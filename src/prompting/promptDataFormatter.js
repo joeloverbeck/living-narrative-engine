@@ -5,7 +5,6 @@
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../types/perceptionLogTypes.js').RawPerceptionLogEntry} RawPerceptionLogEntry */
-/** @typedef {import('../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
 
 import { validateDependency } from '../utils/dependencyUtils.js';
 
@@ -127,35 +126,47 @@ export class PromptDataFormatter {
     return goals;
   }
 
+
   /**
-   * Format indexed choices array
+   * Format thoughts section with conditional XML wrapper
    *
-   * @param {ActionComposite[]} indexedChoicesArray - Array of available actions
-   * @returns {string} Formatted indexed choices content
+   * @param {Array<{text: string, timestamp: string}>} thoughtsArray - Array of thoughts
+   * @returns {string} Complete thoughts section with XML tags or empty string
    */
-  formatIndexedChoices(indexedChoicesArray) {
-    if (
-      !Array.isArray(indexedChoicesArray) ||
-      indexedChoicesArray.length === 0
-    ) {
-      this.#logger.debug('PromptDataFormatter: No indexed choices to format');
+  formatThoughtsSection(thoughtsArray) {
+    const content = this.formatThoughts(thoughtsArray);
+    if (!content) {
       return '';
     }
+    return `<thoughts>\n${content}\n</thoughts>`;
+  }
 
-    const choices = indexedChoicesArray
-      .filter((choice) => choice && choice.index)
-      .map((choice) => {
-        const index = choice.index;
-        const command = choice.commandString || choice.displayName || 'unknown';
-        const description = choice.description || '';
-        return `[${index}] ${command}: ${description}`.trim();
-      })
-      .join('\n');
+  /**
+   * Format notes section with conditional XML wrapper
+   *
+   * @param {Array<{text: string, timestamp: string}>} notesArray - Array of notes
+   * @returns {string} Complete notes section with XML tags or empty string
+   */
+  formatNotesSection(notesArray) {
+    const content = this.formatNotes(notesArray);
+    if (!content) {
+      return '';
+    }
+    return `<notes>\n${content}\n</notes>`;
+  }
 
-    this.#logger.debug(
-      `PromptDataFormatter: Formatted ${indexedChoicesArray.length} indexed choices`
-    );
-    return choices;
+  /**
+   * Format goals section with conditional XML wrapper
+   *
+   * @param {Array<{text: string, timestamp: string}>} goalsArray - Array of goals
+   * @returns {string} Complete goals section with XML tags or empty string
+   */
+  formatGoalsSection(goalsArray) {
+    const content = this.formatGoals(goalsArray);
+    if (!content) {
+      return '';
+    }
+    return `<goals>\n${content}\n</goals>`;
   }
 
   /**
@@ -183,7 +194,7 @@ export class PromptDataFormatter {
       assistantResponsePrefix: promptData.assistantResponsePrefix || '',
     };
 
-    // Format complex sections
+    // Format complex sections (backwards compatibility - content only)
     formattedData.perceptionLogContent = this.formatPerceptionLog(
       promptData.perceptionLogArray || []
     );
@@ -192,12 +203,20 @@ export class PromptDataFormatter {
     );
     formattedData.notesContent = this.formatNotes(promptData.notesArray || []);
     formattedData.goalsContent = this.formatGoals(promptData.goalsArray || []);
-    formattedData.indexedChoicesContent = this.formatIndexedChoices(
-      promptData.indexedChoicesArray || []
+
+    // New conditional section formatting (complete sections with XML tags)
+    formattedData.thoughtsSection = this.formatThoughtsSection(
+      promptData.thoughtsArray || []
+    );
+    formattedData.notesSection = this.formatNotesSection(
+      promptData.notesArray || []
+    );
+    formattedData.goalsSection = this.formatGoalsSection(
+      promptData.goalsArray || []
     );
 
     this.#logger.debug(
-      'PromptDataFormatter: Successfully formatted all prompt data'
+      'PromptDataFormatter: Successfully formatted all prompt data including conditional sections'
     );
     return formattedData;
   }

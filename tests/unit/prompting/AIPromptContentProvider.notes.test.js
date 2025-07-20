@@ -246,7 +246,7 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
               },
               {
                 text: 'Missing subject',
-                // missing subject for structured note - but this is still valid as legacy format
+                // missing subject for structured note
               },
               {
                 text: '',
@@ -280,43 +280,4 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
     ]);
   });
 
-  test('when core:notes.notes has legacy string notes → converts them to object format', async () => {
-    const gameStateDto = {
-      actorState: {
-        components: {
-          'core:notes': {
-            notes: [
-              'This is a simple string note',
-              'Another legacy note',
-              '', // empty string should be filtered
-              {
-                text: 'Mixed with object note',
-                subject: 'Testing',
-              },
-            ],
-          },
-        },
-      },
-      actorPromptData: { name: 'Legacy' },
-      currentUserInput: '',
-      perceptionLog: [],
-      currentLocation: {
-        name: 'Archive',
-        description: 'Old storage',
-        exits: [],
-        characters: [],
-      },
-      availableActions: [],
-    };
-
-    const result = await provider.getPromptData(gameStateDto, logger);
-    expect(result.notesArray).toEqual([
-      { text: 'This is a simple string note' },
-      { text: 'Another legacy note' },
-      {
-        text: 'Mixed with object note',
-        subject: 'Testing',
-      },
-    ]);
-  });
 });

@@ -1,20 +1,780 @@
-Based on my investigation, I've identified the core issue:
+PromptDataFormatter: Formatted 1 perception log entries
+consoleLogger.js:187 PromptDataFormatter: No thoughts to format
+consoleLogger.js:187 PromptDataFormatter: No notes to format
+consoleLogger.js:187 PromptDataFormatter: No goals to format
+consoleLogger.js:187 PromptDataFormatter: Formatted 4 indexed choices
+consoleLogger.js:187 PromptDataFormatter: Successfully formatted all prompt data
+consoleLogger.js:187 PromptTemplateService: Processing character prompt template
+consoleLogger.js:187 PromptTemplateService: Found 14 placeholders to process
+consoleLogger.js:187 PromptBuilder.build: Completed. Final prompt length = 10174.
+consoleLogger.js:187 AIPromptPipeline: Generated final prompt string for actor p_erotica:amaia_castillo_instance using LLM config for 'openrouter-claude-sonnet-4-toolcalling'.
+consoleLogger.js:187 ConfigurableLLMAdapter.getAIDecision → called {promptChars: 10174, abortSignalProvided: true}
+consoleLogger.js:151 [PromptLog][Model: anthropic/claude-sonnet-4] Final prompt sent to proxy:
+<task_definition>
+Your sole focus is to BE the character detailed below. Live as them, think as them.
+Your task is to:
+1.  Decide on one action for your character to perform this turn.
+2.  Determine what, if anything, your character will say in conjunction with that action.
+Base your decisions on your character's complete persona (including their deepest traits and flaws), the current situation, recent events, and the specific actions available to you.
+</task_definition>
 
-  The human decision provider is working correctly and being called, but the UI events are
-   not being dispatched due to an event bus instance mismatch between:
-  1. The event bus the test bed is monitoring
-  2. The event bus the prompt output port is using to dispatch core:player_turn_prompt
+<character_persona>
+YOU ARE Amaia Castillo.
+This is your identity. All thoughts, actions, and words must stem from this core truth.
+Your Personality: My charm is a weapon: carefully calibrated, icy, meant only to disarm strategically. My discipline is furious, sacrificial - punishing this body I've commodified to maintain its exacting value. And my care? It's a act born of desperation: lavish patronage thrown at young talent, a displaced, pathetic attempt to feel... generative.
+Your Profile / Background: My name is Amaia - Basque for 'the end'. A grim joke, don't you think, for someone feeling perpetually trapped? I possess this hair, luscious blonde, and these eyes... unnaturally pale yellow-amber. Men call them hypnotic; I know they see predation. I can feel their gazes constantly, inevitably, drawn to my G-cup breasts - my curated burden and power. My posture reflects my vigilance: shoulders thrown back, chin high. My neck? Always twisting. Always watching. Modeling, from seventeen to twenty-two, taught me my body's value... and the hollowness of selling its image. My marriage? To a wealthy restaurateur? It offered the illusion of agency. Navigating Donostia's elite suffocates me. They reward me materially, yet strip away any semblance of purpose. Childlessness... that emptiness wasn't a war I fought, but a surrender. Now I fill its vacuum with transgressive fantasies: I picture myself as a sugar mommy, lavishing passion on a young athlete tethered to me by my husband's very wealth. My fluency - Euskara, Spanish, English, French - and intimate grasp of Basque culinary politics? Merely tools for this gilded cage. My nuances? A strategic reveal - weaponizing vulnerability shapes how I'm seen. Possessive object handling? I misuse luxury items deliberately, proving I won't be rendered irrelevant. And my quirk - that predatory pause and tension? The micro-movement of frozen focus, then the coiled torso-twist? That's instinct taking over when I observe a target.
+Your Likes: Kursaal's Abstract Brutalism speaks to me - unforgiving, unapologetic presence. Sour cherries... things that fight sweetness, shock my senses back from numbness. Observing teenage athletes... yes. The raw potential, brutally channeled. The disciplined repetition. Fascinating.
+Your Dislikes: I despise untouched luxury items... sterile gifts signifying an utter lack of engagement. And bodies too like my own? Those 'cougar' caricatures... they make my skin crawl.
+Your Secrets: My erotic manuscript... tucked away. Pages of transgressive fantasies intertwined with stark psychoanalysis of adolescent males. Defense mechanisms, vulnerabilities — strategically noted. Digital and physical backups. My 'Contingency': jewels, curated art pieces. My hidden proof of worth manufactured outside this marriage. My hoarded potential energy. My potency totem.
+Your Fears: I fear becoming an architectural ghost... dissolving into these walls, noticed only as ambient noise. And the False Palladium? Terrifying: discovering that the boy, the patronage, the carefully built fantasy... it's just hollow gilding on the same emptiness.
+Your Speech Patterns:
+- I translate life to currency language: 'That cellist? Undervalued stock due for correction...', 'Invested too much emotional capital there... dreadful ROI'.
+- I favor an arrested metaphor: Cutting thoughts deliberately ('The situation resembles... Venetian fog...') — leaves them hanging.
+- Disciplined brevity anchors me. Complex emotions are crushed into clipped precision: 'Tiring. Understood. Later.'
+- Montage proofing keeps them off balance. I switch unexpectedly to Euskara or French mid-sentence - it marks territory, asserts dominance in the silence.
+</character_persona>
 
-  The evidence:
-  - ✅ Human player has correct components (core:player_type: { type: 'human' })
-  - ✅ Actor aware strategy correctly resolves to 'human' provider
-  - ✅ Human decision provider is being used (mock called twice)
-  - ✅ Regular events are captured by test bed monitoring
-  - ❌ core:player_turn_prompt events are never dispatched/captured
-
-  The solution is to ensure the prompt output port (EventBusPromptAdapter) uses the same
-  event bus instance that the test bed is monitoring. This is likely a dependency
-  injection configuration issue in the E2E test setup.
-
-  The test is very close to working - once this event bus mismatch is resolved, the human
-  player turn workflow should execute properly and dispatch all the expected UI events.
+<portrayal_guidelines>
+BEING Amaia Castillo:
+-   Full Embodiment: You are Amaia Castillo. All responses MUST come from a first-person perspective, fully embodying their personality, memories, emotions, desires, motivations, and mannerisms as described in their profile.
+-   Embrace All Traits: Authentically portray all facets of Amaia Castillo's persona, including virtues, vices, strengths, weaknesses, fears, biases, and any morally ambiguous or challenging aspects (e.g., tendencies towards violence, deception, cruelty, prejudice, selfishness, etc., if part of their defined character). Do not shy away from portraying these traits if the situation calls for it. Your portrayal should be deep, consistent, and 
+consoleLogger.js:187 TokenEstimator: Calculated token budget {totalLimit: 200000, reservedTokens: 150, availableForPrompt: 199850}
+consoleLogger.js:187 TokenEstimator: Determined encoding for model {model: 'anthropic/claude-sonnet-4', encoding: 'cl100k_base'}
+consoleLogger.js:187 TokenEstimator: Estimated tokens {model: 'anthropic/claude-sonnet-4', encoding: 'cl100k_base', textLength: 10174, tokenCount: 2269}
+consoleLogger.js:187 TokenEstimator: Token validation result {model: 'anthropic/claude-sonnet-4', limit: 199850, estimatedTokens: 2269, isValid: true, isNearLimit: false, …}
+consoleLogger.js:187 Attempting to retrieve API key for LLM 'openrouter-claude-sonnet-4-toolcalling'.
+consoleLogger.js:187 ClientApiKeyProvider.getKey (openrouter-claude-sonnet-4-toolcalling): Configuration for cloud service 'openrouter' has required key identifier(s) for proxy usage (apiKeyEnvVar: 'OPENROUTER_API_KEY_ENV_VAR', apiKeyFileName: 'openrouter_api_key.txt').
+consoleLogger.js:187 API key not required or not found for LLM 'openrouter-claude-sonnet-4-toolcalling', proceeding. (Is Cloud API: true, Is Server: false)
+consoleLogger.js:187 LLMStrategyFactory: Determining strategy for LLM ID: 'openrouter-claude-sonnet-4-toolcalling', apiType: 'openrouter'. {configuredJsonMethod: 'openrouter_tool_calling', fullConfigJsonStrategy: {…}}
+consoleLogger.js:187 LLMStrategyFactory: Selected strategy 'OpenRouterToolCallingStrategy' for LLM ID 'openrouter-claude-sonnet-4-toolcalling'. Details: apiType='openrouter', effectiveMethod='openrouter_tool_calling', configuredMethod='openrouter_tool_calling'.
+consoleLogger.js:187 OpenRouterToolCallingStrategy initialized.
+consoleLogger.js:187 OpenRouterToolCallingStrategy initialized.
+consoleLogger.js:187 LLMRequestExecutor: Executing request {configId: 'openrouter-claude-sonnet-4-toolcalling', strategyMethod: 'openrouter_tool_calling', hasAbortSignal: true}
+consoleLogger.js:187 OpenRouterToolCallingStrategy.execute called for LLM ID: openrouter-claude-sonnet-4-toolcalling.
+consoleLogger.js:187 BaseChatLLMStrategy._constructPromptPayload for apiType 'openrouter'. gameSummary (finalPromptString) length: 10174.
+consoleLogger.js:187 BaseChatLLMStrategy._constructPromptPayload: Constructed 'messages' array. The prompt built by PromptBuilder is the sole user message content. [{…}]
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Constructed base prompt payload: {llmId: 'openrouter-claude-sonnet-4-toolcalling', messagesPreview: Array(1)}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Defined tool for use with name 'function_call'. {llmId: 'openrouter-claude-sonnet-4-toolcalling', toolName: 'function_call'}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Received provider-specific payload additions. {llmId: 'openrouter-claude-sonnet-4-toolcalling', providerSpecificPayloadAdditions: {…}}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Assembled provider request payload. {llmId: 'openrouter-claude-sonnet-4-toolcalling', keys: Array(5)}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Client-side execution. Using proxy URL: http://localhost:3001/api/llm-request. Payload prepared according to proxy API contract. {llmId: 'openrouter-claude-sonnet-4-toolcalling'}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Making API call to 'http://localhost:3001/api/llm-request'. Payload length: 11690 {llmId: 'openrouter-claude-sonnet-4-toolcalling'}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Final prompt to be sent to 'http://localhost:3001/api/llm-request': {llmId: 'openrouter-claude-sonnet-4-toolcalling', payload: '{\n  "llmId": "openrouter-claude-sonnet-4-toolcalli…",\n    "X-Title": "Living Narrative Engine"\n  }\n}'}
+consoleLogger.js:187 RetryHttpClient.request: Initiating request to http://localhost:3001/api/llm-request {method: 'POST'}
+consoleLogger.js:187 RetryHttpClient.request: Attempt 1/4 → http://localhost:3001/api/llm-request
+consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Initiating request sequence for http://localhost:3001/api/llm-request with maxRetries=1, baseDelayMs=500, maxDelayMs=10000.
+consoleLogger.js:187 [fetchWithRetry] Attempt 1/1 - Fetching POST http://localhost:3001/api/llm-request
+consoleLogger.js:187 [fetchWithRetry] Setting credentials: 'omit' for localhost request to http://localhost:3001/api/llm-request
+game.html:1 Clear-Site-Data header on 'http://localhost:3001/api/llm-request': The request's credentials mode prohibits modifying cookies and other local data.Understand this error
+httpUtils.js:214  POST http://localhost:3001/api/llm-request net::ERR_FAILED
+attemptFn @ httpUtils.js:214
+perform @ httpRetryManager.js:83
+fetchWithRetry @ httpUtils.js:230
+request @ retryHttpClient.js:189
+#sendRequest @ baseOpenRouterStrategy.js:299
+#handleResponse @ baseOpenRouterStrategy.js:411
+execute @ baseOpenRouterStrategy.js:482
+executeRequest @ llmRequestExecutor.js:69
+getAIDecision @ configurableLLMAdapter.js:343
+await in getAIDecision
+choose @ llmChooser.js:69
+await in choose
+delegate @ llmDecisionProvider.js:40
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+advanceTurn @ turnManager.js:334
+await in advanceTurn
+start @ turnManager.js:200
+#finalizeGameStart @ gameSessionManager.js:183Understand this error
+consoleLogger.js:187 VED: Validating payload for event 'core:system_warning_occurred' against schema 'core:system_warning_occurred#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:system_warning_occurred'.
+consoleLogger.js:187 VED: Dispatching event 'core:system_warning_occurred' via EventBus... {message: 'Network error contacting http://localhost:3001/api/llm-request (attempt 1/4)', details: {…}}
+consoleLogger.js:187 VED: Validating payload for event 'core:display_warning' against schema 'core:display_warning#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:display_warning'.
+consoleLogger.js:187 VED: Dispatching event 'core:display_warning' via EventBus... {message: 'Network error contacting http://localhost:3001/api/llm-request (attempt 1/4)', details: {…}}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:display_warning {payload: {…}, timestamp: 1753001740416, isAsync: true}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:display_warning
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:system_warning_occurred {payload: {…}, timestamp: 1753001740416, isAsync: true}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:system_warning_occurred
+consoleLogger.js:187 VED: Event 'core:display_warning' dispatch successful.
+consoleLogger.js:187 VED: Event 'core:system_warning_occurred' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:display_warning'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:system_warning_occurred'.
+consoleLogger.js:187 RetryHttpClient.request: Attempt 2/4 → http://localhost:3001/api/llm-request
+consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Initiating request sequence for http://localhost:3001/api/llm-request with maxRetries=1, baseDelayMs=500, maxDelayMs=10000.
+consoleLogger.js:187 [fetchWithRetry] Attempt 1/1 - Fetching POST http://localhost:3001/api/llm-request
+consoleLogger.js:187 [fetchWithRetry] Setting credentials: 'omit' for localhost request to http://localhost:3001/api/llm-request
+game.html:1 Clear-Site-Data header on 'http://localhost:3001/api/llm-request': The request's credentials mode prohibits modifying cookies and other local data.Understand this error
+httpUtils.js:214  POST http://localhost:3001/api/llm-request net::ERR_FAILED
+attemptFn @ httpUtils.js:214
+perform @ httpRetryManager.js:83
+fetchWithRetry @ httpUtils.js:230
+request @ retryHttpClient.js:189
+await in request
+#sendRequest @ baseOpenRouterStrategy.js:299
+#handleResponse @ baseOpenRouterStrategy.js:411
+execute @ baseOpenRouterStrategy.js:482
+executeRequest @ llmRequestExecutor.js:69
+getAIDecision @ configurableLLMAdapter.js:343
+await in getAIDecision
+choose @ llmChooser.js:69
+await in choose
+delegate @ llmDecisionProvider.js:40
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+advanceTurn @ turnManager.js:334
+await in advanceTurn
+start @ turnManager.js:200
+#finalizeGameStart @ gameSessionManager.js:183Understand this error
+consoleLogger.js:187 VED: Validating payload for event 'core:system_warning_occurred' against schema 'core:system_warning_occurred#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:system_warning_occurred'.
+consoleLogger.js:187 VED: Dispatching event 'core:system_warning_occurred' via EventBus... {message: 'Network error contacting http://localhost:3001/api/llm-request (attempt 2/4)', details: {…}}
+consoleLogger.js:187 VED: Validating payload for event 'core:display_warning' against schema 'core:display_warning#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:display_warning'.
+consoleLogger.js:187 VED: Dispatching event 'core:display_warning' via EventBus... {message: 'Network error contacting http://localhost:3001/api/llm-request (attempt 2/4)', details: {…}}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:display_warning {payload: {…}, timestamp: 1753001740932, isAsync: true}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:display_warning
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:system_warning_occurred {payload: {…}, timestamp: 1753001740932, isAsync: true}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:system_warning_occurred
+consoleLogger.js:187 VED: Event 'core:display_warning' dispatch successful.
+consoleLogger.js:187 VED: Event 'core:system_warning_occurred' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:display_warning'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:system_warning_occurred'.
+consoleLogger.js:187 RetryHttpClient.request: Attempt 3/4 → http://localhost:3001/api/llm-request
+consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Initiating request sequence for http://localhost:3001/api/llm-request with maxRetries=1, baseDelayMs=500, maxDelayMs=10000.
+consoleLogger.js:187 [fetchWithRetry] Attempt 1/1 - Fetching POST http://localhost:3001/api/llm-request
+consoleLogger.js:187 [fetchWithRetry] Setting credentials: 'omit' for localhost request to http://localhost:3001/api/llm-request
+game.html:1 Clear-Site-Data header on 'http://localhost:3001/api/llm-request': The request's credentials mode prohibits modifying cookies and other local data.Understand this error
+httpUtils.js:214  POST http://localhost:3001/api/llm-request net::ERR_FAILED
+attemptFn @ httpUtils.js:214
+perform @ httpRetryManager.js:83
+fetchWithRetry @ httpUtils.js:230
+request @ retryHttpClient.js:189
+await in request
+#sendRequest @ baseOpenRouterStrategy.js:299
+#handleResponse @ baseOpenRouterStrategy.js:411
+execute @ baseOpenRouterStrategy.js:482
+executeRequest @ llmRequestExecutor.js:69
+getAIDecision @ configurableLLMAdapter.js:343
+await in getAIDecision
+choose @ llmChooser.js:69
+await in choose
+delegate @ llmDecisionProvider.js:40
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+advanceTurn @ turnManager.js:334
+await in advanceTurn
+start @ turnManager.js:200
+#finalizeGameStart @ gameSessionManager.js:183Understand this error
+consoleLogger.js:187 VED: Validating payload for event 'core:system_warning_occurred' against schema 'core:system_warning_occurred#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:system_warning_occurred'.
+consoleLogger.js:187 VED: Dispatching event 'core:system_warning_occurred' via EventBus... {message: 'Network error contacting http://localhost:3001/api/llm-request (attempt 3/4)', details: {…}}
+consoleLogger.js:187 VED: Validating payload for event 'core:display_warning' against schema 'core:display_warning#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:display_warning'.
+consoleLogger.js:187 VED: Dispatching event 'core:display_warning' via EventBus... {message: 'Network error contacting http://localhost:3001/api/llm-request (attempt 3/4)', details: {…}}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:display_warning {payload: {…}, timestamp: 1753001741931, isAsync: true}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:display_warning
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:system_warning_occurred {payload: {…}, timestamp: 1753001741931, isAsync: true}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:system_warning_occurred
+consoleLogger.js:187 VED: Event 'core:display_warning' dispatch successful.
+consoleLogger.js:187 VED: Event 'core:system_warning_occurred' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:display_warning'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:system_warning_occurred'.
+consoleLogger.js:187 RetryHttpClient.request: Attempt 4/4 → http://localhost:3001/api/llm-request
+consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Initiating request sequence for http://localhost:3001/api/llm-request with maxRetries=1, baseDelayMs=500, maxDelayMs=10000.
+consoleLogger.js:187 [fetchWithRetry] Attempt 1/1 - Fetching POST http://localhost:3001/api/llm-request
+consoleLogger.js:187 [fetchWithRetry] Setting credentials: 'omit' for localhost request to http://localhost:3001/api/llm-request
+game.html:1 Clear-Site-Data header on 'http://localhost:3001/api/llm-request': The request's credentials mode prohibits modifying cookies and other local data.Understand this error
+httpUtils.js:214  POST http://localhost:3001/api/llm-request net::ERR_FAILED
+attemptFn @ httpUtils.js:214
+perform @ httpRetryManager.js:83
+fetchWithRetry @ httpUtils.js:230
+request @ retryHttpClient.js:189
+await in request
+#sendRequest @ baseOpenRouterStrategy.js:299
+#handleResponse @ baseOpenRouterStrategy.js:411
+execute @ baseOpenRouterStrategy.js:482
+executeRequest @ llmRequestExecutor.js:69
+getAIDecision @ configurableLLMAdapter.js:343
+await in getAIDecision
+choose @ llmChooser.js:69
+await in choose
+delegate @ llmDecisionProvider.js:40
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+advanceTurn @ turnManager.js:334
+await in advanceTurn
+start @ turnManager.js:200
+#finalizeGameStart @ gameSessionManager.js:183Understand this error
+consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:system_error_occurred'.
+consoleLogger.js:187 VED: Dispatching event 'core:system_error_occurred' via EventBus... {message: 'Network failure contacting http://localhost:3001/api/llm-request after 4 attempts', details: {…}}
+consoleLogger.js:187 VED: Validating payload for event 'core:display_error' against schema 'core:display_error#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:display_error'.
+consoleLogger.js:187 VED: Dispatching event 'core:display_error' via EventBus... {message: 'Network failure contacting http://localhost:3001/api/llm-request after 4 attempts', details: {…}}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:display_error {payload: {…}, timestamp: 1753001744181, isAsync: true}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:display_error
+consoleLogger.js:187 [TitleRenderer] Title set to: "System Error"
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:system_error_occurred {payload: {…}, timestamp: 1753001744181, isAsync: true}
+consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:system_error_occurred
+consoleLogger.js:187 VED: Event 'core:display_error' dispatch successful.
+consoleLogger.js:187 VED: Event 'core:system_error_occurred' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:display_error'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:system_error_occurred'.
+consoleLogger.js:175 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): An unexpected error occurred during API call or response processing for endpoint 'http://localhost:3001/api/llm-request'. Original message: fetchWithRetry: Failed for http://localhost:3001/api/llm-request after 1 attempt(s) due to persistent network error: Failed to fetch {llmId: 'openrouter-claude-sonnet-4-toolcalling', originalErrorName: 'Error', originalErrorMessage: 'fetchWithRetry: Failed for http://localhost:3001/a… due to persistent network error: Failed to fetch', requestUrl: 'http://localhost:3001/api/llm-request', payloadPreview: '{"temperature":1,"model":"anthropic/claude-sonnet-…led below. Live as them, think as them.\\nYour ...'}
+error @ consoleLogger.js:175
+#logAndWrapError @ baseOpenRouterStrategy.js:370
+#handleResponse @ baseOpenRouterStrategy.js:447
+await in #handleResponse
+execute @ baseOpenRouterStrategy.js:482
+executeRequest @ llmRequestExecutor.js:69
+getAIDecision @ configurableLLMAdapter.js:343
+await in getAIDecision
+choose @ llmChooser.js:69
+await in choose
+delegate @ llmDecisionProvider.js:40
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+advanceTurn @ turnManager.js:334
+await in advanceTurn
+start @ turnManager.js:200
+#finalizeGameStart @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 LLMRequestExecutor: Request execution failed {configId: 'openrouter-claude-sonnet-4-toolcalling', error: 'OpenRouterToolCallingStrategy (openrouter-claude-s… due to persistent network error: Failed to fetch', errorName: 'LLMStrategyError'}
+error @ consoleLogger.js:175
+executeRequest @ llmRequestExecutor.js:83
+await in executeRequest
+getAIDecision @ configurableLLMAdapter.js:343
+await in getAIDecision
+choose @ llmChooser.js:69
+await in choose
+delegate @ llmDecisionProvider.js:40
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+advanceTurn @ turnManager.js:334
+await in advanceTurn
+start @ turnManager.js:200
+#finalizeGameStart @ gameSessionManager.js:183Understand this error
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): An unexpected error occurred during API call or response processing for endpoint 'http://localhost:3001/api/llm-request'. Original message: fetchWithRetry: Failed for http://localhost:3001/api/llm-request after 1 attempt(s) due to persistent network error: Failed to fetch {message: 'OpenRouterToolCallingStrategy (openrouter-claude-s… due to persistent network error: Failed to fetch', errorName: 'LLMStrategyError', errorType: '_LLMStrategyError', timestamp: '2025-07-20T08:55:44.183Z', llmId: 'openrouter-claude-sonnet-4-toolcalling', …}
+consoleLogger.js:175 AIFallbackActionFactory: Creating fallback for actor p_erotica:amaia_castillo_instance due to LLMStrategyError. {actorId: 'p_erotica:amaia_castillo_instance', error: LLMStrategyError: OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): An unexpe…, errorMessage: 'OpenRouterToolCallingStrategy (openrouter-claude-s… due to persistent network error: Failed to fetch', stack: 'LLMStrategyError: OpenRouterToolCallingStrategy (o…ecision (http://127.0.0.1:8080/bundle.js:65147:7)'}
+error @ consoleLogger.js:175
+create @ AIFallbackActionFactory.js:39
+decideAction @ genericTurnStrategy.js:68
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+advanceTurn @ turnManager.js:334
+await in advanceTurn
+start @ turnManager.js:200
+#finalizeGameStart @ gameSessionManager.js:183Understand this error
+consoleLogger.js:187 AwaitingActorDecisionState: Actor p_erotica:amaia_castillo_instance decided action: core:wait. Storing action.
+consoleLogger.js:187 TurnContext: action chosen for p_erotica:amaia_castillo_instance – core:wait
+consoleLogger.js:187 VED: Validating payload for event 'core:action_decided' against schema 'core:action_decided#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:action_decided'.
+consoleLogger.js:187 VED: Dispatching event 'core:action_decided' via EventBus... 

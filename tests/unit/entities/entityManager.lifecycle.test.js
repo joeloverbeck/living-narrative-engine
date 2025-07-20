@@ -23,7 +23,7 @@ import { SerializedEntityError } from '../../../src/errors/serializedEntityError
 import { InvalidInstanceIdError } from '../../../src/errors/invalidInstanceIdError.js';
 import { RepositoryConsistencyError } from '../../../src/errors/repositoryConsistencyError.js';
 import { createDefaultDeps } from '../../../src/entities/utils/createDefaultDeps.js';
-import { createDefaultServices } from '../../../src/entities/utils/createDefaultServices.js';
+import { createDefaultServicesWithConfig } from '../../../src/entities/utils/createDefaultServicesWithConfig.js';
 import EntityLifecycleManager from '../../../src/entities/services/entityLifecycleManager.js';
 import {
   expectEntityCreatedDispatch,
@@ -458,7 +458,7 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
 
       const { mocks } = getBed();
       const deps = createDefaultDeps();
-      const services = createDefaultServices({
+      const services = createDefaultServicesWithConfig({
         registry: mocks.registry,
         validator: mocks.validator,
         logger: mocks.logger,

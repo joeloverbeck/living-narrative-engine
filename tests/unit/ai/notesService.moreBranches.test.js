@@ -6,16 +6,17 @@ import NotesService from '../../../src/ai/notesService.js';
  */
 
 describe('NotesService.addNotes more branches', () => {
-  test('skips entries that are not plain strings but adds valid ones', () => {
+  test('skips entries that are not valid structured notes but adds valid ones', () => {
     const service = new NotesService({ autoMigrate: false });
     const comp = { notes: [] };
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('TS');
 
-    const weirdObject = { trim: () => 'should-ignore' };
-    const result = service.addNotes(comp, [weirdObject, ' ok ']);
+    const invalidObject = { trim: () => 'should-ignore' };
+    const validNote = { text: 'ok', subject: 'test_subject' };
+    const result = service.addNotes(comp, [invalidObject, validNote]);
 
     expect(result.wasModified).toBe(true);
-    expect(comp.notes).toEqual([{ text: 'ok', timestamp: 'TS' }]);
+    expect(comp.notes).toEqual([{ text: 'ok', subject: 'test_subject', context: undefined, tags: undefined, timestamp: 'TS' }]);
   });
 
   test('existing notes with non-string text are ignored when checking duplicates', () => {
@@ -25,10 +26,11 @@ describe('NotesService.addNotes more branches', () => {
     };
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('T');
 
-    const result = service.addNotes(comp, ['hello']);
+    const validNote = { text: 'hello', subject: 'test_subject' };
+    const result = service.addNotes(comp, [validNote]);
 
     expect(result.wasModified).toBe(true);
     expect(comp.notes).toHaveLength(2);
-    expect(comp.notes[1]).toEqual({ text: 'hello', timestamp: 'T' });
+    expect(comp.notes[1]).toEqual({ text: 'hello', subject: 'test_subject', context: undefined, tags: undefined, timestamp: 'T' });
   });
 });

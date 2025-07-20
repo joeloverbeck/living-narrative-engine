@@ -47,10 +47,6 @@ const SAMPLE_PROMPT_DATA = {
     { text: 'Test goal 1', timestamp: '2024-01-01' },
     { text: 'Test goal 2', timestamp: '2024-01-02' },
   ],
-  indexedChoicesArray: [
-    { index: 1, commandString: 'action1', description: 'Do action 1' },
-    { index: 2, commandString: 'action2', description: 'Do action 2' },
-  ],
 };
 
 /* ------------------------------------------------------------------------- */
@@ -115,7 +111,7 @@ describe('PromptBuilder (template-based)', () => {
     expect(prompt).toContain(
       '<available_actions_info>\nTest available actions\n</available_actions_info>'
     );
-    expect(prompt).toContain('<user_input>\nTest user input\n</user_input>');
+    // user_input section has been removed from AI character templates
     expect(prompt).toContain(
       '<final_instructions>\nTest final instructions\n</final_instructions>'
     );
@@ -129,9 +125,6 @@ describe('PromptBuilder (template-based)', () => {
     );
     expect(prompt).toContain('<notes>\n- Test note 1\n- Test note 2\n</notes>');
     expect(prompt).toContain('<goals>\n- Test goal 1\n- Test goal 2\n</goals>');
-    expect(prompt).toContain(
-      '<indexed_choices>\n[1] action1: Do action 1\n[2] action2: Do action 2\n</indexed_choices>'
-    );
 
     // Check the assistant response prefix
     expect(prompt).toEndWith('\n');
@@ -148,17 +141,44 @@ describe('PromptBuilder (template-based)', () => {
       thoughtsArray: [],
       notesArray: [],
       goalsArray: [],
-      indexedChoicesArray: [],
     };
 
     const prompt = await builder.build(TEST_LLM_ID, dataWithEmptyArrays);
 
-    // Empty sections should still have wrapper tags but no content
+    // Empty conditional sections should NOT have wrapper tags (smart template engine)
+    expect(prompt).not.toContain('<thoughts>');
+    expect(prompt).not.toContain('<notes>');
+    expect(prompt).not.toContain('<goals>');
+
+    // Non-conditional sections should still have wrapper tags even when empty
     expect(prompt).toContain('<perception_log>\n\n</perception_log>');
-    expect(prompt).toContain('<thoughts>\n\n</thoughts>');
-    expect(prompt).toContain('<notes>\n\n</notes>');
-    expect(prompt).toContain('<goals>\n\n</goals>');
-    expect(prompt).toContain('<indexed_choices>\n\n</indexed_choices>');
+  });
+
+  test('eliminates empty conditional sections to save tokens', async () => {
+    const dataWithSomeEmptySections = {
+      ...SAMPLE_PROMPT_DATA,
+      thoughtsArray: [{ text: 'I have a thought', timestamp: '2024-01-01' }], // Has content
+      notesArray: [], // Empty - should be eliminated
+      goalsArray: [{ text: 'Complete the quest', timestamp: '2024-01-01' }], // Has content
+    };
+
+    const prompt = await builder.build(TEST_LLM_ID, dataWithSomeEmptySections);
+
+    // Should contain sections with content
+    expect(prompt).toContain('<thoughts>\n- I have a thought\n</thoughts>');
+    expect(prompt).toContain('<goals>\n- Complete the quest\n</goals>');
+
+    // Should NOT contain empty notes section
+    expect(prompt).not.toContain('<notes>');
+
+    // Verify token efficiency: count the sections present
+    const thoughtsMatch = prompt.match(/<thoughts>[\s\S]*?<\/thoughts>/);
+    const notesMatch = prompt.match(/<notes>[\s\S]*?<\/notes>/);
+    const goalsMatch = prompt.match(/<goals>[\s\S]*?<\/goals>/);
+
+    expect(thoughtsMatch).toBeTruthy(); // Should exist
+    expect(notesMatch).toBeFalsy(); // Should NOT exist
+    expect(goalsMatch).toBeTruthy(); // Should exist
   });
 
   /* ──────────────────────────────────────────────────────────────────────── */
@@ -172,7 +192,6 @@ describe('PromptBuilder (template-based)', () => {
       thoughtsArray: [],
       notesArray: [],
       goalsArray: [],
-      indexedChoicesArray: [],
     };
 
     const prompt = await builder.build(TEST_LLM_ID, minimalData);
@@ -188,7 +207,7 @@ describe('PromptBuilder (template-based)', () => {
     expect(prompt).toContain(
       '<available_actions_info>\n\n</available_actions_info>'
     );
-    expect(prompt).toContain('<user_input>\n\n</user_input>');
+    // user_input section has been removed from AI character templates
     expect(prompt).toContain('<final_instructions>\n\n</final_instructions>');
   });
 
@@ -255,41 +274,6 @@ describe('PromptBuilder (template-based)', () => {
     );
   });
 
-  test('formats indexed choices with proper numbering and descriptions', async () => {
-    const dataWithManyChoices = {
-      ...SAMPLE_PROMPT_DATA,
-      indexedChoicesArray: [
-        {
-          index: 1,
-          commandString: 'look',
-          description: 'Look around the room',
-        },
-        {
-          index: 2,
-          commandString: 'talk',
-          description: 'Talk to the merchant',
-        },
-        { index: 3, commandString: 'leave', description: 'Leave the shop' },
-        {
-          index: 4,
-          commandString: 'buy sword',
-          description: 'Buy the iron sword (50 gold)',
-        },
-      ],
-    };
-
-    const prompt = await builder.build(TEST_LLM_ID, dataWithManyChoices);
-
-    const choicesSection = prompt.match(
-      /<indexed_choices>([\s\S]*?)<\/indexed_choices>/
-    )[1];
-    expect(choicesSection).toContain('[1] look: Look around the room');
-    expect(choicesSection).toContain('[2] talk: Talk to the merchant');
-    expect(choicesSection).toContain('[3] leave: Leave the shop');
-    expect(choicesSection).toContain(
-      '[4] buy sword: Buy the iron sword (50 gold)'
-    );
-  });
 
   /* ──────────────────────────────────────────────────────────────────────── */
   /* Integration with custom template service                                */

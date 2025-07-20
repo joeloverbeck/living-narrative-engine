@@ -749,7 +749,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       },
       'clothing:slot_metadata': {
         id: 'clothing:slot_metadata',
-        description: 'Metadata about clothing slots and their anatomy socket coverage',
+        description:
+          'Metadata about clothing slots and their anatomy socket coverage',
         dataSchema: {
           type: 'object',
           properties: {
@@ -767,7 +768,13 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
                       type: 'array',
                       items: {
                         type: 'string',
-                        enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
+                        enum: [
+                          'underwear',
+                          'base',
+                          'outer',
+                          'accessories',
+                          'armor',
+                        ],
                       },
                     },
                   },

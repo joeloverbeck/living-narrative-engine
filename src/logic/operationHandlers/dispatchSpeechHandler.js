@@ -80,9 +80,6 @@ class DispatchSpeechHandler extends BaseOperationHandler {
     if (typeof params.thoughts === 'string') {
       payload.thoughts = params.thoughts;
     }
-    if (typeof params.notes === 'string') {
-      payload.notes = params.notes;
-    }
 
     logger.debug('DISPATCH_SPEECH: dispatching display_speech', {
       payload,

@@ -7,6 +7,6 @@
  * @typedef {object} ITurnDecisionResult
  * @property {'success'|'fallback'} kind  - Success or graceful fallback.
  * @property {import('./IActorTurnStrategy.js').ITurnAction} action
- * @property {{ speech:string|null, thoughts:string|null, notes:string[]|null }} extractedData
+ * @property {{ speech:string|null, thoughts:string|null, notes:Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}>|null }} extractedData
  */
 export const typedef = {}; // JSDoc-only file

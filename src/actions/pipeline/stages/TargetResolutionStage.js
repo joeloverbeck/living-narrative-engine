@@ -112,30 +112,70 @@ export class TargetResolutionStage extends PipelineStage {
         continue;
       }
 
-      let targetContexts, resolutionError;
+      let targetContexts;
 
       try {
         const result = this.#targetResolutionService.resolveTargets(
           actionDef.scope,
           actor,
           actionContext,
-          trace
+          trace,
+          actionDef.id
         );
-        targetContexts = result.targets;
-        resolutionError = result.error;
+
+        // Handle ActionResult from resolveTargets
+        if (!result) {
+          this.#logger.error(
+            `TargetResolutionService.resolveTargets returned null/undefined for action '${actionDef.id}'`
+          );
+          continue;
+        }
+
+        if (result.success) {
+          targetContexts = result.value;
+        } else {
+          // Handle errors from ActionResult
+          const resultErrors = result.errors || [];
+          const errorArray = Array.isArray(resultErrors)
+            ? resultErrors
+            : [resultErrors];
+          for (const error of errorArray) {
+            if (!error) continue; // Skip undefined/null errors
+            // If error is already an ActionErrorContext, use it directly
+            if (error.timestamp && error.phase) {
+              errors.push(error);
+            } else {
+              // Build error context
+              const errorContext = this.#errorContextBuilder.buildErrorContext({
+                error: error,
+                actionDef,
+                actorId: actor.id,
+                phase: ERROR_PHASES.VALIDATION,
+                trace,
+                additionalContext: {
+                  stage: 'target_resolution',
+                  scope: actionDef.scope,
+                },
+              });
+              errors.push(errorContext);
+            }
+          }
+
+          this.#logger.error(
+            `Error resolving scope for action '${actionDef.id}'`,
+            { errors: errorArray }
+          );
+          continue;
+        }
       } catch (error) {
+        // Handle unexpected exceptions
         this.#logger.error(
           `Exception in targetResolutionService for action '${actionDef?.id || 'unknown'}': ${error.message}`,
           { actionDef, error }
         );
-        resolutionError = error;
-        targetContexts = [];
-      }
 
-      if (resolutionError) {
-        // Build error context
         const errorContext = this.#errorContextBuilder.buildErrorContext({
-          error: resolutionError,
+          error: error,
           actionDef,
           actorId: actor.id,
           phase: ERROR_PHASES.VALIDATION,
@@ -147,11 +187,6 @@ export class TargetResolutionStage extends PipelineStage {
         });
 
         errors.push(errorContext);
-
-        this.#logger.error(
-          `Error resolving scope for action '${actionDef.id}': ${resolutionError.message}`,
-          errorContext
-        );
         continue;
       }
 

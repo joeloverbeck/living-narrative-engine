@@ -534,15 +534,6 @@ describe('AIPromptContentProvider', () => {
         characterName: testCharName,
         locationName: testLocationName,
         thoughtsArray: [],
-        indexedChoicesArray: [
-          {
-            index: 1,
-            actionId: 'action1',
-            commandString: 'do_test',
-            description: 'A test action.',
-            params: {},
-          },
-        ],
       });
 
       // Verify that the internal (spied) getter methods were called correctly

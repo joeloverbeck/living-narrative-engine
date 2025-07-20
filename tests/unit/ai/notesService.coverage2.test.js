@@ -17,15 +17,17 @@ describe('NotesService extra branch coverage', () => {
     expect(comp.notes).toHaveLength(0);
   });
 
-  test('ignores blank or non-string entries but adds valid ones', () => {
+  test('ignores blank or invalid structured notes but adds valid ones', () => {
     const service = new NotesService({ autoMigrate: false });
     const comp = { notes: [] };
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('TS');
 
-    const oddObject = { trim: () => 'ignored' };
-    const result = service.addNotes(comp, ['  ', oddObject, ' Ok ']);
+    const blankNote = { text: '  ', subject: 'test' };
+    const invalidObject = { trim: () => 'ignored' };
+    const validNote = { text: ' Ok ', subject: 'test_subject' };
+    const result = service.addNotes(comp, [blankNote, invalidObject, validNote]);
 
     expect(result.wasModified).toBe(true);
-    expect(comp.notes).toEqual([{ text: 'Ok', timestamp: 'TS' }]);
+    expect(comp.notes).toEqual([{ text: 'Ok', subject: 'test_subject', context: undefined, tags: undefined, timestamp: 'TS' }]);
   });
 });

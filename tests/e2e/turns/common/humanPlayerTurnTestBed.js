@@ -47,7 +47,7 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
 
     // Set up UI event monitoring
     this.setupUIEventMonitoring();
-    
+
     // Ensure services are properly initialized
     await this.waitForServicesReady();
   }
@@ -57,14 +57,16 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
    */
   async waitForServicesReady() {
     // Give a small delay to ensure all dependency injection and service initialization is complete
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
     // Verify critical services are available
     if (!this.promptCoordinator) {
       throw new Error('PromptCoordinator not available after initialization');
     }
     if (!this.humanDecisionProvider) {
-      throw new Error('HumanDecisionProvider not available after initialization');
+      throw new Error(
+        'HumanDecisionProvider not available after initialization'
+      );
     }
     if (!this.turnManager) {
       throw new Error('TurnManager not available after initialization');
@@ -192,100 +194,124 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
 
     // Store original method for cleanup
     if (!this.promptCoordinator._originalPrompt) {
-      this.promptCoordinator._originalPrompt = this.promptCoordinator.prompt.bind(this.promptCoordinator);
+      this.promptCoordinator._originalPrompt =
+        this.promptCoordinator.prompt.bind(this.promptCoordinator);
     }
-    
+
     // Also mock the prompt output port to simulate UI events
     if (!this.promptOutputPort._originalPrompt) {
-      this.promptOutputPort._originalPrompt = this.promptOutputPort.prompt.bind(this.promptOutputPort);
+      this.promptOutputPort._originalPrompt = this.promptOutputPort.prompt.bind(
+        this.promptOutputPort
+      );
     }
-    
-    this.promptOutputPort.prompt = jest.fn().mockImplementation(async (entityId, availableActions, error) => {
-      console.log(`Mock prompt output port called for actor ${entityId}`);
-      
-      // Dispatch UI events to simulate the real prompt output port
-      await this.eventBus.dispatch('core:player_turn_prompt', {
-        entityId: entityId,
-        availableActions: availableActions,
+
+    this.promptOutputPort.prompt = jest
+      .fn()
+      .mockImplementation(async (entityId, availableActions, error) => {
+        console.log(`Mock prompt output port called for actor ${entityId}`);
+
+        // Dispatch UI events to simulate the real prompt output port
+        await this.eventBus.dispatch('core:player_turn_prompt', {
+          entityId: entityId,
+          availableActions: availableActions,
+        });
+
+        await this.eventBus.dispatch('core:update_available_actions', {
+          actorId: entityId,
+          actions: availableActions,
+        });
+
+        await this.eventBus.dispatch('core:enable_input', {});
+
+        // Wait a bit for event processing
+        await new Promise((resolve) => setTimeout(resolve, 10));
       });
 
-      await this.eventBus.dispatch('core:update_available_actions', {
-        actorId: entityId,
-        actions: availableActions,
-      });
+    this.promptCoordinator.prompt = jest
+      .fn()
+      .mockImplementation(
+        async (actor, { indexedComposites, cancellationSignal } = {}) => {
+          console.log(
+            `Mock prompt called for actor ${actor.id} with ${indexedComposites?.length || 0} actions`
+          );
 
-      await this.eventBus.dispatch('core:enable_input', {});
-      
-      // Wait a bit for event processing
-      await new Promise(resolve => setTimeout(resolve, 10));
-    });
-    
-    this.promptCoordinator.prompt = jest.fn().mockImplementation(async (actor, { indexedComposites, cancellationSignal } = {}) => {
-      console.log(`Mock prompt called for actor ${actor.id} with ${indexedComposites?.length || 0} actions`);
-      
-      // Check for abort signal
-      if (cancellationSignal?.aborted) {
-        throw new DOMException('Prompt operation was aborted.', 'AbortError');
-      }
+          // Check for abort signal
+          if (cancellationSignal?.aborted) {
+            throw new DOMException(
+              'Prompt operation was aborted.',
+              'AbortError'
+            );
+          }
 
-      // Validate we have actions
-      if (!Array.isArray(indexedComposites) || indexedComposites.length === 0) {
-        throw new Error('No actions available for prompting');
-      }
+          // Validate we have actions
+          if (
+            !Array.isArray(indexedComposites) ||
+            indexedComposites.length === 0
+          ) {
+            throw new Error('No actions available for prompting');
+          }
 
-      // The prompt coordinator calls the prompt output port first
-      const actionsForPrompt = indexedComposites.map((c) => ({
-        index: c.index,
-        actionId: c.actionId,
-        commandString: c.commandString,
-        params: c.params,
-        description: c.description,
-      }));
-      await this.promptOutputPort.prompt(actor.id, actionsForPrompt);
+          // The prompt coordinator calls the prompt output port first
+          const actionsForPrompt = indexedComposites.map((c) => ({
+            index: c.index,
+            actionId: c.actionId,
+            commandString: c.commandString,
+            params: c.params,
+            description: c.description,
+          }));
+          await this.promptOutputPort.prompt(actor.id, actionsForPrompt);
 
-      // Simulate delay if specified
-      if (delay > 0) {
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      }
+          // Simulate delay if specified
+          if (delay > 0) {
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          }
 
-      // Check for abort after delay
-      if (cancellationSignal?.aborted) {
-        throw new DOMException('Prompt operation was aborted.', 'AbortError');
-      }
+          // Check for abort after delay
+          if (cancellationSignal?.aborted) {
+            throw new DOMException(
+              'Prompt operation was aborted.',
+              'AbortError'
+            );
+          }
 
-      // Simulate error if requested
-      if (shouldThrow) {
-        throw new Error(errorMessage);
-      }
+          // Simulate error if requested
+          if (shouldThrow) {
+            throw new Error(errorMessage);
+          }
 
-      // Validate action index against available actions (1-based indexing)
-      if (actionIndex < 1 || actionIndex > indexedComposites.length) {
-        throw new Error(`Invalid action index ${actionIndex}. Available actions: 1-${indexedComposites.length}`);
-      }
+          // Validate action index against available actions (1-based indexing)
+          if (actionIndex < 1 || actionIndex > indexedComposites.length) {
+            throw new Error(
+              `Invalid action index ${actionIndex}. Available actions: 1-${indexedComposites.length}`
+            );
+          }
 
-      // Simulate the user submitting their choice
-      await this.eventBus.dispatch('core:player_turn_submitted', {
-        chosenIndex: actionIndex,
-        speech: speech || '',
-        thoughts: null,
-        notes: null,
-        submittedByActorId: actor.id,
-      });
-      
-      // Wait a bit and then disable input
-      await new Promise(resolve => setTimeout(resolve, 10));
-      await this.eventBus.dispatch('core:disable_input', {});
+          // Simulate the user submitting their choice
+          await this.eventBus.dispatch('core:player_turn_submitted', {
+            chosenIndex: actionIndex,
+            speech: speech || '',
+            thoughts: null,
+            notes: null,
+            submittedByActorId: actor.id,
+          });
 
-      console.log(`Mock prompt completed for actor ${actor.id}, returning result`);
-      
-      // Return the expected prompt resolution format
-      return {
-        chosenIndex: actionIndex,
-        speech: speech || '',
-        thoughts: null,
-        notes: null,
-      };
-    });
+          // Wait a bit and then disable input
+          await new Promise((resolve) => setTimeout(resolve, 10));
+          await this.eventBus.dispatch('core:disable_input', {});
+
+          console.log(
+            `Mock prompt completed for actor ${actor.id}, returning result`
+          );
+
+          // Return the expected prompt resolution format
+          return {
+            chosenIndex: actionIndex,
+            speech: speech || '',
+            thoughts: null,
+            notes: null,
+          };
+        }
+      );
   }
 
   /**
@@ -330,7 +356,9 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
     }
 
     const diagnostics = this.generateTimeoutDiagnostics();
-    throw new Error(`Timeout waiting for UI event: ${eventType}. Diagnostics: ${diagnostics}`);
+    throw new Error(
+      `Timeout waiting for UI event: ${eventType}. Diagnostics: ${diagnostics}`
+    );
   }
 
   /**
@@ -389,8 +417,8 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
     }
 
     // Wait for turn manager to be fully ready
-    await new Promise(resolve => setTimeout(resolve, 10));
-    
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
     await this.turnManager.start();
 
     // Find the actor in the turn order
@@ -424,34 +452,39 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
 
   /**
    * Wait for turn to complete with proper timeout handling
-   * 
+   *
    * @param {string} expectedEvent - Event type to wait for
    * @param {number} timeout - Timeout in milliseconds
    * @returns {Promise<object>} The event that was received
    */
-  async waitForTurnCompletion(expectedEvent = 'core:turn_ended', timeout = 10000) {
+  async waitForTurnCompletion(
+    expectedEvent = 'core:turn_ended',
+    timeout = 10000
+  ) {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       const events = this.getEventsByType(expectedEvent);
       if (events.length > 0) {
         return events[events.length - 1]; // Return the most recent event
       }
-      
+
       // Wait a bit before checking again
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
-    
+
     // If we get here, we timed out
     const errorInfo = this.generateTimeoutDiagnostics();
-    throw new Error(`Timeout waiting for ${expectedEvent} after ${timeout}ms. ${errorInfo}`);
+    throw new Error(
+      `Timeout waiting for ${expectedEvent} after ${timeout}ms. ${errorInfo}`
+    );
   }
 
   /**
    * Generate diagnostic information for timeout scenarios
    */
   generateTimeoutDiagnostics() {
-    const recentEvents = this.events.slice(-10).map(e => e.type);
+    const recentEvents = this.events.slice(-10).map((e) => e.type);
     const systemErrors = this.getEventsByType('core:system_error_occurred');
     const turnStarted = this.getEventsByType('core:turn_started');
     const actionDecided = this.getEventsByType('core:action_decided');
@@ -459,7 +492,7 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
     const promptEvents = this.getUIEventsByType('core:player_turn_prompt');
     const inputEvents = this.getUIEventsByType('core:enable_input');
     const submitEvents = this.getEventsByType('core:player_turn_submitted');
-    
+
     const diagnostics = {
       recentEvents: recentEvents,
       turnStarted: turnStarted.length,
@@ -470,14 +503,16 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
       inputEvents: inputEvents.length,
       submitEvents: submitEvents.length,
       totalEvents: this.events.length,
-      totalUIEvents: this.uiEvents.length
+      totalUIEvents: this.uiEvents.length,
     };
-    
+
     // Add error details if there are system errors
     if (systemErrors.length > 0) {
-      diagnostics.errorMessages = systemErrors.map(e => e.payload.message || e.payload.error);
+      diagnostics.errorMessages = systemErrors.map(
+        (e) => e.payload.message || e.payload.error
+      );
     }
-    
+
     return JSON.stringify(diagnostics, null, 2);
   }
 
@@ -486,16 +521,16 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
    */
   enableDebugLogging() {
     console.log('Enabling debug logging for HumanPlayerTurnTestBed');
-    
+
     // Log all events as they happen
     this.eventBus.subscribe('*', (event) => {
       console.log(`[EVENT] ${event.type}:`, event.payload);
     });
-    
+
     // Log UI events separately
     const originalUIEventsPush = this.uiEvents.push.bind(this.uiEvents);
     this.uiEvents.push = (...events) => {
-      events.forEach(event => {
+      events.forEach((event) => {
         console.log(`[UI_EVENT] ${event.type}:`, event.payload);
       });
       return originalUIEventsPush(...events);
@@ -511,9 +546,10 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
       currentActor: this.turnManager?.getCurrentActorId?.() || null,
       totalEvents: this.events.length,
       totalUIEvents: this.uiEvents.length,
-      recentEvents: this.events.slice(-5).map(e => e.type),
+      recentEvents: this.events.slice(-5).map((e) => e.type),
       systemErrors: this.getEventsByType('core:system_error_occurred').length,
-      promptCoordinatorMocked: !!(this.promptCoordinator?.prompt?.mockImplementation),
+      promptCoordinatorMocked:
+        !!this.promptCoordinator?.prompt?.mockImplementation,
     };
   }
 
@@ -678,24 +714,30 @@ export class HumanPlayerTurnTestBed extends FullTurnExecutionTestBed {
   async cleanup() {
     // Restore original prompt coordinator if it was mocked
     if (this.promptCoordinator) {
-      if (this.promptCoordinator.prompt && this.promptCoordinator.prompt.mockRestore) {
+      if (
+        this.promptCoordinator.prompt &&
+        this.promptCoordinator.prompt.mockRestore
+      ) {
         this.promptCoordinator.prompt.mockRestore();
       } else if (this.promptCoordinator._originalPrompt) {
         this.promptCoordinator.prompt = this.promptCoordinator._originalPrompt;
         delete this.promptCoordinator._originalPrompt;
       }
     }
-    
+
     // Restore original prompt output port if it was mocked
     if (this.promptOutputPort) {
-      if (this.promptOutputPort.prompt && this.promptOutputPort.prompt.mockRestore) {
+      if (
+        this.promptOutputPort.prompt &&
+        this.promptOutputPort.prompt.mockRestore
+      ) {
         this.promptOutputPort.prompt.mockRestore();
       } else if (this.promptOutputPort._originalPrompt) {
         this.promptOutputPort.prompt = this.promptOutputPort._originalPrompt;
         delete this.promptOutputPort._originalPrompt;
       }
     }
-    
+
     await super.cleanup();
     this.uiEvents = [];
     this.playerInputHandlers.clear();

@@ -1,5 +1,7 @@
 import { beforeEach, expect, test, jest } from '@jest/globals';
 import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
+import { ActionResult } from '../../../src/actions/core/actionResult.js';
+import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 
 describeActionDiscoverySuite(
   'ActionDiscoveryService – scoped discovery',
@@ -29,17 +31,15 @@ describeActionDiscoverySuite(
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
         (scope) => {
           if (scope === 'directions') {
-            return {
-              targets: [
-                { type: 'entity', entityId: 'loc-2' },
-                { type: 'entity', entityId: 'loc-3' },
-              ],
-            };
+            return ActionResult.success([
+              ActionTargetContext.forEntity('loc-2'),
+              ActionTargetContext.forEntity('loc-3'),
+            ]);
           }
           if (scope === 'none') {
-            return { targets: [{ type: 'none', entityId: null }] };
+            return ActionResult.success([ActionTargetContext.noTarget()]);
           }
-          return { targets: [] };
+          return ActionResult.success([]);
         }
       );
       bed.mocks.actionCommandFormatter.format.mockImplementation((def, ctx) => {

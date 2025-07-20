@@ -16,7 +16,7 @@
               "coveredSockets": {
                 "type": "array",
                 "description": "Array of anatomy socket IDs that this slot covers",
-                "items": { 
+                "items": {
                   "type": "string",
                   "description": "Socket ID (e.g., 'left_chest', 'vagina')"
                 }
@@ -24,9 +24,9 @@
               "allowedLayers": {
                 "type": "array",
                 "description": "Clothing layers allowed for this slot",
-                "items": { 
+                "items": {
                   "type": "string",
-                  "enum": ["underwear", "base", "outer", "accessories", "armor"]
+                  "enum": ["underwear", "base", "outer", "accessory", "armor"]
                 }
               }
             },

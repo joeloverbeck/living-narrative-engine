@@ -76,8 +76,8 @@ describe('TargetResolutionService - Complete Coverage', () => {
 
       const result = service.resolveTargets('core:test', actor, {});
 
-      expect(result.error).toBeUndefined();
-      expect(result.targets).toHaveLength(1);
+      expect(result.success).toBe(true);
+      expect(result.value).toHaveLength(1);
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         'hero',
         'core:position'
@@ -124,8 +124,9 @@ describe('TargetResolutionService - Complete Coverage', () => {
       const result = service.resolveTargets('core:test', actor, {});
 
       // Verify error result is returned
-      expect(result.error).toBeDefined();
-      expect(result.targets).toHaveLength(0);
+      expect(result.success).toBe(false);
+      expect(result.value).toBeNull();
+      expect(result.errors).toHaveLength(1);
       expect(mockScopeEngine.resolve).toHaveBeenCalled();
 
       // Verify error handling was triggered
@@ -168,7 +169,9 @@ describe('TargetResolutionService - Complete Coverage', () => {
         'test-action'
       );
 
-      expect(result.error).toBeDefined();
+      expect(result.success).toBe(false);
+      expect(result.value).toBeNull();
+      expect(result.errors).toHaveLength(1);
 
       // Verify that the error handling was triggered
       expect(
@@ -221,7 +224,9 @@ describe('TargetResolutionService - Complete Coverage', () => {
         'test-action'
       );
 
-      expect(result.error).toBeDefined();
+      expect(result.success).toBe(false);
+      expect(result.value).toBeNull();
+      expect(result.errors).toHaveLength(1);
 
       // Verify that the legacy error handling was triggered
       expect(mockLogger.error).toHaveBeenCalledWith(

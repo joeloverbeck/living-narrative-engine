@@ -12,6 +12,7 @@ import coreWaitActionDefinition from '../../../data/mods/core/actions/wait.actio
 
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
+import { ActionResult } from '../../../src/actions/core/actionResult.js';
 import { beforeEach, expect, it } from '@jest/globals';
 import {
   EXITS_COMPONENT_ID,
@@ -61,14 +62,14 @@ describeActionDiscoverySuite(
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
         (scopeName) => {
           if (scopeName === 'core:clear_directions') {
-            return {
-              targets: [{ type: 'entity', entityId: TOWN_INSTANCE_ID }],
-            };
+            return ActionResult.success([
+              ActionTargetContext.forEntity(TOWN_INSTANCE_ID),
+            ]);
           }
           if (scopeName === 'none') {
-            return { targets: [{ type: 'none', entityId: null }] };
+            return ActionResult.success([ActionTargetContext.noTarget()]);
           }
-          return { targets: [] };
+          return ActionResult.success([]);
         }
       );
 
@@ -126,7 +127,8 @@ describeActionDiscoverySuite(
         'core:clear_directions',
         mockHeroEntity,
         expect.anything(),
-        null
+        null,
+        'core:go'
       );
       expect(
         bed.mocks.targetResolutionService.resolveTargets
@@ -134,7 +136,8 @@ describeActionDiscoverySuite(
         'core:clear_directions',
         mockHeroEntity,
         expect.anything(),
-        null
+        null,
+        'core:go'
       );
 
       const expectedGoTargetContext =

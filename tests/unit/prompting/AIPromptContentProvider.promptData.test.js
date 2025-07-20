@@ -71,8 +71,8 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
     const gameStateDto = makeBaseDto({
       'core:notes': {
         notes: [
-          { text: 'N1', timestamp: '2025-06-01T00:00:00Z' },
-          { text: 'N2', timestamp: '2025-06-02T12:30:00Z' },
+          { text: 'N1', subject: 'test', timestamp: '2025-06-01T00:00:00Z' },
+          { text: 'N2', subject: 'test', timestamp: '2025-06-02T12:30:00Z' },
         ],
       },
       // no core:goals
@@ -81,8 +81,8 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
     const result = await provider.getPromptData(gameStateDto, logger);
 
     expect(result.notesArray).toEqual([
-      { text: 'N1', timestamp: '2025-06-01T00:00:00Z' },
-      { text: 'N2', timestamp: '2025-06-02T12:30:00Z' },
+      { text: 'N1', subject: 'test', timestamp: '2025-06-01T00:00:00Z' },
+      { text: 'N2', subject: 'test', timestamp: '2025-06-02T12:30:00Z' },
     ]);
     expect(result.goalsArray).toEqual([]);
   });
@@ -91,8 +91,8 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
     const gameStateDto = makeBaseDto({
       'core:notes': {
         notes: [
-          { text: 'NoteA', timestamp: '2025-06-05T09:00:00Z' },
-          { text: 'NoteB', timestamp: '2025-06-05T10:00:00Z' },
+          { text: 'NoteA', subject: 'test', timestamp: '2025-06-05T09:00:00Z' },
+          { text: 'NoteB', subject: 'test', timestamp: '2025-06-05T10:00:00Z' },
         ],
       },
       'core:goals': {
@@ -106,8 +106,8 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
     const result = await provider.getPromptData(gameStateDto, logger);
 
     expect(result.notesArray).toEqual([
-      { text: 'NoteA', timestamp: '2025-06-05T09:00:00Z' },
-      { text: 'NoteB', timestamp: '2025-06-05T10:00:00Z' },
+      { text: 'NoteA', subject: 'test', timestamp: '2025-06-05T09:00:00Z' },
+      { text: 'NoteB', subject: 'test', timestamp: '2025-06-05T10:00:00Z' },
     ]);
     expect(result.goalsArray).toEqual([
       { text: 'GoalA', timestamp: '2025-05-01T00:00:00Z' },

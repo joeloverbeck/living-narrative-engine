@@ -20,28 +20,49 @@ const mockConfigurationProvider = {
 // Sample valid LLMConfig objects for testing
 const sampleConfig1 = {
   configId: 'cfg_model_a_v1',
-  modelIdentifier: 'provider/model-a-v1',
-  promptElements: [{ key: 'system_prompt', content: 'system' }],
-  promptAssemblyOrder: ['system_prompt'],
   displayName: 'Model A v1 Config',
+  modelIdentifier: 'provider/model-a-v1',
+  endpointUrl: 'https://api.provider.com/v1/chat/completions',
+  apiType: 'openai',
+  jsonOutputStrategy: {
+    method: 'tool_calling',
+    toolName: 'function_call',
+  },
+  defaultParameters: {
+    temperature: 1.0,
+  },
+  contextTokenLimit: 200000,
 };
 const sampleConfig2 = {
   configId: 'cfg_model_b_v1',
+  displayName: 'Model B v1 Config',
   modelIdentifier: 'provider/model-b-v1',
-  promptElements: [{ key: 'user_query', content: 'user' }],
-  promptAssemblyOrder: ['user_query'],
+  endpointUrl: 'https://api.provider.com/v1/chat/completions',
+  apiType: 'openai',
+  jsonOutputStrategy: {
+    method: 'native_json_mode',
+  },
 };
 const sampleWildcardConfig = {
   configId: 'cfg_provider_wildcard',
+  displayName: 'Provider Wildcard Config',
   modelIdentifier: 'provider/*',
-  promptElements: [{ key: 'context', content: 'context' }],
-  promptAssemblyOrder: ['context'],
+  endpointUrl: 'https://api.provider.com/v1/chat/completions',
+  apiType: 'openai',
+  jsonOutputStrategy: {
+    method: 'manual_prompting',
+  },
 };
 const sampleLongerWildcardConfig = {
   configId: 'cfg_provider_model_wildcard',
+  displayName: 'Provider Model Wildcard Config',
   modelIdentifier: 'provider/model*',
-  promptElements: [{ key: 'context_ext', content: 'context_ext' }],
-  promptAssemblyOrder: ['context_ext'],
+  endpointUrl: 'https://api.provider.com/v1/chat/completions',
+  apiType: 'openai',
+  jsonOutputStrategy: {
+    method: 'tool_calling',
+    toolName: 'response_function',
+  },
 };
 
 describe('LlmConfigManager', () => {
@@ -150,7 +171,7 @@ describe('LlmConfigManager', () => {
     });
 
     it('should filter out invalid initialConfigs and log warnings', () => {
-      const invalidConfig = { modelIdentifier: 'bad' }; // missing configId, promptElements, etc.
+      const invalidConfig = { modelIdentifier: 'bad' }; // missing configId, displayName, endpointUrl, etc.
       const initialConfigs = [{ ...sampleConfig1 }, invalidConfig];
       service = new LlmConfigManager({
         llmConfigCache: new LlmConfigCache(),
@@ -194,9 +215,14 @@ describe('LlmConfigManager', () => {
 
     const baseValidConfig = {
       configId: 'valid',
+      displayName: 'Valid Test Config',
       modelIdentifier: 'valid/model',
-      promptElements: [{ key: 'test' }],
-      promptAssemblyOrder: ['test'],
+      endpointUrl: 'https://api.test.com/v1/chat/completions',
+      apiType: 'openai',
+      jsonOutputStrategy: {
+        method: 'tool_calling',
+        toolName: 'test_function',
+      },
     };
 
     it('should consider a dependencyInjection invalid if configId is missing or empty', () => {
@@ -223,47 +249,54 @@ describe('LlmConfigManager', () => {
       );
     });
 
-    it('should consider a dependencyInjection invalid if promptElements is not an array', () => {
-      // @ts-ignore
-      service.addOrUpdateConfigs([
-        { ...baseValidConfig, promptElements: 'not-an-array' },
-      ]);
+    it('should consider a dependencyInjection invalid if displayName is missing or empty', () => {
+      service.addOrUpdateConfigs([{ ...baseValidConfig, displayName: '' }]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'LlmConfigManager.#isValidConfig: promptElements is not an array.',
-        expect.any(Object)
-      );
-    });
-    it('should consider a dependencyInjection invalid if promptElements contains invalid items', () => {
-      service.addOrUpdateConfigs([
-        { ...baseValidConfig, promptElements: [{ noKey: 'bad' }] },
-      ]);
-      expect(service.getLlmConfigsCacheForTest().size).toBe(0);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'LlmConfigManager.#isValidConfig: One or more promptElements are invalid (not an object or missing key).',
+        'LlmConfigManager.#isValidConfig: Missing or empty displayName.',
         expect.any(Object)
       );
     });
 
-    it('should consider a dependencyInjection invalid if promptAssemblyOrder is not an array', () => {
-      // @ts-ignore
-      service.addOrUpdateConfigs([
-        { ...baseValidConfig, promptAssemblyOrder: 'not-an-array' },
-      ]);
+    it('should consider a dependencyInjection invalid if endpointUrl is missing or empty', () => {
+      service.addOrUpdateConfigs([{ ...baseValidConfig, endpointUrl: '' }]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'LlmConfigManager.#isValidConfig: promptAssemblyOrder is not an array.',
+        'LlmConfigManager.#isValidConfig: Missing or empty endpointUrl.',
         expect.any(Object)
       );
     });
-    it('should consider a dependencyInjection invalid if promptAssemblyOrder contains non-string keys', () => {
-      // @ts-ignore
+
+    it('should consider a dependencyInjection invalid if apiType is missing or empty', () => {
+      service.addOrUpdateConfigs([{ ...baseValidConfig, apiType: '' }]);
+      expect(service.getLlmConfigsCacheForTest().size).toBe(0);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'LlmConfigManager.#isValidConfig: Missing or empty apiType.',
+        expect.any(Object)
+      );
+    });
+
+    it('should consider a dependencyInjection invalid if jsonOutputStrategy is missing or invalid', () => {
       service.addOrUpdateConfigs([
-        { ...baseValidConfig, promptAssemblyOrder: [123] },
+        { ...baseValidConfig, jsonOutputStrategy: null },
       ]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'LlmConfigManager.#isValidConfig: One or more keys in promptAssemblyOrder are not strings.',
+        'LlmConfigManager.#isValidConfig: Missing or invalid jsonOutputStrategy.',
+        expect.any(Object)
+      );
+    });
+
+    it('should consider a dependencyInjection invalid if jsonOutputStrategy.method is missing or empty', () => {
+      service.addOrUpdateConfigs([
+        {
+          ...baseValidConfig,
+          jsonOutputStrategy: { method: '' },
+        },
+      ]);
+      expect(service.getLlmConfigsCacheForTest().size).toBe(0);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'LlmConfigManager.#isValidConfig: Missing or empty jsonOutputStrategy.method.',
         expect.any(Object)
       );
     });
@@ -676,9 +709,14 @@ describe('LlmConfigManager', () => {
       // If we search for "provider/model-a-v1" which is also a configId of another dependencyInjection
       const conflictingConfig = {
         configId: 'provider/model-a-v1', // This configId is same as sampleConfig1's modelIdentifier
+        displayName: 'Conflicting Test Config',
         modelIdentifier: 'some/other-model',
-        promptElements: [{ key: 'k' }],
-        promptAssemblyOrder: ['k'],
+        endpointUrl: 'https://api.test.com/v1/chat/completions',
+        apiType: 'openai',
+        jsonOutputStrategy: {
+          method: 'tool_calling',
+          toolName: 'test_function',
+        },
       };
       service = new LlmConfigManager({
         llmConfigCache: new LlmConfigCache(),
@@ -699,9 +737,14 @@ describe('LlmConfigManager', () => {
     it('should prioritize exact modelIdentifier over wildcard modelIdentifier', async () => {
       const exactMatchConfig = {
         configId: 'exact_model_x',
+        displayName: 'Exact Match Test Config',
         modelIdentifier: 'provider/model-x', // Exact match
-        promptElements: [{ key: 'k' }],
-        promptAssemblyOrder: ['k'],
+        endpointUrl: 'https://api.test.com/v1/chat/completions',
+        apiType: 'openai',
+        jsonOutputStrategy: {
+          method: 'tool_calling',
+          toolName: 'test_function',
+        },
       };
       service = new LlmConfigManager({
         llmConfigCache: new LlmConfigCache(),

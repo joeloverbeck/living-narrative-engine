@@ -4,6 +4,10 @@
  *
  * Provides a comprehensive test environment for testing the complete action
  * execution pipeline from UI selection through game state updates.
+ * @deprecated This test bed is deprecated in favor of the facade pattern.
+ * Please use createMockFacades() and turnExecutionFacade instead.
+ * @see tests/e2e/facades/turnExecutionFacadeExample.e2e.test.js for migration examples
+ * @see src/testing/facades/testingFacadeRegistrations.js for the new approach
  */
 
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
@@ -23,9 +27,18 @@ import { TestDataFactory } from '../../../common/actions/testDataFactory.js';
  * - Simulating UI action selection
  * - Monitoring event flow and state changes
  * - Asserting execution results
+ * 
+ * @deprecated Use turnExecutionFacade from createMockFacades() instead
  */
 export class ActionExecutionTestBed {
   constructor() {
+    // Emit deprecation warning
+    console.warn(
+      'DEPRECATION WARNING: ActionExecutionTestBed is deprecated. ' +
+      'Please migrate to the facade pattern using createMockFacades() and turnExecutionFacade. ' +
+      'See tests/e2e/facades/turnExecutionFacadeExample.e2e.test.js for examples.'
+    );
+    
     this.container = null;
     this.entityManager = null;
     this.commandProcessor = null;

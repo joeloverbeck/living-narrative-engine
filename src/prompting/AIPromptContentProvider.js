@@ -168,30 +168,23 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * @private
-   * @description Extracts notes with support for both legacy and structured formats.
+   * @description Extracts notes in structured format only.
    * @param {object} notesComp - The notes component.
-   * @returns {Array<{text:string,subject?:string,context?:string,tags?:string[],timestamp?:string}>} Array of notes.
+   * @returns {Array<{text:string,subject:string,context?:string,tags?:string[],timestamp?:string}>} Array of structured notes.
    */
   _extractNotes(notesComp) {
     const notes = Array.isArray(notesComp?.notes) ? notesComp.notes : [];
     return notes
       .filter((note) => {
-        // Support both string notes (legacy) and object notes
-        if (typeof note === 'string') {
-          return note.trim().length > 0;
-        }
-        if (typeof note === 'object' && note !== null) {
-          // For objects, text is required
-          return typeof note.text === 'string' && note.text.trim().length > 0;
-        }
-        return false;
+        return (
+          typeof note === 'object' &&
+          note !== null &&
+          typeof note.text === 'string' &&
+          note.text.trim().length > 0
+        );
       })
       .map((note) => {
-        // Convert string notes to object format
-        if (typeof note === 'string') {
-          return { text: note };
-        }
-        // For object notes, include all relevant fields
+        // Return structured note with all relevant fields
         const result = { text: note.text };
         if (note.subject) result.subject = note.subject;
         if (note.context) result.context = note.context;
@@ -305,22 +298,19 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @param {Array<{text:string,timestamp?:string}>} thoughtsArray - Extracted short-term memory thoughts.
    * @param {Array<{text:string,timestamp:string}>} notesArray - Extracted notes.
    * @param {Array<{text:string,timestamp:string}>} goalsArray - Extracted goals.
-   * @param {ActionComposite[]} [indexedChoicesArray] - Array of available actions with indices.
    * @returns {PromptData} The assembled PromptData object.
    */
   _buildPromptData(
     baseValues,
     thoughtsArray,
     notesArray,
-    goalsArray,
-    indexedChoicesArray = []
+    goalsArray
   ) {
     const promptData = {
       ...baseValues,
       thoughtsArray,
       notesArray,
       goalsArray,
-      indexedChoicesArray,
     };
 
     this.#logger.debug(
@@ -336,9 +326,6 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     );
     this.#logger.debug(
       `AIPromptContentProvider.getPromptData: notesArray contains ${notesArray.length} entries.`
-    );
-    this.#logger.debug(
-      `AIPromptContentProvider.getPromptData: indexedChoicesArray contains ${indexedChoicesArray.length} entries.`
     );
     return promptData;
   }
@@ -390,25 +377,11 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
       const memoryData = this._extractMemoryComponents(componentsMap);
 
-      // Extract availableActions and ensure they have indices and required properties
-      const availableActions = gameStateDto.availableActions || [];
-      const indexedChoicesArray = availableActions.map((action, idx) => ({
-        ...action,
-        index: action.index || idx + 1, // Use existing index or generate 1-based index
-        commandString:
-          action.commandString ||
-          action.displayName ||
-          DEFAULT_FALLBACK_ACTION_COMMAND,
-        description:
-          action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW,
-      }));
-
       promptData = this._buildPromptData(
         baseValues,
         memoryData.thoughtsArray,
         memoryData.notesArray,
-        memoryData.goalsArray,
-        indexedChoicesArray
+        memoryData.goalsArray
       );
 
       return promptData;
@@ -524,12 +497,19 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       this._formatListSegment(
         'Exits from your current location',
         currentLocation.exits,
-        (exit) =>
-          `- Towards ${exit.direction} leads to ${
+        (exit) => {
+          const formatDirection = (direction) => {
+            if (direction.startsWith('to ') || direction.startsWith('into ')) {
+              return direction;
+            }
+            return `Towards ${direction}`;
+          };
+          return `- ${formatDirection(exit.direction)} leads to ${
             exit.targetLocationName ||
             exit.targetLocationId ||
             DEFAULT_FALLBACK_LOCATION_NAME
-          }.`,
+          }.`;
+        },
         PROMPT_FALLBACK_NO_EXITS
       )
     );

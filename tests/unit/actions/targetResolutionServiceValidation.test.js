@@ -74,9 +74,9 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
         {}
       );
 
-      expect(result.error).toBeDefined();
-      // Note: Enhanced error context changes the error structure
-      expect(result.targets).toEqual([]);
+      expect(result.success).toBe(false);
+      expect(result.value).toBeNull();
+      expect(result.errors).toHaveLength(1);
       expect(mockDependencies.logger.error).toHaveBeenCalledWith(
         'TargetResolutionService: Actor entity is null or undefined'
       );
@@ -89,10 +89,9 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
         {}
       );
 
-      expect(result.error).toBeDefined();
-      // Note: Enhanced error context changes the error structure
-      expect(result.error).toBeDefined();
-      expect(result.targets).toEqual([]);
+      expect(result.success).toBe(false);
+      expect(result.value).toBeNull();
+      expect(result.errors).toHaveLength(1);
     });
 
     it('should return error for actor entity with id "undefined"', async () => {
@@ -107,10 +106,9 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
         {}
       );
 
-      expect(result.error).toBeDefined();
-      // Note: Enhanced error context changes the error structure
-      expect(result.error).toBeDefined();
-      expect(result.targets).toEqual([]);
+      expect(result.success).toBe(false);
+      expect(result.value).toBeNull();
+      expect(result.errors).toHaveLength(1);
       expect(mockDependencies.logger.error).toHaveBeenCalledWith(
         'TargetResolutionService: Invalid actor entity ID: "undefined" (type: string)',
         expect.objectContaining({
@@ -135,10 +133,9 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
         {}
       );
 
-      expect(result.error).toBeDefined();
-      // Note: Enhanced error context changes the error structure
-      expect(result.error).toBeDefined();
-      expect(result.targets).toEqual([]);
+      expect(result.success).toBe(false);
+      expect(result.value).toBeNull();
+      expect(result.errors).toHaveLength(1);
     });
 
     it('should return error for actor entity with empty string id', async () => {
@@ -153,10 +150,9 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
         {}
       );
 
-      expect(result.error).toBeDefined();
-      // Note: Enhanced error context changes the error structure
-      expect(result.error).toBeDefined();
-      expect(result.targets).toEqual([]);
+      expect(result.success).toBe(false);
+      expect(result.value).toBeNull();
+      expect(result.errors).toHaveLength(1);
     });
 
     it('should process valid actor entity successfully', async () => {
@@ -196,10 +192,10 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
         discoveryContext
       );
 
-      expect(result.error).toBeUndefined();
-      expect(result.targets).toHaveLength(2);
-      expect(result.targets[0].entityId).toBe('target1');
-      expect(result.targets[1].entityId).toBe('target2');
+      expect(result.success).toBe(true);
+      expect(result.value).toHaveLength(2);
+      expect(result.value[0].entityId).toBe('target1');
+      expect(result.value[1].entityId).toBe('target2');
       expect(mockDependencies.logger.error).not.toHaveBeenCalled();
     });
 

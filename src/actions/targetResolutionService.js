@@ -25,8 +25,8 @@ import { ERROR_PHASES } from './errors/actionErrorTypes.js';
 import { ActionResult } from './core/actionResult.js';
 
 /**
- * Service for resolving action target scopes using the Result pattern.
- * This is a refactored version that uses ActionResult for consistent error handling.
+ * Service for resolving action target scopes using the ActionResult pattern.
+ * Provides consistent error handling and composable operations for target resolution.
  *
  * @class TargetResolutionService
  * @augments ITargetResolutionService
@@ -99,16 +99,13 @@ export class TargetResolutionService extends ITargetResolutionService {
   /**
    * Resolves a target scope name into actionable target contexts.
    *
-   * This method maintains the original interface for backward compatibility,
-   * but internally uses ActionResult for better error handling.
-   *
    * @override
    * @param {string} scopeName - The name of the scope to resolve.
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {ActionContext} discoveryContext - Context for DSL evaluation.
    * @param {TraceContext|null} [trace] - Optional tracing instance.
    * @param {string} [actionId] - Optional action ID for error context.
-   * @returns {import('./resolutionResult.js').ResolutionResult} Resolved targets and optional error.
+   * @returns {ActionResult} Result containing resolved targets or errors.
    */
   resolveTargets(
     scopeName,
@@ -117,42 +114,7 @@ export class TargetResolutionService extends ITargetResolutionService {
     trace = null,
     actionId = null
   ) {
-    const result = this.resolveTargetsWithResult(
-      scopeName,
-      actorEntity,
-      discoveryContext,
-      trace,
-      actionId
-    );
-
-    // Convert ActionResult back to legacy format for backward compatibility
-    if (result.success) {
-      return { targets: result.value };
-    } else {
-      // Extract the first error for backward compatibility
-      const error = result.errors[0];
-      return { targets: [], error };
-    }
-  }
-
-  /**
-   * Resolves a target scope name into actionable target contexts using ActionResult.
-   *
-   * @param {string} scopeName - The name of the scope to resolve.
-   * @param {Entity} actorEntity - The entity performing the action.
-   * @param {ActionContext} discoveryContext - Context for DSL evaluation.
-   * @param {TraceContext|null} [trace] - Optional tracing instance.
-   * @param {string} [actionId] - Optional action ID for error context.
-   * @returns {ActionResult<ActionTargetContext[]>} Result containing resolved targets or errors.
-   */
-  resolveTargetsWithResult(
-    scopeName,
-    actorEntity,
-    discoveryContext,
-    trace = null,
-    actionId = null
-  ) {
-    const source = 'TargetResolutionService.resolveTargetsWithResult';
+    const source = 'TargetResolutionService.resolveTargets';
     trace?.info(`Resolving scope '${scopeName}'.`, source);
 
     // Validate actor entity
@@ -209,7 +171,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {string} scopeName - The scope being resolved.
    * @param {TraceContext|null} trace - Optional tracing instance.
    * @param {string} actionId - Optional action ID for error context.
-   * @returns {ActionResult<void>} Success if valid, failure with error context.
+   * @returns {ActionResult} Success if valid, failure with error context.
    * @private
    */
   #validateActorEntity(actorEntity, scopeName, trace, actionId) {
@@ -281,7 +243,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {ActionContext} discoveryContext - Context for evaluating scope rules.
    * @param {TraceContext|null} [trace] - Optional tracing instance.
    * @param {string} [actionId] - Optional action ID for error context.
-   * @returns {ActionResult<Set<string>>} Result containing the set of resolved entity IDs or errors.
+   * @returns {ActionResult} Result containing the set of resolved entity IDs or errors.
    * @private
    */
   #resolveScopeToIds(
@@ -433,7 +395,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {string} scopeName - The scope name.
    * @param {TraceContext|null} trace - Optional tracing instance.
    * @param {string} source - The source method name.
-   * @returns {ActionResult<object>} Result containing the parsed AST or error.
+   * @returns {ActionResult} Result containing the parsed AST or error.
    * @private
    */
   #parseAst(scopeDefinition, scopeName, trace, source) {
@@ -465,7 +427,7 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {Entity} actorEntity - The actor entity.
    * @param {TraceContext|null} trace - Optional tracing instance.
    * @param {string} source - The source method name.
-   * @returns {ActionResult<Entity>} Result containing actor with components or error.
+   * @returns {ActionResult} Result containing actor with components or error.
    * @private
    */
   #buildActorWithComponents(actorEntity, trace, source) {

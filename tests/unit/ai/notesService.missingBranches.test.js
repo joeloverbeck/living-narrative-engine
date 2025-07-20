@@ -14,16 +14,18 @@ describe('NotesService uncovered branches', () => {
     expect(comp.notes).toHaveLength(1);
   });
 
-  it('skips non-string and blank notes while adding valid ones', () => {
+  it('skips invalid structured notes while adding valid ones', () => {
     const service = new NotesService({ autoMigrate: false });
     const comp = { notes: [] };
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('TS');
 
-    const notString = { trim: () => 'x' };
-    const result = service.addNotes(comp, [notString, ' ', 'note']);
+    const invalidNote = { trim: () => 'x' };
+    const blankNote = { text: ' ', subject: 'test' };
+    const validNote = { text: 'note', subject: 'test_subject' };
+    const result = service.addNotes(comp, [invalidNote, blankNote, validNote]);
 
     expect(result.wasModified).toBe(true);
-    expect(result.addedNotes).toEqual([{ text: 'note', timestamp: 'TS' }]);
-    expect(comp.notes).toEqual([{ text: 'note', timestamp: 'TS' }]);
+    expect(result.addedNotes).toEqual([{ text: 'note', subject: 'test_subject', context: undefined, tags: undefined, timestamp: 'TS' }]);
+    expect(comp.notes).toEqual([{ text: 'note', subject: 'test_subject', context: undefined, tags: undefined, timestamp: 'TS' }]);
   });
 });

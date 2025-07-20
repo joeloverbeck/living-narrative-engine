@@ -79,10 +79,7 @@ describe('Enhanced Security Middleware', () => {
         'Permissions-Policy',
         expect.stringContaining('accelerometer=()')
       );
-      expect(mockResponse.setHeader).toHaveBeenCalledWith(
-        'Clear-Site-Data',
-        '"cache", "cookies", "storage", "executionContexts"'
-      );
+      // Note: Clear-Site-Data header intentionally removed to prevent CORS credential conflicts
       expect(mockResponse.setHeader).toHaveBeenCalledWith(
         'Expect-CT',
         'max-age=86400, enforce'

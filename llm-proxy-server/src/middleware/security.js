@@ -129,11 +129,9 @@ function addEnhancedSecurityHeaders(res, nonce) {
     ].join(', ')
   );
 
-  // Clear Site Data header for logout scenarios
-  res.setHeader(
-    'Clear-Site-Data',
-    '"cache", "cookies", "storage", "executionContexts"'
-  );
+  // Note: Clear-Site-Data header removed to prevent browser credential conflicts
+  // This header was causing net::ERR_FAILED errors when used with fetch() omit credentials
+  // Clear Site Data should only be used for specific logout scenarios, not API endpoints
 
   // Expect-CT header for Certificate Transparency
   res.setHeader('Expect-CT', 'max-age=86400, enforce');

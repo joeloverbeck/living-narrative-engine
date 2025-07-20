@@ -64,8 +64,8 @@ describe('AIPromptContentProvider helper methods', () => {
       'core:short_term_memory': { thoughts: [{ text: 't1' }] },
       'core:notes': {
         notes: [
-          { text: 'n1', timestamp: 't1' },
-          { text: '', timestamp: 't2' },
+          { text: 'n1', subject: 'subject1', timestamp: 't1' },
+          { text: '', subject: '', timestamp: 't2' },
         ],
       },
       'core:goals': {
@@ -78,7 +78,7 @@ describe('AIPromptContentProvider helper methods', () => {
 
     const res = provider._extractMemoryComponents(componentsMap);
     expect(res.thoughtsArray).toEqual([{ text: 't1' }]);
-    expect(res.notesArray).toEqual([{ text: 'n1', timestamp: 't1' }]);
+    expect(res.notesArray).toEqual([{ text: 'n1', subject: 'subject1', timestamp: 't1' }]);
     expect(res.goalsArray).toEqual([{ text: 'g1', timestamp: 't3' }]);
   });
 
@@ -121,7 +121,6 @@ describe('AIPromptContentProvider helper methods', () => {
       thoughtsArray: ['t'],
       notesArray: [{ text: 'n', timestamp: 't' }],
       goalsArray: [{ text: 'g', timestamp: 't' }],
-      indexedChoicesArray: [],
     });
   });
 

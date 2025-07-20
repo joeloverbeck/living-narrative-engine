@@ -17,16 +17,20 @@
  * @typedef {object} LLMConfig
  * @description Represents the structure of a single LLM configuration object.
  * This mirrors the definition used in PromptBuilder and expected from the configuration source.
- * @property {string} configId - A unique identifier for this specific configuration (e.g., "claude_default_v1").
+ * @property {string} configId - A unique identifier for this specific configuration (e.g., "openrouter-claude-sonnet-4").
+ * @property {string} displayName - A user-friendly name for this configuration.
  * @property {string} modelIdentifier - The identifier of the LLM or LLM family this configuration applies to.
- * Can be an exact match (e.g., "anthropic/claude-3-sonnet-20240229")
+ * Can be an exact match (e.g., "anthropic/claude-sonnet-4")
  * or a wildcard pattern (e.g., "anthropic/*", "openai/gpt-4*").
- * @property {Array<object>} promptElements - An array defining the constituent parts of the prompt.
- * (Detailed structure of PromptElement is not strictly validated by LlmConfigManager itself beyond existence).
- * @property {string[]} promptAssemblyOrder - An array of keys from `promptElements`, specifying the order.
- * @property {string} [displayName] - A user-friendly name for this configuration.
- * @property {string} [endpointUrl] - The base API endpoint URL.
- * @property {string} [apiType] - Identifier for the API type (e.g., 'openrouter').
+ * @property {string} endpointUrl - The base API endpoint URL.
+ * @property {string} apiType - Identifier for the API type (e.g., 'openrouter').
+ * @property {object} jsonOutputStrategy - Strategy for ensuring JSON output from the LLM.
+ * @property {string} jsonOutputStrategy.method - The method to use for enforcing JSON output.
+ * @property {string} [apiKeyEnvVar] - Optional environment variable name for API key.
+ * @property {string} [apiKeyFileName] - Optional file name for API key.
+ * @property {object} [defaultParameters] - Optional default parameters (e.g., temperature).
+ * @property {object} [providerSpecificHeaders] - Optional HTTP headers for the provider.
+ * @property {number} [contextTokenLimit] - Optional maximum context token limit.
  * // ... other properties as defined in llm-configs.schema.json under definitions.llmConfiguration.properties
  */
 
@@ -184,38 +188,50 @@ export class LlmConfigManager {
       );
       return false;
     }
-    if (!Array.isArray(config.promptElements)) {
-      this.#logger.debug(
-        'LlmConfigManager.#isValidConfig: promptElements is not an array.',
-        { config }
-      );
-      return false;
-    }
-    if (!Array.isArray(config.promptAssemblyOrder)) {
-      this.#logger.debug(
-        'LlmConfigManager.#isValidConfig: promptAssemblyOrder is not an array.',
-        { config }
-      );
-      return false;
-    }
-    // Basic check for promptElements content, can be expanded
     if (
-      config.promptElements.some(
-        (el) =>
-          typeof el !== 'object' || el === null || typeof el.key !== 'string'
-      )
+      typeof config.displayName !== 'string' ||
+      config.displayName.trim() === ''
     ) {
       this.#logger.debug(
-        'LlmConfigManager.#isValidConfig: One or more promptElements are invalid (not an object or missing key).',
-        { configId: config.configId }
+        'LlmConfigManager.#isValidConfig: Missing or empty displayName.',
+        { config }
       );
       return false;
     }
-    // Basic check for promptAssemblyOrder content
-    if (config.promptAssemblyOrder.some((key) => typeof key !== 'string')) {
+    if (
+      typeof config.endpointUrl !== 'string' ||
+      config.endpointUrl.trim() === ''
+    ) {
       this.#logger.debug(
-        'LlmConfigManager.#isValidConfig: One or more keys in promptAssemblyOrder are not strings.',
-        { configId: config.configId }
+        'LlmConfigManager.#isValidConfig: Missing or empty endpointUrl.',
+        { config }
+      );
+      return false;
+    }
+    if (typeof config.apiType !== 'string' || config.apiType.trim() === '') {
+      this.#logger.debug(
+        'LlmConfigManager.#isValidConfig: Missing or empty apiType.',
+        { config }
+      );
+      return false;
+    }
+    if (
+      !config.jsonOutputStrategy ||
+      typeof config.jsonOutputStrategy !== 'object'
+    ) {
+      this.#logger.debug(
+        'LlmConfigManager.#isValidConfig: Missing or invalid jsonOutputStrategy.',
+        { config }
+      );
+      return false;
+    }
+    if (
+      typeof config.jsonOutputStrategy.method !== 'string' ||
+      config.jsonOutputStrategy.method.trim() === ''
+    ) {
+      this.#logger.debug(
+        'LlmConfigManager.#isValidConfig: Missing or empty jsonOutputStrategy.method.',
+        { config }
       );
       return false;
     }

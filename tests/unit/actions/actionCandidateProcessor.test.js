@@ -1,5 +1,7 @@
 import { beforeEach, expect, it, describe } from '@jest/globals';
 import { describeActionCandidateProcessorSuite } from '../../common/actions/actionCandidateProcessorTestBed.js';
+import { ActionResult } from '../../../src/actions/core/actionResult.js';
+import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 
 describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
   beforeEach(() => {
@@ -9,9 +11,9 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       ok: true,
       value: 'doit',
     });
-    bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-      targets: [],
-    });
+    bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+      ActionResult.success([])
+    );
   });
 
   describe('process', () => {
@@ -23,7 +25,12 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
-      expect(result).toEqual({ actions: [], errors: [], cause: 'no-targets' });
+      expect(result.success).toBe(true);
+      expect(result.value).toEqual({
+        actions: [],
+        errors: [],
+        cause: 'no-targets',
+      });
     });
 
     it('returns actions when prerequisites pass and targets exist', () => {
@@ -38,12 +45,12 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const actorEntity = { id: 'actor' };
       const context = {};
 
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [
-          { type: 'entity', entityId: 'enemy1' },
-          { type: 'entity', entityId: 'enemy2' },
-        ],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([
+          ActionTargetContext.forEntity('enemy1'),
+          ActionTargetContext.forEntity('enemy2'),
+        ])
+      );
       bed.mocks.actionCommandFormatter.format.mockImplementation(
         (def, target) => ({
           ok: true,
@@ -54,22 +61,23 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const result = bed.service.process(actionDef, actorEntity, context);
 
       expect(result).not.toBeNull();
-      expect(result.actions).toHaveLength(2);
-      expect(result.actions[0]).toEqual({
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(2);
+      expect(result.value.actions[0]).toEqual({
         id: 'attack',
         name: 'Attack',
         command: 'attack enemy1',
         description: 'Attack an enemy',
         params: { targetId: 'enemy1' },
       });
-      expect(result.actions[1]).toEqual({
+      expect(result.value.actions[1]).toEqual({
         id: 'attack',
         name: 'Attack',
         command: 'attack enemy2',
         description: 'Attack an enemy',
         params: { targetId: 'enemy2' },
       });
-      expect(result.errors).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(0);
     });
 
     it('logs trace info when targets are resolved with trace context', () => {
@@ -90,12 +98,12 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         failure: jest.fn(),
       };
 
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [
-          { type: 'entity', entityId: 'enemy1' },
-          { type: 'entity', entityId: 'enemy2' },
-        ],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([
+          ActionTargetContext.forEntity('enemy1'),
+          ActionTargetContext.forEntity('enemy2'),
+        ])
+      );
       bed.mocks.actionCommandFormatter.format.mockImplementation(
         (def, target) => ({
           ok: true,
@@ -111,10 +119,11 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       );
 
       expect(result).not.toBeNull();
-      expect(result.actions).toHaveLength(2);
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(2);
       expect(mockTrace.info).toHaveBeenCalledWith(
         `Scope for action 'attack' resolved to 2 targets.`,
-        'ActionCandidateProcessor.processWithResult',
+        'ActionCandidateProcessor.process',
         { targets: ['enemy1', 'enemy2'] }
       );
     });
@@ -138,10 +147,11 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
-      expect(result.cause).toBe('prerequisite-error');
-      expect(result.actions).toHaveLength(0);
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toMatchObject({
+      expect(result.success).toBe(true);
+      expect(result.value.cause).toBe('prerequisite-error');
+      expect(result.value.actions).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(1);
+      expect(result.value.errors[0]).toMatchObject({
         actionId: 'test',
         targetId: null,
         error: error,
@@ -168,7 +178,8 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
-      expect(result).toEqual({
+      expect(result.success).toBe(true);
+      expect(result.value).toEqual({
         actions: [],
         errors: [],
         cause: 'prerequisites-failed',
@@ -187,21 +198,22 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const actorEntity = { id: 'actor' };
       const context = {};
 
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [{ type: 'none', entityId: null }],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.noTarget()])
+      );
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
-      expect(result.actions).toHaveLength(1);
-      expect(result.actions[0]).toEqual({
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(1);
+      expect(result.value.actions[0]).toEqual({
         id: 'test',
         name: 'Test Action',
         command: 'doit',
         description: '',
         params: { targetId: null },
       });
-      expect(result.errors).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(0);
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).not.toHaveBeenCalled();
@@ -219,21 +231,22 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const actorEntity = { id: 'actor' };
       const context = {};
 
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [{ type: 'none', entityId: null }],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.noTarget()])
+      );
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
-      expect(result.actions).toHaveLength(1);
-      expect(result.actions[0]).toEqual({
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(1);
+      expect(result.value.actions[0]).toEqual({
         id: 'test',
         name: 'Test Action',
         command: 'doit',
         description: '',
         params: { targetId: null },
       });
-      expect(result.errors).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(0);
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).not.toHaveBeenCalled();
@@ -249,12 +262,12 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const actorEntity = { id: 'actor' };
       const context = {};
 
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [
-          { type: 'entity', entityId: 'target1' },
-          { type: 'entity', entityId: 'target2' },
-        ],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([
+          ActionTargetContext.forEntity('target1'),
+          ActionTargetContext.forEntity('target2'),
+        ])
+      );
       bed.mocks.actionCommandFormatter.format.mockImplementation(
         (def, target) => {
           if (target.entityId === 'target1') {
@@ -271,10 +284,11 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const result = bed.service.process(actionDef, actorEntity, context);
 
       expect(result).not.toBeNull();
-      expect(result.actions).toHaveLength(1);
-      expect(result.actions[0].command).toBe('test target1');
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toMatchObject({
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(1);
+      expect(result.value.actions[0].command).toBe('test target1');
+      expect(result.value.errors).toHaveLength(1);
+      expect(result.value.errors[0]).toMatchObject({
         actionId: 'test',
         targetId: 'target2',
         error: 'Format failed',
@@ -299,17 +313,17 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const context = {};
       const resolutionError = new Error('Target resolution failed');
 
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [],
-        error: resolutionError,
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.failure(resolutionError)
+      );
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
-      expect(result.cause).toBe('resolution-error');
-      expect(result.actions).toHaveLength(0);
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toMatchObject({
+      expect(result.success).toBe(true);
+      expect(result.value.cause).toBe('resolution-error');
+      expect(result.value.actions).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(1);
+      expect(result.value.errors[0]).toMatchObject({
         actionId: 'test',
         targetId: null,
         error: resolutionError,
@@ -322,10 +336,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
           scope: 'target',
         }),
       });
-      expect(bed.mocks.logger.error).toHaveBeenCalledWith(
-        `Error resolving scope for action 'test': ${resolutionError.message}`,
-        expect.any(Object)
-      );
+      // Logger.error is not called anymore since the service returns ActionResult
     });
 
     it('returns errors when target resolution fails with string error', () => {
@@ -338,20 +349,20 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const context = {};
       const resolutionError = 'String error message';
 
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [],
-        error: resolutionError,
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.failure(resolutionError)
+      );
 
       const result = bed.service.process(actionDef, actorEntity, context);
 
-      expect(result.cause).toBe('resolution-error');
-      expect(result.actions).toHaveLength(0);
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toMatchObject({
+      expect(result.success).toBe(true);
+      expect(result.value.cause).toBe('resolution-error');
+      expect(result.value.actions).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(1);
+      expect(result.value.errors[0]).toMatchObject({
         actionId: 'test',
         targetId: null,
-        error: resolutionError,
+        error: expect.any(Error),
         phase: expect.any(String),
         timestamp: expect.any(Number),
         actorSnapshot: expect.any(Object),
@@ -361,10 +372,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
           scope: 'target',
         }),
       });
-      expect(bed.mocks.logger.error).toHaveBeenCalledWith(
-        `Error resolving scope for action 'test': undefined`,
-        expect.any(Object)
-      );
+      // Logger.error is not called anymore since the service returns ActionResult
     });
   });
 });

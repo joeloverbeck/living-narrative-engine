@@ -246,15 +246,6 @@ export default class PerformanceMonitor {
     if (this.#operationHistory.length > this.#maxHistorySize) {
       this.#operationHistory.shift();
     }
-
-    this.#logger.debug(
-      `Recorded operation: ${operation} (${duration.toFixed(2)}ms)`,
-      {
-        operation,
-        duration,
-        context,
-      }
-    );
   }
 
   /**

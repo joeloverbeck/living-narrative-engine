@@ -10,6 +10,7 @@ import EntityFactory from '../factories/entityFactory.js';
 import DefinitionCache from '../services/definitionCache.js';
 import EntityLifecycleManager from '../services/entityLifecycleManager.js';
 import MonitoringCoordinator from '../monitoring/MonitoringCoordinator.js';
+import BatchOperationManager from '../operations/BatchOperationManager.js';
 import { getGlobalConfig, isConfigInitialized } from './configUtils.js';
 
 /** @typedef {import('../services/entityRepositoryAdapter.js').EntityRepositoryAdapter} EntityRepositoryAdapter */
@@ -19,6 +20,7 @@ import { getGlobalConfig, isConfigInitialized } from './configUtils.js';
 /** @typedef {import('../services/definitionCache.js').DefinitionCache} DefinitionCache */
 /** @typedef {import('../services/entityLifecycleManager.js').EntityLifecycleManager} EntityLifecycleManager */
 /** @typedef {import('../monitoring/MonitoringCoordinator.js').default} MonitoringCoordinator */
+/** @typedef {import('../operations/BatchOperationManager.js').default} BatchOperationManager */
 
 /**
  * Assemble default service dependencies for EntityManager with configuration awareness.
@@ -131,6 +133,11 @@ export function createDefaultServicesWithConfig({
     maxCacheSize: cacheSettings.COMPONENT_CACHE_SIZE,
   });
 
+  // BatchOperationManager will be created after EntityLifecycleManager to avoid circular dependency
+  let batchOperationManager = null;
+  const enableBatchOperations =
+    config?.isFeatureEnabled('performance.ENABLE_BATCH_OPERATIONS') ?? true;
+
   // Create EntityLifecycleManager with configuration
   const entityLifecycleManager = new EntityLifecycleManager({
     registry,
@@ -141,9 +148,28 @@ export function createDefaultServicesWithConfig({
     errorTranslator,
     definitionCache,
     monitoringCoordinator,
+    batchOperationManager: null, // Will be set after BatchOperationManager creation
+    enableBatchOperations, // Pass the actual setting
   });
 
-  logger.info('Default services created with configuration-aware settings');
+  // Create BatchOperationManager now that EntityLifecycleManager is available
+  if (enableBatchOperations) {
+    batchOperationManager = new BatchOperationManager({
+      lifecycleManager: entityLifecycleManager,
+      componentMutationService,
+      logger,
+      defaultBatchSize:
+        config?.getValue('performance.DEFAULT_BATCH_SIZE') ?? 50,
+      enableTransactions:
+        config?.isFeatureEnabled(
+          'batchOperations.ENABLE_TRANSACTION_ROLLBACK'
+        ) ?? true,
+    });
+  }
+
+  logger.info('Default services created with configuration-aware settings', {
+    batchOperationsEnabled: enableBatchOperations,
+  });
 
   return {
     entityRepository,
@@ -257,6 +283,11 @@ export function validateServiceConfiguration(config) {
   if (config.getValue('performance.ENABLE_MONITORING')) {
     validateMonitoringConfiguration(config);
   }
+
+  // Validate batch operation configuration if enabled
+  if (config.getValue('performance.ENABLE_BATCH_OPERATIONS')) {
+    validateBatchOperationConfiguration(config);
+  }
 }
 
 /**
@@ -341,6 +372,56 @@ export function validateMonitoringConfiguration(config) {
 }
 
 /**
+ * Validates batch operation-specific configuration.
+ *
+ * @param {object} config - Configuration to validate
+ * @throws {Error} If batch operation configuration is invalid
+ */
+export function validateBatchOperationConfiguration(config) {
+  const requiredBatchPaths = [
+    'performance.DEFAULT_BATCH_SIZE',
+    'performance.MAX_BATCH_SIZE',
+    'performance.SPATIAL_INDEX_BATCH_SIZE',
+    'performance.BATCH_OPERATION_THRESHOLD',
+    'performance.BATCH_TIMEOUT_MS',
+    'batchOperations.ENABLE_TRANSACTION_ROLLBACK',
+    'batchOperations.MAX_FAILURES_PER_BATCH',
+  ];
+
+  for (const path of requiredBatchPaths) {
+    if (config.getValue(path) === undefined) {
+      throw new Error(
+        `Required batch operation configuration path '${path}' is missing`
+      );
+    }
+  }
+
+  // Validate batch size constraints
+  const defaultBatchSize = config.getValue('performance.DEFAULT_BATCH_SIZE');
+  const maxBatchSize = config.getValue('performance.MAX_BATCH_SIZE');
+
+  if (defaultBatchSize <= 0 || defaultBatchSize > maxBatchSize) {
+    throw new Error(
+      `DEFAULT_BATCH_SIZE must be positive and <= MAX_BATCH_SIZE (${maxBatchSize})`
+    );
+  }
+
+  // Validate spatial index batch size
+  const spatialBatchSize = config.getValue(
+    'performance.SPATIAL_INDEX_BATCH_SIZE'
+  );
+  if (spatialBatchSize <= 0) {
+    throw new Error('SPATIAL_INDEX_BATCH_SIZE must be positive');
+  }
+
+  // Validate timeout
+  const batchTimeout = config.getValue('performance.BATCH_TIMEOUT_MS');
+  if (batchTimeout <= 0) {
+    throw new Error('BATCH_TIMEOUT_MS must be positive');
+  }
+}
+
+/**
  * Gets service configuration summary for logging.
  *
  * @param {object} config - Configuration provider
@@ -352,6 +433,9 @@ export function getServiceConfigurationSummary(config) {
     maxComponentSize: config.getValue('limits.MAX_COMPONENT_SIZE'),
     cachingEnabled: config.getValue('cache.ENABLE_DEFINITION_CACHE'),
     monitoringEnabled: config.getValue('performance.ENABLE_MONITORING'),
+    batchOperationsEnabled: config.getValue(
+      'performance.ENABLE_BATCH_OPERATIONS'
+    ),
     strictValidation: config.getValue('validation.STRICT_MODE'),
     environment: config.getValue('environment.NODE_ENV'),
   };

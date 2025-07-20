@@ -143,7 +143,9 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('[Rule no-condition-rule] No condition defined or condition is empty. Defaulting to passed.')
+        expect.stringContaining(
+          '[Rule no-condition-rule] No condition defined or condition is empty. Defaulting to passed.'
+        )
       );
       expect(executeActionSequence).toHaveBeenCalled();
     });
@@ -171,7 +173,9 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
 
       expect(isEmptyCondition).toHaveBeenCalledWith({});
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('[Rule empty-condition-rule] No condition defined or condition is empty. Defaulting to passed.')
+        expect.stringContaining(
+          '[Rule empty-condition-rule] No condition defined or condition is empty. Defaulting to passed.'
+        )
       );
       expect(executeActionSequence).toHaveBeenCalled();
     });
@@ -201,7 +205,9 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('[Rule condition-true-rule] Condition found. Evaluating using jsonLogicDataForEval...')
+        expect.stringContaining(
+          '[Rule condition-true-rule] Condition found. Evaluating using jsonLogicDataForEval...'
+        )
       );
       expect(evaluateConditionWithLogging).toHaveBeenCalledWith(
         mockJsonLogic,
@@ -243,10 +249,14 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("Rule 'condition-false-rule' actions skipped for event 'test:event' due to condition evaluating to false.")
+        expect.stringContaining(
+          "Rule 'condition-false-rule' actions skipped for event 'test:event' due to condition evaluating to false."
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("⏭️ [SystemLogicInterpreter] Rule 'condition-false-rule' actions skipped for event 'test:event' due to condition evaluating to false.")
+        expect.stringContaining(
+          "⏭️ [SystemLogicInterpreter] Rule 'condition-false-rule' actions skipped for event 'test:event' due to condition evaluating to false."
+        )
       );
       expect(executeActionSequence).not.toHaveBeenCalled();
     });
@@ -276,10 +286,14 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("Rule 'condition-error-rule' actions skipped for event 'test:event' due to error during condition evaluation.")
+        expect.stringContaining(
+          "Rule 'condition-error-rule' actions skipped for event 'test:event' due to error during condition evaluation."
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("⏭️ [SystemLogicInterpreter] Rule 'condition-error-rule' actions skipped for event 'test:event' due to error during condition evaluation.")
+        expect.stringContaining(
+          "⏭️ [SystemLogicInterpreter] Rule 'condition-error-rule' actions skipped for event 'test:event' due to error during condition evaluation."
+        )
       );
       expect(executeActionSequence).not.toHaveBeenCalled();
     });
@@ -356,10 +370,14 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('✅ [SystemLogicInterpreter] Rule action-rule: Condition passed, proceeding to actions')
+        expect.stringContaining(
+          '✅ [SystemLogicInterpreter] Rule action-rule: Condition passed, proceeding to actions'
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('🎬 [SystemLogicInterpreter] Rule action-rule: Starting action sequence (2 actions)')
+        expect.stringContaining(
+          '🎬 [SystemLogicInterpreter] Rule action-rule: Starting action sequence (2 actions)'
+        )
       );
 
       expect(executeActionSequence).toHaveBeenCalledWith(
@@ -398,7 +416,9 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('⚠️ [SystemLogicInterpreter] Rule no-actions-rule: No actions to execute')
+        expect.stringContaining(
+          '⚠️ [SystemLogicInterpreter] Rule no-actions-rule: No actions to execute'
+        )
       );
       expect(executeActionSequence).not.toHaveBeenCalled();
     });
@@ -423,7 +443,9 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('⚠️ [SystemLogicInterpreter] Rule null-actions-rule: No actions to execute')
+        expect.stringContaining(
+          '⚠️ [SystemLogicInterpreter] Rule null-actions-rule: No actions to execute'
+        )
       );
       expect(executeActionSequence).not.toHaveBeenCalled();
     });
@@ -451,7 +473,9 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       });
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('❌ [SystemLogicInterpreter] Rule failing-action-rule: Error during action sequence:'),
+        expect.stringContaining(
+          '❌ [SystemLogicInterpreter] Rule failing-action-rule: Error during action sequence:'
+        ),
         expect.any(Error)
       );
     });
@@ -511,7 +535,9 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       await interpreter._executeActions(testActions, mockContext, 'Test Scope');
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('🎬 [SystemLogicInterpreter] _executeActions: Starting action sequence for Test Scope (2 actions)')
+        expect.stringContaining(
+          '🎬 [SystemLogicInterpreter] _executeActions: Starting action sequence for Test Scope (2 actions)'
+        )
       );
 
       expect(executeActionSequence).toHaveBeenCalledWith(
@@ -554,7 +580,9 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       ).rejects.toThrow('Action sequence failed');
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('❌ [SystemLogicInterpreter] _executeActions: Error in action sequence for Failing Scope:'),
+        expect.stringContaining(
+          '❌ [SystemLogicInterpreter] _executeActions: Error in action sequence for Failing Scope:'
+        ),
         expect.any(Error)
       );
     });
@@ -574,7 +602,9 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('🎬 [SystemLogicInterpreter] _executeActions: Starting action sequence for Timed Scope (1 actions)')
+        expect.stringContaining(
+          '🎬 [SystemLogicInterpreter] _executeActions: Starting action sequence for Timed Scope (1 actions)'
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringMatching(
@@ -617,7 +647,9 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('[Rule undefined-condition-rule] No condition defined or condition is empty. Defaulting to passed.')
+        expect.stringContaining(
+          '[Rule undefined-condition-rule] No condition defined or condition is empty. Defaulting to passed.'
+        )
       );
       expect(executeActionSequence).toHaveBeenCalled();
     });
@@ -641,7 +673,9 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('⚠️ [SystemLogicInterpreter] Rule non-array-actions-rule: No actions to execute')
+        expect.stringContaining(
+          '⚠️ [SystemLogicInterpreter] Rule non-array-actions-rule: No actions to execute'
+        )
       );
       expect(executeActionSequence).not.toHaveBeenCalled();
     });
@@ -665,10 +699,14 @@ describe('SystemLogicInterpreter - Rule Processing', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('🔍 [SystemLogicInterpreter] Rule complete-rule: Starting condition evaluation')
+        expect.stringContaining(
+          '🔍 [SystemLogicInterpreter] Rule complete-rule: Starting condition evaluation'
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('✅ [SystemLogicInterpreter] Rule complete-rule completed successfully')
+        expect.stringContaining(
+          '✅ [SystemLogicInterpreter] Rule complete-rule completed successfully'
+        )
       );
     });
   });

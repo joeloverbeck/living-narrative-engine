@@ -43,26 +43,10 @@ describe('DispatchSpeechHandler', () => {
     ['allow_html true', { allow_html: true }, { allowHtml: true }],
     ['allow_html false', { allow_html: false }, { allowHtml: false }],
     ['thoughts only', { thoughts: 't' }, { thoughts: 't' }],
-    ['notes only', { notes: 'n' }, { notes: 'n' }],
-    [
-      'thoughts and notes',
-      { thoughts: 't', notes: 'n' },
-      { thoughts: 't', notes: 'n' },
-    ],
     [
       'thoughts + allow_html',
       { thoughts: 't', allow_html: true },
       { thoughts: 't', allowHtml: true },
-    ],
-    [
-      'notes + allow_html',
-      { notes: 'n', allow_html: false },
-      { notes: 'n', allowHtml: false },
-    ],
-    [
-      'thoughts + notes + allow_html',
-      { thoughts: 't', notes: 'n', allow_html: true },
-      { thoughts: 't', notes: 'n', allowHtml: true },
     ],
   ];
 

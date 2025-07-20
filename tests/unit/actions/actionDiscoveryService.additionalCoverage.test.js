@@ -1,6 +1,7 @@
 import { beforeEach, expect, it } from '@jest/globals';
 import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
 import { InvalidActorEntityError } from '../../../src/errors/invalidActorEntityError.js';
+import { ActionResult } from '../../../src/actions/core/actionResult.js';
 
 // Additional coverage tests for ActionDiscoveryService
 
@@ -39,7 +40,7 @@ describeActionDiscoverySuite(
         (scope, entity, ctx) => {
           // invoke getActor to ensure the arrow function is executed
           expect(ctx.getActor()).toBe(actor);
-          return { targets: [{ type: 'none', entityId: null }] };
+          return ActionResult.success([{ type: 'none', entityId: null }]);
         }
       );
       bed.mocks.actionCommandFormatter.format.mockReturnValue({
@@ -57,9 +58,9 @@ describeActionDiscoverySuite(
       const def = { id: 'bad', commandVerb: 'bad', scope: 'target' };
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [{ type: 'entity', entityId: 't1' }],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([{ type: 'entity', entityId: 't1' }])
+      );
       bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: false,
         error: new Error('nope'),

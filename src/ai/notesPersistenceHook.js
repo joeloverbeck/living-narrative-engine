@@ -58,12 +58,8 @@ export function persistNotes(
   // Filter out invalid notes before processing, dispatching errors for them.
   const validNotes = [];
   for (const note of notesArray) {
-    // Handle string notes (legacy format)
-    if (isNonBlankString(note)) {
-      validNotes.push(note);
-    }
-    // Handle structured notes (new format)
-    else if (
+    // Handle structured notes only
+    if (
       typeof note === 'object' &&
       note !== null &&
       isNonBlankString(note.text) &&

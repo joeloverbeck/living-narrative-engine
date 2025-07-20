@@ -1,11 +1,9 @@
-import NotesMigrationService from '../migration/NotesMigrationService.js';
-
 /**
  * Service for handling compatibility between old and new note formats
  */
 class NotesCompatibilityService {
   constructor() {
-    this.migrationService = new NotesMigrationService();
+    // Service initialization
   }
 
   /**
@@ -159,7 +157,28 @@ class NotesCompatibilityService {
       if (currentFormat === 'structured') {
         return note; // Already in target format
       }
-      return this.migrationService.migrateNote(note);
+
+      // Manual migration for string format
+      if (currentFormat === 'string') {
+        return {
+          text: note,
+          subject: this._extractSubjectFromText(note),
+          context: 'legacy note',
+          tags: ['migrated'],
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // Manual migration for legacy format
+      if (currentFormat === 'legacy') {
+        return {
+          text: note.text,
+          subject: this._extractSubjectFromText(note.text),
+          context: 'legacy note',
+          tags: ['migrated'],
+          timestamp: note.timestamp || new Date().toISOString(),
+        };
+      }
     }
 
     // Convert to legacy format
@@ -266,6 +285,59 @@ class NotesCompatibilityService {
     }
 
     return allNotes;
+  }
+
+  /**
+   * Extract subject from note text using basic pattern matching
+   * Simplified version for legacy conversion
+   *
+   * @param {string} text - The note text
+   * @returns {string} - Extracted subject or "Unknown"
+   * @private
+   */
+  _extractSubjectFromText(text) {
+    if (!text || typeof text !== 'string') {
+      return 'Unknown';
+    }
+
+    // Simple extraction - look for patterns like "about X" or last meaningful word
+    const words = text.trim().split(/\s+/);
+    
+    // Check for "about" pattern
+    const aboutIndex = words.findIndex(w => w.toLowerCase() === 'about');
+    if (aboutIndex !== -1 && aboutIndex < words.length - 1) {
+      return words[aboutIndex + 1];
+    }
+    
+    // Otherwise find first meaningful word
+    for (const word of words) {
+      // Skip common words
+      if (
+        ![
+          'a',
+          'an',
+          'the',
+          'is',
+          'was',
+          'were',
+          'has',
+          'have',
+          'had',
+          'to',
+          'in',
+          'at',
+          'on',
+          'it',
+          'note',
+          'new',
+        ].includes(word.toLowerCase()) &&
+        word.length > 2
+      ) {
+        return word;
+      }
+    }
+
+    return 'Unknown';
   }
 }
 

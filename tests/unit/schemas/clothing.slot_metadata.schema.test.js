@@ -9,47 +9,49 @@ import { describe, beforeAll, test, expect } from '@jest/globals';
 
 // The component schema content
 const slotMetadataComponentSchema = {
-  "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "clothing:slot_metadata",
-  "description": "Metadata about clothing slots and their anatomy socket coverage",
-  "dataSchema": {
-    "type": "object",
-    "properties": {
-      "slotMappings": {
-        "type": "object",
-        "description": "Map of clothing slot IDs to their coverage metadata",
-        "patternProperties": {
-          "^[a-zA-Z][a-zA-Z0-9_]*$": {
-            "type": "object",
-            "description": "Metadata for a specific clothing slot",
-            "properties": {
-              "coveredSockets": {
-                "type": "array",
-                "description": "Array of anatomy socket IDs that this slot covers",
-                "items": { 
-                  "type": "string",
-                  "description": "Socket ID (e.g., 'left_chest', 'vagina')"
-                }
+  $schema: 'schema://living-narrative-engine/component.schema.json',
+  id: 'clothing:slot_metadata',
+  description:
+    'Metadata about clothing slots and their anatomy socket coverage',
+  dataSchema: {
+    type: 'object',
+    properties: {
+      slotMappings: {
+        type: 'object',
+        description: 'Map of clothing slot IDs to their coverage metadata',
+        patternProperties: {
+          '^[a-zA-Z][a-zA-Z0-9_]*$': {
+            type: 'object',
+            description: 'Metadata for a specific clothing slot',
+            properties: {
+              coveredSockets: {
+                type: 'array',
+                description:
+                  'Array of anatomy socket IDs that this slot covers',
+                items: {
+                  type: 'string',
+                  description: "Socket ID (e.g., 'left_chest', 'vagina')",
+                },
               },
-              "allowedLayers": {
-                "type": "array",
-                "description": "Clothing layers allowed for this slot",
-                "items": { 
-                  "type": "string",
-                  "enum": ["underwear", "base", "outer", "accessories", "armor"]
-                }
-              }
+              allowedLayers: {
+                type: 'array',
+                description: 'Clothing layers allowed for this slot',
+                items: {
+                  type: 'string',
+                  enum: ['underwear', 'base', 'outer', 'accessory', 'armor'],
+                },
+              },
             },
-            "required": ["coveredSockets"],
-            "additionalProperties": false
-          }
+            required: ['coveredSockets'],
+            additionalProperties: false,
+          },
         },
-        "additionalProperties": false
-      }
+        additionalProperties: false,
+      },
     },
-    "required": ["slotMappings"],
-    "additionalProperties": false
-  }
+    required: ['slotMappings'],
+    additionalProperties: false,
+  },
 };
 
 describe('JSON-Schema – clothing:slot_metadata component', () => {
@@ -70,13 +72,13 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
         slotMappings: {
           torso_upper: {
             coveredSockets: ['left_chest', 'right_chest', 'chest_center'],
-            allowedLayers: ['underwear', 'base', 'outer', 'armor']
+            allowedLayers: ['underwear', 'base', 'outer', 'armor'],
           },
           torso_lower: {
             coveredSockets: ['vagina', 'left_hip', 'right_hip'],
-            allowedLayers: ['underwear', 'base', 'outer']
-          }
-        }
+            allowedLayers: ['underwear', 'base', 'outer'],
+          },
+        },
       };
 
       const ok = validate(validData);
@@ -90,9 +92,9 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
       const validData = {
         slotMappings: {
           torso_upper: {
-            coveredSockets: ['left_chest']
-          }
-        }
+            coveredSockets: ['left_chest'],
+          },
+        },
       };
 
       const ok = validate(validData);
@@ -101,7 +103,7 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
 
     test('should validate empty slot mappings', () => {
       const validData = {
-        slotMappings: {}
+        slotMappings: {},
       };
 
       const ok = validate(validData);
@@ -113,20 +115,37 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
         slotMappings: {
           head: {
             coveredSockets: ['head_top', 'head_sides'],
-            allowedLayers: ['base', 'outer', 'accessories']
+            allowedLayers: ['base', 'outer', 'accessory'],
           },
           feet: {
             coveredSockets: ['left_foot', 'right_foot'],
-            allowedLayers: ['base', 'outer']
+            allowedLayers: ['base', 'outer'],
           },
           back_accessory: {
             coveredSockets: ['upper_back', 'lower_back'],
-            allowedLayers: ['accessories', 'armor']
-          }
-        }
+            allowedLayers: ['accessory', 'armor'],
+          },
+        },
       };
 
       const ok = validate(validData);
+      expect(ok).toBe(true);
+    });
+
+    test('should validate back_accessory with "accessory" layer (regression test)', () => {
+      const validData = {
+        slotMappings: {
+          back_accessory: {
+            coveredSockets: ['upper_back', 'lower_back'],
+            allowedLayers: ['accessory', 'armor'], // Correct: singular form
+          },
+        },
+      };
+
+      const ok = validate(validData);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
       expect(ok).toBe(true);
     });
   });
@@ -141,7 +160,7 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
         expect.objectContaining({
           instancePath: '',
           keyword: 'required',
-          params: { missingProperty: 'slotMappings' }
+          params: { missingProperty: 'slotMappings' },
         })
       );
     });
@@ -150,9 +169,9 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
       const invalidData = {
         slotMappings: {
           torso_upper: {
-            allowedLayers: ['base']
-          }
-        }
+            allowedLayers: ['base'],
+          },
+        },
       };
 
       const ok = validate(invalidData);
@@ -160,7 +179,7 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
           keyword: 'required',
-          params: { missingProperty: 'coveredSockets' }
+          params: { missingProperty: 'coveredSockets' },
         })
       );
     });
@@ -169,16 +188,16 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
       const invalidData = {
         slotMappings: {
           '123_invalid': {
-            coveredSockets: ['test']
-          }
-        }
+            coveredSockets: ['test'],
+          },
+        },
       };
 
       const ok = validate(invalidData);
       expect(ok).toBe(false);
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
-          keyword: 'additionalProperties'
+          keyword: 'additionalProperties',
         })
       );
     });
@@ -187,9 +206,9 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
       const invalidData = {
         slotMappings: {
           torso_upper: {
-            coveredSockets: 'not_an_array'
-          }
-        }
+            coveredSockets: 'not_an_array',
+          },
+        },
       };
 
       const ok = validate(invalidData);
@@ -197,7 +216,7 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
           keyword: 'type',
-          params: { type: 'array' }
+          params: { type: 'array' },
         })
       );
     });
@@ -207,16 +226,36 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
         slotMappings: {
           torso_upper: {
             coveredSockets: ['chest'],
-            allowedLayers: ['invalid_layer']
-          }
-        }
+            allowedLayers: ['invalid_layer'],
+          },
+        },
       };
 
       const ok = validate(invalidData);
       expect(ok).toBe(false);
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
-          keyword: 'enum'
+          keyword: 'enum',
+        })
+      );
+    });
+
+    test('should reject plural "accessories" (schema expects singular "accessory")', () => {
+      const invalidData = {
+        slotMappings: {
+          back_accessory: {
+            coveredSockets: ['upper_back', 'lower_back'],
+            allowedLayers: ['accessories'], // Wrong: plural form
+          },
+        },
+      };
+
+      const ok = validate(invalidData);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          keyword: 'enum',
+          instancePath: '/slotMappings/back_accessory/allowedLayers/0',
         })
       );
     });
@@ -226,16 +265,16 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
         slotMappings: {
           torso_upper: {
             coveredSockets: ['chest'],
-            invalidProperty: 'value'
-          }
-        }
+            invalidProperty: 'value',
+          },
+        },
       };
 
       const ok = validate(invalidData);
       expect(ok).toBe(false);
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
-          keyword: 'additionalProperties'
+          keyword: 'additionalProperties',
         })
       );
     });
@@ -244,15 +283,17 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
       const invalidData = {
         slotMappings: {
           torso_upper: {
-            coveredSockets: [123, true, {}]
-          }
-        }
+            coveredSockets: [123, true, {}],
+          },
+        },
       };
 
       const ok = validate(invalidData);
       expect(ok).toBe(false);
       // Should have type errors for non-string items
-      const typeErrors = validate.errors.filter(err => err.keyword === 'type');
+      const typeErrors = validate.errors.filter(
+        (err) => err.keyword === 'type'
+      );
       expect(typeErrors.length).toBeGreaterThan(0);
     });
   });
@@ -263,9 +304,9 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
         slotMappings: {
           decorative_slot: {
             coveredSockets: [],
-            allowedLayers: ['accessories']
-          }
-        }
+            allowedLayers: ['accessory'],
+          },
+        },
       };
 
       const ok = validate(data);
@@ -277,9 +318,9 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
         slotMappings: {
           multi_layer: {
             coveredSockets: ['test'],
-            allowedLayers: ['underwear', 'base', 'outer', 'accessories', 'armor']
-          }
-        }
+            allowedLayers: ['underwear', 'base', 'outer', 'accessory', 'armor'],
+          },
+        },
       };
 
       const ok = validate(data);
@@ -290,12 +331,12 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
       const data = {
         slotMappings: {
           left_arm_clothing: {
-            coveredSockets: ['left_upper_arm', 'left_lower_arm']
+            coveredSockets: ['left_upper_arm', 'left_lower_arm'],
           },
           torso_upper_outer: {
-            coveredSockets: ['chest']
-          }
-        }
+            coveredSockets: ['chest'],
+          },
+        },
       };
 
       const ok = validate(data);

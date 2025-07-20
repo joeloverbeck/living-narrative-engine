@@ -17,7 +17,7 @@ describe('NotesService', () => {
   let originalToISOString;
 
   beforeEach(() => {
-    notesService = new NotesService({ autoMigrate: false });
+    notesService = new NotesService();
     originalToISOString = Date.prototype.toISOString; // Stub date for consistent timestamps
   });
 
@@ -28,7 +28,7 @@ describe('NotesService', () => {
 
   test('should add a single valid note to an empty component', () => {
     const component = { notes: [] };
-    const newNotes = ['First note'];
+    const newNotes = [{ text: 'First note', subject: 'Test Subject' }];
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('TS1');
 
     const result = notesService.addNotes(component, newNotes);
@@ -38,13 +38,17 @@ describe('NotesService', () => {
     expect(result.component.notes).toHaveLength(1);
     expect(result.component.notes[0]).toEqual({
       text: 'First note',
+      subject: 'Test Subject',
       timestamp: 'TS1',
     });
   });
 
   test('should add multiple unique notes', () => {
     const component = { notes: [] };
-    const newNotes = ['Note A', 'Note B'];
+    const newNotes = [
+      { text: 'Note A', subject: 'Subject A' },
+      { text: 'Note B', subject: 'Subject B' }
+    ];
     jest
       .spyOn(Date.prototype, 'toISOString')
       .mockReturnValueOnce('TS_A')
@@ -60,9 +64,9 @@ describe('NotesService', () => {
 
   test('should not add notes that are duplicates of existing ones', () => {
     const component = {
-      notes: [{ text: 'Buy Milk', timestamp: 'EXISTING_TS' }],
+      notes: [{ text: 'Buy Milk', subject: 'Shopping', timestamp: 'EXISTING_TS' }],
     };
-    const newNotes = ['buy milk']; // Duplicate after normalization
+    const newNotes = [{ text: 'buy milk', subject: 'shopping' }]; // Duplicate after normalization
 
     const result = notesService.addNotes(component, newNotes);
 
@@ -73,7 +77,11 @@ describe('NotesService', () => {
 
   test('should not add notes that are duplicates within the new notes array', () => {
     const component = { notes: [] };
-    const newNotes = ['Alpha', 'Beta', 'alpha']; // 'alpha' is a duplicate of 'Alpha'
+    const newNotes = [
+      { text: 'Alpha', subject: 'Letter' },
+      { text: 'Beta', subject: 'Letter' },
+      { text: 'alpha', subject: 'letter' } // Duplicate after normalization
+    ];
     jest
       .spyOn(Date.prototype, 'toISOString')
       .mockReturnValueOnce('TS_A')
@@ -92,9 +100,9 @@ describe('NotesService', () => {
 
   test('should return wasModified: false if no new unique notes are added', () => {
     const component = {
-      notes: [{ text: 'Existing Note', timestamp: 'EXISTING_TS' }],
+      notes: [{ text: 'Existing Note', subject: 'Test', timestamp: 'EXISTING_TS' }],
     };
-    const newNotes = ['Existing Note'];
+    const newNotes = [{ text: 'Existing Note', subject: 'Test' }];
 
     const result = notesService.addNotes(component, newNotes);
 
@@ -103,14 +111,14 @@ describe('NotesService', () => {
   });
 
   test('normalizeNoteText strips punctuation without affecting regular characters', () => {
-    const input = " Hello, world! It's great. ";
+    const input = { text: " Hello, world! It's great. ", subject: 'Greeting' };
     const normalized = normalizeNoteText(input);
-    expect(normalized).toBe('hello world its great');
+    expect(normalized).toBe('greeting: hello world its great');
   });
 
   test('should throw a TypeError for a malformed component', () => {
     const malformedComponent = { not_notes: [] };
-    const newNotes = ['Some note'];
+    const newNotes = [{ text: 'Some note', subject: 'Test' }];
 
     expect(() => notesService.addNotes(malformedComponent, newNotes)).toThrow(
       TypeError

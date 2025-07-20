@@ -3,6 +3,7 @@ import { jest, describe, it, expect, afterEach } from '@jest/globals';
 const mockEnsure = jest.fn();
 const mockSetupDI = jest.fn();
 const mockResolveCore = jest.fn();
+const mockInitGlobalConfig = jest.fn();
 const mockInitEngine = jest.fn();
 const mockInitAux = jest.fn();
 const mockMenu = jest.fn();
@@ -10,11 +11,12 @@ const mockGlobal = jest.fn();
 const mockStartGame = jest.fn();
 const mockDisplayFatal = jest.fn();
 
-jest.mock('../../../src/bootstrapper/stages', () => ({
+jest.mock('../../../src/bootstrapper/stages/index.js', () => ({
   __esModule: true,
   ensureCriticalDOMElementsStage: (...args) => mockEnsure(...args),
   setupDIContainerStage: (...args) => mockSetupDI(...args),
   resolveLoggerStage: (...args) => mockResolveCore(...args),
+  initializeGlobalConfigStage: (...args) => mockInitGlobalConfig(...args),
   initializeGameEngineStage: (...args) => mockInitEngine(...args),
   setupMenuButtonListenersStage: (...args) => mockMenu(...args),
   setupGlobalEventListenersStage: (...args) => mockGlobal(...args),
@@ -41,6 +43,7 @@ function setupStageMocks(uiElements) {
   mockSetupDI.mockResolvedValue({ success: true, payload: {} });
   const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
   mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
+  mockInitGlobalConfig.mockResolvedValue({ success: true });
   mockInitEngine.mockResolvedValue({ success: true, payload: {} });
   mockInitAux.mockResolvedValue({ success: true });
   mockMenu.mockResolvedValue({ success: true });

@@ -5,6 +5,7 @@
 
 /** @typedef {import('../errors/actionErrorTypes.js').ActionErrorContext} ActionErrorContext */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo} DiscoveredActionInfo */
+/** @typedef {import('../core/actionResult.js').ActionResult} ActionResult */
 
 /**
  * @class PipelineResult
@@ -80,6 +81,46 @@ export class PipelineResult {
       errors: [...this.errors, ...other.errors],
       data: { ...this.data, ...other.data },
       continueProcessing: this.continueProcessing && other.continueProcessing,
+    });
+  }
+
+  /**
+   * Creates a PipelineResult from an ActionResult
+   *
+   * @param {ActionResult} actionResult - The ActionResult to convert
+   * @param {object} [additionalData] - Additional pipeline data
+   * @returns {PipelineResult}
+   */
+  static fromActionResult(actionResult, additionalData = {}) {
+    if (actionResult.success) {
+      return PipelineResult.success({
+        data: { ...additionalData, ...actionResult.value },
+      });
+    } else {
+      return PipelineResult.failure(actionResult.errors, additionalData);
+    }
+  }
+
+  /**
+   * Chains ActionResult operations within pipeline context
+   *
+   * @param {Function} fn - Function that returns ActionResult
+   * @returns {PipelineResult}
+   */
+  chainActionResult(fn) {
+    if (!this.success) return this;
+
+    const actionResult = fn(this.data);
+    const errors = [...this.errors, ...(actionResult.errors || [])];
+
+    return new PipelineResult({
+      success: this.success && actionResult.success,
+      actions: this.actions,
+      errors,
+      data: actionResult.success
+        ? { ...this.data, ...actionResult.value }
+        : this.data,
+      continueProcessing: this.continueProcessing && actionResult.success,
     });
   }
 }

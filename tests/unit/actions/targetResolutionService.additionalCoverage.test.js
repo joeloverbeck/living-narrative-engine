@@ -61,8 +61,8 @@ describe('TargetResolutionService additional coverage', () => {
       trace
     );
 
-    expect(result.error).toBeUndefined();
-    expect(result.targets).toEqual([
+    expect(result.success).toBe(true);
+    expect(result.value).toEqual([
       ActionTargetContext.forEntity('e1'),
       ActionTargetContext.forEntity('e2'),
     ]);
@@ -77,8 +77,9 @@ describe('TargetResolutionService additional coverage', () => {
 
     const result = service.resolveTargets('bad', { id: 'hero' }, {}, trace);
 
-    expect(result.targets).toEqual([]);
-    expect(result.error).toBeDefined();
+    expect(result.success).toBe(false);
+    expect(result.value).toBeNull();
+    expect(result.errors).toHaveLength(1);
     // Note: Enhanced error context changes logger behavior - this now goes through handleResolutionError
     expect(trace.error).toHaveBeenCalled();
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
@@ -106,8 +107,9 @@ describe('TargetResolutionService additional coverage', () => {
       trace
     );
 
-    expect(result.targets).toEqual([]);
-    expect(result.error).toBeDefined();
+    expect(result.success).toBe(false);
+    expect(result.value).toBeNull();
+    expect(result.errors).toHaveLength(1);
     // Note: Enhanced error context changes logger behavior
     expect(trace.error).toHaveBeenCalled();
     // Parser errors are now handled internally and returned as part of the result

@@ -31,29 +31,15 @@ export const CHARACTER_PROMPT_TEMPLATE = `<task_definition>
 {perceptionLogContent}
 </perception_log>
 
-<thoughts>
-{thoughtsContent}
-</thoughts>
+{thoughtsSection}
 
-<notes>
-{notesContent}
-</notes>
+{notesSection}
 
-<goals>
-{goalsContent}
-</goals>
+{goalsSection}
 
 <available_actions_info>
 {availableActionsInfoContent}
 </available_actions_info>
-
-<indexed_choices>
-{indexedChoicesContent}
-</indexed_choices>
-
-<user_input>
-{userInputContent}
-</user_input>
 
 <final_instructions>
 {finalInstructionsContent}

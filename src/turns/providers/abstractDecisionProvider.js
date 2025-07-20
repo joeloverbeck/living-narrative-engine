@@ -55,7 +55,7 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
    * @param {import('../interfaces/ITurnContext.js').ITurnContext} _context - Turn context
    * @param {import('../dtos/actionComposite.js').ActionComposite[]} _actions - Indexed action list
    * @param {AbortSignal} [_abortSignal] - Optional cancellation signal
-   * @returns {Promise<{ index: number, speech?: string|null, thoughts?: string|null, notes?: string[]|null }>} Selected action information
+   * @returns {Promise<{ index: number, speech?: string|null, thoughts?: string|null, notes?: Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}>|null }>} Selected action information
    */
   async choose(_actor, _context, _actions, _abortSignal) {
     throw new Error('abstract');

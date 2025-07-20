@@ -82,7 +82,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     const sections = testBed.parsePromptSections(prompt);
     expect(sections.task_definition).toBeDefined();
     expect(sections.character_persona).toBeDefined();
-    expect(sections.indexed_choices).toBeDefined();
+    expect(sections.available_actions_info).toBeDefined();
     expect(sections.final_instructions).toBeDefined();
 
     // Assert - Character name was resolved
@@ -115,7 +115,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     const worldIndex = prompt.indexOf('<world_context>');
     const perceptionIndex = prompt.indexOf('<perception_log>');
     const thoughtsIndex = prompt.indexOf('<thoughts>');
-    const choicesIndex = prompt.indexOf('<indexed_choices>');
+    const choicesIndex = prompt.indexOf('<available_actions_info>');
     const instructionsIndex = prompt.indexOf('<final_instructions>');
 
     // All required elements should be present
@@ -306,11 +306,11 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     // Assert - Both use same template structure (new system uses fixed template)
     expect(toolCallingPrompt).toContain('<task_definition>');
     expect(toolCallingPrompt).toContain('<character_persona>');
-    expect(toolCallingPrompt).toContain('<indexed_choices>');
+    expect(toolCallingPrompt).toContain('<available_actions_info>');
 
     expect(jsonSchemaPrompt).toContain('<task_definition>');
     expect(jsonSchemaPrompt).toContain('<character_persona>');
-    expect(jsonSchemaPrompt).toContain('<indexed_choices>');
+    expect(jsonSchemaPrompt).toContain('<available_actions_info>');
 
     // Both should have indexed actions
     const toolCallingActions = testBed.extractIndexedActions(toolCallingPrompt);
@@ -448,11 +448,14 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     const turnContext = testBed.createTestTurnContext();
 
     // Add an action targeting another actor
+    const baseActions = testBed.createTestActionComposites();
     const complexActions = [
-      ...testBed.createTestActionComposites(),
+      ...baseActions,
       {
+        index: baseActions.length + 1, // Next index after existing actions
         actionDefinitionId: 'core:follow',
         displayName: 'Follow Gareth the Innkeeper',
+        commandString: 'follow gareth',
         description: 'Start following Gareth the Innkeeper',
         scopedTargets: [
           {
@@ -461,9 +464,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
             type: 'actor',
           },
         ],
-        actionDefinition: testBed.testActions.find(
-          (a) => a.id === 'core:follow'
-        ),
+        actionDefinition: { id: 'core:follow', name: 'Follow' }, // Simplified action definition
       },
     ];
 
