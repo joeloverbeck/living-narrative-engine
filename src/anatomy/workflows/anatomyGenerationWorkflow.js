@@ -496,7 +496,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
         'anatomyBlueprints',
         blueprintId
       );
-      
+
       if (!blueprint || !blueprint.clothingSlotMappings) {
         this.#logger.debug(
           `AnatomyGenerationWorkflow: No clothing slot mappings found in blueprint '${blueprintId}'`
@@ -506,13 +506,15 @@ export class AnatomyGenerationWorkflow extends BaseService {
 
       // Transform the blueprint mappings into the component format
       const slotMappings = {};
-      
-      for (const [slotId, mapping] of Object.entries(blueprint.clothingSlotMappings)) {
+
+      for (const [slotId, mapping] of Object.entries(
+        blueprint.clothingSlotMappings
+      )) {
         // Only include slots that have anatomySockets (these define coverage)
         if (mapping.anatomySockets && mapping.anatomySockets.length > 0) {
           slotMappings[slotId] = {
             coveredSockets: [...mapping.anatomySockets],
-            allowedLayers: mapping.allowedLayers || []
+            allowedLayers: mapping.allowedLayers || [],
           };
         }
       }

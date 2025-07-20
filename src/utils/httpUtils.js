@@ -202,7 +202,18 @@ export async function fetchWithRetry(
     moduleLogger.debug(
       `Attempt ${currentAttempt}/${maxRetries} - Fetching ${options.method || 'GET'} ${url}`
     );
-    return fetchFn(url, options);
+
+    // For localhost requests, explicitly set credentials to 'omit' to avoid
+    // conflicts with Clear-Site-Data headers from security middleware
+    const enhancedOptions = { ...options };
+    if (url.includes('localhost') || url.includes('127.0.0.1')) {
+      enhancedOptions.credentials = 'omit';
+      moduleLogger.debug(
+        `Setting credentials: 'omit' for localhost request to ${url}`
+      );
+    }
+
+    return fetchFn(url, enhancedOptions);
   };
 
   const responseHandler = (response, currentAttempt) =>

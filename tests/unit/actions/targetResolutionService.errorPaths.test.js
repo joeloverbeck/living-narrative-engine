@@ -51,9 +51,10 @@ describe('TargetResolutionService error paths', () => {
 
     const result = service.resolveTargets('core:test', { id: 'hero' }, {});
 
-    expect(result.targets).toEqual([]);
-    expect(result.error).toBeDefined();
-    expect(result.error.name).toBe('ScopeParseError');
+    expect(result.success).toBe(false);
+    expect(result.value).toBeNull();
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].name).toBe('ScopeParseError');
     // Parser errors are now handled internally and returned as part of the result
     // rather than being dispatched as system errors
   });
@@ -75,8 +76,9 @@ describe('TargetResolutionService error paths', () => {
 
     const result = service.resolveTargets('core:test', { id: 'hero' }, {});
 
-    expect(result.targets).toEqual([]);
-    expect(result.error).toBeDefined();
+    expect(result.success).toBe(false);
+    expect(result.value).toBeNull();
+    expect(result.errors).toHaveLength(1);
     // Note: Enhanced error context changes return type and logger behavior
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,

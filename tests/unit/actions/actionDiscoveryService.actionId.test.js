@@ -1,5 +1,7 @@
 import { beforeEach, expect, it } from '@jest/globals';
 import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
+import { ActionResult } from '../../../src/actions/core/actionResult.js';
+import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 
 describeActionDiscoverySuite(
   'ActionDiscoveryService params exposure',
@@ -18,9 +20,9 @@ describeActionDiscoverySuite(
         dummyActionDef,
       ]);
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [{ type: 'entity', entityId: 'rat123' }],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.forEntity('rat123')])
+      );
       bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: true,
         value: 'attack rat123',

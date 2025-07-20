@@ -54,7 +54,7 @@ export class LLMChooser extends ILLMChooser {
    *   actions:  Array,               // The definitive, indexed list of actions
    *   abortSignal?: AbortSignal
    * }} options
-   * @returns {Promise<{ index: number|null, speech: string|null, thoughts: string|null, notes: string[]|null }>}
+   * @returns {Promise<{ index: number|null, speech: string|null, thoughts: string|null, notes: Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}>|null }>}
    */
   async choose({ actor, context, actions, abortSignal }) {
     this.#logger.debug(`LLMChooser.choose → actor=${actor.id}`);

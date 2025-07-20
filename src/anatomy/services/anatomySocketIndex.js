@@ -19,7 +19,7 @@ import { assertNonBlankString } from '../../utils/dependencyUtils.js';
 
 /**
  * Provides O(1) socket lookup and indexing for anatomy entities
- * Replaces the O(n) and O(n²) socket finding methods in AnatomyClothingIntegrationService
+ * Optimized for fast socket-to-entity lookups and orientation-based queries
  */
 class AnatomySocketIndex extends BaseService {
   #logger;

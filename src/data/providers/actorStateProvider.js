@@ -43,7 +43,9 @@ export class ActorStateProvider extends IActorStateProvider {
     }
 
     const extractSurfaceText = (compId, fallback = '') => {
-      const text = actorState.components[compId]?.text;
+      const component = actorState.components[compId];
+      const text = component?.text;
+
       actorState[compId] = isNonBlankString(text)
         ? { text: text.trim() }
         : { text: fallback };

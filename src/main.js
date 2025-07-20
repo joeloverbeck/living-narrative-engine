@@ -11,6 +11,7 @@ import {
   ensureCriticalDOMElementsStage,
   setupDIContainerStage,
   resolveLoggerStage,
+  initializeGlobalConfigStage,
   initializeGameEngineStage,
   setupMenuButtonListenersStage,
   setupGlobalEventListenersStage,
@@ -93,6 +94,13 @@ export async function bootstrapApp() {
     logger.debug(
       `main.js: ${currentPhaseForError} stage completed. Logger is now available.`
     );
+
+    // STAGE 3.5: Initialize Global Configuration
+    currentPhaseForError = 'Global Configuration Initialization';
+    logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
+    const configResult = await initializeGlobalConfigStage(logger);
+    if (!configResult.success) throw configResult.error;
+    logger.debug(`main.js: ${currentPhaseForError} stage completed.`);
 
     // STAGE 4: Initialize Game Engine
     currentPhaseForError = 'Game Engine Initialization';

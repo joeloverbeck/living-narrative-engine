@@ -52,10 +52,10 @@ describe('TargetResolutionService', () => {
     service = new TargetResolutionService(mockDependencies);
   });
 
-  describe('resolveTargetsWithResult', () => {
+  describe('resolveTargets', () => {
     describe('Special scope handling', () => {
       it('should return no-target context for TARGET_DOMAIN_NONE', () => {
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           TARGET_DOMAIN_NONE,
           { id: 'actor1' },
           { currentLocation: 'loc1' }
@@ -68,7 +68,7 @@ describe('TargetResolutionService', () => {
 
       it('should return actor as target for TARGET_DOMAIN_SELF', () => {
         const actorId = 'actor1';
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           TARGET_DOMAIN_SELF,
           { id: actorId },
           { currentLocation: 'loc1' }
@@ -82,7 +82,7 @@ describe('TargetResolutionService', () => {
 
     describe('Actor validation', () => {
       it('should fail when actor entity is null', () => {
-        const result = service.resolveTargetsWithResult('some-scope', null, {
+        const result = service.resolveTargets('some-scope', null, {
           currentLocation: 'loc1',
         });
 
@@ -95,7 +95,7 @@ describe('TargetResolutionService', () => {
       });
 
       it('should fail when actor entity has no id', () => {
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           'some-scope',
           { id: null },
           { currentLocation: 'loc1' }
@@ -108,7 +108,7 @@ describe('TargetResolutionService', () => {
       });
 
       it('should fail when actor id is undefined string', () => {
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           'some-scope',
           { id: 'undefined' },
           { currentLocation: 'loc1' }
@@ -133,7 +133,7 @@ describe('TargetResolutionService', () => {
         );
         mockDependencies.scopeEngine.resolve.mockReturnValue(resolvedIds);
 
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           'nearby-entities',
           { id: 'actor1' },
           { currentLocation: 'loc1' }
@@ -152,7 +152,7 @@ describe('TargetResolutionService', () => {
       it('should fail when scope is not found', () => {
         mockDependencies.scopeRegistry.getScope.mockReturnValue(null);
 
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           'unknown-scope',
           { id: 'actor1' },
           { currentLocation: 'loc1' }
@@ -167,7 +167,7 @@ describe('TargetResolutionService', () => {
       it('should fail when scope has empty expression', () => {
         mockDependencies.scopeRegistry.getScope.mockReturnValue({ expr: '  ' });
 
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           'empty-scope',
           { id: 'actor1' },
           { currentLocation: 'loc1' }
@@ -192,7 +192,7 @@ describe('TargetResolutionService', () => {
         mockDependencies.dslParser.parse.mockReturnValue(parsedAst);
         mockDependencies.scopeEngine.resolve.mockReturnValue(resolvedIds);
 
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           'needs-parsing',
           { id: 'actor1' },
           { currentLocation: 'loc1' }
@@ -217,7 +217,7 @@ describe('TargetResolutionService', () => {
           throw new Error('Parse error: unexpected token');
         });
 
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           'invalid-syntax',
           { id: 'actor1' },
           { currentLocation: 'loc1' }
@@ -241,7 +241,7 @@ describe('TargetResolutionService', () => {
           throw new Error('Scope engine error');
         });
 
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           'error-scope',
           { id: 'actor1' },
           { currentLocation: 'loc1' }
@@ -267,7 +267,7 @@ describe('TargetResolutionService', () => {
           'set',
         ]); // Invalid - should be Set
 
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           'invalid-result',
           { id: 'actor1' },
           { currentLocation: 'loc1' }
@@ -302,11 +302,9 @@ describe('TargetResolutionService', () => {
           new Set(['entity1'])
         );
 
-        const result = service.resolveTargetsWithResult(
-          'test-scope',
-          actorEntity,
-          { currentLocation: 'loc1' }
-        );
+        const result = service.resolveTargets('test-scope', actorEntity, {
+          currentLocation: 'loc1',
+        });
 
         expect(result.success).toBe(true);
         expect(
@@ -342,11 +340,9 @@ describe('TargetResolutionService', () => {
           new Set(['entity1'])
         );
 
-        const result = service.resolveTargetsWithResult(
-          'test-scope',
-          actorEntity,
-          { currentLocation: 'loc1' }
-        );
+        const result = service.resolveTargets('test-scope', actorEntity, {
+          currentLocation: 'loc1',
+        });
 
         // Should succeed with partial components
         expect(result.success).toBe(true);
@@ -375,7 +371,7 @@ describe('TargetResolutionService', () => {
           new Set(['entity1'])
         );
 
-        const result = service.resolveTargetsWithResult(
+        const result = service.resolveTargets(
           'test-scope',
           actorEntity,
           { currentLocation: 'loc1' },
@@ -407,11 +403,9 @@ describe('TargetResolutionService', () => {
           new Set(['entity1'])
         );
 
-        const result = service.resolveTargetsWithResult(
-          'test-scope',
-          actorEntity,
-          { currentLocation: 'loc1' }
-        );
+        const result = service.resolveTargets('test-scope', actorEntity, {
+          currentLocation: 'loc1',
+        });
 
         expect(result.success).toBe(true);
         expect(
@@ -420,8 +414,8 @@ describe('TargetResolutionService', () => {
       });
     });
 
-    describe('Backward compatibility', () => {
-      it('should maintain backward compatibility with resolveTargets method', () => {
+    describe('resolveTargets method with ActionResult', () => {
+      it('should return ActionResult from resolveTargets method', () => {
         const scopeDefinition = {
           expr: 'entities.all()',
           ast: { type: 'all' },
@@ -439,14 +433,15 @@ describe('TargetResolutionService', () => {
           { currentLocation: 'loc1' }
         );
 
-        expect(result.targets).toHaveLength(2);
-        expect(result.error).toBeUndefined();
-        expect(result.targets[0]).toEqual(
+        expect(result.success).toBe(true);
+        expect(result.value).toHaveLength(2);
+        expect(result.errors).toEqual([]);
+        expect(result.value[0]).toEqual(
           ActionTargetContext.forEntity('entity1')
         );
       });
 
-      it('should convert ActionResult errors to legacy format', () => {
+      it('should return ActionResult failure for unknown scope', () => {
         mockDependencies.scopeRegistry.getScope.mockReturnValue(null);
 
         const result = service.resolveTargets(
@@ -455,9 +450,10 @@ describe('TargetResolutionService', () => {
           { currentLocation: 'loc1' }
         );
 
-        expect(result.targets).toEqual([]);
-        expect(result.error).toBeDefined();
-        expect(result.error.message).toContain('Missing scope definition');
+        expect(result.success).toBe(false);
+        expect(result.value).toBeNull();
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0].message).toContain('Missing scope definition');
       });
     });
 
@@ -480,7 +476,7 @@ describe('TargetResolutionService', () => {
           new Set(['entity1'])
         );
 
-        service.resolveTargetsWithResult(
+        service.resolveTargets(
           'test-scope',
           { id: 'actor1' },
           { currentLocation: 'loc1' },
@@ -504,7 +500,7 @@ describe('TargetResolutionService', () => {
           warn: jest.fn(),
         };
 
-        service.resolveTargetsWithResult(
+        service.resolveTargets(
           'test-scope',
           null,
           { currentLocation: 'loc1' },
@@ -523,7 +519,7 @@ describe('TargetResolutionService', () => {
         const actionId = 'action123';
         mockDependencies.scopeRegistry.getScope.mockReturnValue(null);
 
-        service.resolveTargetsWithResult(
+        service.resolveTargets(
           'unknown-scope',
           { id: 'actor1' },
           { currentLocation: 'loc1' },
@@ -545,7 +541,7 @@ describe('TargetResolutionService', () => {
       it('should dispatch errors through safeEventDispatcher', () => {
         mockDependencies.scopeRegistry.getScope.mockReturnValue(null);
 
-        service.resolveTargetsWithResult(
+        service.resolveTargets(
           'unknown-scope',
           { id: 'actor1' },
           { currentLocation: 'loc1' },

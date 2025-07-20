@@ -1,5 +1,7 @@
 import { beforeEach, expect, it, jest } from '@jest/globals';
 import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
+import { ActionResult } from '../../../src/actions/core/actionResult.js';
+import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 
 describeActionDiscoverySuite(
   'ActionDiscoveryService - getValidActions',
@@ -11,9 +13,9 @@ describeActionDiscoverySuite(
         ok: true,
         value: 'doit',
       });
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([])
+      );
       bed.mocks.getActorLocationFn.mockReturnValue({
         id: 'room1',
         getComponentData: jest.fn(),
@@ -36,10 +38,10 @@ describeActionDiscoverySuite(
       ]);
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
         (scope) => {
-          if (scope === 'badScope') return { targets: [] };
+          if (scope === 'badScope') return ActionResult.success([]);
           if (scope === 'none')
-            return { targets: [{ type: 'none', entityId: null }] };
-          return { targets: [] };
+            return ActionResult.success([ActionTargetContext.noTarget()]);
+          return ActionResult.success([]);
         }
       );
 
@@ -54,7 +56,8 @@ describeActionDiscoverySuite(
         'badScope',
         { id: 'actor' },
         expect.anything(),
-        null
+        null,
+        'fail'
       );
       // FIX: 'none' scope actions are optimized to bypass target resolution
       expect(
@@ -72,9 +75,9 @@ describeActionDiscoverySuite(
       };
 
       bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [{ type: 'entity', entityId: 'monster1' }],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.forEntity('monster1')])
+      );
       bed.mocks.actionCommandFormatter.format.mockReturnValue({
         ok: true,
         value: 'attack monster1',
@@ -97,7 +100,8 @@ describeActionDiscoverySuite(
           getActor: expect.any(Function),
           jsonLogicEval: {},
         }),
-        null
+        null,
+        'attack'
       );
       expect(result.actions).toEqual([
         {
@@ -119,9 +123,9 @@ describeActionDiscoverySuite(
         badDef,
         okDef,
       ]);
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [{ type: 'none', entityId: null }],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.noTarget()])
+      );
       bed.mocks.actionCommandFormatter.format.mockImplementation((def) => {
         if (def.id === 'bad') throw new Error('boom');
         return { ok: true, value: def.template };
@@ -161,9 +165,9 @@ describeActionDiscoverySuite(
         badDef,
         okDef,
       ]);
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [{ type: 'none', entityId: null }],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.success([ActionTargetContext.noTarget()])
+      );
       bed.mocks.prerequisiteEvaluationService.evaluate.mockImplementation(
         (_, def) => {
           if (def.id === 'bad') throw new Error('kaboom');

@@ -11,8 +11,17 @@ import {
 import { SpeechBubbleRenderer } from '../../../src/domUI';
 import { BoundDomRendererBase } from '../../../src/domUI';
 import { DISPLAY_SPEECH_ID } from '../../../src/constants/eventIds';
+import {
+  PLAYER_COMPONENT_ID,
+  PLAYER_TYPE_COMPONENT_ID,
+} from '../../../src/constants/componentIds';
 
 const DEFAULT_SPEAKER_NAME_IN_TEST = 'Unknown Speaker';
+
+// Mock buildSpeechMeta
+jest.mock('../../../src/domUI/helpers/buildSpeechMeta.js', () => ({
+  buildSpeechMeta: jest.fn(),
+}));
 
 // --- Fully Mocked Factories ---
 const createMockLogger = () => ({
@@ -237,10 +246,290 @@ describe('SpeechBubbleRenderer', () => {
     });
   });
 
-  // ... other tests ...
+  describe('constructor', () => {
+    it('should throw error when entityManager is missing', () => {
+      const deps = {
+        logger,
+        documentContext: docContext,
+        validatedEventDispatcher: eventDispatcher,
+        domElementFactory: domFactory,
+        entityDisplayDataProvider,
+        // entityManager is missing
+      };
+      
+      expect(() => new SpeechBubbleRenderer(deps)).toThrow(
+        '[SpeechBubbleRenderer] EntityManager dependency is required.'
+      );
+    });
+
+    it('should throw error when entityDisplayDataProvider is missing', () => {
+      const deps = {
+        logger,
+        documentContext: docContext,
+        validatedEventDispatcher: eventDispatcher,
+        entityManager,
+        domElementFactory: domFactory,
+        // entityDisplayDataProvider is missing
+      };
+      
+      expect(() => new SpeechBubbleRenderer(deps)).toThrow(
+        '[SpeechBubbleRenderer] EntityDisplayDataProvider dependency is required.'
+      );
+    });
+
+    it('should warn and fallback to outputDiv when message-list is not found', () => {
+      // Mock documentContext to return null for #message-list
+      const customDocContext = createMockDocumentContext();
+      customDocContext.query = jest.fn((selector) =>
+        selector === '#outputDiv' ? customDocContext._mockOutputDivElement : null
+      );
+
+      const testRenderer = new SpeechBubbleRenderer({
+        logger,
+        documentContext: customDocContext,
+        validatedEventDispatcher: eventDispatcher,
+        entityManager,
+        domElementFactory: domFactory,
+        entityDisplayDataProvider,
+      });
+
+      // Should have been called with our expected message
+      expect(logger.warn.mock.calls).toContainEqual([
+        '[SpeechBubbleRenderer] #message-list not found. Speech will be appended to #outputDiv.'
+      ]);
+      expect(testRenderer.effectiveSpeechContainer).toBe(
+        customDocContext._mockOutputDivElement
+      );
+    });
+
+    it('should error when neither message-list nor outputDiv are available', () => {
+      // Mock documentContext to return null for both selectors
+      const customDocContext = createMockDocumentContext();
+      customDocContext.query = jest.fn(() => null);
+
+      const testRenderer = new SpeechBubbleRenderer({
+        logger,
+        documentContext: customDocContext,
+        validatedEventDispatcher: eventDispatcher,
+        entityManager,
+        domElementFactory: domFactory,
+        entityDisplayDataProvider,
+      });
+
+      // Should have been called with our expected message
+      expect(logger.error.mock.calls).toContainEqual([
+        '[SpeechBubbleRenderer] Critical: Effective speech container (#message-list or #outputDiv) could not be determined as #outputDiv was also not found or bound.'
+      ]);
+      expect(testRenderer.effectiveSpeechContainer).toBeNull();
+    });
+  });
+
+  describe('event handling', () => {
+    it('should handle DISPLAY_SPEECH_ID event and render speech', () => {
+      const mockRenderSpeech = jest.spyOn(renderer, 'renderSpeech');
+      
+      // Get the event handler that was registered
+      const subscribeCall = eventDispatcher.subscribe.mock.calls.find(
+        call => call[0] === DISPLAY_SPEECH_ID
+      );
+      expect(subscribeCall).toBeDefined();
+      const eventHandler = subscribeCall[1];
+
+      const payload = {
+        entityId: 'test-entity',
+        speechContent: 'Hello world',
+      };
+
+      // Trigger the event
+      eventHandler({ type: DISPLAY_SPEECH_ID, payload });
+
+      expect(mockRenderSpeech).toHaveBeenCalledWith(payload);
+    });
+
+    it('should warn on invalid event object', () => {
+      const subscribeCall = eventDispatcher.subscribe.mock.calls.find(
+        call => call[0] === DISPLAY_SPEECH_ID
+      );
+      const eventHandler = subscribeCall[1];
+
+      // Test with null event
+      eventHandler(null);
+      expect(logger.warn).toHaveBeenCalledWith(
+        '[SpeechBubbleRenderer] Received invalid DISPLAY_SPEECH_ID event object.',
+        null
+      );
+
+      // Test with missing payload
+      eventHandler({ type: DISPLAY_SPEECH_ID });
+      expect(logger.warn).toHaveBeenCalledWith(
+        '[SpeechBubbleRenderer] Received invalid DISPLAY_SPEECH_ID event object.',
+        { type: DISPLAY_SPEECH_ID }
+      );
+    });
+
+    it('should warn on invalid payload data', () => {
+      const subscribeCall = eventDispatcher.subscribe.mock.calls.find(
+        call => call[0] === DISPLAY_SPEECH_ID
+      );
+      const eventHandler = subscribeCall[1];
+
+      // Test with invalid entityId
+      eventHandler({ 
+        type: DISPLAY_SPEECH_ID, 
+        payload: { entityId: null, speechContent: 'test' } 
+      });
+      expect(logger.warn).toHaveBeenCalledWith(
+        '[SpeechBubbleRenderer] Invalid payload for DISPLAY_SPEECH_ID.',
+        { entityId: null, speechContent: 'test' }
+      );
+
+      // Test with invalid speechContent
+      eventHandler({ 
+        type: DISPLAY_SPEECH_ID, 
+        payload: { entityId: 'test', speechContent: 123 } 
+      });
+      expect(logger.warn).toHaveBeenCalledWith(
+        '[SpeechBubbleRenderer] Invalid payload for DISPLAY_SPEECH_ID.',
+        { entityId: 'test', speechContent: 123 }
+      );
+    });
+  });
 
   describe('renderSpeech method', () => {
-    // ... other tests ...
+    describe('DOM element creation failures', () => {
+      it('should handle failure to create speech entry div', () => {
+        domFactory.create = jest.fn((tagName, options) => {
+          if (options?.cls === 'speech-entry') return null;
+          return createGenericMockElement(tagName);
+        });
+
+        renderer.renderSpeech({
+          entityId: 'test-entity',
+          speechContent: 'Test speech',
+        });
+
+        expect(logger.error).toHaveBeenCalledWith(
+          '[SpeechBubbleRenderer] Failed to create speech entry or bubble div.'
+        );
+        // Should not append anything
+        expect(mockMessageList.appendChild).not.toHaveBeenCalled();
+      });
+
+      it('should handle failure to create speech bubble div', () => {
+        domFactory.create = jest.fn((tagName, options) => {
+          if (options?.cls === 'speech-bubble') return null;
+          return createGenericMockElement(tagName);
+        });
+
+        renderer.renderSpeech({
+          entityId: 'test-entity',
+          speechContent: 'Test speech',
+        });
+
+        expect(logger.error).toHaveBeenCalledWith(
+          '[SpeechBubbleRenderer] Failed to create speech entry or bubble div.'
+        );
+        expect(mockMessageList.appendChild).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('error conditions', () => {
+      it('should error when effectiveSpeechContainer is null', () => {
+        renderer.effectiveSpeechContainer = null;
+
+        renderer.renderSpeech({
+          entityId: 'test-entity',
+          speechContent: 'Test speech',
+        });
+
+        expect(logger.error).toHaveBeenCalledWith(
+          '[SpeechBubbleRenderer] Cannot render speech: effectiveSpeechContainer, domElementFactory, or entityManager missing.'
+        );
+      });
+    });
+
+    describe('player detection', () => {
+      it('should detect player with PLAYER_COMPONENT_ID only', () => {
+        const mockEntity = {
+          hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID),
+          getComponentData: jest.fn(),
+        };
+        entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        renderer.renderSpeech({
+          entityId: 'player-entity',
+          speechContent: 'Player speech',
+        });
+
+        const speechEntryDiv = mockMessageList.appendChild.mock.calls[0][0];
+        expect(speechEntryDiv.classList.add).toHaveBeenCalledWith('player-speech');
+      });
+
+      it('should detect player with PLAYER_TYPE_COMPONENT_ID and type=human', () => {
+        const mockEntity = {
+          hasComponent: jest.fn((componentId) => componentId === PLAYER_TYPE_COMPONENT_ID),
+          getComponentData: jest.fn(() => ({ type: 'human' })),
+        };
+        entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        renderer.renderSpeech({
+          entityId: 'player-entity',
+          speechContent: 'Player speech',
+        });
+
+        const speechEntryDiv = mockMessageList.appendChild.mock.calls[0][0];
+        expect(speechEntryDiv.classList.add).toHaveBeenCalledWith('player-speech');
+      });
+
+      it('should not detect player when entity not found', () => {
+        entityManager.getEntityInstance.mockReturnValue(null);
+
+        renderer.renderSpeech({
+          entityId: 'unknown-entity',
+          speechContent: 'Unknown speech',
+        });
+
+        expect(logger.debug).toHaveBeenCalledWith(
+          "[SpeechBubbleRenderer] Speaker entity with ID 'unknown-entity' not found for player check."
+        );
+        
+        const speechEntryDiv = mockMessageList.appendChild.mock.calls[0][0];
+        expect(speechEntryDiv.classList.add).not.toHaveBeenCalledWith('player-speech');
+      });
+
+      it('should not detect player when type is not human', () => {
+        const mockEntity = {
+          hasComponent: jest.fn((componentId) => componentId === PLAYER_TYPE_COMPONENT_ID),
+          getComponentData: jest.fn(() => ({ type: 'npc' })),
+        };
+        entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        renderer.renderSpeech({
+          entityId: 'npc-entity',
+          speechContent: 'NPC speech',
+        });
+
+        const speechEntryDiv = mockMessageList.appendChild.mock.calls[0][0];
+        expect(speechEntryDiv.classList.add).not.toHaveBeenCalledWith('player-speech');
+      });
+
+      it('should handle player type data without type field', () => {
+        const mockEntity = {
+          hasComponent: jest.fn((componentId) => componentId === PLAYER_TYPE_COMPONENT_ID),
+          getComponentData: jest.fn(() => ({})), // No type field
+        };
+        entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        renderer.renderSpeech({
+          entityId: 'entity-without-type',
+          speechContent: 'Speech',
+        });
+
+        const speechEntryDiv = mockMessageList.appendChild.mock.calls[0][0];
+        expect(speechEntryDiv.classList.add).not.toHaveBeenCalledWith('player-speech');
+      });
+    });
+
     const getQuotedTextSpanFromDomFactory = () => {
       const spanCalls = domFactory.span.mock.calls;
       const quotedTextSpanCallIndex = spanCalls.findIndex(
@@ -250,6 +539,49 @@ describe('SpeechBubbleRenderer', () => {
       return domFactory.span.mock.results[quotedTextSpanCallIndex].value;
     };
     // ... other tests ...
+    describe('speaker intro span', () => {
+      it('should handle failure to create speaker intro span', () => {
+        // Mock span to return null for speaker intro
+        const originalSpan = domFactory.span;
+        domFactory.span = jest.fn((cls) => {
+          if (cls === 'speech-speaker-intro') return null;
+          return originalSpan(cls);
+        });
+
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: 'Test speech',
+        });
+
+        // Should still complete rendering
+        expect(mockMessageList.appendChild).toHaveBeenCalled();
+        
+        domFactory.span = originalSpan;
+      });
+    });
+
+    describe('action text', () => {
+      it('should handle failure to create action span', () => {
+        // Mock span to return null for action text
+        const originalSpan = domFactory.span;
+        domFactory.span = jest.fn((cls) => {
+          if (cls === 'speech-action-text') return null;
+          return originalSpan(cls);
+        });
+
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: 'Normal text *action text* more text',
+          allowHtml: false,
+        });
+
+        // Should still complete rendering
+        expect(mockMessageList.appendChild).toHaveBeenCalled();
+        
+        domFactory.span = originalSpan;
+      });
+    });
+
     describe('allowHtml flag', () => {
       const getQuotedTextSpan = getQuotedTextSpanFromDomFactory;
 
@@ -340,6 +672,250 @@ describe('SpeechBubbleRenderer', () => {
         // --- FIX END ---
 
         domFactory.span = originalSpanFn;
+      });
+
+      it('should handle null temporary span with allowHtml=true', () => {
+        const originalSpan = domFactory.span;
+        let spanCallCount = 0;
+        domFactory.span = jest.fn((cls) => {
+          if (cls === undefined) {
+            // Return null for temporary span
+            return null;
+          }
+          return originalSpan(cls);
+        });
+
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: 'Text <b>with HTML</b>',
+          allowHtml: true,
+        });
+
+        // Should still complete rendering
+        expect(mockMessageList.appendChild).toHaveBeenCalled();
+        
+        domFactory.span = originalSpan;
+      });
+
+      it('should handle empty string with allowHtml=true', () => {
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: '',
+          allowHtml: true,
+        });
+
+        const qts = getQuotedTextSpan();
+        expect(qts.innerHTML).toBe('""');
+      });
+
+      it('should handle null with allowHtml=true', () => {
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: null,
+          allowHtml: true,
+        });
+
+        const qts = getQuotedTextSpan();
+        expect(qts.innerHTML).toBe('""');
+      });
+
+      it('should handle undefined with allowHtml=true', () => {
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: undefined,
+          allowHtml: true,
+        });
+
+        const qts = getQuotedTextSpan();
+        expect(qts.innerHTML).toBe('""');
+      });
+
+      it('should handle empty string with allowHtml=false', () => {
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: '',
+          allowHtml: false,
+        });
+
+        const qts = getQuotedTextSpan();
+        expect(qts.textContent).toBe('""');
+      });
+    });
+
+    describe('portrait handling', () => {
+      beforeEach(() => {
+        entityDisplayDataProvider.getEntityName.mockReturnValue('Test Speaker');
+      });
+
+      it('should add portrait and handle load event', () => {
+        entityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/portrait.jpg');
+        
+        const mockPortraitImg = createGenericMockElement('img');
+        const eventHandlers = {};
+        
+        // Mock _addDomListener to capture event handlers
+        jest.spyOn(renderer, '_addDomListener').mockImplementation((element, event, handler) => {
+          eventHandlers[event] = handler;
+        });
+        
+        domFactory.img.mockReturnValue(mockPortraitImg);
+        jest.spyOn(renderer, 'scrollToBottom').mockImplementation(() => {});
+
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: 'Test',
+        });
+
+        expect(domFactory.img).toHaveBeenCalledWith(
+          '/path/to/portrait.jpg',
+          'Portrait of Test Speaker',
+          'speech-portrait'
+        );
+
+        const speechEntryDiv = mockMessageList.appendChild.mock.calls[0][0];
+        expect(speechEntryDiv.classList.add).toHaveBeenCalledWith('has-portrait');
+        expect(speechEntryDiv.appendChild).toHaveBeenCalledWith(mockPortraitImg);
+
+        // Should not scroll immediately
+        expect(renderer.scrollToBottom).not.toHaveBeenCalled();
+
+        // Trigger load event
+        eventHandlers.load();
+        expect(renderer.scrollToBottom).toHaveBeenCalledTimes(1);
+      });
+
+      it('should handle portrait load error', () => {
+        entityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/portrait.jpg');
+        
+        const mockPortraitImg = createGenericMockElement('img');
+        const eventHandlers = {};
+        
+        // Mock _addDomListener to capture event handlers
+        jest.spyOn(renderer, '_addDomListener').mockImplementation((element, event, handler) => {
+          eventHandlers[event] = handler;
+        });
+        
+        domFactory.img.mockReturnValue(mockPortraitImg);
+        jest.spyOn(renderer, 'scrollToBottom').mockImplementation(() => {});
+
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: 'Test',
+        });
+
+        // Trigger error event
+        eventHandlers.error();
+        
+        expect(logger.warn).toHaveBeenCalledWith(
+          '[SpeechBubbleRenderer] Portrait image failed to load for Test Speaker. Scrolling anyway.'
+        );
+        expect(renderer.scrollToBottom).toHaveBeenCalledTimes(1);
+      });
+
+      it('should handle portrait element creation failure', () => {
+        entityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/portrait.jpg');
+        domFactory.img.mockReturnValue(null);
+
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: 'Test',
+        });
+
+        expect(logger.warn).toHaveBeenCalledWith(
+          '[SpeechBubbleRenderer] Failed to create portraitImg element.'
+        );
+        
+        const speechEntryDiv = mockMessageList.appendChild.mock.calls[0][0];
+        expect(speechEntryDiv.classList.add).toHaveBeenCalledWith('no-portrait');
+      });
+
+      it('should add no-portrait class when no portrait path', () => {
+        entityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
+        jest.spyOn(renderer, 'scrollToBottom').mockImplementation(() => {});
+
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: 'Test',
+        });
+
+        const speechEntryDiv = mockMessageList.appendChild.mock.calls[0][0];
+        expect(speechEntryDiv.classList.add).toHaveBeenCalledWith('no-portrait');
+        expect(renderer.scrollToBottom).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('speech meta', () => {
+      it('should add meta fragment when thoughts and notes are provided', () => {
+        // Mock buildSpeechMeta to return a fragment
+        const mockFragment = createGenericMockElement('#document-fragment');
+        mockFragment.nodeType = 11;
+        
+        // Import the mocked module
+        const { buildSpeechMeta } = require('../../../src/domUI/helpers/buildSpeechMeta.js');
+        buildSpeechMeta.mockReturnValue(mockFragment);
+
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: 'Test',
+          thoughts: 'Inner thoughts',
+          notes: 'Private notes',
+        });
+
+        expect(buildSpeechMeta).toHaveBeenCalledWith(
+          docContext.document,
+          domFactory,
+          {
+            thoughts: 'Inner thoughts',
+            notes: 'Private notes',
+          }
+        );
+
+        const speechBubbleDiv = domFactory.create.mock.results.find(
+          r => r.value && domFactory.create.mock.calls[domFactory.create.mock.results.indexOf(r)][1]?.cls === 'speech-bubble'
+        ).value;
+
+        expect(speechBubbleDiv.classList.add).toHaveBeenCalledWith('has-meta');
+        expect(speechBubbleDiv.appendChild).toHaveBeenCalledWith(mockFragment);
+      });
+
+      it('should not add meta when no thoughts or notes provided', () => {
+        const { buildSpeechMeta } = require('../../../src/domUI/helpers/buildSpeechMeta.js');
+        buildSpeechMeta.mockReturnValue(null);
+
+        renderer.renderSpeech({
+          entityId: 'speaker',
+          speechContent: 'Test',
+        });
+
+        expect(buildSpeechMeta).toHaveBeenCalledWith(
+          docContext.document,
+          domFactory,
+          {
+            thoughts: undefined,
+            notes: undefined,
+          }
+        );
+
+        const speechBubbleDiv = domFactory.create.mock.results.find(
+          r => r.value && domFactory.create.mock.calls[domFactory.create.mock.results.indexOf(r)][1]?.cls === 'speech-bubble'
+        ).value;
+
+        expect(speechBubbleDiv.classList.add).not.toHaveBeenCalledWith('has-meta');
+      });
+    });
+
+    describe('disposal', () => {
+      it('should properly dispose and clean up resources', () => {
+        const disposeSpyBase = jest.spyOn(BoundDomRendererBase.prototype, 'dispose');
+        
+        renderer.dispose();
+
+        expect(logger.debug).toHaveBeenCalledWith('[SpeechBubbleRenderer] Disposing.');
+        expect(disposeSpyBase).toHaveBeenCalled();
+        expect(renderer.effectiveSpeechContainer).toBeNull();
+        expect(logger.debug).toHaveBeenCalledWith('[SpeechBubbleRenderer] Disposed.');
+        
+        disposeSpyBase.mockRestore();
       });
     });
   });

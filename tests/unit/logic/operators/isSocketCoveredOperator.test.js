@@ -58,7 +58,11 @@ describe('IsSocketCoveredOperator', () => {
     });
 
     it('should return false when socketId is invalid', () => {
-      const result = operator.evaluateInternal('actor-123', [null], mockContext);
+      const result = operator.evaluateInternal(
+        'actor-123',
+        [null],
+        mockContext
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -78,7 +82,7 @@ describe('IsSocketCoveredOperator', () => {
 
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        "isSocketCovered: Entity actor-123 has no clothing:equipment component"
+        'isSocketCovered: Entity actor-123 has no clothing:equipment component'
       );
     });
 
@@ -164,7 +168,7 @@ describe('IsSocketCoveredOperator', () => {
 
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        "isSocketCovered: Entity actor-123 has no clothing:slot_metadata component"
+        'isSocketCovered: Entity actor-123 has no clothing:slot_metadata component'
       );
     });
 
@@ -354,7 +358,13 @@ describe('IsSocketCoveredOperator', () => {
         .mockReturnValueOnce({
           slotMappings: {
             torso_upper: {
-              coveredSockets: ['left_breast', 'right_breast', 'left_chest', 'right_chest', 'chest_center'],
+              coveredSockets: [
+                'left_breast',
+                'right_breast',
+                'left_chest',
+                'right_chest',
+                'chest_center',
+              ],
               allowedLayers: ['underwear', 'base', 'outer', 'armor'],
             },
           },

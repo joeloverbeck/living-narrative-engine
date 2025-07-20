@@ -7,6 +7,7 @@ import { freeze } from '../utils';
 import { coreTokens } from './tokens/tokens-core.js';
 import { uiTokens } from './tokens/tokens-ui.js';
 import { aiTokens } from './tokens/tokens-ai.js';
+import { testingTokens } from './tokens/tokens-testing.js';
 
 /**
  * @typedef {string} DiToken
@@ -21,4 +22,5 @@ export const tokens = freeze({
   ...coreTokens,
   ...uiTokens,
   ...aiTokens,
+  ...testingTokens,
 });

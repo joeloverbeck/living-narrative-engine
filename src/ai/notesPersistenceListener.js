@@ -44,7 +44,7 @@ export class NotesPersistenceListener {
   /**
    * Handles events emitted after an action decision.
    *
-   * @param {{ type: string, payload: { actorId: string, extractedData?: { notes?: string[] } } }} event -
+   * @param {{ type: string, payload: { actorId: string, extractedData?: { notes?: Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}> } } }} event -
    * The event containing any notes produced by the actor's decision process.
    */
   handleEvent(event) {

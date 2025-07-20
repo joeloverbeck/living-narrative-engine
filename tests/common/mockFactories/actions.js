@@ -5,6 +5,7 @@
 
 import { jest } from '@jest/globals';
 import { createSimpleMock } from './coreServices.js';
+import { ActionResult } from '../../../src/actions/core/actionResult.js';
 
 /**
  * Creates a mock prerequisite evaluation service with an `evaluate` method.
@@ -27,13 +28,19 @@ export const createMockActionIndex = () =>
 /**
  * Creates a mock target resolution service with a `resolveTargets` method.
  *
- * @description Simplified mock to resolve action targets in tests.
+ * @description Simplified mock to resolve action targets in tests that returns ActionResult.
  * @returns {{ resolveTargets: jest.Mock }} Mock target resolution service
  */
-export const createMockTargetResolutionService = () =>
-  createSimpleMock(['resolveTargets'], {
-    resolveTargets: jest.fn(() => ({ targets: [] })),
+export const createMockTargetResolutionService = () => {
+  const {
+    ActionTargetContext,
+  } = require('../../../src/models/actionTargetContext.js');
+  return createSimpleMock(['resolveTargets'], {
+    resolveTargets: jest.fn(() =>
+      ActionResult.success([ActionTargetContext.noTarget()])
+    ),
   });
+};
 
 /**
  * Creates a mock action error context builder with a `buildErrorContext` method.
@@ -59,14 +66,14 @@ export const createMockActionErrorContextBuilder = () => ({
 /**
  * Creates a mock target resolution service with actionErrorContextBuilder dependency.
  *
- * @description Creates a mock TargetResolutionService that includes the actionErrorContextBuilder.
+ * @description Creates a mock TargetResolutionService that includes the actionErrorContextBuilder and returns ActionResult.
  * @returns {{ resolveTargets: jest.Mock, actionErrorContextBuilder: object }} Mock target resolution service
  */
 export const createMockTargetResolutionServiceWithErrorContext = () => {
   const mockActionErrorContextBuilder = createMockActionErrorContextBuilder();
 
   return {
-    resolveTargets: jest.fn(() => ({ targets: [] })),
+    resolveTargets: jest.fn(() => ActionResult.success([])),
     actionErrorContextBuilder: mockActionErrorContextBuilder,
   };
 };

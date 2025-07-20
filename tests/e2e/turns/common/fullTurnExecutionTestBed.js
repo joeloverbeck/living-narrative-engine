@@ -5,6 +5,10 @@
  * Provides a comprehensive test environment for testing the complete AI turn
  * execution flow from decision request through action execution and state updates.
  * Combines capabilities from LLM adapter and prompt generation test beds.
+ * @deprecated This test bed is deprecated in favor of the facade pattern.
+ * Please use createMockFacades() and turnExecutionFacade instead.
+ * @see tests/e2e/facades/turnExecutionFacadeExample.e2e.test.js for migration examples
+ * @see src/testing/facades/testingFacadeRegistrations.js for the new approach
  */
 
 import { jest } from '@jest/globals';
@@ -25,9 +29,18 @@ import { TestConfigurationFactory } from '../../../common/testConfigurationFacto
  * - Complete container with all AI services
  * - Event monitoring for turn lifecycle
  * - Performance monitoring and validation
+ * 
+ * @deprecated Use turnExecutionFacade from createMockFacades() instead
  */
 export class FullTurnExecutionTestBed {
   constructor() {
+    // Emit deprecation warning
+    console.warn(
+      'DEPRECATION WARNING: FullTurnExecutionTestBed is deprecated. ' +
+      'Please migrate to the facade pattern using createMockFacades() and turnExecutionFacade. ' +
+      'See tests/e2e/facades/turnExecutionFacadeExample.e2e.test.js for examples.'
+    );
+    
     this.container = null;
     this.entityManager = null;
     this.eventBus = null;
@@ -1215,7 +1228,7 @@ export class FullTurnExecutionTestBed {
             logLevel: 'debug',
             enableConsole: false,
             enableFile: false,
-            categories: {}
+            categories: {},
           };
         }
 

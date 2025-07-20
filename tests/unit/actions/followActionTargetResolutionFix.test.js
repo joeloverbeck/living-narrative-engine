@@ -144,8 +144,9 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
       validActor,
       { currentLocation: { id: 'test-location' } }
     );
-    expect(validResult.error).toBeUndefined();
-    expect(validResult.targets).toBeDefined();
+    expect(validResult.success).toBe(true);
+    expect(validResult.value).toBeDefined();
+    expect(validResult.errors).toEqual([]);
 
     // Test 2: Actor with 'undefined' string ID should fail gracefully
     const invalidActor = {
@@ -158,8 +159,9 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
       invalidActor,
       { currentLocation: { id: 'test-location' } }
     );
-    expect(invalidResult.error).toBeDefined();
-    expect(invalidResult.targets).toEqual([]);
+    expect(invalidResult.success).toBe(false);
+    expect(invalidResult.value).toBeNull();
+    expect(invalidResult.errors).toHaveLength(1);
   });
 
   it('should handle null and undefined actor entities in target resolution', async () => {
@@ -169,9 +171,9 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
       null,
       { currentLocation: { id: 'test-location' } }
     );
-    expect(nullResult.error).toBeDefined();
-    expect(nullResult.error).toBeDefined();
-    expect(nullResult.targets).toEqual([]);
+    expect(nullResult.success).toBe(false);
+    expect(nullResult.value).toBeNull();
+    expect(nullResult.errors).toHaveLength(1);
 
     // Test with undefined actor
     const undefinedResult = await targetResolutionService.resolveTargets(
@@ -179,9 +181,9 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
       undefined,
       { currentLocation: { id: 'test-location' } }
     );
-    expect(undefinedResult.error).toBeDefined();
-    expect(undefinedResult.error).toBeDefined();
-    expect(undefinedResult.targets).toEqual([]);
+    expect(undefinedResult.success).toBe(false);
+    expect(undefinedResult.value).toBeNull();
+    expect(undefinedResult.errors).toHaveLength(1);
   });
 
   it('should handle actor entity without id property', async () => {
@@ -202,9 +204,9 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
       actorWithoutId,
       { currentLocation: { id: 'test-location' } }
     );
-    expect(result.error).toBeDefined();
-    expect(result.error).toBeDefined();
-    expect(result.targets).toEqual([]);
+    expect(result.success).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.value).toBeNull();
   });
 
   it('should validate actor entity in FilterResolver', () => {

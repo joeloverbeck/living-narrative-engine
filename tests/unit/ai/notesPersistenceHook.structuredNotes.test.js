@@ -96,12 +96,18 @@ describe('persistNotes - structured notes', () => {
   test('should handle mixed array of string and structured notes', () => {
     const action = {
       notes: [
-        'Simple string note',
+        {
+          text: 'Simple string note',
+          subject: 'general',
+        },
         {
           text: 'Structured note',
           subject: 'mixed_format',
         },
-        'Another string note',
+        {
+          text: 'Another string note',
+          subject: 'general',
+        },
       ],
     };
 
@@ -118,16 +124,18 @@ describe('persistNotes - structured notes', () => {
     expect(actor.components[NOTES_COMPONENT_ID].notes).toHaveLength(3);
     const notes = actor.components[NOTES_COMPONENT_ID].notes;
 
-    // First note should be converted from string
+    // First note should retain structure
     expect(notes[0].text).toBe('Simple string note');
+    expect(notes[0].subject).toBe('general');
     expect(notes[0].timestamp).toBeDefined();
 
     // Second note should retain structure
     expect(notes[1].text).toBe('Structured note');
     expect(notes[1].subject).toBe('mixed_format');
 
-    // Third note should be converted from string
+    // Third note should retain structure
     expect(notes[2].text).toBe('Another string note');
+    expect(notes[2].subject).toBe('general');
   });
 
   test('should add structured notes to existing notes component', () => {
@@ -136,6 +144,7 @@ describe('persistNotes - structured notes', () => {
       notes: [
         {
           text: 'Existing note',
+          subject: 'existing',
           timestamp: '2024-01-01T00:00:00.000Z',
         },
       ],

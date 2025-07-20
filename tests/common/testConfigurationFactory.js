@@ -1,6 +1,11 @@
 /**
  * @file testConfigurationFactory.js
  * @description Factory for creating test configurations with isolated paths
+ * 
+ * NOTE: For new tests, consider using the facade pattern with createMockFacades()
+ * instead of manually creating test configurations. The facade pattern provides
+ * a simpler and more maintainable approach.
+ * @see tests/e2e/facades/turnExecutionFacadeExample.e2e.test.js
  */
 
 import fs from 'fs/promises';
@@ -24,11 +29,26 @@ export class TestConfigurationFactory {
     // For E2E tests, use the actual data directory instead of temp files
     // This avoids issues with fetch() not being able to access temp directories
     const projectRoot = process.cwd();
-    const tempDir = path.join(projectRoot, 'data', 'test-temp');
 
-    // Create subdirectories
+    // Create a unique directory name for each test to avoid race conditions
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const tempDir = path.join(
+      projectRoot,
+      'data',
+      `test-temp-${timestamp}-${randomSuffix}`
+    );
+
+    // Create subdirectories with error handling
     const promptsDir = path.join(tempDir, 'prompts');
-    await fs.mkdir(promptsDir, { recursive: true });
+    try {
+      await fs.mkdir(promptsDir, { recursive: true });
+    } catch (error) {
+      // If directory creation fails, wrap the error with more context
+      throw new Error(
+        `Failed to create test directory ${promptsDir}: ${error.message}`
+      );
+    }
 
     // Create test path configuration
     const pathConfiguration = new TestPathConfiguration(tempDir);

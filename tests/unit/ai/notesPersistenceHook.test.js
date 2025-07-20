@@ -45,7 +45,7 @@ describe('persistNotes', () => {
   });
 
   test('should create a new notes component if one does not exist', () => {
-    const action = { notes: ['A new note'] };
+    const action = { notes: [{ text: 'A new note', subject: 'test' }] };
     persistNotes(action, actor, logger, dispatcher);
 
     expect(actor.addComponent).toHaveBeenCalledTimes(1);
@@ -53,7 +53,7 @@ describe('persistNotes', () => {
       NOTES_COMPONENT_ID,
       expect.objectContaining({
         notes: expect.arrayContaining([
-          expect.objectContaining({ text: 'A new note' }),
+          expect.objectContaining({ text: 'A new note', subject: 'test' }),
         ]),
       })
     );
@@ -61,7 +61,7 @@ describe('persistNotes', () => {
 
   test('should add a note to an existing component', () => {
     actor.components[NOTES_COMPONENT_ID] = { notes: [] };
-    const action = { notes: ['Another note'] };
+    const action = { notes: [{ text: 'Another note', subject: 'test' }] };
     persistNotes(action, actor, logger, dispatcher);
 
     expect(actor.addComponent).toHaveBeenCalledTimes(1);
@@ -71,7 +71,7 @@ describe('persistNotes', () => {
   });
 
   test('should log an info message when notes are successfully added', () => {
-    const action = { notes: ['A valid note'] };
+    const action = { notes: [{ text: 'A valid note', subject: 'test' }] };
     persistNotes(action, actor, logger, dispatcher);
 
     // --- FIX: Updated the assertion to match the new, specific log message ---
@@ -82,9 +82,9 @@ describe('persistNotes', () => {
 
   test('should not call addComponent or log info if note is a duplicate', () => {
     actor.components[NOTES_COMPONENT_ID] = {
-      notes: [{ text: 'Existing Note', timestamp: 'TS' }],
+      notes: [{ text: 'Existing Note', subject: 'test', timestamp: 'TS' }],
     };
-    const action = { notes: ['Existing Note'] };
+    const action = { notes: [{ text: 'Existing Note', subject: 'test' }] };
     persistNotes(action, actor, logger, dispatcher);
 
     expect(actor.addComponent).not.toHaveBeenCalled();
@@ -94,22 +94,24 @@ describe('persistNotes', () => {
   test('should filter and log errors for invalid notes', () => {
     const action = {
       notes: [
-        'Valid Note',
-        '', // invalid
-        123, // invalid
-        'Another Valid Note',
-        null, // invalid
+        { text: 'Valid Note', subject: 'test' },
+        { text: '', subject: 'test' }, // invalid - empty text
+        123, // invalid - not an object
+        { text: 'Another Valid Note', subject: 'test' },
+        null, // invalid - null
+        { text: 'Missing subject' }, // invalid - no subject
+        'Plain string', // invalid - not structured
       ],
     };
 
     persistNotes(action, actor, logger, dispatcher);
 
-    expect(dispatcher.dispatch).toHaveBeenCalledTimes(3);
+    expect(dispatcher.dispatch).toHaveBeenCalledTimes(5);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: INVALID_NOTE_SKIPPED_MESSAGE,
-        details: { note: '' },
+        details: expect.objectContaining({ reason: 'Missing or blank text field' }),
       })
     );
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
@@ -152,7 +154,7 @@ describe('persistNotes', () => {
   });
 
   test('ignores invalid notes when none are valid', () => {
-    const action = { notes: ['', null] };
+    const action = { notes: [{ text: '', subject: 'test' }, null] };
 
     persistNotes(action, actor, logger, dispatcher);
 
@@ -163,7 +165,7 @@ describe('persistNotes', () => {
   test('updates component directly when addComponent is unavailable', () => {
     delete actor.addComponent;
     delete actor.getComponentData;
-    const action = { notes: ['direct update'] };
+    const action = { notes: [{ text: 'direct update', subject: 'test' }] };
 
     persistNotes(action, actor, logger, dispatcher);
 
@@ -201,7 +203,7 @@ describe('persistNotes', () => {
     const fakeNow = new Date('2025-01-01T00:00:00Z');
 
     persistNotes(
-      { notes: ['x'] },
+      { notes: [{ text: 'x', subject: 'test' }] },
       actor,
       logger,
       dispatcher,
@@ -211,7 +213,7 @@ describe('persistNotes', () => {
 
     expect(notesService.addNotes).toHaveBeenCalledWith(
       actor.components[NOTES_COMPONENT_ID],
-      ['x'],
+      [{ text: 'x', subject: 'test' }],
       fakeNow
     );
     expect(logger.debug).toHaveBeenCalledWith('Added note: "x" at ts');

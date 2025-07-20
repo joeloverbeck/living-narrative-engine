@@ -21,6 +21,7 @@ import MonitoringCoordinator from '../monitoring/MonitoringCoordinator.js';
  * @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
+ * @typedef {import('../operations/BatchOperationManager.js').default} BatchOperationManager
  */
 
 /**
@@ -49,6 +50,12 @@ export class EntityLifecycleManager {
   /** @type {MonitoringCoordinator} */
   #monitoringCoordinator;
 
+  // Batch operation support
+  /** @type {BatchOperationManager} */
+  #batchOperationManager;
+  /** @type {boolean} */
+  #enableBatchOperations;
+
   /**
    * @class
    * @param {object} deps - Constructor dependencies
@@ -60,6 +67,8 @@ export class EntityLifecycleManager {
    * @param {ErrorTranslator} deps.errorTranslator - Error translator
    * @param {DefinitionCache} deps.definitionCache - Definition cache instance
    * @param {MonitoringCoordinator} [deps.monitoringCoordinator] - Monitoring coordinator
+   * @param {BatchOperationManager} [deps.batchOperationManager] - Batch operation manager
+   * @param {boolean} [deps.enableBatchOperations] - Enable batch operations
    */
   constructor({
     registry,
@@ -70,6 +79,8 @@ export class EntityLifecycleManager {
     errorTranslator,
     definitionCache,
     monitoringCoordinator,
+    batchOperationManager,
+    enableBatchOperations = false,
   }) {
     this.#validateDependencies({
       registry,
@@ -80,6 +91,8 @@ export class EntityLifecycleManager {
       errorTranslator,
       definitionCache,
       monitoringCoordinator,
+      batchOperationManager,
+      enableBatchOperations,
     });
 
     this.#initializeCoreDependencies({
@@ -98,7 +111,13 @@ export class EntityLifecycleManager {
       monitoringCoordinator,
     });
 
-    this.#logger.debug('EntityLifecycleManager (optimized) initialized');
+    // Initialize batch operation support
+    this.#batchOperationManager = batchOperationManager;
+    this.#enableBatchOperations = enableBatchOperations;
+
+    this.#logger.debug('EntityLifecycleManager (optimized) initialized', {
+      batchOperationsEnabled: enableBatchOperations,
+    });
   }
 
   /**
@@ -113,6 +132,8 @@ export class EntityLifecycleManager {
    * @param deps.errorTranslator
    * @param deps.definitionCache
    * @param deps.monitoringCoordinator
+   * @param deps.batchOperationManager
+   * @param deps.enableBatchOperations
    */
   #validateDependencies({
     registry,
@@ -123,6 +144,8 @@ export class EntityLifecycleManager {
     errorTranslator,
     definitionCache,
     monitoringCoordinator,
+    batchOperationManager,
+    enableBatchOperations,
   }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
@@ -164,6 +187,24 @@ export class EntityLifecycleManager {
             'executeMonitored',
             'getCircuitBreaker',
             'getStats',
+          ],
+        }
+      );
+    }
+
+    // BatchOperationManager is optional - it may be set later via setBatchOperationManager
+    // to resolve circular dependencies
+
+    if (batchOperationManager) {
+      validateDependency(
+        batchOperationManager,
+        'BatchOperationManager',
+        tempLogger,
+        {
+          requiredMethods: [
+            'batchCreateEntities',
+            'batchAddComponents',
+            'batchRemoveEntities',
           ],
         }
       );
@@ -434,36 +475,206 @@ export class EntityLifecycleManager {
   }
 
   /**
-   * Batch create multiple entities.
+   * Creates multiple entities in batch for improved performance.
    *
-   * @param {Array<{definitionId: string, opts?: object}>} entitySpecs - Entity specifications
-   * @returns {Array<object>} Created entities
+   * @param {Array<{definitionId: string, opts?: object}>} entitySpecs - Array of entity creation specifications
+   * @param {object} [options] - Batch operation options
+   * @param {number} [options.batchSize] - Override default batch size
+   * @param {boolean} [options.enableParallel] - Enable parallel processing
+   * @param {boolean} [options.stopOnError] - Stop on first error
+   * @returns {Promise<{successes: Array, failures: Array, totalProcessed: number, successCount: number, failureCount: number, processingTime: number}>} Batch operation result
    */
-  async batchCreateEntities(entitySpecs) {
-    const results = [];
-    const errors = [];
+  async batchCreateEntities(entitySpecs, options = {}) {
+    if (!this.#enableBatchOperations || !this.#batchOperationManager) {
+      return this.#fallbackSequentialCreate(entitySpecs, options);
+    }
+
+    this.#logger.info('Executing batch entity creation', {
+      entityCount: entitySpecs.length,
+      batchSize:
+        options.batchSize ||
+        this.#batchOperationManager.getStats().defaultBatchSize,
+    });
+
+    return await this.#batchOperationManager.batchCreateEntities(
+      entitySpecs,
+      options
+    );
+  }
+
+  /**
+   * Adds components to multiple entities in batch.
+   *
+   * @param {Array<{instanceId: string, componentTypeId: string, componentData: object}>} componentSpecs - Array of component specifications
+   * @param {object} [options] - Batch operation options
+   * @returns {Promise<{successes: Array, failures: Array, totalProcessed: number, successCount: number, failureCount: number, processingTime: number}>} Batch operation result
+   */
+  async batchAddComponents(componentSpecs, options = {}) {
+    if (!this.#enableBatchOperations || !this.#batchOperationManager) {
+      return this.#fallbackSequentialAddComponents(componentSpecs, options);
+    }
+
+    this.#logger.info('Executing batch component addition', {
+      componentCount: componentSpecs.length,
+    });
+
+    return await this.#batchOperationManager.batchAddComponents(
+      componentSpecs,
+      options
+    );
+  }
+
+  /**
+   * Removes multiple entities in batch.
+   *
+   * @param {string[]} instanceIds - Array of entity instance IDs
+   * @param {object} [options] - Batch operation options
+   * @returns {Promise<{successes: Array, failures: Array, totalProcessed: number, successCount: number, failureCount: number, processingTime: number}>} Batch operation result
+   */
+  async batchRemoveEntities(instanceIds, options = {}) {
+    if (!this.#enableBatchOperations || !this.#batchOperationManager) {
+      return this.#fallbackSequentialRemove(instanceIds, options);
+    }
+
+    this.#logger.info('Executing batch entity removal', {
+      entityCount: instanceIds.length,
+    });
+
+    return await this.#batchOperationManager.batchRemoveEntities(
+      instanceIds,
+      options
+    );
+  }
+
+  /**
+   * Fallback sequential entity creation when batch operations are disabled.
+   *
+   * @private
+   * @param {Array<{definitionId: string, opts?: object}>} entitySpecs - Entity specifications
+   * @param {object} options - Options
+   * @returns {Promise<object>} Result matching batch operation format
+   */
+  async #fallbackSequentialCreate(entitySpecs, options) {
+    const result = {
+      // Expected format for tests
+      entities: [],
+      errors: [],
+      // Keep internal tracking fields for compatibility
+      successes: [],
+      failures: [],
+      totalProcessed: 0,
+      successCount: 0,
+      failureCount: 0,
+      processingTime: 0,
+    };
+
+    const startTime = performance.now();
 
     for (const spec of entitySpecs) {
+      result.totalProcessed++;
       try {
         const entity = await this.createEntityInstance(
           spec.definitionId,
           spec.opts
         );
-        results.push(entity);
+        result.entities.push(entity);
+        result.successes.push(entity);
+        result.successCount++;
       } catch (error) {
-        errors.push({ spec, error });
+        result.errors.push({ item: spec, error });
+        result.failures.push({ item: spec, error });
+        result.failureCount++;
+        this.#logger.warn(
+          `Failed to create entity with definition '${spec.definitionId}': ${error.message}`
+        );
+
+        if (options.stopOnError) {
+          break;
+        }
       }
     }
 
-    if (errors.length > 0) {
-      this.#logger.warn(`Batch create completed with ${errors.length} errors`);
-    } else {
-      this.#logger.info(
-        `Batch entity creation completed: ${results.length} entities created`
-      );
+    result.processingTime = performance.now() - startTime;
+    return result;
+  }
+
+  /**
+   * Fallback sequential component addition when batch operations are disabled.
+   *
+   * @private
+   * @param {Array} componentSpecs - Component specifications
+   * @param {object} options - Options
+   * @returns {Promise<object>} Result matching batch operation format
+   */
+  async #fallbackSequentialAddComponents(componentSpecs, options) {
+    const result = {
+      successes: [],
+      failures: [],
+      totalProcessed: 0,
+      successCount: 0,
+      failureCount: 0,
+      processingTime: 0,
+    };
+
+    const startTime = performance.now();
+
+    this.#logger.warn(
+      'Batch component addition requested but batch operations are disabled. Falling back to sequential processing.'
+    );
+
+    // This would need ComponentMutationService to be available
+    // For now, we'll just return an error since this is a lifecycle manager
+    result.failures = componentSpecs.map((spec) => ({
+      item: spec,
+      error: new Error(
+        'Component operations not available in EntityLifecycleManager. Use ComponentMutationService.'
+      ),
+    }));
+    result.failureCount = componentSpecs.length;
+    result.totalProcessed = componentSpecs.length;
+
+    result.processingTime = performance.now() - startTime;
+    return result;
+  }
+
+  /**
+   * Fallback sequential entity removal when batch operations are disabled.
+   *
+   * @private
+   * @param {string[]} instanceIds - Instance IDs
+   * @param {object} options - Options
+   * @returns {Promise<object>} Result matching batch operation format
+   */
+  async #fallbackSequentialRemove(instanceIds, options) {
+    const result = {
+      successes: [],
+      failures: [],
+      totalProcessed: 0,
+      successCount: 0,
+      failureCount: 0,
+      processingTime: 0,
+    };
+
+    const startTime = performance.now();
+
+    for (const instanceId of instanceIds) {
+      result.totalProcessed++;
+      try {
+        await this.removeEntityInstance(instanceId);
+        result.successes.push(instanceId);
+        result.successCount++;
+      } catch (error) {
+        result.failures.push({ item: instanceId, error });
+        result.failureCount++;
+
+        if (options.stopOnError) {
+          break;
+        }
+      }
     }
 
-    return { entities: results, errors };
+    result.processingTime = performance.now() - startTime;
+    return result;
   }
 
   /**
@@ -552,6 +763,37 @@ export class EntityLifecycleManager {
    */
   clearCache() {
     this.#definitionHelper.clearCache();
+  }
+
+  /**
+   * Sets the batch operation manager after construction.
+   * This is used to resolve circular dependencies between EntityLifecycleManager and BatchOperationManager.
+   *
+   * @param {BatchOperationManager} batchOperationManager - The batch operation manager
+   */
+  setBatchOperationManager(batchOperationManager) {
+    if (!this.#enableBatchOperations) {
+      this.#logger.warn(
+        'Setting batch operation manager but batch operations are disabled'
+      );
+      return;
+    }
+
+    validateDependency(
+      batchOperationManager,
+      'BatchOperationManager',
+      this.#logger,
+      {
+        requiredMethods: [
+          'batchCreateEntities',
+          'batchAddComponents',
+          'batchRemoveEntities',
+        ],
+      }
+    );
+
+    this.#batchOperationManager = batchOperationManager;
+    this.#logger.debug('Batch operation manager set');
   }
 }
 

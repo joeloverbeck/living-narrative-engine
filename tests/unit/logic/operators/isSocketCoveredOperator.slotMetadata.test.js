@@ -15,19 +15,19 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
     mockLogger = {
       debug: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     // Mock entity manager
     mockEntityManager = {
       getEntityInstance: jest.fn(),
       hasComponent: jest.fn(),
-      getComponentData: jest.fn()
+      getComponentData: jest.fn(),
     };
 
     operator = new IsSocketCoveredOperator({
       entityManager: mockEntityManager,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -37,29 +37,28 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
       const context = { entity: entityId };
 
       // Mock equipment data
-      mockEntityManager.getComponentData
-        .mockImplementation((id, component) => {
-          if (component === 'clothing:equipment') {
-            return {
-              equipped: {
-                torso_upper: {
-                  base: 'shirt_id'
-                }
-              }
-            };
-          }
-          if (component === 'clothing:slot_metadata') {
-            return {
-              slotMappings: {
-                torso_upper: {
-                  coveredSockets: ['left_chest', 'right_chest', 'chest_center'],
-                  allowedLayers: ['underwear', 'base', 'outer']
-                }
-              }
-            };
-          }
-          return null;
-        });
+      mockEntityManager.getComponentData.mockImplementation((id, component) => {
+        if (component === 'clothing:equipment') {
+          return {
+            equipped: {
+              torso_upper: {
+                base: 'shirt_id',
+              },
+            },
+          };
+        }
+        if (component === 'clothing:slot_metadata') {
+          return {
+            slotMappings: {
+              torso_upper: {
+                coveredSockets: ['left_chest', 'right_chest', 'chest_center'],
+                allowedLayers: ['underwear', 'base', 'outer'],
+              },
+            },
+          };
+        }
+        return null;
+      });
 
       expect(operator.evaluate(['entity', 'left_chest'], context)).toBe(true);
       expect(operator.evaluate(['entity', 'right_chest'], context)).toBe(true);
@@ -71,33 +70,32 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
       const context = { entity: entityId };
 
       // Mock equipment data - torso_upper equipped but checking torso_lower socket
-      mockEntityManager.getComponentData
-        .mockImplementation((id, component) => {
-          if (component === 'clothing:equipment') {
-            return {
-              equipped: {
-                torso_upper: {
-                  base: 'shirt_id'
-                }
-              }
-            };
-          }
-          if (component === 'clothing:slot_metadata') {
-            return {
-              slotMappings: {
-                torso_upper: {
-                  coveredSockets: ['left_chest', 'right_chest'],
-                  allowedLayers: ['base', 'outer']
-                },
-                torso_lower: {
-                  coveredSockets: ['vagina', 'penis', 'left_hip', 'right_hip'],
-                  allowedLayers: ['underwear', 'base', 'outer']
-                }
-              }
-            };
-          }
-          return null;
-        });
+      mockEntityManager.getComponentData.mockImplementation((id, component) => {
+        if (component === 'clothing:equipment') {
+          return {
+            equipped: {
+              torso_upper: {
+                base: 'shirt_id',
+              },
+            },
+          };
+        }
+        if (component === 'clothing:slot_metadata') {
+          return {
+            slotMappings: {
+              torso_upper: {
+                coveredSockets: ['left_chest', 'right_chest'],
+                allowedLayers: ['base', 'outer'],
+              },
+              torso_lower: {
+                coveredSockets: ['vagina', 'penis', 'left_hip', 'right_hip'],
+                allowedLayers: ['underwear', 'base', 'outer'],
+              },
+            },
+          };
+        }
+        return null;
+      });
 
       // Socket in torso_lower but only torso_upper is equipped
       expect(operator.evaluate(['entity', 'vagina'], context)).toBe(false);
@@ -108,33 +106,32 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
       const entityId = 'test-entity';
       const context = { entity: entityId };
 
-      mockEntityManager.getComponentData
-        .mockImplementation((id, component) => {
-          if (component === 'clothing:equipment') {
-            return {
-              equipped: {
-                torso_armor: {
-                  armor: 'chest_plate'
-                }
-              }
-            };
-          }
-          if (component === 'clothing:slot_metadata') {
-            return {
-              slotMappings: {
-                torso_upper: {
-                  coveredSockets: ['chest_center'],
-                  allowedLayers: ['underwear', 'base', 'outer']
-                },
-                torso_armor: {
-                  coveredSockets: ['chest_center', 'upper_back'],
-                  allowedLayers: ['armor']
-                }
-              }
-            };
-          }
-          return null;
-        });
+      mockEntityManager.getComponentData.mockImplementation((id, component) => {
+        if (component === 'clothing:equipment') {
+          return {
+            equipped: {
+              torso_armor: {
+                armor: 'chest_plate',
+              },
+            },
+          };
+        }
+        if (component === 'clothing:slot_metadata') {
+          return {
+            slotMappings: {
+              torso_upper: {
+                coveredSockets: ['chest_center'],
+                allowedLayers: ['underwear', 'base', 'outer'],
+              },
+              torso_armor: {
+                coveredSockets: ['chest_center', 'upper_back'],
+                allowedLayers: ['armor'],
+              },
+            },
+          };
+        }
+        return null;
+      });
 
       // chest_center is covered by torso_armor
       expect(operator.evaluate(['entity', 'chest_center'], context)).toBe(true);
@@ -145,16 +142,15 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
       const entityId = 'test-entity';
       const context = { entity: entityId };
 
-      mockEntityManager.getComponentData
-        .mockImplementation((id, component) => {
-          if (component === 'clothing:equipment') {
-            return { equipped: {} };
-          }
-          if (component === 'clothing:slot_metadata') {
-            return null; // No slot metadata
-          }
-          return null;
-        });
+      mockEntityManager.getComponentData.mockImplementation((id, component) => {
+        if (component === 'clothing:equipment') {
+          return { equipped: {} };
+        }
+        if (component === 'clothing:slot_metadata') {
+          return null; // No slot metadata
+        }
+        return null;
+      });
 
       expect(operator.evaluate(['entity', 'any_socket'], context)).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -166,8 +162,7 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
       const entityId = 'test-entity';
       const context = { entity: entityId };
 
-      mockEntityManager.getComponentData
-        .mockImplementation(() => null);
+      mockEntityManager.getComponentData.mockImplementation(() => null);
 
       expect(operator.evaluate(['entity', 'any_socket'], context)).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -179,16 +174,15 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
       const entityId = 'test-entity';
       const context = { entity: entityId };
 
-      mockEntityManager.getComponentData
-        .mockImplementation((id, component) => {
-          if (component === 'clothing:equipment') {
-            return { equipped: {} };
-          }
-          if (component === 'clothing:slot_metadata') {
-            return { slotMappings: {} }; // Empty mappings
-          }
-          return null;
-        });
+      mockEntityManager.getComponentData.mockImplementation((id, component) => {
+        if (component === 'clothing:equipment') {
+          return { equipped: {} };
+        }
+        if (component === 'clothing:slot_metadata') {
+          return { slotMappings: {} }; // Empty mappings
+        }
+        return null;
+      });
 
       expect(operator.evaluate(['entity', 'any_socket'], context)).toBe(false);
     });
@@ -199,30 +193,31 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
       const entityId = 'test-entity';
       const context = { entity: entityId };
 
-      mockEntityManager.getComponentData
-        .mockImplementation((id, component) => {
-          if (component === 'clothing:equipment') {
-            return { equipped: {} };
-          }
-          if (component === 'clothing:slot_metadata') {
-            return {
-              slotMappings: {
-                torso_upper: {
-                  coveredSockets: ['chest_center']
-                }
-              }
-            };
-          }
-          return null;
-        });
+      mockEntityManager.getComponentData.mockImplementation((id, component) => {
+        if (component === 'clothing:equipment') {
+          return { equipped: {} };
+        }
+        if (component === 'clothing:slot_metadata') {
+          return {
+            slotMappings: {
+              torso_upper: {
+                coveredSockets: ['chest_center'],
+              },
+            },
+          };
+        }
+        return null;
+      });
 
       // First call
       operator.evaluate(['entity', 'chest_center'], context);
-      const firstCallCount = mockEntityManager.getComponentData.mock.calls.length;
+      const firstCallCount =
+        mockEntityManager.getComponentData.mock.calls.length;
 
       // Second call should use cache
       operator.evaluate(['entity', 'chest_center'], context);
-      const secondCallCount = mockEntityManager.getComponentData.mock.calls.length;
+      const secondCallCount =
+        mockEntityManager.getComponentData.mock.calls.length;
 
       // Should have fewer calls on second evaluation due to caching
       expect(secondCallCount).toBeLessThan(firstCallCount * 2);
@@ -232,33 +227,34 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
       const entityId = 'test-entity';
       const context = { entity: entityId };
 
-      mockEntityManager.getComponentData
-        .mockImplementation((id, component) => {
-          if (component === 'clothing:equipment') {
-            return { equipped: {} };
-          }
-          if (component === 'clothing:slot_metadata') {
-            return {
-              slotMappings: {
-                torso_upper: {
-                  coveredSockets: ['chest_center']
-                }
-              }
-            };
-          }
-          return null;
-        });
+      mockEntityManager.getComponentData.mockImplementation((id, component) => {
+        if (component === 'clothing:equipment') {
+          return { equipped: {} };
+        }
+        if (component === 'clothing:slot_metadata') {
+          return {
+            slotMappings: {
+              torso_upper: {
+                coveredSockets: ['chest_center'],
+              },
+            },
+          };
+        }
+        return null;
+      });
 
       // First evaluation
       operator.evaluate(['entity', 'chest_center'], context);
-      const beforeClearCount = mockEntityManager.getComponentData.mock.calls.length;
+      const beforeClearCount =
+        mockEntityManager.getComponentData.mock.calls.length;
 
       // Clear cache for this entity
       operator.clearCache(entityId);
 
       // Evaluation after cache clear should fetch data again
       operator.evaluate(['entity', 'chest_center'], context);
-      const afterClearCount = mockEntityManager.getComponentData.mock.calls.length;
+      const afterClearCount =
+        mockEntityManager.getComponentData.mock.calls.length;
 
       // Should have made new calls after cache clear
       expect(afterClearCount).toBeGreaterThan(beforeClearCount);
@@ -270,16 +266,15 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
       const context1 = { entity: entity1 };
       const context2 = { entity: entity2 };
 
-      mockEntityManager.getComponentData
-        .mockImplementation((id, component) => {
-          if (component === 'clothing:equipment') {
-            return { equipped: {} };
-          }
-          if (component === 'clothing:slot_metadata') {
-            return { slotMappings: {} };
-          }
-          return null;
-        });
+      mockEntityManager.getComponentData.mockImplementation((id, component) => {
+        if (component === 'clothing:equipment') {
+          return { equipped: {} };
+        }
+        if (component === 'clothing:slot_metadata') {
+          return { slotMappings: {} };
+        }
+        return null;
+      });
 
       // Cache data for both entities
       operator.evaluate(['entity', 'test_socket'], context1);
@@ -307,7 +302,7 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
 
     it('should handle invalid socket parameter', () => {
       const context = { entity: 'test-entity' };
-      
+
       expect(operator.evaluate(['entity', null], context)).toBe(false);
       expect(operator.evaluate(['entity', 123], context)).toBe(false);
       expect(operator.evaluate(['entity', {}], context)).toBe(false);
@@ -318,7 +313,7 @@ describe('IsSocketCoveredOperator with slot metadata', () => {
 
     it('should handle errors during evaluation', () => {
       const context = { entity: 'test-entity' };
-      
+
       // Mock getComponentData to throw an error
       mockEntityManager.getComponentData.mockImplementation(() => {
         throw new Error('Database error');

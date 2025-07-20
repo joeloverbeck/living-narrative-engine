@@ -6,7 +6,6 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
-import { PlaceholderResolver } from '../../src/utils/placeholderResolverUtils.js';
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
@@ -95,7 +94,7 @@ const buildPrompt = async (provider, builder, actor, logger) => {
     availableActions: [],
   };
   const promptData = await provider.getPromptData(dto, logger);
-  return builder.build('notes_only', promptData);
+  return builder.build('test-config', promptData);
 };
 
 describe('End-to-End Notes Persistence Flow', () => {
@@ -106,19 +105,7 @@ describe('End-to-End Notes Persistence Flow', () => {
   let actor;
   let processor;
 
-  const testConfig = {
-    configId: 'notes_only',
-    modelIdentifier: 'test/model',
-    promptElements: [
-      {
-        key: 'notes_wrapper',
-        elementType: 'notes_section',
-        prefix: '<notes>\n',
-        suffix: '\n',
-      },
-    ],
-    promptAssemblyOrder: ['notes_wrapper'],
-  };
+  // Remove obsolete prompt configuration - new system uses template-based prompts
 
   beforeEach(async () => {
     logger = makeLogger();
@@ -149,13 +136,12 @@ describe('End-to-End Notes Persistence Flow', () => {
     });
 
     const llmConfigService = {
-      getConfig: jest.fn().mockResolvedValue(testConfig),
+      getConfig: jest.fn().mockResolvedValue({
+        configId: 'test-config',
+        modelIdentifier: 'test/model',
+      }),
     };
-    const placeholderResolver = new PlaceholderResolver(logger);
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Use current template-based PromptBuilder (no assemblers needed)
-    // ──────────────────────────────────────────────────────────────────────────
+    // Use current template-based PromptBuilder
     promptBuilder = new PromptBuilder({
       logger,
       llmConfigService,
@@ -182,8 +168,8 @@ describe('End-to-End Notes Persistence Flow', () => {
   test('notes persist and appear in subsequent prompt', async () => {
     // first prompt: no notes yet
     const prompt1 = await buildPrompt(provider, promptBuilder, actor, logger);
-    // The prompt contains the <notes> section header but should be empty or minimal
-    expect(prompt1).toContain('<notes>');
+    // The prompt should NOT contain the <notes> section when there are no notes (conditional formatting)
+    expect(prompt1).not.toContain('<notes>');
     // Should not contain any actual notes content
     expect(prompt1).not.toContain('Remember the password');
 
@@ -213,7 +199,8 @@ describe('End-to-End Notes Persistence Flow', () => {
       const newNoteObjects = processingResult.extractedData.notes.map(
         (text) => ({
           text,
-          timestamp: new Date().toISOString(), // Consistent with potential schema
+          subject: 'Password reminder', // Required field for structured notes
+          timestamp: new Date().toISOString(),
         })
       );
 

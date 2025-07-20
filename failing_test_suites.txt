@@ -1,3 +1,0 @@
-tests/integration/anatomy/bodyDescriptionGeneration.integration.test.js
-tests/unit/anatomy/anatomyGenerationService.test.js
-tests/integration/anatomy/gorgeousMilfGeneration.integration.test.js

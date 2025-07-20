@@ -7,6 +7,8 @@ import { TargetResolutionStage } from '../../../../../src/actions/pipeline/stage
 import { ActionTargetContext } from '../../../../../src/models/actionTargetContext.js';
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
 import { ERROR_PHASES } from '../../../../../src/actions/errors/actionErrorTypes.js';
+import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
+import '../../../../../tests/common/actionResultMatchers.js';
 
 describe('TargetResolutionStage', () => {
   let stage;
@@ -142,10 +144,9 @@ describe('TargetResolutionStage', () => {
           trace: mockTrace,
         };
 
-        mockTargetResolutionService.resolveTargets.mockReturnValue({
-          targets: [ActionTargetContext.forEntity('target-entity')],
-          error: undefined,
-        });
+        mockTargetResolutionService.resolveTargets.mockReturnValue(
+          ActionResult.success([ActionTargetContext.forEntity('target-entity')])
+        );
 
         const result = await stage.execute(context);
 
@@ -226,10 +227,9 @@ describe('TargetResolutionStage', () => {
         const expectedTargets = [
           ActionTargetContext.forEntity('target-entity'),
         ];
-        mockTargetResolutionService.resolveTargets.mockReturnValue({
-          targets: expectedTargets,
-          error: undefined,
-        });
+        mockTargetResolutionService.resolveTargets.mockReturnValue(
+          ActionResult.success(expectedTargets)
+        );
 
         const result = await stage.execute(context);
 
@@ -237,7 +237,8 @@ describe('TargetResolutionStage', () => {
           'entity',
           mockActor,
           mockActionContext,
-          mockTrace
+          mockTrace,
+          'core:go'
         );
 
         expect(result.data.actionsWithTargets).toHaveLength(1);
@@ -255,10 +256,9 @@ describe('TargetResolutionStage', () => {
           trace: mockTrace,
         };
 
-        mockTargetResolutionService.resolveTargets.mockReturnValue({
-          targets: [],
-          error: undefined,
-        });
+        mockTargetResolutionService.resolveTargets.mockReturnValue(
+          ActionResult.success([])
+        );
 
         const result = await stage.execute(context);
 
@@ -282,10 +282,9 @@ describe('TargetResolutionStage', () => {
         };
 
         const resolutionError = new Error('Target resolution failed');
-        mockTargetResolutionService.resolveTargets.mockReturnValue({
-          targets: [],
-          error: resolutionError,
-        });
+        mockTargetResolutionService.resolveTargets.mockReturnValue(
+          ActionResult.failure(resolutionError)
+        );
 
         const expectedErrorContext = { error: 'context' };
         mockErrorContextBuilder.buildErrorContext.mockReturnValue(
@@ -311,8 +310,8 @@ describe('TargetResolutionStage', () => {
         });
 
         expect(mockLogger.error).toHaveBeenCalledWith(
-          "Error resolving scope for action 'core:go': Target resolution failed",
-          expectedErrorContext
+          "Error resolving scope for action 'core:go'",
+          { errors: [resolutionError] }
         );
       });
 
@@ -363,10 +362,9 @@ describe('TargetResolutionStage', () => {
         };
 
         const entityTargets = [ActionTargetContext.forEntity('target-entity')];
-        mockTargetResolutionService.resolveTargets.mockReturnValue({
-          targets: entityTargets,
-          error: undefined,
-        });
+        mockTargetResolutionService.resolveTargets.mockReturnValue(
+          ActionResult.success(entityTargets)
+        );
 
         const result = await stage.execute(context);
 
@@ -396,7 +394,8 @@ describe('TargetResolutionStage', () => {
           'entity',
           mockActor,
           mockActionContext,
-          mockTrace
+          mockTrace,
+          'core:go'
         );
       });
     });

@@ -533,8 +533,12 @@ export class PromptGenerationTestBed {
             notes: [
               {
                 text: 'The innkeeper mentioned something about troubles in the market.',
+                subject: 'Market troubles',
               },
-              { text: 'I should perform a song to lighten the mood.' },
+              { 
+                text: 'I should perform a song to lighten the mood.',
+                subject: 'Performance plan',
+              },
             ],
           },
         },
@@ -646,15 +650,19 @@ export class PromptGenerationTestBed {
   createTestActionComposites() {
     return [
       {
+        index: 1,
         actionDefinitionId: 'core:wait',
         displayName: 'Wait',
+        commandString: 'wait',
         description: 'Wait and observe your surroundings',
         scopedTargets: [],
         actionDefinition: this.testActions.find((a) => a.id === 'core:wait'),
       },
       {
+        index: 2,
         actionDefinitionId: 'core:go',
         displayName: 'Go North',
+        commandString: 'go north',
         description: 'Move to Market Square',
         scopedTargets: [
           { id: 'test-market', display: 'Market Square', type: 'location' },
@@ -662,8 +670,10 @@ export class PromptGenerationTestBed {
         actionDefinition: this.testActions.find((a) => a.id === 'core:go'),
       },
       {
+        index: 3,
         actionDefinitionId: 'core:go',
         displayName: 'Go East',
+        commandString: 'go east',
         description: 'Move to Dark Alley',
         scopedTargets: [
           { id: 'test-alley', display: 'Dark Alley', type: 'location' },
@@ -671,15 +681,19 @@ export class PromptGenerationTestBed {
         actionDefinition: this.testActions.find((a) => a.id === 'core:go'),
       },
       {
+        index: 4,
         actionDefinitionId: 'core:say',
         displayName: 'Say something',
+        commandString: 'say',
         description: 'Say something out loud',
         scopedTargets: [],
         actionDefinition: this.testActions.find((a) => a.id === 'core:say'),
       },
       {
+        index: 5,
         actionDefinitionId: 'test:perform',
         displayName: 'Perform',
+        commandString: 'perform',
         description: 'Perform a song or story',
         scopedTargets: [],
         actionDefinition: this.testActions.find((a) => a.id === 'test:perform'),
@@ -877,7 +891,8 @@ export class PromptGenerationTestBed {
     const actions = [];
     const sections = this.parsePromptSections(prompt);
     const choicesSection =
-      sections.indexed_choices || sections.available_actions || '';
+      sections.indexed_choices || sections.available_actions || sections.available_actions_info || '';
+
 
     // Match patterns like [1], [2], [Index: 1], and "index: 1 --> Action (description)"
     const actionRegex =

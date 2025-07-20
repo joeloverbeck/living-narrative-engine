@@ -41,13 +41,13 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
 
   describe('extractPromptData with anatomy description', () => {
     test('should use anatomy description when entity has anatomy:body component', () => {
-      // Setup: Entity has anatomy:body component
+      // Setup: Entity has anatomy:body component and core:description component
       mockEntityFinder.getEntityInstance.mockReturnValue(mockEntity);
       mockEntity.hasComponent.mockReturnValue(true);
       const anatomyDescription = 'A tall figure with piercing eyes';
-      mockAnatomyDescriptionService.getOrGenerateBodyDescription.mockReturnValue(
-        anatomyDescription
-      );
+      mockEntity.getComponentData.mockReturnValue({
+        text: anatomyDescription,
+      });
 
       // Act
       const actorState = {};
@@ -60,9 +60,13 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       expect(mockEntity.hasComponent).toHaveBeenCalledWith(
         ANATOMY_BODY_COMPONENT_ID
       );
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+        DESCRIPTION_COMPONENT_ID
+      );
+      // The anatomy service should NOT be called anymore
       expect(
         mockAnatomyDescriptionService.getOrGenerateBodyDescription
-      ).toHaveBeenCalledWith(mockEntity);
+      ).not.toHaveBeenCalled();
       expect(result.description).toBe(anatomyDescription + '.');
     });
 
@@ -100,13 +104,11 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       expect(result.description).toBe('No description available.');
     });
 
-    test('should handle when anatomyDescriptionService returns null', () => {
-      // Setup: Entity has anatomy:body but service returns null
+    test('should handle when entity has anatomy:body but no description component', () => {
+      // Setup: Entity has anatomy:body but no description component
       mockEntityFinder.getEntityInstance.mockReturnValue(mockEntity);
       mockEntity.hasComponent.mockReturnValue(true);
-      mockAnatomyDescriptionService.getOrGenerateBodyDescription.mockReturnValue(
-        null
-      );
+      mockEntity.getComponentData.mockReturnValue(null);
       const fallbackDescription = 'Fallback description';
 
       // Act
@@ -181,24 +183,24 @@ describe('ActorDataExtractor - Anatomy Handling', () => {
       expect(result.description).toBe(fallbackDescription + '.');
     });
 
-    test('should prefer anatomy description over component description when both exist', () => {
-      // Setup: Both anatomy and component descriptions exist
+    test('should prefer entity description component over actorState description when both exist', () => {
+      // Setup: Both entity description component and actorState description exist
       mockEntityFinder.getEntityInstance.mockReturnValue(mockEntity);
       mockEntity.hasComponent.mockReturnValue(true);
-      const anatomyDescription = 'Anatomy-based description';
-      const componentDescription = 'Component-based description';
-      mockAnatomyDescriptionService.getOrGenerateBodyDescription.mockReturnValue(
-        anatomyDescription
-      );
+      const entityDescription = 'Entity-based description from anatomy';
+      const actorStateDescription = 'ActorState-based description';
+      mockEntity.getComponentData.mockReturnValue({
+        text: entityDescription,
+      });
 
       // Act
       const actorState = {
-        [DESCRIPTION_COMPONENT_ID]: { text: componentDescription },
+        [DESCRIPTION_COMPONENT_ID]: { text: actorStateDescription },
       };
       const result = extractor.extractPromptData(actorState, 'test-actor-id');
 
-      // Assert - anatomy description should be used with terminal punctuation
-      expect(result.description).toBe(anatomyDescription + '.');
+      // Assert - entity description should be used (anatomy-generated) with terminal punctuation
+      expect(result.description).toBe(entityDescription + '.');
     });
 
     test('should handle hasComponent method throwing an error', () => {

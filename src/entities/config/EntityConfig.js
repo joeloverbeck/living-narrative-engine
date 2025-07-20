@@ -52,6 +52,18 @@ export default class EntityConfig {
       MEMORY_WARNING_THRESHOLD: 0.8, // 80% of max
       ENABLE_OPERATION_TRACING: false,
       BATCH_OPERATION_TIMEOUT: 30000, // 30 seconds
+      // Batch operations
+      ENABLE_BATCH_OPERATIONS: true,
+      DEFAULT_BATCH_SIZE: 50,
+      MAX_BATCH_SIZE: 200,
+      SPATIAL_INDEX_BATCH_SIZE: 100,
+      ENABLE_PARALLEL_BATCH_PROCESSING: true,
+      // Batch operation thresholds
+      BATCH_OPERATION_THRESHOLD: 10, // Minimum items to trigger batch mode
+      BATCH_TIMEOUT_MS: 30000, // Maximum time for batch operation
+      // World loading optimization
+      WORLD_LOADING_BATCH_SIZE: 100,
+      ENABLE_WORLD_LOADING_OPTIMIZATION: true,
     };
   }
 
@@ -124,6 +136,17 @@ export default class EntityConfig {
     };
   }
 
+  // Batch operations settings
+  static get BATCH_OPERATIONS() {
+    return {
+      ENABLE_TRANSACTION_ROLLBACK: true,
+      STOP_ON_ERROR: false,
+      MAX_FAILURES_PER_BATCH: 5,
+      BATCH_RETRY_ATTEMPTS: 2,
+      BATCH_RETRY_DELAY_MS: 1000,
+    };
+  }
+
   // Environment-specific overrides (deprecated - use IEnvironmentProvider)
   static get ENVIRONMENT() {
     return {
@@ -152,6 +175,7 @@ export default class EntityConfig {
       entityCreation: this.ENTITY_CREATION,
       spatialIndex: this.SPATIAL_INDEX,
       monitoring: this.MONITORING,
+      batchOperations: this.BATCH_OPERATIONS,
       environment: this.ENVIRONMENT,
     };
 
@@ -206,6 +230,39 @@ export default class EntityConfig {
       ) {
         throw new Error(
           'EntityConfig: MEMORY_WARNING_THRESHOLD must be between 0 and 1'
+        );
+      }
+      if (config.performance.DEFAULT_BATCH_SIZE <= 0) {
+        throw new Error('EntityConfig: DEFAULT_BATCH_SIZE must be positive');
+      }
+      if (config.performance.MAX_BATCH_SIZE <= 0) {
+        throw new Error('EntityConfig: MAX_BATCH_SIZE must be positive');
+      }
+      if (
+        config.performance.DEFAULT_BATCH_SIZE >
+        config.performance.MAX_BATCH_SIZE
+      ) {
+        throw new Error(
+          'EntityConfig: DEFAULT_BATCH_SIZE must be <= MAX_BATCH_SIZE'
+        );
+      }
+    }
+
+    // Validate batch operations settings
+    if (config.batchOperations) {
+      if (config.batchOperations.MAX_FAILURES_PER_BATCH < 0) {
+        throw new Error(
+          'EntityConfig: MAX_FAILURES_PER_BATCH must be non-negative'
+        );
+      }
+      if (config.batchOperations.BATCH_RETRY_ATTEMPTS < 0) {
+        throw new Error(
+          'EntityConfig: BATCH_RETRY_ATTEMPTS must be non-negative'
+        );
+      }
+      if (config.batchOperations.BATCH_RETRY_DELAY_MS < 0) {
+        throw new Error(
+          'EntityConfig: BATCH_RETRY_DELAY_MS must be non-negative'
         );
       }
     }

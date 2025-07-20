@@ -85,8 +85,9 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       expect(mockScopeRegistry.getScope).toHaveBeenCalledWith(
         'core:clear_directions'
       );
-      expect(result.targets).toHaveLength(2);
-      expect(result.error).toBeUndefined();
+      expect(result.success).toBe(true);
+      expect(result.value).toHaveLength(2);
+      expect(result.errors).toEqual([]);
       expectNoDispatch(mockSafeEventDispatcher.dispatch);
     });
 
@@ -106,8 +107,9 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       expect(mockScopeRegistry.getScope).toHaveBeenCalledWith(
         'core:clear_directions'
       );
-      expect(result.targets).toHaveLength(0);
-      expect(result.error).toBeDefined();
+      expect(result.success).toBe(false);
+      expect(result.value).toBeNull();
+      expect(result.errors).toHaveLength(1);
       // Note: Enhanced error context changes logger behavior and error structure
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
@@ -142,8 +144,9 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
         mockDiscoveryContext
       );
 
-      expect(result.targets).toHaveLength(0);
-      expect(result.error).toBeDefined();
+      expect(result.success).toBe(false);
+      expect(result.value).toBeNull();
+      expect(result.errors).toHaveLength(1);
       // Note: Enhanced error context changes logger behavior and error structure
     });
 
@@ -172,8 +175,9 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
         mockDiscoveryContext
       );
 
-      expect(result.targets).toHaveLength(2);
-      expect(result.error).toBeUndefined();
+      expect(result.success).toBe(true);
+      expect(result.value).toHaveLength(2);
+      expect(result.errors).toEqual([]);
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockDslParser.parse).toHaveBeenCalledWith(
         'location.core:exits[].target'

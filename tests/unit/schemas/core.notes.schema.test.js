@@ -36,8 +36,22 @@ describe('JSON-Schema – core:notes component', () => {
     ['no core:notes key', {}],
     ['core:notes with empty array', { 'core:notes': { notes: [] } }],
     [
-      'note without timestamp',
-      { 'core:notes': { notes: [{ text: 'A note without timestamp' }] } },
+      'note with required fields only',
+      { 'core:notes': { notes: [{ text: 'A note about something', subject: 'something' }] } },
+    ],
+    [
+      'note with all fields',
+      { 
+        'core:notes': { 
+          notes: [{ 
+            text: 'A note about player',
+            subject: 'player',
+            context: 'During combat',
+            tags: ['combat', 'observation'],
+            timestamp: '2025-06-04T12:00:00Z'
+          }] 
+        } 
+      },
     ],
   ])('✓ %s – should validate', (_label, payload) => {
     const ok = validateEntity(payload);
@@ -48,23 +62,39 @@ describe('JSON-Schema – core:notes component', () => {
   /* ── INVALID CASES ───────────────────────────────────────────────────── */
   test.each([
     [
+      'missing required subject field',
+      {
+        'core:notes': {
+          notes: [{ text: 'A note without subject' }],
+        },
+      },
+    ],
+    [
       'empty text',
       {
         'core:notes': {
-          notes: [{ text: '', timestamp: '2025-06-04T12:00:00Z' }],
+          notes: [{ text: '', subject: 'player' }],
+        },
+      },
+    ],
+    [
+      'empty subject',
+      {
+        'core:notes': {
+          notes: [{ text: 'A note', subject: '' }],
         },
       },
     ],
     [
       'malformed timestamp',
-      { 'core:notes': { notes: [{ text: 'foo', timestamp: 'not-a-date' }] } },
+      { 'core:notes': { notes: [{ text: 'foo', subject: 'bar', timestamp: 'not-a-date' }] } },
     ],
     [
       'extra property',
       {
         'core:notes': {
           notes: [
-            { text: 'foo', timestamp: '2025-06-04T12:00:00Z', extra: 123 },
+            { text: 'foo', subject: 'bar', timestamp: '2025-06-04T12:00:00Z', extra: 123 },
           ],
         },
       },

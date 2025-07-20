@@ -89,8 +89,9 @@ describe('Follow Action Debug Test', () => {
       locationId: 'room1',
     });
 
-    // Verify we got the expected result
-    expect(result.targets).toHaveLength(1);
-    expect(result.targets[0].entityId).toBe('amaia');
+    // Verify we got the expected result (ActionResult format)
+    expect(result.success).toBe(true);
+    expect(result.value).toHaveLength(1);
+    expect(result.value[0].entityId).toBe('amaia');
   });
 });

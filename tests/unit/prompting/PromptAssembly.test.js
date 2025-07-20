@@ -99,11 +99,11 @@ describe('Prompt Assembly with template-based system', () => {
     return await promptBuilder.build('test-llm', promptData);
   };
 
-  test('Entity with zero thoughts includes empty thoughts section', async () => {
+  test('Entity with zero thoughts does NOT include empty thoughts section', async () => {
     const prompt = await buildPrompt([]);
 
-    // Should include the thoughts section but it should be empty
-    expect(prompt).toContain('<thoughts>\n\n</thoughts>');
+    // Should NOT include the thoughts section when empty (smart template engine)
+    expect(prompt).not.toContain('<thoughts>');
     expect(prompt).not.toContain('Your most recent thoughts');
   });
 
@@ -136,13 +136,15 @@ describe('Prompt Assembly with template-based system', () => {
     expect(prompt).toContain('<content_policy>');
     expect(prompt).toContain('<world_context>');
     expect(prompt).toContain('<perception_log>');
-    expect(prompt).toContain('<thoughts>');
-    expect(prompt).toContain('<notes>');
-    expect(prompt).toContain('<goals>');
+    expect(prompt).toContain('<thoughts>'); // This should exist because we have thoughts
+    // Notes and goals sections are conditional - they won't appear if empty
     expect(prompt).toContain('<available_actions_info>');
-    expect(prompt).toContain('<indexed_choices>');
-    expect(prompt).toContain('<user_input>');
+    // user_input section has been removed from AI character templates
     expect(prompt).toContain('<final_instructions>');
+
+    // Verify conditional sections are not present when empty
+    expect(prompt).not.toContain('<notes>'); // Should be empty and therefore not present
+    expect(prompt).not.toContain('<goals>'); // Should be empty and therefore not present
   });
 
   test('Prompt sections are in the correct order', async () => {

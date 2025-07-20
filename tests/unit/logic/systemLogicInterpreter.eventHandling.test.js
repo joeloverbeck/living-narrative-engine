@@ -129,7 +129,9 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: test:no-rules')
+        expect.stringContaining(
+          'SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: test:no-rules'
+        )
       );
     });
 
@@ -145,8 +147,11 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       interpreter.initialize();
 
       // Verify event handler was subscribed
-      expect(mockEventBus.subscribe).toHaveBeenCalledWith('*', expect.any(Function));
-      
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        '*',
+        expect.any(Function)
+      );
+
       const eventHandler = mockEventBus.subscribe.mock.calls[0][1];
 
       await eventHandler({
@@ -155,17 +160,27 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
 
       // Check that the event received log exists
-      const eventReceivedCalls = mockLogger.debug.mock.calls.filter(call => 
-        call[0] && call[0].includes('🎯 [SystemLogicInterpreter] Event received: test:event')
+      const eventReceivedCalls = mockLogger.debug.mock.calls.filter(
+        (call) =>
+          call[0] &&
+          call[0].includes(
+            '🎯 [SystemLogicInterpreter] Event received: test:event'
+          )
       );
       expect(eventReceivedCalls.length).toBeGreaterThan(0);
 
       // Check that the rule count log exists with correct payload
-      const ruleCountCalls = mockLogger.debug.mock.calls.filter(call => 
-        call[0] && call[0].includes('Received event: test:event. Found 1 potential rule(s).')
+      const ruleCountCalls = mockLogger.debug.mock.calls.filter(
+        (call) =>
+          call[0] &&
+          call[0].includes(
+            'Received event: test:event. Found 1 potential rule(s).'
+          )
       );
       expect(ruleCountCalls.length).toBeGreaterThan(0);
-      expect(ruleCountCalls[0][1]).toEqual({ payload: { actorId: 'test-actor', targetId: 'test-target' } });
+      expect(ruleCountCalls[0][1]).toEqual({
+        payload: { actorId: 'test-actor', targetId: 'test-target' },
+      });
     });
 
     it('should handle ATTEMPT_ACTION_ID events with specific action rules', async () => {
@@ -194,7 +209,9 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: Received event: core:attempt_action. Found 2 potential rule(s).'),
+        expect.stringContaining(
+          'SystemLogicInterpreter: Received event: core:attempt_action. Found 2 potential rule(s).'
+        ),
         expect.any(Object)
       );
     });
@@ -219,7 +236,9 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: Received event: core:attempt_action. Found 1 potential rule(s).'),
+        expect.stringContaining(
+          'SystemLogicInterpreter: Received event: core:attempt_action. Found 1 potential rule(s).'
+        ),
         expect.any(Object)
       );
     });
@@ -229,7 +248,9 @@ describe('SystemLogicInterpreter - Event Handling', () => {
         {
           rule_id: 'specific-action-rule',
           event_type: ATTEMPT_ACTION_ID,
-          condition: { '==': [{ var: 'event.payload.actionId' }, 'other-action'] },
+          condition: {
+            '==': [{ var: 'event.payload.actionId' }, 'other-action'],
+          },
           actions: [{ type: 'LOG', parameters: { message: 'other' } }],
         },
       ];
@@ -244,8 +265,12 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
 
       // Check that the "no matching rules" log exists
-      const noMatchingRulesCalls = mockLogger.debug.mock.calls.filter(call => 
-        call[0] && call[0].includes('🎯 [SystemLogicInterpreter] No matching rules for event: core:attempt_action')
+      const noMatchingRulesCalls = mockLogger.debug.mock.calls.filter(
+        (call) =>
+          call[0] &&
+          call[0].includes(
+            '🎯 [SystemLogicInterpreter] No matching rules for event: core:attempt_action'
+          )
       );
       expect(noMatchingRulesCalls.length).toBeGreaterThan(0);
     });
@@ -308,7 +333,9 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: [Event: test:event] Assembling execution context via createNestedExecutionContext... (ActorID: test-actor, TargetID: test-target)')
+        expect.stringContaining(
+          'SystemLogicInterpreter: [Event: test:event] Assembling execution context via createNestedExecutionContext... (ActorID: test-actor, TargetID: test-target)'
+        )
       );
     });
 
@@ -371,7 +398,9 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: ❌ [SystemLogicInterpreter] Failed to build JsonLogic context for event'),
+        expect.stringContaining(
+          'SystemLogicInterpreter: ❌ [SystemLogicInterpreter] Failed to build JsonLogic context for event'
+        ),
         expect.any(Object),
         expect.any(Error)
       );
@@ -386,10 +415,14 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: [Event: test:event] createNestedExecutionContext returned a valid ExecutionContext.')
+        expect.stringContaining(
+          'SystemLogicInterpreter: [Event: test:event] createNestedExecutionContext returned a valid ExecutionContext.'
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: [Event: test:event] Final ExecutionContext (nested structure) assembled successfully.')
+        expect.stringContaining(
+          'SystemLogicInterpreter: [Event: test:event] Final ExecutionContext (nested structure) assembled successfully.'
+        )
       );
     });
   });
@@ -431,13 +464,19 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: 🚀 [SystemLogicInterpreter] Starting rule processing for event: test:event (2 rules)')
+        expect.stringContaining(
+          'SystemLogicInterpreter: 🚀 [SystemLogicInterpreter] Starting rule processing for event: test:event (2 rules)'
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: 📋 [SystemLogicInterpreter] Processing rule 1/2: rule-1')
+        expect.stringContaining(
+          'SystemLogicInterpreter: 📋 [SystemLogicInterpreter] Processing rule 1/2: rule-1'
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: 📋 [SystemLogicInterpreter] Processing rule 2/2: rule-2')
+        expect.stringContaining(
+          'SystemLogicInterpreter: 📋 [SystemLogicInterpreter] Processing rule 2/2: rule-2'
+        )
       );
     });
 
@@ -475,11 +514,15 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining("SystemLogicInterpreter: ❌ [SystemLogicInterpreter] Rule 'failing-rule' threw error:"),
+        expect.stringContaining(
+          "SystemLogicInterpreter: ❌ [SystemLogicInterpreter] Rule 'failing-rule' threw error:"
+        ),
         expect.any(Error)
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: ✅ [SystemLogicInterpreter] Rule success-rule completed successfully')
+        expect.stringContaining(
+          'SystemLogicInterpreter: ✅ [SystemLogicInterpreter] Rule success-rule completed successfully'
+        )
       );
     });
 
@@ -527,10 +570,14 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: 📋 [SystemLogicInterpreter] Processing rule 1/1: NO_ID')
+        expect.stringContaining(
+          'SystemLogicInterpreter: 📋 [SystemLogicInterpreter] Processing rule 1/1: NO_ID'
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: ✅ [SystemLogicInterpreter] Rule NO_ID completed successfully')
+        expect.stringContaining(
+          'SystemLogicInterpreter: ✅ [SystemLogicInterpreter] Rule NO_ID completed successfully'
+        )
       );
     });
   });
@@ -588,7 +635,9 @@ describe('SystemLogicInterpreter - Event Handling', () => {
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Processing event: test:event. Found 1 potential rule(s).'),
+        expect.stringContaining(
+          'SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Processing event: test:event. Found 1 potential rule(s).'
+        ),
         expect.objectContaining({
           payload: testPayload,
           ruleIds: ['test-rule'],

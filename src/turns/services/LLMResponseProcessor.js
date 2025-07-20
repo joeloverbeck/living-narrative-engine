@@ -159,7 +159,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
    * @description Extract the actionable data from the validated JSON.
    * @param {object} parsed - Validated JSON object from the LLM.
    * @param {string} actorId - ID of the actor for logging context.
-   * @returns {{ action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: string[] } }}
+   * @returns {{ action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}> } }}
    */
   #extractData(parsed, actorId) {
     const { chosenIndex, speech, thoughts, notes } = parsed;
@@ -180,7 +180,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
    *
    * @param {string} llmJsonResponse
    * @param {string} actorId
-   * @returns {Promise<{ success: boolean; action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: string[] } }>}
+   * @returns {Promise<{ success: boolean; action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}> } }>}
    */
   async processResponse(llmJsonResponse, actorId) {
     const parsed = await this.#parseResponse(llmJsonResponse, actorId);

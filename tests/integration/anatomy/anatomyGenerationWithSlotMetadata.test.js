@@ -26,17 +26,19 @@ describe('Anatomy Generation with Slot Metadata', () => {
   async function createActorWithGeneratedAnatomy(recipeId) {
     const actor = await testBed.createActor({ recipeId });
     const actorId = actor.id;
-    
+
     // Generate anatomy
     await testBed.anatomyGenerationService.generateAnatomyIfNeeded(actorId);
-    
+
     return { actor, actorId };
   }
 
   describe('Slot metadata component creation', () => {
     it('should create clothing:slot_metadata component during anatomy generation', async () => {
       // Create an actor with generated anatomy
-      const { actorId } = await createActorWithGeneratedAnatomy('anatomy:human_female_balanced');
+      const { actorId } = await createActorWithGeneratedAnatomy(
+        'anatomy:human_female_balanced'
+      );
 
       // Verify the entity has the slot metadata component
       const entity = testBed.entityManager.getEntityInstance(actorId);
@@ -50,7 +52,9 @@ describe('Anatomy Generation with Slot Metadata', () => {
 
     it('should populate slot metadata with correct socket mappings from blueprint', async () => {
       // Create an entity with female anatomy
-      const { actorId } = await createActorWithGeneratedAnatomy('anatomy:human_female_balanced');
+      const { actorId } = await createActorWithGeneratedAnatomy(
+        'anatomy:human_female_balanced'
+      );
 
       // Get the slot metadata
       const slotMetadata = testBed.entityManager.getComponentData(
@@ -60,22 +64,42 @@ describe('Anatomy Generation with Slot Metadata', () => {
 
       // Verify torso_upper mapping exists and has correct sockets
       expect(slotMetadata.slotMappings.torso_upper).toBeDefined();
-      expect(slotMetadata.slotMappings.torso_upper.coveredSockets).toContain('left_breast');
-      expect(slotMetadata.slotMappings.torso_upper.coveredSockets).toContain('right_breast');
-      expect(slotMetadata.slotMappings.torso_upper.coveredSockets).toContain('left_chest');
-      expect(slotMetadata.slotMappings.torso_upper.coveredSockets).toContain('right_chest');
-      expect(slotMetadata.slotMappings.torso_upper.coveredSockets).toContain('chest_center');
+      expect(slotMetadata.slotMappings.torso_upper.coveredSockets).toContain(
+        'left_breast'
+      );
+      expect(slotMetadata.slotMappings.torso_upper.coveredSockets).toContain(
+        'right_breast'
+      );
+      expect(slotMetadata.slotMappings.torso_upper.coveredSockets).toContain(
+        'left_chest'
+      );
+      expect(slotMetadata.slotMappings.torso_upper.coveredSockets).toContain(
+        'right_chest'
+      );
+      expect(slotMetadata.slotMappings.torso_upper.coveredSockets).toContain(
+        'chest_center'
+      );
 
       // Verify torso_lower mapping for female-specific sockets
       expect(slotMetadata.slotMappings.torso_lower).toBeDefined();
-      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain('vagina');
-      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain('pubic_hair');
-      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain('left_hip');
-      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain('right_hip');
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'vagina'
+      );
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'pubic_hair'
+      );
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'left_hip'
+      );
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'right_hip'
+      );
     });
 
     it('should include allowed layers in slot metadata', async () => {
-      const { actorId } = await createActorWithGeneratedAnatomy('anatomy:human_female_balanced');
+      const { actorId } = await createActorWithGeneratedAnatomy(
+        'anatomy:human_female_balanced'
+      );
 
       const slotMetadata = testBed.entityManager.getComponentData(
         actorId,
@@ -84,15 +108,25 @@ describe('Anatomy Generation with Slot Metadata', () => {
 
       // Check allowed layers for torso_upper
       expect(slotMetadata.slotMappings.torso_upper.allowedLayers).toBeDefined();
-      expect(slotMetadata.slotMappings.torso_upper.allowedLayers).toContain('underwear');
-      expect(slotMetadata.slotMappings.torso_upper.allowedLayers).toContain('base');
-      expect(slotMetadata.slotMappings.torso_upper.allowedLayers).toContain('outer');
-      expect(slotMetadata.slotMappings.torso_upper.allowedLayers).toContain('armor');
+      expect(slotMetadata.slotMappings.torso_upper.allowedLayers).toContain(
+        'underwear'
+      );
+      expect(slotMetadata.slotMappings.torso_upper.allowedLayers).toContain(
+        'base'
+      );
+      expect(slotMetadata.slotMappings.torso_upper.allowedLayers).toContain(
+        'outer'
+      );
+      expect(slotMetadata.slotMappings.torso_upper.allowedLayers).toContain(
+        'armor'
+      );
     });
 
     it('should create different slot metadata for male anatomy', async () => {
       // Create an entity with male anatomy
-      const { actorId } = await createActorWithGeneratedAnatomy('anatomy:human_male_balanced');
+      const { actorId } = await createActorWithGeneratedAnatomy(
+        'anatomy:human_male_balanced'
+      );
 
       const slotMetadata = testBed.entityManager.getComponentData(
         actorId,
@@ -101,13 +135,21 @@ describe('Anatomy Generation with Slot Metadata', () => {
 
       // Verify male-specific mappings
       expect(slotMetadata.slotMappings.torso_lower).toBeDefined();
-      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain('penis');
-      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain('left_testicle');
-      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain('right_testicle');
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'penis'
+      );
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'left_testicle'
+      );
+      expect(slotMetadata.slotMappings.torso_lower.coveredSockets).toContain(
+        'right_testicle'
+      );
     });
 
     it('should only include slots with anatomySockets in metadata', async () => {
-      const { actorId } = await createActorWithGeneratedAnatomy('anatomy:human_female_balanced');
+      const { actorId } = await createActorWithGeneratedAnatomy(
+        'anatomy:human_female_balanced'
+      );
 
       const slotMetadata = testBed.entityManager.getComponentData(
         actorId,
@@ -118,7 +160,7 @@ describe('Anatomy Generation with Slot Metadata', () => {
       // because they don't directly map to anatomy sockets for coverage
       expect(slotMetadata.slotMappings.full_body).toBeUndefined();
       expect(slotMetadata.slotMappings.legs).toBeUndefined();
-      
+
       // But slots with anatomySockets should be included
       expect(slotMetadata.slotMappings.torso_upper).toBeDefined();
       expect(slotMetadata.slotMappings.torso_lower).toBeDefined();
@@ -149,11 +191,15 @@ describe('Anatomy Generation with Slot Metadata', () => {
       const testBlueprint = {
         id: 'test:no_clothing_slots',
         root: 'test:simple_torso',
-        slots: {}
+        slots: {},
       };
 
       // Register the test blueprint
-      testBed.registry.store('anatomyBlueprints', testBlueprint.id, testBlueprint);
+      testBed.registry.store(
+        'anatomyBlueprints',
+        testBlueprint.id,
+        testBlueprint
+      );
 
       // Create a test recipe
       const testRecipe = {
@@ -166,7 +212,7 @@ describe('Anatomy Generation with Slot Metadata', () => {
             preferId: 'test:simple_torso',
           },
         },
-        patterns: []
+        patterns: [],
       };
 
       testBed.registry.store('anatomyRecipes', testRecipe.id, testRecipe);
@@ -183,47 +229,103 @@ describe('Anatomy Generation with Slot Metadata', () => {
   describe('Integration with isSocketCoveredOperator', () => {
     it('should work with isSocketCoveredOperator after generation', async () => {
       // Create entity with anatomy
-      const { actorId } = await createActorWithGeneratedAnatomy('anatomy:human_female_balanced');
+      const { actorId } = await createActorWithGeneratedAnatomy(
+        'anatomy:human_female_balanced'
+      );
 
       // Add equipment component
       await testBed.entityManager.addComponent(actorId, 'clothing:equipment', {
         equipped: {
           torso_upper: {
-            base: 'some_shirt_id'
-          }
-        }
+            base: 'some_shirt_id',
+          },
+        },
       });
 
       // Get the isSocketCoveredOperator from the logic registry
       const logicRegistry = testBed.container.get('ILogicRegistry');
-      const isSocketCoveredOp = logicRegistry.getCustomOperator('isSocketCovered');
+      const isSocketCoveredOp =
+        logicRegistry.getCustomOperator('isSocketCovered');
 
       // Test that covered sockets return true
       const context = { entity: actorId };
-      expect(isSocketCoveredOp.evaluate(['entity', 'left_breast'], context)).toBe(true);
-      expect(isSocketCoveredOp.evaluate(['entity', 'right_breast'], context)).toBe(true);
-      expect(isSocketCoveredOp.evaluate(['entity', 'chest_center'], context)).toBe(true);
+      expect(
+        isSocketCoveredOp.evaluate(['entity', 'left_breast'], context)
+      ).toBe(true);
+      expect(
+        isSocketCoveredOp.evaluate(['entity', 'right_breast'], context)
+      ).toBe(true);
+      expect(
+        isSocketCoveredOp.evaluate(['entity', 'chest_center'], context)
+      ).toBe(true);
 
       // Test that uncovered sockets return false
-      expect(isSocketCoveredOp.evaluate(['entity', 'vagina'], context)).toBe(false);
+      expect(isSocketCoveredOp.evaluate(['entity', 'vagina'], context)).toBe(
+        false
+      );
     });
 
     it('should handle cache correctly across multiple checks', async () => {
-      const { actorId } = await createActorWithGeneratedAnatomy('anatomy:human_female_balanced');
+      const { actorId } = await createActorWithGeneratedAnatomy(
+        'anatomy:human_female_balanced'
+      );
 
       const logicRegistry = testBed.container.get('ILogicRegistry');
-      const isSocketCoveredOp = logicRegistry.getCustomOperator('isSocketCovered');
+      const isSocketCoveredOp =
+        logicRegistry.getCustomOperator('isSocketCovered');
       const context = { entity: actorId };
 
       // First check should populate cache
-      expect(isSocketCoveredOp.evaluate(['entity', 'left_breast'], context)).toBe(false);
+      expect(
+        isSocketCoveredOp.evaluate(['entity', 'left_breast'], context)
+      ).toBe(false);
 
       // Second check should use cache (we can't directly test this, but it should be faster)
-      expect(isSocketCoveredOp.evaluate(['entity', 'left_breast'], context)).toBe(false);
+      expect(
+        isSocketCoveredOp.evaluate(['entity', 'left_breast'], context)
+      ).toBe(false);
 
       // Clear cache and check again
       isSocketCoveredOp.clearCache(actorId);
-      expect(isSocketCoveredOp.evaluate(['entity', 'left_breast'], context)).toBe(false);
+      expect(
+        isSocketCoveredOp.evaluate(['entity', 'left_breast'], context)
+      ).toBe(false);
+    });
+  });
+
+  describe('Regression tests', () => {
+    it('should generate back_accessory with "accessory" layer without validation errors', async () => {
+      // This is a regression test for the schema mismatch issue where
+      // blueprint data contained "accessory" but schema expected "accessories"
+      const { actorId } = await createActorWithGeneratedAnatomy(
+        'anatomy:human_female_balanced'
+      );
+
+      // Verify entity has the slot metadata component
+      const entity = testBed.entityManager.getEntityInstance(actorId);
+      expect(entity.hasComponent('clothing:slot_metadata')).toBe(true);
+
+      // Get the component data
+      const slotMetadata = entity.getComponentData('clothing:slot_metadata');
+      expect(slotMetadata).toBeDefined();
+      expect(slotMetadata.slotMappings).toBeDefined();
+
+      // Verify back_accessory slot exists and has correct accessory layer
+      expect(slotMetadata.slotMappings.back_accessory).toBeDefined();
+      expect(slotMetadata.slotMappings.back_accessory.allowedLayers).toContain(
+        'accessory'
+      );
+      expect(slotMetadata.slotMappings.back_accessory.allowedLayers).toContain(
+        'armor'
+      );
+
+      // Verify covered sockets
+      expect(slotMetadata.slotMappings.back_accessory.coveredSockets).toContain(
+        'upper_back'
+      );
+      expect(slotMetadata.slotMappings.back_accessory.coveredSockets).toContain(
+        'lower_back'
+      );
     });
   });
 });

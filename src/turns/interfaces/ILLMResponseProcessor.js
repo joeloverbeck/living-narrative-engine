@@ -4,7 +4,7 @@
  * @typedef {object} LlmProcessingResult
  * @property {boolean} success            – true when the JSON parsed & validated
  * @property {{ chosenIndex: number; speech: string }} action – The structured action data.
- * @property {{thoughts: string; notes?: string[]}|null} extractedData – Extracted metadata.
+ * @property {{thoughts: string; notes?: Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}>}|null} extractedData – Extracted metadata.
  */
 
 /**
