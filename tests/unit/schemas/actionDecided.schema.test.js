@@ -81,6 +81,7 @@ describe('Schema – core:action_decided payload', () => {
           {
             text: 'Player seems nervous',
             subject: 'player-1',
+            subjectType: 'character',
             context: 'dialogue interaction',
             tags: ['behavior', 'observation'],
           },
@@ -101,6 +102,7 @@ describe('Schema – core:action_decided payload', () => {
           {
             text: 'Structured note',
             subject: 'test-subject',
+            subjectType: 'other',
           },
         ],
       },
@@ -117,6 +119,7 @@ describe('Schema – core:action_decided payload', () => {
           {
             text: 'Minimal note',
             subject: 'something',
+            subjectType: 'other',
           },
         ],
       },

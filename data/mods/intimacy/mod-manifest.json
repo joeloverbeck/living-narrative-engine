@@ -22,12 +22,16 @@
       "massage_back.action.json",
       "massage_shoulders.action.json",
       "peck_on_lips.action.json",
+      "place_hand_on_waist.action.json",
       "step_back.action.json",
       "thumb_wipe_cheek.action.json",
       "turn_around.action.json",
       "turn_around_to_face.action.json"
     ],
-    "components": ["closeness.component.json", "facing_away.component.json"],
+    "components": [
+      "closeness.component.json",
+      "facing_away.component.json"
+    ],
     "conditions": [
       "actor-has-facing-away.condition.json",
       "actor-in-entity-facing-away.condition.json",
@@ -42,6 +46,7 @@
       "event-is-action-massage-back.condition.json",
       "event-is-action-massage-shoulders.condition.json",
       "event-is-action-peck_on_lips.condition.json",
+      "event-is-action-place-hand-on-waist.condition.json",
       "event-is-action-step-back.condition.json",
       "event-is-action-thumb-wipe-cheek.condition.json",
       "event-is-action-turn-around-to-face.condition.json",
@@ -66,12 +71,16 @@
       "lick_lips.rule.json",
       "massage_back.rule.json",
       "peck_on_lips.rule.json",
+      "place_hand_on_waist.rule.json",
       "step_back.rule.json",
       "thumb_wipe_cheek.rule.json",
       "turn_around.rule.json",
       "turn_around_to_face.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"],
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ],
     "scopes": [
       "actors_im_facing_away_from.scope",
       "actors_with_arms_facing_forward.scope",

@@ -1,230 +1,369 @@
-PromptTextLoader: Stored prompt text under type ‘prompt_text’ with id ‘core’.
-consoleLogger.js:187 SystemInitializer: System PromptStaticContentService initialized successfully.
-consoleLogger.js:187 SystemInitializer: System 'TurnManager' has no initialize() method, skipping.
-consoleLogger.js:187 SystemInitializer: Initialization loop for tagged systems completed.
-consoleLogger.js:187 InitializationService: Tagged system initialization complete.
-consoleLogger.js:187 Initializing world entities...
-consoleLogger.js:187 WorldInitializer: Starting world entity initialization process for world: p_erotica:donostia...
-consoleLogger.js:187 WorldInitializer (Pass 1): Found 4 instances in world 'p_erotica:donostia'.
-consoleLogger.js:175 WorldInitializer: Critical error during entity initialization for world 'p_erotica:donostia': Error: IEntityManager.hasBatchSupport not implemented.
-    at EntityManagerAdapter.hasBatchSupport (IEntityManager.js:198:11)
-    at #shouldUseBatchOperations (worldInitializer.js:190:32)
-    at #instantiateEntitiesFromWorldBatch (worldInitializer.js:404:15)
-    at async WorldInitializer.initializeWorldEntities (worldInitializer.js:892:9)
-    at async #initWorld (initializationService.js:395:7)
-    at async InitializationService.runInitializationSequence (initializationService.js:304:7)
-    at async #executeInitializationSequence (gameEngine.js:202:7)
-    at async GameEngine.startNewGame (gameEngine.js:318:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:254:25)
-error @ consoleLogger.js:175
-initializeWorldEntities @ worldInitializer.js:910
-await in initializeWorldEntities
-#initWorld @ initializationService.js:395
-runInitializationSequence @ initializationService.js:304
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:202
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:274
-await in #initializeNewGame
-startNewGame @ gameEngine.js:318
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this error
-consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
-consoleLogger.js:175 VED: Payload validation FAILED for event 'core:system_error_occurred'. Dispatch SKIPPED. Errors: [/details]: must NOT have additional properties {payload: {…}, errors: Array(1)}
-error @ consoleLogger.js:175
-#validatePayload @ validatedEventDispatcher.js:144
-dispatch @ validatedEventDispatcher.js:219
-safeDispatchError @ safeDispatchErrorUtils.js:91
-initializeWorldEntities @ worldInitializer.js:915
-await in initializeWorldEntities
-#initWorld @ initializationService.js:395
-runInitializationSequence @ initializationService.js:304
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:202
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:274
-await in #initializeNewGame
-startNewGame @ gameEngine.js:318
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this error
-consoleLogger.js:187 VED: Dispatch skipped for 'core:system_error_occurred' due to validation failure (see error above).
-consoleLogger.js:175 CRITICAL ERROR during initialization sequence for world 'p_erotica:donostia': IEntityManager.hasBatchSupport not implemented. {errorMessage: 'IEntityManager.hasBatchSupport not implemented.', errorName: 'WorldInitializationError', errorStack: 'WorldInitializationError: IEntityManager.hasBatchS…nGame (http://127.0.0.1:8080/bundle.js:104655:27)'}
-error @ consoleLogger.js:175
-#reportFatalError @ initializationService.js:415
-runInitializationSequence @ initializationService.js:345
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:202
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:274
-await in #initializeNewGame
-startNewGame @ gameEngine.js:318
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this error
-consoleLogger.js:187 VED: EventDefinition not found for 'initialization:initialization_service:failed'. Skipping validation as allowed by options.
-consoleLogger.js:187 VED: Dispatching event 'initialization:initialization_service:failed' via EventBus... {worldName: 'p_erotica:donostia', error: 'IEntityManager.hasBatchSupport not implemented.', stack: 'WorldInitializationError: IEntityManager.hasBatchS…nGame (http://127.0.0.1:8080/bundle.js:104655:27)'}
-consoleLogger.js:187 [TitleRenderer] Received initialization failed event with envelope: {type: 'initialization:initialization_service:failed', payload: {…}}
-consoleLogger.js:187 [TitleRenderer] Extracted payload: {worldName: 'p_erotica:donostia', error: 'IEntityManager.hasBatchSupport not implemented.', stack: 'WorldInitializationError: IEntityManager.hasBatchS…nGame (http://127.0.0.1:8080/bundle.js:104655:27)'}
-consoleLogger.js:187 [TitleRenderer] Event type: undefined
-consoleLogger.js:187 [TitleRenderer] Payload.error: IEntityManager.hasBatchSupport not implemented.
-consoleLogger.js:187 [TitleRenderer] Title set to: "Initialization Failed (World: p_erotica:donostia)"
-consoleLogger.js:187 [TitleRenderer] Using error message: IEntityManager.hasBatchSupport not implemented.
-consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
-consoleLogger.js:175 VED: Payload validation FAILED for event 'core:system_error_occurred'. Dispatch SKIPPED. Errors: [/details]: must NOT have additional properties; [/details]: must NOT have additional properties {payload: {…}, errors: Array(2)}
+POST http://localhost:3001/api/llm-request 504 (Gateway Timeout)
+attemptFn @ httpUtils.js:216
+perform @ httpRetryManager.js:83
+fetchWithRetry @ httpUtils.js:232
+request @ retryHttpClient.js:189
+#sendRequest @ baseOpenRouterStrategy.js:299
+#handleResponse @ baseOpenRouterStrategy.js:411
+execute @ baseOpenRouterStrategy.js:482
+executeRequest @ llmRequestExecutor.js:69
+getAIDecision @ configurableLLMAdapter.js:343
+await in getAIDecision
+choose @ llmChooser.js:69
+await in choose
+delegate @ llmDecisionProvider.js:40
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62Understand this error
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:system_warning_occurred'. Dispatch SKIPPED. Errors: [/details/raw]: must be string {payload: {…}, errors: Array(1)}
 error @ consoleLogger.js:175
 #validatePayload @ validatedEventDispatcher.js:144
 dispatch @ validatedEventDispatcher.js:219
 dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
 #executeSafely @ safeEventDispatcher.js:88
 dispatch @ safeEventDispatcher.js:122
-safeDispatchError @ safeDispatchErrorUtils.js:91
-#handleInitializationFailed @ titleRenderer.js:233
+#emitWarning @ retryHttpClient.js:132
+request @ retryHttpClient.js:209
+await in request
+#sendRequest @ baseOpenRouterStrategy.js:299
+#handleResponse @ baseOpenRouterStrategy.js:411
+execute @ baseOpenRouterStrategy.js:482
+executeRequest @ llmRequestExecutor.js:69
+getAIDecision @ configurableLLMAdapter.js:343
+await in getAIDecision
+choose @ llmChooser.js:69
+await in choose
+delegate @ llmDecisionProvider.js:40
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
 (anonymous) @ eventBus.js:144
 dispatch @ eventBus.js:141
 #emitEvent @ validatedEventDispatcher.js:192
 dispatch @ validatedEventDispatcher.js:222
-#reportFatalError @ initializationService.js:430
-runInitializationSequence @ initializationService.js:345
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:202
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:274
-await in #initializeNewGame
-startNewGame @ gameEngine.js:318
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this error
-consoleLogger.js:187 VED: Dispatch skipped for 'core:system_error_occurred' due to validation failure (see error above).
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: initialization:initialization_service:failed {payload: {…}, timestamp: 1753025284319, isAsync: true}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: initialization:initialization_service:failed
-consoleLogger.js:163 VED: EventDefinition not found for 'ui:show_fatal_error'. Cannot validate payload. Proceeding with dispatch.
-warn @ consoleLogger.js:163
-#validatePayload @ validatedEventDispatcher.js:87
-dispatch @ validatedEventDispatcher.js:219
-#reportFatalError @ initializationService.js:447
-runInitializationSequence @ initializationService.js:345
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:202
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:274
-await in #initializeNewGame
-startNewGame @ gameEngine.js:318
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this warning
-consoleLogger.js:187 VED: Dispatching event 'ui:show_fatal_error' via EventBus... {title: 'Fatal Initialization Error', message: "Initialization failed for world 'p_erotica:donosti…: IEntityManager.hasBatchSupport not implemented.", details: 'WorldInitializationError: IEntityManager.hasBatchS…nGame (http://127.0.0.1:8080/bundle.js:104655:27)'}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: ui:show_fatal_error {payload: {…}, timestamp: 1753025284320, isAsync: true}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: ui:show_fatal_error
-consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_error_occurred' (returned false). See VED logs for details. Payload: {"message":"[TitleRenderer] Overall initialization failed. Error: IEntityManager.hasBatchSupport not implemented.","details":{"worldName":"p_erotica:donostia","error":"IEntityManager.hasBatchSupport not implemented.","stack":"WorldInitializationError: IEntityManager.hasBatchSupport not implemented.\n    at WorldInitializer.initializeWorldEntities (http://127.0.0.1:8080/bundle.js:73364:67)\n    at async #initWorld (http://127.0.0.1:8080/bundle.js:89702:32)\n    at async InitializationService.runInitializationSequence (http://127.0.0.1:8080/bundle.js:89625:9)\n    at async #executeInitializationSequence (http://127.0.0.1:8080/bundle.js:103589:9)\n    at async GameEngine.startNewGame (http://127.0.0.1:8080/bundle.js:103689:28)\n    at async startGameStage (http://127.0.0.1:8080/bundle.js:104140:7)\n    at async beginGame (http://127.0.0.1:8080/bundle.js:104655:27)"}}
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62Understand this error
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_warning_occurred' (returned false). See VED logs for details. Payload: {"message":"Retryable HTTP error 504 on http://localhost:3001/api/llm-request (attempt 1/4)","details":{"statusCode":504,"url":"http://localhost:3001/api/llm-request","raw":{"error":true,"message":"The proxy encountered a network issue or exhausted retries when trying to reach the LLM provider.","stage":"llm_forwarding_network_or_retry_exhausted","details":{"llmId":"openrouter-claude-sonnet-4-toolcalling","targetUrl":"https://openrouter.ai/api/v1/chat/completions","originalErrorMessage":"RetryManager: Failed for https://openrouter.ai/api/v1/chat/completions after 1 attempt(s). Unexpected error: fetch failed","originalProxiedErrorMessage":"fetch failed"},"originalStatusCode":504},"timestamp":"2025-07-20T18:31:38.573Z"}}
 warn @ consoleLogger.js:163
 dispatch @ safeEventDispatcher.js:136
 await in dispatch
-safeDispatchError @ safeDispatchErrorUtils.js:91
-#handleInitializationFailed @ titleRenderer.js:233
+#emitWarning @ retryHttpClient.js:132
+request @ retryHttpClient.js:209
+await in request
+#sendRequest @ baseOpenRouterStrategy.js:299
+#handleResponse @ baseOpenRouterStrategy.js:411
+execute @ baseOpenRouterStrategy.js:482
+executeRequest @ llmRequestExecutor.js:69
+getAIDecision @ configurableLLMAdapter.js:343
+await in getAIDecision
+choose @ llmChooser.js:69
+await in choose
+delegate @ llmDecisionProvider.js:40
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
 (anonymous) @ eventBus.js:144
 dispatch @ eventBus.js:141
 #emitEvent @ validatedEventDispatcher.js:192
 dispatch @ validatedEventDispatcher.js:222
-#reportFatalError @ initializationService.js:430
-runInitializationSequence @ initializationService.js:345
-await in runInitializationSequence
-#executeInitializationSequence @ gameEngine.js:202
-await in #executeInitializationSequence
-#initializeNewGame @ gameEngine.js:274
-await in #initializeNewGame
-startNewGame @ gameEngine.js:318
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this warning
-consoleLogger.js:187 VED: Event 'initialization:initialization_service:failed' dispatch successful.
-consoleLogger.js:187 VED: Event 'ui:show_fatal_error' dispatch successful.
-consoleLogger.js:187 Dispatched initialization:initialization_service:failed event. {worldName: 'p_erotica:donostia', error: 'IEntityManager.hasBatchSupport not implemented.', stack: 'WorldInitializationError: IEntityManager.hasBatchS…nGame (http://127.0.0.1:8080/bundle.js:104655:27)'}
-consoleLogger.js:187 VED: Validating payload for event 'core:disable_input' against schema 'core:disable_input#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:disable_input'.
-consoleLogger.js:187 VED: Dispatching event 'core:disable_input' via EventBus... {message: 'Fatal error during initialization. Cannot continue.'}
-consoleLogger.js:187 [InputStateController] Input placeholder set to: "Fatal error during initialization. Cannot continue."
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:disable_input {payload: {…}, timestamp: 1753025284320, isAsync: true}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:disable_input
-consoleLogger.js:187 VED: Event 'core:disable_input' dispatch successful.
-consoleLogger.js:187 InitializationService: Dispatched ui:show_fatal_error and core:disable_input events.
-consoleLogger.js:187 GameEngine._executeInitializationSequence: Initialization sequence completed for "p_erotica:donostia". Success: false
-consoleLogger.js:163 GameEngine: InitializationService reported failure for "p_erotica:donostia".
-warn @ consoleLogger.js:163
-startNewGame @ gameEngine.js:326
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this warning
-consoleLogger.js:175 GameEngine._handleNewGameFailure: Handling new game failure for world "p_erotica:donostia": IEntityManager.hasBatchSupport not implemented. WorldInitializationError: IEntityManager.hasBatchSupport not implemented.
-    at WorldInitializer.initializeWorldEntities (worldInitializer.js:928:11)
-    at async #initWorld (initializationService.js:395:7)
-    at async InitializationService.runInitializationSequence (initializationService.js:304:7)
-    at async #executeInitializationSequence (gameEngine.js:202:7)
-    at async GameEngine.startNewGame (gameEngine.js:318:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:254:25)Caused by: Error: IEntityManager.hasBatchSupport not implemented.
-    at EntityManagerAdapter.hasBatchSupport (IEntityManager.js:198:11)
-    at #shouldUseBatchOperations (worldInitializer.js:190:32)
-    at #instantiateEntitiesFromWorldBatch (worldInitializer.js:404:15)
-    at async WorldInitializer.initializeWorldEntities (worldInitializer.js:892:9)
-    at async #initWorld (initializationService.js:395:7)
-    at async InitializationService.runInitializationSequence (initializationService.js:304:7)
-    at async #executeInitializationSequence (gameEngine.js:202:7)
-    at async GameEngine.startNewGame (gameEngine.js:318:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:254:25)
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62Understand this warning
+httpUtils.js:216  POST http://localhost:3001/api/llm-request 504 (Gateway Timeout)
+attemptFn @ httpUtils.js:216
+perform @ httpRetryManager.js:83
+fetchWithRetry @ httpUtils.js:232
+request @ retryHttpClient.js:189
+await in request
+#sendRequest @ baseOpenRouterStrategy.js:299
+#handleResponse @ baseOpenRouterStrategy.js:411
+execute @ baseOpenRouterStrategy.js:482
+executeRequest @ llmRequestExecutor.js:69
+getAIDecision @ configurableLLMAdapter.js:343
+await in getAIDecision
+choose @ llmChooser.js:69
+await in choose
+delegate @ llmDecisionProvider.js:40
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62Understand this error
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:system_warning_occurred'. Dispatch SKIPPED. Errors: [/details/raw]: must be string {payload: {…}, errors: Array(1)}
 error @ consoleLogger.js:175
-processOperationFailure @ engineErrorUtils.js:74
-#processOperationFailure @ gameEngine.js:227
-#handleNewGameFailure @ gameEngine.js:240
-startNewGame @ gameEngine.js:329
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this error
-consoleLogger.js:187 engineErrorUtils.dispatchFailureAndReset: Dispatching UI event for operation failed.
-consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_operation_failed'. Cannot validate payload. Proceeding with dispatch.
-warn @ consoleLogger.js:163
-#validatePayload @ validatedEventDispatcher.js:87
+#validatePayload @ validatedEventDispatcher.js:144
 dispatch @ validatedEventDispatcher.js:219
 dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
 #executeSafely @ safeEventDispatcher.js:88
 dispatch @ safeEventDispatcher.js:122
-dispatchFailureAndReset @ engineErrorUtils.js:33
-processOperationFailure @ engineErrorUtils.js:79
-#processOperationFailure @ gameEngine.js:227
-#handleNewGameFailure @ gameEngine.js:240
-startNewGame @ gameEngine.js:329
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this warning
-consoleLogger.js:187 VED: Dispatching event 'core:ui_operation_failed' via EventBus... {errorMessage: 'Failed to start new game: IEntityManager.hasBatchSupport not implemented.', errorTitle: 'Initialization Error'}
-consoleLogger.js:187 EngineUIManager: Received core:ui_operation_failed {errorMessage: 'Failed to start new game: IEntityManager.hasBatchSupport not implemented.', errorTitle: 'Initialization Error'}
-consoleLogger.js:175 EngineUIManager: Initialization Error - Failed to start new game: IEntityManager.hasBatchSupport not implemented.
-error @ consoleLogger.js:175
-#handleEngineOperationFailedUI @ engineUIManager.js:283
+#emitWarning @ retryHttpClient.js:132
+request @ retryHttpClient.js:209
+await in request
+#sendRequest @ baseOpenRouterStrategy.js:299
+#handleResponse @ baseOpenRouterStrategy.js:411
+execute @ baseOpenRouterStrategy.js:482
+executeRequest @ llmRequestExecutor.js:69
+getAIDecision @ configurableLLMAdapter.js:343
+await in getAIDecision
+choose @ llmChooser.js:69
+await in choose
+delegate @ llmDecisionProvider.js:40
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:438
+await in advanceTurn
+#handleTurnEndedEvent @ turnManager.js:595
+(anonymous) @ turnManager.js:186
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+#emitEvent @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+#dispatchViaValidatedDispatcher @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+#processRule @ systemLogicInterpreter.js:422
+#handleEvent @ systemLogicInterpreter.js:325
+await in #handleEvent
 (anonymous) @ eventBus.js:144
 dispatch @ eventBus.js:141
 #emitEvent @ validatedEventDispatcher.js:192
@@ -232,147 +371,19 @@ dispatch @ validatedEventDispatcher.js:222
 dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
 #executeSafely @ safeEventDispatcher.js:88
 dispatch @ safeEventDispatcher.js:122
-dispatchFailureAndReset @ engineErrorUtils.js:33
-processOperationFailure @ engineErrorUtils.js:79
-#processOperationFailure @ gameEngine.js:227
-#handleNewGameFailure @ gameEngine.js:240
-startNewGame @ gameEngine.js:329
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this error
-consoleLogger.js:187 [InputStateController] Input placeholder set to: "Operation failed."
-consoleLogger.js:187 [TitleRenderer] Title set to: "Initialization Error"
-consoleLogger.js:175 EngineUIManager: Handled core:ui_operation_failed. Error Title: "Initialization Error", Message: "Failed to start new game: IEntityManager.hasBatchSupport not implemented.".
-error @ consoleLogger.js:175
-#handleEngineOperationFailedUI @ engineUIManager.js:288
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-#emitEvent @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchFailureAndReset @ engineErrorUtils.js:33
-processOperationFailure @ engineErrorUtils.js:79
-#processOperationFailure @ gameEngine.js:227
-#handleNewGameFailure @ gameEngine.js:240
-startNewGame @ gameEngine.js:329
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this error
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:ui_operation_failed {payload: {…}, timestamp: 1753025284321, isAsync: true}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:ui_operation_failed
-consoleLogger.js:187 VED: Event 'core:ui_operation_failed' dispatch successful.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:ui_operation_failed'.
-consoleLogger.js:175 GameEngine: Overall catch in startNewGame for world "p_erotica:donostia". Error: IEntityManager.hasBatchSupport not implemented. WorldInitializationError: IEntityManager.hasBatchSupport not implemented.
-    at WorldInitializer.initializeWorldEntities (worldInitializer.js:928:11)
-    at async #initWorld (initializationService.js:395:7)
-    at async InitializationService.runInitializationSequence (initializationService.js:304:7)
-    at async #executeInitializationSequence (gameEngine.js:202:7)
-    at async GameEngine.startNewGame (gameEngine.js:318:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:254:25)Caused by: Error: IEntityManager.hasBatchSupport not implemented.
-    at EntityManagerAdapter.hasBatchSupport (IEntityManager.js:198:11)
-    at #shouldUseBatchOperations (worldInitializer.js:190:32)
-    at #instantiateEntitiesFromWorldBatch (worldInitializer.js:404:15)
-    at async WorldInitializer.initializeWorldEntities (worldInitializer.js:892:9)
-    at async #initWorld (initializationService.js:395:7)
-    at async InitializationService.runInitializationSequence (initializationService.js:304:7)
-    at async #executeInitializationSequence (gameEngine.js:202:7)
-    at async GameEngine.startNewGame (gameEngine.js:318:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:254:25)
-error @ consoleLogger.js:175
-#handleInitializationError @ gameEngine.js:300
-startNewGame @ gameEngine.js:333
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this error
-consoleLogger.js:175 Bootstrap Stage: Start Game: Error during gameEngine.startNewGame for world "p_erotica:donostia". WorldInitializationError: IEntityManager.hasBatchSupport not implemented.
-    at WorldInitializer.initializeWorldEntities (worldInitializer.js:928:11)
-    at async #initWorld (initializationService.js:395:7)
-    at async InitializationService.runInitializationSequence (initializationService.js:304:7)
-    at async #executeInitializationSequence (gameEngine.js:202:7)
-    at async GameEngine.startNewGame (gameEngine.js:318:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:254:25)Caused by: Error: IEntityManager.hasBatchSupport not implemented.
-    at EntityManagerAdapter.hasBatchSupport (IEntityManager.js:198:11)
-    at #shouldUseBatchOperations (worldInitializer.js:190:32)
-    at #instantiateEntitiesFromWorldBatch (worldInitializer.js:404:15)
-    at async WorldInitializer.initializeWorldEntities (worldInitializer.js:892:9)
-    at async #initWorld (initializationService.js:395:7)
-    at async InitializationService.runInitializationSequence (initializationService.js:304:7)
-    at async #executeInitializationSequence (gameEngine.js:202:7)
-    at async GameEngine.startNewGame (gameEngine.js:318:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:254:25)
-error @ consoleLogger.js:175
-startGameStage @ engineStages.js:92
-await in startGameStage
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this error
-consoleLogger.js:175 [errorUtils] [Bootstrapper Error - Phase: Start Game] Critical error during application bootstrap in phase: Start Game. StageError: Failed to start new game with world "p_erotica:donostia": IEntityManager.hasBatchSupport not implemented.
-    at createStageError (bootstrapperHelpers.js:120:10)
-    at stageFailure2 (bootstrapperHelpers.js:140:27)
-    at startGameStage (engineStages.js:96:12)
-    at async beginGame (main.js:254:25)Caused by: WorldInitializationError: IEntityManager.hasBatchSupport not implemented.
-    at WorldInitializer.initializeWorldEntities (worldInitializer.js:928:11)
-    at async #initWorld (initializationService.js:395:7)
-    at async InitializationService.runInitializationSequence (initializationService.js:304:7)
-    at async #executeInitializationSequence (gameEngine.js:202:7)
-    at async GameEngine.startNewGame (gameEngine.js:318:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:254:25)Caused by: Error: IEntityManager.hasBatchSupport not implemented.
-    at EntityManagerAdapter.hasBatchSupport (IEntityManager.js:198:11)
-    at #shouldUseBatchOperations (worldInitializer.js:190:32)
-    at #instantiateEntitiesFromWorldBatch (worldInitializer.js:404:15)
-    at async WorldInitializer.initializeWorldEntities (worldInitializer.js:892:9)
-    at async #initWorld (initializationService.js:395:7)
-    at async InitializationService.runInitializationSequence (initializationService.js:304:7)
-    at async #executeInitializationSequence (gameEngine.js:202:7)
-    at async GameEngine.startNewGame (gameEngine.js:318:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:254:25)
-error @ consoleLogger.js:175
-error @ loggerUtils.js:96
-logStartupError @ startupErrorHandler.js:106
-displayFatalStartupError @ startupErrorHandler.js:275
-displayFatalStartupError @ errorUtils.js:33
-beginGame @ main.js:260
-await in beginGame
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this error
-bootstrapperHelpers.js:120 Uncaught (in promise) StageError: Failed to start new game with world "p_erotica:donostia": IEntityManager.hasBatchSupport not implemented.
-    at createStageError (bootstrapperHelpers.js:120:10)
-    at stageFailure2 (bootstrapperHelpers.js:140:27)
-    at startGameStage (engineStages.js:96:12)
-    at async beginGame (main.js:254:25)Caused by: WorldInitializationError: IEntityManager.hasBatchSupport not implemented.
-    at WorldInitializer.initializeWorldEntities (worldInitializer.js:928:11)
-    at async #initWorld (initializationService.js:395:7)
-    at async InitializationService.runInitializationSequence (initializationService.js:304:7)
-    at async #executeInitializationSequence (gameEngine.js:202:7)
-    at async GameEngine.startNewGame (gameEngine.js:318:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:254:25)Caused by: Error: IEntityManager.hasBatchSupport not implemented.
-    at EntityManagerAdapter.hasBatchSupport (IEntityManager.js:198:11)
-    at #shouldUseBatchOperations (worldInitializer.js:190:32)
-    at #instantiateEntitiesFromWorldBatch (worldInitializer.js:404:15)
-    at async WorldInitializer.initializeWorldEntities (worldInitializer.js:892:9)
-    at async #initWorld (initializationService.js:395:7)
-    at async InitializationService.runInitializationSequence (initializationService.js:304:7)
-    at async #executeInitializationSequence (gameEngine.js:202:7)
-    at async GameEngine.startNewGame (gameEngine.js:318:26)
-    at async startGameStage (engineStages.js:87:5)
-    at async beginGame (main.js:254:25)
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:110
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62Understand this error
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:system_warning_occurred' (returned false). See VED logs for details. Payload: {"message":"Retryable HTTP error 504 on http://localhost:3001/api/llm-request (attempt 2/4)","details":{"statusCode":504,"url":"http://localhost:3001/api/llm-request","raw":{"error":true,"message":"The proxy encountered a network issue or exhausted retries when trying to reach the LLM provider.","stage":"llm_forwarding_network_or_retry_exhausted","details":{"llmId":"openrouter-claude-sonnet-4-toolcalling","targetUrl":"https://openrouter.ai/api/v1/chat/completions","originalErrorMessage":"RetryManager: Failed for https://openrouter.ai/api/v1/chat/completions after 1 attempt(s). Unexpected error: fetch failed","originalProxiedErrorMessage":"fetch failed"},"originalStatusCode":504},"timestamp":"2025-07-20T18:31:49.395Z"}}

@@ -43,6 +43,25 @@
                       "minLength": 1,
                       "description": "Primary subject of the note (entity, location, concept)"
                     },
+                    "subjectType": {
+                      "type": "string",
+                      "enum": [
+                        "character",
+                        "location",
+                        "item",
+                        "creature",
+                        "event",
+                        "concept",
+                        "relationship",
+                        "organization",
+                        "quest",
+                        "skill",
+                        "emotion",
+                        "other"
+                      ],
+                      "default": "other",
+                      "description": "Explicit categorization of the note's subject type"
+                    },
                     "context": {
                       "type": "string",
                       "description": "Where/how this was observed (optional)"
@@ -53,7 +72,7 @@
                       "description": "Additional categorization tags (optional)"
                     }
                   },
-                  "required": ["text", "subject"],
+                  "required": ["text", "subject", "subjectType"],
                   "additionalProperties": false
                 }
               ]
