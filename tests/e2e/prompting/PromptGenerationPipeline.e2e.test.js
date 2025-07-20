@@ -324,6 +324,41 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
   });
 
   /**
+   * Test: Character persona markdown formatting
+   * Verifies character persona uses enhanced markdown structure
+   */
+  test('should generate character persona with markdown formatting', async () => {
+    // Arrange
+    const aiActor = testActors.aiActor;
+    const turnContext = testBed.createTestTurnContext();
+    const availableActions = testBed.createTestActionComposites();
+
+    // Act
+    const prompt = await testBed.generatePrompt(
+      aiActor.id,
+      turnContext,
+      availableActions
+    );
+
+    // Assert - Verify markdown structure in character persona
+    expect(prompt).toMatch(/<character_persona>[\s\S]*## Your Description[\s\S]*<\/character_persona>/);
+    expect(prompt).toMatch(/\*\*[^*]+\*\*:/); // Bold formatting for attributes
+
+    // Extract character persona section for detailed validation
+    const sections = testBed.parsePromptSections(prompt);
+    const personaSection = sections.character_persona;
+    
+    // Verify specific markdown elements that should exist for the test character
+    expect(personaSection).toContain('YOU ARE Elara the Bard.');
+    expect(personaSection).toContain('## Your Description');
+    expect(personaSection).toMatch(/\*\*\w+\*\*:/); // Bold attribute labels (e.g., **Description**:)
+    
+    // Since the test character may not have all sections, just verify the structure
+    // Check that the character persona section uses markdown formatting
+    expect(personaSection).toMatch(/^##\s+/m); // Contains markdown headers
+  });
+
+  /**
    * Test: Token estimation and limits
    * Verifies token counting and warnings for large prompts
    */

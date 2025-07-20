@@ -118,7 +118,7 @@ describe('PromptBuilder (template-based)', () => {
 
     // Check complex sections are formatted correctly
     expect(prompt).toContain(
-      '<perception_log>\n<entry type="visual">\nTest perception 1\n</entry>\n<entry type="audio">\nTest perception 2\n</entry>\n</perception_log>'
+      '<perception_log>\nTest perception 1\nTest perception 2\n</perception_log>'
     );
     expect(prompt).toContain(
       '<thoughts>\n- Test thought 1\n- Test thought 2\n</thoughts>'
@@ -263,15 +263,9 @@ describe('PromptBuilder (template-based)', () => {
     const perceptionSection = prompt.match(
       /<perception_log>([\s\S]*?)<\/perception_log>/
     )[1];
-    expect(perceptionSection).toContain(
-      '<entry type="visual">\nA bright light\n</entry>'
-    );
-    expect(perceptionSection).toContain(
-      '<entry type="audio">\nA loud noise\n</entry>'
-    );
-    expect(perceptionSection).toContain(
-      '<entry type="tactile">\nA rough surface\n</entry>'
-    );
+    expect(perceptionSection).toContain('A bright light');
+    expect(perceptionSection).toContain('A loud noise');
+    expect(perceptionSection).toContain('A rough surface');
   });
 
   /* ──────────────────────────────────────────────────────────────────────── */

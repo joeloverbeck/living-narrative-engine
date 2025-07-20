@@ -618,7 +618,7 @@ describe('AIPromptContentProvider', () => {
     });
 
     describe('getCharacterPersonaContent', () => {
-      test('should return full persona string with all details', () => {
+      test('should return full persona string with all details in markdown format', () => {
         const dto = {
           ...minimalGameStateDto,
           actorPromptData: {
@@ -635,19 +635,23 @@ describe('AIPromptContentProvider', () => {
         const result = provider.getCharacterPersonaContent(dto);
 
         expect(result).toContain('YOU ARE Sir Reginald.');
-        expect(result).toContain('Your Description: A brave knight.');
-        expect(result).toContain('Your Personality: Gallant and Stoic.');
-        expect(result).toContain(
-          'Your Profile / Background: Born in a noble family, trained in swordsmanship.'
-        );
-        expect(result).toContain('Your Likes: Justice, good ale.');
-        expect(result).toContain('Your Dislikes: Dragons, injustice.');
-        expect(result).toContain('Your Secrets: Afraid of spiders.');
-        expect(result).toContain(
-          'Your Speech Patterns:\n- Verily!\n- Forsooth!'
-        );
+        expect(result).toContain('## Your Description');
+        expect(result).toContain('**Description**: A brave knight.');
+        expect(result).toContain('## Your Personality');
+        expect(result).toContain('Gallant and Stoic.');
+        expect(result).toContain('## Your Profile');
+        expect(result).toContain('Born in a noble family, trained in swordsmanship.');
+        expect(result).toContain('## Your Likes');
+        expect(result).toContain('Justice, good ale.');
+        expect(result).toContain('## Your Dislikes');
+        expect(result).toContain('Dragons, injustice.');
+        expect(result).toContain('## Your Secrets');
+        expect(result).toContain('Afraid of spiders.');
+        expect(result).toContain('## Your Speech Patterns');
+        expect(result).toContain('- Verily!');
+        expect(result).toContain('- Forsooth!');
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-          'AIPromptContentProvider: Formatting character persona content.'
+          'AIPromptContentProvider: Formatting character persona content with markdown structure.'
         );
       });
 
@@ -719,10 +723,12 @@ describe('AIPromptContentProvider', () => {
           },
         };
         const result = provider.getCharacterPersonaContent(dto);
-        expect(result).toContain('Your Personality: Friendly');
-        expect(result).not.toContain('Your Profile / Background:');
-        expect(result).not.toContain('Your Likes:');
-        expect(result).toContain('Your Secrets: A big one.');
+        expect(result).toContain('## Your Personality');
+        expect(result).toContain('Friendly');
+        expect(result).not.toContain('## Your Profile');
+        expect(result).not.toContain('## Your Likes');
+        expect(result).toContain('## Your Secrets');
+        expect(result).toContain('A big one.');
       });
     });
 
@@ -745,36 +751,38 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getWorldContextContent(dto);
 
-        expect(result).toContain('CURRENT SITUATION');
-        expect(result).toContain('Location: The Grand Hall.');
-        expect(result).toContain('Description: A vast and ornate hall.');
+        // Check markdown structure headers
+        expect(result).toContain('## Current Situation');
+        expect(result).toContain('### Location');
+        expect(result).toContain('The Grand Hall');
+        expect(result).toContain('### Description');
+        expect(result).toContain('A vast and ornate hall.');
 
-        expect(result).toContain('Exits from your current location:');
-        expect(result).toContain('- Towards north leads to The Library.');
-        expect(result).toContain(`- Towards south leads to loc_throne_room.`);
+        // Check exits section with markdown formatting
+        expect(result).toContain('## Exits from Current Location');
+        expect(result).toContain('- **Towards north** leads to The Library');
+        expect(result).toContain(`- **Towards south** leads to loc_throne_room`);
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Formatted 2 items for section "Exits from your current location"'
+            'Formatted 2 exits for location'
           )
         );
 
-        expect(result).toContain(
-          'Other characters present in this location (you cannot speak as them):'
+        // Check characters section with markdown formatting
+        expect(result).toContain('## Other Characters Present');
+        expect(result).toContain('### Guard Captain');
+        expect(result).toContain('- **Description**: Stern and watchful.'
         );
-        expect(result).toContain(
-          '- Guard Captain - Description: Stern and watchful.'
-        );
-        expect(result).toContain(
-          '- Jester - Description: Wearing colorful attire.'
-        );
+        expect(result).toContain('### Jester');
+        expect(result).toContain('- **Description**: Wearing colorful attire.');
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Formatted 2 items for section "Other characters present in this location (you cannot speak as them)"'
+            'Formatted 2 characters for location'
           )
         );
 
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-          'AIPromptContentProvider: Formatting world context content.'
+          'AIPromptContentProvider: Formatting world context content with markdown structure.'
         );
       });
 
@@ -799,30 +807,27 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getWorldContextContent(dto);
 
-        expect(result).toContain(
-          `Location: ${DEFAULT_FALLBACK_LOCATION_NAME}.`
-        );
+        expect(result).toContain('### Location');
+        expect(result).toContain(DEFAULT_FALLBACK_LOCATION_NAME);
         // If description is "  ", it becomes "" after ensureTerminalPunctuation.
-        expect(result).toContain(`Description: `);
+        expect(result).toContain('### Description');
         expect(result).not.toContain(
           `Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_DESCRIPTION_RAW)}`
         );
 
-        expect(result).toContain('Exits from your current location:');
+        expect(result).toContain('## Exits from Current Location');
         expect(result).toContain(PROMPT_FALLBACK_NO_EXITS);
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Section "Exits from your current location" is empty'
+            'No exits found, using fallback message'
           )
         );
 
-        expect(result).toContain(
-          'Other characters present in this location (you cannot speak as them):'
-        );
+        expect(result).toContain('## Other Characters Present');
         expect(result).toContain(PROMPT_FALLBACK_ALONE_IN_LOCATION);
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Section "Other characters present in this location (you cannot speak as them)" is empty'
+            'No other characters found, using fallback message'
           )
         );
       });
@@ -841,9 +846,9 @@ describe('AIPromptContentProvider', () => {
           },
         };
         const result = provider.getWorldContextContent(dto);
-        expect(result).toContain('- Towards east leads to village_east_gate.');
+        expect(result).toContain('- **Towards east** leads to village_east_gate');
         expect(result).toContain(
-          `- Towards west leads to ${DEFAULT_FALLBACK_LOCATION_NAME}.`
+          `- **Towards west** leads to ${DEFAULT_FALLBACK_LOCATION_NAME}`
         );
       });
     });

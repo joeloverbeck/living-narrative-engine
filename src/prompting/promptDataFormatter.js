@@ -96,7 +96,7 @@ export class PromptDataFormatter {
   }
 
   /**
-   * Format perception log entries
+   * Format perception log entries with simplified format (no XML tags)
    *
    * @param {RawPerceptionLogEntry[]} perceptionLogArray - Array of perception log entries
    * @returns {string} Formatted perception log content
@@ -113,13 +113,14 @@ export class PromptDataFormatter {
       .filter((entry) => entry && typeof entry === 'object')
       .map((entry) => {
         const content = entry.content || '';
-        const type = entry.type || 'unknown';
-        return `<entry type="${type}">\n${content}\n</entry>`;
+        // Return simplified format - just the content without XML tags
+        return content;
       })
+      .filter(content => content.trim().length > 0) // Remove empty entries
       .join('\n');
 
     this.#logger.debug(
-      `PromptDataFormatter: Formatted ${perceptionLogArray.length} perception log entries`
+      `PromptDataFormatter: Formatted ${perceptionLogArray.length} perception log entries with simplified format`
     );
     return entries;
   }
