@@ -1,0 +1,10 @@
+{
+  "id": "intimacy:place_hand_on_waist",
+  "name": "Place hand on waist",
+  "description": "Place a hand on someone's waist in an intimate gesture",
+  "scope": "intimacy:close_actors_in_front",
+  "required_components": {
+    "actor": ["intimacy:closeness"]
+  },
+  "template": "place a hand on {target}'s waist"
+}

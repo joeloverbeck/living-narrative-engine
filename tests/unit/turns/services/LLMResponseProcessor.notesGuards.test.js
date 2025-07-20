@@ -5,7 +5,6 @@
 
 import { LLMResponseProcessor } from '../../../../src/turns/services/LLMResponseProcessor.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { LLMProcessingError } from '../../../../src/turns/services/LLMResponseProcessor.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 import { LlmJsonService } from '../../../../src/llms/llmJsonService.js';

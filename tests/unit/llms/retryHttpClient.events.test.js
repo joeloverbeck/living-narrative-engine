@@ -120,4 +120,55 @@ describe('RetryHttpClient event dispatching', () => {
 
     expectNoDispatch(dispatcher.dispatch);
   });
+
+  it('handles object error bodies by stringifying them for the raw field', async () => {
+    // Mock a response that fails with a complex JSON error body
+    const complexErrorBody = {
+      error: true,
+      message: 'The proxy encountered a network issue',
+      stage: 'llm_forwarding_network_or_retry_exhausted',
+      details: {
+        llmId: 'openrouter-claude-sonnet-4',
+        targetUrl: 'https://openrouter.ai/api/v1/chat/completions',
+      },
+    };
+
+    global.fetch
+      .mockResolvedValueOnce(createResponse(JSON.stringify(complexErrorBody), { status: 504 }))
+      .mockResolvedValueOnce(createResponse('{"ok":true}', { status: 200 }));
+
+    const client = new RetryHttpClient({
+      logger,
+      dispatcher,
+      defaultMaxRetries: 1,
+      defaultBaseDelayMs: 0,
+      defaultMaxDelayMs: 0,
+    });
+
+    await client.request('https://example.com', { method: 'GET' });
+
+    // Verify the warning was dispatched
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_WARNING_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('Retryable HTTP error 504'),
+        details: expect.objectContaining({
+          statusCode: 504,
+          url: 'https://example.com',
+          raw: expect.any(String), // The raw field should be a string
+        }),
+      })
+    );
+
+    // Verify the raw field is a stringified version of the object (truncated to 200 chars)
+    const dispatchCall = dispatcher.dispatch.mock.calls.find(
+      (call) => call[0] === SYSTEM_WARNING_OCCURRED_ID
+    );
+    expect(dispatchCall).toBeDefined();
+    const rawField = dispatchCall[1].details.raw;
+    expect(typeof rawField).toBe('string');
+    expect(rawField.length).toBeLessThanOrEqual(200);
+    expect(rawField).toContain('error');
+    expect(rawField).toContain('true');
+  });
 });

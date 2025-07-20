@@ -122,10 +122,24 @@ export class RetryHttpClient extends IHttpClient {
   }
 
   #emitWarning(message, { statusCode, url, raw }) {
+    // Ensure raw is always a string for schema compliance
+    let rawString;
+    if (typeof raw === 'string') {
+      rawString = raw.slice(0, 200);
+    } else if (raw === null || raw === undefined) {
+      rawString = '';
+    } else {
+      try {
+        rawString = JSON.stringify(raw).slice(0, 200);
+      } catch (e) {
+        rawString = String(raw).slice(0, 200);
+      }
+    }
+    
     const details = {
       statusCode,
       url,
-      raw,
+      raw: rawString,
       timestamp: new Date().toISOString(),
     };
     // *** CORRECTED METHOD CALL ***
@@ -136,10 +150,24 @@ export class RetryHttpClient extends IHttpClient {
   }
 
   async #emitError(message, { statusCode, url, raw, stack }) {
+    // Ensure raw is always a string for schema compliance
+    let rawString;
+    if (typeof raw === 'string') {
+      rawString = raw.slice(0, 200);
+    } else if (raw === null || raw === undefined) {
+      rawString = '';
+    } else {
+      try {
+        rawString = JSON.stringify(raw).slice(0, 200);
+      } catch (e) {
+        rawString = String(raw).slice(0, 200);
+      }
+    }
+    
     const details = {
       statusCode,
       url,
-      raw,
+      raw: rawString,
       timestamp: new Date().toISOString(),
       stack,
       scopeName: 'RetryHttpClient',
@@ -213,7 +241,7 @@ export class RetryHttpClient extends IHttpClient {
               {
                 statusCode: status,
                 url,
-                raw: typeof raw === 'string' ? raw.slice(0, 200) : raw,
+                raw,
               }
             );
           } else {

@@ -93,6 +93,18 @@ describe('AnatomyInitializationService', () => {
       );
     });
 
+    it('should log debug message about registering event listeners', () => {
+      // Verify line 62 is covered - the debug log when registering listeners
+      service.initialize();
+
+      // Should have logged the debug message
+      const debugCalls = mockLogger.debug.mock.calls;
+      expect(debugCalls.length).toBeGreaterThan(0);
+      expect(debugCalls[0][0]).toBe(
+        'AnatomyInitializationService: Registering event listeners'
+      );
+    });
+
     it('should warn and return early if already initialized', () => {
       service.initialize();
 
@@ -140,6 +152,9 @@ describe('AnatomyInitializationService', () => {
 
         await boundHandlerRef(event);
 
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          "AnatomyInitializationService: Starting anatomy generation for entity 'entity-1'"
+        );
         expect(
           mockAnatomyGenerationService.generateAnatomyIfNeeded
         ).toHaveBeenCalledWith('entity-1');
