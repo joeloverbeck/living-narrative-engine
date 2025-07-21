@@ -464,7 +464,10 @@ export class LocationRenderer extends BoundDomRendererBase {
       this.elements.locationPortraitImageElement,
       this.elements.locationPortraitVisualsElement,
       locationDto,
-      this.logger
+      this.logger,
+      this.domElementFactory,
+      this.documentContext,
+      this._addDomListener.bind(this)
     );
   }
 
@@ -476,15 +479,19 @@ export class LocationRenderer extends BoundDomRendererBase {
    */
   renderDescription(locationDto) {
     DomUtils.clearElement(this.elements.descriptionDisplay);
-    const pDesc = this.domElementFactory.p(
-      undefined,
-      locationDto.description || DEFAULT_LOCATION_DESCRIPTION
-    );
-    if (pDesc) {
-      this.elements.descriptionDisplay.appendChild(pDesc);
-    } else {
-      this.elements.descriptionDisplay.textContent =
-        locationDto.description || DEFAULT_LOCATION_DESCRIPTION;
+
+    // Only show inline description if no portrait exists
+    if (!locationDto.portraitPath) {
+      const pDesc = this.domElementFactory.p(
+        undefined,
+        locationDto.description || DEFAULT_LOCATION_DESCRIPTION
+      );
+      if (pDesc) {
+        this.elements.descriptionDisplay.appendChild(pDesc);
+      } else {
+        this.elements.descriptionDisplay.textContent =
+          locationDto.description || DEFAULT_LOCATION_DESCRIPTION;
+      }
     }
   }
 

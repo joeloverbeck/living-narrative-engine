@@ -20,6 +20,8 @@ jest.mock('../../../../src/utils/index.js', () => ({
   }),
 }));
 
+// Note: We'll use Jest's fake timers in specific tests that need them
+
 import { AnatomyLoadingDetector } from '../../../../src/domUI/visualizer/AnatomyLoadingDetector.js';
 
 describe('AnatomyLoadingDetector - Anatomy Detection', () => {
@@ -41,6 +43,8 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
       anatomyLoadingDetector.dispose();
     }
     await testBed.cleanup();
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   describe('Constructor and Initialization', () => {
@@ -68,7 +72,7 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
   });
 
   describe('Anatomy Detection', () => {
-    // Parameterized tests for anatomy validation scenarios - optimized set
+    // Comprehensive parameterized tests for anatomy validation scenarios
     const anatomyValidationScenarios = [
       {
         name: 'should detect valid anatomy with all required fields',
@@ -82,8 +86,42 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
         expected: true,
       },
       {
-        name: 'should reject invalid anatomy data (null, missing body, or invalid types)',
+        name: 'should reject null anatomy data',
         anatomyData: null,
+        expected: false,
+      },
+      {
+        name: 'should reject empty anatomy data',
+        anatomyData: {},
+        expected: false,
+      },
+      {
+        name: 'should reject anatomy without body',
+        anatomyData: { recipeId: 'test:recipe' },
+        expected: false,
+      },
+      {
+        name: 'should reject anatomy without root',
+        anatomyData: {
+          recipeId: 'test:recipe',
+          body: { parts: { 'test:part1': 'entity1' } },
+        },
+        expected: false,
+      },
+      {
+        name: 'should reject anatomy without parts',
+        anatomyData: {
+          recipeId: 'test:recipe',
+          body: { root: 'test:root:123' },
+        },
+        expected: false,
+      },
+      {
+        name: 'should reject anatomy with invalid parts type',
+        anatomyData: {
+          recipeId: 'test:recipe',
+          body: { root: 'test:root:123', parts: 'invalid' },
+        },
         expected: false,
       },
     ];
@@ -102,8 +140,11 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
           mockEntity
         );
 
-        const result =
-          await anatomyLoadingDetector.waitForAnatomyReady(entityId);
+        // Use immediate check for invalid cases, small timeout for valid cases
+        const result = await anatomyLoadingDetector.waitForAnatomyReady(
+          entityId,
+          { timeout: expected ? 10 : 0, retryInterval: 0 }
+        );
 
         expect(result).toBe(expected);
         expect(
@@ -130,41 +171,7 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
       );
     });
 
-    // Test various invalid anatomy structures in one comprehensive test
-    it('should reject various invalid anatomy structures', async () => {
-      const invalidStructures = [
-        { recipeId: 'test:recipe' }, // missing body
-        { recipeId: 'test:recipe', body: { root: 'test:root' } }, // missing parts
-        { recipeId: 'test:recipe', body: { parts: {} } }, // missing root
-        {
-          recipeId: 'test:recipe',
-          body: { root: 'test:root', parts: 'invalid' },
-        }, // invalid parts type
-      ];
-
-      for (const anatomyData of invalidStructures) {
-        const entityId = 'test:entity:' + Math.random();
-        const mockEntity = testBed.createMockEntityWithAnatomy({
-          entityId,
-          hasValidAnatomy: false,
-          anatomyData,
-        });
-
-        testBed.mockEntityManager.getEntityInstance.mockResolvedValue(
-          mockEntity
-        );
-
-        // Use immediate check instead of waiting
-        const result = await anatomyLoadingDetector.waitForAnatomyReady(
-          entityId,
-          {
-            timeout: 0, // Don't wait, just check immediately
-            retryInterval: 0,
-          }
-        );
-        expect(result).toBe(false);
-      }
-    }, 10000); // Set explicit timeout
+    // Removed - these test cases are now covered in the parameterized tests above
 
     it('should log debug information when checking anatomy readiness', async () => {
       const entityId = 'test:entity:123';
@@ -182,7 +189,10 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
       testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
 
-      const result = await anatomyLoadingDetector.waitForAnatomyReady(entityId);
+      const result = await anatomyLoadingDetector.waitForAnatomyReady(entityId, {
+        timeout: 10,
+        retryInterval: 0,
+      });
 
       expect(result).toBe(true);
       expect(testBed.mockLogger.debug).toHaveBeenCalledWith(
@@ -267,11 +277,12 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
       testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
 
+      // Use very short intervals for testing
       const result = await anatomyLoadingDetector.waitForAnatomyReady(
         entityId,
         {
-          timeout: 1000,
-          retryInterval: 50,
+          timeout: 100,
+          retryInterval: 10,
         }
       );
 
@@ -287,11 +298,12 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
       testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
 
+      // Use very short timeout for fast test
       const result = await anatomyLoadingDetector.waitForAnatomyReady(
         entityId,
         {
-          timeout: 100,
-          retryInterval: 20,
+          timeout: 50,
+          retryInterval: 10,
         }
       );
 
@@ -320,11 +332,12 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
       testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
 
+      // Use short intervals for testing
       const result = await anatomyLoadingDetector.waitForAnatomyReady(
         entityId,
         {
-          timeout: 1000,
-          retryInterval: 50,
+          timeout: 200,
+          retryInterval: 10,
           useExponentialBackoff: true,
         }
       );

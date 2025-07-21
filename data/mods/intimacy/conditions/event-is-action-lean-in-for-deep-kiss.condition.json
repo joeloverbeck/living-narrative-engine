@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "intimacy:event-is-action-lean-in-for-deep-kiss",
+  "description": "Checks if event is lean in for deep kiss action",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "intimacy:lean_in_for_deep_kiss"]
+  }
+}

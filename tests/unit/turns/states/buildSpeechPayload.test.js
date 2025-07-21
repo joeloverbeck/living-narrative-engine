@@ -9,20 +9,50 @@ describe('buildSpeechPayload', () => {
   });
 
   it('trims speech and includes optional fields', () => {
+    const notesRaw = [' first ', 'second'];
     const payload = buildSpeechPayload({
       speech: ' hi ',
       thoughts: ' think ',
-      notes: [' first ', 'second'],
+      notes: notesRaw,
     });
     expect(payload).toEqual({
       speechContent: 'hi',
       thoughts: 'think',
       notes: 'first\nsecond',
+      notesRaw: notesRaw,
     });
   });
 
   it('handles notes as a string', () => {
-    const payload = buildSpeechPayload({ speech: 'a', notes: ' note ' });
-    expect(payload).toEqual({ speechContent: 'a', notes: 'note' });
+    const notesRaw = ' note ';
+    const payload = buildSpeechPayload({ speech: 'a', notes: notesRaw });
+    expect(payload).toEqual({ 
+      speechContent: 'a', 
+      notes: 'note',
+      notesRaw: notesRaw
+    });
+  });
+
+  it('excludes notesRaw when notes are falsy', () => {
+    const payload = buildSpeechPayload({ speech: 'hello' });
+    expect(payload).toEqual({ speechContent: 'hello' });
+    expect(payload).not.toHaveProperty('notesRaw');
+  });
+
+  it('includes notesRaw for structured notes', () => {
+    const notesRaw = {
+      text: 'Character observation',
+      subject: 'Alice',
+      subjectType: 'character'
+    };
+    const payload = buildSpeechPayload({ 
+      speech: 'hello',
+      notes: notesRaw 
+    });
+    expect(payload).toEqual({
+      speechContent: 'hello',
+      notes: '[character] Alice: Character observation',
+      notesRaw: notesRaw
+    });
   });
 });

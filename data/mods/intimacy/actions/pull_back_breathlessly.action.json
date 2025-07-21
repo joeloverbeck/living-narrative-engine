@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "intimacy:pull_back_breathlessly",
+  "name": "Pull back breathlessly",
+  "description": "End the kiss by pulling back, breathing heavily",
+  "scope": "intimacy:current_kissing_partner",
+  "required_components": {
+    "actor": ["intimacy:kissing"]
+  },
+  "prerequisites": [],
+  "template": "pull back from {target}'s kiss breathlessly"
+}

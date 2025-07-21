@@ -238,7 +238,7 @@ describe('violence:sucker_punch action integration', () => {
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      'Alice sucker-punches Beth.'
+      'Alice sucker-punches Beth in the head.'
     );
     expect(perceptibleEvent.payload.perceptionType).toBe(
       'action_target_general'
@@ -324,7 +324,7 @@ describe('violence:sucker_punch action integration', () => {
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      'John sucker-punches Mary.'
+      'John sucker-punches Mary in the head.'
     );
   });
 });

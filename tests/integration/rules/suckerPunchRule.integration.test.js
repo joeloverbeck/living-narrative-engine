@@ -203,7 +203,7 @@ describe('handle_sucker_punch rule integration', () => {
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      'Alice sucker-punches Beth.'
+      'Alice sucker-punches Beth in the head.'
     );
   });
 
@@ -313,7 +313,7 @@ describe('handle_sucker_punch rule integration', () => {
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      'John sucker-punches Mary.'
+      'John sucker-punches Mary in the head.'
     );
   });
 
@@ -346,7 +346,7 @@ describe('handle_sucker_punch rule integration', () => {
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload).toMatchObject({
-      descriptionText: 'Alice sucker-punches Beth.',
+      descriptionText: 'Alice sucker-punches Beth in the head.',
       perceptionType: 'action_target_general',
       locationId: 'room1',
       targetId: 'target1',

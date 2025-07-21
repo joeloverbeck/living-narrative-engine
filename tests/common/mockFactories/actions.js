@@ -46,31 +46,51 @@ export const createMockTargetResolutionService = () => {
  * Creates a mock action error context builder with a `buildErrorContext` method.
  *
  * @description Returns a mock ActionErrorContextBuilder for tests.
+ * @param {object} [options] - Optional configuration
+ * @param {number} [options.fixedTimestamp] - Fixed timestamp to use instead of Date.now()
  * @returns {{ buildErrorContext: jest.Mock }} Mock action error context builder
  */
-export const createMockActionErrorContextBuilder = () => ({
-  buildErrorContext: jest.fn((params) => ({
-    actionId: params?.actionDef?.id || 'test',
-    targetId: params?.targetId || null,
-    error: params?.error || new Error('Test error'),
-    actionDefinition: params?.actionDef || {},
-    actorSnapshot: params?.actorSnapshot || {},
-    evaluationTrace: { steps: [], failurePoint: 'Unknown', finalContext: {} },
-    suggestedFixes: [],
-    environmentContext: params?.additionalContext || {},
-    timestamp: Date.now(),
-    phase: params?.phase || 'resolution',
-  })),
-});
+export const createMockActionErrorContextBuilder = (options = {}) => {
+  const { fixedTimestamp = 1234567890 } = options;
+
+  return {
+    buildErrorContext: jest.fn((params) => {
+      // If the error already has timestamp, preserve it
+      const timestamp = params?.error?.timestamp || fixedTimestamp;
+
+      return {
+        actionId: params?.actionDef?.id || 'test',
+        targetId: params?.targetId || null,
+        error: params?.error || new Error('Test error'),
+        actionDefinition: params?.actionDef || {},
+        actorSnapshot: params?.actorSnapshot || {},
+        evaluationTrace: {
+          steps: [],
+          failurePoint: 'Unknown',
+          finalContext: {},
+        },
+        suggestedFixes: [],
+        environmentContext: params?.additionalContext || {},
+        timestamp: timestamp,
+        phase: params?.phase || 'resolution',
+      };
+    }),
+  };
+};
 
 /**
  * Creates a mock target resolution service with actionErrorContextBuilder dependency.
  *
  * @description Creates a mock TargetResolutionService that includes the actionErrorContextBuilder and returns ActionResult.
+ * @param {object} [options] - Optional configuration
+ * @param {number} [options.fixedTimestamp] - Fixed timestamp to use for error contexts
  * @returns {{ resolveTargets: jest.Mock, actionErrorContextBuilder: object }} Mock target resolution service
  */
-export const createMockTargetResolutionServiceWithErrorContext = () => {
-  const mockActionErrorContextBuilder = createMockActionErrorContextBuilder();
+export const createMockTargetResolutionServiceWithErrorContext = (
+  options = {}
+) => {
+  const mockActionErrorContextBuilder =
+    createMockActionErrorContextBuilder(options);
 
   return {
     resolveTargets: jest.fn(() => ActionResult.success([])),

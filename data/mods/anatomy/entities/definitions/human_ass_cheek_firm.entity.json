@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_ass_cheek_firm",
+  "description": "A human ass cheek with firm texture characteristics",
+  "components": {
+    "anatomy:part": {
+      "subType": "ass_cheek"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
+    },
+    "core:name": {
+      "text": "ass cheek"
+    }
+  }
+}

@@ -17,7 +17,9 @@ describe('intimacy:turn_around action', () => {
     });
 
     it('uses intimacy:close_actors_facing_forward scope', () => {
-      expect(turnAroundAction.scope).toBe('intimacy:close_actors_facing_forward');
+      expect(turnAroundAction.scope).toBe(
+        'intimacy:close_actors_facing_forward'
+      );
     });
 
     it('requires intimacy:closeness component for actor', () => {

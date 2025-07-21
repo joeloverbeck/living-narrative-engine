@@ -252,9 +252,13 @@ export function createMockUnifiedScopeResolver(dependencies) {
         }
 
         // Build runtime context
+        // Use jsonLogicEval from actionContext if provided, otherwise fall back to the service
+        const jsonLogicEval =
+          context.actionContext?.jsonLogicEval || jsonLogicEvaluationService;
+
         const runtimeCtx = {
           entityManager: entityManager,
-          jsonLogicEval: jsonLogicEvaluationService,
+          jsonLogicEval: jsonLogicEval,
           logger: logger,
           actor: actorWithComponents,
           location: context.actorLocation,

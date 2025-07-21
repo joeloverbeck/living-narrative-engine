@@ -14,11 +14,30 @@
       }
     },
     {
-      "type": "REMOVE_COMPONENT",
-      "comment": "Remove facing_away component to ensure actor is no longer facing away from anyone",
+      "type": "HAS_COMPONENT",
+      "comment": "Check if actor has facing_away component before trying to remove it",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "intimacy:facing_away"
+        "component_type": "intimacy:facing_away",
+        "result_variable": "hasFacingAway"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Only remove facing_away component if it exists",
+      "parameters": {
+        "condition": { "var": "context.hasFacingAway" },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "comment": "Remove facing_away component to ensure actor is no longer facing away from anyone",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "intimacy:facing_away"
+            }
+          }
+        ],
+        "else_actions": []
       }
     },
     {
