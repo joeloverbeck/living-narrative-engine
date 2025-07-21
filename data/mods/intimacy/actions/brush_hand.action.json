@@ -1,0 +1,10 @@
+{
+  "id": "intimacy:brush_hand",
+  "name": "Brush hand",
+  "description": "Brush someone's hand with your own in a gentle, intimate gesture",
+  "scope": "intimacy:close_actors",
+  "required_components": {
+    "actor": ["intimacy:closeness"]
+  },
+  "template": "brush {target}'s hand with your own"
+}

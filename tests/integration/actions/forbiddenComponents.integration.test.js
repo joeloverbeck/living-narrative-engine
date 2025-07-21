@@ -1,15 +1,109 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { TestBedClass } from '../../common/testbed.js';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { ActionIndex } from '../../../src/actions/actionIndex.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import { createMockLogger } from '../../common/mockFactories/index.js';
 
 describe('Forbidden Components - Integration', () => {
-  let testBed;
+  let entityManager;
+  let actionIndex;
+  let schemaValidator;
+  let logger;
+  let gameDataRepository;
 
-  beforeEach(async () => {
-    testBed = new TestBedClass();
-    await testBed.initialize({
-      loadRealGame: false,
-      createPlayer: true,
-    });
+  beforeEach(() => {
+    // Create logger
+    logger = createMockLogger();
+
+    // Create mock entity manager
+    const entities = new Map();
+    entityManager = {
+      entities,
+      createEntity: (id) => {
+        const entity = {
+          id,
+          components: {},
+          hasComponent: (componentId) => componentId in entity.components,
+          getComponentData: (componentId) =>
+            entity.components[componentId] || null,
+        };
+        entities.set(id, entity);
+        return entity;
+      },
+      getEntityById: (id) => entities.get(id),
+      getEntityInstance: (id) => entities.get(id),
+      addComponent: (entityId, componentId, data) => {
+        const entity = entities.get(entityId);
+        if (entity) {
+          entity.components[componentId] = data;
+        }
+      },
+      getAllComponentTypesForEntity: (entityId) => {
+        const entity =
+          typeof entityId === 'string' ? entities.get(entityId) : entityId;
+        return entity ? Object.keys(entity.components || {}) : [];
+      },
+      clear: () => entities.clear(),
+    };
+
+    // Create action index
+    actionIndex = new ActionIndex({ logger, entityManager });
+
+    // Create schema validator
+    schemaValidator = new AjvSchemaValidator({ logger });
+
+    // Load action schema
+    const actionSchema = {
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      $id: 'schema://living-narrative-engine/action.schema.json',
+      type: 'object',
+      properties: {
+        $schema: { type: 'string' },
+        id: { type: 'string', pattern: '^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$' },
+        name: { type: 'string' },
+        description: { type: 'string' },
+        scope: { type: 'string' },
+        template: { type: 'string' },
+        required_components: {
+          type: 'object',
+          properties: {
+            actor: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
+        },
+        forbidden_components: {
+          type: 'object',
+          properties: {
+            actor: {
+              type: 'array',
+              items: {
+                type: 'string',
+                pattern: '^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$',
+              },
+            },
+          },
+        },
+      },
+      required: ['id', 'scope', 'template'],
+    };
+    schemaValidator.addSchema(
+      actionSchema,
+      'schema://living-narrative-engine/action.schema.json'
+    );
+
+    // Create game data repository
+    gameDataRepository = {
+      actions: [],
+    };
+
+    // Create player entity
+    entityManager.createEntity('player');
+  });
+
+  afterEach(() => {
+    // Clear all entities
+    entityManager.clear();
   });
 
   it('should exclude actions when actor has forbidden components', async () => {
@@ -21,41 +115,40 @@ describe('Forbidden Components - Integration', () => {
       scope: 'core:environment',
       template: 'perform forbidden action',
       required_components: {
-        actor: ['core:stats']
+        actor: ['core:stats'],
       },
       forbidden_components: {
-        actor: ['status:paralyzed']
-      }
+        actor: ['status:paralyzed'],
+      },
     };
 
     // Add action to game data
-    testBed.gameDataRepository.actions.push(testAction);
-    
+    gameDataRepository.actions.push(testAction);
+
     // Rebuild action index
-    const actionIndex = testBed.container.get('IActionIndex');
-    actionIndex.buildIndex(testBed.gameDataRepository.actions);
+    actionIndex.buildIndex(gameDataRepository.actions);
 
     // Get player entity
-    const player = testBed.entityManager.getEntityById('player');
-    
+    const player = entityManager.getEntityById('player');
+
     // Add required component
-    testBed.entityManager.addComponent('player', 'core:stats', { health: 100 });
+    entityManager.addComponent('player', 'core:stats', { health: 100 });
 
     // Test without forbidden component - action should be available
     let candidates = actionIndex.getCandidateActions(player);
-    let actionIds = candidates.map(a => a.id);
+    let actionIds = candidates.map((a) => a.id);
     expect(actionIds).toContain('test:forbidden_action');
 
     // Add forbidden component
-    testBed.entityManager.addComponent('player', 'status:paralyzed', {});
+    entityManager.addComponent('player', 'status:paralyzed', {});
 
     // Test with forbidden component - action should NOT be available
     candidates = actionIndex.getCandidateActions(player);
-    actionIds = candidates.map(a => a.id);
+    actionIds = candidates.map((a) => a.id);
     expect(actionIds).not.toContain('test:forbidden_action');
   });
 
-  it('should handle multiple forbidden components correctly', async () => {
+  it('should handle multiple forbidden components correctly', () => {
     // Create test action with multiple forbidden components
     const testAction = {
       id: 'test:multi_forbidden',
@@ -64,35 +157,34 @@ describe('Forbidden Components - Integration', () => {
       scope: 'core:environment',
       template: 'perform multi forbidden action',
       forbidden_components: {
-        actor: ['status:stunned', 'status:sleeping', 'status:confused']
-      }
+        actor: ['status:stunned', 'status:sleeping', 'status:confused'],
+      },
     };
 
     // Add action to game data
-    testBed.gameDataRepository.actions.push(testAction);
-    
+    gameDataRepository.actions.push(testAction);
+
     // Rebuild action index
-    const actionIndex = testBed.container.get('IActionIndex');
-    actionIndex.buildIndex(testBed.gameDataRepository.actions);
+    actionIndex.buildIndex(gameDataRepository.actions);
 
     // Get player entity
-    const player = testBed.entityManager.getEntityById('player');
+    const player = entityManager.getEntityById('player');
 
     // Test without any forbidden components - action should be available
     let candidates = actionIndex.getCandidateActions(player);
-    let actionIds = candidates.map(a => a.id);
+    let actionIds = candidates.map((a) => a.id);
     expect(actionIds).toContain('test:multi_forbidden');
 
     // Add one of the forbidden components
-    testBed.entityManager.addComponent('player', 'status:sleeping', {});
+    entityManager.addComponent('player', 'status:sleeping', {});
 
     // Test with one forbidden component - action should NOT be available
     candidates = actionIndex.getCandidateActions(player);
-    actionIds = candidates.map(a => a.id);
+    actionIds = candidates.map((a) => a.id);
     expect(actionIds).not.toContain('test:multi_forbidden');
   });
 
-  it('should work with both required and forbidden components', async () => {
+  it('should work with both required and forbidden components', () => {
     // Create test action with both required and forbidden components
     const testAction = {
       id: 'test:complex_requirements',
@@ -101,44 +193,41 @@ describe('Forbidden Components - Integration', () => {
       scope: 'core:environment',
       template: 'perform complex action',
       required_components: {
-        actor: ['core:stats', 'core:inventory']
+        actor: ['core:stats', 'core:inventory'],
       },
       forbidden_components: {
-        actor: ['status:disabled', 'status:blocked']
-      }
+        actor: ['status:disabled', 'status:blocked'],
+      },
     };
 
     // Add action to game data
-    testBed.gameDataRepository.actions.push(testAction);
-    
+    gameDataRepository.actions.push(testAction);
+
     // Rebuild action index
-    const actionIndex = testBed.container.get('IActionIndex');
-    actionIndex.buildIndex(testBed.gameDataRepository.actions);
+    actionIndex.buildIndex(gameDataRepository.actions);
 
     // Get player entity
-    const player = testBed.entityManager.getEntityById('player');
+    const player = entityManager.getEntityById('player');
 
     // Add required components
-    testBed.entityManager.addComponent('player', 'core:stats', { health: 100 });
-    testBed.entityManager.addComponent('player', 'core:inventory', { items: [] });
+    entityManager.addComponent('player', 'core:stats', { health: 100 });
+    entityManager.addComponent('player', 'core:inventory', { items: [] });
 
     // Test with required components but no forbidden - action should be available
     let candidates = actionIndex.getCandidateActions(player);
-    let actionIds = candidates.map(a => a.id);
+    let actionIds = candidates.map((a) => a.id);
     expect(actionIds).toContain('test:complex_requirements');
 
     // Add a forbidden component
-    testBed.entityManager.addComponent('player', 'status:blocked', {});
+    entityManager.addComponent('player', 'status:blocked', {});
 
     // Test with forbidden component - action should NOT be available
     candidates = actionIndex.getCandidateActions(player);
-    actionIds = candidates.map(a => a.id);
+    actionIds = candidates.map((a) => a.id);
     expect(actionIds).not.toContain('test:complex_requirements');
   });
 
-  it('should validate forbidden components match schema pattern', async () => {
-    const validator = testBed.container.get('ISchemaValidator');
-    
+  it('should validate forbidden components match schema pattern', () => {
     // Valid action with forbidden components
     const validAction = {
       $schema: 'schema://living-narrative-engine/action.schema.json',
@@ -148,11 +237,14 @@ describe('Forbidden Components - Integration', () => {
       scope: 'core:environment',
       template: 'perform action',
       forbidden_components: {
-        actor: ['mod:component1', 'mod:component2']
-      }
+        actor: ['mod:component1', 'mod:component2'],
+      },
     };
 
-    const validationResult = validator.validate(validAction, 'schema://living-narrative-engine/action.schema.json');
+    const validationResult = schemaValidator.validate(
+      'schema://living-narrative-engine/action.schema.json',
+      validAction
+    );
     expect(validationResult.isValid).toBe(true);
 
     // Invalid action with malformed component IDs
@@ -164,11 +256,14 @@ describe('Forbidden Components - Integration', () => {
       scope: 'core:environment',
       template: 'perform action',
       forbidden_components: {
-        actor: ['invalid-format', 'mod:valid', 'also invalid']
-      }
+        actor: ['invalid-format', 'mod:valid', 'also invalid'],
+      },
     };
 
-    const invalidResult = validator.validate(invalidAction, 'schema://living-narrative-engine/action.schema.json');
+    const invalidResult = schemaValidator.validate(
+      'schema://living-narrative-engine/action.schema.json',
+      invalidAction
+    );
     expect(invalidResult.isValid).toBe(false);
     expect(invalidResult.errors).toBeDefined();
     expect(invalidResult.errors.length).toBeGreaterThan(0);

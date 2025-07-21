@@ -1,0 +1,7 @@
+{
+  "id": "violence:slap",
+  "name": "Slap",
+  "description": "Slap someone across the face",
+  "scope": "core:actors_in_location",
+  "template": "slap {target}"
+}

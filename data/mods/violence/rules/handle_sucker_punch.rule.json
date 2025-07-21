@@ -27,7 +27,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} sucker-punches {context.targetName}."
+        "value": "{context.actorName} sucker-punches {context.targetName} in the head."
       }
     },
     {

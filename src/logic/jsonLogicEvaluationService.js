@@ -122,6 +122,7 @@ class JsonLogicEvaluationService extends BaseService {
       // Clothing/equipment operators
       'hasClothingInSlot',
       'hasClothingInSlotLayer',
+      'isSocketCovered',
       // Test operators
       'throw_error_operator', // Used in tests for short-circuit behavior
     ]);

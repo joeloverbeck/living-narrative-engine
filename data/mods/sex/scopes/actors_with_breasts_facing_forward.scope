@@ -1,8 +1,14 @@
-// Scope for actors in closeness who have breasts and are facing forward
-// Used by actions that require breast anatomy and face-to-face interaction
+// Scope for actors in closeness who have breasts that are uncovered and are facing forward
+// Used by actions that require exposed breast anatomy and face-to-face interaction
 sex:actors_with_breasts_facing_forward := actor.intimacy:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "breast"]},
-    {"condition_ref": "intimacy:entity-not-in-facing-away"}
+    {"condition_ref": "intimacy:entity-not-in-facing-away"},
+    {
+      "or": [
+        {"not": {"isSocketCovered": [".", "left_chest"]}},
+        {"not": {"isSocketCovered": [".", "right_chest"]}}
+      ]
+    }
   ]
 }]

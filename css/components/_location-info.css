@@ -83,8 +83,7 @@
 /* LOCATION PORTRAIT (same tooltip idea) -------------------------------*/
 #location-portrait-visuals {
   position: relative;
-  display: inline-block;
-  max-width: 100%;
+  display: block;
 }
 
 #location-portrait-image {
@@ -98,6 +97,24 @@
 /* tooltip lives *inside* #location-portrait-visuals */
 .location-tooltip {
   @extend .character-tooltip;
+}
+
+/* Enable hover/focus/click interactions for location portrait tooltips */
+#location-portrait-visuals:hover > .location-tooltip,
+#location-portrait-visuals:focus-within > .location-tooltip,
+#location-portrait-visuals.tooltip-open > .location-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Ensure the portrait container can receive focus for keyboard accessibility */
+#location-portrait-visuals {
+  cursor: pointer;
+  outline-offset: 2px;
+}
+
+#location-portrait-visuals:focus {
+  outline: 2px solid var(--focus-color);
 }
 
 /* ─────────────────────────────────────────────

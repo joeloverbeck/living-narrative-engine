@@ -458,7 +458,7 @@ describe('LocationRenderer', () => {
         portraitInfo.imagePath
       );
       expect(mockLocationPortraitImageElement.alt).toBe(portraitInfo.altText);
-      expect(mockLocationPortraitVisualsElement.style.display).toBe('flex');
+      expect(mockLocationPortraitVisualsElement.style.display).toBe('block');
     });
 
     it('should default portrait alt text when none is provided', () => {
@@ -951,6 +951,69 @@ describe('LocationRenderer', () => {
         }
       );
       mockDocumentContext.query = originalQuery; // Restore original mock
+    });
+  });
+
+  describe('conditional description rendering', () => {
+    let renderer;
+
+    beforeEach(() => {
+      mockEntityDisplayDataProvider.getEntityLocationId.mockReturnValue(
+        MOCK_LOCATION_ID
+      );
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set());
+      renderer = new LocationRenderer(rendererDeps);
+    });
+
+    it('should show description when no portrait exists', () => {
+      const locationData = {
+        name: 'Test Location',
+        description: 'A beautiful test location.',
+        portraitPath: null,
+        portraitAltText: null,
+        exits: [],
+        characters: [],
+      };
+
+      renderer.render(locationData);
+
+      expect(mockDescriptionDisplay.textContent).toContain(
+        'A beautiful test location.'
+      );
+    });
+
+    it('should hide description when portrait exists', () => {
+      const locationData = {
+        name: 'Test Location',
+        description: 'A beautiful test location.',
+        portraitPath: '/path/to/portrait.png',
+        portraitAltText: 'Location portrait',
+        exits: [],
+        characters: [],
+      };
+
+      renderer.render(locationData);
+
+      // Description display should be cleared but not populated when portrait exists
+      expect(mockDescriptionDisplay.textContent).toBe('');
+      expect(mockDescriptionDisplay.children.length).toBe(0);
+    });
+
+    it('should show default description when no portrait and no description', () => {
+      const locationData = {
+        name: 'Test Location',
+        description: '',
+        portraitPath: null,
+        portraitAltText: null,
+        exits: [],
+        characters: [],
+      };
+
+      renderer.render(locationData);
+
+      expect(mockDescriptionDisplay.textContent).toContain(
+        'You see nothing remarkable.'
+      );
     });
   });
 

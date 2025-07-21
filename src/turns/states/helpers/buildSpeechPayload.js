@@ -15,7 +15,7 @@ import { formatNotesForDisplay } from './noteFormatter.js';
  * Builds a sanitized payload from decision metadata for ENTITY_SPOKE_ID.
  *
  * @param {DecisionMeta} decisionMeta - Metadata from the actor decision.
- * @returns {{speechContent: string, thoughts?: string, notes?: string}|null} The sanitized payload, or null if speech is absent/invalid.
+ * @returns {{speechContent: string, thoughts?: string, notes?: string, notesRaw?: *}|null} The sanitized payload, or null if speech is absent/invalid.
  */
 export function buildSpeechPayload(decisionMeta) {
   const {
@@ -39,6 +39,7 @@ export function buildSpeechPayload(decisionMeta) {
     speechContent: speech,
     ...(thoughts ? { thoughts } : {}),
     ...(notes ? { notes } : {}),
+    ...(notesRaw ? { notesRaw } : {}),
   };
 
   return payload;

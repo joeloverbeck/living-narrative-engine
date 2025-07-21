@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "violence:event-is-action-slap",
+  "description": "Checks if the triggering event is for the 'violence:slap' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "violence:slap"]
+  }
+}

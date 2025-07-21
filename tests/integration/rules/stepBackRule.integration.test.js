@@ -26,6 +26,7 @@ import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import RemoveFromClosenessCircleHandler from '../../../src/logic/operationHandlers/removeFromClosenessCircleHandler.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
+import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -110,6 +111,11 @@ function createHandlers(
       entityManager,
       safeEventDispatcher: safeEventDispatcher,
       closenessCircleService,
+    }),
+    HAS_COMPONENT: new HasComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeEventDispatcher,
     }),
   };
 }

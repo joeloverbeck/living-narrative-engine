@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "intimacy:kissing",
+  "description": "Tracks an active kissing interaction between two characters. Presence indicates the character is currently kissing someone.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["partner", "initiator"],
+    "properties": {
+      "partner": {
+        "description": "The entity ID of the character being kissed",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+      },
+      "initiator": {
+        "type": "boolean",
+        "description": "Whether this character initiated the kiss",
+        "default": false
+      }
+    }
+  }
+}

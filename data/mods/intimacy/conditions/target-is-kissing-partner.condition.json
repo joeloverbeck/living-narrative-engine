@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "intimacy:target-is-kissing-partner",
+  "description": "Checks if the target is the actor's current kissing partner",
+  "logic": {
+    "==": [
+      { "var": "target.id" },
+      { "var": "actor.components.intimacy:kissing.partner" }
+    ]
+  }
+}
