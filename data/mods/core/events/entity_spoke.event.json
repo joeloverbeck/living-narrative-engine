@@ -24,6 +24,47 @@
         "type": "string",
         "description": "Private OOC notes related to the speech.",
         "minLength": 1
+      },
+      "notesRaw": {
+        "description": "Raw structured notes data for processing and UI display.",
+        "oneOf": [
+          {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": { "type": "string" },
+                "subject": { "type": "string" },
+                "subjectType": { "type": "string" },
+                "context": { "type": "string" },
+                "tags": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "timestamp": { "type": "string" }
+              },
+              "required": ["text"],
+              "additionalProperties": false
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "text": { "type": "string" },
+              "subject": { "type": "string" },
+              "subjectType": { "type": "string" },
+              "context": { "type": "string" },
+              "tags": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "timestamp": { "type": "string" }
+            },
+            "required": ["text"],
+            "additionalProperties": false
+          },
+          { "type": "string" }
+        ]
       }
     },
     "required": ["entityId", "speechContent"],
