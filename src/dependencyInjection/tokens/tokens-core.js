@@ -200,4 +200,12 @@ export const coreTokens = freeze({
   ResultInterpreter: 'ResultInterpreter',
   UnifiedErrorHandler: 'UnifiedErrorHandler',
   DirectiveStrategyResolver: 'DirectiveStrategyResolver',
+  // Character Builder Services
+  ICharacterBuilderService: 'ICharacterBuilderService',
+  CharacterBuilderService: 'CharacterBuilderService',
+  ICharacterStorageService: 'ICharacterStorageService',
+  CharacterStorageService: 'CharacterStorageService',
+  IThematicDirectionGenerator: 'IThematicDirectionGenerator',
+  ThematicDirectionGenerator: 'ThematicDirectionGenerator',
+  CharacterDatabase: 'CharacterDatabase',
 });

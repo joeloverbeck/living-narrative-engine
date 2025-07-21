@@ -3,6 +3,9 @@
   "id": "intimacy:event-is-action-pull-back-breathlessly",
   "description": "Checks if event is pull back breathlessly action",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "intimacy:pull_back_breathlessly"]
+    "==": [
+      { "var": "event.payload.actionId" },
+      "intimacy:pull_back_breathlessly"
+    ]
   }
 }

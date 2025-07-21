@@ -189,10 +189,13 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
       testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
 
-      const result = await anatomyLoadingDetector.waitForAnatomyReady(entityId, {
-        timeout: 10,
-        retryInterval: 0,
-      });
+      const result = await anatomyLoadingDetector.waitForAnatomyReady(
+        entityId,
+        {
+          timeout: 10,
+          retryInterval: 0,
+        }
+      );
 
       expect(result).toBe(true);
       expect(testBed.mockLogger.debug).toHaveBeenCalledWith(

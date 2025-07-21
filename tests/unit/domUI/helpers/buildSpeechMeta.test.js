@@ -37,20 +37,23 @@ describe('buildSpeechMeta', () => {
     container = doc.body;
   });
 
-  it('should return null if both thoughts and notes are falsy', () => {
+  it('should return null if both thoughts and notesRaw are falsy', () => {
     expect(buildSpeechMeta(doc, mockDomFactory, {})).toBeNull();
     expect(
-      buildSpeechMeta(doc, mockDomFactory, { thoughts: '', notes: null })
+      buildSpeechMeta(doc, mockDomFactory, { thoughts: '', notesRaw: null })
     ).toBeNull();
     expect(
-      buildSpeechMeta(doc, mockDomFactory, { thoughts: undefined, notes: '' })
+      buildSpeechMeta(doc, mockDomFactory, {
+        thoughts: undefined,
+        notesRaw: '',
+      })
     ).toBeNull();
   });
 
-  it('should return a fragment with two buttons when both thoughts and notes are provided', () => {
+  it('should return a fragment with two buttons when both thoughts and notesRaw are provided', () => {
     const fragment = buildSpeechMeta(doc, mockDomFactory, {
       thoughts: 'Inner monologue',
-      notes: 'A private note',
+      notesRaw: 'A private note',
     });
     expect(fragment).not.toBeNull();
     container.appendChild(fragment.cloneNode(true)); // Use cloneNode to append
@@ -84,9 +87,10 @@ describe('buildSpeechMeta', () => {
     );
     // FIX: Check for presence of SVG instead of exact innerHTML
     expect(notesButton.querySelector('svg')).not.toBeNull();
-    const notesTooltip = getByText(notesButton, 'A private note');
+    const notesTooltip = notesButton.querySelector('.meta-tooltip');
     expect(notesTooltip).not.toBeNull();
-    expect(notesTooltip.classList.contains('meta-tooltip')).toBe(true);
+    expect(notesTooltip.classList.contains('meta-tooltip--notes')).toBe(true);
+    expect(notesTooltip.innerHTML).toContain('A private note');
   });
 
   it('should return a fragment with only the thoughts button if only thoughts are provided', () => {
@@ -102,29 +106,29 @@ describe('buildSpeechMeta', () => {
     expect(container.querySelector('.notes')).toBeNull();
   });
 
-  it('should return a fragment with only the notes button if only notes are provided', () => {
+  it('should return a fragment with only the notes button if only notesRaw is provided', () => {
     const fragment = buildSpeechMeta(doc, mockDomFactory, {
-      notes: 'Just a note',
+      notesRaw: 'Just a note',
     });
     expect(fragment).not.toBeNull();
     container.appendChild(fragment.cloneNode(true));
 
     const notesButton = getByLabelText(container, 'View private notes');
     expect(notesButton).not.toBeNull();
-    expect(getByText(notesButton, 'Just a note')).not.toBeNull();
+    const tooltip = notesButton.querySelector('.meta-tooltip');
+    expect(tooltip.innerHTML).toContain('Just a note');
     expect(container.querySelector('.thoughts')).toBeNull();
   });
 
   it('should use rich HTML for structured notes when notesRaw is provided', () => {
     const notesRaw = {
       text: 'Character seems nervous',
-      subject: 'Alice', 
+      subject: 'Alice',
       subjectType: 'character',
-      tags: ['emotion']
+      tags: ['emotion'],
     };
-    
+
     const fragment = buildSpeechMeta(doc, mockDomFactory, {
-      notes: 'Plain fallback text',
       notesRaw: notesRaw,
     });
     expect(fragment).not.toBeNull();
@@ -132,11 +136,11 @@ describe('buildSpeechMeta', () => {
 
     const notesButton = getByLabelText(container, 'View private notes');
     expect(notesButton).not.toBeNull();
-    
+
     // Should have the enhanced tooltip class
     const tooltip = notesButton.querySelector('.meta-tooltip');
     expect(tooltip.classList.contains('meta-tooltip--notes')).toBe(true);
-    
+
     // Should contain rich HTML content
     expect(tooltip.innerHTML).toContain('notes-container');
     expect(tooltip.innerHTML).toContain('note-subject-type');
@@ -146,48 +150,10 @@ describe('buildSpeechMeta', () => {
     expect(tooltip.innerHTML).toContain('👤'); // Character icon
   });
 
-  it('should fallback to plain text when notesRaw is not provided', () => {
-    const fragment = buildSpeechMeta(doc, mockDomFactory, {
-      notes: 'Plain text note',
-    });
-    expect(fragment).not.toBeNull();
-    container.appendChild(fragment.cloneNode(true));
-
-    const notesButton = getByLabelText(container, 'View private notes');
-    const tooltip = notesButton.querySelector('.meta-tooltip');
-    
-    // Should NOT have the enhanced tooltip class
-    expect(tooltip.classList.contains('meta-tooltip--notes')).toBe(false);
-    
-    // Should contain plain text
-    expect(tooltip.textContent).toBe('Plain text note');
-    expect(tooltip.innerHTML).not.toContain('notes-container');
-  });
-
-  it('should fallback to plain text when notesRaw produces empty HTML', () => {
-    const notesRaw = null; // This will produce empty HTML
-    
-    const fragment = buildSpeechMeta(doc, mockDomFactory, {
-      notes: 'Fallback text',
-      notesRaw: notesRaw,
-    });
-    expect(fragment).not.toBeNull();
-    container.appendChild(fragment.cloneNode(true));
-
-    const notesButton = getByLabelText(container, 'View private notes');
-    const tooltip = notesButton.querySelector('.meta-tooltip');
-    
-    // Should NOT have the enhanced tooltip class
-    expect(tooltip.classList.contains('meta-tooltip--notes')).toBe(false);
-    
-    // Should contain fallback text
-    expect(tooltip.textContent).toBe('Fallback text');
-  });
-
   it('snapshot test should show focus state correctly', () => {
     const fragment = buildSpeechMeta(doc, mockDomFactory, {
       thoughts: 'foo',
-      notes: 'bar',
+      notesRaw: 'bar',
     });
     container.appendChild(fragment.cloneNode(true));
 
@@ -206,7 +172,7 @@ describe('buildSpeechMeta', () => {
 
     const fragment = buildSpeechMeta(doc, mockDomFactory, {
       thoughts: 'Hi',
-      notes: 'Note',
+      notesRaw: 'Note',
     });
     container.appendChild(fragment.cloneNode(true));
 

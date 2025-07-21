@@ -73,6 +73,7 @@ Character Builder UI → Service Layer → Storage Layer
 ### JSON Schemas
 
 #### CharacterConcept Schema
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -117,6 +118,7 @@ Character Builder UI → Service Layer → Storage Layer
 ```
 
 #### ThematicDirection Schema
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -170,7 +172,16 @@ Character Builder UI → Service Layer → Storage Layer
       }
     }
   },
-  "required": ["id", "conceptId", "title", "description", "coreTension", "uniqueTwist", "narrativePotential", "createdAt"],
+  "required": [
+    "id",
+    "conceptId",
+    "title",
+    "description",
+    "coreTension",
+    "uniqueTwist",
+    "narrativePotential",
+    "createdAt"
+  ],
   "additionalProperties": false
 }
 ```
@@ -271,35 +282,41 @@ const THEMATIC_DIRECTIONS_RESPONSE_SCHEMA = {
           title: {
             type: 'string',
             minLength: 5,
-            maxLength: 100
+            maxLength: 100,
           },
           description: {
             type: 'string',
             minLength: 50,
-            maxLength: 500
+            maxLength: 500,
           },
           coreTension: {
             type: 'string',
             minLength: 20,
-            maxLength: 200
+            maxLength: 200,
           },
           uniqueTwist: {
             type: 'string',
             minLength: 20,
-            maxLength: 200
+            maxLength: 200,
           },
           narrativePotential: {
             type: 'string',
             minLength: 30,
-            maxLength: 300
-          }
+            maxLength: 300,
+          },
         },
-        required: ['title', 'description', 'coreTension', 'uniqueTwist', 'narrativePotential'],
-        additionalProperties: false
-      }
-    }
+        required: [
+          'title',
+          'description',
+          'coreTension',
+          'uniqueTwist',
+          'narrativePotential',
+        ],
+        additionalProperties: false,
+      },
+    },
   },
-  required: ['thematicDirections']
+  required: ['thematicDirections'],
 };
 ```
 
@@ -321,7 +338,7 @@ class CharacterBuilderService {
     characterStorageService,
     thematicDirectionGenerator,
     validationService,
-    eventBus
+    eventBus,
   }) {
     // Service dependencies via dependency injection
   }
@@ -425,7 +442,7 @@ class ThematicDirectionGenerator {
     llmAdapter,
     promptBuilder,
     responseParser,
-    validationService
+    validationService,
   }) {}
 
   /**
@@ -459,125 +476,152 @@ class ThematicDirectionGenerator {
 ```html
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Character Builder - Living Narrative Engine</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/character-builder.css" />
-</head>
-<body>
-  <div id="character-builder-container">
-    <!-- Header -->
-    <header class="character-builder-header">
-      <h1>Character Builder</h1>
-      <nav class="breadcrumb">
-        <span class="step active">Step 1: Thematic Directions</span>
-        <span class="step disabled">Step 2: Cliché Analysis</span>
-        <span class="step disabled">Step 3: Core Motivations</span>
-        <span class="step disabled">Step 4: Character Details</span>
-        <span class="step disabled">Step 5: Final Polish</span>
-      </nav>
-    </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Character Builder - Living Narrative Engine</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/character-builder.css" />
+  </head>
+  <body>
+    <div id="character-builder-container">
+      <!-- Header -->
+      <header class="character-builder-header">
+        <h1>Character Builder</h1>
+        <nav class="breadcrumb">
+          <span class="step active">Step 1: Thematic Directions</span>
+          <span class="step disabled">Step 2: Cliché Analysis</span>
+          <span class="step disabled">Step 3: Core Motivations</span>
+          <span class="step disabled">Step 4: Character Details</span>
+          <span class="step disabled">Step 5: Final Polish</span>
+        </nav>
+      </header>
 
-    <!-- Main Content Area -->
-    <main class="character-builder-main">
-      <!-- Left Panel: Concept Input -->
-      <section class="concept-input-panel">
-        <h2>Character Concept</h2>
-        <form id="character-concept-form">
-          <div class="input-group">
-            <label for="character-concept-input">
-              Describe your character concept:
-            </label>
-            <textarea
-              id="character-concept-input"
-              placeholder="e.g. a ditzy female adventurer who's good with a bow"
-              rows="4"
-              maxlength="1000"
-              required
-            ></textarea>
-            <div class="input-meta">
-              <span class="char-count">0/1000</span>
+      <!-- Main Content Area -->
+      <main class="character-builder-main">
+        <!-- Left Panel: Concept Input -->
+        <section class="concept-input-panel">
+          <h2>Character Concept</h2>
+          <form id="character-concept-form">
+            <div class="input-group">
+              <label for="character-concept-input">
+                Describe your character concept:
+              </label>
+              <textarea
+                id="character-concept-input"
+                placeholder="e.g. a ditzy female adventurer who's good with a bow"
+                rows="4"
+                maxlength="1000"
+                required
+              ></textarea>
+              <div class="input-meta">
+                <span class="char-count">0/1000</span>
+              </div>
+            </div>
+            <div class="action-buttons">
+              <button
+                type="submit"
+                id="generate-directions-btn"
+                class="primary-button"
+              >
+                Generate Thematic Directions
+              </button>
+              <button
+                type="button"
+                id="save-concept-btn"
+                class="secondary-button"
+                disabled
+              >
+                Save Concept
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Right Panel: Results Display -->
+        <section class="thematic-directions-panel">
+          <h2>Thematic Directions</h2>
+          <div id="directions-container">
+            <!-- Loading State -->
+            <div
+              id="loading-state"
+              class="loading-state"
+              style="display: none;"
+            >
+              <div class="spinner"></div>
+              <p>Generating thematic directions...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state">
+              <p>Enter a character concept to generate thematic directions.</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="error-state" style="display: none;">
+              <p class="error-message">
+                Failed to generate thematic directions. Please try again.
+              </p>
+              <button type="button" id="retry-btn" class="secondary-button">
+                Retry
+              </button>
+            </div>
+
+            <!-- Results Display -->
+            <div
+              id="directions-results"
+              class="directions-results"
+              style="display: none;"
+            >
+              <!-- Dynamic content populated by JavaScript -->
             </div>
           </div>
-          <div class="action-buttons">
-            <button type="submit" id="generate-directions-btn" class="primary-button">
-              Generate Thematic Directions
-            </button>
-            <button type="button" id="save-concept-btn" class="secondary-button" disabled>
-              Save Concept
-            </button>
-          </div>
-        </form>
-      </section>
+        </section>
+      </main>
 
-      <!-- Right Panel: Results Display -->
-      <section class="thematic-directions-panel">
-        <h2>Thematic Directions</h2>
-        <div id="directions-container">
-          <!-- Loading State -->
-          <div id="loading-state" class="loading-state" style="display: none;">
-            <div class="spinner"></div>
-            <p>Generating thematic directions...</p>
-          </div>
-
-          <!-- Empty State -->
-          <div id="empty-state" class="empty-state">
-            <p>Enter a character concept to generate thematic directions.</p>
-          </div>
-
-          <!-- Error State -->
-          <div id="error-state" class="error-state" style="display: none;">
-            <p class="error-message">Failed to generate thematic directions. Please try again.</p>
-            <button type="button" id="retry-btn" class="secondary-button">Retry</button>
-          </div>
-
-          <!-- Results Display -->
-          <div id="directions-results" class="directions-results" style="display: none;">
-            <!-- Dynamic content populated by JavaScript -->
-          </div>
+      <!-- Footer -->
+      <footer class="character-builder-footer">
+        <div class="navigation-buttons">
+          <button type="button" id="back-to-menu-btn" class="secondary-button">
+            Back to Main Menu
+          </button>
+          <button
+            type="button"
+            id="continue-step2-btn"
+            class="primary-button"
+            disabled
+          >
+            Continue to Step 2
+          </button>
         </div>
-      </section>
-    </main>
+      </footer>
+    </div>
 
-    <!-- Footer -->
-    <footer class="character-builder-footer">
-      <div class="navigation-buttons">
-        <button type="button" id="back-to-menu-btn" class="secondary-button">
-          Back to Main Menu
-        </button>
-        <button type="button" id="continue-step2-btn" class="primary-button" disabled>
-          Continue to Step 2
+    <!-- Saved Concepts Sidebar -->
+    <aside id="saved-concepts-sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <h3>Saved Concepts</h3>
+        <button type="button" id="toggle-sidebar-btn" class="toggle-button">
+          ≡
         </button>
       </div>
-    </footer>
-  </div>
-
-  <!-- Saved Concepts Sidebar -->
-  <aside id="saved-concepts-sidebar" class="sidebar">
-    <div class="sidebar-header">
-      <h3>Saved Concepts</h3>
-      <button type="button" id="toggle-sidebar-btn" class="toggle-button">
-        ≡
-      </button>
-    </div>
-    <div class="sidebar-content">
-      <div id="saved-concepts-list">
-        <!-- Dynamic content populated by JavaScript -->
+      <div class="sidebar-content">
+        <div id="saved-concepts-list">
+          <!-- Dynamic content populated by JavaScript -->
+        </div>
       </div>
-    </div>
-  </aside>
+    </aside>
 
-  <!-- Character Builder Scripts -->
-  <script src="dist/character-builder.js"></script>
-</body>
+    <!-- Character Builder Scripts -->
+    <script src="dist/character-builder.js"></script>
+  </body>
 </html>
 ```
 
 ### CSS Architecture (character-builder.css)
 
 Key styling considerations:
+
 - Responsive grid layout for dual-panel design
 - Loading states and animations
 - Card-based display for thematic directions
@@ -598,7 +642,7 @@ class CharacterBuilderController {
     logger,
     characterBuilderService,
     eventBus,
-    validationService
+    validationService,
   }) {}
 
   /**
@@ -753,7 +797,10 @@ const characterBuilderTokens = {
 };
 
 // Service registration in container
-container.register(characterBuilderTokens.ICharacterBuilderService, CharacterBuilderService);
+container.register(
+  characterBuilderTokens.ICharacterBuilderService,
+  CharacterBuilderService
+);
 // ... additional registrations
 ```
 
@@ -765,7 +812,7 @@ const CHARACTER_BUILDER_EVENTS = {
   CONCEPT_CREATED: 'CHARACTER_CONCEPT_CREATED',
   DIRECTIONS_GENERATED: 'THEMATIC_DIRECTIONS_GENERATED',
   CONCEPT_SAVED: 'CHARACTER_CONCEPT_SAVED',
-  ERROR_OCCURRED: 'CHARACTER_BUILDER_ERROR_OCCURRED'
+  ERROR_OCCURRED: 'CHARACTER_BUILDER_ERROR_OCCURRED',
 };
 ```
 
@@ -802,13 +849,13 @@ export const testCharacterConcepts = [
   {
     concept: "a ditzy female adventurer who's good with a bow",
     expectedDirections: 5,
-    testCase: "basic_archer_concept"
+    testCase: 'basic_archer_concept',
   },
   {
-    concept: "a brooding vampire lord seeking redemption",
+    concept: 'a brooding vampire lord seeking redemption',
     expectedDirections: 4,
-    testCase: "vampire_redemption_concept"
-  }
+    testCase: 'vampire_redemption_concept',
+  },
 ];
 ```
 

@@ -99,7 +99,7 @@ function formatSingleNoteAsHtml(note, index = 0) {
   let headerHtml = '';
   if (escapedSubjectType || escapedSubject) {
     headerHtml += '<div class="note-header">';
-    
+
     if (escapedSubjectType) {
       const icon = getSubjectTypeIcon(escapedSubjectType);
       headerHtml += `<span class="note-subject-type" data-type="${escapedSubjectType.toLowerCase()}">`;
@@ -108,11 +108,11 @@ function formatSingleNoteAsHtml(note, index = 0) {
       }
       headerHtml += `${escapedSubjectType}</span>`;
     }
-    
+
     if (escapedSubject) {
       headerHtml += `<span class="note-subject">${escapedSubject}</span>`;
     }
-    
+
     headerHtml += '</div>';
   }
 
@@ -120,16 +120,16 @@ function formatSingleNoteAsHtml(note, index = 0) {
   let metaHtml = '';
   if (escapedContext || (Array.isArray(tags) && tags.length > 0)) {
     metaHtml += '<div class="note-meta">';
-    
+
     if (escapedContext) {
       metaHtml += `<span class="note-context">${escapedContext}</span>`;
     }
-    
+
     if (Array.isArray(tags) && tags.length > 0) {
       const validTags = tags
         .filter((tag) => isNonBlankString(tag))
         .map((tag) => escapeHtml(tag.trim()));
-      
+
       if (validTags.length > 0) {
         metaHtml += '<div class="note-tags">';
         validTags.forEach((tag) => {
@@ -138,7 +138,7 @@ function formatSingleNoteAsHtml(note, index = 0) {
         metaHtml += '</div>';
       }
     }
-    
+
     metaHtml += '</div>';
   }
 
@@ -175,7 +175,7 @@ export function formatNotesAsRichHtml(notesData) {
     if (!noteHtml) {
       return '';
     }
-    
+
     return `<div class="notes-container notes-container--single">
       ${noteHtml}
     </div>`;
@@ -198,7 +198,8 @@ export function formatNotesAsRichHtml(notesData) {
 
   const notesListHtml = noteHtmls
     .map((noteHtml, index) => {
-      const divider = index < noteHtmls.length - 1 ? '<div class="note-divider"></div>' : '';
+      const divider =
+        index < noteHtmls.length - 1 ? '<div class="note-divider"></div>' : '';
       return noteHtml + divider;
     })
     .join('');
