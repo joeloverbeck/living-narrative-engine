@@ -3,9 +3,12 @@
   "id": "intimacy:massage_back",
   "name": "Massage Back",
   "description": "Gently massage the target's back.",
-  "scope": "intimacy:close_actors_facing_away",
+  "scope": "intimacy:close_actors",
   "required_components": {
     "actor": ["intimacy:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["intimacy:facing_away"]
   },
   "template": "massage {target}'s back",
   "prerequisites": []

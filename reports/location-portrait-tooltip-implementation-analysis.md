@@ -23,11 +23,13 @@ Location Panel
 ### 1.2 Current Behavior
 
 When a location has both a portrait and a description:
+
 - The portrait is displayed as a full-width image
 - The description text appears directly below the portrait
 - This creates visual clutter and redundancy
 
 The relevant rendering logic is in `locationRenderer.js:540-542`:
+
 ```javascript
 this.renderName(locationDto);
 this.renderPortrait(locationDto);
@@ -42,7 +44,7 @@ Both elements are rendered sequentially without conditional logic to hide the de
 
 Character portraits with tooltips are implemented in `renderCharacterListItem.js` with the following key features:
 
-1. **HTML Structure**: 
+1. **HTML Structure**:
    - Portrait image and name are wrapped in a list item
    - A hidden tooltip span is appended containing the description
    - The tooltip has class `character-tooltip`
@@ -52,6 +54,7 @@ Character portraits with tooltips are implemented in `renderCharacterListItem.js
    - CSS handles visibility based on hover, focus, or the `tooltip-open` class
 
 3. **CSS Implementation** (from `_location-info.css`):
+
    ```css
    .character-tooltip {
      visibility: hidden;
@@ -59,7 +62,7 @@ Character portraits with tooltips are implemented in `renderCharacterListItem.js
      position: absolute;
      /* ... positioning and styling ... */
    }
-   
+
    #location-characters-display li:hover > .character-tooltip,
    #location-characters-display li:focus-within > .character-tooltip,
    #location-characters-display li.tooltip-open > .character-tooltip {
@@ -93,7 +96,7 @@ Modify the `renderDescription` method to conditionally render based on portrait 
 ```javascript
 renderDescription(locationDto) {
   DomUtils.clearElement(this.elements.descriptionDisplay);
-  
+
   // Only show inline description if no portrait
   if (!locationDto.portraitPath && locationDto.description) {
     const pDesc = this.domElementFactory.p(
@@ -129,10 +132,12 @@ export function renderPortraitElements(
   if (locationDto.portraitPath) {
     // Set up the portrait image
     imageElement.src = locationDto.portraitPath;
-    imageElement.alt = locationDto.portraitAltText || `Image of ${locationDto.name || 'location'}`;
+    imageElement.alt =
+      locationDto.portraitAltText ||
+      `Image of ${locationDto.name || 'location'}`;
     imageElement.style.display = 'block';
     visualsElement.style.display = 'flex';
-    
+
     // Add tooltip if description exists
     if (locationDto.description && locationDto.description.trim()) {
       // Remove any existing tooltip
@@ -140,13 +145,13 @@ export function renderPortraitElements(
       if (existingTooltip) {
         existingTooltip.remove();
       }
-      
+
       // Create new tooltip
       const tooltip = documentContext.document.createElement('span');
       tooltip.classList.add('location-tooltip');
       tooltip.innerHTML = DomUtils.textToHtml(locationDto.description);
       visualsElement.appendChild(tooltip);
-      
+
       // Add interaction handler
       const handler = () => visualsElement.classList.toggle('tooltip-open');
       if (addListener) {
@@ -201,7 +206,7 @@ The existing CSS already includes a `.location-tooltip` class that extends `.cha
    - Implement tooltip creation and interaction logic
    - Handle cleanup of existing tooltips
 
-3. **_location-info.css**:
+3. **\_location-info.css**:
    - Add hover/focus rules for location portrait tooltips
    - Ensure proper focus styling for accessibility
 
@@ -256,6 +261,7 @@ The existing CSS already includes a `.location-tooltip` class that extends `.cha
 ## 6. Conclusion
 
 The proposed solution elegantly solves the visual clutter issue by:
+
 - Reusing existing tooltip patterns from character portraits
 - Maintaining accessibility and mobile support
 - Requiring minimal code changes

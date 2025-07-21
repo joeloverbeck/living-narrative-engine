@@ -37,7 +37,8 @@ Add the following property to the action schema after the `required_components` 
 }
 ```
 
-**Rationale**: 
+**Rationale**:
+
 - Mirrors the structure of `required_components` for consistency
 - Uses the same namespaced component ID pattern
 - Allows future extension to target components if needed
@@ -47,6 +48,7 @@ Add the following property to the action schema after the `required_components` 
 #### File: src/actions/actionIndex.js
 
 **New Private Field**:
+
 ```javascript
 /**
  * A map where keys are component IDs and values are arrays of ActionDefinitions
@@ -82,6 +84,7 @@ if (
 ```
 
 Also update the clear operation:
+
 ```javascript
 this.#byForbiddenComponent.clear();
 ```
@@ -94,7 +97,8 @@ Add forbidden component filtering after building the initial candidate set:
 // Filter out actions with forbidden components
 const forbiddenCandidates = new Set();
 for (const componentType of actorComponentTypes) {
-  const actionsWithForbiddenComponent = this.#byForbiddenComponent.get(componentType);
+  const actionsWithForbiddenComponent =
+    this.#byForbiddenComponent.get(componentType);
   if (actionsWithForbiddenComponent) {
     trace?.info(
       `Found ${actionsWithForbiddenComponent.length} actions forbidden by component '${componentType}'.`,
@@ -115,7 +119,7 @@ if (forbiddenCandidates.size > 0) {
   trace?.info(
     `Removed ${forbiddenCandidates.size} actions due to forbidden components.`,
     source,
-    { removedActionIds: Array.from(forbiddenCandidates).map(a => a.id) }
+    { removedActionIds: Array.from(forbiddenCandidates).map((a) => a.id) }
   );
 }
 ```
@@ -125,10 +129,11 @@ if (forbiddenCandidates.size > 0) {
 #### Files to Update:
 
 1. **data/mods/intimacy/actions/place_hand_on_waist.action.json**
+
    ```json
    {
      "id": "intimacy:place_hand_on_waist",
-     "scope": "intimacy:close_actors_facing_forward",  // Changed from close_actors_in_front
+     "scope": "intimacy:close_actors_facing_forward", // Changed from close_actors_in_front
      "required_components": {
        "actor": ["intimacy:closeness"]
      },
@@ -143,7 +148,7 @@ if (forbiddenCandidates.size > 0) {
    ```json
    {
      "id": "intimacy:turn_around_to_face",
-     "scope": "intimacy:close_actors_facing_forward",  // Changed from close_actors_in_front
+     "scope": "intimacy:close_actors_facing_forward", // Changed from close_actors_in_front
      "required_components": {
        "actor": ["intimacy:closeness"]
      },
@@ -169,6 +174,7 @@ if (forbiddenCandidates.size > 0) {
 #### Files to Verify:
 
 Check if any other files reference the removed condition or scope:
+
 - Run grep for "actor-has-facing-away"
 - Run grep for "close_actors_in_front"
 
@@ -181,6 +187,7 @@ Check if any other files reference the removed condition or scope:
 Add test cases for:
 
 1. **Building index with forbidden components**:
+
    ```javascript
    it('should build index with forbidden components', () => {
      const actionDefinitions = [
@@ -188,15 +195,16 @@ Add test cases for:
          id: 'action1',
          name: 'Restricted Action',
          forbidden_components: {
-           actor: ['core:paralyzed', 'core:unconscious']
-         }
-       }
+           actor: ['core:paralyzed', 'core:unconscious'],
+         },
+       },
      ];
      // Test that forbidden component maps are created correctly
    });
    ```
 
 2. **Filtering actions with forbidden components**:
+
    ```javascript
    it('should exclude actions when actor has forbidden components', () => {
      // Setup actor with forbidden component
@@ -205,6 +213,7 @@ Add test cases for:
    ```
 
 3. **Mixed required and forbidden components**:
+
    ```javascript
    it('should handle actions with both required and forbidden components', () => {
      // Test complex scenarios with both types of requirements
@@ -232,6 +241,7 @@ Create new integration test file to verify:
 #### Existing Test Updates
 
 Update any tests that:
+
 - Reference the removed condition file
 - Use the removed scope
 - Test actions that will be modified
@@ -246,6 +256,7 @@ For mod developers updating existing actions:
 4. **Test action discovery still works correctly**
 
 Example migration:
+
 ```javascript
 // Before: Complex scope with condition
 "scope": "intimacy:close_actors_in_front"
@@ -274,7 +285,7 @@ Example migration:
 - [ ] Update action.schema.json with forbidden_components field
 - [ ] Enhance ActionIndex class with forbidden component tracking
 - [ ] Update place_hand_on_waist.action.json
-- [ ] Update turn_around.action.json  
+- [ ] Update turn_around.action.json
 - [ ] Remove actor-has-facing-away.condition.json
 - [ ] Remove close_actors_in_front.scope
 - [ ] Write unit tests for ActionIndex changes
@@ -286,11 +297,13 @@ Example migration:
 ## Risk Assessment
 
 **Low Risk**:
+
 - Feature is optional and backward compatible
 - Localized changes to ActionIndex
 - Clear migration path
 
 **Mitigation**:
+
 - Comprehensive testing before deployment
 - Keep old files during transition period if needed
 - Clear documentation of changes

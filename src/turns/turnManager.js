@@ -293,7 +293,7 @@ class TurnManager extends ITurnManager {
     }
 
     logStart(this.#logger, 'TurnManager.advanceTurn() initiating...');
-    
+
     // Clear previous actor/handler
     const previousActorIdForLog = this.#currentActor?.id;
     if (previousActorIdForLog) {
@@ -449,7 +449,7 @@ class TurnManager extends ITurnManager {
             `Error initiating turn for ${actorId}`,
             { error: startTurnError.message, handlerName }
           );
-          
+
           try {
             await this.#dispatchSystemError(
               `Error initiating turn for ${actorId}.`,
@@ -624,7 +624,7 @@ class TurnManager extends ITurnManager {
             e
           );
         }
-        
+
         try {
           await this.stop();
         } catch (e) {

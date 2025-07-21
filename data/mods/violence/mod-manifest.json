@@ -10,14 +10,8 @@
     }
   ],
   "content": {
-    "actions": [
-      "sucker_punch.action.json"
-    ],
-    "rules": [
-      "handle_sucker_punch.rule.json"
-    ],
-    "conditions": [
-      "event-is-action-sucker-punch.condition.json"
-    ]
+    "actions": ["sucker_punch.action.json"],
+    "rules": ["handle_sucker_punch.rule.json"],
+    "conditions": ["event-is-action-sucker-punch.condition.json"]
   }
 }

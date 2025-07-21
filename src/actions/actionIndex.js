@@ -29,6 +29,14 @@ export class ActionIndex {
   #noActorRequirement = [];
 
   /**
+   * A map where keys are component IDs and values are arrays of ActionDefinitions
+   * that forbid that component on the actor.
+   *
+   * @type {Map<string, ActionDefinition[]>}
+   */
+  #byForbiddenComponent = new Map();
+
+  /**
    * Instantiates ActionIndex.
    *
    * @param {{logger: ILogger, entityManager: EntityManager}} deps ActionIndex's dependencies.
@@ -65,6 +73,7 @@ export class ActionIndex {
     );
 
     this.#byActorComponent.clear();
+    this.#byForbiddenComponent.clear();
     this.#noActorRequirement = [];
 
     for (const actionDef of allActionDefinitions) {
@@ -92,6 +101,24 @@ export class ActionIndex {
         }
       } else {
         this.#noActorRequirement.push(actionDef);
+      }
+
+      // Process forbidden components
+      const forbiddenActorComponents = actionDef.forbidden_components?.actor;
+
+      if (
+        forbiddenActorComponents &&
+        Array.isArray(forbiddenActorComponents) &&
+        forbiddenActorComponents.length > 0
+      ) {
+        for (const componentId of forbiddenActorComponents) {
+          if (typeof componentId === 'string' && componentId.trim()) {
+            if (!this.#byForbiddenComponent.has(componentId)) {
+              this.#byForbiddenComponent.set(componentId, []);
+            }
+            this.#byForbiddenComponent.get(componentId).push(actionDef);
+          }
+        }
       }
     }
 
@@ -136,6 +163,35 @@ export class ActionIndex {
           candidateSet.add(action);
         }
       }
+    }
+
+    // Filter out actions with forbidden components
+    const forbiddenCandidates = new Set();
+    for (const componentType of actorComponentTypes) {
+      const actionsWithForbiddenComponent =
+        this.#byForbiddenComponent.get(componentType);
+      if (actionsWithForbiddenComponent) {
+        trace?.info(
+          `Found ${actionsWithForbiddenComponent.length} actions forbidden by component '${componentType}'.`,
+          source
+        );
+        for (const action of actionsWithForbiddenComponent) {
+          forbiddenCandidates.add(action);
+        }
+      }
+    }
+
+    // Remove forbidden actions from candidates
+    for (const forbiddenAction of forbiddenCandidates) {
+      candidateSet.delete(forbiddenAction);
+    }
+
+    if (forbiddenCandidates.size > 0) {
+      trace?.info(
+        `Removed ${forbiddenCandidates.size} actions due to forbidden components.`,
+        source,
+        { removedActionIds: Array.from(forbiddenCandidates).map((a) => a.id) }
+      );
     }
 
     const candidates = Array.from(candidateSet);

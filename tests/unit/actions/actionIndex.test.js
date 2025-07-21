@@ -511,4 +511,230 @@ describe('ActionIndex', () => {
       );
     });
   });
+
+  describe('forbidden components', () => {
+    it('should build index with forbidden components', () => {
+      const actionDefinitions = [
+        {
+          id: 'action1',
+          name: 'Restricted Action',
+          forbidden_components: {
+            actor: ['core:paralyzed', 'core:unconscious'],
+          },
+        },
+        {
+          id: 'action2',
+          name: 'Normal Action',
+          required_components: {
+            actor: ['core:active'],
+          },
+        },
+      ];
+
+      actionIndex.buildIndex(actionDefinitions);
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Building action index from 2 definitions...'
+      );
+      // Should create maps for both required and forbidden components
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Action index built. 1 component-to-action maps created.'
+      );
+    });
+
+    it('should exclude actions when actor has forbidden components', () => {
+      const actionDefinitions = [
+        {
+          id: 'action1',
+          name: 'Movement Action',
+          required_components: {
+            actor: ['core:movement'],
+          },
+          forbidden_components: {
+            actor: ['core:paralyzed'],
+          },
+        },
+        {
+          id: 'action2',
+          name: 'Alert Action',
+          required_components: {
+            actor: ['core:consciousness'],
+          },
+          forbidden_components: {
+            actor: ['core:unconscious'],
+          },
+        },
+        {
+          id: 'action3',
+          name: 'Basic Action',
+          // No requirements or forbidden components
+        },
+      ];
+
+      actionIndex.buildIndex(actionDefinitions);
+
+      // Test with actor having paralyzed component
+      const actorEntity = { id: 'paralyzed-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:movement',
+        'core:consciousness',
+        'core:paralyzed',
+      ]);
+
+      const candidates = actionIndex.getCandidateActions(actorEntity);
+
+      // Should get action2 (alert) and action3 (basic), but NOT action1 (movement)
+      expect(candidates).toHaveLength(2);
+      expect(candidates.map((a) => a.id)).toEqual(
+        expect.arrayContaining(['action2', 'action3'])
+      );
+      expect(candidates.map((a) => a.id)).not.toContain('action1');
+    });
+
+    it('should handle actions with both required and forbidden components', () => {
+      const actionDefinitions = [
+        {
+          id: 'complex-action',
+          name: 'Complex Action',
+          required_components: {
+            actor: ['core:stats', 'core:inventory'],
+          },
+          forbidden_components: {
+            actor: ['core:disabled', 'core:blocked'],
+          },
+        },
+      ];
+
+      actionIndex.buildIndex(actionDefinitions);
+
+      // Test with actor meeting requirements but having forbidden component
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:stats',
+        'core:inventory',
+        'core:blocked',
+      ]);
+
+      const candidates = actionIndex.getCandidateActions(actorEntity);
+
+      // Should NOT get the complex-action because actor has forbidden component
+      expect(candidates).toHaveLength(0);
+    });
+
+    it('should handle multiple forbidden components on same action', () => {
+      const actionDefinitions = [
+        {
+          id: 'sensitive-action',
+          name: 'Sensitive Action',
+          forbidden_components: {
+            actor: ['status:stunned', 'status:sleeping', 'status:confused'],
+          },
+        },
+      ];
+
+      actionIndex.buildIndex(actionDefinitions);
+
+      // Test with actor having one of the forbidden components
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:basic',
+        'status:sleeping',
+      ]);
+
+      const candidates = actionIndex.getCandidateActions(actorEntity);
+
+      // Should NOT include the sensitive-action
+      expect(candidates).toHaveLength(0);
+    });
+
+    it('should trace forbidden component filtering', () => {
+      const actionDefinitions = [
+        {
+          id: 'action1',
+          name: 'Action 1',
+          forbidden_components: {
+            actor: ['core:forbidden'],
+          },
+        },
+      ];
+
+      actionIndex.buildIndex(actionDefinitions);
+
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:forbidden',
+      ]);
+
+      const trace = {
+        data: jest.fn(),
+        info: jest.fn(),
+        success: jest.fn(),
+      };
+
+      const candidates = actionIndex.getCandidateActions(actorEntity, trace);
+
+      // Verify trace messages
+      expect(trace.info).toHaveBeenCalledWith(
+        expect.stringContaining('Found 1 actions forbidden by component'),
+        expect.any(String)
+      );
+      expect(trace.info).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Removed 1 actions due to forbidden components'
+        ),
+        expect.any(String),
+        expect.objectContaining({
+          removedActionIds: ['action1'],
+        })
+      );
+    });
+
+    it('should handle empty forbidden components gracefully', () => {
+      const actionDefinitions = [
+        {
+          id: 'action1',
+          name: 'Action 1',
+          forbidden_components: {
+            actor: [],
+          },
+        },
+        {
+          id: 'action2',
+          name: 'Action 2',
+          forbidden_components: {}, // No actor field
+        },
+      ];
+
+      // Should not throw errors
+      expect(() => actionIndex.buildIndex(actionDefinitions)).not.toThrow();
+    });
+
+    it('should maintain performance with many forbidden components', () => {
+      const actionDefinitions = [];
+
+      // Create actions with various forbidden components
+      for (let i = 0; i < 100; i++) {
+        actionDefinitions.push({
+          id: `action-${i}`,
+          name: `Action ${i}`,
+          forbidden_components: {
+            actor: [`status:effect-${i % 10}`],
+          },
+        });
+      }
+
+      actionIndex.buildIndex(actionDefinitions);
+
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'status:effect-0',
+        'status:effect-5',
+      ]);
+
+      const candidates = actionIndex.getCandidateActions(actorEntity);
+
+      // Should exclude 20 actions (10 with effect-0 + 10 with effect-5)
+      expect(candidates).toHaveLength(80);
+    });
+  });
 });

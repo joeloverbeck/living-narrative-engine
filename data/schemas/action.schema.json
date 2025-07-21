@@ -38,6 +38,21 @@
       },
       "additionalProperties": false
     },
+    "forbidden_components": {
+      "type": "object",
+      "description": "HIGH-LEVEL PRE-FILTERING. Specifies component IDs that must NOT be present on the actor for this action to be considered for discovery. This is evaluated at the same pre-filtering stage as required_components for optimal performance.",
+      "properties": {
+        "actor": {
+          "type": "array",
+          "description": "A list of component IDs that the actor must NOT possess for this action to be a candidate.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "prerequisites": {
       "type": "array",
       "description": "ACTOR/WORLD STATE VALIDATION. Checks conditions on the actor (e.g., has enough mana, not rooted) or the global game state. Target-specific filtering and validation should be handled exclusively by the 'scope' property's DSL expression.",
