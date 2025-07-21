@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "character-concept.schema.json",
+  "title": "Character Concept",
+  "description": "Schema for character concept data in the character builder system",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+      "description": "Unique identifier (UUID)"
+    },
+    "concept": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 1000,
+      "description": "User-provided character concept text"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "processing", "completed", "error"],
+      "description": "Current processing status"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Creation timestamp"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last modification timestamp"
+    },
+    "thematicDirections": {
+      "type": "array",
+      "items": { "$ref": "thematic-direction.schema.json" },
+      "minItems": 0,
+      "maxItems": 10,
+      "description": "Generated thematic directions"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Additional metadata for future steps"
+    }
+  },
+  "required": ["id", "concept", "status", "createdAt", "updatedAt"],
+  "additionalProperties": false
+}

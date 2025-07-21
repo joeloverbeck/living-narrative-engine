@@ -13,7 +13,6 @@ import { formatNotesAsRichHtml } from './noteTooltipFormatter.js';
 /**
  * @typedef {object} SpeechMetaInput
  * @property {string} [thoughts] - The inner thoughts of the character.
- * @property {string} [notes] - Private notes or observations (formatted string).
  * @property {*} [notesRaw] - Raw structured notes data for rich HTML display.
  */
 
@@ -25,8 +24,8 @@ import { formatNotesAsRichHtml } from './noteTooltipFormatter.js';
  * @param {SpeechMetaInput} meta - An object containing the speech metadata.
  * @returns {DocumentFragment|null} A document fragment with the speech-meta div, or null if no metadata is provided.
  */
-export function buildSpeechMeta(document, domFactory, { thoughts, notes, notesRaw }) {
-  if (!thoughts && !notes) {
+export function buildSpeechMeta(document, domFactory, { thoughts, notesRaw }) {
+  if (!thoughts && !notesRaw) {
     return null;
   }
 
@@ -48,7 +47,7 @@ export function buildSpeechMeta(document, domFactory, { thoughts, notes, notesRa
     metaContainer.appendChild(btn);
   }
 
-  if (notes) {
+  if (notesRaw) {
     const btn = domFactory.create('button', {
       cls: 'meta-btn notes',
       attrs: { 'aria-label': 'View private notes' },
@@ -56,18 +55,13 @@ export function buildSpeechMeta(document, domFactory, { thoughts, notes, notesRa
     btn.style.setProperty('--clr', 'var(--notes-icon-color)');
     btn.innerHTML = getIcon('notes');
 
-    // Try to use rich HTML if structured data is available, otherwise fallback to plain text
-    const richHtml = notesRaw ? formatNotesAsRichHtml(notesRaw) : '';
-    const tooltip = domFactory.create('div', { 
-      cls: richHtml ? 'meta-tooltip meta-tooltip--notes' : 'meta-tooltip'
+    const richHtml = formatNotesAsRichHtml(notesRaw);
+    const tooltip = domFactory.create('div', {
+      cls: 'meta-tooltip meta-tooltip--notes',
     });
-    
-    if (richHtml) {
-      tooltip.innerHTML = richHtml;
-    } else {
-      tooltip.textContent = notes;
-    }
-    
+
+    tooltip.innerHTML = richHtml;
+
     btn.appendChild(tooltip);
     metaContainer.appendChild(btn);
   }

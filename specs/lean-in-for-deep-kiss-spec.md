@@ -55,6 +55,7 @@ The kissing system revolves around a mutual state component (`intimacy:kissing`)
 ### Entry Actions (Kiss Initiation)
 
 #### lean_in_for_deep_kiss
+
 ```json
 {
   "id": "intimacy:lean_in_for_deep_kiss",
@@ -149,9 +150,7 @@ intimacy:current_kissing_partner := entities(intimacy:kissing)[][{
 }]
 ```
 
-
 ## Condition Definitions
-
 
 ### target-is-kissing-partner
 
@@ -169,7 +168,6 @@ intimacy:current_kissing_partner := entities(intimacy:kissing)[][{
 }
 ```
 
-
 ## Rule Processing Logic
 
 ### Kiss Initiation Rules
@@ -177,9 +175,9 @@ intimacy:current_kissing_partner := entities(intimacy:kissing)[][{
 Rules for initiating kisses must:
 
 1. Add the `intimacy:kissing` component to both participants
-3. Mark the initiator
-4. Provide descriptive feedback
-5. Handle the perception system appropriately
+2. Mark the initiator
+3. Provide descriptive feedback
+4. Handle the perception system appropriately
 
 Example rule structure for `lean_in_for_deep_kiss`:
 
@@ -239,7 +237,6 @@ Example rule structure for `lean_in_for_deep_kiss`:
 ```
 
 You should add the perceptible events logs as well to the rule.
-
 
 ### Kiss Termination Rules
 
@@ -316,6 +313,6 @@ Example for `break_kiss_gently`:
 
 1. Core component and basic scopes/conditions
 2. Entry actions (2-3 variations)
-4. Exit actions (2-3 variations)
-5. Additional contextual actions
-6. Edge case handling and state cleanup rules
+3. Exit actions (2-3 variations)
+4. Additional contextual actions
+5. Edge case handling and state cleanup rules

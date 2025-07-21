@@ -9,13 +9,12 @@
  * @property {*} [notes] - Raw notes value.
  */
 import { isNonBlankString } from '../../../utils/textUtils.js';
-import { formatNotesForDisplay } from './noteFormatter.js';
 
 /**
  * Builds a sanitized payload from decision metadata for ENTITY_SPOKE_ID.
  *
  * @param {DecisionMeta} decisionMeta - Metadata from the actor decision.
- * @returns {{speechContent: string, thoughts?: string, notes?: string, notesRaw?: *}|null} The sanitized payload, or null if speech is absent/invalid.
+ * @returns {{speechContent: string, thoughts?: string, notesRaw?: *}|null} The sanitized payload, or null if speech is absent/invalid.
  */
 export function buildSpeechPayload(decisionMeta) {
   const {
@@ -33,12 +32,9 @@ export function buildSpeechPayload(decisionMeta) {
     ? thoughtsRaw.trim()
     : undefined;
 
-  const notes = formatNotesForDisplay(notesRaw);
-
   const payload = {
     speechContent: speech,
     ...(thoughts ? { thoughts } : {}),
-    ...(notes ? { notes } : {}),
     ...(notesRaw ? { notesRaw } : {}),
   };
 

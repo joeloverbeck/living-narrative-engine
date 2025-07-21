@@ -18,7 +18,6 @@ describe('buildSpeechPayload', () => {
     expect(payload).toEqual({
       speechContent: 'hi',
       thoughts: 'think',
-      notes: 'first\nsecond',
       notesRaw: notesRaw,
     });
   });
@@ -26,10 +25,9 @@ describe('buildSpeechPayload', () => {
   it('handles notes as a string', () => {
     const notesRaw = ' note ';
     const payload = buildSpeechPayload({ speech: 'a', notes: notesRaw });
-    expect(payload).toEqual({ 
-      speechContent: 'a', 
-      notes: 'note',
-      notesRaw: notesRaw
+    expect(payload).toEqual({
+      speechContent: 'a',
+      notesRaw: notesRaw,
     });
   });
 
@@ -43,16 +41,15 @@ describe('buildSpeechPayload', () => {
     const notesRaw = {
       text: 'Character observation',
       subject: 'Alice',
-      subjectType: 'character'
+      subjectType: 'character',
     };
-    const payload = buildSpeechPayload({ 
+    const payload = buildSpeechPayload({
       speech: 'hello',
-      notes: notesRaw 
+      notes: notesRaw,
     });
     expect(payload).toEqual({
       speechContent: 'hello',
-      notes: '[character] Alice: Character observation',
-      notesRaw: notesRaw
+      notesRaw: notesRaw,
     });
   });
 });

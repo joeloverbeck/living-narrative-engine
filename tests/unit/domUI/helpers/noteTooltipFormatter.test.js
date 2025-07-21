@@ -26,7 +26,7 @@ describe('noteTooltipFormatter', () => {
   afterEach(() => {
     // Restore the original document
     global.document = originalDocument;
-    
+
     // Clean up JSDOM
     if (jsdom) {
       jsdom.window.close();
@@ -59,7 +59,7 @@ describe('noteTooltipFormatter', () => {
     describe('with string input (fallback mode)', () => {
       it('should handle plain text string', () => {
         const result = formatNotesAsRichHtml('This is a simple note');
-        
+
         expect(result).toContain('notes-container--simple');
         expect(result).toContain('note-item--simple');
         expect(result).toContain('This is a simple note');
@@ -67,8 +67,10 @@ describe('noteTooltipFormatter', () => {
       });
 
       it('should escape HTML entities in string input', () => {
-        const result = formatNotesAsRichHtml('Alert: <script>alert("xss")</script>');
-        
+        const result = formatNotesAsRichHtml(
+          'Alert: <script>alert("xss")</script>'
+        );
+
         expect(result).toContain('&lt;script&gt;');
         expect(result).toContain('&lt;/script&gt;');
         expect(result).not.toContain('<script>');
@@ -76,7 +78,7 @@ describe('noteTooltipFormatter', () => {
 
       it('should handle whitespace-only string', () => {
         const result = formatNotesAsRichHtml('   \t\n   ');
-        
+
         // Whitespace-only strings should still create HTML structure but with empty content
         expect(result).toContain('notes-container--simple');
         expect(result).toContain('<div class="note-content"></div>');
@@ -88,7 +90,7 @@ describe('noteTooltipFormatter', () => {
         const note = {
           text: 'Character seems nervous',
           subject: 'Alice',
-          subjectType: 'character'
+          subjectType: 'character',
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -108,7 +110,7 @@ describe('noteTooltipFormatter', () => {
           subject: 'Old Library',
           subjectType: 'location',
           context: 'During midnight exploration',
-          tags: ['mystery', 'investigation', 'atmosphere']
+          tags: ['mystery', 'investigation', 'atmosphere'],
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -126,7 +128,7 @@ describe('noteTooltipFormatter', () => {
 
       it('should handle note with missing optional fields', () => {
         const note = {
-          text: 'Important observation'
+          text: 'Important observation',
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -142,7 +144,7 @@ describe('noteTooltipFormatter', () => {
           subject: 'Evil <img src=x onerror=alert(1)>',
           subjectType: 'test<script>',
           context: 'During <iframe> test',
-          tags: ['<svg onload=alert(1)>', 'normal-tag']
+          tags: ['<svg onload=alert(1)>', 'normal-tag'],
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -159,7 +161,7 @@ describe('noteTooltipFormatter', () => {
         const note = {
           text: '',
           subject: 'Alice',
-          subjectType: 'character'
+          subjectType: 'character',
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -170,7 +172,7 @@ describe('noteTooltipFormatter', () => {
         const note = {
           text: '   \t\n   ',
           subject: 'Alice',
-          subjectType: 'character'
+          subjectType: 'character',
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -186,14 +188,14 @@ describe('noteTooltipFormatter', () => {
             subject: 'Alice',
             subjectType: 'character',
             context: 'During garden conversation',
-            tags: ['emotion', 'observation']
+            tags: ['emotion', 'observation'],
           },
           {
             text: 'Dusty and abandoned, perfect for secrets',
             subject: 'Old Library',
             subjectType: 'location',
-            tags: ['atmosphere', 'discovery']
-          }
+            tags: ['atmosphere', 'discovery'],
+          },
         ];
 
         const result = formatNotesAsRichHtml(notes);
@@ -203,12 +205,12 @@ describe('noteTooltipFormatter', () => {
         expect(result).toContain('2 Notes');
         expect(result).toContain('notes-list');
         expect(result).toContain('note-divider');
-        
+
         expect(result).toContain('Alice');
         expect(result).toContain('Character seems nervous about the meeting');
         expect(result).toContain('Old Library');
         expect(result).toContain('Dusty and abandoned');
-        
+
         expect(result).toContain('data-index="0"');
         expect(result).toContain('data-index="1"');
       });
@@ -218,8 +220,8 @@ describe('noteTooltipFormatter', () => {
           {
             text: 'Single note in array',
             subject: 'Test',
-            subjectType: 'character'
-          }
+            subjectType: 'character',
+          },
         ];
 
         const result = formatNotesAsRichHtml(notes);
@@ -236,13 +238,13 @@ describe('noteTooltipFormatter', () => {
           {
             text: 'Structured note',
             subject: 'Alice',
-            subjectType: 'character'
+            subjectType: 'character',
           },
           {
             text: 'Another structured note',
             subject: 'Library',
-            subjectType: 'location'
-          }
+            subjectType: 'location',
+          },
         ];
 
         const result = formatNotesAsRichHtml(notes);
@@ -260,22 +262,22 @@ describe('noteTooltipFormatter', () => {
           {
             text: 'Valid note',
             subject: 'Alice',
-            subjectType: 'character'
+            subjectType: 'character',
           },
           {
             text: '',
             subject: 'Bob',
-            subjectType: 'character'
+            subjectType: 'character',
           },
           null,
           {
             text: 'Another valid note',
-            subject: 'Library'
+            subject: 'Library',
           },
           undefined,
           {
-            subject: 'Missing text'
-          }
+            subject: 'Missing text',
+          },
         ];
 
         const result = formatNotesAsRichHtml(notes);
@@ -294,7 +296,7 @@ describe('noteTooltipFormatter', () => {
           null,
           undefined,
           { subject: 'Missing text' },
-          { text: '   ' }
+          { text: '   ' },
         ];
 
         const result = formatNotesAsRichHtml(notes);
@@ -313,14 +315,14 @@ describe('noteTooltipFormatter', () => {
           { type: 'observation', icon: '👁️' },
           { type: 'discovery', icon: '🔍' },
           { type: 'mystery', icon: '🔮' },
-          { type: 'investigation', icon: '🕵️' }
+          { type: 'investigation', icon: '🕵️' },
         ];
 
         subjectTypes.forEach(({ type, icon }) => {
           const note = {
             text: 'Test note',
             subject: 'Test Subject',
-            subjectType: type
+            subjectType: type,
           };
 
           const result = formatNotesAsRichHtml(note);
@@ -334,7 +336,7 @@ describe('noteTooltipFormatter', () => {
         const note = {
           text: 'Test note',
           subject: 'Test Subject',
-          subjectType: 'unknown-type'
+          subjectType: 'unknown-type',
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -348,7 +350,7 @@ describe('noteTooltipFormatter', () => {
         const note = {
           text: 'Test note',
           subject: 'Test Subject',
-          subjectType: 'CHARACTER'
+          subjectType: 'CHARACTER',
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -363,7 +365,7 @@ describe('noteTooltipFormatter', () => {
         const note = {
           text: 'Test note',
           subject: 'Test',
-          tags: []
+          tags: [],
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -375,7 +377,7 @@ describe('noteTooltipFormatter', () => {
         const note = {
           text: 'Test note',
           subject: 'Test',
-          tags: ['valid-tag', '', '   ', null, undefined, 'another-valid']
+          tags: ['valid-tag', '', '   ', null, undefined, 'another-valid'],
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -390,7 +392,7 @@ describe('noteTooltipFormatter', () => {
         const note = {
           text: 'Test note',
           subject: 'Test',
-          tags: 'not-an-array'
+          tags: 'not-an-array',
         };
 
         const result = formatNotesAsRichHtml(note);
