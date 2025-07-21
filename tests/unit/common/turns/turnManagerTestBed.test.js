@@ -134,11 +134,11 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
       bed.turnManager.advanceTurn.mockResolvedValue();
       const fn = jest.fn();
       setTimeout(fn, 50);
-      
+
       // Call advanceTurn directly and run timers manually for this test
       await bed.turnManager.advanceTurn();
       jest.runAllTimers();
-      
+
       expect(bed.turnManager.advanceTurn).toHaveBeenCalled();
       expect(fn).toHaveBeenCalled();
     } finally {
@@ -154,11 +154,11 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
     try {
       const fn = jest.fn();
       setTimeout(fn, 50);
-      
+
       // Call start directly and run timers manually for this test
       await bed.turnManager.start();
       jest.runAllTimers();
-      
+
       expect(bed.turnManager.start).toHaveBeenCalled();
       expect(fn).toHaveBeenCalled();
     } finally {
@@ -175,12 +175,12 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
       const entity = { id: 'x' };
       const fn = jest.fn();
       setTimeout(fn, 50);
-      
+
       // Set up entities and call start directly for this test
       bed.setActiveEntities(entity);
       await bed.turnManager.start();
       jest.runAllTimers();
-      
+
       expect(bed.turnManager.start).toHaveBeenCalled();
       expect(bed.entityManager.activeEntities.get('x')).toBe(entity);
       expect(fn).toHaveBeenCalled();

@@ -75,10 +75,10 @@ afterEach(() => {
     // If getTimerCount is not available or throws, we're likely not using fake timers
     // Safe to ignore
   }
-  
+
   // Restore all mocks
   jest.restoreAllMocks();
-  
+
   // Clear all mock calls
   jest.clearAllMocks();
 });

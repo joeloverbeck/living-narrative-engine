@@ -7,12 +7,14 @@ This specification outlines the implementation of a rich text display for notes 
 ## Problem Statement
 
 ### Current Issues
+
 1. **Line breaks not respected**: Multiple notes appear as a continuous string
 2. **Plain text display**: No visual distinction between different note properties
 3. **Poor readability**: Difficult to distinguish between multiple notes
 4. **Lost structure**: The rich structure of note objects (subject, subjectType, context, tags) is flattened into plain text
 
 ### Current Implementation
+
 - Notes are formatted in `noteFormatter.js` using simple string concatenation
 - The tooltip displays the formatted string as plain text in `buildSpeechMeta.js`
 - CSS styling is minimal, focusing only on positioning and basic appearance
@@ -20,6 +22,7 @@ This specification outlines the implementation of a rich text display for notes 
 ## Desired Functionality
 
 ### Rich Text Display Requirements
+
 1. **Structured display** of each note showing:
    - Subject (with visual emphasis)
    - Subject type (as a styled badge/label)
@@ -44,14 +47,18 @@ This specification outlines the implementation of a rich text display for notes 
 ### 1. HTML Structure Changes
 
 #### Current Structure (buildSpeechMeta.js)
+
 ```javascript
 const tooltip = domFactory.create('div', { cls: 'meta-tooltip' });
 tooltip.textContent = notes; // Plain text
 ```
 
 #### Proposed Structure
+
 ```javascript
-const tooltip = domFactory.create('div', { cls: 'meta-tooltip meta-tooltip--notes' });
+const tooltip = domFactory.create('div', {
+  cls: 'meta-tooltip meta-tooltip--notes',
+});
 tooltip.innerHTML = formatNotesAsRichHTML(notes); // Rich HTML content
 ```
 
@@ -75,6 +82,7 @@ export function formatNotesAsRichHTML(notesData) {
 ### 3. HTML Template Structure
 
 For a single note:
+
 ```html
 <div class="note-item">
   <div class="note-header">
@@ -84,9 +92,7 @@ For a single note:
     </span>
     <span class="note-subject">Alice</span>
   </div>
-  <div class="note-content">
-    Seems nervous about the upcoming meeting
-  </div>
+  <div class="note-content">Seems nervous about the upcoming meeting</div>
   <div class="note-meta">
     <span class="note-context">During conversation in the garden</span>
     <div class="note-tags">
@@ -98,6 +104,7 @@ For a single note:
 ```
 
 For multiple notes:
+
 ```html
 <div class="notes-container">
   <div class="notes-header">
@@ -175,9 +182,18 @@ Add new styles to `css/components/_speech-bubbles.css`:
   color: var(--badge-text);
 }
 
-.note-subject-type[data-type="character"] { background: var(--type-character-bg); color: var(--type-character-text); }
-.note-subject-type[data-type="location"] { background: var(--type-location-bg); color: var(--type-location-text); }
-.note-subject-type[data-type="event"] { background: var(--type-event-bg); color: var(--type-event-text); }
+.note-subject-type[data-type='character'] {
+  background: var(--type-character-bg);
+  color: var(--type-character-text);
+}
+.note-subject-type[data-type='location'] {
+  background: var(--type-location-bg);
+  color: var(--type-location-text);
+}
+.note-subject-type[data-type='event'] {
+  background: var(--type-event-bg);
+  color: var(--type-event-text);
+}
 /* ... other types ... */
 
 .note-subject {

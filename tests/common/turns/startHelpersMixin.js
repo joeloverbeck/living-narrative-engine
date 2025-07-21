@@ -111,12 +111,12 @@ export function StartHelpersMixin(Base) {
       try {
         // Call advanceTurn
         await this.turnManager.advanceTurn();
-        
+
         // If using real timers, we need to wait for any setTimeout(0) callbacks
         if (!jest.isMockFunction(setTimeout)) {
-          await new Promise(resolve => setTimeout(resolve, 10)); // Wait for real timer
+          await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for real timer
         }
-        
+
         await flushPromisesAndTimers(5); // Use shorter iteration limit for better performance
       } catch (error) {
         if (!suppressErrors) {

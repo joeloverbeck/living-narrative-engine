@@ -44,14 +44,14 @@ The ActionIndex service processes this by:
 getCandidateActions(actorEntity) {
   const actorComponents = this.#entityManager.getAllComponentTypesForEntity(actorEntity.id);
   const candidateSet = new Set(this.#noActorRequirement);
-  
+
   for (const componentType of actorComponents) {
     const actionsForComponent = this.#byActorComponent.get(componentType);
     if (actionsForComponent) {
       candidateSet.add(...actionsForComponent);
     }
   }
-  
+
   return Array.from(candidateSet);
 }
 ```
@@ -71,6 +71,7 @@ intimacy:close_actors_in_front := actor.intimacy:closeness.partners[][{
 ```
 
 This requires:
+
 - Creating separate scope files for positive and negative filtering
 - More complex JSON Logic conditions
 - Runtime evaluation of conditions rather than pre-filtering
@@ -106,13 +107,13 @@ The ActionIndex would need to be enhanced to:
 ```javascript
 // Enhanced ActionIndex structure
 class ActionIndex {
-  #byActorComponent = new Map();      // Required components
-  #byForbiddenComponent = new Map();  // NEW: Forbidden components
-  #noRequirement = [];                // No requirements
-  
+  #byActorComponent = new Map(); // Required components
+  #byForbiddenComponent = new Map(); // NEW: Forbidden components
+  #noRequirement = []; // No requirements
+
   buildIndex(allActionDefinitions) {
     // ... existing code ...
-    
+
     const forbiddenActorComponents = actionDef.forbidden_components?.actor;
     if (forbiddenActorComponents?.length > 0) {
       for (const componentId of forbiddenActorComponents) {
@@ -123,12 +124,14 @@ class ActionIndex {
       }
     }
   }
-  
+
   getCandidateActions(actorEntity, trace) {
     // ... existing code ...
-    
+
     // NEW: Remove actions with forbidden components
-    const actorComponents = this.#entityManager.getAllComponentTypesForEntity(actorEntity.id);
+    const actorComponents = this.#entityManager.getAllComponentTypesForEntity(
+      actorEntity.id
+    );
     for (const componentType of actorComponents) {
       const forbiddenActions = this.#byForbiddenComponent.get(componentType);
       if (forbiddenActions) {
@@ -137,7 +140,7 @@ class ActionIndex {
         }
       }
     }
-    
+
     return Array.from(candidateSet);
   }
 }
@@ -225,13 +228,15 @@ Add component presence/absence checks as built-in conditions:
 
 ```json
 {
-  "prerequisites": [{
-    "logic": {
-      "not": {
-        "actor_has_component": "intimacy:facing_away"
+  "prerequisites": [
+    {
+      "logic": {
+        "not": {
+          "actor_has_component": "intimacy:facing_away"
+        }
       }
     }
-  }]
+  ]
 }
 ```
 
@@ -261,7 +266,10 @@ Given the current intimacy mod patterns and the explicit example in the request,
       "properties": {
         "actor": {
           "type": "array",
-          "items": { "type": "string", "pattern": "^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$" }
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$"
+          }
         }
       },
       "additionalProperties": false
@@ -302,7 +310,7 @@ The implementation effort is moderate and well-defined, with clear benefits for 
 // place_hand_on_waist.action.json
 {
   "id": "intimacy:place_hand_on_waist",
-  "scope": "intimacy:close_actors_in_front",  // Complex scope
+  "scope": "intimacy:close_actors_in_front", // Complex scope
   "required_components": {
     "actor": ["intimacy:closeness"]
   }
@@ -315,7 +323,7 @@ The implementation effort is moderate and well-defined, with clear benefits for 
 // place_hand_on_waist.action.json
 {
   "id": "intimacy:place_hand_on_waist",
-  "scope": "intimacy:close_actors",  // Simpler scope
+  "scope": "intimacy:close_actors", // Simpler scope
   "required_components": {
     "actor": ["intimacy:closeness"]
   },

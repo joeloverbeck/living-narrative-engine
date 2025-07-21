@@ -37,7 +37,7 @@ class MockScheduler {
     }
     return setTimeout(fn, ms);
   }
-  
+
   clearTimeout(id) {
     // Ensure we're properly using Jest's mocked clearTimeout if available
     if (jest.isMockFunction(clearTimeout)) {
@@ -189,12 +189,14 @@ export const {
     try {
       // Clear any pending timers first to prevent hanging
       jest.clearAllTimers();
-      
+
       // Force stop the turn manager if it exists
       if (bed.turnManager && bed.turnManager.stop) {
         // Create a timeout promise to prevent hanging on stop
         const stopPromise = bed.turnManager.stop();
-        const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 100));
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(resolve, 100)
+        );
         await Promise.race([stopPromise, timeoutPromise]);
       }
     } catch (e) {
@@ -203,7 +205,7 @@ export const {
       // Always restore real timers to prevent leakage
       jest.useRealTimers();
     }
-    
+
     // Timers restored via BaseTestBed cleanup; spies restored by SpyTrackerMixin
   },
 });
@@ -230,7 +232,7 @@ export const describeRunningTurnManagerSuite = createDescribeTestBedSuite(
       try {
         // Clear any pending timers first to prevent hanging
         jest.clearAllTimers();
-        
+
         // Force stop the turn manager by setting private field
         if (bed.turnManager) {
           try {
@@ -238,16 +240,18 @@ export const describeRunningTurnManagerSuite = createDescribeTestBedSuite(
             Object.defineProperty(bed.turnManager, '_TurnManager__isRunning', {
               value: false,
               writable: true,
-              configurable: true
+              configurable: true,
             });
           } catch (e) {
             // Ignore errors accessing private fields
           }
-          
+
           // Also try to stop it normally with a timeout
           if (bed.turnManager.stop) {
             const stopPromise = bed.turnManager.stop();
-            const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 100));
+            const timeoutPromise = new Promise((resolve) =>
+              setTimeout(resolve, 100)
+            );
             await Promise.race([stopPromise, timeoutPromise]);
           }
         }
@@ -257,7 +261,7 @@ export const describeRunningTurnManagerSuite = createDescribeTestBedSuite(
         // Always restore real timers to prevent leakage
         jest.useRealTimers();
       }
-      
+
       /* timers restored in cleanup */
     },
   }

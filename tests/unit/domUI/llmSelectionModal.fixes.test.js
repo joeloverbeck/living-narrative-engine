@@ -272,11 +272,11 @@ describe('LlmSelectionModal', () => {
       expect(modalElementMock).toBeDefined();
       expect(modalElementMock.classList).toBeDefined();
       expect(modalElementMock.classList.add).toBeDefined();
-      
+
       // Check if the modal's elements property was properly initialized
       expect(llmSelectionModal.elements).toBeDefined();
       expect(llmSelectionModal.elements.modalElement).toBe(modalElementMock);
-      
+
       // Check if show() set isVisible to true
       expect(llmSelectionModal.isVisible).toBe(true);
 
@@ -326,7 +326,7 @@ describe('LlmSelectionModal', () => {
       // The implementation should have set these properties
       expect(modalElementMock.style.display).toBe('flex');
       expect(llmSelectionModal.isVisible).toBe(true);
-      
+
       // Since we're dealing with async behavior and mock issues, let's focus on the important parts
       // The modal should be shown and the focus should be set
       expect(closeModalButtonMock.focus).toHaveBeenCalled();
@@ -351,13 +351,17 @@ describe('LlmSelectionModal', () => {
           call[1]?.text === 'No Language Models are currently configured.'
       );
       expect(emptyMessageCall).toBeDefined();
-      expect(emptyMessageCall[1].cls).toBe('llm-item-message llm-empty-message');
+      expect(emptyMessageCall[1].cls).toBe(
+        'llm-item-message llm-empty-message'
+      );
 
       // The warning might not be logged if populateSlotsList handles empty arrays differently
       // Let's just check that the empty message was displayed
       const appendedArgs = llmListElementMock.appendChild.mock.calls;
       const emptyMessageAppended = appendedArgs.find(
-        (call) => call[0]?.textContent === 'No Language Models are currently configured.'
+        (call) =>
+          call[0]?.textContent ===
+          'No Language Models are currently configured.'
       );
       expect(emptyMessageAppended).toBeDefined();
 

@@ -1,8 +1,0 @@
-// Scope for actors in closeness who are in front (not in facing_away_from array)
-// Used by turn_around action to ensure actors can only turn around entities in front of them
-intimacy:close_actors_in_front := actor.intimacy:closeness.partners[][{
-  "or": [
-    {"not": {"condition_ref": "intimacy:actor-has-facing-away"}},
-    {"condition_ref": "intimacy:entity-not-in-facing-away"}
-  ]
-}]

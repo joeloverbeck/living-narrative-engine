@@ -96,7 +96,6 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
       expect(mockAiHandler.destroy).toHaveBeenCalled();
     });
 
-
     test('should handle player vs AI actor types correctly', async () => {
       const mockPlayerActor = createPlayerActor('player-actor');
       const mockAiActor = createAiActor('ai-actor');

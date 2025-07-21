@@ -37,7 +37,7 @@ export async function flushPromisesAndTimers(maxIterations = 20) {
   let lastTimerCount = -1;
   let noProgressCount = 0;
   const maxNoProgress = 3; // Exit if no progress for 3 iterations
-  
+
   while (iterations < maxIterations) {
     // First flush all pending promises using microtask queue
     // This is more reliable than mixing different async mechanisms
@@ -59,7 +59,7 @@ export async function flushPromisesAndTimers(maxIterations = 20) {
       try {
         // Check if there are actually pending timers before running them
         const numPendingTimers = jest.getTimerCount();
-        
+
         // Track if we're making progress
         if (numPendingTimers === lastTimerCount) {
           noProgressCount++;
@@ -70,9 +70,9 @@ export async function flushPromisesAndTimers(maxIterations = 20) {
         } else {
           noProgressCount = 0; // Reset progress counter
         }
-        
+
         lastTimerCount = numPendingTimers;
-        
+
         if (numPendingTimers > 0) {
           // If there are many timers, run them all at once
           // Otherwise advance by smaller increments
@@ -82,7 +82,7 @@ export async function flushPromisesAndTimers(maxIterations = 20) {
             // For fewer timers, advance by 100ms at a time
             jest.advanceTimersByTime(100);
           }
-          
+
           // After advancing timers, flush microtasks again
           await new Promise((resolve) => {
             if (typeof queueMicrotask !== 'undefined') {
@@ -95,7 +95,6 @@ export async function flushPromisesAndTimers(maxIterations = 20) {
           // No pending timers after at least one iteration - we're likely done
           break;
         }
-        
       } catch (error) {
         // If timer flushing fails, log and exit to prevent hangs
         console.warn('Timer flushing failed:', error.message);
@@ -112,12 +111,14 @@ export async function flushPromisesAndTimers(maxIterations = 20) {
       });
       break;
     }
-    
+
     iterations++;
   }
-  
+
   if (iterations >= maxIterations) {
-    console.warn(`flushPromisesAndTimers: Maximum iterations (${maxIterations}) reached`);
+    console.warn(
+      `flushPromisesAndTimers: Maximum iterations (${maxIterations}) reached`
+    );
   }
 }
 
