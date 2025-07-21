@@ -1,7 +1,7 @@
 // src/tests/turns/turnManager.errorHandling.test.js
 // --- FILE START ---
 
-import { describeRunningTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
+import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
   expectSystemErrorDispatch,
@@ -12,7 +12,7 @@ import { beforeEach, expect, jest, test } from '@jest/globals';
 // --- Mock Implementations ---
 
 // --- Test Suite ---
-describeRunningTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
+describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
   // Set a reasonable timeout, but hopefully the fixes prevent hitting it.
   jest.setTimeout(15000); // Slightly increased timeout just in case, but OOM is the main concern.
 
@@ -26,9 +26,18 @@ describeRunningTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     ({ ai1, ai2, player } = testBed.addDefaultActors());
 
     testBed.resetMocks();
+    
+    // Mock the stop method to prevent infinite loops in error scenarios
+    const stopSpy = jest.spyOn(testBed.turnManager, 'stop').mockImplementation(async () => {
+      // Access private field through a workaround - mark manager as stopped
+      testBed.turnManager.isRunning = false;
+    });
   });
 
   test('should stop advancing if handlerResolver fails', async () => {
+    // Get reference to the stop spy
+    const stopSpy = testBed.turnManager.stop;
+    
     // --- Test-Specific Mock Setup ---
     testBed.mockNextActor(ai1);
     const resolveError = new Error('Simulated Handler Resolution Failure');
@@ -37,8 +46,18 @@ describeRunningTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
       .mockRejectedValue(resolveError);
     // --- End Test-Specific Mock Setup ---
 
-    // Start the turn manager
-    await testBed.advanceAndFlush();
+    // Manually set up entities and start
+    testBed.setActiveEntities(ai1);
+    
+    // Call start which will trigger advanceTurn
+    await testBed.turnManager.start();
+    
+    // Now run all the timers to ensure async operations complete
+    jest.runAllTimers();
+    
+    // Let promises resolve
+    await Promise.resolve();
+    await Promise.resolve();
 
     // Verify safeDispatchError was called
     expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
@@ -62,9 +81,15 @@ describeRunningTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(
       1
     );
+    
+    // Verify stop was called due to the error
+    expect(stopSpy).toHaveBeenCalled();
   });
 
   test('should handle handler startTurn failure gracefully', async () => {
+    // Get reference to the stop spy
+    const stopSpy = testBed.turnManager.stop;
+    
     // --- Test-Specific Mock Setup ---
     testBed.mockNextActor(ai1);
     testBed.mocks.turnOrderService.getNextEntity
@@ -85,8 +110,18 @@ describeRunningTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
       .mockResolvedValueOnce(successHandler);
     // --- End Test-Specific Mock Setup ---
 
-    // Advance turn - this should trigger the handler failure
-    await testBed.advanceAndFlush();
+    // Manually set up entities and start
+    testBed.setActiveEntities(ai1);
+    
+    // Start the turn manager - this should trigger the handler failure
+    await testBed.turnManager.start();
+    
+    // Now run all the timers to ensure async operations complete
+    jest.runAllTimers();
+    
+    // Let promises resolve
+    await Promise.resolve();
+    await Promise.resolve();
 
     expectTurnStartedEvents(testBed.mocks.dispatcher.dispatch, ai1.id, 'ai');
 
@@ -112,20 +147,33 @@ describeRunningTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     // Verify handler was destroyed
     expect(failingHandler.destroy).toHaveBeenCalled();
 
-    // Verify turn manager stopped advancing
+    // Verify turn manager continues to next entity after error
     expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(
       2
-    ); // Called twice due to retry logic
+    ); // Called twice - once for ai1, once for ai2
   });
 
   test('should handle turn order service errors', async () => {
+    // Get reference to the stop spy
+    const stopSpy = testBed.turnManager.stop;
+    
     // Arrange
     const orderError = new Error('Turn order service failure');
     testBed.mockNextActor(ai1);
     testBed.mocks.turnOrderService.getNextEntity.mockRejectedValue(orderError);
 
-    // Act
-    await testBed.advanceAndFlush();
+    // Manually set up entities and start
+    testBed.setActiveEntities(ai1);
+    
+    // Act - start which will fail
+    await testBed.turnManager.start();
+    
+    // Now run all the timers to ensure async operations complete
+    jest.runAllTimers();
+    
+    // Let promises resolve
+    await Promise.resolve();
+    await Promise.resolve();
 
     // Verify safeDispatchError was called
     expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
@@ -144,6 +192,9 @@ describeRunningTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
       'System Error during turn advancement. Stopping game.',
       orderError.message
     );
+    
+    // Verify stop was called due to the error
+    expect(stopSpy).toHaveBeenCalled();
   });
 });
 

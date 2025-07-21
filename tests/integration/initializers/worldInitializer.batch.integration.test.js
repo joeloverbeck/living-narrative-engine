@@ -5,7 +5,10 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import WorldInitializer from '../../../src/initializers/worldInitializer.js';
 import { createTestBed } from '../../common/testBed.js';
-import { WORLDINIT_ENTITY_INSTANTIATED_ID, WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID } from '../../../src/constants/eventIds.js';
+import {
+  WORLDINIT_ENTITY_INSTANTIATED_ID,
+  WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
+} from '../../../src/constants/eventIds.js';
 
 describe('WorldInitializer - Batch Operations Integration', () => {
   let testBed;
@@ -19,7 +22,8 @@ describe('WorldInitializer - Batch Operations Integration', () => {
     // Mock configuration for world loading optimization
     mockConfig = {
       isFeatureEnabled: jest.fn().mockImplementation((key) => {
-        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION') return true;
+        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION')
+          return true;
         return false;
       }),
       getValue: jest.fn().mockImplementation((key) => {
@@ -59,9 +63,11 @@ describe('WorldInitializer - Batch Operations Integration', () => {
   describe('end-to-end batch world loading', () => {
     it('should load medium-sized world using batch operations', async () => {
       // Arrange
-      const entityInstances = Array(15).fill(0).map((_, i) => ({
-        instanceId: `world_entity_${i}`,
-      }));
+      const entityInstances = Array(15)
+        .fill(0)
+        .map((_, i) => ({
+          instanceId: `world_entity_${i}`,
+        }));
 
       const worldData = {
         instances: entityInstances,
@@ -69,14 +75,16 @@ describe('WorldInitializer - Batch Operations Integration', () => {
 
       // Set up repository to return world data
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
-      
+
       // Set up entity instance definitions
-      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation((instanceId) => ({
-        definitionId: 'core:test_actor',
-        componentOverrides: {
-          'core:location': { locationId: 'test_location' },
-        },
-      }));
+      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation(
+        (instanceId) => ({
+          definitionId: 'core:test_actor',
+          componentOverrides: {
+            'core:location': { locationId: 'test_location' },
+          },
+        })
+      );
 
       // Set up batch entity creation
       const createdEntities = entityInstances.map((instance, i) => ({
@@ -95,7 +103,8 @@ describe('WorldInitializer - Batch Operations Integration', () => {
       });
 
       // Act
-      const result = await worldInitializer.initializeWorldEntities('test_world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test_world');
 
       // Assert
       expect(result.instantiatedCount).toBe(entityInstances.length);
@@ -133,13 +142,15 @@ describe('WorldInitializer - Batch Operations Integration', () => {
       });
 
       // Verify events were dispatched for each entity
-      expect(testBed.mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledTimes(
-        entityInstances.length
-      );
+      expect(
+        testBed.mockEventDispatchService.dispatchWithLogging
+      ).toHaveBeenCalledTimes(entityInstances.length);
 
       // Check that all success events were dispatched
       createdEntities.forEach((entity) => {
-        expect(testBed.mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
+        expect(
+          testBed.mockEventDispatchService.dispatchWithLogging
+        ).toHaveBeenCalledWith(
           WORLDINIT_ENTITY_INSTANTIATED_ID,
           expect.objectContaining({
             entityId: entity.id,
@@ -156,41 +167,57 @@ describe('WorldInitializer - Batch Operations Integration', () => {
 
     it('should handle mixed success and failure scenarios', async () => {
       // Arrange
-      const entityInstances = Array(8).fill(0).map((_, i) => ({
-        instanceId: `world_entity_${i}`,
-      }));
+      const entityInstances = Array(8)
+        .fill(0)
+        .map((_, i) => ({
+          instanceId: `world_entity_${i}`,
+        }));
 
       const worldData = {
         instances: entityInstances,
       };
 
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
-      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation((instanceId) => ({
-        definitionId: 'core:test_actor',
-        componentOverrides: {},
-      }));
+      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation(
+        (instanceId) => ({
+          definitionId: 'core:test_actor',
+          componentOverrides: {},
+        })
+      );
 
       // Simulate partial failures
       const successfulEntities = [
-        { id: 'entity_0', instanceId: 'world_entity_0', definitionId: 'core:test_actor' },
-        { id: 'entity_1', instanceId: 'world_entity_1', definitionId: 'core:test_actor' },
-        { id: 'entity_3', instanceId: 'world_entity_3', definitionId: 'core:test_actor' },
+        {
+          id: 'entity_0',
+          instanceId: 'world_entity_0',
+          definitionId: 'core:test_actor',
+        },
+        {
+          id: 'entity_1',
+          instanceId: 'world_entity_1',
+          definitionId: 'core:test_actor',
+        },
+        {
+          id: 'entity_3',
+          instanceId: 'world_entity_3',
+          definitionId: 'core:test_actor',
+        },
       ];
 
       const failedEntities = [
         {
           item: {
             definitionId: 'core:test_actor',
-            opts: { instanceId: 'world_entity_2' }
+            opts: { instanceId: 'world_entity_2' },
           },
-          error: new Error('Entity creation failed')
+          error: new Error('Entity creation failed'),
         },
         {
           item: {
             definitionId: 'core:test_actor',
-            opts: { instanceId: 'world_entity_4' }
+            opts: { instanceId: 'world_entity_4' },
           },
-          error: new Error('Validation error')
+          error: new Error('Validation error'),
         },
       ];
 
@@ -204,7 +231,8 @@ describe('WorldInitializer - Batch Operations Integration', () => {
       });
 
       // Act
-      const result = await worldInitializer.initializeWorldEntities('test_world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test_world');
 
       // Assert
       expect(result.instantiatedCount).toBe(3);
@@ -214,7 +242,9 @@ describe('WorldInitializer - Batch Operations Integration', () => {
 
       // Verify success events
       successfulEntities.forEach((entity) => {
-        expect(testBed.mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
+        expect(
+          testBed.mockEventDispatchService.dispatchWithLogging
+        ).toHaveBeenCalledWith(
           WORLDINIT_ENTITY_INSTANTIATED_ID,
           expect.objectContaining({
             entityId: entity.id,
@@ -228,7 +258,9 @@ describe('WorldInitializer - Batch Operations Integration', () => {
 
       // Verify failure events
       failedEntities.forEach((failure) => {
-        expect(testBed.mockEventDispatchService.dispatchWithLogging).toHaveBeenCalledWith(
+        expect(
+          testBed.mockEventDispatchService.dispatchWithLogging
+        ).toHaveBeenCalledWith(
           WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
           expect.objectContaining({
             instanceId: failure.item.opts.instanceId,
@@ -243,19 +275,23 @@ describe('WorldInitializer - Batch Operations Integration', () => {
 
     it('should automatically fallback to sequential processing when batch operations fail', async () => {
       // Arrange
-      const entityInstances = Array(10).fill(0).map((_, i) => ({
-        instanceId: `world_entity_${i}`,
-      }));
+      const entityInstances = Array(10)
+        .fill(0)
+        .map((_, i) => ({
+          instanceId: `world_entity_${i}`,
+        }));
 
       const worldData = {
         instances: entityInstances,
       };
 
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
-      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation((instanceId) => ({
-        definitionId: 'core:test_actor',
-        componentOverrides: {},
-      }));
+      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation(
+        (instanceId) => ({
+          definitionId: 'core:test_actor',
+          componentOverrides: {},
+        })
+      );
 
       // First attempt (batch) fails
       mockEntityManager.batchCreateEntities.mockRejectedValue(
@@ -263,14 +299,17 @@ describe('WorldInitializer - Batch Operations Integration', () => {
       );
 
       // Sequential fallback succeeds
-      mockEntityManager.createEntityInstance.mockImplementation((definitionId, opts) => ({
-        id: `entity_${opts.instanceId}`,
-        instanceId: opts.instanceId,
-        definitionId,
-      }));
+      mockEntityManager.createEntityInstance.mockImplementation(
+        (definitionId, opts) => ({
+          id: `entity_${opts.instanceId}`,
+          instanceId: opts.instanceId,
+          definitionId,
+        })
+      );
 
       // Act
-      const result = await worldInitializer.initializeWorldEntities('test_world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test_world');
 
       // Assert
       expect(result.instantiatedCount).toBe(entityInstances.length);
@@ -280,7 +319,9 @@ describe('WorldInitializer - Batch Operations Integration', () => {
 
       // Verify both batch and sequential operations were attempted
       expect(mockEntityManager.batchCreateEntities).toHaveBeenCalledTimes(1);
-      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledTimes(entityInstances.length);
+      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledTimes(
+        entityInstances.length
+      );
 
       // Verify error was logged
       expect(testBed.mockLogger.error).toHaveBeenCalledWith(
@@ -296,53 +337,66 @@ describe('WorldInitializer - Batch Operations Integration', () => {
 
     it('should respect configuration-driven optimization selection', async () => {
       // Arrange - Small world that should use sequential processing
-      const entityInstances = Array(3).fill(0).map((_, i) => ({
-        instanceId: `world_entity_${i}`,
-      }));
+      const entityInstances = Array(3)
+        .fill(0)
+        .map((_, i) => ({
+          instanceId: `world_entity_${i}`,
+        }));
 
       const worldData = {
         instances: entityInstances,
       };
 
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
-      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation((instanceId) => ({
-        definitionId: 'core:test_actor',
-        componentOverrides: {},
-      }));
+      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation(
+        (instanceId) => ({
+          definitionId: 'core:test_actor',
+          componentOverrides: {},
+        })
+      );
 
-      mockEntityManager.createEntityInstance.mockImplementation((definitionId, opts) => ({
-        id: `entity_${opts.instanceId}`,
-        instanceId: opts.instanceId,
-        definitionId,
-      }));
+      mockEntityManager.createEntityInstance.mockImplementation(
+        (definitionId, opts) => ({
+          id: `entity_${opts.instanceId}`,
+          instanceId: opts.instanceId,
+          definitionId,
+        })
+      );
 
       // Act
-      const result = await worldInitializer.initializeWorldEntities('test_world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test_world');
 
       // Assert
       expect(result.instantiatedCount).toBe(entityInstances.length);
       expect(result.optimizationUsed).toBe('sequential');
 
       // Should use sequential processing due to small size
-      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledTimes(entityInstances.length);
+      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledTimes(
+        entityInstances.length
+      );
       expect(mockEntityManager.batchCreateEntities).not.toHaveBeenCalled();
     });
 
     it('should handle critical batch failures with automatic fallback', async () => {
       // Arrange
-      const entityInstances = Array(12).fill(0).map((_, i) => ({
-        instanceId: `world_entity_${i}`,
-      }));
+      const entityInstances = Array(12)
+        .fill(0)
+        .map((_, i) => ({
+          instanceId: `world_entity_${i}`,
+        }));
 
       const worldData = {
         instances: entityInstances,
       };
 
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
-      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation((instanceId) => ({
-        definitionId: 'core:test_actor',
-        componentOverrides: {},
-      }));
+      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation(
+        (instanceId) => ({
+          definitionId: 'core:test_actor',
+          componentOverrides: {},
+        })
+      );
 
       // Batch operation returns critical failures
       mockEntityManager.batchCreateEntities.mockResolvedValue({
@@ -350,8 +404,11 @@ describe('WorldInitializer - Batch Operations Integration', () => {
         failures: [
           {
             item: { opts: { instanceId: 'world_entity_0' } },
-            error: { name: 'RepositoryConsistencyError', message: 'Critical consistency error' }
-          }
+            error: {
+              name: 'RepositoryConsistencyError',
+              message: 'Critical consistency error',
+            },
+          },
         ],
         successCount: 0,
         failureCount: 1,
@@ -360,14 +417,17 @@ describe('WorldInitializer - Batch Operations Integration', () => {
       });
 
       // Sequential fallback
-      mockEntityManager.createEntityInstance.mockImplementation((definitionId, opts) => ({
-        id: `entity_${opts.instanceId}`,
-        instanceId: opts.instanceId,
-        definitionId,
-      }));
+      mockEntityManager.createEntityInstance.mockImplementation(
+        (definitionId, opts) => ({
+          id: `entity_${opts.instanceId}`,
+          instanceId: opts.instanceId,
+          definitionId,
+        })
+      );
 
       // Act
-      const result = await worldInitializer.initializeWorldEntities('test_world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test_world');
 
       // Assert
       expect(result.instantiatedCount).toBe(entityInstances.length);
@@ -376,7 +436,9 @@ describe('WorldInitializer - Batch Operations Integration', () => {
 
       // Verify both operations were attempted
       expect(mockEntityManager.batchCreateEntities).toHaveBeenCalledTimes(1);
-      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledTimes(entityInstances.length);
+      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledTimes(
+        entityInstances.length
+      );
 
       // Verify critical failure was logged
       expect(testBed.mockLogger.error).toHaveBeenCalledWith(
@@ -389,37 +451,47 @@ describe('WorldInitializer - Batch Operations Integration', () => {
     it('should respect disabled optimization setting', async () => {
       // Arrange
       mockConfig.isFeatureEnabled.mockImplementation((key) => {
-        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION') return false;
+        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION')
+          return false;
         return false;
       });
 
-      const entityInstances = Array(20).fill(0).map((_, i) => ({
-        instanceId: `world_entity_${i}`,
-      }));
+      const entityInstances = Array(20)
+        .fill(0)
+        .map((_, i) => ({
+          instanceId: `world_entity_${i}`,
+        }));
 
       const worldData = {
         instances: entityInstances,
       };
 
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
-      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation((instanceId) => ({
-        definitionId: 'core:test_actor',
-        componentOverrides: {},
-      }));
+      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation(
+        (instanceId) => ({
+          definitionId: 'core:test_actor',
+          componentOverrides: {},
+        })
+      );
 
-      mockEntityManager.createEntityInstance.mockImplementation((definitionId, opts) => ({
-        id: `entity_${opts.instanceId}`,
-        instanceId: opts.instanceId,
-        definitionId,
-      }));
+      mockEntityManager.createEntityInstance.mockImplementation(
+        (definitionId, opts) => ({
+          id: `entity_${opts.instanceId}`,
+          instanceId: opts.instanceId,
+          definitionId,
+        })
+      );
 
       // Act
-      const result = await worldInitializer.initializeWorldEntities('test_world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test_world');
 
       // Assert
       expect(result.optimizationUsed).toBe('sequential');
       expect(mockEntityManager.batchCreateEntities).not.toHaveBeenCalled();
-      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledTimes(entityInstances.length);
+      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledTimes(
+        entityInstances.length
+      );
     });
 
     it('should use custom batch size configuration', async () => {
@@ -435,19 +507,23 @@ describe('WorldInitializer - Batch Operations Integration', () => {
         return values[key];
       });
 
-      const entityInstances = Array(25).fill(0).map((_, i) => ({
-        instanceId: `world_entity_${i}`,
-      }));
+      const entityInstances = Array(25)
+        .fill(0)
+        .map((_, i) => ({
+          instanceId: `world_entity_${i}`,
+        }));
 
       const worldData = {
         instances: entityInstances,
       };
 
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
-      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation((instanceId) => ({
-        definitionId: 'core:test_actor',
-        componentOverrides: {},
-      }));
+      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation(
+        (instanceId) => ({
+          definitionId: 'core:test_actor',
+          componentOverrides: {},
+        })
+      );
 
       mockEntityManager.batchCreateEntities.mockResolvedValue({
         successes: [],
@@ -475,19 +551,23 @@ describe('WorldInitializer - Batch Operations Integration', () => {
   describe('performance characteristics', () => {
     it('should provide performance metrics in results', async () => {
       // Arrange
-      const entityInstances = Array(30).fill(0).map((_, i) => ({
-        instanceId: `world_entity_${i}`,
-      }));
+      const entityInstances = Array(30)
+        .fill(0)
+        .map((_, i) => ({
+          instanceId: `world_entity_${i}`,
+        }));
 
       const worldData = {
         instances: entityInstances,
       };
 
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
-      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation((instanceId) => ({
-        definitionId: 'core:test_actor',
-        componentOverrides: {},
-      }));
+      testBed.mockRepository.getEntityInstanceDefinition.mockImplementation(
+        (instanceId) => ({
+          definitionId: 'core:test_actor',
+          componentOverrides: {},
+        })
+      );
 
       const mockProcessingTime = 250;
       mockEntityManager.batchCreateEntities.mockResolvedValue({
@@ -504,7 +584,8 @@ describe('WorldInitializer - Batch Operations Integration', () => {
       });
 
       // Act
-      const result = await worldInitializer.initializeWorldEntities('test_world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test_world');
 
       // Assert
       expect(result).toMatchObject({

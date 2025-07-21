@@ -34,10 +34,7 @@ export function createTestBed() {
     ...mockObjects,
 
     createMockEntityManager(options = {}) {
-      const {
-        hasBatchSupport = true,
-        enableBatchOperations = true,
-      } = options;
+      const { hasBatchSupport = true, enableBatchOperations = true } = options;
 
       return {
         hasBatchSupport: jest.fn().mockReturnValue(hasBatchSupport),

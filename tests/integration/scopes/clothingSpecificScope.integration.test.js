@@ -23,7 +23,7 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
-import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
@@ -123,7 +123,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       logger,
     });
 
-    const targetResolutionService = new TargetResolutionService({
+    const targetResolutionService = createTargetResolutionServiceWithMocks({
       logger,
       scopeEngine,
       entityManager,

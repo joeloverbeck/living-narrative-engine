@@ -25,8 +25,8 @@ describe('CharacterDataFormatter', () => {
         description: {
           hair: 'long, blonde, wavy',
           eyes: 'amber, almond',
-          wearing: 'black dress'
-        }
+          wearing: 'black dress',
+        },
       };
 
       const result = formatter.formatPhysicalDescription(characterData);
@@ -39,7 +39,8 @@ describe('CharacterDataFormatter', () => {
 
     it('should parse structured text-based description', () => {
       const characterData = {
-        description: 'Hair: long, blonde, wavy; Eyes: amber, almond; Wearing: black dress'
+        description:
+          'Hair: long, blonde, wavy; Eyes: amber, almond; Wearing: black dress',
       };
 
       const result = formatter.formatPhysicalDescription(characterData);
@@ -52,13 +53,15 @@ describe('CharacterDataFormatter', () => {
 
     it('should handle unstructured description text as fallback', () => {
       const characterData = {
-        description: 'A tall person with distinctive features'
+        description: 'A tall person with distinctive features',
       };
 
       const result = formatter.formatPhysicalDescription(characterData);
 
       expect(result).toContain('## Your Description');
-      expect(result).toContain('**Description**: A tall person with distinctive features');
+      expect(result).toContain(
+        '**Description**: A tall person with distinctive features'
+      );
     });
 
     it('should return empty string for missing description', () => {
@@ -68,7 +71,7 @@ describe('CharacterDataFormatter', () => {
 
     it('should handle newline-separated attributes', () => {
       const characterData = {
-        description: 'Hair: blonde\nEyes: blue\nHeight: tall'
+        description: 'Hair: blonde\nEyes: blue\nHeight: tall',
       };
 
       const result = formatter.formatPhysicalDescription(characterData);
@@ -81,12 +84,15 @@ describe('CharacterDataFormatter', () => {
 
   describe('formatPersonalitySection', () => {
     it('should format personality with markdown header', () => {
-      const personalityText = 'I am confident and outgoing, with a love for adventure.';
+      const personalityText =
+        'I am confident and outgoing, with a love for adventure.';
 
       const result = formatter.formatPersonalitySection(personalityText);
 
       expect(result).toContain('## Your Personality');
-      expect(result).toContain('I am confident and outgoing, with a love for adventure.');
+      expect(result).toContain(
+        'I am confident and outgoing, with a love for adventure.'
+      );
     });
 
     it('should return empty string for null personality', () => {
@@ -111,12 +117,15 @@ describe('CharacterDataFormatter', () => {
 
   describe('formatProfileSection', () => {
     it('should format profile with markdown header', () => {
-      const profileText = 'Born in a small town, I moved to the city to pursue my dreams.';
+      const profileText =
+        'Born in a small town, I moved to the city to pursue my dreams.';
 
       const result = formatter.formatProfileSection(profileText);
 
       expect(result).toContain('## Your Profile');
-      expect(result).toContain('Born in a small town, I moved to the city to pursue my dreams.');
+      expect(result).toContain(
+        'Born in a small town, I moved to the city to pursue my dreams.'
+      );
     });
 
     it('should return empty string for null profile', () => {
@@ -135,7 +144,7 @@ describe('CharacterDataFormatter', () => {
       const speechPatterns = [
         'I speak with authority and confidence',
         'I use metaphors frequently',
-        'I pause dramatically before important points'
+        'I pause dramatically before important points',
       ];
 
       const result = formatter.formatSpeechPatterns(speechPatterns);
@@ -143,7 +152,9 @@ describe('CharacterDataFormatter', () => {
       expect(result).toContain('## Your Speech Patterns');
       expect(result).toContain('- I speak with authority and confidence');
       expect(result).toContain('- I use metaphors frequently');
-      expect(result).toContain('- I pause dramatically before important points');
+      expect(result).toContain(
+        '- I pause dramatically before important points'
+      );
     });
 
     it('should handle string-based speech patterns', () => {
@@ -166,7 +177,7 @@ describe('CharacterDataFormatter', () => {
         'I speak with authority',
         '',
         null,
-        'I use metaphors'
+        'I use metaphors',
       ];
 
       const result = formatter.formatSpeechPatterns(speechPatterns);
@@ -232,7 +243,7 @@ describe('CharacterDataFormatter', () => {
         description: {
           hair: 'long, auburn',
           eyes: 'green, sparkling',
-          wearing: 'traveler robes'
+          wearing: 'traveler robes',
         },
         personality: 'I am charismatic and love to tell stories.',
         profile: 'Born in the mountains, I travel the world sharing tales.',
@@ -242,15 +253,17 @@ describe('CharacterDataFormatter', () => {
         fears: 'Being forgotten.',
         speechPatterns: [
           'I often speak in rhymes',
-          'I use grand gestures when telling stories'
-        ]
+          'I use grand gestures when telling stories',
+        ],
       };
 
       const result = formatter.formatCharacterPersona(characterData);
 
       // Check identity header
       expect(result).toContain('YOU ARE Elara the Bard.');
-      expect(result).toContain('This is your identity. All thoughts, actions, and words must stem from this core truth.');
+      expect(result).toContain(
+        'This is your identity. All thoughts, actions, and words must stem from this core truth.'
+      );
 
       // Check all sections are present
       expect(result).toContain('## Your Description');
@@ -274,7 +287,7 @@ describe('CharacterDataFormatter', () => {
     it('should format character with minimal data', () => {
       const characterData = {
         name: 'Simple Character',
-        personality: 'I am straightforward.'
+        personality: 'I am straightforward.',
       };
 
       const result = formatter.formatCharacterPersona(characterData);
@@ -288,7 +301,7 @@ describe('CharacterDataFormatter', () => {
 
     it('should handle missing name gracefully', () => {
       const characterData = {
-        personality: 'I am mysterious.'
+        personality: 'I am mysterious.',
       };
 
       const result = formatter.formatCharacterPersona(characterData);
@@ -311,27 +324,32 @@ describe('CharacterDataFormatter', () => {
     it('should handle complex description parsing', () => {
       const characterData = {
         name: 'Complex Character',
-        description: 'Hair: jet black, shoulder length; Eyes: piercing blue; Clothing: worn leather armor | silver pendant | travel-stained cloak'
+        description:
+          'Hair: jet black, shoulder length; Eyes: piercing blue; Clothing: worn leather armor | silver pendant | travel-stained cloak',
       };
 
       const result = formatter.formatCharacterPersona(characterData);
 
       expect(result).toContain('**Hair**: jet black, shoulder length');
       expect(result).toContain('**Eyes**: piercing blue');
-      expect(result).toContain('**Clothing**: worn leather armor | silver pendant | travel-stained cloak');
+      expect(result).toContain(
+        '**Clothing**: worn leather armor | silver pendant | travel-stained cloak'
+      );
     });
 
     it('should properly space sections', () => {
       const characterData = {
         name: 'Test Character',
         personality: 'Confident.',
-        profile: 'Experienced.'
+        profile: 'Experienced.',
       };
 
       const result = formatter.formatCharacterPersona(characterData);
 
       // Check that sections are properly separated with newlines
-      expect(result).toMatch(/## Your Personality\nConfident\.\n\n## Your Profile/);
+      expect(result).toMatch(
+        /## Your Personality\nConfident\.\n\n## Your Profile/
+      );
     });
   });
 
@@ -340,7 +358,9 @@ describe('CharacterDataFormatter', () => {
       const result = formatter.formatCharacterPersona({});
       // Empty object will still get the identity header with fallback name
       expect(result).toContain('YOU ARE Unnamed Character.');
-      expect(result).toContain('This is your identity. All thoughts, actions, and words must stem from this core truth.');
+      expect(result).toContain(
+        'This is your identity. All thoughts, actions, and words must stem from this core truth.'
+      );
     });
 
     it('should handle undefined values in description object', () => {
@@ -349,8 +369,8 @@ describe('CharacterDataFormatter', () => {
           hair: 'blonde',
           eyes: undefined,
           height: null,
-          clothing: 'dress'
-        }
+          clothing: 'dress',
+        },
       };
 
       const result = formatter.formatPhysicalDescription(characterData);
@@ -372,7 +392,7 @@ describe('CharacterDataFormatter', () => {
         123, // invalid type
         null,
         'Another valid pattern',
-        undefined
+        undefined,
       ];
 
       const result = formatter.formatSpeechPatterns(speechPatterns);

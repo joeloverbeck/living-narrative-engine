@@ -13,15 +13,15 @@ describe('action_decided event - notes validation with subjectType', () => {
 
   beforeEach(() => {
     ajv = new Ajv({ allErrors: true, strict: false });
-    
+
     // Define the schema directly to avoid reference resolution issues
     const schema = {
       type: 'object',
       properties: {
         actorId: { type: 'string' },
-        actorType: { 
+        actorType: {
           type: 'string',
-          enum: ['ai', 'human']
+          enum: ['ai', 'human'],
         },
         extractedData: {
           type: 'object',
@@ -37,11 +37,11 @@ describe('action_decided event - notes validation with subjectType', () => {
                     properties: {
                       text: {
                         type: 'string',
-                        minLength: 1
+                        minLength: 1,
                       },
                       subject: {
                         type: 'string',
-                        minLength: 1
+                        minLength: 1,
                       },
                       subjectType: {
                         type: 'string',
@@ -57,29 +57,29 @@ describe('action_decided event - notes validation with subjectType', () => {
                           'quest',
                           'skill',
                           'emotion',
-                          'other'
-                        ]
+                          'other',
+                        ],
                       },
                       context: { type: 'string' },
                       tags: {
                         type: 'array',
-                        items: { type: 'string' }
-                      }
+                        items: { type: 'string' },
+                      },
                     },
                     required: ['text', 'subject', 'subjectType'],
-                    additionalProperties: false
-                  }
-                ]
-              }
-            }
+                    additionalProperties: false,
+                  },
+                ],
+              },
+            },
           },
-          additionalProperties: true
-        }
+          additionalProperties: true,
+        },
       },
       required: ['actorId', 'actorType'],
-      additionalProperties: false
+      additionalProperties: false,
     };
-    
+
     validate = ajv.compile(schema);
   });
 
@@ -95,10 +95,10 @@ describe('action_decided event - notes validation with subjectType', () => {
               subject: 'Iker Aguirre',
               subjectType: 'character',
               context: 'The Gilded Bean terrace',
-              tags: ['potential', 'young']
-            }
-          ]
-        }
+              tags: ['potential', 'young'],
+            },
+          ],
+        },
       };
 
       const isValid = validate(payload);
@@ -115,10 +115,10 @@ describe('action_decided event - notes validation with subjectType', () => {
             {
               text: 'Basic observation',
               subject: 'Test Subject',
-              subjectType: 'other'
-            }
-          ]
-        }
+              subjectType: 'other',
+            },
+          ],
+        },
       };
 
       const isValid = validate(payload);
@@ -127,22 +127,33 @@ describe('action_decided event - notes validation with subjectType', () => {
 
     it('should accept all valid subjectType enum values', () => {
       const validTypes = [
-        'character', 'location', 'item', 'creature', 'event',
-        'concept', 'relationship', 'organization', 'quest',
-        'skill', 'emotion', 'other'
+        'character',
+        'location',
+        'item',
+        'creature',
+        'event',
+        'concept',
+        'relationship',
+        'organization',
+        'quest',
+        'skill',
+        'emotion',
+        'other',
       ];
 
-      validTypes.forEach(type => {
+      validTypes.forEach((type) => {
         const payload = {
           actorId: 'test:actor',
           actorType: 'ai',
           extractedData: {
-            notes: [{
-              text: `Note about ${type}`,
-              subject: 'Test',
-              subjectType: type
-            }]
-          }
+            notes: [
+              {
+                text: `Note about ${type}`,
+                subject: 'Test',
+                subjectType: type,
+              },
+            ],
+          },
         };
 
         const isValid = validate(payload);
@@ -155,8 +166,8 @@ describe('action_decided event - notes validation with subjectType', () => {
         actorId: 'test:actor',
         actorType: 'ai',
         extractedData: {
-          notes: ['Simple string note', 'Another string note']
-        }
+          notes: ['Simple string note', 'Another string note'],
+        },
       };
 
       const isValid = validate(payload);
@@ -173,10 +184,10 @@ describe('action_decided event - notes validation with subjectType', () => {
             {
               text: 'Object note',
               subject: 'Test',
-              subjectType: 'character'
-            }
-          ]
-        }
+              subjectType: 'character',
+            },
+          ],
+        },
       };
 
       const isValid = validate(payload);
@@ -190,18 +201,22 @@ describe('action_decided event - notes validation with subjectType', () => {
         actorId: 'test:actor',
         actorType: 'ai',
         extractedData: {
-          notes: [{
-            text: 'Note without subjectType',
-            subject: 'Test Subject'
-            // Missing subjectType
-          }]
-        }
+          notes: [
+            {
+              text: 'Note without subjectType',
+              subject: 'Test Subject',
+              // Missing subjectType
+            },
+          ],
+        },
       };
 
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => err.message.includes('required'))).toBe(true);
+      expect(
+        validate.errors.some((err) => err.message.includes('required'))
+      ).toBe(true);
     });
 
     it('should reject object notes with invalid subjectType', () => {
@@ -209,21 +224,26 @@ describe('action_decided event - notes validation with subjectType', () => {
         actorId: 'test:actor',
         actorType: 'ai',
         extractedData: {
-          notes: [{
-            text: 'Note with invalid type',
-            subject: 'Test',
-            subjectType: 'invalid_type'
-          }]
-        }
+          notes: [
+            {
+              text: 'Note with invalid type',
+              subject: 'Test',
+              subjectType: 'invalid_type',
+            },
+          ],
+        },
       };
 
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => 
-        err.message.includes('enum') || 
-        err.message.includes('must be equal to one of the allowed values')
-      )).toBe(true);
+      expect(
+        validate.errors.some(
+          (err) =>
+            err.message.includes('enum') ||
+            err.message.includes('must be equal to one of the allowed values')
+        )
+      ).toBe(true);
     });
 
     it('should reject notes with additional properties', () => {
@@ -231,19 +251,25 @@ describe('action_decided event - notes validation with subjectType', () => {
         actorId: 'test:actor',
         actorType: 'ai',
         extractedData: {
-          notes: [{
-            text: 'Note',
-            subject: 'Test',
-            subjectType: 'character',
-            extraField: 'not allowed'
-          }]
-        }
+          notes: [
+            {
+              text: 'Note',
+              subject: 'Test',
+              subjectType: 'character',
+              extraField: 'not allowed',
+            },
+          ],
+        },
       };
 
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => err.message.includes('additional properties'))).toBe(true);
+      expect(
+        validate.errors.some((err) =>
+          err.message.includes('additional properties')
+        )
+      ).toBe(true);
     });
   });
 
@@ -253,8 +279,8 @@ describe('action_decided event - notes validation with subjectType', () => {
         actorId: 'test:actor',
         actorType: 'ai',
         extractedData: {
-          notes: []
-        }
+          notes: [],
+        },
       };
 
       const isValid = validate(payload);
@@ -264,7 +290,7 @@ describe('action_decided event - notes validation with subjectType', () => {
     it('should accept missing extractedData', () => {
       const payload = {
         actorId: 'test:actor',
-        actorType: 'human'
+        actorType: 'human',
       };
 
       const isValid = validate(payload);
@@ -276,8 +302,8 @@ describe('action_decided event - notes validation with subjectType', () => {
         actorId: 'test:actor',
         actorType: 'ai',
         extractedData: {
-          thoughts: 'Some thoughts'
-        }
+          thoughts: 'Some thoughts',
+        },
       };
 
       const isValid = validate(payload);
@@ -291,16 +317,20 @@ describe('action_decided event - notes validation with subjectType', () => {
         actorId: 'p_erotica:amaia_castillo_instance',
         actorType: 'ai',
         extractedData: {
-          speech: '*adjusts the line of her blazer with deliberate precision, then approaches with measured steps* That view... it pulls at something, doesn\'t it? The way the light fractures across the water.',
-          thoughts: 'Young, athletic build visible even through casual clothing. The quiet contemplation... interesting. Not performing for anyone, genuinely absorbed. This bears closer examination. The isolated positioning suggests either shyness or confidence - need to determine which. My opening gambit should test his receptiveness to sophisticated conversation while maintaining plausible deniability.',
-          notes: [{
-            text: 'Young man, athletic build, contemplating bay view alone - appears genuinely absorbed rather than posturing',
-            subject: 'Iker Aguirre',
-            subjectType: 'character',
-            context: 'The Gilded Bean terrace observation',
-            tags: ['potential', 'young', 'solitary']
-          }]
-        }
+          speech:
+            "*adjusts the line of her blazer with deliberate precision, then approaches with measured steps* That view... it pulls at something, doesn't it? The way the light fractures across the water.",
+          thoughts:
+            'Young, athletic build visible even through casual clothing. The quiet contemplation... interesting. Not performing for anyone, genuinely absorbed. This bears closer examination. The isolated positioning suggests either shyness or confidence - need to determine which. My opening gambit should test his receptiveness to sophisticated conversation while maintaining plausible deniability.',
+          notes: [
+            {
+              text: 'Young man, athletic build, contemplating bay view alone - appears genuinely absorbed rather than posturing',
+              subject: 'Iker Aguirre',
+              subjectType: 'character',
+              context: 'The Gilded Bean terrace observation',
+              tags: ['potential', 'young', 'solitary'],
+            },
+          ],
+        },
       };
 
       const isValid = validate(payload);

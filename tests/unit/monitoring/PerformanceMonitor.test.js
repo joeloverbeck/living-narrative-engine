@@ -8,7 +8,13 @@ describe('PerformanceMonitor', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
     logger = createMockLogger();
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   describe('constructor', () => {
@@ -106,16 +112,15 @@ describe('PerformanceMonitor', () => {
       expect(duration).toBeGreaterThanOrEqual(0);
     });
 
-    it('should warn for slow operations', (done) => {
-      // Simulate slow operation
-      setTimeout(() => {
-        monitor.stopTimer(timerId);
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Slow operation detected'),
-          expect.any(Object)
-        );
-        done();
-      }, 150);
+    it('should warn for slow operations', async () => {
+      // Simulate slow operation by advancing time
+      jest.advanceTimersByTime(150);
+
+      monitor.stopTimer(timerId);
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Slow operation detected'),
+        expect.any(Object)
+      );
     });
 
     it('should handle non-existent timer ID', () => {
@@ -172,25 +177,29 @@ describe('PerformanceMonitor', () => {
       expect(metrics.totalOperations).toBe(1);
     });
 
-    it('should track slow operations', (done) => {
+    it('should track slow operations', () => {
+      // Mock performance.now to simulate slow operation
+      const originalPerformanceNow = performance.now;
+      let currentTime = 0;
+      jest.spyOn(performance, 'now').mockImplementation(() => {
+        const time = currentTime;
+        currentTime += 150; // Simulate 150ms passing for each call
+        return time;
+      });
+
       monitor.timeSync('slow-op', () => {
-        // Simulate slow operation
-        const start = Date.now();
-        while (Date.now() - start < 150) {
-          // Busy wait
-        }
         return 'slow-result';
       });
 
-      setTimeout(() => {
-        const metrics = monitor.getMetrics();
-        expect(metrics.slowOperations).toBe(1);
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Slow operation detected'),
-          expect.any(Object)
-        );
-        done();
-      }, 200);
+      // Restore performance.now
+      performance.now.mockRestore();
+
+      const metrics = monitor.getMetrics();
+      expect(metrics.slowOperations).toBe(1);
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Slow operation detected'),
+        expect.any(Object)
+      );
     });
 
     it('should handle operation errors', () => {
@@ -214,21 +223,35 @@ describe('PerformanceMonitor', () => {
     });
 
     it('should calculate average duration correctly', () => {
+      // Mock performance.now to simulate time passing
+      let currentTime = 0;
+      jest.spyOn(performance, 'now').mockImplementation(() => currentTime);
+
+      // Simulate op1 taking 10ms
+      currentTime = 0;
       monitor.timeSync('op1', () => {
-        const start = Date.now();
-        while (Date.now() - start < 10) {}
+        currentTime = 10;
       });
+
+      // Simulate op2 taking 20ms
+      currentTime = 100;
       monitor.timeSync('op2', () => {
-        const start = Date.now();
-        while (Date.now() - start < 20) {}
+        currentTime = 120;
       });
+
+      // Simulate op3 taking 30ms
+      currentTime = 200;
       monitor.timeSync('op3', () => {
-        const start = Date.now();
-        while (Date.now() - start < 30) {}
+        currentTime = 230;
       });
+
+      // Restore performance.now
+      performance.now.mockRestore();
 
       const metrics = monitor.getMetrics();
       expect(metrics.averageOperationTime).toBeGreaterThan(0);
+      // Average should be (10 + 20 + 30) / 3 = 20
+      expect(metrics.averageOperationTime).toBeCloseTo(20, 1);
     });
   });
 
@@ -266,25 +289,39 @@ describe('PerformanceMonitor', () => {
     });
 
     it('should track min and max durations', () => {
-      // Use timeSync to record operations with different durations
+      // Mock performance.now to simulate time passing
+      let currentTime = 0;
+      jest.spyOn(performance, 'now').mockImplementation(() => currentTime);
+
+      // Simulate op1 taking 5ms
+      currentTime = 0;
       monitor.timeSync('op1', () => {
-        const start = Date.now();
-        while (Date.now() - start < 5) {}
+        currentTime = 5;
       });
+
+      // Simulate op2 taking 10ms
+      currentTime = 100;
       monitor.timeSync('op2', () => {
-        const start = Date.now();
-        while (Date.now() - start < 10) {}
+        currentTime = 110;
       });
+
+      // Simulate op3 taking 2ms
+      currentTime = 200;
       monitor.timeSync('op3', () => {
-        const start = Date.now();
-        while (Date.now() - start < 2) {}
+        currentTime = 202;
       });
+
+      // Restore performance.now
+      performance.now.mockRestore();
 
       const metrics = monitor.getMetrics();
       expect(metrics.minOperationTime).toBeGreaterThan(0);
       expect(metrics.maxOperationTime).toBeGreaterThan(
         metrics.minOperationTime
       );
+      // Min should be 2ms, max should be 10ms
+      expect(metrics.minOperationTime).toBeCloseTo(2, 1);
+      expect(metrics.maxOperationTime).toBeCloseTo(10, 1);
     });
 
     it('should track active timers', () => {

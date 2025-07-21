@@ -105,7 +105,7 @@ export class ActionErrorContextBuilder extends BaseService {
     };
 
     return {
-      actionId: actionDef.id,
+      actionId: actionDef?.id || null,
       targetId,
       error,
       actionDefinition: actionDef,

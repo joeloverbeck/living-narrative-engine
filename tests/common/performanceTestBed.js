@@ -11,13 +11,17 @@ export function createPerformanceTestBed() {
       return {
         startBenchmark(name, options = {}) {
           const startTime = process.hrtime.bigint();
-          const startMemory = options.trackMemory ? process.memoryUsage() : null;
+          const startMemory = options.trackMemory
+            ? process.memoryUsage()
+            : null;
 
           return {
             end() {
               const endTime = process.hrtime.bigint();
-              const endMemory = options.trackMemory ? process.memoryUsage() : null;
-              
+              const endMemory = options.trackMemory
+                ? process.memoryUsage()
+                : null;
+
               const totalTime = Number(endTime - startTime) / 1000000; // Convert to milliseconds
 
               const metrics = {
@@ -42,9 +46,11 @@ export function createPerformanceTestBed() {
 
     createLargeWorldData(size) {
       return {
-        instances: Array(size).fill(0).map((_, i) => ({
-          instanceId: `perf_entity_${i}`,
-        })),
+        instances: Array(size)
+          .fill(0)
+          .map((_, i) => ({
+            instanceId: `perf_entity_${i}`,
+          })),
       };
     },
 
@@ -60,45 +66,55 @@ export function createPerformanceTestBed() {
 
       return {
         hasBatchSupport: jest.fn().mockReturnValue(hasBatchSupport),
-        
-        batchCreateEntities: jest.fn().mockImplementation(async (entitySpecs, batchOptions) => {
-          // Simulate realistic processing time
-          await new Promise(resolve => setTimeout(resolve, batchProcessingTimeMs));
 
-          const successes = entitySpecs.map((spec, i) => ({
-            id: `entity_${i}`,
-            instanceId: spec.opts.instanceId,
-            definitionId: spec.definitionId,
-          }));
+        batchCreateEntities: jest
+          .fn()
+          .mockImplementation(async (entitySpecs, batchOptions) => {
+            // Simulate realistic processing time
+            await new Promise((resolve) =>
+              setTimeout(resolve, batchProcessingTimeMs)
+            );
 
-          return {
-            successes,
-            failures: [],
-            successCount: successes.length,
-            failureCount: 0,
-            totalProcessed: successes.length,
-            processingTime: batchProcessingTimeMs,
-          };
-        }),
+            const successes = entitySpecs.map((spec, i) => ({
+              id: `entity_${i}`,
+              instanceId: spec.opts.instanceId,
+              definitionId: spec.definitionId,
+            }));
 
-        createEntityInstance: jest.fn().mockImplementation(async (definitionId, opts) => {
-          // Simulate realistic sequential processing time
-          await new Promise(resolve => setTimeout(resolve, sequentialProcessingTimeMs));
+            return {
+              successes,
+              failures: [],
+              successCount: successes.length,
+              failureCount: 0,
+              totalProcessed: successes.length,
+              processingTime: batchProcessingTimeMs,
+            };
+          }),
 
-          return {
-            id: `entity_${opts.instanceId}`,
-            instanceId: opts.instanceId,
-            definitionId,
-          };
-        }),
+        createEntityInstance: jest
+          .fn()
+          .mockImplementation(async (definitionId, opts) => {
+            // Simulate realistic sequential processing time
+            await new Promise((resolve) =>
+              setTimeout(resolve, sequentialProcessingTimeMs)
+            );
+
+            return {
+              id: `entity_${opts.instanceId}`,
+              instanceId: opts.instanceId,
+              definitionId,
+            };
+          }),
       };
     },
 
     setupEntityDefinitions(count) {
-      this.mockRepository.getEntityInstanceDefinition.mockImplementation((instanceId) => ({
-        definitionId: 'core:perf_test_actor',
-        componentOverrides: {},
-      }));
+      this.mockRepository.getEntityInstanceDefinition.mockImplementation(
+        (instanceId) => ({
+          definitionId: 'core:perf_test_actor',
+          componentOverrides: {},
+        })
+      );
     },
 
     cleanup() {

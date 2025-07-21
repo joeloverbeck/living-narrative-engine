@@ -3,7 +3,9 @@
   "rule_id": "handle_place_hand_on_waist",
   "comment": "Handles the 'intimacy:place_hand_on_waist' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "intimacy:event-is-action-place-hand-on-waist" },
+  "condition": {
+    "condition_ref": "intimacy:event-is-action-place-hand-on-waist"
+  },
   "actions": [
     {
       "type": "GET_NAME",

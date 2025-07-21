@@ -971,14 +971,14 @@ describe('LocationRenderer', () => {
         null
       );
       mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set());
-      
+
       renderer = new LocationRenderer(rendererDeps);
     });
 
     it('should dispatch error and return early if baseContainerElement is missing', () => {
       // Remove baseContainerElement after construction
       renderer.baseContainerElement = null;
-      
+
       const mockLocationDto = {
         name: 'Test Location',
         description: 'Test description',
@@ -995,7 +995,8 @@ describe('LocationRenderer', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         {
-          message: '[LocationRenderer] Cannot render, critical dependencies (baseContainerElement or domElementFactory) missing.',
+          message:
+            '[LocationRenderer] Cannot render, critical dependencies (baseContainerElement or domElementFactory) missing.',
         }
       );
 
@@ -1006,7 +1007,7 @@ describe('LocationRenderer', () => {
     it('should dispatch error and return early if domElementFactory is missing', () => {
       // Remove domElementFactory after construction
       renderer.domElementFactory = null;
-      
+
       const mockLocationDto = {
         name: 'Test Location',
         description: 'Test description',
@@ -1023,7 +1024,8 @@ describe('LocationRenderer', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         {
-          message: '[LocationRenderer] Cannot render, critical dependencies (baseContainerElement or domElementFactory) missing.',
+          message:
+            '[LocationRenderer] Cannot render, critical dependencies (baseContainerElement or domElementFactory) missing.',
         }
       );
 
@@ -1041,8 +1043,10 @@ describe('LocationRenderer', () => {
       );
 
       // Verify clearDisplayWithError was called by checking the description display
-      expect(mockDescriptionDisplay.textContent).toContain('(No location data to display)');
-      
+      expect(mockDescriptionDisplay.textContent).toContain(
+        '(No location data to display)'
+      );
+
       // Verify portrait elements are hidden
       expect(mockLocationPortraitVisualsElement.style.display).toBe('none');
       expect(mockLocationPortraitImageElement.style.display).toBe('none');
@@ -1058,8 +1062,10 @@ describe('LocationRenderer', () => {
       );
 
       // Verify clearDisplayWithError was called by checking the description display
-      expect(mockDescriptionDisplay.textContent).toContain('(No location data to display)');
-      
+      expect(mockDescriptionDisplay.textContent).toContain(
+        '(No location data to display)'
+      );
+
       // Verify portrait elements are hidden
       expect(mockLocationPortraitVisualsElement.style.display).toBe('none');
       expect(mockLocationPortraitImageElement.style.display).toBe('none');

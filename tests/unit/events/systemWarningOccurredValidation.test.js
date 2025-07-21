@@ -13,33 +13,40 @@ describe('system_warning_occurred event validation', () => {
     // Define the schema directly from system_warning_occurred.event.json
     const schema = {
       title: 'Core: System Warning Occurred Event Payload',
-      description: "Defines the payload structure for the 'core:system_warning_occurred' event, used for reporting general system‐level warnings.",
+      description:
+        "Defines the payload structure for the 'core:system_warning_occurred' event, used for reporting general system‐level warnings.",
       type: 'object',
       properties: {
         message: {
           type: 'string',
-          description: 'Required. A user‐facing message describing the warning.',
+          description:
+            'Required. A user‐facing message describing the warning.',
         },
         details: {
           type: 'object',
-          description: 'Optional. Additional technical details about the warning.',
+          description:
+            'Optional. Additional technical details about the warning.',
           properties: {
             statusCode: {
               type: 'integer',
-              description: 'Optional. Numeric code (e.g., HTTP status) associated with the warning.',
+              description:
+                'Optional. Numeric code (e.g., HTTP status) associated with the warning.',
             },
             url: {
               type: 'string',
-              description: 'Optional. URI related to the warning, if applicable.',
+              description:
+                'Optional. URI related to the warning, if applicable.',
             },
             raw: {
               type: 'string',
-              description: 'Optional. Raw diagnostic text or payload for debugging.',
+              description:
+                'Optional. Raw diagnostic text or payload for debugging.',
             },
             timestamp: {
               type: 'string',
               format: 'date-time',
-              description: 'Optional. ISO 8601 timestamp of when the warning occurred.',
+              description:
+                'Optional. ISO 8601 timestamp of when the warning occurred.',
             },
           },
           additionalProperties: false,
@@ -89,7 +96,11 @@ describe('system_warning_occurred event validation', () => {
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => err.message === "must have required property 'message'")).toBe(true);
+      expect(
+        validate.errors.some(
+          (err) => err.message === "must have required property 'message'"
+        )
+      ).toBe(true);
     });
 
     it('should reject payload with non-string message', () => {
@@ -100,7 +111,9 @@ describe('system_warning_occurred event validation', () => {
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => err.message === 'must be string')).toBe(true);
+      expect(
+        validate.errors.some((err) => err.message === 'must be string')
+      ).toBe(true);
     });
   });
 
@@ -133,7 +146,13 @@ describe('system_warning_occurred event validation', () => {
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => err.message === 'must be string' && err.instancePath === '/details/raw')).toBe(true);
+      expect(
+        validate.errors.some(
+          (err) =>
+            err.message === 'must be string' &&
+            err.instancePath === '/details/raw'
+        )
+      ).toBe(true);
     });
 
     it('should reject array raw value', () => {
@@ -147,7 +166,13 @@ describe('system_warning_occurred event validation', () => {
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => err.message === 'must be string' && err.instancePath === '/details/raw')).toBe(true);
+      expect(
+        validate.errors.some(
+          (err) =>
+            err.message === 'must be string' &&
+            err.instancePath === '/details/raw'
+        )
+      ).toBe(true);
     });
 
     it('should reject number raw value', () => {
@@ -161,7 +186,13 @@ describe('system_warning_occurred event validation', () => {
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => err.message === 'must be string' && err.instancePath === '/details/raw')).toBe(true);
+      expect(
+        validate.errors.some(
+          (err) =>
+            err.message === 'must be string' &&
+            err.instancePath === '/details/raw'
+        )
+      ).toBe(true);
     });
 
     it('should reject boolean raw value', () => {
@@ -175,7 +206,13 @@ describe('system_warning_occurred event validation', () => {
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => err.message === 'must be string' && err.instancePath === '/details/raw')).toBe(true);
+      expect(
+        validate.errors.some(
+          (err) =>
+            err.message === 'must be string' &&
+            err.instancePath === '/details/raw'
+        )
+      ).toBe(true);
     });
 
     it('should accept empty string raw value', () => {
@@ -218,7 +255,11 @@ describe('system_warning_occurred event validation', () => {
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => err.message === 'must NOT have additional properties')).toBe(true);
+      expect(
+        validate.errors.some(
+          (err) => err.message === 'must NOT have additional properties'
+        )
+      ).toBe(true);
     });
 
     it('should accept details with only statusCode', () => {
@@ -271,7 +312,11 @@ describe('system_warning_occurred event validation', () => {
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => err.keyword === 'format' && err.params.format === 'date-time')).toBe(true);
+      expect(
+        validate.errors.some(
+          (err) => err.keyword === 'format' && err.params.format === 'date-time'
+        )
+      ).toBe(true);
     });
   });
 
@@ -279,7 +324,8 @@ describe('system_warning_occurred event validation', () => {
     it('should handle proxy server 504 error payload after fix', () => {
       // This simulates what retryHttpClient will send after our fix
       const payload = {
-        message: 'Retryable HTTP error 504 on http://localhost:3001/api/llm-request (attempt 1/4)',
+        message:
+          'Retryable HTTP error 504 on http://localhost:3001/api/llm-request (attempt 1/4)',
         details: {
           statusCode: 504,
           url: 'http://localhost:3001/api/llm-request',
@@ -296,18 +342,21 @@ describe('system_warning_occurred event validation', () => {
     it('should reject the original problematic payload with object raw', () => {
       // This is the original payload that was causing the validation error
       const payload = {
-        message: 'Retryable HTTP error 504 on http://localhost:3001/api/llm-request (attempt 1/4)',
+        message:
+          'Retryable HTTP error 504 on http://localhost:3001/api/llm-request (attempt 1/4)',
         details: {
           statusCode: 504,
           url: 'http://localhost:3001/api/llm-request',
           raw: {
             error: true,
-            message: 'The proxy encountered a network issue or exhausted retries when trying to reach the LLM provider.',
+            message:
+              'The proxy encountered a network issue or exhausted retries when trying to reach the LLM provider.',
             stage: 'llm_forwarding_network_or_retry_exhausted',
             details: {
               llmId: 'openrouter-claude-sonnet-4-toolcalling',
               targetUrl: 'https://openrouter.ai/api/v1/chat/completions',
-              originalErrorMessage: 'RetryManager: Failed for https://openrouter.ai/api/v1/chat/completions after 1 attempt(s). Unexpected error: fetch failed',
+              originalErrorMessage:
+                'RetryManager: Failed for https://openrouter.ai/api/v1/chat/completions after 1 attempt(s). Unexpected error: fetch failed',
               originalProxiedErrorMessage: 'fetch failed',
             },
             originalStatusCode: 504,
@@ -319,7 +368,13 @@ describe('system_warning_occurred event validation', () => {
       const isValid = validate(payload);
       expect(isValid).toBe(false);
       expect(validate.errors).not.toBeNull();
-      expect(validate.errors.some(err => err.message === 'must be string' && err.instancePath === '/details/raw')).toBe(true);
+      expect(
+        validate.errors.some(
+          (err) =>
+            err.message === 'must be string' &&
+            err.instancePath === '/details/raw'
+        )
+      ).toBe(true);
     });
   });
 });

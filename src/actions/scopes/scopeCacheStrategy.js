@@ -5,10 +5,10 @@
 
 /** @typedef {import('../core/actionResult.js').ActionResult} ActionResult */
 
-import { validateDependency } from '../../utils/validationUtils.js';
+// No validateDependency needed - using optional dependencies
 
 /**
- * @typedef {Object} CacheEntry
+ * @typedef {object} CacheEntry
  * @property {*} value - The cached value
  * @property {number} timestamp - When the entry was cached
  * @property {number} [ttl] - Optional custom TTL for this entry
@@ -31,15 +31,15 @@ export class ScopeCacheStrategy {
    *
    * @param {object} deps - Constructor dependencies.
    * @param {Map} [deps.cache] - Optional cache implementation (defaults to Map).
-   * @param {number} [deps.maxSize=1000] - Maximum number of cache entries.
-   * @param {number} [deps.defaultTTL=5000] - Default TTL in milliseconds.
+   * @param {number} [deps.maxSize] - Maximum number of cache entries.
+   * @param {number} [deps.defaultTTL] - Default TTL in milliseconds.
    * @param {import('../../logging/consoleLogger.js').default} [deps.logger] - Optional logger.
    */
   constructor({ cache, maxSize = 1000, defaultTTL = 5000, logger } = {}) {
     this.#cache = cache || new Map();
     this.#maxSize = maxSize;
     this.#defaultTTL = defaultTTL;
-    this.#logger = logger?.child({ service: 'ScopeCacheStrategy' });
+    this.#logger = logger;
   }
 
   /**
@@ -59,6 +59,44 @@ export class ScopeCacheStrategy {
   }
 
   /**
+   * Gets a value from cache synchronously or returns null if not found.
+   *
+   * @param {string} key - The cache key
+   * @returns {*|null} The cached value or null if not found/expired
+   */
+  getSync(key) {
+    // Check if we have a valid cached entry
+    if (this.#cache.has(key)) {
+      const entry = this.#cache.get(key);
+      if (this.#isValid(entry)) {
+        this.#logger?.debug('Cache hit', {
+          key,
+          age: Date.now() - entry.timestamp,
+        });
+        return entry.value;
+      } else {
+        // Entry expired, remove it
+        this.#cache.delete(key);
+        this.#logger?.debug('Cache entry expired', { key });
+      }
+    }
+
+    this.#logger?.debug('Cache miss', { key });
+    return null;
+  }
+
+  /**
+   * Sets a value in the cache synchronously.
+   *
+   * @param {string} key - The cache key
+   * @param {*} value - The value to cache
+   * @param {number} [ttl] - TTL in milliseconds
+   */
+  setSync(key, value, ttl) {
+    this.#set(key, value, ttl);
+  }
+
+  /**
    * Gets a value from cache or computes it using the factory function.
    *
    * @param {string} key - The cache key
@@ -73,7 +111,10 @@ export class ScopeCacheStrategy {
     if (this.#cache.has(key)) {
       const entry = this.#cache.get(key);
       if (this.#isValid(entry)) {
-        this.#logger?.debug('Cache hit', { key, age: Date.now() - entry.timestamp });
+        this.#logger?.debug('Cache hit', {
+          key,
+          age: Date.now() - entry.timestamp,
+        });
         return entry.value;
       } else {
         // Entry expired, remove it
@@ -84,18 +125,21 @@ export class ScopeCacheStrategy {
 
     // No valid cached entry, compute the value
     this.#logger?.debug('Cache miss', { key });
-    
+
     try {
       const result = await factory();
-      
+
       // Only cache successful results
       if (result.success) {
         this.#set(key, result, effectiveTTL);
       }
-      
+
       return result;
     } catch (error) {
-      this.#logger?.error('Factory function failed', { key, error: error.message });
+      this.#logger?.error('Factory function failed', {
+        key,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -114,7 +158,9 @@ export class ScopeCacheStrategy {
       // Remove the oldest entry (first in the Map)
       const firstKey = this.#cache.keys().next().value;
       this.#cache.delete(firstKey);
-      this.#logger?.debug('Evicted cache entry due to size limit', { key: firstKey });
+      this.#logger?.debug('Evicted cache entry due to size limit', {
+        key: firstKey,
+      });
     }
 
     const entry = {
@@ -141,7 +187,7 @@ export class ScopeCacheStrategy {
 
     const age = Date.now() - entry.timestamp;
     const ttl = entry.ttl || this.#defaultTTL;
-    
+
     return age < ttl;
   }
 
@@ -176,7 +222,7 @@ export class ScopeCacheStrategy {
    */
   invalidateMatching(predicate) {
     const keysToDelete = [];
-    
+
     for (const key of this.#cache.keys()) {
       if (predicate(key)) {
         keysToDelete.push(key);
@@ -188,8 +234,8 @@ export class ScopeCacheStrategy {
     }
 
     if (keysToDelete.length > 0) {
-      this.#logger?.info('Invalidated matching cache entries', { 
-        count: keysToDelete.length 
+      this.#logger?.info('Invalidated matching cache entries', {
+        count: keysToDelete.length,
       });
     }
 
@@ -265,8 +311,8 @@ export class ScopeCacheStrategy {
     }
 
     if (keysToDelete.length > 0) {
-      this.#logger?.info('Cleaned up expired cache entries', { 
-        count: keysToDelete.length 
+      this.#logger?.info('Cleaned up expired cache entries', {
+        count: keysToDelete.length,
       });
     }
 

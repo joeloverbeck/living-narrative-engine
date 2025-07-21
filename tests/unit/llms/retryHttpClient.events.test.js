@@ -134,7 +134,9 @@ describe('RetryHttpClient event dispatching', () => {
     };
 
     global.fetch
-      .mockResolvedValueOnce(createResponse(JSON.stringify(complexErrorBody), { status: 504 }))
+      .mockResolvedValueOnce(
+        createResponse(JSON.stringify(complexErrorBody), { status: 504 })
+      )
       .mockResolvedValueOnce(createResponse('{"ok":true}', { status: 200 }));
 
     const client = new RetryHttpClient({

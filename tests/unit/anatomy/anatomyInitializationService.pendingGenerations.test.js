@@ -325,11 +325,17 @@ describe('AnatomyInitializationService - Pending Generations', () => {
     it('should reject all pending generation promises when disposed', async () => {
       // Create multiple pending generations
       let rejectGen1, rejectGen2, rejectGen3;
-      
+
       mockAnatomyGenerationService.generateAnatomyIfNeeded
-        .mockImplementationOnce(() => new Promise((_, reject) => (rejectGen1 = reject)))
-        .mockImplementationOnce(() => new Promise((_, reject) => (rejectGen2 = reject)))
-        .mockImplementationOnce(() => new Promise((_, reject) => (rejectGen3 = reject)));
+        .mockImplementationOnce(
+          () => new Promise((_, reject) => (rejectGen1 = reject))
+        )
+        .mockImplementationOnce(
+          () => new Promise((_, reject) => (rejectGen2 = reject))
+        )
+        .mockImplementationOnce(
+          () => new Promise((_, reject) => (rejectGen3 = reject))
+        );
 
       // Trigger generations
       for (let i = 1; i <= 3; i++) {
@@ -346,10 +352,10 @@ describe('AnatomyInitializationService - Pending Generations', () => {
 
       // The dispose method should have cleared all pending generations
       expect(service.getPendingGenerationCount()).toBe(0);
-      
+
       // Verify that trying to wait after disposal returns immediately
       await service.waitForAllGenerationsToComplete();
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'AnatomyInitializationService: No pending anatomy generations'
       );
@@ -374,7 +380,7 @@ describe('AnatomyInitializationService - Pending Generations', () => {
 
       // Pending count should be 0 after disposal
       expect(service.getPendingGenerationCount()).toBe(0);
-      
+
       // Verify the internal state was cleaned up properly
       await service.waitForAllGenerationsToComplete();
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -406,7 +412,9 @@ describe('AnatomyInitializationService - Pending Generations', () => {
       service.initialize();
 
       // Should work normally again
-      mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(true);
+      mockAnatomyGenerationService.generateAnatomyIfNeeded.mockResolvedValue(
+        true
+      );
       await boundHandlerRef({
         payload: { instanceId: 'entity-2', wasReconstructed: false },
       });
@@ -446,7 +454,7 @@ describe('AnatomyInitializationService - Pending Generations', () => {
     it('should properly clean up promise handlers after rejection', async () => {
       const testError = new Error('Test error');
       let rejectGeneration;
-      
+
       mockAnatomyGenerationService.generateAnatomyIfNeeded.mockImplementation(
         () => new Promise((_, reject) => (rejectGeneration = reject))
       );
@@ -461,9 +469,9 @@ describe('AnatomyInitializationService - Pending Generations', () => {
 
       // Reject the generation
       rejectGeneration(testError);
-      
+
       // Wait for handler to process the rejection
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should complete without error
       await waitPromise;
@@ -476,7 +484,7 @@ describe('AnatomyInitializationService - Pending Generations', () => {
   describe('edge cases', () => {
     it('should handle concurrent entity creation events', async () => {
       const resolvers = [];
-      
+
       // Mock 5 concurrent generations
       for (let i = 0; i < 5; i++) {
         mockAnatomyGenerationService.generateAnatomyIfNeeded.mockImplementationOnce(
@@ -507,7 +515,7 @@ describe('AnatomyInitializationService - Pending Generations', () => {
 
     it('should handle same entity being created multiple times', async () => {
       let firstResolve, secondResolve;
-      
+
       mockAnatomyGenerationService.generateAnatomyIfNeeded
         .mockImplementationOnce(
           () => new Promise((resolve) => (firstResolve = resolve))

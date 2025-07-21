@@ -130,7 +130,8 @@ describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
           characters: [
             {
               name: 'Structured Character',
-              description: 'Hair: brown, straight; Eyes: blue, round; Height: tall',
+              description:
+                'Hair: brown, straight; Eyes: blue, round; Height: tall',
             },
           ],
         },
@@ -275,7 +276,9 @@ describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
       const result = provider.getWorldContextContent(mockGameState);
 
       expect(result).toContain(`### ${DEFAULT_FALLBACK_CHARACTER_NAME}`);
-      expect(result).toContain(`- **Description**: ${DEFAULT_FALLBACK_DESCRIPTION_RAW}`);
+      expect(result).toContain(
+        `- **Description**: ${DEFAULT_FALLBACK_DESCRIPTION_RAW}`
+      );
     });
   });
 
@@ -296,13 +299,12 @@ describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
       const result = provider._parseCharacterDescription(description);
 
       // Pipes should be preserved within values, not used as delimiters
-      expect(result).toEqual([
-        '- **Hair**: brown | Eyes: blue | Height: tall',
-      ]);
+      expect(result).toEqual(['- **Hair**: brown | Eyes: blue | Height: tall']);
     });
 
     test('should parse newline-separated attributes', () => {
-      const description = 'Hair: medium, brown, straight\nEyes: brown, round\nWearing: white sneakers | blue shirt | black pants';
+      const description =
+        'Hair: medium, brown, straight\nEyes: brown, round\nWearing: white sneakers | blue shirt | black pants';
       const result = provider._parseCharacterDescription(description);
 
       expect(result).toEqual([

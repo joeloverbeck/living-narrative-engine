@@ -26,6 +26,28 @@ import {
 } from '../mockFactories/entities.js';
 
 /**
+ * Mock scheduler that works with Jest fake timers.
+ * Provides better integration with Jest's timer mocking.
+ */
+class MockScheduler {
+  setTimeout(fn, ms) {
+    // Ensure we're properly using Jest's mocked setTimeout if available
+    if (jest.isMockFunction(setTimeout)) {
+      return setTimeout(fn, ms);
+    }
+    return setTimeout(fn, ms);
+  }
+  
+  clearTimeout(id) {
+    // Ensure we're properly using Jest's mocked clearTimeout if available
+    if (jest.isMockFunction(clearTimeout)) {
+      return clearTimeout(id);
+    }
+    return clearTimeout(id);
+  }
+}
+
+/**
  * @description Utility class that instantiates {@link TurnManager} with mocked
  * dependencies and exposes helpers for common test operations.
  * @class
@@ -61,6 +83,7 @@ const TurnManagerFactoryMixin = createServiceFactoryMixin(
       logger: mocks.logger,
       dispatcher: mocks.dispatcher,
       turnHandlerResolver: mocks.turnHandlerResolver,
+      scheduler: new MockScheduler(), // Use mock scheduler for Jest fake timers
       ...opts,
     });
   },
@@ -159,10 +182,28 @@ export const {
   describeSuite: describeTurnManagerSuite,
 } = createTestBedHelpers(TurnManagerTestBed, {
   beforeEachHook(bed) {
-    jest.useFakeTimers();
+    jest.useFakeTimers({ legacyFakeTimers: false });
     bed.initializeDefaultMocks();
   },
-  afterEachHook() {
+  async afterEachHook(bed) {
+    try {
+      // Clear any pending timers first to prevent hanging
+      jest.clearAllTimers();
+      
+      // Force stop the turn manager if it exists
+      if (bed.turnManager && bed.turnManager.stop) {
+        // Create a timeout promise to prevent hanging on stop
+        const stopPromise = bed.turnManager.stop();
+        const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 100));
+        await Promise.race([stopPromise, timeoutPromise]);
+      }
+    } catch (e) {
+      // Ignore errors during cleanup
+    } finally {
+      // Always restore real timers to prevent leakage
+      jest.useRealTimers();
+    }
+    
     // Timers restored via BaseTestBed cleanup; spies restored by SpyTrackerMixin
   },
 });
@@ -181,11 +222,42 @@ export const describeRunningTurnManagerSuite = createDescribeTestBedSuite(
   TurnManagerTestBed,
   {
     async beforeEachHook(bed) {
-      jest.useFakeTimers();
+      jest.useFakeTimers({ legacyFakeTimers: false });
       bed.initializeDefaultMocks();
       await bed.startRunning();
     },
-    afterEachHook() {
+    async afterEachHook(bed) {
+      try {
+        // Clear any pending timers first to prevent hanging
+        jest.clearAllTimers();
+        
+        // Force stop the turn manager by setting private field
+        if (bed.turnManager) {
+          try {
+            // Access private field through a workaround to ensure manager stops
+            Object.defineProperty(bed.turnManager, '_TurnManager__isRunning', {
+              value: false,
+              writable: true,
+              configurable: true
+            });
+          } catch (e) {
+            // Ignore errors accessing private fields
+          }
+          
+          // Also try to stop it normally with a timeout
+          if (bed.turnManager.stop) {
+            const stopPromise = bed.turnManager.stop();
+            const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 100));
+            await Promise.race([stopPromise, timeoutPromise]);
+          }
+        }
+      } catch (e) {
+        // Ignore errors during cleanup
+      } finally {
+        // Always restore real timers to prevent leakage
+        jest.useRealTimers();
+      }
+      
       /* timers restored in cleanup */
     },
   }

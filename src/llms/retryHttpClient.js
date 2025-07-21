@@ -135,7 +135,7 @@ export class RetryHttpClient extends IHttpClient {
         rawString = String(raw).slice(0, 200);
       }
     }
-    
+
     const details = {
       statusCode,
       url,
@@ -163,7 +163,7 @@ export class RetryHttpClient extends IHttpClient {
         rawString = String(raw).slice(0, 200);
       }
     }
-    
+
     const details = {
       statusCode,
       url,

@@ -115,10 +115,7 @@ describe('handle_place_hand_on_waist rule integration', () => {
 
     // Check what the condition expects
     expect(condition).toEqual({
-      '==': [
-        { var: 'event.payload.actionId' },
-        'intimacy:place_hand_on_waist',
-      ],
+      '==': [{ var: 'event.payload.actionId' }, 'intimacy:place_hand_on_waist'],
     });
 
     // The event structure for attempt_action events

@@ -59,6 +59,7 @@ export const ERROR_PHASES = {
   DISCOVERY: 'discovery',
   VALIDATION: 'validation',
   EXECUTION: 'execution',
+  SCOPE_RESOLUTION: 'scope_resolution',
 };
 
 /**

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
@@ -33,7 +34,7 @@ describe('TargetResolutionService - additional branches', () => {
     mockJsonLogic = { evaluate: jest.fn() };
     const mockDslParser = { parse: jest.fn(() => generateMockAst('')) };
 
-    service = new TargetResolutionService({
+    service = createTargetResolutionServiceWithMocks({
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
       entityManager: mockEntityManager,

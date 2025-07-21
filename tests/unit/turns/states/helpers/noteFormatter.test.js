@@ -39,23 +39,29 @@ describe('formatNotesForDisplay', () => {
     });
 
     it('should format array of object notes with all fields', () => {
-      const notes = [{
-        text: 'Young man observed',
-        subject: 'Iker Aguirre',
-        subjectType: 'character',
-        context: 'The Gilded Bean terrace',
-        tags: ['potential', 'young']
-      }];
+      const notes = [
+        {
+          text: 'Young man observed',
+          subject: 'Iker Aguirre',
+          subjectType: 'character',
+          context: 'The Gilded Bean terrace',
+          tags: ['potential', 'young'],
+        },
+      ];
       const result = formatNotesForDisplay(notes);
-      expect(result).toBe('[character] Iker Aguirre: Young man observed (The Gilded Bean terrace) [potential, young]');
+      expect(result).toBe(
+        '[character] Iker Aguirre: Young man observed (The Gilded Bean terrace) [potential, young]'
+      );
     });
 
     it('should format array of object notes with minimal fields', () => {
-      const notes = [{
-        text: 'Basic observation',
-        subject: 'Test Subject',
-        subjectType: 'other'
-      }];
+      const notes = [
+        {
+          text: 'Basic observation',
+          subject: 'Test Subject',
+          subjectType: 'other',
+        },
+      ];
       const result = formatNotesForDisplay(notes);
       expect(result).toBe('[other] Test Subject: Basic observation');
     });
@@ -74,7 +80,7 @@ describe('formatNotesForDisplay', () => {
         undefined,
         '',
         { subject: 'No text field' },
-        'String note'
+        'String note',
       ];
       const result = formatNotesForDisplay(notes);
       expect(result).toBe('Subject: Valid note\nString note');
@@ -86,8 +92,8 @@ describe('formatNotesForDisplay', () => {
         {
           text: 'Object note',
           subject: 'Test',
-          context: 'Testing'
-        }
+          context: 'Testing',
+        },
       ];
       const result = formatNotesForDisplay(notes);
       expect(result).toBe('Simple string note\nTest: Object note (Testing)');
@@ -99,7 +105,7 @@ describe('formatNotesForDisplay', () => {
       const note = {
         text: 'Single observation',
         subject: 'Entity',
-        tags: ['tag1', 'tag2']
+        tags: ['tag1', 'tag2'],
       };
       const result = formatNotesForDisplay(note);
       expect(result).toBe('Entity: Single observation [tag1, tag2]');
@@ -110,7 +116,7 @@ describe('formatNotesForDisplay', () => {
         text: 'Single observation',
         subject: 'Entity',
         subjectType: 'location',
-        tags: ['tag1', 'tag2']
+        tags: ['tag1', 'tag2'],
       };
       const result = formatNotesForDisplay(note);
       expect(result).toBe('[location] Entity: Single observation [tag1, tag2]');
@@ -119,7 +125,7 @@ describe('formatNotesForDisplay', () => {
     it('should return null for object without text', () => {
       const note = {
         subject: 'Entity',
-        tags: ['tag1']
+        tags: ['tag1'],
       };
       const result = formatNotesForDisplay(note);
       expect(result).toBeNull();
@@ -128,11 +134,13 @@ describe('formatNotesForDisplay', () => {
 
   describe('edge cases', () => {
     it('should handle notes with only whitespace tags', () => {
-      const notes = [{
-        text: 'Note',
-        subject: 'Subject',
-        tags: ['  ', '', 'valid', '   ']
-      }];
+      const notes = [
+        {
+          text: 'Note',
+          subject: 'Subject',
+          tags: ['  ', '', 'valid', '   '],
+        },
+      ];
       const result = formatNotesForDisplay(notes);
       expect(result).toBe('Subject: Note [valid]');
     });

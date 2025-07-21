@@ -11,10 +11,9 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import { flushPromisesAndTimers } from '../../../common/turns/turnManagerTestBed.js';
 import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
-const TIMEOUT_MS = 10;
+const TIMEOUT_MS = 100; // Increased from 10ms to allow more time for async operations
 
 // --- Module Mocks ---
 
@@ -233,7 +232,9 @@ describe('AwaitingExternalTurnEndState', () => {
         // Act
         await state.enterState(mockHandler, null);
         // Manually trigger timeout to check the actionId in the generated error message.
-        await flushPromisesAndTimers();
+        jest.advanceTimersByTime(TIMEOUT_MS);
+        await Promise.resolve();
+        await Promise.resolve();
 
         // Assert
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
@@ -336,7 +337,9 @@ describe('AwaitingExternalTurnEndState', () => {
       mockTurnContext.isAwaitingExternalEvent.mockReturnValue(false);
 
       // Act
-      await flushPromisesAndTimers();
+      jest.advanceTimersByTime(TIMEOUT_MS);
+      await Promise.resolve();
+      await Promise.resolve();
 
       // Assert
       expectNoDispatch(mockEventDispatcher.dispatch);
@@ -348,7 +351,9 @@ describe('AwaitingExternalTurnEndState', () => {
       expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
 
       // Act
-      await flushPromisesAndTimers();
+      jest.advanceTimersByTime(TIMEOUT_MS);
+      await Promise.resolve();
+      await Promise.resolve();
 
       // Assert
       // 1. A display error event is dispatched.

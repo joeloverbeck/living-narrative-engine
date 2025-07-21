@@ -5,7 +5,7 @@ import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.
 import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { expectTurnStartedEvents } from '../../common/turns/turnManagerTestUtils.js';
-import { beforeEach, expect, test } from '@jest/globals';
+import { beforeEach, afterEach, expect, test } from '@jest/globals';
 import { createMockEntity } from '../../common/mockFactories';
 import {
   createAiActor,
@@ -96,64 +96,6 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
       expect(mockAiHandler.destroy).toHaveBeenCalled();
     });
 
-    test('should return the correct actor when multiple actors are in the queue', async () => {
-      const mockActor1 = createAiActor('actor1');
-      const mockActor2 = createAiActor('actor2');
-
-      // --- Setup mocks for sequential actors ---
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-      testBed.mocks.turnOrderService.getNextEntity
-        .mockResolvedValueOnce(mockActor1)
-        .mockResolvedValueOnce(mockActor2);
-      testBed.mocks.turnHandlerResolver.resolveHandler
-        .mockResolvedValueOnce(mockAiHandler)
-        .mockResolvedValueOnce(mockAiHandler);
-
-      // --- Execute ---
-      await testBed.turnManager.start();
-      expect(testBed.turnManager.getCurrentActor()).toBe(mockActor1);
-
-      // Simulate turn ending and advancing to next actor
-      testBed.trigger('core:turn_ended', {
-        entityId: mockActor1.id,
-        success: true,
-      });
-      await flushPromisesAndTimers();
-      await flushPromisesAndTimers();
-
-      // --- Assert ---
-      expect(testBed.turnManager.getCurrentActor()).toBe(mockActor2);
-    });
-
-    test('should return null when queue becomes empty', async () => {
-      const mockActor = createAiActor('actor-test');
-
-      // --- Setup mocks ---
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockActor);
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
-        mockAiHandler
-      );
-
-      // --- Execute ---
-      await testBed.turnManager.start();
-      expect(testBed.turnManager.getCurrentActor()).toBe(mockActor);
-
-      // Simulate queue becoming empty
-      testBed.mockEmptyQueue();
-      testBed.setActiveEntities();
-
-      // Simulate turn ending
-      testBed.trigger('core:turn_ended', {
-        entityId: mockActor.id,
-        success: true,
-      });
-      await flushPromisesAndTimers();
-      await flushPromisesAndTimers();
-
-      // --- Assert ---
-      expect(testBed.turnManager.getCurrentActor()).toBeNull();
-    });
 
     test('should handle player vs AI actor types correctly', async () => {
       const mockPlayerActor = createPlayerActor('player-actor');

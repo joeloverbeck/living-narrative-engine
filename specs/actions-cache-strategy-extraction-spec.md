@@ -26,6 +26,7 @@ This specification defines the extraction of caching logic from the `AvailableAc
 ### Current Implementation Analysis
 
 **From `src/data/providers/availableActionsProvider.js`:**
+
 ```javascript
 // Turn-scoped Cache - Lines 34-36
 #lastTurnContext = null;
@@ -97,7 +98,7 @@ this.#cachedActions.set(cacheKey, indexedActions);
 export class IActionCacheStrategy {
   /**
    * Generate cache key for given context
-   * 
+   *
    * @param {Entity} actor - Actor entity
    * @param {ITurnContext} turnContext - Current turn context
    * @returns {string} Cache key
@@ -108,18 +109,20 @@ export class IActionCacheStrategy {
 
   /**
    * Check if cache should be invalidated based on context change
-   * 
+   *
    * @param {ITurnContext} oldContext - Previous turn context
    * @param {ITurnContext} newContext - Current turn context
    * @returns {boolean} True if cache should be invalidated
    */
   shouldInvalidate(oldContext, newContext) {
-    throw new Error('IActionCacheStrategy.shouldInvalidate must be implemented');
+    throw new Error(
+      'IActionCacheStrategy.shouldInvalidate must be implemented'
+    );
   }
 
   /**
    * Get cached value or compute using factory function
-   * 
+   *
    * @param {string} key - Cache key
    * @param {Function} factory - Function to compute value if not cached
    * @returns {Promise<ActionComposite[]>} Cached or computed action list
@@ -130,7 +133,7 @@ export class IActionCacheStrategy {
 
   /**
    * Explicitly set a value in cache
-   * 
+   *
    * @param {string} key - Cache key
    * @param {ActionComposite[]} value - Value to cache
    * @param {object} [options] - Additional options
@@ -141,7 +144,7 @@ export class IActionCacheStrategy {
 
   /**
    * Check if key exists in cache
-   * 
+   *
    * @param {string} key - Cache key
    * @returns {boolean} True if key exists
    */
@@ -151,7 +154,7 @@ export class IActionCacheStrategy {
 
   /**
    * Remove specific entry from cache
-   * 
+   *
    * @param {string} key - Cache key
    * @returns {boolean} True if entry was removed
    */
@@ -168,7 +171,7 @@ export class IActionCacheStrategy {
 
   /**
    * Get cache statistics
-   * 
+   *
    * @returns {object} Cache statistics
    */
   getStats() {
@@ -177,7 +180,7 @@ export class IActionCacheStrategy {
 
   /**
    * Invalidate cache entries by pattern or entity
-   * 
+   *
    * @param {string|Entity} target - Pattern string or entity to invalidate
    */
   invalidate(target) {
@@ -278,7 +281,9 @@ export class TurnScopedCacheStrategy extends IActionCacheStrategy {
           invalidated++;
         }
       }
-      this.#logger.debug(`[ActionCache] Pattern invalidated ${invalidated} entries: ${target}`);
+      this.#logger.debug(
+        `[ActionCache] Pattern invalidated ${invalidated} entries: ${target}`
+      );
     } else if (target && target.id) {
       // Entity-based invalidation
       this.delete(target.id);
@@ -287,7 +292,7 @@ export class TurnScopedCacheStrategy extends IActionCacheStrategy {
 
   /**
    * Handle turn context changes for invalidation
-   * 
+   *
    * @param {ITurnContext} newContext
    */
   handleTurnChange(newContext) {
@@ -354,9 +359,11 @@ export class LRUActionCacheStrategy extends IActionCacheStrategy {
 
   shouldInvalidate(oldContext, newContext) {
     // Only invalidate on significant context changes
-    return !oldContext || 
-           oldContext.turnNumber !== newContext.turnNumber ||
-           oldContext.phase !== newContext.phase;
+    return (
+      !oldContext ||
+      oldContext.turnNumber !== newContext.turnNumber ||
+      oldContext.phase !== newContext.phase
+    );
   }
 
   async get(key, factory) {
@@ -420,7 +427,9 @@ export class LRUActionCacheStrategy extends IActionCacheStrategy {
           invalidated++;
         }
       }
-      this.#logger.debug(`[ActionCache] LRU Pattern invalidated ${invalidated} entries: ${target}`);
+      this.#logger.debug(
+        `[ActionCache] LRU Pattern invalidated ${invalidated} entries: ${target}`
+      );
     } else if (target && target.id) {
       // Invalidate all entries for this actor
       const pattern = `^${target.id}:`;
@@ -458,14 +467,16 @@ export class SessionScopedCacheStrategy extends IActionCacheStrategy {
 
   generateKey(actor, turnContext) {
     // Include location for spatial awareness
-    const locationId = actor.getComponentData('core:position')?.locationId || 'unknown';
+    const locationId =
+      actor.getComponentData('core:position')?.locationId || 'unknown';
     return `${actor.id}:${locationId}`;
   }
 
   shouldInvalidate(oldContext, newContext) {
     // Only invalidate on major game state changes
-    return !oldContext || 
-           oldContext.game?.sessionId !== newContext.game?.sessionId;
+    return (
+      !oldContext || oldContext.game?.sessionId !== newContext.game?.sessionId
+    );
   }
 
   async get(key, factory) {
@@ -521,7 +532,9 @@ export class SessionScopedCacheStrategy extends IActionCacheStrategy {
           invalidated++;
         }
       }
-      this.#logger.debug(`[ActionCache] Session Pattern invalidated ${invalidated} entries: ${target}`);
+      this.#logger.debug(
+        `[ActionCache] Session Pattern invalidated ${invalidated} entries: ${target}`
+      );
     } else if (target && target.id) {
       // Invalidate entries for specific actor
       const pattern = `^${target.id}:`;
@@ -644,9 +657,13 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
           actions: discoveredActions,
           errors,
           trace,
-        } = await this.#actionDiscoveryService.getValidActions(actor, actionCtx, {
-          trace: true,
-        });
+        } = await this.#actionDiscoveryService.getValidActions(
+          actor,
+          actionCtx,
+          {
+            trace: true,
+          }
+        );
 
         this.#logDiscoveryTrace(actor.id, trace, logger);
 
@@ -684,7 +701,7 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
 
   /**
    * Get cache statistics for monitoring
-   * 
+   *
    * @returns {object} Cache statistics
    */
   getCacheStats() {
@@ -693,7 +710,7 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
 
   /**
    * Invalidate cache for specific actor or pattern
-   * 
+   *
    * @param {string|Entity} target - Actor entity or pattern to invalidate
    */
   invalidateCache(target) {
@@ -756,7 +773,8 @@ export function registerActionCacheStrategies(container) {
     LRUActionCacheStrategy,
     {
       dependencies: [CommonTokens.ILogger],
-      factory: (logger, config) => new LRUActionCacheStrategy({ logger }, config),
+      factory: (logger, config) =>
+        new LRUActionCacheStrategy({ logger }, config),
     }
   );
 
@@ -770,16 +788,25 @@ export function registerActionCacheStrategies(container) {
 
   // Register default strategy (configurable)
   const defaultStrategy = process.env.ACTION_CACHE_STRATEGY || 'turn-scoped';
-  
+
   switch (defaultStrategy) {
     case 'lru':
-      container.alias(ActionTokens.IActionCacheStrategy, ActionTokens.LRUActionCacheStrategy);
+      container.alias(
+        ActionTokens.IActionCacheStrategy,
+        ActionTokens.LRUActionCacheStrategy
+      );
       break;
     case 'session':
-      container.alias(ActionTokens.IActionCacheStrategy, ActionTokens.SessionScopedCacheStrategy);
+      container.alias(
+        ActionTokens.IActionCacheStrategy,
+        ActionTokens.SessionScopedCacheStrategy
+      );
       break;
     default:
-      container.alias(ActionTokens.IActionCacheStrategy, ActionTokens.TurnScopedCacheStrategy);
+      container.alias(
+        ActionTokens.IActionCacheStrategy,
+        ActionTokens.TurnScopedCacheStrategy
+      );
   }
 }
 ```
@@ -793,23 +820,33 @@ export function registerActionCacheStrategies(container) {
  */
 
 export function registerDataProviders(container) {
-  container.register(CommonTokens.IAvailableActionsProvider, AvailableActionsProvider, {
-    dependencies: [
-      CommonTokens.IActionDiscoveryService,
-      CommonTokens.IActionIndexer,
-      CommonTokens.IEntityManager,
-      CommonTokens.ILogger,
-      ActionTokens.IActionCacheStrategy, // New dependency
-    ],
-    factory: (actionDiscoveryService, actionIndexer, entityManager, logger, cacheStrategy) =>
-      new AvailableActionsProvider({
+  container.register(
+    CommonTokens.IAvailableActionsProvider,
+    AvailableActionsProvider,
+    {
+      dependencies: [
+        CommonTokens.IActionDiscoveryService,
+        CommonTokens.IActionIndexer,
+        CommonTokens.IEntityManager,
+        CommonTokens.ILogger,
+        ActionTokens.IActionCacheStrategy, // New dependency
+      ],
+      factory: (
         actionDiscoveryService,
-        actionIndexingService: actionIndexer,
+        actionIndexer,
         entityManager,
         logger,
-        actionCacheStrategy: cacheStrategy,
-      }),
-  });
+        cacheStrategy
+      ) =>
+        new AvailableActionsProvider({
+          actionDiscoveryService,
+          actionIndexingService: actionIndexer,
+          entityManager,
+          logger,
+          actionCacheStrategy: cacheStrategy,
+        }),
+    }
+  );
 }
 ```
 
@@ -842,14 +879,18 @@ export class ActionCacheEventHandler extends BaseService {
   #setupEventListeners() {
     // Actor movement invalidates location-based caches
     this.#eventBus.on('ENTITY_MOVED', (event) => {
-      this.#logger.debug(`Invalidating cache for moved entity: ${event.entityId}`);
+      this.#logger.debug(
+        `Invalidating cache for moved entity: ${event.entityId}`
+      );
       this.#cacheStrategy.invalidate(event.entityId);
     });
 
     // Component changes may affect available actions
     this.#eventBus.on('COMPONENT_UPDATED', (event) => {
       if (this.#isActionRelevantComponent(event.componentId)) {
-        this.#logger.debug(`Invalidating cache for component update: ${event.entityId}:${event.componentId}`);
+        this.#logger.debug(
+          `Invalidating cache for component update: ${event.entityId}:${event.componentId}`
+        );
         this.#cacheStrategy.invalidate(event.entityId);
       }
     });
@@ -863,7 +904,9 @@ export class ActionCacheEventHandler extends BaseService {
 
     // Equipment changes affect available actions
     this.#eventBus.on('EQUIPMENT_CHANGED', (event) => {
-      this.#logger.debug(`Invalidating cache for equipment change: ${event.actorId}`);
+      this.#logger.debug(
+        `Invalidating cache for equipment change: ${event.actorId}`
+      );
       this.#cacheStrategy.invalidate(event.actorId);
     });
   }
@@ -908,7 +951,7 @@ describe('TurnScopedCacheStrategy', () => {
   beforeEach(() => {
     mockLogger = createMockLogger();
     strategy = new TurnScopedCacheStrategy({ logger: mockLogger });
-    
+
     mockActor = { id: 'actor1' };
     mockTurnContext = { turnNumber: 1 };
   });
@@ -924,13 +967,13 @@ describe('TurnScopedCacheStrategy', () => {
     it('should invalidate when turn context changes', () => {
       const oldContext = { turnNumber: 1 };
       const newContext = { turnNumber: 2 };
-      
+
       expect(strategy.shouldInvalidate(oldContext, newContext)).toBe(true);
     });
 
     it('should not invalidate when turn context is same', () => {
       const context = { turnNumber: 1 };
-      
+
       expect(strategy.shouldInvalidate(context, context)).toBe(false);
     });
   });
@@ -958,7 +1001,7 @@ describe('TurnScopedCacheStrategy', () => {
 
       const newContext = { turnNumber: 2 };
       strategy.handleTurnChange(newContext);
-      
+
       expect(strategy.has('key1')).toBe(false);
     });
   });
@@ -972,7 +1015,7 @@ describe('TurnScopedCacheStrategy', () => {
 
     it('should invalidate by pattern', () => {
       strategy.invalidate('actor1:');
-      
+
       expect(strategy.has('actor1:loc1')).toBe(false);
       expect(strategy.has('actor1:loc2')).toBe(false);
       expect(strategy.has('actor2:loc1')).toBe(true);
@@ -981,7 +1024,7 @@ describe('TurnScopedCacheStrategy', () => {
     it('should invalidate by entity', () => {
       const actor = { id: 'actor1' };
       strategy.invalidate(actor);
-      
+
       expect(strategy.has('actor1')).toBe(false);
     });
   });
@@ -992,7 +1035,7 @@ describe('TurnScopedCacheStrategy', () => {
       strategy.set('key2', 'value2');
 
       const stats = strategy.getStats();
-      
+
       expect(stats).toEqual({
         size: 2,
         strategy: 'turn-scoped',
@@ -1074,14 +1117,20 @@ describe('AvailableActionsProvider - Cache Strategy Integration', () => {
       const result = await provider.get(mockActor, mockTurnContext, mockLogger);
 
       expect(result).toEqual(expectedActions);
-      expect(mockCacheStrategy.generateKey).toHaveBeenCalledWith(mockActor, mockTurnContext);
-      expect(mockCacheStrategy.get).toHaveBeenCalledWith('test-key', expect.any(Function));
+      expect(mockCacheStrategy.generateKey).toHaveBeenCalledWith(
+        mockActor,
+        mockTurnContext
+      );
+      expect(mockCacheStrategy.get).toHaveBeenCalledWith(
+        'test-key',
+        expect.any(Function)
+      );
     });
 
     it('should handle cache miss by invoking factory', async () => {
-      const mockActor = { 
-        id: 'actor1', 
-        getComponentData: jest.fn().mockReturnValue(null)
+      const mockActor = {
+        id: 'actor1',
+        getComponentData: jest.fn().mockReturnValue(null),
       };
       const mockTurnContext = { turnNumber: 1, game: {} };
 
@@ -1104,7 +1153,9 @@ describe('AvailableActionsProvider - Cache Strategy Integration', () => {
 
       await provider.get(mockActor, mockTurnContext, mockLogger);
 
-      expect(mockCacheStrategy.handleTurnChange).toHaveBeenCalledWith(mockTurnContext);
+      expect(mockCacheStrategy.handleTurnChange).toHaveBeenCalledWith(
+        mockTurnContext
+      );
     });
   });
 
@@ -1179,13 +1230,15 @@ describe('Action Cache System Integration', () => {
   it('should handle different cache strategies', async () => {
     // Test with different strategies
     const strategies = ['turn-scoped', 'lru', 'session'];
-    
+
     for (const strategyName of strategies) {
       process.env.ACTION_CACHE_STRATEGY = strategyName;
-      
+
       const testContainer = createTestContainer();
-      const testProvider = testContainer.resolve(CommonTokens.IAvailableActionsProvider);
-      
+      const testProvider = testContainer.resolve(
+        CommonTokens.IAvailableActionsProvider
+      );
+
       const stats = testProvider.getCacheStats();
       expect(stats.strategy).toBeDefined();
     }
@@ -1234,26 +1287,31 @@ describe('Action Cache Performance', () => {
 
       for (const strategy of strategies) {
         const startTime = performance.now();
-        
+
         for (let i = 0; i < ITERATIONS; i++) {
           const key = `key-${i % CACHE_SIZE}`;
           const factory = () => Promise.resolve([{ id: `action-${i}` }]);
           await strategy.get(key, factory);
         }
-        
+
         const endTime = performance.now();
         const avgTime = (endTime - startTime) / ITERATIONS;
-        
+
         expect(avgTime).toBeLessThan(1); // Less than 1ms per operation
-        console.log(`${strategy.constructor.name}: ${avgTime.toFixed(3)}ms per operation`);
+        console.log(
+          `${strategy.constructor.name}: ${avgTime.toFixed(3)}ms per operation`
+        );
       }
     });
 
     it('should handle memory usage efficiently', () => {
-      const strategy = new LRUActionCacheStrategy({ logger: console }, {
-        maxSize: 50,
-        maxMemoryUsage: 1024 * 1024, // 1MB
-      });
+      const strategy = new LRUActionCacheStrategy(
+        { logger: console },
+        {
+          maxSize: 50,
+          maxMemoryUsage: 1024 * 1024, // 1MB
+        }
+      );
 
       // Fill cache beyond limit
       for (let i = 0; i < 100; i++) {
@@ -1314,7 +1372,7 @@ export class CacheMemoryManager {
         const stats = strategy.getStats();
         const memoryUsage = stats.calculatedSize || 0;
         totalMemory += memoryUsage;
-        
+
         reports.push({
           strategy: name,
           size: stats.size,
@@ -1365,6 +1423,7 @@ export class CacheMemoryManager {
 ### Phase 1: Interface and Base Strategy (Week 1)
 
 #### Implementation Steps
+
 1. **Create interface definition** (`IActionCacheStrategy.js`)
 2. **Implement `TurnScopedCacheStrategy`** (maintain current behavior)
 3. **Update dependency injection tokens** and registrations
@@ -1372,12 +1431,14 @@ export class CacheMemoryManager {
 5. **Validate interface design** with existing codebase patterns
 
 #### Success Criteria
+
 - All existing tests pass with new strategy
 - Interface provides all required methods
 - TurnScopedCacheStrategy matches current provider behavior exactly
 - 100% test coverage for new cache strategy
 
 #### Risks & Mitigations
+
 - **Risk**: Interface doesn't capture all required functionality
 - **Mitigation**: Comprehensive analysis of current provider usage patterns
 - **Risk**: Performance regression with strategy pattern
@@ -1386,6 +1447,7 @@ export class CacheMemoryManager {
 ### Phase 2: Provider Integration (Week 2)
 
 #### Implementation Steps
+
 1. **Modify `AvailableActionsProvider`** to use injected cache strategy
 2. **Update DI registrations** for provider with cache dependency
 3. **Create integration tests** for provider-strategy interaction
@@ -1393,12 +1455,14 @@ export class CacheMemoryManager {
 5. **Update existing tests** to work with strategy pattern
 
 #### Success Criteria
+
 - Modified provider maintains exact same external behavior
 - All existing integration and E2E tests pass
 - New cache management functionality works correctly
 - Performance remains within 5% of baseline
 
 #### Risks & Mitigations
+
 - **Risk**: Breaking changes to provider interface
 - **Mitigation**: Maintain complete backward compatibility
 - **Risk**: Complex dependency injection issues
@@ -1407,6 +1471,7 @@ export class CacheMemoryManager {
 ### Phase 3: Advanced Strategies (Week 3)
 
 #### Implementation Steps
+
 1. **Implement `LRUActionCacheStrategy`** with TTL and size limits
 2. **Implement `SessionScopedCacheStrategy`** for longer-term caching
 3. **Add configuration system** for strategy selection
@@ -1414,12 +1479,14 @@ export class CacheMemoryManager {
 5. **Add comprehensive strategy tests**
 
 #### Success Criteria
+
 - LRU strategy demonstrates improved cache hit rates
 - Session strategy maintains cache across turn boundaries appropriately
 - Configuration system allows runtime strategy selection
 - Performance benchmarks show measurable improvements
 
 #### Risks & Mitigations
+
 - **Risk**: LRU cache memory leaks or excessive memory usage
 - **Mitigation**: Comprehensive memory monitoring and limits
 - **Risk**: Session strategy cache invalidation issues
@@ -1428,6 +1495,7 @@ export class CacheMemoryManager {
 ### Phase 4: Event Integration & Optimization (Week 4)
 
 #### Implementation Steps
+
 1. **Implement `ActionCacheEventHandler`** for automatic invalidation
 2. **Add event-driven cache invalidation** for relevant game events
 3. **Implement memory management utilities**
@@ -1435,12 +1503,14 @@ export class CacheMemoryManager {
 5. **Performance tuning and optimization**
 
 #### Success Criteria
+
 - Cache automatically invalidates on relevant game state changes
 - Memory usage stays within defined bounds
 - Cache metrics provide visibility into performance
 - Overall system performance improves measurably
 
 #### Risks & Mitigations
+
 - **Risk**: Over-aggressive cache invalidation reducing hit rates
 - **Mitigation**: Careful event filtering and invalidation logic
 - **Risk**: Event system overhead
@@ -1460,7 +1530,7 @@ npm run test:performance
 # Integration test validation
 npm run test:integration
 
-# E2E test validation  
+# E2E test validation
 npm run test:e2e
 ```
 
@@ -1477,13 +1547,13 @@ describe('Action Cache Behavior Validation', () => {
     // Direct comparison between original and new implementations
     const originalProvider = createOriginalProvider();
     const newProvider = createNewProviderWithTurnScopedStrategy();
-    
+
     const testCases = generateTestCases();
-    
+
     for (const testCase of testCases) {
       const originalResult = await originalProvider.get(...testCase.args);
       const newResult = await newProvider.get(...testCase.args);
-      
+
       expect(newResult).toEqual(originalResult);
     }
   });
@@ -1491,14 +1561,16 @@ describe('Action Cache Behavior Validation', () => {
   it('should demonstrate improved performance with LRU strategy', async () => {
     const turnScopedProvider = createProviderWithStrategy('turn-scoped');
     const lruProvider = createProviderWithStrategy('lru');
-    
+
     const benchmark = new CacheBenchmark();
-    
+
     const turnScopedStats = await benchmark.run(turnScopedProvider);
     const lruStats = await benchmark.run(lruProvider);
-    
+
     expect(lruStats.hitRate).toBeGreaterThan(turnScopedStats.hitRate);
-    expect(lruStats.avgResponseTime).toBeLessThan(turnScopedStats.avgResponseTime);
+    expect(lruStats.avgResponseTime).toBeLessThan(
+      turnScopedStats.avgResponseTime
+    );
   });
 });
 ```

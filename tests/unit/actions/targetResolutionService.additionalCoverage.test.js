@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 import { generateMockAst } from '../../common/scopeDsl/mockAstGenerator.js';
@@ -29,7 +30,7 @@ describe('TargetResolutionService additional coverage', () => {
     mockJsonLogic = { evaluate: jest.fn() };
     mockDslParser = { parse: jest.fn((expr) => generateMockAst(expr)) };
 
-    service = new TargetResolutionService({
+    service = createTargetResolutionServiceWithMocks({
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
       entityManager: {},
@@ -80,14 +81,13 @@ describe('TargetResolutionService additional coverage', () => {
     expect(result.success).toBe(false);
     expect(result.value).toBeNull();
     expect(result.errors).toHaveLength(1);
-    // Note: Enhanced error context changes logger behavior - this now goes through handleResolutionError
-    expect(trace.error).toHaveBeenCalled();
-    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: expect.anything(),
-      })
+    // The error is wrapped in an error context object
+    expect(result.errors[0].error.message).toContain(
+      'Missing scope definition'
     );
+    expect(result.errors[0].error.name).toBe('ScopeNotFoundError');
+    // With the new unified approach, errors are returned in the result, not dispatched
+    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
   it('reports parser errors through logger.error and trace', () => {
@@ -110,9 +110,11 @@ describe('TargetResolutionService additional coverage', () => {
     expect(result.success).toBe(false);
     expect(result.value).toBeNull();
     expect(result.errors).toHaveLength(1);
-    // Note: Enhanced error context changes logger behavior
-    expect(trace.error).toHaveBeenCalled();
+    // The error is wrapped in an error context object
+    expect(result.errors[0].error.message).toContain('parse fail');
+    expect(result.errors[0].error.name).toBe('ScopeParseError');
     // Parser errors are now handled internally and returned as part of the result
     // rather than being dispatched as system errors
+    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
   });
 });

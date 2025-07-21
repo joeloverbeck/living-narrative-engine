@@ -5,6 +5,7 @@
 
 import { beforeEach, describe, it, expect, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import createFilterResolver from '../../../src/scopeDsl/nodes/filterResolver.js';
@@ -90,7 +91,7 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
     });
 
     // Create TargetResolutionService
-    targetResolutionService = new TargetResolutionService({
+    targetResolutionService = createTargetResolutionServiceWithMocks({
       entityManager: mockEntityManager,
       logger: mockLogger,
       registryIndexes: mockRegistryIndexes,

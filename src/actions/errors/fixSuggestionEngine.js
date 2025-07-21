@@ -88,7 +88,7 @@ export class FixSuggestionEngine extends BaseService {
     }
 
     // Check for prerequisite failures
-    if (phase === 'validation' && actionDef.prerequisites) {
+    if (phase === 'validation' && actionDef && actionDef.prerequisites) {
       suggestions.push(
         ...this.#suggestPrerequisiteFixes(error, actionDef, actorSnapshot)
       );
@@ -195,14 +195,14 @@ export class FixSuggestionEngine extends BaseService {
         details: {
           componentId,
           actorId: actorSnapshot.id,
-          requiredBy: actionDef.id,
+          requiredBy: actionDef?.id || 'unknown',
         },
         confidence: 0.9,
       });
     }
 
     // Check prerequisites for required components
-    if (actionDef.prerequisites) {
+    if (actionDef && actionDef.prerequisites) {
       const requiredComponents = this.#extractRequiredComponents(
         actionDef.prerequisites
       );
@@ -210,7 +210,7 @@ export class FixSuggestionEngine extends BaseService {
         if (!actorSnapshot.components[compId]) {
           fixes.push({
             type: FIX_TYPES.MISSING_COMPONENT,
-            description: `Actor is missing required component '${compId}' for action '${actionDef.id}'`,
+            description: `Actor is missing required component '${compId}' for action '${actionDef?.id || 'unknown'}'`,
             details: {
               componentId: compId,
               actorId: actorSnapshot.id,
@@ -313,10 +313,14 @@ export class FixSuggestionEngine extends BaseService {
     /** @type {SuggestedFix[]} */
     const fixes = [];
 
-    if (actionDef.prerequisites && actionDef.prerequisites.length > 0) {
+    if (
+      actionDef &&
+      actionDef.prerequisites &&
+      actionDef.prerequisites.length > 0
+    ) {
       fixes.push({
         type: FIX_TYPES.MISSING_PREREQUISITE,
-        description: `Action '${actionDef.id}' has prerequisites that are not met`,
+        description: `Action '${actionDef?.id || 'unknown'}' has prerequisites that are not met`,
         details: {
           prerequisites: actionDef.prerequisites,
           actorComponents: Object.keys(actorSnapshot.components),
@@ -346,7 +350,7 @@ export class FixSuggestionEngine extends BaseService {
       type: FIX_TYPES.INVALID_TARGET,
       description: 'No valid targets found for the action',
       details: {
-        actionScope: actionDef.scope || 'none',
+        actionScope: actionDef?.scope || 'none',
         actorLocation: actorSnapshot.location,
         suggestion: 'Verify that entities exist in the expected scope/location',
       },

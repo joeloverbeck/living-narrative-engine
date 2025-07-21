@@ -136,7 +136,9 @@ describe('Notes Formatting Integration', () => {
       });
 
       // Test new default behavior - should be grouped format by default
-      expect(formattedPromptData.notesContent).toContain('- John seems nervous about the council meeting');
+      expect(formattedPromptData.notesContent).toContain(
+        '- John seems nervous about the council meeting'
+      );
       expect(formattedPromptData.notesContent).toContain('## Characters');
 
       // Step 3: Test grouped formatting explicitly
@@ -153,9 +155,15 @@ describe('Notes Formatting Integration', () => {
       expect(groupedNotesContent).toContain('### The Missing Shipment');
 
       // Verify content and formatting
-      expect(groupedNotesContent).toContain('- John seems nervous about the council meeting (tavern conversation) [emotion, politics]');
-      expect(groupedNotesContent).toContain('- Always carries that strange medallion (morning observation) [mystery, artifact]');
-      expect(groupedNotesContent).toContain('- Guards doubled at the north gate (morning patrol) [security, observation]');
+      expect(groupedNotesContent).toContain(
+        '- John seems nervous about the council meeting (tavern conversation) [emotion, politics]'
+      );
+      expect(groupedNotesContent).toContain(
+        '- Always carries that strange medallion (morning observation) [mystery, artifact]'
+      );
+      expect(groupedNotesContent).toContain(
+        '- Guards doubled at the north gate (morning patrol) [security, observation]'
+      );
 
       // Step 4: Test complete notes section with grouping
       const groupedNotesSection = promptDataFormatter.formatNotesSection(
@@ -241,7 +249,10 @@ describe('Notes Formatting Integration', () => {
       const largeNotesArray = Array.from({ length: 100 }, (_, index) => ({
         text: `Note ${index + 1}`,
         subject: `Subject ${(index % 10) + 1}`,
-        subjectType: Object.values(SUBJECT_TYPES)[index % Object.values(SUBJECT_TYPES).length],
+        subjectType:
+          Object.values(SUBJECT_TYPES)[
+            index % Object.values(SUBJECT_TYPES).length
+          ],
         context: `Context ${index + 1}`,
         tags: [`tag${index + 1}`, `category${(index % 5) + 1}`],
         timestamp: new Date(2024, 0, 1, index % 24).toISOString(),
@@ -269,7 +280,7 @@ describe('Notes Formatting Integration', () => {
 
       // Measure processing time
       const startTime = Date.now();
-      
+
       const promptData = await promptContentProvider.getPromptData(
         gameStateDto,
         mockLogger
@@ -288,7 +299,7 @@ describe('Notes Formatting Integration', () => {
       expect(promptData.notesArray).toHaveLength(100);
       expect(groupedContent).toContain('## Characters');
       expect(groupedContent).toContain('### Subject 1');
-      
+
       // Verify all subjects are present
       for (let i = 1; i <= 10; i++) {
         expect(groupedContent).toContain(`### Subject ${i}`);
@@ -323,7 +334,8 @@ describe('Notes Formatting Integration', () => {
 
       expect(promptData.notesArray).toEqual([]);
 
-      const formattedPromptData = promptDataFormatter.formatPromptData(promptData);
+      const formattedPromptData =
+        promptDataFormatter.formatPromptData(promptData);
       expect(formattedPromptData.notesContent).toBe('');
       expect(formattedPromptData.notesSection).toBe('');
 
@@ -403,13 +415,20 @@ describe('Notes Formatting Integration', () => {
         mockLogger
       );
 
-      const formattedPromptData = promptDataFormatter.formatPromptData(promptData);
+      const formattedPromptData =
+        promptDataFormatter.formatPromptData(promptData);
 
       // Verify default is now grouped format
       expect(formattedPromptData.notesContent).toContain('## Characters');
-      expect(formattedPromptData.notesContent).toContain('### Template Subject');
-      expect(formattedPromptData.notesContent).toContain('- Test note for template (template context) [template, test]');
-      expect(formattedPromptData.notesSection).toContain('<notes>\n## Characters\n### Template Subject\n- Test note for template (template context) [template, test]\n</notes>');
+      expect(formattedPromptData.notesContent).toContain(
+        '### Template Subject'
+      );
+      expect(formattedPromptData.notesContent).toContain(
+        '- Test note for template (template context) [template, test]'
+      );
+      expect(formattedPromptData.notesSection).toContain(
+        '<notes>\n## Characters\n### Template Subject\n- Test note for template (template context) [template, test]\n</notes>'
+      );
 
       // Test that grouped section formatting can be applied
       const groupedNotesSection = promptDataFormatter.formatNotesSection(
@@ -420,7 +439,9 @@ describe('Notes Formatting Integration', () => {
       expect(groupedNotesSection).toContain('<notes>');
       expect(groupedNotesSection).toContain('## Characters');
       expect(groupedNotesSection).toContain('### Template Subject');
-      expect(groupedNotesSection).toContain('- Test note for template (template context) [template, test]');
+      expect(groupedNotesSection).toContain(
+        '- Test note for template (template context) [template, test]'
+      );
       expect(groupedNotesSection).toContain('</notes>');
     });
   });
@@ -463,7 +484,11 @@ describe('Notes Formatting Integration', () => {
       // Test different option combinations
       const optionsTestCases = [
         {
-          options: { groupBySubject: true, showContext: false, showTags: false },
+          options: {
+            groupBySubject: true,
+            showContext: false,
+            showTags: false,
+          },
           expectedContent: '- Note with options test',
           expectedNotToContain: ['(options context)', '[option1, option2]'],
         },
@@ -479,14 +504,19 @@ describe('Notes Formatting Integration', () => {
         },
       ];
 
-      optionsTestCases.forEach(({ options, expectedContent, expectedNotToContain }) => {
-        const result = promptDataFormatter.formatNotes(promptData.notesArray, options);
-        
-        expect(result).toContain(expectedContent);
-        expectedNotToContain.forEach((notExpected) => {
-          expect(result).not.toContain(notExpected);
-        });
-      });
+      optionsTestCases.forEach(
+        ({ options, expectedContent, expectedNotToContain }) => {
+          const result = promptDataFormatter.formatNotes(
+            promptData.notesArray,
+            options
+          );
+
+          expect(result).toContain(expectedContent);
+          expectedNotToContain.forEach((notExpected) => {
+            expect(result).not.toContain(notExpected);
+          });
+        }
+      );
     });
   });
 });

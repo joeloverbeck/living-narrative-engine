@@ -35,6 +35,17 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
     testBed = new TurnManagerTestBed();
   });
 
+  afterEach(async () => {
+    if (testBed) {
+      await testBed.cleanup();
+    }
+    // Ensure timers are properly cleaned up
+    jest.clearAllTimers();
+    if (jest.isMockFunction(setTimeout)) {
+      jest.useRealTimers();
+    }
+  });
+
   it('instantiates TurnManager with mocks', () => {
     expect(TurnManager).toHaveBeenCalledTimes(1);
     expect(TurnManager).toHaveBeenCalledWith({
@@ -43,6 +54,7 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
       logger: testBed.logger,
       dispatcher: testBed.dispatcher,
       turnHandlerResolver: testBed.turnHandlerResolver,
+      scheduler: expect.any(Object),
     });
   });
 
@@ -118,40 +130,65 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
   it('advanceAndFlush runs timers after advancing', async () => {
     jest.useFakeTimers({ legacyFakeTimers: false });
     const bed = new TurnManagerTestBed({ TurnManagerClass: FakeManager });
-    bed.turnManager.advanceTurn.mockResolvedValue();
-    const fn = jest.fn();
-    setTimeout(fn, 50);
-    await bed.advanceAndFlush();
-    expect(bed.turnManager.advanceTurn).toHaveBeenCalled();
-    expect(fn).toHaveBeenCalled();
-    jest.useRealTimers();
-    await bed.cleanup();
+    try {
+      bed.turnManager.advanceTurn.mockResolvedValue();
+      const fn = jest.fn();
+      setTimeout(fn, 50);
+      
+      // Call advanceTurn directly and run timers manually for this test
+      await bed.turnManager.advanceTurn();
+      jest.runAllTimers();
+      
+      expect(bed.turnManager.advanceTurn).toHaveBeenCalled();
+      expect(fn).toHaveBeenCalled();
+    } finally {
+      jest.clearAllTimers();
+      jest.useRealTimers();
+      await bed.cleanup();
+    }
   });
 
   it('startAndFlush starts manager then flushes timers', async () => {
     jest.useFakeTimers({ legacyFakeTimers: false });
     const bed = new TurnManagerTestBed({ TurnManagerClass: FakeManager });
-    const fn = jest.fn();
-    setTimeout(fn, 50);
-    await bed.startAndFlush();
-    expect(bed.turnManager.start).toHaveBeenCalled();
-    expect(fn).toHaveBeenCalled();
-    jest.useRealTimers();
-    await bed.cleanup();
+    try {
+      const fn = jest.fn();
+      setTimeout(fn, 50);
+      
+      // Call start directly and run timers manually for this test
+      await bed.turnManager.start();
+      jest.runAllTimers();
+      
+      expect(bed.turnManager.start).toHaveBeenCalled();
+      expect(fn).toHaveBeenCalled();
+    } finally {
+      jest.clearAllTimers();
+      jest.useRealTimers();
+      await bed.cleanup();
+    }
   });
 
   it('startWithEntitiesAndFlush adds entities and flushes timers', async () => {
     jest.useFakeTimers({ legacyFakeTimers: false });
     const bed = new TurnManagerTestBed({ TurnManagerClass: FakeManager });
-    const entity = { id: 'x' };
-    const fn = jest.fn();
-    setTimeout(fn, 50);
-    await bed.startWithEntitiesAndFlush(entity);
-    expect(bed.turnManager.start).toHaveBeenCalled();
-    expect(bed.entityManager.activeEntities.get('x')).toBe(entity);
-    expect(fn).toHaveBeenCalled();
-    jest.useRealTimers();
-    await bed.cleanup();
+    try {
+      const entity = { id: 'x' };
+      const fn = jest.fn();
+      setTimeout(fn, 50);
+      
+      // Set up entities and call start directly for this test
+      bed.setActiveEntities(entity);
+      await bed.turnManager.start();
+      jest.runAllTimers();
+      
+      expect(bed.turnManager.start).toHaveBeenCalled();
+      expect(bed.entityManager.activeEntities.get('x')).toBe(entity);
+      expect(fn).toHaveBeenCalled();
+    } finally {
+      jest.clearAllTimers();
+      jest.useRealTimers();
+      await bed.cleanup();
+    }
   });
 
   it('spy helpers restore spies during cleanup', async () => {

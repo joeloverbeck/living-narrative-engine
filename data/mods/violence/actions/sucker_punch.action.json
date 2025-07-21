@@ -1,0 +1,7 @@
+{
+  "id": "violence:sucker_punch",
+  "name": "Sucker Punch",
+  "description": "Throw an unexpected punch at someone when they're not looking",
+  "scope": "core:actors_in_location",
+  "template": "sucker-punch {target}"
+}

@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { generateMockAst } from '../../common/scopeDsl/mockAstGenerator.js';
 import { ERROR_PHASES } from '../../../src/actions/errors/actionErrorTypes.js';
 
@@ -44,7 +45,7 @@ describe('TargetResolutionService - Missing Coverage', () => {
       },
     };
 
-    service = new TargetResolutionService(mockDependencies);
+    service = createTargetResolutionServiceWithMocks(mockDependencies);
   });
 
   describe('buildActorWithComponents catch block (lines 504-507)', () => {
@@ -55,7 +56,9 @@ describe('TargetResolutionService - Missing Coverage', () => {
         ast: generateMockAst('entities.all()'),
       };
       mockDependencies.scopeRegistry.getScope.mockReturnValue(scopeDefinition);
-      mockDependencies.scopeEngine.resolve.mockReturnValue(new Set(['entity1']));
+      mockDependencies.scopeEngine.resolve.mockReturnValue(
+        new Set(['entity1'])
+      );
 
       // Create an actor entity with problematic properties that will cause spread operator to fail
       const actorEntity = {
@@ -64,7 +67,7 @@ describe('TargetResolutionService - Missing Coverage', () => {
         // Add a getter that throws when accessed during spread operation
         get problemProperty() {
           throw new Error('Property access failure');
-        }
+        },
       };
 
       const trace = {
@@ -85,17 +88,12 @@ describe('TargetResolutionService - Missing Coverage', () => {
       expect(result.success).toBe(false);
       expect(result.errors).toHaveLength(1);
 
-      // Verify error logging includes the service name prefix
-      expect(mockDependencies.logger.error).toHaveBeenCalledWith(
-        'TargetResolutionService: Failed to build actor with components: Property access failure',
-        expect.any(Error)
-      );
+      // In this test, the actionErrorContextBuilder is mocked to return the error directly
+      expect(result.errors[0].message).toContain('Property access failure');
 
-      // Verify trace error logging
-      expect(trace.error).toHaveBeenCalledWith(
-        'Failed to build actor with components: Property access failure',
-        'TargetResolutionService.#resolveScopeToIds'
-      );
+      // With the new implementation, errors are caught in the UnifiedScopeResolver
+      // and returned as ActionResult failures, not logged by TargetResolutionService
+      expect(mockDependencies.logger.error).not.toHaveBeenCalled();
     });
   });
 
@@ -106,7 +104,7 @@ describe('TargetResolutionService - Missing Coverage', () => {
         expr: 'invalid expression',
       };
       mockDependencies.scopeRegistry.getScope.mockReturnValue(scopeDefinition);
-      
+
       // Make dslParser.parse throw an error to trigger handleResolutionError
       mockDependencies.dslParser.parse.mockImplementation(() => {
         throw new Error('Parse error');
@@ -117,22 +115,19 @@ describe('TargetResolutionService - Missing Coverage', () => {
       };
 
       // Act: This should trigger the parse error path which calls handleResolutionError
-      const result = service.resolveTargets(
-        'invalid-scope',
-        actorEntity,
-        { currentLocation: 'loc1' }
-      );
+      const result = service.resolveTargets('invalid-scope', actorEntity, {
+        currentLocation: 'loc1',
+      });
 
       // Assert: Should still return a failure result
       expect(result.success).toBe(false);
       expect(result.errors).toHaveLength(1);
+      // In this test, the actionErrorContextBuilder is mocked to return the error directly
       expect(result.errors[0].name).toBe('ScopeParseError');
 
-      // Verify parse error was logged with service prefix
-      expect(mockDependencies.logger.error).toHaveBeenCalledWith(
-        'TargetResolutionService: Failed to parse scope expression for \'invalid-scope\': Parse error',
-        expect.any(Error)
-      );
+      // With the new implementation, parse errors are handled in UnifiedScopeResolver
+      // and returned as ActionResult failures, not logged by TargetResolutionService
+      expect(mockDependencies.logger.error).not.toHaveBeenCalled();
     });
 
     it('should trigger legacy error handling when buildErrorContext fails', () => {
@@ -142,53 +137,39 @@ describe('TargetResolutionService - Missing Coverage', () => {
       // Mock buildErrorContext to fail the FIRST call only (in #handleResolutionError)
       // This forces the legacy error handling path
       let firstCall = true;
-      mockDependencies.actionErrorContextBuilder.buildErrorContext.mockImplementation(() => {
-        if (firstCall) {
-          firstCall = false;
-          throw new Error('Context building failed');
+      mockDependencies.actionErrorContextBuilder.buildErrorContext.mockImplementation(
+        () => {
+          if (firstCall) {
+            firstCall = false;
+            throw new Error('Context building failed');
+          }
+          return { error: new Error('Second call') };
         }
-        return { error: new Error('Second call') };
-      });
+      );
 
       const actorEntity = {
         id: 'actor1',
       };
 
       // Act: This triggers scope not found -> handleResolutionError -> buildErrorContext throws
-      const result = service.resolveTargets(
-        'missing-scope',
-        actorEntity,
-        { currentLocation: 'loc1' },
-        null,
-        'test-action'
-      );
+      // With the new implementation, when buildErrorContext fails in the mock,
+      // it throws an error which is not caught
+      expect(() => {
+        service.resolveTargets(
+          'missing-scope',
+          actorEntity,
+          { currentLocation: 'loc1' },
+          null,
+          'test-action'
+        );
+      }).toThrow('Context building failed');
 
-      // Assert: Should return failure from the main error path
-      expect(result.success).toBe(false);
-      expect(result.errors).toHaveLength(1);
-
-      // Verify legacy error handling was triggered (in #handleResolutionError)
-      expect(mockDependencies.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to build error context'),
-        expect.any(Error)
-      );
-
-      // Verify the missing scope error was also logged
-      expect(mockDependencies.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Missing scope definition'),
-        expect.any(Error)
-      );
-
-      // Verify safeDispatchError was called (legacy path)
-      expect(mockDependencies.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'core:system_error_occurred',
-        expect.objectContaining({
-          message: expect.stringContaining('Missing scope definition'),
-          details: expect.objectContaining({
-            scopeName: 'missing-scope',
-          }),
-        })
-      );
+      // In the new implementation, the TargetResolutionService doesn't handle errors directly
+      // The UnifiedScopeResolver throws the error which propagates up
+      expect(mockDependencies.logger.error).not.toHaveBeenCalled();
+      expect(
+        mockDependencies.safeEventDispatcher.dispatch
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -196,7 +177,7 @@ describe('TargetResolutionService - Missing Coverage', () => {
     it('should handle scope resolution with complex error path', () => {
       // This test is designed to cover edge cases in the resolution process
       // by creating a scenario where buildRuntimeContext creates invalid context
-      
+
       const scopeDefinition = {
         expr: 'entities.all()',
         ast: generateMockAst('entities.all()'),
@@ -210,7 +191,9 @@ describe('TargetResolutionService - Missing Coverage', () => {
       };
 
       // Mock component data to return successfully
-      mockDependencies.entityManager.getComponentData.mockReturnValue({ value: 100 });
+      mockDependencies.entityManager.getComponentData.mockReturnValue({
+        value: 100,
+      });
 
       // Create a problematic discovery context that might cause issues
       // in the runtime context building process
@@ -218,7 +201,7 @@ describe('TargetResolutionService - Missing Coverage', () => {
         get currentLocation() {
           // This getter might cause issues during runtime context building
           return null;
-        }
+        },
       };
 
       // Make the scope engine throw an error to trigger error handling
@@ -240,7 +223,9 @@ describe('TargetResolutionService - Missing Coverage', () => {
       expect(result.errors).toHaveLength(1);
 
       // Verify error handling was triggered
-      expect(mockDependencies.actionErrorContextBuilder.buildErrorContext).toHaveBeenCalled();
+      expect(
+        mockDependencies.actionErrorContextBuilder.buildErrorContext
+      ).toHaveBeenCalled();
     });
 
     it('should handle invalid runtime context scenario', () => {
@@ -253,7 +238,7 @@ describe('TargetResolutionService - Missing Coverage', () => {
 
       // Override entityManager temporarily to be null after service construction
       const originalEntityManager = mockDependencies.entityManager;
-      
+
       // Create an actor without components to minimize other complications
       const actorEntity = {
         id: 'actor1',
@@ -263,13 +248,11 @@ describe('TargetResolutionService - Missing Coverage', () => {
       // Try to trigger runtime context validation failure by making entityManager null
       // This would need to happen after buildActorWithComponents but before scope resolution
       const spy = jest.spyOn(service, 'resolveTargets');
-      
+
       // Act: This scenario tries to exercise the runtime context validation
-      const result = service.resolveTargets(
-        'test-scope',
-        actorEntity,
-        { currentLocation: null }
-      );
+      const result = service.resolveTargets('test-scope', actorEntity, {
+        currentLocation: null,
+      });
 
       // Assert: Even if we can't trigger the exact validation, test should not crash
       expect(result).toBeDefined();

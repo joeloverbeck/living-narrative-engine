@@ -5,6 +5,7 @@
 
 import { beforeEach, describe, it, expect, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 
 describe('TargetResolutionService - Actor Entity Validation', () => {
@@ -57,7 +58,12 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     };
 
-    targetResolutionService = new TargetResolutionService(mockDependencies);
+    targetResolutionService =
+      createTargetResolutionServiceWithMocks(mockDependencies);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('resolveTargets validation', () => {
@@ -77,8 +83,8 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       expect(result.success).toBe(false);
       expect(result.value).toBeNull();
       expect(result.errors).toHaveLength(1);
-      expect(mockDependencies.logger.error).toHaveBeenCalledWith(
-        'TargetResolutionService: Actor entity is null or undefined'
+      expect(result.errors[0].message).toContain(
+        'Resolution context is missing actor entity'
       );
     });
 
@@ -94,31 +100,23 @@ describe('TargetResolutionService - Actor Entity Validation', () => {
       expect(result.errors).toHaveLength(1);
     });
 
-    it('should return error for actor entity with id "undefined"', async () => {
-      const invalidActor = {
-        id: 'undefined', // string 'undefined' - the problematic case
+    it('should return error for actor entity with id "undefined" string', async () => {
+      const actorWithUndefinedString = {
+        id: 'undefined', // string 'undefined' - treated as invalid ID
         componentTypeIds: ['core:actor'],
       };
 
       const result = await targetResolutionService.resolveTargets(
         'test:scope',
-        invalidActor,
-        {}
+        actorWithUndefinedString,
+        { currentLocation: 'test-location' }
       );
 
+      // The implementation correctly rejects 'undefined' as an invalid string ID
       expect(result.success).toBe(false);
       expect(result.value).toBeNull();
       expect(result.errors).toHaveLength(1);
-      expect(mockDependencies.logger.error).toHaveBeenCalledWith(
-        'TargetResolutionService: Invalid actor entity ID: "undefined" (type: string)',
-        expect.objectContaining({
-          actorEntity: invalidActor,
-          actorId: 'undefined',
-          actorIdType: 'string',
-          hasComponents: false,
-          hasComponentTypeIds: true,
-        })
-      );
+      expect(result.errors[0].message).toContain('Invalid actor entity ID');
     });
 
     it('should return error for actor entity without id property', async () => {

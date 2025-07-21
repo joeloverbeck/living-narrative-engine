@@ -52,9 +52,15 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
       expect(result).toContain('### John');
       expect(result).toContain('## Locations');
       expect(result).toContain('### The North Gate');
-      expect(result).toContain('- John seems nervous about the meeting (tavern conversation) [emotion, politics]');
-      expect(result).toContain('- The north gate has extra guards (morning patrol) [security]');
-      expect(result).toContain('- John always carries a medallion (observation) [mystery, artifact]');
+      expect(result).toContain(
+        '- John seems nervous about the meeting (tavern conversation) [emotion, politics]'
+      );
+      expect(result).toContain(
+        '- The north gate has extra guards (morning patrol) [security]'
+      );
+      expect(result).toContain(
+        '- John always carries a medallion (observation) [mystery, artifact]'
+      );
     });
 
     test('should handle notes without context or tags gracefully', () => {
@@ -81,7 +87,9 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
       const result = formatter.formatNotes(notes, { groupBySubject: true });
 
       expect(result).toContain('- Simple note without extras');
-      expect(result).toContain('- Note with context only (overheard conversation)');
+      expect(result).toContain(
+        '- Note with context only (overheard conversation)'
+      );
       expect(result).toContain('- Note with tags only [important]');
     });
 
@@ -292,7 +300,9 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
 
     test('should handle null/undefined notes array', () => {
       expect(formatter.formatNotes(null, { groupBySubject: true })).toBe('');
-      expect(formatter.formatNotes(undefined, { groupBySubject: true })).toBe('');
+      expect(formatter.formatNotes(undefined, { groupBySubject: true })).toBe(
+        ''
+      );
     });
 
     test('should filter out invalid notes gracefully', () => {
@@ -377,7 +387,9 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
         },
       ];
 
-      const result = formatter.formatNotesSection(notes, { groupBySubject: true });
+      const result = formatter.formatNotesSection(notes, {
+        groupBySubject: true,
+      });
 
       expect(result).toMatch(/^<notes>\n[\s\S]*\n<\/notes>$/);
       expect(result).toContain('## Characters');
@@ -398,7 +410,9 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
 
       const result = formatter.formatNotesSection(notes);
 
-      expect(result).toContain('<notes>\n## Other\n### General\n- Test note\n</notes>');
+      expect(result).toContain(
+        '<notes>\n## Other\n### General\n- Test note\n</notes>'
+      );
     });
   });
 });

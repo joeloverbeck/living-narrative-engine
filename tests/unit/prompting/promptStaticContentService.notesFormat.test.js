@@ -116,7 +116,9 @@ describe('PromptStaticContentService - Enhanced Notes Format', () => {
       expect(finalInstructions).toContain('"subject": "City defenses"');
       expect(finalInstructions).toContain('"subjectType": "location"');
       expect(finalInstructions).toContain('"context": "morning patrol"');
-      expect(finalInstructions).toContain('"tags": ["security", "observation"]');
+      expect(finalInstructions).toContain(
+        '"tags": ["security", "observation"]'
+      );
     });
 
     test('should include skill example with subjectType', () => {
@@ -196,9 +198,7 @@ describe('PromptStaticContentService - Enhanced Notes Format', () => {
       const finalInstructions = service.getFinalLlmInstructionText();
 
       // Extract example JSON blocks and validate they're properly formatted
-      const jsonMatches = finalInstructions.match(
-        /\{\s*"text":[^}]+\}/g
-      );
+      const jsonMatches = finalInstructions.match(/\{\s*"text":[^}]+\}/g);
 
       expect(jsonMatches).toBeTruthy();
       expect(jsonMatches.length).toBeGreaterThanOrEqual(3);
@@ -223,8 +223,8 @@ describe('PromptStaticContentService - Enhanced Notes Format', () => {
       expect(subjectTypeMatches.length).toBeGreaterThanOrEqual(3);
 
       // Extract the actual values
-      const subjectTypes = subjectTypeMatches.map((match) =>
-        match.match(/"subjectType":\s*"([^"]+)"/)[1]
+      const subjectTypes = subjectTypeMatches.map(
+        (match) => match.match(/"subjectType":\s*"([^"]+)"/)[1]
       );
 
       // Should have variety (at least 2 different types)
