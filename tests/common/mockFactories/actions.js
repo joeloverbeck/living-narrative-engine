@@ -49,17 +49,17 @@ export const createMockTargetResolutionService = () => {
  * @returns {{ buildErrorContext: jest.Mock }} Mock action error context builder
  */
 export const createMockActionErrorContextBuilder = () => ({
-  buildErrorContext: jest.fn(() => ({
-    actionId: 'test',
-    targetId: null,
-    error: new Error('Test error'),
-    actionDefinition: {},
-    actorSnapshot: {},
+  buildErrorContext: jest.fn((params) => ({
+    actionId: params?.actionDef?.id || 'test',
+    targetId: params?.targetId || null,
+    error: params?.error || new Error('Test error'),
+    actionDefinition: params?.actionDef || {},
+    actorSnapshot: params?.actorSnapshot || {},
     evaluationTrace: { steps: [], failurePoint: 'Unknown', finalContext: {} },
     suggestedFixes: [],
-    environmentContext: {},
+    environmentContext: params?.additionalContext || {},
     timestamp: Date.now(),
-    phase: 'resolution',
+    phase: params?.phase || 'resolution',
   })),
 });
 

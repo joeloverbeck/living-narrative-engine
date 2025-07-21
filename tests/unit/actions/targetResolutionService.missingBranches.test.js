@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import { generateMockAst } from '../../common/scopeDsl/mockAstGenerator.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
@@ -30,7 +31,7 @@ describe('TargetResolutionService uncovered branches', () => {
     mockJsonLogic = { evaluate: jest.fn() };
     mockDslParser = { parse: jest.fn((expr) => generateMockAst(expr)) };
 
-    service = new TargetResolutionService({
+    service = createTargetResolutionServiceWithMocks({
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
       entityManager: mockEntityManager,
@@ -100,9 +101,15 @@ describe('TargetResolutionService uncovered branches', () => {
     expect(result.success).toBe(false);
     expect(result.value).toBeNull();
     expect(result.errors).toHaveLength(1);
+    // The error is wrapped in an error context object
+    expect(result.errors[0].error.message).toBe(
+      'Failed to load any components for actor'
+    );
+    expect(result.errors[0].error.name).toBe('ComponentLoadError');
+    // The trace.error is called from buildActorWithComponents
     expect(trace.error).toHaveBeenCalledWith(
-      `Failed to get component data for c1 on actor hero: ${error.message}`,
-      'TargetResolutionService.#resolveScopeToIds'
+      `Failed to load component c1: ${error.message}`,
+      'MockUnifiedScopeResolver.resolve'
     );
   });
 });

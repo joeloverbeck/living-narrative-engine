@@ -19,7 +19,7 @@ import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.
 import { createMockActionErrorContextBuilder } from '../../../common/mockFactories/actions.js';
 import turnAroundToFaceAction from '../../../../data/mods/intimacy/actions/turn_around_to_face.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
-import { TargetResolutionService } from '../../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../../common/mocks/mockUnifiedScopeResolver.js';
 import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionParser.js';
@@ -92,7 +92,7 @@ describe('Turn Around to Face Action Discovery', () => {
     });
 
     // Set up target resolution service
-    targetResolutionService = new TargetResolutionService({
+    targetResolutionService = createTargetResolutionServiceWithMocks({
       entityManager,
       scopeEngine,
       scopeRegistry,

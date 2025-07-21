@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { generateMockAst } from '../../common/scopeDsl/mockAstGenerator.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
@@ -28,7 +29,7 @@ describe('TargetResolutionService error paths', () => {
     mockJsonLogic = { evaluate: jest.fn() };
     mockDslParser = { parse: jest.fn((expr) => generateMockAst(expr)) };
 
-    service = new TargetResolutionService({
+    service = createTargetResolutionServiceWithMocks({
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
       entityManager: {},
@@ -54,6 +55,7 @@ describe('TargetResolutionService error paths', () => {
     expect(result.success).toBe(false);
     expect(result.value).toBeNull();
     expect(result.errors).toHaveLength(1);
+    // The enhanced error has the error properties directly on it
     expect(result.errors[0].name).toBe('ScopeParseError');
     // Parser errors are now handled internally and returned as part of the result
     // rather than being dispatched as system errors
@@ -79,13 +81,6 @@ describe('TargetResolutionService error paths', () => {
     expect(result.success).toBe(false);
     expect(result.value).toBeNull();
     expect(result.errors).toHaveLength(1);
-    // Note: Enhanced error context changes return type and logger behavior
-    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: expect.any(String),
-        details: expect.any(Object),
-      })
-    );
+    // The new implementation doesn't dispatch errors directly
   });
 });

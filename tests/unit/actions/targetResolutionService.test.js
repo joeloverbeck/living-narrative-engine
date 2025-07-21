@@ -11,6 +11,7 @@ import {
   TARGET_DOMAIN_NONE,
 } from '../../../src/constants/targetDomains.js';
 import { ERROR_PHASES } from '../../../src/actions/errors/actionErrorTypes.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 
 describe('TargetResolutionService', () => {
   let service;
@@ -49,7 +50,7 @@ describe('TargetResolutionService', () => {
       },
     };
 
-    service = new TargetResolutionService(mockDependencies);
+    service = createTargetResolutionServiceWithMocks(mockDependencies);
   });
 
   describe('resolveTargets', () => {
@@ -89,9 +90,9 @@ describe('TargetResolutionService', () => {
         expect(result.success).toBe(false);
         expect(result.errors).toHaveLength(1);
         expect(result.errors[0].message).toContain(
-          'Actor entity is null or undefined'
+          'Resolution context is missing actor entity'
         );
-        expect(result.errors[0].name).toBe('InvalidActorError');
+        expect(result.errors[0].name).toBe('InvalidContextError');
       });
 
       it('should fail when actor entity has no id', () => {
@@ -114,8 +115,10 @@ describe('TargetResolutionService', () => {
           { currentLocation: 'loc1' }
         );
 
+        // The implementation correctly rejects 'undefined' as an invalid string ID
         expect(result.success).toBe(false);
         expect(result.errors).toHaveLength(1);
+        expect(result.errors[0].name).toBe('InvalidActorIdError');
         expect(result.errors[0].message).toContain('Invalid actor entity ID');
       });
     });

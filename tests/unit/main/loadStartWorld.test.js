@@ -1,4 +1,11 @@
-import { jest, describe, it, expect, afterEach } from '@jest/globals';
+import {
+  jest,
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 
 const mockEnsure = jest.fn();
 const mockSetupDI = jest.fn();
@@ -52,7 +59,13 @@ function setupStageMocks(uiElements) {
   return logger;
 }
 
+beforeEach(() => {
+  jest.useFakeTimers();
+});
+
 afterEach(() => {
+  jest.clearAllTimers();
+  jest.useRealTimers();
   jest.resetModules();
   jest.clearAllMocks();
   if (global.fetch) delete global.fetch;
@@ -85,9 +98,11 @@ describe('loadStartWorld via bootstrapApp', () => {
       main = await import('../../../src/main.js');
     });
     await main.bootstrapApp();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
     await main.beginGame();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
 
     expect(fetch).toHaveBeenCalledWith('./data/game.json');
     expect(mockStartGame).toHaveBeenCalledWith(
@@ -117,9 +132,11 @@ describe('loadStartWorld via bootstrapApp', () => {
       main = await import('../../../src/main.js');
     });
     await main.bootstrapApp();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
     await main.beginGame();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
 
     expect(mockStartGame).toHaveBeenCalledWith(
       expect.anything(),
@@ -148,9 +165,11 @@ describe('loadStartWorld via bootstrapApp', () => {
       main = await import('../../../src/main.js');
     });
     await main.bootstrapApp();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
     await main.beginGame();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
 
     expect(console.error).toHaveBeenCalled();
     expect(mockStartGame).toHaveBeenCalledWith(
@@ -178,9 +197,11 @@ describe('loadStartWorld via bootstrapApp', () => {
       main = await import('../../../src/main.js');
     });
     await main.bootstrapApp();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
     await main.beginGame();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
 
     expect(console.error).toHaveBeenCalled();
     expect(mockStartGame).toHaveBeenCalledWith(

@@ -56,13 +56,13 @@ describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug
     // This is the exact structure from the sugar_mommy character definition
     const sugarMommyGoals = [
       {
-        text: 'I will cement myself as the indispensable face of Donostia\'s art film festivals - visibly steering funding panels, commanding introductions, claiming photographic prominence.',
+        text: "I will cement myself as the indispensable face of Donostia's art film festivals - visibly steering funding panels, commanding introductions, claiming photographic prominence.",
       },
       {
         text: 'I must procure the perfect residence - my discretionary funds will manifest my architecture of control. Every view, every line, obsessively chosen to be my fortress.',
       },
       {
-        text: 'I want a handsome young man, perhaps even a teenage boy, to become mine. I will use my husband\'s wealth and my sexuality to keep my lover\'s attention, to ensure he is always available to me. And his passion, which will be mine to command, will make me feel alive again, and powerful.',
+        text: "I want a handsome young man, perhaps even a teenage boy, to become mine. I will use my husband's wealth and my sexuality to keep my lover's attention, to ensure he is always available to me. And his passion, which will be mine to command, will make me feel alive again, and powerful.",
       },
     ];
 
@@ -91,16 +91,16 @@ describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug
     // Verify goals are extracted correctly
     expect(Array.isArray(promptData.goalsArray)).toBe(true);
     expect(promptData.goalsArray).toHaveLength(3);
-    
+
     // Verify exact content matches
     expect(promptData.goalsArray[0].text).toBe(
-      'I will cement myself as the indispensable face of Donostia\'s art film festivals - visibly steering funding panels, commanding introductions, claiming photographic prominence.'
+      "I will cement myself as the indispensable face of Donostia's art film festivals - visibly steering funding panels, commanding introductions, claiming photographic prominence."
     );
     expect(promptData.goalsArray[1].text).toBe(
       'I must procure the perfect residence - my discretionary funds will manifest my architecture of control. Every view, every line, obsessively chosen to be my fortress.'
     );
     expect(promptData.goalsArray[2].text).toBe(
-      'I want a handsome young man, perhaps even a teenage boy, to become mine. I will use my husband\'s wealth and my sexuality to keep my lover\'s attention, to ensure he is always available to me. And his passion, which will be mine to command, will make me feel alive again, and powerful.'
+      "I want a handsome young man, perhaps even a teenage boy, to become mine. I will use my husband's wealth and my sexuality to keep my lover's attention, to ensure he is always available to me. And his passion, which will be mine to command, will make me feel alive again, and powerful."
     );
 
     // Verify no timestamp fields are added when not present
@@ -124,11 +124,8 @@ describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug
         components: {
           'core:short_term_memory': { thoughts: [] },
           'core:notes': { notes: [] },
-          'core:goals': { 
-            goals: [
-              { text: 'Goal 1' },
-              { text: 'Goal 2' },
-            ]
+          'core:goals': {
+            goals: [{ text: 'Goal 1' }, { text: 'Goal 2' }],
           },
         },
       },

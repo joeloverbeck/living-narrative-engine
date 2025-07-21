@@ -1,12 +1,12 @@
 // tests/config/containerConfig.test.js
 
-import AppContainer from '../../../src/dependencyInjection/appContainer.js'; // Adjust path as needed
-import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js'; // Adjust path
-import { tokens } from '../../../src/dependencyInjection/tokens.js'; // Adjust path
+import AppContainer from '../../src/dependencyInjection/appContainer.js';
+import { configureContainer } from '../../src/dependencyInjection/containerConfig.js';
+import { tokens } from '../../src/dependencyInjection/tokens.js';
 
 // --- Import the classes we want to check ---
-import CommandOutcomeInterpreter from '../../../src/commands/interpreters/commandOutcomeInterpreter.js'; // Adjust path
-import TurnManager from '../../../src/turns/turnManager.js';
+import CommandOutcomeInterpreter from '../../src/commands/interpreters/commandOutcomeInterpreter.js';
+import TurnManager from '../../src/turns/turnManager.js';
 import {
   afterEach,
   beforeEach,
@@ -15,7 +15,7 @@ import {
   it,
   jest,
 } from '@jest/globals';
-import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
+import ActorTurnHandler from '../../src/turns/handlers/actorTurnHandler.js';
 
 // Mock external dependencies (DOM elements, document)
 const mockOutputDiv = document.createElement('div');

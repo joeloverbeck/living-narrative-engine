@@ -374,7 +374,7 @@ class EntityManager extends IEntityManager {
 
   /**
    * Creates multiple entities in a batch operation for improved performance.
-   * 
+   *
    * @param {object[]} entitySpecs - Array of entity specifications for batch creation
    * @param {string} entitySpecs[].definitionId - Entity definition ID
    * @param {object} [entitySpecs[].opts] - Creation options
@@ -389,17 +389,22 @@ class EntityManager extends IEntityManager {
    * @throws {Error} If batch operation fails critically
    */
   async batchCreateEntities(entitySpecs, options = {}) {
-    return await this.#lifecycleManager.batchCreateEntities(entitySpecs, options);
+    return await this.#lifecycleManager.batchCreateEntities(
+      entitySpecs,
+      options
+    );
   }
 
   /**
    * Checks if the entity manager supports batch operations.
-   * 
+   *
    * @returns {boolean} True if batch operations are supported and enabled
    */
   hasBatchSupport() {
-    return this.#lifecycleManager && 
-           typeof this.#lifecycleManager.batchCreateEntities === 'function';
+    return (
+      this.#lifecycleManager &&
+      typeof this.#lifecycleManager.batchCreateEntities === 'function'
+    );
   }
 
   /* ---------------------------------------------------------------------- */

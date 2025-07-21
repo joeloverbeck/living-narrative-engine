@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, jest } from '@jest/globals';
-import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 
@@ -48,7 +48,7 @@ describe('Follow Action Debug Test', () => {
     };
 
     // Create service
-    const service = new TargetResolutionService({
+    const service = createTargetResolutionServiceWithMocks({
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
       entityManager: mockEntityManager,

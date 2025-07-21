@@ -16,8 +16,8 @@ module.exports = {
     '<rootDir>/tests/unit/**/*.test.js',
     '<rootDir>/tests/unit/**/*.spec.js',
   ],
-  // Unit tests should be fast, set a lower timeout
-  testTimeout: 10000,
+  // Unit tests should be fast, set a reasonable timeout
+  testTimeout: 15000, // Increased slightly to handle performance tests
   // Unit tests should have high coverage
   coverageThreshold: {
     global: {

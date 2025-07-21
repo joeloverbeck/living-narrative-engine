@@ -25,6 +25,8 @@ import { ActionDiscoveryService } from '../../actions/actionDiscoveryService.js'
 import { ActionCandidateProcessor } from '../../actions/actionCandidateProcessor.js';
 import { ActionPipelineOrchestrator } from '../../actions/actionPipelineOrchestrator.js';
 import { TargetResolutionService } from '../../actions/targetResolutionService.js';
+import { UnifiedScopeResolver } from '../../actions/scopes/unifiedScopeResolver.js';
+import { ScopeCacheStrategy } from '../../actions/scopes/scopeCacheStrategy.js';
 import { ActionIndex } from '../../actions/actionIndex.js';
 import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../actions/validation/prerequisiteEvaluationService.js';
@@ -78,19 +80,44 @@ export function registerCommandAndAction(container) {
     tokens.IEntityManager,
   ]);
 
+  // --- Scope Cache Strategy ---
+  // Must be registered before UnifiedScopeResolver
+  registrar.singletonFactory(tokens.IScopeCacheStrategy, (c) => {
+    return new ScopeCacheStrategy({
+      logger: c.resolve(tokens.ILogger),
+      maxSize: 1000,
+      defaultTTL: 5000,
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered ScopeCacheStrategy.'
+  );
+
+  // --- Unified Scope Resolver ---
+  // Must be registered before TargetResolutionService
+  registrar.singletonFactory(tokens.IUnifiedScopeResolver, (c) => {
+    return new UnifiedScopeResolver({
+      scopeRegistry: c.resolve(tokens.IScopeRegistry),
+      scopeEngine: c.resolve(tokens.IScopeEngine),
+      entityManager: c.resolve(tokens.IEntityManager),
+      jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
+      dslParser: c.resolve(tokens.DslParser),
+      logger: c.resolve(tokens.ILogger),
+      actionErrorContextBuilder: c.resolve(tokens.IActionErrorContextBuilder),
+      cacheStrategy: c.resolve(tokens.IScopeCacheStrategy),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered UnifiedScopeResolver.'
+  );
+
   // --- Target Resolution Service ---
   // Must be registered before ActionDiscoveryService
   registrar.singletonFactory(tokens.ITargetResolutionService, (c) => {
     return new TargetResolutionService({
-      scopeRegistry: c.resolve(tokens.IScopeRegistry),
-      scopeEngine: c.resolve(tokens.IScopeEngine),
-      entityManager: c.resolve(tokens.IEntityManager),
+      unifiedScopeResolver: c.resolve(tokens.IUnifiedScopeResolver),
       logger: c.resolve(tokens.ILogger),
       serviceSetup: c.resolve(tokens.ServiceSetup),
-      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-      jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
-      dslParser: c.resolve(tokens.DslParser),
-      actionErrorContextBuilder: c.resolve(tokens.IActionErrorContextBuilder),
     });
   });
 

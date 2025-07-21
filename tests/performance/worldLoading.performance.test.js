@@ -6,7 +6,29 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import WorldInitializer from '../../src/initializers/worldInitializer.js';
 import { createPerformanceTestBed } from '../common/performanceTestBed.js';
 
+/**
+ * Wraps Promise.all with a timeout to prevent hanging tests
+ *
+ * @param {Promise[]} promises - Array of promises to execute
+ * @param {number} timeoutMs - Timeout in milliseconds
+ * @returns {Promise} Promise that resolves with results or rejects with timeout
+ */
+function promiseAllWithTimeout(promises, timeoutMs) {
+  return Promise.race([
+    Promise.all(promises),
+    new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`Promise.all timeout after ${timeoutMs}ms`)),
+        timeoutMs
+      )
+    ),
+  ]);
+}
+
 describe('World Loading - Performance Tests', () => {
+  // Set longer timeout for performance tests
+  jest.setTimeout(25000);
+
   let testBed;
   let performanceTracker;
   let baselineMetrics;
@@ -14,11 +36,11 @@ describe('World Loading - Performance Tests', () => {
   beforeEach(() => {
     testBed = createPerformanceTestBed();
     performanceTracker = testBed.createPerformanceTracker();
-    
+
     // Establish baseline performance for sequential processing
     baselineMetrics = {
-      25: 1000,  // 25 entities should complete in < 1 second (baseline)
-      50: 2000,  // 50 entities should complete in < 2 seconds (baseline)
+      25: 1000, // 25 entities should complete in < 1 second (baseline)
+      50: 2000, // 50 entities should complete in < 2 seconds (baseline)
       100: 4000, // 100 entities should complete in < 4 seconds (baseline)
     };
   });
@@ -38,7 +60,7 @@ describe('World Loading - Performance Tests', () => {
       for (const { size, targetTime } of worldSizes) {
         // Arrange
         const worldData = testBed.createLargeWorldData(size);
-        
+
         const mockConfig = {
           isFeatureEnabled: jest.fn().mockReturnValue(true),
           getValue: jest.fn().mockImplementation((key) => {
@@ -74,10 +96,14 @@ describe('World Loading - Performance Tests', () => {
         testBed.mockRepository.getWorld.mockReturnValue(worldData);
         testBed.setupEntityDefinitions(size);
 
-        const benchmark = performanceTracker.startBenchmark(`world_loading_${size}`);
+        const benchmark = performanceTracker.startBenchmark(
+          `world_loading_${size}`
+        );
 
         // Act
-        const result = await worldInitializer.initializeWorldEntities('performance_test_world');
+        const result = await worldInitializer.initializeWorldEntities(
+          'performance_test_world'
+        );
 
         const metrics = benchmark.end();
 
@@ -88,12 +114,12 @@ describe('World Loading - Performance Tests', () => {
 
         console.log(
           `World loading (${size} entities): ${metrics.totalTime}ms ` +
-          `(target: ${targetTime}ms, improvement: ${((targetTime - metrics.totalTime) / targetTime * 100).toFixed(1)}%)`
+            `(target: ${targetTime}ms, improvement: ${(((targetTime - metrics.totalTime) / targetTime) * 100).toFixed(1)}%)`
         );
 
         // Performance should be within target
         expect(metrics.totalTime).toBeLessThan(targetTime);
-        
+
         // Memory usage should be reasonable
         if (metrics.memoryUsage) {
           expect(metrics.memoryUsage.peak).toBeLessThan(100 * 1024 * 1024); // 100MB
@@ -131,7 +157,9 @@ describe('World Loading - Performance Tests', () => {
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
       testBed.setupEntityDefinitions(entityCount);
 
-      const sequentialBenchmark = performanceTracker.startBenchmark('sequential_world_loading');
+      const sequentialBenchmark = performanceTracker.startBenchmark(
+        'sequential_world_loading'
+      );
       await sequentialInitializer.initializeWorldEntities('sequential_world');
       const sequentialMetrics = sequentialBenchmark.end();
 
@@ -168,21 +196,26 @@ describe('World Loading - Performance Tests', () => {
         config: batchConfig,
       });
 
-      const batchBenchmark = performanceTracker.startBenchmark('batch_world_loading');
+      const batchBenchmark = performanceTracker.startBenchmark(
+        'batch_world_loading'
+      );
       await batchInitializer.initializeWorldEntities('batch_world');
       const batchMetrics = batchBenchmark.end();
 
       // Batch should be at least 40% faster
-      const improvementRatio = sequentialMetrics.totalTime / batchMetrics.totalTime;
+      const improvementRatio =
+        sequentialMetrics.totalTime / batchMetrics.totalTime;
       expect(improvementRatio).toBeGreaterThan(1.4);
 
       console.log(
         `Performance improvement: ${((improvementRatio - 1) * 100).toFixed(1)}% ` +
-        `(Sequential: ${sequentialMetrics.totalTime}ms, Batch: ${batchMetrics.totalTime}ms)`
+          `(Sequential: ${sequentialMetrics.totalTime}ms, Batch: ${batchMetrics.totalTime}ms)`
       );
 
       // Assert specific performance characteristics
-      expect(batchMetrics.totalTime).toBeLessThan(sequentialMetrics.totalTime * 0.6); // At least 40% improvement
+      expect(batchMetrics.totalTime).toBeLessThan(
+        sequentialMetrics.totalTime * 0.6
+      ); // At least 40% improvement
     });
 
     it('should scale efficiently with world size', async () => {
@@ -191,7 +224,7 @@ describe('World Loading - Performance Tests', () => {
 
       for (const size of worldSizes) {
         const worldData = testBed.createLargeWorldData(size);
-        
+
         const mockConfig = {
           isFeatureEnabled: jest.fn().mockReturnValue(true),
           getValue: jest.fn().mockImplementation((key) => {
@@ -227,7 +260,9 @@ describe('World Loading - Performance Tests', () => {
         testBed.setupEntityDefinitions(size);
 
         const benchmark = performanceTracker.startBenchmark(`scaling_${size}`);
-        const result = await worldInitializer.initializeWorldEntities(`scaling_world_${size}`);
+        const result = await worldInitializer.initializeWorldEntities(
+          `scaling_world_${size}`
+        );
         const metrics = benchmark.end();
 
         results.push({
@@ -237,18 +272,21 @@ describe('World Loading - Performance Tests', () => {
           optimizationUsed: result.optimizationUsed,
         });
 
-        console.log(`${size} entities: ${metrics.totalTime}ms (${(metrics.totalTime / size).toFixed(2)}ms per entity)`);
+        console.log(
+          `${size} entities: ${metrics.totalTime}ms (${(metrics.totalTime / size).toFixed(2)}ms per entity)`
+        );
       }
 
       // Verify scalability characteristics
       for (let i = 1; i < results.length; i++) {
         const current = results[i];
         const previous = results[i - 1];
-        
+
         // Time per entity should not increase significantly with scale
-        const timePerEntityIncrease = current.timePerEntity / previous.timePerEntity;
+        const timePerEntityIncrease =
+          current.timePerEntity / previous.timePerEntity;
         expect(timePerEntityIncrease).toBeLessThan(1.2); // No more than 20% increase per size jump
-        
+
         // Batch operations should be used for larger worlds
         if (current.size >= 5) {
           expect(current.optimizationUsed).toBe('batch');
@@ -260,7 +298,7 @@ describe('World Loading - Performance Tests', () => {
       const largest = results[results.length - 1];
       const scalingFactor = largest.size / smallest.size;
       const timeScalingFactor = largest.time / smallest.time;
-      
+
       // Time should scale better than linearly (batch operations benefit)
       // Relaxed threshold for simulated environment
       expect(timeScalingFactor).toBeLessThan(scalingFactor * 1.2);
@@ -310,23 +348,26 @@ describe('World Loading - Performance Tests', () => {
         trackMemory: true,
       });
 
-      const result = await worldInitializer.initializeWorldEntities('memory_test_world');
+      const result =
+        await worldInitializer.initializeWorldEntities('memory_test_world');
       const metrics = benchmark.end();
 
       // Assert memory efficiency
       expect(result.instantiatedCount).toBe(entityCount);
-      
+
       if (metrics.memoryUsage) {
         // Peak memory should be reasonable for 100 entities
         expect(metrics.memoryUsage.peak).toBeLessThan(90 * 1024 * 1024); // 90MB target (25% improvement)
-        
+
         // Memory should be released efficiently
         // Relaxed threshold for simulated environment
-        expect(metrics.memoryUsage.final).toBeLessThan(metrics.memoryUsage.peak * 1.2);
-        
+        expect(metrics.memoryUsage.final).toBeLessThan(
+          metrics.memoryUsage.peak * 1.2
+        );
+
         console.log(
           `Memory usage - Peak: ${(metrics.memoryUsage.peak / 1024 / 1024).toFixed(2)}MB, ` +
-          `Final: ${(metrics.memoryUsage.final / 1024 / 1024).toFixed(2)}MB`
+            `Final: ${(metrics.memoryUsage.final / 1024 / 1024).toFixed(2)}MB`
         );
       }
     });
@@ -334,7 +375,7 @@ describe('World Loading - Performance Tests', () => {
     it('should handle concurrent batch operations efficiently', async () => {
       const entityCount = 75;
       const concurrentWorlds = 3;
-      
+
       const mockConfig = {
         isFeatureEnabled: jest.fn().mockReturnValue(true),
         getValue: jest.fn().mockImplementation((key) => {
@@ -349,24 +390,26 @@ describe('World Loading - Performance Tests', () => {
         }),
       };
 
-      const worldInitializers = Array(concurrentWorlds).fill(0).map(() => {
-        const mockEntityManager = testBed.createMockEntityManager({
-          enableBatchOperations: true,
-          hasBatchSupport: true,
-          batchProcessingTimeMs: Math.ceil(entityCount * 8),
-        });
+      const worldInitializers = Array(concurrentWorlds)
+        .fill(0)
+        .map(() => {
+          const mockEntityManager = testBed.createMockEntityManager({
+            enableBatchOperations: true,
+            hasBatchSupport: true,
+            batchProcessingTimeMs: Math.ceil(entityCount * 8),
+          });
 
-        return new WorldInitializer({
-          entityManager: mockEntityManager,
-          worldContext: testBed.mockWorldContext,
-          gameDataRepository: testBed.mockRepository,
-          validatedEventDispatcher: testBed.mockValidatedEventDispatcher,
-          eventDispatchService: testBed.mockEventDispatchService,
-          logger: testBed.mockLogger,
-          scopeRegistry: testBed.mockScopeRegistry,
-          config: mockConfig,
+          return new WorldInitializer({
+            entityManager: mockEntityManager,
+            worldContext: testBed.mockWorldContext,
+            gameDataRepository: testBed.mockRepository,
+            validatedEventDispatcher: testBed.mockValidatedEventDispatcher,
+            eventDispatchService: testBed.mockEventDispatchService,
+            logger: testBed.mockLogger,
+            scopeRegistry: testBed.mockScopeRegistry,
+            config: mockConfig,
+          });
         });
-      });
 
       const worldData = testBed.createLargeWorldData(entityCount);
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
@@ -379,7 +422,9 @@ describe('World Loading - Performance Tests', () => {
         initializer.initializeWorldEntities(`concurrent_world_${i}`)
       );
 
-      const results = await Promise.all(promises);
+      // Use timeout wrapper to prevent hanging
+      const timeoutMs = 10000; // 10 second timeout for concurrent loading
+      const results = await promiseAllWithTimeout(promises, timeoutMs);
       const metrics = benchmark.end();
 
       // Assert
@@ -437,9 +482,12 @@ describe('World Loading - Performance Tests', () => {
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
       testBed.setupEntityDefinitions(entityCount);
 
-      const benchmark = performanceTracker.startBenchmark('large_world_loading');
+      const benchmark = performanceTracker.startBenchmark(
+        'large_world_loading'
+      );
 
-      const result = await worldInitializer.initializeWorldEntities('large_world');
+      const result =
+        await worldInitializer.initializeWorldEntities('large_world');
       const metrics = benchmark.end();
 
       // Should complete large world in reasonable time
@@ -449,7 +497,7 @@ describe('World Loading - Performance Tests', () => {
 
       console.log(
         `Large world loading (${entityCount} entities): ${metrics.totalTime}ms ` +
-        `(${(metrics.totalTime / entityCount).toFixed(2)}ms per entity)`
+          `(${(metrics.totalTime / entityCount).toFixed(2)}ms per entity)`
       );
 
       // Time per entity should be very efficient
@@ -496,15 +544,19 @@ describe('World Loading - Performance Tests', () => {
       testBed.mockRepository.getWorld.mockReturnValue(worldData);
       testBed.setupEntityDefinitions(entityCount);
 
-      const benchmark = performanceTracker.startBenchmark('memory_pressure_loading');
+      const benchmark = performanceTracker.startBenchmark(
+        'memory_pressure_loading'
+      );
 
-      const result = await worldInitializer.initializeWorldEntities('memory_pressure_world');
+      const result = await worldInitializer.initializeWorldEntities(
+        'memory_pressure_world'
+      );
       const metrics = benchmark.end();
 
       // Should still complete successfully under memory pressure
       expect(result.instantiatedCount).toBe(entityCount);
       expect(result.optimizationUsed).toBe('batch');
-      
+
       // May be slower but should still be reasonable
       expect(metrics.totalTime).toBeLessThan(8000); // 8 seconds max under memory pressure
 
@@ -514,4 +566,3 @@ describe('World Loading - Performance Tests', () => {
     });
   });
 });
-

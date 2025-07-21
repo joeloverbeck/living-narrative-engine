@@ -18,13 +18,33 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
     // Clear all mocks and reset modules before each test
     jest.clearAllMocks();
     jest.resetModules();
+
+    // Use fake timers to prevent hanging promises
+    jest.useFakeTimers();
   });
 
   afterEach(() => {
+    // Clear any pending timers before restoring real timers
+    jest.clearAllTimers();
+
+    // Run any remaining timers to completion to prevent hanging
+    if (jest.isMockFunction(setTimeout)) {
+      try {
+        // Run only pending timers, don't create infinite loops
+        jest.runOnlyPendingTimers();
+      } catch (error) {
+        // If timer execution fails, continue cleanup anyway
+        console.warn('Timer cleanup warning:', error.message);
+      }
+    }
+
+    jest.useRealTimers();
+
     // Restore original globals
     global.document = originalDocument;
     global.window = originalWindow;
     jest.clearAllMocks();
+    jest.resetModules();
   });
 
   it('should handle successful initialization with all services', async () => {
@@ -121,7 +141,8 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
       await import('../../src/anatomy-visualizer.js');
 
       // Wait for initialization - need more time for async operations
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await Promise.resolve();
+      jest.advanceTimersByTime(50);
 
       // Verify bootstrapper was called
       expect(mockBootstrapper.bootstrap).toHaveBeenCalledWith({
@@ -260,7 +281,8 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
       await import('../../src/anatomy-visualizer.js');
 
       // Wait for initialization
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await Promise.resolve();
+      jest.advanceTimersByTime(50);
 
       // Verify warning was logged
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -375,7 +397,8 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
       await import('../../src/anatomy-visualizer.js');
 
       // Wait for initialization
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await Promise.resolve();
+      jest.advanceTimersByTime(50);
 
       // Note: We can't properly test the back button click in this setup
       // because the document reference inside postInitHook is different from our mock.
@@ -433,7 +456,8 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
       await import('../../src/anatomy-visualizer.js');
 
       // Wait for initial setup
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await Promise.resolve();
+      jest.advanceTimersByTime(50);
 
       // In the 'loading' state, the module sets up a DOMContentLoaded listener
       // and doesn't call initialize() immediately. However, due to the way
@@ -501,7 +525,8 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
       await import('../../src/anatomy-visualizer.js');
 
       // Wait for initialization
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await Promise.resolve();
+      jest.advanceTimersByTime(50);
 
       // Verify error was handled
       expect(mockBootstrapper.displayFatalStartupError).toHaveBeenCalledWith(
@@ -593,7 +618,8 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
       await import('../../src/anatomy-visualizer.js');
 
       // Wait for initialization
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await Promise.resolve();
+      jest.advanceTimersByTime(50);
 
       // The back button search happens but we can't verify getElementById
       // as it's not a jest mock in this test setup
@@ -696,8 +722,11 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
       // Import the module
       await import('../../src/anatomy-visualizer.js');
 
-      // Wait for initialization
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Wait for initialization and error handling to complete
+      await Promise.resolve(); // Let the immediate initialization start
+      await Promise.resolve(); // Let the async bootstrap complete
+      await Promise.resolve(); // Let the error handling complete
+      jest.advanceTimersByTime(50);
 
       // Verify error was handled by bootstrap error handler
       expect(mockBootstrapper.displayFatalStartupError).toHaveBeenCalledWith(
@@ -794,7 +823,8 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
       await import('../../src/anatomy-visualizer.js');
 
       // Wait for initialization
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await Promise.resolve();
+      jest.advanceTimersByTime(50);
 
       // Verify initialization occurred immediately (non-loading state)
       expect(mockBootstrapper.bootstrap).toHaveBeenCalledTimes(1);
@@ -880,7 +910,8 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
       await import('../../src/anatomy-visualizer.js');
 
       // Wait for initialization
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await Promise.resolve();
+      jest.advanceTimersByTime(50);
 
       // Verify error was handled
       expect(mockBootstrapper.displayFatalStartupError).toHaveBeenCalledWith(
@@ -968,7 +999,8 @@ describe('anatomy-visualizer.js - Comprehensive Tests', () => {
       await import('../../src/anatomy-visualizer.js');
 
       // Wait for initialization
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await Promise.resolve();
+      jest.advanceTimersByTime(50);
 
       // Verify error was handled
       expect(mockBootstrapper.displayFatalStartupError).toHaveBeenCalledWith(

@@ -12,8 +12,9 @@ const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
-// Increase default Jest test timeout to accommodate slower environments
-jest.setTimeout(30000);
+// Set reasonable default Jest test timeout - reduced from 30s to prevent hanging
+// Individual test files can override this for specific performance tests
+jest.setTimeout(15000);
 
 // Import the fetch polyfill. This will automatically add fetch, Headers, Request, Response
 // to the global scope (window in jsdom) if they don't exist.
@@ -58,52 +59,31 @@ if (typeof window !== 'undefined' && window.EventTarget) {
   };
 }
 
-// Global cleanup hook to prevent timer leaks and hanging worker processes
-global.afterEach(async () => {
-  // First, clear all pending timers without executing them
-  if (typeof jest.clearAllTimers === 'function') {
-    jest.clearAllTimers();
-  }
+// Note: Global cleanup hooks have been removed to prevent race conditions
+// with individual test suite cleanup. Each test file should handle its own
+// cleanup in afterEach hooks as needed.
 
-  // Restore real timers if fake timers were used
+// Global cleanup to ensure tests don't hang
+afterEach(() => {
+  // Clear all timers to prevent hanging
   try {
-    // Check if we're using fake timers by attempting to get the system time
-    const usingFakeTimers = jest.isMockFunction(setTimeout);
-    if (usingFakeTimers || typeof jest.useRealTimers === 'function') {
-      jest.useRealTimers();
+    // Check if fake timers are in use by checking jest's timer state
+    if (jest.getTimerCount && jest.getTimerCount() > 0) {
+      jest.clearAllTimers();
     }
-  } catch (e) {
-    // Ignore errors - real timers might already be in use
+  } catch (error) {
+    // If getTimerCount is not available or throws, we're likely not using fake timers
+    // Safe to ignore
   }
+  
+  // Restore all mocks
+  jest.restoreAllMocks();
+  
+  // Clear all mock calls
+  jest.clearAllMocks();
+});
 
-  // Clear all mocks
-  if (typeof jest.clearAllMocks === 'function') {
-    jest.clearAllMocks();
-  }
-
-  // Note: We intentionally don't clear all timeout/interval IDs globally
-  // as this can interfere with Jest's internal timers and cause hangs
-
-  // Allow any pending microtasks to complete
-  // Check if we're using fake timers and handle accordingly
-  try {
-    // If fake timers are active, we need to use a different approach
-    if (typeof jest !== 'undefined' && jest.isMockFunction(setTimeout)) {
-      // Use process.nextTick if available (Node.js environment)
-      if (typeof process !== 'undefined' && process.nextTick) {
-        await new Promise((resolve) => process.nextTick(resolve));
-      }
-      // Otherwise, we can skip this step as fake timers are controlling async behavior
-    } else {
-      // Real timers are active, use setTimeout normally
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    }
-  } catch (err) {
-    // If anything fails, we can safely continue as this is just cleanup
-  }
-
-  // Force clear any active handles that might be keeping the process alive
-  if (typeof global.gc === 'function') {
-    global.gc();
-  }
+// Ensure we're using real timers by default
+beforeEach(() => {
+  jest.useRealTimers();
 });

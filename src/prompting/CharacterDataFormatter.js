@@ -57,13 +57,13 @@ export class CharacterDataFormatter {
    */
   #extractSpeechPatterns(speechText) {
     if (!speechText || typeof speechText !== 'string') return [];
-    
+
     // Split by common delimiters and clean up
     const patterns = speechText
       .split(/[-•\n]/)
-      .map(pattern => pattern.trim())
-      .filter(pattern => pattern.length > 0);
-    
+      .map((pattern) => pattern.trim())
+      .filter((pattern) => pattern.length > 0);
+
     return patterns;
   }
 
@@ -75,25 +75,25 @@ export class CharacterDataFormatter {
    */
   #parseDescriptionAttributes(description) {
     if (!description || typeof description !== 'string') return {};
-    
+
     const attributes = {};
-    
+
     // Split by common delimiters (semicolons, newlines) but preserve pipes in clothing
     const parts = description.split(/[;\n]/);
-    
+
     for (const part of parts) {
       const trimmed = part.trim();
       if (trimmed.includes(':')) {
         const colonIndex = trimmed.indexOf(':');
         const key = trimmed.substring(0, colonIndex).trim().toLowerCase();
         const value = trimmed.substring(colonIndex + 1).trim();
-        
+
         if (key && value) {
           attributes[key] = value;
         }
       }
     }
-    
+
     return attributes;
   }
 
@@ -105,13 +105,15 @@ export class CharacterDataFormatter {
    */
   formatPhysicalDescription(characterData) {
     if (!characterData || !characterData.description) {
-      this.#logger.debug('CharacterDataFormatter: No description data provided');
+      this.#logger.debug(
+        'CharacterDataFormatter: No description data provided'
+      );
       return '';
     }
 
     const description = characterData.description;
     let result = '## Your Description\n';
-    
+
     // Handle both structured object and text descriptions
     if (typeof description === 'object') {
       // Direct attribute object
@@ -124,7 +126,7 @@ export class CharacterDataFormatter {
     } else if (typeof description === 'string') {
       // Parse text-based description
       const attributes = this.#parseDescriptionAttributes(description);
-      
+
       if (Object.keys(attributes).length > 0) {
         // Use parsed attributes
         Object.entries(attributes).forEach(([key, value]) => {
@@ -136,8 +138,10 @@ export class CharacterDataFormatter {
         result += `**Description**: ${description}\n`;
       }
     }
-    
-    this.#logger.debug('CharacterDataFormatter: Formatted physical description section');
+
+    this.#logger.debug(
+      'CharacterDataFormatter: Formatted physical description section'
+    );
     return result;
   }
 
@@ -149,16 +153,20 @@ export class CharacterDataFormatter {
    */
   formatPersonalitySection(personalityText) {
     if (!personalityText || typeof personalityText !== 'string') {
-      this.#logger.debug('CharacterDataFormatter: No personality text provided');
+      this.#logger.debug(
+        'CharacterDataFormatter: No personality text provided'
+      );
       return '';
     }
-    
+
     const trimmedText = personalityText.trim();
     if (trimmedText.length === 0) {
-      this.#logger.debug('CharacterDataFormatter: Empty personality text after trimming');
+      this.#logger.debug(
+        'CharacterDataFormatter: Empty personality text after trimming'
+      );
       return '';
     }
-    
+
     const result = `## Your Personality\n${trimmedText}\n`;
     this.#logger.debug('CharacterDataFormatter: Formatted personality section');
     return result;
@@ -175,13 +183,15 @@ export class CharacterDataFormatter {
       this.#logger.debug('CharacterDataFormatter: No profile text provided');
       return '';
     }
-    
+
     const trimmedText = profileText.trim();
     if (trimmedText.length === 0) {
-      this.#logger.debug('CharacterDataFormatter: Empty profile text after trimming');
+      this.#logger.debug(
+        'CharacterDataFormatter: Empty profile text after trimming'
+      );
       return '';
     }
-    
+
     const result = `## Your Profile\n${trimmedText}\n`;
     this.#logger.debug('CharacterDataFormatter: Formatted profile section');
     return result;
@@ -198,11 +208,11 @@ export class CharacterDataFormatter {
       this.#logger.debug('CharacterDataFormatter: No speech patterns provided');
       return '';
     }
-    
+
     let result = '## Your Speech Patterns\n';
-    
+
     if (Array.isArray(speechPatterns)) {
-      speechPatterns.forEach(pattern => {
+      speechPatterns.forEach((pattern) => {
         if (pattern && typeof pattern === 'string') {
           result += `- ${pattern.trim()}\n`;
         }
@@ -210,12 +220,14 @@ export class CharacterDataFormatter {
     } else if (typeof speechPatterns === 'string') {
       // Handle existing format where patterns might be in text
       const patterns = this.#extractSpeechPatterns(speechPatterns);
-      patterns.forEach(pattern => {
+      patterns.forEach((pattern) => {
         result += `- ${pattern}\n`;
       });
     }
-    
-    this.#logger.debug('CharacterDataFormatter: Formatted speech patterns section');
+
+    this.#logger.debug(
+      'CharacterDataFormatter: Formatted speech patterns section'
+    );
     return result;
   }
 
@@ -228,19 +240,25 @@ export class CharacterDataFormatter {
    */
   formatOptionalSection(sectionName, content) {
     if (!content || typeof content !== 'string') {
-      this.#logger.debug(`CharacterDataFormatter: No content provided for ${sectionName} section`);
+      this.#logger.debug(
+        `CharacterDataFormatter: No content provided for ${sectionName} section`
+      );
       return '';
     }
-    
+
     const trimmedContent = content.trim();
     if (trimmedContent.length === 0) {
-      this.#logger.debug(`CharacterDataFormatter: Empty content for ${sectionName} section after trimming`);
+      this.#logger.debug(
+        `CharacterDataFormatter: Empty content for ${sectionName} section after trimming`
+      );
       return '';
     }
-    
+
     const headerName = this.#formatSectionHeader(sectionName);
     const result = `## Your ${headerName}\n${trimmedContent}\n`;
-    this.#logger.debug(`CharacterDataFormatter: Formatted ${sectionName} section`);
+    this.#logger.debug(
+      `CharacterDataFormatter: Formatted ${sectionName} section`
+    );
     return result;
   }
 
@@ -252,72 +270,76 @@ export class CharacterDataFormatter {
    */
   formatCharacterPersona(characterData) {
     if (!characterData || typeof characterData !== 'object') {
-      this.#logger.warn('CharacterDataFormatter: Invalid character data provided to formatCharacterPersona');
+      this.#logger.warn(
+        'CharacterDataFormatter: Invalid character data provided to formatCharacterPersona'
+      );
       return '';
     }
 
-    const { 
-      name, 
-      description, 
-      personality, 
-      profile, 
-      likes, 
-      dislikes, 
-      secrets, 
-      fears, 
-      speechPatterns 
+    const {
+      name,
+      description,
+      personality,
+      profile,
+      likes,
+      dislikes,
+      secrets,
+      fears,
+      speechPatterns,
     } = characterData;
-    
+
     let result = '';
-    
+
     // Add character identity header
     const characterName = name || DEFAULT_FALLBACK_CHARACTER_NAME;
     result += `YOU ARE ${characterName}.\n`;
     result += `This is your identity. All thoughts, actions, and words must stem from this core truth.\n\n`;
-    
+
     // Add each section if data exists
     const descriptionSection = this.formatPhysicalDescription({ description });
     if (descriptionSection) {
       result += descriptionSection + '\n';
     }
-    
+
     const personalitySection = this.formatPersonalitySection(personality);
     if (personalitySection) {
       result += personalitySection + '\n';
     }
-    
+
     const profileSection = this.formatProfileSection(profile);
     if (profileSection) {
       result += profileSection + '\n';
     }
-    
+
     const likesSection = this.formatOptionalSection('Likes', likes);
     if (likesSection) {
       result += likesSection + '\n';
     }
-    
+
     const dislikesSection = this.formatOptionalSection('Dislikes', dislikes);
     if (dislikesSection) {
       result += dislikesSection + '\n';
     }
-    
+
     const secretsSection = this.formatOptionalSection('Secrets', secrets);
     if (secretsSection) {
       result += secretsSection + '\n';
     }
-    
+
     const fearsSection = this.formatOptionalSection('Fears', fears);
     if (fearsSection) {
       result += fearsSection + '\n';
     }
-    
+
     const speechSection = this.formatSpeechPatterns(speechPatterns);
     if (speechSection) {
       result += speechSection;
     }
-    
+
     const trimmedResult = result.trim();
-    this.#logger.debug('CharacterDataFormatter: Successfully formatted complete character persona');
+    this.#logger.debug(
+      'CharacterDataFormatter: Successfully formatted complete character persona'
+    );
     return trimmedResult;
   }
 }

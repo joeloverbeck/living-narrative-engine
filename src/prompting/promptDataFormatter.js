@@ -116,7 +116,7 @@ export class PromptDataFormatter {
         // Return simplified format - just the content without XML tags
         return content;
       })
-      .filter(content => content.trim().length > 0) // Remove empty entries
+      .filter((content) => content.trim().length > 0) // Remove empty entries
       .join('\n');
 
     this.#logger.debug(
@@ -213,13 +213,13 @@ export class PromptDataFormatter {
 
     notes.forEach((note) => {
       const subject = note.subject || 'General';
-      
+
       // If no subject is provided (fallback to 'General'), use OTHER as subjectType
       // Otherwise, use the note's subjectType or fallback to OTHER
-      const subjectType = !note.subject 
-        ? SUBJECT_TYPES.OTHER 
-        : (note.subjectType || SUBJECT_TYPES.OTHER);
-      
+      const subjectType = !note.subject
+        ? SUBJECT_TYPES.OTHER
+        : note.subjectType || SUBJECT_TYPES.OTHER;
+
       const displayInfo = this.getSubjectTypeDisplayInfo(subjectType);
 
       if (!grouped.has(subject)) {

@@ -640,7 +640,9 @@ describe('AIPromptContentProvider', () => {
         expect(result).toContain('## Your Personality');
         expect(result).toContain('Gallant and Stoic.');
         expect(result).toContain('## Your Profile');
-        expect(result).toContain('Born in a noble family, trained in swordsmanship.');
+        expect(result).toContain(
+          'Born in a noble family, trained in swordsmanship.'
+        );
         expect(result).toContain('## Your Likes');
         expect(result).toContain('Justice, good ale.');
         expect(result).toContain('## Your Dislikes');
@@ -761,24 +763,21 @@ describe('AIPromptContentProvider', () => {
         // Check exits section with markdown formatting
         expect(result).toContain('## Exits from Current Location');
         expect(result).toContain('- **Towards north** leads to The Library');
-        expect(result).toContain(`- **Towards south** leads to loc_throne_room`);
+        expect(result).toContain(
+          `- **Towards south** leads to loc_throne_room`
+        );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'Formatted 2 exits for location'
-          )
+          expect.stringContaining('Formatted 2 exits for location')
         );
 
         // Check characters section with markdown formatting
         expect(result).toContain('## Other Characters Present');
         expect(result).toContain('### Guard Captain');
-        expect(result).toContain('- **Description**: Stern and watchful.'
-        );
+        expect(result).toContain('- **Description**: Stern and watchful.');
         expect(result).toContain('### Jester');
         expect(result).toContain('- **Description**: Wearing colorful attire.');
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'Formatted 2 characters for location'
-          )
+          expect.stringContaining('Formatted 2 characters for location')
         );
 
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
@@ -818,9 +817,7 @@ describe('AIPromptContentProvider', () => {
         expect(result).toContain('## Exits from Current Location');
         expect(result).toContain(PROMPT_FALLBACK_NO_EXITS);
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'No exits found, using fallback message'
-          )
+          expect.stringContaining('No exits found, using fallback message')
         );
 
         expect(result).toContain('## Other Characters Present');
@@ -846,7 +843,9 @@ describe('AIPromptContentProvider', () => {
           },
         };
         const result = provider.getWorldContextContent(dto);
-        expect(result).toContain('- **Towards east** leads to village_east_gate');
+        expect(result).toContain(
+          '- **Towards east** leads to village_east_gate'
+        );
         expect(result).toContain(
           `- **Towards west** leads to ${DEFAULT_FALLBACK_LOCATION_NAME}`
         );

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "id": "violence",
+  "version": "1.0.0",
+  "name": "violence",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "sucker_punch.action.json"
+    ],
+    "rules": [
+      "handle_sucker_punch.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-sucker-punch.condition.json"
+    ]
+  }
+}

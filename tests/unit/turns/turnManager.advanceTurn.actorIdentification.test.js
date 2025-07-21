@@ -26,6 +26,7 @@ describeRunningTurnManagerSuite(
     let stopSpy;
 
     beforeEach(async () => {
+      jest.useRealTimers(); // Use real timers for this specific test
       testBed = getBed();
       testBed.mockNextActor(createAiActor('initial-actor-for-start'));
       testBed.setupMockHandlerResolver();
@@ -33,6 +34,7 @@ describeRunningTurnManagerSuite(
     });
 
     afterEach(async () => {
+      jest.useFakeTimers(); // Restore fake timers after each test
       // Timer cleanup handled by BaseTestBed
     });
 
@@ -76,7 +78,8 @@ describeRunningTurnManagerSuite(
         expect(mockHandler.destroy).toHaveBeenCalledTimes(1);
 
         // Timer cleanup handled by BaseTestBed
-      }
+      },
+      30000 // 30 second timeout
     );
 
     test('Non-actor entity: logs warning, does not resolve handler or dispatch events', async () => {

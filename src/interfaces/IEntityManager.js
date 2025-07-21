@@ -173,7 +173,7 @@ export class IEntityManager {
 
   /**
    * Creates multiple entities in a batch operation for improved performance.
-   * 
+   *
    * @param {object[]} entitySpecs - Array of entity specifications for batch creation
    * @param {string} entitySpecs[].definitionId - Entity definition ID
    * @param {object} [entitySpecs[].opts] - Creation options
@@ -191,7 +191,7 @@ export class IEntityManager {
 
   /**
    * Checks if the entity manager supports batch operations.
-   * 
+   *
    * @returns {boolean} True if batch operations are supported and enabled
    */
   hasBatchSupport() {

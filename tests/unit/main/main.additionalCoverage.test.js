@@ -1,4 +1,11 @@
-import { jest, describe, it, afterEach, expect } from '@jest/globals';
+import {
+  jest,
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+} from '@jest/globals';
 
 const mockEnsure = jest.fn();
 const mockSetupDI = jest.fn();
@@ -35,9 +42,22 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
 }));
 
 describe('main.js additional branch coverage', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    // Mock fetch to prevent real HTTP requests
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ startWorld: 'default' }),
+    });
+  });
+
   afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
     jest.resetModules();
     jest.clearAllMocks();
+    // Clean up fetch mock
+    if (global.fetch) delete global.fetch;
     document.body.innerHTML = '';
   });
 
@@ -59,7 +79,8 @@ describe('main.js additional branch coverage', () => {
       main = await import('../../../src/main.js');
     });
     await main.bootstrapApp();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
 
     expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
     const [elements, details] = mockDisplayFatal.mock.calls[0];
@@ -95,9 +116,11 @@ describe('main.js additional branch coverage', () => {
 
     const main = await import('../../../src/main.js');
     await main.bootstrapApp();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
     await main.beginGame(true);
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
 
     expect(mockStartGame).toHaveBeenCalled();
     expect(showLoad).toHaveBeenCalled();
@@ -130,9 +153,11 @@ describe('main.js additional branch coverage', () => {
 
     const main = await import('../../../src/main.js');
     await main.bootstrapApp();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
     await expect(main.beginGame()).rejects.toThrow();
-    await new Promise((r) => setTimeout(r, 0));
+    await Promise.resolve();
+    jest.runAllTimers();
 
     expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
     const [, details] = mockDisplayFatal.mock.calls[0];

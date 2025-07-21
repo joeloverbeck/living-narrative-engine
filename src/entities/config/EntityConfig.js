@@ -293,26 +293,46 @@ export default class EntityConfig {
     // Validate world loading settings
     if (config.worldLoading) {
       if (config.worldLoading.WORLD_LOADING_BATCH_SIZE <= 0) {
-        throw new Error('EntityConfig: WORLD_LOADING_BATCH_SIZE must be positive');
+        throw new Error(
+          'EntityConfig: WORLD_LOADING_BATCH_SIZE must be positive'
+        );
       }
       if (config.worldLoading.WORLD_LOADING_MAX_BATCH_SIZE <= 0) {
-        throw new Error('EntityConfig: WORLD_LOADING_MAX_BATCH_SIZE must be positive');
+        throw new Error(
+          'EntityConfig: WORLD_LOADING_MAX_BATCH_SIZE must be positive'
+        );
       }
-      if (config.worldLoading.WORLD_LOADING_BATCH_SIZE > config.worldLoading.WORLD_LOADING_MAX_BATCH_SIZE) {
-        throw new Error('EntityConfig: WORLD_LOADING_BATCH_SIZE must be <= WORLD_LOADING_MAX_BATCH_SIZE');
+      if (
+        config.worldLoading.WORLD_LOADING_BATCH_SIZE >
+        config.worldLoading.WORLD_LOADING_MAX_BATCH_SIZE
+      ) {
+        throw new Error(
+          'EntityConfig: WORLD_LOADING_BATCH_SIZE must be <= WORLD_LOADING_MAX_BATCH_SIZE'
+        );
       }
       if (config.worldLoading.WORLD_LOADING_BATCH_THRESHOLD < 0) {
-        throw new Error('EntityConfig: WORLD_LOADING_BATCH_THRESHOLD must be non-negative');
+        throw new Error(
+          'EntityConfig: WORLD_LOADING_BATCH_THRESHOLD must be non-negative'
+        );
       }
       if (config.worldLoading.WORLD_LOADING_TIMEOUT_MS <= 0) {
-        throw new Error('EntityConfig: WORLD_LOADING_TIMEOUT_MS must be positive');
+        throw new Error(
+          'EntityConfig: WORLD_LOADING_TIMEOUT_MS must be positive'
+        );
       }
-      if (config.worldLoading.MEMORY_THRESHOLD && 
-          (config.worldLoading.MEMORY_THRESHOLD <= 0 || config.worldLoading.MEMORY_THRESHOLD > 1)) {
-        throw new Error('EntityConfig: MEMORY_THRESHOLD must be between 0 and 1');
+      if (
+        config.worldLoading.MEMORY_THRESHOLD &&
+        (config.worldLoading.MEMORY_THRESHOLD <= 0 ||
+          config.worldLoading.MEMORY_THRESHOLD > 1)
+      ) {
+        throw new Error(
+          'EntityConfig: MEMORY_THRESHOLD must be between 0 and 1'
+        );
       }
       if (config.worldLoading.MAX_BATCH_FAILURES_BEFORE_FALLBACK < 0) {
-        throw new Error('EntityConfig: MAX_BATCH_FAILURES_BEFORE_FALLBACK must be non-negative');
+        throw new Error(
+          'EntityConfig: MAX_BATCH_FAILURES_BEFORE_FALLBACK must be non-negative'
+        );
       }
     }
 

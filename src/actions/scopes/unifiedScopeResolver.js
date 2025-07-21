@@ -15,7 +15,7 @@
 /** @typedef {import('../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../types/runtimeContext.js').RuntimeContext} RuntimeContext */
 
-import { validateDependency } from '../../utils/validationUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ActionResult } from '../core/actionResult.js';
 import {
   TARGET_DOMAIN_SELF,
@@ -24,7 +24,7 @@ import {
 import { ERROR_PHASES } from '../errors/actionErrorTypes.js';
 
 /**
- * @typedef {Object} ScopeResolutionContext
+ * @typedef {object} ScopeResolutionContext
  * @property {Entity} actor - The entity performing the action
  * @property {string} actorLocation - Current location of the actor
  * @property {ActionContext} actionContext - Full action context for evaluation
@@ -33,7 +33,7 @@ import { ERROR_PHASES } from '../errors/actionErrorTypes.js';
  */
 
 /**
- * @typedef {Object} ScopeResolutionOptions
+ * @typedef {object} ScopeResolutionOptions
  * @property {boolean} [useCache=true] - Whether to use cached results
  * @property {number} [cacheTTL=5000] - Cache time-to-live in milliseconds
  * @property {boolean} [includeMetadata=false] - Include resolution metadata
@@ -67,7 +67,7 @@ export class UnifiedScopeResolver {
    * @param {IDslParser} deps.dslParser - Parser used for Scope-DSL expressions.
    * @param {ILogger} deps.logger - Logger instance.
    * @param {ActionErrorContextBuilder} deps.actionErrorContextBuilder - Builds enhanced error contexts.
-   * @param {Object} [deps.cacheStrategy] - Optional cache strategy implementation.
+   * @param {object} [deps.cacheStrategy] - Optional cache strategy implementation.
    */
   constructor({
     scopeRegistry,
@@ -112,7 +112,7 @@ export class UnifiedScopeResolver {
     this.#entityManager = entityManager;
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#dslParser = dslParser;
-    this.#logger = logger.child({ service: 'UnifiedScopeResolver' });
+    this.#logger = logger;
     this.#actionErrorContextBuilder = actionErrorContextBuilder;
     this.#cacheStrategy = cacheStrategy;
   }
@@ -122,10 +122,10 @@ export class UnifiedScopeResolver {
    *
    * @param {string} scopeName - The scope to resolve
    * @param {ScopeResolutionContext} context - Resolution context
-   * @param {ScopeResolutionOptions} [options={}] - Resolution options
-   * @returns {Promise<ActionResult>} ActionResult containing Set of entity IDs or errors
+   * @param {ScopeResolutionOptions} [options] - Resolution options
+   * @returns {ActionResult} ActionResult containing Set of entity IDs or errors
    */
-  async resolve(scopeName, context, options = {}) {
+  resolve(scopeName, context, options = {}) {
     const source = 'UnifiedScopeResolver.resolve';
     const {
       useCache = true,
@@ -134,46 +134,40 @@ export class UnifiedScopeResolver {
       validateEntities = true,
     } = options;
 
-    context.trace?.info(`Resolving scope '${scopeName}'.`, source);
-
-    // Validate context
+    // Validate context first before using it
     const contextValidation = this.#validateContext(context, scopeName);
     if (!contextValidation.success) {
       return contextValidation;
     }
 
+    context.trace?.info(`Resolving scope '${scopeName}'.`, source);
+
     // Handle special scopes
     const specialScopeResult = this.#handleSpecialScopes(scopeName, context);
     if (specialScopeResult !== null) {
-      context.trace?.info(
-        `Resolved special scope '${scopeName}'.`,
-        source,
-        { entityCount: specialScopeResult.value.size }
-      );
+      context.trace?.info(`Resolved special scope '${scopeName}'.`, source, {
+        entityCount: specialScopeResult.value.size,
+      });
       return specialScopeResult;
     }
 
     // Check cache if enabled
     if (useCache && this.#cacheStrategy) {
       const cacheKey = this.#cacheStrategy.generateKey(scopeName, context);
-      const cachedResult = await this.#cacheStrategy.get(
-        cacheKey,
-        () => this.#resolveScopeInternal(scopeName, context, validateEntities),
-        cacheTTL
-      );
+      const cachedResult = this.#cacheStrategy.getSync(cacheKey);
 
-      if (cachedResult.success) {
+      if (cachedResult) {
         context.trace?.info(
-          `Resolved scope '${scopeName}' from cache.`,
+          `Resolved scope '${scopeName}' from cache with ${cachedResult.value.size} entities.`,
           source,
-          { entityCount: cachedResult.value.size }
+          { entityIds: Array.from(cachedResult.value) }
         );
         return cachedResult;
       }
     }
 
     // Resolve without cache
-    const result = await this.#resolveScopeInternal(
+    const result = this.#resolveScopeInternal(
       scopeName,
       context,
       validateEntities
@@ -185,6 +179,12 @@ export class UnifiedScopeResolver {
         source,
         { entityIds: Array.from(result.value) }
       );
+
+      // Cache the successful result
+      if (useCache && this.#cacheStrategy) {
+        const cacheKey = this.#cacheStrategy.generateKey(scopeName, context);
+        this.#cacheStrategy.setSync(cacheKey, result, cacheTTL);
+      }
     }
 
     return result;
@@ -194,36 +194,33 @@ export class UnifiedScopeResolver {
    * Batch resolves multiple scopes efficiently.
    *
    * @param {Array<{scopeName: string, context: ScopeResolutionContext}>} requests - Batch resolution requests
-   * @param {ScopeResolutionOptions} [options={}] - Resolution options
-   * @returns {Promise<ActionResult>} ActionResult containing Map of scope names to entity ID sets
+   * @param {ScopeResolutionOptions} [options] - Resolution options
+   * @returns {ActionResult} ActionResult containing Map of scope names to entity ID sets
    */
-  async resolveBatch(requests, options = {}) {
+  resolveBatch(requests, options = {}) {
     const source = 'UnifiedScopeResolver.resolveBatch';
     const results = new Map();
     const errors = [];
 
-    this.#logger.info(
-      `Batch resolving ${requests.length} scopes.`,
-      { source }
-    );
+    this.#logger.info(`Batch resolving ${requests.length} scopes.`, { source });
 
-    // Process requests in parallel for efficiency
-    const resolutionPromises = requests.map(async ({ scopeName, context }) => {
-      const result = await this.resolve(scopeName, context, options);
+    // Process requests sequentially (synchronous)
+    const resolutions = requests.map(({ scopeName, context }) => {
+      const result = this.resolve(scopeName, context, options);
       return { scopeName, result };
     });
-
-    const resolutions = await Promise.all(resolutionPromises);
 
     // Collect results and errors
     for (const { scopeName, result } of resolutions) {
       if (result.success) {
         results.set(scopeName, result.value);
       } else {
-        errors.push(...result.errors.map(err => ({
-          ...err,
-          scopeName, // Add scope context to errors
-        })));
+        errors.push(
+          ...result.errors.map((err) => ({
+            ...err,
+            scopeName, // Add scope context to errors
+          }))
+        );
       }
     }
 
@@ -248,39 +245,45 @@ export class UnifiedScopeResolver {
     if (!context || !context.actor) {
       const error = new Error('Resolution context is missing actor entity');
       error.name = 'InvalidContextError';
-      const errorContext = this.#buildEnhancedError(
+      const enhancedError = this.#buildEnhancedError(
         error,
         scopeName,
         context,
         ERROR_PHASES.VALIDATION
       );
-      return ActionResult.failure(errorContext);
+      return ActionResult.failure(enhancedError);
     }
 
-    if (!context.actor.id || typeof context.actor.id !== 'string') {
+    if (
+      !context.actor.id ||
+      typeof context.actor.id !== 'string' ||
+      context.actor.id === 'undefined' ||
+      context.actor.id === 'null' ||
+      context.actor.id.trim() === ''
+    ) {
       const error = new Error(
         `Invalid actor entity ID: ${JSON.stringify(context.actor.id)}`
       );
       error.name = 'InvalidActorIdError';
-      const errorContext = this.#buildEnhancedError(
+      const enhancedError = this.#buildEnhancedError(
         error,
         scopeName,
         context,
         ERROR_PHASES.VALIDATION
       );
-      return ActionResult.failure(errorContext);
+      return ActionResult.failure(enhancedError);
     }
 
     if (!context.actorLocation) {
       const error = new Error('Resolution context is missing actor location');
       error.name = 'InvalidContextError';
-      const errorContext = this.#buildEnhancedError(
+      const enhancedError = this.#buildEnhancedError(
         error,
         scopeName,
         context,
         ERROR_PHASES.VALIDATION
       );
-      return ActionResult.failure(errorContext);
+      return ActionResult.failure(enhancedError);
     }
 
     return ActionResult.success();
@@ -313,10 +316,10 @@ export class UnifiedScopeResolver {
    * @param {string} scopeName - The scope to resolve
    * @param {ScopeResolutionContext} context - Resolution context
    * @param {boolean} validateEntities - Whether to validate resolved entities
-   * @returns {Promise<ActionResult>} Result with entity IDs or errors
+   * @returns {ActionResult} Result with entity IDs or errors
    * @private
    */
-  async #resolveScopeInternal(scopeName, context, validateEntities) {
+  #resolveScopeInternal(scopeName, context, validateEntities) {
     const source = 'UnifiedScopeResolver.#resolveScopeInternal';
 
     // Get scope definition
@@ -326,13 +329,13 @@ export class UnifiedScopeResolver {
         `Missing scope definition: Scope '${scopeName}' not found or has no expression`
       );
       error.name = 'ScopeNotFoundError';
-      const errorContext = this.#buildEnhancedError(
+      const enhancedError = this.#buildEnhancedError(
         error,
         scopeName,
         context,
         ERROR_PHASES.VALIDATION
       );
-      return ActionResult.failure(errorContext);
+      return ActionResult.failure(enhancedError);
     }
 
     // Parse AST
@@ -342,19 +345,13 @@ export class UnifiedScopeResolver {
     }
 
     // Build actor with components
-    const actorResult = await this.#buildActorWithComponents(
-      context.actor,
-      context
-    );
+    const actorResult = this.#buildActorWithComponents(context.actor, context);
     if (!actorResult.success) {
       return actorResult;
     }
 
     // Build runtime context
-    const runtimeCtx = this.#buildRuntimeContext(
-      actorResult.value,
-      context
-    );
+    const runtimeCtx = this.#buildRuntimeContext(actorResult.value, context);
 
     // Resolve scope
     try {
@@ -373,7 +370,7 @@ export class UnifiedScopeResolver {
 
       // Optionally validate entities exist
       if (validateEntities && resolvedIds.size > 0) {
-        const validationResult = await this.#validateResolvedEntities(
+        const validationResult = this.#validateResolvedEntities(
           resolvedIds,
           scopeName,
           context
@@ -385,17 +382,17 @@ export class UnifiedScopeResolver {
 
       return ActionResult.success(resolvedIds);
     } catch (error) {
-      const errorContext = this.#buildEnhancedError(
+      const enhancedError = this.#buildEnhancedError(
         error,
         scopeName,
         context,
         ERROR_PHASES.SCOPE_RESOLUTION,
         {
           scopeExpression: scopeDefinition.expr,
-          actorLocation: actorResult.value?.location || context.actorLocation,
+          actorLocation: context.actorLocation,
         }
       );
-      return ActionResult.failure(errorContext);
+      return ActionResult.failure(enhancedError);
     }
   }
 
@@ -428,7 +425,7 @@ export class UnifiedScopeResolver {
       return ActionResult.success(ast);
     } catch (error) {
       error.name = 'ScopeParseError';
-      const errorContext = this.#buildEnhancedError(
+      const enhancedError = this.#buildEnhancedError(
         error,
         scopeName,
         context,
@@ -437,7 +434,7 @@ export class UnifiedScopeResolver {
           scopeExpression: scopeDefinition.expr,
         }
       );
-      return ActionResult.failure(errorContext);
+      return ActionResult.failure(enhancedError);
     }
   }
 
@@ -446,10 +443,10 @@ export class UnifiedScopeResolver {
    *
    * @param {Entity} actorEntity - The actor entity
    * @param {ScopeResolutionContext} context - Resolution context
-   * @returns {Promise<ActionResult>} Result containing actor with components or error
+   * @returns {ActionResult} Result containing actor with components or error
    * @private
    */
-  async #buildActorWithComponents(actorEntity, context) {
+  #buildActorWithComponents(actorEntity, context) {
     const source = 'UnifiedScopeResolver.#buildActorWithComponents';
 
     try {
@@ -540,15 +537,15 @@ export class UnifiedScopeResolver {
    * @param {Set<string>} entityIds - The resolved entity IDs
    * @param {string} scopeName - The scope name
    * @param {ScopeResolutionContext} context - Resolution context
-   * @returns {Promise<ActionResult>} Success or validation errors
+   * @returns {ActionResult} Success or validation errors
    * @private
    */
-  async #validateResolvedEntities(entityIds, scopeName, context) {
+  #validateResolvedEntities(entityIds, scopeName, context) {
     const invalidIds = [];
 
     for (const entityId of entityIds) {
       try {
-        const exists = this.#entityManager.getEntity(entityId);
+        const exists = this.#entityManager.getEntityInstance(entityId);
         if (!exists) {
           invalidIds.push(entityId);
         }
@@ -563,17 +560,17 @@ export class UnifiedScopeResolver {
       );
       error.name = 'InvalidResolvedEntitiesError';
       error.invalidEntityIds = invalidIds;
-      const errorContext = this.#buildEnhancedError(
+      const enhancedError = this.#buildEnhancedError(
         error,
         scopeName,
         context,
         ERROR_PHASES.VALIDATION,
         {
-          invalidEntityIds,
+          invalidEntityIds: invalidIds,
           totalResolved: entityIds.size,
         }
       );
-      return ActionResult.failure(errorContext);
+      return ActionResult.failure(enhancedError);
     }
 
     return ActionResult.success();
@@ -586,26 +583,41 @@ export class UnifiedScopeResolver {
    * @param {string} scopeName - The scope name
    * @param {ScopeResolutionContext} context - Resolution context
    * @param {string} phase - The error phase
-   * @param {object} [additionalContext={}] - Additional context
-   * @returns {object} Enhanced error context
+   * @param {object} [additionalContext] - Additional context
+   * @returns {Error} Enhanced error with context attached
    * @private
    */
-  #buildEnhancedError(error, scopeName, context, phase, additionalContext = {}) {
+  #buildEnhancedError(
+    error,
+    scopeName,
+    context,
+    phase,
+    additionalContext = {}
+  ) {
     const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
       error: error,
-      actionDef: context.actionId ? { id: context.actionId } : null,
-      actorId: context.actor?.id,
+      actionDef: context?.actionId ? { id: context.actionId } : null,
+      actorId: context?.actor?.id,
       phase: phase,
-      trace: context.trace,
+      trace: context?.trace,
       additionalContext: {
         scopeName: scopeName,
-        actorLocation: context.actorLocation,
+        actorLocation: context?.actorLocation,
         suggestions: this.#generateFixSuggestions(error, scopeName),
         ...additionalContext,
       },
     });
 
-    return errorContext;
+    // Create an enhanced error that includes the original error message
+    // and attaches the context as properties
+    const enhancedError = new Error(error.message);
+    enhancedError.name = error.name;
+    enhancedError.stack = error.stack;
+
+    // Attach the error context properties
+    Object.assign(enhancedError, errorContext);
+
+    return enhancedError;
   }
 
   /**

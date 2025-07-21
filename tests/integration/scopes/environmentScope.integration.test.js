@@ -29,7 +29,7 @@ import fs from 'fs';
 import path from 'path';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
-import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 
 // Import actions
@@ -140,7 +140,7 @@ describe('Scope Integration Tests', () => {
       logger,
     });
 
-    const targetResolutionService = new TargetResolutionService({
+    const targetResolutionService = createTargetResolutionServiceWithMocks({
       scopeRegistry,
       scopeEngine,
       entityManager,

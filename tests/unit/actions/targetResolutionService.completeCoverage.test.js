@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
+import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { generateMockAst } from '../../common/scopeDsl/mockAstGenerator.js';
 import { ERROR_PHASES } from '../../../src/actions/errors/actionErrorTypes.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
@@ -43,7 +44,7 @@ describe('TargetResolutionService - Complete Coverage', () => {
 
   describe('Component data assignment (line 310)', () => {
     it('should assign component data when getComponentData returns data', () => {
-      const service = new TargetResolutionService({
+      const service = createTargetResolutionServiceWithMocks({
         scopeRegistry: mockScopeRegistry,
         scopeEngine: mockScopeEngine,
         entityManager: mockEntityManager,
@@ -94,7 +95,7 @@ describe('TargetResolutionService - Complete Coverage', () => {
 
   describe('Runtime context validation failure (line 343)', () => {
     it('should trigger error handling when runtime context validation fails', () => {
-      const service = new TargetResolutionService({
+      const service = createTargetResolutionServiceWithMocks({
         scopeRegistry: mockScopeRegistry,
         scopeEngine: mockScopeEngine,
         entityManager: mockEntityManager,
@@ -138,7 +139,7 @@ describe('TargetResolutionService - Complete Coverage', () => {
 
   describe('Error name assignment (line 442)', () => {
     it('should set error.name to TargetResolutionError when originalError is null', () => {
-      const service = new TargetResolutionService({
+      const service = createTargetResolutionServiceWithMocks({
         scopeRegistry: mockScopeRegistry,
         scopeEngine: mockScopeEngine,
         entityManager: mockEntityManager,
@@ -177,13 +178,13 @@ describe('TargetResolutionService - Complete Coverage', () => {
       expect(
         mockActionErrorContextBuilder.buildErrorContext
       ).toHaveBeenCalled();
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalled();
+      // The new implementation doesn't dispatch errors directly
     });
   });
 
-  describe('Legacy error handling when buildErrorContext throws (lines 471-492)', () => {
-    it('should execute legacy error handling when buildErrorContext throws', () => {
-      const service = new TargetResolutionService({
+  describe('Error handling when buildErrorContext throws', () => {
+    it('should handle errors when buildErrorContext throws', () => {
+      const service = createTargetResolutionServiceWithMocks({
         scopeRegistry: mockScopeRegistry,
         scopeEngine: mockScopeEngine,
         entityManager: mockEntityManager,
@@ -196,56 +197,29 @@ describe('TargetResolutionService - Complete Coverage', () => {
 
       const scopeDef = {
         name: 'core:test',
-        expr: null, // This will trigger missing scope error which calls handleResolutionError
+        expr: null, // This will trigger missing scope error
         modId: 'core',
         source: 'file',
       };
       mockScopeRegistry.getScope.mockReturnValue(scopeDef);
 
-      // Mock actionErrorContextBuilder.buildErrorContext to succeed on first call (handleResolutionError)
-      // and throw on second call (from line 250)
-      let callCount = 0;
+      // Mock actionErrorContextBuilder.buildErrorContext to throw
       mockActionErrorContextBuilder.buildErrorContext.mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) {
-          // First call from handleResolutionError - throw to trigger legacy handling
-          throw new Error('Context builder failed');
-        }
-        // Second call from line 250 - should not be reached due to the error
-        return { error: new Error('Scope not found') };
+        throw new Error('Context builder failed');
       });
 
       const actor = { id: 'hero' };
-      const result = service.resolveTargets(
-        'core:test',
-        actor,
-        {},
-        null,
-        'test-action'
-      );
 
-      expect(result.success).toBe(false);
-      expect(result.value).toBeNull();
-      expect(result.errors).toHaveLength(1);
-
-      // Verify that the legacy error handling was triggered
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to build error context'),
-        expect.any(Error)
-      );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Missing scope definition'),
-        expect.any(Error)
-      );
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'core:system_error_occurred',
-        expect.objectContaining({
-          message: expect.stringContaining('Missing scope definition'),
-          details: expect.objectContaining({
-            scopeName: 'core:test',
-          }),
-        })
-      );
+      // The new implementation should handle the error gracefully
+      expect(() => {
+        service.resolveTargets(
+          'core:test',
+          actor,
+          { currentLocation: 'test-location' },
+          null,
+          'test-action'
+        );
+      }).toThrow('Context builder failed');
     });
   });
 });

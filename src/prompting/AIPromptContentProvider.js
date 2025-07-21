@@ -158,17 +158,17 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    */
   _parseCharacterDescription(description) {
     const attributes = [];
-    
+
     // Split by semicolons OR newlines, but preserve pipes within values (for clothing lists)
     const parts = description.split(/[;\n]/);
-    
+
     for (const part of parts) {
       const trimmed = part.trim();
       if (trimmed.includes(':')) {
         const colonIndex = trimmed.indexOf(':');
         const key = trimmed.substring(0, colonIndex).trim();
         const value = trimmed.substring(colonIndex + 1).trim();
-        
+
         if (key && value) {
           // Capitalize first letter of key and format as bullet point
           const formattedKey = key.charAt(0).toUpperCase() + key.slice(1);
@@ -179,12 +179,12 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         attributes.push(`- **Description**: ${trimmed}`);
       }
     }
-    
+
     // If no structured attributes found, treat entire description as single item
     if (attributes.length === 0) {
       attributes.push(`- **Description**: ${description}`);
     }
-    
+
     return attributes;
   }
 
@@ -481,7 +481,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
     // Check for minimal character details before formatting
     if (
-      (!actorPromptData.name || actorPromptData.name === DEFAULT_FALLBACK_CHARACTER_NAME) &&
+      (!actorPromptData.name ||
+        actorPromptData.name === DEFAULT_FALLBACK_CHARACTER_NAME) &&
       !actorPromptData.description &&
       !actorPromptData.personality &&
       !actorPromptData.profile
@@ -494,15 +495,16 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
     // Use the new CharacterDataFormatter for markdown structure
     try {
-      const formattedPersona = this.#characterDataFormatter.formatCharacterPersona(actorPromptData);
-      
+      const formattedPersona =
+        this.#characterDataFormatter.formatCharacterPersona(actorPromptData);
+
       if (!formattedPersona || formattedPersona.trim().length === 0) {
         this.#logger.warn(
           'AIPromptContentProvider: CharacterDataFormatter returned empty result. Using fallback.'
         );
         return PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS;
       }
-      
+
       this.#logger.debug(
         'AIPromptContentProvider: Successfully formatted character persona with markdown structure.'
       );
@@ -536,19 +538,20 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
     // Build markdown-structured content
     const segments = [];
-    
+
     // Main header
     segments.push('## Current Situation');
     segments.push('');
-    
+
     // Location section
     const locationName = currentLocation.name || DEFAULT_FALLBACK_LOCATION_NAME;
     segments.push('### Location');
     segments.push(locationName);
     segments.push('');
-    
+
     // Description section
-    let locationDesc = currentLocation.description || DEFAULT_FALLBACK_DESCRIPTION_RAW;
+    let locationDesc =
+      currentLocation.description || DEFAULT_FALLBACK_DESCRIPTION_RAW;
     locationDesc = ensureTerminalPunctuation(locationDesc);
     segments.push('### Description');
     segments.push(locationDesc);
@@ -564,10 +567,13 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
           }
           return `Towards ${direction}`;
         };
-        const targetName = exit.targetLocationName || 
-                          exit.targetLocationId || 
-                          DEFAULT_FALLBACK_LOCATION_NAME;
-        segments.push(`- **${formatDirection(exit.direction)}** leads to ${targetName}`);
+        const targetName =
+          exit.targetLocationName ||
+          exit.targetLocationId ||
+          DEFAULT_FALLBACK_LOCATION_NAME;
+        segments.push(
+          `- **${formatDirection(exit.direction)}** leads to ${targetName}`
+        );
       });
       this.#logger.debug(
         `AIPromptContentProvider: Formatted ${currentLocation.exits.length} exits for location.`
@@ -580,20 +586,21 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     }
     segments.push('');
 
-    // Characters section  
+    // Characters section
     segments.push('## Other Characters Present');
     if (currentLocation.characters && currentLocation.characters.length > 0) {
       currentLocation.characters.forEach((char) => {
         const namePart = char.name || DEFAULT_FALLBACK_CHARACTER_NAME;
-        let descriptionText = char.description || DEFAULT_FALLBACK_DESCRIPTION_RAW;
+        let descriptionText =
+          char.description || DEFAULT_FALLBACK_DESCRIPTION_RAW;
         descriptionText = ensureTerminalPunctuation(descriptionText);
-        
+
         segments.push(`### ${namePart}`);
         // Format character description as bullet points if it contains attribute-like information
         if (descriptionText.includes(':') && descriptionText.includes(',')) {
           // Parse structured character description into bullet points
           const attributes = this._parseCharacterDescription(descriptionText);
-          attributes.forEach(attr => segments.push(attr));
+          attributes.forEach((attr) => segments.push(attr));
         } else {
           // Simple description without structure
           segments.push(`- **Description**: ${descriptionText}`);

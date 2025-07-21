@@ -164,7 +164,7 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
       const result = formatter.groupNotesBySubject(notes);
 
       expect(result.size).toBe(2);
-      
+
       const johnGroup = result.get('John');
       expect(johnGroup).toEqual({
         subjectType: SUBJECT_TYPES.CHARACTER,
@@ -519,7 +519,7 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
       // Step 2: Sort for display
       const sorted = formatter.sortNotesForDisplay(grouped);
       expect(sorted).toHaveLength(3);
-      
+
       // Characters should come first (priority 1)
       expect(sorted[0].displayCategory).toBe('Characters');
       expect(sorted[1].displayCategory).toBe('Locations');

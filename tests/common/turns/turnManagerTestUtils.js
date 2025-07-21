@@ -68,5 +68,11 @@ export function expectTurnStartedEvents(dispatchMock, actorId, actorType) {
  */
 export async function triggerTurnEndedAndFlush(bed, entityId, success = true) {
   bed.trigger(TURN_ENDED_ID, { entityId, success });
+  
+  // If using real timers, we need to wait for the setTimeout(0) callback
+  if (!jest.isMockFunction(setTimeout)) {
+    await new Promise(resolve => setTimeout(resolve, 10)); // Wait for real timer
+  }
+  
   await flushPromisesAndTimers();
 }

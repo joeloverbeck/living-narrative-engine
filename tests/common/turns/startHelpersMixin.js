@@ -58,10 +58,15 @@ export function StartHelpersMixin(Base) {
      * @returns {Promise<void>} Resolves when flush completes.
      */
     async startAndFlush() {
-      await this.#startInternal(async () => {
-        await this.turnManager.start();
-      });
-      await flushPromisesAndTimers();
+      try {
+        await this.#startInternal(async () => {
+          await this.turnManager.start();
+        });
+        await flushPromisesAndTimers(5); // Use shorter iteration limit
+      } catch (error) {
+        console.warn('startAndFlush error:', error.message);
+        throw error;
+      }
     }
 
     /**
@@ -71,8 +76,13 @@ export function StartHelpersMixin(Base) {
      * @returns {Promise<void>} Resolves once flush completes.
      */
     async startWithEntitiesAndFlush(...entities) {
-      await this.startWithEntities(...entities);
-      await flushPromisesAndTimers();
+      try {
+        await this.startWithEntities(...entities);
+        await flushPromisesAndTimers(5); // Use shorter iteration limit
+      } catch (error) {
+        console.warn('startWithEntitiesAndFlush error:', error.message);
+        throw error;
+      }
     }
 
     /**
@@ -81,19 +91,43 @@ export function StartHelpersMixin(Base) {
      * @returns {Promise<{ ai1: object, ai2: object, player: object }>} Created actors.
      */
     async startWithDefaultActorsAndFlush() {
-      const actors = this.addDefaultActors();
-      await this.startAndFlush();
-      return actors;
+      try {
+        const actors = this.addDefaultActors();
+        await this.startAndFlush();
+        return actors;
+      } catch (error) {
+        console.warn('startWithDefaultActorsAndFlush error:', error.message);
+        throw error;
+      }
     }
 
     /**
      * Calls advanceTurn then flushes timers/promises.
      *
+     * @param {boolean} [suppressErrors] - Whether to suppress errors for error handling tests
      * @returns {Promise<void>} Resolves when flush completes.
      */
-    async advanceAndFlush() {
-      await this.turnManager.advanceTurn();
-      await flushPromisesAndTimers();
+    async advanceAndFlush(suppressErrors = false) {
+      try {
+        // Call advanceTurn
+        await this.turnManager.advanceTurn();
+        
+        // If using real timers, we need to wait for any setTimeout(0) callbacks
+        if (!jest.isMockFunction(setTimeout)) {
+          await new Promise(resolve => setTimeout(resolve, 10)); // Wait for real timer
+        }
+        
+        await flushPromisesAndTimers(5); // Use shorter iteration limit for better performance
+      } catch (error) {
+        if (!suppressErrors) {
+          // Log error for debugging but don't silently fail
+          console.warn('advanceAndFlush error:', error.message);
+          throw error;
+        }
+        // For error handling tests, we expect errors so just continue
+        // Flush additional times to ensure all error handling completes
+        await flushPromisesAndTimers(10);
+      }
     }
 
     /**

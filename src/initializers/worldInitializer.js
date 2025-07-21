@@ -161,18 +161,24 @@ class WorldInitializer {
    */
   #getWorldLoadingConfig() {
     return {
-      ENABLE_WORLD_LOADING_OPTIMIZATION: 
-        this.#config?.isFeatureEnabled?.('performance.ENABLE_WORLD_LOADING_OPTIMIZATION') ?? true,
-      WORLD_LOADING_BATCH_SIZE: 
+      ENABLE_WORLD_LOADING_OPTIMIZATION:
+        this.#config?.isFeatureEnabled?.(
+          'performance.ENABLE_WORLD_LOADING_OPTIMIZATION'
+        ) ?? true,
+      WORLD_LOADING_BATCH_SIZE:
         this.#config?.getValue?.('performance.WORLD_LOADING_BATCH_SIZE') ?? 25,
-      WORLD_LOADING_MAX_BATCH_SIZE: 
-        this.#config?.getValue?.('performance.WORLD_LOADING_MAX_BATCH_SIZE') ?? 100,
-      WORLD_LOADING_ENABLE_PARALLEL: 
-        this.#config?.getValue?.('performance.WORLD_LOADING_ENABLE_PARALLEL') ?? true,
-      WORLD_LOADING_BATCH_THRESHOLD: 
-        this.#config?.getValue?.('performance.WORLD_LOADING_BATCH_THRESHOLD') ?? 5,
-      WORLD_LOADING_TIMEOUT_MS: 
-        this.#config?.getValue?.('performance.WORLD_LOADING_TIMEOUT_MS') ?? 30000,
+      WORLD_LOADING_MAX_BATCH_SIZE:
+        this.#config?.getValue?.('performance.WORLD_LOADING_MAX_BATCH_SIZE') ??
+        100,
+      WORLD_LOADING_ENABLE_PARALLEL:
+        this.#config?.getValue?.('performance.WORLD_LOADING_ENABLE_PARALLEL') ??
+        true,
+      WORLD_LOADING_BATCH_THRESHOLD:
+        this.#config?.getValue?.('performance.WORLD_LOADING_BATCH_THRESHOLD') ??
+        5,
+      WORLD_LOADING_TIMEOUT_MS:
+        this.#config?.getValue?.('performance.WORLD_LOADING_TIMEOUT_MS') ??
+        30000,
     };
   }
 
@@ -185,10 +191,12 @@ class WorldInitializer {
    */
   #shouldUseBatchOperations(entityCount) {
     const config = this.#getWorldLoadingConfig();
-    
-    return config.ENABLE_WORLD_LOADING_OPTIMIZATION &&
-           this.#entityManager.hasBatchSupport?.() &&
-           entityCount >= config.WORLD_LOADING_BATCH_THRESHOLD;
+
+    return (
+      config.ENABLE_WORLD_LOADING_OPTIMIZATION &&
+      this.#entityManager.hasBatchSupport?.() &&
+      entityCount >= config.WORLD_LOADING_BATCH_THRESHOLD
+    );
   }
 
   /**
@@ -200,21 +208,21 @@ class WorldInitializer {
    */
   #getBatchSizeForWorld(entityCount) {
     const config = this.#getWorldLoadingConfig();
-    
+
     if (entityCount <= config.WORLD_LOADING_BATCH_THRESHOLD) {
       return entityCount; // Process small worlds in single batch
     }
-    
+
     // Scale batch size based on entity count
     const baseBatchSize = config.WORLD_LOADING_BATCH_SIZE;
     const maxBatchSize = config.WORLD_LOADING_MAX_BATCH_SIZE;
-    
+
     // For large worlds, use larger batches but cap at maximum
     const scaledBatchSize = Math.min(
       Math.ceil(entityCount / 4), // Quarter of total entities
       maxBatchSize
     );
-    
+
     return Math.max(baseBatchSize, scaledBatchSize);
   }
 
@@ -241,19 +249,27 @@ class WorldInitializer {
   async #validateAndPrepareSpec(worldInstance, worldName, seenIds) {
     // Check for valid instanceId
     if (!worldInstance?.instanceId) {
-      this.#logger.warn(`Invalid world instance (missing instanceId):`, worldInstance);
+      this.#logger.warn(
+        `Invalid world instance (missing instanceId):`,
+        worldInstance
+      );
       return null;
     }
 
     // Check for duplicates
     if (seenIds.has(worldInstance.instanceId)) {
-      this.#logger.error(`Duplicate instanceId '${worldInstance.instanceId}' encountered. Skipping.`);
+      this.#logger.error(
+        `Duplicate instanceId '${worldInstance.instanceId}' encountered. Skipping.`
+      );
       return null;
     }
     seenIds.add(worldInstance.instanceId);
 
     // Validate instance definition
-    const validation = this.#validateInstanceDefinition(worldInstance.instanceId, worldName);
+    const validation = this.#validateInstanceDefinition(
+      worldInstance.instanceId,
+      worldName
+    );
     if (!validation) {
       return null;
     }
@@ -284,7 +300,11 @@ class WorldInitializer {
 
     for (const worldInstance of instances) {
       // Validate and prepare each instance
-      const spec = await this.#validateAndPrepareSpec(worldInstance, worldName, seenIds);
+      const spec = await this.#validateAndPrepareSpec(
+        worldInstance,
+        worldName,
+        seenIds
+      );
       if (spec) {
         entitySpecs.push(spec);
       } else {
@@ -316,7 +336,9 @@ class WorldInitializer {
       };
     }
 
-    this.#logger.info(`WorldInitializer: Starting batch entity creation for ${entitySpecs.length} entities in world '${worldName}'`);
+    this.#logger.info(
+      `WorldInitializer: Starting batch entity creation for ${entitySpecs.length} entities in world '${worldName}'`
+    );
 
     const batchOptions = {
       batchSize: this.#getBatchSizeForWorld(entitySpecs.length),
@@ -325,13 +347,16 @@ class WorldInitializer {
     };
 
     const startTime = performance.now();
-    const result = await this.#entityManager.batchCreateEntities(entitySpecs, batchOptions);
+    const result = await this.#entityManager.batchCreateEntities(
+      entitySpecs,
+      batchOptions
+    );
     const processingTime = performance.now() - startTime;
 
     this.#logger.info(
       `WorldInitializer: Batch entity creation completed. ` +
-      `Success: ${result.successCount}, Failed: ${result.failureCount}, ` +
-      `Time: ${processingTime.toFixed(2)}ms`
+        `Success: ${result.successCount}, Failed: ${result.failureCount}, ` +
+        `Time: ${processingTime.toFixed(2)}ms`
     );
 
     return { ...result, processingTime };
@@ -347,7 +372,12 @@ class WorldInitializer {
    * @returns {Promise<object>} Final initialization result
    * @private
    */
-  async #processBatchResults(batchResult, worldName, totalInstances, validationFailures = 0) {
+  async #processBatchResults(
+    batchResult,
+    worldName,
+    totalInstances,
+    validationFailures = 0
+  ) {
     const result = {
       entities: batchResult.successes || [],
       instantiatedCount: batchResult.successCount || 0,
@@ -407,32 +437,55 @@ class WorldInitializer {
 
     // Check if batch operations should be used
     if (!this.#shouldUseBatchOperations(instances.length)) {
-      return await this.#instantiateEntitiesFromWorldSequential(worldName, instances);
+      return await this.#instantiateEntitiesFromWorldSequential(
+        worldName,
+        instances
+      );
     }
 
     try {
       // Prepare batch entity specifications
-      const { entitySpecs, validationFailures } = await this.#prepareEntitySpecs(instances, worldName);
-      
+      const { entitySpecs, validationFailures } =
+        await this.#prepareEntitySpecs(instances, worldName);
+
       // Execute batch entity creation
-      const batchResult = await this.#executeBatchEntityCreation(entitySpecs, worldName);
-      
+      const batchResult = await this.#executeBatchEntityCreation(
+        entitySpecs,
+        worldName
+      );
+
       // Check for critical failures that require fallback
-      const shouldFallback = await this.#handleBatchFailures(batchResult, worldName);
+      const shouldFallback = await this.#handleBatchFailures(
+        batchResult,
+        worldName
+      );
       if (shouldFallback) {
-        return await this.#fallbackToSequentialProcessing(worldName, instances, 'Critical batch failures detected');
+        return await this.#fallbackToSequentialProcessing(
+          worldName,
+          instances,
+          'Critical batch failures detected'
+        );
       }
-      
+
       // Process batch results and dispatch events
-      return await this.#processBatchResults(batchResult, worldName, instances.length, validationFailures);
+      return await this.#processBatchResults(
+        batchResult,
+        worldName,
+        instances.length,
+        validationFailures
+      );
     } catch (error) {
       this.#logger.error(
         `WorldInitializer: Batch operation failed for world '${worldName}'. Falling back to sequential processing.`,
         error
       );
-      
+
       // Fallback to sequential processing on any batch operation failure
-      return await this.#fallbackToSequentialProcessing(worldName, instances, `Batch operation error: ${error.message}`);
+      return await this.#fallbackToSequentialProcessing(
+        worldName,
+        instances,
+        `Batch operation error: ${error.message}`
+      );
     }
   }
 
@@ -514,7 +567,7 @@ class WorldInitializer {
    * @private
    */
   async #handleBatchFailures(batchResult, worldName) {
-    const criticalFailures = batchResult.failures?.filter(failure => {
+    const criticalFailures = batchResult.failures?.filter((failure) => {
       const errorType = this.#classifyBatchError(failure.error, failure.item);
       return errorType === 'consistency' || errorType === 'timeout';
     });
@@ -522,7 +575,7 @@ class WorldInitializer {
     if (criticalFailures?.length > 0) {
       this.#logger.error(
         `WorldInitializer: Critical failures detected in batch operation for world '${worldName}'. ` +
-        `Falling back to sequential processing.`
+          `Falling back to sequential processing.`
       );
       return true; // Retry with sequential processing
     }
@@ -552,8 +605,11 @@ class WorldInitializer {
       `WorldInitializer: Falling back to sequential processing for world '${worldName}'. Reason: ${reason}`
     );
 
-    const result = await this.#instantiateEntitiesFromWorldSequential(worldName, instances);
-    
+    const result = await this.#instantiateEntitiesFromWorldSequential(
+      worldName,
+      instances
+    );
+
     return {
       ...result,
       optimizationUsed: 'sequential_fallback',

@@ -110,6 +110,8 @@ export const coreTokens = freeze({
   IValidatedEventDispatcher: 'IValidatedEventDispatcher',
   IScopeRegistry: 'IScopeRegistry',
   IScopeEngine: 'IScopeEngine',
+  IUnifiedScopeResolver: 'IUnifiedScopeResolver',
+  IScopeCacheStrategy: 'IScopeCacheStrategy',
   IActionExecutor: 'IActionExecutor',
   IWorldContext: 'IWorldContext',
   ICommandProcessor: 'ICommandProcessor',
