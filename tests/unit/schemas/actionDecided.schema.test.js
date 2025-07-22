@@ -5,6 +5,7 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 import eventDef from '../../../data/mods/core/events/action_decided.event.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 
@@ -14,6 +15,7 @@ describe('Schema – core:action_decided payload', () => {
 
   beforeAll(() => {
     const ajv = new Ajv({ strict: true, allErrors: true });
+    addFormats(ajv);
     ajv.addSchema(
       commonSchema,
       'schema://living-narrative-engine/common.schema.json'
@@ -29,7 +31,18 @@ describe('Schema – core:action_decided payload', () => {
       actorType: 'human',
       extractedData: {
         thoughts: 'This seems like a good idea.',
-        notes: ['note 1', 'note 2'],
+        notes: [
+          {
+            text: 'First observation',
+            subject: 'player-1',
+            subjectType: 'character',
+          },
+          {
+            text: 'Second observation',
+            subject: 'environment',
+            subjectType: 'location',
+          },
+        ],
         speech: 'I will do it.',
       },
     };
@@ -91,24 +104,6 @@ describe('Schema – core:action_decided payload', () => {
     expect(validate(payload)).toBe(true);
   });
 
-  test('✓ should validate with mixed string and object format notes', () => {
-    const payload = {
-      actorId: 'player-1',
-      actorType: 'ai',
-      extractedData: {
-        thoughts: 'Mixed format test.',
-        notes: [
-          'Simple string note',
-          {
-            text: 'Structured note',
-            subject: 'test-subject',
-            subjectType: 'other',
-          },
-        ],
-      },
-    };
-    expect(validate(payload)).toBe(true);
-  });
 
   test('✓ should validate object notes without optional fields', () => {
     const payload = {
@@ -229,11 +224,19 @@ describe('Schema – core:action_decided payload', () => {
         notes: [
           {
             subject: 'missing-text',
+            subjectType: 'other',
           },
         ],
       },
     };
     expect(validate(payload)).toBe(false);
+    expect(validate.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message: "must have required property 'text'",
+        }),
+      ])
+    );
   });
 
   test('✗ should NOT validate object notes without required subject field', () => {
@@ -249,6 +252,13 @@ describe('Schema – core:action_decided payload', () => {
       },
     };
     expect(validate(payload)).toBe(false);
+    expect(validate.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message: "must have required property 'subject'",
+        }),
+      ])
+    );
   });
 
   test('✗ should NOT validate object notes with empty text', () => {
@@ -260,11 +270,20 @@ describe('Schema – core:action_decided payload', () => {
           {
             text: '',
             subject: 'test',
+            subjectType: 'other',
           },
         ],
       },
     };
     expect(validate(payload)).toBe(false);
+    expect(validate.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          instancePath: '/extractedData/notes/0/text',
+          message: 'must NOT have fewer than 1 characters',
+        }),
+      ])
+    );
   });
 
   test('✗ should NOT validate object notes with additional properties', () => {
@@ -276,11 +295,45 @@ describe('Schema – core:action_decided payload', () => {
           {
             text: 'note text',
             subject: 'test',
+            subjectType: 'other',
             invalidProp: 'not allowed',
           },
         ],
       },
     };
     expect(validate(payload)).toBe(false);
+    expect(validate.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          instancePath: '/extractedData/notes/0',
+          message: 'must NOT have additional properties',
+        }),
+      ])
+    );
+  });
+
+  test('✗ should NOT validate object notes with invalid subjectType', () => {
+    const payload = {
+      actorId: 'player-1',
+      actorType: 'ai',
+      extractedData: {
+        notes: [
+          {
+            text: 'note text',
+            subject: 'test',
+            subjectType: 'invalid_type',
+          },
+        ],
+      },
+    };
+    expect(validate(payload)).toBe(false);
+    expect(validate.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          instancePath: '/extractedData/notes/0/subjectType',
+          message: 'must be equal to one of the allowed values',
+        }),
+      ])
+    );
   });
 });

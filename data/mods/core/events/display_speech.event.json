@@ -26,9 +26,11 @@
         "minLength": 1
       },
       "notes": {
-        "type": "string",
-        "description": "Private notes",
-        "minLength": 1
+        "type": "array",
+        "description": "Private structured notes",
+        "items": {
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/structuredNote"
+        }
       }
     },
     "required": ["entityId", "speechContent"],

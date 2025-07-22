@@ -321,8 +321,6 @@ describe('NotesQueryService', () => {
       const stats = service.getStatistics(sampleNotes);
 
       expect(stats.total).toBe(5);
-      expect(stats.structured).toBe(4);
-      expect(stats.legacy).toBe(1);
 
       expect(stats.bySubject).toEqual({
         John: 2,
@@ -350,8 +348,6 @@ describe('NotesQueryService', () => {
     test('should handle empty notes', () => {
       const stats = service.getStatistics([]);
       expect(stats.total).toBe(0);
-      expect(stats.structured).toBe(0);
-      expect(stats.legacy).toBe(0);
       expect(stats.bySubject).toEqual({});
       expect(stats.byTag).toEqual({});
       expect(stats.byContext).toEqual({});

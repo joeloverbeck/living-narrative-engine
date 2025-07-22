@@ -753,9 +753,11 @@ describe('Character Builder LLM Integration', () => {
       const endTime = Date.now();
       const actualProcessingTime = endTime - startTime;
 
-      // Assert
-      expect(result[0].llmMetadata.processingTime).toBeGreaterThanOrEqual(100);
+      // Assert - Allow for timing variations in test environments
+      // The mock has a 100ms timeout, but we allow ±10ms for system variance
+      expect(result[0].llmMetadata.processingTime).toBeGreaterThanOrEqual(90);
       expect(result[0].llmMetadata.processingTime).toBeLessThan(actualProcessingTime + 50); // Allow small margin
+      expect(result[0].llmMetadata.processingTime).toBeLessThan(200); // Reasonable upper bound
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Successfully generated thematic directions'),
         expect.objectContaining({

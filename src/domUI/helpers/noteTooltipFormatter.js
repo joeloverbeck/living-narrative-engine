@@ -74,12 +74,6 @@ function getSubjectTypeIcon(subjectType) {
  * @returns {string} The formatted HTML string.
  */
 function formatSingleNoteAsHtml(note, index = 0) {
-  if (typeof note === 'string') {
-    return `<div class="note-item note-item--simple">
-      <div class="note-content">${escapeHtml(note.trim())}</div>
-    </div>`;
-  }
-
   if (!note || typeof note !== 'object') {
     return '';
   }
@@ -150,23 +144,14 @@ function formatSingleNoteAsHtml(note, index = 0) {
 }
 
 /**
- * Formats notes data into rich HTML for tooltip display.
+ * Formats structured notes data into rich HTML for tooltip display.
  *
- * @param {NoteObject|NoteObject[]|string|null|undefined} notesData - The notes data to format.
+ * @param {NoteObject|NoteObject[]|null|undefined} notesData - The structured notes data to format.
  * @returns {string} HTML string for tooltip content.
  */
 export function formatNotesAsRichHtml(notesData) {
   if (!notesData) {
     return '';
-  }
-
-  // Handle string input (fallback for plain text)
-  if (typeof notesData === 'string') {
-    return `<div class="notes-container notes-container--simple">
-      <div class="note-item note-item--simple">
-        <div class="note-content">${escapeHtml(notesData.trim())}</div>
-      </div>
-    </div>`;
   }
 
   // Handle single note object

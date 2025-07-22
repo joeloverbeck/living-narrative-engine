@@ -495,7 +495,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       expect.objectContaining({
         entityId: actor.id,
         speechContent: 'Hello notes',
-        notesRaw: ['first note', 'second note'],
+        notes: ['first note', 'second note'],
       })
     );
   });
