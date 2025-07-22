@@ -13,7 +13,6 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
   ENTITY_SPOKE_ID,
 } from '../../../../src/constants/eventIds.js';
-import TurnDirective from '../../../../src/turns/constants/turnDirectives.js';
 import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
@@ -496,7 +495,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       expect.objectContaining({
         entityId: actor.id,
         speechContent: 'Hello notes',
-        notes: 'first note\nsecond note',
+        notesRaw: ['first note', 'second note'],
       })
     );
   });

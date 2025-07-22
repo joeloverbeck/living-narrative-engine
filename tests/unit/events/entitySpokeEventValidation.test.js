@@ -33,12 +33,12 @@ describe('Entity Spoke Event - Schema Validation', () => {
   });
 
   describe('Payload validation with structured notes', () => {
-    it('should validate successfully with plain text notes', () => {
+    it('should validate successfully with plain text notesRaw', () => {
       const payload = {
         entityId: 'test:actor',
         speechContent: 'Hello world',
         thoughts: 'Internal thoughts',
-        notes: 'Simple text note',
+        notesRaw: 'Simple text note',
       };
 
       const isValid = validate(payload);
@@ -61,8 +61,6 @@ describe('Entity Spoke Event - Schema Validation', () => {
         entityId: 'test:actor',
         speechContent: 'Hello world',
         thoughts: 'Internal thoughts',
-        notes:
-          '[character] Alice: Character observation text (in the tavern) [suspicious, wealthy]',
         notesRaw: notesRaw,
       };
 
@@ -94,8 +92,6 @@ describe('Entity Spoke Event - Schema Validation', () => {
         entityId: 'test:actor',
         speechContent: 'Hello world',
         thoughts: 'Internal thoughts',
-        notes:
-          '[character] Alice: First observation\n[location] Tavern: Second observation (busy night) [crowded]',
         notesRaw: notesRaw,
       };
 
@@ -151,7 +147,6 @@ describe('Entity Spoke Event - Schema Validation', () => {
         entityId: 'p_erotica:amaia_castillo_instance',
         speechContent: expect.any(String),
         thoughts: expect.any(String),
-        notes: expect.any(String),
         notesRaw: expect.any(Array),
       });
 

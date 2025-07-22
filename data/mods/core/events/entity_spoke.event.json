@@ -20,11 +20,6 @@
         "description": "Internal monologue of the entity.",
         "minLength": 1
       },
-      "notes": {
-        "type": "string",
-        "description": "Private OOC notes related to the speech.",
-        "minLength": 1
-      },
       "notesRaw": {
         "description": "Raw structured notes data for processing and UI display.",
         "oneOf": [

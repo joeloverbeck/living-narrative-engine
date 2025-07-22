@@ -30,12 +30,12 @@ describe('CharacterStorageService', () => {
     };
 
     mockDatabase = {
-      storeConcept: jest.fn(),
-      retrieveConcept: jest.fn(),
-      listConcepts: jest.fn(),
-      deleteConcept: jest.fn(),
-      storeDirections: jest.fn(),
-      retrieveDirections: jest.fn(),
+      saveCharacterConcept: jest.fn(),
+      getCharacterConcept: jest.fn(),
+      getAllCharacterConcepts: jest.fn(),
+      deleteCharacterConcept: jest.fn(),
+      saveThematicDirections: jest.fn(),
+      getThematicDirectionsByConceptId: jest.fn(),
       initialize: jest.fn(),
       close: jest.fn(),
     };
@@ -69,7 +69,7 @@ describe('CharacterStorageService', () => {
           database: mockDatabase,
           schemaValidator: mockSchemaValidator,
         });
-      }).toThrow('Missing required dependency: logger.');
+      }).toThrow('Missing required dependency: ILogger.');
     });
 
     test('should throw error if database is invalid', () => {
@@ -79,7 +79,7 @@ describe('CharacterStorageService', () => {
           database: null,
           schemaValidator: mockSchemaValidator,
         });
-      }).toThrow('Missing required dependency: database.');
+      }).toThrow('Missing required dependency: CharacterDatabase.');
     });
 
     test('should throw error if schemaValidator is invalid', () => {
@@ -89,7 +89,7 @@ describe('CharacterStorageService', () => {
           database: mockDatabase,
           schemaValidator: null,
         });
-      }).toThrow('Missing required dependency: schemaValidator.');
+      }).toThrow('Missing required dependency: ISchemaValidator.');
     });
   });
 
@@ -101,8 +101,10 @@ describe('CharacterStorageService', () => {
       personality: 'Courageous but impulsive',
     };
 
-    beforeEach(() => {
+    beforeEach(async () => {
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
+      mockDatabase.initialize.mockResolvedValue();
+      await service.initialize();
     });
 
     test('should successfully store character concept', async () => {
@@ -113,18 +115,18 @@ describe('CharacterStorageService', () => {
         updatedAt: new Date().toISOString(),
       };
 
-      mockDatabase.storeConcept.mockResolvedValue(mockStoredConcept);
+      mockDatabase.saveCharacterConcept.mockResolvedValue(mockStoredConcept);
 
       const result = await service.storeCharacterConcept(validConceptData);
 
       expect(result).toEqual(mockStoredConcept);
       expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledWith(
         validConceptData,
-        'character-concept.schema.json'
+        'character-concept'
       );
-      expect(mockDatabase.storeConcept).toHaveBeenCalledWith(validConceptData);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Storing character concept'),
+      expect(mockDatabase.saveCharacterConcept).toHaveBeenCalledWith(validConceptData);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Successfully stored character concept'),
         expect.any(Object)
       );
     });
@@ -137,14 +139,14 @@ describe('CharacterStorageService', () => {
       await expect(service.storeCharacterConcept(invalidData)).rejects.toThrow();
       expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledWith(
         invalidData,
-        'character-concept.schema.json'
+        'character-concept'
       );
-      expect(mockDatabase.storeConcept).not.toHaveBeenCalled();
+      expect(mockDatabase.saveCharacterConcept).not.toHaveBeenCalled();
     });
 
     test('should handle database storage errors', async () => {
       const storageError = new Error('Database connection failed');
-      mockDatabase.storeConcept.mockRejectedValue(storageError);
+      mockDatabase.saveCharacterConcept.mockRejectedValue(storageError);
 
       await expect(service.storeCharacterConcept(validConceptData)).rejects.toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -163,12 +165,17 @@ describe('CharacterStorageService', () => {
 
       expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledWith(
         validConceptData,
-        'character-concept.schema.json'
+        'character-concept'
       );
     });
   });
 
-  describe('retrieveCharacterConcept', () => {
+  describe('getCharacterConcept', () => {
+    beforeEach(async () => {
+      mockDatabase.initialize.mockResolvedValue();
+      await service.initialize();
+    });
+
     test('should successfully retrieve character concept', async () => {
       const conceptId = 'test-concept-123';
       const mockConcept = {
@@ -181,12 +188,12 @@ describe('CharacterStorageService', () => {
         updatedAt: new Date().toISOString(),
       };
 
-      mockDatabase.retrieveConcept.mockResolvedValue(mockConcept);
+      mockDatabase.getCharacterConcept.mockResolvedValue(mockConcept);
 
-      const result = await service.retrieveCharacterConcept(conceptId);
+      const result = await service.getCharacterConcept(conceptId);
 
       expect(result).toEqual(mockConcept);
-      expect(mockDatabase.retrieveConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockDatabase.getCharacterConcept).toHaveBeenCalledWith(conceptId);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Retrieved character concept'),
         expect.objectContaining({ conceptId })
@@ -195,34 +202,39 @@ describe('CharacterStorageService', () => {
 
     test('should return null if concept not found', async () => {
       const conceptId = 'non-existent-concept';
-      mockDatabase.retrieveConcept.mockResolvedValue(null);
+      mockDatabase.getCharacterConcept.mockResolvedValue(null);
 
-      const result = await service.retrieveCharacterConcept(conceptId);
+      const result = await service.getCharacterConcept(conceptId);
 
       expect(result).toBeNull();
-      expect(mockDatabase.retrieveConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockDatabase.getCharacterConcept).toHaveBeenCalledWith(conceptId);
     });
 
     test('should handle database retrieval errors', async () => {
       const conceptId = 'test-concept-123';
       const retrievalError = new Error('Database connection failed');
-      mockDatabase.retrieveConcept.mockRejectedValue(retrievalError);
+      mockDatabase.getCharacterConcept.mockRejectedValue(retrievalError);
 
-      await expect(service.retrieveCharacterConcept(conceptId)).rejects.toThrow();
+      await expect(service.getCharacterConcept(conceptId)).rejects.toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to retrieve character concept'),
-        expect.any(Object)
+        expect.stringContaining('Failed to get character concept'),
+        expect.any(Error)
       );
     });
 
     test('should throw error if conceptId is invalid', async () => {
-      await expect(service.retrieveCharacterConcept('')).rejects.toThrow();
-      await expect(service.retrieveCharacterConcept(null)).rejects.toThrow();
-      await expect(service.retrieveCharacterConcept(undefined)).rejects.toThrow();
+      await expect(service.getCharacterConcept('')).rejects.toThrow();
+      await expect(service.getCharacterConcept(null)).rejects.toThrow();
+      await expect(service.getCharacterConcept(undefined)).rejects.toThrow();
     });
   });
 
   describe('listCharacterConcepts', () => {
+    beforeEach(async () => {
+      mockDatabase.initialize.mockResolvedValue();
+      await service.initialize();
+    });
+
     test('should successfully list character concepts', async () => {
       const mockConcepts = [
         {
@@ -239,30 +251,30 @@ describe('CharacterStorageService', () => {
         },
       ];
 
-      mockDatabase.listConcepts.mockResolvedValue(mockConcepts);
+      mockDatabase.getAllCharacterConcepts.mockResolvedValue(mockConcepts);
 
       const result = await service.listCharacterConcepts();
 
       expect(result).toEqual(mockConcepts);
-      expect(mockDatabase.listConcepts).toHaveBeenCalled();
+      expect(mockDatabase.getAllCharacterConcepts).toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Listed character concepts'),
-        expect.objectContaining({ count: mockConcepts.length })
+        expect.stringContaining('Retrieved character concepts list'),
+        expect.objectContaining({ conceptCount: mockConcepts.length })
       );
     });
 
     test('should return empty array if no concepts exist', async () => {
-      mockDatabase.listConcepts.mockResolvedValue([]);
+      mockDatabase.getAllCharacterConcepts.mockResolvedValue([]);
 
       const result = await service.listCharacterConcepts();
 
       expect(result).toEqual([]);
-      expect(mockDatabase.listConcepts).toHaveBeenCalled();
+      expect(mockDatabase.getAllCharacterConcepts).toHaveBeenCalled();
     });
 
     test('should handle database listing errors', async () => {
       const listingError = new Error('Database connection failed');
-      mockDatabase.listConcepts.mockRejectedValue(listingError);
+      mockDatabase.getAllCharacterConcepts.mockRejectedValue(listingError);
 
       await expect(service.listCharacterConcepts()).rejects.toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -273,34 +285,39 @@ describe('CharacterStorageService', () => {
   });
 
   describe('deleteCharacterConcept', () => {
+    beforeEach(async () => {
+      mockDatabase.initialize.mockResolvedValue();
+      await service.initialize();
+    });
+
     test('should successfully delete character concept', async () => {
       const conceptId = 'test-concept-123';
-      mockDatabase.deleteConcept.mockResolvedValue(true);
+      mockDatabase.deleteCharacterConcept.mockResolvedValue(true);
 
       const result = await service.deleteCharacterConcept(conceptId);
 
       expect(result).toBe(true);
-      expect(mockDatabase.deleteConcept).toHaveBeenCalledWith(conceptId);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Deleted character concept'),
+      expect(mockDatabase.deleteCharacterConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Successfully deleted character concept'),
         expect.objectContaining({ conceptId })
       );
     });
 
     test('should return false if concept not found', async () => {
       const conceptId = 'non-existent-concept';
-      mockDatabase.deleteConcept.mockResolvedValue(false);
+      mockDatabase.deleteCharacterConcept.mockResolvedValue(false);
 
       const result = await service.deleteCharacterConcept(conceptId);
 
       expect(result).toBe(false);
-      expect(mockDatabase.deleteConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockDatabase.deleteCharacterConcept).toHaveBeenCalledWith(conceptId);
     });
 
     test('should handle database deletion errors', async () => {
       const conceptId = 'test-concept-123';
       const deletionError = new Error('Database connection failed');
-      mockDatabase.deleteConcept.mockRejectedValue(deletionError);
+      mockDatabase.deleteCharacterConcept.mockRejectedValue(deletionError);
 
       await expect(service.deleteCharacterConcept(conceptId)).rejects.toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -317,6 +334,12 @@ describe('CharacterStorageService', () => {
   });
 
   describe('storeThematicDirections', () => {
+    beforeEach(async () => {
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
+      mockDatabase.initialize.mockResolvedValue();
+      await service.initialize();
+    });
+
     const mockDirections = [
       {
         id: 'direction-1',
@@ -329,21 +352,17 @@ describe('CharacterStorageService', () => {
       },
     ];
 
-    beforeEach(() => {
-      mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
-    });
-
     test('should successfully store thematic directions', async () => {
       const conceptId = 'concept-123';
-      mockDatabase.storeDirections.mockResolvedValue(mockDirections);
+      mockDatabase.saveThematicDirections.mockResolvedValue(mockDirections);
 
       const result = await service.storeThematicDirections(conceptId, mockDirections);
 
       expect(result).toEqual(mockDirections);
-      expect(mockDatabase.storeDirections).toHaveBeenCalledWith(conceptId, mockDirections);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Stored thematic directions'),
-        expect.objectContaining({ conceptId, count: mockDirections.length })
+      expect(mockDatabase.saveThematicDirections).toHaveBeenCalledWith(mockDirections);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Successfully stored thematic directions'),
+        expect.objectContaining({ conceptId, directionCount: mockDirections.length, attempt: 1 })
       );
     });
 
@@ -353,7 +372,7 @@ describe('CharacterStorageService', () => {
 
       expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledWith(
         mockDirections[0],
-        'thematic-direction.schema.json'
+        'thematic-direction'
       );
     });
 
@@ -365,13 +384,13 @@ describe('CharacterStorageService', () => {
       await expect(
         service.storeThematicDirections(conceptId, mockDirections)
       ).rejects.toThrow();
-      expect(mockDatabase.storeDirections).not.toHaveBeenCalled();
+      expect(mockDatabase.saveThematicDirections).not.toHaveBeenCalled();
     });
 
     test('should handle database storage errors', async () => {
       const conceptId = 'concept-123';
       const storageError = new Error('Database connection failed');
-      mockDatabase.storeDirections.mockRejectedValue(storageError);
+      mockDatabase.saveThematicDirections.mockRejectedValue(storageError);
 
       await expect(
         service.storeThematicDirections(conceptId, mockDirections)
@@ -394,7 +413,12 @@ describe('CharacterStorageService', () => {
     });
   });
 
-  describe('retrieveThematicDirections', () => {
+  describe('getThematicDirections', () => {
+    beforeEach(async () => {
+      mockDatabase.initialize.mockResolvedValue();
+      await service.initialize();
+    });
+
     test('should successfully retrieve thematic directions', async () => {
       const conceptId = 'concept-123';
       const mockDirections = [
@@ -406,44 +430,44 @@ describe('CharacterStorageService', () => {
         },
       ];
 
-      mockDatabase.retrieveDirections.mockResolvedValue(mockDirections);
+      mockDatabase.getThematicDirectionsByConceptId.mockResolvedValue(mockDirections);
 
-      const result = await service.retrieveThematicDirections(conceptId);
+      const result = await service.getThematicDirections(conceptId);
 
       expect(result).toEqual(mockDirections);
-      expect(mockDatabase.retrieveDirections).toHaveBeenCalledWith(conceptId);
+      expect(mockDatabase.getThematicDirectionsByConceptId).toHaveBeenCalledWith(conceptId);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Retrieved thematic directions'),
-        expect.objectContaining({ conceptId, count: mockDirections.length })
+        expect.objectContaining({ conceptId, directionCount: mockDirections.length })
       );
     });
 
     test('should return empty array if no directions found', async () => {
       const conceptId = 'concept-123';
-      mockDatabase.retrieveDirections.mockResolvedValue([]);
+      mockDatabase.getThematicDirectionsByConceptId.mockResolvedValue([]);
 
-      const result = await service.retrieveThematicDirections(conceptId);
+      const result = await service.getThematicDirections(conceptId);
 
       expect(result).toEqual([]);
-      expect(mockDatabase.retrieveDirections).toHaveBeenCalledWith(conceptId);
+      expect(mockDatabase.getThematicDirectionsByConceptId).toHaveBeenCalledWith(conceptId);
     });
 
     test('should handle database retrieval errors', async () => {
       const conceptId = 'concept-123';
       const retrievalError = new Error('Database connection failed');
-      mockDatabase.retrieveDirections.mockRejectedValue(retrievalError);
+      mockDatabase.getThematicDirectionsByConceptId.mockRejectedValue(retrievalError);
 
-      await expect(service.retrieveThematicDirections(conceptId)).rejects.toThrow();
+      await expect(service.getThematicDirections(conceptId)).rejects.toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to retrieve thematic directions'),
-        expect.any(Object)
+        expect.stringContaining('Failed to get thematic directions'),
+        expect.any(Error)
       );
     });
 
     test('should throw error if conceptId is invalid', async () => {
-      await expect(service.retrieveThematicDirections('')).rejects.toThrow();
-      await expect(service.retrieveThematicDirections(null)).rejects.toThrow();
-      await expect(service.retrieveThematicDirections(undefined)).rejects.toThrow();
+      await expect(service.getThematicDirections('')).rejects.toThrow();
+      await expect(service.getThematicDirections(null)).rejects.toThrow();
+      await expect(service.getThematicDirections(undefined)).rejects.toThrow();
     });
   });
 });

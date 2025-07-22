@@ -7,19 +7,32 @@ import {
   createThematicDirection,
   createThematicDirectionsFromLLMResponse,
   validateThematicDirection,
-  ThematicDirectionValidationError 
+  serializeThematicDirection,
+  deserializeThematicDirection,
+  validateThematicDirections
 } from '../../../../src/characterBuilder/models/thematicDirection.js';
 
 describe('ThematicDirection Model', () => {
+  let mockSchemaValidator;
+
+  beforeEach(() => {
+    // Create a mock schema validator
+    mockSchemaValidator = {
+      validate: jest.fn().mockReturnValue({ isValid: true, errors: [] })
+    };
+  });
+
   describe('createThematicDirection', () => {
     test('should create thematic direction with valid data', () => {
+      const conceptId = 'concept-123';
       const directionData = {
-        conceptId: 'concept-123',
         title: 'The Hero\'s Journey',
         description: 'A classic heroic arc where the character grows through trials',
         coreTension: 'The conflict between personal desires and duty to others',
         uniqueTwist: 'The hero\'s greatest weakness becomes their greatest strength',
         narrativePotential: 'Epic adventures with moral complexity and character growth',
+      };
+      const options = {
         llmMetadata: {
           modelId: 'openrouter-claude-sonnet-4',
           promptTokens: 150,
@@ -28,7 +41,7 @@ describe('ThematicDirection Model', () => {
         },
       };
 
-      const result = createThematicDirection(directionData);
+      const result = createThematicDirection(conceptId, directionData, options);
 
       expect(result).toMatchObject({
         id: expect.any(String),
@@ -44,129 +57,122 @@ describe('ThematicDirection Model', () => {
           responseTokens: 300,
           processingTime: 2500,
         },
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
+        createdAt: expect.any(Date),
       });
 
       // Verify ID is a valid UUID format
       expect(result.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-      
-      // Verify timestamps are ISO strings
-      expect(() => new Date(result.createdAt)).not.toThrow();
-      expect(() => new Date(result.updatedAt)).not.toThrow();
     });
 
     test('should create direction with minimal LLM metadata', () => {
+      const conceptId = 'concept-123';
       const directionData = {
-        conceptId: 'concept-123',
         title: 'Simple Direction',
-        description: 'A simple thematic direction',
-        coreTension: 'Simple tension',
-        uniqueTwist: 'Simple twist',
-        narrativePotential: 'Simple potential',
-        llmMetadata: {
-          modelId: 'test-model',
-        },
+        description: 'A simple thematic direction that is long enough',
+        coreTension: 'Simple tension that meets minimum length',
+        uniqueTwist: 'Simple twist that meets minimum length',
+        narrativePotential: 'Simple potential that meets minimum length',
       };
 
-      const result = createThematicDirection(directionData);
+      const result = createThematicDirection(conceptId, directionData);
 
-      expect(result.llmMetadata).toMatchObject({
-        modelId: 'test-model',
-        promptTokens: 0,
-        responseTokens: 0,
-        processingTime: 0,
-      });
+      expect(result.llmMetadata).toEqual({});
     });
 
     test('should throw error if conceptId is missing', () => {
       const directionData = {
         title: 'Test Direction',
-        description: 'A test direction',
-        coreTension: 'Test tension',
-        uniqueTwist: 'Test twist',
-        narrativePotential: 'Test potential',
+        description: 'A test direction with sufficient length for validation',
+        coreTension: 'Test tension with sufficient length',
+        uniqueTwist: 'Test twist with sufficient length',
+        narrativePotential: 'Test potential with sufficient length',
       };
 
-      expect(() => createThematicDirection(directionData)).toThrow(ThematicDirectionValidationError);
-      expect(() => createThematicDirection(directionData)).toThrow('conceptId is required');
+      expect(() => createThematicDirection('', directionData)).toThrow('conceptId must be a non-empty string');
+      expect(() => createThematicDirection(null, directionData)).toThrow('conceptId must be a non-empty string');
     });
 
     test('should throw error if required fields are missing', () => {
       const requiredFields = ['title', 'description', 'coreTension', 'uniqueTwist', 'narrativePotential'];
+      const conceptId = 'concept-123';
       
       requiredFields.forEach(field => {
         const directionData = {
-          conceptId: 'concept-123',
-          title: 'Test Title',
-          description: 'Test description',
-          coreTension: 'Test tension',
-          uniqueTwist: 'Test twist',
-          narrativePotential: 'Test potential',
+          title: 'Test Title That Is Long Enough',
+          description: 'Test description that meets the minimum length requirement',
+          coreTension: 'Test tension that meets the minimum length',
+          uniqueTwist: 'Test twist that meets the minimum length',
+          narrativePotential: 'Test potential that meets the minimum length',
         };
         
         delete directionData[field];
 
-        expect(() => createThematicDirection(directionData)).toThrow(ThematicDirectionValidationError);
-        expect(() => createThematicDirection(directionData)).toThrow(`${field} is required`);
+        expect(() => createThematicDirection(conceptId, directionData)).toThrow(`${field} must be a non-empty string`);
       });
     });
 
-    test('should throw error if fields exceed maximum length', () => {
-      const directionData = {
-        conceptId: 'concept-123',
-        title: 'a'.repeat(101), // Exceeds max length
-        description: 'Valid description',
-        coreTension: 'Valid tension',
-        uniqueTwist: 'Valid twist',
-        narrativePotential: 'Valid potential',
-      };
+    test('should throw error if fields do not meet length constraints', () => {
+      const conceptId = 'concept-123';
+      
+      // Test title too short
+      expect(() => createThematicDirection(conceptId, {
+        title: 'a',
+        description: 'Test description that meets the minimum length requirement',
+        coreTension: 'Test tension that meets the minimum length',
+        uniqueTwist: 'Test twist that meets the minimum length',
+        narrativePotential: 'Test potential that meets the minimum length',
+      })).toThrow('title must be between 5 and 200 characters');
 
-      expect(() => createThematicDirection(directionData)).toThrow(ThematicDirectionValidationError);
-      expect(() => createThematicDirection(directionData)).toThrow('title exceeds maximum length');
+      // Test description too short
+      expect(() => createThematicDirection(conceptId, {
+        title: 'Valid Title',
+        description: 'Too short',
+        coreTension: 'Test tension that meets the minimum length',
+        uniqueTwist: 'Test twist that meets the minimum length',
+        narrativePotential: 'Test potential that meets the minimum length',
+      })).toThrow('description must be between 20 and 2000 characters');
     });
 
     test('should sanitize input data', () => {
+      const conceptId = '  concept-123  ';
       const directionData = {
-        conceptId: '  concept-123  ',
         title: '  The Hero\'s Journey  ',
-        description: '  A classic heroic arc  ',
-        coreTension: '  Conflict between desires  ',
-        uniqueTwist: '  Weakness becomes strength  ',
-        narrativePotential: '  Epic adventures  ',
+        description: '  A classic heroic arc with sufficient length  ',
+        coreTension: '  Conflict between desires and minimum length  ',
+        uniqueTwist: '  Weakness becomes strength with padding  ',
+        narrativePotential: '  Epic adventures with sufficient length  ',
       };
 
-      const result = createThematicDirection(directionData);
+      const result = createThematicDirection(conceptId, directionData);
 
       expect(result.conceptId).toBe('concept-123');
       expect(result.title).toBe('The Hero\'s Journey');
-      expect(result.description).toBe('A classic heroic arc');
-      expect(result.coreTension).toBe('Conflict between desires');
-      expect(result.uniqueTwist).toBe('Weakness becomes strength');
-      expect(result.narrativePotential).toBe('Epic adventures');
+      expect(result.description).toBe('A classic heroic arc with sufficient length');
+      expect(result.coreTension).toBe('Conflict between desires and minimum length');
+      expect(result.uniqueTwist).toBe('Weakness becomes strength with padding');
+      expect(result.narrativePotential).toBe('Epic adventures with sufficient length');
     });
 
     test('should generate unique IDs for different directions', () => {
+      const conceptId = 'concept-123';
       const directionData1 = {
-        conceptId: 'concept-123',
-        title: 'Direction One',
-        description: 'First direction',
-        coreTension: 'First tension',
-        uniqueTwist: 'First twist',
-        narrativePotential: 'First potential',
+        title: 'Direction One Title',
+        description: 'First direction with sufficient description length',
+        coreTension: 'First tension with sufficient length',
+        uniqueTwist: 'First twist with sufficient length',
+        narrativePotential: 'First potential with sufficient length',
       };
 
       const directionData2 = {
-        conceptId: 'concept-123',
-        title: 'Direction Two',
-        description: 'Second direction',
-        coreTension: 'Second tension',
-        uniqueTwist: 'Second twist',
-        narrativePotential: 'Second potential',
+        title: 'Direction Two Title',
+        description: 'Second direction with sufficient description length',
+        coreTension: 'Second tension with sufficient length',
+        uniqueTwist: 'Second twist with sufficient length',
+        narrativePotential: 'Second potential with sufficient length',
       };
 
-      const result1 = createThematicDirection(directionData1);
-      const result2 = createThematicDirection(directionData2);
+      const result1 = createThematicDirection(conceptId, directionData1);
+      const result2 = createThematicDirection(conceptId, directionData2);
 
       expect(result1.id).not.toBe(result2.id);
     });
@@ -186,7 +192,7 @@ describe('ThematicDirection Model', () => {
         {
           title: 'The Hidden Strategist',
           description: 'A character whose true intelligence is masked by their demeanor',
-          coreTension: 'Appearance vs. reality',
+          coreTension: 'Appearance vs. reality in social dynamics',
           uniqueTwist: 'Uses misdirection as a tactical advantage',
           narrativePotential: 'Stories of perception and revelation',
         },
@@ -226,19 +232,18 @@ describe('ThematicDirection Model', () => {
       const llmResponse = [];
       const llmMetadata = { modelId: 'test-model' };
 
-      const result = createThematicDirectionsFromLLMResponse(conceptId, llmResponse, llmMetadata);
-
-      expect(result).toHaveLength(0);
+      expect(() => createThematicDirectionsFromLLMResponse(conceptId, llmResponse, llmMetadata))
+        .toThrow('directionsData cannot be empty');
     });
 
     test('should throw error if conceptId is invalid', () => {
       const llmResponse = [
         {
           title: 'Test Direction',
-          description: 'Test description',
-          coreTension: 'Test tension',
-          uniqueTwist: 'Test twist',
-          narrativePotential: 'Test potential',
+          description: 'Test description with sufficient length',
+          coreTension: 'Test tension with sufficient length',
+          uniqueTwist: 'Test twist with sufficient length',
+          narrativePotential: 'Test potential with sufficient length',
         },
       ];
       const llmMetadata = { modelId: 'test-model' };
@@ -251,13 +256,15 @@ describe('ThematicDirection Model', () => {
       const conceptId = 'concept-123';
       const llmMetadata = { modelId: 'test-model' };
 
-      expect(() => createThematicDirectionsFromLLMResponse(conceptId, null, llmMetadata)).toThrow();
-      expect(() => createThematicDirectionsFromLLMResponse(conceptId, 'not-array', llmMetadata)).toThrow();
+      expect(() => createThematicDirectionsFromLLMResponse(conceptId, null, llmMetadata))
+        .toThrow('directionsData must be an array');
+      expect(() => createThematicDirectionsFromLLMResponse(conceptId, 'not-array', llmMetadata))
+        .toThrow('directionsData must be an array');
     });
   });
 
   describe('validateThematicDirection', () => {
-    test('should return true for valid thematic direction', () => {
+    test('should return true for valid thematic direction', async () => {
       const direction = {
         id: '12345678-1234-1234-1234-123456789abc',
         conceptId: 'concept-123',
@@ -272,162 +279,231 @@ describe('ThematicDirection Model', () => {
           responseTokens: 300,
           processingTime: 2500,
         },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(),
       };
 
-      expect(validateThematicDirection(direction)).toBe(true);
+      const result = await validateThematicDirection(direction, mockSchemaValidator);
+      
+      expect(result).toBe(true);
+      expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
+        'thematic-direction.schema.json',
+        expect.objectContaining({
+          id: direction.id,
+          conceptId: direction.conceptId,
+          title: direction.title,
+          createdAt: expect.any(String), // Date converted to ISO string
+        })
+      );
     });
 
-    test('should return false for direction missing required fields', () => {
-      const direction = {
-        id: '12345678-1234-1234-1234-123456789abc',
-        conceptId: 'concept-123',
-        title: 'The Hero\'s Journey',
-        // Missing description and other required fields
-      };
-
-      expect(validateThematicDirection(direction)).toBe(false);
-    });
-
-    test('should return false for direction with invalid ID format', () => {
+    test('should throw error for invalid direction', async () => {
       const direction = {
         id: 'invalid-id',
-        conceptId: 'concept-123',
-        title: 'The Hero\'s Journey',
-        description: 'A classic heroic arc',
-        coreTension: 'Conflict between desires',
-        uniqueTwist: 'Weakness becomes strength',
-        narrativePotential: 'Epic adventures',
-        llmMetadata: { modelId: 'test-model' },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        // Missing required fields
       };
 
-      expect(validateThematicDirection(direction)).toBe(false);
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: false,
+        errors: [
+          { instancePath: '/title', message: 'must be string' },
+          { instancePath: '/description', message: 'must be string' }
+        ]
+      });
+
+      await expect(validateThematicDirection(direction, mockSchemaValidator))
+        .rejects.toThrow('ThematicDirection validation failed: /title: must be string, /description: must be string');
     });
 
-    test('should return false for null or undefined direction', () => {
-      expect(validateThematicDirection(null)).toBe(false);
-      expect(validateThematicDirection(undefined)).toBe(false);
+    test('should throw error for null or undefined direction', async () => {
+      await expect(validateThematicDirection(null, mockSchemaValidator))
+        .rejects.toThrow('direction must be a valid object');
+      await expect(validateThematicDirection(undefined, mockSchemaValidator))
+        .rejects.toThrow('direction must be a valid object');
     });
 
-    test('should return false for direction with invalid LLM metadata', () => {
-      const direction = {
-        id: '12345678-1234-1234-1234-123456789abc',
-        conceptId: 'concept-123',
-        title: 'The Hero\'s Journey',
-        description: 'A classic heroic arc',
-        coreTension: 'Conflict between desires',
-        uniqueTwist: 'Weakness becomes strength',
-        narrativePotential: 'Epic adventures',
-        llmMetadata: null, // Invalid metadata
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      expect(validateThematicDirection(direction)).toBe(false);
-    });
-
-    test('should return false for direction with field length violations', () => {
-      const direction = {
-        id: '12345678-1234-1234-1234-123456789abc',
-        conceptId: 'concept-123',
-        title: 'a'.repeat(101), // Exceeds max length
-        description: 'A classic heroic arc',
-        coreTension: 'Conflict between desires',
-        uniqueTwist: 'Weakness becomes strength',
-        narrativePotential: 'Epic adventures',
-        llmMetadata: { modelId: 'test-model' },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      expect(validateThematicDirection(direction)).toBe(false);
+    test('should throw error if schemaValidator is missing', async () => {
+      const direction = { id: 'test' };
+      
+      await expect(validateThematicDirection(direction, null))
+        .rejects.toThrow('Missing required dependency: ISchemaValidator');
     });
   });
 
-  describe('ThematicDirectionValidationError', () => {
-    test('should create error with message', () => {
-      const error = new ThematicDirectionValidationError('Test validation error');
+  describe('serializeThematicDirection', () => {
+    test('should serialize direction with Date objects', () => {
+      const direction = {
+        id: '12345678-1234-1234-1234-123456789abc',
+        conceptId: 'concept-123',
+        title: 'Test Direction',
+        createdAt: new Date('2023-01-01T00:00:00Z'),
+      };
 
-      expect(error).toBeInstanceOf(Error);
-      expect(error).toBeInstanceOf(ThematicDirectionValidationError);
-      expect(error.message).toBe('Test validation error');
-      expect(error.name).toBe('ThematicDirectionValidationError');
+      const result = serializeThematicDirection(direction);
+
+      expect(result).toEqual({
+        id: '12345678-1234-1234-1234-123456789abc',
+        conceptId: 'concept-123',
+        title: 'Test Direction',
+        createdAt: '2023-01-01T00:00:00.000Z',
+      });
     });
 
-    test('should create error with cause', () => {
-      const cause = new Error('Root cause');
-      const error = new ThematicDirectionValidationError('Test validation error', cause);
+    test('should handle direction already serialized', () => {
+      const direction = {
+        id: '12345678-1234-1234-1234-123456789abc',
+        conceptId: 'concept-123',
+        title: 'Test Direction',
+        createdAt: '2023-01-01T00:00:00.000Z',
+      };
 
-      expect(error.message).toBe('Test validation error');
-      expect(error.cause).toBe(cause);
+      const result = serializeThematicDirection(direction);
+
+      expect(result).toEqual(direction);
+    });
+
+    test('should throw error for invalid input', () => {
+      expect(() => serializeThematicDirection(null))
+        .toThrow('direction must be a valid object');
+      expect(() => serializeThematicDirection(undefined))
+        .toThrow('direction must be a valid object');
+    });
+  });
+
+  describe('deserializeThematicDirection', () => {
+    test('should deserialize direction with ISO date strings', () => {
+      const data = {
+        id: '12345678-1234-1234-1234-123456789abc',
+        conceptId: 'concept-123',
+        title: 'Test Direction',
+        createdAt: '2023-01-01T00:00:00.000Z',
+      };
+
+      const result = deserializeThematicDirection(data);
+
+      expect(result).toEqual({
+        id: '12345678-1234-1234-1234-123456789abc',
+        conceptId: 'concept-123',
+        title: 'Test Direction',
+        createdAt: new Date('2023-01-01T00:00:00.000Z'),
+      });
+      expect(result.createdAt).toBeInstanceOf(Date);
+    });
+
+    test('should handle direction already deserialized', () => {
+      const data = {
+        id: '12345678-1234-1234-1234-123456789abc',
+        conceptId: 'concept-123',
+        title: 'Test Direction',
+        createdAt: new Date('2023-01-01T00:00:00Z'),
+      };
+
+      const result = deserializeThematicDirection(data);
+
+      expect(result).toEqual(data);
+      expect(result.createdAt).toBeInstanceOf(Date);
+    });
+
+    test('should throw error for invalid input', () => {
+      expect(() => deserializeThematicDirection(null))
+        .toThrow('data must be a valid object');
+      expect(() => deserializeThematicDirection(undefined))
+        .toThrow('data must be a valid object');
+    });
+  });
+
+  describe('validateThematicDirections', () => {
+    test('should validate array of directions', async () => {
+      const directions = [
+        {
+          id: '12345678-1234-1234-1234-123456789abc',
+          conceptId: 'concept-123',
+          title: 'Direction One',
+          createdAt: new Date(),
+        },
+        {
+          id: '87654321-4321-4321-4321-123456789abc',
+          conceptId: 'concept-123',
+          title: 'Direction Two',
+          createdAt: new Date(),
+        },
+      ];
+
+      const result = await validateThematicDirections(directions, mockSchemaValidator);
+
+      expect(result).toBe(true);
+      expect(mockSchemaValidator.validate).toHaveBeenCalledTimes(2);
+    });
+
+    test('should throw error if any direction is invalid', async () => {
+      const directions = [
+        {
+          id: '12345678-1234-1234-1234-123456789abc',
+          conceptId: 'concept-123',
+          title: 'Valid Direction',
+        },
+        {
+          id: 'invalid-id',
+          // Invalid direction
+        },
+      ];
+
+      mockSchemaValidator.validate
+        .mockReturnValueOnce({ isValid: true, errors: [] })
+        .mockReturnValueOnce({ 
+          isValid: false, 
+          errors: [{ instancePath: '/title', message: 'must be string' }] 
+        });
+
+      await expect(validateThematicDirections(directions, mockSchemaValidator))
+        .rejects.toThrow('ThematicDirection validation failed at index 1');
+    });
+
+    test('should throw error if input is not an array', async () => {
+      await expect(validateThematicDirections(null, mockSchemaValidator))
+        .rejects.toThrow('directions must be an array');
+      await expect(validateThematicDirections('not-array', mockSchemaValidator))
+        .rejects.toThrow('directions must be an array');
     });
   });
 
   describe('edge cases', () => {
     test('should handle unicode characters in text fields', () => {
+      const conceptId = 'concept-123';
       const directionData = {
-        conceptId: 'concept-123',
         title: 'The Héro\'s Jöurney 🧙‍♂️',
-        description: 'A classic heroic arc with émojis ⚔️',
-        coreTension: 'Conflict between desires 💭',
-        uniqueTwist: 'Weakness becomes strength 💪',
-        narrativePotential: 'Epic adventures 🗡️',
+        description: 'A classic heroic arc with émojis ⚔️ and sufficient length',
+        coreTension: 'Conflict between desires 💭 with sufficient length',
+        uniqueTwist: 'Weakness becomes strength 💪 with sufficient length',
+        narrativePotential: 'Epic adventures 🗡️ with sufficient length for validation',
       };
 
-      const result = createThematicDirection(directionData);
+      const result = createThematicDirection(conceptId, directionData);
 
       expect(result.title).toBe('The Héro\'s Jöurney 🧙‍♂️');
-      expect(result.description).toBe('A classic heroic arc with émojis ⚔️');
-      expect(result.coreTension).toBe('Conflict between desires 💭');
-      expect(result.uniqueTwist).toBe('Weakness becomes strength 💪');
-      expect(result.narrativePotential).toBe('Epic adventures 🗡️');
+      expect(result.description).toBe('A classic heroic arc with émojis ⚔️ and sufficient length');
+      expect(result.coreTension).toBe('Conflict between desires 💭 with sufficient length');
+      expect(result.uniqueTwist).toBe('Weakness becomes strength 💪 with sufficient length');
+      expect(result.narrativePotential).toBe('Epic adventures 🗡️ with sufficient length for validation');
     });
 
-    test('should handle LLM metadata with missing optional fields', () => {
+    test('should handle HTML-like content safely', () => {
+      const conceptId = 'concept-123';
       const directionData = {
-        conceptId: 'concept-123',
-        title: 'Test Direction',
-        description: 'Test description',
-        coreTension: 'Test tension',
-        uniqueTwist: 'Test twist',
-        narrativePotential: 'Test potential',
-        llmMetadata: {
-          modelId: 'test-model',
-          // Missing promptTokens, responseTokens, processingTime
-        },
-      };
-
-      const result = createThematicDirection(directionData);
-
-      expect(result.llmMetadata).toMatchObject({
-        modelId: 'test-model',
-        promptTokens: 0,
-        responseTokens: 0,
-        processingTime: 0,
-      });
-    });
-
-    test('should handle directions with HTML-like content safely', () => {
-      const directionData = {
-        conceptId: 'concept-123',
         title: 'The <strong>Hero</strong>\'s Journey',
-        description: 'A classic <em>heroic</em> arc',
-        coreTension: 'Conflict <span>between</span> desires',
-        uniqueTwist: 'Weakness <br> becomes strength',
-        narrativePotential: 'Epic <script>alert("test")</script> adventures',
+        description: 'A classic <em>heroic</em> arc with sufficient length for validation',
+        coreTension: 'Conflict <span>between</span> desires with sufficient length',
+        uniqueTwist: 'Weakness <br> becomes strength with sufficient length',
+        narrativePotential: 'Epic <script>alert("test")</script> adventures with length',
       };
 
-      const result = createThematicDirection(directionData);
+      const result = createThematicDirection(conceptId, directionData);
 
       // Should preserve the content as-is (sanitization should happen at display time)
       expect(result.title).toBe('The <strong>Hero</strong>\'s Journey');
-      expect(result.description).toBe('A classic <em>heroic</em> arc');
-      expect(result.coreTension).toBe('Conflict <span>between</span> desires');
-      expect(result.uniqueTwist).toBe('Weakness <br> becomes strength');
-      expect(result.narrativePotential).toBe('Epic <script>alert("test")</script> adventures');
+      expect(result.description).toBe('A classic <em>heroic</em> arc with sufficient length for validation');
+      expect(result.coreTension).toBe('Conflict <span>between</span> desires with sufficient length');
+      expect(result.uniqueTwist).toBe('Weakness <br> becomes strength with sufficient length');
+      expect(result.narrativePotential).toBe('Epic <script>alert("test")</script> adventures with length');
     });
   });
 });
