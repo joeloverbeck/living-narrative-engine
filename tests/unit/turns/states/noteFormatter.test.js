@@ -18,7 +18,9 @@ describe('formatNotesForDisplay', () => {
   describe('when notes is a single structured note object', () => {
     it('formats note with text and subject', () => {
       const note = { text: 'Simple note content', subject: 'Character' };
-      expect(formatNotesForDisplay(note)).toBe('Character: Simple note content');
+      expect(formatNotesForDisplay(note)).toBe(
+        'Character: Simple note content'
+      );
     });
 
     it('formats note with all structured fields', () => {

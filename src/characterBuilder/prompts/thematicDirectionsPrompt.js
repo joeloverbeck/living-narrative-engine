@@ -214,7 +214,9 @@ export function validateThematicDirectionsResponse(response) {
  */
 export function createThematicDirectionsLlmConfig(baseLlmConfig) {
   if (!baseLlmConfig || typeof baseLlmConfig !== 'object') {
-    throw new Error('ThematicDirectionsPrompt: baseLlmConfig must be a valid object');
+    throw new Error(
+      'ThematicDirectionsPrompt: baseLlmConfig must be a valid object'
+    );
   }
 
   // Create enhanced config with JSON schema

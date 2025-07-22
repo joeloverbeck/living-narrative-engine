@@ -35,14 +35,14 @@ export class ComponentFilteringStage extends PipelineStage {
   }
 
   /**
-   * Executes the component filtering stage
+   * Internal execution of the component filtering stage
    *
    * @param {object} context - The pipeline context
    * @param {import('../../../entities/entity.js').default} context.actor - The actor entity
-   * @param {import('../../tracing/traceContext.js').TraceContext} [context.trace] - Optional trace context
+   * @param {import('../../tracing/traceContext.js').TraceContext|import('../../tracing/structuredTrace.js').StructuredTrace} [context.trace] - Optional trace context
    * @returns {Promise<PipelineResult>} The filtered candidate actions
    */
-  async execute(context) {
+  async executeInternal(context) {
     const { actor, trace } = context;
     const source = `${this.name}Stage.execute`;
 

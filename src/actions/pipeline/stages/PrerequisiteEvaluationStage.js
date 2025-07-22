@@ -36,15 +36,15 @@ export class PrerequisiteEvaluationStage extends PipelineStage {
   }
 
   /**
-   * Executes the prerequisite evaluation stage
+   * Internal execution of the prerequisite evaluation stage
    *
    * @param {object} context - The pipeline context
    * @param {import('../../../entities/entity.js').default} context.actor - The actor entity
    * @param {import('../../../interfaces/IGameDataRepository.js').ActionDefinition[]} context.candidateActions - Candidate actions
-   * @param {import('../../tracing/traceContext.js').TraceContext} [context.trace] - Optional trace context
+   * @param {import('../../tracing/traceContext.js').TraceContext|import('../../tracing/structuredTrace.js').StructuredTrace} [context.trace] - Optional trace context
    * @returns {Promise<PipelineResult>} Actions that passed prerequisites
    */
-  async execute(context) {
+  async executeInternal(context) {
     const { actor, candidateActions, trace } = context;
     const source = `${this.name}Stage.execute`;
 

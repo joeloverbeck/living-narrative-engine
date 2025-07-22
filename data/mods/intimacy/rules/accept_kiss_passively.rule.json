@@ -1,0 +1,100 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_accept_kiss_passively",
+  "comment": "Handles the 'intimacy:accept_kiss_passively' action. Maintains kissing state while providing passive acceptance narrative.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "intimacy:event-is-action-accept-kiss-passively"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} has accepted {context.targetName}'s kiss passively."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "successMessage",
+        "value": "{context.actorName} accepts {context.targetName}'s kiss passively."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "GET_TIMESTAMP",
+      "parameters": {
+        "result_variable": "nowIso"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:perceptible_event",
+        "payload": {
+          "eventName": "core:perceptible_event",
+          "locationId": "{context.locationId}",
+          "descriptionText": "{context.logMessage}",
+          "timestamp": "{context.nowIso}",
+          "perceptionType": "{context.perceptionType}",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{context.targetId}",
+          "involvedEntities": []
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.successMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

@@ -2,7 +2,14 @@
  * @file Unit tests for CharacterStorageService
  */
 
-import { jest, describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import {
+  jest,
+  describe,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+} from '@jest/globals';
 import { CharacterStorageService } from '../../../../src/characterBuilder/services/characterStorageService.js';
 
 /**
@@ -124,7 +131,9 @@ describe('CharacterStorageService', () => {
         validConceptData,
         'character-concept'
       );
-      expect(mockDatabase.saveCharacterConcept).toHaveBeenCalledWith(validConceptData);
+      expect(mockDatabase.saveCharacterConcept).toHaveBeenCalledWith(
+        validConceptData
+      );
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Successfully stored character concept'),
         expect.any(Object)
@@ -136,7 +145,9 @@ describe('CharacterStorageService', () => {
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
       mockSchemaValidator.formatAjvErrors.mockReturnValue('Name is required');
 
-      await expect(service.storeCharacterConcept(invalidData)).rejects.toThrow();
+      await expect(
+        service.storeCharacterConcept(invalidData)
+      ).rejects.toThrow();
       expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledWith(
         invalidData,
         'character-concept'
@@ -148,7 +159,9 @@ describe('CharacterStorageService', () => {
       const storageError = new Error('Database connection failed');
       mockDatabase.saveCharacterConcept.mockRejectedValue(storageError);
 
-      await expect(service.storeCharacterConcept(validConceptData)).rejects.toThrow();
+      await expect(
+        service.storeCharacterConcept(validConceptData)
+      ).rejects.toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to store character concept'),
         expect.any(Object)
@@ -297,7 +310,9 @@ describe('CharacterStorageService', () => {
       const result = await service.deleteCharacterConcept(conceptId);
 
       expect(result).toBe(true);
-      expect(mockDatabase.deleteCharacterConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockDatabase.deleteCharacterConcept).toHaveBeenCalledWith(
+        conceptId
+      );
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Successfully deleted character concept'),
         expect.objectContaining({ conceptId })
@@ -311,7 +326,9 @@ describe('CharacterStorageService', () => {
       const result = await service.deleteCharacterConcept(conceptId);
 
       expect(result).toBe(false);
-      expect(mockDatabase.deleteCharacterConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockDatabase.deleteCharacterConcept).toHaveBeenCalledWith(
+        conceptId
+      );
     });
 
     test('should handle database deletion errors', async () => {
@@ -344,7 +361,7 @@ describe('CharacterStorageService', () => {
       {
         id: 'direction-1',
         conceptId: 'concept-123',
-        title: 'The Hero\'s Journey',
+        title: "The Hero's Journey",
         description: 'Classic heroic arc',
         coreTension: 'Duty vs. personal desires',
         uniqueTwist: 'Hidden nobility',
@@ -356,13 +373,22 @@ describe('CharacterStorageService', () => {
       const conceptId = 'concept-123';
       mockDatabase.saveThematicDirections.mockResolvedValue(mockDirections);
 
-      const result = await service.storeThematicDirections(conceptId, mockDirections);
+      const result = await service.storeThematicDirections(
+        conceptId,
+        mockDirections
+      );
 
       expect(result).toEqual(mockDirections);
-      expect(mockDatabase.saveThematicDirections).toHaveBeenCalledWith(mockDirections);
+      expect(mockDatabase.saveThematicDirections).toHaveBeenCalledWith(
+        mockDirections
+      );
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Successfully stored thematic directions'),
-        expect.objectContaining({ conceptId, directionCount: mockDirections.length, attempt: 1 })
+        expect.objectContaining({
+          conceptId,
+          directionCount: mockDirections.length,
+          attempt: 1,
+        })
       );
     });
 
@@ -379,7 +405,9 @@ describe('CharacterStorageService', () => {
     test('should throw error if validation fails', async () => {
       const conceptId = 'concept-123';
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
-      mockSchemaValidator.formatAjvErrors.mockReturnValue('Invalid direction structure');
+      mockSchemaValidator.formatAjvErrors.mockReturnValue(
+        'Invalid direction structure'
+      );
 
       await expect(
         service.storeThematicDirections(conceptId, mockDirections)
@@ -402,14 +430,22 @@ describe('CharacterStorageService', () => {
     });
 
     test('should throw error if conceptId is invalid', async () => {
-      await expect(service.storeThematicDirections('', mockDirections)).rejects.toThrow();
-      await expect(service.storeThematicDirections(null, mockDirections)).rejects.toThrow();
+      await expect(
+        service.storeThematicDirections('', mockDirections)
+      ).rejects.toThrow();
+      await expect(
+        service.storeThematicDirections(null, mockDirections)
+      ).rejects.toThrow();
     });
 
     test('should throw error if directions array is invalid', async () => {
       const conceptId = 'concept-123';
-      await expect(service.storeThematicDirections(conceptId, null)).rejects.toThrow();
-      await expect(service.storeThematicDirections(conceptId, 'not-array')).rejects.toThrow();
+      await expect(
+        service.storeThematicDirections(conceptId, null)
+      ).rejects.toThrow();
+      await expect(
+        service.storeThematicDirections(conceptId, 'not-array')
+      ).rejects.toThrow();
     });
   });
 
@@ -425,20 +461,27 @@ describe('CharacterStorageService', () => {
         {
           id: 'direction-1',
           conceptId,
-          title: 'The Hero\'s Journey',
+          title: "The Hero's Journey",
           description: 'Classic heroic arc',
         },
       ];
 
-      mockDatabase.getThematicDirectionsByConceptId.mockResolvedValue(mockDirections);
+      mockDatabase.getThematicDirectionsByConceptId.mockResolvedValue(
+        mockDirections
+      );
 
       const result = await service.getThematicDirections(conceptId);
 
       expect(result).toEqual(mockDirections);
-      expect(mockDatabase.getThematicDirectionsByConceptId).toHaveBeenCalledWith(conceptId);
+      expect(
+        mockDatabase.getThematicDirectionsByConceptId
+      ).toHaveBeenCalledWith(conceptId);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Retrieved thematic directions'),
-        expect.objectContaining({ conceptId, directionCount: mockDirections.length })
+        expect.objectContaining({
+          conceptId,
+          directionCount: mockDirections.length,
+        })
       );
     });
 
@@ -449,13 +492,17 @@ describe('CharacterStorageService', () => {
       const result = await service.getThematicDirections(conceptId);
 
       expect(result).toEqual([]);
-      expect(mockDatabase.getThematicDirectionsByConceptId).toHaveBeenCalledWith(conceptId);
+      expect(
+        mockDatabase.getThematicDirectionsByConceptId
+      ).toHaveBeenCalledWith(conceptId);
     });
 
     test('should handle database retrieval errors', async () => {
       const conceptId = 'concept-123';
       const retrievalError = new Error('Database connection failed');
-      mockDatabase.getThematicDirectionsByConceptId.mockRejectedValue(retrievalError);
+      mockDatabase.getThematicDirectionsByConceptId.mockRejectedValue(
+        retrievalError
+      );
 
       await expect(service.getThematicDirections(conceptId)).rejects.toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(

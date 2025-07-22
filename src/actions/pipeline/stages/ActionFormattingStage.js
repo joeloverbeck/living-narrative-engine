@@ -55,15 +55,15 @@ export class ActionFormattingStage extends PipelineStage {
   }
 
   /**
-   * Executes the action formatting stage
+   * Internal execution of the action formatting stage
    *
    * @param {object} context - The pipeline context
    * @param {import('../../../entities/entity.js').default} context.actor - The actor entity
    * @param {Array<{actionDef: import('../../../interfaces/IGameDataRepository.js').ActionDefinition, targetContexts: import('../../../models/actionTargetContext.js').ActionTargetContext[]}>} context.actionsWithTargets - Actions with their targets
-   * @param {import('../../tracing/traceContext.js').TraceContext} [context.trace] - Optional trace context
+   * @param {import('../../tracing/traceContext.js').TraceContext|import('../../tracing/structuredTrace.js').StructuredTrace} [context.trace] - Optional trace context
    * @returns {Promise<PipelineResult>} Formatted actions
    */
-  async execute(context) {
+  async executeInternal(context) {
     const { actor, actionsWithTargets = [], trace } = context;
     const source = `${this.name}Stage.execute`;
 

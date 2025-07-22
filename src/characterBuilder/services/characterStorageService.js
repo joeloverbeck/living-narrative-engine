@@ -132,38 +132,47 @@ export class CharacterStorageService {
     while (attempt < maxRetries) {
       try {
         // Validate the concept against schema
-        const isValid = this.#schemaValidator.validateAgainstSchema(concept, 'character-concept');
+        const isValid = this.#schemaValidator.validateAgainstSchema(
+          concept,
+          'character-concept'
+        );
         if (!isValid) {
           const errorMsg = this.#schemaValidator.formatAjvErrors();
-          throw new CharacterStorageError(`Character concept validation failed: ${errorMsg}`);
+          throw new CharacterStorageError(
+            `Character concept validation failed: ${errorMsg}`
+          );
         }
 
         // Store to database
-        const storedConcept = await this.#database.saveCharacterConcept(concept);
+        const storedConcept =
+          await this.#database.saveCharacterConcept(concept);
 
         this.#logger.info(
           `CharacterStorageService: Successfully stored character concept ${concept.id}`,
           { conceptId: concept.id, attempt: attempt + 1 }
         );
-        
+
         return storedConcept;
       } catch (error) {
         attempt++;
         lastError = error;
-        
+
         this.#logger.warn(
           `CharacterStorageService: Attempt ${attempt} failed for concept storage: ${error.message}`,
           { conceptId: concept.id, attempt, error }
         );
 
         // Don't retry validation errors
-        if (error.message.includes('validation failed') || attempt >= maxRetries) {
+        if (
+          error.message.includes('validation failed') ||
+          attempt >= maxRetries
+        ) {
           break;
         }
 
         // Wait before retrying
         const backoffTime = Math.min(500 * Math.pow(2, attempt - 1), 2000);
-        await new Promise(resolve => setTimeout(resolve, backoffTime));
+        await new Promise((resolve) => setTimeout(resolve, backoffTime));
       }
     }
 
@@ -207,39 +216,48 @@ export class CharacterStorageService {
       try {
         // Validate all directions
         for (const direction of directions) {
-          const isValid = this.#schemaValidator.validateAgainstSchema(direction, 'thematic-direction');
+          const isValid = this.#schemaValidator.validateAgainstSchema(
+            direction,
+            'thematic-direction'
+          );
           if (!isValid) {
             const errorMsg = this.#schemaValidator.formatAjvErrors();
-            throw new CharacterStorageError(`Thematic direction validation failed: ${errorMsg}`);
+            throw new CharacterStorageError(
+              `Thematic direction validation failed: ${errorMsg}`
+            );
           }
         }
 
         // Store to database
-        const storedDirections = await this.#database.saveThematicDirections(directions);
+        const storedDirections =
+          await this.#database.saveThematicDirections(directions);
 
         this.#logger.info(
           `CharacterStorageService: Successfully stored thematic directions`,
           { conceptId, directionCount: directions.length, attempt: attempt + 1 }
         );
-        
+
         return storedDirections;
       } catch (error) {
         attempt++;
         lastError = error;
-        
+
         this.#logger.warn(
           `CharacterStorageService: Attempt ${attempt} failed for directions storage: ${error.message}`,
           { conceptId, attempt, error }
         );
 
         // Don't retry validation errors
-        if (error.message.includes('validation failed') || attempt >= maxRetries) {
+        if (
+          error.message.includes('validation failed') ||
+          attempt >= maxRetries
+        ) {
           break;
         }
 
         // Wait before retrying
         const backoffTime = Math.min(500 * Math.pow(2, attempt - 1), 2000);
-        await new Promise(resolve => setTimeout(resolve, backoffTime));
+        await new Promise((resolve) => setTimeout(resolve, backoffTime));
       }
     }
 
@@ -324,7 +342,8 @@ export class CharacterStorageService {
     }
 
     try {
-      const directions = await this.#database.getThematicDirectionsByConceptId(conceptId);
+      const directions =
+        await this.#database.getThematicDirectionsByConceptId(conceptId);
 
       if (!directions || directions.length === 0) {
         this.#logger.info(
@@ -393,10 +412,18 @@ export class CharacterStorageService {
       try {
         await this.#database.close();
         this.#initialized = false;
-        this.#logger.info('CharacterStorageService: Storage service closed successfully');
+        this.#logger.info(
+          'CharacterStorageService: Storage service closed successfully'
+        );
       } catch (error) {
-        this.#logger.error('CharacterStorageService: Error closing storage service', error);
-        throw new CharacterStorageError(`Failed to close storage service: ${error.message}`, error);
+        this.#logger.error(
+          'CharacterStorageService: Error closing storage service',
+          error
+        );
+        throw new CharacterStorageError(
+          `Failed to close storage service: ${error.message}`,
+          error
+        );
       }
     }
   }

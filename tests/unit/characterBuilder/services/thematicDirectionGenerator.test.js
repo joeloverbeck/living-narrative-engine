@@ -2,8 +2,18 @@
  * @file Unit tests for ThematicDirectionGenerator service
  */
 
-import { jest, describe, beforeEach, afterEach, test, expect } from '@jest/globals';
-import { ThematicDirectionGenerator, ThematicDirectionGenerationError } from '../../../../src/characterBuilder/services/thematicDirectionGenerator.js';
+import {
+  jest,
+  describe,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+} from '@jest/globals';
+import {
+  ThematicDirectionGenerator,
+  ThematicDirectionGenerationError,
+} from '../../../../src/characterBuilder/services/thematicDirectionGenerator.js';
 
 /**
  * @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger
@@ -122,21 +132,24 @@ describe('ThematicDirectionGenerator', () => {
       thematicDirections: [
         {
           title: 'The Reluctant Hero',
-          description: 'A character who must overcome their reluctance to face destiny.',
+          description:
+            'A character who must overcome their reluctance to face destiny.',
           coreTension: 'Desire for normalcy vs. call to adventure',
           uniqueTwist: 'Their reluctance is actually hidden strength',
           narrativePotential: 'Growth through adversity and self-discovery',
         },
         {
           title: 'The Hidden Strategist',
-          description: 'A character whose true intelligence is masked by their demeanor.',
+          description:
+            'A character whose true intelligence is masked by their demeanor.',
           coreTension: 'Appearance vs. reality',
           uniqueTwist: 'Uses misdirection as a tactical advantage',
           narrativePotential: 'Stories of perception and revelation',
         },
         {
           title: 'The Unlikely Mentor',
-          description: 'A character who appears unwise but holds deep knowledge.',
+          description:
+            'A character who appears unwise but holds deep knowledge.',
           coreTension: 'Outward simplicity vs. inner wisdom',
           uniqueTwist: 'Their teaching methods seem counterintuitive',
           narrativePotential: 'Stories of unexpected guidance and growth',
@@ -152,26 +165,34 @@ describe('ThematicDirectionGenerator', () => {
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
       mockLlmStrategyFactory.getStrategy.mockReturnValue(mockStrategy);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
-      mockLlmJsonService.parseAndRepair.mockResolvedValue(JSON.parse(mockLlmResponse));
+      mockLlmJsonService.parseAndRepair.mockResolvedValue(
+        JSON.parse(mockLlmResponse)
+      );
     });
 
     test('should successfully generate thematic directions', async () => {
       const conceptId = 'test-concept-123';
       const characterConcept = 'A ditzy archer who loves adventure';
 
-      const result = await generator.generateDirections(conceptId, characterConcept);
+      const result = await generator.generateDirections(
+        conceptId,
+        characterConcept
+      );
 
       expect(result).toHaveLength(3);
       expect(result[0]).toMatchObject({
         conceptId,
         title: 'The Reluctant Hero',
-        description: 'A character who must overcome their reluctance to face destiny.',
+        description:
+          'A character who must overcome their reluctance to face destiny.',
       });
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Starting generation for concept'),
         expect.objectContaining({ conceptId })
       );
-      expect(mockLlmConfigManager.loadConfiguration).toHaveBeenCalledWith('openrouter-claude-sonnet-4');
+      expect(mockLlmConfigManager.loadConfiguration).toHaveBeenCalledWith(
+        'openrouter-claude-sonnet-4'
+      );
       expect(mockLlmStrategyFactory.getStrategy).toHaveBeenCalledWith(
         expect.objectContaining({
           configId: 'openrouter-claude-sonnet-4',
@@ -198,7 +219,9 @@ describe('ThematicDirectionGenerator', () => {
         llmConfigId: customConfigId,
       });
 
-      expect(mockLlmConfigManager.loadConfiguration).toHaveBeenCalledWith(customConfigId);
+      expect(mockLlmConfigManager.loadConfiguration).toHaveBeenCalledWith(
+        customConfigId
+      );
     });
 
     test('should throw error if conceptId is empty', async () => {
@@ -266,7 +289,7 @@ describe('ThematicDirectionGenerator', () => {
       mockStrategy.execute.mockResolvedValue(mockLlmResponse);
       mockLlmStrategyFactory.getStrategy.mockReturnValue(mockStrategy);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
-      
+
       // Set up the parsing failure
       const parseError = new Error('Invalid JSON');
       mockLlmJsonService.parseAndRepair.mockRejectedValue(parseError);
@@ -285,7 +308,9 @@ describe('ThematicDirectionGenerator', () => {
       mockStrategy.execute.mockResolvedValue(mockLlmResponse);
       mockLlmStrategyFactory.getStrategy.mockReturnValue(mockStrategy);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
-      mockLlmJsonService.parseAndRepair.mockResolvedValue(JSON.parse(mockLlmResponse));
+      mockLlmJsonService.parseAndRepair.mockResolvedValue(
+        JSON.parse(mockLlmResponse)
+      );
 
       const conceptId = 'test-concept-123';
       const characterConcept = 'A ditzy archer who loves adventure';
@@ -294,7 +319,10 @@ describe('ThematicDirectionGenerator', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Starting generation for concept'),
-        expect.objectContaining({ conceptId, conceptLength: characterConcept.length })
+        expect.objectContaining({
+          conceptId,
+          conceptLength: characterConcept.length,
+        })
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Built prompt'),
@@ -316,7 +344,7 @@ describe('ThematicDirectionGenerator', () => {
       mockStrategy.execute.mockResolvedValue(mockLlmResponse);
       mockLlmStrategyFactory.getStrategy.mockReturnValue(mockStrategy);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
-      
+
       const malformedResponse = { invalidStructure: true };
       mockLlmJsonService.parseAndRepair.mockResolvedValue(malformedResponse);
 
@@ -334,12 +362,17 @@ describe('ThematicDirectionGenerator', () => {
       mockStrategy.execute.mockResolvedValue(mockLlmResponse);
       mockLlmStrategyFactory.getStrategy.mockReturnValue(mockStrategy);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
-      mockLlmJsonService.parseAndRepair.mockResolvedValue(JSON.parse(mockLlmResponse));
+      mockLlmJsonService.parseAndRepair.mockResolvedValue(
+        JSON.parse(mockLlmResponse)
+      );
 
       const conceptId = 'test-concept-123';
       const characterConcept = 'A ditzy archer who loves adventure';
 
-      const result = await generator.generateDirections(conceptId, characterConcept);
+      const result = await generator.generateDirections(
+        conceptId,
+        characterConcept
+      );
 
       expect(result[0]).toHaveProperty('llmMetadata');
       expect(result[0].llmMetadata).toMatchObject({
@@ -357,21 +390,24 @@ describe('ThematicDirectionGenerator', () => {
         thematicDirections: [
           {
             title: 'Test Title One',
-            description: 'Test description for the first thematic direction with enough characters to pass validation',
+            description:
+              'Test description for the first thematic direction with enough characters to pass validation',
             coreTension: 'Test tension for first direction',
             uniqueTwist: 'Test twist for first direction',
             narrativePotential: 'Test narrative potential for first direction',
           },
           {
             title: 'Test Title Two',
-            description: 'Test description for the second thematic direction with enough characters to pass validation',
+            description:
+              'Test description for the second thematic direction with enough characters to pass validation',
             coreTension: 'Test tension for second direction',
             uniqueTwist: 'Test twist for second direction',
             narrativePotential: 'Test narrative potential for second direction',
           },
           {
             title: 'Test Title Three',
-            description: 'Test description for the third thematic direction with enough characters to pass validation',
+            description:
+              'Test description for the third thematic direction with enough characters to pass validation',
             coreTension: 'Test tension for third direction',
             uniqueTwist: 'Test twist for third direction',
             narrativePotential: 'Test narrative potential for third direction',
