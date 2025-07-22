@@ -371,11 +371,11 @@ describe('Pipeline', () => {
       const result = await pipeline.execute(initialContext);
 
       expect(result.success).toBe(true);
-      
+
       // Check that a root span was created
       const spans = structuredTrace.getSpans();
       expect(spans.length).toBeGreaterThan(0);
-      
+
       const hierarchicalView = structuredTrace.getHierarchicalView();
       expect(hierarchicalView.operation).toBe('Pipeline');
       expect(hierarchicalView.attributes.stageCount).toBe(1);
@@ -384,7 +384,7 @@ describe('Pipeline', () => {
     it('should create spans for each stage', async () => {
       const result1 = PipelineResult.success({ actions: [{ id: 'action1' }] });
       const result2 = PipelineResult.success({ actions: [{ id: 'action2' }] });
-      
+
       mockStage1.executeInternal.mockResolvedValue(result1);
       mockStage2.executeInternal.mockResolvedValue(result2);
 
@@ -405,10 +405,10 @@ describe('Pipeline', () => {
       const result = await pipeline.execute(initialContext);
 
       expect(result.success).toBe(false);
-      
+
       // Check error was captured in span
       const spans = structuredTrace.getSpans();
-      const stageSpan = spans.find(s => s.operation === 'Stage1Stage');
+      const stageSpan = spans.find((s) => s.operation === 'Stage1Stage');
       expect(stageSpan.status).toBe('error');
       expect(stageSpan.error).toBeDefined();
       expect(stageSpan.error.message).toBe('Stage failed');
@@ -451,10 +451,10 @@ describe('Pipeline', () => {
     it('should provide performance metrics', async () => {
       const result1 = PipelineResult.success({ actions: [{ id: 'action1' }] });
       const result2 = PipelineResult.success({ actions: [{ id: 'action2' }] });
-      
+
       // Add a small delay to ensure measurable duration
       mockStage1.executeInternal.mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 5));
+        await new Promise((resolve) => setTimeout(resolve, 5));
         return result1;
       });
       mockStage2.executeInternal.mockResolvedValue(result2);
@@ -467,7 +467,7 @@ describe('Pipeline', () => {
       expect(perfSummary.operationCount).toBe(3); // Pipeline + 2 stages
       expect(perfSummary.criticalPath.length).toBeGreaterThanOrEqual(2); // At least Pipeline and one stage
       expect(perfSummary.criticalPath[0]).toBe('Pipeline'); // Pipeline should be first
-      
+
       // Check that operation stats include our operations
       expect(perfSummary.operationStats).toHaveProperty('Pipeline');
       expect(perfSummary.operationStats).toHaveProperty('Stage1Stage');

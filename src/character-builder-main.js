@@ -4,7 +4,10 @@
  */
 
 import ConsoleLogger from './logging/consoleLogger.js';
+import EventBus from './events/eventBus.js';
+import ValidatedEventDispatcher from './events/validatedEventDispatcher.js';
 import { SafeEventDispatcher } from './events/safeEventDispatcher.js';
+import GameDataRepository from './data/gameDataRepository.js';
 import AjvSchemaValidator from './validation/ajvSchemaValidator.js';
 import { LlmJsonService } from './llms/llmJsonService.js';
 import { LLMStrategyFactory } from './llms/LLMStrategyFactory.js';
@@ -50,15 +53,35 @@ class CharacterBuilderApp {
     try {
       this.#logger.info('CharacterBuilderApp: Starting initialization');
 
-      // Create core services
-      const eventBus = new SafeEventDispatcher({ logger: this.#logger });
-
+      // Create schema validator first
       const schemaValidator = new AjvSchemaValidator({
         logger: this.#logger,
       });
 
-      // Load schemas (we'll need to implement schema loading)
+      // Load schemas before creating event system
       await this.#loadSchemas(schemaValidator);
+
+      // Create event system with proper initialization chain
+      const rawEventBus = new EventBus({ logger: this.#logger });
+
+      // Create a minimal game data repository for character builder
+      // This is needed by ValidatedEventDispatcher but we won't use event validation
+      const gameDataRepository = new GameDataRepository({
+        logger: this.#logger,
+        schemaValidator,
+      });
+
+      const validatedEventDispatcher = new ValidatedEventDispatcher({
+        eventBus: rawEventBus,
+        gameDataRepository,
+        schemaValidator,
+        logger: this.#logger,
+      });
+
+      const eventBus = new SafeEventDispatcher({
+        validatedEventDispatcher,
+        logger: this.#logger,
+      });
 
       // Create character builder specific services
       const database = new CharacterDatabase({
