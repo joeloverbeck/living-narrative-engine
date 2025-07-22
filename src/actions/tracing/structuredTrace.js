@@ -42,7 +42,7 @@ export class StructuredTrace {
     this.#spanIdCounter = 0;
     this.#rootSpan = null;
     this.#traceConfig = traceConfig || { traceAnalysisEnabled: false };
-    
+
     // Lazy-initialized analysis tools
     this.#analyzer = null;
     this.#visualizer = null;
@@ -470,10 +470,12 @@ export class StructuredTrace {
     if (!this.#visualizer) {
       // Lazy load the visualizer
       // Dynamic import to avoid loading unless needed
-      return import('./traceVisualizer.js').then(({ default: TraceVisualizer }) => {
-        this.#visualizer = new TraceVisualizer(this);
-        return this.#visualizer;
-      });
+      return import('./traceVisualizer.js').then(
+        ({ default: TraceVisualizer }) => {
+          this.#visualizer = new TraceVisualizer(this);
+          return this.#visualizer;
+        }
+      );
     }
 
     return this.#visualizer;
@@ -496,19 +498,22 @@ export class StructuredTrace {
     if (!this.#performanceMonitor) {
       // Lazy load the performance monitor
       // Dynamic import to avoid loading unless needed
-      return import('./performanceMonitor.js').then(({ default: PerformanceMonitor }) => {
-        const thresholds = this.#traceConfig.performanceMonitoring.thresholds || {};
-        this.#performanceMonitor = new PerformanceMonitor(this, thresholds);
+      return import('./performanceMonitor.js').then(
+        ({ default: PerformanceMonitor }) => {
+          const thresholds =
+            this.#traceConfig.performanceMonitoring.thresholds || {};
+          this.#performanceMonitor = new PerformanceMonitor(this, thresholds);
 
-        // Apply sampling configuration if present
-        if (this.#traceConfig.performanceMonitoring.sampling) {
-          this.#performanceMonitor.enableSampling(
-            this.#traceConfig.performanceMonitoring.sampling
-          );
+          // Apply sampling configuration if present
+          if (this.#traceConfig.performanceMonitoring.sampling) {
+            this.#performanceMonitor.enableSampling(
+              this.#traceConfig.performanceMonitoring.sampling
+            );
+          }
+
+          return this.#performanceMonitor;
         }
-        
-        return this.#performanceMonitor;
-      });
+      );
     }
 
     return this.#performanceMonitor;

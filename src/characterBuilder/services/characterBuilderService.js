@@ -158,14 +158,11 @@ export class CharacterBuilderService {
         }
 
         // Dispatch success event
-        this.#eventBus.dispatch({
-          type: CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED,
-          payload: {
-            conceptId: savedConcept.id,
-            concept:
-              concept.substring(0, 100) + (concept.length > 100 ? '...' : ''),
-            autoSaved: autoSave,
-          },
+        this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED, {
+          conceptId: savedConcept.id,
+          concept:
+            concept.substring(0, 100) + (concept.length > 100 ? '...' : ''),
+          autoSaved: autoSave,
         });
 
         return savedConcept;
@@ -196,16 +193,12 @@ export class CharacterBuilderService {
     const message = `Failed to create character concept after ${maxRetries} attempts: ${lastError.message}`;
     this.#logger.error(message, lastError);
 
-    this.#eventBus.dispatch({
-      type: CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,
-      payload: {
-        error: message,
-        operation: 'createCharacterConcept',
-        concept:
-          concept.substring(0, 100) + (concept.length > 100 ? '...' : ''),
-        attempts: maxRetries,
-        finalError: lastError.message,
-      },
+    this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED, {
+      error: message,
+      operation: 'createCharacterConcept',
+      concept: concept.substring(0, 100) + (concept.length > 100 ? '...' : ''),
+      attempts: maxRetries,
+      finalError: lastError.message,
     });
 
     throw new CharacterBuilderError(message, lastError);
@@ -320,13 +313,10 @@ export class CharacterBuilderService {
         this.#resetCircuitBreaker(circuitBreakerKey);
 
         // Dispatch success event
-        this.#eventBus.dispatch({
-          type: CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED,
-          payload: {
-            conceptId,
-            directionCount: savedDirections.length,
-            autoSaved: autoSave,
-          },
+        this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED, {
+          conceptId,
+          directionCount: savedDirections.length,
+          autoSaved: autoSave,
         });
 
         return savedDirections;
@@ -368,15 +358,12 @@ export class CharacterBuilderService {
     const message = `Failed to generate thematic directions for concept ${conceptId} after ${maxRetries} attempts: ${lastError.message}`;
     this.#logger.error(message, lastError);
 
-    this.#eventBus.dispatch({
-      type: CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,
-      payload: {
-        error: message,
-        operation: 'generateThematicDirections',
-        conceptId,
-        attempts: maxRetries,
-        finalError: lastError.message,
-      },
+    this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED, {
+      error: message,
+      operation: 'generateThematicDirections',
+      conceptId,
+      attempts: maxRetries,
+      finalError: lastError.message,
     });
 
     throw new CharacterBuilderError(message, lastError);
@@ -482,11 +469,8 @@ export class CharacterBuilderService {
           `CharacterBuilderService: Deleted character concept ${conceptId}`
         );
 
-        this.#eventBus.dispatch({
-          type: CHARACTER_BUILDER_EVENTS.CONCEPT_DELETED,
-          payload: {
-            conceptId,
-          },
+        this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.CONCEPT_DELETED, {
+          conceptId,
         });
       }
 
@@ -495,13 +479,10 @@ export class CharacterBuilderService {
       const message = `Failed to delete character concept ${conceptId}: ${error.message}`;
       this.#logger.error(message, error);
 
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,
-        payload: {
-          error: message,
-          operation: 'deleteCharacterConcept',
-          conceptId,
-        },
+      this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED, {
+        error: message,
+        operation: 'deleteCharacterConcept',
+        conceptId,
       });
 
       throw new CharacterBuilderError(message, error);
@@ -549,12 +530,9 @@ export class CharacterBuilderService {
       );
 
       // Dispatch event
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CONCEPT_UPDATED,
-        payload: {
-          concept: savedConcept,
-          updates,
-        },
+      this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.CONCEPT_UPDATED, {
+        concept: savedConcept,
+        updates,
       });
 
       return savedConcept;
@@ -562,14 +540,11 @@ export class CharacterBuilderService {
       const message = `Failed to update character concept ${conceptId}: ${error.message}`;
       this.#logger.error(message, error);
 
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,
-        payload: {
-          error: message,
-          operation: 'updateCharacterConcept',
-          conceptId,
-          updates,
-        },
+      this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED, {
+        error: message,
+        operation: 'updateCharacterConcept',
+        conceptId,
+        updates,
       });
 
       throw new CharacterBuilderError(message, error);

@@ -131,15 +131,30 @@ export class CharacterStorageService {
 
     while (attempt < maxRetries) {
       try {
-        // Validate the concept against schema
+        // Serialize the concept for validation (converts Date objects to ISO strings)
+        const serializedConcept = serializeCharacterConcept(concept);
+        
+        // Validate the serialized concept against schema
         const isValid = this.#schemaValidator.validateAgainstSchema(
-          concept,
+          serializedConcept,
           'character-concept'
         );
         if (!isValid) {
           const errorMsg = this.#schemaValidator.formatAjvErrors();
+          const detailedErrorMsg = errorMsg || 'Schema validation failed without specific details';
+          
+          this.#logger.error(
+            `CharacterStorageService: Schema validation failed for concept ${concept.id}`,
+            { 
+              conceptId: concept.id, 
+              validationErrors: errorMsg,
+              originalData: concept,
+              serializedData: serializedConcept,
+              schemaId: 'character-concept'
+            }
+          );
           throw new CharacterStorageError(
-            `Character concept validation failed: ${errorMsg}`
+            `Character concept validation failed: ${detailedErrorMsg}`
           );
         }
 

@@ -381,7 +381,7 @@ describe('TraceAnalyzer', () => {
       // Create some data first
       const span = structuredTrace.startSpan('Test');
       structuredTrace.endSpan(span);
-      
+
       const result1 = analyzer.getConcurrencyProfile();
       const result2 = analyzer.getConcurrencyProfile();
 

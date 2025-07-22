@@ -17,6 +17,82 @@ describe('ActionIndexingService', () => {
     service = new ActionIndexingService({ logger });
   });
 
+  describe('constructor', () => {
+    it('throws error when logger is missing', () => {
+      expect(() => new ActionIndexingService({})).toThrow(
+        'ActionIndexingService: logger required'
+      );
+    });
+
+    it('throws error when logger is null', () => {
+      expect(() => new ActionIndexingService({ logger: null })).toThrow(
+        'ActionIndexingService: logger required'
+      );
+    });
+
+    it('throws error when logger.debug is not a function', () => {
+      const invalidLogger = {
+        debug: 'not a function',
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      expect(
+        () => new ActionIndexingService({ logger: invalidLogger })
+      ).toThrow('ActionIndexingService: logger required');
+    });
+
+    it('creates instance successfully with valid logger missing some methods', () => {
+      const minimalLogger = {
+        debug: jest.fn(),
+      };
+      expect(
+        () => new ActionIndexingService({ logger: minimalLogger })
+      ).not.toThrow();
+    });
+  });
+
+  describe('indexActions', () => {
+    it('throws TypeError when actorId is not a string', () => {
+      expect(() => service.indexActions(123, [])).toThrow(TypeError);
+      expect(() => service.indexActions(123, [])).toThrow(
+        'ActionIndexingService.indexActions: actorId must be a non-empty string'
+      );
+
+      expect(() => service.indexActions(null, [])).toThrow(TypeError);
+      expect(() => service.indexActions(undefined, [])).toThrow(TypeError);
+      expect(() => service.indexActions({}, [])).toThrow(TypeError);
+      expect(() => service.indexActions([], [])).toThrow(TypeError);
+    });
+
+    it('throws TypeError when actorId is empty or whitespace', () => {
+      expect(() => service.indexActions('', [])).toThrow(TypeError);
+      expect(() => service.indexActions('', [])).toThrow(
+        'ActionIndexingService.indexActions: actorId must be a non-empty string'
+      );
+
+      expect(() => service.indexActions('   ', [])).toThrow(TypeError);
+      expect(() => service.indexActions('\t', [])).toThrow(TypeError);
+      expect(() => service.indexActions('\n', [])).toThrow(TypeError);
+    });
+
+    it('throws TypeError when discovered is not an array', () => {
+      expect(() => service.indexActions('actor1', null)).toThrow(TypeError);
+      expect(() => service.indexActions('actor1', null)).toThrow(
+        'ActionIndexingService.indexActions: discovered must be an array'
+      );
+
+      expect(() => service.indexActions('actor1', undefined)).toThrow(
+        TypeError
+      );
+      expect(() => service.indexActions('actor1', 'not an array')).toThrow(
+        TypeError
+      );
+      expect(() => service.indexActions('actor1', 123)).toThrow(TypeError);
+      expect(() => service.indexActions('actor1', {})).toThrow(TypeError);
+    });
+  });
+
   it('enumerates actions with correct indices (happy path)', () => {
     const rawActions = [
       {
@@ -148,6 +224,81 @@ describe('ActionIndexingService', () => {
     expect(second).toBe(first);
   });
 
+  describe('beginTurn', () => {
+    it('clears cached actions for the actor', () => {
+      // First index some actions
+      const raw = [
+        { id: 'a', params: {}, command: 'cmd', description: 'desc' },
+      ];
+      service.indexActions('actor1', raw);
+
+      // Verify they're cached
+      expect(() => service.getIndexedList('actor1')).not.toThrow();
+
+      // Begin new turn
+      service.beginTurn('actor1');
+
+      // Verify cache is cleared
+      expect(() => service.getIndexedList('actor1')).toThrow(
+        ActionIndexingError
+      );
+    });
+
+    it('is idempotent - can be called multiple times safely', () => {
+      service.beginTurn('actor1');
+      service.beginTurn('actor1');
+      service.beginTurn('actor1');
+
+      // Should not throw
+      expect(() => service.getIndexedList('actor1')).toThrow(
+        ActionIndexingError
+      );
+    });
+
+    it('only clears cache for the specified actor', () => {
+      // Index actions for multiple actors
+      const raw = [
+        { id: 'a', params: {}, command: 'cmd', description: 'desc' },
+      ];
+      service.indexActions('actor1', raw);
+      service.indexActions('actor2', raw);
+
+      // Begin turn for only actor1
+      service.beginTurn('actor1');
+
+      // actor1 cache should be cleared
+      expect(() => service.getIndexedList('actor1')).toThrow(
+        ActionIndexingError
+      );
+
+      // actor2 cache should remain
+      expect(() => service.getIndexedList('actor2')).not.toThrow();
+    });
+  });
+
+  describe('clearActorCache (deprecated)', () => {
+    it('clears cached actions for the actor and logs debug message', () => {
+      // First index some actions
+      const raw = [
+        { id: 'a', params: {}, command: 'cmd', description: 'desc' },
+      ];
+      service.indexActions('actor1', raw);
+
+      // Clear cache
+      service.clearActorCache('actor1');
+
+      // Verify cache is cleared
+      expect(() => service.getIndexedList('actor1')).toThrow(
+        ActionIndexingError
+      );
+
+      // Verify debug log
+      expect(logger.debug).toHaveBeenCalledWith(
+        'ActionIndexingService: cache cleared for actor1'
+      );
+    });
+  });
+
   it('resets between turns and re-suppresses duplicates per actor', () => {
     service.indexActions('actorA', [
       { id: 'a', params: {}, command: 'c', description: 'd' },
@@ -191,5 +342,58 @@ describe('ActionIndexingService', () => {
       { id: 'x', params: {}, command: 'cmd', description: 'desc' },
     ]);
     expect(() => service.resolve('actorZ', 2)).toThrow(ActionIndexingError);
+  });
+
+  it('resolve returns correct action composite when index is valid', () => {
+    const rawActions = [
+      {
+        id: 'action1',
+        params: { key: 'value1' },
+        command: 'cmd1',
+        description: 'desc1',
+      },
+      {
+        id: 'action2',
+        params: { key: 'value2' },
+        command: 'cmd2',
+        description: 'desc2',
+      },
+      {
+        id: 'action3',
+        params: { key: 'value3' },
+        command: 'cmd3',
+        description: 'desc3',
+      },
+    ];
+
+    service.indexActions('actorResolve', rawActions);
+
+    // Test resolving each action
+    const resolved1 = service.resolve('actorResolve', 1);
+    expect(resolved1).toEqual({
+      index: 1,
+      actionId: 'action1',
+      commandString: 'cmd1',
+      params: { key: 'value1' },
+      description: 'desc1',
+    });
+
+    const resolved2 = service.resolve('actorResolve', 2);
+    expect(resolved2).toEqual({
+      index: 2,
+      actionId: 'action2',
+      commandString: 'cmd2',
+      params: { key: 'value2' },
+      description: 'desc2',
+    });
+
+    const resolved3 = service.resolve('actorResolve', 3);
+    expect(resolved3).toEqual({
+      index: 3,
+      actionId: 'action3',
+      commandString: 'cmd3',
+      params: { key: 'value3' },
+      description: 'desc3',
+    });
   });
 });

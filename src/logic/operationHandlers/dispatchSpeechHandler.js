@@ -80,7 +80,7 @@ class DispatchSpeechHandler extends BaseOperationHandler {
     if (typeof params.thoughts === 'string') {
       payload.thoughts = params.thoughts;
     }
-    if (typeof params.notes === 'string') {
+    if (params.notes !== undefined) {
       payload.notes = params.notes;
     }
 

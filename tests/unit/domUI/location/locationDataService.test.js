@@ -51,17 +51,21 @@ describe('LocationDataService', () => {
       });
       const loc = svc.resolveLocationInstanceId('actor');
       expect(loc).toBeNull();
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
-        message: "Entity 'actor' has no valid position or locationId.",
-        details: expect.objectContaining({
-          raw: expect.stringContaining('actor'),
-          stack: expect.any(String),
-        }),
-      });
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message: "Entity 'actor' has no valid position or locationId.",
+          details: expect.objectContaining({
+            raw: expect.stringContaining('actor'),
+            stack: expect.any(String),
+          }),
+        }
+      );
     });
 
     it('returns null and queries dataRegistry when location missing with dataRegistry', () => {
-      const { logger, entityManager, provider, dispatcher, dataRegistry } = makeDeps();
+      const { logger, entityManager, provider, dispatcher, dataRegistry } =
+        makeDeps();
       provider.getEntityLocationId.mockReturnValue(null);
       const svc = new LocationDataService({
         logger,
@@ -74,13 +78,16 @@ describe('LocationDataService', () => {
       expect(loc).toBeNull();
       expect(dataRegistry.getAll).toHaveBeenCalledWith('entityInstances');
       expect(dataRegistry.getAll).toHaveBeenCalledWith('entityDefinitions');
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
-        message: "Entity 'actor' has no valid position or locationId.",
-        details: expect.objectContaining({
-          raw: expect.stringContaining('actor'),
-          stack: expect.any(String),
-        }),
-      });
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message: "Entity 'actor' has no valid position or locationId.",
+          details: expect.objectContaining({
+            raw: expect.stringContaining('actor'),
+            stack: expect.any(String),
+          }),
+        }
+      );
     });
 
     it('handles dataRegistry without getAll method gracefully', () => {
@@ -96,13 +103,16 @@ describe('LocationDataService', () => {
       });
       const loc = svc.resolveLocationInstanceId('actor');
       expect(loc).toBeNull();
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
-        message: "Entity 'actor' has no valid position or locationId.",
-        details: expect.objectContaining({
-          raw: expect.stringContaining('actor'),
-          stack: expect.any(String),
-        }),
-      });
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message: "Entity 'actor' has no valid position or locationId.",
+          details: expect.objectContaining({
+            raw: expect.stringContaining('actor'),
+            stack: expect.any(String),
+          }),
+        }
+      );
     });
 
     it('handles dataRegistry returning null or undefined values', () => {
@@ -124,15 +134,22 @@ describe('LocationDataService', () => {
       });
       const loc = svc.resolveLocationInstanceId('actor');
       expect(loc).toBeNull();
-      expect(dataRegistryWithNulls.getAll).toHaveBeenCalledWith('entityInstances');
-      expect(dataRegistryWithNulls.getAll).toHaveBeenCalledWith('entityDefinitions');
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
-        message: "Entity 'actor' has no valid position or locationId.",
-        details: expect.objectContaining({
-          raw: expect.stringContaining('actor'),
-          stack: expect.any(String),
-        }),
-      });
+      expect(dataRegistryWithNulls.getAll).toHaveBeenCalledWith(
+        'entityInstances'
+      );
+      expect(dataRegistryWithNulls.getAll).toHaveBeenCalledWith(
+        'entityDefinitions'
+      );
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message: "Entity 'actor' has no valid position or locationId.",
+          details: expect.objectContaining({
+            raw: expect.stringContaining('actor'),
+            stack: expect.any(String),
+          }),
+        }
+      );
     });
   });
 
@@ -169,7 +186,9 @@ describe('LocationDataService', () => {
       });
       const chars = svc.gatherLocationCharacters('loc1', 'actor');
       expect(chars.length).toBe(2);
-      expect(provider.getCharacterDisplayInfo).not.toHaveBeenCalledWith('actor');
+      expect(provider.getCharacterDisplayInfo).not.toHaveBeenCalledWith(
+        'actor'
+      );
       expect(provider.getCharacterDisplayInfo).toHaveBeenCalledWith('a');
       expect(provider.getCharacterDisplayInfo).toHaveBeenCalledWith('b');
     });
@@ -189,7 +208,9 @@ describe('LocationDataService', () => {
       });
       const chars = svc.gatherLocationCharacters('loc1', 'current');
       expect(chars.length).toBe(1);
-      expect(nonActorEntity.hasComponent).toHaveBeenCalledWith(ACTOR_COMPONENT_ID);
+      expect(nonActorEntity.hasComponent).toHaveBeenCalledWith(
+        ACTOR_COMPONENT_ID
+      );
       expect(provider.getCharacterDisplayInfo).toHaveBeenCalledTimes(1);
       expect(provider.getCharacterDisplayInfo).toHaveBeenCalledWith('b');
     });

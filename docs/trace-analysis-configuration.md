@@ -138,10 +138,10 @@ const monitor = await trace.getPerformanceMonitor();
 if (monitor) {
   // Start monitoring
   const stopMonitoring = monitor.startMonitoring({ intervalMs: 1000 });
-  
+
   // Get real-time metrics
   const metrics = monitor.getRealtimeMetrics();
-  
+
   // Stop monitoring when done
   stopMonitoring();
 }

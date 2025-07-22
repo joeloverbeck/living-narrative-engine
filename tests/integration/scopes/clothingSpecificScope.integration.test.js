@@ -171,17 +171,28 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     );
 
     // Register the condition used by the scope
-    dataRegistry.store('conditions', 'intimacy:entity-not-in-facing-away', {
-      id: 'intimacy:entity-not-in-facing-away',
-      description:
-        "Checks if the entity is not in the actor's facing_away_from array (i.e., the actor is not facing away from this entity).",
+    dataRegistry.store('conditions', 'intimacy:both-actors-facing-each-other', {
+      id: 'intimacy:both-actors-facing-each-other',
+      description: 'Checks if both actors are facing each other (neither is facing away from the other).',
       logic: {
-        not: {
-          in: [
-            { var: 'entity.id' },
-            { var: 'actor.components.intimacy:closeness.facing_away_from' },
-          ],
-        },
+        and: [
+          {
+            not: {
+              in: [
+                { var: 'entity.id' },
+                { var: 'actor.components.intimacy:closeness.facing_away_from' },
+              ],
+            },
+          },
+          {
+            not: {
+              in: [
+                { var: 'actor.id' },
+                { var: 'entity.components.intimacy:closeness.facing_away_from' },
+              ],
+            },
+          },
+        ],
       },
     });
   });
@@ -252,8 +263,8 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       // Mock condition evaluation for facing direction
       const originalEvaluate = jsonLogicEval.evaluate;
       jsonLogicEval.evaluate = jest.fn((logic, context) => {
-        if (logic?.condition_ref === 'intimacy:entity-not-in-facing-away') {
-          return true; // Target is facing forward
+        if (logic?.condition_ref === 'intimacy:both-actors-facing-each-other') {
+          return true; // Both actors are facing each other
         }
         return originalEvaluate.call(jsonLogicEval, logic, context);
       });
@@ -281,8 +292,8 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       // Mock condition evaluation for facing direction
       jsonLogicEval.evaluate = jest.fn((logic, context) => {
-        if (logic?.condition_ref === 'intimacy:entity-not-in-facing-away') {
-          return true; // Target is facing forward
+        if (logic?.condition_ref === 'intimacy:both-actors-facing-each-other') {
+          return false; // Not both facing each other
         }
         return false;
       });
@@ -309,8 +320,8 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       // Mock condition evaluation for facing direction
       jsonLogicEval.evaluate = jest.fn((logic, context) => {
-        if (logic?.condition_ref === 'intimacy:entity-not-in-facing-away') {
-          return true; // Target is facing forward
+        if (logic?.condition_ref === 'intimacy:both-actors-facing-each-other') {
+          return false; // Not both facing each other
         }
         return false;
       });
@@ -337,7 +348,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       // Mock condition evaluation for facing direction
       jsonLogicEval.evaluate = jest.fn((logic, context) => {
-        if (logic?.condition_ref === 'intimacy:entity-not-in-facing-away') {
+        if (logic?.condition_ref === 'intimacy:both-actors-facing-each-other') {
           return false; // Target is facing away
         }
         return false;
@@ -396,7 +407,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       // Mock condition evaluation for facing direction
       const originalEvaluate = jsonLogicEval.evaluate;
       jsonLogicEval.evaluate = jest.fn((logic, context) => {
-        if (logic?.condition_ref === 'intimacy:entity-not-in-facing-away') {
+        if (logic?.condition_ref === 'intimacy:both-actors-facing-each-other') {
           return true; // Both targets are facing forward
         }
         // For other logic (like hasClothingInSlot), use the original evaluator

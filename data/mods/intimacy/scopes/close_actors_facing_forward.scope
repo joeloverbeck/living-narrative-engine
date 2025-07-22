@@ -1,5 +1,5 @@
-// Scope for actors in closeness who are facing forward (not in facing_away_from array)
+// Scope for actors in closeness who are facing forward (both actors are facing each other)
 // Used by actions that require face-to-face interaction
 intimacy:close_actors_facing_forward := actor.intimacy:closeness.partners[][{
-  "condition_ref": "intimacy:entity-not-in-facing-away"
+  "condition_ref": "intimacy:both-actors-facing-each-other"
 }]

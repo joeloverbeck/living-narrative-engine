@@ -6,5 +6,8 @@
   "required_components": {
     "actor": ["intimacy:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["intimacy:kissing"]
+  },
   "template": "give {target} a peck on the lips"
 }

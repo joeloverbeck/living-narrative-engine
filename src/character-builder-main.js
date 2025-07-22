@@ -215,10 +215,7 @@ class CharacterBuilderApp {
         );
       }
       const directionSchema = await directionSchemaResponse.json();
-      await schemaValidator.addSchema(
-        directionSchema,
-        'schema://living-narrative-engine/thematic-direction.schema.json'
-      );
+      await schemaValidator.addSchema(directionSchema, 'thematic-direction');
 
       // Load character concept schema second (it references thematic-direction)
       const conceptSchemaResponse = await fetch(
@@ -230,10 +227,7 @@ class CharacterBuilderApp {
         );
       }
       const conceptSchema = await conceptSchemaResponse.json();
-      await schemaValidator.addSchema(
-        conceptSchema,
-        'schema://living-narrative-engine/character-concept.schema.json'
-      );
+      await schemaValidator.addSchema(conceptSchema, 'character-concept');
 
       this.#logger.debug('CharacterBuilderApp: Loaded JSON schemas');
     } catch (error) {
