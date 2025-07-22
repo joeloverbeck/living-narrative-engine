@@ -108,6 +108,46 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   async getValidActions(actorEntity, baseContext = {}, options = {}) {
     const { trace: shouldTrace = false } = options;
     const trace = shouldTrace ? this.#traceContextFactory() : null;
+
+    // Support both old and new trace APIs
+    if (trace?.withSpanAsync) {
+      return trace.withSpanAsync(
+        'action.discover',
+        async () => {
+          return this.#getValidActionsInternal(
+            actorEntity,
+            baseContext,
+            trace,
+            shouldTrace
+          );
+        },
+        {
+          actorId: actorEntity?.id,
+          withTrace: shouldTrace,
+        }
+      );
+    }
+
+    // Fallback to original implementation for backward compatibility
+    return this.#getValidActionsInternal(
+      actorEntity,
+      baseContext,
+      trace,
+      shouldTrace
+    );
+  }
+
+  /**
+   * Internal implementation of action discovery logic.
+   *
+   * @private
+   * @param {Entity} actorEntity - The entity for whom to find actions.
+   * @param {ActionContext} baseContext - The current action context.
+   * @param {TraceContext|null} trace - Optional tracing instance.
+   * @param {boolean} shouldTrace - Whether tracing is enabled.
+   * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionsResult>} The discovered actions result.
+   */
+  async #getValidActionsInternal(actorEntity, baseContext, trace, shouldTrace) {
     const SOURCE = 'getValidActions';
 
     if (!actorEntity || !isNonBlankString(actorEntity.id)) {

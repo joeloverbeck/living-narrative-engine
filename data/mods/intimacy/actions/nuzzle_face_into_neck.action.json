@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "intimacy:nuzzle_face_into_neck",
+  "name": "Nuzzle Face Into Neck",
+  "description": "Gently nuzzle your face into the target's neck in an intimate gesture.",
+  "scope": "intimacy:close_actors",
+  "required_components": {
+    "actor": ["intimacy:closeness"]
+  },
+  "template": "nuzzle face into {target}'s neck",
+  "prerequisites": []
+}

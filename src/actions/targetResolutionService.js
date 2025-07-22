@@ -72,6 +72,55 @@ export class TargetResolutionService extends ITargetResolutionService {
     trace = null,
     actionId = null
   ) {
+    // Support both old and new trace APIs
+    if (trace?.withSpan) {
+      return trace.withSpan(
+        'target.resolve',
+        () => {
+          return this.#resolveTargetsInternal(
+            scopeName,
+            actorEntity,
+            discoveryContext,
+            trace,
+            actionId
+          );
+        },
+        {
+          scopeName: scopeName,
+          actorId: actorEntity?.id,
+          actionId: actionId,
+        }
+      );
+    }
+
+    // Fallback to original implementation for backward compatibility
+    return this.#resolveTargetsInternal(
+      scopeName,
+      actorEntity,
+      discoveryContext,
+      trace,
+      actionId
+    );
+  }
+
+  /**
+   * Internal implementation of target resolution logic.
+   *
+   * @private
+   * @param {string} scopeName - The name of the scope to resolve.
+   * @param {Entity} actorEntity - The entity performing the action.
+   * @param {ActionContext} discoveryContext - Context for DSL evaluation.
+   * @param {TraceContext|null} [trace] - Optional tracing instance.
+   * @param {string} [actionId] - Optional action ID for error context.
+   * @returns {ActionResult} Result containing resolved targets or errors.
+   */
+  #resolveTargetsInternal(
+    scopeName,
+    actorEntity,
+    discoveryContext,
+    trace = null,
+    actionId = null
+  ) {
     const source = 'TargetResolutionService.resolveTargets';
     trace?.info(
       `Delegating scope resolution for '${scopeName}' to UnifiedScopeResolver.`,

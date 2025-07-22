@@ -346,6 +346,59 @@ export class PrerequisiteEvaluationService extends BaseService {
     actionId,
     trace = null
   ) {
+    // Support span-based tracing if available
+    if (trace?.withSpan) {
+      return trace.withSpan(
+        `prerequisite.rule.${ruleNumber}`,
+        () => {
+          return this.#evaluatePrerequisiteInternal(
+            prereqObject,
+            ruleNumber,
+            totalRules,
+            evaluationContext,
+            actionId,
+            trace
+          );
+        },
+        {
+          actionId: actionId,
+          ruleNumber: ruleNumber,
+          totalRules: totalRules,
+        }
+      );
+    }
+
+    // Fallback to original implementation
+    return this.#evaluatePrerequisiteInternal(
+      prereqObject,
+      ruleNumber,
+      totalRules,
+      evaluationContext,
+      actionId,
+      trace
+    );
+  }
+
+  /**
+   * Internal implementation of single prerequisite rule evaluation.
+   *
+   * @private
+   * @param {object} prereqObject - The prerequisite object containing a logic rule.
+   * @param {number} ruleNumber - The index (1-based) of the rule being evaluated.
+   * @param {number} totalRules - Total number of prerequisite rules.
+   * @param {JsonLogicEvaluationContext} evaluationContext - The context used for evaluation.
+   * @param {string} actionId - The ID of the action being evaluated.
+   * @param {TraceContext} [trace] - Optional tracing context.
+   * @returns {boolean} True if the prerequisite passes, false otherwise.
+   */
+  #evaluatePrerequisiteInternal(
+    prereqObject,
+    ruleNumber,
+    totalRules,
+    evaluationContext,
+    actionId,
+    trace = null
+  ) {
     const source = 'PrerequisiteEvaluationService._evaluatePrerequisite';
     if (
       !this._validatePrerequisiteRule(
@@ -404,6 +457,52 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @returns {boolean} True if all rules pass, false if any fail.
    */
   #evaluateRules(prerequisites, evaluationContext, actionId, trace = null) {
+    const source = 'PrerequisiteEvaluationService.#evaluateRules';
+
+    // Support span-based tracing if available
+    if (trace?.withSpan) {
+      return trace.withSpan(
+        'prerequisite.evaluateRules',
+        () => {
+          return this.#evaluateRulesInternal(
+            prerequisites,
+            evaluationContext,
+            actionId,
+            trace
+          );
+        },
+        {
+          actionId: actionId,
+          ruleCount: prerequisites.length,
+        }
+      );
+    }
+
+    // Fallback to original implementation
+    return this.#evaluateRulesInternal(
+      prerequisites,
+      evaluationContext,
+      actionId,
+      trace
+    );
+  }
+
+  /**
+   * Internal implementation of rule evaluation logic.
+   *
+   * @private
+   * @param {object[]} prerequisites - The prerequisite rule objects.
+   * @param {JsonLogicEvaluationContext} evaluationContext - Context for rule evaluation.
+   * @param {string} actionId - The ID of the action being evaluated.
+   * @param {TraceContext} [trace] - Optional tracing context.
+   * @returns {boolean} True if all rules pass, false if any fail.
+   */
+  #evaluateRulesInternal(
+    prerequisites,
+    evaluationContext,
+    actionId,
+    trace = null
+  ) {
     const source = 'PrerequisiteEvaluationService.#evaluateRules';
 
     this.#logger.debug(
@@ -469,6 +568,62 @@ export class PrerequisiteEvaluationService extends BaseService {
     const source = 'PrerequisiteEvaluationService.evaluate';
     const actionId = actionDefinition?.id ?? 'unknown_action';
     const actorId = actor?.id ?? 'unknown_actor';
+
+    // Support both old and new trace APIs
+    if (trace?.withSpan) {
+      return trace.withSpan(
+        'prerequisite.evaluate',
+        () => {
+          return this.#evaluatePrerequisitesInternal(
+            prerequisites,
+            actionDefinition,
+            actor,
+            actionId,
+            actorId,
+            trace
+          );
+        },
+        {
+          actionId: actionId,
+          actorId: actorId,
+          ruleCount: prerequisites?.length || 0,
+        }
+      );
+    }
+
+    // Fallback to original implementation for backward compatibility
+    return this.#evaluatePrerequisitesInternal(
+      prerequisites,
+      actionDefinition,
+      actor,
+      actionId,
+      actorId,
+      trace
+    );
+  }
+
+  /**
+   * Internal method for prerequisite evaluation logic.
+   * Separated to support span wrapping while maintaining backward compatibility.
+   *
+   * @private
+   * @param {object[]} prerequisites - The array of prerequisite rule objects.
+   * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
+   * @param {Entity} actor - The entity performing the action.
+   * @param {string} actionId - The ID of the action being evaluated.
+   * @param {string} actorId - The ID of the acting entity.
+   * @param {TraceContext} [trace] - Optional tracing context for detailed logging.
+   * @returns {boolean} True if all prerequisites pass, false otherwise.
+   */
+  #evaluatePrerequisitesInternal(
+    prerequisites,
+    actionDefinition,
+    actor,
+    actionId,
+    actorId,
+    trace
+  ) {
+    const source = 'PrerequisiteEvaluationService.evaluate';
 
     // Record prerequisite evaluation start
     trace?.step('Checking prerequisites', source);

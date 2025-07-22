@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "character-concept.schema.json",
+  "$id": "schema://living-narrative-engine/character-concept.schema.json",
   "title": "Character Concept",
   "description": "Schema for character concept data in the character builder system",
   "type": "object",
@@ -33,7 +33,9 @@
     },
     "thematicDirections": {
       "type": "array",
-      "items": { "$ref": "thematic-direction.schema.json" },
+      "items": {
+        "$ref": "schema://living-narrative-engine/thematic-direction.schema.json"
+      },
       "minItems": 0,
       "maxItems": 10,
       "description": "Generated thematic directions"

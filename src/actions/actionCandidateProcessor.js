@@ -87,6 +87,36 @@ export class ActionCandidateProcessor {
    * @returns {ActionResult} Result containing valid actions and errors.
    */
   process(actionDef, actorEntity, context, trace = null) {
+    // Support both old and new trace APIs
+    if (trace?.withSpan) {
+      return trace.withSpan(
+        'candidate.process',
+        () => {
+          return this.#processInternal(actionDef, actorEntity, context, trace);
+        },
+        {
+          actionId: actionDef.id,
+          actorId: actorEntity.id,
+          scope: actionDef.scope,
+        }
+      );
+    }
+
+    // Fallback to original implementation for backward compatibility
+    return this.#processInternal(actionDef, actorEntity, context, trace);
+  }
+
+  /**
+   * Internal implementation of candidate processing logic.
+   *
+   * @private
+   * @param {ActionDefinition} actionDef - The action definition to process.
+   * @param {Entity} actorEntity - The entity performing the action.
+   * @param {ActionContext} context - The action discovery context.
+   * @param {TraceContext} [trace] - Optional trace context for logging.
+   * @returns {ActionResult} Result containing valid actions and errors.
+   */
+  #processInternal(actionDef, actorEntity, context, trace = null) {
     const source = 'ActionCandidateProcessor.process';
     trace?.step(`Processing candidate action: '${actionDef.id}'`, source);
 

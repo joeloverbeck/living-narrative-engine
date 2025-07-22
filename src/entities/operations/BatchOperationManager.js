@@ -7,6 +7,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { validateBatchSize } from '../utils/configUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
+import IBatchOperationManager from '../interfaces/IBatchOperationManager.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../services/entityLifecycleManager.js').EntityLifecycleManager} EntityLifecycleManager */
@@ -40,8 +41,9 @@ import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 /**
  * @class BatchOperationManager
  * @description Handles batch operations for entity creation, updates, and deletions
+ * @implements {IBatchOperationManager}
  */
-export default class BatchOperationManager {
+export default class BatchOperationManager extends IBatchOperationManager {
   /** @type {EntityLifecycleManager} */
   #lifecycleManager;
   /** @type {ComponentMutationService} */
@@ -69,6 +71,7 @@ export default class BatchOperationManager {
     defaultBatchSize = 50,
     enableTransactions = true,
   }) {
+    super();
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });

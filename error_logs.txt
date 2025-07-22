@@ -1,23 +1,19 @@
-[ConsoleLogger] Invalid log level input type: 'object', value: '[object Object]'. Using previous or default: INFO.
+consoleLogger.js:107 [ConsoleLogger] Invalid log level input type: 'object', value: '[object Object]'. Using previous or default: INFO.
 setLogLevel @ consoleLogger.js:107
 ConsoleLogger @ consoleLogger.js:64
-CharacterBuilderApp @ character-builder-main.js:33
-initialize @ character-builder-main.js:272Understand this warning
+CharacterBuilderApp @ character-builder-main.js:36
+initialize @ character-builder-main.js:295Understand this warning
 consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
 consoleLogger.js:151 CharacterBuilderApp: Starting initialization
-consoleLogger.js:175 SafeEventDispatcher Constructor: Invalid or missing validatedEventDispatcher dependency (requires dispatch, subscribe, and unsubscribe methods).
+consoleLogger.js:175 CharacterBuilderApp: Failed to initialize Error: GameDataRepository requires a valid ILogger with info, warn, error, and debug methods.
+    at new GameDataRepository (gameDataRepository.js:59:13)
+    at CharacterBuilderApp.initialize (character-builder-main.js:69:34)
+    at async HTMLDocument.initialize (character-builder-main.js:296:5)
 error @ consoleLogger.js:175
-SafeEventDispatcher @ safeEventDispatcher.js:67
-initialize @ character-builder-main.js:54
-initialize @ character-builder-main.js:273Understand this error
-consoleLogger.js:175 CharacterBuilderApp: Failed to initialize Error: SafeEventDispatcher Constructor: Invalid or missing validatedEventDispatcher dependency (requires dispatch, subscribe, and unsubscribe methods).
-    at new SafeEventDispatcher (safeEventDispatcher.js:68:13)
-    at CharacterBuilderApp.initialize (character-builder-main.js:54:24)
-    at HTMLDocument.initialize (character-builder-main.js:273:15)
-error @ consoleLogger.js:175
-initialize @ character-builder-main.js:133
-initialize @ character-builder-main.js:273Understand this error
-character-builder-main.js:275 Failed to initialize character builder: Error: SafeEventDispatcher Constructor: Invalid or missing validatedEventDispatcher dependency (requires dispatch, subscribe, and unsubscribe methods).
-    at new SafeEventDispatcher (safeEventDispatcher.js:68:13)
-    at CharacterBuilderApp.initialize (character-builder-main.js:54:24)
-    at HTMLDocument.initialize (character-builder-main.js:273:15)
+initialize @ character-builder-main.js:156
+await in initialize
+initialize @ character-builder-main.js:296Understand this error
+character-builder-main.js:298 Failed to initialize character builder: Error: GameDataRepository requires a valid ILogger with info, warn, error, and debug methods.
+    at new GameDataRepository (gameDataRepository.js:59:13)
+    at CharacterBuilderApp.initialize (character-builder-main.js:69:34)
+    at async HTMLDocument.initialize (character-builder-main.js:296:5)

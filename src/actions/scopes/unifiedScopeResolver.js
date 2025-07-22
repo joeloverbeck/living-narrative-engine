@@ -126,6 +126,35 @@ export class UnifiedScopeResolver {
    * @returns {ActionResult} ActionResult containing Set of entity IDs or errors
    */
   resolve(scopeName, context, options = {}) {
+    // Support both old and new trace APIs
+    if (context?.trace?.withSpan) {
+      return context.trace.withSpan(
+        'scope.resolve',
+        () => {
+          return this.#resolveInternal(scopeName, context, options);
+        },
+        {
+          scopeName: scopeName,
+          actorId: context.actor?.id,
+          actionId: context.actionId,
+        }
+      );
+    }
+
+    // Fallback to original implementation for backward compatibility
+    return this.#resolveInternal(scopeName, context, options);
+  }
+
+  /**
+   * Internal implementation of scope resolution logic.
+   *
+   * @private
+   * @param {string} scopeName - The scope to resolve
+   * @param {ScopeResolutionContext} context - Resolution context
+   * @param {ScopeResolutionOptions} [options] - Resolution options
+   * @returns {ActionResult} ActionResult containing Set of entity IDs or errors
+   */
+  #resolveInternal(scopeName, context, options = {}) {
     const source = 'UnifiedScopeResolver.resolve';
     const {
       useCache = true,

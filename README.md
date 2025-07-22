@@ -186,6 +186,43 @@ The formal structure of this file is defined by the `game.schema.json` schema fi
 against this schema during startup. You can refer to `data/schemas/game.schema.json` for the precise definition.
 UI icons and labels are validated against `ui-icons.schema.json` and `ui-labels.schema.json` and loaded by the new **UiLoader**. Definitions from later mods override earlier ones.
 
+### Logger Configuration (`logger-config.json`)
+
+The logging level can be configured via `config/logger-config.json`:
+
+```json
+{
+  "logLevel": "INFO"
+}
+```
+
+Available log levels: `DEBUG`, `INFO`, `WARN`, `ERROR`, `NONE`
+
+### Trace Analysis Configuration (`trace-config.json`)
+
+The engine includes powerful trace analysis tools for debugging and performance optimization. These are configured via `config/trace-config.json`:
+
+```json
+{
+  "traceAnalysisEnabled": false,
+  "performanceMonitoring": {
+    "enabled": true,
+    "thresholds": {
+      "slowOperationMs": 100,
+      "criticalOperationMs": 500
+    }
+  },
+  "visualization": {
+    "enabled": true
+  },
+  "analysis": {
+    "enabled": true
+  }
+}
+```
+
+To enable trace analysis tools, set `"traceAnalysisEnabled": true`. See `docs/trace-analysis-configuration.md` for detailed configuration options.
+
 ## Dependency & Conflict Validation
 
 A robust modding system relies on clearly defined dependencies and the ability to handle potential conflicts. The Living

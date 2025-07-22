@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "intimacy:event-is-action-nuzzle-face-into-neck",
+  "description": "Checks if the triggering event is for the 'intimacy:nuzzle_face_into_neck' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "intimacy:nuzzle_face_into_neck"
+    ]
+  }
+}

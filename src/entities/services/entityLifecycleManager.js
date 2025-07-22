@@ -21,7 +21,7 @@ import MonitoringCoordinator from '../monitoring/MonitoringCoordinator.js';
  * @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
- * @typedef {import('../operations/BatchOperationManager.js').default} BatchOperationManager
+ * @typedef {import('../interfaces/IBatchOperationManager.js').default} IBatchOperationManager
  */
 
 /**
@@ -51,7 +51,7 @@ export class EntityLifecycleManager {
   #monitoringCoordinator;
 
   // Batch operation support
-  /** @type {BatchOperationManager} */
+  /** @type {IBatchOperationManager} */
   #batchOperationManager;
   /** @type {boolean} */
   #enableBatchOperations;
@@ -67,7 +67,7 @@ export class EntityLifecycleManager {
    * @param {ErrorTranslator} deps.errorTranslator - Error translator
    * @param {DefinitionCache} deps.definitionCache - Definition cache instance
    * @param {MonitoringCoordinator} [deps.monitoringCoordinator] - Monitoring coordinator
-   * @param {BatchOperationManager} [deps.batchOperationManager] - Batch operation manager
+   * @param {IBatchOperationManager} [deps.batchOperationManager] - Batch operation manager
    * @param {boolean} [deps.enableBatchOperations] - Enable batch operations
    */
   constructor({
@@ -769,7 +769,7 @@ export class EntityLifecycleManager {
    * Sets the batch operation manager after construction.
    * This is used to resolve circular dependencies between EntityLifecycleManager and BatchOperationManager.
    *
-   * @param {BatchOperationManager} batchOperationManager - The batch operation manager
+   * @param {IBatchOperationManager} batchOperationManager - The batch operation manager
    */
   setBatchOperationManager(batchOperationManager) {
     if (!this.#enableBatchOperations) {

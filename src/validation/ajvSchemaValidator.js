@@ -5,6 +5,8 @@
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import { validateAgainstSchema as validateAgainstSchemaUtil } from '../utils/schemaValidationUtils.js';
+import { formatAjvErrors } from '../utils/ajvUtils.js';
 
 // ── IMPORT v3 TURN‐ACTION SCHEMA ─────────────────────────────────────────────
 // Schema IDs can be preloaded by passing them in via constructor options.
@@ -584,6 +586,45 @@ class AjvSchemaValidator {
     }
 
     return Promise.resolve();
+  }
+
+  /**
+   * Validates data against the specified schema ID using the utility function.
+   * This method provides compatibility with character builder services.
+   *
+   * @param {any} data - The data to validate
+   * @param {string} schemaId - The schema ID to validate against
+   * @param {object} [context] - Optional context for validation
+   * @returns {boolean} - True if valid, false otherwise
+   */
+  validateAgainstSchema(data, schemaId, context = {}) {
+    try {
+      const result = validateAgainstSchemaUtil(
+        this,
+        schemaId,
+        data,
+        this.#logger,
+        context
+      );
+      return result.isValid;
+    } catch (error) {
+      this.#logger.error(
+        `AjvSchemaValidator: validateAgainstSchema failed for schema '${schemaId}': ${error.message}`,
+        { schemaId, error }
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Formats Ajv errors into a readable string.
+   * This method provides compatibility with character builder services.
+   *
+   * @param {object[]} errors - Array of Ajv error objects
+   * @returns {string} - Formatted error string
+   */
+  formatAjvErrors(errors) {
+    return formatAjvErrors(errors);
   }
 }
 
