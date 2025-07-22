@@ -25,55 +25,16 @@
           },
           "notes": {
             "type": "array",
+            "description": "Structured notes from AI decision process",
             "items": {
               "oneOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Simple string note"
                 },
                 {
-                  "type": "object",
-                  "properties": {
-                    "text": {
-                      "type": "string",
-                      "minLength": 1,
-                      "description": "The note content"
-                    },
-                    "subject": {
-                      "type": "string",
-                      "minLength": 1,
-                      "description": "Primary subject of the note (entity, location, concept)"
-                    },
-                    "subjectType": {
-                      "type": "string",
-                      "enum": [
-                        "character",
-                        "location",
-                        "item",
-                        "creature",
-                        "event",
-                        "concept",
-                        "relationship",
-                        "organization",
-                        "quest",
-                        "skill",
-                        "emotion",
-                        "other"
-                      ],
-                      "default": "other",
-                      "description": "Explicit categorization of the note's subject type"
-                    },
-                    "context": {
-                      "type": "string",
-                      "description": "Where/how this was observed (optional)"
-                    },
-                    "tags": {
-                      "type": "array",
-                      "items": { "type": "string" },
-                      "description": "Additional categorization tags (optional)"
-                    }
-                  },
-                  "required": ["text", "subject", "subjectType"],
-                  "additionalProperties": false
+                  "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/structuredNote"
                 }
               ]
             }

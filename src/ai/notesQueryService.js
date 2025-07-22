@@ -1,5 +1,6 @@
 /**
- * Service for querying and filtering notes based on various criteria
+ * Service for querying and filtering notes based on various criteria.
+ * Supports structured notes format only.
  */
 class NotesQueryService {
   constructor() {}
@@ -331,8 +332,6 @@ class NotesQueryService {
         bySubject: {},
         byTag: {},
         byContext: {},
-        structured: 0,
-        legacy: 0,
       };
     }
 
@@ -341,20 +340,13 @@ class NotesQueryService {
       bySubject: {},
       byTag: {},
       byContext: {},
-      structured: 0,
-      legacy: 0,
     };
 
     notes.forEach((note) => {
-      // Count structured vs legacy
+      // Count by subject - all notes should be structured format
       if (note.subject) {
-        stats.structured++;
-
-        // Count by subject
         stats.bySubject[note.subject] =
           (stats.bySubject[note.subject] || 0) + 1;
-      } else {
-        stats.legacy++;
       }
 
       // Count by context

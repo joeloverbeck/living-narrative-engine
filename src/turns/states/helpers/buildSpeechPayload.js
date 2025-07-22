@@ -14,13 +14,13 @@ import { isNonBlankString } from '../../../utils/textUtils.js';
  * Builds a sanitized payload from decision metadata for ENTITY_SPOKE_ID.
  *
  * @param {DecisionMeta} decisionMeta - Metadata from the actor decision.
- * @returns {{speechContent: string, thoughts?: string, notesRaw?: *}|null} The sanitized payload, or null if speech is absent/invalid.
+ * @returns {{speechContent: string, thoughts?: string, notes?: *}|null} The sanitized payload, or null if speech is absent/invalid.
  */
 export function buildSpeechPayload(decisionMeta) {
   const {
     speech: speechRaw,
     thoughts: thoughtsRaw,
-    notes: notesRaw,
+    notes,
   } = decisionMeta || {};
 
   const speech = isNonBlankString(speechRaw) ? speechRaw.trim() : null;
@@ -35,7 +35,7 @@ export function buildSpeechPayload(decisionMeta) {
   const payload = {
     speechContent: speech,
     ...(thoughts ? { thoughts } : {}),
-    ...(notesRaw ? { notesRaw } : {}),
+    ...(notes ? { notes } : {}),
   };
 
   return payload;

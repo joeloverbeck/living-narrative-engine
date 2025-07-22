@@ -45,43 +45,9 @@ describe('noteTooltipFormatter', () => {
         expect(result).toBe('');
       });
 
-      it('should return empty string for empty string input', () => {
-        const result = formatNotesAsRichHtml('');
-        expect(result).toBe('');
-      });
-
       it('should return empty string for empty array input', () => {
         const result = formatNotesAsRichHtml([]);
         expect(result).toBe('');
-      });
-    });
-
-    describe('with string input (fallback mode)', () => {
-      it('should handle plain text string', () => {
-        const result = formatNotesAsRichHtml('This is a simple note');
-
-        expect(result).toContain('notes-container--simple');
-        expect(result).toContain('note-item--simple');
-        expect(result).toContain('This is a simple note');
-        expect(result).not.toContain('notes-header');
-      });
-
-      it('should escape HTML entities in string input', () => {
-        const result = formatNotesAsRichHtml(
-          'Alert: <script>alert("xss")</script>'
-        );
-
-        expect(result).toContain('&lt;script&gt;');
-        expect(result).toContain('&lt;/script&gt;');
-        expect(result).not.toContain('<script>');
-      });
-
-      it('should handle whitespace-only string', () => {
-        const result = formatNotesAsRichHtml('   \t\n   ');
-
-        // Whitespace-only strings should still create HTML structure but with empty content
-        expect(result).toContain('notes-container--simple');
-        expect(result).toContain('<div class="note-content"></div>');
       });
     });
 
@@ -232,9 +198,8 @@ describe('noteTooltipFormatter', () => {
         expect(result).toContain('Single note in array');
       });
 
-      it('should handle mixed note types in array', () => {
+      it('should handle multiple structured notes in array', () => {
         const notes = [
-          'Simple string note',
           {
             text: 'Structured note',
             subject: 'Alice',
@@ -250,11 +215,10 @@ describe('noteTooltipFormatter', () => {
         const result = formatNotesAsRichHtml(notes);
 
         expect(result).toContain('notes-container--multiple');
-        expect(result).toContain('3 Notes');
-        expect(result).toContain('Simple string note');
+        expect(result).toContain('2 Notes');
         expect(result).toContain('Structured note');
         expect(result).toContain('Another structured note');
-        expect(result).toContain('note-item--simple');
+        expect(result).not.toContain('note-item--simple');
       });
 
       it('should filter out invalid notes from array', () => {

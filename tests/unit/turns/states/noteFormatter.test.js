@@ -1,5 +1,5 @@
 /**
- * @file Unit tests for noteFormatter.js
+ * @file Unit tests for noteFormatter.js - Structured Notes Format Only
  */
 
 import { formatNotesForDisplay } from '../../../../src/turns/states/helpers/noteFormatter.js';
@@ -15,143 +15,90 @@ describe('formatNotesForDisplay', () => {
     });
   });
 
-  describe('when notes is a string', () => {
-    it('returns trimmed string for valid string input', () => {
-      expect(formatNotesForDisplay('  valid note  ')).toBe('valid note');
+  describe('when notes is a single structured note object', () => {
+    it('formats note with text and subject', () => {
+      const note = { text: 'Simple note content', subject: 'Character' };
+      expect(formatNotesForDisplay(note)).toBe('Character: Simple note content');
     });
 
-    it('returns null for empty string', () => {
-      expect(formatNotesForDisplay('')).toBeNull();
-    });
-
-    it('returns null for whitespace-only string', () => {
-      expect(formatNotesForDisplay('   ')).toBeNull();
-    });
-  });
-
-  describe('when notes is a simple note object', () => {
-    it('formats simple note with text only', () => {
-      const note = { text: 'Simple note content' };
-      expect(formatNotesForDisplay(note)).toBe('Simple note content');
-    });
-
-    it('formats simple note with text and timestamp', () => {
+    it('formats note with all structured fields', () => {
       const note = {
-        text: 'Simple note content',
+        text: 'Detailed observation',
+        subject: 'Character',
+        subjectType: 'person',
+        context: 'during conversation',
+        tags: ['personality', 'mood'],
         timestamp: '2023-01-01T00:00:00Z',
       };
-      expect(formatNotesForDisplay(note)).toBe('Simple note content');
+      expect(formatNotesForDisplay(note)).toBe(
+        '[person] Character: Detailed observation (during conversation) [personality, mood]'
+      );
+    });
+
+    it('formats note with partial structured fields', () => {
+      const note = {
+        text: 'Basic observation',
+        subject: 'Location',
+        context: 'explored',
+      };
+      expect(formatNotesForDisplay(note)).toBe(
+        'Location: Basic observation (explored)'
+      );
     });
 
     it('returns null for note object without text', () => {
-      const note = { timestamp: '2023-01-01T00:00:00Z' };
+      const note = { subject: 'Character', timestamp: '2023-01-01T00:00:00Z' };
       expect(formatNotesForDisplay(note)).toBeNull();
     });
 
     it('returns null for note object with empty text', () => {
-      const note = { text: '' };
+      const note = { text: '', subject: 'Character' };
       expect(formatNotesForDisplay(note)).toBeNull();
     });
 
     it('returns null for note object with whitespace-only text', () => {
-      const note = { text: '   ' };
+      const note = { text: '   ', subject: 'Character' };
       expect(formatNotesForDisplay(note)).toBeNull();
     });
-  });
 
-  describe('when notes is a structured note object', () => {
-    it('formats structured note with subject', () => {
+    it('formats note without subject but with text', () => {
+      const note = { text: 'Simple note content' };
+      expect(formatNotesForDisplay(note)).toBe('Simple note content');
+    });
+
+    it('filters out empty tags', () => {
       const note = {
-        text: 'Character seems suspicious',
-        subject: 'Merchant',
-        timestamp: '2023-01-01T00:00:00Z',
+        text: 'Test note',
+        subject: 'Test',
+        tags: ['valid', '', '  ', 'another', null, undefined],
       };
       expect(formatNotesForDisplay(note)).toBe(
-        'Merchant: Character seems suspicious'
+        'Test: Test note [valid, another]'
       );
     });
 
-    it('formats structured note with subject and context', () => {
+    it('trims whitespace from subject and context', () => {
       const note = {
-        text: 'Character seems suspicious',
-        subject: 'Merchant',
-        context: 'during conversation',
-        timestamp: '2023-01-01T00:00:00Z',
+        text: 'Test note',
+        subject: '  Character  ',
+        context: '  during battle  ',
       };
       expect(formatNotesForDisplay(note)).toBe(
-        'Merchant: Character seems suspicious (during conversation)'
+        'Character: Test note (during battle)'
       );
     });
 
-    it('formats structured note with subject, context, and tags', () => {
+    it('handles empty tags array', () => {
       const note = {
-        text: 'Character seems suspicious',
-        subject: 'Merchant',
-        context: 'during conversation',
-        tags: ['behavior', 'suspicious'],
-        timestamp: '2023-01-01T00:00:00Z',
-      };
-      expect(formatNotesForDisplay(note)).toBe(
-        'Merchant: Character seems suspicious (during conversation) [behavior, suspicious]'
-      );
-    });
-
-    it('formats structured note with tags only', () => {
-      const note = {
-        text: 'Character seems suspicious',
-        subject: 'Merchant',
-        tags: ['behavior', 'suspicious'],
-      };
-      expect(formatNotesForDisplay(note)).toBe(
-        'Merchant: Character seems suspicious [behavior, suspicious]'
-      );
-    });
-
-    it('handles empty arrays in tags', () => {
-      const note = {
-        text: 'Character seems suspicious',
-        subject: 'Merchant',
+        text: 'Test note',
+        subject: 'Character',
         tags: [],
       };
-      expect(formatNotesForDisplay(note)).toBe(
-        'Merchant: Character seems suspicious'
-      );
-    });
-
-    it('filters out empty strings from tags', () => {
-      const note = {
-        text: 'Character seems suspicious',
-        subject: 'Merchant',
-        tags: ['behavior', '', 'suspicious', '   '],
-      };
-      expect(formatNotesForDisplay(note)).toBe(
-        'Merchant: Character seems suspicious [behavior, suspicious]'
-      );
-    });
-
-    it('handles whitespace in subject and context', () => {
-      const note = {
-        text: '  Character seems suspicious  ',
-        subject: '  Merchant  ',
-        context: '  during conversation  ',
-      };
-      expect(formatNotesForDisplay(note)).toBe(
-        'Merchant: Character seems suspicious (during conversation)'
-      );
+      expect(formatNotesForDisplay(note)).toBe('Character: Test note');
     });
   });
 
-  describe('when notes is an array', () => {
-    it('formats array of string notes', () => {
-      const notes = ['First note', 'Second note'];
-      expect(formatNotesForDisplay(notes)).toBe('First note\nSecond note');
-    });
-
-    it('formats array of simple note objects', () => {
-      const notes = [{ text: 'First note' }, { text: 'Second note' }];
-      expect(formatNotesForDisplay(notes)).toBe('First note\nSecond note');
-    });
-
+  describe('when notes is an array of structured notes', () => {
     it('formats array of structured note objects', () => {
       const notes = [
         { text: 'First observation', subject: 'Character' },
@@ -166,71 +113,70 @@ describe('formatNotesForDisplay', () => {
       );
     });
 
-    it('formats mixed array of strings and objects', () => {
+    it('formats array with complex structured notes', () => {
       const notes = [
-        'String note',
-        { text: 'Object note', subject: 'Subject' },
-        { text: 'Another note' },
+        {
+          text: 'Seems friendly',
+          subject: 'John',
+          subjectType: 'character',
+          context: 'first meeting',
+          tags: ['personality'],
+        },
+        {
+          text: 'Dark and mysterious',
+          subject: 'Cavern',
+          subjectType: 'location',
+          tags: ['atmosphere', 'danger'],
+        },
       ];
       expect(formatNotesForDisplay(notes)).toBe(
-        'String note\nSubject: Object note\nAnother note'
+        '[character] John: Seems friendly (first meeting) [personality]\n[location] Cavern: Dark and mysterious [atmosphere, danger]'
       );
     });
 
     it('filters out empty and invalid notes from array', () => {
       const notes = [
-        'Valid note',
-        '',
-        { text: '' },
-        { text: 'Another valid note' },
-        null,
-        undefined,
-        { invalidProperty: 'value' },
+        { text: 'Valid note', subject: 'Character' },
+        { text: '' }, // Empty text - should be filtered
+        { text: 'Another valid note', subject: 'Location' },
+        null, // Invalid - should be filtered
+        undefined, // Invalid - should be filtered
+        { invalidProperty: 'value' }, // No text - should be filtered
+        { text: '   ' }, // Whitespace only - should be filtered
       ];
       expect(formatNotesForDisplay(notes)).toBe(
-        'Valid note\nAnother valid note'
+        'Character: Valid note\nLocation: Another valid note'
       );
     });
 
-    it('returns null for empty array', () => {
-      expect(formatNotesForDisplay([])).toBeNull();
+    it('returns null for array with no valid notes', () => {
+      const notes = [
+        { text: '' },
+        null,
+        undefined,
+        { invalidProperty: 'value' },
+        { text: '   ' },
+      ];
+      expect(formatNotesForDisplay(notes)).toBeNull();
     });
 
-    it('returns null for array with only invalid notes', () => {
-      const notes = ['', '   ', { text: '' }, null, undefined];
+    it('returns null for empty array', () => {
+      const notes = [];
       expect(formatNotesForDisplay(notes)).toBeNull();
     });
   });
 
-  describe('edge cases', () => {
-    it('handles non-object, non-string, non-array input', () => {
+  describe('when notes has invalid type', () => {
+    it('returns null for string input (legacy format not supported)', () => {
+      expect(formatNotesForDisplay('valid note')).toBeNull();
+    });
+
+    it('returns null for number input', () => {
       expect(formatNotesForDisplay(123)).toBeNull();
+    });
+
+    it('returns null for boolean input', () => {
       expect(formatNotesForDisplay(true)).toBeNull();
-      expect(formatNotesForDisplay(Symbol('test'))).toBeNull();
-    });
-
-    it('handles object with non-string text property', () => {
-      const note = { text: 123 };
-      expect(formatNotesForDisplay(note)).toBeNull();
-    });
-
-    it('handles object with non-string subject property', () => {
-      const note = { text: 'Valid text', subject: 123 };
-      expect(formatNotesForDisplay(note)).toBe('Valid text');
-    });
-
-    it('handles object with non-string context property', () => {
-      const note = { text: 'Valid text', subject: 'Subject', context: 123 };
-      expect(formatNotesForDisplay(note)).toBe('Subject: Valid text');
-    });
-
-    it('handles object with non-array tags property', () => {
-      const note = {
-        text: 'Valid text',
-        subject: 'Subject',
-        tags: 'not-array',
-      };
-      expect(formatNotesForDisplay(note)).toBe('Subject: Valid text');
     });
   });
 });

@@ -5,12 +5,6 @@
 import { isNonBlankString } from '../../../utils/textUtils.js';
 
 /**
- * @typedef {object} SimpleNote
- * @property {string} text - The note content.
- * @property {string} [timestamp] - When the note was created.
- */
-
-/**
  * @typedef {object} StructuredNote
  * @property {string} text - The note content.
  * @property {string} subject - Primary subject of the note.
@@ -21,20 +15,12 @@ import { isNonBlankString } from '../../../utils/textUtils.js';
  */
 
 /**
- * @typedef {SimpleNote|StructuredNote} NoteObject
- */
-
-/**
- * Formats a single note object into a readable string.
+ * Formats a single structured note object into a readable string.
  *
- * @param {NoteObject|string} note - The note to format.
+ * @param {StructuredNote} note - The note to format.
  * @returns {string} The formatted note string.
  */
 function formatSingleNote(note) {
-  if (typeof note === 'string') {
-    return note.trim();
-  }
-
   if (!note || typeof note !== 'object') {
     return '';
   }
@@ -70,18 +56,14 @@ function formatSingleNote(note) {
 }
 
 /**
- * Formats notes (single note, array of notes, or string) into a readable string for display.
+ * Formats structured notes (single note or array of notes) into a readable string for display.
  *
- * @param {NoteObject|NoteObject[]|string|null|undefined} notes - The notes to format.
+ * @param {StructuredNote|StructuredNote[]|null|undefined} notes - The notes to format.
  * @returns {string|null} The formatted notes string, or null if no valid notes.
  */
 export function formatNotesForDisplay(notes) {
   if (!notes) {
     return null;
-  }
-
-  if (typeof notes === 'string') {
-    return isNonBlankString(notes) ? notes.trim() : null;
   }
 
   if (Array.isArray(notes)) {

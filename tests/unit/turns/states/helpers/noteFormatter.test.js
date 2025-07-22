@@ -17,27 +17,8 @@ describe('formatNotesForDisplay', () => {
     });
   });
 
-  describe('string notes', () => {
-    it('should return trimmed string for non-empty string', () => {
-      expect(formatNotesForDisplay('  Some note  ')).toBe('Some note');
-    });
-
-    it('should return null for empty string', () => {
-      expect(formatNotesForDisplay('')).toBeNull();
-    });
-
-    it('should return null for whitespace-only string', () => {
-      expect(formatNotesForDisplay('   ')).toBeNull();
-    });
-  });
 
   describe('array notes', () => {
-    it('should format array of string notes', () => {
-      const notes = ['Note 1', 'Note 2', 'Note 3'];
-      const result = formatNotesForDisplay(notes);
-      expect(result).toBe('Note 1\nNote 2\nNote 3');
-    });
-
     it('should format array of object notes with all fields', () => {
       const notes = [
         {
@@ -78,26 +59,12 @@ describe('formatNotesForDisplay', () => {
         { text: '', subject: 'Empty text' },
         null,
         undefined,
-        '',
         { subject: 'No text field' },
-        'String note',
       ];
       const result = formatNotesForDisplay(notes);
-      expect(result).toBe('Subject: Valid note\nString note');
+      expect(result).toBe('Subject: Valid note');
     });
 
-    it('should handle mixed string and object notes', () => {
-      const notes = [
-        'Simple string note',
-        {
-          text: 'Object note',
-          subject: 'Test',
-          context: 'Testing',
-        },
-      ];
-      const result = formatNotesForDisplay(notes);
-      expect(result).toBe('Simple string note\nTest: Object note (Testing)');
-    });
   });
 
   describe('single object note', () => {

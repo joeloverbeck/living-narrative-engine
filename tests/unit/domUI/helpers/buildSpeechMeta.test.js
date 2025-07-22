@@ -37,23 +37,27 @@ describe('buildSpeechMeta', () => {
     container = doc.body;
   });
 
-  it('should return null if both thoughts and notesRaw are falsy', () => {
+  it('should return null if both thoughts and notes are falsy', () => {
     expect(buildSpeechMeta(doc, mockDomFactory, {})).toBeNull();
     expect(
-      buildSpeechMeta(doc, mockDomFactory, { thoughts: '', notesRaw: null })
+      buildSpeechMeta(doc, mockDomFactory, { thoughts: '', notes: null })
     ).toBeNull();
     expect(
       buildSpeechMeta(doc, mockDomFactory, {
         thoughts: undefined,
-        notesRaw: '',
+        notes: '',
       })
     ).toBeNull();
   });
 
-  it('should return a fragment with two buttons when both thoughts and notesRaw are provided', () => {
+  it('should return a fragment with two buttons when both thoughts and notes are provided', () => {
     const fragment = buildSpeechMeta(doc, mockDomFactory, {
       thoughts: 'Inner monologue',
-      notesRaw: 'A private note',
+      notes: {
+        text: 'A private note',
+        subject: 'TestSubject',
+        subjectType: 'observation',
+      },
     });
     expect(fragment).not.toBeNull();
     container.appendChild(fragment.cloneNode(true)); // Use cloneNode to append
@@ -106,9 +110,13 @@ describe('buildSpeechMeta', () => {
     expect(container.querySelector('.notes')).toBeNull();
   });
 
-  it('should return a fragment with only the notes button if only notesRaw is provided', () => {
+  it('should return a fragment with only the notes button if only notes is provided', () => {
     const fragment = buildSpeechMeta(doc, mockDomFactory, {
-      notesRaw: 'Just a note',
+      notes: {
+        text: 'Just a note',
+        subject: 'TestSubject',
+        subjectType: 'observation',
+      },
     });
     expect(fragment).not.toBeNull();
     container.appendChild(fragment.cloneNode(true));
@@ -120,8 +128,8 @@ describe('buildSpeechMeta', () => {
     expect(container.querySelector('.thoughts')).toBeNull();
   });
 
-  it('should use rich HTML for structured notes when notesRaw is provided', () => {
-    const notesRaw = {
+  it('should use rich HTML for structured notes when notes is provided', () => {
+    const notes = {
       text: 'Character seems nervous',
       subject: 'Alice',
       subjectType: 'character',
@@ -129,7 +137,7 @@ describe('buildSpeechMeta', () => {
     };
 
     const fragment = buildSpeechMeta(doc, mockDomFactory, {
-      notesRaw: notesRaw,
+      notes: notes,
     });
     expect(fragment).not.toBeNull();
     container.appendChild(fragment.cloneNode(true));
@@ -153,7 +161,11 @@ describe('buildSpeechMeta', () => {
   it('snapshot test should show focus state correctly', () => {
     const fragment = buildSpeechMeta(doc, mockDomFactory, {
       thoughts: 'foo',
-      notesRaw: 'bar',
+      notes: {
+        text: 'bar',
+        subject: 'TestSubject',
+        subjectType: 'observation',
+      },
     });
     container.appendChild(fragment.cloneNode(true));
 
@@ -172,7 +184,11 @@ describe('buildSpeechMeta', () => {
 
     const fragment = buildSpeechMeta(doc, mockDomFactory, {
       thoughts: 'Hi',
-      notesRaw: 'Note',
+      notes: {
+        text: 'Note',
+        subject: 'TestSubject',
+        subjectType: 'observation',
+      },
     });
     container.appendChild(fragment.cloneNode(true));
 

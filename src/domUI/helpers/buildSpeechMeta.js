@@ -13,7 +13,7 @@ import { formatNotesAsRichHtml } from './noteTooltipFormatter.js';
 /**
  * @typedef {object} SpeechMetaInput
  * @property {string} [thoughts] - The inner thoughts of the character.
- * @property {*} [notesRaw] - Raw structured notes data for rich HTML display.
+ * @property {*} [notes] - Structured notes data for rich HTML display.
  */
 
 /**
@@ -24,8 +24,8 @@ import { formatNotesAsRichHtml } from './noteTooltipFormatter.js';
  * @param {SpeechMetaInput} meta - An object containing the speech metadata.
  * @returns {DocumentFragment|null} A document fragment with the speech-meta div, or null if no metadata is provided.
  */
-export function buildSpeechMeta(document, domFactory, { thoughts, notesRaw }) {
-  if (!thoughts && !notesRaw) {
+export function buildSpeechMeta(document, domFactory, { thoughts, notes }) {
+  if (!thoughts && !notes) {
     return null;
   }
 
@@ -47,7 +47,7 @@ export function buildSpeechMeta(document, domFactory, { thoughts, notesRaw }) {
     metaContainer.appendChild(btn);
   }
 
-  if (notesRaw) {
+  if (notes) {
     const btn = domFactory.create('button', {
       cls: 'meta-btn notes',
       attrs: { 'aria-label': 'View private notes' },
@@ -55,7 +55,7 @@ export function buildSpeechMeta(document, domFactory, { thoughts, notesRaw }) {
     btn.style.setProperty('--clr', 'var(--notes-icon-color)');
     btn.innerHTML = getIcon('notes');
 
-    const richHtml = formatNotesAsRichHtml(notesRaw);
+    const richHtml = formatNotesAsRichHtml(notes);
     const tooltip = domFactory.create('div', {
       cls: 'meta-tooltip meta-tooltip--notes',
     });

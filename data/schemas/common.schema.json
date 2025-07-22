@@ -62,6 +62,57 @@
           "description": "Reference via explicit entityId property."
         }
       ]
+    },
+    "structuredNote": {
+      "type": "object",
+      "description": "A structured note with categorized subject information",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The note content"
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Primary subject of the note (entity, location, concept)"
+        },
+        "subjectType": {
+          "type": "string",
+          "enum": [
+            "character",
+            "location",
+            "item",
+            "creature",
+            "event",
+            "concept",
+            "relationship",
+            "organization",
+            "quest",
+            "skill",
+            "emotion",
+            "other"
+          ],
+          "default": "other",
+          "description": "Explicit categorization of the note's subject type"
+        },
+        "context": {
+          "type": "string",
+          "description": "Where/how this was observed (optional)"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional categorization tags (optional)"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the note was created"
+        }
+      },
+      "required": ["text", "subject", "subjectType"],
+      "additionalProperties": false
     }
   }
 }
