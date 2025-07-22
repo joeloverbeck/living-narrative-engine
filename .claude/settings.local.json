@@ -50,7 +50,8 @@
       "Bash(jq:*)",
       "Bash(NODE_ENV=test npx jest tests/unit/anatomy/anatomyCacheManager.test.js --no-coverage --verbose)",
       "Bash(eslint:*)",
-      "Bash(./node_modules/.bin/jest:*)"
+      "Bash(./node_modules/.bin/jest:*)",
+      "Bash(npm run scope:lint)"
     ],
     "deny": []
   }

@@ -7,6 +7,9 @@
   "required_components": {
     "actor": ["intimacy:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["intimacy:kissing"]
+  },
   "template": "wipe {target}'s cheek with your thumb",
   "prerequisites": []
 }

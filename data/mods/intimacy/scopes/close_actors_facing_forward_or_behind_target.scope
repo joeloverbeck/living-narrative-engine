@@ -1,0 +1,8 @@
+// Scope for actors in closeness who are either facing each other OR actor is behind the target
+// Used by actions that can work from either face-to-face or behind positions without anatomy requirements
+intimacy:close_actors_facing_forward_or_behind_target := actor.intimacy:closeness.partners[][{
+  "or": [
+    {"condition_ref": "intimacy:both-actors-facing-each-other"},
+    {"condition_ref": "intimacy:actor-is-behind-entity"}
+  ]
+}]

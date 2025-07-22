@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "intimacy:both-actors-facing-each-other",
+  "description": "Checks if both actors are facing each other (neither is facing away from the other).",
+  "logic": {
+    "and": [
+      {
+        "not": {
+          "in": [
+            { "var": "entity.id" },
+            { "var": "actor.components.intimacy:facing_away.facing_away_from" }
+          ]
+        }
+      },
+      {
+        "not": {
+          "in": [
+            { "var": "actor.id" },
+            { "var": "entity.components.intimacy:facing_away.facing_away_from" }
+          ]
+        }
+      }
+    ]
+  }
+}

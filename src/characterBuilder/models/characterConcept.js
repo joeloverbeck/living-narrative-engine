@@ -187,11 +187,11 @@ export function serializeCharacterConcept(concept) {
   return {
     ...concept,
     createdAt:
-      concept.createdAt instanceof Date
+      concept.createdAt instanceof Date && !isNaN(concept.createdAt.getTime())
         ? concept.createdAt.toISOString()
         : concept.createdAt,
     updatedAt:
-      concept.updatedAt instanceof Date
+      concept.updatedAt instanceof Date && !isNaN(concept.updatedAt.getTime())
         ? concept.updatedAt.toISOString()
         : concept.updatedAt,
   };

@@ -211,14 +211,14 @@ describe('Character Builder Workflow Integration', () => {
           status: 'draft',
         })
       );
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CHARACTER_CONCEPT_CREATED',
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'CHARACTER_CONCEPT_CREATED',
+        expect.objectContaining({
           conceptId: mockStoredConcept.id,
           concept: expect.any(String),
           autoSaved: true,
-        }),
-      });
+        })
+      );
 
       // Act - Step 2: Generate thematic directions
       const generatedDirections =
@@ -239,13 +239,13 @@ describe('Character Builder Workflow Integration', () => {
       expect(mockDatabase.saveThematicDirections).toHaveBeenCalledWith(
         mockGeneratedDirections
       );
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'THEMATIC_DIRECTIONS_GENERATED',
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'THEMATIC_DIRECTIONS_GENERATED',
+        expect.objectContaining({
           conceptId: createdConcept.id,
           directionCount: 3,
-        }),
-      });
+        })
+      );
 
       // Act - Step 3: Retrieve stored data
       const retrievedConcept =
@@ -374,7 +374,7 @@ describe('Character Builder Workflow Integration', () => {
 
       // Use real timers for the promise but immediately run timers
       jest.useRealTimers();
-      
+
       // Mock setTimeout to execute immediately
       const originalSetTimeout = global.setTimeout;
       global.setTimeout = jest.fn((fn) => {
@@ -488,12 +488,12 @@ describe('Character Builder Workflow Integration', () => {
       expect(mockDatabase.deleteCharacterConcept).toHaveBeenCalledWith(
         'concept-1'
       );
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CHARACTER_CONCEPT_DELETED',
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'CHARACTER_CONCEPT_DELETED',
+        expect.objectContaining({
           conceptId: 'concept-1',
-        }),
-      });
+        })
+      );
     });
 
     test('should handle non-existent concept deletion gracefully', async () => {
@@ -507,7 +507,8 @@ describe('Character Builder Workflow Integration', () => {
       // Assert
       expect(deletionResult).toBe(false);
       expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'CHARACTER_CONCEPT_DELETED' })
+        'CHARACTER_CONCEPT_DELETED',
+        expect.anything()
       );
     });
   });
@@ -572,29 +573,29 @@ describe('Character Builder Workflow Integration', () => {
       await characterBuilderService.deleteCharacterConcept(createdConcept.id);
 
       // Assert - Verify all expected events were dispatched
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CHARACTER_CONCEPT_CREATED',
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'CHARACTER_CONCEPT_CREATED',
+        expect.objectContaining({
           conceptId: mockStoredConcept.id,
           concept: expect.any(String),
           autoSaved: true,
-        }),
-      });
+        })
+      );
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'THEMATIC_DIRECTIONS_GENERATED',
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'THEMATIC_DIRECTIONS_GENERATED',
+        expect.objectContaining({
           conceptId: mockStoredConcept.id,
           directionCount: 1,
-        }),
-      });
+        })
+      );
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CHARACTER_CONCEPT_DELETED',
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'CHARACTER_CONCEPT_DELETED',
+        expect.objectContaining({
           conceptId: mockStoredConcept.id,
-        }),
-      });
+        })
+      );
 
       expect(mockEventBus.dispatch).toHaveBeenCalledTimes(3);
     });

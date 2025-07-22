@@ -7,6 +7,9 @@
   "required_components": {
     "actor": ["intimacy:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["intimacy:kissing"]
+  },
   "template": "adjust {target}'s clothing",
   "prerequisites": [
     {

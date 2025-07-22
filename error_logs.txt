@@ -1,19 +1,242 @@
-consoleLogger.js:107 [ConsoleLogger] Invalid log level input type: 'object', value: '[object Object]'. Using previous or default: INFO.
-setLogLevel @ consoleLogger.js:107
-ConsoleLogger @ consoleLogger.js:64
-CharacterBuilderApp @ character-builder-main.js:36
-initialize @ character-builder-main.js:295Understand this warning
-consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
-consoleLogger.js:151 CharacterBuilderApp: Starting initialization
-consoleLogger.js:175 CharacterBuilderApp: Failed to initialize Error: GameDataRepository requires a valid ILogger with info, warn, error, and debug methods.
-    at new GameDataRepository (gameDataRepository.js:59:13)
-    at CharacterBuilderApp.initialize (character-builder-main.js:69:34)
-    at async HTMLDocument.initialize (character-builder-main.js:296:5)
+CharacterBuilderService: Retrieved 0 character concepts
+consoleLogger.js:151 CharacterBuilderController: Successfully initialized
+consoleLogger.js:151 CharacterBuilderApp: Successfully initialized
+consoleLogger.js:151 CharacterBuilderService: Created character concept d0b62bd0-46b6-4be1-942d-2c0d2a16df26 {conceptId: 'd0b62bd0-46b6-4be1-942d-2c0d2a16df26', concept: 'a strong woman in her twenties, who is good with a...', autoSave: true, attempt: 1}
+consoleLogger.js:175 AjvSchemaValidator: validateAgainstSchema failed for schema 'character-concept': Schema validation failed.
+Details:
+[
+  {
+    "instancePath": "/createdAt",
+    "schemaPath": "#/properties/createdAt/type",
+    "keyword": "type",
+    "params": {
+      "type": "string"
+    },
+    "message": "must be string",
+    "schema": "string",
+    "parentSchema": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Creation timestamp"
+    },
+    "data": "2025-07-22T19:45:15.844Z"
+  },
+  {
+    "instancePath": "/updatedAt",
+    "schemaPath": "#/properties/updatedAt/type",
+    "keyword": "type",
+    "params": {
+      "type": "string"
+    },
+    "message": "must be string",
+    "schema": "string",
+    "parentSchema": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last modification timestamp"
+    },
+    "data": "2025-07-22T19:45:15.844Z"
+  }
+] {schemaId: 'character-concept', error: Error: Schema validation failed.
+Details:
+[
+  {
+    "instancePath": "/createdAt",
+    "schemaPath":…}
 error @ consoleLogger.js:175
-initialize @ character-builder-main.js:156
-await in initialize
-initialize @ character-builder-main.js:296Understand this error
-character-builder-main.js:298 Failed to initialize character builder: Error: GameDataRepository requires a valid ILogger with info, warn, error, and debug methods.
-    at new GameDataRepository (gameDataRepository.js:59:13)
-    at CharacterBuilderApp.initialize (character-builder-main.js:69:34)
-    at async HTMLDocument.initialize (character-builder-main.js:296:5)
+validateAgainstSchema @ ajvSchemaValidator.js:611
+storeCharacterConcept @ characterStorageService.js:135
+createCharacterConcept @ characterBuilderService.js:157
+#handleSaveClick @ characterBuilderController.js:336Understand this error
+consoleLogger.js:163 CharacterStorageService: Attempt 1 failed for concept storage: Character concept validation failed: No specific error details provided. {conceptId: 'd0b62bd0-46b6-4be1-942d-2c0d2a16df26', attempt: 1, error: CharacterStorageError: Character concept validation failed: No specific error details provided.
+   …}
+warn @ consoleLogger.js:163
+storeCharacterConcept @ characterStorageService.js:160
+createCharacterConcept @ characterBuilderService.js:157
+#handleSaveClick @ characterBuilderController.js:336Understand this warning
+consoleLogger.js:175 Failed to store character concept d0b62bd0-46b6-4be1-942d-2c0d2a16df26 after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Character concept validation failed: No specific error details provided.
+    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:141:17)
+    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
+    at #handleSaveClick (characterBuilderController.js:336:45)
+error @ consoleLogger.js:175
+storeCharacterConcept @ characterStorageService.js:180
+createCharacterConcept @ characterBuilderService.js:157
+#handleSaveClick @ characterBuilderController.js:336Understand this error
+consoleLogger.js:163 CharacterBuilderService: Attempt 1 failed for concept creation: Failed to store character concept d0b62bd0-46b6-4be1-942d-2c0d2a16df26 after 3 attempts: Character concept validation failed: No specific error details provided. {attempt: 1, error: CharacterStorageError: Failed to store character concept d0b62bd0-46b6-4be1-942d-2c0d2a16df26 after…}
+warn @ consoleLogger.js:163
+createCharacterConcept @ characterBuilderService.js:173
+await in createCharacterConcept
+#handleSaveClick @ characterBuilderController.js:336Understand this warning
+consoleLogger.js:151 CharacterBuilderService: Created character concept 82153b99-06ef-4bb7-b298-8962ec593967 {conceptId: '82153b99-06ef-4bb7-b298-8962ec593967', concept: 'a strong woman in her twenties, who is good with a...', autoSave: true, attempt: 2}
+consoleLogger.js:175 AjvSchemaValidator: validateAgainstSchema failed for schema 'character-concept': Schema validation failed.
+Details:
+[
+  {
+    "instancePath": "/createdAt",
+    "schemaPath": "#/properties/createdAt/type",
+    "keyword": "type",
+    "params": {
+      "type": "string"
+    },
+    "message": "must be string",
+    "schema": "string",
+    "parentSchema": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Creation timestamp"
+    },
+    "data": "2025-07-22T19:45:16.860Z"
+  },
+  {
+    "instancePath": "/updatedAt",
+    "schemaPath": "#/properties/updatedAt/type",
+    "keyword": "type",
+    "params": {
+      "type": "string"
+    },
+    "message": "must be string",
+    "schema": "string",
+    "parentSchema": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last modification timestamp"
+    },
+    "data": "2025-07-22T19:45:16.860Z"
+  }
+] {schemaId: 'character-concept', error: Error: Schema validation failed.
+Details:
+[
+  {
+    "instancePath": "/createdAt",
+    "schemaPath":…}
+error @ consoleLogger.js:175
+validateAgainstSchema @ ajvSchemaValidator.js:611
+storeCharacterConcept @ characterStorageService.js:135
+createCharacterConcept @ characterBuilderService.js:157
+await in createCharacterConcept
+#handleSaveClick @ characterBuilderController.js:336Understand this error
+consoleLogger.js:163 CharacterStorageService: Attempt 1 failed for concept storage: Character concept validation failed: No specific error details provided. {conceptId: '82153b99-06ef-4bb7-b298-8962ec593967', attempt: 1, error: CharacterStorageError: Character concept validation failed: No specific error details provided.
+   …}
+warn @ consoleLogger.js:163
+storeCharacterConcept @ characterStorageService.js:160
+createCharacterConcept @ characterBuilderService.js:157
+await in createCharacterConcept
+#handleSaveClick @ characterBuilderController.js:336Understand this warning
+consoleLogger.js:175 Failed to store character concept 82153b99-06ef-4bb7-b298-8962ec593967 after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Character concept validation failed: No specific error details provided.
+    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:141:17)
+    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
+    at async #handleSaveClick (characterBuilderController.js:336:9)
+error @ consoleLogger.js:175
+storeCharacterConcept @ characterStorageService.js:180
+createCharacterConcept @ characterBuilderService.js:157
+await in createCharacterConcept
+#handleSaveClick @ characterBuilderController.js:336Understand this error
+consoleLogger.js:163 CharacterBuilderService: Attempt 2 failed for concept creation: Failed to store character concept 82153b99-06ef-4bb7-b298-8962ec593967 after 3 attempts: Character concept validation failed: No specific error details provided. {attempt: 2, error: CharacterStorageError: Failed to store character concept 82153b99-06ef-4bb7-b298-8962ec593967 after…}
+warn @ consoleLogger.js:163
+createCharacterConcept @ characterBuilderService.js:173
+await in createCharacterConcept
+#handleSaveClick @ characterBuilderController.js:336Understand this warning
+consoleLogger.js:151 CharacterBuilderService: Created character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 {conceptId: '78897af1-c4dd-46da-8113-ec82d363bfc2', concept: 'a strong woman in her twenties, who is good with a...', autoSave: true, attempt: 3}
+consoleLogger.js:175 AjvSchemaValidator: validateAgainstSchema failed for schema 'character-concept': Schema validation failed.
+Details:
+[
+  {
+    "instancePath": "/createdAt",
+    "schemaPath": "#/properties/createdAt/type",
+    "keyword": "type",
+    "params": {
+      "type": "string"
+    },
+    "message": "must be string",
+    "schema": "string",
+    "parentSchema": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Creation timestamp"
+    },
+    "data": "2025-07-22T19:45:18.868Z"
+  },
+  {
+    "instancePath": "/updatedAt",
+    "schemaPath": "#/properties/updatedAt/type",
+    "keyword": "type",
+    "params": {
+      "type": "string"
+    },
+    "message": "must be string",
+    "schema": "string",
+    "parentSchema": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last modification timestamp"
+    },
+    "data": "2025-07-22T19:45:18.868Z"
+  }
+] {schemaId: 'character-concept', error: Error: Schema validation failed.
+Details:
+[
+  {
+    "instancePath": "/createdAt",
+    "schemaPath":…}
+error @ consoleLogger.js:175
+validateAgainstSchema @ ajvSchemaValidator.js:611
+storeCharacterConcept @ characterStorageService.js:135
+createCharacterConcept @ characterBuilderService.js:157
+await in createCharacterConcept
+#handleSaveClick @ characterBuilderController.js:336Understand this error
+consoleLogger.js:163 CharacterStorageService: Attempt 1 failed for concept storage: Character concept validation failed: No specific error details provided. {conceptId: '78897af1-c4dd-46da-8113-ec82d363bfc2', attempt: 1, error: CharacterStorageError: Character concept validation failed: No specific error details provided.
+   …}
+warn @ consoleLogger.js:163
+storeCharacterConcept @ characterStorageService.js:160
+createCharacterConcept @ characterBuilderService.js:157
+await in createCharacterConcept
+#handleSaveClick @ characterBuilderController.js:336Understand this warning
+consoleLogger.js:175 Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Character concept validation failed: No specific error details provided.
+    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:141:17)
+    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
+    at async #handleSaveClick (characterBuilderController.js:336:9)
+error @ consoleLogger.js:175
+storeCharacterConcept @ characterStorageService.js:180
+createCharacterConcept @ characterBuilderService.js:157
+await in createCharacterConcept
+#handleSaveClick @ characterBuilderController.js:336Understand this error
+consoleLogger.js:163 CharacterBuilderService: Attempt 3 failed for concept creation: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided. {attempt: 3, error: CharacterStorageError: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after…}
+warn @ consoleLogger.js:163
+createCharacterConcept @ characterBuilderService.js:173
+await in createCharacterConcept
+#handleSaveClick @ characterBuilderController.js:336Understand this warning
+consoleLogger.js:175 Failed to create character concept after 3 attempts: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided.
+    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:181:11)
+    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
+    at async #handleSaveClick (characterBuilderController.js:336:9)Caused by: CharacterStorageError: Character concept validation failed: No specific error details provided.
+    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:141:17)
+    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
+    at async #handleSaveClick (characterBuilderController.js:336:9)
+error @ consoleLogger.js:175
+createCharacterConcept @ characterBuilderService.js:194
+await in createCharacterConcept
+#handleSaveClick @ characterBuilderController.js:336Understand this error
+consoleLogger.js:163 VED: EventDefinition not found for 'CHARACTER_BUILDER_ERROR_OCCURRED'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+#validatePayload @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
+#executeSafely @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+createCharacterConcept @ characterBuilderService.js:196
+await in createCharacterConcept
+#handleSaveClick @ characterBuilderController.js:336Understand this warning
+consoleLogger.js:187 VED: Dispatching event 'CHARACTER_BUILDER_ERROR_OCCURRED' via EventBus... {error: 'Failed to create character concept after 3 attempt…ation failed: No specific error details provided.', operation: 'createCharacterConcept', concept: 'a strong woman in her twenties, who is good with a… and who survives as a hunter and adventurer. ...', attempts: 3, finalError: 'Failed to store character concept 78897af1-c4dd-46…ation failed: No specific error details provided.'}
+consoleLogger.js:187 VED: Event 'CHARACTER_BUILDER_ERROR_OCCURRED' dispatch successful.
+consoleLogger.js:175 CharacterBuilderController: Failed to save concept CharacterBuilderError: Failed to create character concept after 3 attempts: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided.
+    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:204:11)
+    at async #handleSaveClick (characterBuilderController.js:336:9)Caused by: CharacterStorageError: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided.
+    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:181:11)
+    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
+    at async #handleSaveClick (characterBuilderController.js:336:9)Caused by: CharacterStorageError: Character concept validation failed: No specific error details provided.
+    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:141:17)
+    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
+    at async #handleSaveClick (characterBuilderController.js:336:9)
+error @ consoleLogger.js:175
+#handleSaveClick @ characterBuilderController.js:341Understand this error
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'CHARACTER_BUILDER_ERROR_OCCURRED'.

@@ -49,7 +49,7 @@ describe('Trace Analysis Tools Integration', () => {
 
   describe('realistic action pipeline trace simulation', () => {
     let traceSetupComplete = false;
-    
+
     beforeEach(async () => {
       // Create fresh instances for each test to avoid state pollution
       structuredTrace = new StructuredTrace();
@@ -60,100 +60,102 @@ describe('Trace Analysis Tools Integration', () => {
         criticalOperationMs: 300,
         maxErrorRate: 10,
       });
-      
+
       try {
         // Simulate a realistic action pipeline execution
         await structuredTrace.withSpanAsync(
-        'ActionDiscovery',
-        async () => {
-          // Component filtering stage
-          await structuredTrace.withSpanAsync(
-            'ComponentFiltering',
-            async () => {
-              timeCounter += 50;
-              // Simulate filtering 20 components
-              structuredTrace
-                .getActiveSpan()
-                .setAttribute('componentCount', 20);
-            },
-            { stage: 'filtering' }
-          );
+          'ActionDiscovery',
+          async () => {
+            // Component filtering stage
+            await structuredTrace.withSpanAsync(
+              'ComponentFiltering',
+              async () => {
+                timeCounter += 50;
+                // Simulate filtering 20 components
+                structuredTrace
+                  .getActiveSpan()
+                  .setAttribute('componentCount', 20);
+              },
+              { stage: 'filtering' }
+            );
 
-          // Prerequisite evaluation stage
-          await structuredTrace.withSpanAsync(
-            'PrerequisiteEvaluation',
-            async () => {
-              // Simulate evaluating multiple actions
-              for (let i = 0; i < 5; i++) {
+            // Prerequisite evaluation stage
+            await structuredTrace.withSpanAsync(
+              'PrerequisiteEvaluation',
+              async () => {
+                // Simulate evaluating multiple actions
+                for (let i = 0; i < 5; i++) {
+                  await structuredTrace.withSpanAsync(
+                    `EvaluateAction${i}`,
+                    async () => {
+                      if (i === 3) {
+                        // Simulate a slow evaluation
+                        timeCounter += 150;
+                      } else {
+                        timeCounter += 30;
+                      }
+                    },
+                    { actionId: `action_${i}` }
+                  );
+                }
+
+                // Simulate an error in one evaluation
                 await structuredTrace.withSpanAsync(
-                  `EvaluateAction${i}`,
+                  'EvaluateActionError',
                   async () => {
-                    if (i === 3) {
-                      // Simulate a slow evaluation
-                      timeCounter += 150;
-                    } else {
-                      timeCounter += 30;
-                    }
+                    timeCounter += 20;
+                    // Set error on the span without throwing
+                    structuredTrace
+                      .getActiveSpan()
+                      .setError(new Error('Prerequisite not met'));
                   },
-                  { actionId: `action_${i}` }
+                  { actionId: 'action_error' }
                 );
-              }
+              },
+              { stage: 'prerequisites' }
+            );
 
-              // Simulate an error in one evaluation
-              await structuredTrace.withSpanAsync(
-                'EvaluateActionError',
-                async () => {
-                  timeCounter += 20;
-                  // Set error on the span without throwing
-                  structuredTrace
-                    .getActiveSpan()
-                    .setError(new Error('Prerequisite not met'));
-                },
-                { actionId: 'action_error' }
-              );
-            },
-            { stage: 'prerequisites' }
-          );
+            // Target resolution stage
+            await structuredTrace.withSpanAsync(
+              'TargetResolution',
+              async () => {
+                // Simulate parallel target resolution
+                const resolveTarget = async (targetId) => {
+                  await structuredTrace.withSpanAsync(
+                    `ResolveTarget${targetId}`,
+                    async () => {
+                      timeCounter += 40;
+                    },
+                    { targetId }
+                  );
+                };
 
-          // Target resolution stage
-          await structuredTrace.withSpanAsync(
-            'TargetResolution',
-            async () => {
-              // Simulate parallel target resolution
-              const resolveTarget = async (targetId) => {
-                await structuredTrace.withSpanAsync(
-                  `ResolveTarget${targetId}`,
-                  async () => {
-                    timeCounter += 40;
-                  },
-                  { targetId }
-                );
-              };
+                // Note: StructuredTrace doesn't support concurrent spans,
+                // so we simulate concurrency by running them sequentially
+                // but recording that they would have been concurrent
+                await resolveTarget(1);
+                await resolveTarget(2);
+                await resolveTarget(3);
+              },
+              { stage: 'targets' }
+            );
 
-              // Note: StructuredTrace doesn't support concurrent spans, 
-              // so we simulate concurrency by running them sequentially
-              // but recording that they would have been concurrent
-              await resolveTarget(1);
-              await resolveTarget(2);
-              await resolveTarget(3);
-            },
-            { stage: 'targets' }
-          );
+            // Action formatting stage
+            await structuredTrace.withSpanAsync(
+              'ActionFormatting',
+              async () => {
+                timeCounter += 25;
+                structuredTrace
+                  .getActiveSpan()
+                  .setAttribute('formattedCount', 4);
+              },
+              { stage: 'formatting' }
+            );
+          },
+          { pipeline: 'action-discovery' }
+        );
 
-          // Action formatting stage
-          await structuredTrace.withSpanAsync(
-            'ActionFormatting',
-            async () => {
-              timeCounter += 25;
-              structuredTrace.getActiveSpan().setAttribute('formattedCount', 4);
-            },
-            { stage: 'formatting' }
-          );
-        },
-        { pipeline: 'action-discovery' }
-      );
-      
-      traceSetupComplete = true;
+        traceSetupComplete = true;
       } catch (error) {
         console.error('Error in beforeEach setup:', error);
         throw error;
@@ -283,7 +285,7 @@ describe('Trace Analysis Tools Integration', () => {
   describe('performance monitoring with alerts', () => {
     it('should generate alerts for performance issues', () => {
       jest.useFakeTimers();
-      
+
       // Create fresh instances for this test
       structuredTrace = new StructuredTrace();
       analyzer = new TraceAnalyzer(structuredTrace);
@@ -325,14 +327,14 @@ describe('Trace Analysis Tools Integration', () => {
       const alerts = monitor.getAlerts();
 
       // NOTE: This test is currently disabled because StructuredTrace was refactored
-      // to use lazy loading and configuration. The test needs to be updated to 
+      // to use lazy loading and configuration. The test needs to be updated to
       // work with the new implementation that requires trace configuration.
-      
+
       // Skip these assertions for now
       // expect(alertTypes.has('slow_operation')).toBe(true);
       // expect(alertTypes.has('critical_operation')).toBe(true);
       // expect(alertTypes.has('high_error_rate')).toBe(true);
-      
+
       // Just check that we got some alerts (basic sanity check)
       expect(Array.isArray(alerts)).toBe(true);
 
@@ -358,7 +360,7 @@ describe('Trace Analysis Tools Integration', () => {
         criticalOperationMs: 300,
         maxErrorRate: 10,
       });
-      
+
       // 1. Execute a trace with monitoring enabled
       jest.useFakeTimers();
       const stopMonitoring = monitor.startMonitoring();

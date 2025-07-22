@@ -18,7 +18,7 @@ describe('traceConfigUtils', () => {
     jest.clearAllMocks();
 
     mockSafeEventDispatcher = { dispatch: jest.fn() };
-    
+
     mockContainer = {
       resolve: jest.fn().mockImplementation((token) => {
         if (token === 'ISafeEventDispatcher') {
@@ -79,7 +79,9 @@ describe('traceConfigUtils', () => {
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Performance: true, Visualization: true, Analysis: true')
+        expect.stringContaining(
+          'Performance: true, Visualization: true, Analysis: true'
+        )
       );
     });
 
@@ -180,7 +182,9 @@ describe('traceConfigUtils', () => {
       await loadAndApplyTraceConfig(mockContainer, mockLogger, mockTokens);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Performance: true, Visualization: true, Analysis: true')
+        expect.stringContaining(
+          'Performance: true, Visualization: true, Analysis: true'
+        )
       );
     });
   });

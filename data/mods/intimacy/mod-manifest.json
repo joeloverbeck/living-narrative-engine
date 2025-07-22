@@ -47,8 +47,10 @@
     ],
     "conditions": [
       "actor-in-entity-facing-away.condition.json",
+      "actor-is-behind-entity.condition.json",
       "actor-is-in-closeness.condition.json",
       "actor-is-kiss-receiver.condition.json",
+      "both-actors-facing-each-other.condition.json",
       "entity-in-facing-away.condition.json",
       "entity-not-in-facing-away.condition.json",
       "event-is-action-accept-kiss-passively.condition.json",
@@ -115,17 +117,23 @@
       "turn_around.rule.json",
       "turn_around_to_face.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"],
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ],
     "scopes": [
       "actors_im_facing_away_from.scope",
       "actors_with_arms_facing_forward.scope",
+      "actors_with_arms_facing_forward_or_behind_target.scope",
       "actors_with_arms_in_intimacy.scope",
       "actors_with_ass_cheeks_facing_forward.scope",
+      "actors_with_ass_cheeks_facing_forward_or_behind_target.scope",
       "actors_with_ass_cheeks_in_intimacy.scope",
       "actors_with_mouth_facing_forward.scope",
       "close_actors.scope",
       "close_actors_facing_away.scope",
       "close_actors_facing_forward.scope",
+      "close_actors_facing_forward_or_behind_target.scope",
       "close_actors_facing_forward_with_torso_clothing.scope",
       "current_kissing_partner.scope"
     ]

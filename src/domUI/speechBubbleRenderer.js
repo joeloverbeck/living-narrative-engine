@@ -325,7 +325,6 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       allowHtml = false,
       thoughts,
       notes,
-      notesRaw,
     } = payload;
 
     const elementInfo = this.#createSpeechElements(payload);
@@ -347,7 +346,6 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       {
         thoughts,
         notes,
-        notesRaw,
       }
     );
     if (speechMetaFragment) {

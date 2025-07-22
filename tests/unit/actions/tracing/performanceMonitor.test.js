@@ -336,7 +336,6 @@ describe('PerformanceMonitor', () => {
       jest.useRealTimers();
     });
 
-
     it('should generate high concurrency alert', () => {
       // Create many concurrent operations
       const spans = [];
@@ -387,7 +386,6 @@ describe('PerformanceMonitor', () => {
       // May or may not generate depending on thresholds
       expect(alerts).toBeDefined();
     });
-
   });
 
   describe('getAlerts', () => {

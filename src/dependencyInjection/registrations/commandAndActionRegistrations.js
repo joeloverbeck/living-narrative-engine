@@ -133,7 +133,7 @@ export function registerCommandAndAction(container) {
         // Configuration might not be loaded yet
         traceConfig = { traceAnalysisEnabled: false };
       }
-      
+
       return new StructuredTrace(null, traceConfig);
     };
   });
