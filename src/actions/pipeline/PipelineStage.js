@@ -36,15 +36,32 @@ export class PipelineStage {
   async execute(context) {
     const { trace } = context;
 
-    // If trace supports structured spans, wrap execution
-    if (trace?.withSpanAsync) {
-      return trace.withSpanAsync(
-        `${this.name}Stage`,
-        async () => {
-          return this.executeInternal(context);
-        },
-        { stage: this.name }
-      );
+    // If trace supports structured spans, we need to handle it manually
+    // to properly set error status when stages return failure results
+    if (trace?.startSpan && trace?.endSpan) {
+      const span = trace.startSpan(`${this.name}Stage`, { stage: this.name });
+
+      try {
+        const result = await this.executeInternal(context);
+
+        // If the stage failed, mark the span as error
+        if (!result.success && result.errors && result.errors.length > 0) {
+          const errorContext = result.errors[0];
+          const error = new Error(
+            errorContext.error || 'Stage execution failed'
+          );
+          span.setError(error);
+        } else {
+          span.setStatus('success');
+        }
+
+        return result;
+      } catch (error) {
+        span.setError(error);
+        throw error;
+      } finally {
+        trace.endSpan(span);
+      }
     }
 
     // Otherwise, execute directly
@@ -63,7 +80,9 @@ export class PipelineStage {
    * @returns {Promise<import('./PipelineResult.js').PipelineResult>} The result of this stage
    */
   async executeInternal(context) {
-    throw new Error(`Stage ${this.name} must implement executeInternal() method`);
+    throw new Error(
+      `Stage ${this.name} must implement executeInternal() method`
+    );
   }
 }
 

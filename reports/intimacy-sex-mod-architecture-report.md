@@ -3,6 +3,7 @@
 This report provides a comprehensive overview of the intimacy and sex mods in Living Narrative Engine, serving as a reference guide for developers who want to add new actions and rules to these mods.
 
 ## Table of Contents
+
 1. [Actions Overview](#actions-overview)
 2. [Component Usage Analysis](#component-usage-analysis)
 3. [Conditions Reference](#conditions-reference)
@@ -17,6 +18,7 @@ This report provides a comprehensive overview of the intimacy and sex mods in Li
 The intimacy mod provides 31 actions that enable romantic and intimate interactions between characters:
 
 #### Basic Physical Contact
+
 - `adjust_clothing` - Adjust target's clothing seductively
 - `brush_hand` - Gently brush hands together
 - `fondle_ass` - Fondle target's buttocks
@@ -26,6 +28,7 @@ The intimacy mod provides 31 actions that enable romantic and intimate interacti
 - `thumb_wipe_cheek` - Gently wipe target's cheek with thumb
 
 #### Kissing Actions
+
 - `kiss_cheek` - Softly kiss target's cheek
 - `peck_on_lips` - Quick kiss on the lips
 - `lean_in_for_deep_kiss` - Initiate a deep, meaningful kiss
@@ -40,17 +43,20 @@ The intimacy mod provides 31 actions that enable romantic and intimate interacti
 - `pull_back_in_revulsion` - Pull away from kiss in disgust
 
 #### Body Language
+
 - `lick_lips` - Seductively lick own lips
 - `turn_around` - Turn to face away from target
 - `turn_around_to_face` - Turn to face someone you were facing away from
 
 #### Massage Actions
+
 - `massage_shoulders` - Massage target's shoulders
 - `massage_back` - Massage target's back
 
 ### Sex Mod Actions
 
 The sex mod currently provides 2 explicit sexual actions:
+
 - `fondle_breasts` - Fondle target's breasts
 - `fondle_penis` - Fondle target's penis
 
@@ -59,18 +65,21 @@ The sex mod currently provides 2 explicit sexual actions:
 ### Intimacy Components
 
 #### `intimacy:closeness`
+
 - **Purpose**: Tracks mutual closeness between characters
 - **Structure**: Contains an array of partner entity IDs
 - **Usage**: Required for most intimate actions; represents consent and mutual interest
 - **Key Feature**: Fully-connected graph - all partners must have each other in their closeness arrays
 
 #### `intimacy:facing_away`
+
 - **Purpose**: Tracks which entities a character is facing away from
 - **Structure**: Contains an array of entity IDs the character has turned away from
 - **Usage**: Blocks face-to-face actions; enables back-facing actions like back massage
 - **State Management**: Added by turn_around action, removed by turn_around_to_face
 
 #### `intimacy:kissing`
+
 - **Purpose**: Tracks active kissing state between two characters
 - **Structure**: Contains partner ID and initiator flag
 - **Usage**: Required for kissing continuation actions; prevents multiple simultaneous kisses
@@ -88,21 +97,25 @@ The sex mod currently provides 2 explicit sexual actions:
 ### Event-Based Conditions
 
 Both mods use a consistent pattern for checking action events:
+
 - Pattern: `event-is-action-[action-name]`
 - Logic: `{"==": [{"var": "event.payload.actionId"}, "modId:action_name"]}`
 - Purpose: Used in rules to handle specific action attempts
 
 #### Intimacy Event Conditions (28 total)
+
 - All action-based conditions follow the naming pattern above
 - Examples: `event-is-action-kiss-cheek`, `event-is-action-lean-in-for-deep-kiss`
 
 #### Sex Event Conditions (2 total)
+
 - `event-is-action-fondle-breasts`
 - `event-is-action-fondle-penis`
 
 ### State-Based Conditions
 
 #### Intimacy State Conditions
+
 - `actor-is-in-closeness` - Checks if actor has closeness component
 - `entity-in-facing-away` - Checks if entity is in someone's facing_away list
 - `entity-not-in-facing-away` - Inverse of above
@@ -115,6 +128,7 @@ Both mods use a consistent pattern for checking action events:
 Scopes define the available targets for actions using the custom scope DSL.
 
 ### Core Scopes (Referenced)
+
 - `none` - No target required (self-actions)
 - `self` - Target is the actor themselves
 - `core:actors_in_location` - All actors in the same location
@@ -122,6 +136,7 @@ Scopes define the available targets for actions using the custom scope DSL.
 ### Intimacy Scopes
 
 #### Basic Interaction Scopes
+
 - **`intimacy:close_actors`**
   - Returns: All partners in actor's closeness circle
   - Usage: Basic intimate actions that don't require specific positioning
@@ -135,6 +150,7 @@ Scopes define the available targets for actions using the custom scope DSL.
   - Usage: Actions performed from behind like back massage
 
 #### Body-Part Specific Scopes
+
 - **`intimacy:actors_with_mouth_facing_forward`**
   - Returns: Facing-forward closeness partners with mouth body part
   - Usage: Kissing initiation actions
@@ -148,6 +164,7 @@ Scopes define the available targets for actions using the custom scope DSL.
   - Usage: Ass fondling actions
 
 #### Special Relationship Scopes
+
 - **`intimacy:current_kissing_partner`**
   - Returns: The entity currently being kissed
   - Usage: Actions during active kissing (nibble lip, break kiss, etc.)
@@ -157,6 +174,7 @@ Scopes define the available targets for actions using the custom scope DSL.
   - Usage: Turn around to face actions
 
 #### Clothing-Aware Scopes
+
 - **`intimacy:close_actors_facing_forward_with_torso_clothing`**
   - Returns: Facing-forward partners wearing torso clothing
   - Usage: Clothing adjustment actions
@@ -194,32 +212,57 @@ All rules follow a consistent pattern:
 {
   "actions": [
     // 1. Get entity names
-    { "type": "GET_NAME", "parameters": { "entity_ref": "actor", "result_variable": "actorName" }},
-    { "type": "GET_NAME", "parameters": { "entity_ref": "target", "result_variable": "targetName" }},
-    
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+    },
+
     // 2. Get location context
-    { "type": "QUERY_COMPONENT", "parameters": { 
-      "entity_ref": "actor", 
-      "component_type": "core:position",
-      "result_variable": "actorPosition"
-    }},
-    
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+
     // 3. (Optional) Modify state
-    { "type": "ADD_COMPONENT", "parameters": { /* component data */ }},
-    { "type": "REMOVE_COMPONENT", "parameters": { /* component ref */ }},
-    
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        /* component data */
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        /* component ref */
+      }
+    },
+
     // 4. Set message variables
-    { "type": "SET_VARIABLE", "parameters": { 
-      "variable_name": "logMessage",
-      "value": "Descriptive action text with {context.actorName} and {context.targetName}"
-    }},
-    
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "Descriptive action text with {context.actorName} and {context.targetName}"
+      }
+    },
+
     // 5. Set perception metadata
-    { "type": "SET_VARIABLE", "parameters": { 
-      "variable_name": "perceptionType",
-      "value": "action_target_general"
-    }},
-    
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+
     // 6. Use macro for standard completion
     { "macro": "core:logSuccessAndEndTurn" }
   ]
@@ -229,16 +272,22 @@ All rules follow a consistent pattern:
 ### State Management Patterns
 
 #### Bidirectional State (Kissing)
+
 When initiating kissing, both participants receive the component:
+
 - Actor: `{"partner": targetId, "initiator": true}`
 - Target: `{"partner": actorId, "initiator": false}`
 
 #### Unidirectional State (Facing Away)
+
 Only the actor who turns away gets the component:
+
 - Actor adds target to their `facing_away_from` array
 
 #### Mutual State (Closeness)
+
 Both entities must have each other in their partner arrays:
+
 - Validated by action prerequisites
 - Managed outside the intimacy/sex mods
 
@@ -268,6 +317,7 @@ Both entities must have each other in their partner arrays:
 ### Scope Selection Guide
 
 Choose scopes based on:
+
 - **Positioning Requirements**: Face-to-face vs. any position
 - **Body Part Requirements**: Specific anatomy needed
 - **State Requirements**: Active relationships (kissing partner)
