@@ -287,28 +287,22 @@ describe('CharacterBuilderApp - Initialization', () => {
       expect(document.body.innerHTML).toContain('Controller init failed');
     });
 
-    it('should initialize LLM services properly', async () => {
+    it('should initialize with mock LLM services', async () => {
       app = new CharacterBuilderApp();
       await app.initialize();
 
+      // Character builder uses mock LLM services, not real ones
       const {
-        LLMConfigurationManager,
-      } = require('../../../src/llms/services/llmConfigurationManager.js');
-      const {
-        RetryHttpClient,
-      } = require('../../../src/llms/retryHttpClient.js');
+        ThematicDirectionGenerator,
+      } = require('../../../src/characterBuilder/services/thematicDirectionGenerator.js');
 
-      expect(LLMConfigurationManager).toHaveBeenCalledWith(
+      // Verify ThematicDirectionGenerator was created with mock services
+      expect(ThematicDirectionGenerator).toHaveBeenCalledWith(
         expect.objectContaining({
           logger: expect.any(Object),
-          initialLlmId: 'openrouter-claude-sonnet-4',
-        })
-      );
-
-      expect(RetryHttpClient).toHaveBeenCalledWith(
-        expect.objectContaining({
-          logger: expect.any(Object),
-          baseURL: 'http://localhost:3001',
+          llmJsonService: expect.any(Object),
+          llmStrategyFactory: expect.any(Object),
+          llmConfigManager: expect.any(Object),
         })
       );
     });

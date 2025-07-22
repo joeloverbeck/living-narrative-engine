@@ -388,7 +388,7 @@ export class CharacterBuilderService {
    * @returns {Promise<CharacterConcept[]>} Array of character concepts
    * @throws {CharacterBuilderError} If retrieval fails
    */
-  async listCharacterConcepts() {
+  async getAllCharacterConcepts() {
     try {
       const concepts = await this.#storageService.listCharacterConcepts();
       this.#logger.debug(

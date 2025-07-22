@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "thematic-direction.schema.json",
+  "$id": "schema://living-narrative-engine/thematic-direction.schema.json",
   "title": "Thematic Direction",
   "description": "Schema for thematic direction data in the character builder system",
   "type": "object",

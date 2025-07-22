@@ -1,0 +1,16 @@
+{
+  "parent": "89445224-3df5-4730-8b7c-60d267ee501e",
+  "pid": 19507,
+  "argv": [
+    "/usr/local/bin/node",
+    "/home/joeloverbeck/projects/living-narrative-engine/node_modules/jest-worker/build/processChild.js"
+  ],
+  "execArgv": [],
+  "cwd": "/home/joeloverbeck/projects/living-narrative-engine",
+  "time": 1753199195635,
+  "ppid": 19469,
+  "coverageFilename": "/home/joeloverbeck/projects/living-narrative-engine/.nyc_output/a9a65aa2-8b2c-4880-ab4c-593edad73930.json",
+  "externalId": "",
+  "uuid": "a9a65aa2-8b2c-4880-ab4c-593edad73930",
+  "files": []
+}

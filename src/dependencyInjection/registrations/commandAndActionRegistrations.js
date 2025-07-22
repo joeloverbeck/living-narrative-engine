@@ -33,7 +33,7 @@ import { PrerequisiteEvaluationService } from '../../actions/validation/prerequi
 import { ActionErrorContextBuilder } from '../../actions/errors/actionErrorContextBuilder.js';
 import { FixSuggestionEngine } from '../../actions/errors/fixSuggestionEngine.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
-import { TraceContext as TraceContextImpl } from '../../actions/tracing/traceContext.js';
+import { StructuredTrace } from '../../actions/tracing/structuredTrace.js';
 
 // --- Helper Function Imports ---
 import ActionCommandFormatter from '../../actions/actionFormatter.js';
@@ -122,9 +122,20 @@ export function registerCommandAndAction(container) {
   });
 
   // --- TraceContext Factory ---
-  // Register the factory that creates TraceContext instances
-  registrar.singletonFactory(tokens.TraceContextFactory, () => {
-    return () => new TraceContextImpl();
+  // Register the factory that creates StructuredTrace instances for enhanced tracing
+  registrar.singletonFactory(tokens.TraceContextFactory, (c) => {
+    return () => {
+      // Get trace configuration if available
+      let traceConfig = null;
+      try {
+        traceConfig = c.resolve(tokens.ITraceConfiguration);
+      } catch {
+        // Configuration might not be loaded yet
+        traceConfig = { traceAnalysisEnabled: false };
+      }
+      
+      return new StructuredTrace(null, traceConfig);
+    };
   });
   logger.debug(
     'Command and Action Registration: Registered TraceContextFactory.'

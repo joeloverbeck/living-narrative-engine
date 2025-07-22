@@ -10,6 +10,9 @@ import ConsoleLogger, { LogLevel } from '../logging/consoleLogger.js';
 // --- Import Logger Config Utility ---
 import { loadAndApplyLoggerConfig } from '../configuration/utils/loggerConfigUtils.js';
 
+// --- Import Trace Config Utility ---
+import { loadAndApplyTraceConfig } from '../configuration/utils/traceConfigUtils.js';
+
 // --- Import Logger Interface for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 // --- Import necessary types for registry population ---
@@ -74,6 +77,10 @@ export function configureContainer(container, uiElements) {
   // --- Load logger configuration asynchronously ---
   // This is intentionally fire-and-forget during container setup.
   loadAndApplyLoggerConfig(container, logger, tokens, 'ContainerConfig');
+
+  // --- Load trace configuration asynchronously ---
+  // This is also fire-and-forget during container setup.
+  loadAndApplyTraceConfig(container, logger, tokens, 'ContainerConfig');
 
   logger.debug(
     '[ContainerConfig] Configuration and registry population complete.'

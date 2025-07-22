@@ -1,0 +1,37 @@
+{
+  "traceAnalysisEnabled": false,
+  "performanceMonitoring": {
+    "enabled": true,
+    "thresholds": {
+      "slowOperationMs": 100,
+      "criticalOperationMs": 500,
+      "maxConcurrency": 10,
+      "maxTotalDurationMs": 5000,
+      "maxErrorRate": 5,
+      "maxMemoryUsageMB": 50
+    },
+    "sampling": {
+      "rate": 1.0,
+      "strategy": "random",
+      "alwaysSampleErrors": true,
+      "alwaysSampleSlow": true,
+      "slowThresholdMs": 1000
+    }
+  },
+  "visualization": {
+    "enabled": true,
+    "options": {
+      "showAttributes": true,
+      "showTimings": true,
+      "showErrors": true,
+      "showCriticalPath": true,
+      "maxDepth": 0,
+      "minDuration": 0,
+      "colorsEnabled": true
+    }
+  },
+  "analysis": {
+    "enabled": true,
+    "bottleneckThresholdMs": 100
+  }
+}

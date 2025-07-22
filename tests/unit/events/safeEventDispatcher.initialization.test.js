@@ -169,10 +169,11 @@ describe('SafeEventDispatcher - Initialization', () => {
 
       // Proper initialization chain
       const eventBus = new EventBus({ logger: mockLogger });
-      const gameDataRepository = new GameDataRepository({
-        logger: mockLogger,
-        schemaValidator: new AjvSchemaValidator({ logger: mockLogger }),
-      });
+      const mockRegistry = {}; // Empty mock registry for testing
+      const gameDataRepository = new GameDataRepository(
+        mockRegistry,
+        mockLogger
+      );
       const validatedEventDispatcher = new ValidatedEventDispatcher({
         eventBus,
         gameDataRepository,

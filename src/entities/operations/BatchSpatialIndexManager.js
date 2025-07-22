@@ -7,6 +7,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { processBatch } from '../utils/batchOperationUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
+import IBatchSpatialIndexManager from '../interfaces/IBatchSpatialIndexManager.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../spatialIndexManager.js').default} SpatialIndexManager */
@@ -30,8 +31,9 @@ import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 /**
  * @class BatchSpatialIndexManager
  * @description Handles batch operations for spatial index management
+ * @implements {IBatchSpatialIndexManager}
  */
-export default class BatchSpatialIndexManager {
+export default class BatchSpatialIndexManager extends IBatchSpatialIndexManager {
   /** @type {SpatialIndexManager} */
   #spatialIndex;
   /** @type {ILogger} */
@@ -47,6 +49,7 @@ export default class BatchSpatialIndexManager {
    * @param {number} [deps.defaultBatchSize] - Default batch size
    */
   constructor({ spatialIndex, logger, defaultBatchSize = 100 }) {
+    super();
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });

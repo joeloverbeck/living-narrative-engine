@@ -12,6 +12,7 @@ import Span from './span.js';
 /** @typedef {import('./types.js').HierarchicalSpan} HierarchicalSpan */
 /** @typedef {import('./types.js').PerformanceSummary} PerformanceSummary */
 /** @typedef {import('./types.js').SpanOptions} SpanOptions */
+/** @typedef {import('../configuration/traceConfigLoader.js').TraceConfigurationFile} TraceConfigurationFile */
 
 /**
  * @class StructuredTrace
@@ -23,18 +24,29 @@ export class StructuredTrace {
   #activeSpan;
   #spanIdCounter;
   #rootSpan;
+  #traceConfig;
+  #analyzer;
+  #visualizer;
+  #performanceMonitor;
 
   /**
    * Creates a new StructuredTrace instance
    *
    * @param {TraceContext} [traceContext] - Optional existing TraceContext to wrap
+   * @param {TraceConfigurationFile} [traceConfig] - Optional trace configuration
    */
-  constructor(traceContext = null) {
+  constructor(traceContext = null, traceConfig = null) {
     this.#traceContext = traceContext || new TraceContext();
     this.#spans = new Map(); // Map of span ID to Span
     this.#activeSpan = null;
     this.#spanIdCounter = 0;
     this.#rootSpan = null;
+    this.#traceConfig = traceConfig || { traceAnalysisEnabled: false };
+    
+    // Lazy-initialized analysis tools
+    this.#analyzer = null;
+    this.#visualizer = null;
+    this.#performanceMonitor = null;
   }
 
   // ==========================================
@@ -227,7 +239,10 @@ export class StructuredTrace {
 
     try {
       const result = await asyncFn();
-      span.setStatus('success');
+      // Only set success status if the span doesn't already have an error
+      if (span.status !== 'error') {
+        span.setStatus('success');
+      }
       return result;
     } catch (error) {
       span.setError(error);
@@ -397,6 +412,115 @@ export class StructuredTrace {
    */
   getActiveSpan() {
     return this.#activeSpan;
+  }
+
+  // ==========================================
+  // Analysis tools - lazy initialization
+  // ==========================================
+
+  /**
+   * Sets the trace configuration
+   *
+   * @param {TraceConfigurationFile} config - The trace configuration
+   */
+  setTraceConfiguration(config) {
+    this.#traceConfig = config;
+  }
+
+  /**
+   * Gets the trace analyzer instance (lazy initialization)
+   *
+   * @returns {Promise<import('./traceAnalyzer.js').default|null>} The analyzer or null if disabled
+   */
+  async getAnalyzer() {
+    if (!this.#traceConfig.traceAnalysisEnabled) {
+      return null;
+    }
+
+    if (!this.#traceConfig.analysis?.enabled) {
+      return null;
+    }
+
+    if (!this.#analyzer) {
+      // Lazy load the analyzer
+      // Dynamic import to avoid loading unless needed
+      return import('./traceAnalyzer.js').then(({ default: TraceAnalyzer }) => {
+        this.#analyzer = new TraceAnalyzer(this);
+        return this.#analyzer;
+      });
+    }
+
+    return this.#analyzer;
+  }
+
+  /**
+   * Gets the trace visualizer instance (lazy initialization)
+   *
+   * @returns {Promise<import('./traceVisualizer.js').default|null>} The visualizer or null if disabled
+   */
+  async getVisualizer() {
+    if (!this.#traceConfig.traceAnalysisEnabled) {
+      return null;
+    }
+
+    if (!this.#traceConfig.visualization?.enabled) {
+      return null;
+    }
+
+    if (!this.#visualizer) {
+      // Lazy load the visualizer
+      // Dynamic import to avoid loading unless needed
+      return import('./traceVisualizer.js').then(({ default: TraceVisualizer }) => {
+        this.#visualizer = new TraceVisualizer(this);
+        return this.#visualizer;
+      });
+    }
+
+    return this.#visualizer;
+  }
+
+  /**
+   * Gets the performance monitor instance (lazy initialization)
+   *
+   * @returns {Promise<import('./performanceMonitor.js').default|null>} The monitor or null if disabled
+   */
+  async getPerformanceMonitor() {
+    if (!this.#traceConfig.traceAnalysisEnabled) {
+      return null;
+    }
+
+    if (!this.#traceConfig.performanceMonitoring?.enabled) {
+      return null;
+    }
+
+    if (!this.#performanceMonitor) {
+      // Lazy load the performance monitor
+      // Dynamic import to avoid loading unless needed
+      return import('./performanceMonitor.js').then(({ default: PerformanceMonitor }) => {
+        const thresholds = this.#traceConfig.performanceMonitoring.thresholds || {};
+        this.#performanceMonitor = new PerformanceMonitor(this, thresholds);
+
+        // Apply sampling configuration if present
+        if (this.#traceConfig.performanceMonitoring.sampling) {
+          this.#performanceMonitor.enableSampling(
+            this.#traceConfig.performanceMonitoring.sampling
+          );
+        }
+        
+        return this.#performanceMonitor;
+      });
+    }
+
+    return this.#performanceMonitor;
+  }
+
+  /**
+   * Checks if trace analysis is enabled
+   *
+   * @returns {boolean} Whether trace analysis is enabled
+   */
+  isTraceAnalysisEnabled() {
+    return this.#traceConfig.traceAnalysisEnabled === true;
   }
 }
 

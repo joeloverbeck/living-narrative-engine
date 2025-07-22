@@ -12,7 +12,7 @@ import { isValidId } from '../utils/idValidation.js';
  * @implements {ISpatialIndexManager}
  */
 class SpatialIndexManager extends MapManager {
-  /** @type {import('./operations/BatchSpatialIndexManager.js').default} */
+  /** @type {import('./interfaces/IBatchSpatialIndexManager.js').default} */
   #batchSpatialIndexManager;
   /** @type {boolean} */
   #enableBatchOperations;
@@ -20,7 +20,7 @@ class SpatialIndexManager extends MapManager {
   /**
    * @param {object} dependencies
    * @param {import('../interfaces/coreServices.js').ILogger} dependencies.logger
-   * @param {import('./operations/BatchSpatialIndexManager.js').default} [dependencies.batchSpatialIndexManager] - Batch spatial index manager
+   * @param {import('./interfaces/IBatchSpatialIndexManager.js').default} [dependencies.batchSpatialIndexManager] - Batch spatial index manager
    * @param {boolean} [dependencies.enableBatchOperations] - Enable batch operations
    */
   constructor({
@@ -322,7 +322,7 @@ class SpatialIndexManager extends MapManager {
   /**
    * Sets the batch spatial index manager (for dependency injection after construction).
    *
-   * @param {import('./operations/BatchSpatialIndexManager.js').default} batchSpatialIndexManager - Batch spatial index manager
+   * @param {import('./interfaces/IBatchSpatialIndexManager.js').default} batchSpatialIndexManager - Batch spatial index manager
    */
   setBatchSpatialIndexManager(batchSpatialIndexManager) {
     this.#batchSpatialIndexManager = batchSpatialIndexManager;

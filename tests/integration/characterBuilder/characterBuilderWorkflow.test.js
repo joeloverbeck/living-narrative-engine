@@ -343,6 +343,9 @@ describe('Character Builder Workflow Integration', () => {
     });
 
     test('should handle workflow errors gracefully', async () => {
+      // Use fake timers to speed up retry delays
+      jest.useFakeTimers();
+
       // Arrange
       const conceptText =
         'Test Character, a test character for error handling.';
@@ -369,9 +372,22 @@ describe('Character Builder Workflow Integration', () => {
         await characterBuilderService.createCharacterConcept(conceptText);
       expect(createdConcept).toEqual(mockStoredConcept);
 
+      // Use real timers for the promise but immediately run timers
+      jest.useRealTimers();
+      
+      // Mock setTimeout to execute immediately
+      const originalSetTimeout = global.setTimeout;
+      global.setTimeout = jest.fn((fn) => {
+        fn();
+        return 0;
+      });
+
       await expect(
         characterBuilderService.generateThematicDirections(createdConcept.id)
       ).rejects.toThrow('LLM service temporarily unavailable');
+
+      // Restore setTimeout
+      global.setTimeout = originalSetTimeout;
 
       // Verify concept was still created despite direction generation failure
       const retrievedConcept =
@@ -389,6 +405,13 @@ describe('Character Builder Workflow Integration', () => {
         new Error('Database connection failed')
       );
 
+      // Mock setTimeout to execute immediately
+      const originalSetTimeout = global.setTimeout;
+      global.setTimeout = jest.fn((fn) => {
+        fn();
+        return 0;
+      });
+
       // Act & Assert
       await expect(
         characterBuilderService.createCharacterConcept(conceptText)
@@ -398,6 +421,9 @@ describe('Character Builder Workflow Integration', () => {
         expect.stringContaining('Failed to create character concept'),
         expect.any(Object)
       );
+
+      // Restore setTimeout
+      global.setTimeout = originalSetTimeout;
     });
 
     test('should handle validation errors in workflow', async () => {
@@ -447,7 +473,7 @@ describe('Character Builder Workflow Integration', () => {
 
       // Act - List concepts
       const listedConcepts =
-        await characterBuilderService.listCharacterConcepts();
+        await characterBuilderService.getAllCharacterConcepts();
 
       // Assert - List operation
       expect(listedConcepts).toEqual(mockConcepts);

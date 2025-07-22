@@ -1,0 +1,21 @@
+{
+  "parent": null,
+  "pid": 19450,
+  "argv": [
+    "/usr/local/bin/node",
+    "/usr/local/bin/npm",
+    "run",
+    "test:unit",
+    "--",
+    "--testPathPatterns=characterBuilderService.test.js",
+    "--silent"
+  ],
+  "execArgv": [],
+  "cwd": "/home/joeloverbeck/projects/living-narrative-engine",
+  "time": 1753199195106,
+  "ppid": 19439,
+  "coverageFilename": "/home/joeloverbeck/projects/living-narrative-engine/.nyc_output/621cdba9-2dc6-4d7a-b1d5-5a88e4be1f58.json",
+  "externalId": "",
+  "uuid": "621cdba9-2dc6-4d7a-b1d5-5a88e4be1f58",
+  "files": []
+}
