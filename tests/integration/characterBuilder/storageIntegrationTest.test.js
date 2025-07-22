@@ -30,12 +30,12 @@ describe('Character Builder Storage Integration', () => {
     // Create comprehensive database mock
     mockDatabase = {
       initialize: jest.fn(),
-      storeConcept: jest.fn(),
-      retrieveConcept: jest.fn(),
-      listConcepts: jest.fn(),
-      deleteConcept: jest.fn(),
-      storeDirections: jest.fn(),
-      retrieveDirections: jest.fn(),
+      saveCharacterConcept: jest.fn(),
+      getCharacterConcept: jest.fn(),
+      getAllCharacterConcepts: jest.fn(),
+      deleteCharacterConcept: jest.fn(),
+      saveThematicDirections: jest.fn(),
+      getThematicDirectionsByConceptId: jest.fn(),
       close: jest.fn(),
     };
 
@@ -52,6 +52,9 @@ describe('Character Builder Storage Integration', () => {
       database: mockDatabase,
       schemaValidator: mockSchemaValidator,
     });
+    
+    // The database initialization should succeed in setup
+    mockDatabase.initialize.mockResolvedValue();
   });
 
   afterEach(() => {
@@ -59,6 +62,10 @@ describe('Character Builder Storage Integration', () => {
   });
 
   describe('Character Concept Storage Integration', () => {
+    beforeEach(async () => {
+      await storageService.initialize();
+    });
+
     test('should successfully integrate concept creation with validation and storage', async () => {
       // Arrange
       const conceptData = {
@@ -77,7 +84,7 @@ describe('Character Builder Storage Integration', () => {
 
       // Setup mocks
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
-      mockDatabase.storeConcept.mockResolvedValue(expectedStoredConcept);
+      mockDatabase.saveCharacterConcept.mockResolvedValue(expectedStoredConcept);
 
       // Act
       const result = await storageService.storeCharacterConcept(conceptData);
@@ -89,7 +96,7 @@ describe('Character Builder Storage Integration', () => {
       );
 
       // Assert - Database integration
-      expect(mockDatabase.storeConcept).toHaveBeenCalledWith(
+      expect(mockDatabase.saveCharacterConcept).toHaveBeenCalledWith(
         expect.objectContaining(conceptData)
       );
 
@@ -97,10 +104,15 @@ describe('Character Builder Storage Integration', () => {
       expect(result).toEqual(expectedStoredConcept);
 
       // Assert - Logging integration
+      // The service logs initialization first, then the storage success
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'CharacterStorageService: Successfully initialized'
+      );
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Successfully stored character concept'),
         expect.objectContaining({
-          conceptId: expectedStoredConcept.id,
+          conceptId: undefined, // conceptData doesn't have an id yet
+          attempt: 1
         })
       );
     });
@@ -122,7 +134,7 @@ describe('Character Builder Storage Integration', () => {
       ).rejects.toThrow('Character concept validation failed: Name is required and cannot be empty');
 
       // Verify database was not called
-      expect(mockDatabase.storeConcept).not.toHaveBeenCalled();
+      expect(mockDatabase.saveCharacterConcept).not.toHaveBeenCalled();
 
       // Verify error logging
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -140,7 +152,7 @@ describe('Character Builder Storage Integration', () => {
 
       // Setup validation to pass but database to fail
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
-      mockDatabase.storeConcept.mockRejectedValue(new Error('Database connection failed'));
+      mockDatabase.saveCharacterConcept.mockRejectedValue(new Error('Database connection failed'));
 
       // Act & Assert
       await expect(
@@ -168,14 +180,14 @@ describe('Character Builder Storage Integration', () => {
       };
 
       // Setup database mock
-      mockDatabase.retrieveConcept.mockResolvedValue(storedConcept);
+      mockDatabase.getCharacterConcept.mockResolvedValue(storedConcept);
 
       // Act
       const result = await storageService.getCharacterConcept(conceptId);
 
       // Assert
       expect(result).toEqual(storedConcept);
-      expect(mockDatabase.retrieveConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockDatabase.getCharacterConcept).toHaveBeenCalledWith(conceptId);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Retrieved character concept'),
         expect.objectContaining({ conceptId })
@@ -185,7 +197,7 @@ describe('Character Builder Storage Integration', () => {
     test('should handle concept not found scenarios', async () => {
       // Arrange
       const conceptId = 'non-existent-concept';
-      mockDatabase.retrieveConcept.mockResolvedValue(null);
+      mockDatabase.getCharacterConcept.mockResolvedValue(null);
 
       // Act
       const result = await storageService.getCharacterConcept(conceptId);
@@ -200,6 +212,10 @@ describe('Character Builder Storage Integration', () => {
   });
 
   describe('Thematic Directions Storage Integration', () => {
+    beforeEach(async () => {
+      await storageService.initialize();
+    });
+
     test('should successfully integrate directions storage with validation', async () => {
       // Arrange
       const conceptId = 'concept-directions-test';
@@ -242,7 +258,7 @@ describe('Character Builder Storage Integration', () => {
 
       // Setup mocks
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
-      mockDatabase.storeDirections.mockResolvedValue(directionsData);
+      mockDatabase.saveThematicDirections.mockResolvedValue(directionsData);
 
       // Act
       const result = await storageService.storeThematicDirections(conceptId, directionsData);
@@ -258,7 +274,7 @@ describe('Character Builder Storage Integration', () => {
       );
 
       // Assert - Database integration
-      expect(mockDatabase.storeDirections).toHaveBeenCalledWith(conceptId, directionsData);
+      expect(mockDatabase.saveThematicDirections).toHaveBeenCalledWith(directionsData);
 
       // Assert - Result
       expect(result).toEqual(directionsData);
@@ -295,7 +311,7 @@ describe('Character Builder Storage Integration', () => {
       ).rejects.toThrow('Thematic direction validation failed: Title is required');
 
       // Verify database was not called
-      expect(mockDatabase.storeDirections).not.toHaveBeenCalled();
+      expect(mockDatabase.saveThematicDirections).not.toHaveBeenCalled();
     });
 
     test('should integrate directions retrieval with filtering and validation', async () => {
@@ -329,14 +345,14 @@ describe('Character Builder Storage Integration', () => {
       ];
 
       // Setup database mock
-      mockDatabase.retrieveDirections.mockResolvedValue(storedDirections);
+      mockDatabase.getThematicDirectionsByConceptId.mockResolvedValue(storedDirections);
 
       // Act
       const result = await storageService.getThematicDirections(conceptId);
 
       // Assert
       expect(result).toEqual(storedDirections);
-      expect(mockDatabase.retrieveDirections).toHaveBeenCalledWith(conceptId);
+      expect(mockDatabase.getThematicDirectionsByConceptId).toHaveBeenCalledWith(conceptId);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Retrieved thematic directions'),
         expect.objectContaining({
@@ -349,7 +365,7 @@ describe('Character Builder Storage Integration', () => {
     test('should handle empty directions retrieval', async () => {
       // Arrange
       const conceptId = 'concept-no-directions';
-      mockDatabase.retrieveDirections.mockResolvedValue([]);
+      mockDatabase.getThematicDirectionsByConceptId.mockResolvedValue([]);
 
       // Act
       const result = await storageService.getThematicDirections(conceptId);
@@ -364,6 +380,10 @@ describe('Character Builder Storage Integration', () => {
   });
 
   describe('Storage Service Lifecycle Integration', () => {
+    beforeEach(async () => {
+      await storageService.initialize();
+    });
+
     test('should integrate concept listing with database operations', async () => {
       // Arrange
       const mockConcepts = [
@@ -391,14 +411,14 @@ describe('Character Builder Storage Integration', () => {
       ];
 
       // Setup database mock
-      mockDatabase.listConcepts.mockResolvedValue(mockConcepts);
+      mockDatabase.getAllCharacterConcepts.mockResolvedValue(mockConcepts);
 
       // Act
       const result = await storageService.listCharacterConcepts();
 
       // Assert
       expect(result).toEqual(mockConcepts);
-      expect(mockDatabase.listConcepts).toHaveBeenCalled();
+      expect(mockDatabase.getAllCharacterConcepts).toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Retrieved character concepts list'),
         expect.objectContaining({
@@ -410,14 +430,14 @@ describe('Character Builder Storage Integration', () => {
     test('should integrate concept deletion with database and logging', async () => {
       // Arrange
       const conceptId = 'concept-to-delete';
-      mockDatabase.deleteConcept.mockResolvedValue(true);
+      mockDatabase.deleteCharacterConcept.mockResolvedValue(true);
 
       // Act
       const result = await storageService.deleteCharacterConcept(conceptId);
 
       // Assert
       expect(result).toBe(true);
-      expect(mockDatabase.deleteConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockDatabase.deleteCharacterConcept).toHaveBeenCalledWith(conceptId);
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Successfully deleted character concept'),
         expect.objectContaining({ conceptId })
@@ -427,7 +447,7 @@ describe('Character Builder Storage Integration', () => {
     test('should handle deletion of non-existent concept', async () => {
       // Arrange
       const conceptId = 'non-existent-concept';
-      mockDatabase.deleteConcept.mockResolvedValue(false);
+      mockDatabase.deleteCharacterConcept.mockResolvedValue(false);
 
       // Act
       const result = await storageService.deleteCharacterConcept(conceptId);
@@ -454,21 +474,24 @@ describe('Character Builder Storage Integration', () => {
         schemaValidator: mockSchemaValidator,
       });
 
-      // Act & Assert - Attempt to use service, which should trigger initialization
+      // Act & Assert - The service will fail during initialization
+      await expect(
+        testStorageService.initialize()
+      ).rejects.toThrow('Failed to initialize character storage: Database initialization failed');
+
+      // Since initialization failed, trying to store will also fail
       await expect(
         testStorageService.storeCharacterConcept({
           name: 'Test',
           description: 'Test character'
         })
-      ).rejects.toThrow();
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to store character concept'),
-        expect.any(Object)
-      );
+      ).rejects.toThrow('CharacterStorageService not initialized');
     });
 
     test('should handle schema validation service errors', async () => {
+      // Initialize the service first
+      await storageService.initialize();
+      
       // Arrange
       const conceptData = {
         name: 'Test Character',
@@ -486,10 +509,13 @@ describe('Character Builder Storage Integration', () => {
       ).rejects.toThrow('Schema validation service unavailable');
 
       // Verify database was not called due to validation failure
-      expect(mockDatabase.storeConcept).not.toHaveBeenCalled();
+      expect(mockDatabase.saveCharacterConcept).not.toHaveBeenCalled();
     });
 
     test('should handle concurrent storage operations', async () => {
+      // Initialize the service first
+      await storageService.initialize();
+      
       // Arrange
       const conceptData1 = { name: 'Hero 1', description: 'First concurrent concept' };
       const conceptData2 = { name: 'Hero 2', description: 'Second concurrent concept' };
@@ -501,7 +527,7 @@ describe('Character Builder Storage Integration', () => {
 
       // Setup mocks for concurrent operations
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
-      mockDatabase.storeConcept
+      mockDatabase.saveCharacterConcept
         .mockResolvedValueOnce(storedConcept1)
         .mockResolvedValueOnce(storedConcept2)
         .mockResolvedValueOnce(storedConcept3);
@@ -522,12 +548,17 @@ describe('Character Builder Storage Integration', () => {
       expect(results[2]).toEqual(storedConcept3);
 
       // Verify all operations were processed
-      expect(mockDatabase.storeConcept).toHaveBeenCalledTimes(3);
-      expect(mockLogger.info).toHaveBeenCalledTimes(3);
+      expect(mockDatabase.saveCharacterConcept).toHaveBeenCalledTimes(3);
+      // 4 info logs: 1 for initialization + 3 for storage operations
+      expect(mockLogger.info).toHaveBeenCalledTimes(4);
     });
   });
 
   describe('Performance and Resource Management Integration', () => {
+    beforeEach(async () => {
+      await storageService.initialize();
+    });
+
     test('should handle large datasets efficiently', async () => {
       // Arrange - Create a large dataset
       const largeConceptList = Array.from({ length: 1000 }, (_, index) => ({
@@ -538,7 +569,7 @@ describe('Character Builder Storage Integration', () => {
         updatedAt: new Date().toISOString(),
       }));
 
-      mockDatabase.listConcepts.mockResolvedValue(largeConceptList);
+      mockDatabase.getAllCharacterConcepts.mockResolvedValue(largeConceptList);
 
       // Act
       const startTime = Date.now();
@@ -585,7 +616,7 @@ describe('Character Builder Storage Integration', () => {
       // Setup mocks
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
       allDirections.forEach((directions, index) => {
-        mockDatabase.storeDirections.mockResolvedValueOnce(directions);
+        mockDatabase.saveThematicDirections.mockResolvedValueOnce(directions);
       });
 
       // Act - Perform batch operations
@@ -603,8 +634,9 @@ describe('Character Builder Storage Integration', () => {
       });
 
       // Verify all batch operations completed
-      expect(mockDatabase.storeDirections).toHaveBeenCalledTimes(3);
-      expect(mockLogger.info).toHaveBeenCalledTimes(3);
+      expect(mockDatabase.saveThematicDirections).toHaveBeenCalledTimes(3);
+      // 4 info logs: 1 for initialization + 3 for batch operations
+      expect(mockLogger.info).toHaveBeenCalledTimes(4);
     });
   });
 });

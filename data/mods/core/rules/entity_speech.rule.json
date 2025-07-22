@@ -61,7 +61,7 @@
               "entity_id": "{event.payload.entityId}",
               "speech_content": "{event.payload.speechContent}",
               "thoughts": "{event.payload.thoughts?}",
-              "notes": "{event.payload.notes?}",
+              "notes": "{event.payload.notesRaw?}",
               "allow_html": false
             }
           }

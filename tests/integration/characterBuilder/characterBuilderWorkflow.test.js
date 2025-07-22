@@ -47,12 +47,12 @@ describe('Character Builder Workflow Integration', () => {
 
     // Create database mock
     mockDatabase = {
-      storeConcept: jest.fn(),
-      retrieveConcept: jest.fn(),
-      listConcepts: jest.fn(),
-      deleteConcept: jest.fn(),
-      storeDirections: jest.fn(),
-      retrieveDirections: jest.fn(),
+      saveCharacterConcept: jest.fn(),
+      getCharacterConcept: jest.fn(),
+      getAllCharacterConcepts: jest.fn(),
+      deleteCharacterConcept: jest.fn(),
+      saveThematicDirections: jest.fn(),
+      getThematicDirectionsByConceptId: jest.fn(),
       initialize: jest.fn(),
       close: jest.fn(),
     };
@@ -85,6 +85,9 @@ describe('Character Builder Workflow Integration', () => {
       directionGenerator: mockDirectionGenerator,
       eventBus: mockEventBus,
     });
+    
+    // Mock database initialization to succeed
+    mockDatabase.initialize.mockResolvedValue();
   });
 
   afterEach(() => {
@@ -92,18 +95,21 @@ describe('Character Builder Workflow Integration', () => {
   });
 
   describe('Complete Character Creation Workflow', () => {
+    beforeEach(async () => {
+      // Initialize the character builder service
+      await characterBuilderService.initialize();
+    });
+
     test('should successfully create character concept and generate thematic directions', async () => {
       // Arrange
-      const conceptData = {
-        name: 'Elara Nightwhisper',
-        description: 'A skilled elven ranger with a mysterious past, known for her exceptional archery skills and her ability to communicate with woodland creatures. She carries an ancient bow passed down through her family.',
-        background: 'Outlander',
-        personality: 'Curious but cautious, fiercely protective of nature',
-      };
+      const conceptText = 'Elara Nightwhisper, a skilled elven ranger with a mysterious past, known for her exceptional archery skills and her ability to communicate with woodland creatures. She carries an ancient bow passed down through her family. Background: Outlander. Personality: Curious but cautious, fiercely protective of nature.';
 
       const mockStoredConcept = {
         id: 'concept-elara-123',
-        ...conceptData,
+        concept: conceptText,
+        status: 'draft',
+        thematicDirections: [],
+        metadata: {},
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -163,22 +169,27 @@ describe('Character Builder Workflow Integration', () => {
       ];
 
       // Setup mocks
-      mockDatabase.storeConcept.mockResolvedValue(mockStoredConcept);
-      mockDatabase.retrieveConcept.mockResolvedValue(mockStoredConcept);
+      mockDatabase.saveCharacterConcept.mockResolvedValue(mockStoredConcept);
+      mockDatabase.getCharacterConcept.mockResolvedValue(mockStoredConcept);
       mockDirectionGenerator.generateDirections.mockResolvedValue(mockGeneratedDirections);
-      mockDatabase.storeDirections.mockResolvedValue(mockGeneratedDirections);
-      mockDatabase.retrieveDirections.mockResolvedValue(mockGeneratedDirections);
+      mockDatabase.saveThematicDirections.mockResolvedValue(mockGeneratedDirections);
+      mockDatabase.getThematicDirectionsByConceptId.mockResolvedValue(mockGeneratedDirections);
 
       // Act - Step 1: Create character concept
-      const createdConcept = await characterBuilderService.createCharacterConcept(conceptData);
+      const createdConcept = await characterBuilderService.createCharacterConcept(conceptText);
 
       // Assert - Step 1
       expect(createdConcept).toEqual(mockStoredConcept);
-      expect(mockDatabase.storeConcept).toHaveBeenCalledWith(conceptData);
+      expect(mockDatabase.saveCharacterConcept).toHaveBeenCalledWith(expect.objectContaining({
+        concept: conceptText,
+        status: 'draft'
+      }));
       expect(mockEventBus.dispatch).toHaveBeenCalledWith({
         type: 'CHARACTER_CONCEPT_CREATED',
         payload: expect.objectContaining({
           conceptId: mockStoredConcept.id,
+          concept: expect.any(String),
+          autoSaved: true,
         }),
       });
 
@@ -189,13 +200,13 @@ describe('Character Builder Workflow Integration', () => {
 
       // Assert - Step 2
       expect(generatedDirections).toEqual(mockGeneratedDirections);
-      expect(mockDatabase.retrieveConcept).toHaveBeenCalledWith(createdConcept.id);
+      expect(mockDatabase.getCharacterConcept).toHaveBeenCalledWith(createdConcept.id);
       expect(mockDirectionGenerator.generateDirections).toHaveBeenCalledWith(
         createdConcept.id,
-        expect.stringContaining('Elara Nightwhisper')
+        expect.stringContaining('Elara Nightwhisper'),
+        expect.objectContaining({})  // options parameter
       );
-      expect(mockDatabase.storeDirections).toHaveBeenCalledWith(
-        createdConcept.id,
+      expect(mockDatabase.saveThematicDirections).toHaveBeenCalledWith(
         mockGeneratedDirections
       );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith({
@@ -232,17 +243,15 @@ describe('Character Builder Workflow Integration', () => {
 
     test('should handle workflow with custom LLM configuration', async () => {
       // Arrange
-      const conceptData = {
-        name: 'Thorgar Ironbeard',
-        description: 'A dwarven blacksmith with dreams of adventure',
-        background: 'Guild Artisan',
-        personality: 'Practical but adventurous',
-      };
+      const conceptText = 'Thorgar Ironbeard, a dwarven blacksmith with dreams of adventure. Background: Guild Artisan. Personality: Practical but adventurous.';
 
       const customLlmConfigId = 'custom-character-config';
       const mockStoredConcept = {
         id: 'concept-thorgar-456',
-        ...conceptData,
+        concept: conceptText,
+        status: 'draft',
+        thematicDirections: [],
+        metadata: {},
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -268,13 +277,13 @@ describe('Character Builder Workflow Integration', () => {
       ];
 
       // Setup mocks
-      mockDatabase.storeConcept.mockResolvedValue(mockStoredConcept);
-      mockDatabase.retrieveConcept.mockResolvedValue(mockStoredConcept);
+      mockDatabase.saveCharacterConcept.mockResolvedValue(mockStoredConcept);
+      mockDatabase.getCharacterConcept.mockResolvedValue(mockStoredConcept);
       mockDirectionGenerator.generateDirections.mockResolvedValue(mockGeneratedDirections);
-      mockDatabase.storeDirections.mockResolvedValue(mockGeneratedDirections);
+      mockDatabase.saveThematicDirections.mockResolvedValue(mockGeneratedDirections);
 
       // Act
-      const createdConcept = await characterBuilderService.createCharacterConcept(conceptData);
+      const createdConcept = await characterBuilderService.createCharacterConcept(conceptText);
       const generatedDirections = await characterBuilderService.generateThematicDirections(
         createdConcept.id,
         { llmConfigId: customLlmConfigId }
@@ -291,27 +300,27 @@ describe('Character Builder Workflow Integration', () => {
 
     test('should handle workflow errors gracefully', async () => {
       // Arrange
-      const conceptData = {
-        name: 'Test Character',
-        description: 'A test character for error handling',
-      };
+      const conceptText = 'Test Character, a test character for error handling.';
 
       const mockStoredConcept = {
         id: 'concept-error-test',
-        ...conceptData,
+        concept: conceptText,
+        status: 'draft',
+        thematicDirections: [],
+        metadata: {},
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
       // Setup mocks - concept creation succeeds, but direction generation fails
-      mockDatabase.storeConcept.mockResolvedValue(mockStoredConcept);
-      mockDatabase.retrieveConcept.mockResolvedValue(mockStoredConcept);
+      mockDatabase.saveCharacterConcept.mockResolvedValue(mockStoredConcept);
+      mockDatabase.getCharacterConcept.mockResolvedValue(mockStoredConcept);
       mockDirectionGenerator.generateDirections.mockRejectedValue(
         new Error('LLM service temporarily unavailable')
       );
 
       // Act & Assert
-      const createdConcept = await characterBuilderService.createCharacterConcept(conceptData);
+      const createdConcept = await characterBuilderService.createCharacterConcept(conceptText);
       expect(createdConcept).toEqual(mockStoredConcept);
 
       await expect(
@@ -325,17 +334,14 @@ describe('Character Builder Workflow Integration', () => {
 
     test('should handle database connection errors', async () => {
       // Arrange
-      const conceptData = {
-        name: 'Test Character',
-        description: 'A test character for database error handling',
-      };
+      const conceptText = 'Test Character, a test character for database error handling.';
 
       // Setup mock - database operation fails
-      mockDatabase.storeConcept.mockRejectedValue(new Error('Database connection failed'));
+      mockDatabase.saveCharacterConcept.mockRejectedValue(new Error('Database connection failed'));
 
       // Act & Assert
       await expect(
-        characterBuilderService.createCharacterConcept(conceptData)
+        characterBuilderService.createCharacterConcept(conceptText)
       ).rejects.toThrow('Database connection failed');
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -346,10 +352,7 @@ describe('Character Builder Workflow Integration', () => {
 
     test('should handle validation errors in workflow', async () => {
       // Arrange
-      const invalidConceptData = {
-        name: '', // Invalid - empty name
-        description: 'A test character with invalid data',
-      };
+      const invalidConceptText = ''; // Invalid - empty string
 
       // Setup mock - validation fails
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
@@ -357,14 +360,19 @@ describe('Character Builder Workflow Integration', () => {
 
       // Act & Assert
       await expect(
-        characterBuilderService.createCharacterConcept(invalidConceptData)
-      ).rejects.toThrow();
+        characterBuilderService.createCharacterConcept(invalidConceptText)
+      ).rejects.toThrow('concept must be a non-empty string');
 
-      expect(mockDatabase.storeConcept).not.toHaveBeenCalled();
+      expect(mockDatabase.saveCharacterConcept).not.toHaveBeenCalled();
     });
   });
 
   describe('Character Concept Management Workflow', () => {
+    beforeEach(async () => {
+      // Initialize the character builder service
+      await characterBuilderService.initialize();
+    });
+
     test('should successfully list and delete character concepts', async () => {
       // Arrange
       const mockConcepts = [
@@ -382,22 +390,22 @@ describe('Character Builder Workflow Integration', () => {
         },
       ];
 
-      mockDatabase.listConcepts.mockResolvedValue(mockConcepts);
-      mockDatabase.deleteConcept.mockResolvedValue(true);
+      mockDatabase.getAllCharacterConcepts.mockResolvedValue(mockConcepts);
+      mockDatabase.deleteCharacterConcept.mockResolvedValue(true);
 
       // Act - List concepts
       const listedConcepts = await characterBuilderService.listCharacterConcepts();
 
       // Assert - List operation
       expect(listedConcepts).toEqual(mockConcepts);
-      expect(mockDatabase.listConcepts).toHaveBeenCalled();
+      expect(mockDatabase.getAllCharacterConcepts).toHaveBeenCalled();
 
       // Act - Delete concept
       const deletionResult = await characterBuilderService.deleteCharacterConcept('concept-1');
 
       // Assert - Delete operation
       expect(deletionResult).toBe(true);
-      expect(mockDatabase.deleteConcept).toHaveBeenCalledWith('concept-1');
+      expect(mockDatabase.deleteCharacterConcept).toHaveBeenCalledWith('concept-1');
       expect(mockEventBus.dispatch).toHaveBeenCalledWith({
         type: 'CHARACTER_CONCEPT_DELETED',
         payload: expect.objectContaining({
@@ -408,7 +416,7 @@ describe('Character Builder Workflow Integration', () => {
 
     test('should handle non-existent concept deletion gracefully', async () => {
       // Arrange
-      mockDatabase.deleteConcept.mockResolvedValue(false);
+      mockDatabase.deleteCharacterConcept.mockResolvedValue(false);
 
       // Act
       const deletionResult = await characterBuilderService.deleteCharacterConcept('non-existent');
@@ -422,16 +430,21 @@ describe('Character Builder Workflow Integration', () => {
   });
 
   describe('Event System Integration', () => {
+    beforeEach(async () => {
+      // Initialize the character builder service
+      await characterBuilderService.initialize();
+    });
+
     test('should dispatch all expected events during complete workflow', async () => {
       // Arrange
-      const conceptData = {
-        name: 'Event Test Character',
-        description: 'Character for testing event system integration',
-      };
+      const conceptText = 'Event Test Character, a character for testing event system integration.';
 
       const mockStoredConcept = {
         id: 'concept-events-test',
-        ...conceptData,
+        concept: conceptText,
+        status: 'draft',
+        thematicDirections: [],
+        metadata: {},
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -451,13 +464,14 @@ describe('Character Builder Workflow Integration', () => {
         },
       ];
 
-      mockDatabase.storeConcept.mockResolvedValue(mockStoredConcept);
-      mockDatabase.retrieveConcept.mockResolvedValue(mockStoredConcept);
+      mockDatabase.saveCharacterConcept.mockResolvedValue(mockStoredConcept);
+      mockDatabase.getCharacterConcept.mockResolvedValue(mockStoredConcept);
       mockDirectionGenerator.generateDirections.mockResolvedValue(mockGeneratedDirections);
-      mockDatabase.storeDirections.mockResolvedValue(mockGeneratedDirections);
+      mockDatabase.saveThematicDirections.mockResolvedValue(mockGeneratedDirections);
+      mockDatabase.deleteCharacterConcept.mockResolvedValue(true);
 
       // Act
-      const createdConcept = await characterBuilderService.createCharacterConcept(conceptData);
+      const createdConcept = await characterBuilderService.createCharacterConcept(conceptText);
       await characterBuilderService.generateThematicDirections(createdConcept.id);
       await characterBuilderService.deleteCharacterConcept(createdConcept.id);
 
@@ -466,7 +480,8 @@ describe('Character Builder Workflow Integration', () => {
         type: 'CHARACTER_CONCEPT_CREATED',
         payload: expect.objectContaining({
           conceptId: mockStoredConcept.id,
-          conceptName: conceptData.name,
+          concept: expect.any(String),
+          autoSaved: true,
         }),
       });
 
