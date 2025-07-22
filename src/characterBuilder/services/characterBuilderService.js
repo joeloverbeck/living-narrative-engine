@@ -122,7 +122,11 @@ export class CharacterBuilderService {
   async createCharacterConcept(concept, options = {}) {
     const { autoSave = true } = options;
 
-    if (!concept || typeof concept !== 'string' || concept.trim().length === 0) {
+    if (
+      !concept ||
+      typeof concept !== 'string' ||
+      concept.trim().length === 0
+    ) {
       throw new CharacterBuilderError('concept must be a non-empty string');
     }
 
@@ -139,7 +143,8 @@ export class CharacterBuilderService {
           `CharacterBuilderService: Created character concept ${characterConcept.id}`,
           {
             conceptId: characterConcept.id,
-            concept: concept.substring(0, 50) + (concept.length > 50 ? '...' : ''),
+            concept:
+              concept.substring(0, 50) + (concept.length > 50 ? '...' : ''),
             autoSave,
             attempt: attempt + 1,
           }
@@ -148,7 +153,8 @@ export class CharacterBuilderService {
         // Save if requested
         let savedConcept = characterConcept;
         if (autoSave) {
-          savedConcept = await this.#storageService.storeCharacterConcept(characterConcept);
+          savedConcept =
+            await this.#storageService.storeCharacterConcept(characterConcept);
         }
 
         // Dispatch success event
@@ -156,7 +162,8 @@ export class CharacterBuilderService {
           type: CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED,
           payload: {
             conceptId: savedConcept.id,
-            concept: concept.substring(0, 100) + (concept.length > 100 ? '...' : ''),
+            concept:
+              concept.substring(0, 100) + (concept.length > 100 ? '...' : ''),
             autoSaved: autoSave,
           },
         });
@@ -165,20 +172,23 @@ export class CharacterBuilderService {
       } catch (error) {
         attempt++;
         lastError = error;
-        
+
         this.#logger.warn(
           `CharacterBuilderService: Attempt ${attempt} failed for concept creation: ${error.message}`,
           { attempt, error }
         );
 
         // If it's the last attempt or a validation error, don't retry
-        if (attempt >= maxRetries || error.name === 'CharacterConceptValidationError') {
+        if (
+          attempt >= maxRetries ||
+          error.name === 'CharacterConceptValidationError'
+        ) {
           break;
         }
 
         // Wait before retrying (exponential backoff)
         const backoffTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-        await new Promise(resolve => setTimeout(resolve, backoffTime));
+        await new Promise((resolve) => setTimeout(resolve, backoffTime));
       }
     }
 
@@ -191,7 +201,8 @@ export class CharacterBuilderService {
       payload: {
         error: message,
         operation: 'createCharacterConcept',
-        concept: concept.substring(0, 100) + (concept.length > 100 ? '...' : ''),
+        concept:
+          concept.substring(0, 100) + (concept.length > 100 ? '...' : ''),
         attempts: maxRetries,
         finalError: lastError.message,
       },
@@ -225,7 +236,7 @@ export class CharacterBuilderService {
     // Circuit breaker pattern for repeated failures
     const circuitBreakerKey = `directions_${conceptId}`;
     const failureCount = this.#getCircuitBreakerCount(circuitBreakerKey);
-    
+
     if (failureCount >= 5) {
       const cooldownPeriod = 5 * 60 * 1000; // 5 minutes
       const lastFailureTime = this.#getLastFailureTime(circuitBreakerKey);
@@ -252,7 +263,9 @@ export class CharacterBuilderService {
           `CharacterBuilderService: Starting thematic direction generation for concept ${conceptId}`,
           {
             conceptId,
-            concept: concept.concept.substring(0, 50) + (concept.concept.length > 50 ? '...' : ''),
+            concept:
+              concept.concept.substring(0, 50) +
+              (concept.concept.length > 50 ? '...' : ''),
             llmConfigId,
             attempt: attempt + 1,
           }
@@ -269,17 +282,29 @@ export class CharacterBuilderService {
             characterDescription,
             { llmConfigId }
           ),
-          this.#createTimeoutPromise(generationTimeout, 'LLM generation timeout')
+          this.#createTimeoutPromise(
+            generationTimeout,
+            'LLM generation timeout'
+          ),
         ]);
 
-        if (!thematicDirections || !Array.isArray(thematicDirections) || thematicDirections.length === 0) {
-          throw new CharacterBuilderError('Generated directions are empty or invalid');
+        if (
+          !thematicDirections ||
+          !Array.isArray(thematicDirections) ||
+          thematicDirections.length === 0
+        ) {
+          throw new CharacterBuilderError(
+            'Generated directions are empty or invalid'
+          );
         }
 
         // Save the directions if requested
         let savedDirections = thematicDirections;
         if (autoSave) {
-          savedDirections = await this.#storageService.storeThematicDirections(conceptId, thematicDirections);
+          savedDirections = await this.#storageService.storeThematicDirections(
+            conceptId,
+            thematicDirections
+          );
         }
 
         this.#logger.info(
@@ -308,7 +333,7 @@ export class CharacterBuilderService {
       } catch (error) {
         attempt++;
         lastError = error;
-        
+
         this.#logger.warn(
           `CharacterBuilderService: Attempt ${attempt} failed for directions generation: ${error.message}`,
           { conceptId, attempt, error }
@@ -321,17 +346,21 @@ export class CharacterBuilderService {
         const nonRetryableErrors = [
           'CharacterConceptValidationError',
           'ThematicDirectionValidationError',
-          'Character concept not found'
+          'Character concept not found',
         ];
 
-        if (attempt >= maxRetries || 
-            nonRetryableErrors.some(errorType => error.message.includes(errorType))) {
+        if (
+          attempt >= maxRetries ||
+          nonRetryableErrors.some((errorType) =>
+            error.message.includes(errorType)
+          )
+        ) {
           break;
         }
 
         // Wait before retrying (exponential backoff)
         const backoffTime = Math.min(2000 * Math.pow(2, attempt - 1), 10000);
-        await new Promise(resolve => setTimeout(resolve, backoffTime));
+        await new Promise((resolve) => setTimeout(resolve, backoffTime));
       }
     }
 
@@ -419,7 +448,8 @@ export class CharacterBuilderService {
     }
 
     try {
-      const directions = await this.#storageService.getThematicDirections(conceptId);
+      const directions =
+        await this.#storageService.getThematicDirections(conceptId);
       this.#logger.debug(
         `CharacterBuilderService: Retrieved ${directions.length} thematic directions for concept ${conceptId}`
       );
@@ -601,7 +631,10 @@ export class CharacterBuilderService {
    * @private
    */
   #incrementCircuitBreaker(key) {
-    const breaker = this.#circuitBreakers.get(key) || { failures: 0, lastFailureTime: 0 };
+    const breaker = this.#circuitBreakers.get(key) || {
+      failures: 0,
+      lastFailureTime: 0,
+    };
     breaker.failures += 1;
     breaker.lastFailureTime = Date.now();
     this.#circuitBreakers.set(key, breaker);
@@ -620,6 +653,8 @@ export class CharacterBuilderService {
    */
   #resetCircuitBreaker(key) {
     this.#circuitBreakers.delete(key);
-    this.#logger.debug(`CharacterBuilderService: Circuit breaker reset for ${key}`);
+    this.#logger.debug(
+      `CharacterBuilderService: Circuit breaker reset for ${key}`
+    );
   }
 }

@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "intimacy:event-is-action-nibble-lower-lip",
+  "description": "Checks if the event is the nibble_lower_lip action",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "intimacy:nibble_lower_lip"]
+  }
+}

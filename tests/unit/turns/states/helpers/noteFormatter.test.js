@@ -17,7 +17,6 @@ describe('formatNotesForDisplay', () => {
     });
   });
 
-
   describe('array notes', () => {
     it('should format array of object notes with all fields', () => {
       const notes = [
@@ -64,7 +63,6 @@ describe('formatNotesForDisplay', () => {
       const result = formatNotesForDisplay(notes);
       expect(result).toBe('Subject: Valid note');
     });
-
   });
 
   describe('single object note', () => {

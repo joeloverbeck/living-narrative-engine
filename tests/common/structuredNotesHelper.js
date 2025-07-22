@@ -14,11 +14,11 @@ import { v4 as uuid } from 'uuid';
  */
 const VALID_SUBJECT_TYPES = [
   'character',
-  'location', 
+  'location',
   'object',
   'event',
   'concept',
-  'other'
+  'other',
 ];
 
 /**
@@ -36,7 +36,7 @@ const VALID_SUBJECT_TYPES = [
  * @example
  * const note = createValidNote(
  *   'Player is acting suspicious',
- *   'player-001', 
+ *   'player-001',
  *   'character',
  *   { context: 'dialogue', tags: ['behavior', 'suspicion'] }
  * );
@@ -46,38 +46,40 @@ export function createValidNote(text, subject, subjectType, options = {}) {
   if (!text || typeof text !== 'string' || text.length < 1) {
     throw new Error('Note text must be a non-empty string');
   }
-  
+
   if (!subject || typeof subject !== 'string') {
     throw new Error('Note subject must be a non-empty string');
   }
-  
+
   if (!subjectType || typeof subjectType !== 'string') {
     throw new Error('Note subjectType must be a non-empty string');
   }
-  
+
   if (!VALID_SUBJECT_TYPES.includes(subjectType)) {
-    throw new Error(`Invalid subjectType: ${subjectType}. Must be one of: ${VALID_SUBJECT_TYPES.join(', ')}`);
+    throw new Error(
+      `Invalid subjectType: ${subjectType}. Must be one of: ${VALID_SUBJECT_TYPES.join(', ')}`
+    );
   }
-  
+
   const note = {
     text,
     subject,
-    subjectType
+    subjectType,
   };
-  
+
   // Add optional fields if provided
   if (options.context && typeof options.context === 'string') {
     note.context = options.context;
   }
-  
+
   if (options.tags && Array.isArray(options.tags)) {
     note.tags = options.tags;
   }
-  
+
   if (options.timestamp && typeof options.timestamp === 'string') {
     note.timestamp = options.timestamp;
   }
-  
+
   return note;
 }
 
@@ -96,11 +98,13 @@ export function createMinimalNote(text, subjectType = 'other', subject = null) {
   if (!text || typeof text !== 'string' || text.length < 1) {
     throw new Error('Note text must be a non-empty string');
   }
-  
+
   if (!VALID_SUBJECT_TYPES.includes(subjectType)) {
-    throw new Error(`Invalid subjectType: ${subjectType}. Must be one of: ${VALID_SUBJECT_TYPES.join(', ')}`);
+    throw new Error(
+      `Invalid subjectType: ${subjectType}. Must be one of: ${VALID_SUBJECT_TYPES.join(', ')}`
+    );
   }
-  
+
   return createValidNote(
     text,
     subject || `test-subject-${uuid().slice(0, 8)}`,
@@ -131,23 +135,25 @@ export function createNotesArray(count = 1, template = {}) {
     textPrefix = 'Test note',
     subjectPrefix = 'test-subject',
     subjectType = 'other',
-    options = {}
+    options = {},
   } = template;
-  
+
   if (typeof count !== 'number' || count < 1) {
     throw new Error('Count must be a positive number');
   }
-  
+
   const notes = [];
   for (let i = 1; i <= count; i++) {
-    notes.push(createValidNote(
-      `${textPrefix} ${i}`,
-      `${subjectPrefix}-${i}`,
-      subjectType,
-      options
-    ));
+    notes.push(
+      createValidNote(
+        `${textPrefix} ${i}`,
+        `${subjectPrefix}-${i}`,
+        subjectType,
+        options
+      )
+    );
   }
-  
+
   return notes;
 }
 
@@ -167,9 +173,9 @@ export const NOTE_TEMPLATES = {
   characterObservation: (characterId, observation) =>
     createValidNote(observation, characterId, 'character', {
       context: 'character observation',
-      tags: ['behavior', 'observation']
+      tags: ['behavior', 'observation'],
     }),
-  
+
   /**
    * Creates a location description note
    *
@@ -180,9 +186,9 @@ export const NOTE_TEMPLATES = {
   locationDescription: (locationId, description) =>
     createValidNote(description, locationId, 'location', {
       context: 'environmental description',
-      tags: ['description', 'environment']
+      tags: ['description', 'environment'],
     }),
-  
+
   /**
    * Creates an event note
    *
@@ -191,12 +197,17 @@ export const NOTE_TEMPLATES = {
    * @returns {object} Structured note for event documentation
    */
   eventNote: (eventDescription, eventId = null) =>
-    createValidNote(eventDescription, eventId || `event-${uuid().slice(0, 8)}`, 'event', {
-      context: 'event documentation',
-      tags: ['event', 'timeline'],
-      timestamp: new Date().toISOString()
-    }),
-  
+    createValidNote(
+      eventDescription,
+      eventId || `event-${uuid().slice(0, 8)}`,
+      'event',
+      {
+        context: 'event documentation',
+        tags: ['event', 'timeline'],
+        timestamp: new Date().toISOString(),
+      }
+    ),
+
   /**
    * Creates a dialogue note
    *
@@ -207,8 +218,8 @@ export const NOTE_TEMPLATES = {
   dialogueNote: (speakerId, dialogueContext) =>
     createValidNote(dialogueContext, speakerId, 'character', {
       context: 'dialogue interaction',
-      tags: ['dialogue', 'speech']
-    })
+      tags: ['dialogue', 'speech'],
+    }),
 };
 
 /**
@@ -224,37 +235,37 @@ export function isValidStructuredNote(note) {
   if (!note || typeof note !== 'object') {
     return false;
   }
-  
+
   // Check required fields
   if (!note.text || typeof note.text !== 'string' || note.text.length < 1) {
     return false;
   }
-  
+
   if (!note.subject || typeof note.subject !== 'string') {
     return false;
   }
-  
+
   if (!note.subjectType || typeof note.subjectType !== 'string') {
     return false;
   }
-  
+
   if (!VALID_SUBJECT_TYPES.includes(note.subjectType)) {
     return false;
   }
-  
+
   // Check optional fields if present
   if (note.context && typeof note.context !== 'string') {
     return false;
   }
-  
+
   if (note.tags && !Array.isArray(note.tags)) {
     return false;
   }
-  
+
   if (note.timestamp && typeof note.timestamp !== 'string') {
     return false;
   }
-  
+
   return true;
 }
 

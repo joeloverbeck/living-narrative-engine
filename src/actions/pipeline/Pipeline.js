@@ -38,10 +38,34 @@ export class Pipeline {
    * @param {import('../../entities/entity.js').default} initialContext.actor - The actor entity
    * @param {import('../actionTypes.js').ActionContext} initialContext.actionContext - The action context
    * @param {import('../../interfaces/IGameDataRepository.js').ActionDefinition[]} initialContext.candidateActions - Candidate actions
-   * @param {TraceContext} [initialContext.trace] - Optional trace context
+   * @param {TraceContext|import('../tracing/structuredTrace.js').StructuredTrace} [initialContext.trace] - Optional trace context
    * @returns {Promise<PipelineResult>} The final result after all stages
    */
   async execute(initialContext) {
+    const { trace } = initialContext;
+
+    // If structured trace, wrap entire pipeline
+    if (trace?.withSpanAsync) {
+      return trace.withSpanAsync(
+        'Pipeline',
+        async () => {
+          return this.#executePipeline(initialContext);
+        },
+        { stageCount: this.#stages.length }
+      );
+    }
+
+    return this.#executePipeline(initialContext);
+  }
+
+  /**
+   * Internal pipeline execution logic
+   *
+   * @private
+   * @param {object} initialContext - Initial context for the pipeline
+   * @returns {Promise<PipelineResult>} The final result after all stages
+   */
+  async #executePipeline(initialContext) {
     const source = 'Pipeline.execute';
     const { trace } = initialContext;
 

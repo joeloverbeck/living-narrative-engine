@@ -181,7 +181,6 @@ class CharacterBuilderApp {
     }
   }
 
-
   /**
    * Show initialization error to user
    *

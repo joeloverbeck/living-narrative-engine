@@ -104,7 +104,6 @@ describe('Schema – core:action_decided payload', () => {
     expect(validate(payload)).toBe(true);
   });
 
-
   test('✓ should validate object notes without optional fields', () => {
     const payload = {
       actorId: 'player-1',

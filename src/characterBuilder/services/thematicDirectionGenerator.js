@@ -194,7 +194,8 @@ export class ThematicDirectionGenerator {
       }
 
       // Create enhanced config with thematic directions schema
-      const enhancedLlmConfig = createThematicDirectionsLlmConfig(baseLlmConfig);
+      const enhancedLlmConfig =
+        createThematicDirectionsLlmConfig(baseLlmConfig);
 
       // Create LLM strategy with enhanced config
       const strategy = this.#llmStrategyFactory.getStrategy(enhancedLlmConfig);

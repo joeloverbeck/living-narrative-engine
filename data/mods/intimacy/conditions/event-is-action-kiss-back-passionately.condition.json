@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "intimacy:event-is-action-kiss-back-passionately",
+  "description": "Checks if event is kiss back passionately action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "intimacy:kiss_back_passionately"
+    ]
+  }
+}

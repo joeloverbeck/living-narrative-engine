@@ -3,7 +3,14 @@
  * @description Tests the interaction between storage services, database, and validation
  */
 
-import { jest, describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import {
+  jest,
+  describe,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+} from '@jest/globals';
 import { CharacterStorageService } from '../../../src/characterBuilder/services/characterStorageService.js';
 import { CharacterDatabase } from '../../../src/characterBuilder/storage/characterDatabase.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
@@ -52,7 +59,7 @@ describe('Character Builder Storage Integration', () => {
       database: mockDatabase,
       schemaValidator: mockSchemaValidator,
     });
-    
+
     // The database initialization should succeed in setup
     mockDatabase.initialize.mockResolvedValue();
   });
@@ -70,7 +77,8 @@ describe('Character Builder Storage Integration', () => {
       // Arrange
       const conceptData = {
         name: 'Alaric Thornfield',
-        description: 'A weathered knight with a noble heart, seeking redemption for past mistakes. His armor bears the scars of countless battles, and his eyes hold the wisdom of hard-won experience.',
+        description:
+          'A weathered knight with a noble heart, seeking redemption for past mistakes. His armor bears the scars of countless battles, and his eyes hold the wisdom of hard-won experience.',
         background: 'Soldier',
         personality: 'Honorable but haunted by past failures',
       };
@@ -84,7 +92,9 @@ describe('Character Builder Storage Integration', () => {
 
       // Setup mocks
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
-      mockDatabase.saveCharacterConcept.mockResolvedValue(expectedStoredConcept);
+      mockDatabase.saveCharacterConcept.mockResolvedValue(
+        expectedStoredConcept
+      );
 
       // Act
       const result = await storageService.storeCharacterConcept(conceptData);
@@ -112,7 +122,7 @@ describe('Character Builder Storage Integration', () => {
         expect.stringContaining('Successfully stored character concept'),
         expect.objectContaining({
           conceptId: undefined, // conceptData doesn't have an id yet
-          attempt: 1
+          attempt: 1,
         })
       );
     });
@@ -126,12 +136,16 @@ describe('Character Builder Storage Integration', () => {
 
       // Setup validation to fail
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
-      mockSchemaValidator.formatAjvErrors.mockReturnValue('Name is required and cannot be empty');
+      mockSchemaValidator.formatAjvErrors.mockReturnValue(
+        'Name is required and cannot be empty'
+      );
 
       // Act & Assert
       await expect(
         storageService.storeCharacterConcept(invalidConceptData)
-      ).rejects.toThrow('Character concept validation failed: Name is required and cannot be empty');
+      ).rejects.toThrow(
+        'Character concept validation failed: Name is required and cannot be empty'
+      );
 
       // Verify database was not called
       expect(mockDatabase.saveCharacterConcept).not.toHaveBeenCalled();
@@ -152,7 +166,9 @@ describe('Character Builder Storage Integration', () => {
 
       // Setup validation to pass but database to fail
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
-      mockDatabase.saveCharacterConcept.mockRejectedValue(new Error('Database connection failed'));
+      mockDatabase.saveCharacterConcept.mockRejectedValue(
+        new Error('Database connection failed')
+      );
 
       // Act & Assert
       await expect(
@@ -227,7 +243,8 @@ describe('Character Builder Storage Integration', () => {
           description: 'A character thrust into leadership against their will',
           coreTension: 'Personal desires vs. responsibility to others',
           uniqueTwist: 'Their reluctance actually makes them a better leader',
-          narrativePotential: 'Stories of growth, sacrifice, and learning to inspire others',
+          narrativePotential:
+            'Stories of growth, sacrifice, and learning to inspire others',
           llmMetadata: {
             modelId: 'openrouter-claude-sonnet-4',
             promptTokens: 180,
@@ -241,7 +258,8 @@ describe('Character Builder Storage Integration', () => {
           id: 'direction-2',
           conceptId,
           title: 'The Hidden Protector',
-          description: 'A character who secretly protects others from the shadows',
+          description:
+            'A character who secretly protects others from the shadows',
           coreTension: 'The need for secrecy vs. desire for recognition',
           uniqueTwist: 'Their anonymity is their greatest weapon',
           narrativePotential: 'Mystery stories with themes of selfless service',
@@ -261,7 +279,10 @@ describe('Character Builder Storage Integration', () => {
       mockDatabase.saveThematicDirections.mockResolvedValue(directionsData);
 
       // Act
-      const result = await storageService.storeThematicDirections(conceptId, directionsData);
+      const result = await storageService.storeThematicDirections(
+        conceptId,
+        directionsData
+      );
 
       // Assert - Validation integration
       expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledWith(
@@ -274,7 +295,9 @@ describe('Character Builder Storage Integration', () => {
       );
 
       // Assert - Database integration
-      expect(mockDatabase.saveThematicDirections).toHaveBeenCalledWith(directionsData);
+      expect(mockDatabase.saveThematicDirections).toHaveBeenCalledWith(
+        directionsData
+      );
 
       // Assert - Result
       expect(result).toEqual(directionsData);
@@ -308,7 +331,9 @@ describe('Character Builder Storage Integration', () => {
       // Act & Assert
       await expect(
         storageService.storeThematicDirections(conceptId, invalidDirectionsData)
-      ).rejects.toThrow('Thematic direction validation failed: Title is required');
+      ).rejects.toThrow(
+        'Thematic direction validation failed: Title is required'
+      );
 
       // Verify database was not called
       expect(mockDatabase.saveThematicDirections).not.toHaveBeenCalled();
@@ -345,14 +370,18 @@ describe('Character Builder Storage Integration', () => {
       ];
 
       // Setup database mock
-      mockDatabase.getThematicDirectionsByConceptId.mockResolvedValue(storedDirections);
+      mockDatabase.getThematicDirectionsByConceptId.mockResolvedValue(
+        storedDirections
+      );
 
       // Act
       const result = await storageService.getThematicDirections(conceptId);
 
       // Assert
       expect(result).toEqual(storedDirections);
-      expect(mockDatabase.getThematicDirectionsByConceptId).toHaveBeenCalledWith(conceptId);
+      expect(
+        mockDatabase.getThematicDirectionsByConceptId
+      ).toHaveBeenCalledWith(conceptId);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Retrieved thematic directions'),
         expect.objectContaining({
@@ -437,7 +466,9 @@ describe('Character Builder Storage Integration', () => {
 
       // Assert
       expect(result).toBe(true);
-      expect(mockDatabase.deleteCharacterConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockDatabase.deleteCharacterConcept).toHaveBeenCalledWith(
+        conceptId
+      );
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Successfully deleted character concept'),
         expect.objectContaining({ conceptId })
@@ -475,15 +506,15 @@ describe('Character Builder Storage Integration', () => {
       });
 
       // Act & Assert - The service will fail during initialization
-      await expect(
-        testStorageService.initialize()
-      ).rejects.toThrow('Failed to initialize character storage: Database initialization failed');
+      await expect(testStorageService.initialize()).rejects.toThrow(
+        'Failed to initialize character storage: Database initialization failed'
+      );
 
       // Since initialization failed, trying to store will also fail
       await expect(
         testStorageService.storeCharacterConcept({
           name: 'Test',
-          description: 'Test character'
+          description: 'Test character',
         })
       ).rejects.toThrow('CharacterStorageService not initialized');
     });
@@ -491,7 +522,7 @@ describe('Character Builder Storage Integration', () => {
     test('should handle schema validation service errors', async () => {
       // Initialize the service first
       await storageService.initialize();
-      
+
       // Arrange
       const conceptData = {
         name: 'Test Character',
@@ -515,11 +546,20 @@ describe('Character Builder Storage Integration', () => {
     test('should handle concurrent storage operations', async () => {
       // Initialize the service first
       await storageService.initialize();
-      
+
       // Arrange
-      const conceptData1 = { name: 'Hero 1', description: 'First concurrent concept' };
-      const conceptData2 = { name: 'Hero 2', description: 'Second concurrent concept' };
-      const conceptData3 = { name: 'Hero 3', description: 'Third concurrent concept' };
+      const conceptData1 = {
+        name: 'Hero 1',
+        description: 'First concurrent concept',
+      };
+      const conceptData2 = {
+        name: 'Hero 2',
+        description: 'Second concurrent concept',
+      };
+      const conceptData3 = {
+        name: 'Hero 3',
+        description: 'Third concurrent concept',
+      };
 
       const storedConcept1 = { id: 'concept-1', ...conceptData1 };
       const storedConcept2 = { id: 'concept-2', ...conceptData2 };
@@ -598,7 +638,7 @@ describe('Character Builder Storage Integration', () => {
       const conceptIds = ['concept-1', 'concept-2', 'concept-3'];
       const directionsPerConcept = 10;
 
-      const allDirections = conceptIds.map(conceptId => 
+      const allDirections = conceptIds.map((conceptId) =>
         Array.from({ length: directionsPerConcept }, (_, index) => ({
           id: `${conceptId}-direction-${index + 1}`,
           conceptId,

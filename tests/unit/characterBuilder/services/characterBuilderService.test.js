@@ -2,7 +2,14 @@
  * @file Unit tests for CharacterBuilderService
  */
 
-import { jest, describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import {
+  jest,
+  describe,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+} from '@jest/globals';
 import { CharacterBuilderService } from '../../../../src/characterBuilder/services/characterBuilderService.js';
 
 /**
@@ -116,7 +123,8 @@ describe('CharacterBuilderService', () => {
 
   describe('createCharacterConcept', () => {
     test('should successfully create and store character concept', async () => {
-      const conceptText = 'Test Hero - A brave adventurer with a mysterious past. Noble background, courageous but impulsive.';
+      const conceptText =
+        'Test Hero - A brave adventurer with a mysterious past. Noble background, courageous but impulsive.';
 
       const mockStoredConcept = {
         id: 'generated-uuid-123',
@@ -125,14 +133,18 @@ describe('CharacterBuilderService', () => {
         updatedAt: new Date().toISOString(),
       };
 
-      mockStorageService.storeCharacterConcept.mockResolvedValue(mockStoredConcept);
+      mockStorageService.storeCharacterConcept.mockResolvedValue(
+        mockStoredConcept
+      );
 
       const result = await service.createCharacterConcept(conceptText);
 
       expect(result).toEqual(mockStoredConcept);
-      expect(mockStorageService.storeCharacterConcept).toHaveBeenCalledWith(expect.objectContaining({
-        concept: conceptText
-      }));
+      expect(mockStorageService.storeCharacterConcept).toHaveBeenCalledWith(
+        expect.objectContaining({
+          concept: conceptText,
+        })
+      );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith({
         type: 'CHARACTER_CONCEPT_CREATED',
         payload: expect.objectContaining({
@@ -157,7 +169,9 @@ describe('CharacterBuilderService', () => {
       const storageError = new Error('Storage unavailable');
       mockStorageService.storeCharacterConcept.mockRejectedValue(storageError);
 
-      await expect(service.createCharacterConcept(conceptText)).rejects.toThrow();
+      await expect(
+        service.createCharacterConcept(conceptText)
+      ).rejects.toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to create character concept'),
         expect.any(Object)
@@ -170,7 +184,8 @@ describe('CharacterBuilderService', () => {
       const conceptId = 'test-concept-123';
       const mockCharacterConcept = {
         id: conceptId,
-        concept: 'Test Hero - A brave adventurer with noble background and courageous personality',
+        concept:
+          'Test Hero - A brave adventurer with noble background and courageous personality',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -179,7 +194,7 @@ describe('CharacterBuilderService', () => {
         {
           id: 'direction-1',
           conceptId,
-          title: 'The Hero\'s Journey',
+          title: "The Hero's Journey",
           description: 'Classic heroic arc',
           coreTension: 'Duty vs. personal desires',
           uniqueTwist: 'Hidden nobility',
@@ -193,14 +208,22 @@ describe('CharacterBuilderService', () => {
         },
       ];
 
-      mockStorageService.getCharacterConcept.mockResolvedValue(mockCharacterConcept);
-      mockDirectionGenerator.generateDirections.mockResolvedValue(mockGeneratedDirections);
-      mockStorageService.storeThematicDirections.mockResolvedValue(mockGeneratedDirections);
+      mockStorageService.getCharacterConcept.mockResolvedValue(
+        mockCharacterConcept
+      );
+      mockDirectionGenerator.generateDirections.mockResolvedValue(
+        mockGeneratedDirections
+      );
+      mockStorageService.storeThematicDirections.mockResolvedValue(
+        mockGeneratedDirections
+      );
 
       const result = await service.generateThematicDirections(conceptId);
 
       expect(result).toEqual(mockGeneratedDirections);
-      expect(mockStorageService.getCharacterConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockStorageService.getCharacterConcept).toHaveBeenCalledWith(
+        conceptId
+      );
       expect(mockDirectionGenerator.generateDirections).toHaveBeenCalledWith(
         conceptId,
         mockCharacterConcept.concept,
@@ -223,7 +246,9 @@ describe('CharacterBuilderService', () => {
       const conceptId = 'non-existent-concept';
       mockStorageService.getCharacterConcept.mockResolvedValue(null);
 
-      await expect(service.generateThematicDirections(conceptId)).rejects.toThrow();
+      await expect(
+        service.generateThematicDirections(conceptId)
+      ).rejects.toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to generate thematic directions'),
         expect.any(Error)
@@ -240,10 +265,16 @@ describe('CharacterBuilderService', () => {
       };
 
       const generationError = new Error('LLM service unavailable');
-      mockStorageService.getCharacterConcept.mockResolvedValue(mockCharacterConcept);
-      mockDirectionGenerator.generateDirections.mockRejectedValue(generationError);
+      mockStorageService.getCharacterConcept.mockResolvedValue(
+        mockCharacterConcept
+      );
+      mockDirectionGenerator.generateDirections.mockRejectedValue(
+        generationError
+      );
 
-      await expect(service.generateThematicDirections(conceptId)).rejects.toThrow();
+      await expect(
+        service.generateThematicDirections(conceptId)
+      ).rejects.toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to generate thematic directions'),
         expect.any(Object)
@@ -268,11 +299,19 @@ describe('CharacterBuilderService', () => {
         },
       ];
 
-      mockStorageService.getCharacterConcept.mockResolvedValue(mockCharacterConcept);
-      mockDirectionGenerator.generateDirections.mockResolvedValue(mockDirections);
-      mockStorageService.storeThematicDirections.mockResolvedValue(mockDirections);
+      mockStorageService.getCharacterConcept.mockResolvedValue(
+        mockCharacterConcept
+      );
+      mockDirectionGenerator.generateDirections.mockResolvedValue(
+        mockDirections
+      );
+      mockStorageService.storeThematicDirections.mockResolvedValue(
+        mockDirections
+      );
 
-      await service.generateThematicDirections(conceptId, { llmConfigId: customLlmConfigId });
+      await service.generateThematicDirections(conceptId, {
+        llmConfigId: customLlmConfigId,
+      });
 
       expect(mockDirectionGenerator.generateDirections).toHaveBeenCalledWith(
         conceptId,
@@ -297,7 +336,9 @@ describe('CharacterBuilderService', () => {
       const result = await service.getCharacterConcept(conceptId);
 
       expect(result).toEqual(mockConcept);
-      expect(mockStorageService.getCharacterConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockStorageService.getCharacterConcept).toHaveBeenCalledWith(
+        conceptId
+      );
     });
 
     test('should return null if concept not found', async () => {
@@ -325,17 +366,21 @@ describe('CharacterBuilderService', () => {
         {
           id: 'direction-1',
           conceptId,
-          title: 'The Hero\'s Journey',
+          title: "The Hero's Journey",
           description: 'Classic heroic arc',
         },
       ];
 
-      mockStorageService.getThematicDirections.mockResolvedValue(mockDirections);
+      mockStorageService.getThematicDirections.mockResolvedValue(
+        mockDirections
+      );
 
       const result = await service.getThematicDirections(conceptId);
 
       expect(result).toEqual(mockDirections);
-      expect(mockStorageService.getThematicDirections).toHaveBeenCalledWith(conceptId);
+      expect(mockStorageService.getThematicDirections).toHaveBeenCalledWith(
+        conceptId
+      );
     });
 
     test('should return empty array if no directions found', async () => {
@@ -405,7 +450,9 @@ describe('CharacterBuilderService', () => {
       const result = await service.deleteCharacterConcept(conceptId);
 
       expect(result).toBe(true);
-      expect(mockStorageService.deleteCharacterConcept).toHaveBeenCalledWith(conceptId);
+      expect(mockStorageService.deleteCharacterConcept).toHaveBeenCalledWith(
+        conceptId
+      );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith({
         type: 'CHARACTER_CONCEPT_DELETED',
         payload: expect.objectContaining({ conceptId }),

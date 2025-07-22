@@ -4,10 +4,10 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import fs from 'fs';
 import path from 'path';
-import { 
-  createValidNote, 
-  createNotesArray, 
-  NOTE_TEMPLATES 
+import {
+  createValidNote,
+  createNotesArray,
+  NOTE_TEMPLATES,
 } from '../../common/structuredNotesHelper.js';
 
 describe('Entity Spoke Event - Schema Validation', () => {
@@ -21,9 +21,15 @@ describe('Entity Spoke Event - Schema Validation', () => {
     addFormats(ajv);
 
     // Load the common schema for structured note definition
-    const commonSchemaPath = path.join(process.cwd(), 'data/schemas/common.schema.json');
+    const commonSchemaPath = path.join(
+      process.cwd(),
+      'data/schemas/common.schema.json'
+    );
     const commonSchema = JSON.parse(fs.readFileSync(commonSchemaPath, 'utf8'));
-    ajv.addSchema(commonSchema, 'schema://living-narrative-engine/common.schema.json');
+    ajv.addSchema(
+      commonSchema,
+      'schema://living-narrative-engine/common.schema.json'
+    );
 
     // Load the actual event schema
     const eventSchemaPath = path.join(
@@ -66,7 +72,10 @@ describe('Entity Spoke Event - Schema Validation', () => {
         speechContent: 'Hello world',
         thoughts: 'Internal thoughts',
         notes: [
-          NOTE_TEMPLATES.characterObservation('Alice', 'Character observation text')
+          NOTE_TEMPLATES.characterObservation(
+            'Alice',
+            'Character observation text'
+          ),
         ],
       };
 
@@ -84,7 +93,7 @@ describe('Entity Spoke Event - Schema Validation', () => {
         thoughts: 'Internal thoughts',
         notes: [
           NOTE_TEMPLATES.characterObservation('Alice', 'First observation'),
-          NOTE_TEMPLATES.locationDescription('Tavern', 'Second observation')
+          NOTE_TEMPLATES.locationDescription('Tavern', 'Second observation'),
         ],
       };
 
@@ -104,7 +113,7 @@ describe('Entity Spoke Event - Schema Validation', () => {
             text: 'Minimal note',
             subject: 'someone',
             subjectType: 'other',
-          }
+          },
         ],
       };
 
@@ -118,8 +127,10 @@ describe('Entity Spoke Event - Schema Validation', () => {
     it('should validate with complex structured notes with all fields', () => {
       const payload = {
         entityId: 'p_erotica:amaia_castillo_instance',
-        speechContent: "Bonsoir. The view from here... quite stunning, n'est-ce pas?",
-        thoughts: 'There. A young man, lean muscle wrapped in casual indifference...',
+        speechContent:
+          "Bonsoir. The view from here... quite stunning, n'est-ce pas?",
+        thoughts:
+          'There. A young man, lean muscle wrapped in casual indifference...',
         notes: [
           {
             text: 'Young man positioned strategically near café tables, observing bay with confident posture',
@@ -161,7 +172,7 @@ describe('Entity Spoke Event - Schema Validation', () => {
             text: 'Some note',
             subject: 'test',
             subjectType: 'invalid_type', // Not in enum
-          }
+          },
         ],
       };
 
