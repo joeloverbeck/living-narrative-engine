@@ -78,7 +78,9 @@ export class TurnExecutionFacade {
    *
    * @param {object} [config] - Configuration for the test environment.
    * @param {string} [config.llmStrategy] - LLM strategy to use.
-   * @param {object} [config.actorConfig] - Configuration for test actors.
+   * @param {object} [config.llmConfig] - Additional LLM configuration.
+   * @param {object} [config.actorConfig] - Configuration for test actors (legacy).
+   * @param {Array<object>} [config.actors] - Array of actor configurations.
    * @param {object} [config.worldConfig] - Configuration for test world.
    * @param {boolean} [config.createConnections] - Whether to create connected locations.
    * @returns {Promise<object>} The initialized test environment.
@@ -86,7 +88,9 @@ export class TurnExecutionFacade {
   async initializeTestEnvironment(config = {}) {
     const {
       llmStrategy = 'tool-calling',
+      llmConfig = {},
       actorConfig = {},
+      actors = [],
       worldConfig = {},
       createConnections = false,
     } = config;
@@ -97,38 +101,71 @@ export class TurnExecutionFacade {
 
     try {
       // 1. Configure LLM strategy
-      await this.#llmService.configureLLMStrategy(llmStrategy);
+      await this.#llmService.configureLLMStrategy(llmStrategy, llmConfig);
 
       // 2. Create test world
       const world = await this.#entityService.createTestWorld({
         ...worldConfig,
-        createConnections,
+        createConnections: worldConfig.createConnections ?? createConnections,
       });
 
       // 3. Create test actors
-      const aiActorId = await this.#entityService.createTestActor({
-        name: 'AI Test Actor',
-        location: world.mainLocationId,
-        ...actorConfig,
-      });
+      const createdActors = {};
+      const actorIds = [];
 
-      const playerActorId = await this.#entityService.createTestActor({
-        name: 'Player Test Actor',
-        location: world.mainLocationId,
-        components: {
-          'core:actor': { type: 'player' },
-        },
-      });
+      // Handle new actors array format
+      if (actors.length > 0) {
+        for (const actorDef of actors) {
+          // Extract type to prevent it from being passed as entity definition type
+          const { type: actorType, ...restActorDef } = actorDef;
+          
+          const actorId = await this.#entityService.createTestActor({
+            name: actorDef.name || `Test ${actorType || 'AI'} Actor`,
+            location: actorDef.location || world.mainLocationId,
+            components: actorDef.components || {
+              'core:actor': { type: actorType || 'ai' },
+            },
+            ...restActorDef,
+          });
+          
+          createdActors[actorDef.id || actorId] = actorId;
+          actorIds.push(actorId);
+        }
+      } else {
+        // Legacy support - create default AI and player actors
+        const aiActorId = await this.#entityService.createTestActor({
+          name: 'AI Test Actor',
+          location: world.mainLocationId,
+          ...actorConfig,
+        });
+
+        const playerActorId = await this.#entityService.createTestActor({
+          name: 'Player Test Actor',
+          location: world.mainLocationId,
+          components: {
+            'core:actor': { type: 'player' },
+          },
+        });
+
+        createdActors.aiActorId = aiActorId;
+        createdActors.playerActorId = playerActorId;
+        actorIds.push(aiActorId, playerActorId);
+      }
 
       // 4. Set up basic test data
       const testEnvironment = {
         world,
-        actors: {
-          aiActorId,
-          playerActorId,
+        actors: createdActors,
+        actorIds,
+        // Legacy compatibility
+        aiActor: actors.length > 0 ? { id: actorIds[0] } : { id: createdActors.aiActorId },
+        context: {
+          world,
+          actors: createdActors,
         },
         config: {
           llmStrategy,
+          llmConfig,
           ...config,
         },
         initialized: Date.now(),
@@ -138,9 +175,9 @@ export class TurnExecutionFacade {
       this.#isInitialized = true;
 
       this.#logger.debug('TurnExecutionFacade: Test environment initialized', {
-        aiActorId,
-        playerActorId,
-        locationCount: world.locations.length,
+        actorCount: actorIds.length,
+        actors: createdActors,
+        locationCount: world.locations ? world.locations.length : 1,
       });
 
       return testEnvironment;
