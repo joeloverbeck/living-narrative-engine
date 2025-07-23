@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "intimacy:feel_arm_muscles",
+  "name": "Feel Arm Muscles",
+  "description": "Feel the hard swell of the target's muscular arms.",
+  "scope": "intimacy:actors_with_muscular_arms_facing_forward_or_behind_target",
+  "required_components": {
+    "actor": ["intimacy:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["intimacy:kissing"]
+  },
+  "template": "feel the hard swell of {target}'s muscles",
+  "prerequisites": []
+}

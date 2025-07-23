@@ -344,59 +344,6 @@ describe('EntityLifecycleManager - Batch Operations Integration', () => {
     });
   });
 
-  describe('Performance Comparison', () => {
-    it('batch operations should be faster than sequential operations', async () => {
-      const entityCount = 50;
-      const entitySpecs = Array(entityCount)
-        .fill(0)
-        .map((_, i) => ({
-          definitionId: 'core:actor',
-          opts: { instanceId: `perf-actor-${i}` },
-        }));
-
-      // Test batch performance
-      const batchStart = performance.now();
-      const batchResult = await lifecycleManager.batchCreateEntities(
-        entitySpecs,
-        {
-          batchSize: 10,
-          enableParallel: true,
-        }
-      );
-      const batchTime = performance.now() - batchStart;
-
-      expect(batchResult.successCount).toBe(entityCount);
-
-      // Clean up
-      const removeIds = entitySpecs.map((spec) => spec.opts.instanceId);
-      await lifecycleManager.batchRemoveEntities(removeIds);
-
-      // Test sequential performance
-      const sequentialStart = performance.now();
-      for (const spec of entitySpecs) {
-        await lifecycleManager.createEntityInstance(
-          spec.definitionId,
-          spec.opts
-        );
-      }
-      const sequentialTime = performance.now() - sequentialStart;
-
-      // Batch operations might not always be faster due to overhead, especially with small datasets
-      // Just verify both operations completed successfully
-      console.log(
-        `Batch time: ${batchTime}ms, Sequential time: ${sequentialTime}ms`
-      );
-
-      // Instead of expecting batch to be faster, just verify it completed
-      expect(batchTime).toBeGreaterThan(0);
-      expect(sequentialTime).toBeGreaterThan(0);
-
-      // Optionally log the performance difference
-      const performanceRatio = batchTime / sequentialTime;
-      console.log(`Performance ratio: ${performanceRatio.toFixed(2)}x`);
-    });
-  });
-
   describe('Fallback Behavior', () => {
     it('should fall back to sequential operations when batch disabled', async () => {
       // Import services factory

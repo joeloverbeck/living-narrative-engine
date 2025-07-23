@@ -479,7 +479,7 @@ The existing intimacy and sex mods provide a foundation for romantic and sexual 
 
 #### Aftercare
 
-- `cuddle_afterwards` - Post-sex intimacy
+- `cuddle_afterwards` - Post-sex intimacyP
 - `kiss_gently_after` - Tender aftercare
 - `check_in_emotionally` - Ensure partner is okay
 - `get_water` - Care for partner's needs

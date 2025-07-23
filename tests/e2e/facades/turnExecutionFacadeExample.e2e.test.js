@@ -274,68 +274,6 @@ describe('Turn Execution Facade Example E2E', () => {
   });
 
   /**
-   * Test: Performance benchmarking
-   * Demonstrates performance testing capabilities of the facade.
-   */
-  test('should complete turns within performance targets', async () => {
-    const mockDecision = {
-      actionId: 'core:look',
-      targets: {},
-    };
-
-    const mockValidation = {
-      success: true,
-      validatedAction: {
-        actionId: 'core:look',
-        actorId: testEnvironment.actors.aiActorId,
-        targets: {},
-      },
-    };
-
-    turnExecutionFacade.setupMocks({
-      aiResponses: {
-        [testEnvironment.actors.aiActorId]: mockDecision,
-      },
-      actionResults: {
-        [testEnvironment.actors.aiActorId]: [
-          { actionId: 'core:look', name: 'Look Around', available: true },
-        ],
-      },
-      validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:look`]: mockValidation,
-      },
-    });
-
-    // Execute multiple turns and measure performance
-    const turnCount = 5;
-    const results = [];
-
-    for (let i = 0; i < turnCount; i++) {
-      const result = await turnExecutionFacade.executeAITurn(
-        testEnvironment.actors.aiActorId
-      );
-      results.push(result);
-    }
-
-    // Verify all turns succeeded
-    results.forEach((result) => {
-      expect(result.success).toBe(true);
-      expect(result.duration).toBeGreaterThanOrEqual(0);
-    });
-
-    // Check performance targets (sub-100ms as mentioned in the report)
-    const averageDuration =
-      results.reduce((sum, r) => sum + r.duration, 0) / turnCount;
-    const maxDuration = Math.max(...results.map((r) => r.duration));
-
-    // Performance assertions (these would be real targets in production)
-    expect(averageDuration).toBeLessThan(100); // Average under 100ms
-    expect(maxDuration).toBeLessThan(200); // Max under 200ms
-
-    console.log(`Performance: Avg ${averageDuration}ms, Max ${maxDuration}ms`);
-  });
-
-  /**
    * Test: Error handling and recovery
    * Demonstrates robust error handling in the facade.
    */

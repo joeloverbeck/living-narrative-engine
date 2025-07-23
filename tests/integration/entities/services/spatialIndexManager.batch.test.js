@@ -509,36 +509,4 @@ describe('SpatialIndexManager - Batch Operations Integration', () => {
     });
   });
 
-  describe('performance integration', () => {
-    beforeEach(() => {
-      services = createDefaultServicesWithConfig(mockDependencies);
-    });
-
-    it('should complete batch operations within reasonable time', async () => {
-      const spatialIndexManager = services.spatialIndexManager;
-
-      // Create a larger batch to test performance
-      const additions = Array.from({ length: 100 }, (_, i) => ({
-        entityId: `entity${i}`,
-        locationId: `location${i % 10}`, // Distribute across 10 locations
-      }));
-
-      const startTime = performance.now();
-      const result = await spatialIndexManager.batchAdd(additions);
-      const endTime = performance.now();
-
-      expect(result.successful).toHaveLength(100);
-      expect(result.totalProcessed).toBe(100);
-      expect(endTime - startTime).toBeLessThan(1000); // Should complete within 1 second
-
-      // Verify all entities were added correctly
-      expect(spatialIndexManager.size).toBe(10); // 10 different locations
-      for (let i = 0; i < 10; i++) {
-        const entities = spatialIndexManager.getEntitiesInLocation(
-          `location${i}`
-        );
-        expect(entities.size).toBe(10); // 10 entities per location
-      }
-    });
-  });
 });

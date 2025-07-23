@@ -3,6 +3,26 @@
  */
 
 /**
+ * Determines timing multiplier based on test environment
+ * CI/automated environments can use minimal delays for faster execution
+ *
+ * @returns {number} Timing multiplier (0.1 for CI, 1.0 for local)
+ */
+function getTestTimingMultiplier() {
+  // Check for CI environment variables
+  const isCI = !!(
+    process.env.CI ||
+    process.env.CONTINUOUS_INTEGRATION ||
+    process.env.GITHUB_ACTIONS ||
+    process.env.GITLAB_CI ||
+    process.env.JENKINS_URL
+  );
+  
+  // Use minimal delays in CI for faster test execution
+  return isCI ? 0.1 : 1.0;
+}
+
+/**
  *
  */
 export function createPerformanceTestBed() {
@@ -55,11 +75,12 @@ export function createPerformanceTestBed() {
     },
 
     createMockEntityManager(options = {}) {
+      const timingMultiplier = getTestTimingMultiplier();
       const {
         enableBatchOperations = true,
         hasBatchSupport = true,
-        batchProcessingTimeMs = 100,
-        sequentialProcessingTimeMs = 20,
+        batchProcessingTimeMs = Math.max(1, Math.ceil(10 * timingMultiplier)), // Environment-aware timing
+        sequentialProcessingTimeMs = Math.max(1, Math.ceil(2 * timingMultiplier)), // Environment-aware timing
         trackMemoryUsage = false,
         simulateMemoryPressure = false,
       } = options;
@@ -70,7 +91,7 @@ export function createPerformanceTestBed() {
         batchCreateEntities: jest
           .fn()
           .mockImplementation(async (entitySpecs, batchOptions) => {
-            // Simulate realistic processing time
+            // Simulate realistic processing time with environment-aware delays
             await new Promise((resolve) =>
               setTimeout(resolve, batchProcessingTimeMs)
             );
@@ -94,7 +115,7 @@ export function createPerformanceTestBed() {
         createEntityInstance: jest
           .fn()
           .mockImplementation(async (definitionId, opts) => {
-            // Simulate realistic sequential processing time
+            // Simulate realistic sequential processing time with environment-aware delays
             await new Promise((resolve) =>
               setTimeout(resolve, sequentialProcessingTimeMs)
             );
