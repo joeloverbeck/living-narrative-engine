@@ -61,24 +61,35 @@ export function createInvalidAction(id = 'test:invalid') {
  * expect(validateActionStructure(action)).toBe(true);
  */
 export function validateActionStructure(definition) {
-  const requiredFields = ['id', 'name', 'description', 'scope', 'template', 'prerequisites', 'required_components'];
-  
+  const requiredFields = [
+    'id',
+    'name',
+    'description',
+    'scope',
+    'template',
+    'prerequisites',
+    'required_components',
+  ];
+
   for (const field of requiredFields) {
     if (!(field in definition)) {
       return false;
     }
   }
-  
+
   // Check required_components structure
-  if (!definition.required_components || !Array.isArray(definition.required_components.actor)) {
+  if (
+    !definition.required_components ||
+    !Array.isArray(definition.required_components.actor)
+  ) {
     return false;
   }
-  
+
   // Check prerequisites is array
   if (!Array.isArray(definition.prerequisites)) {
     return false;
   }
-  
+
   return true;
 }
 
@@ -92,17 +103,19 @@ export const actionMatchers = {
    * @param {object} received - The received action definition
    * @returns {object} Jest matcher result
    */
-  toBeValidActionDefinition: function(received) {
+  toBeValidActionDefinition: function (received) {
     const pass = validateActionStructure(received);
-    
+
     if (pass) {
       return {
-        message: () => `Expected ${JSON.stringify(received)} not to be a valid action definition`,
+        message: () =>
+          `Expected ${JSON.stringify(received)} not to be a valid action definition`,
         pass: true,
       };
     } else {
       return {
-        message: () => `Expected ${JSON.stringify(received)} to be a valid action definition`,
+        message: () =>
+          `Expected ${JSON.stringify(received)} to be a valid action definition`,
         pass: false,
       };
     }
@@ -115,17 +128,20 @@ export const actionMatchers = {
    * @param {string} componentId - The component ID to check for
    * @returns {object} Jest matcher result
    */
-  toRequireComponent: function(received, componentId) {
-    const hasComponent = received.required_components?.actor?.includes(componentId);
-    
+  toRequireComponent: function (received, componentId) {
+    const hasComponent =
+      received.required_components?.actor?.includes(componentId);
+
     if (hasComponent) {
       return {
-        message: () => `Expected action not to require component '${componentId}'`,
+        message: () =>
+          `Expected action not to require component '${componentId}'`,
         pass: true,
       };
     } else {
       return {
-        message: () => `Expected action to require component '${componentId}', but got: ${JSON.stringify(received.required_components?.actor || [])}`,
+        message: () =>
+          `Expected action to require component '${componentId}', but got: ${JSON.stringify(received.required_components?.actor || [])}`,
         pass: false,
       };
     }
@@ -138,26 +154,28 @@ export const actionMatchers = {
    * @param {string} conditionId - The condition ID to check for
    * @returns {object} Jest matcher result
    */
-  toHavePrerequisite: function(received, conditionId) {
-    const hasPrerequisite = received.prerequisites?.some(prereq => {
+  toHavePrerequisite: function (received, conditionId) {
+    const hasPrerequisite = received.prerequisites?.some((prereq) => {
       if (typeof prereq === 'string') {
         return prereq === conditionId;
       }
       return prereq?.logic?.condition_ref === conditionId;
     });
-    
+
     if (hasPrerequisite) {
       return {
-        message: () => `Expected action not to have prerequisite '${conditionId}'`,
+        message: () =>
+          `Expected action not to have prerequisite '${conditionId}'`,
         pass: true,
       };
     } else {
       return {
-        message: () => `Expected action to have prerequisite '${conditionId}', but got: ${JSON.stringify(received.prerequisites || [])}`,
+        message: () =>
+          `Expected action to have prerequisite '${conditionId}', but got: ${JSON.stringify(received.prerequisites || [])}`,
         pass: false,
       };
     }
-  }
+  },
 };
 
 /**
@@ -205,7 +223,7 @@ export function createComplexTestAction(id = 'test:complex') {
     .withPrerequisites([
       'test:cond1',
       { condition: 'test:cond2', message: 'Custom failure message' },
-      'test:cond3'
+      'test:cond3',
     ])
     .build();
 }
@@ -218,5 +236,5 @@ export default {
   actionMatchers,
   createMovementActionBuilder,
   createCombatActionBuilder,
-  createComplexTestAction
+  createComplexTestAction,
 };

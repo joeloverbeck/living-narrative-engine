@@ -3,7 +3,14 @@
  * @description Tests focused on measuring and validating turn execution performance
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createMockFacades } from '../../src/testing/facades/testingFacadeRegistrations.js';
 
 describe('Turn Execution Performance', () => {
@@ -13,7 +20,7 @@ describe('Turn Execution Performance', () => {
   beforeEach(async () => {
     const facades = createMockFacades({}, jest.fn);
     turnExecutionFacade = facades.turnExecutionFacade;
-    
+
     // Initialize test environment
     testEnvironment = await turnExecutionFacade.initializeTestEnvironment();
   });

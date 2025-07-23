@@ -148,13 +148,14 @@ export class TestModuleValidator {
     // Validate performance tracking
     if (config.monitoring?.performance?.thresholds) {
       const thresholds = config.monitoring.performance.thresholds;
-      
+
       // Check turn execution threshold
       if (thresholds.turnExecution && thresholds.turnExecution > 1000) {
         warnings.push({
           code: 'HIGH_PERFORMANCE_THRESHOLD',
           field: 'monitoring.performance.thresholds.turnExecution',
-          message: 'Turn execution threshold >1000ms may hide performance issues',
+          message:
+            'Turn execution threshold >1000ms may hide performance issues',
         });
       }
 
@@ -163,7 +164,8 @@ export class TestModuleValidator {
         warnings.push({
           code: 'HIGH_PERFORMANCE_THRESHOLD',
           field: 'monitoring.performance.thresholds.actionDiscovery',
-          message: 'Action discovery threshold >500ms may hide performance issues',
+          message:
+            'Action discovery threshold >500ms may hide performance issues',
         });
       }
     }
@@ -305,7 +307,8 @@ export class TestModuleValidator {
       warnings.push({
         code: 'NO_WORLD_LOCATIONS',
         field: 'world.createLocations',
-        message: 'World locations disabled - entities may not have valid locations',
+        message:
+          'World locations disabled - entities may not have valid locations',
       });
     }
 
@@ -351,7 +354,10 @@ export class TestModuleValidator {
             field: 'parameters.temperature',
             message: 'Temperature must be a number',
           });
-        } else if (config.parameters.temperature < 0 || config.parameters.temperature > 2) {
+        } else if (
+          config.parameters.temperature < 0 ||
+          config.parameters.temperature > 2
+        ) {
           warnings.push({
             code: 'INVALID_TEMPERATURE',
             field: 'parameters.temperature',
@@ -359,7 +365,7 @@ export class TestModuleValidator {
           });
         }
       }
-      
+
       if (config.parameters.topP !== undefined) {
         if (typeof config.parameters.topP !== 'number') {
           errors.push({
@@ -386,7 +392,7 @@ export class TestModuleValidator {
           message: 'Input token limit >8000 may exceed model capacity',
         });
       }
-      
+
       if (config.tokenLimits.output && config.tokenLimits.output > 4000) {
         warnings.push({
           code: 'HIGH_OUTPUT_TOKEN_LIMIT',

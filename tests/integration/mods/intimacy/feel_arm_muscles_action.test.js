@@ -323,8 +323,10 @@ describe('intimacy:feel_arm_muscles action integration', () => {
     const successEvent = testEnv.events.find(
       (e) => e.eventType === 'core:display_successful_action_result'
     );
-    
+
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe("Alice feels the hard swell of Bob's muscles.");
+    expect(successEvent.payload.message).toBe(
+      "Alice feels the hard swell of Bob's muscles."
+    );
   });
 });

@@ -17,6 +17,7 @@ import { registerAI } from './registrations/aiRegistrations.js';
 import { registerTurnLifecycle } from './registrations/turnLifecycleRegistrations.js';
 import { registerOrchestration } from './registrations/orchestrationRegistrations.js';
 import { registerUI } from './registrations/uiRegistrations.js';
+import { registerCharacterBuilder } from './registrations/characterBuilderRegistrations.js';
 
 /**
  * @typedef {import('./appContainer.js').default} AppContainer
@@ -29,6 +30,7 @@ import { registerUI } from './registrations/uiRegistrations.js';
  * @param {boolean} [options.includeGameSystems] - Whether to include game-specific systems (AI, turn lifecycle, orchestration)
  * @param {boolean} [options.includeUI] - Whether to include UI registrations
  * @param {boolean} [options.includeAnatomySystems] - Whether to include anatomy initialization (for testing)
+ * @param {boolean} [options.includeCharacterBuilder] - Whether to include character builder services
  * @param {object} [options.uiElements] - UI elements to register if includeUI is true
  * @param {ILogger} [options.logger] - Logger instance for debug logging
  */
@@ -37,6 +39,7 @@ export async function configureBaseContainer(container, options = {}) {
     includeGameSystems = false,
     includeUI = false,
     includeAnatomySystems = false,
+    includeCharacterBuilder = false,
     uiElements = null,
     logger = null,
   } = options;
@@ -65,6 +68,16 @@ export async function configureBaseContainer(container, options = {}) {
     }
     registerAI(container);
     registerTurnLifecycle(container);
+  }
+
+  // --- Conditionally register character builder services ---
+  if (includeCharacterBuilder) {
+    if (logger) {
+      logger.debug(
+        '[BaseContainerConfig] Registering character builder services...'
+      );
+    }
+    registerCharacterBuilder(container);
   }
 
   // Continue with core registrations

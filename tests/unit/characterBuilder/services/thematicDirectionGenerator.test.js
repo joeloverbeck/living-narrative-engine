@@ -48,11 +48,13 @@ describe('ThematicDirectionGenerator', () => {
     };
 
     mockLlmStrategyFactory = {
-      getStrategy: jest.fn(),
+      getAIDecision: jest.fn(),
     };
 
     mockLlmConfigManager = {
       loadConfiguration: jest.fn(),
+      getActiveConfiguration: jest.fn(),
+      setActiveConfiguration: jest.fn(),
     };
 
     generator = new ThematicDirectionGenerator({
@@ -102,7 +104,7 @@ describe('ThematicDirectionGenerator', () => {
           llmStrategyFactory: null,
           llmConfigManager: mockLlmConfigManager,
         });
-      }).toThrow('Missing required dependency: LLMStrategyFactory.');
+      }).toThrow('Missing required dependency: ConfigurableLLMAdapter.');
     });
 
     test('should throw error if llmConfigManager is invalid', () => {
@@ -113,7 +115,7 @@ describe('ThematicDirectionGenerator', () => {
           llmStrategyFactory: mockLlmStrategyFactory,
           llmConfigManager: null,
         });
-      }).toThrow('Missing required dependency: LLMConfigurationManager.');
+      }).toThrow('Missing required dependency: ILLMConfigurationManager.');
     });
   });
 
@@ -157,13 +159,12 @@ describe('ThematicDirectionGenerator', () => {
       ],
     });
 
-    const mockStrategy = {
-      execute: jest.fn().mockResolvedValue(mockLlmResponse),
-    };
-
     beforeEach(() => {
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockLlmStrategyFactory.getStrategy.mockReturnValue(mockStrategy);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(mockLlmResponse)
@@ -190,23 +191,9 @@ describe('ThematicDirectionGenerator', () => {
         expect.stringContaining('Starting generation for concept'),
         expect.objectContaining({ conceptId })
       );
-      expect(mockLlmConfigManager.loadConfiguration).toHaveBeenCalledWith(
-        'openrouter-claude-sonnet-4'
-      );
-      expect(mockLlmStrategyFactory.getStrategy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          configId: 'openrouter-claude-sonnet-4',
-          modelIdentifier: 'anthropic/claude-sonnet-4',
-          apiType: 'openrouter',
-          jsonOutputStrategy: expect.objectContaining({
-            method: 'openrouter_json_schema',
-            jsonSchema: expect.any(Object),
-          }),
-          defaultParameters: expect.objectContaining({
-            temperature: 0.7,
-            max_tokens: 2000,
-          }),
-        })
+      // getAIDecision is called on the llmStrategyFactory (ConfigurableLLMAdapter)
+      expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledWith(
+        expect.stringContaining('<character_concept>')
       );
     });
 
@@ -215,11 +202,14 @@ describe('ThematicDirectionGenerator', () => {
       const characterConcept = 'A ditzy archer who loves adventure';
       const customConfigId = 'custom-llm-config';
 
+      // Mock setActiveConfiguration to return true (success)
+      mockLlmConfigManager.setActiveConfiguration.mockResolvedValue(true);
+
       await generator.generateDirections(conceptId, characterConcept, {
         llmConfigId: customConfigId,
       });
 
-      expect(mockLlmConfigManager.loadConfiguration).toHaveBeenCalledWith(
+      expect(mockLlmConfigManager.setActiveConfiguration).toHaveBeenCalledWith(
         customConfigId
       );
     });
@@ -261,19 +251,21 @@ describe('ThematicDirectionGenerator', () => {
     });
 
     test('should throw error if LLM configuration not found', async () => {
-      mockLlmConfigManager.loadConfiguration.mockResolvedValue(null);
+      // Override the default mock to return null for getActiveConfiguration
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(null);
 
       await expect(
         generator.generateDirections('test-id', 'Valid concept')
       ).rejects.toThrow(ThematicDirectionGenerationError);
       await expect(
         generator.generateDirections('test-id', 'Valid concept')
-      ).rejects.toThrow('LLM configuration not found');
+      ).rejects.toThrow('No active LLM configuration found');
     });
 
     test('should throw error if LLM strategy execution fails', async () => {
       const llmError = new Error('LLM service unavailable');
-      mockStrategy.execute.mockRejectedValue(llmError);
+      // Override the default mock to reject with an error
+      mockLlmStrategyFactory.getAIDecision.mockRejectedValue(llmError);
 
       await expect(
         generator.generateDirections('test-id', 'Valid concept')
@@ -286,8 +278,10 @@ describe('ThematicDirectionGenerator', () => {
     test('should throw error if response parsing fails', async () => {
       // Reset mocks to default successful state
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(mockLlmResponse);
-      mockLlmStrategyFactory.getStrategy.mockReturnValue(mockStrategy);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
 
       // Set up the parsing failure
@@ -305,8 +299,10 @@ describe('ThematicDirectionGenerator', () => {
     test('should log appropriate debug and info messages', async () => {
       // Reset mocks to default successful state first
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(mockLlmResponse);
-      mockLlmStrategyFactory.getStrategy.mockReturnValue(mockStrategy);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(mockLlmResponse)
@@ -341,8 +337,10 @@ describe('ThematicDirectionGenerator', () => {
     test('should handle malformed LLM response gracefully', async () => {
       // Reset mocks to default successful state first
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(mockLlmResponse);
-      mockLlmStrategyFactory.getStrategy.mockReturnValue(mockStrategy);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
 
       const malformedResponse = { invalidStructure: true };
@@ -359,8 +357,10 @@ describe('ThematicDirectionGenerator', () => {
     test('should include metadata in generated directions', async () => {
       // Reset mocks to default successful state first
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(mockLlmResponse);
-      mockLlmStrategyFactory.getStrategy.mockReturnValue(mockStrategy);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(mockLlmResponse)

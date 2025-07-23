@@ -16,9 +16,9 @@ describe('intimacy:turn_around action', () => {
       expect(turnAroundAction.description).toBeTruthy();
     });
 
-    it('uses intimacy:close_actors_facing_forward_or_behind_target scope', () => {
+    it('uses intimacy:close_actors_facing_each_other_or_behind_target scope', () => {
       expect(turnAroundAction.scope).toBe(
-        'intimacy:close_actors_facing_forward_or_behind_target'
+        'intimacy:close_actors_facing_each_other_or_behind_target'
       );
     });
 

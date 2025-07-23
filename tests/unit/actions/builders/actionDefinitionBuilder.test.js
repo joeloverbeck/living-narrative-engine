@@ -13,28 +13,28 @@ describe('ActionDefinitionBuilder', () => {
     it('should create individual actions quickly', () => {
       const iterations = 100;
       const times = [];
-      
+
       for (let i = 0; i < iterations; i++) {
         const startTime = performance.now();
-        
+
         new ActionDefinitionBuilder(`test:perf${i}`)
           .withName(`Performance Test ${i}`)
           .withDescription(`Performance test action ${i}`)
           .asBasicAction()
           .build();
-        
+
         const endTime = performance.now();
         times.push(endTime - startTime);
       }
-      
+
       const avgTime = times.reduce((sum, time) => sum + time, 0) / times.length;
       expect(avgTime).toBeLessThan(0.5); // Less than 0.5ms per action on average
     });
 
     it('should handle bulk creation efficiently', () => {
       const startTime = performance.now();
-      
-      const actions = Array.from({ length: 100 }, (_, i) => 
+
+      const actions = Array.from({ length: 100 }, (_, i) =>
         new ActionDefinitionBuilder(`test:bulk${i}`)
           .withName(`Bulk Test ${i}`)
           .withDescription(`Bulk test action ${i}`)
@@ -43,10 +43,10 @@ describe('ActionDefinitionBuilder', () => {
           .withPrerequisite('test:condition')
           .build()
       );
-      
+
       const endTime = performance.now();
       const duration = endTime - startTime;
-      
+
       expect(actions).toHaveLength(100);
       expect(duration).toBeLessThan(50); // Should be less than 50ms for 100 actions
     });
@@ -65,11 +65,11 @@ describe('ActionDefinitionBuilder', () => {
       expect(action.prerequisites).toHaveLength(2);
       expect(action.prerequisites[0]).toEqual({
         logic: { condition_ref: 'test:condition' },
-        failure_message: 'First message'
+        failure_message: 'First message',
       });
       expect(action.prerequisites[1]).toEqual({
         logic: { condition_ref: 'test:condition' },
-        failure_message: 'Second message'
+        failure_message: 'Second message',
       });
     });
 
@@ -81,7 +81,7 @@ describe('ActionDefinitionBuilder', () => {
         .withPrerequisite('test:simple')
         .withPrerequisites([
           'test:another-simple',
-          { condition: 'test:complex', message: 'Complex message' }
+          { condition: 'test:complex', message: 'Complex message' },
         ])
         .withPrerequisite('test:final', 'Final message')
         .build();
@@ -91,41 +91,44 @@ describe('ActionDefinitionBuilder', () => {
       expect(action.prerequisites[1]).toBe('test:another-simple');
       expect(action.prerequisites[2]).toEqual({
         logic: { condition_ref: 'test:complex' },
-        failure_message: 'Complex message'
+        failure_message: 'Complex message',
       });
       expect(action.prerequisites[3]).toEqual({
         logic: { condition_ref: 'test:final' },
-        failure_message: 'Final message'
+        failure_message: 'Final message',
       });
     });
 
     it('should maintain state immutability across multiple operations', () => {
       const builder = new ActionDefinitionBuilder('test:immutability');
-      
+
       const state1 = builder.toPartial();
       builder.withName('Test');
       const state2 = builder.toPartial();
       builder.withDescription('Description');
       const state3 = builder.toPartial();
-      
+
       // Previous states should not be modified
       expect(state1.name).toBeUndefined();
       expect(state1.description).toBeUndefined();
-      
+
       expect(state2.name).toBe('Test');
       expect(state2.description).toBeUndefined();
-      
+
       expect(state3.name).toBe('Test');
       expect(state3.description).toBe('Description');
-      
+
       // Each state should be a different object
       expect(state1).not.toBe(state2);
       expect(state2).not.toBe(state3);
     });
 
     it('should handle extreme component list sizes', () => {
-      const components = Array.from({ length: 50 }, (_, i) => `test:component${i}`);
-      
+      const components = Array.from(
+        { length: 50 },
+        (_, i) => `test:component${i}`
+      );
+
       const action = new ActionDefinitionBuilder('test:many-components')
         .withName('Many Components')
         .withDescription('Testing many components')
@@ -138,8 +141,11 @@ describe('ActionDefinitionBuilder', () => {
     });
 
     it('should handle extreme prerequisite list sizes', () => {
-      const prerequisites = Array.from({ length: 30 }, (_, i) => `test:condition${i}`);
-      
+      const prerequisites = Array.from(
+        { length: 30 },
+        (_, i) => `test:condition${i}`
+      );
+
       const action = new ActionDefinitionBuilder('test:many-prereqs')
         .withName('Many Prerequisites')
         .withDescription('Testing many prerequisites')
@@ -159,7 +165,7 @@ describe('ActionDefinitionBuilder', () => {
         name: 'Minimal',
         description: 'Minimal action',
         scope: 'none',
-        template: 'minimal'
+        template: 'minimal',
         // No prerequisites or required_components
       };
 
@@ -179,7 +185,7 @@ describe('ActionDefinitionBuilder', () => {
         scope: 'none',
         template: 'null test',
         prerequisites: null,
-        required_components: null
+        required_components: null,
       };
 
       const builder = ActionDefinitionBuilder.fromDefinition(definition);
@@ -198,10 +204,13 @@ describe('ActionDefinitionBuilder', () => {
         template: 'complex from {target}',
         prerequisites: [
           'test:simple',
-          { logic: { condition_ref: 'test:complex' }, failure_message: 'Complex failed' },
-          { logic: { condition_ref: 'test:another' } } // No failure message
+          {
+            logic: { condition_ref: 'test:complex' },
+            failure_message: 'Complex failed',
+          },
+          { logic: { condition_ref: 'test:another' } }, // No failure message
         ],
-        required_components: { actor: ['test:comp1', 'test:comp2'] }
+        required_components: { actor: ['test:comp1', 'test:comp2'] },
       };
 
       const builder = ActionDefinitionBuilder.fromDefinition(definition);
@@ -211,7 +220,7 @@ describe('ActionDefinitionBuilder', () => {
       expect(recreated.prerequisites[0]).toBe('test:simple');
       expect(recreated.prerequisites[1]).toEqual({
         logic: { condition_ref: 'test:complex' },
-        failure_message: 'Complex failed'
+        failure_message: 'Complex failed',
       });
       expect(recreated.prerequisites[2]).toBe('test:another');
     });
@@ -220,31 +229,45 @@ describe('ActionDefinitionBuilder', () => {
     it('should create builder with valid ID', () => {
       const builder = new ActionDefinitionBuilder('test:action');
       const partial = builder.toPartial();
-      
+
       expect(partial).toEqual({
         id: 'test:action',
         prerequisites: [],
-        required_components: { actor: [] }
+        required_components: { actor: [] },
       });
     });
 
     it('should throw error for missing ID', () => {
-      expect(() => new ActionDefinitionBuilder()).toThrow(InvalidActionDefinitionError);
-      expect(() => new ActionDefinitionBuilder()).toThrow('Action ID is required and must be a string');
+      expect(() => new ActionDefinitionBuilder()).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => new ActionDefinitionBuilder()).toThrow(
+        'Action ID is required and must be a string'
+      );
     });
 
     it('should throw error for null ID', () => {
-      expect(() => new ActionDefinitionBuilder(null)).toThrow(InvalidActionDefinitionError);
+      expect(() => new ActionDefinitionBuilder(null)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for non-string ID', () => {
-      expect(() => new ActionDefinitionBuilder(123)).toThrow(InvalidActionDefinitionError);
-      expect(() => new ActionDefinitionBuilder({})).toThrow(InvalidActionDefinitionError);
-      expect(() => new ActionDefinitionBuilder([])).toThrow(InvalidActionDefinitionError);
+      expect(() => new ActionDefinitionBuilder(123)).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => new ActionDefinitionBuilder({})).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => new ActionDefinitionBuilder([])).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for empty string ID', () => {
-      expect(() => new ActionDefinitionBuilder('')).toThrow(InvalidActionDefinitionError);
+      expect(() => new ActionDefinitionBuilder('')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
   });
 
@@ -268,11 +291,15 @@ describe('ActionDefinitionBuilder', () => {
 
     it('should throw error for missing name', () => {
       expect(() => builder.withName()).toThrow(InvalidActionDefinitionError);
-      expect(() => builder.withName()).toThrow('Name must be a non-empty string');
+      expect(() => builder.withName()).toThrow(
+        'Name must be a non-empty string'
+      );
     });
 
     it('should throw error for null name', () => {
-      expect(() => builder.withName(null)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withName(null)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for non-string name', () => {
@@ -285,7 +312,9 @@ describe('ActionDefinitionBuilder', () => {
     });
 
     it('should throw error for whitespace-only name', () => {
-      expect(() => builder.withName('   ')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withName('   ')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
   });
 
@@ -308,24 +337,36 @@ describe('ActionDefinitionBuilder', () => {
     });
 
     it('should throw error for missing description', () => {
-      expect(() => builder.withDescription()).toThrow(InvalidActionDefinitionError);
-      expect(() => builder.withDescription()).toThrow('Description must be a non-empty string');
+      expect(() => builder.withDescription()).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => builder.withDescription()).toThrow(
+        'Description must be a non-empty string'
+      );
     });
 
     it('should throw error for null description', () => {
-      expect(() => builder.withDescription(null)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withDescription(null)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for non-string description', () => {
-      expect(() => builder.withDescription(123)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withDescription(123)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for empty string description', () => {
-      expect(() => builder.withDescription('')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withDescription('')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for whitespace-only description', () => {
-      expect(() => builder.withDescription('   ')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withDescription('   ')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
   });
 
@@ -354,15 +395,21 @@ describe('ActionDefinitionBuilder', () => {
 
     it('should throw error for missing scope', () => {
       expect(() => builder.withScope()).toThrow(InvalidActionDefinitionError);
-      expect(() => builder.withScope()).toThrow('Scope must be a non-empty string');
+      expect(() => builder.withScope()).toThrow(
+        'Scope must be a non-empty string'
+      );
     });
 
     it('should throw error for null scope', () => {
-      expect(() => builder.withScope(null)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withScope(null)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for non-string scope', () => {
-      expect(() => builder.withScope(123)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withScope(123)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for empty string scope', () => {
@@ -370,7 +417,9 @@ describe('ActionDefinitionBuilder', () => {
     });
 
     it('should throw error for whitespace-only scope', () => {
-      expect(() => builder.withScope('   ')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withScope('   ')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
   });
 
@@ -393,24 +442,36 @@ describe('ActionDefinitionBuilder', () => {
     });
 
     it('should throw error for missing template', () => {
-      expect(() => builder.withTemplate()).toThrow(InvalidActionDefinitionError);
-      expect(() => builder.withTemplate()).toThrow('Template must be a non-empty string');
+      expect(() => builder.withTemplate()).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => builder.withTemplate()).toThrow(
+        'Template must be a non-empty string'
+      );
     });
 
     it('should throw error for null template', () => {
-      expect(() => builder.withTemplate(null)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withTemplate(null)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for non-string template', () => {
-      expect(() => builder.withTemplate(123)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withTemplate(123)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for empty string template', () => {
-      expect(() => builder.withTemplate('')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withTemplate('')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for whitespace-only template', () => {
-      expect(() => builder.withTemplate('   ')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withTemplate('   ')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
   });
 
@@ -424,49 +485,70 @@ describe('ActionDefinitionBuilder', () => {
     it('should add component and return builder for chaining', () => {
       const result = builder.requiresComponent('test:component');
       expect(result).toBe(builder);
-      expect(builder.toPartial().required_components.actor).toContain('test:component');
+      expect(builder.toPartial().required_components.actor).toContain(
+        'test:component'
+      );
     });
 
     it('should trim whitespace from component ID', () => {
       builder.requiresComponent('  test:component  ');
-      expect(builder.toPartial().required_components.actor).toContain('test:component');
+      expect(builder.toPartial().required_components.actor).toContain(
+        'test:component'
+      );
     });
 
     it('should deduplicate components automatically', () => {
       builder
         .requiresComponent('test:component')
         .requiresComponent('test:component');
-      
-      expect(builder.toPartial().required_components.actor).toEqual(['test:component']);
+
+      expect(builder.toPartial().required_components.actor).toEqual([
+        'test:component',
+      ]);
     });
 
     it('should add multiple different components', () => {
       builder
         .requiresComponent('test:component1')
         .requiresComponent('test:component2');
-      
-      expect(builder.toPartial().required_components.actor).toEqual(['test:component1', 'test:component2']);
+
+      expect(builder.toPartial().required_components.actor).toEqual([
+        'test:component1',
+        'test:component2',
+      ]);
     });
 
     it('should throw error for missing component ID', () => {
-      expect(() => builder.requiresComponent()).toThrow(InvalidActionDefinitionError);
-      expect(() => builder.requiresComponent()).toThrow('Component ID must be a non-empty string');
+      expect(() => builder.requiresComponent()).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => builder.requiresComponent()).toThrow(
+        'Component ID must be a non-empty string'
+      );
     });
 
     it('should throw error for null component ID', () => {
-      expect(() => builder.requiresComponent(null)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.requiresComponent(null)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for non-string component ID', () => {
-      expect(() => builder.requiresComponent(123)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.requiresComponent(123)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for empty string component ID', () => {
-      expect(() => builder.requiresComponent('')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.requiresComponent('')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for whitespace-only component ID', () => {
-      expect(() => builder.requiresComponent('   ')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.requiresComponent('   ')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
   });
 
@@ -480,7 +562,10 @@ describe('ActionDefinitionBuilder', () => {
     it('should add multiple components and return builder for chaining', () => {
       const result = builder.requiresComponents(['test:comp1', 'test:comp2']);
       expect(result).toBe(builder);
-      expect(builder.toPartial().required_components.actor).toEqual(['test:comp1', 'test:comp2']);
+      expect(builder.toPartial().required_components.actor).toEqual([
+        'test:comp1',
+        'test:comp2',
+      ]);
     });
 
     it('should handle empty array gracefully', () => {
@@ -492,22 +577,36 @@ describe('ActionDefinitionBuilder', () => {
       builder
         .requiresComponents(['test:comp1', 'test:comp2'])
         .requiresComponents(['test:comp2', 'test:comp3']);
-      
-      expect(builder.toPartial().required_components.actor).toEqual(['test:comp1', 'test:comp2', 'test:comp3']);
+
+      expect(builder.toPartial().required_components.actor).toEqual([
+        'test:comp1',
+        'test:comp2',
+        'test:comp3',
+      ]);
     });
 
     it('should throw error for non-array input', () => {
-      expect(() => builder.requiresComponents('test:comp')).toThrow(InvalidActionDefinitionError);
-      expect(() => builder.requiresComponents('test:comp')).toThrow('Component IDs must be an array');
+      expect(() => builder.requiresComponents('test:comp')).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => builder.requiresComponents('test:comp')).toThrow(
+        'Component IDs must be an array'
+      );
     });
 
     it('should throw error for null input', () => {
-      expect(() => builder.requiresComponents(null)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.requiresComponents(null)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for invalid component in array', () => {
-      expect(() => builder.requiresComponents(['test:comp1', null])).toThrow(InvalidActionDefinitionError);
-      expect(() => builder.requiresComponents(['test:comp1', 123])).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.requiresComponents(['test:comp1', null])).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => builder.requiresComponents(['test:comp1', 123])).toThrow(
+        InvalidActionDefinitionError
+      );
     });
   });
 
@@ -527,11 +626,11 @@ describe('ActionDefinitionBuilder', () => {
     it('should add prerequisite with failure message', () => {
       builder.withPrerequisite('test:condition', 'Test failed');
       const prerequisites = builder.toPartial().prerequisites;
-      
+
       expect(prerequisites).toHaveLength(1);
       expect(prerequisites[0]).toEqual({
         logic: { condition_ref: 'test:condition' },
-        failure_message: 'Test failed'
+        failure_message: 'Test failed',
       });
     });
 
@@ -544,35 +643,47 @@ describe('ActionDefinitionBuilder', () => {
       builder
         .withPrerequisite('test:condition1')
         .withPrerequisite('test:condition2', 'Failed message');
-      
+
       const prerequisites = builder.toPartial().prerequisites;
       expect(prerequisites).toHaveLength(2);
       expect(prerequisites[0]).toBe('test:condition1');
       expect(prerequisites[1]).toEqual({
         logic: { condition_ref: 'test:condition2' },
-        failure_message: 'Failed message'
+        failure_message: 'Failed message',
       });
     });
 
     it('should throw error for missing condition ID', () => {
-      expect(() => builder.withPrerequisite()).toThrow(InvalidActionDefinitionError);
-      expect(() => builder.withPrerequisite()).toThrow('Condition ID must be a non-empty string');
+      expect(() => builder.withPrerequisite()).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => builder.withPrerequisite()).toThrow(
+        'Condition ID must be a non-empty string'
+      );
     });
 
     it('should throw error for null condition ID', () => {
-      expect(() => builder.withPrerequisite(null)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withPrerequisite(null)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for non-string condition ID', () => {
-      expect(() => builder.withPrerequisite(123)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withPrerequisite(123)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for empty string condition ID', () => {
-      expect(() => builder.withPrerequisite('')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withPrerequisite('')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for whitespace-only condition ID', () => {
-      expect(() => builder.withPrerequisite('   ')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withPrerequisite('   ')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
   });
 
@@ -586,39 +697,42 @@ describe('ActionDefinitionBuilder', () => {
     it('should add multiple string prerequisites', () => {
       const result = builder.withPrerequisites(['test:cond1', 'test:cond2']);
       expect(result).toBe(builder);
-      expect(builder.toPartial().prerequisites).toEqual(['test:cond1', 'test:cond2']);
+      expect(builder.toPartial().prerequisites).toEqual([
+        'test:cond1',
+        'test:cond2',
+      ]);
     });
 
     it('should add multiple object prerequisites', () => {
       builder.withPrerequisites([
         { condition: 'test:cond1', message: 'Message 1' },
-        { condition: 'test:cond2', message: 'Message 2' }
+        { condition: 'test:cond2', message: 'Message 2' },
       ]);
-      
+
       const prerequisites = builder.toPartial().prerequisites;
       expect(prerequisites).toHaveLength(2);
       expect(prerequisites[0]).toEqual({
         logic: { condition_ref: 'test:cond1' },
-        failure_message: 'Message 1'
+        failure_message: 'Message 1',
       });
       expect(prerequisites[1]).toEqual({
         logic: { condition_ref: 'test:cond2' },
-        failure_message: 'Message 2'
+        failure_message: 'Message 2',
       });
     });
 
     it('should handle mixed string and object prerequisites', () => {
       builder.withPrerequisites([
         'test:cond1',
-        { condition: 'test:cond2', message: 'Message 2' }
+        { condition: 'test:cond2', message: 'Message 2' },
       ]);
-      
+
       const prerequisites = builder.toPartial().prerequisites;
       expect(prerequisites).toHaveLength(2);
       expect(prerequisites[0]).toBe('test:cond1');
       expect(prerequisites[1]).toEqual({
         logic: { condition_ref: 'test:cond2' },
-        failure_message: 'Message 2'
+        failure_message: 'Message 2',
       });
     });
 
@@ -628,21 +742,33 @@ describe('ActionDefinitionBuilder', () => {
     });
 
     it('should throw error for non-array input', () => {
-      expect(() => builder.withPrerequisites('test:cond')).toThrow(InvalidActionDefinitionError);
-      expect(() => builder.withPrerequisites('test:cond')).toThrow('Prerequisites must be an array');
+      expect(() => builder.withPrerequisites('test:cond')).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => builder.withPrerequisites('test:cond')).toThrow(
+        'Prerequisites must be an array'
+      );
     });
 
     it('should throw error for invalid object format', () => {
-      expect(() => builder.withPrerequisites([{ invalid: 'format' }])).toThrow(InvalidActionDefinitionError);
-      expect(() => builder.withPrerequisites([{ invalid: 'format' }])).toThrow('Invalid prerequisite format');
+      expect(() => builder.withPrerequisites([{ invalid: 'format' }])).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => builder.withPrerequisites([{ invalid: 'format' }])).toThrow(
+        'Invalid prerequisite format'
+      );
     });
 
     it('should throw error for missing condition in object', () => {
-      expect(() => builder.withPrerequisites([{ message: 'Message' }])).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.withPrerequisites([{ message: 'Message' }])).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for missing message in object', () => {
-      expect(() => builder.withPrerequisites([{ condition: 'test:cond' }])).toThrow(InvalidActionDefinitionError);
+      expect(() =>
+        builder.withPrerequisites([{ condition: 'test:cond' }])
+      ).toThrow(InvalidActionDefinitionError);
     });
   });
 
@@ -651,16 +777,17 @@ describe('ActionDefinitionBuilder', () => {
       const builder = new ActionDefinitionBuilder('test:action')
         .withName('TestAction')
         .asBasicAction();
-      
+
       const partial = builder.toPartial();
       expect(partial.scope).toBe('none');
       expect(partial.template).toBe('testaction');
     });
 
     it('should use "action" as default template when no name set', () => {
-      const builder = new ActionDefinitionBuilder('test:action')
-        .asBasicAction();
-      
+      const builder = new ActionDefinitionBuilder(
+        'test:action'
+      ).asBasicAction();
+
       expect(builder.toPartial().template).toBe('action');
     });
 
@@ -676,7 +803,7 @@ describe('ActionDefinitionBuilder', () => {
       const builder = new ActionDefinitionBuilder('test:action')
         .withName('Attack')
         .asTargetedAction('test:targets');
-      
+
       const partial = builder.toPartial();
       expect(partial.scope).toBe('test:targets');
       expect(partial.template).toBe('attack {target}');
@@ -686,23 +813,25 @@ describe('ActionDefinitionBuilder', () => {
       const builder = new ActionDefinitionBuilder('test:action')
         .withName('Take')
         .asTargetedAction('test:items', 'from {target}');
-      
+
       const partial = builder.toPartial();
       expect(partial.scope).toBe('test:items');
       expect(partial.template).toBe('take from {target}');
     });
 
     it('should use "action" as default name when no name set', () => {
-      const builder = new ActionDefinitionBuilder('test:action')
-        .asTargetedAction('test:targets');
-      
+      const builder = new ActionDefinitionBuilder(
+        'test:action'
+      ).asTargetedAction('test:targets');
+
       expect(builder.toPartial().template).toBe('action {target}');
     });
 
     it('should trim whitespace from scope ID', () => {
-      const builder = new ActionDefinitionBuilder('test:action')
-        .asTargetedAction('  test:targets  ');
-      
+      const builder = new ActionDefinitionBuilder(
+        'test:action'
+      ).asTargetedAction('  test:targets  ');
+
       expect(builder.toPartial().scope).toBe('test:targets');
     });
 
@@ -714,41 +843,54 @@ describe('ActionDefinitionBuilder', () => {
 
     it('should throw error for missing scope ID', () => {
       const builder = new ActionDefinitionBuilder('test:action');
-      expect(() => builder.asTargetedAction()).toThrow(InvalidActionDefinitionError);
-      expect(() => builder.asTargetedAction()).toThrow('Scope ID is required for targeted actions');
+      expect(() => builder.asTargetedAction()).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => builder.asTargetedAction()).toThrow(
+        'Scope ID is required for targeted actions'
+      );
     });
 
     it('should throw error for null scope ID', () => {
       const builder = new ActionDefinitionBuilder('test:action');
-      expect(() => builder.asTargetedAction(null)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.asTargetedAction(null)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for non-string scope ID', () => {
       const builder = new ActionDefinitionBuilder('test:action');
-      expect(() => builder.asTargetedAction(123)).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.asTargetedAction(123)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for empty string scope ID', () => {
       const builder = new ActionDefinitionBuilder('test:action');
-      expect(() => builder.asTargetedAction('')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.asTargetedAction('')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for whitespace-only scope ID', () => {
       const builder = new ActionDefinitionBuilder('test:action');
-      expect(() => builder.asTargetedAction('   ')).toThrow(InvalidActionDefinitionError);
+      expect(() => builder.asTargetedAction('   ')).toThrow(
+        InvalidActionDefinitionError
+      );
     });
   });
 
   describe('asMovementAction', () => {
     it('should add movement component and prerequisite', () => {
-      const builder = new ActionDefinitionBuilder('test:action')
-        .asMovementAction();
-      
+      const builder = new ActionDefinitionBuilder(
+        'test:action'
+      ).asMovementAction();
+
       const partial = builder.toPartial();
       expect(partial.required_components.actor).toContain('core:position');
       expect(partial.prerequisites).toContainEqual({
         logic: { condition_ref: 'core:actor-can-move' },
-        failure_message: 'You cannot move right now'
+        failure_message: 'You cannot move right now',
       });
     });
 
@@ -763,7 +905,7 @@ describe('ActionDefinitionBuilder', () => {
         .withName('Go')
         .asTargetedAction('test:locations')
         .asMovementAction();
-      
+
       const partial = builder.toPartial();
       expect(partial.scope).toBe('test:locations');
       expect(partial.template).toBe('go {target}');
@@ -773,19 +915,20 @@ describe('ActionDefinitionBuilder', () => {
 
   describe('asCombatAction', () => {
     it('should add combat components and prerequisites', () => {
-      const builder = new ActionDefinitionBuilder('test:action')
-        .asCombatAction();
-      
+      const builder = new ActionDefinitionBuilder(
+        'test:action'
+      ).asCombatAction();
+
       const partial = builder.toPartial();
       expect(partial.required_components.actor).toContain('core:position');
       expect(partial.required_components.actor).toContain('core:health');
       expect(partial.prerequisites).toContainEqual({
         logic: { condition_ref: 'core:actor-can-move' },
-        failure_message: 'You cannot move right now'
+        failure_message: 'You cannot move right now',
       });
       expect(partial.prerequisites).toContainEqual({
         logic: { condition_ref: 'core:has-health' },
-        failure_message: 'You need health to perform this action'
+        failure_message: 'You need health to perform this action',
       });
     });
 
@@ -800,7 +943,7 @@ describe('ActionDefinitionBuilder', () => {
         .withName('Attack')
         .asTargetedAction('test:enemies')
         .asCombatAction();
-      
+
       const partial = builder.toPartial();
       expect(partial.scope).toBe('test:enemies');
       expect(partial.template).toBe('attack {target}');
@@ -816,7 +959,7 @@ describe('ActionDefinitionBuilder', () => {
         .withDescription('Test action')
         .withScope('test:scope')
         .withTemplate('test {target}');
-      
+
       const result = builder.validate();
       expect(result.isValid).toBe(true);
       expect(result.errors).toEqual([]);
@@ -824,7 +967,7 @@ describe('ActionDefinitionBuilder', () => {
 
     it('should return invalid result for incomplete definition', () => {
       const builder = new ActionDefinitionBuilder('test:action');
-      
+
       const result = builder.validate();
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
@@ -848,13 +991,15 @@ describe('ActionDefinitionBuilder', () => {
         description: 'A complete test action',
         scope: 'test:scope',
         template: 'complete {target}',
-        prerequisites: [{
-          logic: { condition_ref: 'test:condition' },
-          failure_message: 'Test failed'
-        }],
+        prerequisites: [
+          {
+            logic: { condition_ref: 'test:condition' },
+            failure_message: 'Test failed',
+          },
+        ],
         required_components: {
-          actor: ['test:component']
-        }
+          actor: ['test:component'],
+        },
       });
     });
 
@@ -863,13 +1008,13 @@ describe('ActionDefinitionBuilder', () => {
         .withName('Immutable')
         .withDescription('Test immutability')
         .asBasicAction();
-      
+
       const action1 = builder.build();
       const action2 = builder.build();
-      
+
       expect(action1).not.toBe(action2);
       expect(action1).toEqual(action2);
-      
+
       // Modifying one shouldn't affect the other
       action1.name = 'Modified';
       expect(action2.name).toBe('Immutable');
@@ -877,7 +1022,7 @@ describe('ActionDefinitionBuilder', () => {
 
     it('should throw error for invalid definition', () => {
       const builder = new ActionDefinitionBuilder('test:invalid');
-      
+
       expect(() => builder.build()).toThrow(InvalidActionDefinitionError);
       expect(() => builder.build()).toThrow('Invalid action definition');
     });
@@ -885,9 +1030,10 @@ describe('ActionDefinitionBuilder', () => {
 
   describe('toPartial', () => {
     it('should return current definition state', () => {
-      const builder = new ActionDefinitionBuilder('test:partial')
-        .withName('Partial');
-      
+      const builder = new ActionDefinitionBuilder('test:partial').withName(
+        'Partial'
+      );
+
       const partial = builder.toPartial();
       expect(partial.id).toBe('test:partial');
       expect(partial.name).toBe('Partial');
@@ -898,7 +1044,7 @@ describe('ActionDefinitionBuilder', () => {
       const builder = new ActionDefinitionBuilder('test:clone');
       const partial1 = builder.toPartial();
       const partial2 = builder.toPartial();
-      
+
       expect(partial1).not.toBe(partial2);
       expect(partial1).toEqual(partial2);
     });
@@ -913,7 +1059,7 @@ describe('ActionDefinitionBuilder', () => {
         scope: 'test:scope',
         template: 'original {target}',
         prerequisites: ['test:condition'],
-        required_components: { actor: ['test:component'] }
+        required_components: { actor: ['test:component'] },
       };
 
       const rebuilt = ActionDefinitionBuilder.fromDefinition(original).build();
@@ -929,9 +1075,12 @@ describe('ActionDefinitionBuilder', () => {
         template: 'complex {target}',
         prerequisites: [
           'test:condition1',
-          { logic: { condition_ref: 'test:condition2' }, failure_message: 'Failed' }
+          {
+            logic: { condition_ref: 'test:condition2' },
+            failure_message: 'Failed',
+          },
         ],
-        required_components: { actor: ['test:comp1', 'test:comp2'] }
+        required_components: { actor: ['test:comp1', 'test:comp2'] },
       };
 
       const rebuilt = ActionDefinitionBuilder.fromDefinition(original).build();
@@ -941,28 +1090,36 @@ describe('ActionDefinitionBuilder', () => {
     it('should handle partial definitions', () => {
       const partial = {
         id: 'test:partial',
-        name: 'Partial'
+        name: 'Partial',
       };
 
       const builder = ActionDefinitionBuilder.fromDefinition(partial);
       const result = builder.toPartial();
-      
+
       expect(result.id).toBe('test:partial');
       expect(result.name).toBe('Partial');
       expect(result.description).toBeUndefined();
     });
 
     it('should throw error for missing definition', () => {
-      expect(() => ActionDefinitionBuilder.fromDefinition()).toThrow(InvalidActionDefinitionError);
-      expect(() => ActionDefinitionBuilder.fromDefinition()).toThrow('Definition must have an ID');
+      expect(() => ActionDefinitionBuilder.fromDefinition()).toThrow(
+        InvalidActionDefinitionError
+      );
+      expect(() => ActionDefinitionBuilder.fromDefinition()).toThrow(
+        'Definition must have an ID'
+      );
     });
 
     it('should throw error for null definition', () => {
-      expect(() => ActionDefinitionBuilder.fromDefinition(null)).toThrow(InvalidActionDefinitionError);
+      expect(() => ActionDefinitionBuilder.fromDefinition(null)).toThrow(
+        InvalidActionDefinitionError
+      );
     });
 
     it('should throw error for definition without ID', () => {
-      expect(() => ActionDefinitionBuilder.fromDefinition({})).toThrow(InvalidActionDefinitionError);
+      expect(() => ActionDefinitionBuilder.fromDefinition({})).toThrow(
+        InvalidActionDefinitionError
+      );
     });
   });
 
@@ -1018,26 +1175,34 @@ describe('ActionDefinitionBuilder', () => {
       expect(action).toHaveProperty('template');
       expect(action).toHaveProperty('prerequisites');
       expect(action).toHaveProperty('required_components.actor');
-      
+
       // Validate ID format (namespace:identifier)
-      expect(action.id).toMatch(/^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/);
-      
+      expect(action.id).toMatch(
+        /^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/
+      );
+
       // Validate required_components structure
       expect(Array.isArray(action.required_components.actor)).toBe(true);
-      action.required_components.actor.forEach(componentId => {
+      action.required_components.actor.forEach((componentId) => {
         expect(typeof componentId).toBe('string');
-        expect(componentId).toMatch(/^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/);
+        expect(componentId).toMatch(
+          /^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/
+        );
       });
-      
+
       // Validate prerequisites structure
       expect(Array.isArray(action.prerequisites)).toBe(true);
-      action.prerequisites.forEach(prereq => {
+      action.prerequisites.forEach((prereq) => {
         if (typeof prereq === 'string') {
-          expect(prereq).toMatch(/^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/);
+          expect(prereq).toMatch(
+            /^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/
+          );
         } else {
           expect(prereq).toHaveProperty('logic');
           expect(prereq.logic).toHaveProperty('condition_ref');
-          expect(prereq.logic.condition_ref).toMatch(/^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/);
+          expect(prereq.logic.condition_ref).toMatch(
+            /^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/
+          );
         }
       });
     });
@@ -1048,31 +1213,34 @@ describe('ActionDefinitionBuilder', () => {
         .withDescription('Testing different prerequisite formats')
         .asBasicAction()
         .withPrerequisite('test:simple-condition')
-        .withPrerequisite('test:condition-with-message', 'Custom failure message')
+        .withPrerequisite(
+          'test:condition-with-message',
+          'Custom failure message'
+        )
         .withPrerequisites([
           'test:another-simple',
-          { condition: 'test:complex-condition', message: 'Another message' }
+          { condition: 'test:complex-condition', message: 'Another message' },
         ])
         .build();
 
       expect(action.prerequisites).toHaveLength(4);
-      
+
       // Simple string prerequisite
       expect(action.prerequisites[0]).toBe('test:simple-condition');
-      
+
       // Prerequisite with failure message (object format)
       expect(action.prerequisites[1]).toEqual({
         logic: { condition_ref: 'test:condition-with-message' },
-        failure_message: 'Custom failure message'
+        failure_message: 'Custom failure message',
       });
-      
+
       // Another simple string
       expect(action.prerequisites[2]).toBe('test:another-simple');
-      
+
       // Complex object format
       expect(action.prerequisites[3]).toEqual({
         logic: { condition_ref: 'test:complex-condition' },
-        failure_message: 'Another message'
+        failure_message: 'Another message',
       });
     });
 
@@ -1082,10 +1250,10 @@ describe('ActionDefinitionBuilder', () => {
         'test_mod:custom_action',
         'namespace123:identifier456',
         'my_namespace:action-with-hyphens',
-        'a:b'
+        'a:b',
       ];
 
-      testIds.forEach(id => {
+      testIds.forEach((id) => {
         const action = new ActionDefinitionBuilder(id)
           .withName('Test Action')
           .withDescription('Test description')
@@ -1093,7 +1261,9 @@ describe('ActionDefinitionBuilder', () => {
           .build();
 
         expect(action.id).toBe(id);
-        expect(action.id).toMatch(/^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/);
+        expect(action.id).toMatch(
+          /^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/
+        );
       });
     });
 
@@ -1102,10 +1272,10 @@ describe('ActionDefinitionBuilder', () => {
         'none',
         'core:nearby_actors',
         'test_mod:custom_scope',
-        'my_namespace:action-scope'
+        'my_namespace:action-scope',
       ];
 
-      validScopes.forEach(scope => {
+      validScopes.forEach((scope) => {
         const action = new ActionDefinitionBuilder('test:scope-compliance')
           .withName('Scope Test')
           .withDescription('Testing scope compliance')
@@ -1115,7 +1285,9 @@ describe('ActionDefinitionBuilder', () => {
 
         expect(action.scope).toBe(scope);
         if (scope !== 'none') {
-          expect(scope).toMatch(/^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/);
+          expect(scope).toMatch(
+            /^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/
+          );
         }
       });
     });
@@ -1125,7 +1297,7 @@ describe('ActionDefinitionBuilder', () => {
         'core:position',
         'core:health',
         'test_mod:custom_component',
-        'namespace123:component456'
+        'namespace123:component456',
       ];
 
       const action = new ActionDefinitionBuilder('test:component-compliance')
@@ -1135,13 +1307,17 @@ describe('ActionDefinitionBuilder', () => {
         .requiresComponents(validComponentIds)
         .build();
 
-      action.required_components.actor.forEach(componentId => {
-        expect(componentId).toMatch(/^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/);
+      action.required_components.actor.forEach((componentId) => {
+        expect(componentId).toMatch(
+          /^[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_][a-zA-Z0-9_-]*$/
+        );
       });
     });
 
     it('should ensure templates include {target} for targeted actions', () => {
-      const targetedAction = new ActionDefinitionBuilder('test:targeted-template')
+      const targetedAction = new ActionDefinitionBuilder(
+        'test:targeted-template'
+      )
         .withName('Targeted Template Test')
         .withDescription('Testing targeted action templates')
         .asTargetedAction('test:scope', 'perform action on {target}')
@@ -1179,7 +1355,7 @@ describe('ActionDefinitionBuilder', () => {
     it('should handle very long strings', () => {
       const longString = 'a'.repeat(1000);
       const builder = new ActionDefinitionBuilder('test:long');
-      
+
       expect(() => builder.withName(longString)).not.toThrow();
       expect(() => builder.withDescription(longString)).not.toThrow();
       expect(() => builder.withTemplate(longString)).not.toThrow();
@@ -1187,15 +1363,18 @@ describe('ActionDefinitionBuilder', () => {
 
     it('should handle many components and prerequisites', () => {
       const components = Array.from({ length: 100 }, (_, i) => `test:comp${i}`);
-      const prerequisites = Array.from({ length: 100 }, (_, i) => `test:cond${i}`);
-      
+      const prerequisites = Array.from(
+        { length: 100 },
+        (_, i) => `test:cond${i}`
+      );
+
       const builder = new ActionDefinitionBuilder('test:many')
         .withName('Many Items')
         .withDescription('Test with many items')
         .asBasicAction()
         .requiresComponents(components)
         .withPrerequisites(prerequisites);
-      
+
       const partial = builder.toPartial();
       expect(partial.required_components.actor).toHaveLength(100);
       expect(partial.prerequisites).toHaveLength(100);

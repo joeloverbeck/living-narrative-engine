@@ -24,7 +24,6 @@ describe('Character Builder LLM Integration', () => {
   let mockLlmJsonService;
   let mockLlmStrategyFactory;
   let mockLlmConfigManager;
-  let mockStrategy;
 
   beforeEach(() => {
     mockLogger = {
@@ -39,16 +38,15 @@ describe('Character Builder LLM Integration', () => {
       parseAndRepair: jest.fn(),
     };
 
-    mockStrategy = {
-      execute: jest.fn(),
-    };
-
     mockLlmStrategyFactory = {
-      getStrategy: jest.fn(() => mockStrategy),
+      getAIDecision: jest.fn(),
+      getCurrentActiveLlmConfig: jest.fn(),
     };
 
     mockLlmConfigManager = {
       loadConfiguration: jest.fn(),
+      getActiveConfiguration: jest.fn(),
+      setActiveConfiguration: jest.fn(),
     };
 
     directionGenerator = new ThematicDirectionGenerator({
@@ -135,8 +133,12 @@ describe('Character Builder LLM Integration', () => {
         ],
       });
 
+      mockLlmConfigManager.setActiveConfiguration.mockResolvedValue(false); // Force it to try loadConfiguration
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(mockLlmResponse);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(mockLlmResponse)
@@ -145,29 +147,17 @@ describe('Character Builder LLM Integration', () => {
       // Act
       const result = await directionGenerator.generateDirections(
         'concept-123',
-        'A ditzy archer who loves adventure'
+        'A ditzy archer who loves adventure',
+        { llmConfigId: 'openrouter-claude-sonnet-4' }
       );
 
       // Assert
       expect(mockLlmConfigManager.loadConfiguration).toHaveBeenCalledWith(
         'openrouter-claude-sonnet-4'
       );
-      // The strategy is called with an enhanced config that includes the JSON schema
-      expect(mockLlmStrategyFactory.getStrategy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          configId: 'openrouter-claude-sonnet-4',
-          modelIdentifier: 'anthropic/claude-sonnet-4',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'openrouter_json_schema',
-            jsonSchema: expect.objectContaining({
-              type: 'object',
-              properties: expect.objectContaining({
-                thematicDirections: expect.any(Object),
-              }),
-            }),
-          },
-        })
+      // The LLM adapter is called with the generated prompt
+      expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledWith(
+        expect.stringContaining('A ditzy archer who loves adventure')
       );
       expect(result).toHaveLength(3);
       expect(result[0].llmMetadata.modelId).toBe('openrouter-claude-sonnet-4');
@@ -222,7 +212,10 @@ describe('Character Builder LLM Integration', () => {
       });
 
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(mockLlmResponse);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(mockLlmResponse)
@@ -244,14 +237,19 @@ describe('Character Builder LLM Integration', () => {
 
     test('should handle LLM configuration not found', async () => {
       // Arrange
+      mockLlmConfigManager.setActiveConfiguration.mockResolvedValue(false); // Force it to try loadConfiguration
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(null);
 
       // Act & Assert
       await expect(
-        directionGenerator.generateDirections('concept-123', 'A test character')
-      ).rejects.toThrow(
-        'LLM configuration not found: openrouter-claude-sonnet-4'
-      );
+        directionGenerator.generateDirections(
+          'concept-123',
+          'A test character',
+          {
+            llmConfigId: 'nonexistent-config',
+          }
+        )
+      ).rejects.toThrow('LLM configuration not found: nonexistent-config');
     });
   });
 
@@ -305,7 +303,10 @@ describe('Character Builder LLM Integration', () => {
       });
 
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(mockLlmResponse);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(mockLlmResponse)
@@ -318,28 +319,16 @@ describe('Character Builder LLM Integration', () => {
       );
 
       // Assert
-      expect(mockStrategy.execute).toHaveBeenCalledWith({
-        messages: [
-          { role: 'user', content: expect.stringContaining(characterConcept) },
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-        llmConfig: expect.objectContaining({
-          apiType: 'openrouter',
-          configId: 'openrouter-claude-sonnet-4',
-          jsonOutputStrategy: {
-            method: 'openrouter_json_schema',
-            jsonSchema: expect.any(Object),
-          },
-        }),
-        environmentContext: { environment: 'client' },
-      });
+      expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledWith(
+        expect.stringContaining(characterConcept)
+      );
 
       // Verify the prompt contains the character concept
-      const executeCall = mockStrategy.execute.mock.calls[0][0];
-      expect(executeCall.messages[0].content).toContain('Elara');
-      expect(executeCall.messages[0].content).toContain('elven archer');
-      expect(executeCall.messages[0].content).toContain('ancient knowledge');
+      const getAIDecisionCall =
+        mockLlmStrategyFactory.getAIDecision.mock.calls[0][0];
+      expect(getAIDecisionCall).toContain('Elara');
+      expect(getAIDecisionCall).toContain('elven archer');
+      expect(getAIDecisionCall).toContain('ancient knowledge');
     });
 
     test('should include proper prompt structure for thematic directions', async () => {
@@ -389,7 +378,10 @@ describe('Character Builder LLM Integration', () => {
       });
 
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(mockLlmResponse);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(mockLlmResponse)
@@ -402,8 +394,8 @@ describe('Character Builder LLM Integration', () => {
       );
 
       // Assert - Verify prompt contains expected structure
-      const executeCall = mockStrategy.execute.mock.calls[0][0];
-      const promptContent = executeCall.messages[0].content;
+      const promptContent =
+        mockLlmStrategyFactory.getAIDecision.mock.calls[0][0];
 
       expect(promptContent).toContain('<task_definition>');
       expect(promptContent).toContain('<character_concept>');
@@ -493,7 +485,10 @@ describe('Character Builder LLM Integration', () => {
       });
 
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(rawLlmResponse);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(rawLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(cleanedResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(cleanedResponse)
@@ -571,7 +566,10 @@ describe('Character Builder LLM Integration', () => {
       });
 
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(mockLlmResponse);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(mockLlmResponse)
@@ -645,8 +643,11 @@ describe('Character Builder LLM Integration', () => {
       const responseLength = mockLlmResponse.length * 4; // Rough token estimate
 
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
       // Add a small delay to simulate processing time
-      mockStrategy.execute.mockImplementation(
+      mockLlmStrategyFactory.getAIDecision.mockImplementation(
         () =>
           new Promise((resolve) =>
             setTimeout(() => resolve(mockLlmResponse), 10)
@@ -696,7 +697,12 @@ describe('Character Builder LLM Integration', () => {
       };
 
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockRejectedValue(new Error('Network timeout'));
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockRejectedValue(
+        new Error('Network timeout')
+      );
 
       // Act & Assert
       await expect(
@@ -720,7 +726,12 @@ describe('Character Builder LLM Integration', () => {
       const invalidJsonResponse = 'This is not valid JSON';
 
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(invalidJsonResponse);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        invalidJsonResponse
+      );
       mockLlmJsonService.clean.mockReturnValue(invalidJsonResponse);
       mockLlmJsonService.parseAndRepair.mockRejectedValue(
         new Error('Invalid JSON format')
@@ -745,7 +756,12 @@ describe('Character Builder LLM Integration', () => {
       });
 
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(invalidStructureResponse);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        invalidStructureResponse
+      );
       mockLlmJsonService.clean.mockReturnValue(invalidStructureResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(invalidStructureResponse)
@@ -809,7 +825,10 @@ describe('Character Builder LLM Integration', () => {
       const characterConcept = 'A character for testing logging';
 
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
-      mockStrategy.execute.mockResolvedValue(mockLlmResponse);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(mockLlmResponse)
@@ -894,7 +913,7 @@ describe('Character Builder LLM Integration', () => {
       });
 
       // Simulate realistic processing delay
-      mockStrategy.execute.mockImplementation(
+      mockLlmStrategyFactory.getAIDecision.mockImplementation(
         () =>
           new Promise((resolve) =>
             setTimeout(() => resolve(mockLlmResponse), 100)
@@ -902,6 +921,9 @@ describe('Character Builder LLM Integration', () => {
       );
 
       mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockLlmConfig);
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+        mockLlmConfig
+      );
       mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(
         JSON.parse(mockLlmResponse)

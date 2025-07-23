@@ -19,7 +19,7 @@ describe('TurnExecutionTestModule', () => {
   describe('Constructor and Defaults', () => {
     it('should initialize with default configuration', () => {
       const config = module.getConfiguration();
-      
+
       expect(config.llm.strategy).toBe('tool-calling');
       expect(config.llm.temperature).toBe(1.0);
       expect(config.actors).toEqual([]);
@@ -31,7 +31,7 @@ describe('TurnExecutionTestModule', () => {
     it('should accept mock function creator', () => {
       const customMockFn = () => () => 'mocked';
       const customModule = new TurnExecutionTestModule(customMockFn);
-      
+
       expect(customModule).toBeDefined();
     });
   });
@@ -44,18 +44,20 @@ describe('TurnExecutionTestModule', () => {
           temperature: 0.7,
           mockResponses: { 'actor-1': { actionId: 'test' } },
         });
-        
+
         const config = module.getConfiguration();
         expect(config.llm.strategy).toBe('json-schema');
         expect(config.llm.temperature).toBe(0.7);
-        expect(config.llm.mockResponses['actor-1']).toEqual({ actionId: 'test' });
+        expect(config.llm.mockResponses['actor-1']).toEqual({
+          actionId: 'test',
+        });
       });
 
       it('should merge with existing LLM config', () => {
         module
           .withMockLLM({ temperature: 0.5 })
           .withMockLLM({ strategy: 'json-schema' });
-        
+
         const config = module.getConfiguration();
         expect(config.llm.temperature).toBe(0.5);
         expect(config.llm.strategy).toBe('json-schema');
@@ -65,7 +67,7 @@ describe('TurnExecutionTestModule', () => {
     describe('withTestActors()', () => {
       it('should convert string actors to objects', () => {
         module.withTestActors(['ai-actor', 'player']);
-        
+
         const config = module.getConfiguration();
         expect(config.actors).toEqual([
           { id: 'ai-actor', type: 'ai' },
@@ -78,9 +80,9 @@ describe('TurnExecutionTestModule', () => {
           { id: 'custom-ai', type: 'ai', name: 'Custom AI' },
           { id: 'custom-player', type: 'player', role: 'hero' },
         ];
-        
+
         module.withTestActors(actors);
-        
+
         const config = module.getConfiguration();
         expect(config.actors).toEqual(actors);
       });
@@ -93,7 +95,7 @@ describe('TurnExecutionTestModule', () => {
           size: 'large',
           generateLocations: true,
         });
-        
+
         const config = module.getConfiguration();
         expect(config.world.name).toBe('Custom World');
         expect(config.world.size).toBe('large');
@@ -104,7 +106,7 @@ describe('TurnExecutionTestModule', () => {
         module
           .withWorld({ name: 'First Name' })
           .withWorld({ size: 'medium', name: 'Final Name' });
-        
+
         const config = module.getConfiguration();
         expect(config.world.name).toBe('Final Name');
         expect(config.world.size).toBe('medium');
@@ -115,7 +117,7 @@ describe('TurnExecutionTestModule', () => {
     describe('withPerformanceTracking()', () => {
       it('should enable performance tracking with defaults', () => {
         module.withPerformanceTracking();
-        
+
         const config = module.getConfiguration();
         expect(config.monitoring.performance.enabled).toBe(true);
         expect(config.monitoring.performance.thresholds).toEqual({
@@ -132,11 +134,15 @@ describe('TurnExecutionTestModule', () => {
             customMetric: 25,
           },
         });
-        
+
         const config = module.getConfiguration();
-        expect(config.monitoring.performance.thresholds.turnExecution).toBe(200);
+        expect(config.monitoring.performance.thresholds.turnExecution).toBe(
+          200
+        );
         expect(config.monitoring.performance.thresholds.customMetric).toBe(25);
-        expect(config.monitoring.performance.thresholds.actionDiscovery).toBe(50); // Default preserved
+        expect(config.monitoring.performance.thresholds.actionDiscovery).toBe(
+          50
+        ); // Default preserved
       });
     });
 
@@ -144,7 +150,7 @@ describe('TurnExecutionTestModule', () => {
       it('should configure event types to capture', () => {
         const events = ['AI_DECISION_MADE', 'ACTION_EXECUTED'];
         module.withEventCapture(events);
-        
+
         const config = module.getConfiguration();
         expect(config.monitoring.events).toEqual(events);
       });
@@ -153,7 +159,7 @@ describe('TurnExecutionTestModule', () => {
         module
           .withEventCapture(['EVENT_A'])
           .withEventCapture(['EVENT_B', 'EVENT_C']);
-        
+
         const config = module.getConfiguration();
         expect(config.monitoring.events).toEqual(['EVENT_B', 'EVENT_C']);
       });
@@ -165,9 +171,9 @@ describe('TurnExecutionTestModule', () => {
           actionService: { customMethod: 'test' },
           llmService: { customMethod: 'test' },
         };
-        
+
         module.withCustomFacades(customFacades);
-        
+
         const config = module.getConfiguration();
         expect(config.facades).toEqual(customFacades);
       });
@@ -180,38 +186,42 @@ describe('TurnExecutionTestModule', () => {
         .withMockLLM({ strategy: 'tool-calling' })
         .withTestActors(['ai-actor'])
         .withWorld({ name: 'Test' });
-      
+
       const result = module.validate();
-      
+
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
 
     it('should detect invalid LLM strategy', () => {
       module.withMockLLM({ strategy: 'invalid-strategy' });
-      
+
       const result = module.validate();
-      
+
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.code === 'INVALID_LLM_STRATEGY')).toBe(true);
+      expect(result.errors.some((e) => e.code === 'INVALID_LLM_STRATEGY')).toBe(
+        true
+      );
     });
 
     it('should warn about no actors', () => {
       const result = module.validate();
-      
+
       expect(result.valid).toBe(true); // Still valid, just a warning
-      expect(result.warnings.some(w => w.code === 'NO_ACTORS')).toBe(true);
+      expect(result.warnings.some((w) => w.code === 'NO_ACTORS')).toBe(true);
     });
 
     it('should warn about high performance thresholds', () => {
       module.withPerformanceTracking({
         thresholds: { turnExecution: 2000 },
       });
-      
+
       const result = module.validate();
-      
+
       expect(result.valid).toBe(true);
-      expect(result.warnings.some(w => w.code === 'HIGH_PERFORMANCE_THRESHOLD')).toBe(true);
+      expect(
+        result.warnings.some((w) => w.code === 'HIGH_PERFORMANCE_THRESHOLD')
+      ).toBe(true);
     });
   });
 
@@ -219,7 +229,7 @@ describe('TurnExecutionTestModule', () => {
     it('should throw on invalid configuration', async () => {
       // Create invalid config
       module.withMockLLM({ strategy: 'invalid' });
-      
+
       await expect(module.build()).rejects.toThrow(TestModuleValidationError);
     });
 
@@ -227,20 +237,20 @@ describe('TurnExecutionTestModule', () => {
       module
         .withMockLLM({ strategy: 'tool-calling' })
         .withTestActors(['ai-actor']);
-      
+
       const testEnv = await module.build();
-      
+
       expect(testEnv.config).toBeDefined();
-      expect(() => testEnv.config.llm = 'modified').toThrow(); // Frozen
+      expect(() => (testEnv.config.llm = 'modified')).toThrow(); // Frozen
     });
 
     it('should provide convenience methods', async () => {
       module
         .withMockLLM({ strategy: 'tool-calling' })
         .withTestActors(['ai-actor']);
-      
+
       const testEnv = await module.build();
-      
+
       expect(typeof testEnv.executeAITurn).toBe('function');
       expect(typeof testEnv.executePlayerTurn).toBe('function');
       expect(typeof testEnv.cleanup).toBe('function');
@@ -251,9 +261,9 @@ describe('TurnExecutionTestModule', () => {
         .withMockLLM({ strategy: 'tool-calling' })
         .withTestActors(['ai-actor'])
         .withPerformanceTracking();
-      
+
       const testEnv = await module.build();
-      
+
       expect(typeof testEnv.getPerformanceMetrics).toBe('function');
       expect(typeof testEnv.checkPerformanceThresholds).toBe('function');
     });
@@ -263,9 +273,9 @@ describe('TurnExecutionTestModule', () => {
         .withMockLLM({ strategy: 'tool-calling' })
         .withTestActors(['ai-actor'])
         .withEventCapture(['TEST_EVENT']);
-      
+
       const testEnv = await module.build();
-      
+
       expect(typeof testEnv.getCapturedEvents).toBe('function');
       expect(typeof testEnv.clearCapturedEvents).toBe('function');
     });
@@ -278,9 +288,9 @@ describe('TurnExecutionTestModule', () => {
         .withTestActors(['actor1', 'actor2'])
         .withWorld({ name: 'Custom' })
         .reset();
-      
+
       const config = module.getConfiguration();
-      
+
       expect(config.llm.temperature).toBe(1.0);
       expect(config.actors).toEqual([]);
       expect(config.world.name).toBe('Test World');
@@ -297,15 +307,15 @@ describe('TurnExecutionTestModule', () => {
       module
         .withMockLLM({ temperature: 0.7 })
         .withTestActors(['original-actor']);
-      
+
       const cloned = module.clone();
-      
+
       // Verify configurations match
       expect(cloned.getConfiguration()).toEqual(module.getConfiguration());
-      
+
       // Verify independence
       cloned.withTestActors(['cloned-actor']);
-      
+
       expect(module.getConfiguration().actors[0].id).toBe('original-actor');
       expect(cloned.getConfiguration().actors[0].id).toBe('cloned-actor');
     });
@@ -314,7 +324,7 @@ describe('TurnExecutionTestModule', () => {
       const customMockFn = () => () => 'custom';
       const original = new TurnExecutionTestModule(customMockFn);
       const cloned = original.clone();
-      
+
       expect(cloned).toBeDefined();
     });
   });
@@ -328,9 +338,9 @@ describe('TurnExecutionTestModule', () => {
         .withPerformanceTracking()
         .withEventCapture(['EVENT_A', 'EVENT_B'])
         .withCustomFacades({ custom: true });
-      
+
       expect(result).toBe(module);
-      
+
       const config = module.getConfiguration();
       expect(config.llm.strategy).toBe('json-schema');
       expect(config.actors).toHaveLength(2);

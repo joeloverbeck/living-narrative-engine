@@ -13,7 +13,7 @@ import { TestModuleValidator } from './validation/testModuleValidator.js';
 /**
  * Primary entry point for all test module creation.
  * Provides static factory methods and preset scenarios for rapid test setup.
- * 
+ *
  * @example
  * // Basic usage
  * const testEnv = await TestModuleBuilder.forTurnExecution()
@@ -66,7 +66,7 @@ export class TestModuleBuilder {
   /**
    * Preset scenarios for rapid test creation.
    * Each scenario returns a pre-configured test module ready for customization.
-   * 
+   *
    * @namespace
    */
   static scenarios = {
@@ -201,6 +201,8 @@ export class TestModuleBuilder {
    * @private
    */
   constructor() {
-    throw new Error('TestModuleBuilder is a static class and cannot be instantiated');
+    throw new Error(
+      'TestModuleBuilder is a static class and cannot be instantiated'
+    );
   }
 }

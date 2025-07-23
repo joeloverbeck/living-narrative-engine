@@ -14,6 +14,10 @@ import { CharacterBuilderApp } from '../../../src/character-builder-main.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 
+// Mock the DI container and its dependencies
+jest.mock('../../../src/dependencyInjection/appContainer.js');
+jest.mock('../../../src/dependencyInjection/baseContainerConfig.js');
+
 // Mock global fetch
 global.fetch = jest.fn();
 
@@ -23,8 +27,14 @@ document.body.innerHTML = '<div id="root"></div>';
 describe('CharacterBuilderApp', () => {
   let app;
   let mockFetch;
+  let mockContainer;
+  let mockSchemaLoader;
+  let mockSchemaValidator;
+  let mockLlmAdapter;
+  let mockController;
+  let mockConfigureBaseContainer;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset mocks
     jest.clearAllMocks();
     mockFetch = global.fetch;
@@ -33,6 +43,49 @@ describe('CharacterBuilderApp', () => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
     jest.spyOn(console, 'debug').mockImplementation(() => {});
+
+    // Setup DI container mocks
+    mockSchemaLoader = {
+      loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockSchemaValidator = {
+      addSchema: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockLlmAdapter = {
+      init: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockController = {
+      initialize: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockContainer = {
+      register: jest.fn(),
+      resolve: jest.fn((token) => {
+        if (token.toString().includes('SchemaLoader')) return mockSchemaLoader;
+        if (token.toString().includes('ISchemaValidator')) return mockSchemaValidator;
+        if (token.toString().includes('LLMAdapter')) return mockLlmAdapter;
+        if (token.toString().includes('Controller')) return mockController;
+        return {};
+      }),
+    };
+
+    mockConfigureBaseContainer = jest
+      .fn()
+      .mockResolvedValue(undefined);
+
+    // Mock the imports
+    const { default: AppContainer } = await import(
+      '../../../src/dependencyInjection/appContainer.js'
+    );
+    AppContainer.mockImplementation(() => mockContainer);
+
+    const { configureBaseContainer } = await import(
+      '../../../src/dependencyInjection/baseContainerConfig.js'
+    );
+    configureBaseContainer.mockImplementation(mockConfigureBaseContainer);
 
     app = new CharacterBuilderApp();
   });
@@ -95,14 +148,12 @@ describe('CharacterBuilderApp', () => {
         });
       });
 
-      try {
-        await app.initialize();
-      } catch (error) {
-        // We expect some initialization errors due to missing dependencies
-        // But schema loading should have been attempted in correct order
-      }
+      await app.initialize();
 
-      // Verify schemas were fetched in the correct order
+      // Verify SchemaLoader was called to load all schemas
+      expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(1);
+
+      // Verify character-specific schemas were loaded in correct order
       const schemaFetchCalls = fetchCalls.filter(
         (url) =>
           url.includes('thematic-direction.schema.json') ||
@@ -112,6 +163,19 @@ describe('CharacterBuilderApp', () => {
       expect(schemaFetchCalls.length).toBe(2);
       expect(schemaFetchCalls[0]).toContain('thematic-direction.schema.json');
       expect(schemaFetchCalls[1]).toContain('character-concept.schema.json');
+
+      // Verify the schemas were added to the validator in correct order
+      expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(2);
+      expect(mockSchemaValidator.addSchema).toHaveBeenNthCalledWith(
+        1,
+        mockThematicDirectionSchema,
+        'thematic-direction'
+      );
+      expect(mockSchemaValidator.addSchema).toHaveBeenNthCalledWith(
+        2,
+        mockCharacterConceptSchema,
+        'character-concept'
+      );
     });
 
     it('should handle schema loading failure gracefully', async () => {
@@ -128,13 +192,17 @@ describe('CharacterBuilderApp', () => {
         });
       });
 
-      await expect(app.initialize()).rejects.toThrow('Schema loading failed');
+      await expect(app.initialize()).rejects.toThrow(
+        'Failed to load thematic direction schema: 404'
+      );
     });
 
     it('should handle network errors during schema fetch', async () => {
       mockFetch.mockRejectedValue(new Error('Network error'));
 
-      await expect(app.initialize()).rejects.toThrow('Schema loading failed');
+      await expect(app.initialize()).rejects.toThrow(
+        'Schema loading failed: Network error'
+      );
     });
   });
 

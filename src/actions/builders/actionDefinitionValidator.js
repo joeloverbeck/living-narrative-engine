@@ -6,14 +6,14 @@
 
 /**
  * Validates action definitions for schema compliance and format requirements
- * 
+ *
  * Performs comprehensive validation including:
  * - Required field presence
  * - ID format validation (namespace:identifier)
  * - Scope format validation
  * - Template validation for targeted actions
  * - Component and prerequisite ID validation
- * 
+ *
  * @example
  * const validator = new ActionDefinitionValidator();
  * const result = validator.validate(actionDefinition);
@@ -24,7 +24,7 @@
 export class ActionDefinitionValidator {
   /**
    * Validates an action definition
-   * 
+   *
    * @param {object} definition - The action definition to validate
    * @returns {{isValid: boolean, errors: string[]}} Validation result
    * @example
@@ -40,16 +40,16 @@ export class ActionDefinitionValidator {
    */
   validate(definition) {
     const errors = [];
-    
+
     // Handle null/undefined definition
     if (!definition || typeof definition !== 'object') {
       errors.push('Definition must be a valid object');
       return {
         isValid: false,
-        errors
+        errors,
       };
     }
-    
+
     // Required field validation
     if (!definition.id) {
       errors.push('Action ID is required');
@@ -66,26 +66,36 @@ export class ActionDefinitionValidator {
     if (!definition.template) {
       errors.push('Action template is required');
     }
-    
+
     // Format validation for ID
     if (definition.id && !this.#isValidId(definition.id)) {
-      errors.push('Action ID must follow namespace:identifier format (e.g., "core:attack")');
+      errors.push(
+        'Action ID must follow namespace:identifier format (e.g., "core:attack")'
+      );
     }
-    
+
     // Format validation for scope
     if (definition.scope) {
       if (definition.scope !== 'none' && !this.#isValidId(definition.scope)) {
-        errors.push('Scope must be "none" or follow namespace:identifier format (e.g., "core:nearby_actors")');
+        errors.push(
+          'Scope must be "none" or follow namespace:identifier format (e.g., "core:nearby_actors")'
+        );
       }
     }
-    
+
     // Template validation for targeted actions
-    if (definition.template && definition.scope && definition.scope !== 'none') {
+    if (
+      definition.template &&
+      definition.scope &&
+      definition.scope !== 'none'
+    ) {
       if (!definition.template.includes('{target}')) {
-        errors.push('Template for targeted actions should include {target} placeholder');
+        errors.push(
+          'Template for targeted actions should include {target} placeholder'
+        );
       }
     }
-    
+
     // Component validation
     if (definition.required_components?.actor) {
       if (!Array.isArray(definition.required_components.actor)) {
@@ -95,12 +105,14 @@ export class ActionDefinitionValidator {
           if (typeof componentId !== 'string') {
             errors.push(`Component at index ${index} must be a string`);
           } else if (!this.#isValidId(componentId)) {
-            errors.push(`Invalid component ID at index ${index}: "${componentId}" (must follow namespace:identifier format)`);
+            errors.push(
+              `Invalid component ID at index ${index}: "${componentId}" (must follow namespace:identifier format)`
+            );
           }
         });
       }
     }
-    
+
     // Prerequisite validation
     if (definition.prerequisites) {
       if (!Array.isArray(definition.prerequisites)) {
@@ -109,48 +121,66 @@ export class ActionDefinitionValidator {
         definition.prerequisites.forEach((prereq, index) => {
           if (typeof prereq === 'string') {
             if (!this.#isValidId(prereq)) {
-              errors.push(`Invalid prerequisite ID at index ${index}: "${prereq}" (must follow namespace:identifier format)`);
+              errors.push(
+                `Invalid prerequisite ID at index ${index}: "${prereq}" (must follow namespace:identifier format)`
+              );
             }
           } else if (prereq && typeof prereq === 'object') {
             if (prereq.logic?.condition_ref) {
               if (typeof prereq.logic.condition_ref !== 'string') {
-                errors.push(`Prerequisite condition_ref at index ${index} must be a string`);
+                errors.push(
+                  `Prerequisite condition_ref at index ${index} must be a string`
+                );
               } else if (!this.#isValidId(prereq.logic.condition_ref)) {
-                errors.push(`Invalid prerequisite condition_ref at index ${index}: "${prereq.logic.condition_ref}" (must follow namespace:identifier format)`);
+                errors.push(
+                  `Invalid prerequisite condition_ref at index ${index}: "${prereq.logic.condition_ref}" (must follow namespace:identifier format)`
+                );
               }
             } else {
-              errors.push(`Invalid prerequisite format at index ${index}: expected string or object with logic.condition_ref`);
+              errors.push(
+                `Invalid prerequisite format at index ${index}: expected string or object with logic.condition_ref`
+              );
             }
-            
+
             // Validate failure_message if present
-            if (prereq.failure_message !== undefined && typeof prereq.failure_message !== 'string') {
-              errors.push(`Prerequisite failure_message at index ${index} must be a string`);
+            if (
+              prereq.failure_message !== undefined &&
+              typeof prereq.failure_message !== 'string'
+            ) {
+              errors.push(
+                `Prerequisite failure_message at index ${index} must be a string`
+              );
             }
           } else {
-            errors.push(`Invalid prerequisite format at index ${index}: expected string or object`);
+            errors.push(
+              `Invalid prerequisite format at index ${index}: expected string or object`
+            );
           }
         });
       }
     }
-    
+
     // Validate required_components structure
     if (definition.required_components !== undefined) {
-      if (!definition.required_components || typeof definition.required_components !== 'object') {
+      if (
+        !definition.required_components ||
+        typeof definition.required_components !== 'object'
+      ) {
         errors.push('required_components must be an object');
       } else if (!definition.required_components.actor) {
         errors.push('required_components must have an "actor" property');
       }
     }
-    
+
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
-  
+
   /**
    * Validates that an ID follows the namespace:identifier format
-   * 
+   *
    * @private
    * @param {string} id - The ID to validate
    * @returns {boolean} True if the ID is valid

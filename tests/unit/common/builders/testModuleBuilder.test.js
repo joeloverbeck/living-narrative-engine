@@ -14,7 +14,7 @@ describe('TestModuleBuilder', () => {
   describe('Factory Methods', () => {
     it('should create TurnExecutionTestModule via forTurnExecution()', () => {
       const module = TestModuleBuilder.forTurnExecution();
-      
+
       expect(module).toBeInstanceOf(TurnExecutionTestModule);
       expect(module.build).toBeDefined();
       expect(module.validate).toBeDefined();
@@ -23,7 +23,7 @@ describe('TestModuleBuilder', () => {
 
     it('should create ActionProcessingTestModule via forActionProcessing()', () => {
       const module = TestModuleBuilder.forActionProcessing();
-      
+
       expect(module).toBeInstanceOf(ActionProcessingTestModule);
       expect(module.build).toBeDefined();
       expect(module.validate).toBeDefined();
@@ -32,7 +32,7 @@ describe('TestModuleBuilder', () => {
 
     it('should create EntityManagementTestModule via forEntityManagement()', () => {
       const module = TestModuleBuilder.forEntityManagement();
-      
+
       expect(module).toBeInstanceOf(EntityManagementTestModule);
       expect(module.build).toBeDefined();
       expect(module.validate).toBeDefined();
@@ -41,7 +41,7 @@ describe('TestModuleBuilder', () => {
 
     it('should create LLMTestingModule via forLLMTesting()', () => {
       const module = TestModuleBuilder.forLLMTesting();
-      
+
       expect(module).toBeInstanceOf(LLMTestingModule);
       expect(module.build).toBeDefined();
       expect(module.validate).toBeDefined();
@@ -52,9 +52,9 @@ describe('TestModuleBuilder', () => {
   describe('Scenario Presets', () => {
     it('should create combat scenario', () => {
       const module = TestModuleBuilder.scenarios.combat();
-      
+
       expect(module).toBeInstanceOf(TurnExecutionTestModule);
-      
+
       const config = module.getConfiguration();
       expect(config.llm.strategy).toBe('tool-calling');
       expect(config.llm.temperature).toBe(0.8);
@@ -64,9 +64,9 @@ describe('TestModuleBuilder', () => {
 
     it('should create social interaction scenario', () => {
       const module = TestModuleBuilder.scenarios.socialInteraction();
-      
+
       expect(module).toBeInstanceOf(TurnExecutionTestModule);
-      
+
       const config = module.getConfiguration();
       expect(config.llm.strategy).toBe('json-schema');
       expect(config.llm.temperature).toBe(1.2);
@@ -76,9 +76,9 @@ describe('TestModuleBuilder', () => {
 
     it('should create exploration scenario', () => {
       const module = TestModuleBuilder.scenarios.exploration();
-      
+
       expect(module).toBeInstanceOf(TurnExecutionTestModule);
-      
+
       const config = module.getConfiguration();
       expect(config.llm.strategy).toBe('tool-calling');
       expect(config.actors).toHaveLength(1); // explorer
@@ -88,9 +88,9 @@ describe('TestModuleBuilder', () => {
 
     it('should create performance scenario', () => {
       const module = TestModuleBuilder.scenarios.performance();
-      
+
       expect(module).toBeInstanceOf(TurnExecutionTestModule);
-      
+
       const config = module.getConfiguration();
       expect(config.llm.fastMode).toBe(true);
       expect(config.world.minimal).toBe(true);
@@ -105,9 +105,12 @@ describe('TestModuleBuilder', () => {
         actors: [{ id: 'test' }],
         world: { name: 'Test' },
       };
-      
-      const result = TestModuleBuilder.utils.validateConfig(validConfig, 'turnExecution');
-      
+
+      const result = TestModuleBuilder.utils.validateConfig(
+        validConfig,
+        'turnExecution'
+      );
+
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
@@ -117,18 +120,21 @@ describe('TestModuleBuilder', () => {
         // Missing required fields
         actors: [],
       };
-      
-      const result = TestModuleBuilder.utils.validateConfig(invalidConfig, 'turnExecution');
-      
+
+      const result = TestModuleBuilder.utils.validateConfig(
+        invalidConfig,
+        'turnExecution'
+      );
+
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors.some(e => e.field === 'llm')).toBe(true);
+      expect(result.errors.some((e) => e.field === 'llm')).toBe(true);
     });
 
     it('should throw for unknown module type validation', () => {
-      expect(() => TestModuleBuilder.utils.validateConfig({}, 'unknown')).toThrow(
-        'Unknown module type: unknown'
-      );
+      expect(() =>
+        TestModuleBuilder.utils.validateConfig({}, 'unknown')
+      ).toThrow('Unknown module type: unknown');
     });
   });
 
@@ -137,7 +143,7 @@ describe('TestModuleBuilder', () => {
       expect(() => TestModuleBuilder.advanced.custom({})).toThrow(
         'Custom scenario builder not yet implemented'
       );
-      
+
       expect(() => TestModuleBuilder.advanced.multiActor(5)).toThrow(
         'Multi-actor scenario builder not yet implemented'
       );

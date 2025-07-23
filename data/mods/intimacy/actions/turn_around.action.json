@@ -3,7 +3,7 @@
   "id": "intimacy:turn_around",
   "name": "Turn Around",
   "description": "Turn the target around or have them face you again.",
-  "scope": "intimacy:close_actors_facing_forward_or_behind_target",
+  "scope": "intimacy:close_actors_facing_each_other_or_behind_target",
   "required_components": {
     "actor": ["intimacy:closeness"]
   },

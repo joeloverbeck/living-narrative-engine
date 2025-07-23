@@ -11,8 +11,11 @@ import { InvalidActionDefinitionError } from '../../../../src/errors/invalidActi
 describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
   describe('extreme input scenarios', () => {
     it('should handle very large component arrays', () => {
-      const largeComponentArray = Array.from({ length: 1000 }, (_, i) => `test:component${i}`);
-      
+      const largeComponentArray = Array.from(
+        { length: 1000 },
+        (_, i) => `test:component${i}`
+      );
+
       const action = new ActionDefinitionBuilder('test:large-components')
         .withName('Large Components Test')
         .withDescription('Testing with 1000 components')
@@ -26,8 +29,11 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
     });
 
     it('should handle very large prerequisite arrays', () => {
-      const largePrerequisiteArray = Array.from({ length: 500 }, (_, i) => `test:condition${i}`);
-      
+      const largePrerequisiteArray = Array.from(
+        { length: 500 },
+        (_, i) => `test:condition${i}`
+      );
+
       const action = new ActionDefinitionBuilder('test:large-prerequisites')
         .withName('Large Prerequisites Test')
         .withDescription('Testing with 500 prerequisites')
@@ -42,7 +48,7 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
 
     it('should handle extremely long strings', () => {
       const veryLongString = 'a'.repeat(10000);
-      
+
       const action = new ActionDefinitionBuilder('test:long-strings')
         .withName(veryLongString)
         .withDescription(veryLongString)
@@ -57,7 +63,7 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
 
     it('should handle special characters in all string fields', () => {
       const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?`~';
-      
+
       const action = new ActionDefinitionBuilder('test:special-chars')
         .withName(`Name with ${specialChars}`)
         .withDescription(`Description with ${specialChars}`)
@@ -72,7 +78,7 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
 
     it('should handle unicode and emoji characters', () => {
       const unicodeText = '你好世界 🌍🎮🚀⚡🔥💎🌟⭐🎯🎲';
-      
+
       const action = new ActionDefinitionBuilder('test:unicode')
         .withName(`Unicode ${unicodeText}`)
         .withDescription(`Description with ${unicodeText}`)
@@ -89,20 +95,20 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
   describe('complex prerequisite combinations', () => {
     it('should handle mixed prerequisite formats in large numbers', () => {
       const prerequisites = [];
-      
+
       // Add 50 simple string prerequisites
       for (let i = 0; i < 50; i++) {
         prerequisites.push(`test:simple${i}`);
       }
-      
+
       // Add 50 complex object prerequisites
       for (let i = 0; i < 50; i++) {
         prerequisites.push({
           condition: `test:complex${i}`,
-          message: `Complex failure message ${i}`
+          message: `Complex failure message ${i}`,
         });
       }
-      
+
       const action = new ActionDefinitionBuilder('test:mixed-prereqs')
         .withName('Mixed Prerequisites Test')
         .withDescription('Testing mixed prerequisite formats')
@@ -111,18 +117,18 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
         .build();
 
       expect(action.prerequisites).toHaveLength(100);
-      
+
       // Check first 50 are strings
       for (let i = 0; i < 50; i++) {
         expect(action.prerequisites[i]).toBe(`test:simple${i}`);
       }
-      
+
       // Check last 50 are objects
       for (let i = 50; i < 100; i++) {
         const complexIndex = i - 50;
         expect(action.prerequisites[i]).toEqual({
           logic: { condition_ref: `test:complex${complexIndex}` },
-          failure_message: `Complex failure message ${complexIndex}`
+          failure_message: `Complex failure message ${complexIndex}`,
         });
       }
     });
@@ -156,17 +162,17 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
         .withPrerequisite('test:duplicate', 'Second message')
         .withPrerequisites([
           { condition: 'test:duplicate', message: 'Third message' },
-          'test:another-unique'
+          'test:another-unique',
         ])
         .build();
 
       // Should have all duplicates (not deduplicated for prerequisites)
       expect(action.prerequisites).toHaveLength(6);
-      
+
       // Check the various formats are preserved
       expect(action.prerequisites[0]).toEqual({
         logic: { condition_ref: 'test:duplicate' },
-        failure_message: 'First message'
+        failure_message: 'First message',
       });
       expect(action.prerequisites[1]).toBe('test:duplicate');
       expect(action.prerequisites[2]).toBe('test:unique');
@@ -181,16 +187,18 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
         .asBasicAction()
         .requiresComponent('test:duplicate')
         .requiresComponents(['test:duplicate', 'test:unique1'])
-        .requiresComponent('test:duplicate')  // Another duplicate
+        .requiresComponent('test:duplicate') // Another duplicate
         .requiresComponents(['test:unique2', 'test:duplicate'])
-        .asCombatAction()  // Adds core:position and core:health
-        .requiresComponent('test:duplicate')  // Yet another duplicate
+        .asCombatAction() // Adds core:position and core:health
+        .requiresComponent('test:duplicate') // Yet another duplicate
         .build();
 
       // Should deduplicate test:duplicate but keep all unique ones
       const components = action.required_components.actor;
-      const duplicateCount = components.filter(c => c === 'test:duplicate').length;
-      
+      const duplicateCount = components.filter(
+        (c) => c === 'test:duplicate'
+      ).length;
+
       expect(duplicateCount).toBe(1);
       expect(components).toContain('test:duplicate');
       expect(components).toContain('test:unique1');
@@ -204,26 +212,26 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
         .withName('Mixed Arrays')
         .withDescription('Testing mixed empty and non-empty arrays')
         .asBasicAction()
-        .requiresComponents([])  // Empty array
+        .requiresComponents([]) // Empty array
         .requiresComponent('test:component1')
         .requiresComponents(['test:component2', 'test:component3'])
-        .requiresComponents([])  // Another empty array
+        .requiresComponents([]) // Another empty array
         .requiresComponent('test:component4')
-        .withPrerequisites([])  // Empty prerequisites
+        .withPrerequisites([]) // Empty prerequisites
         .withPrerequisite('test:condition1')
         .withPrerequisites(['test:condition2'])
-        .withPrerequisites([])  // Another empty prerequisites array
+        .withPrerequisites([]) // Another empty prerequisites array
         .build();
 
       expect(action.required_components.actor).toEqual([
         'test:component1',
         'test:component2',
         'test:component3',
-        'test:component4'
+        'test:component4',
       ]);
       expect(action.prerequisites).toEqual([
         'test:condition1',
-        'test:condition2'
+        'test:condition2',
       ]);
     });
   });
@@ -234,31 +242,33 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
         .withName('Complex Convenience')
         .withDescription('Testing complex convenience method combinations')
         .asTargetedAction('test:targets', 'complex {target}')
-        .asMovementAction()  // Adds core:position + core:actor-can-move
-        .asCombatAction()    // Adds core:health + core:has-health (position already exists)
+        .asMovementAction() // Adds core:position + core:actor-can-move
+        .asCombatAction() // Adds core:health + core:has-health (position already exists)
         .requiresComponent('extra:component1')
         .withPrerequisite('extra:condition1')
         .requiresComponents(['extra:component2', 'extra:component3'])
         .withPrerequisites([
           'extra:condition2',
-          { condition: 'extra:condition3', message: 'Extra failure' }
+          { condition: 'extra:condition3', message: 'Extra failure' },
         ])
         .build();
 
       // Check all components are present (with deduplication)
       const components = action.required_components.actor;
-      expect(components).toContain('core:position');  // From both movement and combat
-      expect(components).toContain('core:health');    // From combat
+      expect(components).toContain('core:position'); // From both movement and combat
+      expect(components).toContain('core:health'); // From combat
       expect(components).toContain('extra:component1');
       expect(components).toContain('extra:component2');
       expect(components).toContain('extra:component3');
-      
+
       // Position should only appear once due to deduplication
-      const positionCount = components.filter(c => c === 'core:position').length;
+      const positionCount = components.filter(
+        (c) => c === 'core:position'
+      ).length;
       expect(positionCount).toBe(1);
 
       // Check all prerequisites are present
-      const allConditionRefs = action.prerequisites.map(p => 
+      const allConditionRefs = action.prerequisites.map((p) =>
         typeof p === 'string' ? p : p.logic?.condition_ref
       );
       expect(allConditionRefs).toContain('core:actor-can-move');
@@ -275,7 +285,7 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
         ['asBasicAction', 'asMovementAction', 'asCombatAction'],
         ['asTargetedAction', 'asCombatAction', 'asMovementAction'],
         ['asTargetedAction', 'asMovementAction', 'asCombatAction'],
-        ['asBasicAction', 'asCombatAction', 'asMovementAction']
+        ['asBasicAction', 'asCombatAction', 'asMovementAction'],
       ];
 
       orders.forEach((order, index) => {
@@ -284,7 +294,7 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
           .withDescription(`Testing order ${order.join(' -> ')}`);
 
         // Apply methods in the specified order
-        order.forEach(methodName => {
+        order.forEach((methodName) => {
           switch (methodName) {
             case 'asBasicAction':
               builder = builder.asBasicAction();
@@ -302,7 +312,7 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
         });
 
         const action = builder.build();
-        
+
         // All orders should result in the same final components
         // (because of deduplication)
         if (order.includes('asCombatAction')) {
@@ -339,20 +349,20 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
 
     it('should handle toPartial calls during different states', () => {
       const builder = new ActionDefinitionBuilder('test:partial-states');
-      
+
       const state1 = builder.toPartial();
       expect(state1.name).toBeUndefined();
-      
+
       builder.withName('Test Name');
       const state2 = builder.toPartial();
       expect(state2.name).toBe('Test Name');
       expect(state2.description).toBeUndefined();
-      
+
       builder.withDescription('Test Description');
       const state3 = builder.toPartial();
       expect(state3.name).toBe('Test Name');
       expect(state3.description).toBe('Test Description');
-      
+
       // Previous states should remain unchanged
       expect(state1.name).toBeUndefined();
       expect(state2.description).toBeUndefined();
@@ -395,12 +405,15 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
         prerequisites: [
           'test:simple',
           { logic: { condition_ref: 'test:complex' } }, // No failure message
-          { logic: { condition_ref: 'test:with-message' }, failure_message: 'Has message' }
+          {
+            logic: { condition_ref: 'test:with-message' },
+            failure_message: 'Has message',
+          },
         ],
         required_components: { actor: ['test:comp1', 'test:comp2'] },
         // Extra properties that should be ignored
         extraProperty1: 'should be ignored',
-        extraProperty2: { nested: 'also ignored' }
+        extraProperty2: { nested: 'also ignored' },
       };
 
       const builder = ActionDefinitionBuilder.fromDefinition(unusualDefinition);
@@ -413,9 +426,9 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
       expect(recreated.prerequisites[1]).toBe('test:complex'); // Converted to simple string
       expect(recreated.prerequisites[2]).toEqual({
         logic: { condition_ref: 'test:with-message' },
-        failure_message: 'Has message'
+        failure_message: 'Has message',
       });
-      
+
       // Extra properties should not be in the final definition
       expect(recreated).not.toHaveProperty('extraProperty1');
       expect(recreated).not.toHaveProperty('extraProperty2');
@@ -428,8 +441,8 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
         description: 'Definition with sparse fields',
         scope: 'test:scope',
         template: 'sparse {target}',
-        prerequisites: null,  // Should be handled gracefully
-        required_components: undefined  // Should be handled gracefully
+        prerequisites: null, // Should be handled gracefully
+        required_components: undefined, // Should be handled gracefully
       };
 
       const builder = ActionDefinitionBuilder.fromDefinition(sparseDefinition);
@@ -450,13 +463,14 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
           'test:simple1',
           { condition: 'test:complex1', message: 'Complex message 1' },
           'test:simple2',
-          { condition: 'test:complex2', message: 'Complex message 2' }
+          { condition: 'test:complex2', message: 'Complex message 2' },
         ])
         .asCombatAction()
         .build();
 
       // Convert to builder and back
-      const recreatedBuilder = ActionDefinitionBuilder.fromDefinition(originalAction);
+      const recreatedBuilder =
+        ActionDefinitionBuilder.fromDefinition(originalAction);
       const recreatedAction = recreatedBuilder.build();
 
       // Should be identical
@@ -474,44 +488,44 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
   describe('error recovery and resilience', () => {
     it('should recover from validation errors when fields are added', () => {
       const builder = new ActionDefinitionBuilder('test:error-recovery');
-      
+
       // Initially invalid
       let validation = builder.validate();
       expect(validation.isValid).toBe(false);
       expect(validation.errors.length).toBeGreaterThan(0);
-      
+
       // Add name - still invalid
       builder.withName('Recovery Test');
       validation = builder.validate();
       expect(validation.isValid).toBe(false);
-      
+
       // Add description - still invalid
       builder.withDescription('Testing error recovery');
       validation = builder.validate();
       expect(validation.isValid).toBe(false);
-      
+
       // Add scope and template - should become valid
       builder.asBasicAction();
       validation = builder.validate();
       expect(validation.isValid).toBe(true);
       expect(validation.errors).toEqual([]);
-      
+
       // Should be able to build now
       const action = builder.build();
       expect(action).toBeDefined();
     });
 
     it('should handle builder modifications after partial build attempts', () => {
-      const builder = new ActionDefinitionBuilder('test:partial-builds')
-        .withName('Partial Build Test');
-      
+      const builder = new ActionDefinitionBuilder(
+        'test:partial-builds'
+      ).withName('Partial Build Test');
+
       // Try to build incomplete definition (should throw)
       expect(() => builder.build()).toThrow(InvalidActionDefinitionError);
-      
+
       // Continue building after error
-      builder.withDescription('After error description')
-        .asBasicAction();
-      
+      builder.withDescription('After error description').asBasicAction();
+
       // Should work now
       const action = builder.build();
       expect(action.name).toBe('Partial Build Test');
@@ -535,7 +549,7 @@ describe('ActionDefinitionBuilder - Advanced Edge Cases', () => {
       expect(action.required_components.actor).toContain('test:component');
       expect(action.prerequisites[0]).toEqual({
         logic: { condition_ref: 'test:condition' },
-        failure_message: '  failure message  ' // Failure messages not trimmed
+        failure_message: '  failure message  ', // Failure messages not trimmed
       });
     });
   });

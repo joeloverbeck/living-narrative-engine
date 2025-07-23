@@ -508,5 +508,4 @@ describe('SpatialIndexManager - Batch Operations Integration', () => {
       expect(result.failed[0].error.message).toBe('Simulated error');
     });
   });
-
 });

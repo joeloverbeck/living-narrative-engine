@@ -10,7 +10,7 @@ describe('TestModuleValidationError', () => {
   describe('Constructor', () => {
     it('should create error with message only', () => {
       const error = new TestModuleValidationError('Test error message');
-      
+
       expect(error).toBeInstanceOf(Error);
       expect(error).toBeInstanceOf(TestModuleValidationError);
       expect(error.message).toBe('Test error message');
@@ -23,16 +23,16 @@ describe('TestModuleValidationError', () => {
         { field: 'llm', message: 'LLM config required' },
         { field: 'actors', message: 'No actors configured', code: 'NO_ACTORS' },
       ];
-      
+
       const error = new TestModuleValidationError('Validation failed', errors);
-      
+
       expect(error.message).toBe('Validation failed');
       expect(error.errors).toEqual(errors);
     });
 
     it('should capture stack trace', () => {
       const error = new TestModuleValidationError('Test error');
-      
+
       expect(error.stack).toBeDefined();
       expect(error.stack).toContain('TestModuleValidationError');
     });
@@ -41,7 +41,7 @@ describe('TestModuleValidationError', () => {
   describe('getFormattedErrors()', () => {
     it('should return just message when no errors', () => {
       const error = new TestModuleValidationError('Simple error');
-      
+
       expect(error.getFormattedErrors()).toBe('Simple error');
     });
 
@@ -49,9 +49,9 @@ describe('TestModuleValidationError', () => {
       const error = new TestModuleValidationError('Validation failed', [
         { field: 'test', message: 'Test field error' },
       ]);
-      
+
       const formatted = error.getFormattedErrors();
-      
+
       expect(formatted).toContain('Validation failed');
       expect(formatted).toContain('Validation errors:');
       expect(formatted).toContain('  - test: Test field error');
@@ -62,9 +62,9 @@ describe('TestModuleValidationError', () => {
         { field: 'field1', message: 'Error 1' },
         { field: 'field2', message: 'Error 2', code: 'ERROR_2' },
       ]);
-      
+
       const formatted = error.getFormattedErrors();
-      
+
       expect(formatted).toContain('Multiple errors');
       expect(formatted).toContain('  - field1: Error 1');
       expect(formatted).toContain('  - field2: Error 2 [ERROR_2]');
@@ -78,9 +78,9 @@ describe('TestModuleValidationError', () => {
         { field: 'actors', message: 'Actors error' },
         { field: 'llm', message: 'LLM error 2' },
       ];
-      
+
       const error = new TestModuleValidationError('Test', errors);
-      
+
       const llmErrors = error.getFieldErrors('llm');
       expect(llmErrors).toHaveLength(2);
       expect(llmErrors[0].message).toBe('LLM error 1');
@@ -91,7 +91,7 @@ describe('TestModuleValidationError', () => {
       const error = new TestModuleValidationError('Test', [
         { field: 'llm', message: 'LLM error' },
       ]);
-      
+
       const notFoundErrors = error.getFieldErrors('notFound');
       expect(notFoundErrors).toEqual([]);
     });
@@ -102,7 +102,7 @@ describe('TestModuleValidationError', () => {
       const error = new TestModuleValidationError('Test', [
         { field: 'llm', message: 'LLM error' },
       ]);
-      
+
       expect(error.hasFieldErrors('llm')).toBe(true);
     });
 
@@ -110,13 +110,13 @@ describe('TestModuleValidationError', () => {
       const error = new TestModuleValidationError('Test', [
         { field: 'llm', message: 'LLM error' },
       ]);
-      
+
       expect(error.hasFieldErrors('actors')).toBe(false);
     });
 
     it('should return false when no errors at all', () => {
       const error = new TestModuleValidationError('Test');
-      
+
       expect(error.hasFieldErrors('any')).toBe(false);
     });
   });
@@ -124,7 +124,7 @@ describe('TestModuleValidationError', () => {
   describe('errorCount', () => {
     it('should return 0 for no errors', () => {
       const error = new TestModuleValidationError('Test');
-      
+
       expect(error.errorCount).toBe(0);
     });
 
@@ -134,7 +134,7 @@ describe('TestModuleValidationError', () => {
         { field: 'field2', message: 'Error 2' },
         { field: 'field3', message: 'Error 3' },
       ]);
-      
+
       expect(error.errorCount).toBe(3);
     });
   });
@@ -144,10 +144,10 @@ describe('TestModuleValidationError', () => {
       const errors = [
         { field: 'test', message: 'Test error', code: 'TEST_ERROR' },
       ];
-      
+
       const error = new TestModuleValidationError('Test message', errors);
       const json = error.toJSON();
-      
+
       expect(json).toEqual({
         name: 'TestModuleValidationError',
         message: 'Test message',
@@ -159,10 +159,10 @@ describe('TestModuleValidationError', () => {
       const error = new TestModuleValidationError('Test', [
         { field: 'test', message: 'Error' },
       ]);
-      
+
       const jsonString = JSON.stringify(error);
       const parsed = JSON.parse(jsonString);
-      
+
       expect(parsed.name).toBe('TestModuleValidationError');
       expect(parsed.message).toBe('Test');
       expect(parsed.errors).toHaveLength(1);
@@ -184,7 +184,7 @@ describe('TestModuleValidationError', () => {
 
     it('should preserve error information when thrown', () => {
       const errors = [{ field: 'test', message: 'Test field error' }];
-      
+
       try {
         throw new TestModuleValidationError('Validation failed', errors);
       } catch (error) {

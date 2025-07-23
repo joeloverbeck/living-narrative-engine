@@ -428,5 +428,4 @@ describe('Services Monitoring Integration', () => {
       expect(stats).toHaveProperty('recentAlerts');
     });
   });
-
 });

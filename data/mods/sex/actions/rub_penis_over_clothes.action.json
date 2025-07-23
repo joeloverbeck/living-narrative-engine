@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex:rub_penis_over_clothes",
+  "name": "Rub Penis Over Clothes",
+  "description": "Rub the target's penis over their clothing.",
+  "scope": "sex:actors_with_penis_facing_each_other_covered",
+  "required_components": {
+    "actor": ["intimacy:closeness"]
+  },
+  "template": "rub {target}'s penis over the clothes",
+  "prerequisites": []
+}

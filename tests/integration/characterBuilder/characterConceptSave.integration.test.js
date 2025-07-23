@@ -132,7 +132,7 @@ describe('Character Concept Save - Integration', () => {
 
     // Setup default mock behaviors
     savedConcepts = new Map(); // Store concepts in memory for getCharacterConcept
-    
+
     database.saveCharacterConcept.mockImplementation((concept) => {
       const savedConcept = {
         ...concept,
@@ -141,12 +141,14 @@ describe('Character Concept Save - Integration', () => {
       savedConcepts.set(savedConcept.id, savedConcept);
       return Promise.resolve(savedConcept);
     });
-    
+
     database.getCharacterConcept.mockImplementation((id) => {
       const concept = savedConcepts.get(id);
-      return concept ? Promise.resolve(concept) : Promise.reject(new Error(`Character concept not found: ${id}`));
+      return concept
+        ? Promise.resolve(concept)
+        : Promise.reject(new Error(`Character concept not found: ${id}`));
     });
-    
+
     database.saveThematicDirections.mockImplementation((directions) => {
       return Promise.resolve(directions);
     });

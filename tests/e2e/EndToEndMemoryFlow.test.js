@@ -108,7 +108,7 @@ describe('End-to-End Short-Term Memory Flow', () => {
     });
 
     const llmConfigService = {
-      getConfig: jest.fn().mockResolvedValue(testConfig),
+      loadConfiguration: jest.fn().mockResolvedValue(testConfig),
     };
 
     // Use current template-based PromptBuilder (no assemblers needed)

@@ -34,6 +34,7 @@ This specification outlines the implementation of the Test Module Pattern for th
 ```
 
 The Test Module Pattern acts as a thin, intelligent layer over the existing facades, providing:
+
 - Fluent builder interfaces for intuitive configuration
 - Preset configurations for common scenarios
 - Validation and error handling at build time
@@ -46,11 +47,19 @@ The Test Module Pattern acts as a thin, intelligent layer over the existing faca
 ```javascript
 // Primary entry point for all test module creation
 class TestModuleBuilder {
-  static forTurnExecution() { return new TurnExecutionTestModule(); }
-  static forActionProcessing() { return new ActionProcessingTestModule(); }
-  static forEntityManagement() { return new EntityManagementTestModule(); }
-  static forLLMTesting() { return new LLMTestingModule(); }
-  
+  static forTurnExecution() {
+    return new TurnExecutionTestModule();
+  }
+  static forActionProcessing() {
+    return new ActionProcessingTestModule();
+  }
+  static forEntityManagement() {
+    return new EntityManagementTestModule();
+  }
+  static forLLMTesting() {
+    return new LLMTestingModule();
+  }
+
   // Preset scenarios for rapid test creation
   static scenarios = {
     combat: () => TestScenarioPresets.combat(),
@@ -102,7 +111,7 @@ export class ITestModule {
   async build() {
     throw new Error('Must implement build()');
   }
-  
+
   /**
    * Validates the current configuration
    * @returns {ValidationResult}
@@ -110,7 +119,7 @@ export class ITestModule {
   validate() {
     throw new Error('Must implement validate()');
   }
-  
+
   /**
    * Resets the module to default state
    * @returns {ITestModule}
@@ -141,12 +150,12 @@ export class TurnExecutionTestModule extends ITestModule {
     },
     facades: {},
   };
-  
+
   constructor() {
     super();
     this.#applyDefaults();
   }
-  
+
   #applyDefaults() {
     this.#config = {
       llm: {
@@ -166,7 +175,7 @@ export class TurnExecutionTestModule extends ITestModule {
       facades: {},
     };
   }
-  
+
   /**
    * Configure mock LLM behavior
    * @param {Object} config - LLM configuration options
@@ -179,21 +188,21 @@ export class TurnExecutionTestModule extends ITestModule {
     };
     return this;
   }
-  
+
   /**
    * Add test actors to the environment
    * @param {Array<string|Object>} actors - Actor configurations
    * @returns {TurnExecutionTestModule}
    */
   withTestActors(actors = []) {
-    this.#config.actors = actors.map(actor => 
-      typeof actor === 'string' 
+    this.#config.actors = actors.map((actor) =>
+      typeof actor === 'string'
         ? { id: actor, type: actor.includes('ai') ? 'ai' : 'player' }
         : actor
     );
     return this;
   }
-  
+
   /**
    * Configure the test world
    * @param {Object} worldConfig - World configuration
@@ -206,7 +215,7 @@ export class TurnExecutionTestModule extends ITestModule {
     };
     return this;
   }
-  
+
   /**
    * Enable performance tracking
    * @param {Object} options - Performance tracking options
@@ -223,7 +232,7 @@ export class TurnExecutionTestModule extends ITestModule {
     };
     return this;
   }
-  
+
   /**
    * Configure event capture
    * @param {Array<string>} eventTypes - Event types to capture
@@ -233,7 +242,7 @@ export class TurnExecutionTestModule extends ITestModule {
     this.#config.monitoring.events = eventTypes;
     return this;
   }
-  
+
   /**
    * Override specific facades with custom implementations
    * @param {Object} facades - Custom facade implementations
@@ -243,14 +252,14 @@ export class TurnExecutionTestModule extends ITestModule {
     this.#config.facades = facades;
     return this;
   }
-  
+
   /**
    * Validate configuration before building
    * @returns {ValidationResult}
    */
   validate() {
     const errors = [];
-    
+
     // Validate LLM configuration
     if (!this.#config.llm.strategy) {
       errors.push({
@@ -258,7 +267,7 @@ export class TurnExecutionTestModule extends ITestModule {
         message: 'LLM strategy is required',
       });
     }
-    
+
     // Validate actors
     if (this.#config.actors.length === 0) {
       errors.push({
@@ -266,7 +275,7 @@ export class TurnExecutionTestModule extends ITestModule {
         message: 'At least one actor is required',
       });
     }
-    
+
     // Validate world
     if (!this.#config.world.name) {
       errors.push({
@@ -274,13 +283,13 @@ export class TurnExecutionTestModule extends ITestModule {
         message: 'World name is required',
       });
     }
-    
+
     return {
       valid: errors.length === 0,
       errors,
     };
   }
-  
+
   /**
    * Build the test environment
    * @returns {Promise<TestEnvironment>}
@@ -294,36 +303,36 @@ export class TurnExecutionTestModule extends ITestModule {
         validation.errors
       );
     }
-    
+
     // Create facades with configuration
     const facades = createMockFacades(this.#config.facades, jest.fn);
-    
+
     // Initialize test environment using facades
-    const testEnvironment = await facades.turnExecutionFacade
-      .initializeTestEnvironment({
+    const testEnvironment =
+      await facades.turnExecutionFacade.initializeTestEnvironment({
         llmStrategy: this.#config.llm.strategy,
         llmConfig: this.#config.llm,
         worldConfig: this.#config.world,
         actors: this.#config.actors,
       });
-    
+
     // Apply monitoring configuration
     if (this.#config.monitoring.performance) {
       testEnvironment.enablePerformanceTracking(
         this.#config.monitoring.performance
       );
     }
-    
+
     if (this.#config.monitoring.events.length > 0) {
       testEnvironment.captureEvents(this.#config.monitoring.events);
     }
-    
+
     // Return enriched test environment
     return {
       ...testEnvironment,
       facades,
       config: { ...this.#config }, // Frozen copy
-      
+
       // Convenience methods
       async executeAITurn(actorId) {
         return facades.turnExecutionFacade.executeAITurn(
@@ -331,7 +340,7 @@ export class TurnExecutionTestModule extends ITestModule {
           testEnvironment.context
         );
       },
-      
+
       async cleanup() {
         if (testEnvironment.cleanup) {
           await testEnvironment.cleanup();
@@ -339,7 +348,7 @@ export class TurnExecutionTestModule extends ITestModule {
       },
     };
   }
-  
+
   /**
    * Reset module to default configuration
    * @returns {TurnExecutionTestModule}
@@ -381,13 +390,9 @@ export class TestScenarioPresets {
       .withPerformanceTracking({
         thresholds: { turnExecution: 150 },
       })
-      .withEventCapture([
-        'COMBAT_INITIATED',
-        'DAMAGE_DEALT',
-        'COMBAT_ENDED',
-      ]);
+      .withEventCapture(['COMBAT_INITIATED', 'DAMAGE_DEALT', 'COMBAT_ENDED']);
   }
-  
+
   /**
    * Social interaction scenario with dialogue focus
    */
@@ -414,7 +419,7 @@ export class TestScenarioPresets {
         'RELATIONSHIP_CHANGED',
       ]);
   }
-  
+
   /**
    * Exploration scenario with movement and discovery
    */
@@ -424,9 +429,7 @@ export class TestScenarioPresets {
         strategy: 'tool-calling',
         temperature: 1.0,
       })
-      .withTestActors([
-        { id: 'ai-explorer', type: 'ai', role: 'explorer' },
-      ])
+      .withTestActors([{ id: 'ai-explorer', type: 'ai', role: 'explorer' }])
       .withWorld({
         name: 'Unknown Territory',
         size: 'large',
@@ -438,7 +441,7 @@ export class TestScenarioPresets {
         'MOVEMENT_COMPLETED',
       ]);
   }
-  
+
   /**
    * Performance testing scenario with minimal overhead
    */
@@ -473,19 +476,19 @@ export class TestModuleValidator {
       entityManagement: this.#validateEntityManagementConfig,
       llmTesting: this.#validateLLMTestingConfig,
     };
-    
+
     const validator = validators[moduleType];
     if (!validator) {
       throw new Error(`Unknown module type: ${moduleType}`);
     }
-    
+
     return validator(config);
   }
-  
+
   static #validateTurnExecutionConfig(config) {
     const errors = [];
     const warnings = [];
-    
+
     // Required fields
     if (!config.llm) {
       errors.push({
@@ -494,16 +497,19 @@ export class TestModuleValidator {
         message: 'LLM configuration is required for turn execution',
       });
     }
-    
+
     // Validate LLM strategy
-    if (config.llm && !['tool-calling', 'json-schema'].includes(config.llm.strategy)) {
+    if (
+      config.llm &&
+      !['tool-calling', 'json-schema'].includes(config.llm.strategy)
+    ) {
       errors.push({
         code: 'INVALID_LLM_STRATEGY',
         field: 'llm.strategy',
         message: `Invalid LLM strategy: ${config.llm.strategy}`,
       });
     }
-    
+
     // Validate actors
     if (!config.actors || config.actors.length === 0) {
       warnings.push({
@@ -512,7 +518,7 @@ export class TestModuleValidator {
         message: 'No actors configured - test environment will be empty',
       });
     }
-    
+
     // Performance thresholds
     if (config.monitoring?.performance?.thresholds) {
       const thresholds = config.monitoring.performance.thresholds;
@@ -520,11 +526,12 @@ export class TestModuleValidator {
         warnings.push({
           code: 'HIGH_PERFORMANCE_THRESHOLD',
           field: 'monitoring.performance.thresholds.turnExecution',
-          message: 'Turn execution threshold >1000ms may hide performance issues',
+          message:
+            'Turn execution threshold >1000ms may hide performance issues',
         });
       }
     }
-    
+
     return {
       valid: errors.length === 0,
       errors,
@@ -543,22 +550,23 @@ export class TestModuleValidator {
 describe('Turn Execution Tests', () => {
   let facades;
   let testEnvironment;
-  
+
   beforeEach(async () => {
     facades = createMockFacades({}, jest.fn);
-    testEnvironment = await facades.turnExecutionFacade.initializeTestEnvironment({
-      llmStrategy: 'tool-calling',
-      worldConfig: { name: 'Test World', createConnections: true },
-      actorConfig: { name: 'Test AI Actor' },
-    });
+    testEnvironment =
+      await facades.turnExecutionFacade.initializeTestEnvironment({
+        llmStrategy: 'tool-calling',
+        worldConfig: { name: 'Test World', createConnections: true },
+        actorConfig: { name: 'Test AI Actor' },
+      });
   });
-  
+
   afterEach(async () => {
     if (testEnvironment?.cleanup) {
       await testEnvironment.cleanup();
     }
   });
-  
+
   it('should execute AI turn', async () => {
     const result = await facades.turnExecutionFacade.executeAITurn(
       testEnvironment.aiActor.id,
@@ -571,7 +579,7 @@ describe('Turn Execution Tests', () => {
 // After: Using Test Module Pattern
 describe('Turn Execution Tests', () => {
   let testEnv;
-  
+
   beforeEach(async () => {
     testEnv = await TestModuleBuilder.forTurnExecution()
       .withMockLLM({ strategy: 'tool-calling' })
@@ -579,11 +587,11 @@ describe('Turn Execution Tests', () => {
       .withWorld({ name: 'Test World' })
       .build();
   });
-  
+
   afterEach(async () => {
     await testEnv.cleanup();
   });
-  
+
   it('should execute AI turn', async () => {
     const result = await testEnv.executeAITurn('ai-actor');
     expect(result.success).toBe(true);
@@ -596,9 +604,10 @@ describe('Turn Execution Tests', () => {
 ```javascript
 describe('Combat System Tests', () => {
   let testEnv;
-  
+
   beforeEach(async () => {
-    testEnv = await TestModuleBuilder.scenarios.combat()
+    testEnv = await TestModuleBuilder.scenarios
+      .combat()
       .withCustomFacades({
         // Override specific facade behavior for this test
         actionService: {
@@ -607,10 +616,10 @@ describe('Combat System Tests', () => {
       })
       .build();
   });
-  
+
   it('should handle combat between actors', async () => {
     const result = await testEnv.executeAITurn('ai-fighter');
-    
+
     expect(result.action).toBe('attack');
     expect(result.target).toBe('enemy');
     expect(testEnv.getCapturedEvents()).toContainEqual(
@@ -625,10 +634,11 @@ describe('Combat System Tests', () => {
 ```javascript
 describe('Complex Scenario Tests', () => {
   let testEnv;
-  
+
   beforeEach(async () => {
     // Start with a preset and customize further
-    testEnv = await TestModuleBuilder.scenarios.exploration()
+    testEnv = await TestModuleBuilder.scenarios
+      .exploration()
       .withTestActors([
         { id: 'ai-explorer', type: 'ai', inventory: ['map', 'compass'] },
         { id: 'ai-companion', type: 'ai', followsPlayer: true },
@@ -653,17 +663,17 @@ describe('Complex Scenario Tests', () => {
       })
       .build();
   });
-  
+
   it('should coordinate multiple actors during exploration', async () => {
     // Execute turns for both actors
     const explorerResult = await testEnv.executeAITurn('ai-explorer');
     const companionResult = await testEnv.executeAITurn('ai-companion');
-    
+
     // Verify coordination
     expect(explorerResult.action).toBe('explore');
     expect(companionResult.action).toBe('follow');
     expect(companionResult.target).toBe('ai-explorer');
-    
+
     // Check performance
     const metrics = testEnv.getPerformanceMetrics();
     expect(metrics.turnExecution).toBeLessThan(75);
@@ -676,23 +686,27 @@ describe('Complex Scenario Tests', () => {
 ### Phase 1: Foundation (Week 1)
 
 #### 1.1 Core Infrastructure
+
 - Create base module interfaces and classes
 - Implement validation framework
 - Set up builder pattern infrastructure
 - Add comprehensive unit tests
 
 **Files to create:**
+
 - `tests/common/builders/testModuleBuilder.js`
 - `tests/common/builders/interfaces/ITestModule.js`
 - `tests/common/builders/validation/testModuleValidator.js`
 - `tests/common/builders/errors/testModuleValidationError.js`
 
 #### 1.2 Initial Modules
+
 - Implement `TurnExecutionTestModule`
 - Implement `ActionProcessingTestModule`
 - Create basic preset configurations
 
 **Files to create:**
+
 - `tests/common/builders/modules/turnExecutionTestModule.js`
 - `tests/common/builders/modules/actionProcessingTestModule.js`
 - `tests/common/builders/presets/testScenarioPresets.js`
@@ -700,20 +714,24 @@ describe('Complex Scenario Tests', () => {
 ### Phase 2: Integration (Week 2)
 
 #### 2.1 Facade Integration
+
 - Update `testingFacadeRegistrations.js` to export builder classes
 - Ensure seamless integration with existing facades
 - Add builder-aware factory methods
 
 **Files to modify:**
+
 - `src/testing/facades/testingFacadeRegistrations.js`
 - `tests/common/testConfigurationFactory.js`
 
 #### 2.2 Advanced Features
+
 - Implement remaining module types
 - Add performance optimization features
 - Create comprehensive preset library
 
 **Files to create:**
+
 - `tests/common/builders/modules/entityManagementTestModule.js`
 - `tests/common/builders/modules/llmTestingModule.js`
 - `tests/common/builders/presets/advancedPresets.js`
@@ -721,21 +739,25 @@ describe('Complex Scenario Tests', () => {
 ### Phase 3: Migration & Documentation (Week 3)
 
 #### 3.1 Test Migration
+
 - Migrate 3-5 test files as proof of concept
 - Document migration patterns
 - Gather feedback from team
 
 **Files to migrate (examples):**
+
 - `tests/e2e/turns/FullTurnExecution.e2e.test.js`
 - `tests/e2e/actions/TurnBasedActionProcessing.e2e.test.js`
 - `tests/e2e/llm-adapter/LLMAdapterIntegration.e2e.test.js`
 
 #### 3.2 Documentation
+
 - Create comprehensive usage guide
 - Write migration guide
 - Update project documentation
 
 **Files to create:**
+
 - `docs/testing/test-module-pattern.md`
 - `tests/common/builders/README.md`
 - `docs/testing/migration-guide.md`
@@ -743,14 +765,16 @@ describe('Complex Scenario Tests', () => {
 ## Risk Mitigation
 
 ### 1. Backward Compatibility
+
 - **Risk**: Breaking existing tests during migration
-- **Mitigation**: 
+- **Mitigation**:
   - Test modules use facades internally
   - No changes to facade interfaces
   - Parallel support for both patterns
   - Comprehensive test coverage
 
 ### 2. Performance Impact
+
 - **Risk**: Additional abstraction layer affects performance
 - **Mitigation**:
   - Lazy initialization of components
@@ -759,6 +783,7 @@ describe('Complex Scenario Tests', () => {
   - Optimization opportunities
 
 ### 3. Adoption Resistance
+
 - **Risk**: Developers prefer existing patterns
 - **Mitigation**:
   - Clear documentation and examples
@@ -767,6 +792,7 @@ describe('Complex Scenario Tests', () => {
   - Team training sessions
 
 ### 4. Complexity Creep
+
 - **Risk**: Over-engineering the builder pattern
 - **Mitigation**:
   - Focus on common use cases
@@ -854,4 +880,4 @@ The investment in implementing this pattern will pay dividends through improved 
 
 ---
 
-*This specification provides a comprehensive blueprint for implementing the Test Module Pattern. Implementation should proceed according to the phased approach, with regular checkpoints to ensure alignment with project goals and team needs.*
+_This specification provides a comprehensive blueprint for implementing the Test Module Pattern. Implementation should proceed according to the phased approach, with regular checkpoints to ensure alignment with project goals and team needs._

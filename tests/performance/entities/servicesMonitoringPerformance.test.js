@@ -105,7 +105,10 @@ describe('Services Monitoring Performance', () => {
     }
 
     // Stop monitoring services if stop method exists
-    if (monitoringCoordinator && typeof monitoringCoordinator.stop === 'function') {
+    if (
+      monitoringCoordinator &&
+      typeof monitoringCoordinator.stop === 'function'
+    ) {
       await monitoringCoordinator.stop();
     }
 
@@ -193,7 +196,7 @@ describe('Services Monitoring Performance', () => {
 
       // Should complete within reasonable time even with monitoring overhead
       expect(totalTime).toBeLessThan(2000); // 2 seconds
-      
+
       console.log(`Created 50 entities with monitoring in ${totalTime}ms`);
 
       // Verify monitoring captured all operations
@@ -205,7 +208,9 @@ describe('Services Monitoring Performance', () => {
 
       // Check monitoring overhead didn't significantly impact performance
       const avgTimePerOperation = totalTime / 50;
-      console.log(`Average time per monitored operation: ${avgTimePerOperation.toFixed(2)}ms`);
+      console.log(
+        `Average time per monitored operation: ${avgTimePerOperation.toFixed(2)}ms`
+      );
       expect(avgTimePerOperation).toBeLessThan(40); // Should be less than 40ms per operation
     });
 
@@ -216,7 +221,7 @@ describe('Services Monitoring Performance', () => {
 
       // Mixed operations under load
       const operations = [];
-      
+
       // Create entities
       for (let i = 0; i < 20; i++) {
         operations.push(
@@ -253,8 +258,10 @@ describe('Services Monitoring Performance', () => {
       const totalTime = endTime - startTime;
 
       expect(totalTime).toBeLessThan(3000); // Should complete within 3 seconds
-      
-      console.log(`Completed 45 mixed operations with monitoring in ${totalTime}ms`);
+
+      console.log(
+        `Completed 45 mixed operations with monitoring in ${totalTime}ms`
+      );
 
       // Verify all operations were monitored
       const stats = monitoringCoordinator.getStats();
@@ -262,7 +269,9 @@ describe('Services Monitoring Performance', () => {
 
       // Performance should be reasonable
       const avgTimePerOperation = totalTime / 45;
-      console.log(`Average time per mixed monitored operation: ${avgTimePerOperation.toFixed(2)}ms`);
+      console.log(
+        `Average time per mixed monitored operation: ${avgTimePerOperation.toFixed(2)}ms`
+      );
     });
 
     it('should demonstrate monitoring performance scaling', async () => {
@@ -295,13 +304,17 @@ describe('Services Monitoring Performance', () => {
 
         // Cleanup for next iteration
         for (let i = 0; i < count; i++) {
-          await entityLifecycleManager.removeEntityInstance(`scale-test-${count}-${i}`);
+          await entityLifecycleManager.removeEntityInstance(
+            `scale-test-${count}-${i}`
+          );
         }
       }
 
       console.log('Monitoring performance scaling results:');
       for (const [count, data] of Object.entries(results)) {
-        console.log(`  ${count} operations: ${data.totalTime.toFixed(2)}ms total, ${data.avgTime.toFixed(2)}ms avg`);
+        console.log(
+          `  ${count} operations: ${data.totalTime.toFixed(2)}ms total, ${data.avgTime.toFixed(2)}ms avg`
+        );
       }
 
       // Verify monitoring overhead doesn't grow exponentially

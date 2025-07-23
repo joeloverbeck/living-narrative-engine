@@ -1,242 +1,98 @@
-CharacterBuilderService: Retrieved 0 character concepts
-consoleLogger.js:151 CharacterBuilderController: Successfully initialized
-consoleLogger.js:151 CharacterBuilderApp: Successfully initialized
-consoleLogger.js:151 CharacterBuilderService: Created character concept d0b62bd0-46b6-4be1-942d-2c0d2a16df26 {conceptId: 'd0b62bd0-46b6-4be1-942d-2c0d2a16df26', concept: 'a strong woman in her twenties, who is good with a...', autoSave: true, attempt: 1}
-consoleLogger.js:175 AjvSchemaValidator: validateAgainstSchema failed for schema 'character-concept': Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/createdAt",
-    "schemaPath": "#/properties/createdAt/type",
-    "keyword": "type",
-    "params": {
-      "type": "string"
-    },
-    "message": "must be string",
-    "schema": "string",
-    "parentSchema": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Creation timestamp"
-    },
-    "data": "2025-07-22T19:45:15.844Z"
-  },
-  {
-    "instancePath": "/updatedAt",
-    "schemaPath": "#/properties/updatedAt/type",
-    "keyword": "type",
-    "params": {
-      "type": "string"
-    },
-    "message": "must be string",
-    "schema": "string",
-    "parentSchema": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Last modification timestamp"
-    },
-    "data": "2025-07-22T19:45:15.844Z"
-  }
-] {schemaId: 'character-concept', error: Error: Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/createdAt",
-    "schemaPath":…}
-error @ consoleLogger.js:175
-validateAgainstSchema @ ajvSchemaValidator.js:611
-storeCharacterConcept @ characterStorageService.js:135
-createCharacterConcept @ characterBuilderService.js:157
-#handleSaveClick @ characterBuilderController.js:336Understand this error
-consoleLogger.js:163 CharacterStorageService: Attempt 1 failed for concept storage: Character concept validation failed: No specific error details provided. {conceptId: 'd0b62bd0-46b6-4be1-942d-2c0d2a16df26', attempt: 1, error: CharacterStorageError: Character concept validation failed: No specific error details provided.
-   …}
-warn @ consoleLogger.js:163
-storeCharacterConcept @ characterStorageService.js:160
-createCharacterConcept @ characterBuilderService.js:157
-#handleSaveClick @ characterBuilderController.js:336Understand this warning
-consoleLogger.js:175 Failed to store character concept d0b62bd0-46b6-4be1-942d-2c0d2a16df26 after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:141:17)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
-    at #handleSaveClick (characterBuilderController.js:336:45)
-error @ consoleLogger.js:175
-storeCharacterConcept @ characterStorageService.js:180
-createCharacterConcept @ characterBuilderService.js:157
-#handleSaveClick @ characterBuilderController.js:336Understand this error
-consoleLogger.js:163 CharacterBuilderService: Attempt 1 failed for concept creation: Failed to store character concept d0b62bd0-46b6-4be1-942d-2c0d2a16df26 after 3 attempts: Character concept validation failed: No specific error details provided. {attempt: 1, error: CharacterStorageError: Failed to store character concept d0b62bd0-46b6-4be1-942d-2c0d2a16df26 after…}
-warn @ consoleLogger.js:163
-createCharacterConcept @ characterBuilderService.js:173
-await in createCharacterConcept
-#handleSaveClick @ characterBuilderController.js:336Understand this warning
-consoleLogger.js:151 CharacterBuilderService: Created character concept 82153b99-06ef-4bb7-b298-8962ec593967 {conceptId: '82153b99-06ef-4bb7-b298-8962ec593967', concept: 'a strong woman in her twenties, who is good with a...', autoSave: true, attempt: 2}
-consoleLogger.js:175 AjvSchemaValidator: validateAgainstSchema failed for schema 'character-concept': Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/createdAt",
-    "schemaPath": "#/properties/createdAt/type",
-    "keyword": "type",
-    "params": {
-      "type": "string"
-    },
-    "message": "must be string",
-    "schema": "string",
-    "parentSchema": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Creation timestamp"
-    },
-    "data": "2025-07-22T19:45:16.860Z"
-  },
-  {
-    "instancePath": "/updatedAt",
-    "schemaPath": "#/properties/updatedAt/type",
-    "keyword": "type",
-    "params": {
-      "type": "string"
-    },
-    "message": "must be string",
-    "schema": "string",
-    "parentSchema": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Last modification timestamp"
-    },
-    "data": "2025-07-22T19:45:16.860Z"
-  }
-] {schemaId: 'character-concept', error: Error: Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/createdAt",
-    "schemaPath":…}
-error @ consoleLogger.js:175
-validateAgainstSchema @ ajvSchemaValidator.js:611
-storeCharacterConcept @ characterStorageService.js:135
-createCharacterConcept @ characterBuilderService.js:157
-await in createCharacterConcept
-#handleSaveClick @ characterBuilderController.js:336Understand this error
-consoleLogger.js:163 CharacterStorageService: Attempt 1 failed for concept storage: Character concept validation failed: No specific error details provided. {conceptId: '82153b99-06ef-4bb7-b298-8962ec593967', attempt: 1, error: CharacterStorageError: Character concept validation failed: No specific error details provided.
-   …}
-warn @ consoleLogger.js:163
-storeCharacterConcept @ characterStorageService.js:160
-createCharacterConcept @ characterBuilderService.js:157
-await in createCharacterConcept
-#handleSaveClick @ characterBuilderController.js:336Understand this warning
-consoleLogger.js:175 Failed to store character concept 82153b99-06ef-4bb7-b298-8962ec593967 after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:141:17)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
-    at async #handleSaveClick (characterBuilderController.js:336:9)
-error @ consoleLogger.js:175
-storeCharacterConcept @ characterStorageService.js:180
-createCharacterConcept @ characterBuilderService.js:157
-await in createCharacterConcept
-#handleSaveClick @ characterBuilderController.js:336Understand this error
-consoleLogger.js:163 CharacterBuilderService: Attempt 2 failed for concept creation: Failed to store character concept 82153b99-06ef-4bb7-b298-8962ec593967 after 3 attempts: Character concept validation failed: No specific error details provided. {attempt: 2, error: CharacterStorageError: Failed to store character concept 82153b99-06ef-4bb7-b298-8962ec593967 after…}
-warn @ consoleLogger.js:163
-createCharacterConcept @ characterBuilderService.js:173
-await in createCharacterConcept
-#handleSaveClick @ characterBuilderController.js:336Understand this warning
-consoleLogger.js:151 CharacterBuilderService: Created character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 {conceptId: '78897af1-c4dd-46da-8113-ec82d363bfc2', concept: 'a strong woman in her twenties, who is good with a...', autoSave: true, attempt: 3}
-consoleLogger.js:175 AjvSchemaValidator: validateAgainstSchema failed for schema 'character-concept': Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/createdAt",
-    "schemaPath": "#/properties/createdAt/type",
-    "keyword": "type",
-    "params": {
-      "type": "string"
-    },
-    "message": "must be string",
-    "schema": "string",
-    "parentSchema": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Creation timestamp"
-    },
-    "data": "2025-07-22T19:45:18.868Z"
-  },
-  {
-    "instancePath": "/updatedAt",
-    "schemaPath": "#/properties/updatedAt/type",
-    "keyword": "type",
-    "params": {
-      "type": "string"
-    },
-    "message": "must be string",
-    "schema": "string",
-    "parentSchema": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Last modification timestamp"
-    },
-    "data": "2025-07-22T19:45:18.868Z"
-  }
-] {schemaId: 'character-concept', error: Error: Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/createdAt",
-    "schemaPath":…}
-error @ consoleLogger.js:175
-validateAgainstSchema @ ajvSchemaValidator.js:611
-storeCharacterConcept @ characterStorageService.js:135
-createCharacterConcept @ characterBuilderService.js:157
-await in createCharacterConcept
-#handleSaveClick @ characterBuilderController.js:336Understand this error
-consoleLogger.js:163 CharacterStorageService: Attempt 1 failed for concept storage: Character concept validation failed: No specific error details provided. {conceptId: '78897af1-c4dd-46da-8113-ec82d363bfc2', attempt: 1, error: CharacterStorageError: Character concept validation failed: No specific error details provided.
-   …}
-warn @ consoleLogger.js:163
-storeCharacterConcept @ characterStorageService.js:160
-createCharacterConcept @ characterBuilderService.js:157
-await in createCharacterConcept
-#handleSaveClick @ characterBuilderController.js:336Understand this warning
-consoleLogger.js:175 Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:141:17)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
-    at async #handleSaveClick (characterBuilderController.js:336:9)
-error @ consoleLogger.js:175
-storeCharacterConcept @ characterStorageService.js:180
-createCharacterConcept @ characterBuilderService.js:157
-await in createCharacterConcept
-#handleSaveClick @ characterBuilderController.js:336Understand this error
-consoleLogger.js:163 CharacterBuilderService: Attempt 3 failed for concept creation: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided. {attempt: 3, error: CharacterStorageError: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after…}
-warn @ consoleLogger.js:163
-createCharacterConcept @ characterBuilderService.js:173
-await in createCharacterConcept
-#handleSaveClick @ characterBuilderController.js:336Understand this warning
-consoleLogger.js:175 Failed to create character concept after 3 attempts: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:181:11)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
-    at async #handleSaveClick (characterBuilderController.js:336:9)Caused by: CharacterStorageError: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:141:17)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
-    at async #handleSaveClick (characterBuilderController.js:336:9)
-error @ consoleLogger.js:175
-createCharacterConcept @ characterBuilderService.js:194
-await in createCharacterConcept
-#handleSaveClick @ characterBuilderController.js:336Understand this error
-consoleLogger.js:163 VED: EventDefinition not found for 'CHARACTER_BUILDER_ERROR_OCCURRED'. Cannot validate payload. Proceeding with dispatch.
-warn @ consoleLogger.js:163
-#validatePayload @ validatedEventDispatcher.js:87
-dispatch @ validatedEventDispatcher.js:219
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-createCharacterConcept @ characterBuilderService.js:196
-await in createCharacterConcept
-#handleSaveClick @ characterBuilderController.js:336Understand this warning
-consoleLogger.js:187 VED: Dispatching event 'CHARACTER_BUILDER_ERROR_OCCURRED' via EventBus... {error: 'Failed to create character concept after 3 attempt…ation failed: No specific error details provided.', operation: 'createCharacterConcept', concept: 'a strong woman in her twenties, who is good with a… and who survives as a hunter and adventurer. ...', attempts: 3, finalError: 'Failed to store character concept 78897af1-c4dd-46…ation failed: No specific error details provided.'}
-consoleLogger.js:187 VED: Event 'CHARACTER_BUILDER_ERROR_OCCURRED' dispatch successful.
-consoleLogger.js:175 CharacterBuilderController: Failed to save concept CharacterBuilderError: Failed to create character concept after 3 attempts: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided.
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:204:11)
-    at async #handleSaveClick (characterBuilderController.js:336:9)Caused by: CharacterStorageError: Failed to store character concept 78897af1-c4dd-46da-8113-ec82d363bfc2 after 3 attempts: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:181:11)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
-    at async #handleSaveClick (characterBuilderController.js:336:9)Caused by: CharacterStorageError: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:141:17)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:157:40)
-    at async #handleSaveClick (characterBuilderController.js:336:9)
-error @ consoleLogger.js:175
-#handleSaveClick @ characterBuilderController.js:341Understand this error
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'CHARACTER_BUILDER_ERROR_OCCURRED'.
+Plan to Fix Thematic Directions Generation Issue                                        │ │
+│ │                                                                                         │ │
+│ │ Root Cause Identified                                                                   │ │
+│ │                                                                                         │ │
+│ │ The thematic directions generation is failing because:                                  │ │
+│ │ 1. The OpenRouterToolCallingStrategy is hardcoded to use                                │ │
+│ │ OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA for ALL tool calling operations                 │ │
+│ │ 2. This schema is designed for game turn actions with fields like actionDefinitionId,   │ │
+│ │ commandString, speech, thoughts                                                         │ │
+│ │ 3. The thematic directions generator expects a response with a thematicDirections array │ │
+│ │ 4. The LLM is being instructed to return game action data instead of thematic           │ │
+│ │ directions data                                                                         │ │
+│ │                                                                                         │ │
+│ │ Solution Strategy                                                                       │ │
+│ │                                                                                         │ │
+│ │ Option 1: Update OpenRouterToolCallingStrategy (Recommended)                            │ │
+│ │                                                                                         │ │
+│ │ 1. Modify the strategy to accept custom tool schemas from the LLM configuration         │ │
+│ │ 2. Add support for a toolSchema field in the jsonOutputStrategy configuration           │ │
+│ │ 3. Fall back to the game AI schema only when no custom schema is provided               │ │
+│ │                                                                                         │ │
+│ │ Option 2: Use JSON Schema Strategy Instead                                              │ │
+│ │                                                                                         │ │
+│ │ 1. Switch character builder to use openrouter_json_schema instead of                    │ │
+│ │ openrouter_tool_calling                                                                 │ │
+│ │ 2. This would use the schema directly without the tool calling wrapper                  │ │
+│ │ 3. Less reliable than tool calling but would work immediately                           │ │
+│ │                                                                                         │ │
+│ │ Implementation Plan (Option 1 - Recommended)                                            │ │
+│ │                                                                                         │ │
+│ │ 1. Update LLM Config Schema                                                             │ │
+│ │                                                                                         │ │
+│ │ File: data/schemas/llm-configs.schema.json                                              │ │
+│ │ - Add toolSchema field to jsonOutputStrategy for tool calling methods                   │ │
+│ │ - Make it optional but recommended for tool calling strategies                          │ │
+│ │                                                                                         │ │
+│ │ 2. Update OpenRouterToolCallingStrategy                                                 │ │
+│ │                                                                                         │ │
+│ │ File: src/llms/strategies/openRouterToolCallingStrategy.js                              │ │
+│ │ - Modify _buildProviderRequestPayloadAdditions to:                                      │ │
+│ │   - Check for llmConfig.jsonOutputStrategy.toolSchema                                   │ │
+│ │   - Use custom schema if provided                                                       │ │
+│ │   - Fall back to OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA for backward compatibility     │ │
+│ │ - Update tool description to be configurable as well                                    │ │
+│ │                                                                                         │ │
+│ │ 3. Update Thematic Directions Prompt                                                    │ │
+│ │                                                                                         │ │
+│ │ File: src/characterBuilder/prompts/thematicDirectionsPrompt.js                          │ │
+│ │ - Modify createThematicDirectionsLlmConfig to include the tool schema:                  │ │
+│ │ jsonOutputStrategy: {                                                                   │ │
+│ │   method: 'openrouter_tool_calling',                                                    │ │
+│ │   toolName: 'function_call',                                                            │ │
+│ │   toolSchema: THEMATIC_DIRECTIONS_RESPONSE_SCHEMA,                                      │ │
+│ │   toolDescription: 'Generate thematic directions for character development'             │ │
+│ │ }                                                                                       │ │
+│ │                                                                                         │ │
+│ │ 4. Update Character Builder Service                                                     │ │
+│ │                                                                                         │ │
+│ │ File: src/characterBuilder/services/thematicDirectionGenerator.js                       │ │
+│ │ - Ensure it uses the enhanced LLM config with the custom schema                         │ │
+│ │ - Add error logging to show what schema is being used                                   │ │
+│ │                                                                                         │ │
+│ │ 5. Create Test Suite                                                                    │ │
+│ │                                                                                         │ │
+│ │ Files to create:                                                                        │ │
+│ │ - tests/unit/characterBuilder/services/thematicDirectionGenerator.test.js               │ │
+│ │ - tests/integration/characterBuilder/thematicDirectionGeneration.integration.test.js    │ │
+│ │ - Test that the correct schema is being used                                            │ │
+│ │ - Test response parsing and validation                                                  │ │
+│ │                                                                                         │ │
+│ │ Alternative Quick Fix (Option 2)                                                        │ │
+│ │                                                                                         │ │
+│ │ If we need a quick fix without modifying the core strategy:                             │ │
+│ │                                                                                         │ │
+│ │ 1. Create a new LLM configuration specifically for character builder:                   │ │
+│ │ "character-builder-claude": {                                                           │ │
+│ │   "configId": "character-builder-claude",                                               │ │
+│ │   "displayName": "Claude for Character Builder",                                        │ │
+│ │   "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",                                         │ │
+│ │   "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",                       │ │
+│ │   "modelIdentifier": "anthropic/claude-sonnet-4",                                       │ │
+│ │   "apiType": "openrouter",                                                              │ │
+│ │   "jsonOutputStrategy": {                                                               │ │
+│ │     "method": "openrouter_json_schema",                                                 │ │
+│ │     "jsonSchema": { /* thematic directions schema */ }                                  │ │
+│ │   }                                                                                     │ │
+│ │ }                                                                                       │ │
+│ │ 2. Update character builder to use this specific configuration                          │ │
+│ │                                                                                         │ │
+│ │ Benefits of Option 1                                                                    │ │
+│ │                                                                                         │ │
+│ │ - Maintains the reliability of tool calling                                             │ │
+│ │ - Makes the system more flexible for future use cases                                   │ │
+│ │ - Follows the principle that both JSON schema and tool calling should work with the     │ │
+│ │ same schemas                                                                            │ │
+│ │ - Backward compatible with existing game AI usage                                       │ │
+│ │                                                                                         │ │
+│ │ Would you like me to proceed with implementing Option 1 (the recommended approach)?

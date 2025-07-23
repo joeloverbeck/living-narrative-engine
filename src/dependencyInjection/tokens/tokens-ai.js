@@ -33,7 +33,6 @@ export const aiTokens = freeze({
   LLMResponseProcessor: 'LLMResponseProcessor',
   ActionIndexingService: 'ActionIndexingService',
   IConfigurationProvider: 'IConfigurationProvider',
-  LlmConfigManager: 'LlmConfigManager',
   PromptTemplateService: 'PromptTemplateService',
   PromptDataFormatter: 'PromptDataFormatter',
   IPromptStaticContentService: 'IPromptStaticContentService',

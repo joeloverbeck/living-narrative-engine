@@ -16,6 +16,15 @@ import {
 } from '../models/thematicDirection.js';
 
 /**
+ * Retry configuration for storage operations
+ */
+const STORAGE_RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelayMs: process.env.NODE_ENV === 'test' ? 5 : 500,
+  maxDelayMs: process.env.NODE_ENV === 'test' ? 25 : 2000,
+};
+
+/**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
  * @typedef {import('../storage/characterDatabase.js').CharacterDatabase} CharacterDatabase
@@ -125,7 +134,7 @@ export class CharacterStorageService {
       throw new CharacterStorageError('concept is required');
     }
 
-    const maxRetries = 3;
+    const maxRetries = STORAGE_RETRY_CONFIG.maxRetries;
     let attempt = 0;
     let lastError;
 
@@ -133,7 +142,7 @@ export class CharacterStorageService {
       try {
         // Serialize the concept for validation (converts Date objects to ISO strings)
         const serializedConcept = serializeCharacterConcept(concept);
-        
+
         // Validate the serialized concept against schema
         const isValid = this.#schemaValidator.validateAgainstSchema(
           serializedConcept,
@@ -141,16 +150,17 @@ export class CharacterStorageService {
         );
         if (!isValid) {
           const errorMsg = this.#schemaValidator.formatAjvErrors();
-          const detailedErrorMsg = errorMsg || 'Schema validation failed without specific details';
-          
+          const detailedErrorMsg =
+            errorMsg || 'Schema validation failed without specific details';
+
           this.#logger.error(
             `CharacterStorageService: Schema validation failed for concept ${concept.id}`,
-            { 
-              conceptId: concept.id, 
+            {
+              conceptId: concept.id,
               validationErrors: errorMsg,
               originalData: concept,
               serializedData: serializedConcept,
-              schemaId: 'character-concept'
+              schemaId: 'character-concept',
             }
           );
           throw new CharacterStorageError(
@@ -186,7 +196,10 @@ export class CharacterStorageService {
         }
 
         // Wait before retrying
-        const backoffTime = Math.min(500 * Math.pow(2, attempt - 1), 2000);
+        const backoffTime = Math.min(
+          STORAGE_RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt - 1),
+          STORAGE_RETRY_CONFIG.maxDelayMs
+        );
         await new Promise((resolve) => setTimeout(resolve, backoffTime));
       }
     }
@@ -223,7 +236,7 @@ export class CharacterStorageService {
       return [];
     }
 
-    const maxRetries = 3;
+    const maxRetries = STORAGE_RETRY_CONFIG.maxRetries;
     let attempt = 0;
     let lastError;
 
@@ -271,7 +284,10 @@ export class CharacterStorageService {
         }
 
         // Wait before retrying
-        const backoffTime = Math.min(500 * Math.pow(2, attempt - 1), 2000);
+        const backoffTime = Math.min(
+          STORAGE_RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt - 1),
+          STORAGE_RETRY_CONFIG.maxDelayMs
+        );
         await new Promise((resolve) => setTimeout(resolve, backoffTime));
       }
     }

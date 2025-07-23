@@ -3,7 +3,7 @@
  * @description Provides registration functions for testing facade services.
  * These registrations simplify test container setup by providing pre-configured
  * facade instances with all required dependencies.
- * 
+ *
  * Phase 2 Enhancement: Now also exports test module builders for an even simpler
  * testing experience with fluent API and preset configurations.
  */
@@ -258,13 +258,87 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
     },
   };
 
+  // Create a shared entity store for the mock entity manager
+  const mockEntityStore = new Map();
+
   // Create mock entity service dependencies
   const mockEntityDeps = {
     entityManager: {
-      createEntity: mockFn(),
-      getEntityInstance: mockFn(),
-      updateComponent: mockFn(),
-      removeEntity: mockFn(),
+      createEntity: (() => {
+        const mock = mockFn();
+        if (mock.mockImplementation) {
+          return mock.mockImplementation(async (config) => {
+            // Return the provided ID or generate one
+            const id = config.id || `entity-${Date.now()}-${Math.random()}`;
+            // Store the entity
+            mockEntityStore.set(id, {
+              id,
+              components: config.components || {},
+              ...config,
+            });
+            return id;
+          });
+        } else {
+          // Fallback for non-Jest mock functions
+          return async (config) => {
+            const id = config.id || `entity-${Date.now()}-${Math.random()}`;
+            mockEntityStore.set(id, {
+              id,
+              components: config.components || {},
+              ...config,
+            });
+            return id;
+          };
+        }
+      })(),
+      getEntityInstance: (() => {
+        const mock = mockFn();
+        if (mock.mockImplementation) {
+          return mock.mockImplementation(async (entityId) => {
+            return mockEntityStore.get(entityId) || null;
+          });
+        } else {
+          // Fallback for non-Jest mock functions
+          return async (entityId) => mockEntityStore.get(entityId) || null;
+        }
+      })(),
+      updateComponent: (() => {
+        const mock = mockFn();
+        if (mock.mockImplementation) {
+          return mock.mockImplementation(
+            async (entityId, componentId, data) => {
+              // Update the entity's components in the tracked entities
+              const entity = mockEntityStore.get(entityId);
+              if (entity) {
+                if (!entity.components) entity.components = {};
+                entity.components[componentId] = data;
+              }
+              return true;
+            }
+          );
+        } else {
+          // Fallback for non-Jest mock functions
+          return async (entityId, componentId, data) => {
+            const entity = mockEntityStore.get(entityId);
+            if (entity) {
+              if (!entity.components) entity.components = {};
+              entity.components[componentId] = data;
+            }
+            return true;
+          };
+        }
+      })(),
+      removeEntity: (() => {
+        const mock = mockFn();
+        if (mock.mockImplementation) {
+          return mock.mockImplementation(async (entityId) => {
+            return mockEntityStore.delete(entityId);
+          });
+        } else {
+          // Fallback for non-Jest mock functions
+          return async (entityId) => mockEntityStore.delete(entityId);
+        }
+      })(),
     },
     eventBus: {
       dispatch: (() => {
@@ -324,7 +398,7 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
 /**
  * Creates test modules with integrated facade support.
  * This provides a more fluent and intuitive API compared to createMockFacades.
- * 
+ *
  * @param {Function} [mockFn] - Mock function creator (typically jest.fn).
  * @returns {object} Object containing test module builders.
  * @example
@@ -342,14 +416,14 @@ export function createTestModules(mockFn = () => () => {}) {
      * @returns {TurnExecutionTestModule}
      */
     forTurnExecution: () => new TurnExecutionTestModule(mockFn),
-    
+
     /**
      * Creates a new ActionProcessingTestModule for action discovery and processing
      *
      * @returns {ActionProcessingTestModule}
      */
     forActionProcessing: () => new ActionProcessingTestModule(mockFn),
-    
+
     /**
      * Preset scenarios for rapid test creation
      */
@@ -363,7 +437,7 @@ export function createTestModules(mockFn = () => () => {}) {
 }
 
 // Re-export test module classes and utilities for direct access
-export { 
+export {
   TestModuleBuilder,
   TurnExecutionTestModule,
   ActionProcessingTestModule,

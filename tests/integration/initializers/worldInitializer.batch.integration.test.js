@@ -547,5 +547,4 @@ describe('WorldInitializer - Batch Operations Integration', () => {
       );
     });
   });
-
 });

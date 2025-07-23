@@ -6,13 +6,7 @@
  * and lines 170-174 (summary logging with getLoadedSchemaIds)
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import SchemaLoader from '../../../src/loaders/schemaLoader.js';
 
 describe('SchemaLoader - Summary Functionality', () => {
@@ -43,9 +37,9 @@ describe('SchemaLoader - Summary Functionality', () => {
     };
 
     mockPathResolver = {
-      resolveSchemaPath: jest.fn().mockImplementation(
-        (filename) => `./test/schemas/${filename}`
-      ),
+      resolveSchemaPath: jest
+        .fn()
+        .mockImplementation((filename) => `./test/schemas/${filename}`),
       resolveContentPath: jest.fn(),
     };
 
@@ -90,8 +84,14 @@ describe('SchemaLoader - Summary Functionality', () => {
   describe('Summary logging during loadAndCompileAllSchemas (lines 170-174)', () => {
     it('should log schema summary when getLoadedSchemaIds method exists', async () => {
       // Arrange
-      const loadedSchemaIds = ['test://schema1', 'test://schema2', 'test://schema3'];
-      mockSchemaValidator.getLoadedSchemaIds = jest.fn().mockReturnValue(loadedSchemaIds);
+      const loadedSchemaIds = [
+        'test://schema1',
+        'test://schema2',
+        'test://schema3',
+      ];
+      mockSchemaValidator.getLoadedSchemaIds = jest
+        .fn()
+        .mockReturnValue(loadedSchemaIds);
 
       // Act
       await schemaLoader.loadAndCompileAllSchemas();
@@ -169,7 +169,9 @@ describe('SchemaLoader - Summary Functionality', () => {
     it('should include loaded schemas when getLoadedSchemaIds method exists', () => {
       // Arrange
       const loadedSchemaIds = ['test://schema1', 'test://schema2'];
-      mockSchemaValidator.getLoadedSchemaIds = jest.fn().mockReturnValue(loadedSchemaIds);
+      mockSchemaValidator.getLoadedSchemaIds = jest
+        .fn()
+        .mockReturnValue(loadedSchemaIds);
       mockSchemaValidator.isSchemaLoaded = jest.fn().mockReturnValue(true);
 
       // Act
@@ -203,11 +205,13 @@ describe('SchemaLoader - Summary Functionality', () => {
         'schema://living-narrative-engine/world.schema.json',
         'schema://living-narrative-engine/entity-instance.schema.json',
       ];
-      
-      mockSchemaValidator.isSchemaLoaded = jest.fn().mockImplementation((schemaId) => {
-        // Only the first critical schema is loaded
-        return schemaId === criticalSchemas[0];
-      });
+
+      mockSchemaValidator.isSchemaLoaded = jest
+        .fn()
+        .mockImplementation((schemaId) => {
+          // Only the first critical schema is loaded
+          return schemaId === criticalSchemas[0];
+        });
 
       // Act
       const summary = schemaLoader.getSchemaLoadingSummary();
@@ -235,12 +239,14 @@ describe('SchemaLoader - Summary Functionality', () => {
 
       // All critical schemas are loaded
       mockSchemaValidator.isSchemaLoaded = jest.fn().mockReturnValue(true);
-      
+
       // But some have invalid $refs
-      mockSchemaValidator.validateSchemaRefs = jest.fn().mockImplementation((schemaId) => {
-        // Only the first schema has valid refs
-        return schemaId === criticalSchemas[0];
-      });
+      mockSchemaValidator.validateSchemaRefs = jest
+        .fn()
+        .mockImplementation((schemaId) => {
+          // Only the first schema has valid refs
+          return schemaId === criticalSchemas[0];
+        });
 
       // Act
       const summary = schemaLoader.getSchemaLoadingSummary();
@@ -291,9 +297,11 @@ describe('SchemaLoader - Summary Functionality', () => {
       ];
 
       // Mixed scenario: some loaded, some not
-      mockSchemaValidator.isSchemaLoaded = jest.fn().mockImplementation((schemaId) => {
-        return schemaId === criticalSchemas[0]; // Only first is loaded
-      });
+      mockSchemaValidator.isSchemaLoaded = jest
+        .fn()
+        .mockImplementation((schemaId) => {
+          return schemaId === criticalSchemas[0]; // Only first is loaded
+        });
 
       // For the loaded schema, it has invalid $refs
       mockSchemaValidator.validateSchemaRefs = jest.fn().mockReturnValue(false);
@@ -343,9 +351,11 @@ describe('SchemaLoader - Summary Functionality', () => {
 
       it('should handle isSchemaLoaded throwing an error', () => {
         // Arrange
-        mockSchemaValidator.isSchemaLoaded = jest.fn().mockImplementation(() => {
-          throw new Error('Schema validation error');
-        });
+        mockSchemaValidator.isSchemaLoaded = jest
+          .fn()
+          .mockImplementation(() => {
+            throw new Error('Schema validation error');
+          });
 
         // Act & Assert
         expect(() => schemaLoader.getSchemaLoadingSummary()).toThrow(
@@ -356,9 +366,11 @@ describe('SchemaLoader - Summary Functionality', () => {
       it('should handle validateSchemaRefs throwing an error', () => {
         // Arrange
         mockSchemaValidator.isSchemaLoaded = jest.fn().mockReturnValue(true);
-        mockSchemaValidator.validateSchemaRefs = jest.fn().mockImplementation(() => {
-          throw new Error('$refs validation error');
-        });
+        mockSchemaValidator.validateSchemaRefs = jest
+          .fn()
+          .mockImplementation(() => {
+            throw new Error('$refs validation error');
+          });
 
         // Act & Assert
         expect(() => schemaLoader.getSchemaLoadingSummary()).toThrow(

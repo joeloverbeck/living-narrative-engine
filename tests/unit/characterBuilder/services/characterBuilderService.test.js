@@ -609,34 +609,35 @@ describe('CharacterBuilderService', () => {
     );
 
     test('should handle empty or invalid directions response', async () => {
-      const conceptId = 'test-concept-123';
       const mockCharacterConcept = {
-        id: conceptId,
+        id: 'test-concept-123',
         concept: 'Test Hero - A brave adventurer',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
-      mocks.storageService.getCharacterConcept.mockResolvedValue(
-        mockCharacterConcept
-      );
-
-      // Test empty array
-      mocks.directionGenerator.generateDirections.mockResolvedValue([]);
+      // Test empty array - use fresh service instance to avoid circuit breaker state
+      const setup1 = createService();
+      setup1.mocks.storageService.getCharacterConcept.mockResolvedValue(mockCharacterConcept);
+      setup1.mocks.directionGenerator.generateDirections.mockResolvedValue([]);
       await expect(
-        service.generateThematicDirections(conceptId)
+        setup1.service.generateThematicDirections('test-concept-empty')
       ).rejects.toThrow('Generated directions are empty or invalid');
 
-      // Test null response
-      mocks.directionGenerator.generateDirections.mockResolvedValue(null);
+      // Test null response - use fresh service instance to avoid circuit breaker state
+      const setup2 = createService();
+      setup2.mocks.storageService.getCharacterConcept.mockResolvedValue(mockCharacterConcept);
+      setup2.mocks.directionGenerator.generateDirections.mockResolvedValue(null);
       await expect(
-        service.generateThematicDirections(conceptId)
+        setup2.service.generateThematicDirections('test-concept-null')
       ).rejects.toThrow('Generated directions are empty or invalid');
 
-      // Test non-array response
-      mocks.directionGenerator.generateDirections.mockResolvedValue('invalid');
+      // Test non-array response - use fresh service instance to avoid circuit breaker state
+      const setup3 = createService();
+      setup3.mocks.storageService.getCharacterConcept.mockResolvedValue(mockCharacterConcept);
+      setup3.mocks.directionGenerator.generateDirections.mockResolvedValue('invalid');
       await expect(
-        service.generateThematicDirections(conceptId)
+        setup3.service.generateThematicDirections('test-concept-invalid')
       ).rejects.toThrow('Generated directions are empty or invalid');
     });
 

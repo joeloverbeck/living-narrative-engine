@@ -18,7 +18,7 @@ export class TestModuleValidationError extends Error {
     super(message);
     this.name = 'TestModuleValidationError';
     this.errors = errors;
-    
+
     // Capture stack trace in V8 environments
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, TestModuleValidationError);
@@ -37,7 +37,7 @@ export class TestModuleValidationError extends Error {
 
     const header = `${this.message}\nValidation errors:`;
     const errorList = this.errors
-      .map(err => {
+      .map((err) => {
         const codeStr = err.code ? ` [${err.code}]` : '';
         return `  - ${err.field}: ${err.message}${codeStr}`;
       })
@@ -53,7 +53,7 @@ export class TestModuleValidationError extends Error {
    * @returns {Array<{field: string, message: string, code?: string}>} Errors for the specified field
    */
   getFieldErrors(field) {
-    return this.errors.filter(err => err.field === field);
+    return this.errors.filter((err) => err.field === field);
   }
 
   /**
@@ -63,7 +63,7 @@ export class TestModuleValidationError extends Error {
    * @returns {boolean} True if there are errors for the field
    */
   hasFieldErrors(field) {
-    return this.errors.some(err => err.field === field);
+    return this.errors.some((err) => err.field === field);
   }
 
   /**

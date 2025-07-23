@@ -12,7 +12,7 @@ import { TestModuleValidator } from '../validation/testModuleValidator.js';
  * Test module for action discovery and processing.
  * Provides focused testing capabilities for action-related functionality
  * without the overhead of full turn execution.
- * 
+ *
  * @augments ITestModule
  * @example
  * const testEnv = await new ActionProcessingTestModule()
@@ -101,10 +101,8 @@ export class ActionProcessingTestModule extends ITestModule {
     if (!Array.isArray(actions)) {
       this.#config.actions = actions;
     } else {
-      this.#config.actions = actions.map(action =>
-        typeof action === 'string'
-          ? { id: action }
-          : action
+      this.#config.actions = actions.map((action) =>
+        typeof action === 'string' ? { id: action } : action
       );
     }
     return this;
@@ -199,7 +197,10 @@ export class ActionProcessingTestModule extends ITestModule {
    * @returns {import('../validation/testModuleValidator.js').ValidationResult}
    */
   validate() {
-    return TestModuleValidator.validateConfiguration(this.#config, 'actionProcessing');
+    return TestModuleValidator.validateConfiguration(
+      this.#config,
+      'actionProcessing'
+    );
   }
 
   /**
@@ -219,8 +220,11 @@ export class ActionProcessingTestModule extends ITestModule {
     }
 
     // Create facades with configuration
-    const facades = createMockFacades(this.#config.facades, this.#mockFn || (() => () => {}));
-    
+    const facades = createMockFacades(
+      this.#config.facades,
+      this.#mockFn || (() => () => {})
+    );
+
     // Configure action service mocks
     this.#configureActionServiceMocks(facades.actionService);
 
@@ -234,76 +238,90 @@ export class ActionProcessingTestModule extends ITestModule {
       actorId: this.#config.actorId,
       facades,
       config: Object.freeze({ ...this.#config }),
-      
+
       // Action-focused convenience methods
       async discoverActions(actorId = this.#config.actorId) {
         const startTime = performanceTracker ? Date.now() : null;
-        
+
         const result = await facades.actionService.discoverActions(actorId);
-        
+
         if (performanceTracker) {
           performanceTracker.recordDiscovery(Date.now() - startTime);
         }
-        
+
         return result;
       },
-      
+
       async validateAction(actionId, targets = {}) {
         const startTime = performanceTracker ? Date.now() : null;
-        
+
         const result = await facades.actionService.validateAction({
           actionId,
           actorId: this.#config.actorId,
           targets,
         });
-        
+
         if (performanceTracker) {
           performanceTracker.recordValidation(Date.now() - startTime);
         }
-        
+
         return result;
       },
-      
+
       async executeAction(actionId, targets = {}) {
         const startTime = performanceTracker ? Date.now() : null;
-        
+
         const result = await facades.actionService.executeAction({
           actionId,
           actorId: this.#config.actorId,
           targets,
         });
-        
+
         if (performanceTracker) {
           performanceTracker.recordExecution(Date.now() - startTime);
         }
-        
+
         return result;
       },
-      
+
       async processActionCandidate(candidate) {
         // Full action processing pipeline
-        const validation = await this.validateAction(candidate.actionId, candidate.targets);
+        const validation = await this.validateAction(
+          candidate.actionId,
+          candidate.targets
+        );
         if (!validation.success) {
           return { success: false, validation };
         }
-        
-        const execution = await this.executeAction(candidate.actionId, candidate.targets);
+
+        const execution = await this.executeAction(
+          candidate.actionId,
+          candidate.targets
+        );
         return { success: execution.success, validation, execution };
       },
-      
+
       // Mock configuration methods
       setAvailableActions(actions) {
         facades.actionService.setMockActions(this.#config.actorId, actions);
       },
-      
+
       setValidationResult(actionId, result) {
-        facades.actionService.setMockValidation(this.#config.actorId, actionId, result);
+        facades.actionService.setMockValidation(
+          this.#config.actorId,
+          actionId,
+          result
+        );
       },
-      
+
       setExecutionResult(actionId, result) {
-        facades.actionService.setMockExecution(this.#config.actorId, actionId, result);
+        facades.actionService.setMockExecution(
+          this.#config.actorId,
+          actionId,
+          result
+        );
       },
-      
+
       async cleanup() {
         facades.actionService.clearMockData();
       },
@@ -358,28 +376,46 @@ export class ActionProcessingTestModule extends ITestModule {
       if (this.#config.mockDiscovery.returnEmpty) {
         actionService.setMockActions(this.#config.actorId, []);
       } else if (this.#config.actions.length > 0) {
-        actionService.setMockActions(this.#config.actorId, this.#config.actions);
+        actionService.setMockActions(
+          this.#config.actorId,
+          this.#config.actions
+        );
       }
-      
+
       if (this.#config.mockDiscovery.customLogic && this.#mockFn) {
         // Override discovery method with custom logic
-        actionService.discoverActions = this.#mockFn()
-          .mockImplementation(this.#config.mockDiscovery.customLogic);
+        actionService.discoverActions = this.#mockFn().mockImplementation(
+          this.#config.mockDiscovery.customLogic
+        );
       }
     }
 
     // Set up validation mocks
-    if (this.#config.mockValidation && this.#config.mockValidation.customRules) {
-      Object.entries(this.#config.mockValidation.customRules).forEach(([actionId, rule]) => {
-        actionService.setMockValidation(this.#config.actorId, actionId, rule);
-      });
+    if (
+      this.#config.mockValidation &&
+      this.#config.mockValidation.customRules
+    ) {
+      Object.entries(this.#config.mockValidation.customRules).forEach(
+        ([actionId, rule]) => {
+          actionService.setMockValidation(this.#config.actorId, actionId, rule);
+        }
+      );
     }
 
     // Set up execution mocks
-    if (this.#config.mockExecution && this.#config.mockExecution.customResults) {
-      Object.entries(this.#config.mockExecution.customResults).forEach(([actionId, result]) => {
-        actionService.setMockExecution(this.#config.actorId, actionId, result);
-      });
+    if (
+      this.#config.mockExecution &&
+      this.#config.mockExecution.customResults
+    ) {
+      Object.entries(this.#config.mockExecution.customResults).forEach(
+        ([actionId, result]) => {
+          actionService.setMockExecution(
+            this.#config.actorId,
+            actionId,
+            result
+          );
+        }
+      );
     }
   }
 
@@ -402,22 +438,34 @@ export class ActionProcessingTestModule extends ITestModule {
       recordDiscovery: (duration) => metrics.discovery.push(duration),
       recordValidation: (duration) => metrics.validation.push(duration),
       recordExecution: (duration) => metrics.execution.push(duration),
-      
+
       getMetrics: () => ({
         discovery: this.#calculateStats(metrics.discovery),
         validation: this.#calculateStats(metrics.validation),
         execution: this.#calculateStats(metrics.execution),
       }),
-      
+
       checkThresholds: () => {
         const violations = [];
-        
+
         const checks = [
-          { name: 'discovery', data: metrics.discovery, threshold: thresholds.discovery },
-          { name: 'validation', data: metrics.validation, threshold: thresholds.validation },
-          { name: 'execution', data: metrics.execution, threshold: thresholds.execution },
+          {
+            name: 'discovery',
+            data: metrics.discovery,
+            threshold: thresholds.discovery,
+          },
+          {
+            name: 'validation',
+            data: metrics.validation,
+            threshold: thresholds.validation,
+          },
+          {
+            name: 'execution',
+            data: metrics.execution,
+            threshold: thresholds.execution,
+          },
         ];
-        
+
         checks.forEach(({ name, data, threshold }) => {
           const avg = this.#calculateAverage(data);
           if (avg > threshold) {
@@ -428,7 +476,7 @@ export class ActionProcessingTestModule extends ITestModule {
             });
           }
         });
-        
+
         return violations;
       },
     };

@@ -144,7 +144,7 @@ describe('WorldInitializer Performance', () => {
 
         // Simulate realistic processing times based on entity count
         const mockProcessingTime = Math.floor(size * 2.5); // ~2.5ms per entity
-        
+
         mockEntityManager.batchCreateEntities.mockResolvedValue({
           successes: entityInstances.map((instance, i) => ({
             id: `entity_${size}_${i}`,
@@ -159,7 +159,9 @@ describe('WorldInitializer Performance', () => {
         });
 
         const startTime = performance.now();
-        const result = await worldInitializer.initializeWorldEntities(`test_world_${size}`);
+        const result = await worldInitializer.initializeWorldEntities(
+          `test_world_${size}`
+        );
         const endTime = performance.now();
 
         results[size] = {
@@ -177,14 +179,16 @@ describe('WorldInitializer Performance', () => {
 
       console.log('World initialization performance scaling:');
       for (const [size, data] of Object.entries(results)) {
-        console.log(`  ${size} entities: ${data.processingTime}ms (${data.entitiesPerSecond.toFixed(0)} entities/sec)`);
+        console.log(
+          `  ${size} entities: ${data.processingTime}ms (${data.entitiesPerSecond.toFixed(0)} entities/sec)`
+        );
       }
 
       // Verify performance doesn't degrade exponentially
       const smallWorldRate = results[50].entitiesPerSecond;
       const largeWorldRate = results[500].entitiesPerSecond;
       const degradationRatio = smallWorldRate / largeWorldRate;
-      
+
       // Performance shouldn't degrade more than 2x between 50 and 500 entities
       expect(degradationRatio).toBeLessThan(2);
     });
@@ -223,7 +227,8 @@ describe('WorldInitializer Performance', () => {
         processingTime: 150, // Efficient batch processing
       });
 
-      const batchResult = await worldInitializer.initializeWorldEntities('test_world_batch');
+      const batchResult =
+        await worldInitializer.initializeWorldEntities('test_world_batch');
 
       // Test sequential performance (simulate by disabling batch optimization)
       const sequentialConfig = {
@@ -245,22 +250,30 @@ describe('WorldInitializer Performance', () => {
       // Mock sequential entity creation (slower)
       mockEntityManager.createEntityInstance.mockImplementation(async () => {
         // Simulate 5ms per entity for sequential creation
-        await new Promise(resolve => setTimeout(resolve, 5));
+        await new Promise((resolve) => setTimeout(resolve, 5));
         return { id: 'sequential_entity', instanceId: 'test' };
       });
 
       const sequentialStartTime = performance.now();
-      const sequentialResult = await sequentialInitializer.initializeWorldEntities('test_world_sequential');
+      const sequentialResult =
+        await sequentialInitializer.initializeWorldEntities(
+          'test_world_sequential'
+        );
       const sequentialEndTime = performance.now();
 
       console.log(`Batch initialization: ${batchResult.processingTime}ms`);
-      console.log(`Sequential initialization: ${sequentialEndTime - sequentialStartTime}ms`);
+      console.log(
+        `Sequential initialization: ${sequentialEndTime - sequentialStartTime}ms`
+      );
 
       // Batch should be significantly faster
       expect(batchResult.optimizationUsed).toBe('batch');
-      expect(batchResult.processingTime).toBeLessThan(sequentialEndTime - sequentialStartTime);
+      expect(batchResult.processingTime).toBeLessThan(
+        sequentialEndTime - sequentialStartTime
+      );
 
-      const performanceGain = (sequentialEndTime - sequentialStartTime) / batchResult.processingTime;
+      const performanceGain =
+        (sequentialEndTime - sequentialStartTime) / batchResult.processingTime;
       console.log(`Performance gain: ${performanceGain.toFixed(2)}x faster`);
     });
 
@@ -286,34 +299,41 @@ describe('WorldInitializer Performance', () => {
 
       // Simulate batched processing for large world
       let batchCallCount = 0;
-      mockEntityManager.batchCreateEntities.mockImplementation(async (specs) => {
-        batchCallCount++;
-        const batchSize = specs.length;
-        
-        return {
-          successes: specs.map((spec, i) => ({
-            id: `entity_${batchCallCount}_${i}`,
-            instanceId: spec.opts.instanceId,
-            definitionId: spec.definitionId,
-          })),
-          failures: [],
-          successCount: batchSize,
-          failureCount: 0,
-          totalProcessed: batchSize,
-          processingTime: batchSize * 1.5, // Realistic processing time
-        };
-      });
+      mockEntityManager.batchCreateEntities.mockImplementation(
+        async (specs) => {
+          batchCallCount++;
+          const batchSize = specs.length;
+
+          return {
+            successes: specs.map((spec, i) => ({
+              id: `entity_${batchCallCount}_${i}`,
+              instanceId: spec.opts.instanceId,
+              definitionId: spec.definitionId,
+            })),
+            failures: [],
+            successCount: batchSize,
+            failureCount: 0,
+            totalProcessed: batchSize,
+            processingTime: batchSize * 1.5, // Realistic processing time
+          };
+        }
+      );
 
       const startTime = performance.now();
-      const result = await worldInitializer.initializeWorldEntities('test_large_world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test_large_world');
       const endTime = performance.now();
 
       expect(result.instantiatedCount).toBe(entityCount);
       expect(result.optimizationUsed).toBe('batch');
       expect(endTime - startTime).toBeLessThan(5000); // Should complete within 5 seconds
 
-      console.log(`Loaded ${entityCount} entities in ${endTime - startTime}ms using ${batchCallCount} batch calls`);
-      console.log(`Average entities per batch: ${entityCount / batchCallCount}`);
+      console.log(
+        `Loaded ${entityCount} entities in ${endTime - startTime}ms using ${batchCallCount} batch calls`
+      );
+      console.log(
+        `Average entities per batch: ${entityCount / batchCallCount}`
+      );
 
       // Verify batching was used efficiently
       expect(batchCallCount).toBeGreaterThanOrEqual(1); // Should use at least one batch

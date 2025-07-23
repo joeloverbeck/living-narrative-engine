@@ -4,19 +4,11 @@
  */
 
 import ConsoleLogger from './logging/consoleLogger.js';
-import EventBus from './events/eventBus.js';
-import ValidatedEventDispatcher from './events/validatedEventDispatcher.js';
-import { SafeEventDispatcher } from './events/safeEventDispatcher.js';
-import GameDataRepository from './data/gameDataRepository.js';
-import AjvSchemaValidator from './validation/ajvSchemaValidator.js';
-// Removed complex LLM imports - using simple mocks instead
 
-// Character Builder imports
-import { CharacterDatabase } from './characterBuilder/storage/characterDatabase.js';
-import { CharacterStorageService } from './characterBuilder/services/characterStorageService.js';
-import { ThematicDirectionGenerator } from './characterBuilder/services/thematicDirectionGenerator.js';
-import { CharacterBuilderService } from './characterBuilder/services/characterBuilderService.js';
-import { CharacterBuilderController } from './characterBuilder/controllers/characterBuilderController.js';
+// DI Container imports
+import AppContainer from './dependencyInjection/appContainer.js';
+import { configureBaseContainer } from './dependencyInjection/baseContainerConfig.js';
+import { tokens } from './dependencyInjection/tokens.js';
 
 /**
  * Character Builder Application class
@@ -42,154 +34,50 @@ class CharacterBuilderApp {
     }
 
     try {
-      this.#logger.info('CharacterBuilderApp: Starting initialization');
-
-      // Create schema validator first
-      const schemaValidator = new AjvSchemaValidator({
-        logger: this.#logger,
-      });
-
-      // Load schemas before creating event system
-      await this.#loadSchemas(schemaValidator);
-
-      // Create event system with proper initialization chain
-      const rawEventBus = new EventBus({ logger: this.#logger });
-
-      // Create a minimal mock registry for character builder
-      // This is needed by ValidatedEventDispatcher but we won't use most game data features
-      const mockRegistry = {
-        // World-related methods
-        getWorldDefinition: () => null,
-        getAllWorldDefinitions: () => [],
-        getStartingPlayerId: () => 'player',
-        getStartingLocationId: () => 'starting_location',
-
-        // Game content methods (unused in character builder)
-        getActionDefinition: () => null,
-        getAllActionDefinitions: () => [],
-        getEntityDefinition: () => null,
-        getAllEntityDefinitions: () => [],
-        getEventDefinition: () => null,
-        getAllEventDefinitions: () => [],
-        getComponentDefinition: () => null,
-        getAllComponentDefinitions: () => [],
-        getConditionDefinition: () => null,
-        getAllConditionDefinitions: () => [],
-        getGoalDefinition: () => null,
-        getAllGoalDefinitions: () => [],
-        getEntityInstanceDefinition: () => null,
-        getAllEntityInstanceDefinitions: () => [],
-
-        // Generic data methods
-        get: () => undefined,
-        getAll: () => ({}),
-        clear: () => {},
-        store: () => {},
-      };
-
-      const gameDataRepository = new GameDataRepository(
-        mockRegistry,
-        this.#logger
+      this.#logger.info(
+        'CharacterBuilderApp: Starting initialization with DI container'
       );
 
-      const validatedEventDispatcher = new ValidatedEventDispatcher({
-        eventBus: rawEventBus,
-        gameDataRepository,
-        schemaValidator,
+      // Create and configure DI container
+      const container = new AppContainer();
+
+      // Register logger first so it's available during container configuration
+      container.register(tokens.ILogger, this.#logger);
+
+      // Configure the container with character builder services
+      await configureBaseContainer(container, {
+        includeGameSystems: true, // Needed for LLM infrastructure
+        includeCharacterBuilder: true, // Enable character builder services
         logger: this.#logger,
       });
 
-      const eventBus = new SafeEventDispatcher({
-        validatedEventDispatcher,
-        logger: this.#logger,
+      // Load all schemas using SchemaLoader (includes llm-configs.schema.json)
+      const schemaLoader = container.resolve(tokens.SchemaLoader);
+      await schemaLoader.loadAndCompileAllSchemas();
+      this.#logger.info(
+        'CharacterBuilderApp: Loaded all schemas via SchemaLoader'
+      );
+
+      // Load character-specific schemas that might not be in the standard list
+      const schemaValidator = container.resolve(tokens.ISchemaValidator);
+      await this.#loadCharacterSpecificSchemas(schemaValidator);
+
+      // Initialize LLM adapter
+      const llmAdapter = container.resolve(tokens.LLMAdapter);
+      await llmAdapter.init({
+        llmConfigLoader: container.resolve(tokens.LlmConfigLoader),
       });
 
-      // Create character builder specific services
-      const database = new CharacterDatabase({
-        logger: this.#logger,
-      });
-
-      const storageService = new CharacterStorageService({
-        logger: this.#logger,
-        database,
-        schemaValidator,
-      });
-
-      // Create minimal mock LLM services for character builder
-      // The character builder doesn't need full LLM functionality, just basic concept generation
-      const mockLlmJsonService = {
-        generateJsonWithSchema: async () => ({
-          directions: [
-            {
-              theme: 'Adventure',
-              description: 'A brave character ready for exploration',
-            },
-            {
-              theme: 'Mystery',
-              description: 'Someone with secrets to uncover',
-            },
-            {
-              theme: 'Growth',
-              description: 'A character on a journey of personal development',
-            },
-          ],
-        }),
-        clean: (text) => text || '', // Simple cleanup method for character builder
-        parseAndRepair: (text) => {
-          try {
-            return JSON.parse(text || '{}');
-          } catch {
-            return {}; // Fallback for character builder
-          }
-        },
-      };
-
-      const mockLlmStrategyFactory = {
-        createStrategy: () => ({
-          generateText: async () => 'Generated thematic direction content',
-        }),
-        getStrategy: (strategyType) => ({
-          generateText: async () => 'Generated thematic direction content',
-        }),
-      };
-
-      const mockLlmConfigManager = {
-        getCurrentConfig: () => ({
-          modelName: 'mock-model',
-          temperature: 0.7,
-        }),
-        loadConfiguration: async () => {
-          // Mock configuration loading for character builder
-          return Promise.resolve();
-        },
-      };
-
-      const directionGenerator = new ThematicDirectionGenerator({
-        logger: this.#logger,
-        llmJsonService: mockLlmJsonService,
-        llmStrategyFactory: mockLlmStrategyFactory,
-        llmConfigManager: mockLlmConfigManager,
-      });
-
-      const characterBuilderService = new CharacterBuilderService({
-        logger: this.#logger,
-        storageService,
-        directionGenerator,
-        eventBus,
-      });
-
-      // Create UI controller
-      this.#controller = new CharacterBuilderController({
-        logger: this.#logger,
-        characterBuilderService,
-        eventBus,
-      });
+      // Get controller from container
+      this.#controller = container.resolve(tokens.CharacterBuilderController);
 
       // Initialize the controller
       await this.#controller.initialize();
 
       this.#initialized = true;
-      this.#logger.info('CharacterBuilderApp: Successfully initialized');
+      this.#logger.info(
+        'CharacterBuilderApp: Successfully initialized with unified LLM infrastructure'
+      );
     } catch (error) {
       this.#logger.error('CharacterBuilderApp: Failed to initialize', error);
       this.#showInitializationError(error);
@@ -198,12 +86,12 @@ class CharacterBuilderApp {
   }
 
   /**
-   * Load JSON schemas for validation
+   * Load character-specific schemas that aren't in the standard schema list
    *
    * @private
    * @param {AjvSchemaValidator} schemaValidator - Schema validator instance
    */
-  async #loadSchemas(schemaValidator) {
+  async #loadCharacterSpecificSchemas(schemaValidator) {
     try {
       // Load thematic direction schema first (it has no dependencies)
       const directionSchemaResponse = await fetch(

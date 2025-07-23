@@ -1,6 +1,19 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { CharacterStorageService, CharacterStorageError } from '../../../src/characterBuilder/services/characterStorageService.js';
-import { CharacterBuilderService, CharacterBuilderError } from '../../../src/characterBuilder/services/characterBuilderService.js';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+import {
+  CharacterStorageService,
+  CharacterStorageError,
+} from '../../../src/characterBuilder/services/characterStorageService.js';
+import {
+  CharacterBuilderService,
+  CharacterBuilderError,
+} from '../../../src/characterBuilder/services/characterBuilderService.js';
 import { createCharacterConcept } from '../../../src/characterBuilder/models/characterConcept.js';
 
 /**
@@ -18,7 +31,6 @@ describe('Character Builder - Error Scenarios', () => {
   let mockDirectionGenerator;
 
   beforeEach(() => {
-    
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -72,9 +84,11 @@ describe('Character Builder - Error Scenarios', () => {
     it('should handle the specific Date object vs string schema error from logs', async () => {
       // Arrange - Initialize and recreate the exact scenario from logs
       await storageService.initialize();
-      
-      const concept = createCharacterConcept('a strong woman in her twenties, who is good with a sword');
-      
+
+      const concept = createCharacterConcept(
+        'a strong woman in her twenties, who is good with a sword'
+      );
+
       // Mock the specific validation failure from logs
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
       mockSchemaValidator.formatAjvErrors.mockReturnValue(
@@ -82,9 +96,9 @@ describe('Character Builder - Error Scenarios', () => {
       );
 
       // Act & Assert
-      await expect(storageService.storeCharacterConcept(concept))
-        .rejects
-        .toThrow(CharacterStorageError);
+      await expect(
+        storageService.storeCharacterConcept(concept)
+      ).rejects.toThrow(CharacterStorageError);
 
       // Verify the error includes the detailed validation info
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -94,33 +108,45 @@ describe('Character Builder - Error Scenarios', () => {
           validationErrors: expect.stringContaining('must be string'),
           originalData: concept,
           serializedData: expect.objectContaining({
-            createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-            updatedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-          })
+            createdAt: expect.stringMatching(
+              /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+            ),
+            updatedAt: expect.stringMatching(
+              /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+            ),
+          }),
         })
       );
     });
 
     it('should prevent retries on schema validation failures (as shown in logs)', async () => {
-      // Arrange 
+      // Arrange
       await storageService.initialize();
-      
-      const concept = createCharacterConcept('a strong woman in her twenties, who is good with a sword');
-      
+
+      const concept = createCharacterConcept(
+        'a strong woman in her twenties, who is good with a sword'
+      );
+
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
-      mockSchemaValidator.formatAjvErrors.mockReturnValue('Schema validation failed');
+      mockSchemaValidator.formatAjvErrors.mockReturnValue(
+        'Schema validation failed'
+      );
 
       // Act & Assert
-      await expect(storageService.storeCharacterConcept(concept))
-        .rejects
-        .toThrow('Character concept validation failed: Schema validation failed');
+      await expect(
+        storageService.storeCharacterConcept(concept)
+      ).rejects.toThrow(
+        'Character concept validation failed: Schema validation failed'
+      );
 
       // Should only attempt once, no retries
-      expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledTimes(1);
+      expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledTimes(
+        1
+      );
       expect(mockDatabase.saveCharacterConcept).not.toHaveBeenCalled(); // Never reach database
-      
+
       // One warning is logged for the failed attempt, but no retries occur
-      expect(mockLogger.warn).toHaveBeenCalledTimes(1); 
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Attempt 1 failed for concept storage'),
         expect.any(Object)
@@ -130,16 +156,20 @@ describe('Character Builder - Error Scenarios', () => {
     it('should handle "No specific error details provided" scenario', async () => {
       // Arrange
       await storageService.initialize();
-      
-      const concept = createCharacterConcept('a strong woman in her twenties, who is good with a sword');
-      
+
+      const concept = createCharacterConcept(
+        'a strong woman in her twenties, who is good with a sword'
+      );
+
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
       mockSchemaValidator.formatAjvErrors.mockReturnValue(''); // Empty error details
 
       // Act & Assert
-      await expect(storageService.storeCharacterConcept(concept))
-        .rejects
-        .toThrow('Character concept validation failed: Schema validation failed without specific details');
+      await expect(
+        storageService.storeCharacterConcept(concept)
+      ).rejects.toThrow(
+        'Character concept validation failed: Schema validation failed without specific details'
+      );
 
       // Verify the fallback error message is used
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -155,27 +185,32 @@ describe('Character Builder - Error Scenarios', () => {
     it('should recreate the 3-attempt failure cycle from logs', async () => {
       // Arrange
       await builderService.initialize();
-      
-      const conceptText = 'a strong woman in her twenties, who is good with a sword';
-      
+
+      const conceptText =
+        'a strong woman in her twenties, who is good with a sword';
+
       // Mock storage to fail all 3 attempts (as seen in logs)
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
-      mockSchemaValidator.formatAjvErrors.mockReturnValue('Character concept validation failed: No specific error details provided');
+      mockSchemaValidator.formatAjvErrors.mockReturnValue(
+        'Character concept validation failed: No specific error details provided'
+      );
 
       // Act & Assert
-      await expect(builderService.createCharacterConcept(conceptText, { autoSave: true }))
-        .rejects
-        .toThrow(CharacterBuilderError);
+      await expect(
+        builderService.createCharacterConcept(conceptText, { autoSave: true })
+      ).rejects.toThrow(CharacterBuilderError);
 
       // Verify the builder service made 3 attempts, each causing a storage warning
       // Plus 3 warnings from the builder service retries = 6 total warnings
       expect(mockLogger.warn).toHaveBeenCalledTimes(6); // Storage + Builder warnings
-      
+
       // Verify final error event was dispatched
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         'CHARACTER_BUILDER_ERROR_OCCURRED',
         expect.objectContaining({
-          error: expect.stringContaining('Failed to create character concept after 3 attempts'),
+          error: expect.stringContaining(
+            'Failed to create character concept after 3 attempts'
+          ),
           operation: 'createCharacterConcept',
           concept: expect.stringContaining('a strong woman'),
           attempts: 3,
@@ -184,7 +219,9 @@ describe('Character Builder - Error Scenarios', () => {
 
       // Verify final error logged
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to create character concept after 3 attempts'),
+        expect.stringContaining(
+          'Failed to create character concept after 3 attempts'
+        ),
         expect.any(Error)
       );
     });
@@ -192,24 +229,29 @@ describe('Character Builder - Error Scenarios', () => {
     it('should handle storage service internal retry failures', async () => {
       // Arrange
       await storageService.initialize();
-      
-      const concept = createCharacterConcept('a strong woman in her twenties, who is good with a sword');
-      
+
+      const concept = createCharacterConcept(
+        'a strong woman in her twenties, who is good with a sword'
+      );
+
       // Mock database to fail all 3 storage attempts (not validation)
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
-      mockDatabase.saveCharacterConcept.mockRejectedValue(new Error('Database connection failed'));
+      mockDatabase.saveCharacterConcept.mockRejectedValue(
+        new Error('Database connection failed')
+      );
 
       // Act & Assert
-      await expect(storageService.storeCharacterConcept(concept))
-        .rejects
-        .toThrow('Failed to store character concept');
+      await expect(
+        storageService.storeCharacterConcept(concept)
+      ).rejects.toThrow('Failed to store character concept');
 
       // Verify 3 attempts were made at storage level
       expect(mockDatabase.saveCharacterConcept).toHaveBeenCalledTimes(3);
-      
+
       // Verify retry warnings
       expect(mockLogger.warn).toHaveBeenCalledTimes(3);
-      expect(mockLogger.warn).toHaveBeenNthCalledWith(1,
+      expect(mockLogger.warn).toHaveBeenNthCalledWith(
+        1,
         expect.stringContaining('Attempt 1 failed for concept storage'),
         expect.any(Object)
       );
@@ -220,25 +262,28 @@ describe('Character Builder - Error Scenarios', () => {
     it('should handle missing event definition gracefully', async () => {
       // Arrange
       await builderService.initialize();
-      
-      const conceptText = 'a strong woman in her twenties, who is good with a sword';
-      
+
+      const conceptText =
+        'a strong woman in her twenties, who is good with a sword';
+
       // Mock event dispatch to throw error (simulating missing event definition)
       mockEventBus.dispatch.mockImplementation((eventType) => {
         if (eventType === 'CHARACTER_BUILDER_ERROR_OCCURRED') {
           // Should not throw - this is warning behavior from logs
-          mockLogger.warn(`VED: EventDefinition not found for '${eventType}'. Cannot validate payload. Proceeding with dispatch.`);
+          mockLogger.warn(
+            `VED: EventDefinition not found for '${eventType}'. Cannot validate payload. Proceeding with dispatch.`
+          );
         }
       });
-      
+
       // Mock storage to fail
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
       mockSchemaValidator.formatAjvErrors.mockReturnValue('Validation failed');
 
       // Act & Assert
-      await expect(builderService.createCharacterConcept(conceptText, { autoSave: true }))
-        .rejects
-        .toThrow(CharacterBuilderError);
+      await expect(
+        builderService.createCharacterConcept(conceptText, { autoSave: true })
+      ).rejects.toThrow(CharacterBuilderError);
 
       // Should still dispatch the event despite missing definition
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
@@ -250,15 +295,18 @@ describe('Character Builder - Error Scenarios', () => {
     it('should include all required fields in error event payload', async () => {
       // Arrange
       await builderService.initialize();
-      
-      const conceptText = 'a strong woman in her twenties, who is good with a sword';
+
+      const conceptText =
+        'a strong woman in her twenties, who is good with a sword';
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
-      mockSchemaValidator.formatAjvErrors.mockReturnValue('Schema validation failed');
+      mockSchemaValidator.formatAjvErrors.mockReturnValue(
+        'Schema validation failed'
+      );
 
       // Act
-      await expect(builderService.createCharacterConcept(conceptText, { autoSave: true }))
-        .rejects
-        .toThrow();
+      await expect(
+        builderService.createCharacterConcept(conceptText, { autoSave: true })
+      ).rejects.toThrow();
 
       // Assert - Verify error event payload matches schema
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
@@ -280,21 +328,21 @@ describe('Character Builder - Error Scenarios', () => {
       await builderService.initialize();
 
       // Act & Assert
-      await expect(builderService.createCharacterConcept(null))
-        .rejects
-        .toThrow(CharacterBuilderError);
+      await expect(builderService.createCharacterConcept(null)).rejects.toThrow(
+        CharacterBuilderError
+      );
 
-      await expect(builderService.createCharacterConcept(undefined))
-        .rejects
-        .toThrow(CharacterBuilderError);
+      await expect(
+        builderService.createCharacterConcept(undefined)
+      ).rejects.toThrow(CharacterBuilderError);
 
-      await expect(builderService.createCharacterConcept(''))
-        .rejects
-        .toThrow(CharacterBuilderError);
+      await expect(builderService.createCharacterConcept('')).rejects.toThrow(
+        CharacterBuilderError
+      );
 
-      await expect(builderService.createCharacterConcept('   '))
-        .rejects
-        .toThrow(CharacterBuilderError);
+      await expect(
+        builderService.createCharacterConcept('   ')
+      ).rejects.toThrow(CharacterBuilderError);
     });
 
     it('should handle storage service initialization failures', async () => {
@@ -308,27 +356,29 @@ describe('Character Builder - Error Scenarios', () => {
       const concept = createCharacterConcept('a strong woman in her twenties');
 
       // Act & Assert - Should fail because not initialized
-      await expect(uninitializedStorageService.storeCharacterConcept(concept))
-        .rejects
-        .toThrow('CharacterStorageService not initialized');
+      await expect(
+        uninitializedStorageService.storeCharacterConcept(concept)
+      ).rejects.toThrow('CharacterStorageService not initialized');
     });
 
     it('should handle malformed character concept objects', async () => {
       // Arrange
       await storageService.initialize();
-      
+
       const malformedConcept = {
         // Missing required fields
         concept: 'A warrior',
       };
 
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
-      mockSchemaValidator.formatAjvErrors.mockReturnValue('Missing required fields');
+      mockSchemaValidator.formatAjvErrors.mockReturnValue(
+        'Missing required fields'
+      );
 
       // Act & Assert
-      await expect(storageService.storeCharacterConcept(malformedConcept))
-        .rejects
-        .toThrow(CharacterStorageError);
+      await expect(
+        storageService.storeCharacterConcept(malformedConcept)
+      ).rejects.toThrow(CharacterStorageError);
     });
   });
 
@@ -336,16 +386,20 @@ describe('Character Builder - Error Scenarios', () => {
     it('should provide comprehensive error context for debugging', async () => {
       // Arrange
       await storageService.initialize();
-      
-      const concept = createCharacterConcept('a strong woman in her twenties, who is good with a sword');
-      
+
+      const concept = createCharacterConcept(
+        'a strong woman in her twenties, who is good with a sword'
+      );
+
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
-      mockSchemaValidator.formatAjvErrors.mockReturnValue('Detailed validation errors');
+      mockSchemaValidator.formatAjvErrors.mockReturnValue(
+        'Detailed validation errors'
+      );
 
       // Act
-      await expect(storageService.storeCharacterConcept(concept))
-        .rejects
-        .toThrow();
+      await expect(
+        storageService.storeCharacterConcept(concept)
+      ).rejects.toThrow();
 
       // Assert - Verify comprehensive error logging
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -355,7 +409,7 @@ describe('Character Builder - Error Scenarios', () => {
           validationErrors: 'Detailed validation errors',
           originalData: concept,
           serializedData: expect.any(Object),
-          schemaId: 'character-concept'
+          schemaId: 'character-concept',
         })
       );
     });
@@ -363,17 +417,20 @@ describe('Character Builder - Error Scenarios', () => {
     it('should maintain error cause chains for debugging', async () => {
       // Arrange
       await builderService.initialize();
-      
-      const conceptText = 'a strong woman in her twenties, who is good with a sword';
+
+      const conceptText =
+        'a strong woman in her twenties, who is good with a sword';
       const rootError = new Error('Database connection lost');
-      
+
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(true);
       mockDatabase.saveCharacterConcept.mockRejectedValue(rootError);
 
       // Act
       let caughtError;
       try {
-        await builderService.createCharacterConcept(conceptText, { autoSave: true });
+        await builderService.createCharacterConcept(conceptText, {
+          autoSave: true,
+        });
       } catch (error) {
         caughtError = error;
       }

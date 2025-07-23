@@ -118,7 +118,7 @@ export class TurnExecutionFacade {
         for (const actorDef of actors) {
           // Extract type to prevent it from being passed as entity definition type
           const { type: actorType, ...restActorDef } = actorDef;
-          
+
           const actorId = await this.#entityService.createTestActor({
             name: actorDef.name || `Test ${actorType || 'AI'} Actor`,
             location: actorDef.location || world.mainLocationId,
@@ -127,7 +127,7 @@ export class TurnExecutionFacade {
             },
             ...restActorDef,
           });
-          
+
           createdActors[actorDef.id || actorId] = actorId;
           actorIds.push(actorId);
         }
@@ -158,7 +158,10 @@ export class TurnExecutionFacade {
         actors: createdActors,
         actorIds,
         // Legacy compatibility
-        aiActor: actors.length > 0 ? { id: actorIds[0] } : { id: createdActors.aiActorId },
+        aiActor:
+          actors.length > 0
+            ? { id: actorIds[0] }
+            : { id: createdActors.aiActorId },
         context: {
           world,
           actors: createdActors,

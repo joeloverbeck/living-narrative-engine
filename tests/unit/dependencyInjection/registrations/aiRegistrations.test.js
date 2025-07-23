@@ -28,7 +28,6 @@ import { PromptStaticContentService } from '../../../../src/prompting/promptStat
 import { PerceptionLogFormatter } from '../../../../src/formatting/perceptionLogFormatter.js';
 import { GameStateValidationServiceForPrompting } from '../../../../src/validation/gameStateValidationServiceForPrompting.js';
 import { HttpConfigurationProvider } from '../../../../src/configuration/httpConfigurationProvider.js';
-import { LlmConfigManager } from '../../../../src/llms/llmConfigManager.js';
 import { PromptBuilder } from '../../../../src/prompting/promptBuilder.js';
 import { PromptTemplateService } from '../../../../src/prompting/promptTemplateService.js';
 import { PromptDataFormatter } from '../../../../src/prompting/promptDataFormatter.js';
@@ -193,7 +192,6 @@ describe('AI registration helpers', () => {
         token: tokens.IConfigurationProvider,
         Class: HttpConfigurationProvider,
       },
-      { token: tokens.LlmConfigManager, Class: LlmConfigManager },
       { token: tokens.PromptTemplateService, Class: PromptTemplateService },
       { token: tokens.PromptDataFormatter, Class: PromptDataFormatter },
       { token: tokens.IPromptBuilder, Class: PromptBuilder },
@@ -202,6 +200,8 @@ describe('AI registration helpers', () => {
     test.each(singletonServices)(
       'should register $token correctly',
       ({ token, Class }) => {
+        // Register LLM infrastructure first to satisfy IPromptBuilder dependency
+        registerLlmInfrastructure(registrar, logger);
         registerPromptingEngine(registrar, logger);
         expect(container.isRegistered(token)).toBe(true);
         expectSingleton(container, token, Class);
@@ -209,6 +209,8 @@ describe('AI registration helpers', () => {
     );
 
     it('should log after registering all prompting services', () => {
+      // Register LLM infrastructure first to satisfy IPromptBuilder dependency
+      registerLlmInfrastructure(registrar, logger);
       registerPromptingEngine(registrar, logger);
       // Fix: Use stringContaining to make the test more robust against formatting issues.
       expect(logger.debug).toHaveBeenCalledWith(
@@ -218,6 +220,8 @@ describe('AI registration helpers', () => {
 
     it('registers IPromptStaticContentService as INITIALIZABLE singletonFactory', () => {
       const registerSpy = jest.spyOn(container, 'register');
+      // Register LLM infrastructure first to satisfy IPromptBuilder dependency
+      registerLlmInfrastructure(registrar, logger);
       registerPromptingEngine(registrar, logger);
       const registrationCall = registerSpy.mock.calls.find(
         (call) => call[0] === tokens.IPromptStaticContentService

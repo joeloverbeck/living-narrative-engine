@@ -33,7 +33,6 @@
 /** @typedef {import('../../interfaces/IPerceptionLogFormatter.js').IPerceptionLogFormatter} IPerceptionLogFormatter */
 /** @typedef {import('../../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */
-/** @typedef {import('../../llms/llmConfigManager.js').LlmConfigManager} LlmConfigManager_Concrete */
 /** @typedef {import('../../prompting/promptTemplateService.js').PromptTemplateService} PromptTemplateService */
 /** @typedef {import('../../prompting/promptDataFormatter.js').PromptDataFormatter} PromptDataFormatter */
 /** @typedef {import('../../turns/handlers/actorTurnHandler.js').default} ActorTurnHandler_Concrete */
@@ -67,7 +66,6 @@ import { PromptStaticContentService } from '../../prompting/promptStaticContentS
 import { PerceptionLogFormatter } from '../../formatting/perceptionLogFormatter.js';
 import { GameStateValidationServiceForPrompting } from '../../validation/gameStateValidationServiceForPrompting.js';
 import { HttpConfigurationProvider } from '../../configuration/httpConfigurationProvider.js';
-import { LlmConfigManager } from '../../llms/llmConfigManager.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 import { LlmJsonService } from '../../llms/llmJsonService.js';
 import { PromptBuilder } from '../../prompting/promptBuilder.js';
@@ -239,16 +237,6 @@ export function registerPromptingEngine(registrar, logger) {
       })
   );
 
-  registrar.singletonFactory(tokens.LlmConfigManager, (c) => {
-    return new LlmConfigManager({
-      logger: c.resolve(tokens.ILogger),
-      configurationProvider: c.resolve(tokens.IConfigurationProvider),
-      configSourceIdentifier: c
-        .resolve(tokens.IPathConfiguration)
-        .getLLMConfigPath(),
-    });
-  });
-
   registrar.singletonFactory(
     tokens.PromptTemplateService,
     (c) => new PromptTemplateService({ logger: c.resolve(tokens.ILogger) })
@@ -261,7 +249,7 @@ export function registerPromptingEngine(registrar, logger) {
   registrar.singletonFactory(tokens.IPromptBuilder, (c) => {
     return new PromptBuilder({
       logger: c.resolve(tokens.ILogger),
-      llmConfigService: c.resolve(tokens.LlmConfigManager),
+      llmConfigService: c.resolve(tokens.ILLMConfigurationManager),
       templateService: c.resolve(tokens.PromptTemplateService),
       dataFormatter: c.resolve(tokens.PromptDataFormatter),
     });
