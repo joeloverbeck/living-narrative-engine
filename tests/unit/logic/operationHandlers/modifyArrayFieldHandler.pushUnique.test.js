@@ -79,7 +79,7 @@ describe('ModifyArrayFieldHandler', () => {
     const componentType = 'core:inventory';
     const field = 'items';
 
-    test('should add a primitive value to an empty array', () => {
+    test('should add a primitive value to an empty array', async () => {
       // Arrange
       entityManager._setComponent(entityId, componentType, { [field]: [] });
       const params = {
@@ -91,7 +91,7 @@ describe('ModifyArrayFieldHandler', () => {
       };
 
       // Act
-      handler.execute(params, executionContext);
+      await handler.execute(params, executionContext);
 
       // Assert
       const expectedData = { [field]: ['sword'] };
@@ -109,7 +109,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(finalData[field]).toContain('sword');
     });
 
-    test('should not add a duplicate primitive value', () => {
+    test('should not add a duplicate primitive value', async () => {
       // Arrange
       entityManager._setComponent(entityId, componentType, {
         [field]: ['sword', 'shield'],
@@ -123,7 +123,7 @@ describe('ModifyArrayFieldHandler', () => {
       };
 
       // Act
-      handler.execute(params, executionContext);
+      await handler.execute(params, executionContext);
 
       // Assert
       const expectedData = { [field]: ['sword', 'shield'] };
@@ -143,7 +143,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(finalData[field]).toHaveLength(2);
     });
 
-    test('should add an object value to an empty array', () => {
+    test('should add an object value to an empty array', async () => {
       // Arrange
       entityManager._setComponent(entityId, componentType, { [field]: [] });
       const potion = { id: 'potion_health', quantity: 1 };
@@ -156,7 +156,7 @@ describe('ModifyArrayFieldHandler', () => {
       };
 
       // Act
-      handler.execute(params, executionContext);
+      await handler.execute(params, executionContext);
 
       // Assert
       const expectedData = { [field]: [potion] };
@@ -174,7 +174,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(finalData[field][0]).toEqual(potion);
     });
 
-    test('should not add a duplicate object value', () => {
+    test('should not add a duplicate object value', async () => {
       // Arrange
       const potion = { id: 'potion_health', quantity: 1 };
       entityManager._setComponent(entityId, componentType, {
@@ -190,7 +190,7 @@ describe('ModifyArrayFieldHandler', () => {
       };
 
       // Act
-      handler.execute(params, executionContext);
+      await handler.execute(params, executionContext);
 
       // Assert
       const expectedData = { [field]: [potion] };
@@ -210,7 +210,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(finalData[field]).toHaveLength(1);
     });
 
-    test('should add a new object if it is different from existing ones', () => {
+    test('should add a new object if it is different from existing ones', async () => {
       // Arrange
       const existingPotion = { id: 'potion_health', quantity: 1 };
       const newPotion = { id: 'potion_mana', quantity: 5 };
@@ -226,7 +226,7 @@ describe('ModifyArrayFieldHandler', () => {
       };
 
       // Act
-      handler.execute(params, executionContext);
+      await handler.execute(params, executionContext);
 
       // Assert
       const expectedData = { [field]: [existingPotion, newPotion] };
@@ -244,7 +244,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(finalData[field]).toContainEqual(newPotion);
     });
 
-    test('should warn and do nothing if value is missing', () => {
+    test('should warn and do nothing if value is missing', async () => {
       // Arrange
       entityManager._setComponent(entityId, componentType, {
         [field]: ['item1'],
@@ -258,7 +258,7 @@ describe('ModifyArrayFieldHandler', () => {
       };
 
       // Act
-      handler.execute(params, executionContext);
+      await handler.execute(params, executionContext);
 
       // Assert
       expect(logger.warn).toHaveBeenCalledWith(
@@ -266,10 +266,74 @@ describe('ModifyArrayFieldHandler', () => {
       );
       expect(entityManager.addComponent).not.toHaveBeenCalled();
     });
+
+    test('should store result in result_variable when adding new item', async () => {
+      // Arrange
+      entityManager._setComponent(entityId, componentType, { [field]: ['existing'] });
+      const params = {
+        entity_ref: entityId,
+        component_type: componentType,
+        field,
+        mode: 'push_unique',
+        value: 'new_item',
+        result_variable: 'array_result',
+      };
+
+      // Create execution context with proper structure
+      const contextWithVariables = {
+        ...executionContext,
+        evaluationContext: {
+          actor: { id: 'actor_id' },
+          target: { id: 'target_id' },
+          context: {},
+        },
+      };
+
+      // Act
+      await handler.execute(params, contextWithVariables);
+
+      // Assert
+      expect(contextWithVariables.evaluationContext.context.array_result).toEqual(['existing', 'new_item']);
+      expect(logger.debug).toHaveBeenCalledWith(
+        "MODIFY_ARRAY_FIELD: Stored result in context variable 'array_result'."
+      );
+    });
+
+    test('should store unchanged array in result_variable when item already exists', async () => {
+      // Arrange
+      entityManager._setComponent(entityId, componentType, { [field]: ['existing'] });
+      const params = {
+        entity_ref: entityId,
+        component_type: componentType,
+        field,
+        mode: 'push_unique',
+        value: 'existing',
+        result_variable: 'array_result',
+      };
+
+      // Create execution context with proper structure
+      const contextWithVariables = {
+        ...executionContext,
+        evaluationContext: {
+          actor: { id: 'actor_id' },
+          target: { id: 'target_id' },
+          context: {},
+        },
+      };
+
+      // Act
+      await handler.execute(params, contextWithVariables);
+
+      // Assert
+      expect(contextWithVariables.evaluationContext.context.array_result).toEqual(['existing']);
+      expect(logger.debug).toHaveBeenCalledWith(
+        "MODIFY_ARRAY_FIELD: Stored result in context variable 'array_result'."
+      );
+    });
   });
 
   describe('General Error Handling', () => {
-    test('should warn and exit if component does not exist', () => {
+    test('should warn and exit if component does not exist', async () => {
       // Arrange
       const params = {
         entity_ref: 'non_existent_entity',
@@ -280,7 +344,7 @@ describe('ModifyArrayFieldHandler', () => {
       };
 
       // Act
-      handler.execute(params, executionContext);
+      await handler.execute(params, executionContext);
 
       // Assert
       expect(logger.warn).toHaveBeenCalledWith(
@@ -289,7 +353,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(entityManager.addComponent).not.toHaveBeenCalled();
     });
 
-    test('should warn and exit if field path does not resolve to an array', () => {
+    test('should warn and exit if field path does not resolve to an array', async () => {
       // Arrange
       const entityId = 'player';
       const componentType = 'core:stats';
@@ -306,7 +370,7 @@ describe('ModifyArrayFieldHandler', () => {
       };
 
       // Act
-      handler.execute(params, executionContext);
+      await handler.execute(params, executionContext);
 
       // Assert
       expect(logger.warn).toHaveBeenCalledWith(

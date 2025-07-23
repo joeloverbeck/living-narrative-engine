@@ -14,9 +14,12 @@ describe('TestModuleValidator', () => {
         actors: [{ id: 'test' }],
         world: { name: 'Test' },
       };
-      
-      const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-      
+
+      const result = TestModuleValidator.validateConfiguration(
+        config,
+        'turnExecution'
+      );
+
       expect(result).toBeDefined();
       expect(result.valid).toBeDefined();
       expect(result.errors).toBeDefined();
@@ -24,9 +27,9 @@ describe('TestModuleValidator', () => {
     });
 
     it('should throw for unknown module type', () => {
-      expect(() => TestModuleValidator.validateConfiguration({}, 'unknownType')).toThrow(
-        'Unknown module type: unknownType'
-      );
+      expect(() =>
+        TestModuleValidator.validateConfiguration({}, 'unknownType')
+      ).toThrow('Unknown module type: unknownType');
     });
   });
 
@@ -34,9 +37,12 @@ describe('TestModuleValidator', () => {
     describe('LLM Configuration', () => {
       it('should require LLM configuration', () => {
         const config = { actors: [], world: {} };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.valid).toBe(false);
         expect(result.errors).toContainEqual({
           code: 'MISSING_LLM_CONFIG',
@@ -51,9 +57,12 @@ describe('TestModuleValidator', () => {
           actors: [],
           world: {},
         };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.valid).toBe(false);
         expect(result.errors).toContainEqual(
           expect.objectContaining({
@@ -69,9 +78,12 @@ describe('TestModuleValidator', () => {
           actors: [],
           world: {},
         };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.valid).toBe(false);
         expect(result.errors).toContainEqual(
           expect.objectContaining({
@@ -83,17 +95,22 @@ describe('TestModuleValidator', () => {
 
       it('should accept valid LLM strategies', () => {
         const strategies = ['tool-calling', 'json-schema'];
-        
-        strategies.forEach(strategy => {
+
+        strategies.forEach((strategy) => {
           const config = {
             llm: { strategy },
             actors: [{ id: 'test' }],
             world: {},
           };
-          
-          const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-          
-          expect(result.errors.filter(e => e.field === 'llm.strategy')).toHaveLength(0);
+
+          const result = TestModuleValidator.validateConfiguration(
+            config,
+            'turnExecution'
+          );
+
+          expect(
+            result.errors.filter((e) => e.field === 'llm.strategy')
+          ).toHaveLength(0);
         });
       });
 
@@ -103,9 +120,12 @@ describe('TestModuleValidator', () => {
           actors: [],
           world: {},
         };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.valid).toBe(false);
         expect(result.errors).toContainEqual(
           expect.objectContaining({
@@ -121,9 +141,12 @@ describe('TestModuleValidator', () => {
           actors: [],
           world: {},
         };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.warnings).toContainEqual(
           expect.objectContaining({
             code: 'UNUSUAL_TEMPERATURE',
@@ -140,9 +163,12 @@ describe('TestModuleValidator', () => {
           actors: [],
           world: {},
         };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.warnings).toContainEqual({
           code: 'NO_ACTORS',
           field: 'actors',
@@ -156,9 +182,12 @@ describe('TestModuleValidator', () => {
           actors: [{ type: 'ai' }], // Missing id
           world: {},
         };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.valid).toBe(false);
         expect(result.errors).toContainEqual(
           expect.objectContaining({
@@ -175,9 +204,12 @@ describe('TestModuleValidator', () => {
           llm: { strategy: 'tool-calling' },
           actors: [],
         };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.warnings).toContainEqual(
           expect.objectContaining({
             code: 'NO_WORLD_CONFIG',
@@ -192,9 +224,12 @@ describe('TestModuleValidator', () => {
           actors: [],
           world: { size: 'large' },
         };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.warnings).toContainEqual(
           expect.objectContaining({
             code: 'NO_WORLD_NAME',
@@ -216,9 +251,12 @@ describe('TestModuleValidator', () => {
             },
           },
         };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.warnings).toContainEqual(
           expect.objectContaining({
             code: 'HIGH_PERFORMANCE_THRESHOLD',
@@ -238,9 +276,12 @@ describe('TestModuleValidator', () => {
             },
           },
         };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.warnings).toContainEqual(
           expect.objectContaining({
             code: 'HIGH_PERFORMANCE_THRESHOLD',
@@ -260,9 +301,12 @@ describe('TestModuleValidator', () => {
             events: 'not-an-array',
           },
         };
-        
-        const result = TestModuleValidator.validateConfiguration(config, 'turnExecution');
-        
+
+        const result = TestModuleValidator.validateConfiguration(
+          config,
+          'turnExecution'
+        );
+
         expect(result.valid).toBe(false);
         expect(result.errors).toContainEqual(
           expect.objectContaining({
@@ -277,9 +321,12 @@ describe('TestModuleValidator', () => {
   describe('Action Processing Validation', () => {
     it('should require actor ID', () => {
       const config = { actions: [] };
-      
-      const result = TestModuleValidator.validateConfiguration(config, 'actionProcessing');
-      
+
+      const result = TestModuleValidator.validateConfiguration(
+        config,
+        'actionProcessing'
+      );
+
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual({
         code: 'MISSING_ACTOR_ID',
@@ -293,9 +340,12 @@ describe('TestModuleValidator', () => {
         actorId: 'test',
         actions: 'not-an-array',
       };
-      
-      const result = TestModuleValidator.validateConfiguration(config, 'actionProcessing');
-      
+
+      const result = TestModuleValidator.validateConfiguration(
+        config,
+        'actionProcessing'
+      );
+
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual(
         expect.objectContaining({
@@ -310,9 +360,12 @@ describe('TestModuleValidator', () => {
         actorId: 'test',
         actions: [{ name: 'move' }], // Missing id
       };
-      
-      const result = TestModuleValidator.validateConfiguration(config, 'actionProcessing');
-      
+
+      const result = TestModuleValidator.validateConfiguration(
+        config,
+        'actionProcessing'
+      );
+
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual(
         expect.objectContaining({
@@ -327,9 +380,12 @@ describe('TestModuleValidator', () => {
         actorId: 'test',
         mockDiscovery: 'not-an-object',
       };
-      
-      const result = TestModuleValidator.validateConfiguration(config, 'actionProcessing');
-      
+
+      const result = TestModuleValidator.validateConfiguration(
+        config,
+        'actionProcessing'
+      );
+
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual(
         expect.objectContaining({
@@ -344,11 +400,9 @@ describe('TestModuleValidator', () => {
     it('should throw TestModuleValidationError for invalid result', () => {
       const invalidResult = {
         valid: false,
-        errors: [
-          { field: 'test', message: 'Test error' },
-        ],
+        errors: [{ field: 'test', message: 'Test error' }],
       };
-      
+
       expect(() => TestModuleValidator.throwIfInvalid(invalidResult)).toThrow();
     });
 
@@ -357,8 +411,10 @@ describe('TestModuleValidator', () => {
         valid: true,
         errors: [],
       };
-      
-      expect(() => TestModuleValidator.throwIfInvalid(validResult)).not.toThrow();
+
+      expect(() =>
+        TestModuleValidator.throwIfInvalid(validResult)
+      ).not.toThrow();
     });
 
     it('should use custom error message', () => {
@@ -366,9 +422,10 @@ describe('TestModuleValidator', () => {
         valid: false,
         errors: [{ field: 'test', message: 'Test error' }],
       };
-      
-      expect(() => TestModuleValidator.throwIfInvalid(invalidResult, 'Custom message'))
-        .toThrow('Custom message');
+
+      expect(() =>
+        TestModuleValidator.throwIfInvalid(invalidResult, 'Custom message')
+      ).toThrow('Custom message');
     });
   });
 

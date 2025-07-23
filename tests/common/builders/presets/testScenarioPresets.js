@@ -10,7 +10,7 @@ import { LLMTestingModule } from '../modules/llmTestingModule.js';
 /**
  * Pre-configured test scenarios for common testing needs.
  * Each preset returns a configured test module ready for further customization or immediate use.
- * 
+ *
  * @example
  * // Use a preset directly
  * const testEnv = await TestScenarioPresets.combat().build();
@@ -24,7 +24,7 @@ export class TestScenarioPresets {
   /**
    * Combat scenario with multiple actors and action tracking.
    * Configured for testing combat mechanics with AI fighters and observers.
-   * 
+   *
    * @param {Function} [mockFn] - Mock function creator (typically jest.fn)
    * @returns {TurnExecutionTestModule} Pre-configured combat test module
    */
@@ -34,8 +34,8 @@ export class TestScenarioPresets {
         strategy: 'tool-calling',
         temperature: 0.8,
         mockResponses: {
-          default: { 
-            actionId: 'core:attack', 
+          default: {
+            actionId: 'core:attack',
             targets: { target: 'enemy' },
             reasoning: 'Engaging the enemy in combat',
             speech: 'For victory!',
@@ -54,8 +54,8 @@ export class TestScenarioPresets {
         generateLocations: false,
       })
       .withPerformanceTracking({
-        thresholds: { 
-          turnExecution: 150,  // Combat turns may be slower
+        thresholds: {
+          turnExecution: 150, // Combat turns may be slower
           actionDiscovery: 75,
           eventProcessing: 20,
         },
@@ -73,7 +73,7 @@ export class TestScenarioPresets {
   /**
    * Social interaction scenario with dialogue focus.
    * Configured for testing conversation systems and relationship mechanics.
-   * 
+   *
    * @param {Function} [mockFn] - Mock function creator (typically jest.fn)
    * @returns {TurnExecutionTestModule} Pre-configured social interaction test module
    */
@@ -83,8 +83,8 @@ export class TestScenarioPresets {
         strategy: 'json-schema',
         temperature: 1.2, // Higher temperature for more varied dialogue
         mockResponses: {
-          default: { 
-            actionId: 'core:speak', 
+          default: {
+            actionId: 'core:speak',
             targets: { content: 'Hello there!' },
             reasoning: 'Starting a friendly conversation',
             speech: 'Hello there! How can I help you today?',
@@ -116,7 +116,7 @@ export class TestScenarioPresets {
   /**
    * Exploration scenario with movement and discovery.
    * Configured for testing navigation, discovery mechanics, and world interaction.
-   * 
+   *
    * @param {Function} [mockFn] - Mock function creator (typically jest.fn)
    * @returns {TurnExecutionTestModule} Pre-configured exploration test module
    */
@@ -126,18 +126,20 @@ export class TestScenarioPresets {
         strategy: 'tool-calling',
         temperature: 1.0,
         mockResponses: {
-          'ai-explorer': { 
-            actionId: 'core:move', 
+          'ai-explorer': {
+            actionId: 'core:move',
             targets: { direction: 'north' },
             reasoning: 'Exploring new territories',
-            speech: 'Let\'s see what lies to the north.',
+            speech: "Let's see what lies to the north.",
             thoughts: 'I wonder what I might discover',
-            notes: [{
-              text: 'Northern path looks promising',
-              subject: 'exploration',
-              context: 'navigation',
-              tags: ['exploration', 'movement'],
-            }],
+            notes: [
+              {
+                text: 'Northern path looks promising',
+                subject: 'exploration',
+                context: 'navigation',
+                tags: ['exploration', 'movement'],
+              },
+            ],
           },
         },
       })
@@ -152,7 +154,7 @@ export class TestScenarioPresets {
         explorationEnabled: true,
       })
       .withPerformanceTracking({
-        thresholds: { 
+        thresholds: {
           turnExecution: 100,
           actionDiscovery: 50,
         },
@@ -170,7 +172,7 @@ export class TestScenarioPresets {
   /**
    * Performance testing scenario with minimal overhead.
    * Configured for benchmarking and performance validation with streamlined setup.
-   * 
+   *
    * @param {Function} [mockFn] - Mock function creator (typically jest.fn)
    * @returns {TurnExecutionTestModule} Pre-configured performance test module
    */
@@ -181,15 +183,13 @@ export class TestScenarioPresets {
         fastMode: true,
         temperature: 0.7,
         mockResponses: {
-          default: { 
+          default: {
             actionId: 'core:look',
             targets: {},
           },
         },
       })
-      .withTestActors([
-        { id: 'ai-test', type: 'ai', name: 'Test Actor' },
-      ])
+      .withTestActors([{ id: 'ai-test', type: 'ai', name: 'Test Actor' }])
       .withWorld({
         name: 'Perf Test',
         minimal: true,
@@ -198,7 +198,7 @@ export class TestScenarioPresets {
       })
       .withPerformanceTracking({
         thresholds: {
-          turnExecution: 50,   // Strict performance requirements
+          turnExecution: 50, // Strict performance requirements
           actionDiscovery: 25,
           eventProcessing: 5,
         },
@@ -208,7 +208,7 @@ export class TestScenarioPresets {
   /**
    * Multi-actor scenario for testing complex interactions.
    * Configured with multiple AI actors for testing group dynamics.
-   * 
+   *
    * @param {number} [actorCount] - Number of AI actors to create
    * @param {Function} [mockFn] - Mock function creator (typically jest.fn)
    * @returns {TurnExecutionTestModule} Pre-configured multi-actor test module
@@ -233,7 +233,7 @@ export class TestScenarioPresets {
         strategy: 'tool-calling',
         temperature: 0.9,
         mockResponses: {
-          default: { 
+          default: {
             actionId: 'core:interact',
             reasoning: 'Interacting with other actors',
           },
@@ -257,7 +257,7 @@ export class TestScenarioPresets {
   /**
    * Stealth scenario for testing visibility and detection mechanics.
    * Configured for testing stealth gameplay and detection systems.
-   * 
+   *
    * @param {Function} [mockFn] - Mock function creator (typically jest.fn)
    * @returns {TurnExecutionTestModule} Pre-configured stealth test module
    */
@@ -267,7 +267,7 @@ export class TestScenarioPresets {
         strategy: 'tool-calling',
         temperature: 0.6, // Lower temperature for more calculated decisions
         mockResponses: {
-          'ai-infiltrator': { 
+          'ai-infiltrator': {
             actionId: 'core:sneak',
             targets: { direction: 'shadows' },
             reasoning: 'Moving quietly to avoid detection',
@@ -282,7 +282,12 @@ export class TestScenarioPresets {
         },
       })
       .withTestActors([
-        { id: 'ai-infiltrator', type: 'ai', role: 'stealth', name: 'Infiltrator' },
+        {
+          id: 'ai-infiltrator',
+          type: 'ai',
+          role: 'stealth',
+          name: 'Infiltrator',
+        },
         { id: 'ai-guard', type: 'ai', role: 'guard', name: 'Guard' },
         { id: 'player', type: 'player', role: 'observer', name: 'Observer' },
       ])
@@ -305,7 +310,7 @@ export class TestScenarioPresets {
   /**
    * Error handling scenario for testing failure cases.
    * Configured to test error conditions and recovery mechanisms.
-   * 
+   *
    * @param {Function} [mockFn] - Mock function creator (typically jest.fn)
    * @returns {TurnExecutionTestModule} Pre-configured error handling test module
    */
@@ -341,7 +346,7 @@ export class TestScenarioPresets {
   /**
    * Entity management scenario for testing entity lifecycle.
    * Configured for testing entity creation, updates, and relationships.
-   * 
+   *
    * @param {Function} [mockFn] - Mock function creator (typically jest.fn)
    * @returns {EntityManagementTestModule} Pre-configured entity management test module
    */
@@ -388,7 +393,7 @@ export class TestScenarioPresets {
   /**
    * LLM testing scenario for AI behavior validation.
    * Configured for testing prompt generation, response processing, and decision-making.
-   * 
+   *
    * @param {Function} [mockFn] - Mock function creator (typically jest.fn)
    * @returns {LLMTestingModule} Pre-configured LLM testing module
    */
@@ -401,19 +406,19 @@ export class TestScenarioPresets {
         { id: 'rogue', name: 'Sneaky Rogue', personality: 'opportunistic' },
       ])
       .withMockResponses({
-        'warrior': { 
+        warrior: {
           actionId: 'core:attack',
           targets: { enemy: 'nearest' },
           reasoning: 'A warrior strikes first!',
           speech: 'For honor and glory!',
         },
-        'scholar': {
+        scholar: {
           actionId: 'core:analyze',
           targets: { subject: 'situation' },
           reasoning: 'Knowledge before action',
           speech: 'Let me study this carefully...',
         },
-        'rogue': {
+        rogue: {
           actionId: 'core:hide',
           targets: { location: 'shadows' },
           reasoning: 'Better to strike from the shadows',
@@ -453,7 +458,7 @@ export class TestScenarioPresets {
   /**
    * Integration testing scenario combining multiple modules.
    * Configured for testing complex interactions between different systems.
-   * 
+   *
    * @param {Function} [mockFn] - Mock function creator (typically jest.fn)
    * @returns {TurnExecutionTestModule} Pre-configured integration test module
    */
@@ -468,17 +473,19 @@ export class TestScenarioPresets {
             targets: { quest: 'dragon_slaying' },
             reasoning: 'This quest will bring great rewards',
             speech: 'I accept this noble quest!',
-            notes: [{
-              text: 'Dragon located in northern mountains',
-              subject: 'quest',
-              context: 'dragon_slaying',
-              tags: ['quest', 'important'],
-            }],
+            notes: [
+              {
+                text: 'Dragon located in northern mountains',
+                subject: 'quest',
+                context: 'dragon_slaying',
+                tags: ['quest', 'important'],
+              },
+            ],
           },
         },
       })
       .withTestActors([
-        { 
+        {
           id: 'ai-hero',
           type: 'ai',
           role: 'protagonist',
@@ -534,6 +541,8 @@ export class TestScenarioPresets {
    * @private
    */
   constructor() {
-    throw new Error('TestScenarioPresets is a static class and cannot be instantiated');
+    throw new Error(
+      'TestScenarioPresets is a static class and cannot be instantiated'
+    );
   }
 }

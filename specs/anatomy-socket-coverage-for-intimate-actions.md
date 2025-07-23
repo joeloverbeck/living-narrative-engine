@@ -53,7 +53,7 @@ The `clothing:slot_metadata` component contains a `slotMappings` object that map
   "id": "sex:fondle_breasts",
   "name": "Fondle Breasts",
   "description": "Gently fondle the target's breasts.",
-  "scope": "sex:actors_with_breasts_facing_forward",
+  "scope": "sex:actors_with_breasts_facing_each_other",
   "required_components": {
     "actor": ["intimacy:closeness"]
   }
@@ -67,7 +67,7 @@ The `clothing:slot_metadata` component contains a `slotMappings` object that map
   "id": "sex:fondle_penis",
   "name": "Fondle Penis",
   "description": "Gently fondle the target's penis.",
-  "scope": "sex:actors_with_penis_facing_forward",
+  "scope": "sex:actors_with_penis_facing_each_other",
   "required_components": {
     "actor": ["intimacy:closeness"]
   }
@@ -80,12 +80,12 @@ The `clothing:slot_metadata` component contains a `slotMappings` object that map
 
 The existing scopes need to be modified to include socket coverage checks:
 
-#### Modified actors_with_breasts_facing_forward.scope
+#### Modified actors_with_breasts_facing_each_other.scope
 
 ```
 // Scope for actors in closeness who have breasts that are uncovered and are facing forward
 // Used by actions that require exposed breast anatomy and face-to-face interaction
-sex:actors_with_breasts_facing_forward := actor.intimacy:closeness.partners[][{
+sex:actors_with_breasts_facing_each_other := actor.intimacy:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "breast"]},
     {"condition_ref": "intimacy:entity-not-in-facing-away"},
@@ -99,12 +99,12 @@ sex:actors_with_breasts_facing_forward := actor.intimacy:closeness.partners[][{
 }]
 ```
 
-#### Modified actors_with_penis_facing_forward.scope
+#### Modified actors_with_penis_facing_each_other.scope
 
 ```
 // Scope for actors in closeness who have an uncovered penis and are facing forward
 // Used by actions that require exposed penis anatomy and face-to-face interaction
-sex:actors_with_penis_facing_forward := actor.intimacy:closeness.partners[][{
+sex:actors_with_penis_facing_each_other := actor.intimacy:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "penis"]},
     {"condition_ref": "intimacy:entity-not-in-facing-away"},

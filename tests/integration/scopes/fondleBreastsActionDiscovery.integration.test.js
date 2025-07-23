@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for fondle_breasts action discovery with socket coverage
- * @description Tests that the actors_with_breasts_facing_forward scope properly filters
+ * @description Tests that the actors_with_breasts_facing_each_other scope properly filters
  * actors based on breast socket coverage, facing direction, and closeness
  */
 
@@ -34,7 +34,7 @@ import path from 'path';
 const breastsScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex/scopes/actors_with_breasts_facing_forward.scope'
+    '../../../data/mods/sex/scopes/actors_with_breasts_facing_each_other.scope'
   ),
   'utf8'
 );
@@ -109,15 +109,15 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
     const parser = new DefaultDslParser({ logger });
     const scopeDefinitions = parseScopeDefinitions(
       breastsScopeContent,
-      'actors_with_breasts_facing_forward.scope'
+      'actors_with_breasts_facing_each_other.scope'
     );
 
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex:actors_with_breasts_facing_forward': scopeDefinitions.get(
-        'sex:actors_with_breasts_facing_forward'
+      'sex:actors_with_breasts_facing_each_other': scopeDefinitions.get(
+        'sex:actors_with_breasts_facing_each_other'
       ),
     });
 

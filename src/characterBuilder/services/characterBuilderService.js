@@ -12,6 +12,17 @@ import {
 } from '../models/characterConcept.js';
 
 /**
+ * Retry configuration for character builder operations
+ */
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelayMs: process.env.NODE_ENV === 'test' ? 10 : 1000,
+  maxDelayMs: process.env.NODE_ENV === 'test' ? 50 : 5000,
+  directionBaseDelayMs: process.env.NODE_ENV === 'test' ? 20 : 2000,
+  directionMaxDelayMs: process.env.NODE_ENV === 'test' ? 100 : 10000,
+};
+
+/**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('./characterStorageService.js').CharacterStorageService} CharacterStorageService
@@ -130,7 +141,7 @@ export class CharacterBuilderService {
       throw new CharacterBuilderError('concept must be a non-empty string');
     }
 
-    const maxRetries = 3;
+    const maxRetries = RETRY_CONFIG.maxRetries;
     let attempt = 0;
     let lastError;
 
@@ -184,7 +195,10 @@ export class CharacterBuilderService {
         }
 
         // Wait before retrying (exponential backoff)
-        const backoffTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        const backoffTime = Math.min(
+          RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt - 1),
+          RETRY_CONFIG.maxDelayMs
+        );
         await new Promise((resolve) => setTimeout(resolve, backoffTime));
       }
     }
@@ -221,7 +235,7 @@ export class CharacterBuilderService {
       throw new CharacterBuilderError('conceptId must be a non-empty string');
     }
 
-    const maxRetries = 2;
+    const maxRetries = RETRY_CONFIG.maxRetries;
     let attempt = 0;
     let lastError;
     let concept;
@@ -349,7 +363,10 @@ export class CharacterBuilderService {
         }
 
         // Wait before retrying (exponential backoff)
-        const backoffTime = Math.min(2000 * Math.pow(2, attempt - 1), 10000);
+        const backoffTime = Math.min(
+          RETRY_CONFIG.directionBaseDelayMs * Math.pow(2, attempt - 1),
+          RETRY_CONFIG.directionMaxDelayMs
+        );
         await new Promise((resolve) => setTimeout(resolve, backoffTime));
       }
     }

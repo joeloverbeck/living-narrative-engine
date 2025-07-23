@@ -5,7 +5,6 @@
  * NOTE: For new tests, consider using the test module pattern with TestModuleBuilder
  * or createTestModules() for the simplest testing experience. The test module pattern
  * provides a fluent API with presets and intelligent defaults.
- * 
  * @see tests/common/builders/testModuleBuilder.js
  * @see src/testing/facades/testingFacadeRegistrations.js
  */
@@ -224,7 +223,7 @@ export class TestConfigurationFactory {
    * Creates a test module for simplified test setup.
    * This is the recommended approach for new tests.
    *
-   * @param {string} [moduleType='turnExecution'] - Type of test module to create.
+   * @param {string} [moduleType] - Type of test module to create.
    * @param {Function} [mockFn] - Mock function creator (typically jest.fn).
    * @returns {object} A configured test module builder.
    * @example
@@ -262,7 +261,9 @@ export class TestConfigurationFactory {
   static createScenario(scenario) {
     const scenarios = TestModuleBuilder.scenarios;
     if (!scenarios[scenario]) {
-      throw new Error(`Unknown scenario: ${scenario}. Available: ${Object.keys(scenarios).join(', ')}`);
+      throw new Error(
+        `Unknown scenario: ${scenario}. Available: ${Object.keys(scenarios).join(', ')}`
+      );
     }
     return scenarios[scenario]();
   }
@@ -276,19 +277,19 @@ export class TestConfigurationFactory {
    */
   static migrateToTestModule(legacyConfig) {
     const module = TestModuleBuilder.forTurnExecution();
-    
+
     if (legacyConfig.llmStrategy) {
       module.withMockLLM({ strategy: legacyConfig.llmStrategy });
     }
-    
+
     if (legacyConfig.actors) {
       module.withTestActors(legacyConfig.actors);
     }
-    
+
     if (legacyConfig.worldConfig) {
       module.withWorld(legacyConfig.worldConfig);
     }
-    
+
     return module;
   }
 }

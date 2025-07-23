@@ -8,7 +8,7 @@
 /* eslint-env es2022 */
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../llms/llmConfigManager.js').LlmConfigManager} LlmConfigManager */
+/** @typedef {import('../llms/interfaces/ILLMConfigurationManager.js').ILLMConfigurationManager} ILLMConfigurationManager */
 /** @typedef {import('../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder */
 /** @typedef {import('../types/promptData.js').PromptData} PromptData */
 /** @typedef {import('./promptTemplateService.js').PromptTemplateService} PromptTemplateService */
@@ -20,7 +20,7 @@ import { PromptTemplateService } from './promptTemplateService.js';
 import { PromptDataFormatter } from './promptDataFormatter.js';
 
 const INIT_MSG =
-  'PromptBuilder (template-based) initialised with LlmConfigManager, PromptTemplateService, and PromptDataFormatter.';
+  'PromptBuilder (template-based) initialised with ILLMConfigurationManager, PromptTemplateService, and PromptDataFormatter.';
 
 /**
  * @class PromptBuilder
@@ -28,7 +28,7 @@ const INIT_MSG =
  */
 export class PromptBuilder extends IPromptBuilder {
   /** @type {ILogger} */ #logger;
-  /** @type {LlmConfigManager} */ #llmConfigService;
+  /** @type {ILLMConfigurationManager} */ #llmConfigService;
   /** @type {PromptTemplateService} */ #templateService;
   /** @type {PromptDataFormatter} */ #dataFormatter;
 
@@ -37,7 +37,7 @@ export class PromptBuilder extends IPromptBuilder {
    *
    * @param {object} dependencies
    * @param {ILogger} [dependencies.logger]
-   * @param {LlmConfigManager} dependencies.llmConfigService
+   * @param {ILLMConfigurationManager} dependencies.llmConfigService
    * @param {PromptTemplateService} [dependencies.templateService]
    * @param {PromptDataFormatter} [dependencies.dataFormatter]
    */
@@ -54,9 +54,14 @@ export class PromptBuilder extends IPromptBuilder {
     // ──────────────────────────────────────────────────────────────────────────
     // Dependency validation – fail fast & loud
     // ──────────────────────────────────────────────────────────────────────────
-    validateDependency(llmConfigService, 'LlmConfigManager', this.#logger, {
-      requiredMethods: ['getConfig'],
-    });
+    validateDependency(
+      llmConfigService,
+      'ILLMConfigurationManager',
+      this.#logger,
+      {
+        requiredMethods: ['loadConfiguration'],
+      }
+    );
     this.#llmConfigService = llmConfigService;
 
     // Create default instances if not provided
@@ -94,7 +99,7 @@ export class PromptBuilder extends IPromptBuilder {
     }
 
     // 1️⃣  Load config for the requested LLM (still needed for validation)
-    const cfg = await this.#llmConfigService.getConfig(llmId);
+    const cfg = await this.#llmConfigService.loadConfiguration(llmId);
     if (!cfg) {
       this.#logger.error(
         `PromptBuilder.build: No configuration found for llmId '${llmId}'.`

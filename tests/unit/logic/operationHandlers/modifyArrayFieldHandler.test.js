@@ -488,4 +488,82 @@ describe('ModifyArrayFieldHandler', () => {
       ).toEqual(['a', 'c']);
     });
   });
+
+  describe('Additional Edge Cases', () => {
+    test('should handle missing safeEventDispatcher dependency', () => {
+      expect(
+        () =>
+          new ModifyArrayFieldHandler({
+            entityManager: mockEntityManager,
+            logger: mockLogger,
+          })
+      ).toThrow(/safeEventDispatcher/);
+    });
+
+    test('should handle malformed safeEventDispatcher dependency', () => {
+      const malformedDispatcher = { dispatch: 'not a function' };
+      expect(
+        () =>
+          new ModifyArrayFieldHandler({
+            entityManager: mockEntityManager,
+            logger: mockLogger,
+            safeEventDispatcher: malformedDispatcher,
+          })
+      ).toThrow();
+    });
+
+    test('should handle complex nested field paths', async () => {
+      const originalComponent = { 
+        player: { 
+          inventory: { 
+            equipment: { 
+              weapons: ['sword'] 
+            } 
+          } 
+        } 
+      };
+      mockEntityManager.getComponentData.mockReturnValue(originalComponent);
+      const params = {
+        entity_ref: ENTITY_ID,
+        component_type: COMPONENT_TYPE,
+        field: 'player.inventory.equipment.weapons',
+        mode: 'push',
+        value: 'bow',
+      };
+
+      await handler.execute(params, mockExecutionContext);
+
+      expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
+      const [, , newComponentData] =
+        mockEntityManager.addComponent.mock.calls[0];
+      expect(newComponentData.player.inventory.equipment.weapons).toEqual(['sword', 'bow']);
+      expect(newComponentData).not.toBe(originalComponent);
+    });
+
+    test('should preserve other component fields when modifying array', async () => {
+      const originalComponent = { 
+        items: ['a'], 
+        otherField: 'preserved',
+        nested: { data: 'also preserved' }
+      };
+      mockEntityManager.getComponentData.mockReturnValue(originalComponent);
+      const params = {
+        entity_ref: ENTITY_ID,
+        component_type: COMPONENT_TYPE,
+        field: 'items',
+        mode: 'push',
+        value: 'b',
+      };
+
+      await handler.execute(params, mockExecutionContext);
+
+      const [, , newComponentData] =
+        mockEntityManager.addComponent.mock.calls[0];
+      expect(newComponentData).toEqual({
+        items: ['a', 'b'],
+        otherField: 'preserved',
+        nested: { data: 'also preserved' }
+      });
+    });
+  });
 });

@@ -35,6 +35,9 @@ jest.mock('../../../src/characterBuilder/services/characterBuilderService.js');
 jest.mock(
   '../../../src/characterBuilder/controllers/characterBuilderController.js'
 );
+jest.mock('../../../src/data/workspaceDataFetcher.js');
+jest.mock('../../../src/configuration/productionPathConfiguration.js');
+jest.mock('../../../src/turns/adapters/configurableLLMAdapter.js');
 
 describe('CharacterBuilderApp - Initialization', () => {
   let app;
@@ -51,8 +54,13 @@ describe('CharacterBuilderApp - Initialization', () => {
 
     // Setup fetch to return valid schemas
     mockFetch.mockImplementation((url) => {
+      // Extract filename from URL for $id
+      const filename = url.split('/').pop();
+      const schemaId = filename.replace('.schema.json', '');
+      
       const schemaData = {
         $schema: 'http://json-schema.org/draft-07/schema#',
+        $id: schemaId,
         type: 'object',
         properties: {},
       };
@@ -109,15 +117,17 @@ describe('CharacterBuilderApp - Initialization', () => {
       require('../../../src/validation/ajvSchemaValidator.js').default;
     AjvSchemaValidator.mockImplementation(() => ({
       addSchema: jest.fn().mockResolvedValue(true),
+      addSchemas: jest.fn().mockResolvedValue(undefined),
+      isSchemaLoaded: jest.fn().mockReturnValue(false),
     }));
 
     const { LlmJsonService } = require('../../../src/llms/llmJsonService.js');
     LlmJsonService.mockImplementation(() => ({}));
 
     const {
-      LLMStrategyFactory,
+      LLMStrategyFactory: LLMSFactory,
     } = require('../../../src/llms/LLMStrategyFactory.js');
-    LLMStrategyFactory.mockImplementation(() => ({}));
+    LLMSFactory.mockImplementation(() => ({}));
 
     const {
       LLMConfigurationManager,
@@ -163,6 +173,46 @@ describe('CharacterBuilderApp - Initialization', () => {
     } = require('../../../src/characterBuilder/controllers/characterBuilderController.js');
     CharacterBuilderController.mockImplementation(() => ({
       initialize: jest.fn().mockResolvedValue(true),
+    }));
+
+    // Mock WorkspaceDataFetcher
+    const WorkspaceDataFetcher =
+      require('../../../src/data/workspaceDataFetcher.js').default;
+    WorkspaceDataFetcher.mockImplementation(() => ({
+      fetch: jest.fn().mockImplementation((identifier) => {
+        // Extract filename from identifier for $id
+        const filename = identifier.split('/').pop();
+        const schemaId = filename.replace('.schema.json', '');
+        
+        const schemaData = {
+          $schema: 'http://json-schema.org/draft-07/schema#',
+          $id: schemaId,
+          type: 'object',
+          properties: {},
+        };
+        return Promise.resolve(schemaData);
+      }),
+    }));
+
+    // Mock ProductionPathConfiguration
+    const {
+      ProductionPathConfiguration,
+    } = require('../../../src/configuration/productionPathConfiguration.js');
+    ProductionPathConfiguration.mockImplementation(() => ({
+      getSchemaFiles: jest.fn().mockReturnValue([
+        'common.schema.json',
+        'character-concept.schema.json',
+        'thematic-direction.schema.json',
+      ]),
+      resolveSchemaPath: jest.fn().mockImplementation((filename) => `./data/schemas/${filename}`),
+    }));
+
+    // Mock ConfigurableLLMAdapter
+    const {
+      ConfigurableLLMAdapter,
+    } = require('../../../src/turns/adapters/configurableLLMAdapter.js');
+    ConfigurableLLMAdapter.mockImplementation(() => ({
+      init: jest.fn().mockResolvedValue(true),
     }));
   });
 

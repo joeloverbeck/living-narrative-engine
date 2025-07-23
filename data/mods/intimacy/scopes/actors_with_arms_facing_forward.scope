@@ -1,8 +1,0 @@
-// Scope for actors in closeness who have arms and are facing forward (both actors facing each other)
-// Used by actions that require arm anatomy and face-to-face interaction
-intimacy:actors_with_arms_facing_forward := actor.intimacy:closeness.partners[][{
-  "and": [
-    {"hasPartOfType": [".", "arm"]},
-    {"condition_ref": "intimacy:both-actors-facing-each-other"}
-  ]
-}]

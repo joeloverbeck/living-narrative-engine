@@ -63,6 +63,7 @@
     "events": [
       "action_decided.event.json",
       "attempt_action.event.json",
+      "character_builder_error_occurred.event.json",
       "component_added.event.json",
       "component_removed.event.json",
       "disable_input.event.json",

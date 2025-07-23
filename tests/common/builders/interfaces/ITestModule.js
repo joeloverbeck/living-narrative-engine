@@ -25,7 +25,7 @@
 /**
  * Base interface for all test modules.
  * This class defines the contract that all test module implementations must follow.
- * 
+ *
  * @abstract
  * @interface ITestModule
  */
@@ -34,7 +34,7 @@ export class ITestModule {
    * Builds and returns the configured test environment.
    * This method should validate the configuration and create all necessary
    * test resources based on the module's configuration.
-   * 
+   *
    * @abstract
    * @returns {Promise<TestEnvironment>} The configured test environment
    * @throws {TestModuleValidationError} If configuration is invalid
@@ -46,7 +46,7 @@ export class ITestModule {
   /**
    * Validates the current configuration without building.
    * This allows tests to check configuration validity before attempting to build.
-   * 
+   *
    * @abstract
    * @returns {ValidationResult} The validation result
    */
@@ -57,7 +57,7 @@ export class ITestModule {
   /**
    * Resets the module to its default configuration.
    * This is useful for test cleanup or when reusing a module instance.
-   * 
+   *
    * @abstract
    * @returns {ITestModule} The module instance for chaining
    */
@@ -68,18 +68,20 @@ export class ITestModule {
   /**
    * Gets the current configuration (read-only).
    * This is useful for debugging or asserting on configuration in tests.
-   * 
+   *
    * @abstract
    * @returns {object} A frozen copy of the current configuration
    */
   getConfiguration() {
-    throw new Error('ITestModule.getConfiguration() must be implemented by subclass');
+    throw new Error(
+      'ITestModule.getConfiguration() must be implemented by subclass'
+    );
   }
 
   /**
    * Clones the current module with its configuration.
    * This allows creating variations of a configured module.
-   * 
+   *
    * @abstract
    * @returns {ITestModule} A new instance with the same configuration
    */

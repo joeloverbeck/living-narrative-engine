@@ -17,7 +17,7 @@ function getTestTimingMultiplier() {
     process.env.GITLAB_CI ||
     process.env.JENKINS_URL
   );
-  
+
   // Use minimal delays in CI for faster test execution
   return isCI ? 0.1 : 1.0;
 }
@@ -80,7 +80,10 @@ export function createPerformanceTestBed() {
         enableBatchOperations = true,
         hasBatchSupport = true,
         batchProcessingTimeMs = Math.max(1, Math.ceil(10 * timingMultiplier)), // Environment-aware timing
-        sequentialProcessingTimeMs = Math.max(1, Math.ceil(2 * timingMultiplier)), // Environment-aware timing
+        sequentialProcessingTimeMs = Math.max(
+          1,
+          Math.ceil(2 * timingMultiplier)
+        ), // Environment-aware timing
         trackMemoryUsage = false,
         simulateMemoryPressure = false,
       } = options;

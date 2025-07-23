@@ -5,13 +5,7 @@
  * Tests coverage for lines 151-158 (validateSchemaRefs validation loop)
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import SchemaLoader from '../../../src/loaders/schemaLoader.js';
 
 describe('SchemaLoader - $refs Validation', () => {
@@ -43,9 +37,9 @@ describe('SchemaLoader - $refs Validation', () => {
     };
 
     mockPathResolver = {
-      resolveSchemaPath: jest.fn().mockImplementation(
-        (filename) => `./test/schemas/${filename}`
-      ),
+      resolveSchemaPath: jest
+        .fn()
+        .mockImplementation((filename) => `./test/schemas/${filename}`),
       resolveContentPath: jest.fn(),
     };
 
@@ -97,7 +91,7 @@ describe('SchemaLoader - $refs Validation', () => {
 
       // Assert
       expect(mockSchemaValidator.validateSchemaRefs).toHaveBeenCalledTimes(3);
-      
+
       // Verify it was called for each schema
       testSchemaData.forEach((schema) => {
         expect(mockSchemaValidator.validateSchemaRefs).toHaveBeenCalledWith(
@@ -118,16 +112,14 @@ describe('SchemaLoader - $refs Validation', () => {
 
     it('should log warnings when validateSchemaRefs returns false (invalid refs)', async () => {
       // Arrange
-      mockSchemaValidator.validateSchemaRefs = jest
-        .fn()
-        .mockReturnValue(false);
+      mockSchemaValidator.validateSchemaRefs = jest.fn().mockReturnValue(false);
 
       // Act
       await schemaLoader.loadAndCompileAllSchemas();
 
       // Assert
       expect(mockSchemaValidator.validateSchemaRefs).toHaveBeenCalledTimes(3);
-      
+
       // Verify it was called for each schema
       testSchemaData.forEach((schema) => {
         expect(mockSchemaValidator.validateSchemaRefs).toHaveBeenCalledWith(
@@ -234,9 +226,11 @@ describe('SchemaLoader - $refs Validation', () => {
     it('should handle validateSchemaRefs throwing an error gracefully', async () => {
       // Arrange
       const validationError = new Error('$refs validation failed');
-      mockSchemaValidator.validateSchemaRefs = jest.fn().mockImplementation(() => {
-        throw validationError;
-      });
+      mockSchemaValidator.validateSchemaRefs = jest
+        .fn()
+        .mockImplementation(() => {
+          throw validationError;
+        });
 
       // Act & Assert
       // The current implementation doesn't catch errors from validateSchemaRefs,

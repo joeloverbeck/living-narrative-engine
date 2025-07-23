@@ -60,7 +60,7 @@ class TurnExecutionTestModule {
 beforeEach(async () => {
   facades = createMockFacades({}, jest.fn);
   turnExecutionFacade = facades.turnExecutionFacade;
-  
+
   testEnvironment = await turnExecutionFacade.initializeTestEnvironment({
     llmStrategy: 'tool-calling',
     worldConfig: { name: 'Test World', createConnections: true },
@@ -85,13 +85,13 @@ beforeEach(async () => {
 
 ### Key Differences
 
-| Aspect | Current (Facade) | Proposed (Module) | Benefit |
-|--------|-----------------|-------------------|---------|
-| Configuration | Nested objects | Fluent builder API | Better readability |
-| Composition | Fixed facade structure | Composable modules | Greater flexibility |
-| Presets | Manual configuration | Built-in presets | Faster test writing |
-| Validation | Runtime errors | Build-time validation | Earlier error detection |
-| Documentation | Code comments | Self-documenting API | Improved discoverability |
+| Aspect        | Current (Facade)       | Proposed (Module)     | Benefit                  |
+| ------------- | ---------------------- | --------------------- | ------------------------ |
+| Configuration | Nested objects         | Fluent builder API    | Better readability       |
+| Composition   | Fixed facade structure | Composable modules    | Greater flexibility      |
+| Presets       | Manual configuration   | Built-in presets      | Faster test writing      |
+| Validation    | Runtime errors         | Build-time validation | Earlier error detection  |
+| Documentation | Code comments          | Self-documenting API  | Improved discoverability |
 
 ## Benefit Analysis: Should Test Module Pattern Be Implemented?
 
@@ -104,11 +104,12 @@ beforeEach(async () => {
    - Type-safe builder pattern prevents configuration errors
 
 2. **Test Scenario Presets** (Medium Value):
+
    ```javascript
    // Potential preset patterns
-   TestModuleBuilder.scenarios.combatTest()
-   TestModuleBuilder.scenarios.socialInteraction()
-   TestModuleBuilder.scenarios.exploration()
+   TestModuleBuilder.scenarios.combatTest();
+   TestModuleBuilder.scenarios.socialInteraction();
+   TestModuleBuilder.scenarios.exploration();
    ```
 
 3. **Composable Test Configurations** (High Value):
@@ -129,6 +130,7 @@ beforeEach(async () => {
 ### Cost-Benefit Analysis
 
 **Implementation Effort**: Medium (2-3 weeks)
+
 - Create builder classes and interfaces
 - Implement fluent API methods
 - Add validation logic
@@ -137,6 +139,7 @@ beforeEach(async () => {
 - Update documentation
 
 **Risk Level**: Low
+
 - Can be implemented alongside existing facades
 - No breaking changes required
 - Gradual migration possible
@@ -159,18 +162,19 @@ class TurnExecutionTestModule {
   constructor() {
     this.config = {};
   }
-  
+
   withMockLLM(config) {
     this.config.llm = { ...defaultLLMConfig, ...config };
     return this;
   }
-  
+
   async build() {
     // Use existing facades
     const facades = createMockFacades(this.config);
-    const testEnv = await facades.turnExecutionFacade
-      .initializeTestEnvironment(this.config);
-    
+    const testEnv = await facades.turnExecutionFacade.initializeTestEnvironment(
+      this.config
+    );
+
     return {
       ...facades,
       testEnvironment: testEnv,
@@ -230,16 +234,19 @@ class TurnExecutionTestModule {
 ## Migration Strategy
 
 ### Phase 1: Foundation (Week 1)
+
 1. Create builder infrastructure
 2. Implement core test modules
 3. Add comprehensive unit tests
 
 ### Phase 2: Integration (Week 2)
+
 1. Integrate with existing facades
 2. Create scenario presets
 3. Update 2-3 test files as proof of concept
 
 ### Phase 3: Rollout (Week 3+)
+
 1. Gradual migration of remaining tests
 2. Documentation and training
 3. Gather feedback and iterate

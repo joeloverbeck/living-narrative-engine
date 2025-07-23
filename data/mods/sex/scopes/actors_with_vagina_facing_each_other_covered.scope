@@ -1,0 +1,9 @@
+// Scope for actors in closeness who have a covered vagina and are facing each other
+// Used by actions that require covered vagina anatomy and face-to-face interaction
+sex:actors_with_vagina_facing_each_other_covered := actor.intimacy:closeness.partners[][{
+  "and": [
+    {"hasPartOfType": [".", "vagina"]},
+    {"condition_ref": "intimacy:entity-not-in-facing-away"},
+    {"isSocketCovered": [".", "vagina"]}
+  ]
+}]

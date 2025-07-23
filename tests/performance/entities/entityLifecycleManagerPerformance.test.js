@@ -214,9 +214,11 @@ describe('EntityLifecycleManager Performance', () => {
 
       expect(result.successCount).toBe(entityCount);
       expect(result.processingTime).toBeLessThan(5000); // Should complete within 5 seconds
-      
+
       console.log(`Created ${entityCount} entities in ${totalTime}ms`);
-      console.log(`Average time per entity: ${(totalTime / entityCount).toFixed(2)}ms`);
+      console.log(
+        `Average time per entity: ${(totalTime / entityCount).toFixed(2)}ms`
+      );
 
       // Cleanup
       const removeIds = entitySpecs.map((spec) => spec.opts.instanceId);
@@ -269,7 +271,7 @@ describe('EntityLifecycleManager Performance', () => {
           definitionId: 'core:actor',
           opts: { instanceId: `comp-actor-${i}` },
         }));
-      
+
       await lifecycleManager.batchCreateEntities(entitySpecs);
     });
 
@@ -278,7 +280,7 @@ describe('EntityLifecycleManager Performance', () => {
       const removeIds = Array(50)
         .fill(0)
         .map((_, i) => `comp-actor-${i}`);
-      
+
       await lifecycleManager.batchRemoveEntities(removeIds);
     });
 
@@ -297,7 +299,7 @@ describe('EntityLifecycleManager Performance', () => {
 
       expect(result.successCount).toBe(50);
       expect(totalTime).toBeLessThan(2000); // Should complete within 2 seconds
-      
+
       console.log(`Added components to 50 entities in ${totalTime}ms`);
     });
   });
@@ -323,9 +325,11 @@ describe('EntityLifecycleManager Performance', () => {
 
       expect(result.successCount).toBe(entityCount);
       expect(totalTime).toBeLessThan(3000); // Should complete within 3 seconds
-      
+
       console.log(`Removed ${entityCount} entities in ${totalTime}ms`);
-      console.log(`Average removal time per entity: ${(totalTime / entityCount).toFixed(2)}ms`);
+      console.log(
+        `Average removal time per entity: ${(totalTime / entityCount).toFixed(2)}ms`
+      );
     });
   });
 });

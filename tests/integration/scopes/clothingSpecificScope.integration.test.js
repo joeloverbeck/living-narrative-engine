@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for clothing-specific scope resolution
- * @description Tests that the close_actors_facing_forward_with_torso_clothing scope
+ * @description Tests that the close_actors_facing_each_other_with_torso_clothing scope
  * properly filters actors based on closeness, facing direction, and clothing requirements
  */
 
@@ -34,7 +34,7 @@ import path from 'path';
 const clothingScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/intimacy/scopes/close_actors_facing_forward_with_torso_clothing.scope'
+    '../../../data/mods/intimacy/scopes/close_actors_facing_each_other_with_torso_clothing.scope'
   ),
   'utf8'
 );
@@ -92,16 +92,16 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     const parser = new DefaultDslParser({ logger });
     const scopeDefinitions = parseScopeDefinitions(
       clothingScopeContent,
-      'close_actors_facing_forward_with_torso_clothing.scope'
+      'close_actors_facing_each_other_with_torso_clothing.scope'
     );
 
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'intimacy:close_actors_facing_forward_with_torso_clothing':
+      'intimacy:close_actors_facing_each_other_with_torso_clothing':
         scopeDefinitions.get(
-          'intimacy:close_actors_facing_forward_with_torso_clothing'
+          'intimacy:close_actors_facing_each_other_with_torso_clothing'
         ),
     });
 
@@ -173,7 +173,8 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     // Register the condition used by the scope
     dataRegistry.store('conditions', 'intimacy:both-actors-facing-each-other', {
       id: 'intimacy:both-actors-facing-each-other',
-      description: 'Checks if both actors are facing each other (neither is facing away from the other).',
+      description:
+        'Checks if both actors are facing each other (neither is facing away from the other).',
       logic: {
         and: [
           {
@@ -188,7 +189,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
             not: {
               in: [
                 { var: 'actor.id' },
-                { var: 'entity.components.intimacy:closeness.facing_away_from' },
+                {
+                  var: 'entity.components.intimacy:closeness.facing_away_from',
+                },
               ],
             },
           },

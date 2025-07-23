@@ -19,7 +19,7 @@ describe('ActionProcessingTestModule', () => {
   describe('Constructor and Defaults', () => {
     it('should initialize with default configuration', () => {
       const config = module.getConfiguration();
-      
+
       expect(config.actorId).toBe('test-actor');
       expect(config.actions).toEqual([]);
       expect(config.mockDiscovery.returnEmpty).toBe(false);
@@ -30,7 +30,7 @@ describe('ActionProcessingTestModule', () => {
     it('should accept mock function creator', () => {
       const customMockFn = () => () => 'mocked';
       const customModule = new ActionProcessingTestModule(customMockFn);
-      
+
       expect(customModule).toBeDefined();
     });
   });
@@ -39,7 +39,7 @@ describe('ActionProcessingTestModule', () => {
     describe('forActor()', () => {
       it('should set actor ID', () => {
         module.forActor('custom-actor');
-        
+
         const config = module.getConfiguration();
         expect(config.actorId).toBe('custom-actor');
       });
@@ -48,7 +48,7 @@ describe('ActionProcessingTestModule', () => {
     describe('withAvailableActions()', () => {
       it('should convert string actions to objects', () => {
         module.withAvailableActions(['move', 'look', 'take']);
-        
+
         const config = module.getConfiguration();
         expect(config.actions).toEqual([
           { id: 'move' },
@@ -62,9 +62,9 @@ describe('ActionProcessingTestModule', () => {
           { id: 'move', requiresTarget: true },
           { id: 'look', alwaysAvailable: true },
         ];
-        
+
         module.withAvailableActions(actions);
-        
+
         const config = module.getConfiguration();
         expect(config.actions).toEqual(actions);
       });
@@ -77,7 +77,7 @@ describe('ActionProcessingTestModule', () => {
           returnEmpty: true,
           customLogic: customLogic,
         });
-        
+
         const config = module.getConfiguration();
         expect(config.mockDiscovery.returnEmpty).toBe(true);
         // Note: customLogic function reference may not be directly accessible in frozen config
@@ -87,7 +87,7 @@ describe('ActionProcessingTestModule', () => {
         module
           .withMockDiscovery({ returnEmpty: true })
           .withMockDiscovery({ byContext: { combat: ['attack'] } });
-        
+
         const config = module.getConfiguration();
         expect(config.mockDiscovery.returnEmpty).toBe(true);
         expect(config.mockDiscovery.byContext).toEqual({ combat: ['attack'] });
@@ -103,11 +103,13 @@ describe('ActionProcessingTestModule', () => {
             move: { requiresDirection: true },
           },
         });
-        
+
         const config = module.getConfiguration();
         expect(config.mockValidation.alwaysValid).toBe(false);
         expect(config.mockValidation.requireTarget).toBe(true);
-        expect(config.mockValidation.customRules.move).toEqual({ requiresDirection: true });
+        expect(config.mockValidation.customRules.move).toEqual({
+          requiresDirection: true,
+        });
       });
     });
 
@@ -120,7 +122,7 @@ describe('ActionProcessingTestModule', () => {
             move: { success: true, effects: ['Moved north'] },
           },
         });
-        
+
         const config = module.getConfiguration();
         expect(config.mockExecution.alwaysSucceed).toBe(false);
         expect(config.mockExecution.defaultEffects).toEqual(['Default effect']);
@@ -131,7 +133,7 @@ describe('ActionProcessingTestModule', () => {
     describe('withPerformanceMonitoring()', () => {
       it('should enable performance monitoring with defaults', () => {
         module.withPerformanceMonitoring();
-        
+
         const config = module.getConfiguration();
         expect(config.performanceMonitoring.enabled).toBe(true);
         expect(config.performanceMonitoring.thresholds).toEqual({
@@ -147,7 +149,7 @@ describe('ActionProcessingTestModule', () => {
           validationThreshold: 20,
           executionThreshold: 150,
         });
-        
+
         const config = module.getConfiguration();
         expect(config.performanceMonitoring.thresholds.discovery).toBe(75);
         expect(config.performanceMonitoring.thresholds.validation).toBe(20);
@@ -160,9 +162,9 @@ describe('ActionProcessingTestModule', () => {
         const customFacades = {
           actionService: { customMethod: 'test' },
         };
-        
+
         module.withCustomFacades(customFacades);
-        
+
         const config = module.getConfiguration();
         expect(config.facades).toEqual(customFacades);
       });
@@ -171,49 +173,49 @@ describe('ActionProcessingTestModule', () => {
 
   describe('Validation', () => {
     it('should validate valid configuration', () => {
-      module
-        .forActor('test-actor')
-        .withAvailableActions(['move', 'look']);
-      
+      module.forActor('test-actor').withAvailableActions(['move', 'look']);
+
       const result = module.validate();
-      
+
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
 
     it('should require actor ID', () => {
       module.forActor(null);
-      
+
       const result = module.validate();
-      
+
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.code === 'MISSING_ACTOR_ID')).toBe(true);
+      expect(result.errors.some((e) => e.code === 'MISSING_ACTOR_ID')).toBe(
+        true
+      );
     });
 
     it('should validate action configuration', () => {
       module.withAvailableActions('not-an-array');
-      
+
       const result = module.validate();
-      
+
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.code === 'INVALID_ACTIONS_CONFIG')).toBe(true);
+      expect(
+        result.errors.some((e) => e.code === 'INVALID_ACTIONS_CONFIG')
+      ).toBe(true);
     });
   });
 
   describe('Build', () => {
     it('should throw on invalid configuration', async () => {
       module.forActor(null);
-      
+
       await expect(module.build()).rejects.toThrow(TestModuleValidationError);
     });
 
     it('should return action-focused test environment', async () => {
-      module
-        .forActor('test-actor')
-        .withAvailableActions(['move', 'look']);
-      
+      module.forActor('test-actor').withAvailableActions(['move', 'look']);
+
       const testEnv = await module.build();
-      
+
       expect(testEnv.actorId).toBe('test-actor');
       expect(typeof testEnv.discoverActions).toBe('function');
       expect(typeof testEnv.validateAction).toBe('function');
@@ -223,7 +225,7 @@ describe('ActionProcessingTestModule', () => {
 
     it('should include mock configuration methods', async () => {
       const testEnv = await module.build();
-      
+
       expect(typeof testEnv.setAvailableActions).toBe('function');
       expect(typeof testEnv.setValidationResult).toBe('function');
       expect(typeof testEnv.setExecutionResult).toBe('function');
@@ -231,16 +233,16 @@ describe('ActionProcessingTestModule', () => {
 
     it('should include performance methods when monitoring enabled', async () => {
       module.withPerformanceMonitoring();
-      
+
       const testEnv = await module.build();
-      
+
       expect(typeof testEnv.getPerformanceMetrics).toBe('function');
       expect(typeof testEnv.checkPerformanceThresholds).toBe('function');
     });
 
     it('should provide cleanup method', async () => {
       const testEnv = await module.build();
-      
+
       expect(typeof testEnv.cleanup).toBe('function');
     });
   });
@@ -252,9 +254,9 @@ describe('ActionProcessingTestModule', () => {
         .withAvailableActions(['action1', 'action2'])
         .withMockDiscovery({ returnEmpty: true })
         .reset();
-      
+
       const config = module.getConfiguration();
-      
+
       expect(config.actorId).toBe('test-actor');
       expect(config.actions).toEqual([]);
       expect(config.mockDiscovery.returnEmpty).toBe(false);
@@ -268,18 +270,16 @@ describe('ActionProcessingTestModule', () => {
 
   describe('Clone', () => {
     it('should create independent copy with same configuration', () => {
-      module
-        .forActor('original-actor')
-        .withAvailableActions(['action1']);
-      
+      module.forActor('original-actor').withAvailableActions(['action1']);
+
       const cloned = module.clone();
-      
+
       // Verify configurations match
       expect(cloned.getConfiguration()).toEqual(module.getConfiguration());
-      
+
       // Verify independence
       cloned.forActor('cloned-actor');
-      
+
       expect(module.getConfiguration().actorId).toBe('original-actor');
       expect(cloned.getConfiguration().actorId).toBe('cloned-actor');
     });
@@ -288,7 +288,7 @@ describe('ActionProcessingTestModule', () => {
       const customMockFn = () => () => 'custom';
       const original = new ActionProcessingTestModule(customMockFn);
       const cloned = original.clone();
-      
+
       expect(cloned).toBeDefined();
     });
   });
@@ -303,9 +303,9 @@ describe('ActionProcessingTestModule', () => {
         .withExecutionBehavior({ alwaysSucceed: true })
         .withPerformanceMonitoring()
         .withCustomFacades({ custom: true });
-      
+
       expect(result).toBe(module);
-      
+
       const config = module.getConfiguration();
       expect(config.actorId).toBe('chain-actor');
       expect(config.actions).toHaveLength(2);

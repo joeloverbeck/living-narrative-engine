@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex:rub_vagina_over_clothes",
+  "name": "Rub Vagina Over Clothes",
+  "description": "Rub the target's vagina over their clothing.",
+  "scope": "sex:actors_with_vagina_facing_each_other_covered",
+  "required_components": {
+    "actor": ["intimacy:closeness"]
+  },
+  "template": "rub {target}'s vagina over the clothes",
+  "prerequisites": []
+}

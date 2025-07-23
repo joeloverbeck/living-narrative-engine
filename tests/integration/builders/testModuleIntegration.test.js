@@ -3,8 +3,19 @@
  * @description Integration tests for the Test Module Pattern implementation
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { TestModuleBuilder, TestScenarioPresets, createTestModules } from '../../common/builders/index.js';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+import {
+  TestModuleBuilder,
+  TestScenarioPresets,
+  createTestModules,
+} from '../../common/builders/index.js';
 import { createMockFacades } from '../../../src/testing/facades/testingFacadeRegistrations.js';
 
 describe('Test Module Pattern Integration', () => {
@@ -35,10 +46,10 @@ describe('Test Module Pattern Integration', () => {
       testEnv = await TestModuleBuilder.forEntityManagement()
         .withEntities([
           { type: 'core:actor', id: 'test-actor' },
-          { type: 'core:item', id: 'test-item' }
+          { type: 'core:item', id: 'test-item' },
         ])
         .withComponents({
-          'test-actor': { 'core:health': { current: 100, max: 100 } }
+          'test-actor': { 'core:health': { current: 100, max: 100 } },
         })
         .build();
 
@@ -53,7 +64,7 @@ describe('Test Module Pattern Integration', () => {
       testEnv = await TestModuleBuilder.forLLMTesting()
         .withStrategy('tool-calling')
         .withMockResponses({
-          'default': { actionId: 'core:wait' }
+          default: { actionId: 'core:wait' },
         })
         .build();
 
@@ -108,16 +119,16 @@ describe('Test Module Pattern Integration', () => {
   describe('Integration with Facades', () => {
     it('should work seamlessly with createMockFacades', async () => {
       const facades = createMockFacades({}, jest.fn);
-      
+
       testEnv = await TestModuleBuilder.forTurnExecution()
         .withCustomFacades({
           llm: {
             llmAdapter: {
               getAIDecision: jest.fn().mockResolvedValue({
-                actionId: 'core:custom-action'
-              })
-            }
-          }
+                actionId: 'core:custom-action',
+              }),
+            },
+          },
         })
         .build();
 
@@ -129,7 +140,7 @@ describe('Test Module Pattern Integration', () => {
       testEnv = await TestModuleBuilder.forTurnExecution()
         .withTestActors(['ai-actor'])
         .withPerformanceTracking({
-          thresholds: { turnExecution: 100 }
+          thresholds: { turnExecution: 100 },
         })
         .build();
 
@@ -154,8 +165,7 @@ describe('Test Module Pattern Integration', () => {
         .withMockLLM({ strategy: 'tool-calling' })
         .withTestActors(['ai-actor']);
 
-      const clonedModule = baseModule.clone()
-        .withTestActors(['ai-actor-2']);
+      const clonedModule = baseModule.clone().withTestActors(['ai-actor-2']);
 
       const env1 = await baseModule.build();
       const env2 = await clonedModule.build();
@@ -170,15 +180,15 @@ describe('Test Module Pattern Integration', () => {
 
     it('should validate configurations before building', () => {
       const module = TestModuleBuilder.forTurnExecution();
-      
-      // Test with invalid configuration (no LLM)
-      module.reset();
+
+      // Test with invalid configuration (clear LLM config completely)
+      module.withMockLLM({ strategy: null });
       const validation = module.validate();
-      
+
       expect(validation.valid).toBe(false);
       expect(validation.errors).toContainEqual(
         expect.objectContaining({
-          code: 'MISSING_LLM_STRATEGY'
+          code: 'MISSING_LLM_STRATEGY',
         })
       );
     });
@@ -190,7 +200,7 @@ describe('Test Module Pattern Integration', () => {
 
       // Reset the module
       module.reset();
-      
+
       testEnv = await module
         .withMockLLM({ strategy: 'tool-calling' })
         .withTestActors(['reset-actor'])
@@ -204,19 +214,21 @@ describe('Test Module Pattern Integration', () => {
   describe('createTestModules Factory', () => {
     it('should create test modules with jest mocking', async () => {
       const { forTurnExecution, scenarios } = createTestModules(jest.fn);
-      
+
       testEnv = await forTurnExecution()
         .withMockLLM({ strategy: 'tool-calling' })
         .withTestActors(['ai-actor'])
         .build();
 
       expect(testEnv).toBeDefined();
-      expect(testEnv.facades.mockDeps.llm.llmAdapter.getAIDecision).toBeDefined();
+      expect(
+        testEnv.facades.mockDeps.llm.llmAdapter.getAIDecision
+      ).toBeDefined();
     });
 
     it('should provide access to all scenario presets', () => {
       const { scenarios } = createTestModules(jest.fn);
-      
+
       expect(scenarios.combat).toBeDefined();
       expect(scenarios.socialInteraction).toBeDefined();
       expect(scenarios.exploration).toBeDefined();
@@ -226,23 +238,28 @@ describe('Test Module Pattern Integration', () => {
 
   describe('Error Handling', () => {
     it('should throw validation error for invalid configuration', async () => {
-      const module = TestModuleBuilder.forTurnExecution();
-      module.reset(); // Clear default configuration
+      const module = TestModuleBuilder.forTurnExecution().withMockLLM({
+        strategy: null,
+      }); // Invalid LLM strategy
 
-      await expect(module.build()).rejects.toThrow('Invalid test module configuration');
+      await expect(module.build()).rejects.toThrow(
+        'Invalid test module configuration'
+      );
     });
 
     it('should provide helpful validation messages', () => {
-      const module = TestModuleBuilder.forLLMTesting()
-        .withStrategy('invalid-strategy');
+      const module =
+        TestModuleBuilder.forLLMTesting().withStrategy('invalid-strategy');
 
       const validation = module.validate();
-      
+
       expect(validation.valid).toBe(false);
       expect(validation.errors).toContainEqual(
         expect.objectContaining({
           code: 'INVALID_STRATEGY',
-          message: expect.stringContaining('Must be one of: tool-calling, json-schema')
+          message: expect.stringContaining(
+            'Must be one of: tool-calling, json-schema'
+          ),
         })
       );
     });

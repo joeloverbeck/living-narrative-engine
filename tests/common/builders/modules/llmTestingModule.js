@@ -12,7 +12,7 @@ import { TestModuleValidator } from '../validation/testModuleValidator.js';
  * Test module for AI decision-making and prompt testing.
  * Provides a fluent API for testing LLM interactions, prompt generation,
  * response processing, and decision-making logic.
- * 
+ *
  * @augments ITestModule
  * @example
  * const testEnv = await new LLMTestingModule()
@@ -132,7 +132,10 @@ export class LLMTestingModule extends ITestModule {
    * })
    */
   withMockResponses(responses = {}) {
-    this.#config.mockResponses = { ...this.#config.mockResponses, ...responses };
+    this.#config.mockResponses = {
+      ...this.#config.mockResponses,
+      ...responses,
+    };
     return this;
   }
 
@@ -143,7 +146,7 @@ export class LLMTestingModule extends ITestModule {
    * @returns {LLMTestingModule} This instance for chaining
    */
   withActors(actors = []) {
-    this.#config.actors = actors.map(actor => ({
+    this.#config.actors = actors.map((actor) => ({
       id: actor.id || `actor-${Date.now()}`,
       name: actor.name || 'Test Actor',
       type: actor.type || 'core:actor',
@@ -251,7 +254,10 @@ export class LLMTestingModule extends ITestModule {
    * @returns {import('../validation/testModuleValidator.js').ValidationResult}
    */
   validate() {
-    return TestModuleValidator.validateConfiguration(this.#config, 'llmTesting');
+    return TestModuleValidator.validateConfiguration(
+      this.#config,
+      'llmTesting'
+    );
   }
 
   /**
@@ -271,8 +277,11 @@ export class LLMTestingModule extends ITestModule {
     }
 
     // Create facades with configuration
-    const facades = createMockFacades(this.#config.facades, this.#mockFn || (() => () => {}));
-    
+    const facades = createMockFacades(
+      this.#config.facades,
+      this.#mockFn || (() => () => {})
+    );
+
     // Configure LLM service
     await facades.llmService.configureLLMStrategy(this.#config.strategy, {
       parameters: this.#config.parameters,
@@ -287,8 +296,10 @@ export class LLMTestingModule extends ITestModule {
     // Create test actors if configured
     const createdActors = {};
     if (this.#config.actors.length > 0) {
-      const world = await facades.entityService.createTestWorld({ name: 'LLM Test World' });
-      
+      const world = await facades.entityService.createTestWorld({
+        name: 'LLM Test World',
+      });
+
       for (const actorDef of this.#config.actors) {
         const actorId = await facades.entityService.createTestActor({
           ...actorDef,
@@ -307,16 +318,16 @@ export class LLMTestingModule extends ITestModule {
       actors: createdActors,
       facades,
       config: Object.freeze({ ...this.#config }),
-      
+
       // Convenience methods
       async getAIDecision(actorId, context = {}) {
         const startTime = Date.now();
-        
+
         const decision = await facades.llmService.getAIDecision(actorId, {
           ...context,
           _testScenario: context.scenario || 'default',
         });
-        
+
         if (monitors.responseCapture) {
           monitors.capturedResponses.push({
             actorId,
@@ -326,13 +337,16 @@ export class LLMTestingModule extends ITestModule {
             timestamp: Date.now(),
           });
         }
-        
+
         return decision;
       },
-      
+
       async generatePrompt(actorId, context = {}) {
-        const prompt = await facades.llmService.generatePrompt(actorId, context);
-        
+        const prompt = await facades.llmService.generatePrompt(
+          actorId,
+          context
+        );
+
         if (monitors.promptCapture) {
           monitors.capturedPrompts.push({
             actorId,
@@ -341,7 +355,7 @@ export class LLMTestingModule extends ITestModule {
             timestamp: Date.now(),
           });
         }
-        
+
         if (monitors.tokenCounting) {
           // This would use a real token counter in production
           monitors.tokenCounts.push({
@@ -351,27 +365,29 @@ export class LLMTestingModule extends ITestModule {
             timestamp: Date.now(),
           });
         }
-        
+
         return prompt;
       },
-      
+
       async runScenario(scenarioName) {
-        const scenario = this.#config.scenarios.find(s => s.name === scenarioName);
+        const scenario = this.#config.scenarios.find(
+          (s) => s.name === scenarioName
+        );
         if (!scenario) {
           throw new Error(`Scenario not found: ${scenarioName}`);
         }
-        
+
         const actorId = createdActors[scenario.actor] || scenario.actor;
         return this.getAIDecision(actorId, {
           ...scenario.context,
           scenario: scenarioName,
         });
       },
-      
+
       async cleanup() {
         // Clear mock responses
         facades.llmService.clearMockResponses();
-        
+
         // Clean up actors
         if (Object.keys(createdActors).length > 0) {
           await facades.entityService.clearTestData();

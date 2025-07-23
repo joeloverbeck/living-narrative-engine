@@ -1,6 +1,6 @@
 /**
  * @file Tests for PromptTemplateService
- * @description Tests for template processing with conditional sections
+ * @description Tests for template processing, error handling, and edge cases
  */
 
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
@@ -269,6 +269,223 @@ describe('PromptTemplateService - Conditional Section Template Processing', () =
 
       expect(result).toContain('<thoughts>\n- Old style thought\n</thoughts>');
       expect(result).toContain('<notes>\n- New style note\n</notes>');
+    });
+  });
+});
+
+describe('PromptTemplateService - Error Handling and Edge Cases', () => {
+  let service;
+  let mockLogger;
+
+  beforeEach(() => {
+    mockLogger = {
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    service = new PromptTemplateService({ logger: mockLogger });
+  });
+
+  describe('processTemplate error handling', () => {
+    test('handles invalid template - null', () => {
+      const result = service.processTemplate(null, { key: 'value' });
+      
+      expect(result).toBe('');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'PromptTemplateService.processTemplate: Invalid template provided'
+      );
+    });
+
+    test('handles invalid template - undefined', () => {
+      const result = service.processTemplate(undefined, { key: 'value' });
+      
+      expect(result).toBe('');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'PromptTemplateService.processTemplate: Invalid template provided'
+      );
+    });
+
+    test('handles invalid template - empty string', () => {
+      const result = service.processTemplate('', { key: 'value' });
+      
+      expect(result).toBe('');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'PromptTemplateService.processTemplate: Invalid template provided'
+      );
+    });
+
+    test('handles invalid template - non-string', () => {
+      const result = service.processTemplate(123, { key: 'value' });
+      
+      expect(result).toBe('');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'PromptTemplateService.processTemplate: Invalid template provided'
+      );
+    });
+
+    test('handles invalid data - null', () => {
+      const template = 'Hello {name}';
+      const result = service.processTemplate(template, null);
+      
+      expect(result).toBe(template);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'PromptTemplateService.processTemplate: Invalid data object provided'
+      );
+    });
+
+    test('handles invalid data - undefined', () => {
+      const template = 'Hello {name}';
+      const result = service.processTemplate(template, undefined);
+      
+      expect(result).toBe(template);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'PromptTemplateService.processTemplate: Invalid data object provided'
+      );
+    });
+
+    test('handles invalid data - non-object', () => {
+      const template = 'Hello {name}';
+      const result = service.processTemplate(template, 'not an object');
+      
+      expect(result).toBe(template);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'PromptTemplateService.processTemplate: Invalid data object provided'
+      );
+    });
+  });
+
+  describe('placeholder value handling', () => {
+    test('handles null values in data', () => {
+      const template = 'Hello {name}, you are {age} years old';
+      const data = { name: 'John', age: null };
+      
+      const result = service.processTemplate(template, data);
+      
+      expect(result).toBe('Hello John, you are  years old');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "PromptTemplateService: Placeholder 'age' is null/undefined, using empty string"
+      );
+    });
+
+    test('handles undefined values in data', () => {
+      const template = 'Hello {name}, you live in {city}';
+      const data = { name: 'John', city: undefined };
+      
+      const result = service.processTemplate(template, data);
+      
+      expect(result).toBe('Hello John, you live in ');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "PromptTemplateService: Placeholder 'city' is null/undefined, using empty string"
+      );
+    });
+
+    test('handles missing placeholders and logs warning', () => {
+      const template = 'Hello {name}, you are {age} years old and live in {city}';
+      const data = { name: 'John' }; // missing age and city
+      
+      const result = service.processTemplate(template, data);
+      
+      expect(result).toBe('Hello John, you are {age} years old and live in {city}');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'PromptTemplateService: Missing data for placeholders: age, city'
+      );
+    });
+
+    test('handles mix of found, missing, and null placeholders', () => {
+      const template = 'Name: {name}, Age: {age}, City: {city}, Job: {job}';
+      const data = { 
+        name: 'John',      // found
+        age: null,         // null -> empty string
+        // city missing    // missing -> keep placeholder
+        job: undefined     // undefined -> empty string
+      };
+      
+      const result = service.processTemplate(template, data);
+      
+      expect(result).toBe('Name: John, Age: , City: {city}, Job: ');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "PromptTemplateService: Placeholder 'age' is null/undefined, using empty string"
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "PromptTemplateService: Placeholder 'job' is null/undefined, using empty string"
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'PromptTemplateService: Missing data for placeholders: city'
+      );
+    });
+  });
+
+  describe('getCharacterTemplate', () => {
+    test('returns character template', () => {
+      const template = service.getCharacterTemplate();
+      
+      expect(typeof template).toBe('string');
+      expect(template.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('processCharacterPrompt', () => {
+    test('processes character prompt with valid data', () => {
+      const promptData = {
+        taskDefinitionContent: 'Test task',
+        characterPersonaContent: 'Test persona',
+        assistantResponsePrefix: '\n'
+      };
+      
+      const result = service.processCharacterPrompt(promptData);
+      
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'PromptTemplateService: Processing character prompt template'
+      );
+    });
+
+    test('processes character prompt with empty data', () => {
+      const result = service.processCharacterPrompt({});
+      
+      expect(typeof result).toBe('string');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'PromptTemplateService: Processing character prompt template'
+      );
+    });
+  });
+
+  describe('placeholder regex edge cases', () => {
+    test('handles template with no placeholders', () => {
+      const template = 'This is a plain text template with no variables';
+      const data = { unused: 'value' };
+      
+      const result = service.processTemplate(template, data);
+      
+      expect(result).toBe(template);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'PromptTemplateService: Found 0 placeholders to process'
+      );
+    });
+
+    test('handles non-string values by converting to string', () => {
+      const template = 'Count: {count}, Active: {active}, Rating: {rating}';
+      const data = { 
+        count: 42,
+        active: true,
+        rating: 4.5
+      };
+      
+      const result = service.processTemplate(template, data);
+      
+      expect(result).toBe('Count: 42, Active: true, Rating: 4.5');
+    });
+
+    test('handles objects by converting to string', () => {
+      const template = 'User: {user}';
+      const data = { 
+        user: { name: 'John', age: 30 }
+      };
+      
+      const result = service.processTemplate(template, data);
+      
+      expect(result).toBe('User: [object Object]');
     });
   });
 });

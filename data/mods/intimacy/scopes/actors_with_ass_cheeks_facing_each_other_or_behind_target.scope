@@ -1,0 +1,13 @@
+// Scope for actors in closeness who have ass cheeks and are either facing each other OR actor is behind the target
+// Used by actions that require ass anatomy and can work from either face-to-face or behind positions
+intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target := actor.intimacy:closeness.partners[][{
+  "and": [
+    {"hasPartOfType": [".", "ass_cheek"]},
+    {
+      "or": [
+        {"condition_ref": "intimacy:both-actors-facing-each-other"},
+        {"condition_ref": "intimacy:actor-is-behind-entity"}
+      ]
+    }
+  ]
+}]

@@ -3,7 +3,7 @@
   "id": "intimacy:lick_lips",
   "name": "Lick Lips Seductively",
   "description": "Lean in and seductively lick the target's lips.",
-  "scope": "intimacy:close_actors_facing_forward",
+  "scope": "intimacy:close_actors_facing_each_other",
   "required_components": {
     "actor": ["intimacy:closeness"]
   },

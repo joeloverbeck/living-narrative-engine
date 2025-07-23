@@ -245,10 +245,12 @@ export class FullTurnExecutionTestBed {
     );
     await promptStaticContentService.initialize();
 
-    // Mock the LlmConfigManager to return our test LLM configurations
-    const llmConfigManager = this.container.resolve(aiTokens.LlmConfigManager);
+    // Mock the LLM Configuration Manager to return our test LLM configurations
+    const llmConfigManager = this.container.resolve(
+      aiTokens.ILLMConfigurationManager
+    );
     jest
-      .spyOn(llmConfigManager, 'getConfig')
+      .spyOn(llmConfigManager, 'loadConfiguration')
       .mockImplementation(async (llmId) => {
         if (llmId === 'test-llm-toolcalling') {
           return {

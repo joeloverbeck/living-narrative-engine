@@ -136,7 +136,7 @@ describe('End-to-End Notes Persistence Flow', () => {
     });
 
     const llmConfigService = {
-      getConfig: jest.fn().mockResolvedValue({
+      loadConfiguration: jest.fn().mockResolvedValue({
         configId: 'test-config',
         modelIdentifier: 'test/model',
       }),

@@ -167,64 +167,89 @@ export class CharacterBuilderController {
    */
   #setupEventListeners() {
     // Form events
-    this.#elements.form.addEventListener(
-      'submit',
-      this.#handleFormSubmit.bind(this)
-    );
-    this.#elements.textarea.addEventListener(
-      'input',
-      this.#handleTextareaInput.bind(this)
-    );
-    this.#elements.textarea.addEventListener(
-      'blur',
-      this.#handleTextareaBlur.bind(this)
-    );
+    if (this.#elements.form) {
+      this.#elements.form.addEventListener(
+        'submit',
+        this.#handleFormSubmit.bind(this)
+      );
+    }
+
+    if (this.#elements.textarea) {
+      this.#elements.textarea.addEventListener(
+        'input',
+        this.#handleTextareaInput.bind(this)
+      );
+      this.#elements.textarea.addEventListener(
+        'blur',
+        this.#handleTextareaBlur.bind(this)
+      );
+    }
 
     // Button events
-    this.#elements.saveBtn.addEventListener(
-      'click',
-      this.#handleSaveClick.bind(this)
-    );
-    this.#elements.retryBtn.addEventListener(
-      'click',
-      this.#handleRetryClick.bind(this)
-    );
-    this.#elements.regenerateBtn.addEventListener(
-      'click',
-      this.#handleRegenerateClick.bind(this)
-    );
-    this.#elements.exportBtn.addEventListener(
-      'click',
-      this.#handleExportClick.bind(this)
-    );
-    this.#elements.continueBtn.addEventListener(
-      'click',
-      this.#handleContinueClick.bind(this)
-    );
-    this.#elements.backBtn.addEventListener(
-      'click',
-      this.#handleBackClick.bind(this)
-    );
+    if (this.#elements.saveBtn) {
+      this.#elements.saveBtn.addEventListener(
+        'click',
+        this.#handleSaveClick.bind(this)
+      );
+    }
+    if (this.#elements.retryBtn) {
+      this.#elements.retryBtn.addEventListener(
+        'click',
+        this.#handleRetryClick.bind(this)
+      );
+    }
+    if (this.#elements.regenerateBtn) {
+      this.#elements.regenerateBtn.addEventListener(
+        'click',
+        this.#handleRegenerateClick.bind(this)
+      );
+    }
+    if (this.#elements.exportBtn) {
+      this.#elements.exportBtn.addEventListener(
+        'click',
+        this.#handleExportClick.bind(this)
+      );
+    }
+    if (this.#elements.continueBtn) {
+      this.#elements.continueBtn.addEventListener(
+        'click',
+        this.#handleContinueClick.bind(this)
+      );
+    }
+    if (this.#elements.backBtn) {
+      this.#elements.backBtn.addEventListener(
+        'click',
+        this.#handleBackClick.bind(this)
+      );
+    }
 
     // Sidebar events
-    this.#elements.toggleSidebarBtn.addEventListener(
-      'click',
-      this.#handleToggleSidebar.bind(this)
-    );
-    this.#elements.refreshBtn.addEventListener(
-      'click',
-      this.#handleRefreshConcepts.bind(this)
-    );
-    this.#elements.clearAllBtn.addEventListener(
-      'click',
-      this.#handleClearAllConcepts.bind(this)
-    );
+    if (this.#elements.toggleSidebarBtn) {
+      this.#elements.toggleSidebarBtn.addEventListener(
+        'click',
+        this.#handleToggleSidebar.bind(this)
+      );
+    }
+    if (this.#elements.refreshBtn) {
+      this.#elements.refreshBtn.addEventListener(
+        'click',
+        this.#handleRefreshConcepts.bind(this)
+      );
+    }
+    if (this.#elements.clearAllBtn) {
+      this.#elements.clearAllBtn.addEventListener(
+        'click',
+        this.#handleClearAllConcepts.bind(this)
+      );
+    }
 
     // Modal events
-    this.#elements.helpLink.addEventListener(
-      'click',
-      this.#handleHelpClick.bind(this)
-    );
+    if (this.#elements.helpLink) {
+      this.#elements.helpLink.addEventListener(
+        'click',
+        this.#handleHelpClick.bind(this)
+      );
+    }
     this.#setupModalEvents();
 
     // Error details
@@ -491,9 +516,10 @@ export class CharacterBuilderController {
   /**
    * Handle error details button click
    *
+   * @param event
    * @private
    */
-  #handleErrorDetailsClick() {
+  #handleErrorDetailsClick(event) {
     const errorDetails = document.getElementById('error-details');
     const isVisible = errorDetails.style.display !== 'none';
 
@@ -580,8 +606,12 @@ export class CharacterBuilderController {
    * @param {string} message - Error message
    */
   #showValidationError(message) {
-    this.#elements.errorMessage.textContent = message;
-    this.#elements.textarea.setAttribute('aria-invalid', 'true');
+    if (this.#elements.errorMessage) {
+      this.#elements.errorMessage.textContent = message;
+    }
+    if (this.#elements.textarea) {
+      this.#elements.textarea.setAttribute('aria-invalid', 'true');
+    }
   }
 
   /**
@@ -590,8 +620,12 @@ export class CharacterBuilderController {
    * @private
    */
   #clearValidationError() {
-    this.#elements.errorMessage.textContent = '';
-    this.#elements.textarea.removeAttribute('aria-invalid');
+    if (this.#elements.errorMessage) {
+      this.#elements.errorMessage.textContent = '';
+    }
+    if (this.#elements.textarea) {
+      this.#elements.textarea.removeAttribute('aria-invalid');
+    }
   }
 
   /**
@@ -600,13 +634,18 @@ export class CharacterBuilderController {
    * @private
    */
   #updateCharacterCount() {
+    // Check if elements are available
+    if (!this.#elements.textarea || !this.#elements.charCount) {
+      return;
+    }
+
     const count = this.#elements.textarea.value.length;
     this.#elements.charCount.textContent = `${count}/1000`;
 
-    if (count > 900) {
-      this.#elements.charCount.style.color = 'var(--status-warning)';
-    } else if (count > 950) {
+    if (count > 950) {
       this.#elements.charCount.style.color = 'var(--status-error)';
+    } else if (count > 900) {
+      this.#elements.charCount.style.color = 'var(--status-warning)';
     } else {
       this.#elements.charCount.style.color = 'var(--text-secondary)';
     }
@@ -618,13 +657,25 @@ export class CharacterBuilderController {
    * @private
    */
   #updateButtonStates() {
+    // Check if textarea is available
+    if (!this.#elements.textarea) {
+      return;
+    }
+
     const concept = this.#elements.textarea.value.trim();
     const isValid = concept.length >= 10 && concept.length <= 1000;
 
-    this.#elements.generateBtn.disabled = !isValid;
-    this.#elements.saveBtn.disabled = !isValid;
-
-    this.#elements.continueBtn.disabled = this.#currentDirections.length === 0;
+    // Update button states only if they exist
+    if (this.#elements.generateBtn) {
+      this.#elements.generateBtn.disabled = !isValid;
+    }
+    if (this.#elements.saveBtn) {
+      this.#elements.saveBtn.disabled = !isValid;
+    }
+    if (this.#elements.continueBtn) {
+      this.#elements.continueBtn.disabled =
+        this.#currentDirections.length === 0;
+    }
   }
 
   /**
@@ -634,6 +685,19 @@ export class CharacterBuilderController {
    * @param {string} state - State to show
    */
   #showState(state) {
+    // Check if elements are cached
+    if (
+      !this.#elements.emptyState ||
+      !this.#elements.loadingState ||
+      !this.#elements.errorState ||
+      !this.#elements.resultsState
+    ) {
+      this.#logger.warn(
+        `CharacterBuilderController: Cannot show state ${state}, elements not cached yet`
+      );
+      return;
+    }
+
     // Hide all states
     this.#elements.emptyState.style.display = 'none';
     this.#elements.loadingState.style.display = 'none';
@@ -724,9 +788,18 @@ export class CharacterBuilderController {
    * @param {Error} [error] - Optional error object
    */
   #showError(message, error = null) {
+    // Check if elements are cached yet
+    if (!this.#elements.errorState) {
+      // Fallback to console if DOM elements aren't ready
+      this.#logger.error(`CharacterBuilderController: ${message}`, error);
+      return;
+    }
+
     const errorMessage =
       this.#elements.errorState.querySelector('.error-message');
-    errorMessage.textContent = message;
+    if (errorMessage) {
+      errorMessage.textContent = message;
+    }
 
     if (error) {
       const errorDetails = document.getElementById('error-details-content');
@@ -764,6 +837,11 @@ export class CharacterBuilderController {
    * @param {CharacterConcept[]} concepts - Concepts to display
    */
   #displaySavedConcepts(concepts) {
+    // Check if conceptsList element exists
+    if (!this.#elements.conceptsList) {
+      return;
+    }
+
     if (concepts.length === 0) {
       this.#elements.conceptsList.innerHTML = `
         <div class="concepts-empty">

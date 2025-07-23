@@ -285,9 +285,9 @@ export class EntityServiceFacade {
       });
 
       // Track for cleanup
-      this.#testEntities.set(entityId, { 
+      this.#testEntities.set(entityId, {
         type: type.split(':').pop(), // Extract type name from namespaced ID
-        created: Date.now() 
+        created: Date.now(),
       });
 
       this.#logger.debug('EntityServiceFacade: Entity created', {
@@ -297,10 +297,7 @@ export class EntityServiceFacade {
 
       return entityId;
     } catch (error) {
-      this.#logger.error(
-        'EntityServiceFacade: Error creating entity',
-        error
-      );
+      this.#logger.error('EntityServiceFacade: Error creating entity', error);
       throw error;
     }
   }
@@ -409,10 +406,10 @@ export class EntityServiceFacade {
 
     try {
       await this.#entityManager.removeEntity(entityId);
-      
+
       // Remove from tracking
       this.#testEntities.delete(entityId);
-      
+
       this.#logger.debug('EntityServiceFacade: Entity deleted', { entityId });
     } catch (error) {
       this.#logger.error('EntityServiceFacade: Error deleting entity', error);
@@ -443,12 +440,12 @@ export class EntityServiceFacade {
 
       // Apply filter if provided
       const entities = await scopeInstance.query(filter);
-      
+
       this.#logger.debug('EntityServiceFacade: Query completed', {
         scope,
         resultCount: entities.length,
       });
-      
+
       return entities;
     } catch (error) {
       this.#logger.error('EntityServiceFacade: Error querying entities', error);

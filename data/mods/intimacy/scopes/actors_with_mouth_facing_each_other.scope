@@ -1,0 +1,6 @@
+intimacy:actors_with_mouth_facing_each_other := actor.intimacy:closeness.partners[][{
+  "and": [
+    {"hasPartOfType": [".", "mouth"]},
+    {"condition_ref": "intimacy:both-actors-facing-each-other"}
+  ]
+}]

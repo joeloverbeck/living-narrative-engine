@@ -2,7 +2,7 @@
   "id": "intimacy:peck_on_lips",
   "name": "Give a peck on the lips",
   "description": "Give someone a quick, light kiss on the lips",
-  "scope": "intimacy:close_actors_facing_forward",
+  "scope": "intimacy:close_actors_facing_each_other",
   "required_components": {
     "actor": ["intimacy:closeness"]
   },

@@ -16,8 +16,8 @@ import { createThematicDirectionsFromLLMResponse } from '../models/thematicDirec
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../llms/llmJsonService.js').LlmJsonService} LlmJsonService
- * @typedef {import('../../llms/LLMStrategyFactory.js').LLMStrategyFactory} LLMStrategyFactory
- * @typedef {import('../../llms/services/llmConfigurationManager.js').LLMConfigurationManager} LLMConfigurationManager
+ * @typedef {import('../../turns/adapters/configurableLLMAdapter.js').ConfigurableLLMAdapter} ConfigurableLLMAdapter
+ * @typedef {import('../../llms/interfaces/ILLMConfigurationManager.js').ILLMConfigurationManager} ILLMConfigurationManager
  * @typedef {import('../models/thematicDirection.js').ThematicDirection} ThematicDirection
  */
 
@@ -45,8 +45,8 @@ export class ThematicDirectionGenerator {
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger - Logger instance
    * @param {LlmJsonService} dependencies.llmJsonService - LLM JSON processing service
-   * @param {LLMStrategyFactory} dependencies.llmStrategyFactory - LLM strategy factory
-   * @param {LLMConfigurationManager} dependencies.llmConfigManager - LLM configuration manager
+   * @param {ConfigurableLLMAdapter} dependencies.llmStrategyFactory - LLM adapter (provides strategy factory functionality)
+   * @param {ILLMConfigurationManager} dependencies.llmConfigManager - LLM configuration manager
    */
   constructor({
     logger,
@@ -60,11 +60,15 @@ export class ThematicDirectionGenerator {
     validateDependency(llmJsonService, 'LlmJsonService', logger, {
       requiredMethods: ['clean', 'parseAndRepair'],
     });
-    validateDependency(llmStrategyFactory, 'LLMStrategyFactory', logger, {
-      requiredMethods: ['getStrategy'],
+    validateDependency(llmStrategyFactory, 'ConfigurableLLMAdapter', logger, {
+      requiredMethods: ['getAIDecision'],
     });
-    validateDependency(llmConfigManager, 'LLMConfigurationManager', logger, {
-      requiredMethods: ['loadConfiguration'],
+    validateDependency(llmConfigManager, 'ILLMConfigurationManager', logger, {
+      requiredMethods: [
+        'loadConfiguration',
+        'getActiveConfiguration',
+        'setActiveConfiguration',
+      ],
     });
 
     this.#logger = logger;
@@ -130,9 +134,11 @@ export class ThematicDirectionGenerator {
       const parsedResponse = await this.#parseResponse(llmResponse);
       this.#validateResponseStructure(parsedResponse);
 
-      // Create thematic direction models
+      // Get active config for metadata
+      const activeConfig =
+        await this.#llmConfigManager.getActiveConfiguration();
       const llmMetadata = {
-        modelId: options.llmConfigId || 'openrouter-claude-sonnet-4',
+        modelId: activeConfig?.configId || 'unknown',
         promptTokens: this.#estimateTokens(prompt),
         responseTokens: this.#estimateTokens(JSON.stringify(parsedResponse)),
         processingTime,
@@ -183,34 +189,35 @@ export class ThematicDirectionGenerator {
    */
   async #callLLM(prompt, llmConfigId) {
     try {
-      // Get base LLM configuration (defaults to Claude Sonnet 4)
-      const baseLlmConfig = await this.#llmConfigManager.loadConfiguration(
-        llmConfigId || 'openrouter-claude-sonnet-4'
-      );
-      if (!baseLlmConfig) {
+      // Set active LLM configuration if specified, otherwise use current active
+      if (llmConfigId) {
+        const success =
+          await this.#llmConfigManager.setActiveConfiguration(llmConfigId);
+        if (!success) {
+          // Try to get the configuration to see if it exists
+          const config =
+            await this.#llmConfigManager.loadConfiguration(llmConfigId);
+          if (!config) {
+            throw new Error(`LLM configuration not found: ${llmConfigId}`);
+          }
+        }
+      }
+
+      // Get the current active configuration
+      const activeConfig =
+        await this.#llmConfigManager.getActiveConfiguration();
+      if (!activeConfig) {
         throw new Error(
-          `LLM configuration not found: ${llmConfigId || 'openrouter-claude-sonnet-4'}`
+          'No active LLM configuration found. Please set an active configuration.'
         );
       }
 
-      // Create enhanced config with thematic directions schema
-      const enhancedLlmConfig =
-        createThematicDirectionsLlmConfig(baseLlmConfig);
-
-      // Create LLM strategy with enhanced config
-      const strategy = this.#llmStrategyFactory.getStrategy(enhancedLlmConfig);
-
-      // Execute LLM request with character builder parameters
-      const response = await strategy.execute({
-        messages: [{ role: 'user', content: prompt }],
-        ...CHARACTER_BUILDER_LLM_PARAMS,
-        llmConfig: enhancedLlmConfig,
-        environmentContext: { environment: 'client' },
-      });
+      // Use the ConfigurableLLMAdapter to make the request
+      const response = await this.#llmStrategyFactory.getAIDecision(prompt);
 
       this.#logger.debug('ThematicDirectionGenerator: Received LLM response', {
         responseLength: response.length,
-        modelId: enhancedLlmConfig.configId,
+        modelId: activeConfig.configId,
       });
 
       return response;

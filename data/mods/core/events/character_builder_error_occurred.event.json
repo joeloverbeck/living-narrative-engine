@@ -13,7 +13,12 @@
       },
       "operation": {
         "type": "string",
-        "enum": ["createCharacterConcept", "updateCharacterConcept", "storeCharacterConcept", "generateDirections"],
+        "enum": [
+          "createCharacterConcept",
+          "updateCharacterConcept",
+          "storeCharacterConcept",
+          "generateDirections"
+        ],
         "description": "Required. The character builder operation that failed."
       },
       "concept": {
@@ -28,7 +33,7 @@
         "description": "Optional. Number of attempts made before the operation failed."
       },
       "finalError": {
-        "type": "string", 
+        "type": "string",
         "description": "Optional. The final error message from the last attempt."
       },
       "conceptId": {

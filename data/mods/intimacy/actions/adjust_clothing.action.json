@@ -3,7 +3,7 @@
   "id": "intimacy:adjust_clothing",
   "name": "Adjust Clothing",
   "description": "Smooth their collar or adjust a displaced garment with possessive care.",
-  "scope": "intimacy:close_actors_facing_forward_with_torso_clothing",
+  "scope": "intimacy:close_actors_facing_each_other_with_torso_clothing",
   "required_components": {
     "actor": ["intimacy:closeness"]
   },

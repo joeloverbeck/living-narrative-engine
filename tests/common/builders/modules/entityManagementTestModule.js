@@ -12,7 +12,7 @@ import { TestModuleValidator } from '../validation/testModuleValidator.js';
  * Test module for entity lifecycle and state management testing.
  * Provides a fluent API for configuring tests that involve entity creation,
  * component updates, queries, and relationships.
- * 
+ *
  * @augments ITestModule
  * @example
  * const testEnv = await new EntityManagementTestModule()
@@ -91,7 +91,7 @@ export class EntityManagementTestModule extends ITestModule {
    * ])
    */
   withEntities(entities = []) {
-    this.#config.entities = entities.map(entity => ({
+    this.#config.entities = entities.map((entity) => ({
       type: entity.type || 'core:actor',
       id: entity.id || `entity-${Date.now()}-${Math.random()}`,
       name: entity.name || 'Test Entity',
@@ -203,7 +203,10 @@ export class EntityManagementTestModule extends ITestModule {
    * @returns {import('../validation/testModuleValidator.js').ValidationResult}
    */
   validate() {
-    return TestModuleValidator.validateConfiguration(this.#config, 'entityManagement');
+    return TestModuleValidator.validateConfiguration(
+      this.#config,
+      'entityManagement'
+    );
   }
 
   /**
@@ -223,8 +226,11 @@ export class EntityManagementTestModule extends ITestModule {
     }
 
     // Create facades with configuration
-    const facades = createMockFacades(this.#config.facades, this.#mockFn || (() => () => {}));
-    
+    const facades = createMockFacades(
+      this.#config.facades,
+      this.#mockFn || (() => () => {})
+    );
+
     // Initialize world if configured
     let world = null;
     if (this.#config.world && this.#config.world.createLocations) {
@@ -246,7 +252,9 @@ export class EntityManagementTestModule extends ITestModule {
     }
 
     // Apply component updates
-    for (const [entityId, components] of Object.entries(this.#config.components)) {
+    for (const [entityId, components] of Object.entries(
+      this.#config.components
+    )) {
       if (createdEntities[entityId]) {
         for (const [componentId, data] of Object.entries(components)) {
           await facades.entityService.updateComponent(
@@ -267,10 +275,15 @@ export class EntityManagementTestModule extends ITestModule {
           createdEntities[rel.from],
           'core:relationships',
           {
-            [rel.type]: [...(await facades.entityService.getComponent(
-              createdEntities[rel.from],
-              'core:relationships'
-            ))?.[rel.type] || [], createdEntities[rel.to]],
+            [rel.type]: [
+              ...((
+                await facades.entityService.getComponent(
+                  createdEntities[rel.from],
+                  'core:relationships'
+                )
+              )?.[rel.type] || []),
+              createdEntities[rel.to],
+            ],
           }
         );
       }
@@ -288,28 +301,32 @@ export class EntityManagementTestModule extends ITestModule {
       world,
       facades,
       config: Object.freeze({ ...this.#config }),
-      
+
       // Convenience methods
       async createEntity(definition) {
         return facades.entityService.createEntity(definition);
       },
-      
+
       async updateComponent(entityId, componentId, data) {
-        return facades.entityService.updateComponent(entityId, componentId, data);
+        return facades.entityService.updateComponent(
+          entityId,
+          componentId,
+          data
+        );
       },
-      
+
       async getEntity(entityId) {
         return facades.entityService.getEntity(entityId);
       },
-      
+
       async queryEntities(scope, filter) {
         return facades.entityService.queryEntities(scope, filter);
       },
-      
+
       async deleteEntity(entityId) {
         return facades.entityService.deleteEntity(entityId);
       },
-      
+
       async cleanup() {
         // Clean up all created entities
         for (const entityId of Object.values(createdEntities)) {
@@ -319,7 +336,7 @@ export class EntityManagementTestModule extends ITestModule {
             // Ignore cleanup errors
           }
         }
-        
+
         if (world) {
           await facades.entityService.clearTestData();
         }
@@ -377,15 +394,15 @@ export class EntityManagementTestModule extends ITestModule {
     return {
       getEvents: (eventType) => {
         if (eventType) {
-          return capturedEvents.filter(e => e.type === eventType);
+          return capturedEvents.filter((e) => e.type === eventType);
         }
         return [...capturedEvents];
       },
-      
+
       clear: () => {
         capturedEvents.length = 0;
       },
-      
+
       capture: (event) => {
         if (allowedTypes.has(event.type)) {
           capturedEvents.push({

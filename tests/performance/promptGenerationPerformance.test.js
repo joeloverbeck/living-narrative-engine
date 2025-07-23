@@ -13,7 +13,7 @@ describe('Prompt Generation Performance', () => {
   beforeEach(async () => {
     testBed = new PromptGenerationTestBed();
     await testBed.initialize();
-    
+
     // Set up test world, actors, and actions
     await testBed.createTestWorld();
     testActors = await testBed.createTestActors();
@@ -82,9 +82,9 @@ describe('Prompt Generation Performance', () => {
       // Create context with specified entity count
       const turnContext = {
         ...testBed.createTestTurnContext(),
-        visibleEntities: []
+        visibleEntities: [],
       };
-      
+
       // Add additional entities to context
       for (let i = 0; i < entityCount; i++) {
         turnContext.visibleEntities.push({
@@ -169,11 +169,15 @@ describe('Prompt Generation Performance', () => {
     // Assert
     expect(firstPrompt).toBeDefined();
     expect(secondPrompt).toBeDefined();
-    
+
     // Warm cache should be faster (or at least not significantly slower)
     // Use max to handle case where coldCacheTime is 0
-    expect(warmCacheTime).toBeLessThanOrEqual(Math.max(coldCacheTime * 1.5, 10));
+    expect(warmCacheTime).toBeLessThanOrEqual(
+      Math.max(coldCacheTime * 1.5, 10)
+    );
 
-    console.log(`Cold cache: ${coldCacheTime}ms, Warm cache: ${warmCacheTime}ms`);
+    console.log(
+      `Cold cache: ${coldCacheTime}ms, Warm cache: ${warmCacheTime}ms`
+    );
   });
 });

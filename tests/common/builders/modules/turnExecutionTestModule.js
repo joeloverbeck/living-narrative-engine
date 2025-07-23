@@ -12,7 +12,7 @@ import { TestModuleValidator } from '../validation/testModuleValidator.js';
  * Test module for complete turn execution testing.
  * Provides a fluent API for configuring all aspects of turn execution including
  * LLM behavior, test actors, world setup, and monitoring capabilities.
- * 
+ *
  * @augments ITestModule
  * @example
  * const testEnv = await new TurnExecutionTestModule()
@@ -107,8 +107,8 @@ export class TurnExecutionTestModule extends ITestModule {
    * ])
    */
   withTestActors(actors = []) {
-    this.#config.actors = actors.map(actor => 
-      typeof actor === 'string' 
+    this.#config.actors = actors.map((actor) =>
+      typeof actor === 'string'
         ? { id: actor, type: actor.includes('ai') ? 'ai' : 'player' }
         : actor
     );
@@ -192,7 +192,10 @@ export class TurnExecutionTestModule extends ITestModule {
    * @returns {import('../validation/testModuleValidator.js').ValidationResult}
    */
   validate() {
-    return TestModuleValidator.validateConfiguration(this.#config, 'turnExecution');
+    return TestModuleValidator.validateConfiguration(
+      this.#config,
+      'turnExecution'
+    );
   }
 
   /**
@@ -212,23 +215,29 @@ export class TurnExecutionTestModule extends ITestModule {
     }
 
     // Create facades with configuration
-    const facades = createMockFacades(this.#config.facades, this.#mockFn || (() => () => {}));
-    
+    const facades = createMockFacades(
+      this.#config.facades,
+      this.#mockFn || (() => () => {})
+    );
+
     // Initialize test environment using facades
-    const testEnvironment = await facades.turnExecutionFacade.initializeTestEnvironment({
-      llmStrategy: this.#config.llm.strategy,
-      llmConfig: this.#config.llm,
-      worldConfig: this.#config.world,
-      actors: this.#config.actors,
-    });
+    const testEnvironment =
+      await facades.turnExecutionFacade.initializeTestEnvironment({
+        llmStrategy: this.#config.llm.strategy,
+        llmConfig: this.#config.llm,
+        worldConfig: this.#config.world,
+        actors: this.#config.actors,
+      });
 
     // Set up mock LLM responses if configured
     if (this.#config.llm.mockResponses) {
-      Object.entries(this.#config.llm.mockResponses).forEach(([actorId, response]) => {
-        facades.turnExecutionFacade.setupMocks({
-          aiResponses: { [actorId]: response },
-        });
-      });
+      Object.entries(this.#config.llm.mockResponses).forEach(
+        ([actorId, response]) => {
+          facades.turnExecutionFacade.setupMocks({
+            aiResponses: { [actorId]: response },
+          });
+        }
+      );
     }
 
     // Create performance tracking utilities if enabled
@@ -248,27 +257,27 @@ export class TurnExecutionTestModule extends ITestModule {
       ...testEnvironment,
       facades,
       config: Object.freeze({ ...this.#config }), // Frozen copy
-      
+
       // Convenience methods
       async executeAITurn(actorId) {
         const startTime = performanceTracker ? Date.now() : null;
-        
+
         const result = await facades.turnExecutionFacade.executeAITurn(
           actorId,
           testEnvironment.context || {}
         );
-        
+
         if (performanceTracker) {
           performanceTracker.recordTurnExecution(Date.now() - startTime);
         }
-        
+
         return result;
       },
-      
+
       async executePlayerTurn(actorId, command) {
         return facades.turnExecutionFacade.executePlayerTurn(actorId, command);
       },
-      
+
       async cleanup() {
         if (testEnvironment.cleanup) {
           await testEnvironment.cleanup();
@@ -296,17 +305,7 @@ export class TurnExecutionTestModule extends ITestModule {
    * @returns {TurnExecutionTestModule} This instance for chaining
    */
   reset() {
-    // Clear configuration to empty state for validation testing
-    this.#config = {
-      llm: {},
-      actors: [],
-      world: {},
-      monitoring: {
-        performance: false,
-        events: [],
-      },
-      facades: {},
-    };
+    this.#applyDefaults();
     return this;
   }
 
@@ -347,18 +346,20 @@ export class TurnExecutionTestModule extends ITestModule {
 
     return {
       recordTurnExecution: (duration) => metrics.turnExecution.push(duration),
-      recordActionDiscovery: (duration) => metrics.actionDiscovery.push(duration),
-      recordEventProcessing: (duration) => metrics.eventProcessing.push(duration),
-      
+      recordActionDiscovery: (duration) =>
+        metrics.actionDiscovery.push(duration),
+      recordEventProcessing: (duration) =>
+        metrics.eventProcessing.push(duration),
+
       getMetrics: () => ({
         turnExecution: this.#calculateStats(metrics.turnExecution),
         actionDiscovery: this.#calculateStats(metrics.actionDiscovery),
         eventProcessing: this.#calculateStats(metrics.eventProcessing),
       }),
-      
+
       checkThresholds: () => {
         const violations = [];
-        
+
         const avgTurnExecution = this.#calculateAverage(metrics.turnExecution);
         if (avgTurnExecution > thresholds.turnExecution) {
           violations.push({
@@ -367,7 +368,7 @@ export class TurnExecutionTestModule extends ITestModule {
             actual: avgTurnExecution,
           });
         }
-        
+
         return violations;
       },
     };
@@ -386,19 +387,19 @@ export class TurnExecutionTestModule extends ITestModule {
 
     // TODO: Hook into event bus to capture events
     // This would require accessing the underlying event bus through facades
-    
+
     return {
       getEvents: (eventType) => {
         if (eventType) {
-          return capturedEvents.filter(e => e.type === eventType);
+          return capturedEvents.filter((e) => e.type === eventType);
         }
         return [...capturedEvents];
       },
-      
+
       clear: () => {
         capturedEvents.length = 0;
       },
-      
+
       // This would be called by event listener
       capture: (event) => {
         if (allowedTypes.has(event.type)) {

@@ -30,7 +30,7 @@ export class TestDataFactory {
         .build(),
 
       new ActionDefinitionBuilder('core:go')
-        .withName('Go')  
+        .withName('Go')
         .withDescription('Move to a different location.')
         .asTargetedAction('core:clear_directions', 'to {target}')
         .asMovementAction()
@@ -49,7 +49,7 @@ export class TestDataFactory {
         .withDescription('Attack a target.')
         .asTargetedAction('core:nearby_actors')
         .asCombatAction()
-        .build()
+        .build(),
     ];
   }
 
@@ -416,16 +416,16 @@ export class TestDataFactory {
         .asTargetedAction('core:other_actors')
         .requiresComponents([
           'core:position',
-          'core:health', 
+          'core:health',
           'core:inventory',
-          'core:movement'
+          'core:movement',
         ])
         .withPrerequisites([
           { condition: 'core:actor-can-move', message: 'Cannot move' },
           { condition: 'core:has-health', message: 'No health' },
-          { condition: 'core:has-inventory', message: 'No inventory' }
+          { condition: 'core:has-inventory', message: 'No inventory' },
         ])
-        .build()
+        .build(),
     ];
   }
 

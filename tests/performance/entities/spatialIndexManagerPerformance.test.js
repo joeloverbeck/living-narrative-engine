@@ -3,13 +3,7 @@
  * @description Tests focused on measuring and validating spatial index performance
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
 // Mock configUtils at the top level
 jest.mock('../../../src/entities/utils/configUtils.js', () => {
@@ -165,8 +159,10 @@ describe('SpatialIndexManager Performance', () => {
     // Mock the config utils to return our mock config
     const configUtils = require('../../../src/entities/utils/configUtils.js');
     configUtils.getGlobalConfig.mockReturnValue(mockConfig);
-    configUtils.getPerformanceSettings.mockReturnValue(mockConfig.getPerformanceSettings());
-    
+    configUtils.getPerformanceSettings.mockReturnValue(
+      mockConfig.getPerformanceSettings()
+    );
+
     mockDependencies.getPerformanceSettings.mockImplementation(() =>
       mockConfig.getPerformanceSettings()
     );
@@ -220,9 +216,13 @@ describe('SpatialIndexManager Performance', () => {
       expect(result.successful).toHaveLength(500);
       expect(result.totalProcessed).toBe(500);
       expect(endTime - startTime).toBeLessThan(2000); // Should complete within 2 seconds
-      
-      console.log(`Added 500 entities to spatial index in ${endTime - startTime}ms`);
-      console.log(`Average time per entity: ${((endTime - startTime) / 500).toFixed(2)}ms`);
+
+      console.log(
+        `Added 500 entities to spatial index in ${endTime - startTime}ms`
+      );
+      console.log(
+        `Average time per entity: ${((endTime - startTime) / 500).toFixed(2)}ms`
+      );
 
       // Verify distribution
       expect(spatialIndexManager.size).toBe(50); // 50 different locations
@@ -240,8 +240,8 @@ describe('SpatialIndexManager Performance', () => {
       await spatialIndexManager.batchAdd(additions);
 
       // Now test removal performance
-      const removals = additions.map(item => item.entityId);
-      
+      const removals = additions.map((item) => item.entityId);
+
       const startTime = performance.now();
       const result = await spatialIndexManager.batchRemove(removals);
       const endTime = performance.now();
@@ -249,8 +249,10 @@ describe('SpatialIndexManager Performance', () => {
       expect(result.successful).toHaveLength(200);
       expect(result.totalProcessed).toBe(200);
       expect(endTime - startTime).toBeLessThan(1000); // Should complete within 1 second
-      
-      console.log(`Removed 200 entities from spatial index in ${endTime - startTime}ms`);
+
+      console.log(
+        `Removed 200 entities from spatial index in ${endTime - startTime}ms`
+      );
 
       // Verify all entities were removed
       expect(spatialIndexManager.size).toBe(0);
@@ -277,22 +279,26 @@ describe('SpatialIndexManager Performance', () => {
 
       // Test mixed operation performance
       const startTime = performance.now();
-      
+
       const addResult = await spatialIndexManager.batchAdd(newAdditions);
       const removeResult = await spatialIndexManager.batchRemove(removals);
-      
+
       const endTime = performance.now();
 
       expect(addResult.successful).toHaveLength(50);
       expect(removeResult.successful).toHaveLength(30);
       expect(endTime - startTime).toBeLessThan(1500); // Should complete within 1.5 seconds
-      
-      console.log(`Mixed operations (50 adds, 30 removes) completed in ${endTime - startTime}ms`);
+
+      console.log(
+        `Mixed operations (50 adds, 30 removes) completed in ${endTime - startTime}ms`
+      );
 
       // Verify final state: 100 initial - 30 removed + 50 new = 120 entities
       let totalEntities = 0;
       for (let i = 0; i < 10; i++) {
-        const entities = spatialIndexManager.getEntitiesInLocation(`location${i}`);
+        const entities = spatialIndexManager.getEntitiesInLocation(
+          `location${i}`
+        );
         totalEntities += entities.size;
       }
       expect(totalEntities).toBe(120);
