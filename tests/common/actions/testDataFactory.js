@@ -3,6 +3,8 @@
  * @description Provides centralized test data creation for action tests
  */
 
+import { ActionDefinitionBuilder } from '../../../src/actions/builders/actionDefinitionBuilder.js';
+
 /**
  * Factory for creating test data used in action system tests
  *
@@ -14,6 +16,43 @@
  * - Edge case and error scenario data
  */
 export class TestDataFactory {
+  /**
+   * Creates action definitions using the builder pattern
+   *
+   * @returns {Array} Array of action definitions created with builders
+   */
+  static createActionsWithBuilder() {
+    return [
+      new ActionDefinitionBuilder('core:wait')
+        .withName('Wait')
+        .withDescription('Wait for a moment, doing nothing.')
+        .asBasicAction()
+        .build(),
+
+      new ActionDefinitionBuilder('core:go')
+        .withName('Go')  
+        .withDescription('Move to a different location.')
+        .asTargetedAction('core:clear_directions', 'to {target}')
+        .asMovementAction()
+        .build(),
+
+      new ActionDefinitionBuilder('core:follow')
+        .withName('Follow')
+        .withDescription('Follow another actor.')
+        .asTargetedAction('core:other_actors')
+        .requiresComponent('core:following')
+        .asMovementAction()
+        .build(),
+
+      new ActionDefinitionBuilder('core:attack')
+        .withName('Attack')
+        .withDescription('Attack a target.')
+        .asTargetedAction('core:nearby_actors')
+        .asCombatAction()
+        .build()
+    ];
+  }
+
   /**
    * Creates basic action definitions for common test scenarios
    *
@@ -355,6 +394,39 @@ export class TestDataFactory {
         },
       },
     };
+  }
+
+  /**
+   * Creates edge case actions using builder for consistency
+   *
+   * @returns {Array} Array of edge case action definitions
+   */
+  static createEdgeCaseActionsWithBuilder() {
+    return [
+      new ActionDefinitionBuilder('test:always-fail')
+        .withName('Always Fail')
+        .withDescription('Action that always fails prerequisites')
+        .asBasicAction()
+        .withPrerequisite('test:always-false', 'This action always fails')
+        .build(),
+
+      new ActionDefinitionBuilder('test:complex-requirements')
+        .withName('Complex Requirements')
+        .withDescription('Action with complex component requirements')
+        .asTargetedAction('core:other_actors')
+        .requiresComponents([
+          'core:position',
+          'core:health', 
+          'core:inventory',
+          'core:movement'
+        ])
+        .withPrerequisites([
+          { condition: 'core:actor-can-move', message: 'Cannot move' },
+          { condition: 'core:has-health', message: 'No health' },
+          { condition: 'core:has-inventory', message: 'No inventory' }
+        ])
+        .build()
+    ];
   }
 
   /**
