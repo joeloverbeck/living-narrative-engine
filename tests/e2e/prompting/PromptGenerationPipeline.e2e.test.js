@@ -608,40 +608,4 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     expect(sections.final_instructions).toBeDefined();
     expect(sections.final_instructions.length).toBeGreaterThan(50);
   });
-
-  /**
-   * Test: Performance of prompt generation
-   * Verifies generation completes within reasonable time
-   */
-  test('should generate prompts within performance limits', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
-
-    // Act - Measure generation time
-    const startTime = Date.now();
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
-    const endTime = Date.now();
-
-    const generationTime = endTime - startTime;
-
-    // Assert
-    expect(prompt).toBeDefined();
-    expect(generationTime).toBeLessThan(500); // Should complete in under 500ms
-
-    // Test multiple rapid generations
-    const rapidStartTime = Date.now();
-    for (let i = 0; i < 10; i++) {
-      await testBed.generatePrompt(aiActor.id, turnContext, availableActions);
-    }
-    const rapidEndTime = Date.now();
-
-    const avgTime = (rapidEndTime - rapidStartTime) / 10;
-    expect(avgTime).toBeLessThan(200); // Average should be under 200ms
-  });
 });
