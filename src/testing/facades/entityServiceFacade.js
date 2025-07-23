@@ -253,6 +253,59 @@ export class EntityServiceFacade {
   }
 
   /**
+   * Creates a generic entity with the specified configuration.
+   * This provides a simplified interface for entity creation with
+   * consistent error handling and test tracking.
+   *
+   * @param {object} config - Configuration for the entity.
+   * @param {string} config.type - The entity type/definition ID.
+   * @param {string} [config.id] - Optional entity ID.
+   * @param {object} [config.initialData] - Initial component data.
+   * @returns {Promise<string>} The created entity ID.
+   */
+  async createEntity(config = {}) {
+    const { type, id, initialData = {} } = config;
+
+    if (!type) {
+      throw new Error('Entity type is required');
+    }
+
+    this.#logger.debug('EntityServiceFacade: Creating entity', {
+      type,
+      id,
+      hasInitialData: Object.keys(initialData).length > 0,
+    });
+
+    try {
+      // Create the entity
+      const entityId = await this.#entityManager.createEntity({
+        definitionId: type,
+        id,
+        components: initialData,
+      });
+
+      // Track for cleanup
+      this.#testEntities.set(entityId, { 
+        type: type.split(':').pop(), // Extract type name from namespaced ID
+        created: Date.now() 
+      });
+
+      this.#logger.debug('EntityServiceFacade: Entity created', {
+        entityId,
+        type,
+      });
+
+      return entityId;
+    } catch (error) {
+      this.#logger.error(
+        'EntityServiceFacade: Error creating entity',
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Gets an entity by ID with validation.
    * This provides a simplified interface for entity retrieval with
    * consistent error handling and logging.
@@ -273,6 +326,35 @@ export class EntityServiceFacade {
       return entity;
     } catch (error) {
       this.#logger.error('EntityServiceFacade: Error getting entity', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Gets a component from an entity.
+   * This provides a simplified interface for component retrieval with
+   * consistent error handling.
+   *
+   * @param {string} entityId - The ID of the entity.
+   * @param {string} componentId - The ID of the component to retrieve.
+   * @returns {Promise<object|null>} The component data or null if not found.
+   */
+  async getComponent(entityId, componentId) {
+    this.#logger.debug('EntityServiceFacade: Getting component', {
+      entityId,
+      componentId,
+    });
+
+    try {
+      const entity = await this.#entityManager.getEntityInstance(entityId);
+      if (!entity) {
+        throw new Error(`Entity not found: ${entityId}`);
+      }
+
+      const component = entity.components?.[componentId];
+      return component || null;
+    } catch (error) {
+      this.#logger.error('EntityServiceFacade: Error getting component', error);
       throw error;
     }
   }
@@ -310,6 +392,66 @@ export class EntityServiceFacade {
         'EntityServiceFacade: Error updating component',
         error
       );
+      throw error;
+    }
+  }
+
+  /**
+   * Deletes an entity by ID.
+   * This provides a simplified interface for entity deletion with
+   * consistent error handling and cleanup tracking.
+   *
+   * @param {string} entityId - The ID of the entity to delete.
+   * @returns {Promise<void>}
+   */
+  async deleteEntity(entityId) {
+    this.#logger.debug('EntityServiceFacade: Deleting entity', { entityId });
+
+    try {
+      await this.#entityManager.removeEntity(entityId);
+      
+      // Remove from tracking
+      this.#testEntities.delete(entityId);
+      
+      this.#logger.debug('EntityServiceFacade: Entity deleted', { entityId });
+    } catch (error) {
+      this.#logger.error('EntityServiceFacade: Error deleting entity', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Queries entities by scope and filter.
+   * This provides a simplified interface for entity queries.
+   *
+   * @param {string} scope - The scope to query (e.g., 'core:actor').
+   * @param {object} [filter] - Optional filter criteria.
+   * @returns {Promise<object[]>} Array of entities matching the query.
+   */
+  async queryEntities(scope, filter = {}) {
+    this.#logger.debug('EntityServiceFacade: Querying entities', {
+      scope,
+      filter,
+    });
+
+    try {
+      // Use scope registry to query entities
+      const scopeInstance = await this.#scopeRegistry.getScope(scope);
+      if (!scopeInstance) {
+        throw new Error(`Scope not found: ${scope}`);
+      }
+
+      // Apply filter if provided
+      const entities = await scopeInstance.query(filter);
+      
+      this.#logger.debug('EntityServiceFacade: Query completed', {
+        scope,
+        resultCount: entities.length,
+      });
+      
+      return entities;
+    } catch (error) {
+      this.#logger.error('EntityServiceFacade: Error querying entities', error);
       throw error;
     }
   }

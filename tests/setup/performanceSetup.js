@@ -33,6 +33,7 @@ global.PERFORMANCE_CONFIG = {
 global.performanceUtils = {
   /**
    * Measures execution time of a function
+   *
    * @param {Function} fn - Function to measure
    * @param {number} iterations - Number of iterations
    * @returns {object} - Performance results
@@ -59,6 +60,7 @@ global.performanceUtils = {
   
   /**
    * Measures memory usage of a function
+   *
    * @param {Function} fn - Function to measure
    * @param {number} iterations - Number of iterations
    * @returns {object} - Memory results
@@ -104,6 +106,7 @@ global.performanceUtils = {
   
   /**
    * Formats performance results for console output
+   *
    * @param {object} results - Performance results
    * @param {string} testName - Name of the test
    */
@@ -121,6 +124,7 @@ global.performanceUtils = {
   
   /**
    * Validates performance against thresholds
+   *
    * @param {object} results - Performance results
    * @param {object} thresholds - Threshold configuration
    * @returns {boolean} - True if performance meets thresholds

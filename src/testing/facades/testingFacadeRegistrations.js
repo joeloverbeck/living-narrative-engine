@@ -3,6 +3,9 @@
  * @description Provides registration functions for testing facade services.
  * These registrations simplify test container setup by providing pre-configured
  * facade instances with all required dependencies.
+ * 
+ * Phase 2 Enhancement: Now also exports test module builders for an even simpler
+ * testing experience with fluent API and preset configurations.
  */
 
 import { tokens } from '../../dependencyInjection/tokens.js';
@@ -10,6 +13,12 @@ import { LLMServiceFacade } from './llmServiceFacade.js';
 import { ActionServiceFacade } from './actionServiceFacade.js';
 import { EntityServiceFacade } from './entityServiceFacade.js';
 import { TurnExecutionFacade } from './turnExecutionFacade.js';
+
+// Import test module builders for re-export
+import { TestModuleBuilder } from '../../../tests/common/builders/testModuleBuilder.js';
+import { TurnExecutionTestModule } from '../../../tests/common/builders/modules/turnExecutionTestModule.js';
+import { ActionProcessingTestModule } from '../../../tests/common/builders/modules/actionProcessingTestModule.js';
+import { TestScenarioPresets } from '../../../tests/common/builders/presets/testScenarioPresets.js';
 
 /**
  * Registers all testing facade services with the dependency injection container.
@@ -311,3 +320,52 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
     },
   };
 }
+
+/**
+ * Creates test modules with integrated facade support.
+ * This provides a more fluent and intuitive API compared to createMockFacades.
+ * 
+ * @param {Function} [mockFn] - Mock function creator (typically jest.fn).
+ * @returns {object} Object containing test module builders.
+ * @example
+ * const { forTurnExecution, scenarios } = createTestModules(jest.fn);
+ * const testEnv = await forTurnExecution()
+ *   .withMockLLM({ strategy: 'tool-calling' })
+ *   .withTestActors(['ai-actor'])
+ *   .build();
+ */
+export function createTestModules(mockFn = () => () => {}) {
+  return {
+    /**
+     * Creates a new TurnExecutionTestModule for complete turn execution testing
+     *
+     * @returns {TurnExecutionTestModule}
+     */
+    forTurnExecution: () => new TurnExecutionTestModule(mockFn),
+    
+    /**
+     * Creates a new ActionProcessingTestModule for action discovery and processing
+     *
+     * @returns {ActionProcessingTestModule}
+     */
+    forActionProcessing: () => new ActionProcessingTestModule(mockFn),
+    
+    /**
+     * Preset scenarios for rapid test creation
+     */
+    scenarios: {
+      combat: () => TestScenarioPresets.combat(),
+      socialInteraction: () => TestScenarioPresets.socialInteraction(),
+      exploration: () => TestScenarioPresets.exploration(),
+      performance: () => TestScenarioPresets.performance(),
+    },
+  };
+}
+
+// Re-export test module classes and utilities for direct access
+export { 
+  TestModuleBuilder,
+  TurnExecutionTestModule,
+  ActionProcessingTestModule,
+  TestScenarioPresets,
+};

@@ -2,16 +2,19 @@
  * @file testConfigurationFactory.js
  * @description Factory for creating test configurations with isolated paths
  *
- * NOTE: For new tests, consider using the facade pattern with createMockFacades()
- * instead of manually creating test configurations. The facade pattern provides
- * a simpler and more maintainable approach.
- * @see tests/e2e/facades/turnExecutionFacadeExample.e2e.test.js
+ * NOTE: For new tests, consider using the test module pattern with TestModuleBuilder
+ * or createTestModules() for the simplest testing experience. The test module pattern
+ * provides a fluent API with presets and intelligent defaults.
+ * 
+ * @see tests/common/builders/testModuleBuilder.js
+ * @see src/testing/facades/testingFacadeRegistrations.js
  */
 
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import { TestPathConfiguration } from './testPathConfiguration.js';
+import { TestModuleBuilder } from './builders/testModuleBuilder.js';
 
 /**
  * @class TestConfigurationFactory
@@ -215,5 +218,77 @@ export class TestConfigurationFactory {
       path.join(pathConfiguration.getConfigDirectory(), 'test_api_key.txt'),
       'test-api-key-12345'
     );
+  }
+
+  /**
+   * Creates a test module for simplified test setup.
+   * This is the recommended approach for new tests.
+   *
+   * @param {string} [moduleType='turnExecution'] - Type of test module to create.
+   * @param {Function} [mockFn] - Mock function creator (typically jest.fn).
+   * @returns {object} A configured test module builder.
+   * @example
+   * const testEnv = await TestConfigurationFactory.createTestModule()
+   *   .withMockLLM({ strategy: 'tool-calling' })
+   *   .withTestActors(['ai-actor'])
+   *   .build();
+   */
+  static createTestModule(moduleType = 'turnExecution', mockFn = null) {
+    switch (moduleType) {
+      case 'turnExecution':
+        return TestModuleBuilder.forTurnExecution();
+      case 'actionProcessing':
+        return TestModuleBuilder.forActionProcessing();
+      case 'entityManagement':
+        return TestModuleBuilder.forEntityManagement();
+      case 'llmTesting':
+        return TestModuleBuilder.forLLMTesting();
+      default:
+        throw new Error(`Unknown test module type: ${moduleType}`);
+    }
+  }
+
+  /**
+   * Creates a test module from a preset scenario.
+   * Provides pre-configured modules for common testing scenarios.
+   *
+   * @param {string} scenario - The scenario name ('combat', 'socialInteraction', 'exploration', 'performance').
+   * @returns {object} A pre-configured test module.
+   * @example
+   * const testEnv = await TestConfigurationFactory.createScenario('combat')
+   *   .withCustomFacades({ // overrides })
+   *   .build();
+   */
+  static createScenario(scenario) {
+    const scenarios = TestModuleBuilder.scenarios;
+    if (!scenarios[scenario]) {
+      throw new Error(`Unknown scenario: ${scenario}. Available: ${Object.keys(scenarios).join(', ')}`);
+    }
+    return scenarios[scenario]();
+  }
+
+  /**
+   * Migrates a legacy test configuration to use the test module pattern.
+   * Helper method for gradually migrating existing tests.
+   *
+   * @param {object} legacyConfig - Legacy test configuration.
+   * @returns {object} A test module configured with the legacy settings.
+   */
+  static migrateToTestModule(legacyConfig) {
+    const module = TestModuleBuilder.forTurnExecution();
+    
+    if (legacyConfig.llmStrategy) {
+      module.withMockLLM({ strategy: legacyConfig.llmStrategy });
+    }
+    
+    if (legacyConfig.actors) {
+      module.withTestActors(legacyConfig.actors);
+    }
+    
+    if (legacyConfig.worldConfig) {
+      module.withWorld(legacyConfig.worldConfig);
+    }
+    
+    return module;
   }
 }
