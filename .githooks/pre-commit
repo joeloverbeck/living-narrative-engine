@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# ActionDefinitionBuilder Quality Gates Pre-Commit Hook
+# This hook runs quality gates for ActionDefinitionBuilder components before commits
+
+echo "🚪 Running ActionDefinitionBuilder Quality Gates..."
+
+# Get list of files being committed
+FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+# Check if any ActionDefinitionBuilder-related files are being committed
+ACTIONBUILDER_FILES=$(echo "$FILES" | grep -E "(src/actions/builders/|tests/.*actions/builders/|tests/performance/actions/)" || true)
+
+if [ -z "$ACTIONBUILDER_FILES" ]; then
+    echo "✅ No ActionDefinitionBuilder files modified, skipping quality gates"
+    exit 0
+fi
+
+echo "📁 ActionDefinitionBuilder files detected:"
+echo "$ACTIONBUILDER_FILES" | sed 's/^/  /'
+
+# Run linting
+echo ""
+echo "🔍 Running ESLint..."
+if ! npm run lint --silent; then
+    echo "❌ ESLint failed. Please fix linting errors before committing."
+    exit 1
+fi
+
+# Run TypeScript checks
+echo ""
+echo "🔧 Running TypeScript checks..."
+if ! npm run typecheck --silent; then
+    echo "❌ TypeScript check failed. Please fix type errors before committing."
+    exit 1
+fi
+
+# Run ActionDefinitionBuilder-specific tests
+echo ""
+echo "🧪 Running ActionDefinitionBuilder tests..."
+if ! npm run test:actionbuilder --silent; then
+    echo "❌ ActionDefinitionBuilder tests failed. Please fix failing tests before committing."
+    exit 1
+fi
+
+# Run quality gates
+echo ""
+echo "🚪 Running quality gates validation..."
+if ! npm run quality:gates --silent; then
+    echo "❌ Quality gates failed. Please address the issues above before committing."
+    echo ""
+    echo "💡 Tips:"
+    echo "  - Ensure test coverage meets minimum thresholds (95%+ for builders)"
+    echo "  - Check that performance benchmarks are within limits"
+    echo "  - Review code complexity and consider refactoring if needed"
+    echo "  - Run 'npm run quality:actionbuilder' locally to see detailed results"
+    exit 1
+fi
+
+echo ""
+echo "🎉 All quality gates passed! Proceeding with commit."
+exit 0

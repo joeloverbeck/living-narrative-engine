@@ -1,0 +1,372 @@
+/**
+ * @file Integration tests for ActionDefinitionBuilder
+ * @description Tests compatibility with existing systems, performance, and integration scenarios
+ */
+
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { ActionDefinitionBuilder } from '../../../src/actions/builders/actionDefinitionBuilder.js';
+import { TestDataFactory } from '../../common/actions/testDataFactory.js';
+import { createTestAction, validateActionStructure, actionMatchers } from '../../common/actions/actionBuilderHelpers.js';
+
+// Add custom matchers
+expect.extend(actionMatchers);
+
+describe('ActionDefinitionBuilder Integration', () => {
+  describe('compatibility with existing system', () => {
+    it('should create definitions with equivalent functionality to manual definitions', () => {
+      const builderActions = TestDataFactory.createActionsWithBuilder();
+      const manualActions = TestDataFactory.createBasicActions();
+
+      expect(builderActions).toHaveLength(4);
+      expect(manualActions).toHaveLength(4);
+
+      // Check that all actions have the same core structure and content
+      builderActions.forEach((builderAction, index) => {
+        const manualAction = manualActions[index];
+        
+        // Compare all required fields
+        expect(builderAction.id).toBe(manualAction.id);
+        expect(builderAction.name).toBe(manualAction.name);
+        expect(builderAction.description).toBe(manualAction.description);
+        expect(builderAction.scope).toBe(manualAction.scope);
+        expect(builderAction.template).toBe(manualAction.template);
+        expect(builderAction.required_components).toEqual(manualAction.required_components);
+        
+        // Prerequisites may have different formats but same functional content
+        // Builder uses objects with failure messages, manual uses strings
+        expect(builderAction.prerequisites).toHaveLength(manualAction.prerequisites.length);
+        
+        // For detailed prerequisite comparison, extract condition references
+        const builderConditions = builderAction.prerequisites.map(p => 
+          typeof p === 'string' ? p : p.logic?.condition_ref
+        );
+        const manualConditions = manualAction.prerequisites.map(p => 
+          typeof p === 'string' ? p : p.logic?.condition_ref
+        );
+        
+        expect(builderConditions).toEqual(manualConditions);
+      });
+    });
+
+    it('should create edge case definitions compatible with manual versions', () => {
+      const builderEdgeCases = TestDataFactory.createEdgeCaseActionsWithBuilder();
+      const manualEdgeCases = TestDataFactory.createEdgeCaseActions();
+
+      expect(builderEdgeCases).toHaveLength(2);
+
+      // Test the always-fail action
+      const builderAlwaysFail = builderEdgeCases.find(action => action.id === 'test:always-fail');
+      const manualAlwaysFail = manualEdgeCases.find(action => action.id === 'test:always-fail');
+      
+      expect(builderAlwaysFail).toBeDefined();
+      expect(manualAlwaysFail).toBeDefined();
+      expect(builderAlwaysFail.prerequisites).toEqual([
+        { logic: { condition_ref: 'test:always-false' }, failure_message: 'This action always fails' }
+      ]);
+
+      // Test the complex requirements action
+      const builderComplex = builderEdgeCases.find(action => action.id === 'test:complex-requirements');
+      const manualComplex = manualEdgeCases.find(action => action.id === 'test:complex-requirements');
+      
+      expect(builderComplex).toBeDefined();
+      expect(manualComplex).toBeDefined();
+      expect(builderComplex.required_components.actor).toHaveLength(4);
+      expect(builderComplex.prerequisites).toHaveLength(3);
+    });
+
+    it('should work with custom matchers', () => {
+      const action = createTestAction('test:matcher-test');
+      
+      expect(action).toBeValidActionDefinition();
+      
+      const movementAction = new ActionDefinitionBuilder('test:movement')
+        .withName('Movement Test')
+        .withDescription('Test movement')
+        .asMovementAction()
+        .asBasicAction()
+        .build();
+      
+      expect(movementAction).toRequireComponent('core:position');
+      expect(movementAction).toHavePrerequisite('core:actor-can-move');
+    });
+  });
+
+  describe('structure validation', () => {
+    it('should create structurally valid definitions', () => {
+      const action = new ActionDefinitionBuilder('test:structural')
+        .withName('Structural Test')
+        .withDescription('Testing structure')
+        .asTargetedAction('test:scope', 'perform {target}')
+        .requiresComponent('test:component')
+        .withPrerequisite('test:condition', 'Failure message')
+        .build();
+
+      expect(validateActionStructure(action)).toBe(true);
+      expect(action).toHaveProperty('id', 'test:structural');
+      expect(action).toHaveProperty('name', 'Structural Test');
+      expect(action).toHaveProperty('description', 'Testing structure');
+      expect(action).toHaveProperty('scope', 'test:scope');
+      expect(action).toHaveProperty('template', 'structural test perform {target}');
+      expect(action).toHaveProperty('prerequisites');
+      expect(action).toHaveProperty('required_components.actor');
+      
+      expect(Array.isArray(action.prerequisites)).toBe(true);
+      expect(Array.isArray(action.required_components.actor)).toBe(true);
+    });
+
+    it('should handle complex nested structures', () => {
+      const complexAction = new ActionDefinitionBuilder('test:complex-structure')
+        .withName('Complex Structure')
+        .withDescription('Testing complex structures')
+        .asTargetedAction('test:targets')
+        .requiresComponents(['test:comp1', 'test:comp2', 'test:comp3'])
+        .withPrerequisites([
+          'test:simple-condition',
+          { condition: 'test:complex-condition', message: 'Complex message' },
+          'test:another-condition'
+        ])
+        .build();
+
+      expect(validateActionStructure(complexAction)).toBe(true);
+      expect(complexAction.required_components.actor).toHaveLength(3);
+      expect(complexAction.prerequisites).toHaveLength(3);
+      
+      // Check prerequisite structure
+      expect(complexAction.prerequisites[0]).toBe('test:simple-condition');
+      expect(complexAction.prerequisites[1]).toEqual({
+        logic: { condition_ref: 'test:complex-condition' },
+        failure_message: 'Complex message'
+      });
+      expect(complexAction.prerequisites[2]).toBe('test:another-condition');
+    });
+  });
+
+  describe('performance benchmarks', () => {
+    it('should handle bulk creation efficiently', () => {
+      const startTime = performance.now();
+      
+      const actions = Array.from({ length: 1000 }, (_, i) => 
+        new ActionDefinitionBuilder(`test:action${i}`)
+          .withName(`Action ${i}`)
+          .withDescription(`Test action ${i}`)
+          .asBasicAction()
+          .build()
+      );
+      
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      
+      expect(actions).toHaveLength(1000);
+      expect(duration).toBeLessThan(100); // Should be less than 100ms
+      
+      // Verify all actions are valid
+      actions.forEach(action => {
+        expect(validateActionStructure(action)).toBe(true);
+        expect(action.id).toMatch(/^test:action\d+$/);
+      });
+    });
+
+    it('should create individual actions quickly', () => {
+      const iterations = 100;
+      const times = [];
+      
+      for (let i = 0; i < iterations; i++) {
+        const startTime = performance.now();
+        
+        new ActionDefinitionBuilder(`test:perf${i}`)
+          .withName(`Performance Test ${i}`)
+          .withDescription(`Performance test action ${i}`)
+          .asTargetedAction('test:scope')
+          .requiresComponent('test:component')
+          .withPrerequisite('test:condition')
+          .build();
+        
+        const endTime = performance.now();
+        times.push(endTime - startTime);
+      }
+      
+      const avgTime = times.reduce((sum, time) => sum + time, 0) / times.length;
+      expect(avgTime).toBeLessThan(0.1); // Less than 0.1ms per action on average
+    });
+
+    it('should have minimal memory overhead', () => {
+      if (typeof process !== 'undefined' && process.memoryUsage) {
+        const initialMemory = process.memoryUsage().heapUsed;
+        
+        const actions = Array.from({ length: 1000 }, (_, i) =>
+          new ActionDefinitionBuilder(`test:memory${i}`)
+            .withName(`Memory Test ${i}`)
+            .withDescription(`Memory test action ${i}`)
+            .asBasicAction()
+            .build()
+        );
+        
+        const finalMemory = process.memoryUsage().heapUsed;
+        const memoryPerAction = (finalMemory - initialMemory) / 1000;
+        
+        expect(memoryPerAction).toBeLessThan(2048); // Less than 2KB per action
+        expect(actions).toHaveLength(1000);
+      } else {
+        // Skip memory test in browser environment
+        expect(true).toBe(true);
+      }
+    });
+  });
+
+  describe('builder pattern validation', () => {
+    it('should maintain fluent interface throughout complex chains', () => {
+      const builder = new ActionDefinitionBuilder('test:fluent');
+      
+      // Each method should return the builder for chaining
+      const result = builder
+        .withName('Fluent Test')
+        .withDescription('Testing fluent interface')
+        .withScope('test:scope')
+        .withTemplate('fluent {target}')
+        .requiresComponent('test:comp1')
+        .requiresComponent('test:comp2')
+        .withPrerequisite('test:cond1')
+        .withPrerequisite('test:cond2', 'Custom message')
+        .asMovementAction()
+        .build();
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe('test:fluent');
+      expect(result.required_components.actor).toContain('test:comp1');
+      expect(result.required_components.actor).toContain('test:comp2');
+      expect(result.required_components.actor).toContain('core:position');
+      expect(result.prerequisites).toHaveLength(3); // 2 custom + 1 from asMovementAction
+    });
+
+    it('should handle fromDefinition recreate cycle', () => {
+      const original = new ActionDefinitionBuilder('test:cycle')
+        .withName('Cycle Test')
+        .withDescription('Testing recreation cycle')
+        .asTargetedAction('test:targets')
+        .requiresComponents(['test:comp1', 'test:comp2'])
+        .withPrerequisites([
+          'test:cond1',
+          { condition: 'test:cond2', message: 'Message' }
+        ])
+        .build();
+
+      const recreatedBuilder = ActionDefinitionBuilder.fromDefinition(original);
+      const recreated = recreatedBuilder.build();
+
+      // Should be identical
+      expect(recreated).toEqual(original);
+      expect(validateActionStructure(recreated)).toBe(true);
+    });
+  });
+
+  describe('convenience method combinations', () => {
+    it('should properly combine asBasicAction with other methods', () => {
+      const action = new ActionDefinitionBuilder('test:basic-combo')
+        .withName('Basic Combo')
+        .withDescription('Testing basic action combination')
+        .asBasicAction()
+        .requiresComponent('extra:component')
+        .withPrerequisite('extra:condition')
+        .build();
+
+      expect(action.scope).toBe('none');
+      expect(action.template).toBe('basic combo');
+      expect(action.required_components.actor).toContain('extra:component');
+      expect(action.prerequisites).toContain('extra:condition');
+    });
+
+    it('should properly combine asTargetedAction with convenience methods', () => {
+      const action = new ActionDefinitionBuilder('test:targeted-combo')
+        .withName('Targeted Combo')
+        .withDescription('Testing targeted action combination')
+        .asTargetedAction('test:scope', 'perform on {target}')
+        .asCombatAction()
+        .requiresComponent('extra:component')
+        .build();
+
+      expect(action.scope).toBe('test:scope');
+      expect(action.template).toBe('targeted combo perform on {target}');
+      expect(action.required_components.actor).toContain('core:position');
+      expect(action.required_components.actor).toContain('core:health');
+      expect(action.required_components.actor).toContain('extra:component');
+      expect(action.prerequisites).toHaveLength(2); // from asCombatAction
+    });
+
+    it('should handle movement and combat action combinations', () => {
+      const action = new ActionDefinitionBuilder('test:movement-combat')
+        .withName('Movement Combat')
+        .withDescription('Testing movement and combat combination')
+        .asTargetedAction('test:enemies')
+        .asMovementAction()
+        .asCombatAction()
+        .build();
+
+      // Should have both movement and combat requirements
+      expect(action.required_components.actor).toContain('core:position');
+      expect(action.required_components.actor).toContain('core:health');
+      
+      // Should have all prerequisites (may be objects with failure messages)
+      const allConditionRefs = action.prerequisites.map(p => 
+        typeof p === 'string' ? p : p.logic?.condition_ref
+      );
+      
+      expect(allConditionRefs).toContain('core:actor-can-move');
+      expect(allConditionRefs).toContain('core:has-health');
+    });
+  });
+
+  describe('error handling and edge cases', () => {
+    it('should handle empty component arrays gracefully', () => {
+      const action = new ActionDefinitionBuilder('test:empty-arrays')
+        .withName('Empty Arrays')
+        .withDescription('Testing empty arrays')
+        .asBasicAction()
+        .requiresComponents([])
+        .withPrerequisites([])
+        .build();
+
+      expect(action.required_components.actor).toEqual([]);
+      expect(action.prerequisites).toEqual([]);
+      expect(validateActionStructure(action)).toBe(true);
+    });
+
+    it('should deduplicate component requirements', () => {
+      const action = new ActionDefinitionBuilder('test:deduplication')
+        .withName('Deduplication Test')
+        .withDescription('Testing component deduplication')
+        .asBasicAction()
+        .requiresComponent('test:component')
+        .requiresComponent('test:component') // Duplicate
+        .requiresComponents(['test:component', 'test:other']) // Partial duplicate
+        .build();
+
+      expect(action.required_components.actor).toEqual(['test:component', 'test:other']);
+    });
+
+    it('should handle various prerequisite formats consistently', () => {
+      const action = new ActionDefinitionBuilder('test:prereq-formats')
+        .withName('Prerequisite Formats')
+        .withDescription('Testing prerequisite format handling')
+        .asBasicAction()
+        .withPrerequisite('test:simple-string')
+        .withPrerequisite('test:with-message', 'Custom failure message')
+        .withPrerequisites([
+          'test:another-string',
+          { condition: 'test:object-format', message: 'Object message' }
+        ])
+        .build();
+
+      expect(action.prerequisites).toHaveLength(4);
+      expect(action.prerequisites[0]).toBe('test:simple-string');
+      expect(action.prerequisites[1]).toEqual({
+        logic: { condition_ref: 'test:with-message' },
+        failure_message: 'Custom failure message'
+      });
+      expect(action.prerequisites[2]).toBe('test:another-string');
+      expect(action.prerequisites[3]).toEqual({
+        logic: { condition_ref: 'test:object-format' },
+        failure_message: 'Object message'
+      });
+    });
+  });
+});
