@@ -384,14 +384,22 @@ export class TestConfigurationValidator {
     // For LLM configs, ensure they have consistent structure
     if (configType === 'llm') {
       const firstConfig = configs[0];
-      const requiredFields = ['configId', 'displayName', 'apiKeyEnvVar', 'endpointUrl'];
+      const requiredFields = [
+        'configId',
+        'displayName',
+        'apiKeyEnvVar',
+        'endpointUrl',
+      ];
 
       for (let i = 1; i < configs.length; i++) {
         const config = configs[i];
-        
+
         // Check that all configs have the same required fields
         for (const field of requiredFields) {
-          if ((firstConfig[field] === undefined) !== (config[field] === undefined)) {
+          if (
+            (firstConfig[field] === undefined) !==
+            (config[field] === undefined)
+          ) {
             throw new Error(
               `Configuration inconsistency: field '${field}' present in some configs but not others`
             );
@@ -420,7 +428,11 @@ export class TestConfigurationValidator {
    * @throws {Error} If configurations are functionally different
    * @returns {boolean} True if functionally equivalent
    */
-  static validateMigrationEquivalence(originalConfig, migratedConfig, configId) {
+  static validateMigrationEquivalence(
+    originalConfig,
+    migratedConfig,
+    configId
+  ) {
     if (!originalConfig || !migratedConfig) {
       throw new Error('Both original and migrated configs must be provided');
     }
@@ -439,37 +451,43 @@ export class TestConfigurationValidator {
       if (originalConfig[field] !== migratedConfig[field]) {
         throw new Error(
           `Migration validation failed for ${configId}: ${field} differs. ` +
-          `Original: ${originalConfig[field]}, Migrated: ${migratedConfig[field]}`
+            `Original: ${originalConfig[field]}, Migrated: ${migratedConfig[field]}`
         );
       }
     }
 
     // Validate JSON output strategy structure
-    if (originalConfig.jsonOutputStrategy && migratedConfig.jsonOutputStrategy) {
+    if (
+      originalConfig.jsonOutputStrategy &&
+      migratedConfig.jsonOutputStrategy
+    ) {
       const origStrategy = originalConfig.jsonOutputStrategy;
       const migStrategy = migratedConfig.jsonOutputStrategy;
 
       if (origStrategy.method !== migStrategy.method) {
         throw new Error(
           `Migration validation failed for ${configId}: jsonOutputStrategy.method differs. ` +
-          `Original: ${origStrategy.method}, Migrated: ${migStrategy.method}`
+            `Original: ${origStrategy.method}, Migrated: ${migStrategy.method}`
         );
       }
 
       if (origStrategy.toolName !== migStrategy.toolName) {
         throw new Error(
           `Migration validation failed for ${configId}: jsonOutputStrategy.toolName differs. ` +
-          `Original: ${origStrategy.toolName}, Migrated: ${migStrategy.toolName}`
+            `Original: ${origStrategy.toolName}, Migrated: ${migStrategy.toolName}`
         );
       }
     }
 
     // Validate prompt elements length (structure can differ slightly)
     if (originalConfig.promptElements && migratedConfig.promptElements) {
-      if (originalConfig.promptElements.length !== migratedConfig.promptElements.length) {
+      if (
+        originalConfig.promptElements.length !==
+        migratedConfig.promptElements.length
+      ) {
         throw new Error(
           `Migration validation failed for ${configId}: promptElements length differs. ` +
-          `Original: ${originalConfig.promptElements.length}, Migrated: ${migratedConfig.promptElements.length}`
+            `Original: ${originalConfig.promptElements.length}, Migrated: ${migratedConfig.promptElements.length}`
         );
       }
     }

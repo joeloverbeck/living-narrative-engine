@@ -67,7 +67,7 @@ export class TestDataFactory {
         scope: 'none',
         template: 'wait',
         prerequisites: [],
-        required_components: {},
+        required_components: { actor: [] },
       },
       {
         id: 'core:go',
@@ -78,12 +78,12 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:actor-can-move'
+              condition_ref: 'core:actor-can-move',
             },
-            failure_message: 'You cannot move without functioning legs.'
-          }
+            failure_message: 'You cannot move without functioning legs.',
+          },
         ],
-        required_components: {},
+        required_components: { actor: ['core:position'] },
       },
       {
         id: 'core:follow',
@@ -94,12 +94,12 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:actor-can-move'
+              condition_ref: 'core:actor-can-move',
             },
-            failure_message: 'You cannot move without functioning legs.'
-          }
+            failure_message: 'You cannot move without functioning legs.',
+          },
         ],
-        required_components: {},
+        required_components: { actor: ['core:following', 'core:position'] },
       },
       {
         id: 'core:attack',
@@ -110,18 +110,18 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:actor-can-move'
+              condition_ref: 'core:actor-can-move',
             },
-            failure_message: 'You cannot move without functioning legs.'
+            failure_message: 'You cannot move without functioning legs.',
           },
           {
             logic: {
-              condition_ref: 'core:has-health'
+              condition_ref: 'core:has-health',
             },
-            failure_message: 'You need health to attack.'
-          }
+            failure_message: 'You need health to attack.',
+          },
         ],
-        required_components: {},
+        required_components: { actor: ['core:position', 'core:health'] },
       },
     ];
   }
@@ -141,7 +141,7 @@ export class TestDataFactory {
         scope: 'core:examinable_objects',
         template: 'examine {target}',
         prerequisites: [],
-        required_components: {},
+        required_components: { actor: [] },
       },
       {
         id: 'core:take',
@@ -152,12 +152,12 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:actor-can-move'
+              condition_ref: 'core:actor-can-move',
             },
-            failure_message: 'You cannot move without functioning legs.'
-          }
+            failure_message: 'You cannot move without functioning legs.',
+          },
         ],
-        required_components: {},
+        required_components: { actor: [] },
       },
       {
         id: 'core:use',
@@ -166,7 +166,7 @@ export class TestDataFactory {
         scope: 'core:inventory_items',
         template: 'use {target}',
         prerequisites: [],
-        required_components: {},
+        required_components: { actor: [] },
       },
     ];
   }
@@ -183,7 +183,7 @@ export class TestDataFactory {
         description:
           'Checks if the actor has functioning legs capable of movement',
         logic: {
-          '==': [{ var: 'actor.components.core:movement.locked' }, false]
+          '==': [{ var: 'actor.components.core:movement.locked' }, false],
         },
       },
       {
@@ -465,10 +465,10 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'test:always-false'
+              condition_ref: 'test:always-false',
             },
-            failure_message: 'This action always fails'
-          }
+            failure_message: 'This action always fails',
+          },
         ],
         required_components: {},
       },
@@ -490,10 +490,10 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'test:does-not-exist'
+              condition_ref: 'test:does-not-exist',
             },
-            failure_message: 'Missing prerequisite'
-          }
+            failure_message: 'Missing prerequisite',
+          },
         ],
         required_components: {},
       },
@@ -506,22 +506,22 @@ export class TestDataFactory {
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:actor-can-move'
+              condition_ref: 'core:actor-can-move',
             },
-            failure_message: 'Cannot move'
+            failure_message: 'Cannot move',
           },
           {
             logic: {
-              condition_ref: 'core:has-health'
+              condition_ref: 'core:has-health',
             },
-            failure_message: 'No health'
+            failure_message: 'No health',
           },
           {
             logic: {
-              condition_ref: 'core:has-inventory'
+              condition_ref: 'core:has-inventory',
             },
-            failure_message: 'No inventory'
-          }
+            failure_message: 'No inventory',
+          },
         ],
         required_components: {},
       },

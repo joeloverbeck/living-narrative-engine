@@ -120,6 +120,7 @@ Uses request schema or falls back to default
 - [ ] Modify `getAIDecision` method in `src/turns/adapters/configurableLLMAdapter.js`
 - [ ] Accept optional `requestOptions` parameter
 - [ ] Add request options validation:
+
   ```javascript
   #validateRequestOptions(requestOptions) {
     if (!requestOptions) return; // Optional parameter
@@ -137,6 +138,7 @@ Uses request schema or falls back to default
     }
   }
   ```
+
 - [ ] Pass request options to request executor
 - [ ] Add comprehensive logging for request options usage
 - [ ] Update method implementation:
@@ -485,6 +487,7 @@ Uses request schema or falls back to default
 
 - [ ] Create/update `tests/unit/turns/adapters/configurableLLMAdapter.test.js`
 - [ ] Test with request options containing custom schema:
+
   ```javascript
   describe('ConfigurableLLMAdapter - Request Options', () => {
     it('should accept and use custom request options', async () => {
@@ -507,6 +510,7 @@ Uses request schema or falls back to default
     });
   });
   ```
+
 - [ ] Test without request options (backward compatibility)
 - [ ] Test request options validation and error handling
 - [ ] Test request options propagation to executor

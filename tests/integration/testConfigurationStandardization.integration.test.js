@@ -317,7 +317,9 @@ describe('Test Configuration Standardization Integration', () => {
 
       expect(testEnv.config.llm).toBeDefined();
       expect(testEnv.config.llm.strategy).toBe('tool-calling');
-      expect(testEnv.config.llm.llmConfig.configId).toBe('test-llm-toolcalling');
+      expect(testEnv.config.llm.llmConfig.configId).toBe(
+        'test-llm-toolcalling'
+      );
     });
 
     it('should apply environment preset', async () => {

@@ -198,6 +198,7 @@ export function createEvaluationContext(
       }
     );
   }
+  
 
   return { entity, actor, location };
 }

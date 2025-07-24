@@ -1051,25 +1051,29 @@ export class FullTurnExecutionTestBed {
     const mockLlmConfig = {
       defaultConfigId: 'test-llm-toolcalling',
       configs: {
-        'test-llm-toolcalling': TestConfigurationFactory.createLLMConfig('tool-calling'),
-        'test-llm-jsonschema': TestConfigurationFactory.createLLMConfig('json-schema', {
-          // Override to match original method name for compatibility
-          jsonOutputStrategy: {
-            method: 'openrouter_json_schema',
-            jsonSchema: {
-              name: 'turn_action_response',
-              schema: {
-                type: 'object',
-                properties: {
-                  chosenIndex: { type: 'number' },
-                  speech: { type: 'string' },
-                  thoughts: { type: 'string' },
+        'test-llm-toolcalling':
+          TestConfigurationFactory.createLLMConfig('tool-calling'),
+        'test-llm-jsonschema': TestConfigurationFactory.createLLMConfig(
+          'json-schema',
+          {
+            // Override to match original method name for compatibility
+            jsonOutputStrategy: {
+              method: 'openrouter_json_schema',
+              jsonSchema: {
+                name: 'turn_action_response',
+                schema: {
+                  type: 'object',
+                  properties: {
+                    chosenIndex: { type: 'number' },
+                    speech: { type: 'string' },
+                    thoughts: { type: 'string' },
+                  },
+                  required: ['chosenIndex', 'speech', 'thoughts'],
                 },
-                required: ['chosenIndex', 'speech', 'thoughts'],
               },
             },
-          },
-        }),
+          }
+        ),
       },
     };
 

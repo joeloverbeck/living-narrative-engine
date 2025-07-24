@@ -335,7 +335,11 @@ export class LLMTestingModule extends ITestModule {
     }
 
     // Apply mock responses if available
-    if (config.mocks && config.mocks.llmAdapter && config.mocks.llmAdapter.responses) {
+    if (
+      config.mocks &&
+      config.mocks.llmAdapter &&
+      config.mocks.llmAdapter.responses
+    ) {
       this.#config.mockResponses = {
         ...this.#config.mockResponses,
         default: config.mocks.llmAdapter.responses,

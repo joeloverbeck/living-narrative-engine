@@ -38,12 +38,12 @@ export class TestConfigurationFactory {
     if (!config) {
       throw new Error(`Unknown LLM strategy: ${strategy}`);
     }
-    
+
     const mergedConfig = this.#mergeDeep(config, overrides);
-    
+
     // Validate the final configuration
     TestConfigurationValidator.validateLLMConfig(mergedConfig);
-    
+
     return mergedConfig;
   }
 
@@ -428,10 +428,10 @@ export class TestConfigurationFactory {
     }
 
     const mergedConfig = this.#mergeDeep(baseConfig, overrides);
-    
+
     // Validate the final environment configuration
     TestConfigurationValidator.validateTestEnvironment(mergedConfig, type);
-    
+
     return mergedConfig;
   }
 

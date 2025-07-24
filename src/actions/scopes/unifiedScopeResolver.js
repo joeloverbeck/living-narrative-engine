@@ -245,10 +245,17 @@ export class UnifiedScopeResolver {
         results.set(scopeName, result.value);
       } else {
         errors.push(
-          ...result.errors.map((err) => ({
-            ...err,
-            scopeName, // Add scope context to errors
-          }))
+          ...result.errors.map((err) => {
+            // Create a new object that preserves error properties
+            const errorWithScope = {
+              ...err,
+              message: err.message,
+              name: err.name,
+              stack: err.stack,
+              scopeName: scopeName,
+            };
+            return errorWithScope;
+          })
         );
       }
     }
@@ -332,6 +339,14 @@ export class UnifiedScopeResolver {
         return ActionResult.success(new Set());
 
       case TARGET_DOMAIN_SELF:
+        // Still need to build actor with components to trigger trace warnings
+        const actorResult = this.#buildActorWithComponents(
+          context.actor,
+          context
+        );
+        if (!actorResult.success) {
+          return actorResult;
+        }
         return ActionResult.success(new Set([context.actor.id]));
 
       default:
@@ -498,6 +513,17 @@ export class UnifiedScopeResolver {
         return ActionResult.success(actorWithComponents);
       }
 
+      // Also warn if componentTypeIds is explicitly an empty array
+      if (
+        Array.isArray(actorEntity.componentTypeIds) &&
+        actorEntity.componentTypeIds.length === 0
+      ) {
+        context.trace?.warn(
+          `Actor entity ${actorEntity.id} has no components.`,
+          source
+        );
+      }
+
       // Build components
       const components = {};
       const componentErrors = [];
@@ -623,6 +649,8 @@ export class UnifiedScopeResolver {
     phase,
     additionalContext = {}
   ) {
+    const suggestions = this.#generateFixSuggestions(error, scopeName);
+
     const errorContext = this.#actionErrorContextBuilder.buildErrorContext({
       error: error,
       actionDef: context?.actionId ? { id: context.actionId } : null,
@@ -632,7 +660,7 @@ export class UnifiedScopeResolver {
       additionalContext: {
         scopeName: scopeName,
         actorLocation: context?.actorLocation,
-        suggestions: this.#generateFixSuggestions(error, scopeName),
+        suggestions: suggestions,
         ...additionalContext,
       },
     });
@@ -645,6 +673,11 @@ export class UnifiedScopeResolver {
 
     // Attach the error context properties
     Object.assign(enhancedError, errorContext);
+
+    // Ensure key properties are directly accessible for test compatibility
+    enhancedError.scopeName = scopeName;
+    enhancedError.suggestions = suggestions;
+    enhancedError.phase = phase;
 
     return enhancedError;
   }

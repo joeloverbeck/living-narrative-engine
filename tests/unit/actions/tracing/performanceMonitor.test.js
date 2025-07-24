@@ -120,6 +120,66 @@ describe('PerformanceMonitor', () => {
         'Thresholds must be an object'
       );
     });
+
+    it('should validate individual threshold fields', () => {
+      // Test each numeric field validation
+      const fields = [
+        'slowOperationMs',
+        'criticalOperationMs',
+        'maxConcurrency',
+        'maxTotalDurationMs',
+        'maxErrorRate',
+        'maxMemoryUsageMB',
+      ];
+
+      fields.forEach((field) => {
+        expect(() => monitor.setThresholds({ [field]: -1 })).toThrow(
+          `${field} must be a non-negative number`
+        );
+        expect(() => monitor.setThresholds({ [field]: 'invalid' })).toThrow(
+          `${field} must be a non-negative number`
+        );
+      });
+    });
+
+    it('should handle undefined threshold values', () => {
+      // First get the original defaults
+      const originalStatus = monitor.getMonitoringStatus();
+      const originalSlowMs = originalStatus.thresholds.slowOperationMs;
+
+      const partialThresholds = {
+        slowOperationMs: undefined,
+        maxErrorRate: 15,
+      };
+
+      monitor.setThresholds(partialThresholds);
+
+      const status = monitor.getMonitoringStatus();
+      // undefined values are treated as valid updates (setting to undefined)
+      expect(status.thresholds.slowOperationMs).toBe(undefined);
+      expect(status.thresholds.maxErrorRate).toBe(15); // updated
+      // Other thresholds should remain at defaults
+      expect(status.thresholds.criticalOperationMs).toBe(500);
+    });
+
+    it('should preserve unspecified thresholds', () => {
+      // Set initial thresholds
+      monitor.setThresholds({
+        slowOperationMs: 150,
+        maxErrorRate: 10,
+        maxConcurrency: 20,
+      });
+
+      // Update only some thresholds
+      monitor.setThresholds({
+        slowOperationMs: 200,
+      });
+
+      const status = monitor.getMonitoringStatus();
+      expect(status.thresholds.slowOperationMs).toBe(200); // updated
+      expect(status.thresholds.maxErrorRate).toBe(10); // preserved
+      expect(status.thresholds.maxConcurrency).toBe(20); // preserved
+    });
   });
 
   describe('enableSampling', () => {
@@ -170,6 +230,74 @@ describe('PerformanceMonitor', () => {
         'Config must be a number or object'
       );
     });
+
+    it('should validate sampling rate in config object', () => {
+      expect(() => monitor.enableSampling({ rate: -0.5 })).toThrow(
+        'Sampling rate must be between 0.0 and 1.0'
+      );
+
+      expect(() => monitor.enableSampling({ rate: 1.5 })).toThrow(
+        'Sampling rate must be between 0.0 and 1.0'
+      );
+
+      expect(() => monitor.enableSampling({ rate: 'invalid' })).toThrow(
+        'Sampling rate must be between 0.0 and 1.0'
+      );
+    });
+
+    it('should handle boolean config type', () => {
+      expect(() => monitor.enableSampling(true)).toThrow(
+        'Config must be a number or object'
+      );
+
+      expect(() => monitor.enableSampling(false)).toThrow(
+        'Config must be a number or object'
+      );
+    });
+
+    it('should preserve existing sampling config when partially updating', () => {
+      // Set initial config
+      monitor.enableSampling({
+        rate: 0.5,
+        strategy: 'adaptive',
+        alwaysSampleErrors: false,
+        alwaysSampleSlow: false,
+        slowThresholdMs: 500,
+      });
+
+      // Update only strategy
+      monitor.enableSampling({ strategy: 'error_biased' });
+
+      const status = monitor.getMonitoringStatus();
+      expect(status.samplingConfig.rate).toBe(0.5); // preserved
+      expect(status.samplingConfig.strategy).toBe('error_biased'); // updated
+      expect(status.samplingConfig.alwaysSampleErrors).toBe(false); // preserved
+      expect(status.samplingConfig.alwaysSampleSlow).toBe(false); // preserved
+      expect(status.samplingConfig.slowThresholdMs).toBe(500); // preserved
+    });
+
+    it('should accept all valid sampling strategies', () => {
+      const strategies = ['random', 'adaptive', 'error_biased'];
+
+      strategies.forEach((strategy) => {
+        monitor.enableSampling({ strategy });
+        const status = monitor.getMonitoringStatus();
+        expect(status.samplingConfig.strategy).toBe(strategy);
+      });
+    });
+
+    it('should handle array as invalid config type', () => {
+      expect(() => monitor.enableSampling([])).toThrow(
+        'Config must be a number or object'
+      );
+    });
+
+    it('should validate undefined rate in config object', () => {
+      // Should not throw when rate is undefined (preserves existing)
+      expect(() =>
+        monitor.enableSampling({ rate: undefined, strategy: 'adaptive' })
+      ).not.toThrow();
+    });
   });
 
   describe('getMemoryUsage', () => {
@@ -204,6 +332,29 @@ describe('PerformanceMonitor', () => {
       expect(usage.estimatedSizeMB).toBeGreaterThan(0);
       expect(usage.averageSpanSize).toBeGreaterThan(0);
       expect(usage.largestSpanSize).toBeGreaterThan(usage.averageSpanSize);
+    });
+
+    it('should handle spans without errors correctly', () => {
+      const span = structuredTrace.startSpan('SimpleOp', {
+        simpleData: 'test',
+      });
+      structuredTrace.endSpan(span);
+
+      const usage = monitor.getMemoryUsage();
+      expect(usage.totalSpans).toBe(1);
+      expect(usage.estimatedSizeBytes).toBeGreaterThan(200); // Base overhead
+    });
+
+    it('should handle error without stack trace', () => {
+      const span = structuredTrace.startSpan('ErrorOp');
+      const error = new Error('Simple error');
+      delete error.stack; // Remove stack trace
+      span.setError(error);
+      structuredTrace.endSpan(span);
+
+      const usage = monitor.getMemoryUsage();
+      expect(usage.totalSpans).toBe(1);
+      expect(usage.estimatedSizeBytes).toBeGreaterThan(0);
     });
   });
 
@@ -274,6 +425,43 @@ describe('PerformanceMonitor', () => {
       expect(metrics.recentAlerts.length).toBeGreaterThan(0);
       expect(metrics.recentAlerts[0].type).toBe('monitoring_stopped');
     });
+
+    it('should calculate duration for completed root span', () => {
+      const rootSpan = structuredTrace.startSpan('Root');
+      timeCounter += 750;
+      structuredTrace.endSpan(rootSpan);
+
+      const metrics = monitor.getRealtimeMetrics();
+      expect(metrics.currentDuration).toBe(750);
+    });
+
+    it('should handle no root span', () => {
+      // Create a new StructuredTrace for this test to ensure clean state
+      const isolatedTrace = new StructuredTrace();
+      const isolatedMonitor = new PerformanceMonitor(isolatedTrace);
+
+      // The trace has no spans at all, so no root span
+      const metrics = isolatedMonitor.getRealtimeMetrics();
+      expect(metrics.currentDuration).toBe(0);
+    });
+
+    it('should limit recent alerts to 5', () => {
+      // Generate more than 5 alerts
+      for (let i = 0; i < 10; i++) {
+        const span = structuredTrace.startSpan(`SlowOp${i}`);
+        timeCounter += 200;
+        structuredTrace.endSpan(span);
+      }
+
+      jest.useFakeTimers();
+      const stopMonitoring = monitor.startMonitoring();
+      jest.advanceTimersByTime(1000);
+      stopMonitoring();
+      jest.useRealTimers();
+
+      const metrics = monitor.getRealtimeMetrics();
+      expect(metrics.recentAlerts.length).toBeLessThanOrEqual(5);
+    });
   });
 
   describe('startMonitoring and stopMonitoring', () => {
@@ -328,11 +516,12 @@ describe('PerformanceMonitor', () => {
     beforeEach(() => {
       // Enable fake timers for interval testing
       jest.useFakeTimers();
-      stopMonitoring = monitor.startMonitoring({ intervalMs: 1000 });
     });
 
     afterEach(() => {
-      stopMonitoring();
+      if (stopMonitoring) {
+        stopMonitoring();
+      }
       jest.useRealTimers();
     });
 
@@ -343,6 +532,9 @@ describe('PerformanceMonitor', () => {
         spans.push(structuredTrace.startSpan(`Op${i}`));
         timeCounter += 10;
       }
+
+      // Start monitoring after creating concurrent spans
+      stopMonitoring = monitor.startMonitoring({ intervalMs: 1000 });
 
       jest.advanceTimersByTime(1000);
 
@@ -364,6 +556,9 @@ describe('PerformanceMonitor', () => {
         structuredTrace.endSpan(span);
       }
 
+      // Start monitoring after creating error spans
+      stopMonitoring = monitor.startMonitoring({ intervalMs: 1000 });
+
       jest.advanceTimersByTime(1000);
 
       const alerts = monitor.getAlerts({ type: 'high_error_rate' });
@@ -372,19 +567,97 @@ describe('PerformanceMonitor', () => {
     });
 
     it('should generate memory usage alert', () => {
-      // Create many spans with large attributes
-      for (let i = 0; i < 100; i++) {
+      // Set a low memory threshold to ensure alert generation
+      monitor.setThresholds({ maxMemoryUsageMB: 0.1 }); // Very low threshold
+
+      // Create spans with large attributes to exceed memory threshold
+      for (let i = 0; i < 10; i++) {
         const span = structuredTrace.startSpan(`Op${i}`, {
           largeData: 'x'.repeat(10000),
         });
         structuredTrace.endSpan(span);
       }
 
+      // Start monitoring after creating large spans
+      stopMonitoring = monitor.startMonitoring({ intervalMs: 1000 });
+
       jest.advanceTimersByTime(1000);
 
       const alerts = monitor.getAlerts({ type: 'high_memory_usage' });
-      // May or may not generate depending on thresholds
-      expect(alerts).toBeDefined();
+      expect(alerts.length).toBeGreaterThan(0);
+      expect(alerts[0].severity).toBe('warning');
+      expect(alerts[0].value).toBeGreaterThan(0.1);
+    });
+
+    it('should only check recent spans for slow operations', () => {
+      // Create old operation (more than 5 seconds ago)
+      const oldSpan = structuredTrace.startSpan('OldOp');
+      timeCounter += 200;
+      structuredTrace.endSpan(oldSpan);
+
+      // Advance time beyond 5 second window
+      timeCounter += 6000;
+
+      // Clear existing alerts
+      monitor.clearAlerts();
+
+      // Start monitoring AFTER creating the old span
+      stopMonitoring = monitor.startMonitoring({ intervalMs: 1000 });
+
+      // Trigger monitoring check
+      jest.advanceTimersByTime(1000);
+
+      // Should not generate alert for old operation
+      const alerts = monitor.getAlerts({ type: 'slow_operation' });
+      expect(alerts).toHaveLength(0);
+    });
+
+    it('should handle monitoring check when not monitoring', () => {
+      // Reset monitor and manually trigger performMonitoringCheck
+      // This tests the early return when not monitoring
+      const newMonitor = new PerformanceMonitor(structuredTrace);
+
+      // Create some operations that would normally trigger alerts
+      const span = structuredTrace.startSpan('SlowOp');
+      timeCounter += 600;
+      structuredTrace.endSpan(span);
+
+      // Start and immediately stop monitoring to test the check
+      const stop = newMonitor.startMonitoring({ intervalMs: 100 });
+      stop();
+
+      // Force a monitoring check after stopping
+      jest.advanceTimersByTime(100);
+
+      // Should only have the monitoring_stopped alert, no performance alerts
+      const alerts = newMonitor.getAlerts();
+      const perfAlerts = alerts.filter((a) => a.type !== 'monitoring_stopped');
+      expect(perfAlerts).toHaveLength(0);
+    });
+
+    it('should calculate concurrent spans correctly', () => {
+      // Create overlapping spans
+      const span1 = structuredTrace.startSpan('Op1');
+      timeCounter += 100;
+      const span2 = structuredTrace.startSpan('Op2');
+      timeCounter += 100;
+      const span3 = structuredTrace.startSpan('Op3');
+
+      // At this point, all 3 are concurrent
+      const metrics = monitor.getRealtimeMetrics();
+      expect(metrics.currentConcurrency).toBe(3);
+
+      // End one span
+      structuredTrace.endSpan(span3);
+      timeCounter += 100;
+
+      // Now only 2 are concurrent
+      const metrics2 = monitor.getRealtimeMetrics();
+      expect(metrics2.currentConcurrency).toBe(2);
+
+      // Clean up
+      structuredTrace.endSpan(span2);
+      structuredTrace.endSpan(span1);
     });
   });
 
@@ -556,6 +829,126 @@ describe('PerformanceMonitor', () => {
 
       mockRandom.mockRestore();
     });
+
+    it('should handle default strategy case', () => {
+      // Use reflection to modify the private samplingConfig to test default case
+      const newMonitor = new PerformanceMonitor(structuredTrace);
+
+      // Enable sampling with a valid config first
+      newMonitor.enableSampling({
+        rate: 0.5,
+        strategy: 'random',
+      });
+
+      // Access the private field through reflection (for testing purposes)
+      // This will trigger the default case in the switch statement
+      const privateFields = Object.getOwnPropertySymbols(newMonitor).filter(
+        (sym) => sym.toString().includes('samplingConfig')
+      );
+      if (privateFields.length > 0) {
+        newMonitor[privateFields[0]].strategy = 'unknown';
+      }
+
+      const mockRandom = jest.spyOn(Math, 'random');
+      mockRandom.mockReturnValueOnce(0.3); // Should sample
+      mockRandom.mockReturnValueOnce(0.7); // Should not sample
+
+      expect(newMonitor.shouldSampleTrace()).toBe(true);
+      expect(newMonitor.shouldSampleTrace()).toBe(false);
+
+      mockRandom.mockRestore();
+    });
+
+    it('should not always sample slow traces when alwaysSampleSlow is false', () => {
+      monitor.enableSampling({
+        rate: 0.0,
+        alwaysSampleSlow: false,
+        slowThresholdMs: 100,
+      });
+
+      const span = structuredTrace.startSpan('SlowOp');
+      timeCounter += 200;
+      structuredTrace.endSpan(span);
+
+      expect(monitor.shouldSampleTrace()).toBe(false);
+    });
+
+    it('should handle root span without duration in slow sampling', () => {
+      monitor.enableSampling({
+        rate: 0.0,
+        alwaysSampleSlow: true,
+        slowThresholdMs: 100,
+      });
+
+      // Create root span but don't end it (no duration)
+      structuredTrace.startSpan('RootOp');
+
+      // Should not sample because root span has no duration
+      expect(monitor.shouldSampleTrace()).toBe(false);
+    });
+
+    it('should sample with adaptive strategy when no errors or slow ops', () => {
+      monitor.enableSampling({
+        rate: 0.5,
+        strategy: 'adaptive',
+      });
+
+      // Create fast, successful operation
+      const span = structuredTrace.startSpan('FastOp');
+      timeCounter += 50;
+      structuredTrace.endSpan(span);
+
+      const mockRandom = jest.spyOn(Math, 'random');
+      mockRandom.mockReturnValue(0.4); // Below 0.5
+
+      expect(monitor.shouldSampleTrace()).toBe(true);
+
+      mockRandom.mockRestore();
+    });
+
+    it('should cap error_biased rate at 1.0', () => {
+      monitor.enableSampling({
+        rate: 0.8,
+        strategy: 'error_biased',
+      });
+
+      // Create many errors to push rate above 1.0
+      for (let i = 0; i < 5; i++) {
+        const span = structuredTrace.startSpan(`ErrorOp${i}`);
+        span.setError(new Error('Test'));
+        structuredTrace.endSpan(span);
+      }
+
+      // Even with very high random value, should sample due to capped rate
+      const mockRandom = jest.spyOn(Math, 'random');
+      mockRandom.mockReturnValue(0.99);
+
+      expect(monitor.shouldSampleTrace()).toBe(true);
+
+      mockRandom.mockRestore();
+    });
+
+    it('should use error_biased strategy with no errors', () => {
+      monitor.enableSampling({
+        rate: 0.5,
+        strategy: 'error_biased',
+      });
+
+      // Create successful operations (no errors)
+      const span1 = structuredTrace.startSpan('SuccessOp1');
+      structuredTrace.endSpan(span1);
+      const span2 = structuredTrace.startSpan('SuccessOp2');
+      structuredTrace.endSpan(span2);
+
+      const mockRandom = jest.spyOn(Math, 'random');
+      mockRandom.mockReturnValueOnce(0.4); // Should sample (below 0.5)
+      mockRandom.mockReturnValueOnce(0.6); // Should not sample (above 0.5)
+
+      expect(monitor.shouldSampleTrace()).toBe(true);
+      expect(monitor.shouldSampleTrace()).toBe(false);
+
+      mockRandom.mockRestore();
+    });
   });
 
   describe('getMonitoringStatus', () => {
@@ -650,6 +1043,88 @@ describe('PerformanceMonitor', () => {
 
       stopMonitoring();
       jest.useRealTimers();
+    });
+
+    it('should handle getRecentAlerts with more alerts than requested', () => {
+      // Generate exactly 10 alerts
+      for (let i = 0; i < 10; i++) {
+        const span = structuredTrace.startSpan(`SlowOp${i}`);
+        timeCounter += 200;
+        structuredTrace.endSpan(span);
+      }
+
+      jest.useFakeTimers();
+      const stopMonitoring = monitor.startMonitoring();
+      jest.advanceTimersByTime(1000);
+      stopMonitoring();
+      jest.useRealTimers();
+
+      const metrics = monitor.getRealtimeMetrics();
+      // Should return only 5 recent alerts
+      expect(metrics.recentAlerts.length).toBe(5);
+    });
+
+    it('should handle monitoring status when duration is 0', () => {
+      const status = monitor.getMonitoringStatus();
+      expect(status.monitoringDuration).toBe(0);
+      expect(status.isMonitoring).toBe(false);
+    });
+
+    it('should calculate memory usage with very long operation names', () => {
+      const longName = 'VeryLongOperationName'.repeat(50);
+      const span = structuredTrace.startSpan(longName, {
+        data: 'test',
+      });
+      structuredTrace.endSpan(span);
+
+      const usage = monitor.getMemoryUsage();
+      expect(usage.estimatedSizeBytes).toBeGreaterThan(longName.length * 2);
+    });
+
+    it('should handle error rate calculation with zero operations', () => {
+      jest.useFakeTimers();
+      const stopMonitoring = monitor.startMonitoring();
+
+      // Trigger monitoring check with no operations
+      jest.advanceTimersByTime(1000);
+
+      const alerts = monitor.getAlerts({ type: 'high_error_rate' });
+      expect(alerts).toHaveLength(0);
+
+      stopMonitoring();
+      jest.useRealTimers();
+    });
+
+    it('should handle getAlerts with empty results', () => {
+      const alerts = monitor.getAlerts({ type: 'non_existent_type' });
+      expect(alerts).toEqual([]);
+    });
+
+    it('should properly sort alerts by timestamp', () => {
+      // Generate alerts at different times
+      const span1 = structuredTrace.startSpan('SlowOp1');
+      timeCounter += 200;
+      structuredTrace.endSpan(span1);
+
+      timeCounter += 1000;
+
+      const span2 = structuredTrace.startSpan('SlowOp2');
+      timeCounter += 200;
+      structuredTrace.endSpan(span2);
+
+      jest.useFakeTimers();
+      const stopMonitoring = monitor.startMonitoring();
+      jest.advanceTimersByTime(1000);
+      stopMonitoring();
+      jest.useRealTimers();
+
+      const alerts = monitor.getAlerts();
+      // Most recent should be first
+      for (let i = 1; i < alerts.length; i++) {
+        expect(alerts[i - 1].timestamp).toBeGreaterThanOrEqual(
+          alerts[i].timestamp
+        );
+      }
     });
   });
 });

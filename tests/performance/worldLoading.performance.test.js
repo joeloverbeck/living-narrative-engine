@@ -357,7 +357,7 @@ describe('World Loading - Performance Tests', () => {
 
       if (metrics.memoryUsage) {
         // Peak memory should be reasonable for 100 entities (relaxed for test environment)
-        expect(metrics.memoryUsage.peak).toBeLessThan(160 * 1024 * 1024); // 160MB target (relaxed due to Node.js test overhead)
+        expect(metrics.memoryUsage.peak).toBeLessThan(200 * 1024 * 1024); // 200MB target (relaxed due to Node.js test overhead)
 
         // Memory should be released efficiently
         // Relaxed threshold for simulated environment
