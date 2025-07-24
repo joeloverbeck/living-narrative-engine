@@ -957,92 +957,98 @@ export class PromptGenerationTestBed {
     const mockLlmConfig = {
       defaultConfigId: 'test-llm-toolcalling',
       configs: {
-        'test-llm-toolcalling': TestConfigurationFactory.createLLMConfig('tool-calling', {
-          // Override API type and JSON output strategy for this test bed
-          apiType: 'openai',
-          jsonOutputStrategy: {
-            method: 'native_json',
-          },
-          // Override with custom prompt elements specific to this test bed
-          promptElements: [
-            {
-              key: 'task_definition',
-              prefix: '<task_definition>\n',
-              suffix: '\n</task_definition>\n',
+        'test-llm-toolcalling': TestConfigurationFactory.createLLMConfig(
+          'tool-calling',
+          {
+            // Override API type and JSON output strategy for this test bed
+            apiType: 'openai',
+            jsonOutputStrategy: {
+              method: 'native_json',
             },
-            {
-              key: 'character_persona',
-              prefix: '<character_persona>\n',
-              suffix: '\n</character_persona>\n',
+            // Override with custom prompt elements specific to this test bed
+            promptElements: [
+              {
+                key: 'task_definition',
+                prefix: '<task_definition>\n',
+                suffix: '\n</task_definition>\n',
+              },
+              {
+                key: 'character_persona',
+                prefix: '<character_persona>\n',
+                suffix: '\n</character_persona>\n',
+              },
+              {
+                key: 'world_context',
+                prefix: '<world_context>\n',
+                suffix: '\n</world_context>\n',
+              },
+              {
+                key: 'perception_log_wrapper',
+                prefix: '<perception_log>\n',
+                suffix: '\n</perception_log>\n',
+              },
+              {
+                key: 'thoughts_wrapper',
+                prefix: '<thoughts>\n',
+                suffix: '\n</thoughts>\n',
+              },
+              {
+                key: 'indexed_choices',
+                prefix: '<indexed_choices>\n',
+                suffix: '\n</indexed_choices>\n',
+              },
+              {
+                key: 'final_instructions',
+                prefix: '<final_instructions>\n',
+                suffix: '\n</final_instructions>\n',
+              },
+            ],
+            promptAssemblyOrder: [
+              'task_definition',
+              'character_persona',
+              'world_context',
+              'perception_log_wrapper',
+              'thoughts_wrapper',
+              'indexed_choices',
+              'final_instructions',
+            ],
+          }
+        ),
+        'test-llm-jsonschema': TestConfigurationFactory.createLLMConfig(
+          'json-schema',
+          {
+            // Override API type and JSON output strategy for this test bed
+            apiType: 'openai',
+            jsonOutputStrategy: {
+              method: 'native_json',
             },
-            {
-              key: 'world_context',
-              prefix: '<world_context>\n',
-              suffix: '\n</world_context>\n',
-            },
-            {
-              key: 'perception_log_wrapper',
-              prefix: '<perception_log>\n',
-              suffix: '\n</perception_log>\n',
-            },
-            {
-              key: 'thoughts_wrapper',
-              prefix: '<thoughts>\n',
-              suffix: '\n</thoughts>\n',
-            },
-            {
-              key: 'indexed_choices',
-              prefix: '<indexed_choices>\n',
-              suffix: '\n</indexed_choices>\n',
-            },
-            {
-              key: 'final_instructions',
-              prefix: '<final_instructions>\n',
-              suffix: '\n</final_instructions>\n',
-            },
-          ],
-          promptAssemblyOrder: [
-            'task_definition',
-            'character_persona',
-            'world_context',
-            'perception_log_wrapper',
-            'thoughts_wrapper',
-            'indexed_choices',
-            'final_instructions',
-          ],
-        }),
-        'test-llm-jsonschema': TestConfigurationFactory.createLLMConfig('json-schema', {
-          // Override API type and JSON output strategy for this test bed
-          apiType: 'openai',
-          jsonOutputStrategy: {
-            method: 'native_json',
-          },
-          // Override with simplified prompt elements for JSON schema strategy
-          promptElements: [
-            { key: 'task_definition', prefix: '## Task\n', suffix: '\n\n' },
-            {
-              key: 'character_persona',
-              prefix: '## Character\n',
-              suffix: '\n\n',
-            },
-            {
-              key: 'indexed_choices',
-              prefix: '## Available Actions\n',
-              suffix: '\n\n',
-            },
-            {
-              key: 'final_instructions',
-              prefix: '## Instructions\n',
-              suffix: '\n\n',
-            },
-          ],
-          promptAssemblyOrder: [
-            'task_definition',
-            'character_persona',
-            'indexed_choices',
-            'final_instructions',
-          ],
-        }),
+            // Override with simplified prompt elements for JSON schema strategy
+            promptElements: [
+              { key: 'task_definition', prefix: '## Task\n', suffix: '\n\n' },
+              {
+                key: 'character_persona',
+                prefix: '## Character\n',
+                suffix: '\n\n',
+              },
+              {
+                key: 'indexed_choices',
+                prefix: '## Available Actions\n',
+                suffix: '\n\n',
+              },
+              {
+                key: 'final_instructions',
+                prefix: '## Instructions\n',
+                suffix: '\n\n',
+              },
+            ],
+            promptAssemblyOrder: [
+              'task_definition',
+              'character_persona',
+              'indexed_choices',
+              'final_instructions',
+            ],
+          }
+        ),
       },
     };
 

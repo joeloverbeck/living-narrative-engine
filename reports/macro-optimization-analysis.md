@@ -13,6 +13,7 @@ Additionally, the analysis revealed that most rules are likely missing proper pa
 ## Current Macro System Overview
 
 ### Existing Macros
+
 The `core` mod currently provides four macros:
 
 1. **`core:logSuccessAndEndTurn`**
@@ -37,6 +38,7 @@ The `core` mod currently provides four macros:
    - Used by: 1 rule (follow_auto_move)
 
 ### Macro System Implementation
+
 - Macros are defined as JSON files with an array of actions
 - Rules invoke macros using `{ "macro": "modId:macroId" }`
 - Macros are expanded recursively during rule loading
@@ -45,6 +47,7 @@ The `core` mod currently provides four macros:
 ## Critical Finding: Tense Mismatch in Current Implementation
 
 The existing `core:logSuccessAndEndTurn` macro has a design flaw: it uses `context.logMessage` for both:
+
 1. The perception event description (which should be past tense: "X has done Y")
 2. The UI success message (which should be present tense: "X does Y")
 
@@ -111,15 +114,18 @@ The vast majority of intimacy and sex action rules follow this 8-step pattern:
 ### Rules with Tense Issues
 
 #### All Rules Using `core:logSuccessAndEndTurn` (25+ rules)
+
 These rules set only `logMessage` which is used for both perception and UI, causing tense mismatches:
 
 **Sex Mod** (all 4 rules have this issue):
+
 - `handle_fondle_breasts.rule.json`: "eagerly fondles" (should have "has eagerly fondled" for perception)
 - `handle_fondle_penis.rule.json`: Similar issue
 - `handle_rub_penis_over_clothes.rule.json`: "rubs" (should have "has rubbed" for perception)
 - `handle_rub_vagina_over_clothes.rule.json`: "rubs" (should have "has rubbed" for perception)
 
 **Intimacy Mod** (23 rules have this issue):
+
 - `kiss_cheek.rule.json`: "leans in to kiss" (should have "has leaned in to kiss" for perception)
 - `handle_fondle_ass.rule.json`: "gently fondles" (should have "has gently fondled" for perception)
 - `peck_on_lips.rule.json`: "pecks" (should have "has pecked" for perception)
@@ -143,6 +149,7 @@ Only a few rules properly differentiate between tenses:
 ### Rules Without Macros
 
 Several intimacy rules implement the full pattern inline:
+
 - `cup_face_while_kissing.rule.json` (correctly handles tenses)
 - `suck_on_tongue.rule.json`
 - `nibble_lower_lip.rule.json`
@@ -161,6 +168,7 @@ The current `core:logSuccessAndEndTurn` macro should be deprecated or fixed to h
 ### Proposed New Macros
 
 #### 1. `core:handleSimpleTargetedAction`
+
 For actions where the tense conversion is straightforward:
 
 ```json
@@ -174,7 +182,7 @@ For actions where the tense conversion is straightforward:
       "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
     },
     {
-      "type": "GET_NAME", 
+      "type": "GET_NAME",
       "parameters": { "entity_ref": "target", "result_variable": "targetName" }
     },
     {
@@ -281,21 +289,25 @@ Rules would properly handle both tenses:
 ## Implementation Recommendations
 
 ### Phase 1: Fix Existing Rules
-1. Audit all rules using `core:logSuccessAndEndTurn` 
+
+1. Audit all rules using `core:logSuccessAndEndTurn`
 2. Identify which message tense they're using (likely present)
 3. Add proper past-tense messages for perception events
 
 ### Phase 2: Create New Macros
+
 1. Create the new macro that properly handles both tenses
 2. Consider creating a tense conversion utility if patterns are consistent
 
 ### Phase 3: Update Rules
+
 1. Update all affected rules to provide both tenses
 2. Test each rule to ensure proper display in both UI and perception log
 
 ## Affected Rules Summary
 
 ### Rules Needing Past Tense Messages (High Priority)
+
 All 27+ rules currently using `core:logSuccessAndEndTurn`:
 
 **Sex Mod**: All 4 rules
@@ -304,6 +316,7 @@ All 27+ rules currently using `core:logSuccessAndEndTurn`:
 **Core Mod**: Several rules (follow, etc.)
 
 ### Rules to Review
+
 The 6 intimacy rules implementing inline patterns need review to ensure they properly handle both tenses.
 
 ## Risk Considerations
@@ -315,6 +328,7 @@ The 6 intimacy rules implementing inline patterns need review to ensure they pro
 ## Conclusion
 
 The analysis reveals two major findings:
+
 1. Significant opportunities for code optimization through strategic macro usage
 2. A systemic tense mismatch issue affecting most action rules in the game
 

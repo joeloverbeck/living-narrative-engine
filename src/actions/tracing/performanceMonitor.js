@@ -164,7 +164,7 @@ export class PerformanceMonitor {
         throw new Error('Sampling rate must be between 0.0 and 1.0');
       }
       this.#samplingConfig.rate = config;
-    } else if (typeof config === 'object') {
+    } else if (typeof config === 'object' && !Array.isArray(config)) {
       // Validate sampling config
       if (config.rate !== undefined) {
         if (
@@ -422,8 +422,9 @@ export class PerformanceMonitor {
    */
   #checkSlowOperations() {
     const spans = this.#structuredTrace.getSpans();
+    const recentWindowMs = this.#thresholds.recentWindowMs || 5000; // Default 5 seconds
     const recentSpans = spans.filter((span) => {
-      return span.endTime && span.endTime > performance.now() - 5000; // Last 5 seconds
+      return span.endTime && span.endTime > performance.now() - recentWindowMs;
     });
 
     for (const span of recentSpans) {

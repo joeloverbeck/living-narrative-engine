@@ -179,12 +179,12 @@ describe('LLMConfigurationManager', () => {
 
     it('should return existing promise when already initialized and operational', async () => {
       mockConfigLoader.loadConfigs.mockResolvedValue(mockConfig);
-      
+
       // First initialization
       await configManager.init({ llmConfigLoader: mockConfigLoader });
       expect(configManager.isInitialized()).toBe(true);
       expect(configManager.isOperational()).toBe(true);
-      
+
       // Second initialization should return immediately
       await configManager.init({ llmConfigLoader: mockConfigLoader });
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -273,15 +273,15 @@ describe('LLMConfigurationManager', () => {
         logger: mockLogger,
         initialLlmId: 'claude',
       });
-      
+
       // Mock the internal state to have null configs map
       mockConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: 'gpt-4',
         configs: null,
       });
-      
+
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       // Since configs is null, it should not be operational
       expect(manager.isOperational()).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -295,14 +295,14 @@ describe('LLMConfigurationManager', () => {
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       mockConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: 'gpt-4',
         configs: {},
       });
-      
+
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       const activeId = await manager.getActiveConfigId();
       expect(activeId).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -315,7 +315,7 @@ describe('LLMConfigurationManager', () => {
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       mockConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: 'nonexistent-default',
         configs: {
@@ -331,9 +331,9 @@ describe('LLMConfigurationManager', () => {
           },
         },
       });
-      
+
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       const activeId = await manager.getActiveConfigId();
       expect(activeId).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -346,16 +346,16 @@ describe('LLMConfigurationManager', () => {
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       // Create a config where configs is a weird type (string instead of object)
       const invalidConfig = {
         defaultConfigId: 'test',
         configs: 'not-an-object', // This will pass the initial checks but fail in selectInitialActiveConfig
       };
-      
+
       mockConfigLoader.loadConfigs.mockResolvedValue(invalidConfig);
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       // The manager should not be operational
       expect(manager.isOperational()).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -369,7 +369,7 @@ describe('LLMConfigurationManager', () => {
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       mockConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: '', // Empty default
         configs: {
@@ -385,9 +385,9 @@ describe('LLMConfigurationManager', () => {
           },
         },
       });
-      
+
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       const activeId = await manager.getActiveConfigId();
       expect(activeId).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -470,14 +470,14 @@ describe('LLMConfigurationManager', () => {
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       mockConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: 'test',
         configs: null,
       });
-      
+
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       // Since the manager is not operational, setActiveConfiguration should throw
       await expect(manager.setActiveConfiguration('test')).rejects.toThrow(
         'LLMConfigurationManager: Initialized but not operational.'
@@ -510,15 +510,15 @@ describe('LLMConfigurationManager', () => {
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       // Initialize with configs that result in null allConfigsMap
       mockConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: 'test',
         configs: null,
       });
-      
+
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       // Since the manager is not operational, loadConfiguration should throw
       await expect(manager.loadConfiguration('test')).rejects.toThrow(
         'LLMConfigurationManager: Initialized but not operational.'
@@ -538,28 +538,28 @@ describe('LLMConfigurationManager', () => {
       // First init with valid config
       mockConfigLoader.loadConfigs.mockResolvedValue(mockConfig);
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       // Manually manipulate internal state by calling loadConfiguration with
       // a special test to trigger the null configs error
       // We'll use reflection to set the internal state
       const managerReflection = Object.create(manager);
       managerReflection._allConfigsMap = null;
-      
+
       // Since we can't directly manipulate private fields, we'll test this differently
       // by creating a mock that returns an operational state but with undefined configs
       const specialConfig = {
         defaultConfigId: 'test',
         configs: undefined, // This will trigger our edge case
       };
-      
+
       const newManager = new LLMConfigurationManager({
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       mockConfigLoader.loadConfigs.mockResolvedValue(specialConfig);
       await newManager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       // This should not be operational due to undefined configs
       expect(newManager.isOperational()).toBe(false);
     });
@@ -586,7 +586,7 @@ describe('LLMConfigurationManager', () => {
 
       // Mock a scenario where the promise resolves but initialization fails
       const initPromise = manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       // Manually set internal state to simulate the edge case
       // We need to make the loader return an unexpected structure
       mockConfigLoader.loadConfigs.mockResolvedValue({
@@ -631,10 +631,10 @@ describe('LLMConfigurationManager', () => {
       // First initialize properly
       mockConfigLoader.loadConfigs.mockResolvedValue(validConfig);
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       // Verify it's operational
       expect(manager.isOperational()).toBe(true);
-      
+
       // Now we need to test the edge case where allConfigsMap becomes null
       // Since we can't modify private fields directly, we'll create a subclass for testing
       class TestableManager extends LLMConfigurationManager {
@@ -644,19 +644,19 @@ describe('LLMConfigurationManager', () => {
           return this.setActiveConfiguration('test');
         }
       }
-      
+
       // Since we can't test this directly, let's ensure the code path is correct
       // by testing that when configs is an empty object, it still works
       const emptyConfigManager = new LLMConfigurationManager({
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       mockConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: 'test',
         configs: {}, // Empty but not null
       });
-      
+
       await emptyConfigManager.init({ llmConfigLoader: mockConfigLoader });
       const result = await emptyConfigManager.setActiveConfiguration('test');
       expect(result).toBe(false);
@@ -677,7 +677,7 @@ describe('LLMConfigurationManager', () => {
       });
 
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       const config = await manager.loadConfiguration('test');
       expect(config).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -769,15 +769,20 @@ describe('LLMConfigurationManager', () => {
       errors = configManager.validateConfiguration(config);
       expect(errors).toContainEqual({
         field: 'jsonOutputStrategy.jsonSchema',
-        reason: 'Required when jsonOutputStrategy.method is "openrouter_json_schema".',
+        reason:
+          'Required when jsonOutputStrategy.method is "openrouter_json_schema".',
       });
 
       // OpenRouter JSON schema with null jsonSchema
-      config.jsonOutputStrategy = { method: 'openrouter_json_schema', jsonSchema: null };
+      config.jsonOutputStrategy = {
+        method: 'openrouter_json_schema',
+        jsonSchema: null,
+      };
       errors = configManager.validateConfiguration(config);
       expect(errors).toContainEqual({
         field: 'jsonOutputStrategy.jsonSchema',
-        reason: 'Required when jsonOutputStrategy.method is "openrouter_json_schema".',
+        reason:
+          'Required when jsonOutputStrategy.method is "openrouter_json_schema".',
       });
     });
   });
@@ -807,7 +812,7 @@ describe('LLMConfigurationManager', () => {
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       // Don't initialize at all
       const options = await manager.getAvailableOptions();
       expect(options).toEqual([]);
@@ -821,14 +826,14 @@ describe('LLMConfigurationManager', () => {
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       mockConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: '',
         configs: {},
       });
-      
+
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       const options = await manager.getAvailableOptions();
       expect(options).toEqual([]);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -852,10 +857,10 @@ describe('LLMConfigurationManager', () => {
           },
         },
       };
-      
+
       mockConfigLoader.loadConfigs.mockResolvedValue(configWithoutDisplayName);
       await configManager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       const options = await configManager.getAvailableOptions();
       expect(options).toEqual([
         { configId: 'test', displayName: 'test' }, // Falls back to configId
@@ -888,7 +893,7 @@ describe('LLMConfigurationManager', () => {
     it('should return active config ID when initialized', async () => {
       mockConfigLoader.loadConfigs.mockResolvedValue(mockConfig);
       await configManager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       const activeId = await configManager.getActiveConfigId();
       expect(activeId).toBe('gpt-4');
     });
@@ -898,12 +903,14 @@ describe('LLMConfigurationManager', () => {
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       // Don't initialize
       const activeId = await manager.getActiveConfigId();
       expect(activeId).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Not operational. Cannot retrieve active config ID')
+        expect.stringContaining(
+          'Not operational. Cannot retrieve active config ID'
+        )
       );
     });
 
@@ -912,14 +919,14 @@ describe('LLMConfigurationManager', () => {
         logger: mockLogger,
         initialLlmId: null,
       });
-      
+
       mockConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: '',
         configs: {},
       });
-      
+
       await manager.init({ llmConfigLoader: mockConfigLoader });
-      
+
       const activeId = await manager.getActiveConfigId();
       expect(activeId).toBeNull();
     });

@@ -79,6 +79,34 @@ describe('TokenEstimator', () => {
       const count = await tokenEstimator.estimateTokens(text);
       expect(count).toBeGreaterThan(0);
     });
+
+    it('should handle text with various unicode characters', async () => {
+      // Test with various unicode characters to ensure robust encoding
+      const texts = [
+        'Hello world! 🌍',
+        'Chinese text: 你好世界',
+        'Arabic text: مرحبا بالعالم',
+        'Russian text: Привет мир',
+        'Emoji text: 🚀 🎉 ⭐ 💫',
+        'Mixed: Hello 世界! 🌟'
+      ];
+      
+      for (const text of texts) {
+        const count = await tokenEstimator.estimateTokens(text);
+        expect(count).toBeGreaterThan(0);
+        expect(typeof count).toBe('number');
+      }
+    });
+
+    it('should handle non-string input gracefully', async () => {
+      const count1 = await tokenEstimator.estimateTokens(null);
+      const count2 = await tokenEstimator.estimateTokens(undefined);
+      const count3 = await tokenEstimator.estimateTokens(123);
+      
+      expect(count1).toBe(0);
+      expect(count2).toBe(0);
+      expect(count3).toBe(0);
+    });
   });
 
   describe('validateTokenLimit', () => {
@@ -153,6 +181,33 @@ describe('TokenEstimator', () => {
       expect(budget.reservedTokens).toBe(200);
       expect(budget.availableForPrompt).toBe(0); // Math.max prevents negative values
     });
+
+    it('should throw error for invalid contextTokenLimit', () => {
+      expect(() => tokenEstimator.getTokenBudget('invalid')).toThrow(
+        'TokenEstimator: contextTokenLimit must be a positive number'
+      );
+      expect(() => tokenEstimator.getTokenBudget(0)).toThrow(
+        'TokenEstimator: contextTokenLimit must be a positive number'
+      );
+      expect(() => tokenEstimator.getTokenBudget(-100)).toThrow(
+        'TokenEstimator: contextTokenLimit must be a positive number'
+      );
+      expect(() => tokenEstimator.getTokenBudget(null)).toThrow(
+        'TokenEstimator: contextTokenLimit must be a positive number'
+      );
+    });
+
+    it('should throw error for invalid maxOutputTokens', () => {
+      expect(() => tokenEstimator.getTokenBudget(1000, 'invalid')).toThrow(
+        'TokenEstimator: maxOutputTokens must be a non-negative number'
+      );
+      expect(() => tokenEstimator.getTokenBudget(1000, -10)).toThrow(
+        'TokenEstimator: maxOutputTokens must be a non-negative number'
+      );
+      expect(() => tokenEstimator.getTokenBudget(1000, null)).toThrow(
+        'TokenEstimator: maxOutputTokens must be a non-negative number'
+      );
+    });
   });
 
   describe('getEncodingForModel', () => {
@@ -182,6 +237,15 @@ describe('TokenEstimator', () => {
       expect(tokenEstimator.getEncodingForModel('')).toBe('cl100k_base');
       expect(tokenEstimator.getEncodingForModel(null)).toBe('cl100k_base');
     });
+
+    it('should return p50k_base for older models', () => {
+      expect(tokenEstimator.getEncodingForModel('text-davinci-003')).toBe('p50k_base');
+      expect(tokenEstimator.getEncodingForModel('code-davinci-002')).toBe('p50k_base');
+    });
+
+    it('should return r50k_base for curie models', () => {
+      expect(tokenEstimator.getEncodingForModel('text-curie-001')).toBe('r50k_base');
+    });
   });
 
   describe('isNearTokenLimit', () => {
@@ -204,6 +268,83 @@ describe('TokenEstimator', () => {
       expect(tokenEstimator.isNearTokenLimit(100, 100)).toBe(true);
       expect(tokenEstimator.isNearTokenLimit(150, 100)).toBe(true); // over limit
       expect(tokenEstimator.isNearTokenLimit(0, 100)).toBe(false);
+    });
+
+    it('should return false for non-number inputs', () => {
+      expect(tokenEstimator.isNearTokenLimit('100', 100)).toBe(false);
+      expect(tokenEstimator.isNearTokenLimit(100, '100')).toBe(false);
+      expect(tokenEstimator.isNearTokenLimit(null, 100)).toBe(false);
+      expect(tokenEstimator.isNearTokenLimit(100, null)).toBe(false);
+      expect(tokenEstimator.isNearTokenLimit(undefined, 100)).toBe(false);
+      expect(tokenEstimator.isNearTokenLimit(100, undefined)).toBe(false);
+    });
+
+    it('should throw error for invalid threshold values', () => {
+      expect(() => tokenEstimator.isNearTokenLimit(50, 100, -0.1)).toThrow(
+        'TokenEstimator: threshold must be between 0 and 1'
+      );
+      expect(() => tokenEstimator.isNearTokenLimit(50, 100, 1.1)).toThrow(
+        'TokenEstimator: threshold must be between 0 and 1'
+      );
+    });
+  });
+
+  describe('additional coverage scenarios', () => {
+    it('should handle encoder caching correctly', async () => {
+      const text = 'Test caching behavior';
+      
+      // First call should cache the encoder
+      const count1 = await tokenEstimator.estimateTokens(text, 'gpt-4');
+      const count2 = await tokenEstimator.estimateTokens(text, 'gpt-4');
+      
+      // Both calls should return the same result
+      expect(count1).toBe(count2);
+      expect(count1).toBeGreaterThan(0);
+    });
+
+    it('should handle different model encodings', async () => {
+      const text = 'Test text for model encoding';
+      
+      // Test different model types to ensure they use correct encodings
+      const count1 = await tokenEstimator.estimateTokens(text, 'gpt-4');
+      const count2 = await tokenEstimator.estimateTokens(text, 'text-davinci-003');
+      const count3 = await tokenEstimator.estimateTokens(text, 'text-curie-001');
+      
+      // All should return valid counts
+      expect(count1).toBeGreaterThan(0);
+      expect(count2).toBeGreaterThan(0);
+      expect(count3).toBeGreaterThan(0);
+      
+      // Verify encoding detection was logged
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'TokenEstimator: Determined encoding for model',
+        expect.objectContaining({
+          model: 'text-davinci-003',
+          encoding: 'p50k_base'
+        })
+      );
+    });
+
+    it('should test edge cases with threshold validation bounds', () => {
+      // Test exact boundary values for threshold
+      expect(() => tokenEstimator.isNearTokenLimit(50, 100, 0)).not.toThrow();
+      expect(() => tokenEstimator.isNearTokenLimit(50, 100, 1)).not.toThrow();
+      expect(tokenEstimator.isNearTokenLimit(50, 100, 0)).toBe(true); // 0% threshold
+      expect(tokenEstimator.isNearTokenLimit(50, 100, 1)).toBe(false); // 100% threshold
+    });
+
+    it('should handle token budget edge cases', () => {
+      // Test with minimum valid values
+      const budget1 = tokenEstimator.getTokenBudget(1, 0);
+      expect(budget1.totalLimit).toBe(1);
+      expect(budget1.reservedTokens).toBe(0);
+      expect(budget1.availableForPrompt).toBe(1);
+      
+      // Test with very large values
+      const budget2 = tokenEstimator.getTokenBudget(100000, 50000);
+      expect(budget2.totalLimit).toBe(100000);
+      expect(budget2.reservedTokens).toBe(50000);
+      expect(budget2.availableForPrompt).toBe(50000);
     });
   });
 });
