@@ -1047,35 +1047,13 @@ export class FullTurnExecutionTestBed {
         'NOTES RULES\n- Only record brand-new, critical facts (locations, allies, threats, etc.) that may determine your survival, well-being, or prosperity.\n- No internal musings, only hard data.\n- Each note MUST identify its subject (who/what the note is about)\n- Include context when relevant (where/when observed)\n- Use tags for categorization (e.g., "combat", "relationship", "location")\n- Example format:\n  {\n    "text": "Seems nervous about the council meeting",\n    "subject": "John",\n    "context": "tavern conversation",\n    "tags": ["emotion", "politics"]\n  }\n- Another example:\n  {\n    "text": "Guards doubled at the north gate",\n    "subject": "City defenses",\n    "context": "morning patrol",\n    "tags": ["security", "observation"]\n  }\n\nNow, based on all the information provided, decide on your character\'s action and what they will say. Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.',
     };
 
-    // Mock LLM configuration
+    // Use centralized test configuration factory instead of inline configs
     const mockLlmConfig = {
       defaultConfigId: 'test-llm-toolcalling',
       configs: {
-        'test-llm-toolcalling': {
-          configId: 'test-llm-toolcalling',
-          displayName: 'Test LLM (Tool Calling)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-toolcalling',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'openrouter_tool_calling',
-            toolName: 'function_call',
-          },
-          defaultParameters: {
-            temperature: 1.0,
-          },
-          contextTokenLimit: 8000,
-        },
-        'test-llm-jsonschema': {
-          configId: 'test-llm-jsonschema',
-          displayName: 'Test LLM (JSON Schema)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-jsonschema',
-          apiType: 'openrouter',
+        'test-llm-toolcalling': TestConfigurationFactory.createLLMConfig('tool-calling'),
+        'test-llm-jsonschema': TestConfigurationFactory.createLLMConfig('json-schema', {
+          // Override to match original method name for compatibility
           jsonOutputStrategy: {
             method: 'openrouter_json_schema',
             jsonSchema: {
@@ -1091,11 +1069,7 @@ export class FullTurnExecutionTestBed {
               },
             },
           },
-          defaultParameters: {
-            temperature: 1.0,
-          },
-          contextTokenLimit: 8000,
-        },
+        }),
       },
     };
 

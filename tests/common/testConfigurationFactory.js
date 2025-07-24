@@ -14,13 +14,208 @@ import path from 'path';
 import os from 'os';
 import { TestPathConfiguration } from './testPathConfiguration.js';
 import { TestModuleBuilder } from './builders/testModuleBuilder.js';
+import { TestConfigurationValidator } from './builders/validation/testConfigurationValidator.js';
 
 /**
  * @class TestConfigurationFactory
  * @description Factory class that creates test configurations with isolated
- * temporary directories and files for testing.
+ * temporary directories and files for testing. Also provides centralized
+ * LLM configuration management and test environment factory methods.
  */
 export class TestConfigurationFactory {
+  // LLM Configuration Methods
+
+  /**
+   * Creates a standardized LLM configuration based on strategy
+   *
+   * @param {string} strategy - The LLM strategy ('tool-calling', 'json-schema', 'limited-context')
+   * @param {object} overrides - Optional configuration overrides
+   * @returns {object} Complete LLM configuration
+   */
+  static createLLMConfig(strategy = 'tool-calling', overrides = {}) {
+    const baseConfigs = this.#getLLMBaseConfigs();
+    const config = baseConfigs[strategy];
+    if (!config) {
+      throw new Error(`Unknown LLM strategy: ${strategy}`);
+    }
+    
+    const mergedConfig = this.#mergeDeep(config, overrides);
+    
+    // Validate the final configuration
+    TestConfigurationValidator.validateLLMConfig(mergedConfig);
+    
+    return mergedConfig;
+  }
+
+  /**
+   * Get all base LLM configurations
+   *
+   * @private
+   * @returns {object} Object containing all LLM configuration strategies
+   */
+  static #getLLMBaseConfigs() {
+    return {
+      'tool-calling': {
+        configId: 'test-llm-toolcalling',
+        displayName: 'Test LLM (Tool Calling)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-toolcalling',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'openrouter_tool_calling',
+          toolName: 'function_call',
+        },
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 8000,
+        promptElements: this.#getToolCallingPromptElements(),
+        promptAssemblyOrder: this.#getToolCallingAssemblyOrder(),
+      },
+      'json-schema': {
+        configId: 'test-llm-jsonschema',
+        displayName: 'Test LLM (JSON Schema)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-jsonschema',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'json_schema',
+          schema: {
+            name: 'turn_action_response',
+            schema: {
+              type: 'object',
+              properties: {
+                chosenIndex: { type: 'number' },
+                speech: { type: 'string' },
+                thoughts: { type: 'string' },
+                notes: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      text: { type: 'string' },
+                      subject: { type: 'string' },
+                      context: { type: 'string' },
+                      tags: {
+                        type: 'array',
+                        items: { type: 'string' },
+                      },
+                    },
+                    required: ['text', 'subject'],
+                  },
+                },
+              },
+              required: ['chosenIndex', 'speech', 'thoughts'],
+            },
+          },
+        },
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 8000,
+        promptElements: [
+          { key: 'task_definition', prefix: '## Task\n', suffix: '\n\n' },
+          {
+            key: 'character_persona',
+            prefix: '## Character\n',
+            suffix: '\n\n',
+          },
+          {
+            key: 'indexed_choices',
+            prefix: '## Available Actions\n',
+            suffix: '\n\n',
+          },
+          {
+            key: 'final_instructions',
+            prefix: '## Instructions\n',
+            suffix: '\n\n',
+          },
+        ],
+        promptAssemblyOrder: [
+          'task_definition',
+          'character_persona',
+          'indexed_choices',
+          'final_instructions',
+        ],
+      },
+      'limited-context': {
+        configId: 'test-llm-limited',
+        displayName: 'Test LLM (Limited Context)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-limited',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'openrouter_tool_calling',
+          toolName: 'function_call',
+        },
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 1000, // Very low limit for testing
+        promptElements: this.#getToolCallingPromptElements(),
+        promptAssemblyOrder: this.#getToolCallingAssemblyOrder(),
+      },
+    };
+  }
+
+  /**
+   * Get prompt elements for tool-calling strategy
+   *
+   * @private
+   * @returns {Array} Array of prompt element configurations
+   */
+  static #getToolCallingPromptElements() {
+    return [
+      {
+        key: 'task_definition',
+        prefix: '<task_definition>\n',
+        suffix: '\n</task_definition>\n',
+      },
+      {
+        key: 'character_persona',
+        prefix: '<character_persona>\n',
+        suffix: '\n</character_persona>\n',
+      },
+      {
+        key: 'perception_log_wrapper',
+        prefix: '<perception_log>\n',
+        suffix: '\n</perception_log>\n',
+      },
+      {
+        key: 'thoughts_wrapper',
+        prefix: '<thoughts>\n',
+        suffix: '\n</thoughts>\n',
+      },
+      {
+        key: 'indexed_choices',
+        prefix: '<indexed_choices>\n',
+        suffix: '\n</indexed_choices>\n',
+      },
+      {
+        key: 'final_instructions',
+        prefix: '<final_instructions>\n',
+        suffix: '\n</final_instructions>\n',
+      },
+    ];
+  }
+
+  /**
+   * Get prompt assembly order for tool-calling strategy
+   *
+   * @private
+   * @returns {Array} Array of prompt element keys in order
+   */
+  static #getToolCallingAssemblyOrder() {
+    return [
+      'task_definition',
+      'character_persona',
+      'perception_log_wrapper',
+      'thoughts_wrapper',
+      'indexed_choices',
+      'final_instructions',
+    ];
+  }
+
   /**
    * Creates a test configuration with a temporary directory structure.
    * For E2E tests, we use the actual data directory to avoid file path issues.
@@ -80,108 +275,12 @@ export class TestConfigurationFactory {
    * @returns {Promise<void>}
    */
   static async createTestFiles(pathConfiguration) {
-    // Create test LLM configuration
+    // Create test LLM configuration using the centralized factory
     const llmConfig = {
       defaultConfigId: 'test-llm-toolcalling',
       configs: {
-        'test-llm-toolcalling': {
-          configId: 'test-llm-toolcalling',
-          displayName: 'Test LLM (Tool Calling)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-toolcalling',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'openrouter_tool_calling',
-            toolName: 'function_call',
-          },
-          defaultParameters: {
-            temperature: 1.0,
-          },
-          contextTokenLimit: 8000,
-          promptElements: [
-            {
-              key: 'task_definition',
-              prefix: '<task_definition>\n',
-              suffix: '\n</task_definition>\n',
-            },
-            {
-              key: 'character_persona',
-              prefix: '<character_persona>\n',
-              suffix: '\n</character_persona>\n',
-            },
-            {
-              key: 'perception_log_wrapper',
-              prefix: '<perception_log>\n',
-              suffix: '\n</perception_log>\n',
-            },
-            {
-              key: 'thoughts_wrapper',
-              prefix: '<thoughts>\n',
-              suffix: '\n</thoughts>\n',
-            },
-            {
-              key: 'indexed_choices',
-              prefix: '<indexed_choices>\n',
-              suffix: '\n</indexed_choices>\n',
-            },
-            {
-              key: 'final_instructions',
-              prefix: '<final_instructions>\n',
-              suffix: '\n</final_instructions>\n',
-            },
-          ],
-          promptAssemblyOrder: [
-            'task_definition',
-            'character_persona',
-            'perception_log_wrapper',
-            'thoughts_wrapper',
-            'indexed_choices',
-            'final_instructions',
-          ],
-        },
-        'test-llm-jsonschema': {
-          configId: 'test-llm-jsonschema',
-          displayName: 'Test LLM (JSON Schema)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-jsonschema',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'json_schema',
-            schema: {},
-          },
-          defaultParameters: {
-            temperature: 1.0,
-          },
-          contextTokenLimit: 8000,
-          promptElements: [
-            { key: 'task_definition', prefix: '## Task\n', suffix: '\n\n' },
-            {
-              key: 'character_persona',
-              prefix: '## Character\n',
-              suffix: '\n\n',
-            },
-            {
-              key: 'indexed_choices',
-              prefix: '## Available Actions\n',
-              suffix: '\n\n',
-            },
-            {
-              key: 'final_instructions',
-              prefix: '## Instructions\n',
-              suffix: '\n\n',
-            },
-          ],
-          promptAssemblyOrder: [
-            'task_definition',
-            'character_persona',
-            'indexed_choices',
-            'final_instructions',
-          ],
-        },
+        'test-llm-toolcalling': this.createLLMConfig('tool-calling'),
+        'test-llm-jsonschema': this.createLLMConfig('json-schema'),
       },
     };
 
@@ -291,5 +390,339 @@ export class TestConfigurationFactory {
     }
 
     return module;
+  }
+
+  // Test Environment Factory Methods
+
+  /**
+   * Creates a complete test environment configuration
+   *
+   * @param {string} type - Environment type ('turn-execution', 'action-processing', 'prompt-generation')
+   * @param {object} overrides - Optional configuration overrides
+   * @returns {object} Complete test environment configuration
+   */
+  static createTestEnvironment(type, overrides = {}) {
+    const environments = {
+      'turn-execution': {
+        llm: this.createLLMConfig('tool-calling'),
+        actors: this.#createDefaultActors(),
+        world: this.#createDefaultWorld(),
+        mocks: this.#createTurnExecutionMocks(),
+      },
+      'action-processing': {
+        llm: this.createLLMConfig('tool-calling'),
+        actors: this.#createMinimalActors(),
+        actions: this.#createTestActions(),
+        mocks: this.#createActionProcessingMocks(),
+      },
+      'prompt-generation': {
+        llm: this.createLLMConfig('json-schema'),
+        actors: this.#createPromptTestActors(),
+        mocks: this.#createPromptGenerationMocks(),
+      },
+    };
+
+    const baseConfig = environments[type];
+    if (!baseConfig) {
+      throw new Error(`Unknown environment type: ${type}`);
+    }
+
+    const mergedConfig = this.#mergeDeep(baseConfig, overrides);
+    
+    // Validate the final environment configuration
+    TestConfigurationValidator.validateTestEnvironment(mergedConfig, type);
+    
+    return mergedConfig;
+  }
+
+  // Mock Configuration Methods
+
+  /**
+   * Creates mock configurations for different services
+   *
+   * @param {string} mockType - Type of mock ('llm-adapter', 'event-bus', 'entity-manager')
+   * @param {object} options - Mock configuration options
+   * @returns {object} Mock configuration
+   */
+  static createMockConfiguration(mockType, options = {}) {
+    const mockConfigs = {
+      'llm-adapter': {
+        responses: this.#createLLMResponses(options.strategy || 'tool-calling'),
+        apiKey: 'test-api-key-12345',
+        delay: options.delay || 0,
+      },
+      'event-bus': {
+        captureAll: options.captureAll || false,
+        eventTypes: options.eventTypes || [],
+      },
+      'entity-manager': {
+        entities: options.entities || this.#createDefaultEntities(),
+      },
+    };
+
+    return mockConfigs[mockType] || {};
+  }
+
+  /**
+   * Get configuration presets for quick setup
+   *
+   * @returns {object} Object containing preset functions
+   */
+  static getPresets() {
+    return {
+      llm: {
+        toolCalling: () => this.createLLMConfig('tool-calling'),
+        jsonSchema: () => this.createLLMConfig('json-schema'),
+        limited: () => this.createLLMConfig('limited-context'),
+      },
+      environments: {
+        turnExecution: () => this.createTestEnvironment('turn-execution'),
+        actionProcessing: () => this.createTestEnvironment('action-processing'),
+        promptGeneration: () => this.createTestEnvironment('prompt-generation'),
+      },
+      mocks: {
+        minimalLLM: () =>
+          this.createMockConfiguration('llm-adapter', { minimal: true }),
+        fullEventCapture: () =>
+          this.createMockConfiguration('event-bus', { captureAll: true }),
+      },
+    };
+  }
+
+  // Private Helper Methods
+
+  /**
+   * Create default actors for testing
+   *
+   * @private
+   * @returns {Array} Array of actor configurations
+   */
+  static #createDefaultActors() {
+    return [
+      {
+        id: 'ai-actor',
+        name: 'Test AI Actor',
+        type: 'core:actor',
+        components: {
+          'core:position': { location: 'test-location' },
+          'core:persona': { traits: ['brave', 'curious'] },
+        },
+      },
+      {
+        id: 'player-actor',
+        name: 'Test Player',
+        type: 'core:actor',
+        isPlayer: true,
+      },
+    ];
+  }
+
+  /**
+   * Create minimal actors for action processing tests
+   *
+   * @private
+   * @returns {Array} Array of actor configurations
+   */
+  static #createMinimalActors() {
+    return [
+      {
+        id: 'test-actor',
+        name: 'Test Actor',
+        type: 'core:actor',
+      },
+    ];
+  }
+
+  /**
+   * Create actors for prompt generation tests
+   *
+   * @private
+   * @returns {Array} Array of actor configurations
+   */
+  static #createPromptTestActors() {
+    return [
+      {
+        id: 'prompt-test-actor',
+        name: 'Prompt Test Actor',
+        type: 'core:actor',
+        components: {
+          'core:persona': {
+            description: 'A character for testing prompt generation',
+            traits: ['methodical', 'observant'],
+          },
+        },
+      },
+    ];
+  }
+
+  /**
+   * Create default world configuration
+   *
+   * @private
+   * @returns {object} World configuration
+   */
+  static #createDefaultWorld() {
+    return {
+      id: 'test-world',
+      name: 'Test World',
+      description: 'A world for testing',
+      locations: ['test-location', 'test-location-2'],
+    };
+  }
+
+  /**
+   * Create test actions
+   *
+   * @private
+   * @returns {Array} Array of action configurations
+   */
+  static #createTestActions() {
+    return [
+      { id: 'core:move', name: 'Move', requiresTarget: true },
+      { id: 'core:look', name: 'Look Around', alwaysAvailable: true },
+      { id: 'core:wait', name: 'Wait', alwaysAvailable: true },
+    ];
+  }
+
+  /**
+   * Create mocks for turn execution tests
+   *
+   * @private
+   * @returns {object} Mock configurations
+   */
+  static #createTurnExecutionMocks() {
+    return {
+      llmAdapter: {
+        defaultResponse: {
+          actionId: 'core:wait',
+          speech: 'I wait patiently.',
+          thoughts: 'I should observe before acting.',
+        },
+      },
+      eventBus: { captureAll: false },
+    };
+  }
+
+  /**
+   * Create mocks for action processing tests
+   *
+   * @private
+   * @returns {object} Mock configurations
+   */
+  static #createActionProcessingMocks() {
+    return {
+      actionService: {
+        availableActions: this.#createTestActions(),
+      },
+      validationService: {
+        alwaysValid: true,
+      },
+    };
+  }
+
+  /**
+   * Create mocks for prompt generation tests
+   *
+   * @private
+   * @returns {object} Mock configurations
+   */
+  static #createPromptGenerationMocks() {
+    return {
+      promptBuilder: {
+        useDefaults: true,
+      },
+      tokenCounter: {
+        mockCounts: true,
+      },
+    };
+  }
+
+  /**
+   * Create LLM responses based on strategy
+   *
+   * @private
+   * @param {string} strategy - LLM strategy
+   * @returns {object} Mock LLM responses
+   */
+  static #createLLMResponses(strategy) {
+    const responses = {
+      'tool-calling': {
+        function_call: {
+          name: 'function_call',
+          arguments: JSON.stringify({
+            chosenIndex: 0,
+            speech: 'Test response from tool-calling strategy.',
+            thoughts: 'This is a test thought.',
+            notes: [],
+          }),
+        },
+      },
+      'json-schema': {
+        chosenIndex: 0,
+        speech: 'Test response from JSON schema strategy.',
+        thoughts: 'This is a test thought.',
+        notes: [],
+      },
+    };
+
+    return responses[strategy] || responses['tool-calling'];
+  }
+
+  /**
+   * Create default entities for testing
+   *
+   * @private
+   * @returns {Array} Array of entity configurations
+   */
+  static #createDefaultEntities() {
+    return [
+      {
+        id: 'test-entity-1',
+        type: 'core:actor',
+        components: {},
+      },
+      {
+        id: 'test-entity-2',
+        type: 'core:item',
+        components: {},
+      },
+    ];
+  }
+
+  /**
+   * Deep merge objects recursively
+   *
+   * @private
+   * @param {object} target - Target object
+   * @param {object} source - Source object to merge
+   * @returns {object} Merged object
+   */
+  static #mergeDeep(target, source) {
+    const output = { ...target };
+
+    if (
+      target &&
+      source &&
+      typeof target === 'object' &&
+      typeof source === 'object'
+    ) {
+      Object.keys(source).forEach((key) => {
+        if (
+          source[key] &&
+          typeof source[key] === 'object' &&
+          !Array.isArray(source[key])
+        ) {
+          if (key in target) {
+            output[key] = this.#mergeDeep(target[key], source[key]);
+          } else {
+            output[key] = source[key];
+          }
+        } else {
+          output[key] = source[key];
+        }
+      });
+    }
+
+    return output;
   }
 }

@@ -953,25 +953,17 @@ export class PromptGenerationTestBed {
         'NOTES RULES\n- Only record brand-new, critical facts (locations, allies, threats, etc.) that may determine your survival, well-being, or prosperity.\n- No internal musings, only hard data.\n- Each note MUST identify its subject (who/what the note is about)\n- Include context when relevant (where/when observed)\n- Use tags for categorization (e.g., "combat", "relationship", "location")\n- Example format:\n  {\n    "text": "Seems nervous about the council meeting",\n    "subject": "John",\n    "context": "tavern conversation",\n    "tags": ["emotion", "politics"]\n  }\n- Another example:\n  {\n    "text": "Guards doubled at the north gate",\n    "subject": "City defenses",\n    "context": "morning patrol",\n    "tags": ["security", "observation"]\n  }\n\nNow, based on all the information provided, decide on your character\'s action and what they will say. Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.',
     };
 
-    // Mock LLM configuration
+    // Use centralized test configuration factory instead of inline configs
     const mockLlmConfig = {
       defaultConfigId: 'test-llm-toolcalling',
       configs: {
-        'test-llm-toolcalling': {
-          configId: 'test-llm-toolcalling',
-          displayName: 'Test LLM (Tool Calling)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-toolcalling',
+        'test-llm-toolcalling': TestConfigurationFactory.createLLMConfig('tool-calling', {
+          // Override API type and JSON output strategy for this test bed
           apiType: 'openai',
           jsonOutputStrategy: {
             method: 'native_json',
           },
-          defaultParameters: {
-            temperature: 1.0,
-          },
-          contextTokenLimit: 8000,
+          // Override with custom prompt elements specific to this test bed
           promptElements: [
             {
               key: 'task_definition',
@@ -1018,22 +1010,14 @@ export class PromptGenerationTestBed {
             'indexed_choices',
             'final_instructions',
           ],
-        },
-        'test-llm-jsonschema': {
-          configId: 'test-llm-jsonschema',
-          displayName: 'Test LLM (JSON Schema)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-jsonschema',
+        }),
+        'test-llm-jsonschema': TestConfigurationFactory.createLLMConfig('json-schema', {
+          // Override API type and JSON output strategy for this test bed
           apiType: 'openai',
           jsonOutputStrategy: {
             method: 'native_json',
           },
-          defaultParameters: {
-            temperature: 1.0,
-          },
-          contextTokenLimit: 8000,
+          // Override with simplified prompt elements for JSON schema strategy
           promptElements: [
             { key: 'task_definition', prefix: '## Task\n', suffix: '\n\n' },
             {
@@ -1058,7 +1042,7 @@ export class PromptGenerationTestBed {
             'indexed_choices',
             'final_instructions',
           ],
-        },
+        }),
       },
     };
 

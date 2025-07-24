@@ -54,7 +54,7 @@ describe('CharacterBuilderController - Fixed Tests', () => {
       setAttribute: jest.fn(),
       addEventListener: jest.fn(),
     }));
-    
+
     global.document = {
       getElementById: mockGetElementById,
       querySelector: mockQuerySelector,
@@ -226,17 +226,17 @@ describe('CharacterBuilderController - Fixed Tests', () => {
     it('should attempt to initialize and handle DOM gracefully', async () => {
       // Reset and setup spy to track calls
       global.mockGetElementById.mockClear();
-      
+
       await controller.initialize();
 
       // The core behavior we're testing: the controller should initialize the service
       expect(mockCharacterBuilderService.initialize).toHaveBeenCalledTimes(1);
-      
+
       // And it should complete without throwing errors
       expect(mockLogger.info).toHaveBeenCalledWith(
         'CharacterBuilderController: Successfully initialized'
       );
-      
+
       // Note: DOM element caching may fail silently in test environment,
       // but the controller should handle this gracefully
     });
@@ -336,7 +336,7 @@ describe('CharacterBuilderController - Fixed Tests', () => {
 
       // The controller should initialize the service
       expect(mockCharacterBuilderService.initialize).toHaveBeenCalledTimes(1);
-      
+
       // Note: DOM element availability in test environment may affect
       // whether getAllCharacterConcepts is called, but the controller
       // should handle this gracefully
@@ -347,7 +347,7 @@ describe('CharacterBuilderController - Fixed Tests', () => {
 
       // The controller should initialize the service
       expect(mockCharacterBuilderService.initialize).toHaveBeenCalledTimes(1);
-      
+
       // The controller should handle various scenarios gracefully
       // (DOM element availability may vary in test environment)
     });

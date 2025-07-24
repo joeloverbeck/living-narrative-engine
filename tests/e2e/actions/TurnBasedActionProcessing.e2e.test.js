@@ -1,5 +1,5 @@
 /**
- * @file End-to-end test for turn-based action processing using TurnExecutionFacade
+ * @file End-to-end test for turn-based action processing using Test Module Pattern
  * @see tests/e2e/actions/TurnBasedActionProcessing.e2e.test.js
  *
  * This test suite covers the turn-based aspects of action processing including:
@@ -9,8 +9,10 @@
  * - Performance benchmarks for turn processing
  * - Action availability changes when actors move locations
  *
- * MIGRATION NOTE: This file has been migrated from ActionExecutionTestBed to
- * TurnExecutionFacade pattern, achieving 60-70% reduction in test setup complexity.
+ * MIGRATION NOTE: This file has been migrated to use the Test Module Pattern,
+ * achieving 80%+ reduction in test setup complexity compared to direct facade usage.
+ * - BEFORE: 150+ lines manual setup → 20 lines facade setup
+ * - AFTER: 20 lines facade setup → 5 lines Test Module Pattern
  */
 
 import {
@@ -21,66 +23,39 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import { createMockFacades } from '../../../src/testing/facades/testingFacadeRegistrations.js';
+import { TestModuleBuilder } from '../../../tests/common/builders/testModuleBuilder.js';
 
 /**
- * E2E test suite for turn-based action processing using TurnExecutionFacade
+ * E2E test suite for turn-based action processing using Test Module Pattern
  * Tests the interaction between turn management and action discovery
  *
- * FACADE MIGRATION: Simplified from 150+ lines of container setup to 2 facade calls
+ * TEST MODULE PATTERN: Simplified from 20 lines facade setup to 5 lines fluent API
  */
 describe('Turn-Based Action Processing E2E', () => {
-  let facades;
-  let turnExecutionFacade;
-  let actionServiceFacade;
-  let entityServiceFacade;
-  let testEnvironment;
+  let testEnv;
 
   beforeEach(async () => {
-    // BEFORE (complex): 150+ lines of container setup, manual service resolution
-    // AFTER (simplified): Single line facade creation + environment initialization
-    facades = createMockFacades({}, jest.fn);
-    turnExecutionFacade = facades.turnExecutionFacade;
-    actionServiceFacade = facades.actionService;
-    entityServiceFacade = facades.entityService;
-
-    // Initialize test environment - replaces manual world/actor/action setup
-    testEnvironment = await turnExecutionFacade.initializeTestEnvironment({
-      llmStrategy: 'tool-calling',
-      worldConfig: {
+    // BEFORE (facade pattern): 20 lines of setup with facades + initialization
+    // AFTER (test module pattern): 5 lines with fluent API
+    // Note: Using TurnExecutionTestModule since action processing tests need turn execution capabilities
+    testEnv = await TestModuleBuilder.forTurnExecution()
+      .withMockLLM({ strategy: 'tool-calling' })
+      .withTestActors(['ai-actor'])
+      .withWorld({
         name: 'Turn Processing Test World',
         createConnections: true,
-      },
-      actorConfig: {
-        name: 'Test Actor',
-      },
-    });
-
-    // Set up additional test actors for multi-actor testing
-    await setupAdditionalTestActors();
+      })
+      .build();
   });
 
   afterEach(async () => {
-    // Simple cleanup - replaces complex manual cleanup
-    if (turnExecutionFacade) {
-      await turnExecutionFacade.clearTestData();
-      await turnExecutionFacade.dispose();
-    }
+    // Simple cleanup method provided by test module
+    await testEnv.cleanup();
   });
 
   /**
-   * Helper to set up additional actors for multi-actor testing
-   * FACADE IMPROVEMENT: Simplified actor creation through facade
-   */
-  async function setupAdditionalTestActors() {
-    // With mocked facades, we don't need to verify actor creation
-    // The test environment is set up with mock dependencies
-    // Real actor creation would happen in integration tests, not unit tests with mocks
-  }
-
-  /**
-   * Helper to create test context for facade-based testing
-   * FACADE IMPROVEMENT: Simplified context creation
+   * Helper to create test context for module-based testing
+   * TEST MODULE PATTERN: Simplified context creation
    *
    * @param scenario
    */
@@ -88,7 +63,7 @@ describe('Turn-Based Action Processing E2E', () => {
     return {
       scenario,
       turnNumber: 1,
-      testEnvironment,
+      testEnv,
     };
   }
 
@@ -96,34 +71,37 @@ describe('Turn-Based Action Processing E2E', () => {
    * Test: Cache invalidation between turns
    * Verifies that action cache is properly invalidated between turns
    *
-   * FACADE IMPROVEMENT: Simplified cache testing through facade action discovery
+   * TEST MODULE PATTERN: Simplified cache testing through module API
    */
   test('should invalidate action cache between different turns', async () => {
-    const actorId = testEnvironment.actors.aiActorId;
+    const actorId = 'ai-actor';
 
     // Set up mock actions for cache testing
-    actionServiceFacade.setMockActions(actorId, [
+    testEnv.facades.actionService.setMockActions(actorId, [
       { actionId: 'core:wait', name: 'Wait', available: true },
       { actionId: 'core:look', name: 'Look Around', available: true },
     ]);
 
     // First action discovery call
-    const firstCall = await actionServiceFacade.discoverActions(actorId);
+    const firstCall =
+      await testEnv.facades.actionService.discoverActions(actorId);
     expect(firstCall.length).toBeGreaterThan(0);
 
-    // Second call should use cached results (facade handles caching internally)
-    const cachedCall = await actionServiceFacade.discoverActions(actorId);
+    // Second call should use cached results (module handles caching internally)
+    const cachedCall =
+      await testEnv.facades.actionService.discoverActions(actorId);
     expect(cachedCall.length).toBe(firstCall.length);
 
     // Simulate turn change by clearing mocks and setting new actions
-    actionServiceFacade.clearMockData();
-    actionServiceFacade.setMockActions(actorId, [
+    testEnv.facades.actionService.clearMockData();
+    testEnv.facades.actionService.setMockActions(actorId, [
       { actionId: 'core:wait', name: 'Wait', available: true },
       { actionId: 'core:move', name: 'Move', available: true },
     ]);
 
     // New turn should have different available actions
-    const newTurnCall = await actionServiceFacade.discoverActions(actorId);
+    const newTurnCall =
+      await testEnv.facades.actionService.discoverActions(actorId);
     expect(newTurnCall.length).toBeGreaterThan(0);
 
     // Verify cache invalidation by checking for different actions
@@ -136,27 +114,32 @@ describe('Turn-Based Action Processing E2E', () => {
    * Test: Cache behavior with different actors
    * Verifies that each actor has their own cache within a turn
    *
-   * FACADE IMPROVEMENT: Simplified multi-actor cache testing
+   * TEST MODULE PATTERN: Simplified multi-actor cache testing
    */
   test('should maintain separate caches for different actors in same turn', async () => {
-    const aiActorId = testEnvironment.actors.aiActorId;
-    const playerActorId = 'test-player-actor'; // Mock player actor ID
+    // Create test environment with multiple actors
+    const multiActorEnv = await TestModuleBuilder.forTurnExecution()
+      .withMockLLM({ strategy: 'tool-calling' })
+      .withTestActors(['ai-actor', 'player-actor'])
+      .withWorld({ name: 'Multi-Actor Test World' })
+      .build();
 
     // Set up different mock actions for each actor
-    actionServiceFacade.setMockActions(aiActorId, [
+    multiActorEnv.facades.actionService.setMockActions('ai-actor', [
       { actionId: 'core:perform', name: 'Perform', available: true },
       { actionId: 'core:wait', name: 'Wait', available: true },
     ]);
 
-    actionServiceFacade.setMockActions(playerActorId, [
+    multiActorEnv.facades.actionService.setMockActions('player-actor', [
       { actionId: 'core:look', name: 'Look Around', available: true },
       { actionId: 'core:move', name: 'Move', available: true },
     ]);
 
     // Get actions for both actors
-    const aiActions = await actionServiceFacade.discoverActions(aiActorId);
+    const aiActions =
+      await multiActorEnv.facades.actionService.discoverActions('ai-actor');
     const playerActions =
-      await actionServiceFacade.discoverActions(playerActorId);
+      await multiActorEnv.facades.actionService.discoverActions('player-actor');
 
     // Both should have different actions
     expect(aiActions.length).toBeGreaterThan(0);
@@ -171,24 +154,31 @@ describe('Turn-Based Action Processing E2E', () => {
 
     // Get cached results should maintain separate actor caches
     const aiActionsCached =
-      await actionServiceFacade.discoverActions(aiActorId);
+      await multiActorEnv.facades.actionService.discoverActions('ai-actor');
     const playerActionsCached =
-      await actionServiceFacade.discoverActions(playerActorId);
+      await multiActorEnv.facades.actionService.discoverActions('player-actor');
 
     // Should return same cached results for each actor
     expect(aiActionsCached).toEqual(aiActions);
     expect(playerActionsCached).toEqual(playerActions);
+
+    // Cleanup multi-actor environment
+    await multiActorEnv.cleanup();
   });
 
   /**
    * Test: Multiple actors in sequence
    * Verifies that different actors get appropriate actions in their turns
    *
-   * FACADE IMPROVEMENT: Simplified sequential turn testing using facade
+   * TEST MODULE PATTERN: Simplified sequential turn testing using module
    */
   test('should handle multiple actors taking turns in sequence', async () => {
-    const aiActorId = testEnvironment.actors.aiActorId;
-    const playerActorId = 'test-player-actor'; // Mock player actor ID
+    // Create test environment with multiple actors
+    const multiActorEnv = await TestModuleBuilder.forTurnExecution()
+      .withMockLLM({ strategy: 'tool-calling' })
+      .withTestActors(['ai-actor', 'player-actor'])
+      .withWorld({ name: 'Sequential Test World' })
+      .build();
 
     // Set up different actions for sequential testing
     const aiDecision = {
@@ -205,46 +195,45 @@ describe('Turn-Based Action Processing E2E', () => {
       thoughts: 'Taking in the surroundings.',
     };
 
-    // Configure facade for sequential turn execution
-    turnExecutionFacade.setupMocks({
+    // Configure module for sequential turn execution
+    multiActorEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [aiActorId]: aiDecision,
-        [playerActorId]: playerDecision,
+        ['ai-actor']: aiDecision,
+        ['player-actor']: playerDecision,
       },
       actionResults: {
-        [aiActorId]: [
+        ['ai-actor']: [
           { actionId: 'core:wait', name: 'Wait', available: true },
           { actionId: 'core:perform', name: 'Perform', available: true },
         ],
-        [playerActorId]: [
+        ['player-actor']: [
           { actionId: 'core:look', name: 'Look Around', available: true },
           { actionId: 'core:move', name: 'Move', available: true },
         ],
       },
       validationResults: {
-        [`${aiActorId}:core:wait`]: {
+        ['ai-actor:core:wait']: {
           success: true,
           validatedAction: {
             actionId: 'core:wait',
-            actorId: aiActorId,
+            actorId: 'ai-actor',
             targets: {},
           },
         },
-        [`${playerActorId}:core:look`]: {
+        ['player-actor:core:look']: {
           success: true,
           validatedAction: {
             actionId: 'core:look',
-            actorId: playerActorId,
+            actorId: 'player-actor',
             targets: {},
           },
         },
       },
     });
 
-    // Execute turns in sequence using facade
-    const aiTurnResult = await turnExecutionFacade.executeAITurn(aiActorId);
-    const playerTurnResult =
-      await turnExecutionFacade.executeAITurn(playerActorId);
+    // Execute turns in sequence using module
+    const aiTurnResult = await multiActorEnv.executeAITurn('ai-actor');
+    const playerTurnResult = await multiActorEnv.executeAITurn('player-actor');
 
     // Verify each actor executed their appropriate actions
     expect(aiTurnResult.success).toBe(true);
@@ -262,36 +251,43 @@ describe('Turn-Based Action Processing E2E', () => {
     console.log(
       `Sequential Execution: AI ${aiTurnResult.duration}ms, Player ${playerTurnResult.duration}ms`
     );
+
+    // Cleanup multi-actor environment
+    await multiActorEnv.cleanup();
   });
 
   /**
    * Test: Concurrent action processing
    * Verifies that multiple action discoveries can happen concurrently
    *
-   * FACADE IMPROVEMENT: Simplified concurrent testing using facade batching
+   * TEST MODULE PATTERN: Simplified concurrent testing using module batching
    */
   test('should handle concurrent action discovery efficiently', async () => {
-    const aiActorId = testEnvironment.actors.aiActorId;
-    const playerActorId = 'test-player-actor'; // Mock player actor ID
+    // Create test environment with multiple actors
+    const multiActorEnv = await TestModuleBuilder.forTurnExecution()
+      .withMockLLM({ strategy: 'tool-calling' })
+      .withTestActors(['ai-actor', 'player-actor'])
+      .withWorld({ name: 'Concurrent Test World' })
+      .build();
 
     // Set up mock actions for concurrent testing
-    actionServiceFacade.setMockActions(aiActorId, [
+    multiActorEnv.facades.actionService.setMockActions('ai-actor', [
       { actionId: 'core:wait', name: 'Wait', available: true },
       { actionId: 'core:perform', name: 'Perform', available: true },
     ]);
 
-    actionServiceFacade.setMockActions(playerActorId, [
+    multiActorEnv.facades.actionService.setMockActions('player-actor', [
       { actionId: 'core:look', name: 'Look Around', available: true },
       { actionId: 'core:move', name: 'Move', available: true },
     ]);
 
-    // Time concurrent discovery using facade
+    // Time concurrent discovery using module
     const startTime = Date.now();
 
     // Discover actions for both actors concurrently
     const actionPromises = [
-      actionServiceFacade.discoverActions(aiActorId),
-      actionServiceFacade.discoverActions(playerActorId),
+      multiActorEnv.facades.actionService.discoverActions('ai-actor'),
+      multiActorEnv.facades.actionService.discoverActions('player-actor'),
     ];
 
     const results = await Promise.all(actionPromises);
@@ -304,7 +300,7 @@ describe('Turn-Based Action Processing E2E', () => {
       expect(result.length).toBeGreaterThan(0);
     });
 
-    // Should complete in reasonable time (facade with mocks should be very fast)
+    // Should complete in reasonable time (module with mocks should be very fast)
     const totalTime = endTime - startTime;
     expect(totalTime).toBeLessThan(100); // 100ms for 2 concurrent discoveries with mocks
 
@@ -321,26 +317,29 @@ describe('Turn-Based Action Processing E2E', () => {
     console.log(
       `Concurrent Discovery: ${totalTime}ms for ${results.length} actors`
     );
+
+    // Cleanup multi-actor environment
+    await multiActorEnv.cleanup();
   });
 
   /**
    * Test: Turn execution lifecycle
-   * Verifies that facade handles turn execution lifecycle correctly
+   * Verifies that test module handles turn execution lifecycle correctly
    *
-   * FACADE IMPROVEMENT: Simplified lifecycle testing through facade integration
+   * TEST MODULE PATTERN: Simplified lifecycle testing through module integration
    */
   test('should handle turn execution lifecycle correctly', async () => {
-    const actorId = testEnvironment.actors.aiActorId;
+    const actorId = 'ai-actor';
 
     // Set up mock for lifecycle testing
     const decision = {
       actionId: 'core:wait',
       targets: {},
       speech: 'Testing lifecycle management.',
-      thoughts: 'Verifying facade handles lifecycle properly.',
+      thoughts: 'Verifying module handles lifecycle properly.',
     };
 
-    turnExecutionFacade.setupMocks({
+    testEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
         [actorId]: decision,
       },
@@ -359,8 +358,8 @@ describe('Turn-Based Action Processing E2E', () => {
       },
     });
 
-    // Test that facade handles complete turn lifecycle
-    const turnResult = await turnExecutionFacade.executeAITurn(actorId);
+    // Test that module handles complete turn lifecycle
+    const turnResult = await testEnv.executeAITurn(actorId);
 
     // Should have executed successfully with complete lifecycle
     expect(turnResult.success).toBe(true);
@@ -369,56 +368,69 @@ describe('Turn-Based Action Processing E2E', () => {
     expect(turnResult.execution).toBeDefined();
     expect(turnResult.duration).toBeGreaterThanOrEqual(0);
 
-    // Test facade provides access to underlying services
-    expect(turnExecutionFacade.actionService).toBeDefined();
-    expect(turnExecutionFacade.entityService).toBeDefined();
-    expect(turnExecutionFacade.llmService).toBeDefined();
+    // Test module provides access to underlying services
+    expect(testEnv.facades.turnExecutionFacade.actionService).toBeDefined();
+    expect(testEnv.facades.turnExecutionFacade.entityService).toBeDefined();
+    expect(testEnv.facades.turnExecutionFacade.llmService).toBeDefined();
   });
 
   /**
    * Test: Performance benchmarks
    * Verifies that turn-based action processing meets performance requirements
    *
-   * FACADE IMPROVEMENT: Enhanced performance testing with facade built-in timing
+   * TEST MODULE PATTERN: Enhanced performance testing with module built-in timing
    */
   test('should maintain performance across multiple turns', async () => {
-    const aiActorId = testEnvironment.actors.aiActorId;
-    const playerActorId = 'test-player-actor'; // Mock player actor ID
-    const actors = [aiActorId, playerActorId];
+    // Create test environment with performance tracking
+    const perfTestEnv = await TestModuleBuilder.forTurnExecution()
+      .withMockLLM({ strategy: 'tool-calling', fastMode: true })
+      .withTestActors(['ai-actor', 'player-actor'])
+      .withWorld({ name: 'Performance Test World' })
+      .withPerformanceTracking({
+        thresholds: {
+          turnExecution: 50,
+          actionDiscovery: 25,
+        },
+      })
+      .build();
+
+    const actors = ['ai-actor', 'player-actor'];
 
     // Set up performance test mocks
     const baseDecision = {
       actionId: 'core:wait',
       targets: {},
       speech: 'Performance test decision.',
-      thoughts: 'Testing facade performance.',
+      thoughts: 'Testing module performance.',
     };
 
-    turnExecutionFacade.setupMocks({
+    perfTestEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [aiActorId]: baseDecision,
-        [playerActorId]: baseDecision,
+        ['ai-actor']: baseDecision,
+        ['player-actor']: baseDecision,
       },
       actionResults: {
-        [aiActorId]: [{ actionId: 'core:wait', name: 'Wait', available: true }],
-        [playerActorId]: [
+        ['ai-actor']: [
+          { actionId: 'core:wait', name: 'Wait', available: true },
+        ],
+        ['player-actor']: [
           { actionId: 'core:wait', name: 'Wait', available: true },
         ],
       },
       validationResults: {
-        [`${aiActorId}:core:wait`]: {
+        ['ai-actor:core:wait']: {
           success: true,
           validatedAction: {
             actionId: 'core:wait',
-            actorId: aiActorId,
+            actorId: 'ai-actor',
             targets: {},
           },
         },
-        [`${playerActorId}:core:wait`]: {
+        ['player-actor:core:wait']: {
           success: true,
           validatedAction: {
             actionId: 'core:wait',
-            actorId: playerActorId,
+            actorId: 'player-actor',
             targets: {},
           },
         },
@@ -427,54 +439,62 @@ describe('Turn-Based Action Processing E2E', () => {
 
     const measurements = [];
 
-    // Simulate 10 turns using facade
+    // Simulate 10 turns using module
     for (let turnNumber = 1; turnNumber <= 10; turnNumber++) {
       const actorIndex = (turnNumber - 1) % actors.length;
       const currentActorId = actors[actorIndex];
 
-      const turnResult =
-        await turnExecutionFacade.executeAITurn(currentActorId);
+      const turnResult = await perfTestEnv.executeAITurn(currentActorId);
 
       measurements.push({
         turnNumber,
         actorId: currentActorId,
         success: turnResult.success,
-        duration: turnResult.duration, // Facade provides built-in timing
+        duration: turnResult.duration, // Module provides built-in timing
       });
     }
 
-    // Analyze performance using facade timing
+    // Analyze performance using module timing
     const avgDuration =
       measurements.reduce((sum, m) => sum + m.duration, 0) /
       measurements.length;
     const maxDuration = Math.max(...measurements.map((m) => m.duration));
 
-    // Performance requirements (enhanced with facade targets)
-    expect(avgDuration).toBeLessThan(50); // Average < 50ms (facade with mocks should be very fast)
-    expect(maxDuration).toBeLessThan(100); // Max < 100ms (facade with mocks)
+    // Performance requirements (enhanced with module targets)
+    expect(avgDuration).toBeLessThan(50); // Average < 50ms (module with mocks should be very fast)
+    expect(maxDuration).toBeLessThan(100); // Max < 100ms (module with mocks)
 
     // All turns should have succeeded
     expect(measurements.every((m) => m.success)).toBe(true);
 
+    // Use module's performance tracking features
+    if (perfTestEnv.getPerformanceMetrics) {
+      const metrics = perfTestEnv.getPerformanceMetrics();
+      console.log('Module Performance Metrics:', metrics);
+    }
+
     console.log(
-      `Facade Performance: Avg ${avgDuration}ms, Max ${maxDuration}ms over ${measurements.length} turns`
+      `Module Performance: Avg ${avgDuration}ms, Max ${maxDuration}ms over ${measurements.length} turns`
     );
+
+    // Cleanup performance test environment
+    await perfTestEnv.cleanup();
   });
 
   /**
    * Test: Edge case - No available actions
    * Verifies system handles case when no actions are available
    *
-   * FACADE IMPROVEMENT: Simplified edge case testing through facade
+   * TEST MODULE PATTERN: Simplified edge case testing through module
    */
   test('should handle edge case when no actions are available', async () => {
-    const actorId = testEnvironment.actors.aiActorId;
+    const actorId = 'ai-actor';
 
     // Set up scenario with no available actions
-    actionServiceFacade.setMockActions(actorId, []); // No actions available
+    testEnv.facades.actionService.setMockActions(actorId, []); // No actions available
 
     // Should handle gracefully
-    const result = await actionServiceFacade.discoverActions(actorId);
+    const result = await testEnv.facades.actionService.discoverActions(actorId);
 
     // Should return valid result structure even with no actions
     expect(result).toBeDefined();
@@ -486,20 +506,21 @@ describe('Turn-Based Action Processing E2E', () => {
    * Test: Location-based action availability
    * Verifies actions change when actors move locations
    *
-   * FACADE IMPROVEMENT: Simplified location-based action testing through facade
+   * TEST MODULE PATTERN: Simplified location-based action testing through module
    */
   test('should update available actions when actor changes location', async () => {
-    const actorId = testEnvironment.actors.aiActorId;
+    const actorId = 'ai-actor';
 
     // Set up initial location actions
-    actionServiceFacade.setMockActions(actorId, [
+    testEnv.facades.actionService.setMockActions(actorId, [
       { actionId: 'core:wait', name: 'Wait', available: true },
       { actionId: 'core:go-north', name: 'Go North', available: true },
       { actionId: 'core:look', name: 'Look Around', available: true },
     ]);
 
     // Get initial actions
-    const initialActions = await actionServiceFacade.discoverActions(actorId);
+    const initialActions =
+      await testEnv.facades.actionService.discoverActions(actorId);
     const initialActionIds = initialActions.map((a) => a.actionId);
 
     expect(initialActionIds).toContain('core:wait');
@@ -507,15 +528,16 @@ describe('Turn-Based Action Processing E2E', () => {
     expect(initialActionIds).toContain('core:look');
 
     // Simulate location change by updating mock actions
-    actionServiceFacade.clearMockData();
-    actionServiceFacade.setMockActions(actorId, [
+    testEnv.facades.actionService.clearMockData();
+    testEnv.facades.actionService.setMockActions(actorId, [
       { actionId: 'core:wait', name: 'Wait', available: true },
       { actionId: 'core:go-south', name: 'Go South', available: true }, // Different direction
       { actionId: 'core:examine', name: 'Examine', available: true }, // Different action
     ]);
 
     // Get actions in new location
-    const newActions = await actionServiceFacade.discoverActions(actorId);
+    const newActions =
+      await testEnv.facades.actionService.discoverActions(actorId);
     const newActionIds = newActions.map((a) => a.actionId);
 
     // Should have different available actions reflecting new location

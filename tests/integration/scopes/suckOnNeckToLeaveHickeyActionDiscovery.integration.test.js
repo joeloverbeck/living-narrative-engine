@@ -22,9 +22,7 @@ import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js'
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
-import {
-  POSITION_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
+import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import fs from 'fs';
 import path from 'path';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
@@ -67,10 +65,14 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
     scopeRegistry.clear();
 
     // Load the required scope
-    const closeActorsFacingEachOtherOrBehindTargetScopeContent = fs.readFileSync(
-      path.resolve(__dirname, '../../../data/mods/intimacy/scopes/close_actors_facing_each_other_or_behind_target.scope'),
-      'utf8'
-    );
+    const closeActorsFacingEachOtherOrBehindTargetScopeContent =
+      fs.readFileSync(
+        path.resolve(
+          __dirname,
+          '../../../data/mods/intimacy/scopes/close_actors_facing_each_other_or_behind_target.scope'
+        ),
+        'utf8'
+      );
 
     const scopeDefs = parseScopeDefinitions(
       closeActorsFacingEachOtherOrBehindTargetScopeContent,
@@ -78,15 +80,25 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
     );
 
     scopeRegistry.initialize({
-      'intimacy:close_actors_facing_each_other_or_behind_target': scopeDefs.get('intimacy:close_actors_facing_each_other_or_behind_target'),
+      'intimacy:close_actors_facing_each_other_or_behind_target': scopeDefs.get(
+        'intimacy:close_actors_facing_each_other_or_behind_target'
+      ),
     });
 
     scopeEngine = new ScopeEngine();
     const registry = new InMemoryDataRegistry();
-    registry.store('actions', suckOnNeckToLeaveHickeyAction.id, suckOnNeckToLeaveHickeyAction);
-    
+    registry.store(
+      'actions',
+      suckOnNeckToLeaveHickeyAction.id,
+      suckOnNeckToLeaveHickeyAction
+    );
+
     // Store required conditions
-    registry.store('conditions', bothActorsFacingEachOther.id, bothActorsFacingEachOther);
+    registry.store(
+      'conditions',
+      bothActorsFacingEachOther.id,
+      bothActorsFacingEachOther
+    );
     registry.store('conditions', actorIsBehindEntity.id, actorIsBehindEntity);
 
     gameDataRepository = new GameDataRepository(registry, logger);
@@ -366,7 +378,9 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [facingTargetId, behindTargetId] },
+            'intimacy:closeness': {
+              partners: [facingTargetId, behindTargetId],
+            },
           },
         },
         {
@@ -405,7 +419,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
       const targetIds = suckOnNeckActions
         .map((action) => action.params?.targetId)
         .filter(Boolean);
-      
+
       // Should be available for both positioning scenarios
       expect(targetIds).toContain(facingTargetId);
       expect(targetIds).toContain(behindTargetId);
@@ -414,7 +428,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
     it('should validate proper component requirements', async () => {
       const actorId = 'actor1';
       const targetId = 'target1';
-      
+
       // Test that closeness is required
       const entitiesWithoutCloseness = [
         {

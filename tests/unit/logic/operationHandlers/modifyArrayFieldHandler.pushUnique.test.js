@@ -269,7 +269,9 @@ describe('ModifyArrayFieldHandler', () => {
 
     test('should store result in result_variable when adding new item', async () => {
       // Arrange
-      entityManager._setComponent(entityId, componentType, { [field]: ['existing'] });
+      entityManager._setComponent(entityId, componentType, {
+        [field]: ['existing'],
+      });
       const params = {
         entity_ref: entityId,
         component_type: componentType,
@@ -293,7 +295,9 @@ describe('ModifyArrayFieldHandler', () => {
       await handler.execute(params, contextWithVariables);
 
       // Assert
-      expect(contextWithVariables.evaluationContext.context.array_result).toEqual(['existing', 'new_item']);
+      expect(
+        contextWithVariables.evaluationContext.context.array_result
+      ).toEqual(['existing', 'new_item']);
       expect(logger.debug).toHaveBeenCalledWith(
         "MODIFY_ARRAY_FIELD: Stored result in context variable 'array_result'."
       );
@@ -301,7 +305,9 @@ describe('ModifyArrayFieldHandler', () => {
 
     test('should store unchanged array in result_variable when item already exists', async () => {
       // Arrange
-      entityManager._setComponent(entityId, componentType, { [field]: ['existing'] });
+      entityManager._setComponent(entityId, componentType, {
+        [field]: ['existing'],
+      });
       const params = {
         entity_ref: entityId,
         component_type: componentType,
@@ -325,7 +331,9 @@ describe('ModifyArrayFieldHandler', () => {
       await handler.execute(params, contextWithVariables);
 
       // Assert
-      expect(contextWithVariables.evaluationContext.context.array_result).toEqual(['existing']);
+      expect(
+        contextWithVariables.evaluationContext.context.array_result
+      ).toEqual(['existing']);
       expect(logger.debug).toHaveBeenCalledWith(
         "MODIFY_ARRAY_FIELD: Stored result in context variable 'array_result'."
       );
