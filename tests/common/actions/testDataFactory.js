@@ -67,9 +67,7 @@ export class TestDataFactory {
         scope: 'none',
         template: 'wait',
         prerequisites: [],
-        required_components: {
-          actor: [],
-        },
+        required_components: {},
       },
       {
         id: 'core:go',
@@ -77,10 +75,15 @@ export class TestDataFactory {
         description: 'Move to a different location.',
         scope: 'core:clear_directions',
         template: 'go to {target}',
-        prerequisites: ['core:actor-can-move'],
-        required_components: {
-          actor: ['core:position'],
-        },
+        prerequisites: [
+          {
+            logic: {
+              condition_ref: 'core:actor-can-move'
+            },
+            failure_message: 'You cannot move without functioning legs.'
+          }
+        ],
+        required_components: {},
       },
       {
         id: 'core:follow',
@@ -88,10 +91,15 @@ export class TestDataFactory {
         description: 'Follow another actor.',
         scope: 'core:other_actors',
         template: 'follow {target}',
-        prerequisites: ['core:actor-can-move'],
-        required_components: {
-          actor: ['core:following', 'core:position'],
-        },
+        prerequisites: [
+          {
+            logic: {
+              condition_ref: 'core:actor-can-move'
+            },
+            failure_message: 'You cannot move without functioning legs.'
+          }
+        ],
+        required_components: {},
       },
       {
         id: 'core:attack',
@@ -99,10 +107,21 @@ export class TestDataFactory {
         description: 'Attack a target.',
         scope: 'core:nearby_actors',
         template: 'attack {target}',
-        prerequisites: ['core:actor-can-move', 'core:has-health'],
-        required_components: {
-          actor: ['core:position', 'core:health'],
-        },
+        prerequisites: [
+          {
+            logic: {
+              condition_ref: 'core:actor-can-move'
+            },
+            failure_message: 'You cannot move without functioning legs.'
+          },
+          {
+            logic: {
+              condition_ref: 'core:has-health'
+            },
+            failure_message: 'You need health to attack.'
+          }
+        ],
+        required_components: {},
       },
     ];
   }
@@ -122,9 +141,7 @@ export class TestDataFactory {
         scope: 'core:examinable_objects',
         template: 'examine {target}',
         prerequisites: [],
-        required_components: {
-          actor: [],
-        },
+        required_components: {},
       },
       {
         id: 'core:take',
@@ -132,10 +149,15 @@ export class TestDataFactory {
         description: 'Take an item from the environment.',
         scope: 'core:takeable_items',
         template: 'take {target}',
-        prerequisites: ['core:actor-can-move'],
-        required_components: {
-          actor: ['core:inventory', 'core:position'],
-        },
+        prerequisites: [
+          {
+            logic: {
+              condition_ref: 'core:actor-can-move'
+            },
+            failure_message: 'You cannot move without functioning legs.'
+          }
+        ],
+        required_components: {},
       },
       {
         id: 'core:use',
@@ -144,9 +166,7 @@ export class TestDataFactory {
         scope: 'core:inventory_items',
         template: 'use {target}',
         prerequisites: [],
-        required_components: {
-          actor: ['core:inventory'],
-        },
+        required_components: {},
       },
     ];
   }
@@ -163,7 +183,7 @@ export class TestDataFactory {
         description:
           'Checks if the actor has functioning legs capable of movement',
         logic: {
-          '==': [{ var: 'actor.core:movement.locked' }, false],
+          '==': [{ var: 'actor.components.core:movement.locked' }, false]
         },
       },
       {
@@ -177,14 +197,14 @@ export class TestDataFactory {
         id: 'core:has-health',
         description: 'Checks if the actor has health component',
         logic: {
-          has: [{ var: 'actor' }, 'core:health'],
+          has: [{ var: 'actor.components' }, 'core:health'],
         },
       },
       {
         id: 'core:has-inventory',
         description: 'Checks if the actor has inventory component',
         logic: {
-          has: [{ var: 'actor' }, 'core:inventory'],
+          has: [{ var: 'actor.components' }, 'core:inventory'],
         },
       },
       {
@@ -442,10 +462,15 @@ export class TestDataFactory {
         description: 'Action that always fails prerequisites',
         scope: 'none',
         template: 'fail',
-        prerequisites: ['test:always-false'],
-        required_components: {
-          actor: [],
-        },
+        prerequisites: [
+          {
+            logic: {
+              condition_ref: 'test:always-false'
+            },
+            failure_message: 'This action always fails'
+          }
+        ],
+        required_components: {},
       },
       {
         id: 'test:missing-scope',
@@ -454,9 +479,7 @@ export class TestDataFactory {
         scope: 'test:non-existent-scope',
         template: 'missing scope',
         prerequisites: [],
-        required_components: {
-          actor: [],
-        },
+        required_components: {},
       },
       {
         id: 'test:missing-prerequisites',
@@ -464,10 +487,15 @@ export class TestDataFactory {
         description: 'Action with non-existent prerequisites',
         scope: 'none',
         template: 'missing prereq',
-        prerequisites: ['test:does-not-exist'],
-        required_components: {
-          actor: [],
-        },
+        prerequisites: [
+          {
+            logic: {
+              condition_ref: 'test:does-not-exist'
+            },
+            failure_message: 'Missing prerequisite'
+          }
+        ],
+        required_components: {},
       },
       {
         id: 'test:complex-requirements',
@@ -476,18 +504,26 @@ export class TestDataFactory {
         scope: 'core:other_actors',
         template: 'complex {target}',
         prerequisites: [
-          'core:actor-can-move',
-          'core:has-health',
-          'core:has-inventory',
+          {
+            logic: {
+              condition_ref: 'core:actor-can-move'
+            },
+            failure_message: 'Cannot move'
+          },
+          {
+            logic: {
+              condition_ref: 'core:has-health'
+            },
+            failure_message: 'No health'
+          },
+          {
+            logic: {
+              condition_ref: 'core:has-inventory'
+            },
+            failure_message: 'No inventory'
+          }
         ],
-        required_components: {
-          actor: [
-            'core:position',
-            'core:health',
-            'core:inventory',
-            'core:movement',
-          ],
-        },
+        required_components: {},
       },
     ];
   }
@@ -534,9 +570,9 @@ export class TestDataFactory {
         description: 'Complex condition that fails',
         logic: {
           and: [
-            { '==': [{ var: 'actor.core:movement.locked' }, false] },
-            { '>=': [{ var: 'actor.core:health.current' }, 50] },
-            { has: [{ var: 'actor' }, 'test:special-ability'] },
+            { '==': [{ var: 'actor.components.core:movement.locked' }, false] },
+            { '>=': [{ var: 'actor.components.core:health.current' }, 50] },
+            { has: [{ var: 'actor.components' }, 'test:special-ability'] },
           ],
         },
       },
