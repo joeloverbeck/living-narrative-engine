@@ -65,16 +65,15 @@ describe('CharacterBuilderApp', () => {
       register: jest.fn(),
       resolve: jest.fn((token) => {
         if (token.toString().includes('SchemaLoader')) return mockSchemaLoader;
-        if (token.toString().includes('ISchemaValidator')) return mockSchemaValidator;
+        if (token.toString().includes('ISchemaValidator'))
+          return mockSchemaValidator;
         if (token.toString().includes('LLMAdapter')) return mockLlmAdapter;
         if (token.toString().includes('Controller')) return mockController;
         return {};
       }),
     };
 
-    mockConfigureBaseContainer = jest
-      .fn()
-      .mockResolvedValue(undefined);
+    mockConfigureBaseContainer = jest.fn().mockResolvedValue(undefined);
 
     // Mock the imports
     const { default: AppContainer } = await import(
@@ -151,7 +150,9 @@ describe('CharacterBuilderApp', () => {
       await app.initialize();
 
       // Verify SchemaLoader was called to load all schemas
-      expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(1);
+      expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(
+        1
+      );
 
       // Verify character-specific schemas were loaded in correct order
       const schemaFetchCalls = fetchCalls.filter(

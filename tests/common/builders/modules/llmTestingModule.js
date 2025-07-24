@@ -249,6 +249,103 @@ export class LLMTestingModule extends ITestModule {
   }
 
   /**
+   * Use a standardized LLM configuration from TestConfigurationFactory
+   *
+   * @param {string} [strategy] - The LLM strategy to use
+   * @returns {LLMTestingModule} This instance for chaining
+   * @example
+   * .withStandardLLM('json-schema')
+   */
+  withStandardLLM(strategy = 'tool-calling') {
+    // Import TestConfigurationFactory dynamically to avoid circular dependencies
+    const {
+      TestConfigurationFactory,
+    } = require('../../testConfigurationFactory.js');
+    const llmConfig = TestConfigurationFactory.createLLMConfig(strategy);
+
+    this.#config.strategy =
+      llmConfig.jsonOutputStrategy?.method === 'json_schema'
+        ? 'json-schema'
+        : 'tool-calling';
+    this.#config.llmConfig = llmConfig;
+
+    // Update parameters from config
+    if (llmConfig.defaultParameters) {
+      this.#config.parameters = {
+        ...this.#config.parameters,
+        ...llmConfig.defaultParameters,
+      };
+    }
+
+    // Update token limits from config
+    if (llmConfig.contextTokenLimit) {
+      this.#config.tokenLimits.input = llmConfig.contextTokenLimit;
+    }
+
+    return this;
+  }
+
+  /**
+   * Apply a complete environment preset from TestConfigurationFactory
+   *
+   * @param {string} presetName - The preset name to apply
+   * @returns {LLMTestingModule} This instance for chaining
+   * @example
+   * .withEnvironmentPreset('promptGeneration')
+   */
+  withEnvironmentPreset(presetName) {
+    // Import TestConfigurationFactory dynamically to avoid circular dependencies
+    const {
+      TestConfigurationFactory,
+    } = require('../../testConfigurationFactory.js');
+    const preset =
+      TestConfigurationFactory.getPresets().environments[presetName];
+
+    if (!preset) {
+      throw new Error(`Unknown environment preset: ${presetName}`);
+    }
+
+    const config = preset();
+
+    // Apply LLM configuration
+    if (config.llm) {
+      this.#config.strategy =
+        config.llm.jsonOutputStrategy?.method === 'json_schema'
+          ? 'json-schema'
+          : 'tool-calling';
+      this.#config.llmConfig = config.llm;
+
+      // Update parameters from config
+      if (config.llm.defaultParameters) {
+        this.#config.parameters = {
+          ...this.#config.parameters,
+          ...config.llm.defaultParameters,
+        };
+      }
+
+      // Update token limits from config
+      if (config.llm.contextTokenLimit) {
+        this.#config.tokenLimits.input = config.llm.contextTokenLimit;
+      }
+    }
+
+    // Apply actors
+    if (config.actors) {
+      this.#config.actors = config.actors;
+    }
+
+    // Apply mock responses if available
+    if (config.mocks && config.mocks.llmAdapter && config.mocks.llmAdapter.responses) {
+      this.#config.mockResponses = {
+        ...this.#config.mockResponses,
+        default: config.mocks.llmAdapter.responses,
+      };
+    }
+
+    return this;
+  }
+
+  /**
    * Validate configuration before building
    *
    * @returns {import('../validation/testModuleValidator.js').ValidationResult}

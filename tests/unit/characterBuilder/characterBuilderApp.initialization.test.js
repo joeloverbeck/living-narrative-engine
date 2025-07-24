@@ -57,7 +57,7 @@ describe('CharacterBuilderApp - Initialization', () => {
       // Extract filename from URL for $id
       const filename = url.split('/').pop();
       const schemaId = filename.replace('.schema.json', '');
-      
+
       const schemaData = {
         $schema: 'http://json-schema.org/draft-07/schema#',
         $id: schemaId,
@@ -183,7 +183,7 @@ describe('CharacterBuilderApp - Initialization', () => {
         // Extract filename from identifier for $id
         const filename = identifier.split('/').pop();
         const schemaId = filename.replace('.schema.json', '');
-        
+
         const schemaData = {
           $schema: 'http://json-schema.org/draft-07/schema#',
           $id: schemaId,
@@ -199,12 +199,16 @@ describe('CharacterBuilderApp - Initialization', () => {
       ProductionPathConfiguration,
     } = require('../../../src/configuration/productionPathConfiguration.js');
     ProductionPathConfiguration.mockImplementation(() => ({
-      getSchemaFiles: jest.fn().mockReturnValue([
-        'common.schema.json',
-        'character-concept.schema.json',
-        'thematic-direction.schema.json',
-      ]),
-      resolveSchemaPath: jest.fn().mockImplementation((filename) => `./data/schemas/${filename}`),
+      getSchemaFiles: jest
+        .fn()
+        .mockReturnValue([
+          'common.schema.json',
+          'character-concept.schema.json',
+          'thematic-direction.schema.json',
+        ]),
+      resolveSchemaPath: jest
+        .fn()
+        .mockImplementation((filename) => `./data/schemas/${filename}`),
     }));
 
     // Mock ConfigurableLLMAdapter

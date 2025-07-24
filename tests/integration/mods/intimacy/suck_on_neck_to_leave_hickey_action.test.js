@@ -433,7 +433,7 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    
+
     // The message should convey the intimate and marking nature of the action
     expect(perceptibleEvent.payload.descriptionText).toContain('sucked on');
     expect(perceptibleEvent.payload.descriptionText).toContain('neck');

@@ -219,7 +219,7 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
     test('should return null when mode is unknown in applyModification', async () => {
       const originalComponent = { items: ['a', 'b'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
-      
+
       const params = {
         entity_ref: ENTITY_ID,
         component_type: COMPONENT_TYPE,
@@ -240,7 +240,7 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
     test('should return null when value is undefined for push in applyModification', async () => {
       const originalComponent = { items: ['a', 'b'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
-      
+
       const params = {
         entity_ref: ENTITY_ID,
         component_type: COMPONENT_TYPE,
@@ -260,7 +260,7 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
     test('should return null when value is undefined for push_unique in applyModification', async () => {
       const originalComponent = { items: ['a', 'b'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
-      
+
       const params = {
         entity_ref: ENTITY_ID,
         component_type: COMPONENT_TYPE,
@@ -280,7 +280,7 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
     test('should return null when value is undefined for remove_by_value in applyModification', async () => {
       const originalComponent = { items: ['a', 'b'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
-      
+
       const params = {
         entity_ref: ENTITY_ID,
         component_type: COMPONENT_TYPE,
@@ -303,7 +303,7 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
     test('should dispatch error event when addComponent throws', async () => {
       const originalComponent = { items: ['a'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
-      
+
       const error = new Error('Database connection failed');
       mockEntityManager.addComponent.mockRejectedValue(error);
 
@@ -320,7 +320,8 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         {
-          message: 'MODIFY_ARRAY_FIELD: Failed to commit changes via addComponent.',
+          message:
+            'MODIFY_ARRAY_FIELD: Failed to commit changes via addComponent.',
           details: {
             error: 'Database connection failed',
             entityId: ENTITY_ID,
@@ -333,7 +334,7 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
     test('should not attempt to write result variable when addComponent fails', async () => {
       const originalComponent = { items: ['a'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
-      
+
       const error = new Error('Save failed');
       mockEntityManager.addComponent.mockRejectedValue(error);
 
@@ -349,7 +350,9 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
       await handler.execute(params, mockExecutionContext);
 
       // The result variable should not be set since addComponent failed
-      expect(mockExecutionContext.evaluationContext.context.result).toBeUndefined();
+      expect(
+        mockExecutionContext.evaluationContext.context.result
+      ).toBeUndefined();
     });
   });
 
@@ -376,9 +379,11 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
     test('should return early when commitChanges returns false', async () => {
       const originalComponent = { items: ['a'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
-      
+
       // Make addComponent fail
-      mockEntityManager.addComponent.mockRejectedValue(new Error('Commit failed'));
+      mockEntityManager.addComponent.mockRejectedValue(
+        new Error('Commit failed')
+      );
 
       const params = {
         entity_ref: ENTITY_ID,
@@ -392,7 +397,9 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
       await handler.execute(params, mockExecutionContext);
 
       // Should not try to write to result variable since commit failed
-      expect(mockExecutionContext.evaluationContext.context.result).toBeUndefined();
+      expect(
+        mockExecutionContext.evaluationContext.context.result
+      ).toBeUndefined();
     });
 
     // Covers line 340: Early return when ensureEvaluationContext fails
@@ -445,7 +452,9 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "MODIFY_ARRAY_FIELD: Stored result in context variable 'result'."
       );
-      expect(mockExecutionContext.evaluationContext.context.result).toEqual(['new_item']);
+      expect(mockExecutionContext.evaluationContext.context.result).toEqual([
+        'new_item',
+      ]);
     });
 
     test('should handle context variable writing with pop operation result', async () => {
@@ -466,7 +475,9 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "MODIFY_ARRAY_FIELD: Stored result in context variable 'popped_item'."
       );
-      expect(mockExecutionContext.evaluationContext.context.popped_item).toBe('second');
+      expect(mockExecutionContext.evaluationContext.context.popped_item).toBe(
+        'second'
+      );
     });
   });
 
@@ -512,7 +523,9 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "MODIFY_ARRAY_FIELD: Stored result in context variable 'result'."
       );
-      expect(mockExecutionContext.evaluationContext.context.result).toEqual(['item']);
+      expect(mockExecutionContext.evaluationContext.context.result).toEqual([
+        'item',
+      ]);
     });
   });
 });

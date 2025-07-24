@@ -3,7 +3,14 @@
  * @description Tests isolated schema loading behaviors that don't require full DI setup
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 describe('CharacterBuilderApp - Schema Loading (Unit Tests)', () => {
   let originalFetch;
@@ -29,10 +36,11 @@ describe('CharacterBuilderApp - Schema Loading (Unit Tests)', () => {
             status: 404,
           });
         }
-        
+
         // Handle all other schema files properly
         if (url.includes('.schema.json')) {
-          const schemaName = url.match(/([^/]+)\.schema\.json$/)?.[1] || 'unknown';
+          const schemaName =
+            url.match(/([^/]+)\.schema\.json$/)?.[1] || 'unknown';
           return Promise.resolve({
             ok: true,
             json: () =>
@@ -44,12 +52,14 @@ describe('CharacterBuilderApp - Schema Loading (Unit Tests)', () => {
               }),
           });
         }
-        
+
         return Promise.reject(new Error(`Unexpected fetch: ${url}`));
       });
 
       // Import the module dynamically to apply mocks
-      const { CharacterBuilderApp } = await import('../../../src/character-builder-main.js');
+      const { CharacterBuilderApp } = await import(
+        '../../../src/character-builder-main.js'
+      );
       const app = new CharacterBuilderApp();
 
       // Act & Assert
@@ -67,10 +77,11 @@ describe('CharacterBuilderApp - Schema Loading (Unit Tests)', () => {
             status: 500,
           });
         }
-        
+
         // Handle all other schema files properly
         if (url.includes('.schema.json')) {
-          const schemaName = url.match(/([^/]+)\.schema\.json$/)?.[1] || 'unknown';
+          const schemaName =
+            url.match(/([^/]+)\.schema\.json$/)?.[1] || 'unknown';
           return Promise.resolve({
             ok: true,
             json: () =>
@@ -82,12 +93,14 @@ describe('CharacterBuilderApp - Schema Loading (Unit Tests)', () => {
               }),
           });
         }
-        
+
         return Promise.reject(new Error(`Unexpected fetch: ${url}`));
       });
 
       // Import the module dynamically to apply mocks
-      const { CharacterBuilderApp } = await import('../../../src/character-builder-main.js');
+      const { CharacterBuilderApp } = await import(
+        '../../../src/character-builder-main.js'
+      );
       const app = new CharacterBuilderApp();
 
       // Act & Assert
@@ -102,14 +115,14 @@ describe('CharacterBuilderApp - Schema Loading (Unit Tests)', () => {
       // This test serves as documentation that the full schema loading flow,
       // including DI container setup and SchemaLoader coordination, is covered
       // by integration tests in tests/integration/characterBuilder/
-      
+
       const integrationTestFiles = [
         'tests/integration/characterBuilder/characterBuilderSchemaFix.integration.test.js',
-        'tests/integration/characterBuilder/characterBuilderLLMInit.integration.test.js'
+        'tests/integration/characterBuilder/characterBuilderLLMInit.integration.test.js',
       ];
-      
+
       expect(integrationTestFiles).toHaveLength(2);
-      
+
       // The full initialization flow including:
       // - SchemaLoader.loadAndCompileAllSchemas() being called
       // - Proper order of schema loading before LLM adapter init

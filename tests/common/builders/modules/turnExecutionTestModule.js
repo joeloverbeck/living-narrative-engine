@@ -187,6 +187,88 @@ export class TurnExecutionTestModule extends ITestModule {
   }
 
   /**
+   * Use a standardized LLM configuration from TestConfigurationFactory
+   *
+   * @param {string} [strategy] - The LLM strategy to use
+   * @returns {TurnExecutionTestModule} This instance for chaining
+   * @example
+   * .withStandardLLM('json-schema')
+   */
+  withStandardLLM(strategy = 'tool-calling') {
+    // Import TestConfigurationFactory dynamically to avoid circular dependencies
+    const {
+      TestConfigurationFactory,
+    } = require('../../testConfigurationFactory.js');
+    const llmConfig = TestConfigurationFactory.createLLMConfig(strategy);
+
+    this.#config.llm = {
+      ...this.#config.llm,
+      strategy:
+        llmConfig.jsonOutputStrategy?.method === 'json_schema'
+          ? 'json-schema'
+          : 'tool-calling',
+      llmConfig: llmConfig,
+    };
+
+    return this;
+  }
+
+  /**
+   * Apply a complete environment preset from TestConfigurationFactory
+   *
+   * @param {string} presetName - The preset name to apply
+   * @returns {TurnExecutionTestModule} This instance for chaining
+   * @example
+   * .withEnvironmentPreset('turnExecution')
+   */
+  withEnvironmentPreset(presetName) {
+    // Import TestConfigurationFactory dynamically to avoid circular dependencies
+    const {
+      TestConfigurationFactory,
+    } = require('../../testConfigurationFactory.js');
+    const preset =
+      TestConfigurationFactory.getPresets().environments[presetName];
+
+    if (!preset) {
+      throw new Error(`Unknown environment preset: ${presetName}`);
+    }
+
+    const config = preset();
+
+    // Apply LLM configuration
+    if (config.llm) {
+      this.#config.llm = {
+        ...this.#config.llm,
+        strategy:
+          config.llm.jsonOutputStrategy?.method === 'json_schema'
+            ? 'json-schema'
+            : 'tool-calling',
+        llmConfig: config.llm,
+      };
+    }
+
+    // Apply actors
+    if (config.actors) {
+      this.#config.actors = config.actors;
+    }
+
+    // Apply world
+    if (config.world) {
+      this.#config.world = {
+        ...this.#config.world,
+        ...config.world,
+      };
+    }
+
+    // Apply mocks
+    if (config.mocks) {
+      this.#config.mocks = config.mocks;
+    }
+
+    return this;
+  }
+
+  /**
    * Validate configuration before building
    *
    * @returns {import('../validation/testModuleValidator.js').ValidationResult}

@@ -513,14 +513,14 @@ describe('ModifyArrayFieldHandler', () => {
     });
 
     test('should handle complex nested field paths', async () => {
-      const originalComponent = { 
-        player: { 
-          inventory: { 
-            equipment: { 
-              weapons: ['sword'] 
-            } 
-          } 
-        } 
+      const originalComponent = {
+        player: {
+          inventory: {
+            equipment: {
+              weapons: ['sword'],
+            },
+          },
+        },
       };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -536,15 +536,18 @@ describe('ModifyArrayFieldHandler', () => {
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(1);
       const [, , newComponentData] =
         mockEntityManager.addComponent.mock.calls[0];
-      expect(newComponentData.player.inventory.equipment.weapons).toEqual(['sword', 'bow']);
+      expect(newComponentData.player.inventory.equipment.weapons).toEqual([
+        'sword',
+        'bow',
+      ]);
       expect(newComponentData).not.toBe(originalComponent);
     });
 
     test('should preserve other component fields when modifying array', async () => {
-      const originalComponent = { 
-        items: ['a'], 
+      const originalComponent = {
+        items: ['a'],
         otherField: 'preserved',
-        nested: { data: 'also preserved' }
+        nested: { data: 'also preserved' },
       };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
       const params = {
@@ -562,7 +565,7 @@ describe('ModifyArrayFieldHandler', () => {
       expect(newComponentData).toEqual({
         items: ['a', 'b'],
         otherField: 'preserved',
-        nested: { data: 'also preserved' }
+        nested: { data: 'also preserved' },
       });
     });
   });

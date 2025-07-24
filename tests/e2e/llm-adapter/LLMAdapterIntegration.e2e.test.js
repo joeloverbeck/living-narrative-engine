@@ -10,6 +10,16 @@
  * - Error handling (network, JSON parsing, schema validation)
  * - Token limit handling
  * - API key management
+ *
+ * MIGRATION NOTE: This test uses a custom LLMAdapterTestBed rather than the
+ * Test Module Pattern because it tests low-level adapter functionality:
+ * - Direct HTTP request/response mocking
+ * - Raw JSON response handling
+ * - Network-level error simulation
+ * - API-level configuration testing
+ *
+ * The Test Module Pattern is designed for high-level AI decision testing,
+ * while this test requires direct access to the adapter's internals.
  */
 
 import {
@@ -20,7 +30,7 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import { LLMAdapterTestBed } from './common/llmAdapterTestBed.js';
+import LLMAdapterTestBed from './common/llmAdapterTestBed.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
   PromptTooLongError,

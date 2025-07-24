@@ -379,34 +379,13 @@ Choose one action by its index number and explain your choice.
    * Create a mock data fetcher that returns test data
    */
   createMockDataFetcher() {
+    // Use centralized test configuration factory instead of inline configs
     const mockLlmConfig = {
       defaultConfigId: 'test-llm-toolcalling',
       configs: {
-        'test-llm-toolcalling': {
-          configId: 'test-llm-toolcalling',
-          displayName: 'Test LLM (Tool Calling)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-toolcalling',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'openrouter_tool_calling',
-            toolName: 'function_call',
-          },
-          defaultParameters: {
-            temperature: 1.0,
-          },
-          contextTokenLimit: 8000,
-        },
-        'test-llm-jsonschema': {
-          configId: 'test-llm-jsonschema',
-          displayName: 'Test LLM (JSON Schema)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-jsonschema',
-          apiType: 'openrouter',
+        'test-llm-toolcalling': TestConfigurationFactory.createLLMConfig('tool-calling'),
+        'test-llm-jsonschema': TestConfigurationFactory.createLLMConfig('json-schema', {
+          // Override to match original method name for compatibility
           jsonOutputStrategy: {
             method: 'openrouter_json_schema',
             jsonSchema: {
@@ -422,28 +401,8 @@ Choose one action by its index number and explain your choice.
               },
             },
           },
-          defaultParameters: {
-            temperature: 1.0,
-          },
-          contextTokenLimit: 8000,
-        },
-        'test-llm-limited': {
-          configId: 'test-llm-limited',
-          displayName: 'Test LLM (Limited Context)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-limited',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'openrouter_tool_calling',
-            toolName: 'function_call',
-          },
-          defaultParameters: {
-            temperature: 1.0,
-          },
-          contextTokenLimit: 1000, // Very low limit for testing
-        },
+        }),
+        'test-llm-limited': TestConfigurationFactory.createLLMConfig('limited-context'),
       },
     };
 

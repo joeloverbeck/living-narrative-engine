@@ -174,10 +174,10 @@ describe('CharacterBuilderController', () => {
       expect(
         mockCharacterBuilderService.getAllCharacterConcepts
       ).toHaveBeenCalled();
-      
+
       // Wait for the concepts to be rendered
       await Promise.resolve();
-      
+
       expect(mockElements.conceptsList.innerHTML).toContain('Test concept');
     });
 
@@ -406,8 +406,6 @@ describe('CharacterBuilderController', () => {
 
       expect(mockElements.form.requestSubmit).toHaveBeenCalled();
     });
-
-
   });
 
   describe('sidebar functionality', () => {
@@ -480,8 +478,6 @@ describe('CharacterBuilderController', () => {
         'Saved concepts refreshed.'
       );
     });
-
-
   });
 
   describe('modal functionality', () => {
@@ -508,7 +504,6 @@ describe('CharacterBuilderController', () => {
       expect(mockElements.helpModal.style.display).toBe('flex');
     });
 
-
     it('should handle escape key to close modal', () => {
       mockElements.helpModal.style.display = 'flex';
       global.document.querySelector = jest
@@ -532,9 +527,15 @@ describe('CharacterBuilderController', () => {
       controller['#showConfirmDialog'] = jest.fn().mockResolvedValue(true);
 
       // Test that the method exists and works
-      const result = await controller['#showConfirmDialog']('Test Title', 'Test Message');
+      const result = await controller['#showConfirmDialog'](
+        'Test Title',
+        'Test Message'
+      );
       expect(result).toBe(true);
-      expect(controller['#showConfirmDialog']).toHaveBeenCalledWith('Test Title', 'Test Message');
+      expect(controller['#showConfirmDialog']).toHaveBeenCalledWith(
+        'Test Title',
+        'Test Message'
+      );
 
       // Restore
       controller['#showConfirmDialog'] = originalShowConfirmDialog;
@@ -559,7 +560,6 @@ describe('CharacterBuilderController', () => {
       expect(mockElements.resultsState.style.display).toBe('none');
     });
 
-
     it('should show error state when service fails', async () => {
       mockElements.textarea.value = 'Valid concept text';
       mockCharacterBuilderService.createCharacterConcept.mockRejectedValue(
@@ -577,10 +577,10 @@ describe('CharacterBuilderController', () => {
       mockElements.textarea.value = 'Valid concept text';
       mockCharacterBuilderService.createCharacterConcept.mockResolvedValue({
         id: '123',
-        concept: 'Valid concept text'
+        concept: 'Valid concept text',
       });
       mockCharacterBuilderService.generateThematicDirections.mockResolvedValue([
-        { id: '1', title: 'Test Direction', description: 'Test' }
+        { id: '1', title: 'Test Direction', description: 'Test' },
       ]);
 
       const submitHandler = getEventHandler(mockElements.form, 'submit');
@@ -606,13 +606,15 @@ describe('CharacterBuilderController', () => {
       mockElements.textarea.value = 'Valid concept text';
       mockCharacterBuilderService.createCharacterConcept.mockResolvedValue({
         id: '123',
-        concept: 'Valid concept text'
+        concept: 'Valid concept text',
       });
 
       const saveHandler = getEventHandler(mockElements.saveBtn, 'click');
       await saveHandler();
 
-      expect(mockElements.liveRegion.textContent).toBe('Character concept saved successfully.');
+      expect(mockElements.liveRegion.textContent).toBe(
+        'Character concept saved successfully.'
+      );
 
       // Fast forward timers to test clearing
       jest.runAllTimers();
@@ -621,7 +623,7 @@ describe('CharacterBuilderController', () => {
 
     it('should set aria-invalid on validation errors via blur', () => {
       mockElements.textarea.value = 'Short';
-      
+
       const blurHandler = getEventHandler(mockElements.textarea, 'blur');
       blurHandler();
 
@@ -677,11 +679,10 @@ describe('CharacterBuilderController', () => {
       await controller.initialize();
     });
 
-
     it('should format dates correctly in concept display', async () => {
       const now = new Date();
       const justNow = new Date(now.getTime() - 30 * 60 * 1000); // 30 minutes ago
-      
+
       const mockConcepts = [
         {
           id: '1',
@@ -730,8 +731,6 @@ describe('CharacterBuilderController', () => {
       await controller.initialize();
     });
 
-
-
     it('should handle save concept failure', async () => {
       mockElements.textarea.value = 'Valid concept';
       const error = new Error('Save failed');
@@ -750,7 +749,6 @@ describe('CharacterBuilderController', () => {
         'Failed to save character concept.'
       );
     });
-
   });
 
   describe('validation methods', () => {
@@ -805,7 +803,7 @@ describe('CharacterBuilderController', () => {
     it('should clear validation error on input', () => {
       // First set an error
       mockElements.errorMessage.textContent = 'Some error';
-      
+
       // Then trigger input event
       mockElements.textarea.value = 'Valid concept text';
       const inputHandler = getEventHandler(mockElements.textarea, 'input');
@@ -814,7 +812,6 @@ describe('CharacterBuilderController', () => {
       expect(mockElements.errorMessage.textContent).toBe('');
     });
   });
-
 
   describe('continue functionality', () => {
     beforeEach(async () => {
@@ -838,8 +835,6 @@ describe('CharacterBuilderController', () => {
         'Step 2 is not yet implemented.'
       );
     });
-
-
   });
 });
 
@@ -1066,12 +1061,12 @@ function setupDOMMocks(mockElements) {
       ...extraElements,
     };
     const result = elementMap[id] || null;
-    
+
     // Set the id property on the returned element for completeness
     if (result && typeof result === 'object') {
       result.id = id;
     }
-    
+
     return result;
   });
 
@@ -1094,11 +1089,13 @@ function setupDOMMocks(mockElements) {
     const elem = createMockElement(tag);
     // Ensure querySelector returns an element for nested queries
     elem.querySelector.mockReturnValue(createMockElement());
-    
+
     // Mock textContent and innerHTML behavior for escapeHtml method
     Object.defineProperty(elem, 'textContent', {
-      get() { return this._textContent || ''; },
-      set(value) { 
+      get() {
+        return this._textContent || '';
+      },
+      set(value) {
         this._textContent = value;
         // Simple HTML escaping for innerHTML
         this.innerHTML = String(value)
@@ -1107,9 +1104,9 @@ function setupDOMMocks(mockElements) {
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;')
           .replace(/'/g, '&#39;');
-      }
+      },
     });
-    
+
     return elem;
   });
   document.body.appendChild = jest.fn();

@@ -618,7 +618,9 @@ describe('CharacterBuilderService', () => {
 
       // Test empty array - use fresh service instance to avoid circuit breaker state
       const setup1 = createService();
-      setup1.mocks.storageService.getCharacterConcept.mockResolvedValue(mockCharacterConcept);
+      setup1.mocks.storageService.getCharacterConcept.mockResolvedValue(
+        mockCharacterConcept
+      );
       setup1.mocks.directionGenerator.generateDirections.mockResolvedValue([]);
       await expect(
         setup1.service.generateThematicDirections('test-concept-empty')
@@ -626,16 +628,24 @@ describe('CharacterBuilderService', () => {
 
       // Test null response - use fresh service instance to avoid circuit breaker state
       const setup2 = createService();
-      setup2.mocks.storageService.getCharacterConcept.mockResolvedValue(mockCharacterConcept);
-      setup2.mocks.directionGenerator.generateDirections.mockResolvedValue(null);
+      setup2.mocks.storageService.getCharacterConcept.mockResolvedValue(
+        mockCharacterConcept
+      );
+      setup2.mocks.directionGenerator.generateDirections.mockResolvedValue(
+        null
+      );
       await expect(
         setup2.service.generateThematicDirections('test-concept-null')
       ).rejects.toThrow('Generated directions are empty or invalid');
 
       // Test non-array response - use fresh service instance to avoid circuit breaker state
       const setup3 = createService();
-      setup3.mocks.storageService.getCharacterConcept.mockResolvedValue(mockCharacterConcept);
-      setup3.mocks.directionGenerator.generateDirections.mockResolvedValue('invalid');
+      setup3.mocks.storageService.getCharacterConcept.mockResolvedValue(
+        mockCharacterConcept
+      );
+      setup3.mocks.directionGenerator.generateDirections.mockResolvedValue(
+        'invalid'
+      );
       await expect(
         setup3.service.generateThematicDirections('test-concept-invalid')
       ).rejects.toThrow('Generated directions are empty or invalid');

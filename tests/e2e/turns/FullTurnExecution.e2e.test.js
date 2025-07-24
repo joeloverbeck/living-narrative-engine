@@ -1,14 +1,16 @@
 /**
  * @file FullTurnExecution.e2e.test.js
- * @description E2E test suite for complete AI turn execution using TurnExecutionFacade
+ * @description E2E test suite for complete AI turn execution using Test Module Pattern
  *
  * This test suite covers the complete AI turn execution flow as specified
  * in section 6 of the LLM prompt workflow analysis report. It tests the
  * integration of all AI subsystems from decision request through action
  * execution and state updates.
  *
- * MIGRATION NOTE: This file has been migrated from FullTurnExecutionTestBed to
- * TurnExecutionFacade pattern, achieving 60-70% reduction in test setup complexity.
+ * MIGRATION NOTE: This file has been migrated to use the Test Module Pattern,
+ * achieving 80%+ reduction in test setup complexity compared to direct facade usage.
+ * - BEFORE: 150+ lines manual setup → 20 lines facade setup
+ * - AFTER: 20 lines facade setup → 5 lines Test Module Pattern
  *
  * Test Coverage:
  * - Complete AI turn execution from decision to action
@@ -26,46 +28,32 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import { createMockFacades } from '../../../src/testing/facades/testingFacadeRegistrations.js';
+import { TestModuleBuilder } from '../../../tests/common/builders/testModuleBuilder.js';
 
 /**
- * E2E test suite for complete AI turn execution using TurnExecutionFacade
+ * E2E test suite for complete AI turn execution using Test Module Pattern
  *
  * Tests the complete flow from LLM decision request through action execution
  * as outlined in the report section "6. Full Turn Execution Test"
  *
- * FACADE MIGRATION: Simplified from 150+ lines of manual setup to 2 facade calls
+ * TEST MODULE PATTERN: Simplified from 20 lines facade setup to 5 lines fluent API
  */
 describe('E2E: Complete AI Turn Execution', () => {
-  let facades;
-  let turnExecutionFacade;
-  let testEnvironment;
+  let testEnv;
 
   beforeEach(async () => {
-    // BEFORE (complex): 150+ lines of container setup, manual world/actor creation
-    // AFTER (simplified): Single line facade creation + environment initialization
-    facades = createMockFacades({}, jest.fn);
-    turnExecutionFacade = facades.turnExecutionFacade;
-
-    // Initialize test environment - replaces manual world/actor/action setup
-    testEnvironment = await turnExecutionFacade.initializeTestEnvironment({
-      llmStrategy: 'tool-calling',
-      worldConfig: {
-        name: 'Test World',
-        createConnections: true,
-      },
-      actorConfig: {
-        name: 'Elara the Bard',
-      },
-    });
+    // BEFORE (facade pattern): 20 lines of setup with facades + initialization
+    // AFTER (test module pattern): 5 lines with fluent API
+    testEnv = await TestModuleBuilder.forTurnExecution()
+      .withMockLLM({ strategy: 'tool-calling' })
+      .withTestActors([{ id: 'ai-actor', name: 'Elara the Bard' }])
+      .withWorld({ name: 'Test World', createConnections: true })
+      .build();
   });
 
   afterEach(async () => {
-    // Simple cleanup - replaces complex manual cleanup
-    if (turnExecutionFacade) {
-      await turnExecutionFacade.clearTestData();
-      await turnExecutionFacade.dispose();
-    }
+    // Simple cleanup method provided by test module
+    await testEnv.cleanup();
   });
 
   /**
@@ -74,10 +62,10 @@ describe('E2E: Complete AI Turn Execution', () => {
    * This is the core test from the report recommendation that validates
    * the complete flow from AI decision to action execution.
    *
-   * FACADE IMPROVEMENT: Single method call replaces 30+ lines of service coordination
+   * TEST MODULE PATTERN: Mock configuration integrated into module setup
    */
   test('should execute full AI turn from decision to action', async () => {
-    // Setup: Configure mock AI decision using facade's simplified mock system
+    // Setup: Configure mock AI decision
     const expectedDecision = {
       actionId: 'core:move', // Move action
       targets: { direction: 'north' },
@@ -97,41 +85,36 @@ describe('E2E: Complete AI Turn Execution', () => {
       ],
     };
 
-    // Configure facade mocks - replaces 50+ lines of individual service mocking
-    turnExecutionFacade.setupMocks({
+    // Configure test module mocks - cleaner API than facade mocking
+    testEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [testEnvironment.actors.aiActorId]: expectedDecision,
+        ['ai-actor']: expectedDecision,
       },
       actionResults: {
-        [testEnvironment.actors.aiActorId]: [
+        ['ai-actor']: [
           { actionId: 'core:move', name: 'Move', available: true },
           { actionId: 'core:look', name: 'Look Around', available: true },
           { actionId: 'core:wait', name: 'Wait', available: true },
         ],
       },
       validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:move`]: {
+        ['ai-actor:core:move']: {
           success: true,
           validatedAction: {
             actionId: 'core:move',
-            actorId: testEnvironment.actors.aiActorId,
+            actorId: 'ai-actor',
             targets: { direction: 'north' },
           },
         },
       },
     });
 
-    // Execute: Single facade method call replaces complex service coordination
-    const startTime = Date.now();
-    const turnResult = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId,
-      { situation: 'exploring world' }
-    );
-    const endTime = Date.now();
+    // Execute: Use convenient test module method
+    const turnResult = await testEnv.executeAITurn('ai-actor');
 
-    // Assert: Verify facade execution results
+    // Assert: Verify execution results
     expect(turnResult.success).toBe(true);
-    expect(turnResult.actorId).toBe(testEnvironment.actors.aiActorId);
+    expect(turnResult.actorId).toBe('ai-actor');
     expect(turnResult.aiDecision).toMatchObject({
       actionId: expectedDecision.actionId,
       targets: expectedDecision.targets,
@@ -147,18 +130,14 @@ describe('E2E: Complete AI Turn Execution', () => {
 
     // Verify validation passed
     expect(turnResult.validation.validatedAction.actionId).toBe('core:move');
-    expect(turnResult.validation.validatedAction.actorId).toBe(
-      testEnvironment.actors.aiActorId
-    );
+    expect(turnResult.validation.validatedAction.actorId).toBe('ai-actor');
 
-    // Verify performance - facade should complete quickly due to mocks
-    const executionTime = endTime - startTime;
-    expect(executionTime).toBeLessThan(1000); // 1 second max for mocked execution
+    // Verify performance
+    expect(turnResult.duration).toBeLessThan(1000); // 1 second max for mocked execution
 
-    // Verify events were dispatched using facade's event tracking
-    const events = turnExecutionFacade.getDispatchedEvents();
+    // Verify events were dispatched
+    const events = testEnv.facades.turnExecutionFacade.getDispatchedEvents();
     expect(Array.isArray(events)).toBe(true);
-    // Note: Events may be empty with mocks, which is acceptable
   });
 
   /**
@@ -167,7 +146,7 @@ describe('E2E: Complete AI Turn Execution', () => {
    * Validates that the system can switch between different LLM configurations
    * (tool calling vs JSON schema) as mentioned in the report.
    *
-   * FACADE IMPROVEMENT: Simplified strategy switching through facade configuration
+   * TEST MODULE PATTERN: Strategy switching through module reconfiguration
    */
   test('should handle LLM configuration switching between strategies', async () => {
     // Test Tool Calling Strategy First
@@ -178,40 +157,38 @@ describe('E2E: Complete AI Turn Execution', () => {
       thoughts: 'Better to take in my surroundings first.',
     };
 
-    // Configure facade for tool calling strategy
-    turnExecutionFacade.setupMocks({
+    // Configure mocks for tool calling
+    testEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [testEnvironment.actors.aiActorId]: toolCallingDecision,
+        ['ai-actor']: toolCallingDecision,
       },
       actionResults: {
-        [testEnvironment.actors.aiActorId]: [
+        ['ai-actor']: [
           { actionId: 'core:wait', name: 'Wait', available: true },
         ],
       },
       validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:wait`]: {
+        ['ai-actor:core:wait']: {
           success: true,
           validatedAction: {
             actionId: 'core:wait',
-            actorId: testEnvironment.actors.aiActorId,
+            actorId: 'ai-actor',
             targets: {},
           },
         },
       },
     });
 
-    const turnResult1 = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId
-    );
+    const turnResult1 = await testEnv.executeAITurn('ai-actor');
     expect(turnResult1.success).toBe(true);
     expect(turnResult1.aiDecision.actionId).toBe('core:wait');
 
-    // Switch to different strategy by reconfiguring environment
-    await turnExecutionFacade.clearTestData();
-    testEnvironment = await turnExecutionFacade.initializeTestEnvironment({
-      llmStrategy: 'json-schema',
-      actorConfig: { name: 'Elara the Bard' },
-    });
+    // Create new test environment with json-schema strategy
+    const jsonSchemaTestEnv = await TestModuleBuilder.forTurnExecution()
+      .withMockLLM({ strategy: 'json-schema' })
+      .withTestActors([{ id: 'ai-actor', name: 'Elara the Bard' }])
+      .withWorld({ name: 'Test World' })
+      .build();
 
     // Test different decision with new strategy
     const jsonSchemaDecision = {
@@ -221,30 +198,28 @@ describe('E2E: Complete AI Turn Execution', () => {
       thoughts: 'A friendly greeting would be nice.',
     };
 
-    turnExecutionFacade.setupMocks({
+    jsonSchemaTestEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [testEnvironment.actors.aiActorId]: jsonSchemaDecision,
+        ['ai-actor']: jsonSchemaDecision,
       },
       actionResults: {
-        [testEnvironment.actors.aiActorId]: [
+        ['ai-actor']: [
           { actionId: 'core:look', name: 'Look Around', available: true },
         ],
       },
       validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:look`]: {
+        ['ai-actor:core:look']: {
           success: true,
           validatedAction: {
             actionId: 'core:look',
-            actorId: testEnvironment.actors.aiActorId,
+            actorId: 'ai-actor',
             targets: {},
           },
         },
       },
     });
 
-    const turnResult2 = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId
-    );
+    const turnResult2 = await jsonSchemaTestEnv.executeAITurn('ai-actor');
     expect(turnResult2.success).toBe(true);
     expect(turnResult2.aiDecision.actionId).toBe('core:look');
 
@@ -252,6 +227,9 @@ describe('E2E: Complete AI Turn Execution', () => {
     expect(turnResult1.aiDecision.actionId).not.toBe(
       turnResult2.aiDecision.actionId
     );
+
+    // Cleanup second environment
+    await jsonSchemaTestEnv.cleanup();
   });
 
   /**
@@ -262,53 +240,49 @@ describe('E2E: Complete AI Turn Execution', () => {
    */
   test('should handle LLM errors gracefully during turn execution', async () => {
     // Test Action Discovery Failure - No available actions
-    turnExecutionFacade.setupMocks({
+    testEnv.facades.turnExecutionFacade.setupMocks({
       actionResults: {
-        [testEnvironment.actors.aiActorId]: [], // No actions available
+        ['ai-actor']: [], // No actions available
       },
     });
 
-    const noActionsResult = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId
-    );
+    const noActionsResult = await testEnv.executeAITurn('ai-actor');
     expect(noActionsResult.success).toBe(false);
     expect(noActionsResult.error).toContain('No available actions');
 
     // Test AI Decision Failure - Invalid decision
-    turnExecutionFacade.setupMocks({
+    testEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [testEnvironment.actors.aiActorId]: {
+        ['ai-actor']: {
           // Missing required actionId field
           targets: {},
           speech: 'Invalid decision without action',
         },
       },
       actionResults: {
-        [testEnvironment.actors.aiActorId]: [
+        ['ai-actor']: [
           { actionId: 'core:wait', name: 'Wait', available: true },
         ],
       },
     });
 
-    const invalidDecisionResult = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId
-    );
+    const invalidDecisionResult = await testEnv.executeAITurn('ai-actor');
     expect(invalidDecisionResult.success).toBe(false);
     expect(invalidDecisionResult.error).toContain(
       'did not specify a valid action'
     );
 
     // Test Action Validation Failure
-    turnExecutionFacade.setupMocks({
+    testEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [testEnvironment.actors.aiActorId]: {
+        ['ai-actor']: {
           actionId: 'core:invalid-action',
           targets: {},
           speech: 'Attempting invalid action',
         },
       },
       actionResults: {
-        [testEnvironment.actors.aiActorId]: [
+        ['ai-actor']: [
           {
             actionId: 'core:invalid-action',
             name: 'Invalid Action',
@@ -317,7 +291,7 @@ describe('E2E: Complete AI Turn Execution', () => {
         ],
       },
       validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:invalid-action`]: {
+        ['ai-actor:core:invalid-action']: {
           success: false,
           error: 'Action not found',
           code: 'ACTION_NOT_FOUND',
@@ -325,9 +299,7 @@ describe('E2E: Complete AI Turn Execution', () => {
       },
     });
 
-    const validationFailureResult = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId
-    );
+    const validationFailureResult = await testEnv.executeAITurn('ai-actor');
     expect(validationFailureResult.success).toBe(false);
     expect(validationFailureResult.error).toBe('Action validation failed');
     expect(validationFailureResult.validation.success).toBe(false);
@@ -364,24 +336,24 @@ describe('E2E: Complete AI Turn Execution', () => {
       ],
     };
 
-    // Configure facade mocks
-    turnExecutionFacade.setupMocks({
+    // Configure test module mocks
+    testEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [testEnvironment.actors.aiActorId]: comprehensiveDecision,
+        ['ai-actor']: comprehensiveDecision,
       },
       actionResults: {
-        [testEnvironment.actors.aiActorId]: [
+        ['ai-actor']: [
           { actionId: 'core:look', name: 'Look Around', available: true },
           { actionId: 'core:wait', name: 'Wait', available: true },
           { actionId: 'core:move', name: 'Move', available: true },
         ],
       },
       validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:look`]: {
+        ['ai-actor:core:look']: {
           success: true,
           validatedAction: {
             actionId: 'core:look',
-            actorId: testEnvironment.actors.aiActorId,
+            actorId: 'ai-actor',
             targets: {},
           },
         },
@@ -389,13 +361,11 @@ describe('E2E: Complete AI Turn Execution', () => {
     });
 
     // Execute the turn
-    const turnResult = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId
-    );
+    const turnResult = await testEnv.executeAITurn('ai-actor');
 
     // Verify the turn executed successfully
     expect(turnResult.success).toBe(true);
-    expect(turnResult.actorId).toBe(testEnvironment.actors.aiActorId);
+    expect(turnResult.actorId).toBe('ai-actor');
     expect(turnResult.aiDecision).toMatchObject({
       actionId: comprehensiveDecision.actionId,
       targets: comprehensiveDecision.targets,
@@ -441,24 +411,24 @@ describe('E2E: Complete AI Turn Execution', () => {
       reasoning: 'Patience and observation lead to wisdom.',
     };
 
-    // Configure facade mocks
-    turnExecutionFacade.setupMocks({
+    // Configure test module mocks
+    testEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [testEnvironment.actors.aiActorId]: decision,
+        ['ai-actor']: decision,
       },
       actionResults: {
-        [testEnvironment.actors.aiActorId]: [
+        ['ai-actor']: [
           { actionId: 'core:wait', name: 'Wait', available: true },
           { actionId: 'core:look', name: 'Look Around', available: true },
           { actionId: 'core:move', name: 'Move', available: true },
         ],
       },
       validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:wait`]: {
+        ['ai-actor:core:wait']: {
           success: true,
           validatedAction: {
             actionId: 'core:wait',
-            actorId: testEnvironment.actors.aiActorId,
+            actorId: 'ai-actor',
             targets: {},
           },
         },
@@ -466,18 +436,16 @@ describe('E2E: Complete AI Turn Execution', () => {
     });
 
     // Execute turn - this will internally generate a prompt
-    const turnResult = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId
-    );
+    const turnResult = await testEnv.executeAITurn('ai-actor');
 
     // Verify the turn completed successfully
     expect(turnResult.success).toBe(true);
     expect(turnResult.aiDecision.actionId).toBe(decision.actionId);
 
-    // The facade pattern handles prompt generation internally
+    // The test module pattern handles prompt generation internally
     // We can verify that the AI decision was made correctly, which implies
     // the prompt was generated and processed successfully
-    expect(turnResult.actorId).toBe(testEnvironment.actors.aiActorId);
+    expect(turnResult.actorId).toBe('ai-actor');
     expect(turnResult.aiDecision.speech).toBe(decision.speech);
     expect(turnResult.aiDecision.thoughts).toBe(decision.thoughts);
 
@@ -486,17 +454,17 @@ describe('E2E: Complete AI Turn Execution', () => {
     expect(turnResult.duration).toBeLessThan(5000); // Should complete within 5 seconds
 
     // The new system uses templated prompts with proper sections
-    // The facade ensures these are correctly formatted
+    // The test module ensures these are correctly formatted
     expect(turnResult.availableActionCount).toBe(3);
   });
 
   /**
    * Test: Graceful Operations Handling
    *
-   * Validates that facade handles complex scenarios and operations gracefully
+   * Validates that test module handles complex scenarios and operations gracefully
    * in various execution contexts.
    *
-   * FACADE IMPROVEMENT: Simplified error boundary and graceful handling testing
+   * TEST MODULE PATTERN: Simplified error boundary and graceful handling testing
    */
   test('should handle complex operations gracefully', async () => {
     // Set up a decision for graceful handling test
@@ -504,39 +472,37 @@ describe('E2E: Complete AI Turn Execution', () => {
       actionId: 'core:wait',
       targets: {},
       speech: 'Handling complex scenario gracefully.',
-      thoughts: 'Testing facade resilience.',
+      thoughts: 'Testing module resilience.',
     };
 
-    // Test that facade handles graceful operations in complex scenarios
-    // Note: Facade provides robust error handling and operational resilience
+    // Test that module handles graceful operations in complex scenarios
+    // Note: Test module provides robust error handling and operational resilience
 
-    turnExecutionFacade.setupMocks({
+    testEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [testEnvironment.actors.aiActorId]: decision,
+        ['ai-actor']: decision,
       },
       actionResults: {
-        [testEnvironment.actors.aiActorId]: [
+        ['ai-actor']: [
           { actionId: 'core:wait', name: 'Wait', available: true },
         ],
       },
       validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:wait`]: {
+        ['ai-actor:core:wait']: {
           success: true,
           validatedAction: {
             actionId: 'core:wait',
-            actorId: testEnvironment.actors.aiActorId,
+            actorId: 'ai-actor',
             targets: {},
           },
         },
       },
     });
 
-    // Execute turn to verify facade handles operations gracefully
-    const turnResult = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId
-    );
+    // Execute turn to verify module handles operations gracefully
+    const turnResult = await testEnv.executeAITurn('ai-actor');
 
-    // Verify facade completed successfully even in complex scenarios
+    // Verify module completed successfully even in complex scenarios
     expect(turnResult.success).toBe(true);
     expect(turnResult.aiDecision.actionId).toBe('core:wait');
   });
@@ -544,10 +510,10 @@ describe('E2E: Complete AI Turn Execution', () => {
   /**
    * Test: Validation-Only Mode
    *
-   * Validates that facade can validate actions without executing them
+   * Validates that test module can validate actions without executing them
    * for testing and preview scenarios.
    *
-   * FACADE IMPROVEMENT: Built-in validation-only mode support
+   * TEST MODULE PATTERN: Built-in validation-only mode support
    */
   test('should support validation-only mode for action testing', async () => {
     // Set up decision for validation testing
@@ -558,30 +524,30 @@ describe('E2E: Complete AI Turn Execution', () => {
       thoughts: 'Testing validation without execution.',
     };
 
-    turnExecutionFacade.setupMocks({
+    testEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [testEnvironment.actors.aiActorId]: decision,
+        ['ai-actor']: decision,
       },
       actionResults: {
-        [testEnvironment.actors.aiActorId]: [
+        ['ai-actor']: [
           { actionId: 'core:wait', name: 'Wait', available: true },
         ],
       },
       validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:wait`]: {
+        ['ai-actor:core:wait']: {
           success: true,
           validatedAction: {
             actionId: 'core:wait',
-            actorId: testEnvironment.actors.aiActorId,
+            actorId: 'ai-actor',
             targets: {},
           },
         },
       },
     });
 
-    // Execute in validation-only mode using facade option
-    const turnResult = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId,
+    // Execute in validation-only mode using module option
+    const turnResult = await testEnv.facades.turnExecutionFacade.executeAITurn(
+      'ai-actor',
       { situation: 'validation test' },
       { validateOnly: true }
     );
@@ -597,14 +563,21 @@ describe('E2E: Complete AI Turn Execution', () => {
   /**
    * Test: Multiple Actors Integration
    *
-   * Validates that facade can handle multiple actors efficiently
+   * Validates that test module can handle multiple actors efficiently
    * as mentioned in the report for concurrent testing.
    *
-   * FACADE IMPROVEMENT: Simplified multi-actor coordination
+   * TEST MODULE PATTERN: Simplified multi-actor coordination
    */
   test('should handle multiple actors taking turns efficiently', async () => {
-    // Create additional actor for multi-actor testing
-    const playerActorId = 'test-player-actor'; // Mock player actor ID
+    // Create test environment with multiple actors
+    const multiActorEnv = await TestModuleBuilder.forTurnExecution()
+      .withMockLLM({ strategy: 'tool-calling' })
+      .withTestActors([
+        { id: 'ai-actor', name: 'AI Character' },
+        { id: 'player-actor', name: 'Player Character' },
+      ])
+      .withWorld({ name: 'Multi-Actor World' })
+      .build();
 
     // Set up decisions for both actors
     const aiDecision = {
@@ -621,33 +594,33 @@ describe('E2E: Complete AI Turn Execution', () => {
       thoughts: 'Taking time to think.',
     };
 
-    turnExecutionFacade.setupMocks({
+    multiActorEnv.facades.turnExecutionFacade.setupMocks({
       aiResponses: {
-        [testEnvironment.actors.aiActorId]: aiDecision,
-        [playerActorId]: playerDecision,
+        ['ai-actor']: aiDecision,
+        ['player-actor']: playerDecision,
       },
       actionResults: {
-        [testEnvironment.actors.aiActorId]: [
+        ['ai-actor']: [
           { actionId: 'core:look', name: 'Look Around', available: true },
         ],
-        [playerActorId]: [
+        ['player-actor']: [
           { actionId: 'core:wait', name: 'Wait', available: true },
         ],
       },
       validationResults: {
-        [`${testEnvironment.actors.aiActorId}:core:look`]: {
+        ['ai-actor:core:look']: {
           success: true,
           validatedAction: {
             actionId: 'core:look',
-            actorId: testEnvironment.actors.aiActorId,
+            actorId: 'ai-actor',
             targets: {},
           },
         },
-        [`${playerActorId}:core:wait`]: {
+        ['player-actor:core:wait']: {
           success: true,
           validatedAction: {
             actionId: 'core:wait',
-            actorId: playerActorId,
+            actorId: 'player-actor',
             targets: {},
           },
         },
@@ -655,10 +628,8 @@ describe('E2E: Complete AI Turn Execution', () => {
     });
 
     // Execute turns for both actors
-    const aiResult = await turnExecutionFacade.executeAITurn(
-      testEnvironment.actors.aiActorId
-    );
-    const playerResult = await turnExecutionFacade.executeAITurn(playerActorId);
+    const aiResult = await multiActorEnv.executeAITurn('ai-actor');
+    const playerResult = await multiActorEnv.executeAITurn('player-actor');
 
     // Verify both actors executed successfully
     expect(aiResult.success).toBe(true);
@@ -670,5 +641,8 @@ describe('E2E: Complete AI Turn Execution', () => {
     expect(aiResult.duration).toBeGreaterThanOrEqual(0);
     expect(playerResult.duration).toBeGreaterThanOrEqual(0);
     expect(aiResult.duration + playerResult.duration).toBeLessThan(200); // Combined execution under 200ms
+
+    // Cleanup multi-actor environment
+    await multiActorEnv.cleanup();
   });
 });

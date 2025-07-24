@@ -33,6 +33,7 @@ static LAYER_ORDER = ['underwear', 'base', 'outer', 'accessories'];
 ```
 
 **Layer Semantics**:
+
 - **`underwear`**: Innermost layer (e.g., bra, underwear, boxer briefs)
 - **`base`**: Core clothing layer (e.g., t-shirt, pants, base garments)
 - **`outer`**: Outerwear layer (e.g., jacket, coat, outer garments)
@@ -151,7 +152,7 @@ Existing clothing operators are used in scope resolution:
 
 ```javascript
 // Example from intimacy mod scopes
-close_actors_facing_each_other_with_torso_clothing := 
+close_actors_facing_each_other_with_torso_clothing :=
   actor.intimacy:closeness.partners[][{
     "and": [
       {"condition_ref": "intimacy:both-actors-facing-each_other"},
@@ -197,20 +198,20 @@ The new operator must support standard Scope DSL patterns:
 getTopLayerClothingItems(entityId) {
   const layerOrder = ['underwear', 'base', 'outer', 'accessories'];
   const topLayerItems = [];
-  
+
   const equipmentData = this.getEquipmentData(entityId);
   if (!equipmentData?.equipped) return [];
-  
+
   // Process each clothing slot
   for (const [slotId, slotData] of Object.entries(equipmentData.equipped)) {
     if (!slotData || typeof slotData !== 'object') continue;
-    
+
     // Find the highest occupied layer in this slot
     let topLayerEntityId = null;
     for (let i = layerOrder.length - 1; i >= 0; i--) {
       const layer = layerOrder[i];
       const entityId = slotData[layer];
-      
+
       if (entityId) {
         // Handle both string IDs and arrays
         if (Array.isArray(entityId)) {
@@ -222,7 +223,7 @@ getTopLayerClothingItems(entityId) {
       }
     }
   }
-  
+
   return topLayerItems;
 }
 ```
@@ -230,12 +231,13 @@ getTopLayerClothingItems(entityId) {
 #### Example Scenarios
 
 **Scenario 1: Simple Layering**
+
 ```json
 // Input Equipment:
 {
   "torso_upper": {
     "underwear": "bra_1",
-    "base": "tshirt_1", 
+    "base": "tshirt_1",
     "outer": "jacket_1"
   }
 }
@@ -243,6 +245,7 @@ getTopLayerClothingItems(entityId) {
 ```
 
 **Scenario 2: Multiple Slots**
+
 ```json
 // Input Equipment:
 {
@@ -262,8 +265,9 @@ getTopLayerClothingItems(entityId) {
 ```
 
 **Scenario 3: Accessories Priority**
+
 ```json
-// Input Equipment:  
+// Input Equipment:
 {
   "torso_upper": {
     "base": "shirt_1",
@@ -335,7 +339,7 @@ removable_clothing := entities(core:item)[][{
  * @class GetTopLayerClothingItemsOperator
  * @augments BaseEquipmentOperator
  * @description Returns array of entity IDs for topmost clothing items in each slot
- * 
+ *
  * Usage: {"getTopLayerClothingItems": ["actor"]}
  * Returns: Array of entity instance IDs from highest clothing layers
  */
@@ -348,7 +352,7 @@ export class GetTopLayerClothingItemsOperator extends BaseEquipmentOperator {
 
   evaluateInternal(entityId, params, context) {
     // Parameter validation
-    // Equipment data retrieval  
+    // Equipment data retrieval
     // Top layer detection algorithm
     // Result formatting and return
   }
@@ -401,7 +405,7 @@ catch (error) {
 
 1. **Basic Functionality**
    - Single slot with single layer
-   - Single slot with multiple layers  
+   - Single slot with multiple layers
    - Multiple slots with varying layers
    - Empty equipment component
 
@@ -430,7 +434,7 @@ catch (error) {
    - Evaluation context handling
    - Return value compatibility
 
-2. **Scope Resolution Integration**  
+2. **Scope Resolution Integration**
    - Usage in filter expressions
    - Array operation compatibility
    - Performance with large datasets
@@ -495,7 +499,7 @@ removable_torso_clothing := entities(core:item)[][{
    - Implement logical undressing sequences
    - Prevent impossible clothing removal attempts
 
-2. **Clothing State Validation**  
+2. **Clothing State Validation**
    - Verify clothing state for intimate actions
    - Check accessibility of anatomy parts
    - Implement clothing-aware interaction logic
@@ -525,7 +529,7 @@ removable_jackets := entities(core:item)[][{
 The new operator complements existing operators without conflicts:
 
 - **`hasClothingInSlot`**: Continues to work for presence checks
-- **`hasClothingInSlotLayer`**: Continues to work for specific layer checks  
+- **`hasClothingInSlotLayer`**: Continues to work for specific layer checks
 - **`isSocketCovered`**: Continues to work for anatomy coverage checks
 
 #### Migration Strategy
@@ -606,7 +610,7 @@ The new operator complements existing operators without conflicts:
 ### Implementation Approach
 
 1. **Phase 1**: Core operator implementation with basic functionality
-2. **Phase 2**: Comprehensive testing and error handling  
+2. **Phase 2**: Comprehensive testing and error handling
 3. **Phase 3**: Integration testing and performance optimization
 4. **Phase 4**: Documentation and example integration
 
@@ -636,4 +640,4 @@ The proposed implementation follows established patterns, includes comprehensive
 
 ---
 
-*This analysis provides the architectural foundation for implementing the top-layer clothing operator. For specific implementation details and code examples, refer to the implementation specifications section and existing operator patterns in the codebase.*
+_This analysis provides the architectural foundation for implementing the top-layer clothing operator. For specific implementation details and code examples, refer to the implementation specifications section and existing operator patterns in the codebase._
