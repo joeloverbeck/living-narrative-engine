@@ -58,7 +58,7 @@ export function EventCaptureMixin(Base) {
      * @returns {void}
      */
     trigger(eventType, payload) {
-      this.dispatcher._triggerEvent(eventType, { type: eventType, payload });
+      this.dispatcher._triggerEvent(eventType, payload);
     }
 
     /**

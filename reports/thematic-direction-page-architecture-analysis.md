@@ -5,6 +5,7 @@
 This report analyzes the architectural changes required to create a dedicated page for generating thematic directions from character concepts. The new page (`thematic-direction-generator.html`) will be derived from the existing `character-builder.html` implementation, focusing specifically on the concept-to-thematic-direction workflow while ensuring proper data persistence and associations.
 
 ### Key Objectives
+
 - Create a focused, single-purpose page for thematic direction generation
 - Maximize code reuse from existing character builder implementation
 - Ensure automatic storage of concepts when generating directions
@@ -14,9 +15,10 @@ This report analyzes the architectural changes required to create a dedicated pa
 ## Current Architecture Analysis
 
 ### Character Builder Structure
+
 The current `character-builder.html` implements a multi-step character creation workflow:
 
-1. **HTML Structure**: 
+1. **HTML Structure**:
    - Two-panel layout (concept input left, thematic directions right)
    - Multi-step breadcrumb navigation
    - Sidebar for saved concepts
@@ -66,6 +68,7 @@ The new page will be a streamlined version focusing solely on thematic direction
 ```
 
 ### Key UI Differences from Current Implementation
+
 1. **Simplified Navigation**: Remove multi-step breadcrumb
 2. **Focused Purpose**: Single action - generate directions from concept
 3. **Dark Theme**: Implement new color scheme from mockup
@@ -75,25 +78,32 @@ The new page will be a streamlined version focusing solely on thematic direction
 ## Core Architectural Changes
 
 ### 1. New Entry Point File
+
 Create `thematic-direction-main.js`:
+
 - Simplified initialization compared to character builder
 - Focus on single workflow
 - Reuse existing DI container setup
 
 ### 2. New Controller
+
 Create `ThematicDirectionController`:
+
 - Derived from `CharacterBuilderController`
 - Remove multi-step logic
 - Simplify state management
 - Focus on concept → direction flow
 
 ### 3. Service Layer Modifications
+
 Reuse existing services with focused interfaces:
+
 - `CharacterBuilderService` - Use only concept and direction methods
 - `ThematicDirectionGenerator` - No changes needed
 - `CharacterStorageService` - No changes needed
 
 ### 4. HTML Template Changes
+
 - Remove breadcrumb navigation
 - Simplify layout to two panels
 - Update styling for dark theme
@@ -103,6 +113,7 @@ Reuse existing services with focused interfaces:
 ## Data Flow & Storage Changes
 
 ### Current Flow
+
 ```
 User Input → Controller → Service → Generator → Storage
                 ↓                        ↓
@@ -112,6 +123,7 @@ User Input → Controller → Service → Generator → Storage
 ```
 
 ### Enhanced Flow for New Page
+
 ```
 User Input → Auto-Save Concept → Generate Directions → Store Association
      ↓              ↓                    ↓                    ↓
@@ -121,6 +133,7 @@ UI Feedback   Concept ID          Directions Array    conceptId ref
 ```
 
 ### Storage Enhancements
+
 1. **Auto-save Concepts**: Save immediately when generating directions
 2. **Maintain Associations**: Ensure `conceptId` properly links directions
 3. **Previous Concepts**: Quick access to past concepts for regeneration
@@ -129,6 +142,7 @@ UI Feedback   Concept ID          Directions Array    conceptId ref
 ## Component Reusability Strategy
 
 ### Fully Reusable Components
+
 1. **Services**:
    - `CharacterBuilderService` (subset of methods)
    - `ThematicDirectionGenerator`
@@ -147,12 +161,14 @@ UI Feedback   Concept ID          Directions Array    conceptId ref
    - Error handling
 
 ### Components Requiring Modification
+
 1. **Controller**: New `ThematicDirectionController`
 2. **Main Entry**: New `thematic-direction-main.js`
 3. **HTML Template**: New `thematic-direction-generator.html`
 4. **CSS**: Extended styles for dark theme
 
 ### New Components
+
 1. **Previous Concepts Dropdown**: For quick concept selection
 2. **Simplified State Manager**: For single-page flow
 
@@ -161,6 +177,7 @@ UI Feedback   Concept ID          Directions Array    conceptId ref
 ### Based on New Mockup Design
 
 1. **Color Scheme**:
+
    ```css
    --bg-primary: #0f0f0f;
    --bg-secondary: #1a1a1a;
@@ -190,42 +207,45 @@ UI Feedback   Concept ID          Directions Array    conceptId ref
 ## Service Layer Adaptations
 
 ### CharacterBuilderService Usage
+
 Only use these methods:
+
 ```javascript
 // Essential methods for new page
-- createCharacterConcept()
-- generateThematicDirections()
-- storeCharacterConcept()
-- getAllCharacterConcepts()
-- getCharacterConcept()
+-createCharacterConcept() -
+  generateThematicDirections() -
+  storeCharacterConcept() -
+  getAllCharacterConcepts() -
+  getCharacterConcept();
 ```
 
 ### New Service Methods Needed
+
 ```javascript
 // Add to CharacterBuilderService or create adapter
-- getRecentConcepts(limit = 10)
-- regenerateDirectionsForConcept(conceptId)
-- getConceptsWithDirections()
+-getRecentConcepts((limit = 10)) -
+  regenerateDirectionsForConcept(conceptId) -
+  getConceptsWithDirections();
 ```
 
 ### Event Handling
+
 Simplified event flow:
+
 ```javascript
 // Key events for new page
-- CONCEPT_CREATED
-- DIRECTIONS_GENERATED
-- CONCEPT_LOADED
-- ERROR_OCCURRED
+-CONCEPT_CREATED - DIRECTIONS_GENERATED - CONCEPT_LOADED - ERROR_OCCURRED;
 ```
 
 ## Dependency Injection Updates
 
 ### New Registrations
+
 ```javascript
 // In thematicDirectionRegistrations.js
 function registerThematicDirection(container) {
   // Reuse existing service registrations
-  
+
   // Register new controller
   registrar.singletonFactory(tokens.ThematicDirectionController, (c) => {
     return new ThematicDirectionController({
@@ -238,6 +258,7 @@ function registerThematicDirection(container) {
 ```
 
 ### Token Additions
+
 ```javascript
 // Add to tokens.js
 ThematicDirectionController: Symbol('ThematicDirectionController'),
@@ -246,30 +267,35 @@ ThematicDirectionController: Symbol('ThematicDirectionController'),
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (2-3 hours)
+
 1. Create `thematic-direction-generator.html` with basic structure
 2. Implement dark theme CSS modifications
 3. Create `thematic-direction-main.js` entry point
 4. Set up basic DI configuration
 
 ### Phase 2: Controller Development (3-4 hours)
+
 1. Create `ThematicDirectionController` class
 2. Implement concept input handling
 3. Add direction generation workflow
 4. Integrate with existing services
 
 ### Phase 3: UI Enhancements (2-3 hours)
+
 1. Implement previous concepts dropdown
 2. Add loading/error states
 3. Create smooth transitions
 4. Polish visual design per mockup
 
 ### Phase 4: Data Integration (2 hours)
+
 1. Ensure auto-save of concepts
 2. Verify concept-direction associations
 3. Test data persistence
 4. Add data migration if needed
 
 ### Phase 5: Testing & Refinement (2 hours)
+
 1. End-to-end testing
 2. Error handling verification
 3. Performance optimization
@@ -278,12 +304,14 @@ ThematicDirectionController: Symbol('ThematicDirectionController'),
 ## Risk Mitigation
 
 ### Potential Risks
+
 1. **Code Duplication**: Mitigate by creating shared utility modules
 2. **State Management**: Simplify by removing multi-step complexity
 3. **Data Consistency**: Ensure proper transaction handling
 4. **UI Responsiveness**: Implement proper loading states
 
 ### Validation Strategy
+
 1. Maintain existing schema validation
 2. Add integration tests for new workflow
 3. Verify data associations in storage

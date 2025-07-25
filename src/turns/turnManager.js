@@ -450,36 +450,23 @@ class TurnManager extends ITurnManager {
             { error: startTurnError.message, handlerName }
           );
 
-          try {
-            await this.#dispatchSystemError(
-              `Error initiating turn for ${actorId}.`,
-              startTurnError
-            );
-          } catch (e) {
-            logError(
-              this.#logger,
-              'Failed to dispatch system error after startTurn failure',
-              e
-            );
-          }
+          await this.#dispatchSystemError(
+            `Error initiating turn for ${actorId}.`,
+            startTurnError
+          );
 
-          if (this.#currentActor?.id === actorId) {
-            this.#logger.warn(
-              `Manually handling turn end after startTurn initiation failure for ${actorId}.`
-            );
-            this.#handleTurnEndedEvent({
-              type: TURN_ENDED_ID,
-              payload: {
-                entityId: actorId,
-                success: false,
-                error: startTurnError,
-              },
-            });
-          } else {
-            this.#logger.warn(
-              `startTurn initiation failed for ${actorId}, but current actor changed before manual advance could occur. No advance triggered by this error handler.`
-            );
-          }
+          // Always handle turn end for startTurn failures
+          this.#logger.warn(
+            `Manually handling turn end after startTurn initiation failure for ${actorId}.`
+          );
+          this.#handleTurnEndedEvent({
+            type: TURN_ENDED_ID,
+            payload: {
+              entityId: actorId,
+              success: false,
+              error: startTurnError,
+            },
+          });
           return; // Exit early on error
         }
         this.#logger.debug(

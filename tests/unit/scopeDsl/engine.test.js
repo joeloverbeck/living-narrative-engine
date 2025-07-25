@@ -919,4 +919,91 @@ describe('ScopeEngine', () => {
       expect(result.customProp2).toBe('value2');
     });
   });
+
+  describe('Clothing Resolver Integration', () => {
+    it('should create resolvers with clothing resolvers included', () => {
+      const resolvers = engine._createResolvers({
+        locationProvider: { getLocation: () => null },
+        entitiesGateway: mockEntityManager,
+        logicEval: mockJsonLogicEval,
+      });
+
+      // Should have 7 resolvers total (2 clothing + 5 original)
+      expect(resolvers).toHaveLength(7);
+
+      // Clothing resolvers should be first for priority
+      expect(
+        resolvers[0].canResolve({ type: 'Step', field: 'topmost_clothing' })
+      ).toBe(true);
+      expect(
+        resolvers[1].canResolve({ type: 'Step', field: 'torso_upper' })
+      ).toBe(true);
+    });
+
+    it('should maintain backward compatibility with existing resolvers', () => {
+      const resolvers = engine._createResolvers({
+        locationProvider: { getLocation: () => null },
+        entitiesGateway: mockEntityManager,
+        logicEval: mockJsonLogicEval,
+      });
+
+      // Original resolvers should still be present
+      const hasSourceResolver = resolvers.some((r) =>
+        r.canResolve({ type: 'Source', kind: 'actor' })
+      );
+      const hasStepResolver = resolvers.some((r) =>
+        r.canResolve({ type: 'Step', field: 'regular_field' })
+      );
+      const hasFilterResolver = resolvers.some((r) =>
+        r.canResolve({ type: 'Filter' })
+      );
+      const hasUnionResolver = resolvers.some((r) =>
+        r.canResolve({ type: 'Union' })
+      );
+      const hasArrayIterationResolver = resolvers.some((r) =>
+        r.canResolve({ type: 'ArrayIterationStep' })
+      );
+
+      expect(hasSourceResolver).toBe(true);
+      expect(hasStepResolver).toBe(true);
+      expect(hasFilterResolver).toBe(true);
+      expect(hasUnionResolver).toBe(true);
+      expect(hasArrayIterationResolver).toBe(true);
+    });
+
+    it('should prioritize clothing resolvers over generic step resolver', () => {
+      const resolvers = engine._createResolvers({
+        locationProvider: { getLocation: () => null },
+        entitiesGateway: mockEntityManager,
+        logicEval: mockJsonLogicEval,
+      });
+
+      // Check that clothing resolvers are at the beginning
+      expect(
+        resolvers[0].canResolve({ type: 'Step', field: 'topmost_clothing' })
+      ).toBe(true);
+      expect(
+        resolvers[1].canResolve({ type: 'Step', field: 'torso_upper' })
+      ).toBe(true);
+
+      // Check that generic step resolver comes later in the list
+      // The generic step resolver would accept any Step node (including clothing fields)
+      // but we can identify it by checking it's not one of the specialized clothing resolvers
+      let genericStepResolverIndex = -1;
+
+      resolvers.forEach((resolver, index) => {
+        // Test if this is the generic step resolver by checking if it accepts Step nodes
+        // and is NOT one of the first two resolvers (which are clothing resolvers)
+        if (
+          index >= 2 && // Skip the first two clothing resolvers
+          resolver.canResolve({ type: 'Step', field: 'some_random_field' })
+        ) {
+          genericStepResolverIndex = index;
+        }
+      });
+
+      // Generic step resolver should exist and come after clothing resolvers (index >= 2)
+      expect(genericStepResolverIndex).toBeGreaterThanOrEqual(2);
+    });
+  });
 });

@@ -1,0 +1,468 @@
+// tests/unit/engine/gameEngine.test.js
+
+import { describe, expect, it, beforeEach } from '@jest/globals';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import {
+  ENGINE_INITIALIZING_UI,
+  ENGINE_STOPPED_UI,
+  REQUEST_SHOW_SAVE_GAME_UI,
+  REQUEST_SHOW_LOAD_GAME_UI,
+  CANNOT_SAVE_GAME_INFO,
+} from '../../../src/constants/eventIds.js';
+import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
+import { generateServiceUnavailableTests } from '../../common/engine/gameEngineHelpers.js';
+import {
+  DEFAULT_TEST_WORLD,
+  DEFAULT_SAVE_ID,
+  ENGINE_STOPPED_MESSAGE,
+} from '../../common/constants.js';
+import GameEngine from '../../../src/engine/gameEngine.js';
+import GameSessionManager from '../../../src/engine/gameSessionManager.js';
+import PersistenceCoordinator from '../../../src/engine/persistenceCoordinator.js';
+
+describeEngineSuite('GameEngine', (context) => {
+  describe('Constructor', () => {
+    it('should throw when logger is not provided', () => {
+      expect(() => {
+        new GameEngine({ container: context.bed.env.mockContainer });
+      }).toThrow('GameEngine requires a logger.');
+    });
+
+    it('should throw and log when service resolution fails', () => {
+      const testBed = context.bed;
+      const resolutionError = new Error('Service resolution failed');
+      testBed.withTokenOverride(tokens.IEntityManager, () => {
+        throw resolutionError;
+      });
+
+      expect(() => testBed.env.createInstance()).toThrow(
+        'GameEngine: Failed to resolve core services. Service resolution failed'
+      );
+
+      expect(testBed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine: CRITICAL - Failed to resolve one or more core services. Error: Service resolution failed',
+        resolutionError
+      );
+    });
+
+    it('should use provided sessionManager when passed', () => {
+      const mockSessionManager = new GameSessionManager({
+        logger: context.bed.getLogger(),
+        turnManager: context.bed.getTurnManager(),
+        playtimeTracker: context.bed.getPlaytimeTracker(),
+        safeEventDispatcher: context.bed.getSafeEventDispatcher(),
+        engineState: expect.any(Object),
+        stopFn: expect.any(Function),
+        resetCoreGameStateFn: expect.any(Function),
+        startEngineFn: expect.any(Function),
+      });
+
+      const engine = new GameEngine({
+        container: context.bed.env.mockContainer,
+        logger: context.bed.getLogger(),
+        sessionManager: mockSessionManager,
+      });
+
+      // Verify the engine was created successfully
+      expect(engine).toBeDefined();
+    });
+
+    it('should use provided persistenceCoordinator when passed', () => {
+      const mockPersistenceCoordinator = new PersistenceCoordinator({
+        logger: context.bed.getLogger(),
+        gamePersistenceService: context.bed.getGamePersistenceService(),
+        safeEventDispatcher: context.bed.getSafeEventDispatcher(),
+        sessionManager: expect.any(Object),
+        engineState: expect.any(Object),
+        handleLoadFailure: expect.any(Function),
+      });
+
+      const engine = new GameEngine({
+        container: context.bed.env.mockContainer,
+        logger: context.bed.getLogger(),
+        persistenceCoordinator: mockPersistenceCoordinator,
+      });
+
+      // Verify the engine was created successfully
+      expect(engine).toBeDefined();
+    });
+  });
+
+  describe('startNewGame', () => {
+    it('should throw when worldName is null', async () => {
+      await expect(context.engine.startNewGame(null)).rejects.toThrow();
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        expect.stringContaining("Invalid worldName 'null'"),
+        expect.any(Object)
+      );
+    });
+
+    it('should throw when worldName is empty string', async () => {
+      await expect(context.engine.startNewGame('')).rejects.toThrow();
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        expect.stringContaining("Invalid worldName ''"),
+        expect.any(Object)
+      );
+    });
+
+    it('should handle initialization service failure', async () => {
+      const initError = new Error('Initialization failed');
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: false,
+          error: initError,
+        });
+
+      await expect(
+        context.engine.startNewGame(DEFAULT_TEST_WORLD)
+      ).rejects.toThrow(initError);
+
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+        `GameEngine: InitializationService reported failure for "${DEFAULT_TEST_WORLD}".`
+      );
+    });
+
+    it('should handle initialization service failure with no error object', async () => {
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: false,
+          error: null,
+        });
+
+      await expect(
+        context.engine.startNewGame(DEFAULT_TEST_WORLD)
+      ).rejects.toThrow('Unknown failure from InitializationService.');
+    });
+
+    it('should handle exceptions during initialization', async () => {
+      const unexpectedError = new Error('Unexpected failure');
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockRejectedValue(unexpectedError);
+
+      await expect(
+        context.engine.startNewGame(DEFAULT_TEST_WORLD)
+      ).rejects.toThrow(unexpectedError);
+
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        expect.stringContaining('Overall catch in startNewGame'),
+        unexpectedError
+      );
+    });
+
+    it('should handle non-Error exceptions during initialization', async () => {
+      const unexpectedError = 'String error';
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockRejectedValue(unexpectedError);
+
+      await expect(
+        context.engine.startNewGame(DEFAULT_TEST_WORLD)
+      ).rejects.toThrow('String error');
+
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        expect.stringContaining('Overall catch in startNewGame'),
+        expect.any(Error)
+      );
+    });
+  });
+
+  describe('stop', () => {
+    beforeEach(async () => {
+      // Start the engine first
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: true,
+        });
+      await context.engine.startNewGame(DEFAULT_TEST_WORLD);
+    });
+
+    it('should handle missing playtimeTracker service', async () => {
+      // Create a new engine instance without playtimeTracker
+      const testBed = context.bed;
+      testBed.withTokenOverride(tokens.PlaytimeTracker, null);
+      const engineWithoutTracker = testBed.env.createInstance();
+
+      // Start the engine
+      testBed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: true,
+        });
+      await engineWithoutTracker.startNewGame(DEFAULT_TEST_WORLD);
+
+      // Stop the engine
+      await engineWithoutTracker.stop();
+
+      expect(testBed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine.stop: PlaytimeTracker service not available, cannot end session.'
+      );
+
+      // Verify stop event was still dispatched
+      expect(testBed.getSafeEventDispatcher().dispatch).toHaveBeenCalledWith(
+        ENGINE_STOPPED_UI,
+        { inputDisabledMessage: ENGINE_STOPPED_MESSAGE }
+      );
+    });
+
+    it('should not take action when engine is already stopped', async () => {
+      // Stop the engine first
+      await context.engine.stop();
+
+      // Clear previous calls
+      context.bed.getLogger().debug.mockClear();
+      context.bed.getSafeEventDispatcher().dispatch.mockClear();
+
+      // Try to stop again
+      await context.engine.stop();
+
+      expect(context.bed.getLogger().debug).toHaveBeenCalledWith(
+        'GameEngine.stop: Engine not running or already stopped. No action taken.'
+      );
+
+      // Verify no events were dispatched
+      expect(
+        context.bed.getSafeEventDispatcher().dispatch
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('loadGame', () => {
+    it('should throw when saveIdentifier is null', async () => {
+      await expect(context.engine.loadGame(null)).rejects.toThrow();
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        expect.stringContaining("Invalid saveIdentifier 'null'"),
+        expect.any(Object)
+      );
+    });
+
+    it('should throw when saveIdentifier is empty string', async () => {
+      await expect(context.engine.loadGame('')).rejects.toThrow();
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        expect.stringContaining("Invalid saveIdentifier ''"),
+        expect.any(Object)
+      );
+    });
+
+    it('should delegate to persistenceCoordinator', async () => {
+      const mockResult = { success: true, data: {} };
+
+      // Create a mock persistenceCoordinator
+      const mockPersistenceCoordinator = {
+        loadGame: jest.fn().mockResolvedValue(mockResult),
+      };
+
+      const engine = new GameEngine({
+        container: context.bed.env.mockContainer,
+        logger: context.bed.getLogger(),
+        persistenceCoordinator: mockPersistenceCoordinator,
+      });
+
+      const result = await engine.loadGame(DEFAULT_SAVE_ID);
+
+      expect(mockPersistenceCoordinator.loadGame).toHaveBeenCalledWith(
+        DEFAULT_SAVE_ID
+      );
+      expect(result).toBe(mockResult);
+    });
+  });
+
+  describe('triggerManualSave', () => {
+    it('should delegate to persistenceCoordinator', async () => {
+      const mockResult = { success: true };
+      const saveName = 'test-save';
+
+      // Create a mock persistenceCoordinator
+      const mockPersistenceCoordinator = {
+        triggerManualSave: jest.fn().mockResolvedValue(mockResult),
+      };
+
+      const engine = new GameEngine({
+        container: context.bed.env.mockContainer,
+        logger: context.bed.getLogger(),
+        persistenceCoordinator: mockPersistenceCoordinator,
+      });
+
+      const result = await engine.triggerManualSave(saveName);
+
+      expect(mockPersistenceCoordinator.triggerManualSave).toHaveBeenCalledWith(
+        saveName
+      );
+      expect(result).toBe(mockResult);
+    });
+  });
+
+  describe('showSaveGameUI', () => {
+    it('should dispatch REQUEST_SHOW_SAVE_GAME_UI when saving is allowed', async () => {
+      context.bed
+        .getGamePersistenceService()
+        .isSavingAllowed.mockReturnValue(true);
+      context.bed.getSafeEventDispatcher().dispatch.mockResolvedValue(true);
+
+      await context.engine.showSaveGameUI();
+
+      expect(context.bed.getLogger().debug).toHaveBeenCalledWith(
+        'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
+      );
+      expect(
+        context.bed.getSafeEventDispatcher().dispatch
+      ).toHaveBeenCalledWith(REQUEST_SHOW_SAVE_GAME_UI, {});
+    });
+
+    it('should log warning when dispatcher fails', async () => {
+      context.bed
+        .getGamePersistenceService()
+        .isSavingAllowed.mockReturnValue(true);
+      context.bed.getSafeEventDispatcher().dispatch.mockResolvedValue(false);
+
+      await context.engine.showSaveGameUI();
+
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching Save Game UI request.'
+      );
+    });
+
+    it('should dispatch CANNOT_SAVE_GAME_INFO when saving is not allowed', async () => {
+      context.bed
+        .getGamePersistenceService()
+        .isSavingAllowed.mockReturnValue(false);
+
+      await context.engine.showSaveGameUI();
+
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine.showSaveGameUI: Saving is not currently allowed.'
+      );
+      expect(
+        context.bed.getSafeEventDispatcher().dispatch
+      ).toHaveBeenCalledWith(CANNOT_SAVE_GAME_INFO);
+    });
+
+    it('should handle missing persistence service', async () => {
+      // Create engine without persistence service
+      const testBed = context.bed;
+      testBed.withTokenOverride(tokens.GamePersistenceService, null);
+      const engineWithoutPersistence = testBed.env.createInstance();
+
+      await engineWithoutPersistence.showSaveGameUI();
+
+      expect(testBed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
+      );
+      // Should not dispatch any events
+      expect(testBed.getSafeEventDispatcher().dispatch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('showLoadGameUI', () => {
+    it('should handle missing persistence service', async () => {
+      // Create engine without persistence service
+      const testBed = context.bed;
+      testBed.withTokenOverride(tokens.GamePersistenceService, null);
+      const engineWithoutPersistence = testBed.env.createInstance();
+
+      await engineWithoutPersistence.showLoadGameUI();
+
+      expect(testBed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.'
+      );
+      // Should not dispatch any events
+      expect(testBed.getSafeEventDispatcher().dispatch).not.toHaveBeenCalled();
+    });
+
+    it('should dispatch REQUEST_SHOW_LOAD_GAME_UI successfully', async () => {
+      context.bed.getSafeEventDispatcher().dispatch.mockResolvedValue(true);
+
+      await context.engine.showLoadGameUI();
+
+      expect(context.bed.getLogger().debug).toHaveBeenCalledWith(
+        'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
+      );
+      expect(
+        context.bed.getSafeEventDispatcher().dispatch
+      ).toHaveBeenCalledWith(REQUEST_SHOW_LOAD_GAME_UI, {});
+    });
+
+    it('should log warning when dispatcher fails for load game UI', async () => {
+      context.bed.getSafeEventDispatcher().dispatch.mockResolvedValue(false);
+
+      await context.engine.showLoadGameUI();
+
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine.showLoadGameUI: SafeEventDispatcher reported failure when dispatching Load Game UI request.'
+      );
+    });
+  });
+
+  describe('getEngineStatus', () => {
+    it('should return correct engine status when stopped', () => {
+      const status = context.engine.getEngineStatus();
+
+      expect(status).toEqual({
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
+      });
+    });
+
+    it('should return correct engine status when running', async () => {
+      // Start the engine
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: true,
+        });
+      await context.engine.startNewGame(DEFAULT_TEST_WORLD);
+
+      const status = context.engine.getEngineStatus();
+
+      expect(status).toEqual({
+        isInitialized: true,
+        isLoopRunning: true,
+        activeWorld: DEFAULT_TEST_WORLD,
+      });
+    });
+  });
+
+  describe('Private method coverage through error scenarios', () => {
+    it('should handle missing entityManager in resetCoreGameState', async () => {
+      // Create engine without entityManager
+      const testBed = context.bed;
+      testBed.withTokenOverride(tokens.IEntityManager, null);
+      const engineWithoutEntityManager = testBed.env.createInstance();
+
+      // Trigger resetCoreGameState through startNewGame
+      testBed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: true,
+        });
+      await engineWithoutEntityManager.startNewGame(DEFAULT_TEST_WORLD);
+
+      expect(testBed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine._resetCoreGameState: EntityManager not available.'
+      );
+    });
+
+    it('should handle missing playtimeTracker in resetCoreGameState', async () => {
+      // Create engine without playtimeTracker
+      const testBed = context.bed;
+      testBed.withTokenOverride(tokens.PlaytimeTracker, null);
+      const engineWithoutTracker = testBed.env.createInstance();
+
+      // Trigger resetCoreGameState through startNewGame
+      testBed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: true,
+        });
+      await engineWithoutTracker.startNewGame(DEFAULT_TEST_WORLD);
+
+      expect(testBed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine._resetCoreGameState: PlaytimeTracker not available.'
+      );
+    });
+  });
+});

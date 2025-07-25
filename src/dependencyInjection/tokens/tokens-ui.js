@@ -47,4 +47,6 @@ export const uiTokens = freeze({
   InteractionController: 'InteractionController',
   ViewportManager: 'ViewportManager',
   VisualizationComposer: 'VisualizationComposer',
+  // Thematic Direction Generator
+  ThematicDirectionController: 'ThematicDirectionController',
 });
