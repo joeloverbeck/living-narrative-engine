@@ -16,7 +16,6 @@ import { CharacterDatabase } from '../../characterBuilder/storage/characterDatab
 import { CharacterStorageService } from '../../characterBuilder/services/characterStorageService.js';
 import { ThematicDirectionGenerator } from '../../characterBuilder/services/thematicDirectionGenerator.js';
 import { CharacterBuilderService } from '../../characterBuilder/services/characterBuilderService.js';
-import { CharacterBuilderController } from '../../characterBuilder/controllers/characterBuilderController.js';
 
 /**
  * Registers character builder storage services.
@@ -81,26 +80,6 @@ function registerCharacterBuilderServices(registrar, logger) {
 }
 
 /**
- * Registers character builder controllers.
- *
- * @param {Registrar} registrar - The service registrar.
- * @param {ILogger} logger - Logger instance for debug output.
- * @returns {void}
- */
-function registerCharacterBuilderControllers(registrar, logger) {
-  registrar.singletonFactory(tokens.CharacterBuilderController, (c) => {
-    return new CharacterBuilderController({
-      logger: c.resolve(tokens.ILogger),
-      characterBuilderService: c.resolve(tokens.CharacterBuilderService),
-      eventBus: c.resolve(tokens.ISafeEventDispatcher),
-    });
-  });
-  logger.debug(
-    `Character Builder Registration: Registered ${tokens.CharacterBuilderController}.`
-  );
-}
-
-/**
  * Registers all character builder services with unified LLM infrastructure.
  *
  * @param {AppContainer} container - The DI container.
@@ -113,7 +92,6 @@ export function registerCharacterBuilder(container) {
 
   registerCharacterBuilderStorage(registrar, logger);
   registerCharacterBuilderServices(registrar, logger);
-  registerCharacterBuilderControllers(registrar, logger);
 
   logger.debug('Character Builder Registration: All registrations complete.');
 }

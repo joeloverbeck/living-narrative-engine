@@ -88,15 +88,18 @@ describe('ThematicDirectionController - Concept Loading', () => {
       expect(
         mockCharacterBuilderService.getAllCharacterConcepts
       ).toHaveBeenCalled();
-      
+
       // Debug: check if warning was logged (element not found)
       const warningCalls = mockLogger.warn.mock.calls;
       if (warningCalls.length > 0) {
         console.log('Warning logged:', warningCalls[0][0]);
       }
-      
+
       // Debug: check current innerHTML
-      console.log('Dropdown innerHTML:', mockElements.previousConceptsSelect.innerHTML);
+      console.log(
+        'Dropdown innerHTML:',
+        mockElements.previousConceptsSelect.innerHTML
+      );
     });
 
     test('should populate dropdown with retrieved concepts', async () => {
@@ -188,9 +191,9 @@ describe('ThematicDirectionController - Concept Loading', () => {
         value: '',
         textContent: '',
         selected: false,
-        tagName: 'OPTION'
+        tagName: 'OPTION',
       };
-      
+
       global.document.createElement = jest.fn((tag) => {
         if (tag === 'option') {
           return mockOption;
@@ -206,7 +209,7 @@ describe('ThematicDirectionController - Concept Loading', () => {
       expect(mockOption.textContent).toBe(
         longConceptText.substring(0, 60) + '...'
       );
-      
+
       // Restore original createElement
       global.document.createElement = originalCreateElement;
     });
@@ -225,8 +228,8 @@ describe('ThematicDirectionController - Concept Loading', () => {
 
       // Simulate concept selection using unified event system
       mockElements.previousConceptsSelect.value = mockConcept.id;
-      const changeEvent = createMockEvent('change', { 
-        target: { value: mockConcept.id } 
+      const changeEvent = createMockEvent('change', {
+        target: { value: mockConcept.id },
       });
       mockElements.previousConceptsSelect.dispatchEvent(changeEvent);
 

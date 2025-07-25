@@ -313,8 +313,6 @@ export class AnatomyStateError extends AnatomyVisualizationError {
         }
     }
 
-    return baseSuggestions.length > 0
-      ? baseSuggestions
-      : ['Refresh the page to restart', 'Try again after a moment'];
+    return baseSuggestions;
   }
 }

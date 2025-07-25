@@ -1,0 +1,20 @@
+# Union Operator Examples
+# Both + and | operators work identically for combining scope results
+
+# Social relationships - combine different relationship types
+all_connections := actor.followers | actor.partners | actor.friends
+close_connections := actor.partners + actor.family
+
+# Clothing combinations - useful for outfit checks
+visible_clothing := actor.topmost_clothing.torso_upper | actor.topmost_clothing.torso_lower | actor.topmost_clothing.head
+all_armor := actor.outer_clothing[{"in": ["armor", {"var": "tags"}]}] | actor.equipped.armor
+
+# Entity queries - combine different entity types
+all_characters := entities(core:actor) | entities(core:npc)
+all_items := entities(core:item) | entities(core:container) | entities(core:weapon)
+
+# Complex filters with unions
+valuable_items := actor.inventory[{">": [{"var": "value"}, 100]}] | actor.equipped[{">": [{"var": "value"}, 100]}]
+
+# Mixed operators - both work together
+mixed_example := actor.followers + actor.friends | actor.partners

@@ -54,14 +54,23 @@ describe('ThematicDirectionController - Debug', () => {
     // Mock all DOM elements to return valid objects mapped by ID
     const mockElements = {};
     const elementIds = [
-      'concept-form', 'concept-input', 'generate-btn', 'retry-btn', 
-      'back-to-menu-btn', 'empty-state', 'loading-state', 'error-state', 
-      'results-state', 'directions-results', 'previous-concepts', 
-      'concept-error', 'error-message-text'
+      'concept-form',
+      'concept-input',
+      'generate-btn',
+      'retry-btn',
+      'back-to-menu-btn',
+      'empty-state',
+      'loading-state',
+      'error-state',
+      'results-state',
+      'directions-results',
+      'previous-concepts',
+      'concept-error',
+      'error-message-text',
     ];
 
     // Create a mock element for each ID
-    elementIds.forEach(id => {
+    elementIds.forEach((id) => {
       mockElements[id] = {
         addEventListener: jest.fn(),
         style: { display: 'none' },
@@ -135,7 +144,10 @@ describe('ThematicDirectionController - Debug', () => {
     console.log('Logger error calls:', mockLogger.error.mock.calls);
     console.log('Logger warn calls:', mockLogger.warn.mock.calls);
     console.log('Logger info calls:', mockLogger.info.mock.calls);
-    console.log('DOM getElementById calls:', mockDocument.getElementById.mock.calls.map(call => call[0]));
+    console.log(
+      'DOM getElementById calls:',
+      mockDocument.getElementById.mock.calls.map((call) => call[0])
+    );
 
     // Assert
     expect(mockCharacterBuilderService.initialize).toHaveBeenCalled();

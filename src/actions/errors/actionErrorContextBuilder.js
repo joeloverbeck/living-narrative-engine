@@ -106,6 +106,7 @@ export class ActionErrorContextBuilder extends BaseService {
 
     return {
       actionId: actionDef?.id || null,
+      actorId,
       targetId,
       error,
       actionDefinition: actionDef,
@@ -113,6 +114,7 @@ export class ActionErrorContextBuilder extends BaseService {
       evaluationTrace,
       suggestedFixes,
       environmentContext,
+      additionalContext,
       timestamp,
       phase,
     };

@@ -65,15 +65,14 @@ if (typeof window !== 'undefined' && window.EventTarget) {
 
 // Global cleanup to ensure tests don't hang
 afterEach(() => {
-  // Clear all timers to prevent hanging
+  // Clear all timers to prevent hanging (only if fake timers are active)
   try {
-    // Check if fake timers are in use by checking jest's timer state
-    if (jest.getTimerCount && jest.getTimerCount() > 0) {
+    // Only clear timers if fake timers are actually in use
+    if (jest.isMockFunction && jest.isMockFunction(setTimeout)) {
       jest.clearAllTimers();
     }
   } catch (error) {
-    // If getTimerCount is not available or throws, we're likely not using fake timers
-    // Safe to ignore
+    // Safe to ignore - means fake timers aren't active
   }
 
   // Restore all mocks
@@ -83,7 +82,5 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-// Ensure we're using real timers by default
-beforeEach(() => {
-  jest.useRealTimers();
-});
+// Note: Removed default jest.useRealTimers() to avoid conflicts with tests that use fake timers
+// Individual test files should manage their own timer setup as needed

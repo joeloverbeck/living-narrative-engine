@@ -427,7 +427,19 @@ describe('ScopeEngine - Additional Coverage Tests', () => {
     test('should handle array iteration with array containing null/undefined values', () => {
       const ast = parseDslExpression('actor.core:inventory[]');
       const arrayWithNulls = ['item1', null, undefined, 'item2'];
-      mockEntityManager.getComponentData.mockReturnValue(arrayWithNulls);
+      
+      // Mock actor entity instance
+      mockEntityManager.getEntityInstance.mockReturnValue({
+        id: 'actor123',
+        componentTypeIds: ['core:inventory'],
+      });
+      
+      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
+        if (entityId === 'actor123' && componentId === 'core:inventory') {
+          return arrayWithNulls;
+        }
+        return null;
+      });
 
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
 

@@ -227,7 +227,14 @@ class ScopeEngine extends IScopeEngine {
     ctx.depthGuard.ensure(ctx.depth);
 
     // Generate key for cycle detection
-    const nodeKey = `${node.type}:${node.field || ''}:${node.param || ''}`;
+    let nodeKey;
+    if (node.type === 'Union') {
+      // For union nodes, create a unique key based on the node object reference
+      // This prevents false cycle detection when multiple unions are nested
+      nodeKey = `Union:${Math.random().toString(36).substr(2, 9)}`;
+    } else {
+      nodeKey = `${node.type}:${node.field || ''}:${node.param || ''}`;
+    }
 
     // Enter cycle detection
     ctx.cycleDetector.enter(nodeKey);

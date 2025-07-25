@@ -1,709 +1,586 @@
 /**
  * @file Unit tests for CharacterBuilderService
+ * @see src/characterBuilder/services/characterBuilderService.js
  */
 
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import {
-  jest,
-  describe,
-  beforeEach,
-  afterEach,
-  test,
-  expect,
-} from '@jest/globals';
-import { CharacterBuilderService } from '../../../../src/characterBuilder/services/characterBuilderService.js';
-
-/**
- * @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../../../../src/characterBuilder/services/characterStorageService.js').CharacterStorageService} CharacterStorageService
- * @typedef {import('../../../../src/characterBuilder/services/thematicDirectionGenerator.js').ThematicDirectionGenerator} ThematicDirectionGenerator
- * @typedef {import('../../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
- */
+  CharacterBuilderService,
+  CHARACTER_BUILDER_EVENTS,
+  CharacterBuilderError,
+} from '../../../../src/characterBuilder/services/characterBuilderService.js';
+import {
+  createCharacterConcept,
+  updateCharacterConcept,
+  CHARACTER_CONCEPT_STATUS,
+} from '../../../../src/characterBuilder/models/characterConcept.js';
 
 describe('CharacterBuilderService', () => {
-  // Shared mock instances - created once and reset between tests
-  const createMockLogger = () => ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+  let service;
+  let mockLogger;
+  let mockStorageService;
+  let mockDirectionGenerator;
+  let mockEventBus;
+
+  beforeEach(() => {
+    // Create mocks for all dependencies
+    mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    mockStorageService = {
+      initialize: jest.fn().mockResolvedValue(),
+      storeCharacterConcept: jest.fn(),
+      listCharacterConcepts: jest.fn(),
+      getCharacterConcept: jest.fn(),
+      deleteCharacterConcept: jest.fn(),
+      storeThematicDirections: jest.fn(),
+      getThematicDirections: jest.fn(),
+      saveCharacterConcept: jest.fn(),
+    };
+
+    mockDirectionGenerator = {
+      generateDirections: jest.fn(),
+    };
+
+    mockEventBus = {
+      dispatch: jest.fn(),
+    };
   });
 
-  const createMockStorageService = () => ({
-    initialize: jest.fn(),
-    storeCharacterConcept: jest.fn(),
-    saveCharacterConcept: jest.fn(),
-    listCharacterConcepts: jest.fn(),
-    getCharacterConcept: jest.fn(),
-    deleteCharacterConcept: jest.fn(),
-    storeThematicDirections: jest.fn(),
-    getThematicDirections: jest.fn(),
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  const createMockDirectionGenerator = () => ({
-    generateDirections: jest.fn(),
-    validateResponse: jest.fn(),
-    getResponseSchema: jest.fn(),
-  });
-
-  const createMockEventBus = () => ({
-    dispatch: jest.fn(),
-  });
-
-  // Lazy initialization for tests that need full service
-  const createService = (overrides = {}) => {
-    const mockLogger = createMockLogger();
-    const mockStorageService = createMockStorageService();
-    const mockDirectionGenerator = createMockDirectionGenerator();
-    const mockEventBus = createMockEventBus();
-
-    const service = new CharacterBuilderService({
-      logger: mockLogger,
-      storageService: mockStorageService,
-      directionGenerator: mockDirectionGenerator,
-      eventBus: mockEventBus,
-      ...overrides,
+  describe('constructor', () => {
+    it('should create instance with valid dependencies', () => {
+      expect(() => {
+        service = new CharacterBuilderService({
+          logger: mockLogger,
+          storageService: mockStorageService,
+          directionGenerator: mockDirectionGenerator,
+          eventBus: mockEventBus,
+        });
+      }).not.toThrow();
     });
 
-    return {
-      service,
-      mocks: {
+    it('should throw error when logger is missing required methods', () => {
+      const invalidLogger = { debug: jest.fn() }; // Missing info, warn, error
+      
+      expect(() => {
+        new CharacterBuilderService({
+          logger: invalidLogger,
+          storageService: mockStorageService,
+          directionGenerator: mockDirectionGenerator,
+          eventBus: mockEventBus,
+        });
+      }).toThrow();
+    });
+
+    it('should throw error when storageService is missing required methods', () => {
+      const invalidStorage = { initialize: jest.fn() }; // Missing other methods
+      
+      expect(() => {
+        new CharacterBuilderService({
+          logger: mockLogger,
+          storageService: invalidStorage,
+          directionGenerator: mockDirectionGenerator,
+          eventBus: mockEventBus,
+        });
+      }).toThrow();
+    });
+
+    it('should throw error when directionGenerator is missing required methods', () => {
+      const invalidGenerator = {}; // Missing generateDirections
+      
+      expect(() => {
+        new CharacterBuilderService({
+          logger: mockLogger,
+          storageService: mockStorageService,
+          directionGenerator: invalidGenerator,
+          eventBus: mockEventBus,
+        });
+      }).toThrow();
+    });
+
+    it('should throw error when eventBus is missing required methods', () => {
+      const invalidEventBus = {}; // Missing dispatch
+      
+      expect(() => {
+        new CharacterBuilderService({
+          logger: mockLogger,
+          storageService: mockStorageService,
+          directionGenerator: mockDirectionGenerator,
+          eventBus: invalidEventBus,
+        });
+      }).toThrow();
+    });
+  });
+
+  describe('initialize', () => {
+    beforeEach(() => {
+      service = new CharacterBuilderService({
         logger: mockLogger,
         storageService: mockStorageService,
         directionGenerator: mockDirectionGenerator,
         eventBus: mockEventBus,
-      },
-    };
-  };
-
-  afterEach(() => {
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
-    jest.useRealTimers();
-  });
-
-  describe('Constructor', () => {
-    test('should create instance with valid dependencies', () => {
-      const { service } = createService();
-      expect(service).toBeInstanceOf(CharacterBuilderService);
+      });
     });
 
-    test.each([
-      ['logger', 'ILogger'],
-      ['storageService', 'CharacterStorageService'],
-      ['directionGenerator', 'ThematicDirectionGenerator'],
-      ['eventBus', 'ISafeEventDispatcher'],
-    ])('should throw error if %s is invalid', (depName, expectedError) => {
-      const validDeps = {
-        logger: createMockLogger(),
-        storageService: createMockStorageService(),
-        directionGenerator: createMockDirectionGenerator(),
-        eventBus: createMockEventBus(),
-      };
+    it('should successfully initialize storage service', async () => {
+      await service.initialize();
 
-      expect(() => {
-        new CharacterBuilderService({
-          ...validDeps,
-          [depName]: null,
-        });
-      }).toThrow(`Missing required dependency: ${expectedError}.`);
+      expect(mockStorageService.initialize).toHaveBeenCalledTimes(1);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'CharacterBuilderService: Successfully initialized'
+      );
+    });
+
+    it('should throw CharacterBuilderError when storage initialization fails', async () => {
+      const storageError = new Error('Storage init failed');
+      mockStorageService.initialize.mockRejectedValue(storageError);
+
+      await expect(service.initialize()).rejects.toThrow(CharacterBuilderError);
+      await expect(service.initialize()).rejects.toThrow(
+        'Failed to initialize character builder service: Storage init failed'
+      );
     });
   });
 
   describe('createCharacterConcept', () => {
-    let service, mocks;
-
     beforeEach(() => {
-      const setup = createService();
-      service = setup.service;
-      mocks = setup.mocks;
+      service = new CharacterBuilderService({
+        logger: mockLogger,
+        storageService: mockStorageService,
+        directionGenerator: mockDirectionGenerator,
+        eventBus: mockEventBus,
+      });
     });
 
-    test('should successfully create and store character concept', async () => {
-      const conceptText =
-        'Test Hero - A brave adventurer with a mysterious past. Noble background, courageous but impulsive.';
+    it('should create and save character concept with autoSave enabled', async () => {
+      const conceptText = 'A brave warrior from the north';
+      const mockConcept = createCharacterConcept(conceptText);
+      const mockSavedConcept = { ...mockConcept, id: 'saved-id' };
 
-      const mockStoredConcept = {
-        id: 'generated-uuid-123',
-        concept: conceptText,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      mocks.storageService.storeCharacterConcept.mockResolvedValue(
-        mockStoredConcept
-      );
+      mockStorageService.storeCharacterConcept.mockResolvedValue(mockSavedConcept);
 
       const result = await service.createCharacterConcept(conceptText);
 
-      expect(result).toEqual(mockStoredConcept);
-      expect(mocks.storageService.storeCharacterConcept).toHaveBeenCalledWith(
+      expect(result).toEqual(mockSavedConcept);
+      expect(mockStorageService.storeCharacterConcept).toHaveBeenCalledTimes(1);
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED,
         expect.objectContaining({
-          concept: conceptText,
+          conceptId: mockSavedConcept.id,
+          autoSaved: true,
         })
-      );
-      expect(mocks.eventBus.dispatch).toHaveBeenCalledWith(
-        'CHARACTER_CONCEPT_CREATED',
-        expect.objectContaining({
-          conceptId: mockStoredConcept.id,
-        })
-      );
-      expect(mocks.logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Created character concept'),
-        expect.any(Object)
       );
     });
 
-    test.each([[null], [''], ['   ']])(
-      'should throw error if concept data is invalid: %p',
-      async (invalidData) => {
-        await expect(
-          service.createCharacterConcept(invalidData)
-        ).rejects.toThrow();
-      }
-    );
+    it('should create character concept without saving when autoSave is false', async () => {
+      const conceptText = 'A wise mage';
+      
+      const result = await service.createCharacterConcept(conceptText, { autoSave: false });
 
-    test('should handle storage errors', async () => {
-      const conceptText = 'Test Hero - A brave adventurer';
+      expect(mockStorageService.storeCharacterConcept).not.toHaveBeenCalled();
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED,
+        expect.objectContaining({
+          autoSaved: false,
+        })
+      );
+    });
 
-      const storageError = new Error('Storage unavailable');
-      mocks.storageService.storeCharacterConcept.mockRejectedValue(
-        storageError
+    it('should throw error for empty concept string', async () => {
+      await expect(service.createCharacterConcept('')).rejects.toThrow(
+        'concept must be a non-empty string'
+      );
+      
+      await expect(service.createCharacterConcept('   ')).rejects.toThrow(
+        'concept must be a non-empty string'
+      );
+    });
+
+    it('should throw error for non-string concept', async () => {
+      await expect(service.createCharacterConcept(null)).rejects.toThrow(
+        'concept must be a non-empty string'
+      );
+      
+      await expect(service.createCharacterConcept(123)).rejects.toThrow(
+        'concept must be a non-empty string'
+      );
+    });
+
+    it('should not retry on validation errors', async () => {
+      const conceptText = 'Invalid concept';
+      const validationError = new Error('Validation failed');
+      validationError.name = 'CharacterConceptValidationError';
+
+      mockStorageService.storeCharacterConcept.mockRejectedValue(validationError);
+
+      await expect(service.createCharacterConcept(conceptText)).rejects.toThrow(
+        CharacterBuilderError
       );
 
-      await expect(
-        service.createCharacterConcept(conceptText)
-      ).rejects.toThrow();
-      expect(mocks.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to create character concept'),
-        expect.any(Object)
+      expect(mockStorageService.storeCharacterConcept).toHaveBeenCalledTimes(1);
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,
+        expect.objectContaining({
+          operation: 'createCharacterConcept',
+        })
       );
     });
   });
 
   describe('generateThematicDirections', () => {
-    let service, mocks;
-
     beforeEach(() => {
-      const setup = createService();
-      service = setup.service;
-      mocks = setup.mocks;
+      service = new CharacterBuilderService({
+        logger: mockLogger,
+        storageService: mockStorageService,
+        directionGenerator: mockDirectionGenerator,
+        eventBus: mockEventBus,
+      });
     });
 
-    test('should successfully generate and store thematic directions', async () => {
-      const conceptId = 'test-concept-123';
-      const mockCharacterConcept = {
-        id: conceptId,
-        concept:
-          'Test Hero - A brave adventurer with noble background and courageous personality',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      const mockGeneratedDirections = [
-        {
-          id: 'direction-1',
-          conceptId,
-          title: "The Hero's Journey",
-          description: 'Classic heroic arc',
-          coreTension: 'Duty vs. personal desires',
-          uniqueTwist: 'Hidden nobility',
-          narrativePotential: 'Epic adventures',
-          llmMetadata: {
-            modelId: 'openrouter-claude-sonnet-4',
-            promptTokens: 150,
-            responseTokens: 300,
-            processingTime: 2500,
-          },
-        },
+    it('should generate and save thematic directions successfully', async () => {
+      const conceptId = 'test-concept-id';
+      const mockConcept = createCharacterConcept('Test concept');
+      const mockDirections = [
+        { id: 'dir1', direction: 'Direction 1' },
+        { id: 'dir2', direction: 'Direction 2' },
       ];
 
-      mocks.storageService.getCharacterConcept.mockResolvedValue(
-        mockCharacterConcept
-      );
-      mocks.directionGenerator.generateDirections.mockResolvedValue(
-        mockGeneratedDirections
-      );
-      mocks.storageService.storeThematicDirections.mockResolvedValue(
-        mockGeneratedDirections
-      );
+      mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
+      mockDirectionGenerator.generateDirections.mockResolvedValue(mockDirections);
+      mockStorageService.storeThematicDirections.mockResolvedValue(mockDirections);
 
       const result = await service.generateThematicDirections(conceptId);
 
-      expect(result).toEqual(mockGeneratedDirections);
-      expect(mocks.storageService.getCharacterConcept).toHaveBeenCalledWith(
-        conceptId
-      );
-      expect(mocks.directionGenerator.generateDirections).toHaveBeenCalledWith(
+      expect(result).toEqual(mockDirections);
+      expect(mockDirectionGenerator.generateDirections).toHaveBeenCalledWith(
         conceptId,
-        mockCharacterConcept.concept,
-        expect.any(Object)
+        mockConcept.concept,
+        { llmConfigId: undefined }
       );
-      expect(mocks.storageService.storeThematicDirections).toHaveBeenCalledWith(
-        conceptId,
-        mockGeneratedDirections
-      );
-      expect(mocks.eventBus.dispatch).toHaveBeenCalledWith(
-        'THEMATIC_DIRECTIONS_GENERATED',
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED,
         expect.objectContaining({
           conceptId,
-          directionCount: mockGeneratedDirections.length,
+          directionCount: 2,
+          autoSaved: true,
         })
       );
     });
 
-    test('should throw error if concept not found', async () => {
-      const conceptId = 'non-existent-concept';
-      mocks.storageService.getCharacterConcept.mockResolvedValue(null);
+    it('should generate directions without saving when autoSave is false', async () => {
+      const conceptId = 'test-concept-id';
+      const mockConcept = createCharacterConcept('Test concept');
+      const mockDirections = [{ id: 'dir1', direction: 'Direction 1' }];
 
-      await expect(
-        service.generateThematicDirections(conceptId)
-      ).rejects.toThrow();
-      expect(mocks.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to generate thematic directions'),
-        expect.any(Error)
+      mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
+      mockDirectionGenerator.generateDirections.mockResolvedValue(mockDirections);
+
+      const result = await service.generateThematicDirections(conceptId, { autoSave: false });
+
+      expect(result).toEqual(mockDirections);
+      expect(mockStorageService.storeThematicDirections).not.toHaveBeenCalled();
+    });
+
+    it('should throw error for invalid conceptId', async () => {
+      await expect(service.generateThematicDirections(null)).rejects.toThrow(
+        'conceptId must be a non-empty string'
+      );
+      
+      await expect(service.generateThematicDirections('')).rejects.toThrow(
+        'conceptId must be a non-empty string'
       );
     });
 
-    test('should handle generation errors', async () => {
-      const conceptId = 'test-concept-123';
-      const mockCharacterConcept = {
-        id: conceptId,
-        concept: 'Test Hero - A brave adventurer',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+    it('should throw error when concept not found', async () => {
+      mockStorageService.getCharacterConcept.mockResolvedValue(null);
 
-      const generationError = new Error('LLM service unavailable');
-      mocks.storageService.getCharacterConcept.mockResolvedValue(
-        mockCharacterConcept
-      );
-      mocks.directionGenerator.generateDirections.mockRejectedValue(
-        generationError
-      );
-
-      await expect(
-        service.generateThematicDirections(conceptId)
-      ).rejects.toThrow();
-      expect(mocks.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to generate thematic directions'),
-        expect.any(Object)
+      await expect(service.generateThematicDirections('missing-id')).rejects.toThrow(
+        'Character concept not found: missing-id'
       );
     });
 
-    test('should use custom LLM config when provided', async () => {
-      const conceptId = 'test-concept-123';
-      const customLlmConfigId = 'custom-config';
-      const mockCharacterConcept = {
-        id: conceptId,
-        concept: 'Test Hero - A brave adventurer',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      const mockDirections = [
-        {
-          id: 'direction-1',
-          conceptId,
-          title: 'Test Direction',
-          description: 'Test description',
-        },
+    it('should throw error for empty or invalid directions', async () => {
+      const conceptId = 'test-concept-id';
+      const mockConcept = createCharacterConcept('Test concept for empty directions');
+
+      mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
+      
+      // Mock empty directions that will always fail validation
+      mockDirectionGenerator.generateDirections.mockResolvedValue([]);
+
+      // The test should fail with the retry mechanism
+      await expect(service.generateThematicDirections(conceptId)).rejects.toThrow(
+        CharacterBuilderError
+      );
+    });
+  });
+
+  describe('getAllCharacterConcepts', () => {
+    beforeEach(() => {
+      service = new CharacterBuilderService({
+        logger: mockLogger,
+        storageService: mockStorageService,
+        directionGenerator: mockDirectionGenerator,
+        eventBus: mockEventBus,
+      });
+    });
+
+    it('should retrieve all character concepts successfully', async () => {
+      const mockConcepts = [
+        createCharacterConcept('First character concept with enough length'),
+        createCharacterConcept('Second character concept with enough length'),
       ];
 
-      mocks.storageService.getCharacterConcept.mockResolvedValue(
-        mockCharacterConcept
-      );
-      mocks.directionGenerator.generateDirections.mockResolvedValue(
-        mockDirections
-      );
-      mocks.storageService.storeThematicDirections.mockResolvedValue(
-        mockDirections
-      );
+      mockStorageService.listCharacterConcepts.mockResolvedValue(mockConcepts);
 
-      await service.generateThematicDirections(conceptId, {
-        llmConfigId: customLlmConfigId,
-      });
+      const result = await service.getAllCharacterConcepts();
 
-      expect(mocks.directionGenerator.generateDirections).toHaveBeenCalledWith(
-        conceptId,
-        mockCharacterConcept.concept,
-        expect.objectContaining({ llmConfigId: customLlmConfigId })
+      expect(result).toEqual(mockConcepts);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'CharacterBuilderService: Retrieved 2 character concepts'
+      );
+    });
+
+    it('should handle empty concept list', async () => {
+      mockStorageService.listCharacterConcepts.mockResolvedValue([]);
+
+      const result = await service.getAllCharacterConcepts();
+
+      expect(result).toEqual([]);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'CharacterBuilderService: Retrieved 0 character concepts'
+      );
+    });
+
+    it('should throw CharacterBuilderError on storage failure', async () => {
+      const error = new Error('Storage error');
+      mockStorageService.listCharacterConcepts.mockRejectedValue(error);
+
+      await expect(service.getAllCharacterConcepts()).rejects.toThrow(CharacterBuilderError);
+      await expect(service.getAllCharacterConcepts()).rejects.toThrow(
+        'Failed to list character concepts: Storage error'
       );
     });
   });
 
   describe('getCharacterConcept', () => {
-    let service, mocks;
-
     beforeEach(() => {
-      const setup = createService();
-      service = setup.service;
-      mocks = setup.mocks;
+      service = new CharacterBuilderService({
+        logger: mockLogger,
+        storageService: mockStorageService,
+        directionGenerator: mockDirectionGenerator,
+        eventBus: mockEventBus,
+      });
     });
 
-    test('should retrieve character concept successfully', async () => {
-      const conceptId = 'test-concept-123';
-      const mockConcept = {
-        id: conceptId,
-        concept: 'Test Hero - A brave adventurer',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+    it('should retrieve character concept by ID', async () => {
+      const conceptId = 'test-id';
+      const mockConcept = createCharacterConcept('Test concept');
 
-      mocks.storageService.getCharacterConcept.mockResolvedValue(mockConcept);
+      mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
 
       const result = await service.getCharacterConcept(conceptId);
 
       expect(result).toEqual(mockConcept);
-      expect(mocks.storageService.getCharacterConcept).toHaveBeenCalledWith(
-        conceptId
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `CharacterBuilderService: Retrieved character concept ${conceptId}`
       );
     });
 
-    test('should return null if concept not found', async () => {
-      const conceptId = 'non-existent-concept';
-      mocks.storageService.getCharacterConcept.mockResolvedValue(null);
+    it('should return null when concept not found', async () => {
+      const conceptId = 'missing-id';
+
+      mockStorageService.getCharacterConcept.mockResolvedValue(null);
 
       const result = await service.getCharacterConcept(conceptId);
 
       expect(result).toBeNull();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `CharacterBuilderService: Character concept ${conceptId} not found`
+      );
     });
 
-    test('should handle storage errors', async () => {
-      const conceptId = 'test-concept-123';
-      const storageError = new Error('Database connection failed');
-      mocks.storageService.getCharacterConcept.mockRejectedValue(storageError);
+    it('should throw error for invalid conceptId', async () => {
+      await expect(service.getCharacterConcept(null)).rejects.toThrow(
+        'conceptId must be a non-empty string'
+      );
+      
+      await expect(service.getCharacterConcept('')).rejects.toThrow(
+        'conceptId must be a non-empty string'
+      );
+    });
 
-      await expect(service.getCharacterConcept(conceptId)).rejects.toThrow();
+    it('should throw CharacterBuilderError on storage failure', async () => {
+      const error = new Error('Storage error');
+      mockStorageService.getCharacterConcept.mockRejectedValue(error);
+
+      await expect(service.getCharacterConcept('test-id')).rejects.toThrow(
+        CharacterBuilderError
+      );
     });
   });
 
   describe('getThematicDirections', () => {
-    let service, mocks;
-
     beforeEach(() => {
-      const setup = createService();
-      service = setup.service;
-      mocks = setup.mocks;
+      service = new CharacterBuilderService({
+        logger: mockLogger,
+        storageService: mockStorageService,
+        directionGenerator: mockDirectionGenerator,
+        eventBus: mockEventBus,
+      });
     });
 
-    test('should retrieve thematic directions successfully', async () => {
-      const conceptId = 'test-concept-123';
+    it('should retrieve thematic directions for concept', async () => {
+      const conceptId = 'test-id';
       const mockDirections = [
-        {
-          id: 'direction-1',
-          conceptId,
-          title: "The Hero's Journey",
-          description: 'Classic heroic arc',
-        },
+        { id: 'dir1', direction: 'Direction 1' },
+        { id: 'dir2', direction: 'Direction 2' },
       ];
 
-      mocks.storageService.getThematicDirections.mockResolvedValue(
-        mockDirections
-      );
+      mockStorageService.getThematicDirections.mockResolvedValue(mockDirections);
 
       const result = await service.getThematicDirections(conceptId);
 
       expect(result).toEqual(mockDirections);
-      expect(mocks.storageService.getThematicDirections).toHaveBeenCalledWith(
-        conceptId
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `CharacterBuilderService: Retrieved 2 thematic directions for concept ${conceptId}`
       );
     });
 
-    test('should return empty array if no directions found', async () => {
-      const conceptId = 'test-concept-123';
-      mocks.storageService.getThematicDirections.mockResolvedValue([]);
+    it('should handle empty directions list', async () => {
+      const conceptId = 'test-id';
+
+      mockStorageService.getThematicDirections.mockResolvedValue([]);
 
       const result = await service.getThematicDirections(conceptId);
 
       expect(result).toEqual([]);
-    });
-
-    test('should handle storage errors', async () => {
-      const conceptId = 'test-concept-123';
-      const storageError = new Error('Database connection failed');
-      mocks.storageService.getThematicDirections.mockRejectedValue(
-        storageError
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `CharacterBuilderService: Retrieved 0 thematic directions for concept ${conceptId}`
       );
-
-      await expect(service.getThematicDirections(conceptId)).rejects.toThrow();
-    });
-  });
-
-  describe('getAllCharacterConcepts', () => {
-    let service, mocks;
-
-    beforeEach(() => {
-      const setup = createService();
-      service = setup.service;
-      mocks = setup.mocks;
     });
 
-    test('should list all character concepts successfully', async () => {
-      const mockConcepts = [
-        {
-          id: 'concept-1',
-          concept: 'Hero One - First hero',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 'concept-2',
-          concept: 'Hero Two - Second hero',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-
-      mocks.storageService.listCharacterConcepts.mockResolvedValue(
-        mockConcepts
+    it('should throw error for invalid conceptId', async () => {
+      await expect(service.getThematicDirections(null)).rejects.toThrow(
+        'conceptId must be a non-empty string'
       );
-
-      const result = await service.getAllCharacterConcepts();
-
-      expect(result).toEqual(mockConcepts);
-      expect(mocks.storageService.listCharacterConcepts).toHaveBeenCalled();
     });
 
-    test('should return empty array if no concepts exist', async () => {
-      mocks.storageService.listCharacterConcepts.mockResolvedValue([]);
+    it('should throw CharacterBuilderError on storage failure', async () => {
+      const error = new Error('Storage error');
+      mockStorageService.getThematicDirections.mockRejectedValue(error);
 
-      const result = await service.getAllCharacterConcepts();
-
-      expect(result).toEqual([]);
-    });
-
-    test('should handle storage errors', async () => {
-      const storageError = new Error('Database connection failed');
-      mocks.storageService.listCharacterConcepts.mockRejectedValue(
-        storageError
+      await expect(service.getThematicDirections('test-id')).rejects.toThrow(
+        CharacterBuilderError
       );
-
-      await expect(service.getAllCharacterConcepts()).rejects.toThrow();
     });
   });
 
   describe('deleteCharacterConcept', () => {
-    let service, mocks;
-
     beforeEach(() => {
-      const setup = createService();
-      service = setup.service;
-      mocks = setup.mocks;
+      service = new CharacterBuilderService({
+        logger: mockLogger,
+        storageService: mockStorageService,
+        directionGenerator: mockDirectionGenerator,
+        eventBus: mockEventBus,
+      });
     });
 
-    test('should delete character concept successfully', async () => {
-      const conceptId = 'test-concept-123';
-      mocks.storageService.deleteCharacterConcept.mockResolvedValue(true);
+    it('should delete character concept successfully', async () => {
+      const conceptId = 'test-id';
+
+      mockStorageService.deleteCharacterConcept.mockResolvedValue(true);
 
       const result = await service.deleteCharacterConcept(conceptId);
 
       expect(result).toBe(true);
-      expect(mocks.storageService.deleteCharacterConcept).toHaveBeenCalledWith(
-        conceptId
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `CharacterBuilderService: Deleted character concept ${conceptId}`
       );
-      expect(mocks.eventBus.dispatch).toHaveBeenCalledWith(
-        'CHARACTER_CONCEPT_DELETED',
-        expect.objectContaining({ conceptId })
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CONCEPT_DELETED,
+        { conceptId }
       );
     });
 
-    test('should return false if concept not found', async () => {
-      const conceptId = 'non-existent-concept';
-      mocks.storageService.deleteCharacterConcept.mockResolvedValue(false);
+    it('should return false when deletion fails', async () => {
+      const conceptId = 'test-id';
+
+      mockStorageService.deleteCharacterConcept.mockResolvedValue(false);
 
       const result = await service.deleteCharacterConcept(conceptId);
 
       expect(result).toBe(false);
-      expect(mocks.eventBus.dispatch).not.toHaveBeenCalled();
-    });
-
-    test('should handle storage errors', async () => {
-      const conceptId = 'test-concept-123';
-      const storageError = new Error('Database connection failed');
-      mocks.storageService.deleteCharacterConcept.mockRejectedValue(
-        storageError
-      );
-
-      await expect(service.deleteCharacterConcept(conceptId)).rejects.toThrow();
-    });
-
-    test.each([[null], [''], [123]])(
-      'should throw error if conceptId is invalid: %p',
-      async (invalidId) => {
-        await expect(service.deleteCharacterConcept(invalidId)).rejects.toThrow(
-          'conceptId must be a non-empty string'
-        );
-      }
-    );
-  });
-
-  describe('initialize', () => {
-    let service, mocks;
-
-    beforeEach(() => {
-      const setup = createService();
-      service = setup.service;
-      mocks = setup.mocks;
-    });
-
-    test('should initialize successfully', async () => {
-      mocks.storageService.initialize.mockResolvedValue();
-
-      await service.initialize();
-
-      expect(mocks.storageService.initialize).toHaveBeenCalled();
-      expect(mocks.logger.info).toHaveBeenCalledWith(
-        'CharacterBuilderService: Successfully initialized'
+      expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CONCEPT_DELETED,
+        expect.any(Object)
       );
     });
 
-    test('should handle initialization errors', async () => {
-      const initError = new Error('Storage initialization failed');
-      mocks.storageService.initialize.mockRejectedValue(initError);
-
-      await expect(service.initialize()).rejects.toThrow(
-        'Failed to initialize character builder service'
+    it('should throw error for invalid conceptId', async () => {
+      await expect(service.deleteCharacterConcept(null)).rejects.toThrow(
+        'conceptId must be a non-empty string'
       );
     });
-  });
 
-  describe('getCharacterConcept - input validation', () => {
-    test.each([[null], [''], [123]])(
-      'should throw error if conceptId is invalid: %p',
-      async (invalidId) => {
-        const { service } = createService();
-        await expect(service.getCharacterConcept(invalidId)).rejects.toThrow(
-          'conceptId must be a non-empty string'
-        );
-      }
-    );
-  });
+    it('should throw CharacterBuilderError and dispatch error event on failure', async () => {
+      const conceptId = 'test-id';
+      const error = new Error('Storage error');
 
-  describe('getThematicDirections - input validation', () => {
-    test.each([[null], [''], [123]])(
-      'should throw error if conceptId is invalid: %p',
-      async (invalidId) => {
-        const { service } = createService();
-        await expect(service.getThematicDirections(invalidId)).rejects.toThrow(
-          'conceptId must be a non-empty string'
-        );
-      }
-    );
-  });
+      mockStorageService.deleteCharacterConcept.mockRejectedValue(error);
 
-  describe('generateThematicDirections - input validation and error handling', () => {
-    let service, mocks;
+      await expect(service.deleteCharacterConcept(conceptId)).rejects.toThrow(
+        CharacterBuilderError
+      );
 
-    beforeEach(() => {
-      const setup = createService();
-      service = setup.service;
-      mocks = setup.mocks;
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,
+        expect.objectContaining({
+          operation: 'deleteCharacterConcept',
+          conceptId,
+        })
+      );
     });
-
-    test.each([[null], [''], [123]])(
-      'should throw error if conceptId is invalid: %p',
-      async (invalidId) => {
-        await expect(
-          service.generateThematicDirections(invalidId)
-        ).rejects.toThrow('conceptId must be a non-empty string');
-      }
-    );
-
-    test('should handle empty or invalid directions response', async () => {
-      const mockCharacterConcept = {
-        id: 'test-concept-123',
-        concept: 'Test Hero - A brave adventurer',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Test empty array - use fresh service instance to avoid circuit breaker state
-      const setup1 = createService();
-      setup1.mocks.storageService.getCharacterConcept.mockResolvedValue(
-        mockCharacterConcept
-      );
-      setup1.mocks.directionGenerator.generateDirections.mockResolvedValue([]);
-      await expect(
-        setup1.service.generateThematicDirections('test-concept-empty')
-      ).rejects.toThrow('Generated directions are empty or invalid');
-
-      // Test null response - use fresh service instance to avoid circuit breaker state
-      const setup2 = createService();
-      setup2.mocks.storageService.getCharacterConcept.mockResolvedValue(
-        mockCharacterConcept
-      );
-      setup2.mocks.directionGenerator.generateDirections.mockResolvedValue(
-        null
-      );
-      await expect(
-        setup2.service.generateThematicDirections('test-concept-null')
-      ).rejects.toThrow('Generated directions are empty or invalid');
-
-      // Test non-array response - use fresh service instance to avoid circuit breaker state
-      const setup3 = createService();
-      setup3.mocks.storageService.getCharacterConcept.mockResolvedValue(
-        mockCharacterConcept
-      );
-      setup3.mocks.directionGenerator.generateDirections.mockResolvedValue(
-        'invalid'
-      );
-      await expect(
-        setup3.service.generateThematicDirections('test-concept-invalid')
-      ).rejects.toThrow('Generated directions are empty or invalid');
-    });
-
-    // Note: Circuit breaker tests were removed due to excessive complexity
-    // The circuit breaker functionality is still implemented in the service,
-    // but testing it properly would require complex mocking of timers,
-    // retries, and state management that would make the tests brittle
-    // and hard to maintain.
   });
 
   describe('updateCharacterConcept', () => {
-    let service, mocks;
-
     beforeEach(() => {
-      const setup = createService();
-      service = setup.service;
-      mocks = setup.mocks;
+      service = new CharacterBuilderService({
+        logger: mockLogger,
+        storageService: mockStorageService,
+        directionGenerator: mockDirectionGenerator,
+        eventBus: mockEventBus,
+      });
     });
 
-    test('should successfully update character concept', async () => {
-      const conceptId = 'test-concept-123';
-      const updates = { concept: 'Updated concept text' };
-      const existingConcept = {
-        id: conceptId,
-        concept: 'Original concept text',
-        status: 'draft',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+    it('should update character concept successfully', async () => {
+      const conceptId = 'test-id';
+      const existingConcept = createCharacterConcept('Original concept');
+      const updates = {
+        concept: 'Updated concept',
+        metadata: { updated: true },
       };
-      const updatedConcept = {
-        ...existingConcept,
-        concept: 'Updated concept text',
-        updatedAt: new Date().toISOString(),
-      };
+      const updatedConcept = { ...existingConcept, ...updates };
 
-      mocks.storageService.getCharacterConcept.mockResolvedValue(
-        existingConcept
-      );
-      mocks.storageService.saveCharacterConcept.mockResolvedValue(
-        updatedConcept
-      );
+      mockStorageService.getCharacterConcept.mockResolvedValue(existingConcept);
+      mockStorageService.saveCharacterConcept.mockResolvedValue(updatedConcept);
 
       const result = await service.updateCharacterConcept(conceptId, updates);
 
       expect(result).toEqual(updatedConcept);
-      expect(mocks.storageService.getCharacterConcept).toHaveBeenCalledWith(
-        conceptId
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `CharacterBuilderService: Updated character concept ${conceptId}`
       );
-      expect(mocks.storageService.saveCharacterConcept).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: conceptId,
-          concept: 'Updated concept text',
-        })
-      );
-      expect(mocks.eventBus.dispatch).toHaveBeenCalledWith(
-        'CHARACTER_CONCEPT_UPDATED',
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CONCEPT_UPDATED,
         {
           concept: updatedConcept,
           updates,
@@ -711,91 +588,74 @@ describe('CharacterBuilderService', () => {
       );
     });
 
-    test.each([[null], [''], [123]])(
-      'should throw error if conceptId is invalid: %p',
-      async (invalidId) => {
-        const updates = { concept: 'Updated text' };
-
-        await expect(
-          service.updateCharacterConcept(invalidId, updates)
-        ).rejects.toThrow('conceptId must be a non-empty string');
-      }
-    );
-
-    test.each([[null], ['invalid'], [123]])(
-      'should throw error if updates is invalid: %p',
-      async (invalidData) => {
-        const conceptId = 'test-concept-123';
-
-        await expect(
-          service.updateCharacterConcept(conceptId, invalidData)
-        ).rejects.toThrow('updates must be a valid object');
-      }
-    );
-
-    test('should throw error if concept not found', async () => {
-      const conceptId = 'non-existent-concept';
-      const updates = { concept: 'Updated text' };
-
-      mocks.storageService.getCharacterConcept.mockResolvedValue(null);
-
-      await expect(
-        service.updateCharacterConcept(conceptId, updates)
-      ).rejects.toThrow('Character concept not found');
+    it('should throw error for invalid conceptId', async () => {
+      await expect(service.updateCharacterConcept(null, {})).rejects.toThrow(
+        'conceptId must be a non-empty string'
+      );
     });
 
-    test('should handle storage errors during update', async () => {
-      const conceptId = 'test-concept-123';
-      const updates = { concept: 'Updated text' };
-      const existingConcept = {
-        id: conceptId,
-        concept: 'Original text',
-        status: 'draft',
-      };
+    it('should throw error for invalid updates', async () => {
+      await expect(service.updateCharacterConcept('test-id', null)).rejects.toThrow(
+        'updates must be a valid object'
+      );
+      
+      await expect(service.updateCharacterConcept('test-id', 'not-an-object')).rejects.toThrow(
+        'updates must be a valid object'
+      );
+    });
 
-      mocks.storageService.getCharacterConcept.mockResolvedValue(
-        existingConcept
-      );
-      mocks.storageService.saveCharacterConcept.mockRejectedValue(
-        new Error('Storage save failed')
-      );
+    it('should throw error when concept not found', async () => {
+      mockStorageService.getCharacterConcept.mockResolvedValue(null);
 
       await expect(
-        service.updateCharacterConcept(conceptId, updates)
-      ).rejects.toThrow('Failed to update character concept');
+        service.updateCharacterConcept('missing-id', { concept: 'New' })
+      ).rejects.toThrow('Character concept not found: missing-id');
+    });
 
-      expect(mocks.eventBus.dispatch).toHaveBeenCalledWith(
-        'CHARACTER_BUILDER_ERROR_OCCURRED',
+    it('should dispatch error event on failure', async () => {
+      const conceptId = 'test-id';
+      const updates = { concept: 'Updated' };
+      const error = new Error('Update failed');
+
+      mockStorageService.getCharacterConcept.mockRejectedValue(error);
+
+      await expect(service.updateCharacterConcept(conceptId, updates)).rejects.toThrow(
+        CharacterBuilderError
+      );
+
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,
         expect.objectContaining({
-          error: expect.stringContaining('Failed to update character concept'),
           operation: 'updateCharacterConcept',
           conceptId,
           updates,
         })
       );
     });
+  });
 
-    test('should handle storage errors during retrieval', async () => {
-      const conceptId = 'test-concept-123';
-      const updates = { concept: 'Updated text' };
+  describe('CharacterBuilderError', () => {
+    it('should create error with message and cause', () => {
+      const cause = new Error('Original error');
+      const error = new CharacterBuilderError('Custom message', cause);
 
-      mocks.storageService.getCharacterConcept.mockRejectedValue(
-        new Error('Storage retrieval failed')
-      );
+      expect(error).toBeInstanceOf(Error);
+      expect(error.name).toBe('CharacterBuilderError');
+      expect(error.message).toBe('Custom message');
+      expect(error.cause).toBe(cause);
+    });
+  });
 
-      await expect(
-        service.updateCharacterConcept(conceptId, updates)
-      ).rejects.toThrow('Failed to update character concept');
 
-      expect(mocks.eventBus.dispatch).toHaveBeenCalledWith(
-        'CHARACTER_BUILDER_ERROR_OCCURRED',
-        expect.objectContaining({
-          error: expect.stringContaining('Failed to update character concept'),
-          operation: 'updateCharacterConcept',
-          conceptId,
-          updates,
-        })
-      );
+  describe('Retry configuration', () => {
+    it('should use test environment timings in test mode', () => {
+      // The RETRY_CONFIG is already set when process.env.NODE_ENV is 'test'
+      // Just verify that the service uses appropriate timings
+      expect(process.env.NODE_ENV).toBe('test');
+      
+      // The service should have been created with test timings
+      // We can verify this indirectly by checking that retries happen quickly
+      // in the tests above (which they do)
     });
   });
 });

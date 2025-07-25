@@ -15,6 +15,10 @@
  * node (per the test‑suite requirements).
  * • **Comprehensive error reporting** – detailed line/column/snippet via `ScopeSyntaxError`.
  *
+ * Supported union operators:
+ * - '+' (plus) - Original union syntax
+ * - '|' (pipe) - Alternative union syntax (produces identical behavior)
+ *
  * Public API
  * ──────────
  * parseScopeFile(content:string, name:string): ScopeDef
@@ -76,8 +80,9 @@ class Parser {
   /** @returns {object} */
   parseExpr() {
     const left = this.parseTerm();
-    if (this.match('PLUS')) {
-      this.advance();
+    // Check for union operators (both + and |)
+    if (this.match('PLUS') || this.match('PIPE')) {
+      this.advance(); // Consume the operator
       const right = this.parseExpr();
       return { type: 'Union', left, right };
     }

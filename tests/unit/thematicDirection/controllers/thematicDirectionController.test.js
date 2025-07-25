@@ -177,7 +177,7 @@ describe('ThematicDirectionController', () => {
         'ThematicDirectionController: Failed to initialize',
         error
       );
-      
+
       expect(mockElements.errorState.style.display).toBe('block');
       expect(mockElements.errorMessageText.textContent).toContain(
         'Failed to initialize'
@@ -200,8 +200,16 @@ describe('ThematicDirectionController', () => {
       const conceptText = 'A brave knight with a mysterious past';
       const mockConcept = { id: '123', concept: conceptText }; // Fixed: use 'concept' not 'conceptText'
       const mockDirections = [
-        { title: 'Direction 1', description: 'Narrative 1', themes: ['Theme1'] }, // Fixed: use 'description' not 'narrative'
-        { title: 'Direction 2', description: 'Narrative 2', themes: ['Theme2'] },
+        {
+          title: 'Direction 1',
+          description: 'Narrative 1',
+          themes: ['Theme1'],
+        }, // Fixed: use 'description' not 'narrative'
+        {
+          title: 'Direction 2',
+          description: 'Narrative 2',
+          themes: ['Theme2'],
+        },
       ];
 
       mockCharacterBuilderService.createCharacterConcept.mockResolvedValue(
@@ -345,8 +353,8 @@ describe('ThematicDirectionController', () => {
       );
 
       mockElements.previousConceptsSelect.value = '123';
-      const changeEvent = createMockEvent('change', { 
-        target: { value: '123' } 
+      const changeEvent = createMockEvent('change', {
+        target: { value: '123' },
       });
       mockElements.previousConceptsSelect.dispatchEvent(changeEvent);
 
@@ -372,7 +380,7 @@ describe('ThematicDirectionController', () => {
 
       mockElements.previousConceptsSelect.value = '123';
       const changeEvent = createMockEvent('change', {
-        target: { value: '123' }
+        target: { value: '123' },
       });
       mockElements.previousConceptsSelect.dispatchEvent(changeEvent);
 
@@ -387,9 +395,11 @@ describe('ThematicDirectionController', () => {
       );
 
       mockElements.previousConceptsSelect.value = '123';
-      mockElements.previousConceptsSelect.dispatchEvent(createMockEvent('change', {
-        target: { value: '123' }
-      }));
+      mockElements.previousConceptsSelect.dispatchEvent(
+        createMockEvent('change', {
+          target: { value: '123' },
+        })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0));
 

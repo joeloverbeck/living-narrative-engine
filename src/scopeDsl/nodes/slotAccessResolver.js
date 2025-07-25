@@ -45,7 +45,17 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
     if (!node || node.type !== 'Step' || !node.field) {
       return false;
     }
-    return CLOTHING_SLOTS.includes(node.field);
+    // Only handle clothing slots if the parent is a clothing access step
+    // This prevents interference with direct component property access
+    if (node.parent && node.parent.type === 'Step' && 
+        (node.parent.field === 'topmost_clothing' || 
+         node.parent.field === 'all_clothing' ||
+         node.parent.field === 'outer_clothing' ||
+         node.parent.field === 'base_clothing' ||
+         node.parent.field === 'underwear')) {
+      return CLOTHING_SLOTS.includes(node.field);
+    }
+    return false;
   }
 
   /**
