@@ -88,9 +88,9 @@ describe('TokenEstimator', () => {
         'Arabic text: مرحبا بالعالم',
         'Russian text: Привет мир',
         'Emoji text: 🚀 🎉 ⭐ 💫',
-        'Mixed: Hello 世界! 🌟'
+        'Mixed: Hello 世界! 🌟',
       ];
-      
+
       for (const text of texts) {
         const count = await tokenEstimator.estimateTokens(text);
         expect(count).toBeGreaterThan(0);
@@ -102,7 +102,7 @@ describe('TokenEstimator', () => {
       const count1 = await tokenEstimator.estimateTokens(null);
       const count2 = await tokenEstimator.estimateTokens(undefined);
       const count3 = await tokenEstimator.estimateTokens(123);
-      
+
       expect(count1).toBe(0);
       expect(count2).toBe(0);
       expect(count3).toBe(0);
@@ -239,12 +239,18 @@ describe('TokenEstimator', () => {
     });
 
     it('should return p50k_base for older models', () => {
-      expect(tokenEstimator.getEncodingForModel('text-davinci-003')).toBe('p50k_base');
-      expect(tokenEstimator.getEncodingForModel('code-davinci-002')).toBe('p50k_base');
+      expect(tokenEstimator.getEncodingForModel('text-davinci-003')).toBe(
+        'p50k_base'
+      );
+      expect(tokenEstimator.getEncodingForModel('code-davinci-002')).toBe(
+        'p50k_base'
+      );
     });
 
     it('should return r50k_base for curie models', () => {
-      expect(tokenEstimator.getEncodingForModel('text-curie-001')).toBe('r50k_base');
+      expect(tokenEstimator.getEncodingForModel('text-curie-001')).toBe(
+        'r50k_base'
+      );
     });
   });
 
@@ -292,11 +298,11 @@ describe('TokenEstimator', () => {
   describe('additional coverage scenarios', () => {
     it('should handle encoder caching correctly', async () => {
       const text = 'Test caching behavior';
-      
+
       // First call should cache the encoder
       const count1 = await tokenEstimator.estimateTokens(text, 'gpt-4');
       const count2 = await tokenEstimator.estimateTokens(text, 'gpt-4');
-      
+
       // Both calls should return the same result
       expect(count1).toBe(count2);
       expect(count1).toBeGreaterThan(0);
@@ -304,23 +310,29 @@ describe('TokenEstimator', () => {
 
     it('should handle different model encodings', async () => {
       const text = 'Test text for model encoding';
-      
+
       // Test different model types to ensure they use correct encodings
       const count1 = await tokenEstimator.estimateTokens(text, 'gpt-4');
-      const count2 = await tokenEstimator.estimateTokens(text, 'text-davinci-003');
-      const count3 = await tokenEstimator.estimateTokens(text, 'text-curie-001');
-      
+      const count2 = await tokenEstimator.estimateTokens(
+        text,
+        'text-davinci-003'
+      );
+      const count3 = await tokenEstimator.estimateTokens(
+        text,
+        'text-curie-001'
+      );
+
       // All should return valid counts
       expect(count1).toBeGreaterThan(0);
       expect(count2).toBeGreaterThan(0);
       expect(count3).toBeGreaterThan(0);
-      
+
       // Verify encoding detection was logged
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TokenEstimator: Determined encoding for model',
         expect.objectContaining({
           model: 'text-davinci-003',
-          encoding: 'p50k_base'
+          encoding: 'p50k_base',
         })
       );
     });
@@ -339,7 +351,7 @@ describe('TokenEstimator', () => {
       expect(budget1.totalLimit).toBe(1);
       expect(budget1.reservedTokens).toBe(0);
       expect(budget1.availableForPrompt).toBe(1);
-      
+
       // Test with very large values
       const budget2 = tokenEstimator.getTokenBudget(100000, 50000);
       expect(budget2.totalLimit).toBe(100000);

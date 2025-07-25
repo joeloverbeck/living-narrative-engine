@@ -277,15 +277,28 @@ class ConfigurableLLMAdapter extends ILLMAdapter {
    * @async
    * @param {string} gameSummary – Fully-assembled prompt string.
    * @param {AbortSignal=} abortSignal – Optional cancellation signal.
+   * @param {object} [requestOptions] - Optional request-specific options
+   * @param {object} [requestOptions.toolSchema] - Custom tool schema for this request
+   * @param {string} [requestOptions.toolName] - Custom tool name for this request
+   * @param {string} [requestOptions.toolDescription] - Custom tool description for this request
    * @returns {Promise<string>} – Raw JSON returned by the LLM.
    * @throws {ConfigurationError|PromptTooLongError|Error}
    */
-  async getAIDecision(gameSummary, abortSignal = undefined) {
+  async getAIDecision(
+    gameSummary,
+    abortSignal = undefined,
+    requestOptions = {}
+  ) {
     this.#ensureInitialized();
+
+    // Validate request options
+    this.#validateRequestOptions(requestOptions);
 
     this.#logger.debug('ConfigurableLLMAdapter.getAIDecision → called', {
       promptChars: gameSummary ? gameSummary.length : 0,
       abortSignalProvided: !!abortSignal,
+      hasRequestOptions: Object.keys(requestOptions).length > 0,
+      hasCustomSchema: !!requestOptions.toolSchema,
     });
 
     // Get active configuration
@@ -347,6 +360,7 @@ class ConfigurableLLMAdapter extends ILLMAdapter {
         apiKey,
         environmentContext: this.#environmentContext,
         abortSignal,
+        requestOptions, // NEW: Pass request options through
       });
 
       return result;
@@ -360,6 +374,36 @@ class ConfigurableLLMAdapter extends ILLMAdapter {
       this.#errorMapper.logError(error, context);
       const mappedError = this.#errorMapper.mapHttpError(error, context);
       throw mappedError;
+    }
+  }
+
+  /**
+   * @private
+   * @param {object} requestOptions - Request options to validate
+   * @throws {Error} If request options are invalid
+   */
+  #validateRequestOptions(requestOptions) {
+    if (!requestOptions) return; // Optional parameter
+
+    if (
+      Object.prototype.hasOwnProperty.call(requestOptions, 'toolSchema') &&
+      typeof requestOptions.toolSchema !== 'object'
+    ) {
+      throw new Error('toolSchema must be an object');
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(requestOptions, 'toolName') &&
+      typeof requestOptions.toolName !== 'string'
+    ) {
+      throw new Error('toolName must be a string');
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(requestOptions, 'toolDescription') &&
+      typeof requestOptions.toolDescription !== 'string'
+    ) {
+      throw new Error('toolDescription must be a string');
     }
   }
 

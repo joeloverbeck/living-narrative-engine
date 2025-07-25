@@ -470,6 +470,7 @@ describe('ConfigurableLLMAdapter', () => {
           apiKey: apiKeyToUse,
           environmentContext: mockEnvironmentContext,
           abortSignal: undefined,
+          requestOptions: {},
         });
       });
 
@@ -577,6 +578,96 @@ describe('ConfigurableLLMAdapter', () => {
         expect(mockErrorMapper.logError).toHaveBeenCalledWith(
           expect.any(Error),
           expect.objectContaining({ operation: 'getAIDecision' })
+        );
+      });
+    });
+
+    describe('Request Options', () => {
+      const llmId = 'test-llm-operational';
+
+      beforeEach(async () => {
+        // Reset mocks to successful state
+        mockRequestExecutor.executeRequest.mockResolvedValue(
+          mockSuccessDecision
+        );
+        await adapter.setActiveLlm(llmId);
+        mockLogger.debug.mockClear();
+        mockRequestExecutor.executeRequest.mockClear();
+      });
+
+      it('should accept and pass through custom request options', async () => {
+        const requestOptions = {
+          toolSchema: {
+            type: 'object',
+            properties: { test: { type: 'string' } },
+          },
+          toolName: 'custom_tool',
+          toolDescription: 'Custom tool description',
+        };
+
+        await adapter.getAIDecision(gameSummary, null, requestOptions);
+
+        expect(mockRequestExecutor.executeRequest).toHaveBeenCalledWith(
+          expect.objectContaining({
+            requestOptions: expect.objectContaining(requestOptions),
+          })
+        );
+      });
+
+      it('should log request options information when provided', async () => {
+        const requestOptions = {
+          toolSchema: { type: 'object', properties: {} },
+          toolName: 'test_tool',
+        };
+
+        await adapter.getAIDecision(gameSummary, null, requestOptions);
+
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'ConfigurableLLMAdapter.getAIDecision → called',
+          expect.objectContaining({
+            hasRequestOptions: true,
+            hasCustomSchema: true,
+          })
+        );
+      });
+
+      it('should throw error for invalid toolSchema type', async () => {
+        const invalidRequestOptions = {
+          toolSchema: 'invalid-schema', // Should be object
+        };
+
+        await expect(
+          adapter.getAIDecision(gameSummary, null, invalidRequestOptions)
+        ).rejects.toThrow('toolSchema must be an object');
+      });
+
+      it('should throw error for invalid toolName type', async () => {
+        const invalidRequestOptions = {
+          toolName: 123, // Should be string
+        };
+
+        await expect(
+          adapter.getAIDecision(gameSummary, null, invalidRequestOptions)
+        ).rejects.toThrow('toolName must be a string');
+      });
+
+      it('should throw error for invalid toolDescription type', async () => {
+        const invalidRequestOptions = {
+          toolDescription: false, // Should be string
+        };
+
+        await expect(
+          adapter.getAIDecision(gameSummary, null, invalidRequestOptions)
+        ).rejects.toThrow('toolDescription must be a string');
+      });
+
+      it('should work without request options (backward compatibility)', async () => {
+        await adapter.getAIDecision(gameSummary);
+
+        expect(mockRequestExecutor.executeRequest).toHaveBeenCalledWith(
+          expect.objectContaining({
+            requestOptions: {},
+          })
         );
       });
     });

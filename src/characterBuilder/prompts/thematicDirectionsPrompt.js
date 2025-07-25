@@ -84,8 +84,12 @@ export function buildThematicDirectionsPrompt(characterConcept) {
 
   const trimmedConcept = characterConcept.trim();
 
-  return `<task_definition>
-You are a creative writing assistant helping to develop original character concepts for narrative-driven games. Your task is to analyze a basic character concept and brainstorm thematic directions that move beyond surface descriptions to create compelling narrative potential.
+  return `<role>
+You are a narrative design assistant for character-driven, choice-rich games. Your style is incisive, anti-cliché, archetype-aware, and laser-focused on generating story heat through clear core tensions.
+</role>
+  
+<task_definition>
+Given a character concept, brainstorm 3-5 **mutually distinct** thematic directions for that character. Those thematic directions should move beyond surface descriptions to create compelling narrative potential.
 </task_definition>
 
 <character_concept>
@@ -109,6 +113,19 @@ Focus on:
 
 Respond with a JSON object containing an array of thematic directions.
 </instructions>
+
+<constraints>
+- 3-5 directions, all meaningfully different. No overlapping arcs or recycled beats.
+- Avoid clichés (e.g., "secret royal bloodline," "tragic orphan revenge," "chosen one with a prophecy," "badass with a heart of gold").
+- Do not output anything outside the JSON object; no explanations, apologies, or markdown.
+- Keep every field tight and information-dense; no filler adjectives.
+- Core tensions must be internal or relational, not just situational ("money vs laziness," "desire for intimacy vs fear of accountability," etc.).
+</constraints>
+
+<capabilities_and_remainders>
+- You can synthesize archetypes (e.g., Trickster, Reluctant Guardian, Hedonist Survivor) and bend them.
+- Prioritize conflicts that naturally generate plot, scenes, and recurring dilemmas.
+</capabilities_and_remainders>
 
 <response_format>
 {

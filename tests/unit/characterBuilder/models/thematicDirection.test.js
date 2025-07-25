@@ -63,7 +63,7 @@ describe('ThematicDirection Model', () => {
           responseTokens: 300,
           processingTime: 2500,
         },
-        createdAt: expect.any(Date),
+        createdAt: expect.any(String),
       });
 
       // Verify ID is a valid UUID format
@@ -334,7 +334,7 @@ describe('ThematicDirection Model', () => {
           responseTokens: 300,
           processingTime: 2500,
         },
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       };
 
       const result = await validateThematicDirection(
@@ -394,12 +394,12 @@ describe('ThematicDirection Model', () => {
   });
 
   describe('serializeThematicDirection', () => {
-    test('should serialize direction with Date objects', () => {
+    test('should serialize direction with ISO string createdAt', () => {
       const direction = {
         id: '12345678-1234-1234-1234-123456789abc',
         conceptId: 'concept-123',
         title: 'Test Direction',
-        createdAt: new Date('2023-01-01T00:00:00Z'),
+        createdAt: '2023-01-01T00:00:00.000Z',
       };
 
       const result = serializeThematicDirection(direction);
@@ -450,9 +450,9 @@ describe('ThematicDirection Model', () => {
         id: '12345678-1234-1234-1234-123456789abc',
         conceptId: 'concept-123',
         title: 'Test Direction',
-        createdAt: new Date('2023-01-01T00:00:00.000Z'),
+        createdAt: '2023-01-01T00:00:00.000Z',
       });
-      expect(result.createdAt).toBeInstanceOf(Date);
+      expect(typeof result.createdAt).toBe('string');
     });
 
     test('should handle direction already deserialized', () => {
@@ -460,13 +460,13 @@ describe('ThematicDirection Model', () => {
         id: '12345678-1234-1234-1234-123456789abc',
         conceptId: 'concept-123',
         title: 'Test Direction',
-        createdAt: new Date('2023-01-01T00:00:00Z'),
+        createdAt: '2023-01-01T00:00:00.000Z',
       };
 
       const result = deserializeThematicDirection(data);
 
       expect(result).toEqual(data);
-      expect(result.createdAt).toBeInstanceOf(Date);
+      expect(typeof result.createdAt).toBe('string');
     });
 
     test('should throw error for invalid input', () => {

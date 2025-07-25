@@ -8,6 +8,7 @@ describe('EntityDefinitionLoader Schema Retrieval', () => {
   let mockSchemaValidator;
   let mockDataRegistry;
   let mockLogger;
+  let mockSafeEventDispatcher;
 
   const ENTITY_DEFINITION_SCHEMA_ID =
     'schema://living-narrative-engine/entity-definition.schema.json';
@@ -39,6 +40,10 @@ describe('EntityDefinitionLoader Schema Retrieval', () => {
       error: jest.fn(),
       info: jest.fn(),
     };
+
+    mockSafeEventDispatcher = {
+      dispatch: jest.fn(),
+    };
   });
 
   test('should correctly retrieve and set _primarySchemaId when config provides it for "entityDefinitions"', () => {
@@ -58,7 +63,8 @@ describe('EntityDefinitionLoader Schema Retrieval', () => {
       mockDataFetcher,
       mockSchemaValidator,
       mockDataRegistry,
-      mockLogger
+      mockLogger,
+      mockSafeEventDispatcher
     );
 
     // New assertion to check what contentType was actually passed
@@ -99,7 +105,8 @@ describe('EntityDefinitionLoader Schema Retrieval', () => {
       mockDataFetcher,
       mockSchemaValidator,
       mockDataRegistry,
-      mockLogger
+      mockLogger,
+      mockSafeEventDispatcher
     );
 
     expect(loader._primarySchemaId).toBeNull();
@@ -127,7 +134,8 @@ describe('EntityDefinitionLoader Schema Retrieval', () => {
       mockDataFetcher,
       mockSchemaValidator,
       mockDataRegistry,
-      mockLogger
+      mockLogger,
+      mockSafeEventDispatcher
     );
 
     expect(loader._primarySchemaId).toBeNull();

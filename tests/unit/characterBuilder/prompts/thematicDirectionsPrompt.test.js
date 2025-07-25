@@ -146,7 +146,8 @@ describe('thematicDirectionsPrompt', () => {
             description:
               'A well-intentioned individual whose actions inadvertently cause harm, forcing them to confront unintended consequences.',
             coreTension: 'Good intentions versus harmful outcomes',
-            uniqueTwist: 'They become their own worst enemy without realizing it',
+            uniqueTwist:
+              'They become their own worst enemy without realizing it',
             narrativePotential:
               'Exploration of moral ambiguity, the road to hell paved with good intentions',
           },

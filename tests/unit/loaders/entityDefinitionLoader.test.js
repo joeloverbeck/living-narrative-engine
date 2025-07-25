@@ -33,6 +33,8 @@ describe('EntityDefinitionLoader', () => {
   let mockDataRegistry;
   /** @type {jest.Mocked<ILogger>} */
   let mockLogger;
+  /** @type {jest.Mocked<import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher>} */
+  let mockSafeEventDispatcher;
 
   beforeEach(() => {
     // Create mock instances for all dependencies using jest-mock-extended
@@ -46,6 +48,10 @@ describe('EntityDefinitionLoader', () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
+    });
+
+    mockSafeEventDispatcher = mock({
+      dispatch: jest.fn(),
     });
 
     // Default mock for store to return false (no override)
@@ -64,7 +70,8 @@ describe('EntityDefinitionLoader', () => {
       mockDataFetcher,
       mockSchemaValidator,
       mockDataRegistry,
-      mockLogger
+      mockLogger,
+      mockSafeEventDispatcher
     );
   });
 

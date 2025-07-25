@@ -178,7 +178,18 @@ describe('StructuredTrace - Backward Compatibility', () => {
 
       expect(structuredErrors).toHaveLength(1);
       expect(structuredErrors[0].data).toEqual({ code: 500 });
-      expect(structuredErrors).toEqual(regularErrors);
+
+      // Compare error logs without timestamps to avoid timing issues
+      expect(structuredErrors).toHaveLength(regularErrors.length);
+      for (let i = 0; i < structuredErrors.length; i++) {
+        expect(structuredErrors[i].type).toBe(regularErrors[i].type);
+        expect(structuredErrors[i].message).toBe(regularErrors[i].message);
+        expect(structuredErrors[i].source).toBe(regularErrors[i].source);
+        expect(structuredErrors[i].data).toEqual(regularErrors[i].data);
+        // Verify timestamp exists but don't compare exact values
+        expect(typeof structuredErrors[i].timestamp).toBe('number');
+        expect(typeof regularErrors[i].timestamp).toBe('number');
+      }
     });
 
     it('should work with null/undefined data parameters', () => {

@@ -82,20 +82,59 @@ describe('registerTurnLifecycle - Unit Tests', () => {
     };
 
     // Register all dependencies
-    container.register(tokens.ICommandProcessor, () => mockDependencies.commandProcessor);
-    container.register(tokens.ICommandOutcomeInterpreter, () => mockDependencies.commandOutcomeInterpreter);
-    container.register(tokens.CommandDispatcher, () => mockDependencies.commandDispatcher);
-    container.register(tokens.ResultInterpreter, () => mockDependencies.resultInterpreter);
-    container.register(tokens.DirectiveExecutor, () => mockDependencies.directiveExecutor);
-    container.register(tokens.IWorldContext, () => mockDependencies.gameWorldAccess);
+    container.register(
+      tokens.ICommandProcessor,
+      () => mockDependencies.commandProcessor
+    );
+    container.register(
+      tokens.ICommandOutcomeInterpreter,
+      () => mockDependencies.commandOutcomeInterpreter
+    );
+    container.register(
+      tokens.CommandDispatcher,
+      () => mockDependencies.commandDispatcher
+    );
+    container.register(
+      tokens.ResultInterpreter,
+      () => mockDependencies.resultInterpreter
+    );
+    container.register(
+      tokens.DirectiveExecutor,
+      () => mockDependencies.directiveExecutor
+    );
+    container.register(
+      tokens.IWorldContext,
+      () => mockDependencies.gameWorldAccess
+    );
     container.register(tokens.ITurnEndPort, () => mockDependencies.turnEndPort);
-    container.register(tokens.ISafeEventDispatcher, () => mockDependencies.safeEventDispatcher);
-    container.register(tokens.IEntityManager, () => mockDependencies.entityManager);
-    container.register(tokens.IGameDataRepository, () => mockDependencies.gameDataRepository);
-    container.register(tokens.IValidatedEventDispatcher, () => mockDependencies.validatedEventDispatcher);
-    container.register(tokens.IPromptOutputPort, () => mockDependencies.promptOutputPort);
-    container.register(tokens.IActionIndexer, () => mockDependencies.actionIndexingService);
-    container.register(tokens.ActorTurnHandler, () => mockDependencies.actorTurnHandler);
+    container.register(
+      tokens.ISafeEventDispatcher,
+      () => mockDependencies.safeEventDispatcher
+    );
+    container.register(
+      tokens.IEntityManager,
+      () => mockDependencies.entityManager
+    );
+    container.register(
+      tokens.IGameDataRepository,
+      () => mockDependencies.gameDataRepository
+    );
+    container.register(
+      tokens.IValidatedEventDispatcher,
+      () => mockDependencies.validatedEventDispatcher
+    );
+    container.register(
+      tokens.IPromptOutputPort,
+      () => mockDependencies.promptOutputPort
+    );
+    container.register(
+      tokens.IActionIndexer,
+      () => mockDependencies.actionIndexingService
+    );
+    container.register(
+      tokens.ActorTurnHandler,
+      () => mockDependencies.actorTurnHandler
+    );
   });
 
   afterEach(() => {
@@ -112,7 +151,9 @@ describe('registerTurnLifecycle - Unit Tests', () => {
     expect(() => container.resolve(tokens.ActionContextBuilder)).not.toThrow();
     expect(() => container.resolve(tokens.IPlayerTurnEvents)).not.toThrow();
     expect(() => container.resolve(tokens.IPromptCoordinator)).not.toThrow();
-    expect(() => container.resolve(tokens.IHumanDecisionProvider)).not.toThrow();
+    expect(() =>
+      container.resolve(tokens.IHumanDecisionProvider)
+    ).not.toThrow();
     expect(() => container.resolve(tokens.assertValidEntity)).not.toThrow();
     expect(() => container.resolve(tokens.TurnContextBuilder)).not.toThrow();
     expect(() => container.resolve(tokens.TurnHandlerResolver)).not.toThrow();
@@ -123,7 +164,7 @@ describe('registerTurnLifecycle - Unit Tests', () => {
   describe('ITurnOrderService factory', () => {
     test('creates TurnOrderService with correct dependencies', () => {
       registerTurnLifecycle(container);
-      
+
       const service = container.resolve(tokens.ITurnOrderService);
       expect(service).toBeDefined();
       expect(service.constructor.name).toBe('TurnOrderService');
@@ -131,9 +172,9 @@ describe('registerTurnLifecycle - Unit Tests', () => {
 
     test('factory function passes logger dependency', () => {
       // Spy on the constructor
-      const TurnOrderService = jest.fn(function() {});
+      const TurnOrderService = jest.fn(function () {});
       jest.doMock('../../../../src/turns/order/turnOrderService.js', () => ({
-        TurnOrderService
+        TurnOrderService,
       }));
 
       registerTurnLifecycle(container);
@@ -147,7 +188,7 @@ describe('registerTurnLifecycle - Unit Tests', () => {
   describe('ITurnStateFactory factory', () => {
     test('creates ConcreteTurnStateFactory with required dependencies', () => {
       registerTurnLifecycle(container);
-      
+
       const factory = container.resolve(tokens.ITurnStateFactory);
       expect(factory).toBeDefined();
       expect(factory.constructor.name).toBe('ConcreteTurnStateFactory');
@@ -160,25 +201,31 @@ describe('registerTurnLifecycle - Unit Tests', () => {
       container.register(tokens.DirectiveExecutor, null);
 
       registerTurnLifecycle(container);
-      
+
       // Should not throw even with missing optional dependencies
       expect(() => container.resolve(tokens.ITurnStateFactory)).not.toThrow();
-      
+
       // Verify tryResolve was called for optional dependencies
-      expect(container.tryResolve).toHaveBeenCalledWith(tokens.CommandDispatcher);
-      expect(container.tryResolve).toHaveBeenCalledWith(tokens.ResultInterpreter);
-      expect(container.tryResolve).toHaveBeenCalledWith(tokens.DirectiveExecutor);
+      expect(container.tryResolve).toHaveBeenCalledWith(
+        tokens.CommandDispatcher
+      );
+      expect(container.tryResolve).toHaveBeenCalledWith(
+        tokens.ResultInterpreter
+      );
+      expect(container.tryResolve).toHaveBeenCalledWith(
+        tokens.DirectiveExecutor
+      );
     });
   });
 
   describe('ITurnContextFactory factory', () => {
     test('creates ConcreteTurnContextFactory with all dependencies', () => {
       registerTurnLifecycle(container);
-      
+
       const factory = container.resolve(tokens.ITurnContextFactory);
       expect(factory).toBeDefined();
       expect(factory.constructor.name).toBe('ConcreteTurnContextFactory');
-      
+
       // Verify all dependencies were resolved
       expect(resolveCalls).toContain(tokens.ILogger);
       expect(resolveCalls).toContain(tokens.IWorldContext);
@@ -191,11 +238,11 @@ describe('registerTurnLifecycle - Unit Tests', () => {
   describe('ActionContextBuilder factory', () => {
     test('creates ActionContextBuilder with correct dependencies', () => {
       registerTurnLifecycle(container);
-      
+
       const builder = container.resolve(tokens.ActionContextBuilder);
       expect(builder).toBeDefined();
       expect(builder.constructor.name).toBe('ActionContextBuilder');
-      
+
       // Verify dependencies
       expect(resolveCalls).toContain(tokens.IWorldContext);
       expect(resolveCalls).toContain(tokens.IEntityManager);
@@ -207,11 +254,11 @@ describe('registerTurnLifecycle - Unit Tests', () => {
   describe('IPlayerTurnEvents factory', () => {
     test('creates ValidatedEventDispatcherAdapter', () => {
       registerTurnLifecycle(container);
-      
+
       const events = container.resolve(tokens.IPlayerTurnEvents);
       expect(events).toBeDefined();
       expect(events.constructor.name).toBe('ValidatedEventDispatcherAdapter');
-      
+
       // Verify dependency
       expect(resolveCalls).toContain(tokens.IValidatedEventDispatcher);
     });
@@ -220,11 +267,11 @@ describe('registerTurnLifecycle - Unit Tests', () => {
   describe('IPromptCoordinator factory', () => {
     test('creates PromptCoordinator with all dependencies', () => {
       registerTurnLifecycle(container);
-      
+
       const coordinator = container.resolve(tokens.IPromptCoordinator);
       expect(coordinator).toBeDefined();
       expect(coordinator.constructor.name).toBe('PromptCoordinator');
-      
+
       // Verify all dependencies
       expect(resolveCalls).toContain(tokens.ILogger);
       expect(resolveCalls).toContain(tokens.IPromptOutputPort);
@@ -236,11 +283,11 @@ describe('registerTurnLifecycle - Unit Tests', () => {
   describe('IHumanDecisionProvider factory', () => {
     test('creates HumanDecisionProvider with dependencies', () => {
       registerTurnLifecycle(container);
-      
+
       const provider = container.resolve(tokens.IHumanDecisionProvider);
       expect(provider).toBeDefined();
       expect(provider.constructor.name).toBe('HumanDecisionProvider');
-      
+
       // Verify dependencies
       expect(resolveCalls).toContain(tokens.IPromptCoordinator);
       expect(resolveCalls).toContain(tokens.ILogger);
@@ -249,10 +296,10 @@ describe('registerTurnLifecycle - Unit Tests', () => {
 
     test('is registered as transient', () => {
       registerTurnLifecycle(container);
-      
+
       const instance1 = container.resolve(tokens.IHumanDecisionProvider);
       const instance2 = container.resolve(tokens.IHumanDecisionProvider);
-      
+
       // Transient services should return different instances
       expect(instance1).not.toBe(instance2);
     });
@@ -261,38 +308,40 @@ describe('registerTurnLifecycle - Unit Tests', () => {
   describe('assertValidEntity factory', () => {
     test('creates function that uses assertValidEntity utility', () => {
       registerTurnLifecycle(container);
-      
+
       const assertFunc = container.resolve(tokens.assertValidEntity);
       expect(assertFunc).toBeDefined();
       expect(typeof assertFunc).toBe('function');
-      
+
       // The factory itself doesn't resolve ISafeEventDispatcher immediately
       // It's resolved when creating the closure
     });
 
     test('returned function has correct signature', () => {
       registerTurnLifecycle(container);
-      
+
       const assertFunc = container.resolve(tokens.assertValidEntity);
-      
+
       // Test the function can be called with expected parameters
       const mockEntity = { id: 'test' };
       const mockLogger = mock();
       const contextName = 'TestContext';
-      
+
       // Should not throw when called with valid parameters
-      expect(() => assertFunc(mockEntity, mockLogger, contextName)).not.toThrow();
+      expect(() =>
+        assertFunc(mockEntity, mockLogger, contextName)
+      ).not.toThrow();
     });
   });
 
   describe('TurnContextBuilder factory', () => {
     test('creates TurnContextBuilder with dependencies', () => {
       registerTurnLifecycle(container);
-      
+
       const builder = container.resolve(tokens.TurnContextBuilder);
       expect(builder).toBeDefined();
       expect(builder.constructor.name).toBe('TurnContextBuilder');
-      
+
       // Verify dependencies
       expect(resolveCalls).toContain(tokens.ILogger);
       expect(resolveCalls).toContain(tokens.ITurnContextFactory);
@@ -301,10 +350,10 @@ describe('registerTurnLifecycle - Unit Tests', () => {
 
     test('is registered as transient', () => {
       registerTurnLifecycle(container);
-      
+
       const instance1 = container.resolve(tokens.TurnContextBuilder);
       const instance2 = container.resolve(tokens.TurnContextBuilder);
-      
+
       // Transient services should return different instances
       expect(instance1).not.toBe(instance2);
     });
@@ -313,22 +362,21 @@ describe('registerTurnLifecycle - Unit Tests', () => {
   describe('TurnHandlerResolver factory', () => {
     test('creates TurnHandlerResolver with handler rules', () => {
       registerTurnLifecycle(container);
-      
+
       const resolver = container.resolve(tokens.TurnHandlerResolver);
       expect(resolver).toBeDefined();
       expect(resolver.constructor.name).toBe('TurnHandlerResolver');
     });
-
   });
 
   describe('ITurnManager factory', () => {
     test('creates TurnManager with all dependencies', () => {
       registerTurnLifecycle(container);
-      
+
       const manager = container.resolve(tokens.ITurnManager);
       expect(manager).toBeDefined();
       expect(manager.constructor.name).toBe('TurnManager');
-      
+
       // Verify all dependencies
       expect(resolveCalls).toContain(tokens.ITurnOrderService);
       expect(resolveCalls).toContain(tokens.IEntityManager);
@@ -339,14 +387,14 @@ describe('registerTurnLifecycle - Unit Tests', () => {
 
     test('is tagged with INITIALIZABLE', () => {
       const registerSpy = jest.spyOn(container, 'register');
-      
+
       registerTurnLifecycle(container);
-      
+
       // Find the registration call for ITurnManager
       const turnManagerCall = registerSpy.mock.calls.find(
-        call => call[0] === tokens.ITurnManager
+        (call) => call[0] === tokens.ITurnManager
       );
-      
+
       expect(turnManagerCall).toBeDefined();
       expect(turnManagerCall[2]).toBeDefined();
       expect(turnManagerCall[2].tags).toEqual(INITIALIZABLE);
@@ -356,63 +404,63 @@ describe('registerTurnLifecycle - Unit Tests', () => {
   describe('ITurnContext factory', () => {
     test('returns null when turn manager has no active handler', () => {
       registerTurnLifecycle(container);
-      
+
       // Mock turn manager without active handler
       const mockTurnManager = {
-        getActiveTurnHandler: jest.fn(() => null)
+        getActiveTurnHandler: jest.fn(() => null),
       };
       container.register(tokens.ITurnManager, () => mockTurnManager);
-      
+
       const context = container.resolve(tokens.ITurnContext);
       expect(context).toBeNull();
     });
 
     test('returns null when turn handler has no context', () => {
       registerTurnLifecycle(container);
-      
+
       // Mock turn manager with handler that has no context
       const mockTurnManager = {
         getActiveTurnHandler: jest.fn(() => ({
-          getTurnContext: jest.fn(() => null)
-        }))
+          getTurnContext: jest.fn(() => null),
+        })),
       };
       container.register(tokens.ITurnManager, () => mockTurnManager);
-      
+
       const context = container.resolve(tokens.ITurnContext);
       expect(context).toBeNull();
     });
 
     test('returns context from active turn handler', () => {
       registerTurnLifecycle(container);
-      
+
       // Mock turn context
       const mockContext = { id: 'test-context' };
-      
+
       // Mock turn manager with active handler
       const mockTurnManager = {
         getActiveTurnHandler: jest.fn(() => ({
-          getTurnContext: jest.fn(() => mockContext)
-        }))
+          getTurnContext: jest.fn(() => mockContext),
+        })),
       };
       container.register(tokens.ITurnManager, () => mockTurnManager);
-      
+
       const context = container.resolve(tokens.ITurnContext);
       expect(context).toBe(mockContext);
     });
 
     test('handles optional chaining correctly', () => {
       registerTurnLifecycle(container);
-      
+
       // Test various undefined scenarios
       const scenarios = [
         { getActiveTurnHandler: undefined },
         { getActiveTurnHandler: () => ({ getTurnContext: undefined }) },
-        { getActiveTurnHandler: () => undefined }
+        { getActiveTurnHandler: () => undefined },
       ];
-      
-      scenarios.forEach(mockTurnManager => {
+
+      scenarios.forEach((mockTurnManager) => {
         container.register(tokens.ITurnManager, () => mockTurnManager);
-        
+
         const context = container.resolve(tokens.ITurnContext);
         expect(context).toBeNull();
       });
@@ -420,15 +468,15 @@ describe('registerTurnLifecycle - Unit Tests', () => {
 
     test('is registered as transient', () => {
       registerTurnLifecycle(container);
-      
+
       // Even though it might return the same value, the factory itself is transient
       const registerSpy = jest.spyOn(container, 'register');
       registerTurnLifecycle(container);
-      
+
       const contextCall = registerSpy.mock.calls.find(
-        call => call[0] === tokens.ITurnContext
+        (call) => call[0] === tokens.ITurnContext
       );
-      
+
       expect(contextCall[2].lifecycle).toBe('transient');
     });
   });
@@ -436,11 +484,13 @@ describe('registerTurnLifecycle - Unit Tests', () => {
   describe('logging', () => {
     test('logs debug messages in correct order', () => {
       registerTurnLifecycle(container);
-      
-      const debugCalls = mockLogger.debug.mock.calls.map(call => call[0]);
-      
+
+      const debugCalls = mockLogger.debug.mock.calls.map((call) => call[0]);
+
       expect(debugCalls[0]).toBe('Turn Lifecycle Registration: Starting...');
-      expect(debugCalls).toContain('Turn Lifecycle Registration: Registered Turn services and factories.');
+      expect(debugCalls).toContain(
+        'Turn Lifecycle Registration: Registered Turn services and factories.'
+      );
       expect(debugCalls).toContain(
         `Turn Lifecycle Registration: Registered ${tokens.TurnHandlerResolver} with singleton resolution.`
       );
@@ -450,7 +500,9 @@ describe('registerTurnLifecycle - Unit Tests', () => {
       expect(debugCalls).toContain(
         `Turn Lifecycle Registration: Registered transient factory for ${tokens.ITurnContext}.`
       );
-      expect(debugCalls[debugCalls.length - 1]).toBe('Turn Lifecycle Registration: Completed.');
+      expect(debugCalls[debugCalls.length - 1]).toBe(
+        'Turn Lifecycle Registration: Completed.'
+      );
     });
   });
 });
