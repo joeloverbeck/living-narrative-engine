@@ -8,10 +8,10 @@
  * - Deep nesting performance (6+ levels)
  * - Concurrent access patterns
  * - Memory usage and resource management
- * 
+ *
  * Addresses Priority 3 requirements from ScopeDSL Architecture and E2E Coverage Analysis
  * Coverage: Workflows 3, 4, 5 (engine execution, node resolution, specialized resolvers)
- * 
+ *
  * Performance Targets:
  * - Resolution time < 100ms for complex queries with 1000+ entities
  * - Memory usage < 50MB for large result sets
@@ -61,24 +61,24 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
   beforeEach(async () => {
     // Create real container for accurate performance testing
     container = new AppContainer();
-    
+
     // Create DOM elements with proper IDs for container configuration
     const outputDiv = document.createElement('div');
     outputDiv.id = 'outputDiv';
     const messageList = document.createElement('ul');
     messageList.id = 'message-list';
     outputDiv.appendChild(messageList);
-    
+
     const inputElement = document.createElement('input');
     inputElement.id = 'inputBox';
-    
+
     const titleElement = document.createElement('h1');
     titleElement.id = 'gameTitle';
-    
+
     document.body.appendChild(outputDiv);
     document.body.appendChild(inputElement);
     document.body.appendChild(titleElement);
-    
+
     configureContainer(container, {
       outputDiv,
       inputElement,
@@ -95,7 +95,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
     jsonLogicService = container.resolve(tokens.JsonLogicEvaluationService);
     spatialIndexManager = container.resolve(tokens.ISpatialIndexManager);
     registry = container.resolve(tokens.IDataRegistry);
-    
+
     // No need to register component definitions - they're handled by the framework
 
     // Reset performance metrics
@@ -109,12 +109,12 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
   afterEach(() => {
     // Clean up DOM elements
     document.body.innerHTML = '';
-    
+
     // Clean up container resources
     if (container && typeof container.cleanup === 'function') {
       container.cleanup();
     }
-    
+
     // Force garbage collection if available
     if (global.gc) {
       global.gc();
@@ -126,7 +126,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       // Arrange - Create large entity dataset
       const entityCount = 1000;
       const testEntities = await createLargeEntityDataset(entityCount);
-      
+
       // Create test scope for filtering high-level actors
       const testScopes = ScopeTestUtilities.createTestScopes(
         { dslParser, logger },
@@ -146,7 +146,9 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       const testActor = testEntities.actors[0];
       // Create game context for resolution
       const gameContext = {
-        currentLocation: await entityManager.getEntityInstance(testEntities.location.id),
+        currentLocation: await entityManager.getEntityInstance(
+          testEntities.location.id
+        ),
         entityManager: entityManager,
         allEntities: Array.from(entityManager.entities || []),
         jsonLogicEval: jsonLogicService,
@@ -157,20 +159,20 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       // Act - Measure resolution performance
       const startTime = performance.now();
       const startMemory = process.memoryUsage().heapUsed;
-      
+
       const result = await ScopeTestUtilities.resolveScopeE2E(
         'test:high_level_actors',
         testActor,
         gameContext,
         { scopeRegistry, scopeEngine }
       );
-      
+
       const endTime = performance.now();
       const endMemory = process.memoryUsage().heapUsed;
-      
+
       const resolutionTime = endTime - startTime;
       const memoryUsed = (endMemory - startMemory) / 1024 / 1024; // Convert to MB
-      
+
       // Record metrics
       performanceMetrics.resolutionTimes.push(resolutionTime);
       performanceMetrics.memoryUsage.push(memoryUsed);
@@ -195,7 +197,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       // Arrange - Create very large entity dataset
       const entityCount = 10000;
       const testEntities = await createLargeEntityDataset(entityCount);
-      
+
       // Create complex scope with multiple conditions
       const testScopes = ScopeTestUtilities.createTestScopes(
         { dslParser, logger },
@@ -216,17 +218,17 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       // Act - Measure resolution with very large dataset
       const startTime = performance.now();
       const startMemory = process.memoryUsage().heapUsed;
-      
+
       const result = await ScopeTestUtilities.resolveScopeE2E(
         'test:complex_filter',
         testActor,
         gameContext,
         { scopeRegistry, scopeEngine }
       );
-      
+
       const endTime = performance.now();
       const endMemory = process.memoryUsage().heapUsed;
-      
+
       const resolutionTime = endTime - startTime;
       const memoryUsed = (endMemory - startMemory) / 1024 / 1024;
 
@@ -248,7 +250,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
     test('should maintain performance with deep component nesting (6+ levels)', async () => {
       // Arrange - Create entities with deep component hierarchies
       const testEntities = await createDeepNestedEntities();
-      
+
       // Create scope with deep nesting access
       const testScopes = ScopeTestUtilities.createTestScopes(
         { dslParser, logger },
@@ -269,22 +271,26 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
         id: 'test-deep-nested-location',
         description: 'Test location',
         components: {
-          'core:location': { name: 'Test Location' }
-        }
+          'core:location': { name: 'Test Location' },
+        },
       };
-      registry.store('entityDefinitions', locationDef.id, new EntityDefinition(locationDef.id, locationDef));
+      registry.store(
+        'entityDefinitions',
+        locationDef.id,
+        new EntityDefinition(locationDef.id, locationDef)
+      );
       await entityManager.createEntityInstance(locationDef.id, {
         instanceId: locationDef.id,
         definitionId: locationDef.id,
-        components: locationDef.components
+        components: locationDef.components,
       });
-      
+
       const gameContext = await createGameContext(locationDef.id);
 
       // Act - Measure deep nesting resolution
       const iterations = 100; // Run multiple times for accurate measurement
       const startTime = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         await ScopeTestUtilities.resolveScopeE2E(
           'test:deep_nested_access',
@@ -293,27 +299,26 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
           { scopeRegistry, scopeEngine }
         );
       }
-      
+
       const endTime = performance.now();
       const avgResolutionTime = (endTime - startTime) / iterations;
 
       // Assert - Verify performance doesn't degrade with depth
       expect(avgResolutionTime).toBeLessThan(10); // < 10ms per resolution
-      
+
       logger.info('Deep nesting performance', {
         nestingDepth: 6,
         iterations,
         avgResolutionTime: `${avgResolutionTime.toFixed(2)}ms`,
       });
     });
-
   });
 
   describe('Concurrent Access Patterns', () => {
     test('should handle multiple simultaneous resolutions efficiently', async () => {
       // Arrange - Create test data and various scopes
       const testEntities = await createLargeEntityDataset(500);
-      
+
       const testScopes = ScopeTestUtilities.createTestScopes(
         { dslParser, logger },
         [
@@ -344,31 +349,29 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       // Act - Execute concurrent resolutions
       const startTime = performance.now();
       const startMemory = process.memoryUsage().heapUsed;
-      
+
       // Create game context once for all concurrent resolutions
       const gameContext = await createGameContext(testEntities.location.id);
-      
+
       const resolutionPromises = [];
       for (let i = 0; i < concurrentCount; i++) {
         const actor = actors[i % actors.length];
         const scopeId = `test:scope_${(i % 3) + 1}`;
 
         resolutionPromises.push(
-          ScopeTestUtilities.resolveScopeE2E(
-            scopeId,
-            actor,
-            gameContext,
-            { scopeRegistry, scopeEngine }
-          )
+          ScopeTestUtilities.resolveScopeE2E(scopeId, actor, gameContext, {
+            scopeRegistry,
+            scopeEngine,
+          })
         );
       }
 
       performanceMetrics.concurrentResolutions = concurrentCount;
       const results = await Promise.all(resolutionPromises);
-      
+
       const endTime = performance.now();
       const endMemory = process.memoryUsage().heapUsed;
-      
+
       const totalTime = endTime - startTime;
       const avgTimePerResolution = totalTime / concurrentCount;
       const memoryUsed = (endMemory - startMemory) / 1024 / 1024;
@@ -377,7 +380,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       expect(avgTimePerResolution).toBeLessThan(50); // Should benefit from parallelism
       expect(memoryUsed).toBeLessThan(100); // Memory should be reasonable
       expect(results).toHaveLength(concurrentCount);
-      expect(results.every(r => r instanceof Set)).toBe(true);
+      expect(results.every((r) => r instanceof Set)).toBe(true);
 
       logger.info('Concurrent resolution performance', {
         concurrentCount,
@@ -390,7 +393,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
     test('should handle resource contention gracefully', async () => {
       // Arrange - Create shared resource scenario
       const sharedEntities = await createLargeEntityDataset(100);
-      
+
       // Create scope that will cause contention
       const testScopes = ScopeTestUtilities.createTestScopes(
         { dslParser, logger },
@@ -410,10 +413,10 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
 
       // Act - Create high contention scenario
       const startTime = performance.now();
-      
+
       // Create game context once
       const gameContext = await createGameContext(sharedEntities.location.id);
-      
+
       const resolutionPromises = [];
       for (let i = 0; i < concurrentCount; i++) {
         resolutionPromises.push(
@@ -432,14 +435,18 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
 
       // Assert - System should handle contention without errors
       expect(results).toHaveLength(concurrentCount);
-      expect(results.every(r => r instanceof Set)).toBe(true);
+      expect(results.every((r) => r instanceof Set)).toBe(true);
       // All results should be identical since using same actor
       const firstResult = Array.from(results[0]);
-      expect(results.every(r => {
-        const arr = Array.from(r);
-        return arr.length === firstResult.length &&
-               arr.every(id => firstResult.includes(id));
-      })).toBe(true);
+      expect(
+        results.every((r) => {
+          const arr = Array.from(r);
+          return (
+            arr.length === firstResult.length &&
+            arr.every((id) => firstResult.includes(id))
+          );
+        })
+      ).toBe(true);
 
       logger.info('Resource contention handling', {
         concurrentCount,
@@ -454,7 +461,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
     test('should clean up resources properly after resolution', async () => {
       // Arrange - Create large dataset
       const testEntities = await createLargeEntityDataset(1000);
-      
+
       const testScopes = ScopeTestUtilities.createTestScopes(
         { dslParser, logger },
         [
@@ -469,18 +476,18 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       scopeRegistry.initialize(testScopes);
 
       const testActor = testEntities.actors[0];
-      
+
       // Force garbage collection before test
       if (global.gc) {
         global.gc();
       }
-      
+
       const initialMemory = process.memoryUsage().heapUsed;
 
       // Act - Perform multiple resolutions
       const iterations = 50;
       const gameContext = await createGameContext(testEntities.location.id);
-      
+
       for (let i = 0; i < iterations; i++) {
         await ScopeTestUtilities.resolveScopeE2E(
           'test:memory_test_scope',
@@ -494,7 +501,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       if (global.gc) {
         global.gc();
       }
-      
+
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryGrowth = (finalMemory - initialMemory) / 1024 / 1024;
 
@@ -512,13 +519,17 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
   describe('Performance Summary', () => {
     test('should generate performance report', () => {
       // Generate summary of all performance metrics
-      const avgResolutionTime = performanceMetrics.resolutionTimes.length > 0
-        ? performanceMetrics.resolutionTimes.reduce((a, b) => a + b, 0) / performanceMetrics.resolutionTimes.length
-        : 0;
-      
-      const avgMemoryUsage = performanceMetrics.memoryUsage.length > 0
-        ? performanceMetrics.memoryUsage.reduce((a, b) => a + b, 0) / performanceMetrics.memoryUsage.length
-        : 0;
+      const avgResolutionTime =
+        performanceMetrics.resolutionTimes.length > 0
+          ? performanceMetrics.resolutionTimes.reduce((a, b) => a + b, 0) /
+            performanceMetrics.resolutionTimes.length
+          : 0;
+
+      const avgMemoryUsage =
+        performanceMetrics.memoryUsage.length > 0
+          ? performanceMetrics.memoryUsage.reduce((a, b) => a + b, 0) /
+            performanceMetrics.memoryUsage.length
+          : 0;
 
       const report = {
         summary: 'ScopeDSL Performance Test Results',
@@ -533,9 +544,16 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
           concurrencyTarget: '10+ simultaneous',
         },
         status: {
-          resolutionTime: avgResolutionTime < 100 && avgResolutionTime > 0 ? 'PASS' : 'FAIL',
-          memoryUsage: avgMemoryUsage < 50 && avgMemoryUsage > 0 ? 'PASS' : 'FAIL',
-          concurrency: performanceMetrics.concurrentResolutions >= 10 ? 'PASS' : performanceMetrics.concurrentResolutions === 0 ? 'SKIPPED' : 'FAIL',
+          resolutionTime:
+            avgResolutionTime < 100 && avgResolutionTime > 0 ? 'PASS' : 'FAIL',
+          memoryUsage:
+            avgMemoryUsage < 50 && avgMemoryUsage > 0 ? 'PASS' : 'FAIL',
+          concurrency:
+            performanceMetrics.concurrentResolutions >= 10
+              ? 'PASS'
+              : performanceMetrics.concurrentResolutions === 0
+                ? 'SKIPPED'
+                : 'FAIL',
         },
       };
 
@@ -552,7 +570,9 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
         expect(report.status.concurrency).toBe('PASS');
       } else {
         // If concurrent tests were not run, skip this assertion
-        logger.warn('Concurrent tests were not run, skipping concurrency assertion');
+        logger.warn(
+          'Concurrent tests were not run, skipping concurrency assertion'
+        );
       }
     });
   });
@@ -585,7 +605,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
   async function createLargeEntityDataset(count) {
     const actors = [];
     const items = [];
-    
+
     // Create test location
     const locationDef = {
       id: 'test-location',
@@ -594,18 +614,22 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
         'core:location': {
           name: 'Test Arena',
           exits: [],
-        }
-      }
+        },
+      },
     };
-    
+
     // Register location entity definition
-    registry.store('entityDefinitions', locationDef.id, new EntityDefinition(locationDef.id, locationDef));
-    
+    registry.store(
+      'entityDefinitions',
+      locationDef.id,
+      new EntityDefinition(locationDef.id, locationDef)
+    );
+
     // Create location instance
     const location = await entityManager.createEntityInstance(locationDef.id, {
       instanceId: locationDef.id,
       definitionId: locationDef.id,
-      components: locationDef.components
+      components: locationDef.components,
     });
 
     // Create actors with varying stats
@@ -635,17 +659,21 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
             max: 100,
           },
           'core:location': { locationId: locationDef.id },
-        }
+        },
       };
-      
+
       // Register actor definition
-      registry.store('entityDefinitions', actorDef.id, new EntityDefinition(actorDef.id, actorDef));
-      
+      registry.store(
+        'entityDefinitions',
+        actorDef.id,
+        new EntityDefinition(actorDef.id, actorDef)
+      );
+
       // Create actor instance
       const actor = await entityManager.createEntityInstance(actorDef.id, {
         instanceId: actorDef.id,
         definitionId: actorDef.id,
-        components: actorDef.components
+        components: actorDef.components,
       });
       actors.push({ id: actorDef.id });
     }
@@ -660,17 +688,21 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
             name: `Test Item ${i}`,
           },
           'core:value': Math.floor(Math.random() * 500),
-        }
+        },
       };
-      
+
       // Register item definition
-      registry.store('entityDefinitions', itemDef.id, new EntityDefinition(itemDef.id, itemDef));
-      
+      registry.store(
+        'entityDefinitions',
+        itemDef.id,
+        new EntityDefinition(itemDef.id, itemDef)
+      );
+
       // Create item instance
       const item = await entityManager.createEntityInstance(itemDef.id, {
         instanceId: itemDef.id,
         definitionId: itemDef.id,
-        components: itemDef.components
+        components: itemDef.components,
       });
       items.push({ id: itemDef.id });
     }
@@ -715,18 +747,22 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
               },
             },
           },
-        }
-      }
+        },
+      },
     };
-    
+
     // Register actor definition
-    registry.store('entityDefinitions', actorDef.id, new EntityDefinition(actorDef.id, actorDef));
-    
+    registry.store(
+      'entityDefinitions',
+      actorDef.id,
+      new EntityDefinition(actorDef.id, actorDef)
+    );
+
     // Create actor instance
     const actor = await entityManager.createEntityInstance(actorDef.id, {
       instanceId: actorDef.id,
       definitionId: actorDef.id,
-      components: actorDef.components
+      components: actorDef.components,
     });
 
     return { actors: [{ id: actorDef.id }] };
@@ -743,18 +779,22 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
         id: `related-actor-${i}`,
         description: `Related actor ${i}`,
         components: {
-          'core:actor': { name: `Related Actor ${i}` }
-        }
+          'core:actor': { name: `Related Actor ${i}` },
+        },
       };
-      
-      registry.store('entityDefinitions', actorDef.id, new EntityDefinition(actorDef.id, actorDef));
-      
+
+      registry.store(
+        'entityDefinitions',
+        actorDef.id,
+        new EntityDefinition(actorDef.id, actorDef)
+      );
+
       await entityManager.createEntityInstance(actorDef.id, {
         instanceId: actorDef.id,
         definitionId: actorDef.id,
-        components: actorDef.components
+        components: actorDef.components,
       });
-      
+
       actors.push({ id: actorDef.id });
     }
 
@@ -766,7 +806,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
         type: 'friend',
         target: actors[nextIndex].id,
       });
-      
+
       await entityManager.addComponent(
         actors[i].id,
         'core:relations',

@@ -7,6 +7,7 @@ import {
   OPENROUTER_DEFAULT_TOOL_DESCRIPTION, // Can still be used for description
 } from '../constants/llmConstants.js';
 import { getLlmId } from '../utils/llmUtils.js';
+import { DefaultToolSchemaHandler } from './toolSchemaHandlers/defaultToolSchemaHandler.js';
 
 /**
  * @typedef {import('../interfaces/IHttpClient.js').IHttpClient} IHttpClient
@@ -20,6 +21,8 @@ import { getLlmId } from '../utils/llmUtils.js';
  * @description Strategy for OpenRouter-compatible LLMs using the OpenAI tool-calling mechanism.
  */
 export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
+  #toolSchemaHandler;
+
   /**
    * Constructs an instance of OpenRouterToolCallingStrategy.
    *
@@ -30,8 +33,117 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
    */
   constructor({ httpClient, logger }) {
     super({ httpClient, logger }); // Pass dependencies to the BaseOpenRouterStrategy constructor
+
+    // Initialize tool schema handler
+    this.#toolSchemaHandler = new DefaultToolSchemaHandler({ logger });
+
     // this.logger is guaranteed to be valid here.
     this.logger.debug(`${this.constructor.name} initialized.`);
+  }
+
+  /**
+   * Gets the tool schema handler instance.
+   *
+   * @private
+   * @returns {DefaultToolSchemaHandler} The tool schema handler
+   */
+  _getToolSchemaHandler() {
+    return this.#toolSchemaHandler;
+  }
+
+  /**
+   * Enhanced tool schema building for OpenRouter tool calling strategy.
+   * This method provides flexible tool schema generation that can use either
+   * request-specific custom schemas or fall back to default behavior.
+   *
+   * @override
+   * @param {Array<object>} tools - Array of tool definitions (currently supports single tool)
+   * @param {object} [requestOptions] - Optional request-specific options
+   * @param {object} [requestOptions.toolSchema] - Custom tool schema to use
+   * @param {string} [requestOptions.toolName] - Custom tool name to use
+   * @param {string} [requestOptions.toolDescription] - Custom tool description to use
+   * @returns {object|null} Tool schema object or null if no tools provided
+   */
+  buildToolSchema(tools, requestOptions = {}) {
+    const llmId = 'openrouter-tool-calling'; // Context-specific identifier
+
+    if (!tools || !Array.isArray(tools) || tools.length === 0) {
+      this.logger.debug(
+        `${this.constructor.name} (${llmId}): No tools provided for schema generation.`,
+        { llmId }
+      );
+      return null;
+    }
+
+    const toolSchemaHandler = this._getToolSchemaHandler();
+
+    try {
+      // If custom schema is provided in request options, use it
+      if (Object.prototype.hasOwnProperty.call(requestOptions, 'toolSchema')) {
+        const customSchema = requestOptions.toolSchema;
+        const toolName = requestOptions.toolName || 'custom_tool';
+        const toolDescription =
+          requestOptions.toolDescription || 'Custom tool for specific request';
+
+        this.logger.debug(
+          `${this.constructor.name} (${llmId}): Building custom tool schema from request options.`,
+          { llmId, toolName, hasCustomSchema: !!customSchema }
+        );
+
+        if (customSchema && typeof customSchema === 'object') {
+          return toolSchemaHandler.buildCustomToolSchema(
+            customSchema,
+            toolName,
+            toolDescription,
+            llmId
+          );
+        } else {
+          this.logger.warn(
+            `${this.constructor.name} (${llmId}): Invalid custom tool schema provided, falling back to default.`,
+            { llmId, providedSchema: customSchema }
+          );
+          // Fall back to default schema without custom name/description when invalid schema provided
+          return toolSchemaHandler.buildDefaultToolSchema(llmId, {});
+        }
+      }
+
+      // Fall back to default tool schema
+      this.logger.debug(
+        `${this.constructor.name} (${llmId}): Building default tool schema.`,
+        { llmId }
+      );
+      return toolSchemaHandler.buildDefaultToolSchema(llmId, requestOptions);
+    } catch (error) {
+      this.logger.error(
+        `${this.constructor.name} (${llmId}): Error building tool schema: ${error.message}`,
+        { llmId, error: error.message, requestOptions }
+      );
+
+      // Fall back to default schema as last resort
+      try {
+        this.logger.debug(
+          `${this.constructor.name} (${llmId}): Attempting fallback to default tool schema.`,
+          { llmId }
+        );
+        return toolSchemaHandler.buildDefaultToolSchema(llmId, {});
+      } catch (fallbackError) {
+        this.logger.error(
+          `${this.constructor.name} (${llmId}): Fallback tool schema generation also failed: ${fallbackError.message}`,
+          { llmId, fallbackError: fallbackError.message }
+        );
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Indicates that this strategy supports custom tool schema generation.
+   *
+   * @override
+   * @returns {boolean} Always returns true for tool calling strategy
+   */
+  requiresCustomToolSchema() {
+    return true;
   }
 
   /**
@@ -73,48 +185,64 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
    * @protected
    * @param {object} baseMessagesPayload - The base messages payload.
    * @param {LLMModelConfig} llmConfig - The LLM configuration.
+   * @param {object} [requestOptions] - Optional request-specific options.
    * @returns {object} An object containing the `tools` and `tool_choice` parameters.
    * @throws {LLMStrategyError} If tool schema configuration is invalid.
    */
-  _buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig) {
+  _buildProviderRequestPayloadAdditions(
+    baseMessagesPayload,
+    llmConfig,
+    requestOptions = {}
+  ) {
     const llmId = getLlmId(llmConfig);
 
-    const configuredToolName = llmConfig.jsonOutputStrategy?.toolName;
+    // Determine tool name: request option overrides config
+    const toolName =
+      requestOptions.toolName || llmConfig.jsonOutputStrategy?.toolName;
 
-    if (
-      !configuredToolName ||
-      typeof configuredToolName !== 'string' ||
-      configuredToolName.trim() === ''
-    ) {
-      // This case should ideally be caught by upstream validation in ConfigurableLLMAdapter,
-      // but as a safeguard:
-      this.logger.error(
-        `${this.constructor.name} (${llmId}): Invalid or missing 'toolName' in llmConfig.jsonOutputStrategy. Expected a non-empty string.`,
+    // Validation for toolName
+    if (!toolName || typeof toolName !== 'string' || toolName.trim() === '') {
+      const errorMsg = `${this.constructor.name} (${llmId}): Missing or invalid 'toolName'. Must be provided in either request options or llmConfig.jsonOutputStrategy.`;
+      this.logger.error(errorMsg, { llmId });
+      throw new LLMStrategyError(errorMsg, llmId);
+    }
+
+    // Determine tool schema: request option overrides default
+    let toolParametersSchema;
+    if (Object.prototype.hasOwnProperty.call(requestOptions, 'toolSchema')) {
+      // Use request-specific schema (even if null or undefined)
+      toolParametersSchema = requestOptions.toolSchema;
+      this.logger.debug(
+        `${this.constructor.name} (${llmId}): Using custom tool schema from request options.`,
         {
           llmId,
-          jsonOutputStrategy: llmConfig.jsonOutputStrategy,
+          schemaProperties: Object.keys(toolParametersSchema?.properties || {}),
         }
       );
-      throw new LLMStrategyError(
-        `Invalid or missing toolName in configuration for LLM ID ${llmId}.`,
-        llmId
+    } else {
+      // Fall back to default game AI schema
+      toolParametersSchema =
+        OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
+        OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA;
+      this.logger.debug(
+        `${this.constructor.name} (${llmId}): No custom tool schema provided, using default game AI schema.`,
+        { llmId }
       );
     }
 
-    // The parameters schema can still come from constants if it's standardized for this strategy's purpose.
-    // If the parameters schema also needs to be dynamic from llmConfig, that would be a further change.
-    // For now, only toolName is made dynamic as per schema definition.
-    const toolParametersSchema =
-      OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
-      OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA;
+    // Determine tool description: request option overrides default
+    const toolDescription =
+      requestOptions.toolDescription || OPENROUTER_DEFAULT_TOOL_DESCRIPTION;
 
-    if (!toolParametersSchema || typeof toolParametersSchema !== 'object') {
+    // Validate schema structure
+    if (
+      !toolParametersSchema ||
+      typeof toolParametersSchema !== 'object' ||
+      toolParametersSchema === null
+    ) {
       this.logger.error(
-        `${this.constructor.name} (${llmId}): Invalid tool parameters schema (OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA). Expected an object.`,
-        {
-          llmId,
-          toolParametersSchema,
-        }
+        `${this.constructor.name} (${llmId}): Invalid tool parameters schema. Expected an object.`,
+        { llmId, toolParametersSchema }
       );
       throw new LLMStrategyError(`Invalid tool parameters schema.`, llmId);
     }
@@ -122,17 +250,18 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
     const tool = {
       type: 'function',
       function: {
-        name: configuredToolName, // Use the configured tool name
-        description: OPENROUTER_DEFAULT_TOOL_DESCRIPTION, // Keep using constant for description
+        name: toolName,
+        description: toolDescription,
         parameters: toolParametersSchema,
       },
     };
 
     this.logger.debug(
-      `${this.constructor.name} (${llmId}): Defined tool for use with name '${configuredToolName}'.`,
+      `${this.constructor.name} (${llmId}): Defined tool for use with name '${toolName}'.`,
       {
         llmId,
-        toolName: tool.function.name, // Log the actually used tool name
+        toolName: tool.function.name,
+        isCustomSchema: !!requestOptions.toolSchema,
       }
     );
 
@@ -150,25 +279,28 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
    * @async
    * @param {any} responseData - The raw response data from the HTTP client.
    * @param {LLMModelConfig} llmConfig - The LLM configuration.
-   * @param {object} [_providerRequestPayload] - The request payload sent to the provider.
+   * @param {object} [providerRequestPayload] - The request payload sent to the provider.
    * @returns {Promise<string>} A promise that resolves to the extracted JSON string.
    * @throws {LLMStrategyError} If JSON content cannot be extracted or validated.
    */
-  async _extractJsonOutput(responseData, llmConfig, _providerRequestPayload) {
+  async _extractJsonOutput(responseData, llmConfig, providerRequestPayload) {
     const llmId = getLlmId(llmConfig);
     const message = responseData?.choices?.[0]?.message;
 
-    const expectedToolName = llmConfig.jsonOutputStrategy?.toolName;
+    // Extract expected tool name from the provider request payload that was sent
+    const expectedToolName = providerRequestPayload?.tools?.[0]?.function?.name;
 
     if (
       !expectedToolName ||
       typeof expectedToolName !== 'string' ||
       expectedToolName.trim() === ''
     ) {
-      const errorMsg = `${this.constructor.name} (${llmId}): Invalid or missing 'toolName' in llmConfig.jsonOutputStrategy for extraction. Expected a non-empty string.`;
+      const errorMsg = `${this.constructor.name} (${llmId}): Unable to determine expected tool name from provider request payload for extraction.`;
       this.logger.error(errorMsg, {
         llmId,
-        jsonOutputStrategy: llmConfig.jsonOutputStrategy,
+        providerRequestPayload: JSON.stringify(
+          providerRequestPayload
+        )?.substring(0, 500),
       });
       throw new LLMStrategyError(errorMsg, llmId);
     }
@@ -209,7 +341,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
                 ? toolCall.function.arguments.trim() === ''
                 : undefined,
           },
-          expectedToolName, // Log the dynamically expected tool name
+          expectedToolName, // Log the expected tool name from request payload
           responseDataPreview: JSON.stringify(responseData)?.substring(0, 500),
         });
         throw new LLMStrategyError(errorMsg, llmId, null, {
@@ -224,6 +356,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
         {
           llmId,
           length: extractedJsonString.length,
+          toolName: expectedToolName,
         }
       );
       return extractedJsonString;

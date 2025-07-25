@@ -48,6 +48,7 @@
  * setting up provider-specific headers, authentication, and using a configured HTTP client.
  * 3. Extracting the raw, unparsed JSON string output from the LLM's response. The structure of this
  * JSON string is dictated by the LLM and the JSON output method being used.
+ * 4. Customizing tool schemas for strategies that support flexible tool calling (Phase 3 enhancement).
  *
  * This interface is fundamental to decoupling the main `ConfigurableLLMAdapter` (or similar orchestrator)
  * from the specifics of individual LLM providers (e.g., "openai", "anthropic", "ollama") and their
@@ -93,6 +94,34 @@ export class ILLMStrategy {
     // This is an interface method and should not be called directly on ILLMStrategy itself.
     // Concrete implementations must override this method.
     throw new Error('ILLMStrategy.execute method not implemented.');
+  }
+
+  /**
+   * Builds a custom tool schema for the strategy, if supported.
+   * This method allows strategies to customize the tool schema generation
+   * based on their specific requirements and the tools provided.
+   *
+   * @param {Array<object>} tools - Array of tool definitions to generate schema for
+   * @param {object} [requestOptions] - Optional request-specific options that may affect schema generation
+   * @returns {object|null} Custom tool schema object, or null if strategy doesn't support custom schemas
+   */
+  buildToolSchema(tools, requestOptions = {}) {
+    // Default implementation returns null indicating no custom schema support
+    // Strategies that support tool schema customization should override this method
+    return null;
+  }
+
+  /**
+   * Indicates whether this strategy requires or supports custom tool schema generation.
+   * This is used by the adapter to determine whether to delegate tool schema building
+   * to the strategy or use default behavior.
+   *
+   * @returns {boolean} True if the strategy supports custom tool schema generation, false otherwise
+   */
+  requiresCustomToolSchema() {
+    // Default implementation returns false
+    // Strategies that support tool schema customization should override this method
+    return false;
   }
 }
 

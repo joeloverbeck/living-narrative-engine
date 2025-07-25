@@ -98,16 +98,22 @@ describe('registerWorldAndEntity', () => {
       tokens.ISpatialIndexManager,
       () => mockSpatialIndexManager
     );
-    container.register(tokens.ISafeEventDispatcher, () => mockSafeEventDispatcher);
-    container.register(tokens.EventDispatchService, () => mockEventDispatchService);
-    
+    container.register(
+      tokens.ISafeEventDispatcher,
+      () => mockSafeEventDispatcher
+    );
+    container.register(
+      tokens.EventDispatchService,
+      () => mockEventDispatchService
+    );
+
     // Other dependencies for services registered by registerWorldAndEntity
     container.register(tokens.IGameDataRepository, () => ({
       getConditionDefinition: jest.fn(),
     }));
     container.register(tokens.ServiceSetup, () => new ServiceSetup());
-    
-    // Register UuidGenerator 
+
+    // Register UuidGenerator
     container.register(tokens.UuidGenerator, () => ({
       generate: jest.fn().mockReturnValue('test-uuid'),
     }));
@@ -123,7 +129,7 @@ describe('registerWorldAndEntity', () => {
     const logs = mockLogger.debug.mock.calls.map((call) => call[0]);
 
     expect(logs[0]).toBe('World and Entity Registration: Starting...');
-    
+
     // Check all service registrations are logged
     // Services with tags are logged differently
     const servicesWithoutTags = [
@@ -169,12 +175,12 @@ describe('registerWorldAndEntity', () => {
       tokens.ClothingInstantiationServiceV2,
       tokens.AnatomyInitializationService,
     ];
-    
-    servicesWithoutTags.forEach(token => {
+
+    servicesWithoutTags.forEach((token) => {
       const expectedLog = `World and Entity Registration: Registered ${String(token)}.`;
       expect(logs).toContain(expectedLog);
     });
-    
+
     // Check INITIALIZABLE tags are logged
     expect(logs).toContain(
       `World and Entity Registration: Registered ${String(tokens.SpatialIndexSynchronizer)} tagged ${INITIALIZABLE.join(', ')}.`
@@ -182,7 +188,7 @@ describe('registerWorldAndEntity', () => {
     expect(logs).toContain(
       `World and Entity Registration: Registered ${String(tokens.AnatomyInitializationService)}.`
     );
-    
+
     expect(logs[logs.length - 1]).toBe(
       'World and Entity Registration: Completed.'
     );
@@ -459,14 +465,14 @@ describe('registerWorldAndEntity', () => {
         // For object factories and services without a Class, just check they can be resolved
         const instance = container.resolve(token);
         expect(instance).toBeDefined();
-        
+
         // For EntityAccessService, check it has the expected methods
         if (token === tokens.EntityAccessService) {
           expect(instance.resolveEntity).toBeDefined();
           expect(instance.getComponent).toBeDefined();
           expect(instance.setComponent).toBeDefined();
         }
-        
+
         // For ClosenessCircleService (module), check it's an object
         if (token === tokens.ClosenessCircleService) {
           expect(typeof instance).toBe('object');
@@ -494,44 +500,44 @@ describe('registerWorldAndEntity', () => {
       }
     }
   );
-  
+
   test('INITIALIZABLE services are tagged correctly', () => {
     registerWorldAndEntity(container);
-    
+
     // Check SpatialIndexSynchronizer
     const spatialCall = registerSpy.mock.calls.find(
-      c => c[0] === tokens.SpatialIndexSynchronizer
+      (c) => c[0] === tokens.SpatialIndexSynchronizer
     );
     expect(spatialCall[2].tags).toEqual(INITIALIZABLE);
-    
+
     // Check AnatomyInitializationService
     const anatomyCall = registerSpy.mock.calls.find(
-      c => c[0] === tokens.AnatomyInitializationService  
+      (c) => c[0] === tokens.AnatomyInitializationService
     );
     expect(anatomyCall[2].tags).toEqual(INITIALIZABLE);
   });
-  
+
   test('EntityAccessService returns an object with correct methods', () => {
     registerWorldAndEntity(container);
-    
+
     const entityAccess = container.resolve(tokens.EntityAccessService);
-    
+
     // Check that it returns an object with the expected methods
     expect(typeof entityAccess).toBe('object');
     expect(typeof entityAccess.resolveEntity).toBe('function');
     expect(typeof entityAccess.getComponent).toBe('function');
     expect(typeof entityAccess.setComponent).toBe('function');
-    
+
     // The actual functionality testing of these methods would be integration tests
     // Here we just verify the structure is correct
   });
-  
+
   test('EntityAccessService factory methods execute and pass dependencies correctly', async () => {
     // Mock the actual entityAccessService functions
     const mockResolveEntity = jest.fn().mockReturnValue({ id: 'test-entity' });
     const mockGetComponent = jest.fn().mockReturnValue({ data: 'test' });
     const mockSetComponent = jest.fn().mockReturnValue(true);
-    
+
     // Override the module before importing
     jest.resetModules();
     jest.doMock('../../../../src/entities/entityAccessService.js', () => ({
@@ -539,21 +545,22 @@ describe('registerWorldAndEntity', () => {
       getComponent: mockGetComponent,
       setComponent: mockSetComponent,
     }));
-    
+
     // Re-import the registration function to use the mocked module
-    const { registerWorldAndEntity: mockedRegister } = 
-      await import('../../../../src/dependencyInjection/registrations/worldAndEntityRegistrations.js');
-    
+    const { registerWorldAndEntity: mockedRegister } = await import(
+      '../../../../src/dependencyInjection/registrations/worldAndEntityRegistrations.js'
+    );
+
     mockedRegister(container);
-    
+
     const entityAccess = container.resolve(tokens.EntityAccessService);
-    
+
     // Call the methods to ensure the factory functions are executed
     entityAccess.resolveEntity('entity-1');
     expect(mockResolveEntity).toHaveBeenCalled();
     // The function is called with the actual resolved dependencies
     // We just need to verify it was called with the entity ID
-    
+
     entityAccess.getComponent('entity-2', 'component-1', { test: true });
     expect(mockGetComponent).toHaveBeenCalled();
     const getComponentCall = mockGetComponent.mock.calls[0];
@@ -562,8 +569,13 @@ describe('registerWorldAndEntity', () => {
     expect(getComponentCall[2]).toMatchObject({
       test: true,
     });
-    
-    entityAccess.setComponent('entity-3', 'component-2', { value: 'new' }, { override: true });
+
+    entityAccess.setComponent(
+      'entity-3',
+      'component-2',
+      { value: 'new' },
+      { override: true }
+    );
     expect(mockSetComponent).toHaveBeenCalled();
     const setComponentCall = mockSetComponent.mock.calls[0];
     expect(setComponentCall[0]).toBe('entity-3');
@@ -572,49 +584,51 @@ describe('registerWorldAndEntity', () => {
     expect(setComponentCall[3]).toMatchObject({
       override: true,
     });
-    
+
     // Restore the original module
     jest.dontMock('../../../../src/entities/entityAccessService.js');
     jest.resetModules();
   });
-  
+
   test('JsonLogicEvaluationService has custom operators registered', () => {
     registerWorldAndEntity(container);
-    
+
     // Resolve JsonLogicEvaluationService
-    const jsonLogicService = container.resolve(tokens.JsonLogicEvaluationService);
+    const jsonLogicService = container.resolve(
+      tokens.JsonLogicEvaluationService
+    );
     expect(jsonLogicService).toBeDefined();
     expect(jsonLogicService).toBeInstanceOf(JsonLogicEvaluationService);
-    
+
     // The actual registration happens inside the factory function
     // We can verify that JsonLogicCustomOperators can be resolved
     const customOperators = container.resolve(tokens.JsonLogicCustomOperators);
     expect(customOperators).toBeDefined();
     expect(customOperators).toBeInstanceOf(JsonLogicCustomOperators);
   });
-  
+
   test('all factory functions are executed and return instances', () => {
     // We need to ensure all necessary dependencies are registered
     // Some services have circular dependencies that will be resolved later
     // For now, we'll provide minimal mocks where needed
-    
+
     // Additional mocks for services that have more complex dependencies
     container.register(tokens.LocationDisplayService, () => ({
       getLocationDisplay: jest.fn(),
     }));
-    
+
     // Stub for services that depend on other anatomy services
     const mockBodyGraphService = {
       getBodyGraph: jest.fn(),
       getPartById: jest.fn(),
       getChildren: jest.fn(),
     };
-    
+
     // Override the BodyGraphService registration temporarily to avoid circular deps
     container.register(tokens.BodyGraphService, () => mockBodyGraphService);
-    
+
     registerWorldAndEntity(container);
-    
+
     // Test that each factory is executed by resolving each service
     const servicesWithCircularDeps = [
       tokens.JsonLogicCustomOperators, // Depends on BodyGraphService
@@ -625,7 +639,7 @@ describe('registerWorldAndEntity', () => {
       tokens.ClothingInstantiationService, // Complex dependencies
       tokens.ClothingInstantiationServiceV2, // Complex dependencies
     ];
-    
+
     specs.forEach(({ token }) => {
       try {
         const instance = container.resolve(token);

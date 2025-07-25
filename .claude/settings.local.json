@@ -51,7 +51,10 @@
       "Bash(NODE_ENV=test npx jest tests/unit/anatomy/anatomyCacheManager.test.js --no-coverage --verbose)",
       "Bash(eslint:*)",
       "Bash(./node_modules/.bin/jest:*)",
-      "Bash(npm run scope:lint)"
+      "Bash(npm run scope:lint)",
+      "mcp__playwright__browser_install",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot"
     ],
     "deny": []
   }

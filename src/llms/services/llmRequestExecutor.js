@@ -49,12 +49,14 @@ export class LLMRequestExecutor extends ILLMRequestExecutor {
       apiKey,
       environmentContext,
       abortSignal,
+      requestOptions = {}, // NEW: Accept request options
     } = options;
 
     this.#logger.debug('LLMRequestExecutor: Executing request', {
       configId: llmConfig.configId,
       strategyMethod: llmConfig.jsonOutputStrategy?.method,
       hasAbortSignal: !!abortSignal,
+      hasRequestOptions: Object.keys(requestOptions).length > 0,
     });
 
     // Handle abort signal if provided
@@ -72,6 +74,7 @@ export class LLMRequestExecutor extends ILLMRequestExecutor {
         apiKey,
         environmentContext,
         abortSignal,
+        requestOptions, // NEW: Pass request options to strategy
       });
 
       this.#logger.debug('LLMRequestExecutor: Request executed successfully', {

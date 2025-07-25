@@ -78,7 +78,10 @@ export class ScopeTestUtilities {
       try {
         ast = dslParser.parse(scope.expr);
       } catch (e) {
-        console.error(`[ScopeTestUtilities] Failed to parse ${scope.id}: "${scope.expr}"`, e);
+        console.error(
+          `[ScopeTestUtilities] Failed to parse ${scope.id}: "${scope.expr}"`,
+          e
+        );
         logger.warn(
           `Failed to parse test scope DSL expression: ${scope.id}`,
           e
@@ -125,7 +128,6 @@ export class ScopeTestUtilities {
     if (!scopeAst) {
       throw new Error(`Scope not found: ${scopeId}`);
     }
-    
 
     // Create runtime context - ensure all required services are present
     const runtimeContext = {
@@ -136,12 +138,14 @@ export class ScopeTestUtilities {
       logger: gameContext.logger,
       spatialIndexManager: gameContext.spatialIndexManager,
     };
-    
+
     // Validate required services for filter operations (only when they're needed)
     // For simple scopes like 'actor' or 'location', jsonLogicEval may not be needed
     // But log a warning if it's missing for completeness
     if (!runtimeContext.jsonLogicEval) {
-      console.warn(`ScopeTestUtilities.resolveScopeE2E: jsonLogicEval service is missing from gameContext. This may cause issues with filter scopes like ${scopeId}.`);
+      console.warn(
+        `ScopeTestUtilities.resolveScopeE2E: jsonLogicEval service is missing from gameContext. This may cause issues with filter scopes like ${scopeId}.`
+      );
     }
 
     // Create trace context if needed

@@ -63,9 +63,9 @@ describe('Scope Definition Loading E2E', () => {
   async function createMockMod(baseDir, modId, scopeFiles) {
     const modDir = path.join(baseDir, 'mods', modId);
     const scopesDir = path.join(modDir, 'scopes');
-    
+
     await fs.mkdir(scopesDir, { recursive: true });
-    
+
     // Create mod manifest
     const manifest = {
       id: modId,
@@ -77,7 +77,7 @@ describe('Scope Definition Loading E2E', () => {
       path.join(modDir, 'mod-manifest.json'),
       JSON.stringify(manifest, null, 2)
     );
-    
+
     // Create scope files
     for (const scopeFile of scopeFiles) {
       await fs.writeFile(
@@ -85,7 +85,7 @@ describe('Scope Definition Loading E2E', () => {
         scopeFile.content
       );
     }
-    
+
     return modDir;
   }
 
@@ -100,14 +100,14 @@ describe('Scope Definition Loading E2E', () => {
    */
   function createScopeContent(modId, scopeName, expression, options = {}) {
     const { multiline = false, withComments = false } = options;
-    
+
     let content = '';
-    
+
     if (withComments) {
       content += '// Test scope definition file\n';
       content += `// Mod: ${modId}\n\n`;
     }
-    
+
     if (multiline) {
       const parts = expression.split(' ');
       content += `${modId}:${scopeName} := ${parts[0]}\n`;
@@ -117,11 +117,11 @@ describe('Scope Definition Loading E2E', () => {
     } else {
       content += `${modId}:${scopeName} := ${expression}`;
     }
-    
+
     if (withComments) {
       content += '\n\n// End of scope definition';
     }
-    
+
     return content;
   }
 
@@ -196,15 +196,15 @@ describe('Scope Definition Loading E2E', () => {
     dataRegistry = container.resolve(tokens.IDataRegistry);
     logger = container.resolve(tokens.ILogger);
     schemaValidator = container.resolve(tokens.ISchemaValidator);
-    
+
     // Create temporary directory for test mods
     tempDir = await createTempModDirectory();
-    
+
     // Create mock services for file operations
     const mockConfig = new MockConfiguration(tempDir);
     pathResolver = new MockPathResolver(tempDir);
     dataFetcher = new MockDataFetcher();
-    
+
     // Create scope loader instance
     scopeLoader = new ScopeLoader(
       mockConfig,
@@ -240,56 +240,84 @@ describe('Scope Definition Loading E2E', () => {
           content: createScopeContent('mod1', 'current_location', 'location'),
         },
       ];
-      
+
       const mod2Files = [
         {
           filename: 'combat_scopes.scope',
-          content: createScopeContent('mod2', 'enemies', 'entities(core:actor)[{"var": "entity.components.core:faction.hostile", "==": true}]'),
+          content: createScopeContent(
+            'mod2',
+            'enemies',
+            'entities(core:actor)[{"var": "entity.components.core:faction.hostile", "==": true}]'
+          ),
         },
         {
           filename: 'ally_scopes.scope',
-          content: createScopeContent('mod2', 'allies', 'entities(core:actor)[{"var": "entity.components.core:faction.allied", "==": true}]'),
+          content: createScopeContent(
+            'mod2',
+            'allies',
+            'entities(core:actor)[{"var": "entity.components.core:faction.allied", "==": true}]'
+          ),
         },
       ];
-      
+
       await createMockMod(tempDir, 'mod1', mod1Files);
       await createMockMod(tempDir, 'mod2', mod2Files);
-      
+
       // Load scopes from both mods
       const scopeDefinitions = {};
-      
+
       // Process mod1 scopes
       for (const scopeFile of mod1Files) {
-        const resolvedPath = pathResolver.resolvePath('mod1', 'scopes', scopeFile.filename);
+        const resolvedPath = pathResolver.resolvePath(
+          'mod1',
+          'scopes',
+          scopeFile.filename
+        );
         const content = await dataFetcher.fetch(resolvedPath);
-        await scopeLoader._processFetchedItem('mod1', scopeFile.filename, resolvedPath, content, 'scopes');
+        await scopeLoader._processFetchedItem(
+          'mod1',
+          scopeFile.filename,
+          resolvedPath,
+          content,
+          'scopes'
+        );
       }
-      
+
       // Process mod2 scopes
       for (const scopeFile of mod2Files) {
-        const resolvedPath = pathResolver.resolvePath('mod2', 'scopes', scopeFile.filename);
+        const resolvedPath = pathResolver.resolvePath(
+          'mod2',
+          'scopes',
+          scopeFile.filename
+        );
         const content = await dataFetcher.fetch(resolvedPath);
-        await scopeLoader._processFetchedItem('mod2', scopeFile.filename, resolvedPath, content, 'scopes');
+        await scopeLoader._processFetchedItem(
+          'mod2',
+          scopeFile.filename,
+          resolvedPath,
+          content,
+          'scopes'
+        );
       }
-      
+
       // Verify all scopes were loaded correctly
       const mod1Actors = dataRegistry.get('scopes', 'mod1:actors');
       expect(mod1Actors).toBeDefined();
       expect(mod1Actors.expr).toBe('entities(core:actor)');
       expect(mod1Actors.ast).toBeDefined();
       expect(mod1Actors.modId).toBe('mod1');
-      
+
       const mod1Location = dataRegistry.get('scopes', 'mod1:current_location');
       expect(mod1Location).toBeDefined();
       expect(mod1Location.expr).toBe('location');
       expect(mod1Location.ast).toBeDefined();
-      
+
       const mod2Enemies = dataRegistry.get('scopes', 'mod2:enemies');
       expect(mod2Enemies).toBeDefined();
       expect(mod2Enemies.expr).toContain('hostile');
       expect(mod2Enemies.ast).toBeDefined();
       expect(mod2Enemies.modId).toBe('mod2');
-      
+
       const mod2Allies = dataRegistry.get('scopes', 'mod2:allies');
       expect(mod2Allies).toBeDefined();
       expect(mod2Allies.expr).toContain('allied');
@@ -301,39 +329,70 @@ describe('Scope Definition Loading E2E', () => {
       const mod1Files = [
         {
           filename: 'base_scopes.scope',
-          content: createScopeContent('mod1', 'base_actors', 'entities(core:actor)'),
+          content: createScopeContent(
+            'mod1',
+            'base_actors',
+            'entities(core:actor)'
+          ),
         },
       ];
-      
+
       // Create mod2 that might reference mod1 concepts (though scopes themselves don't directly reference each other)
       const mod2Files = [
         {
           filename: 'extended_scopes.scope',
-          content: createScopeContent('mod2', 'special_actors', 'entities(core:actor)[{"var": "entity.components.mod1:special", "==": true}]'),
+          content: createScopeContent(
+            'mod2',
+            'special_actors',
+            'entities(core:actor)[{"var": "entity.components.mod1:special", "==": true}]'
+          ),
         },
       ];
-      
+
       await createMockMod(tempDir, 'mod1', mod1Files);
       await createMockMod(tempDir, 'mod2', mod2Files);
-      
+
       // Load scopes from both mods
       for (const scopeFile of mod1Files) {
-        const resolvedPath = pathResolver.resolvePath('mod1', 'scopes', scopeFile.filename);
+        const resolvedPath = pathResolver.resolvePath(
+          'mod1',
+          'scopes',
+          scopeFile.filename
+        );
         const content = await dataFetcher.fetch(resolvedPath);
-        await scopeLoader._processFetchedItem('mod1', scopeFile.filename, resolvedPath, content, 'scopes');
+        await scopeLoader._processFetchedItem(
+          'mod1',
+          scopeFile.filename,
+          resolvedPath,
+          content,
+          'scopes'
+        );
       }
-      
+
       for (const scopeFile of mod2Files) {
-        const resolvedPath = pathResolver.resolvePath('mod2', 'scopes', scopeFile.filename);
+        const resolvedPath = pathResolver.resolvePath(
+          'mod2',
+          'scopes',
+          scopeFile.filename
+        );
         const content = await dataFetcher.fetch(resolvedPath);
-        await scopeLoader._processFetchedItem('mod2', scopeFile.filename, resolvedPath, content, 'scopes');
+        await scopeLoader._processFetchedItem(
+          'mod2',
+          scopeFile.filename,
+          resolvedPath,
+          content,
+          'scopes'
+        );
       }
-      
+
       // Verify both scopes loaded successfully
       const mod1BaseActors = dataRegistry.get('scopes', 'mod1:base_actors');
       expect(mod1BaseActors).toBeDefined();
-      
-      const mod2SpecialActors = dataRegistry.get('scopes', 'mod2:special_actors');
+
+      const mod2SpecialActors = dataRegistry.get(
+        'scopes',
+        'mod2:special_actors'
+      );
       expect(mod2SpecialActors).toBeDefined();
       expect(mod2SpecialActors.expr).toContain('mod1:special');
     });
@@ -350,16 +409,28 @@ describe('Scope Definition Loading E2E', () => {
           ),
         },
       ];
-      
+
       await createMockMod(tempDir, 'testmod', multilineFiles);
-      
-      const resolvedPath = pathResolver.resolvePath('testmod', 'scopes', multilineFiles[0].filename);
+
+      const resolvedPath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        multilineFiles[0].filename
+      );
       const content = await dataFetcher.fetch(resolvedPath);
-      await scopeLoader._processFetchedItem('testmod', multilineFiles[0].filename, resolvedPath, content, 'scopes');
-      
+      await scopeLoader._processFetchedItem(
+        'testmod',
+        multilineFiles[0].filename,
+        resolvedPath,
+        content,
+        'scopes'
+      );
+
       const complexScope = dataRegistry.get('scopes', 'testmod:complex_scope');
       expect(complexScope).toBeDefined();
-      expect(complexScope.expr).toBe('location.core:exits[ { "condition_ref": "core:exit-is-unblocked" } ].target');
+      expect(complexScope.expr).toBe(
+        'location.core:exits[ { "condition_ref": "core:exit-is-unblocked" } ].target'
+      );
       expect(complexScope.ast).toBeDefined();
       expect(complexScope.ast.type).toBe('Step'); // Should be a step node
     });
@@ -376,13 +447,23 @@ describe('Scope Definition Loading E2E', () => {
           ),
         },
       ];
-      
+
       await createMockMod(tempDir, 'testmod', filesWithComments);
-      
-      const resolvedPath = pathResolver.resolvePath('testmod', 'scopes', filesWithComments[0].filename);
+
+      const resolvedPath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        filesWithComments[0].filename
+      );
       const content = await dataFetcher.fetch(resolvedPath);
-      await scopeLoader._processFetchedItem('testmod', filesWithComments[0].filename, resolvedPath, content, 'scopes');
-      
+      await scopeLoader._processFetchedItem(
+        'testmod',
+        filesWithComments[0].filename,
+        resolvedPath,
+        content,
+        'scopes'
+      );
+
       const scope = dataRegistry.get('scopes', 'testmod:actors_with_comments');
       expect(scope).toBeDefined();
       expect(scope.expr).toBe('entities(core:actor)');
@@ -408,34 +489,64 @@ describe('Scope Definition Loading E2E', () => {
         },
         {
           filename: 'wrong_namespace.scope',
-          content: 'othermod:wrong_mod := actor',  // This will test the namespace validation
+          content: 'othermod:wrong_mod := actor', // This will test the namespace validation
         },
       ];
-      
+
       await createMockMod(tempDir, 'testmod', errorFiles);
-      
+
       // Test invalid syntax error
-      const invalidSyntaxPath = pathResolver.resolvePath('testmod', 'scopes', errorFiles[0].filename);
+      const invalidSyntaxPath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        errorFiles[0].filename
+      );
       const invalidSyntaxContent = await dataFetcher.fetch(invalidSyntaxPath);
-      
+
       await expect(
-        scopeLoader._processFetchedItem('testmod', errorFiles[0].filename, invalidSyntaxPath, invalidSyntaxContent, 'scopes')
+        scopeLoader._processFetchedItem(
+          'testmod',
+          errorFiles[0].filename,
+          invalidSyntaxPath,
+          invalidSyntaxContent,
+          'scopes'
+        )
       ).rejects.toThrow('Invalid scope definition format');
-      
+
       // Test malformed expression error
-      const malformedPath = pathResolver.resolvePath('testmod', 'scopes', errorFiles[1].filename);
+      const malformedPath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        errorFiles[1].filename
+      );
       const malformedContent = await dataFetcher.fetch(malformedPath);
-      
+
       await expect(
-        scopeLoader._processFetchedItem('testmod', errorFiles[1].filename, malformedPath, malformedContent, 'scopes')
+        scopeLoader._processFetchedItem(
+          'testmod',
+          errorFiles[1].filename,
+          malformedPath,
+          malformedContent,
+          'scopes'
+        )
       ).rejects.toThrow();
-      
+
       // Test namespace ownership error
-      const wrongNamespacePath = pathResolver.resolvePath('testmod', 'scopes', errorFiles[2].filename);
+      const wrongNamespacePath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        errorFiles[2].filename
+      );
       const wrongNamespaceContent = await dataFetcher.fetch(wrongNamespacePath);
-      
+
       await expect(
-        scopeLoader._processFetchedItem('testmod', errorFiles[2].filename, wrongNamespacePath, wrongNamespaceContent, 'scopes')
+        scopeLoader._processFetchedItem(
+          'testmod',
+          errorFiles[2].filename,
+          wrongNamespacePath,
+          wrongNamespaceContent,
+          'scopes'
+        )
       ).rejects.toThrow('claims to belong to mod');
     });
 
@@ -444,7 +555,11 @@ describe('Scope Definition Loading E2E', () => {
       const mixedFiles = [
         {
           filename: 'valid_scope_1.scope',
-          content: createScopeContent('testmod', 'valid_actors', 'entities(core:actor)'),
+          content: createScopeContent(
+            'testmod',
+            'valid_actors',
+            'entities(core:actor)'
+          ),
         },
         {
           filename: 'invalid_scope.scope',
@@ -455,33 +570,66 @@ describe('Scope Definition Loading E2E', () => {
           content: createScopeContent('testmod', 'valid_location', 'location'),
         },
       ];
-      
+
       await createMockMod(tempDir, 'testmod', mixedFiles);
-      
+
       // Load first valid scope
-      const validPath1 = pathResolver.resolvePath('testmod', 'scopes', mixedFiles[0].filename);
+      const validPath1 = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        mixedFiles[0].filename
+      );
       const validContent1 = await dataFetcher.fetch(validPath1);
-      await scopeLoader._processFetchedItem('testmod', mixedFiles[0].filename, validPath1, validContent1, 'scopes');
-      
+      await scopeLoader._processFetchedItem(
+        'testmod',
+        mixedFiles[0].filename,
+        validPath1,
+        validContent1,
+        'scopes'
+      );
+
       // Try to load invalid scope (should fail)
-      const invalidPath = pathResolver.resolvePath('testmod', 'scopes', mixedFiles[1].filename);
+      const invalidPath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        mixedFiles[1].filename
+      );
       const invalidContent = await dataFetcher.fetch(invalidPath);
-      
+
       await expect(
-        scopeLoader._processFetchedItem('testmod', mixedFiles[1].filename, invalidPath, invalidContent, 'scopes')
+        scopeLoader._processFetchedItem(
+          'testmod',
+          mixedFiles[1].filename,
+          invalidPath,
+          invalidContent,
+          'scopes'
+        )
       ).rejects.toThrow();
-      
+
       // Load second valid scope (should succeed)
-      const validPath2 = pathResolver.resolvePath('testmod', 'scopes', mixedFiles[2].filename);
+      const validPath2 = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        mixedFiles[2].filename
+      );
       const validContent2 = await dataFetcher.fetch(validPath2);
-      await scopeLoader._processFetchedItem('testmod', mixedFiles[2].filename, validPath2, validContent2, 'scopes');
-      
+      await scopeLoader._processFetchedItem(
+        'testmod',
+        mixedFiles[2].filename,
+        validPath2,
+        validContent2,
+        'scopes'
+      );
+
       // Verify valid scopes were loaded
       const validActors = dataRegistry.get('scopes', 'testmod:valid_actors');
       expect(validActors).toBeDefined();
       expect(validActors.expr).toBe('entities(core:actor)');
-      
-      const validLocation = dataRegistry.get('scopes', 'testmod:valid_location');
+
+      const validLocation = dataRegistry.get(
+        'scopes',
+        'testmod:valid_location'
+      );
       expect(validLocation).toBeDefined();
       expect(validLocation.expr).toBe('location');
     });
@@ -497,23 +645,43 @@ describe('Scope Definition Loading E2E', () => {
           content: '// Just comments\n// Nothing else\n\n// More comments',
         },
       ];
-      
+
       await createMockMod(tempDir, 'testmod', emptyFiles);
-      
+
       // Test empty file
-      const emptyPath = pathResolver.resolvePath('testmod', 'scopes', emptyFiles[0].filename);
+      const emptyPath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        emptyFiles[0].filename
+      );
       const emptyContent = await dataFetcher.fetch(emptyPath);
-      
+
       await expect(
-        scopeLoader._processFetchedItem('testmod', emptyFiles[0].filename, emptyPath, emptyContent, 'scopes')
+        scopeLoader._processFetchedItem(
+          'testmod',
+          emptyFiles[0].filename,
+          emptyPath,
+          emptyContent,
+          'scopes'
+        )
       ).rejects.toThrow('empty or contains only comments');
-      
+
       // Test comment-only file
-      const commentsPath = pathResolver.resolvePath('testmod', 'scopes', emptyFiles[1].filename);
+      const commentsPath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        emptyFiles[1].filename
+      );
       const commentsContent = await dataFetcher.fetch(commentsPath);
-      
+
       await expect(
-        scopeLoader._processFetchedItem('testmod', emptyFiles[1].filename, commentsPath, commentsContent, 'scopes')
+        scopeLoader._processFetchedItem(
+          'testmod',
+          emptyFiles[1].filename,
+          commentsPath,
+          commentsContent,
+          'scopes'
+        )
       ).rejects.toThrow('empty or contains only comments');
     });
 
@@ -525,15 +693,25 @@ describe('Scope Definition Loading E2E', () => {
           content: 'othermod:some_scope := actor',
         },
       ];
-      
+
       await createMockMod(tempDir, 'testmod', wrongModFiles);
-      
-      const wrongModPath = pathResolver.resolvePath('testmod', 'scopes', wrongModFiles[0].filename);
+
+      const wrongModPath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        wrongModFiles[0].filename
+      );
       const wrongModContent = await dataFetcher.fetch(wrongModPath);
-      
+
       await expect(
-        scopeLoader._processFetchedItem('testmod', wrongModFiles[0].filename, wrongModPath, wrongModContent, 'scopes')
-      ).rejects.toThrow('claims to belong to mod \'othermod\'');
+        scopeLoader._processFetchedItem(
+          'testmod',
+          wrongModFiles[0].filename,
+          wrongModPath,
+          wrongModContent,
+          'scopes'
+        )
+      ).rejects.toThrow("claims to belong to mod 'othermod'");
     });
   });
 
@@ -547,19 +725,29 @@ describe('Scope Definition Loading E2E', () => {
         {
           filename: 'complex_nested.scope',
           content: createScopeContent(
-            'testmod', 
+            'testmod',
             'complex_filter',
             'entities(core:actor)[{"condition_ref": "test:level-above-threshold"}]'
           ),
         },
       ];
-      
+
       await createMockMod(tempDir, 'testmod', complexFiles);
-      
-      const complexPath = pathResolver.resolvePath('testmod', 'scopes', complexFiles[0].filename);
+
+      const complexPath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        complexFiles[0].filename
+      );
       const complexContent = await dataFetcher.fetch(complexPath);
-      await scopeLoader._processFetchedItem('testmod', complexFiles[0].filename, complexPath, complexContent, 'scopes');
-      
+      await scopeLoader._processFetchedItem(
+        'testmod',
+        complexFiles[0].filename,
+        complexPath,
+        complexContent,
+        'scopes'
+      );
+
       const complexScope = dataRegistry.get('scopes', 'testmod:complex_filter');
       expect(complexScope).toBeDefined();
       expect(complexScope.ast).toBeDefined();
@@ -570,29 +758,39 @@ describe('Scope Definition Loading E2E', () => {
       const multiScopeContent = `testmod:scope1 := actor
 testmod:scope2 := location
 testmod:scope3 := entities(core:actor)`;
-      
+
       const multiScopeFiles = [
         {
           filename: 'multiple_scopes.scope',
           content: multiScopeContent,
         },
       ];
-      
+
       await createMockMod(tempDir, 'testmod', multiScopeFiles);
-      
-      const multiPath = pathResolver.resolvePath('testmod', 'scopes', multiScopeFiles[0].filename);
+
+      const multiPath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        multiScopeFiles[0].filename
+      );
       const multiContent = await dataFetcher.fetch(multiPath);
-      await scopeLoader._processFetchedItem('testmod', multiScopeFiles[0].filename, multiPath, multiContent, 'scopes');
-      
+      await scopeLoader._processFetchedItem(
+        'testmod',
+        multiScopeFiles[0].filename,
+        multiPath,
+        multiContent,
+        'scopes'
+      );
+
       // Verify all three scopes were loaded
       const scope1 = dataRegistry.get('scopes', 'testmod:scope1');
       expect(scope1).toBeDefined();
       expect(scope1.expr).toBe('actor');
-      
+
       const scope2 = dataRegistry.get('scopes', 'testmod:scope2');
       expect(scope2).toBeDefined();
       expect(scope2.expr).toBe('location');
-      
+
       const scope3 = dataRegistry.get('scopes', 'testmod:scope3');
       expect(scope3).toBeDefined();
       expect(scope3.expr).toBe('entities(core:actor)');
@@ -609,13 +807,23 @@ testmod:scope3 := entities(core:actor)`;
           ),
         },
       ];
-      
+
       await createMockMod(tempDir, 'testmod', astFiles);
-      
-      const astPath = pathResolver.resolvePath('testmod', 'scopes', astFiles[0].filename);
+
+      const astPath = pathResolver.resolvePath(
+        'testmod',
+        'scopes',
+        astFiles[0].filename
+      );
       const astContent = await dataFetcher.fetch(astPath);
-      await scopeLoader._processFetchedItem('testmod', astFiles[0].filename, astPath, astContent, 'scopes');
-      
+      await scopeLoader._processFetchedItem(
+        'testmod',
+        astFiles[0].filename,
+        astPath,
+        astContent,
+        'scopes'
+      );
+
       const scope = dataRegistry.get('scopes', 'testmod:step_filter');
       expect(scope).toBeDefined();
       expect(scope.ast).toBeDefined();
@@ -636,27 +844,41 @@ testmod:scope3 := entities(core:actor)`;
       for (let i = 0; i < 20; i++) {
         scopeFiles.push({
           filename: `scope_${i}.scope`,
-          content: createScopeContent('perftest', `scope_${i}`, `entities(core:actor)[{"var": "id", "!=": "${i}"}]`),
+          content: createScopeContent(
+            'perftest',
+            `scope_${i}`,
+            `entities(core:actor)[{"var": "id", "!=": "${i}"}]`
+          ),
         });
       }
-      
+
       await createMockMod(tempDir, 'perftest', scopeFiles);
-      
+
       const startTime = Date.now();
-      
+
       // Load all scopes
       for (const scopeFile of scopeFiles) {
-        const scopePath = pathResolver.resolvePath('perftest', 'scopes', scopeFile.filename);
+        const scopePath = pathResolver.resolvePath(
+          'perftest',
+          'scopes',
+          scopeFile.filename
+        );
         const scopeContent = await dataFetcher.fetch(scopePath);
-        await scopeLoader._processFetchedItem('perftest', scopeFile.filename, scopePath, scopeContent, 'scopes');
+        await scopeLoader._processFetchedItem(
+          'perftest',
+          scopeFile.filename,
+          scopePath,
+          scopeContent,
+          'scopes'
+        );
       }
-      
+
       const endTime = Date.now();
       const loadTime = endTime - startTime;
-      
+
       // Should complete in reasonable time
       expect(loadTime).toBeLessThan(1000); // Less than 1 second for 20 files
-      
+
       // Verify all scopes were loaded
       for (let i = 0; i < 20; i++) {
         const scope = dataRegistry.get('scopes', `perftest:scope_${i}`);
@@ -669,16 +891,30 @@ testmod:scope3 := entities(core:actor)`;
       const integrationFiles = [
         {
           filename: 'registry_test.scope',
-          content: createScopeContent('integration', 'test_actors', 'entities(core:actor)'),
+          content: createScopeContent(
+            'integration',
+            'test_actors',
+            'entities(core:actor)'
+          ),
         },
       ];
-      
+
       await createMockMod(tempDir, 'integration', integrationFiles);
-      
-      const integrationPath = pathResolver.resolvePath('integration', 'scopes', integrationFiles[0].filename);
+
+      const integrationPath = pathResolver.resolvePath(
+        'integration',
+        'scopes',
+        integrationFiles[0].filename
+      );
       const integrationContent = await dataFetcher.fetch(integrationPath);
-      await scopeLoader._processFetchedItem('integration', integrationFiles[0].filename, integrationPath, integrationContent, 'scopes');
-      
+      await scopeLoader._processFetchedItem(
+        'integration',
+        integrationFiles[0].filename,
+        integrationPath,
+        integrationContent,
+        'scopes'
+      );
+
       // Initialize scope registry with loaded scopes
       const allScopes = {};
       const scope = dataRegistry.get('scopes', 'integration:test_actors');
@@ -690,14 +926,14 @@ testmod:scope3 := entities(core:actor)`;
           description: 'Test scope for integration',
         };
       }
-      
+
       scopeRegistry.initialize(allScopes);
-      
+
       // Verify scope can be retrieved from registry
       const registryScope = scopeRegistry.getScope('integration:test_actors');
       expect(registryScope).toBeDefined();
       expect(registryScope.expr).toBe('entities(core:actor)');
-      
+
       const registryAst = scopeRegistry.getScopeAst('integration:test_actors');
       expect(registryAst).toBeDefined();
       expect(registryAst.type).toBe('Source');

@@ -5,6 +5,7 @@ import { ConfigurationError } from '../../../errors/configurationError';
 import { LLMStrategyError } from '../../errors/LLMStrategyError.js';
 import { logPreview } from '../../../utils/index.js';
 import { getLlmId, validateEnvironmentContext } from '../../utils/llmUtils.js';
+import { DefaultToolSchemaHandler } from '../toolSchemaHandlers/defaultToolSchemaHandler.js';
 // Assuming HttpClientError might be a specific type, if not, general Error is caught.
 // For actual HttpClientError type, it would be imported from its definition:
 // import { HttpClientError } from '../../retryHttpClient.js'; // Example path
@@ -33,6 +34,12 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
   #httpClient;
 
   /**
+   * @private
+   * @type {DefaultToolSchemaHandler}
+   */
+  #toolSchemaHandler;
+
+  /**
    * Constructs an instance of BaseOpenRouterStrategy.
    *
    * @param {object} deps - The dependencies object.
@@ -51,6 +58,10 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       throw new Error(errorMsg); // Consider ConfigurationError if appropriate for missing core deps
     }
     this.#httpClient = httpClient;
+
+    // Initialize the default tool schema handler
+    this.#toolSchemaHandler = new DefaultToolSchemaHandler({ logger });
+
     this.logger.debug(`${this.constructor.name} initialized.`);
   }
 
@@ -64,11 +75,16 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    * @param {object} baseMessagesPayload - The payload containing the 'messages' array,
    * as constructed by _constructPromptPayload from BaseChatLLMStrategy.
    * @param {LLMModelConfig} llmConfig - The full LLM configuration object.
+   * @param {object} [_requestOptions] - Optional request-specific options.
    * @returns {object} An object containing the strategy-specific additions to be merged
    * into the main request payload.
    * @throws {Error} This base implementation throws an error if not overridden by a subclass.
    */
-  _buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig) {
+  _buildProviderRequestPayloadAdditions(
+    baseMessagesPayload,
+    llmConfig,
+    _requestOptions = {}
+  ) {
     const errorMessage = `${this.constructor.name}._buildProviderRequestPayloadAdditions: Method not implemented. Subclasses must override this method.`;
     const llmId = getLlmId(llmConfig);
     this.logger.error(errorMessage, { llmId });
@@ -94,6 +110,59 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
     const llmId = getLlmId(llmConfig);
     this.logger.error(errorMessage, { llmId });
     throw new Error(errorMessage); // Or potentially an LLMStrategyError
+  }
+
+  /**
+   * Default implementation of buildToolSchema for OpenRouter strategies.
+   * Uses the default tool schema handler to provide backward compatibility.
+   * Strategies that need custom tool schema logic should override this method.
+   *
+   * @param {Array<object>} tools - Array of tool definitions to generate schema for
+   * @param {object} [requestOptions] - Optional request-specific options that may affect schema generation
+   * @returns {object|null} Tool schema object using default handler, or null if no tools provided
+   */
+  buildToolSchema(tools, requestOptions = {}) {
+    if (!tools || !Array.isArray(tools) || tools.length === 0) {
+      return null;
+    }
+
+    // For OpenRouter strategies, we typically use a single tool
+    // Use the first tool or default to game AI action
+    const llmId = 'unknown'; // This would be provided by the calling context in practice
+
+    try {
+      return this.#toolSchemaHandler.buildDefaultToolSchema(
+        llmId,
+        requestOptions
+      );
+    } catch (error) {
+      this.logger.error(
+        `${this.constructor.name}: Error building default tool schema: ${error.message}`,
+        { error: error.message }
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Default implementation indicates OpenRouter strategies support tool schema customization.
+   * Subclasses can override this to indicate if they support custom schema generation.
+   *
+   * @returns {boolean} True by default for OpenRouter strategies
+   */
+  requiresCustomToolSchema() {
+    return true;
+  }
+
+  /**
+   * Protected method to access the tool schema handler.
+   * Allows subclasses to use the handler for custom tool schema logic.
+   *
+   * @protected
+   * @returns {DefaultToolSchemaHandler} The tool schema handler instance
+   */
+  _getToolSchemaHandler() {
+    return this.#toolSchemaHandler;
   }
 
   /**
@@ -156,9 +225,10 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    * @param {string} gameSummary - The game summary text.
    * @param {LLMModelConfig} llmConfig - The LLM configuration.
    * @param {string} llmId - Identifier of the LLM for logging.
+   * @param {object} [requestOptions] - Optional request-specific options.
    * @returns {{ providerRequestPayload: object }} The payload sent to the provider.
    */
-  #buildProviderPayload(gameSummary, llmConfig, llmId) {
+  #buildProviderPayload(gameSummary, llmConfig, llmId, requestOptions = {}) {
     const baseMessagesPayload = this._constructPromptPayload(
       gameSummary,
       llmConfig
@@ -186,7 +256,8 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
     const providerSpecificPayloadAdditions =
       this._buildProviderRequestPayloadAdditions(
         baseMessagesPayload,
-        llmConfig
+        llmConfig,
+        requestOptions
       );
     this.logger.debug(
       `${this.constructor.name} (${llmId}): Received provider-specific payload additions.`,
@@ -457,8 +528,14 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    * @throws {LLMStrategyError} If there's an error during strategy execution.
    */
   async execute(params) {
-    const { gameSummary, llmConfig, apiKey, environmentContext, abortSignal } =
-      params;
+    const {
+      gameSummary,
+      llmConfig,
+      apiKey,
+      environmentContext,
+      abortSignal,
+      requestOptions = {},
+    } = params;
 
     const { llmId } = this.#validateExecuteParams({
       llmConfig,
@@ -468,7 +545,8 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
     const { providerRequestPayload } = this.#buildProviderPayload(
       gameSummary,
       llmConfig,
-      llmId
+      llmId,
+      requestOptions
     );
 
     const { targetUrl, finalPayload, headers } = this.#prepareHttpRequest(

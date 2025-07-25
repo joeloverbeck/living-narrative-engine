@@ -17,6 +17,10 @@
  * @property {EnvironmentContext} environmentContext - Environment context
  * @property {AbortSignal} [abortSignal] - Optional abort signal
  * @property {ILLMStrategy} strategy - The strategy to use for execution
+ * @property {object} [requestOptions] - Optional request-specific options
+ * @property {object} [requestOptions.toolSchema] - Custom tool schema for this request
+ * @property {string} [requestOptions.toolName] - Custom tool name for this request
+ * @property {string} [requestOptions.toolDescription] - Custom tool description for this request
  */
 
 /**

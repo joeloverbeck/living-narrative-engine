@@ -155,9 +155,16 @@ describe('Character Builder LLM Integration', () => {
       expect(mockLlmConfigManager.loadConfiguration).toHaveBeenCalledWith(
         'openrouter-claude-sonnet-4'
       );
-      // The LLM adapter is called with the generated prompt
+      // The LLM adapter is called with the generated prompt containing the character concept
       expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledWith(
-        expect.stringContaining('A ditzy archer who loves adventure')
+        expect.stringContaining('A ditzy archer who loves adventure'),
+        null,
+        expect.objectContaining({
+          toolName: 'generate_thematic_directions',
+          toolDescription:
+            'Generate thematic directions for character development based on the provided concept',
+          toolSchema: expect.any(Object),
+        })
       );
       expect(result).toHaveLength(3);
       expect(result[0].llmMetadata.modelId).toBe('openrouter-claude-sonnet-4');
@@ -320,7 +327,14 @@ describe('Character Builder LLM Integration', () => {
 
       // Assert
       expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledWith(
-        expect.stringContaining(characterConcept)
+        expect.stringContaining(characterConcept),
+        null,
+        expect.objectContaining({
+          toolName: 'generate_thematic_directions',
+          toolDescription:
+            'Generate thematic directions for character development based on the provided concept',
+          toolSchema: expect.any(Object),
+        })
       );
 
       // Verify the prompt contains the character concept
@@ -393,7 +407,19 @@ describe('Character Builder LLM Integration', () => {
         'A young wizard seeking knowledge'
       );
 
-      // Assert - Verify prompt contains expected structure
+      // Assert - Verify the LLM adapter was called with the correct parameters
+      expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledWith(
+        expect.any(String),
+        null,
+        expect.objectContaining({
+          toolName: 'generate_thematic_directions',
+          toolDescription:
+            'Generate thematic directions for character development based on the provided concept',
+          toolSchema: expect.any(Object),
+        })
+      );
+
+      // Verify prompt contains expected structure
       const promptContent =
         mockLlmStrategyFactory.getAIDecision.mock.calls[0][0];
 

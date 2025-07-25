@@ -189,12 +189,11 @@ export class ThematicDirectionGenerator {
    */
   async #callLLM(prompt, llmConfigId) {
     try {
-      // Set active LLM configuration if specified, otherwise use current active
+      // Set active LLM configuration if specified
       if (llmConfigId) {
         const success =
           await this.#llmConfigManager.setActiveConfiguration(llmConfigId);
         if (!success) {
-          // Try to get the configuration to see if it exists
           const config =
             await this.#llmConfigManager.loadConfiguration(llmConfigId);
           if (!config) {
@@ -207,13 +206,23 @@ export class ThematicDirectionGenerator {
       const activeConfig =
         await this.#llmConfigManager.getActiveConfiguration();
       if (!activeConfig) {
-        throw new Error(
-          'No active LLM configuration found. Please set an active configuration.'
-        );
+        throw new Error('No active LLM configuration found.');
       }
 
-      // Use the ConfigurableLLMAdapter to make the request
-      const response = await this.#llmStrategyFactory.getAIDecision(prompt);
+      // Prepare request options with custom schema
+      const requestOptions = {
+        toolSchema: THEMATIC_DIRECTIONS_RESPONSE_SCHEMA,
+        toolName: 'generate_thematic_directions',
+        toolDescription:
+          'Generate thematic directions for character development based on the provided concept',
+      };
+
+      // Use the ConfigurableLLMAdapter with request options
+      const response = await this.#llmStrategyFactory.getAIDecision(
+        prompt,
+        null, // no abort signal
+        requestOptions
+      );
 
       this.#logger.debug('ThematicDirectionGenerator: Received LLM response', {
         responseLength: response.length,

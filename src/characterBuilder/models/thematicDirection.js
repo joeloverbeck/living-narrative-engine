@@ -19,7 +19,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * @property {string} coreTension - Core tension or conflict this direction embodies
  * @property {string} uniqueTwist - Suggested unique twist or deeper archetype
  * @property {string} narrativePotential - Description of narrative possibilities
- * @property {Date} createdAt - Creation timestamp
+ * @property {string} createdAt - Creation timestamp (ISO string)
  * @property {object} llmMetadata - LLM response metadata (model, tokens, etc.)
  */
 
@@ -96,7 +96,7 @@ export function createThematicDirection(conceptId, data, options = {}) {
     coreTension: data.coreTension.trim(),
     uniqueTwist: data.uniqueTwist.trim(),
     narrativePotential: data.narrativePotential.trim(),
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
     llmMetadata: options.llmMetadata || {},
   };
 }
@@ -143,13 +143,9 @@ export async function validateThematicDirection(direction, schemaValidator) {
     throw new Error('ThematicDirection: direction must be a valid object');
   }
 
-  // Convert dates to ISO strings for schema validation
+  // createdAt is already an ISO string, no conversion needed
   const directionForValidation = {
     ...direction,
-    createdAt:
-      direction.createdAt instanceof Date
-        ? direction.createdAt.toISOString()
-        : direction.createdAt,
   };
 
   const result = schemaValidator.validate(
@@ -178,12 +174,9 @@ export function serializeThematicDirection(direction) {
     throw new Error('ThematicDirection: direction must be a valid object');
   }
 
+  // createdAt is now always a string (ISO format)
   return {
     ...direction,
-    createdAt:
-      direction.createdAt instanceof Date
-        ? direction.createdAt.toISOString()
-        : direction.createdAt,
   };
 }
 
@@ -198,12 +191,9 @@ export function deserializeThematicDirection(data) {
     throw new Error('ThematicDirection: data must be a valid object');
   }
 
+  // createdAt remains as string (ISO format) for schema compatibility
   return {
     ...data,
-    createdAt:
-      typeof data.createdAt === 'string'
-        ? new Date(data.createdAt)
-        : data.createdAt,
   };
 }
 

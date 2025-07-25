@@ -1,5 +1,5 @@
 /**
- * @file Unit tests for EntityInstanceLoader validation and loading behavior
+ * @file Integration tests for EntityInstanceLoader validation and loading behavior
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';

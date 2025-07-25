@@ -372,7 +372,6 @@ describe('Core Scope Resolution E2E', () => {
       expect(result).toBeDefined();
       expect(result instanceof Set).toBe(true);
 
-
       // Should only include actors with level > 5
       expect(result.has('high-level-actor-1')).toBe(true);
       expect(result.has('high-level-actor-2')).toBe(true);

@@ -31,11 +31,12 @@ describe('OpenRouterToolCallingStrategy additional branches', () => {
       configId: 'badId',
       jsonOutputStrategy: { toolName: '' },
     };
-    await expect(strategy._extractJsonOutput({}, llmConfig)).rejects.toThrow(
-      LLMStrategyError
-    );
+    // Missing providerRequestPayload causes inability to determine expected tool name
+    await expect(
+      strategy._extractJsonOutput({}, llmConfig, undefined)
+    ).rejects.toThrow(LLMStrategyError);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid or missing'),
+      expect.stringContaining('Unable to determine expected tool name'),
       expect.objectContaining({ llmId: llmConfig.configId })
     );
   });
@@ -46,8 +47,16 @@ describe('OpenRouterToolCallingStrategy additional branches', () => {
       jsonOutputStrategy: { toolName: 'tool' },
     };
     const response = { choices: [{ message: {} }] };
+    const providerRequestPayload = {
+      tools: [
+        {
+          type: 'function',
+          function: { name: 'tool' },
+        },
+      ],
+    };
     await expect(
-      strategy._extractJsonOutput(response, llmConfig)
+      strategy._extractJsonOutput(response, llmConfig, providerRequestPayload)
     ).rejects.toThrow(LLMStrategyError);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('tool_calls'),
@@ -64,8 +73,16 @@ describe('OpenRouterToolCallingStrategy additional branches', () => {
       type: 'bad',
       function: { name: 'tool', arguments: '{}' },
     });
+    const providerRequestPayload = {
+      tools: [
+        {
+          type: 'function',
+          function: { name: 'tool' },
+        },
+      ],
+    };
     await expect(
-      strategy._extractJsonOutput(response, llmConfig)
+      strategy._extractJsonOutput(response, llmConfig, providerRequestPayload)
     ).rejects.toThrow(LLMStrategyError);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('tool_calls'),
@@ -79,8 +96,16 @@ describe('OpenRouterToolCallingStrategy additional branches', () => {
       jsonOutputStrategy: { toolName: 'tool' },
     };
     const response = buildResponse({ type: 'function' });
+    const providerRequestPayload = {
+      tools: [
+        {
+          type: 'function',
+          function: { name: 'tool' },
+        },
+      ],
+    };
     await expect(
-      strategy._extractJsonOutput(response, llmConfig)
+      strategy._extractJsonOutput(response, llmConfig, providerRequestPayload)
     ).rejects.toThrow(LLMStrategyError);
     expect(mockLogger.error).toHaveBeenCalled();
   });
@@ -94,8 +119,16 @@ describe('OpenRouterToolCallingStrategy additional branches', () => {
       type: 'function',
       function: { name: 'other', arguments: '{}' },
     });
+    const providerRequestPayload = {
+      tools: [
+        {
+          type: 'function',
+          function: { name: 'tool' },
+        },
+      ],
+    };
     await expect(
-      strategy._extractJsonOutput(response, llmConfig)
+      strategy._extractJsonOutput(response, llmConfig, providerRequestPayload)
     ).rejects.toThrow(LLMStrategyError);
     expect(mockLogger.error).toHaveBeenCalled();
   });
@@ -109,8 +142,16 @@ describe('OpenRouterToolCallingStrategy additional branches', () => {
       type: 'function',
       function: { name: 'tool' },
     });
+    const providerRequestPayload = {
+      tools: [
+        {
+          type: 'function',
+          function: { name: 'tool' },
+        },
+      ],
+    };
     await expect(
-      strategy._extractJsonOutput(response, llmConfig)
+      strategy._extractJsonOutput(response, llmConfig, providerRequestPayload)
     ).rejects.toThrow(LLMStrategyError);
     expect(mockLogger.error).toHaveBeenCalled();
   });
@@ -124,8 +165,16 @@ describe('OpenRouterToolCallingStrategy additional branches', () => {
       type: 'function',
       function: { name: 'tool', arguments: 42 },
     });
+    const providerRequestPayload = {
+      tools: [
+        {
+          type: 'function',
+          function: { name: 'tool' },
+        },
+      ],
+    };
     await expect(
-      strategy._extractJsonOutput(response, llmConfig)
+      strategy._extractJsonOutput(response, llmConfig, providerRequestPayload)
     ).rejects.toThrow(LLMStrategyError);
     expect(mockLogger.error).toHaveBeenCalled();
   });
@@ -139,8 +188,16 @@ describe('OpenRouterToolCallingStrategy additional branches', () => {
       type: 'function',
       function: { name: 'tool', arguments: '   ' },
     });
+    const providerRequestPayload = {
+      tools: [
+        {
+          type: 'function',
+          function: { name: 'tool' },
+        },
+      ],
+    };
     await expect(
-      strategy._extractJsonOutput(response, llmConfig)
+      strategy._extractJsonOutput(response, llmConfig, providerRequestPayload)
     ).rejects.toThrow(LLMStrategyError);
     expect(mockLogger.error).toHaveBeenCalled();
   });

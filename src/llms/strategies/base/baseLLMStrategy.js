@@ -59,6 +59,32 @@ export class BaseLLMStrategy extends ILLMStrategy {
     );
   }
 
+  /**
+   * Default implementation of buildToolSchema.
+   * Base strategies do not support custom tool schema generation by default.
+   * Strategies that support tool schema customization should override this method.
+   *
+   * @param {Array<object>} tools - Array of tool definitions to generate schema for
+   * @param {object} [requestOptions] - Optional request-specific options that may affect schema generation
+   * @returns {object|null} Custom tool schema object, or null if strategy doesn't support custom schemas
+   */
+  buildToolSchema(tools, requestOptions = {}) {
+    // Default implementation returns null indicating no custom schema support
+    return null;
+  }
+
+  /**
+   * Default implementation of requiresCustomToolSchema.
+   * Base strategies do not require custom tool schema generation by default.
+   * Strategies that support tool schema customization should override this method.
+   *
+   * @returns {boolean} True if the strategy supports custom tool schema generation, false otherwise
+   */
+  requiresCustomToolSchema() {
+    // Default implementation returns false
+    return false;
+  }
+
   // The main execute method would be implemented by concrete strategies that extend further down
   // (e.g., OpenAIToolCallingStrategy extends BaseChatLLMStrategy).
   // BaseLLMStrategy itself doesn't provide a concrete execute implementation.
