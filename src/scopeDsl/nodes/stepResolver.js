@@ -23,7 +23,24 @@ export default function createStepResolver({ entitiesGateway }) {
    * @returns {any} The component data or undefined.
    */
   function extractFieldFromEntity(entityId, field) {
-    return entitiesGateway.getComponentData(entityId, field);
+    // First try to get it as a component
+    const componentData = entitiesGateway.getComponentData(entityId, field);
+    if (componentData !== undefined) {
+      return componentData;  // Return null or any other value, but not undefined
+    }
+    
+    // If not found as a component, search within all component data for the field
+    const entity = entitiesGateway.getEntityInstance(entityId);
+    if (entity && entity.componentTypeIds) {
+      for (const componentId of entity.componentTypeIds) {
+        const compData = entitiesGateway.getComponentData(entityId, componentId);
+        if (compData && typeof compData === 'object' && field in compData) {
+          return compData[field];
+        }
+      }
+    }
+    
+    return undefined;
   }
 
   /**
@@ -148,7 +165,9 @@ export default function createStepResolver({ entitiesGateway }) {
           }
         } else if (parentValue && typeof parentValue === 'object') {
           const val = resolveObjectParentValue(parentValue, node.field);
-          if (val !== undefined) result.add(val);
+          if (val !== undefined) {
+            result.add(val);
+          }
         }
       }
 

@@ -217,8 +217,9 @@ export class TurnExecutionFacade {
       );
     }
 
+    const startTime = Date.now();
+    
     try {
-      const startTime = Date.now();
 
       // 1. Discover available actions
       const availableActions =
@@ -337,8 +338,9 @@ export class TurnExecutionFacade {
       );
     }
 
+    const startTime = Date.now();
+    
     try {
-      const startTime = Date.now();
 
       // 1. Parse command to extract action and targets
       // This is a simplified version - real implementation would use command parsing

@@ -216,6 +216,12 @@ describe('ScopeEngine', () => {
           },
         ];
 
+        // Mock getEntityInstance for actor entity
+        mockEntityManager.getEntityInstance = jest.fn().mockReturnValue({
+          id: actorId,
+          componentTypeIds: ['core:exits'],
+        });
+
         // The first step 'actor.core:exits' resolves to the array of objects.
         mockEntityManager.getComponentData.mockReturnValue(exitsComponentData);
 
@@ -728,13 +734,23 @@ describe('ScopeEngine', () => {
       ];
       const logic = { '==': [{ var: 'locked' }, false] };
 
-      mockEntityManager.getComponentData.mockReturnValue(exitsData);
+      // Mock getEntityInstance for actor
+      mockEntityManager.getEntityInstance = jest.fn().mockImplementation((id) => {
+        if (id === actorId) {
+          return { id: actorId, componentTypeIds: ['exits'] };
+        }
+        return id === 'loc456' ? { id } : undefined;
+      });
+      
+      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
+        if (entityId === actorId && componentId === 'exits') {
+          return exitsData;
+        }
+        return undefined;
+      });
+      
       mockJsonLogicEval.evaluate.mockImplementation(
         (l, context) => !context.entity.locked
-      );
-      // For the filter step, `item` is an object, not an entity ID
-      mockEntityManager.getEntityInstance.mockImplementation((id) =>
-        id === 'loc456' ? { id } : undefined
       );
 
       const runtimeCtxWithLocation = {
@@ -935,9 +951,20 @@ describe('ScopeEngine', () => {
       expect(
         resolvers[0].canResolve({ type: 'Step', field: 'topmost_clothing' })
       ).toBe(true);
+      
+      // SlotAccessResolver only handles torso_upper when parent is a clothing field
+      expect(
+        resolvers[1].canResolve({ 
+          type: 'Step', 
+          field: 'torso_upper',
+          parent: { type: 'Step', field: 'topmost_clothing' }
+        })
+      ).toBe(true);
+      
+      // SlotAccessResolver should NOT handle standalone torso_upper
       expect(
         resolvers[1].canResolve({ type: 'Step', field: 'torso_upper' })
-      ).toBe(true);
+      ).toBe(false);
     });
 
     it('should maintain backward compatibility with existing resolvers', () => {
@@ -982,28 +1009,26 @@ describe('ScopeEngine', () => {
       expect(
         resolvers[0].canResolve({ type: 'Step', field: 'topmost_clothing' })
       ).toBe(true);
+      
+      // SlotAccessResolver only handles torso_upper with clothing parent
       expect(
-        resolvers[1].canResolve({ type: 'Step', field: 'torso_upper' })
+        resolvers[1].canResolve({ 
+          type: 'Step', 
+          field: 'torso_upper',
+          parent: { type: 'Step', field: 'topmost_clothing' }
+        })
       ).toBe(true);
 
-      // Check that generic step resolver comes later in the list
-      // The generic step resolver would accept any Step node (including clothing fields)
-      // but we can identify it by checking it's not one of the specialized clothing resolvers
-      let genericStepResolverIndex = -1;
-
-      resolvers.forEach((resolver, index) => {
-        // Test if this is the generic step resolver by checking if it accepts Step nodes
-        // and is NOT one of the first two resolvers (which are clothing resolvers)
-        if (
-          index >= 2 && // Skip the first two clothing resolvers
-          resolver.canResolve({ type: 'Step', field: 'some_random_field' })
-        ) {
-          genericStepResolverIndex = index;
-        }
-      });
-
-      // Generic step resolver should exist and come after clothing resolvers (index >= 2)
-      expect(genericStepResolverIndex).toBeGreaterThanOrEqual(2);
+      // Verify that regular StepResolver handles standalone torso_upper
+      // It should be at index 3 (after ClothingStepResolver, SlotAccessResolver, SourceResolver)
+      expect(
+        resolvers[3].canResolve({ type: 'Step', field: 'torso_upper' })
+      ).toBe(true);
+      
+      // Verify that regular StepResolver can handle any field
+      expect(
+        resolvers[3].canResolve({ type: 'Step', field: 'some_random_field' })
+      ).toBe(true);
     });
   });
 });

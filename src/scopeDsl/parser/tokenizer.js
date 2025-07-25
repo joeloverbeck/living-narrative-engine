@@ -91,6 +91,9 @@ export class Tokenizer {
         case '!':
           this.push('BANG', '!');
           break;
+        case '|':
+          this.push('PIPE', '|');
+          break;
         case '"':
           this.readString();
           continue; // consumes internally

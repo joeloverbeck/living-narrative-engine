@@ -274,6 +274,18 @@ describe('ComponentName - Feature', () => {
 - Mod IDs: Alphanumeric + underscore only
 - Always validate IDs with schemas
 
+### Scope DSL Syntax
+
+The Scope DSL supports the following operators:
+
+- `.` - Field access (e.g., `actor.name`)
+- `[]` - Array iteration (e.g., `actor.items[]`)
+- `[{...}]` - JSON Logic filters (e.g., `actor.items[{"==": [{"var": "type"}, "weapon"]}]`)
+- `+` or `|` - Union operators (e.g., `actor.followers | actor.partners`)
+- `:` - Component namespacing (e.g., `core:actor`)
+
+Note: Both `+` and `|` produce identical union behavior. Use whichever feels more natural.
+
 ## 🔄 Development Workflow
 
 ### Essential Commands

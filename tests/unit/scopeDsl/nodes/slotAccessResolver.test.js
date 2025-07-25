@@ -67,13 +67,27 @@ describe('SlotAccessResolver', () => {
       ];
 
       slots.forEach((slot) => {
-        const node = { type: 'Step', field: slot };
+        const node = { 
+          type: 'Step', 
+          field: slot,
+          parent: {
+            type: 'Step',
+            field: 'topmost_clothing'
+          }
+        };
         expect(resolver.canResolve(node)).toBe(true);
       });
     });
 
     it('should return false for non-clothing slot fields', () => {
-      const node = { type: 'Step', field: 'regular_component' };
+      const node = { 
+        type: 'Step', 
+        field: 'regular_component',
+        parent: {
+          type: 'Step',
+          field: 'topmost_clothing'
+        }
+      };
       expect(resolver.canResolve(node)).toBe(false);
     });
 
@@ -83,7 +97,25 @@ describe('SlotAccessResolver', () => {
     });
 
     it('should return false for Step nodes without field', () => {
-      const node = { type: 'Step' };
+      const node = { 
+        type: 'Step',
+        parent: {
+          type: 'Step',
+          field: 'topmost_clothing'
+        }
+      };
+      expect(resolver.canResolve(node)).toBe(false);
+    });
+
+    it('should return false for clothing slot fields without proper parent', () => {
+      const node = { 
+        type: 'Step', 
+        field: 'torso_upper',
+        parent: {
+          type: 'Step',
+          field: 'some_other_field'
+        }
+      };
       expect(resolver.canResolve(node)).toBe(false);
     });
   });

@@ -29,6 +29,24 @@ describe('StepResolver', () => {
         };
         return componentDataMap[entityId]?.[componentId];
       }),
+      getEntityInstance: jest.fn((entityId) => {
+        // Mock entity instances with componentTypeIds
+        const entities = {
+          entity1: {
+            id: 'entity1',
+            componentTypeIds: ['core:position', 'core:relationships'],
+          },
+          entity2: {
+            id: 'entity2',
+            componentTypeIds: ['core:position', 'core:name'],
+          },
+          entity3: {
+            id: 'entity3',
+            componentTypeIds: ['core:position'],
+          },
+        };
+        return entities[entityId];
+      }),
     };
 
     // Mock dispatcher
@@ -118,15 +136,9 @@ describe('StepResolver', () => {
 
       const result = resolver.resolve(node, ctx);
 
-      // Should get location from entity1's core:position component data
-      const entity1Position = entitiesGateway.getComponentData(
-        'entity1',
-        'location'
-      );
-      expect(entity1Position).toBeUndefined(); // No 'location' component
-
-      // Should get location from object
-      expect(result).toEqual(new Set(['objLocation']));
+      // Should get location from entity1's core:position component data (location1)
+      // and from the object (objLocation)
+      expect(result).toEqual(new Set(['location1', 'objLocation']));
     });
 
     it('should skip undefined field values', () => {

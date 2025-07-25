@@ -196,9 +196,10 @@ describe('unionResolver', () => {
         const result = resolver.resolve(node, ctx);
 
         expect(result).toBeInstanceOf(Set);
-        expect(result.size).toBe(3);
-        expect(result.has(arr1)).toBe(true);
-        expect(result.has(arr2)).toBe(true);
+        expect(result.size).toBe(4); // Arrays are flattened: entity1, entity2, entity3, entity4
+        expect(result.has('entity1')).toBe(true);
+        expect(result.has('entity2')).toBe(true);
+        expect(result.has('entity3')).toBe(true);
         expect(result.has('entity4')).toBe(true);
       });
     });

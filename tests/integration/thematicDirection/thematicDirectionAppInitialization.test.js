@@ -169,7 +169,9 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       });
 
       // Act & Assert
-      await expect(failingApp.initialize()).rejects.toThrow('Schema loading failed');
+      await expect(failingApp.initialize()).rejects.toThrow(
+        'Schema loading failed'
+      );
     });
 
     test('should handle fetch network errors', async () => {

@@ -209,5 +209,4 @@ export const coreTokens = freeze({
   IThematicDirectionGenerator: 'IThematicDirectionGenerator',
   ThematicDirectionGenerator: 'ThematicDirectionGenerator',
   CharacterDatabase: 'CharacterDatabase',
-  CharacterBuilderController: 'CharacterBuilderController',
 });

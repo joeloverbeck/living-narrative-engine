@@ -19,7 +19,7 @@ component_id = [ "!" ], identifier, ":", identifier ;
 letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;
 digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 json_logic_object = /* Standard JSON Logic object as defined in json-logic for modders.md */ ;
-union_expression = scope_expression, "+", scope_expression ;
+union_expression = scope_expression, ( "+" | "|" ), scope_expression ;
 max_expression_depth = 4 ;
 ```
 
@@ -159,14 +159,19 @@ upper_and_lower := actor.topmost_clothing.torso_upper + actor.topmost_clothing.t
   - `[{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]` - exclude the actor from the results.
   - `[{"condition_ref": "core:target-is-not-self"}]` - use a condition reference for filtering.
 
-## 6. Union Operator
+## 6. Union Operators
 
-### Union (`+`)
+### Union (`+` or `|`)
 
-- **Format**: `scope_expression + scope_expression`
+- **Format**: `scope_expression + scope_expression` or `scope_expression | scope_expression`
 - **Description**: Combine the results from two separate scope expressions into a single set.
-- **Behavior**: Returns the union (unique combination) of the entity sets. The union operator is right-associative, meaning `a + b + c` is parsed as `a + (b + c)`.
-- **Example**: `actor.core:inventory.items[] + entities(core:item)[...]`
+- **Behavior**: Returns the union (unique combination) of the entity sets. Both operators (`+` and `|`) produce identical results. The union operators are right-associative, meaning `a | b | c` is parsed as `a | (b | c)`.
+- **Examples**:
+  - `actor.core:inventory.items[] + entities(core:item)[...]`
+  - `actor.followers | actor.partners`
+  - `actor.topmost_clothing.torso_upper | actor.topmost_clothing.torso_lower`
+
+**Note**: The pipe operator (`|`) was added as an alternative syntax for unions. Both `+` and `|` produce identical behavior, so use whichever feels more natural for your use case.
 
 ## 7. White-space & Comment Rules
 

@@ -372,7 +372,7 @@ describe('Thematic Direction Workflow Integration', () => {
           autoSaved: true,
         })
       );
-      
+
       // Also check that the controller event was dispatched
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -386,13 +386,13 @@ describe('Thematic Direction Workflow Integration', () => {
 
       // 5. UI should show results
       expect(mockElements.resultsState.style.display).toBe('block');
-      
+
       // Check that appendChild was called to add content
       expect(mockElements.directionsResults.appendChild).toHaveBeenCalled();
-      
+
       // Check that the DOM structure was created properly by looking at createElement calls
       const createElementCalls = document.createElement.mock.calls;
-      const h3Calls = createElementCalls.filter(call => call[0] === 'h3');
+      const h3Calls = createElementCalls.filter((call) => call[0] === 'h3');
       expect(h3Calls.length).toBeGreaterThan(0); // H3 elements should be created for titles
     });
 
@@ -507,9 +507,9 @@ describe('Thematic Direction Workflow Integration', () => {
 
       // Select first concept from dropdown and trigger handler
       mockElements.previousConceptsSelect.value = 'concept-1';
-      const changeEvent = { 
+      const changeEvent = {
         target: mockElements.previousConceptsSelect,
-        type: 'change'
+        type: 'change',
       };
 
       // Find and call the change event handler directly
@@ -530,7 +530,7 @@ describe('Thematic Direction Workflow Integration', () => {
         'An ancient wizard seeking knowledge'
       );
       expect(mockElements.resultsState.style.display).toBe('block');
-      
+
       // Check that the results were rendered by verifying DOM manipulation
       expect(mockElements.directionsResults.appendChild).toHaveBeenCalled();
     });
@@ -726,7 +726,7 @@ function setupDOMMocks(mockElements) {
         set: (value) => {
           _textContent = value;
           element.innerHTML = value; // Also update innerHTML for visibility in tests
-        }
+        },
       });
     }
     return element;

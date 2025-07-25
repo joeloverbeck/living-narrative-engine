@@ -58,8 +58,32 @@ export default function createUnionResolver() {
       const leftResult = dispatcher.resolve(node.left, ctx);
       const rightResult = dispatcher.resolve(node.right, ctx);
 
-      // Create union of both sets
-      const result = new Set([...leftResult, ...rightResult]);
+      // Create union of both sets, flattening arrays if present
+      const result = new Set();
+      
+      // Helper to add items to result, handling arrays
+      const addToResult = (item) => {
+        if (Array.isArray(item)) {
+          // If the item is an array, add each element individually
+          for (const element of item) {
+            if (element !== null && element !== undefined) {
+              result.add(element);
+            }
+          }
+        } else if (item !== null && item !== undefined) {
+          result.add(item);
+        }
+      };
+      
+      // Process left result
+      for (const item of leftResult) {
+        addToResult(item);
+      }
+      
+      // Process right result
+      for (const item of rightResult) {
+        addToResult(item);
+      }
 
       if (trace) {
         trace.addLog(
