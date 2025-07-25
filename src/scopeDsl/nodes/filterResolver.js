@@ -195,15 +195,69 @@ export default function createFilterResolver({
           }
         } else {
           // Handle single items (entity IDs or objects)
-          const evalCtx = createEvaluationContext(
-            item,
-            actorEntity,
-            entitiesGateway,
-            locationProvider,
-            trace
-          );
-          if (evalCtx && logicEval.evaluate(node.logic, evalCtx)) {
-            result.add(item);
+          try {
+            const evalCtx = createEvaluationContext(
+              item,
+              actorEntity,
+              entitiesGateway,
+              locationProvider,
+              trace
+            );
+            
+            if (!evalCtx) {
+              if (trace) {
+                trace.addLog(
+                  'debug',
+                  `Skipping item ${item} - could not create evaluation context`,
+                  source
+                );
+              }
+              continue;
+            }
+
+            // Enhanced trace logging for debugging filter evaluation
+            if (trace) {
+              trace.addLog(
+                'debug',
+                `Evaluating filter for item ${item}`,
+                source,
+                {
+                  itemId: item,
+                  hasEntityComponents: !!evalCtx.entity?.components,
+                  entityComponentKeys: evalCtx.entity?.components ? Object.keys(evalCtx.entity.components) : [],
+                  logic: node.logic
+                }
+              );
+            }
+
+            const evalResult = logicEval.evaluate(node.logic, evalCtx);
+            if (evalResult) {
+              result.add(item);
+              if (trace) {
+                trace.addLog(
+                  'debug',
+                  `Item ${item} passed filter`,
+                  source
+                );
+              }
+            } else if (trace) {
+              trace.addLog(
+                'debug',
+                `Item ${item} failed filter`,
+                source
+              );
+            }
+          } catch (error) {
+            // Handle errors gracefully
+            if (trace) {
+              trace.addLog(
+                'error',
+                `Error filtering item ${item}: ${error.message}`,
+                source,
+                { error: error.message, stack: error.stack }
+              );
+            }
+            // Continue processing other items
           }
         }
       }

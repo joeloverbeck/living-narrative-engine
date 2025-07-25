@@ -373,14 +373,16 @@ describe('Thematic Direction Workflow Integration', () => {
         })
       );
 
-      // Also check that the controller event was dispatched
+      // Note: The service emits events in simple format, not wrapped in type/payload structure
+      // The expected calls are:
+      // 1. CHARACTER_CONCEPT_CREATED (from service)
+      // 2. THEMATIC_DIRECTIONS_GENERATED (from service) - this is what we check
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'THEMATIC_DIRECTIONS_GENERATED',
         expect.objectContaining({
-          type: 'THEMATIC_DIRECTIONS_GENERATED',
-          payload: expect.objectContaining({
-            conceptId,
-            directionsCount: 3, // Controller event format
-          }),
+          conceptId,
+          directionCount: 3, // Service uses directionCount, not directionsCount
+          autoSaved: true,
         })
       );
 

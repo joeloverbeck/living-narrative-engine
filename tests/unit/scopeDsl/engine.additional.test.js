@@ -476,10 +476,10 @@ describe('ScopeEngine - Additional Coverage Tests', () => {
         throw new Error('JSON Logic evaluation failed');
       });
 
-      // Expect the exception to propagate due to fail-fast approach
-      expect(() => engine.resolve(ast, actorEntity, mockRuntimeCtx)).toThrow(
-        'JSON Logic evaluation failed'
-      );
+      // Filter resolver now handles evaluation errors gracefully
+      // Items that fail evaluation are simply excluded from results
+      const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+      expect(result).toEqual(new Set()); // No items pass due to evaluation errors
     });
 
     test('should handle filter evaluation returning non-boolean', () => {

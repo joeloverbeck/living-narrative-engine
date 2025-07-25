@@ -63,6 +63,11 @@ export function createEvaluationContext(
   locationProvider,
   trace
 ) {
+  // Handle null/undefined items
+  if (item == null) {
+    return null;
+  }
+
   // Critical check: actor should never be undefined in scope evaluation
   if (!actorEntity) {
     const error = new Error(
@@ -107,9 +112,26 @@ export function createEvaluationContext(
   // Create entity with components if needed
   let entity;
   if (typeof item === 'string') {
+    // First try as entity (this is the primary path for clothing items)
     entity = gateway.getEntityInstance(item);
-    if (!entity) {
-      entity = { id: item };
+    if (entity) {
+      if (trace) {
+        trace.addLog('debug', `Item ${item} resolved as entity`, 'createEvaluationContext');
+      }
+    } else {
+      // Fallback: Try component registry lookup for non-entity items
+      const components = gateway.getItemComponents?.(item);
+      if (components) {
+        entity = { id: item, components };
+        if (trace) {
+          trace.addLog('debug', `Item ${item} resolved via component lookup`, 'createEvaluationContext');
+        }
+      } else {
+        entity = { id: item };
+        if (trace) {
+          trace.addLog('debug', `Item ${item} created as basic entity`, 'createEvaluationContext');
+        }
+      }
     }
   } else if (item && typeof item === 'object') {
     entity = item;
@@ -124,52 +146,86 @@ export function createEvaluationContext(
    * @param entityId
    */
   function addComponentsToEntity(entity, entityId) {
-    if (entity.components || !entity.componentTypeIds) {
+    // Convert Map-based components to plain object if needed
+    if (entity.components instanceof Map) {
+      const plainComponents = {};
+      for (const [componentId, data] of entity.components) {
+        plainComponents[componentId] = data;
+      }
+      
+      // Create new entity with plain object components
+      const proto = Object.getPrototypeOf(entity);
+      if (proto === Object.prototype || proto === null) {
+        return {
+          ...entity,
+          components: plainComponents,
+        };
+      } else {
+        // Preserve prototype while replacing components
+        const enhancedEntity = Object.create(proto);
+        for (const key of Object.keys(entity)) {
+          if (key !== 'components') {
+            enhancedEntity[key] = entity[key];
+          }
+        }
+        enhancedEntity.components = plainComponents;
+        return enhancedEntity;
+      }
+    }
+    
+    // If entity already has plain object components, return as-is
+    if (entity.components && typeof entity.components === 'object') {
       return entity;
     }
-
-    const components = buildComponents(entityId || entity.id, entity, gateway);
-
-    // Check if it's a plain object or has a custom prototype
-    const proto = Object.getPrototypeOf(entity);
-    if (proto === Object.prototype || proto === null) {
-      // Plain object - safe to use spread
-      return {
-        ...entity,
-        components,
-      };
-    }
-
-    // Entity instance - create a wrapper that preserves the original entity
-    // We can't copy Entity instances because they have private fields
-    const enhancedEntity = Object.create(proto);
-
-    // Define a getter for each property of the original entity
-    const descriptors = Object.getOwnPropertyDescriptors(proto);
-    for (const [key, descriptor] of Object.entries(descriptors)) {
-      if (descriptor.get) {
-        // This is a getter - create a forwarding getter
-        Object.defineProperty(enhancedEntity, key, {
-          get() {
-            return entity[key];
-          },
-          enumerable: descriptor.enumerable,
-          configurable: descriptor.configurable,
-        });
+    
+    // If no components but has componentTypeIds, build them
+    if (!entity.components && entity.componentTypeIds) {
+      const components = buildComponents(entityId || entity.id, entity, gateway);
+      
+      // Check if it's a plain object or has a custom prototype
+      const proto = Object.getPrototypeOf(entity);
+      if (proto === Object.prototype || proto === null) {
+        // Plain object - safe to use spread
+        return {
+          ...entity,
+          components,
+        };
       }
-    }
 
-    // Copy non-getter properties
-    for (const key of Object.keys(entity)) {
-      if (!Object.getOwnPropertyDescriptor(proto, key)?.get) {
-        enhancedEntity[key] = entity[key];
+      // Entity instance - create a wrapper that preserves the original entity
+      // We can't copy Entity instances because they have private fields
+      const enhancedEntity = Object.create(proto);
+
+      // Define a getter for each property of the original entity
+      const descriptors = Object.getOwnPropertyDescriptors(proto);
+      for (const [key, descriptor] of Object.entries(descriptors)) {
+        if (descriptor.get) {
+          // This is a getter - create a forwarding getter
+          Object.defineProperty(enhancedEntity, key, {
+            get() {
+              return entity[key];
+            },
+            enumerable: descriptor.enumerable,
+            configurable: descriptor.configurable,
+          });
+        }
       }
+
+      // Copy non-getter properties
+      for (const key of Object.keys(entity)) {
+        if (!Object.getOwnPropertyDescriptor(proto, key)?.get) {
+          enhancedEntity[key] = entity[key];
+        }
+      }
+
+      // Add components
+      enhancedEntity.components = components;
+
+      return enhancedEntity;
     }
-
-    // Add components
-    enhancedEntity.components = components;
-
-    return enhancedEntity;
+    
+    // No components and no componentTypeIds - return as-is
+    return entity;
   }
 
   // Ensure entity has components
@@ -199,5 +255,17 @@ export function createEvaluationContext(
     );
   }
 
-  return { entity, actor, location };
+  // Create flattened context for easier JSON Logic access
+  // This allows queries like {"var": "components.core:tags.tags"} to work directly
+  const flattenedContext = {
+    entity,
+    actor, 
+    location,
+    // Flatten entity components to root level for easier access
+    ...(entity?.components && { components: entity.components }),
+    // Also provide direct access to entity properties
+    id: entity?.id
+  };
+
+  return flattenedContext;
 }

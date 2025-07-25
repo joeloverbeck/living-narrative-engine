@@ -56,6 +56,11 @@ export class Tokenizer {
         this.readIdentifier();
         continue;
       }
+      // Numeric literal
+      if (/[0-9]/.test(ch)) {
+        this.readNumber();
+        continue;
+      }
       // One‑char tokens & string
       switch (ch) {
         case '(':
@@ -156,6 +161,28 @@ export class Tokenizer {
     this.advance(); // skip closing quote
     this.tokens.push({
       type: 'STRING',
+      value,
+      line: startLine,
+      column: startCol,
+    });
+  }
+
+  readNumber() {
+    const startLine = this.line,
+      startCol = this.col,
+      startPos = this.pos;
+    
+    // Read digits and optional decimal point
+    while (
+      this.pos < this.input.length &&
+      /[0-9.]/.test(this.input[this.pos])
+    ) {
+      this.advance();
+    }
+    
+    const value = this.input.slice(startPos, this.pos);
+    this.tokens.push({
+      type: 'NUMBER',
       value,
       line: startLine,
       column: startCol,

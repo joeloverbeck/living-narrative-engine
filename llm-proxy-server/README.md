@@ -61,6 +61,8 @@ Then, edit the `.env` file with your specific configurations:
   allowed to make requests to this proxy server (CORS configuration).
   - Example for a single origin: `PROXY_ALLOWED_ORIGIN=http://localhost:8080`
   - Example for multiple origins (comma-separated): `PROXY_ALLOWED_ORIGIN=http://localhost:8080,http://127.0.0.1:8080`
+  - **Port Fallback Support**: Includes both default port (8080) and fallback port (8081) for development resilience:
+    `PROXY_ALLOWED_ORIGIN=http://localhost:8080,http://127.0.0.1:8080,http://localhost:8081,http://127.0.0.1:8081`
   - If not set, CORS will not be specifically configured, potentially blocking cross-origin requests.
 
 - **`LLM_CONFIG_PATH`**: The path to the `llm-configs.json` file that the proxy server will use. This path can be

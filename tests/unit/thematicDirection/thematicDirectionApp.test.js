@@ -72,6 +72,11 @@ describe('ThematicDirectionApp', () => {
       init: jest.fn().mockResolvedValue(undefined),
     };
 
+    // Mock data registry
+    const mockDataRegistry = {
+      setEventDefinition: jest.fn(),
+    };
+
     // Setup container resolve calls
     mockContainer.resolve.mockImplementation((token) => {
       switch (token) {
@@ -85,6 +90,8 @@ describe('ThematicDirectionApp', () => {
           return {};
         case tokens.ThematicDirectionController:
           return mockController;
+        case tokens.IDataRegistry:
+          return mockDataRegistry;
         default:
           return {};
       }
@@ -215,7 +222,7 @@ describe('ThematicDirectionApp', () => {
       await app.initialize();
 
       expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalled();
-      expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(2);
+      expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(4);
       expect(fetch).toHaveBeenCalledWith(
         'data/schemas/thematic-direction.schema.json'
       );

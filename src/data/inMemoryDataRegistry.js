@@ -148,6 +148,17 @@ class InMemoryDataRegistry {
     return this.get('events', id);
   }
 
+  /**
+   * Sets an event definition in the registry
+   *
+   * @param {string} id - The event definition ID
+   * @param {object} definition - The event definition object
+   * @returns {boolean} True if stored successfully
+   */
+  setEventDefinition(id, definition) {
+    return this.store('events', id, definition);
+  }
+
   getComponentDefinition(id) {
     return this.get('components', id);
   }

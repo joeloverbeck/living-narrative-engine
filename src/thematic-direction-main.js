@@ -66,6 +66,10 @@ class ThematicDirectionApp {
       const schemaValidator = container.resolve(tokens.ISchemaValidator);
       await this.#loadCharacterSpecificSchemas(schemaValidator);
 
+      // Register required event definitions for this standalone page
+      const dataRegistry = container.resolve(tokens.IDataRegistry);
+      await this.#registerEventDefinitions(dataRegistry, schemaValidator);
+
       // Register the thematic direction controller
       this.#registerThematicDirectionController(container);
 
@@ -151,6 +155,90 @@ class ThematicDirectionApp {
     } catch (error) {
       this.#logger.error('ThematicDirectionApp: Failed to load schemas', error);
       throw new Error(`Schema loading failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Register event definitions required by the thematic direction generator
+   *
+   * @private
+   * @param {IDataRegistry} dataRegistry - Data registry instance
+   * @param {ISchemaValidator} schemaValidator - Schema validator instance
+   */
+  async #registerEventDefinitions(dataRegistry, schemaValidator) {
+    try {
+      // Define CHARACTER_CONCEPT_CREATED event
+      const characterConceptCreatedEvent = {
+        id: 'thematic:character_concept_created',
+        description: 'Fired when a character concept is successfully created in the thematic direction generator.',
+        payloadSchema: {
+          description: 'Defines the structure for the CHARACTER_CONCEPT_CREATED event payload.',
+          type: 'object',
+          required: ['conceptId', 'concept', 'autoSaved'],
+          properties: {
+            conceptId: {
+              type: 'string',
+              description: 'The unique ID of the created character concept.'
+            },
+            concept: {
+              type: 'string',
+              description: 'The character concept text (truncated for events).'
+            },
+            autoSaved: {
+              type: 'boolean',
+              description: 'Whether the concept was automatically saved.'
+            }
+          },
+          additionalProperties: false
+        }
+      };
+
+      // Define THEMATIC_DIRECTIONS_GENERATED event
+      const thematicDirectionsGeneratedEvent = {
+        id: 'thematic:thematic_directions_generated',
+        description: 'Fired when thematic directions are successfully generated for a character concept.',
+        payloadSchema: {
+          description: 'Defines the structure for the THEMATIC_DIRECTIONS_GENERATED event payload.',
+          type: 'object',
+          required: ['conceptId', 'directionCount', 'autoSaved'],
+          properties: {
+            conceptId: {
+              type: 'string',
+              description: 'The unique ID of the character concept.'
+            },
+            directionCount: {
+              type: 'integer',
+              minimum: 0,
+              description: 'The number of thematic directions generated.'
+            },
+            autoSaved: {
+              type: 'boolean',
+              description: 'Whether the directions were automatically saved.'
+            }
+          },
+          additionalProperties: false
+        }
+      };
+
+      // Register payload schemas first
+      await schemaValidator.addSchema(
+        characterConceptCreatedEvent.payloadSchema,
+        'thematic:character_concept_created#payload'
+      );
+      await schemaValidator.addSchema(
+        thematicDirectionsGeneratedEvent.payloadSchema,
+        'thematic:thematic_directions_generated#payload'
+      );
+
+      // Register event definitions in the data registry
+      dataRegistry.setEventDefinition('CHARACTER_CONCEPT_CREATED', characterConceptCreatedEvent);
+      dataRegistry.setEventDefinition('THEMATIC_DIRECTIONS_GENERATED', thematicDirectionsGeneratedEvent);
+
+      this.#logger.info('ThematicDirectionApp: Registered event definitions for CHARACTER_CONCEPT_CREATED and THEMATIC_DIRECTIONS_GENERATED');
+
+    } catch (error) {
+      this.#logger.error('ThematicDirectionApp: Failed to register event definitions', error);
+      throw new Error(`Event definition registration failed: ${error.message}`);
     }
   }
 
