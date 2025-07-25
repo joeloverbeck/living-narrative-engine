@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thematic Direction Generator - Living Narrative Engine</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/thematic-direction.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  </head>
+  <body>
+    <div id="thematic-direction-container">
+      <!-- Simplified Header -->
+      <header class="thematic-direction-header">
+        <div class="header-content">
+          <h1>Thematic Direction Generator</h1>
+          <p class="header-subtitle">
+            Transform character concepts into narrative possibilities
+          </p>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="thematic-direction-main">
+        <!-- Left Panel: Concept Input -->
+        <section class="concept-input-panel">
+          <h2>Character Concept</h2>
+
+          <!-- Previous Concepts Dropdown -->
+          <div class="previous-concepts-group">
+            <label for="previous-concepts"> Load Previous Concept: </label>
+            <select id="previous-concepts" class="concept-select">
+              <option value="">-- Select a saved concept --</option>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <form id="concept-form" novalidate>
+            <div class="input-group">
+              <label for="concept-input">
+                Describe your character concept:
+                <span class="required" aria-hidden="true">*</span>
+              </label>
+              <textarea
+                id="concept-input"
+                name="characterConcept"
+                placeholder="e.g. a ditzy female adventurer who's good with a bow"
+                rows="6"
+                minlength="10"
+                maxlength="1000"
+                required
+                aria-describedby="concept-help concept-error"
+              ></textarea>
+              <div id="concept-help" class="input-help">
+                Describe your character in a few sentences. Focus on
+                personality, background, and key traits.
+              </div>
+              <div class="input-meta">
+                <span class="char-count">0/1000</span>
+                <div
+                  id="concept-error"
+                  class="error-message"
+                  role="alert"
+                  aria-live="polite"
+                ></div>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button
+                type="submit"
+                id="generate-btn"
+                class="primary-button large"
+                disabled
+              >
+                <span class="button-text">Generate Thematic Directions</span>
+                <span class="button-loading" style="display: none">
+                  <span class="spinner"></span>
+                  Generating...
+                </span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Right Panel: Results Display -->
+        <section class="directions-panel">
+          <h2>Generated Directions</h2>
+          <div id="directions-container">
+            <!-- Empty State -->
+            <div id="empty-state" class="state-container">
+              <div class="empty-state">
+                <p>No thematic directions generated yet.</p>
+                <p>
+                  Enter a character concept and click "Generate Thematic
+                  Directions" to begin.
+                </p>
+              </div>
+            </div>
+
+            <!-- Loading State -->
+            <div
+              id="loading-state"
+              class="state-container"
+              style="display: none"
+            >
+              <div class="loading-state">
+                <div class="spinner large"></div>
+                <p>Generating thematic directions...</p>
+                <p class="loading-subtext">This may take a moment.</p>
+              </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="state-container" style="display: none">
+              <div class="error-state">
+                <p class="error-title">Something went wrong</p>
+                <p class="error-message" id="error-message-text"></p>
+                <button type="button" class="secondary-button" id="retry-btn">
+                  Try Again
+                </button>
+              </div>
+            </div>
+
+            <!-- Results State -->
+            <div
+              id="results-state"
+              class="state-container"
+              style="display: none"
+            >
+              <div id="directions-results" class="directions-results">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Simplified Footer -->
+      <footer class="thematic-direction-footer">
+        <div class="footer-content">
+          <button type="button" id="back-to-menu-btn" class="secondary-button">
+            ← Back to Main Menu
+          </button>
+          <p class="footer-info">
+            Living Narrative Engine - Thematic Direction Generator
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Help Modal -->
+    <div
+      id="help-modal"
+      class="modal"
+      style="display: none"
+      role="dialog"
+      aria-labelledby="help-modal-title"
+      aria-describedby="help-modal-description"
+    >
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="help-modal-title">
+            How to Use the Thematic Direction Generator
+          </h2>
+          <button
+            type="button"
+            class="close-modal"
+            aria-label="Close help modal"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="help-modal-description">
+          <h3>Getting Started</h3>
+          <p>
+            The Thematic Direction Generator helps you explore narrative
+            possibilities for your character concepts. Simply describe a
+            character idea, and the generator will provide multiple thematic
+            directions to inspire your storytelling.
+          </p>
+
+          <h3>Tips for Better Results</h3>
+          <ul>
+            <li>
+              Include personality traits, background elements, or unique
+              characteristics
+            </li>
+            <li>Be specific about what makes your character interesting</li>
+            <li>
+              Don't worry about being too detailed - a few sentences work great
+            </li>
+          </ul>
+
+          <h3>Using Previous Concepts</h3>
+          <p>
+            All your generated concepts are automatically saved. Use the
+            dropdown menu to quickly reload and explore variations on previous
+            ideas.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="thematic-direction.js"></script>
+  </body>
+</html>

@@ -80,9 +80,68 @@ max_expression_depth = 4 ;
 - **Examples**:
   - `entities(core:item)[]` - functionally a pass-through, but prepares the set for filtering.
   - `entities(core:item)[][{"==":[...]}]]` - a common pattern to get all items, then iterate and filter them. The first `[]` is the iterator, the second `[...]` is the filter.
-  -
 
-## 4. Filter Syntax
+## 4. Special Resolvers
+
+### Clothing Target Resolution
+
+The Scope DSL supports specialized clothing operations for efficient clothing item targeting. These operations provide a much simpler alternative to complex JSON Logic expressions.
+
+#### Basic Syntax
+
+```dsl
+// Get all topmost clothing items
+all_removable := actor.topmost_clothing[]
+
+// Get specific slot's topmost item
+upper_shirt := actor.topmost_clothing.torso_upper
+lower_pants := actor.topmost_clothing.torso_lower
+
+// Get items from specific layers
+all_outer := actor.outer_clothing[]
+all_base := actor.base_clothing[]
+all_underwear := actor.underwear[]
+```
+
+#### Supported Fields
+
+- `topmost_clothing` - Returns topmost layer items (outer > base > underwear priority)
+- `all_clothing` - Returns items from all layers
+- `outer_clothing` - Returns only outer layer items
+- `base_clothing` - Returns only base layer items
+- `underwear` - Returns only underwear layer items
+
+#### Supported Slots
+
+- `torso_upper` - Upper torso clothing
+- `torso_lower` - Lower torso clothing
+- `legs` - Leg clothing
+- `feet` - Footwear
+- `head_gear` - Head covering
+- `hands` - Hand covering
+- `left_arm_clothing` - Left arm covering
+- `right_arm_clothing` - Right arm covering
+
+#### Examples
+
+```dsl
+// Remove all topmost clothing items
+all_removable := actor.topmost_clothing[]
+
+// Access specific slot with layer priority
+jacket := actor.topmost_clothing.torso_upper
+
+// Get all outer layer items (jackets, coats, etc.)
+outer_garments := actor.outer_clothing[]
+
+// Combine with filters to find waterproof clothing
+waterproof := actor.topmost_clothing[][{"in": ["waterproof", {"var": "entity.components.core:tags.tags"}]}]
+
+// Union of specific slots
+upper_and_lower := actor.topmost_clothing.torso_upper + actor.topmost_clothing.torso_lower
+```
+
+## 5. Filter Syntax
 
 ### JSON Logic Filters
 
@@ -100,7 +159,7 @@ max_expression_depth = 4 ;
   - `[{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]` - exclude the actor from the results.
   - `[{"condition_ref": "core:target-is-not-self"}]` - use a condition reference for filtering.
 
-## 5. Union Operator
+## 6. Union Operator
 
 ### Union (`+`)
 
@@ -109,7 +168,7 @@ max_expression_depth = 4 ;
 - **Behavior**: Returns the union (unique combination) of the entity sets. The union operator is right-associative, meaning `a + b + c` is parsed as `a + (b + c)`.
 - **Example**: `actor.core:inventory.items[] + entities(core:item)[...]`
 
-## 6. White-space & Comment Rules
+## 7. White-space & Comment Rules
 
 ### White-space
 
@@ -127,7 +186,7 @@ max_expression_depth = 4 ;
   actor.core:inventory.items[]
   ```
 
-## 7. Expression Depth Limit
+## 8. Expression Depth Limit
 
 ### Maximum Depth: 4
 
@@ -139,7 +198,7 @@ max_expression_depth = 4 ;
   - `actor.a.b.c.d.e` (depth: 5) ❌
   - `entities(core:item)[].id` (depth: 1) ✅ - The `[]` after entities doesn't count
 
-## 8. Worked Examples
+## 9. Worked Examples
 
 ### Example 1: Followers Scope
 
@@ -245,7 +304,7 @@ environment := entities(core:position)[
 - `entities(core:position)`: Get all entities that have the `core:position` component.
 - `[{"and": [{ "condition_ref": "core:entity-at-location" },{"condition_ref": "core:entity-is-not-current-actor" }]}]`: Entities at the same context location, that aren't the actor.
 
-## 9. Integration with Action Definitions
+## 10. Integration with Action Definitions
 
 The scope property in an action's definition (`.action.json` file) tells the engine which entities are potential targets. It should be referenced by name.
 
@@ -293,7 +352,7 @@ The action then refers to this scope by its name. The engine will automatically 
 }
 ```
 
-## 10. Data Validation and Type Safety
+## 11. Data Validation and Type Safety
 
 ### Automatic Type Filtering
 
@@ -314,7 +373,7 @@ The parser creates different node types for different operations:
 
 This distinction allows the engine to optimize different types of operations appropriately.
 
-## 11. Implementation Notes
+## 12. Implementation Notes
 
 ### Parser Requirements
 
@@ -336,7 +395,7 @@ This distinction allows the engine to optimize different types of operations app
 - Invalid JSON Logic: Errors within a JSON Logic filter are caught and logged, with the filter evaluating to `false`.
 - Depth Limit Exceeded: The parser will throw an error if an expression is more than 4 levels deep.
 
-## 12. Common Pitfalls and Best Practices
+## 13. Common Pitfalls and Best Practices
 
 ### Common Syntax Errors
 

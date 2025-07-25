@@ -1,4 +1,11 @@
-import { describe, expect, it, beforeEach } from '@jest/globals';
+import {
+  describe,
+  expect,
+  it,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import createSourceResolver from '../../../../src/scopeDsl/nodes/sourceResolver.js';
 
 describe('sourceResolver', () => {
@@ -173,6 +180,152 @@ describe('sourceResolver', () => {
 
         expect(() => resolver.resolve(node, ctx)).toThrow(
           'Unknown source kind: unknown'
+        );
+      });
+    });
+
+    describe('context validation', () => {
+      let consoleErrorSpy;
+
+      beforeEach(() => {
+        consoleErrorSpy = jest
+          .spyOn(console, 'error')
+          .mockImplementation(() => {});
+      });
+
+      afterEach(() => {
+        consoleErrorSpy.mockRestore();
+      });
+
+      it('should throw error when actorEntity is missing from context', () => {
+        const node = { type: 'Source', kind: 'actor' };
+        const ctx = {}; // Missing actorEntity
+
+        expect(() => resolver.resolve(node, ctx)).toThrow(
+          'SourceResolver: actorEntity is missing from context'
+        );
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          '[CRITICAL] SourceResolver missing actorEntity:',
+          expect.objectContaining({
+            hasCtx: true,
+            ctxKeys: [],
+            nodeType: 'Source',
+            nodeKind: 'actor',
+            nodeParam: undefined,
+            depth: undefined,
+            callStack: expect.any(String),
+          })
+        );
+      });
+
+      it('should throw error when actorEntity is null', () => {
+        const node = { type: 'Source', kind: 'actor' };
+        const ctx = { actorEntity: null };
+
+        expect(() => resolver.resolve(node, ctx)).toThrow(
+          'SourceResolver: actorEntity is missing from context'
+        );
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          '[CRITICAL] SourceResolver missing actorEntity:',
+          expect.objectContaining({
+            hasCtx: true,
+            ctxKeys: ['actorEntity'],
+            nodeType: 'Source',
+            nodeKind: 'actor',
+          })
+        );
+      });
+
+      it('should throw error when actorEntity.id is null', () => {
+        const node = { type: 'Source', kind: 'actor' };
+        const ctx = { actorEntity: { id: null } };
+
+        expect(() => resolver.resolve(node, ctx)).toThrow(
+          'SourceResolver: actorEntity has invalid ID: null'
+        );
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          '[CRITICAL] SourceResolver actorEntity has invalid ID:',
+          expect.objectContaining({
+            actorId: null,
+            actorIdType: 'object',
+            nodeKind: 'actor',
+            callStack: expect.any(String),
+          })
+        );
+      });
+
+      it('should throw error when actorEntity.id is undefined', () => {
+        const node = { type: 'Source', kind: 'actor' };
+        const ctx = { actorEntity: { id: undefined } };
+
+        expect(() => resolver.resolve(node, ctx)).toThrow(
+          'SourceResolver: actorEntity has invalid ID: undefined'
+        );
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          '[CRITICAL] SourceResolver actorEntity has invalid ID:',
+          expect.objectContaining({
+            actorId: undefined,
+            actorIdType: 'undefined',
+            nodeKind: 'actor',
+          })
+        );
+      });
+
+      it('should throw error when actorEntity.id is not a string', () => {
+        const node = { type: 'Source', kind: 'actor' };
+        const ctx = { actorEntity: { id: 123 } };
+
+        expect(() => resolver.resolve(node, ctx)).toThrow(
+          'SourceResolver: actorEntity has invalid ID: 123'
+        );
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          '[CRITICAL] SourceResolver actorEntity has invalid ID:',
+          expect.objectContaining({
+            actorId: 123,
+            actorIdType: 'number',
+            nodeKind: 'actor',
+          })
+        );
+      });
+
+      it('should throw error when actorEntity.id is an object', () => {
+        const node = { type: 'Source', kind: 'actor' };
+        const ctx = { actorEntity: { id: { invalid: 'object' } } };
+
+        expect(() => resolver.resolve(node, ctx)).toThrow(
+          'SourceResolver: actorEntity has invalid ID: {"invalid":"object"}'
+        );
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          '[CRITICAL] SourceResolver actorEntity has invalid ID:',
+          expect.objectContaining({
+            actorId: { invalid: 'object' },
+            actorIdType: 'object',
+            nodeKind: 'actor',
+          })
+        );
+      });
+
+      it('should throw error when actorEntity.id is an empty string', () => {
+        const node = { type: 'Source', kind: 'actor' };
+        const ctx = { actorEntity: { id: '' } };
+
+        expect(() => resolver.resolve(node, ctx)).toThrow(
+          'SourceResolver: actorEntity has invalid ID: ""'
+        );
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          '[CRITICAL] SourceResolver actorEntity has invalid ID:',
+          expect.objectContaining({
+            actorId: '',
+            actorIdType: 'string',
+            nodeKind: 'actor',
+          })
         );
       });
     });

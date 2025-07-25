@@ -1,7 +1,10 @@
 // tests/unit/turns/turnManager.eventValidation.test.js
 // --- FILE START ---
 
-import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
+import {
+  describeTurnManagerSuite,
+  flushPromisesAndTimers,
+} from '../../common/turns/turnManagerTestBed.js';
 import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
 import { ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { beforeEach, expect, test } from '@jest/globals';
@@ -20,10 +23,6 @@ describeTurnManagerSuite('TurnManager - Event Validation', (getBed) => {
 
     // Ensure subscribe returns a function for proper event handling
     testBed.mocks.dispatcher.subscribe.mockReturnValue(jest.fn());
-
-    // Make sure the turn order service doesn't claim to be empty initially
-    testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-    testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(ai1);
   });
 
   describe('Basic State Validation', () => {
@@ -56,7 +55,7 @@ describeTurnManagerSuite('TurnManager - Event Validation', (getBed) => {
     test('should handle multiple start calls gracefully', async () => {
       testBed.mocks.logger.warn.mockClear();
 
-      await testBed.turnManager.start();
+      await testBed.startRunning();
 
       await testBed.turnManager.start();
       expect(testBed.mocks.logger.warn).toHaveBeenCalledWith(

@@ -3,19 +3,53 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
 
 // Mocks for resolver factories
 jest.mock('../../../src/scopeDsl/nodes/sourceResolver.js', () =>
-  jest.fn(() => ({ name: 'source' }))
+  jest.fn(() => ({
+    canResolve: jest.fn(),
+    resolve: jest.fn(),
+    name: 'source',
+  }))
 );
 jest.mock('../../../src/scopeDsl/nodes/stepResolver.js', () =>
-  jest.fn(() => ({ name: 'step' }))
+  jest.fn(() => ({
+    canResolve: jest.fn(),
+    resolve: jest.fn(),
+    name: 'step',
+  }))
 );
 jest.mock('../../../src/scopeDsl/nodes/filterResolver.js', () =>
-  jest.fn(() => ({ name: 'filter' }))
+  jest.fn(() => ({
+    canResolve: jest.fn(),
+    resolve: jest.fn(),
+    name: 'filter',
+  }))
 );
 jest.mock('../../../src/scopeDsl/nodes/unionResolver.js', () =>
-  jest.fn(() => ({ name: 'union' }))
+  jest.fn(() => ({
+    canResolve: jest.fn(),
+    resolve: jest.fn(),
+    name: 'union',
+  }))
 );
 jest.mock('../../../src/scopeDsl/nodes/arrayIterationResolver.js', () =>
-  jest.fn(() => ({ name: 'array' }))
+  jest.fn(() => ({
+    canResolve: jest.fn(),
+    resolve: jest.fn(),
+    name: 'array',
+  }))
+);
+jest.mock('../../../src/scopeDsl/nodes/clothingStepResolver.js', () =>
+  jest.fn(() => ({
+    canResolve: jest.fn(),
+    resolve: jest.fn(),
+    name: 'clothingStep',
+  }))
+);
+jest.mock('../../../src/scopeDsl/nodes/slotAccessResolver.js', () =>
+  jest.fn(() => ({
+    canResolve: jest.fn(),
+    resolve: jest.fn(),
+    name: 'slotAccess',
+  }))
 );
 
 const createSourceResolver = require('../../../src/scopeDsl/nodes/sourceResolver.js');
@@ -23,6 +57,8 @@ const createStepResolver = require('../../../src/scopeDsl/nodes/stepResolver.js'
 const createFilterResolver = require('../../../src/scopeDsl/nodes/filterResolver.js');
 const createUnionResolver = require('../../../src/scopeDsl/nodes/unionResolver.js');
 const createArrayIterationResolver = require('../../../src/scopeDsl/nodes/arrayIterationResolver.js');
+const createClothingStepResolver = require('../../../src/scopeDsl/nodes/clothingStepResolver.js');
+const createSlotAccessResolver = require('../../../src/scopeDsl/nodes/slotAccessResolver.js');
 
 describe('ScopeEngine helper methods', () => {
   let engine;
@@ -89,6 +125,12 @@ describe('ScopeEngine helper methods', () => {
         logicEval,
       });
 
+      expect(createClothingStepResolver).toHaveBeenCalledWith({
+        entitiesGateway,
+      });
+      expect(createSlotAccessResolver).toHaveBeenCalledWith({
+        entitiesGateway,
+      });
       expect(createSourceResolver).toHaveBeenCalledWith({
         entitiesGateway,
         locationProvider,
@@ -102,11 +144,41 @@ describe('ScopeEngine helper methods', () => {
       expect(createUnionResolver).toHaveBeenCalled();
       expect(createArrayIterationResolver).toHaveBeenCalled();
       expect(resolvers).toEqual([
-        { name: 'source' },
-        { name: 'step' },
-        { name: 'filter' },
-        { name: 'union' },
-        { name: 'array' },
+        {
+          canResolve: expect.any(Function),
+          resolve: expect.any(Function),
+          name: 'clothingStep',
+        },
+        {
+          canResolve: expect.any(Function),
+          resolve: expect.any(Function),
+          name: 'slotAccess',
+        },
+        {
+          canResolve: expect.any(Function),
+          resolve: expect.any(Function),
+          name: 'source',
+        },
+        {
+          canResolve: expect.any(Function),
+          resolve: expect.any(Function),
+          name: 'step',
+        },
+        {
+          canResolve: expect.any(Function),
+          resolve: expect.any(Function),
+          name: 'filter',
+        },
+        {
+          canResolve: expect.any(Function),
+          resolve: expect.any(Function),
+          name: 'union',
+        },
+        {
+          canResolve: expect.any(Function),
+          resolve: expect.any(Function),
+          name: 'array',
+        },
       ]);
     });
   });

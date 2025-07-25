@@ -17,6 +17,8 @@ import createStepResolver from './nodes/stepResolver.js';
 import createFilterResolver from './nodes/filterResolver.js';
 import createUnionResolver from './nodes/unionResolver.js';
 import createArrayIterationResolver from './nodes/arrayIterationResolver.js';
+import createClothingStepResolver from './nodes/clothingStepResolver.js';
+import createSlotAccessResolver from './nodes/slotAccessResolver.js';
 
 /** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
 
@@ -119,17 +121,28 @@ class ScopeEngine extends IScopeEngine {
   }
 
   /**
-   * Constructs the list of node resolvers.
+   * Constructs the list of node resolvers with clothing support.
    *
    * @private
    * @param {object} deps - Resolver dependencies.
    * @param {object} deps.locationProvider - Location provider.
    * @param {object} deps.entitiesGateway - Entities gateway.
    * @param {object} deps.logicEval - Logic evaluator.
-   * @returns {Array<object>} Array of resolver objects.
+   * @returns {Array<object>} Array of resolver objects including clothing resolvers.
    */
   _createResolvers({ locationProvider, entitiesGateway, logicEval }) {
+    // Create clothing resolvers
+    const clothingStepResolver = createClothingStepResolver({
+      entitiesGateway,
+    });
+    const slotAccessResolver = createSlotAccessResolver({ entitiesGateway });
+
     return [
+      // Clothing resolvers get priority for their specific fields
+      clothingStepResolver,
+      slotAccessResolver,
+
+      // Existing resolvers maintain their order
       createSourceResolver({ entitiesGateway, locationProvider }),
       createStepResolver({ entitiesGateway }),
       createFilterResolver({ logicEval, entitiesGateway, locationProvider }),

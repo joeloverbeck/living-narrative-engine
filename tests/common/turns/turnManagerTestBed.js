@@ -24,6 +24,7 @@ import {
   createMockActor,
   createMockEntity,
 } from '../mockFactories/entities.js';
+import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
 
 /**
  * Mock scheduler that works with Jest fake timers.
@@ -72,7 +73,42 @@ const TurnManagerFactoryMixin = createServiceFactoryMixin(
       },
     turnHandlerResolver: () =>
       overrides.turnHandlerResolver ?? { resolveHandler: jest.fn() },
-    dispatcher: () => overrides.dispatcher ?? createMockValidatedEventBus(),
+    dispatcher: () => {
+      if (overrides.dispatcher) return overrides.dispatcher;
+
+      // Create a simpler mock that exposes handlers through call history
+      const handlers = new Map();
+      const dispatcher = {
+        dispatch: jest.fn().mockResolvedValue(true),
+        subscribe: jest.fn((eventType, handler) => {
+          if (!handlers.has(eventType)) {
+            handlers.set(eventType, new Set());
+          }
+          handlers.get(eventType).add(handler);
+
+          const unsubscribe = () => {
+            handlers.get(eventType)?.delete(handler);
+          };
+          return unsubscribe;
+        }),
+        // Keep the internal handler storage for tests that need it
+        _handlers: handlers,
+        // Allow tests to trigger events manually
+        _triggerEvent(eventType, payload) {
+          const eventHandlers = handlers.get(eventType) || new Set();
+          eventHandlers.forEach((handler) =>
+            handler({ type: eventType, payload })
+          );
+
+          // Important: TurnEventSubscription schedules callbacks with setTimeout(callback, 0)
+          // We need to advance timers to execute these scheduled callbacks
+          if (jest.isMockFunction(setTimeout) && jest.getTimerCount() > 0) {
+            jest.advanceTimersByTime(0);
+          }
+        },
+      };
+      return dispatcher;
+    },
   }),
   (mocks, overrides = {}) => {
     const TMClass = overrides.TurnManagerClass ?? TurnManager;
@@ -168,6 +204,22 @@ export class TurnManagerTestBed extends EventCaptureMixin(
     const entity = createMockEntity(id, options);
     this.entityManager.activeEntities.set(id, entity);
     return entity;
+  }
+
+  /**
+   * Simulates the end of a turn by dispatching a TURN_ENDED_ID event.
+   *
+   * @param {string} entityId - The ID of the entity whose turn is ending.
+   * @param {boolean} [success] - Whether the turn ended successfully.
+   * @param {Error|null} [error] - Optional error if the turn failed.
+   * @returns {Promise<void>} Resolves when the event is dispatched.
+   */
+  async endTurn(entityId, success = true, error = null) {
+    await this.mocks.dispatcher.dispatch(TURN_ENDED_ID, {
+      entityId,
+      success,
+      error,
+    });
   }
 }
 

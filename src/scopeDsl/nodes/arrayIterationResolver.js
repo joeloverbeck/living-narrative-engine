@@ -5,6 +5,43 @@
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
 export default function createArrayIterationResolver() {
+  const LAYER_PRIORITY = {
+    topmost: ['outer', 'base', 'underwear'],
+    all: ['outer', 'base', 'underwear', 'accessories'],
+    outer: ['outer'],
+    base: ['base'],
+    underwear: ['underwear'],
+  };
+
+  /**
+   * Gets all clothing items from a clothing access object
+   *
+   * @param {object} clothingAccess - The clothing access object
+   * @returns {Array} Array of clothing entity IDs
+   */
+  function getAllClothingItems(clothingAccess) {
+    const { equipped, mode } = clothingAccess;
+    const result = [];
+    const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
+
+    for (const [slotName, slotData] of Object.entries(equipped)) {
+      if (!slotData || typeof slotData !== 'object') {
+        continue;
+      }
+
+      for (const layer of layers) {
+        if (slotData[layer]) {
+          result.push(slotData[layer]);
+          if (mode === 'topmost') {
+            break; // Only take the topmost for topmost mode
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
   return {
     /**
      * Checks if this resolver can handle the given node.
@@ -65,6 +102,14 @@ export default function createArrayIterationResolver() {
       for (const parentValue of parentResult) {
         if (Array.isArray(parentValue)) {
           for (const item of parentValue) {
+            if (item !== null && item !== undefined) {
+              result.add(item);
+            }
+          }
+        } else if (parentValue && parentValue.__isClothingAccessObject) {
+          // Handle clothing access objects from ClothingStepResolver
+          const items = getAllClothingItems(parentValue);
+          for (const item of items) {
             if (item !== null && item !== undefined) {
               result.add(item);
             }
