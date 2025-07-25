@@ -166,7 +166,7 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
         parseDslExpression(
           'entities(core:item)[{123: [{"var": "type"}, "weapon"]}]'
         );
-      }).toThrow('Unexpected character');
+      }).toThrow('Expected string key in JSON Logic object');
     });
 
     test('should handle missing colon after key in JSON Logic', () => {
@@ -224,11 +224,10 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
 
   describe('JSON Logic parsing edge cases', () => {
     test('should handle numeric values in JSON Logic', () => {
-      expect(() => {
-        parseDslExpression(
-          'entities(core:item)[{"==": [{"var": "level"}, 5]}]'
-        );
-      }).toThrow(ScopeSyntaxError);
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "level"}, 5]}]'
+      );
+      expect(result.logic['==']).toEqual([{ var: 'level' }, 5]);
     });
 
     test('should handle boolean values in JSON Logic', () => {
@@ -246,11 +245,10 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
     });
 
     test('should handle nested objects in JSON Logic', () => {
-      expect(() => {
-        parseDslExpression(
-          'entities(core:item)[{"==": [{"var": "config"}, {"enabled": true, "level": 5}]}]'
-        );
-      }).toThrow(ScopeSyntaxError);
+      const result = parseDslExpression(
+        'entities(core:item)[{"==": [{"var": "config"}, {"enabled": true, "level": 5}]}]'
+      );
+      expect(result.logic['==']).toEqual([{ var: 'config' }, { enabled: true, level: 5 }]);
     });
 
     test('should handle arrays in JSON Logic', () => {

@@ -210,6 +210,7 @@ class Parser {
 
   parseJsonValue() {
     if (this.match('STRING')) return this.advance().value;
+    if (this.match('NUMBER')) return Number(this.advance().value);
     if (this.match('IDENTIFIER')) {
       const v = this.advance().value;
       if (v === 'true') return true;
@@ -218,7 +219,7 @@ class Parser {
     }
     if (this.match('LBRACKET')) return this.parseJsonArray();
     if (this.match('LBRACE')) return this.parseJsonLogic();
-    this.error('Expected JSON value (string, identifier, array, or object)');
+    this.error('Expected JSON value (string, number, identifier, array, or object)');
   }
 
   parseJsonArray() {

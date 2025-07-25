@@ -103,6 +103,53 @@ class ScopeEngine extends IScopeEngine {
         const em = runtimeCtx?.entityManager;
         return em?.getEntity ? em.getEntity(eid) : em?.getEntityInstance(eid);
       },
+      getItemComponents: (itemId) => {
+        // Primary path: Check if it's an entity (most clothing items)
+        const entityManager = runtimeCtx?.entityManager;
+        const entity = entityManager?.getEntity 
+          ? entityManager.getEntity(itemId) 
+          : entityManager?.getEntityInstance(itemId);
+        
+        if (entity) {
+          // Convert entity components to plain object for JSON Logic
+          const components = {};
+          if (entity.components instanceof Map) {
+            for (const [componentId, data] of entity.components) {
+              components[componentId] = data;
+            }
+          } else if (entity.components && typeof entity.components === 'object') {
+            Object.assign(components, entity.components);
+          } else if (Array.isArray(entity.componentTypeIds)) {
+            // Build components from componentTypeIds
+            for (const componentTypeId of entity.componentTypeIds) {
+              const data = entity.getComponentData?.(componentTypeId) ||
+                           entityManager?.getComponentData(itemId, componentTypeId);
+              if (data) {
+                components[componentTypeId] = data;
+              }
+            }
+          }
+          return components;
+        }
+
+        // Fallback: Try component registry for item templates/definitions
+        const componentRegistry = runtimeCtx?.componentRegistry;
+        if (componentRegistry) {
+          // Check for item definitions in registry
+          const itemDef = componentRegistry.getDefinition?.(`item:${itemId}`);
+          if (itemDef?.components) {
+            return itemDef.components;
+          }
+
+          // Check clothing-specific definitions
+          const clothingDef = componentRegistry.getDefinition?.(`clothing:${itemId}`);
+          if (clothingDef?.components) {
+            return clothingDef.components;
+          }
+        }
+
+        return null;
+      },
     };
   }
 

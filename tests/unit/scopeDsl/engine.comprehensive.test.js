@@ -149,9 +149,10 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
         throw new Error('JSON Logic evaluation failed');
       });
 
-      expect(() => {
-        engine.resolve(ast, actorEntity, mockRuntimeCtx);
-      }).toThrow('JSON Logic evaluation failed');
+      // Filter resolver now handles evaluation errors gracefully
+      // Items that fail evaluation are simply excluded from results
+      const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+      expect(result).toEqual(new Set()); // No items pass due to evaluation errors
     });
 
     // Cycle detection is thoroughly tested in engine.test.js

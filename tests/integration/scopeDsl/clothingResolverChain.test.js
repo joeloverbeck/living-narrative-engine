@@ -56,7 +56,20 @@ describe('Clothing Resolver Chain Integration', () => {
         }),
         hasComponent: jest.fn().mockReturnValue(true),
         getEntitiesWithComponent: jest.fn().mockReturnValue([]),
-        getEntity: jest.fn().mockReturnValue(mockActorEntity),
+        getEntity: jest.fn((entityId) => {
+          // Return appropriate entity based on ID
+          if (entityId === 'player_character') {
+            return mockActorEntity;
+          }
+          return null; // Default for unknown entities
+        }),
+        getEntityInstance: jest.fn((entityId) => {
+          // Default behavior - will be overridden in specific tests that need it
+          if (entityId === 'player_character') {
+            return mockActorEntity;
+          }
+          return null;
+        }),
       },
       jsonLogicEval: {
         evaluate: jest.fn().mockReturnValue(true),
@@ -245,11 +258,9 @@ describe('Clothing Resolver Chain Integration', () => {
     // These tests are intentionally skipped as they test features not yet implemented.
     // Remove .skip and implement the required features to enable these tests.
 
-    // SKIPPED: Union operator (|) requires tokenizer enhancement
-    // Implementation needed: Add union operator to src/scopeDsl/parser/tokenizer.js
-    // Syntax: 'query1 | query2' should return combined results from both queries
-    // Related: Enhancement planned for scope DSL union operations
-    it.skip('should handle union of clothing queries', () => {
+    // Union operator (|) is already implemented in tokenizer and parser
+    // This test should now pass with existing implementation
+    it('should handle union of clothing queries', () => {
       const ast = parser.parse(
         'actor.topmost_clothing.torso_upper | actor.topmost_clothing.torso_lower'
       );
@@ -258,11 +269,8 @@ describe('Clothing Resolver Chain Integration', () => {
       expect(result).toEqual(new Set(['leather_jacket_001', 'jeans_004']));
     });
 
-    // SKIPPED: Complex filter syntax requires parser enhancement
-    // Implementation needed: Enhanced filter parser for nested JSON Logic expressions
-    // Syntax: 'query[][filter_expression]' for conditional result filtering
-    // Related: Advanced filtering capabilities for scope DSL queries
-    it.skip('should handle filtered clothing results', () => {
+    // Enhanced filter syntax - needs further implementation work
+    it('should handle filtered clothing results', () => {
       // Mock some clothing items to have a specific component
       mockRuntimeContext.entityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
@@ -295,14 +303,57 @@ describe('Clothing Resolver Chain Integration', () => {
         }
       );
 
+      // Mock entity instances for createEvaluationContext - override getEntity since that's what gets called
+      mockRuntimeContext.entityManager.getEntity = jest.fn((entityId) => {
+        if (entityId === 'player_character') {
+          return mockActorEntity;
+        }
+        // Mock clothing entities with component type IDs for buildComponents
+        if (entityId === 'leather_jacket_001') {
+          return {
+            id: 'leather_jacket_001',
+            componentTypeIds: ['core:tags']
+          };
+        }
+        if (entityId === 'jeans_004') {
+          return {
+            id: 'jeans_004', 
+            componentTypeIds: ['core:tags']
+          };
+        }
+        if (entityId === 'cotton_shirt_002') {
+          return {
+            id: 'cotton_shirt_002',
+            componentTypeIds: ['core:tags']
+          };
+        }
+        return null;
+      });
+
       mockRuntimeContext.jsonLogicEval.evaluate.mockImplementation(
-        (logic, context) => {
-          // Simple mock evaluation - check if item has 'waterproof' tag
-          if (context.id === 'leather_jacket_001') return true;
-          if (context.id === 'jeans_004') return false;
+        function(logic, context) {
+          // Proper JSON Logic evaluation implementation for tests
+          if (logic.in && Array.isArray(logic.in) && logic.in.length === 2) {
+            const [value, data] = logic.in;
+            const resolvedData = this._resolveVar(data, context);
+            return Array.isArray(resolvedData) && resolvedData.includes(value);
+          }
           return false;
         }
       );
+
+      mockRuntimeContext.jsonLogicEval._resolveVar = function(expr, context) {
+        if (expr && expr.var) {
+          const path = expr.var.split('.');
+          let result = context;
+          for (const key of path) {
+            result = result?.[key];
+            if (result === undefined) break;
+          }
+          return result;
+        }
+        return expr;
+      };
 
       const ast = parser.parse(
         'actor.topmost_clothing[][{"in": ["waterproof", {"var": "components.core:tags.tags"}]}]'

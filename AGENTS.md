@@ -132,8 +132,9 @@ Testing Done:
 | --------------------------- | ------------------------------------ |
 | Prettier changes on CI      | Run `npm run format` locally         |
 | ESLint rule not auto-fixing | Address manually or adjust config    |
-| Tests can’t find `jest`     | `rm -rf node_modules && npm install` |
+| Tests can't find `jest`     | `rm -rf node_modules && npm install` |
 | Port 8080 already in use    | `PORT=8081 npm run start`            |
+| CORS errors from 8081       | Already supported - check proxy is running |
 | Proxy env vars missing      | Copy `.env.example` → `.env`         |
 
 Remember to consult CONTRIBUTING.md for more detailed information on all aspects of contributing to this project.
