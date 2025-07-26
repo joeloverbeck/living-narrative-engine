@@ -12,7 +12,7 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import { LLMServiceFacade } from '../../../../src/testing/facades/llmServiceFacade.js';
+import { LLMServiceFacade } from '../../../common/facades/llmServiceFacade.js';
 
 describe('LLMServiceFacade', () => {
   let mockDependencies;

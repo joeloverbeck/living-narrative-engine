@@ -12,7 +12,7 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import { TurnExecutionFacade } from '../../../../src/testing/facades/turnExecutionFacade.js';
+import { TurnExecutionFacade } from '../../../common/facades/turnExecutionFacade.js';
 
 describe('TurnExecutionFacade', () => {
   let mockDependencies;

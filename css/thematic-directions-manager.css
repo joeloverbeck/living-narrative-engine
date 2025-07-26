@@ -79,7 +79,12 @@
   flex-direction: column;
 }
 
-#directions-container {
+.directions-panel-header {
+  flex-shrink: 0;
+  margin-bottom: 1rem;
+}
+
+.directions-content {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -88,22 +93,22 @@
 }
 
 /* Custom scrollbar styling */
-#directions-container::-webkit-scrollbar {
+.directions-content::-webkit-scrollbar {
   width: 8px;
 }
 
-#directions-container::-webkit-scrollbar-track {
+.directions-content::-webkit-scrollbar-track {
   background: var(--bg-tertiary);
   border-radius: 4px;
 }
 
-#directions-container::-webkit-scrollbar-thumb {
+.directions-content::-webkit-scrollbar-thumb {
   background: var(--border-primary);
   border-radius: 4px;
   transition: background 0.2s ease;
 }
 
-#directions-container::-webkit-scrollbar-thumb:hover {
+.directions-content::-webkit-scrollbar-thumb:hover {
   background: var(--accent-primary);
 }
 
@@ -136,7 +141,6 @@
 
 /* Smooth scrolling */
 .directions-results {
-  padding-top: 1rem; /* Reduced padding - header already has bottom margin */
   padding-bottom: 2rem; /* Ensure last item isn't cut off */
 }
 
@@ -152,7 +156,6 @@
   position: relative;
   overflow: hidden;
   animation: slideIn 0.4s ease backwards;
-  scroll-margin-top: 4rem; /* Prevent cards from scrolling under the header */
 }
 
 .direction-card-editable::before {
@@ -188,10 +191,6 @@
   animation-delay: 0.1s;
 }
 
-/* Ensure first card has extra spacing from header */
-.direction-card-editable:first-child {
-  margin-top: 0.5rem;
-}
 .direction-card-editable:nth-child(2) {
   animation-delay: 0.2s;
 }
@@ -632,7 +631,7 @@
     flex-direction: column;
   }
 
-  #directions-container {
+  .directions-content {
     flex: 1;
     min-height: 0;
   }

@@ -121,7 +121,7 @@ Replace facade imports with TestModuleBuilder:
 
 ```javascript
 // Remove:
-import { createMockFacades } from '../../../src/testing/facades/testingFacadeRegistrations.js';
+import { createMockFacades } from '../../../tests/common/facades/testingFacadeRegistrations.js';
 
 // Add:
 import { TestModuleBuilder } from '../../../tests/common/builders/testModuleBuilder.js';

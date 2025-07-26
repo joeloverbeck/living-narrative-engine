@@ -8,7 +8,7 @@
  * testing experience with fluent API and preset configurations.
  */
 
-import { tokens } from '../../dependencyInjection/tokens.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { LLMServiceFacade } from './llmServiceFacade.js';
 import { ActionServiceFacade } from './actionServiceFacade.js';
 import { EntityServiceFacade } from './entityServiceFacade.js';

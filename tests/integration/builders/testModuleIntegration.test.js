@@ -16,7 +16,7 @@ import {
   TestScenarioPresets,
   createTestModules,
 } from '../../common/testing/builders/index.js';
-import { createMockFacades } from '../../../src/testing/facades/testingFacadeRegistrations.js';
+import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
 
 describe('Test Module Pattern Integration', () => {
   let testEnv;

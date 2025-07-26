@@ -7,12 +7,12 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import {
   registerTestingFacades,
   createMockFacades,
-} from '../../../../src/testing/facades/testingFacadeRegistrations.js';
+} from '../../../common/facades/testingFacadeRegistrations.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
-import { LLMServiceFacade } from '../../../../src/testing/facades/llmServiceFacade.js';
-import { ActionServiceFacade } from '../../../../src/testing/facades/actionServiceFacade.js';
-import { EntityServiceFacade } from '../../../../src/testing/facades/entityServiceFacade.js';
-import { TurnExecutionFacade } from '../../../../src/testing/facades/turnExecutionFacade.js';
+import { LLMServiceFacade } from '../../../common/facades/llmServiceFacade.js';
+import { ActionServiceFacade } from '../../../common/facades/actionServiceFacade.js';
+import { EntityServiceFacade } from '../../../common/facades/entityServiceFacade.js';
+import { TurnExecutionFacade } from '../../../common/facades/turnExecutionFacade.js';
 // Test module imports removed - they're now in tests/common/testing/builders/
 
 describe('testingFacadeRegistrations', () => {

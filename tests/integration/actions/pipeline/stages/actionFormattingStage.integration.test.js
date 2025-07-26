@@ -17,6 +17,7 @@ import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResu
 import { ERROR_PHASES } from '../../../../../src/actions/errors/actionErrorTypes.js';
 import { ActionErrorContextBuilder } from '../../../../../src/actions/errors/actionErrorContextBuilder.js';
 import ActionFormatter from '../../../../../src/actions/actionFormatter.js';
+import { MultiTargetActionFormatter } from '../../../../../src/actions/formatters/MultiTargetActionFormatter.js';
 import ConsoleLogger from '../../../../../src/logging/consoleLogger.js';
 import { EntityManagerTestBed } from '../../../../common/entities/entityManagerTestBed.js';
 import EntityDefinition from '../../../../../src/entities/entityDefinition.js';
@@ -689,6 +690,322 @@ describe('ActionFormattingStage - Integration Tests', () => {
         'Formatting 1 actions with their targets',
         'ActionFormattingStage.execute'
       );
+      expect(trace.info).toHaveBeenCalledWith(
+        'Action formatting completed: 1 formatted actions, 0 errors',
+        'ActionFormattingStage.execute'
+      );
+    });
+  });
+
+  describe('Multi-Target Integration', () => {
+    let multiTargetStage;
+    let multiTargetFormatter;
+
+    beforeEach(() => {
+      // Create a MultiTargetActionFormatter for these tests
+      const baseFormatter = new ActionFormatter();
+      multiTargetFormatter = new MultiTargetActionFormatter(baseFormatter, logger);
+
+      // Create stage with multi-target formatter
+      multiTargetStage = new ActionFormattingStage({
+        commandFormatter: multiTargetFormatter,
+        entityManager,
+        safeEventDispatcher,
+        getEntityDisplayNameFn,
+        errorContextBuilder,
+        logger,
+      });
+    });
+
+    it('should integrate with MultiTargetResolutionStage data flow', async () => {
+      // Arrange - Setup entities that would be resolved by MultiTargetResolutionStage
+      const swordDef = new EntityDefinition('test:sword', {
+        description: 'Test sword entity',
+        components: {
+          'core:name': { value: 'Iron Sword' },
+          'core:item': { type: 'weapon' },
+        },
+      });
+      const goblinDef = new EntityDefinition('test:goblin', {
+        description: 'Test goblin entity',
+        components: {
+          'core:name': { value: 'Goblin Warrior' },
+          'core:actor': { name: 'Goblin Warrior' },
+        },
+      });
+      
+      testBed.setupDefinitions(swordDef, goblinDef);
+      
+      const sword = await testBed.entityManager.createEntityInstance('test:sword', {
+        instanceId: 'sword-001',
+      });
+      const goblin = await testBed.entityManager.createEntityInstance('test:goblin', {
+        instanceId: 'goblin-001',
+      });
+
+      // Multi-target action definition
+      const multiTargetActionDef = {
+        id: 'combat:throw',
+        name: 'Throw',
+        template: 'throw {item} at {target}',
+        targets: {
+          primary: { scope: 'actor.inventory[]', placeholder: 'item' },
+          secondary: { scope: 'location.actors[]', placeholder: 'target' },
+        },
+      };
+
+      // Context structure that MultiTargetResolutionStage would provide
+      const multiTargetContext = {
+        actor,
+        actionsWithTargets: [
+          {
+            actionDef: multiTargetActionDef,
+            targetContexts: [
+              ActionTargetContext.forEntity('sword-001'),
+              ActionTargetContext.forEntity('goblin-001'),
+            ],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'sword-001', displayName: 'Iron Sword' }],
+          secondary: [{ id: 'goblin-001', displayName: 'Goblin Warrior' }],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'item' },
+          secondary: { placeholder: 'target' },
+        },
+        trace,
+      };
+
+      // Act
+      const result = await multiTargetStage.execute(multiTargetContext);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      
+      const formattedAction = result.actions[0];
+      expect(formattedAction).toEqual({
+        id: 'combat:throw',
+        name: 'Throw',
+        command: 'throw Iron Sword at Goblin Warrior',
+        description: '',
+        params: {
+          targetIds: {
+            primary: ['sword-001'],
+            secondary: ['goblin-001'],
+          },
+          isMultiTarget: true,
+        },
+      });
+
+      expect(trace.info).toHaveBeenCalledWith(
+        'Multi-target action formatting completed: 1 formatted actions, 0 errors',
+        'ActionFormattingStage.execute'
+      );
+    });
+
+    it('should handle multiple target combinations', async () => {
+      // Arrange - Multiple items and targets
+      const knife = new EntityDefinition('test:knife', {
+        description: 'Test knife entity',
+        components: {
+          'core:name': { value: 'Steel Knife' },
+        },
+      });
+      const orc = new EntityDefinition('test:orc', {
+        description: 'Test orc entity',
+        components: {
+          'core:name': { value: 'Orc Brute' },
+        },
+      });
+      
+      testBed.setupDefinitions(knife, orc);
+      
+      await testBed.entityManager.createEntityInstance('test:knife', {
+        instanceId: 'knife-001',
+      });
+      await testBed.entityManager.createEntityInstance('test:orc', {
+        instanceId: 'orc-001',
+      });
+
+      const multiTargetActionDef = {
+        id: 'combat:multi_throw',
+        name: 'Multi Throw',
+        template: 'throw {item} at {target}',
+        generateCombinations: true,
+      };
+
+      const multiTargetContext = {
+        actor,
+        actionsWithTargets: [
+          {
+            actionDef: multiTargetActionDef,
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [
+            { id: 'knife-001', displayName: 'Steel Knife' },
+            { id: 'sword-001', displayName: 'Iron Sword' },
+          ],
+          secondary: [
+            { id: 'orc-001', displayName: 'Orc Brute' },
+            { id: 'goblin-001', displayName: 'Goblin Warrior' },
+          ],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'item' },
+          secondary: { placeholder: 'target' },
+        },
+        trace,
+      };
+
+      // Act
+      const result = await multiTargetStage.execute(multiTargetContext);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      
+      const formattedAction = result.actions[0];
+      expect(formattedAction.id).toBe('combat:multi_throw');
+      // The command should be an array of combinations when generateCombinations is true
+      expect(formattedAction.params.isMultiTarget).toBe(true);
+    });
+
+    it('should fallback gracefully when multi-target formatter unavailable', async () => {
+      // Arrange - Setup entities for the test
+      const itemDef = new EntityDefinition('test:item', {
+        description: 'Test item entity',
+        components: {
+          'core:name': { value: 'Test Item' },
+        },
+      });
+      
+      testBed.setupDefinitions(itemDef);
+      
+      await testBed.entityManager.createEntityInstance('test:item', {
+        instanceId: 'item-001',
+      });
+
+      // Use base formatter without multi-target support
+      const baseOnlyStage = new ActionFormattingStage({
+        commandFormatter: new ActionFormatter(), // Base formatter only
+        entityManager,
+        safeEventDispatcher,
+        getEntityDisplayNameFn,
+        errorContextBuilder,
+        logger,
+      });
+
+      const multiTargetContext = {
+        actor,
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:fallback',
+              name: 'Fallback Action',
+              template: 'use {item}',
+            },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'item-001', displayName: 'Test Item' }],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'item' },
+        },
+        trace,
+      };
+
+      // Act
+      const result = await baseOnlyStage.execute(multiTargetContext);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0].command).toBe('use Test Item');
+      expect(result.actions[0].params.targetId).toBe('item-001');
+    });
+
+    it('should handle empty resolved targets gracefully', async () => {
+      // Arrange
+      const multiTargetContext = {
+        actor,
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:empty',
+              name: 'Empty Action',
+              template: 'use {item}',
+            },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [], // No targets available
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'item' },
+        },
+        trace,
+      };
+
+      // Act
+      const result = await multiTargetStage.execute(multiTargetContext);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0].command).toBe('use {item}'); // Placeholder not replaced
+    });
+
+    it('should preserve backward compatibility with legacy actions', async () => {
+      // Arrange - Legacy action format (no resolvedTargets/targetDefinitions)
+      const door = new EntityDefinition('test:door', {
+        description: 'Test door entity',
+        components: {
+          'core:name': { value: 'Wooden Door' },
+        },
+      });
+      
+      testBed.setupDefinitions(door);
+      
+      await testBed.entityManager.createEntityInstance('test:door', {
+        instanceId: 'door-001',
+      });
+
+      const legacyContext = {
+        actor,
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:legacy',
+              name: 'Legacy Action',
+              template: 'open {target}',
+              scope: 'entity',
+            },
+            targetContexts: [
+              ActionTargetContext.forEntity('door-001'),
+            ],
+          },
+        ],
+        // No resolvedTargets or targetDefinitions - triggers legacy path
+        trace,
+      };
+
+      // Act
+      const result = await multiTargetStage.execute(legacyContext);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0].command).toBe('open Wooden Door');
+      expect(result.actions[0].params.targetId).toBe('door-001');
+      expect(result.actions[0].params.isMultiTarget).toBeUndefined();
+
       expect(trace.info).toHaveBeenCalledWith(
         'Action formatting completed: 1 formatted actions, 0 errors',
         'ActionFormattingStage.execute'

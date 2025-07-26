@@ -1,18 +1,23 @@
 /**
- * @file Testing Utilities - Central Export
- * @description Provides a unified export point for all testing utilities including facades and builders.
- * This centralizes all testing helpers for easy discovery and import.
+ * @file Testing Utilities - Central Export (DEPRECATED)
+ * @description This file has been deprecated. Testing utilities have been moved to tests/common/
+ * 
+ * MIGRATION GUIDE:
+ * - Facades moved to: tests/common/facades/
+ * - Builders moved to: tests/common/testing/builders/
+ * 
+ * @deprecated Use imports from tests/common/facades/ directly
  */
 
-// Export all facades
-export * from './facades/index.js';
+// DEPRECATED: Use tests/common/facades/ directly
+// export * from './facades/index.js';
 
-// Export all builders - builders have been moved to tests/common/testing/builders/
+// DEPRECATED: Use tests/common/testing/builders/ directly  
 // export * from './builders/index.js';
 
-// Export facade registration and creation functions
-export {
-  registerTestingFacades,
-  createMockFacades,
-  createTestModules,
-} from './facades/testingFacadeRegistrations.js';
+// DEPRECATED: Import directly from tests/common/facades/testingFacadeRegistrations.js
+// export {
+//   registerTestingFacades,
+//   createMockFacades,
+//   createTestModules,
+// } from './facades/testingFacadeRegistrations.js';

@@ -24,7 +24,7 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import { createMockFacades } from '../../../src/testing/facades/testingFacadeRegistrations.js';
+import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
 import {
   ATTEMPT_ACTION_ID,
   TURN_PROCESSING_STARTED,
