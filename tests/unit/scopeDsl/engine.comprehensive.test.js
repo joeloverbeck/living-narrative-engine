@@ -168,33 +168,39 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
       });
 
       // Mock actor with inventory array
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'actor123' && componentId === 'core:inventory') {
-          return ['item1', 'item2', 'item3'];
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'actor123' && componentId === 'core:inventory') {
+            return ['item1', 'item2', 'item3'];
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
       expect(result).toEqual(new Set(['item1', 'item2', 'item3']));
 
       // Test with array containing null and undefined
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'actor123' && componentId === 'core:inventory') {
-          return ['item1', null, 'item2', undefined, 'item3'];
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'actor123' && componentId === 'core:inventory') {
+            return ['item1', null, 'item2', undefined, 'item3'];
+          }
+          return null;
         }
-        return null;
-      });
+      );
       const result2 = engine.resolve(ast, actorEntity, mockRuntimeCtx);
       expect(result2).toEqual(new Set(['item1', 'item2', 'item3']));
 
       // Test with non-array value (should return empty set for array iteration)
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === 'actor123' && componentId === 'core:inventory') {
-          return 'not an array';
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'actor123' && componentId === 'core:inventory') {
+            return 'not an array';
+          }
+          return null;
         }
-        return null;
-      });
+      );
       const result3 = engine.resolve(ast, actorEntity, mockRuntimeCtx);
       expect(result3.size).toBe(0);
     });

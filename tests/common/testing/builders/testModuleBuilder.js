@@ -71,40 +71,43 @@ export class TestModuleBuilder {
    *
    * @namespace
    */
-  static scenarios = new Proxy({}, {
-    get(target, prop) {
-      // Handle symbol properties (like Symbol.toStringTag)
-      if (typeof prop === 'symbol') {
-        return target[prop];
-      }
-      
-      // Try to get the preset from the registry
-      try {
-        const presetFactory = TestModuleRegistry.getPreset(prop);
-        return presetFactory;
-      } catch (error) {
-        // If preset not found, return undefined (standard JS behavior)
+  static scenarios = new Proxy(
+    {},
+    {
+      get(target, prop) {
+        // Handle symbol properties (like Symbol.toStringTag)
+        if (typeof prop === 'symbol') {
+          return target[prop];
+        }
+
+        // Try to get the preset from the registry
+        try {
+          const presetFactory = TestModuleRegistry.getPreset(prop);
+          return presetFactory;
+        } catch (error) {
+          // If preset not found, return undefined (standard JS behavior)
+          return undefined;
+        }
+      },
+
+      // List available presets when Object.keys() is called
+      ownKeys() {
+        return TestModuleRegistry.getPresetNames();
+      },
+
+      // Make properties enumerable
+      getOwnPropertyDescriptor(target, prop) {
+        if (TestModuleRegistry.getPresetNames().includes(prop)) {
+          return {
+            enumerable: true,
+            configurable: true,
+            value: TestModuleRegistry.getPreset(prop),
+          };
+        }
         return undefined;
-      }
-    },
-    
-    // List available presets when Object.keys() is called
-    ownKeys() {
-      return TestModuleRegistry.getPresetNames();
-    },
-    
-    // Make properties enumerable
-    getOwnPropertyDescriptor(target, prop) {
-      if (TestModuleRegistry.getPresetNames().includes(prop)) {
-        return {
-          enumerable: true,
-          configurable: true,
-          value: TestModuleRegistry.getPreset(prop)
-        };
-      }
-      return undefined;
+      },
     }
-  });
+  );
 
   /**
    * Advanced builders for specific testing needs

@@ -1,9 +1,13 @@
 # Ticket: Update CommandProcessor for Multi-Target Payloads
 
 ## Ticket ID: PHASE4-TICKET11
+
 ## Priority: Medium
+
 ## Estimated Time: 5-7 hours
+
 ## Dependencies: PHASE2-TICKET4, PHASE2-TICKET5, PHASE2-TICKET6
+
 ## Blocks: PHASE4-TICKET14, PHASE5-TICKET17
 
 ## Overview
@@ -21,6 +25,7 @@ Update the command processor and event dispatcher to handle multi-target action 
 ## Current State Analysis
 
 The current system likely expects single-target payloads with structure:
+
 ```javascript
 {
   actionId: 'action:id',
@@ -31,6 +36,7 @@ The current system likely expects single-target payloads with structure:
 ```
 
 New system should support:
+
 ```javascript
 {
   actionId: 'action:id',
@@ -209,12 +215,12 @@ export class CommandProcessor {
    * @param {ILogger} deps.logger
    * @param {Function} [deps.payloadValidator] - Custom payload validator
    */
-  constructor({ 
-    eventBus, 
-    entityManager, 
-    actionRegistry, 
+  constructor({
+    eventBus,
+    entityManager,
+    actionRegistry,
     logger,
-    payloadValidator 
+    payloadValidator,
   }) {
     validateDependency(eventBus, 'IEventBus');
     validateDependency(entityManager, 'IEntityManager');
@@ -225,7 +231,8 @@ export class CommandProcessor {
     this.#entityManager = entityManager;
     this.#actionRegistry = actionRegistry;
     this.#logger = logger;
-    this.#payloadValidator = payloadValidator || this.#defaultPayloadValidator.bind(this);
+    this.#payloadValidator =
+      payloadValidator || this.#defaultPayloadValidator.bind(this);
   }
 
   /**
@@ -257,7 +264,9 @@ export class CommandProcessor {
       const entityValidation = await this.#validateEntities(command);
       if (!entityValidation.valid) {
         return CommandResult.failure(
-          new Error(`Entity validation failed: ${entityValidation.errors.join(', ')}`)
+          new Error(
+            `Entity validation failed: ${entityValidation.errors.join(', ')}`
+          )
         );
       }
 
@@ -268,7 +277,9 @@ export class CommandProcessor {
       const payloadValidation = this.#payloadValidator(payload);
       if (!payloadValidation.valid) {
         return CommandResult.failure(
-          new Error(`Payload validation failed: ${payloadValidation.errors.join(', ')}`)
+          new Error(
+            `Payload validation failed: ${payloadValidation.errors.join(', ')}`
+          )
         );
       }
 
@@ -276,7 +287,7 @@ export class CommandProcessor {
       await this.#eventBus.dispatch({
         type: 'core:attempt_action',
         payload,
-        source: 'CommandProcessor'
+        source: 'CommandProcessor',
       });
 
       // Dispatch action-specific event if configured
@@ -284,15 +295,17 @@ export class CommandProcessor {
         await this.#eventBus.dispatch({
           type: `${command.actionId.replace(':', '_')}_attempted`,
           payload,
-          source: 'CommandProcessor'
+          source: 'CommandProcessor',
         });
       }
 
       this.#logger.info(`Command processed successfully: ${command.actionId}`);
       return CommandResult.success(payload);
-
     } catch (error) {
-      this.#logger.error(`Error processing command ${command.actionId}:`, error);
+      this.#logger.error(
+        `Error processing command ${command.actionId}:`,
+        error
+      );
       return CommandResult.failure(error);
     }
   }
@@ -304,17 +317,17 @@ export class CommandProcessor {
    */
   async processCommands(commands) {
     const results = [];
-    
+
     for (const command of commands) {
       const result = await this.processCommand(command);
       results.push(result);
-      
+
       // Stop on first failure if configured
       if (!result.success && this.#shouldStopOnFailure(command)) {
         break;
       }
     }
-    
+
     return results;
   }
 
@@ -348,7 +361,7 @@ export class CommandProcessor {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -381,7 +394,7 @@ export class CommandProcessor {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -418,7 +431,7 @@ export class CommandProcessor {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -433,14 +446,16 @@ export class CommandProcessor {
       timestamp: Date.now(),
       context: {
         location: command.context?.location,
-        ...command.context
+        ...command.context,
       },
       metadata: {
-        isMultiTarget: Boolean(command.targets && Object.keys(command.targets).length > 1),
+        isMultiTarget: Boolean(
+          command.targets && Object.keys(command.targets).length > 1
+        ),
         formattedText: command.metadata?.formattedText,
         actionDefinition: actionDef,
-        ...command.metadata
-      }
+        ...command.metadata,
+      },
     };
 
     // Add legacy targetId for backward compatibility
@@ -468,13 +483,13 @@ export class CommandProcessor {
 
     for (const [key, target] of Object.entries(targets)) {
       const entity = this.#entityManager.getEntity(target.id);
-      
+
       enriched[key] = {
         id: target.id,
         displayName: target.displayName || this.#getEntityDisplayName(entity),
         placeholder: target.placeholder,
         components: entity ? this.#getRelevantComponents(entity) : {},
-        ...target // Preserve any additional properties
+        ...target, // Preserve any additional properties
       };
     }
 
@@ -493,7 +508,7 @@ export class CommandProcessor {
       () => entity.getComponent('core:actor')?.name,
       () => entity.getComponent('core:item')?.name,
       () => entity.getComponent('core:location')?.name,
-      () => entity.id
+      () => entity.id,
     ];
 
     for (const getNameFn of nameSources) {
@@ -517,9 +532,11 @@ export class CommandProcessor {
 
     for (const [componentId, component] of Object.entries(allComponents)) {
       // Skip internal or large components
-      if (componentId.startsWith('_') || 
-          componentId.includes('cache') ||
-          componentId.includes('internal')) {
+      if (
+        componentId.startsWith('_') ||
+        componentId.includes('cache') ||
+        componentId.includes('internal')
+      ) {
         continue;
       }
 
@@ -549,7 +566,7 @@ export class CommandProcessor {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -652,11 +669,13 @@ export class CommandResult {
     return {
       success: this.#success,
       data: this.#data,
-      error: this.#error ? {
-        message: this.#error.message,
-        stack: this.#error.stack
-      } : null,
-      metadata: this.#metadata
+      error: this.#error
+        ? {
+            message: this.#error.message,
+            stack: this.#error.stack,
+          }
+        : null,
+      metadata: this.#metadata,
     };
   }
 }
@@ -714,7 +733,6 @@ export class MultiTargetEventDispatcher {
       if (payload.metadata?.combinations) {
         await this.#dispatchCombinationEvents(payload, actionDef);
       }
-
     } catch (error) {
       this.#logger.error('Error dispatching multi-target events:', error);
       throw error;
@@ -730,7 +748,7 @@ export class MultiTargetEventDispatcher {
       type: 'core:attempt_action',
       payload,
       source: 'MultiTargetEventDispatcher',
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     await this.#eventBus.dispatch(event);
@@ -750,14 +768,16 @@ export class MultiTargetEventDispatcher {
         payload: {
           ...payload,
           currentTarget: target,
-          targetKey
+          targetKey,
         },
         source: 'MultiTargetEventDispatcher',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       await this.#eventBus.dispatch(perTargetEvent);
-      this.#logger.debug(`Dispatched per-target event for ${targetKey}: ${target.id}`);
+      this.#logger.debug(
+        `Dispatched per-target event for ${targetKey}: ${target.id}`
+      );
     }
   }
 
@@ -766,22 +786,27 @@ export class MultiTargetEventDispatcher {
    * @private
    */
   async #dispatchCombinationEvents(payload, actionDef) {
-    for (const [index, combination] of payload.metadata.combinations.entries()) {
+    for (const [
+      index,
+      combination,
+    ] of payload.metadata.combinations.entries()) {
       const combinationEvent = {
         type: `${payload.actionId.replace(':', '_')}_combination`,
         payload: {
           ...payload,
           currentCombination: combination,
-          combinationIndex: index
+          combinationIndex: index,
         },
         source: 'MultiTargetEventDispatcher',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       await this.#eventBus.dispatch(combinationEvent);
     }
 
-    this.#logger.debug(`Dispatched ${payload.metadata.combinations.length} combination events`);
+    this.#logger.debug(
+      `Dispatched ${payload.metadata.combinations.length} combination events`
+    );
   }
 }
 
@@ -806,29 +831,29 @@ describe('CommandProcessor', () => {
 
   beforeEach(() => {
     mockEventBus = {
-      dispatch: jest.fn()
+      dispatch: jest.fn(),
     };
 
     mockEntityManager = {
-      getEntity: jest.fn()
+      getEntity: jest.fn(),
     };
 
     mockActionRegistry = {
-      getAction: jest.fn()
+      getAction: jest.fn(),
     };
 
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     processor = new CommandProcessor({
       eventBus: mockEventBus,
       entityManager: mockEntityManager,
       actionRegistry: mockActionRegistry,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -838,13 +863,13 @@ describe('CommandProcessor', () => {
         actionId: 'test:eat',
         actorId: 'player',
         targetId: 'apple_001',
-        context: { location: 'kitchen' }
+        context: { location: 'kitchen' },
       };
 
       const actionDef = {
         id: 'test:eat',
         name: 'Eat',
-        template: 'eat {target}'
+        template: 'eat {target}',
       };
 
       mockActionRegistry.getAction.mockReturnValue(actionDef);
@@ -860,9 +885,9 @@ describe('CommandProcessor', () => {
         payload: expect.objectContaining({
           actionId: 'test:eat',
           actorId: 'player',
-          targetId: 'apple_001'
+          targetId: 'apple_001',
         }),
-        source: 'CommandProcessor'
+        source: 'CommandProcessor',
       });
     });
   });
@@ -874,9 +899,9 @@ describe('CommandProcessor', () => {
         actorId: 'player',
         targets: {
           primary: { id: 'rock_001', displayName: 'Rock' },
-          secondary: { id: 'goblin_001', displayName: 'Goblin' }
+          secondary: { id: 'goblin_001', displayName: 'Goblin' },
         },
-        context: { location: 'battlefield' }
+        context: { location: 'battlefield' },
       };
 
       const actionDef = {
@@ -884,16 +909,28 @@ describe('CommandProcessor', () => {
         name: 'Throw',
         targets: {
           primary: { placeholder: 'item' },
-          secondary: { placeholder: 'target' }
+          secondary: { placeholder: 'target' },
         },
-        template: 'throw {item} at {target}'
+        template: 'throw {item} at {target}',
       };
 
       mockActionRegistry.getAction.mockReturnValue(actionDef);
       mockEntityManager.getEntity
-        .mockReturnValueOnce({ id: 'player', getComponent: jest.fn(), getAllComponents: () => ({}) })
-        .mockReturnValueOnce({ id: 'rock_001', getComponent: jest.fn(), getAllComponents: () => ({}) })
-        .mockReturnValueOnce({ id: 'goblin_001', getComponent: jest.fn(), getAllComponents: () => ({}) });
+        .mockReturnValueOnce({
+          id: 'player',
+          getComponent: jest.fn(),
+          getAllComponents: () => ({}),
+        })
+        .mockReturnValueOnce({
+          id: 'rock_001',
+          getComponent: jest.fn(),
+          getAllComponents: () => ({}),
+        })
+        .mockReturnValueOnce({
+          id: 'goblin_001',
+          getComponent: jest.fn(),
+          getAllComponents: () => ({}),
+        });
 
       const result = await processor.processCommand(command);
 
@@ -907,18 +944,18 @@ describe('CommandProcessor', () => {
           targets: {
             primary: expect.objectContaining({
               id: 'rock_001',
-              displayName: 'Rock'
+              displayName: 'Rock',
             }),
             secondary: expect.objectContaining({
               id: 'goblin_001',
-              displayName: 'Goblin'
-            })
+              displayName: 'Goblin',
+            }),
           },
           metadata: expect.objectContaining({
-            isMultiTarget: true
-          })
+            isMultiTarget: true,
+          }),
         }),
-        source: 'CommandProcessor'
+        source: 'CommandProcessor',
       });
     });
 
@@ -927,19 +964,27 @@ describe('CommandProcessor', () => {
         actionId: 'test:single_multi',
         actorId: 'player',
         targets: {
-          primary: { id: 'item_001', displayName: 'Item' }
-        }
+          primary: { id: 'item_001', displayName: 'Item' },
+        },
       };
 
       const actionDef = {
         id: 'test:single_multi',
-        name: 'Single Multi'
+        name: 'Single Multi',
       };
 
       mockActionRegistry.getAction.mockReturnValue(actionDef);
       mockEntityManager.getEntity
-        .mockReturnValueOnce({ id: 'player', getComponent: jest.fn(), getAllComponents: () => ({}) })
-        .mockReturnValueOnce({ id: 'item_001', getComponent: jest.fn(), getAllComponents: () => ({}) });
+        .mockReturnValueOnce({
+          id: 'player',
+          getComponent: jest.fn(),
+          getAllComponents: () => ({}),
+        })
+        .mockReturnValueOnce({
+          id: 'item_001',
+          getComponent: jest.fn(),
+          getAllComponents: () => ({}),
+        });
 
       const result = await processor.processCommand(command);
 
@@ -952,7 +997,7 @@ describe('CommandProcessor', () => {
     it('should reject command without actionId', async () => {
       const command = {
         actorId: 'player',
-        targetId: 'target_001'
+        targetId: 'target_001',
       };
 
       const result = await processor.processCommand(command);
@@ -964,7 +1009,7 @@ describe('CommandProcessor', () => {
     it('should reject command without actorId', async () => {
       const command = {
         actionId: 'test:action',
-        targetId: 'target_001'
+        targetId: 'target_001',
       };
 
       const result = await processor.processCommand(command);
@@ -976,13 +1021,15 @@ describe('CommandProcessor', () => {
     it('should reject command without targets or targetId', async () => {
       const command = {
         actionId: 'test:action',
-        actorId: 'player'
+        actorId: 'player',
       };
 
       const result = await processor.processCommand(command);
 
       expect(result.success).toBe(false);
-      expect(result.error.message).toContain('Either targetId or targets must be provided');
+      expect(result.error.message).toContain(
+        'Either targetId or targets must be provided'
+      );
     });
 
     it('should reject command with invalid targets structure', async () => {
@@ -990,8 +1037,8 @@ describe('CommandProcessor', () => {
         actionId: 'test:action',
         actorId: 'player',
         targets: {
-          primary: { /* missing id */ displayName: 'Test' }
-        }
+          primary: { /* missing id */ displayName: 'Test' },
+        },
       };
 
       const result = await processor.processCommand(command);
@@ -1004,7 +1051,7 @@ describe('CommandProcessor', () => {
       const command = {
         actionId: 'test:action',
         actorId: 'nonexistent_player',
-        targetId: 'target_001'
+        targetId: 'target_001',
       };
 
       const actionDef = { id: 'test:action' };
@@ -1021,7 +1068,7 @@ describe('CommandProcessor', () => {
       const command = {
         actionId: 'unknown:action',
         actorId: 'player',
-        targetId: 'target_001'
+        targetId: 'target_001',
       };
 
       mockActionRegistry.getAction.mockReturnValue(null);
@@ -1039,8 +1086,8 @@ describe('CommandProcessor', () => {
         actionId: 'test:action',
         actorId: 'player',
         targets: {
-          primary: { id: 'item_001' }
-        }
+          primary: { id: 'item_001' },
+        },
       };
 
       const actionDef = { id: 'test:action' };
@@ -1048,13 +1095,17 @@ describe('CommandProcessor', () => {
         id: 'item_001',
         getComponent: jest.fn().mockReturnValue({ name: 'Magic Sword' }),
         getAllComponents: jest.fn().mockReturnValue({
-          'core:item': { name: 'Magic Sword', type: 'weapon' }
-        })
+          'core:item': { name: 'Magic Sword', type: 'weapon' },
+        }),
       };
 
       mockActionRegistry.getAction.mockReturnValue(actionDef);
       mockEntityManager.getEntity
-        .mockReturnValueOnce({ id: 'player', getComponent: jest.fn(), getAllComponents: () => ({}) })
+        .mockReturnValueOnce({
+          id: 'player',
+          getComponent: jest.fn(),
+          getAllComponents: () => ({}),
+        })
         .mockReturnValueOnce(itemEntity);
 
       const result = await processor.processCommand(command);
@@ -1065,8 +1116,8 @@ describe('CommandProcessor', () => {
         displayName: 'Magic Sword',
         placeholder: undefined,
         components: {
-          'core:item': { name: 'Magic Sword', type: 'weapon' }
-        }
+          'core:item': { name: 'Magic Sword', type: 'weapon' },
+        },
       });
     });
 
@@ -1075,20 +1126,24 @@ describe('CommandProcessor', () => {
         actionId: 'test:action',
         actorId: 'player',
         targets: {
-          primary: { id: 'unnamed_001' }
-        }
+          primary: { id: 'unnamed_001' },
+        },
       };
 
       const actionDef = { id: 'test:action' };
       const unnamedEntity = {
         id: 'unnamed_001',
         getComponent: jest.fn().mockReturnValue(null),
-        getAllComponents: jest.fn().mockReturnValue({})
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockActionRegistry.getAction.mockReturnValue(actionDef);
       mockEntityManager.getEntity
-        .mockReturnValueOnce({ id: 'player', getComponent: jest.fn(), getAllComponents: () => ({}) })
+        .mockReturnValueOnce({
+          id: 'player',
+          getComponent: jest.fn(),
+          getAllComponents: () => ({}),
+        })
         .mockReturnValueOnce(unnamedEntity);
 
       const result = await processor.processCommand(command);
@@ -1103,12 +1158,15 @@ describe('CommandProcessor', () => {
       const command = {
         actionId: 'test:action',
         actorId: 'player',
-        targetId: 'target_001'
+        targetId: 'target_001',
       };
 
       const actionDef = { id: 'test:action' };
       mockActionRegistry.getAction.mockReturnValue(actionDef);
-      mockEntityManager.getEntity.mockReturnValue({ id: 'test', getComponent: jest.fn() });
+      mockEntityManager.getEntity.mockReturnValue({
+        id: 'test',
+        getComponent: jest.fn(),
+      });
       mockEventBus.dispatch.mockRejectedValue(new Error('Event bus error'));
 
       const result = await processor.processCommand(command);
@@ -1125,18 +1183,21 @@ describe('CommandProcessor', () => {
         {
           actionId: 'test:action1',
           actorId: 'player',
-          targetId: 'target_001'
+          targetId: 'target_001',
         },
         {
           actionId: 'test:action2',
           actorId: 'player',
-          targetId: 'target_002'
-        }
+          targetId: 'target_002',
+        },
       ];
 
       const actionDef = { id: 'test:action' };
       mockActionRegistry.getAction.mockReturnValue(actionDef);
-      mockEntityManager.getEntity.mockReturnValue({ id: 'test', getComponent: jest.fn() });
+      mockEntityManager.getEntity.mockReturnValue({
+        id: 'test',
+        getComponent: jest.fn(),
+      });
 
       const results = await processor.processCommands(commands);
 
@@ -1151,13 +1212,13 @@ describe('CommandProcessor', () => {
         {
           actionId: 'unknown:action',
           actorId: 'player',
-          targetId: 'target_001'
+          targetId: 'target_001',
         },
         {
           actionId: 'test:action2',
           actorId: 'player',
-          targetId: 'target_002'
-        }
+          targetId: 'target_002',
+        },
       ];
 
       mockActionRegistry.getAction.mockReturnValue(null); // First action doesn't exist
@@ -1199,17 +1260,17 @@ describe('Multi-Target Command Processing Integration', () => {
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Hero' },
         'core:inventory': { items: ['rock_001'] },
-        'core:position': { locationId: 'battlefield' }
+        'core:position': { locationId: 'battlefield' },
       });
 
       const rock = testBed.createEntity('rock_001', {
-        'core:item': { name: 'Sharp Rock', type: 'throwable', damage: 5 }
+        'core:item': { name: 'Sharp Rock', type: 'throwable', damage: 5 },
       });
 
       const goblin = testBed.createEntity('goblin_001', {
         'core:actor': { name: 'Goblin Scout' },
         'core:health': { current: 30, max: 30 },
-        'core:position': { locationId: 'battlefield' }
+        'core:position': { locationId: 'battlefield' },
       });
 
       // Register throw action
@@ -1217,10 +1278,13 @@ describe('Multi-Target Command Processing Integration', () => {
         id: 'combat:throw',
         name: 'Throw',
         targets: {
-          primary: { scope: 'actor.core:inventory.items[]', placeholder: 'item' },
-          secondary: { scope: 'location.core:actors[]', placeholder: 'target' }
+          primary: {
+            scope: 'actor.core:inventory.items[]',
+            placeholder: 'item',
+          },
+          secondary: { scope: 'location.core:actors[]', placeholder: 'target' },
         },
-        template: 'throw {item} at {target}'
+        template: 'throw {item} at {target}',
       };
       testBed.registerAction(throwAction);
 
@@ -1229,11 +1293,19 @@ describe('Multi-Target Command Processing Integration', () => {
         actionId: 'combat:throw',
         actorId: 'player',
         targets: {
-          primary: { id: 'rock_001', displayName: 'Sharp Rock', placeholder: 'item' },
-          secondary: { id: 'goblin_001', displayName: 'Goblin Scout', placeholder: 'target' }
+          primary: {
+            id: 'rock_001',
+            displayName: 'Sharp Rock',
+            placeholder: 'item',
+          },
+          secondary: {
+            id: 'goblin_001',
+            displayName: 'Goblin Scout',
+            placeholder: 'target',
+          },
         },
         context: { location: 'battlefield' },
-        metadata: { formattedText: 'throw Sharp Rock at Goblin Scout' }
+        metadata: { formattedText: 'throw Sharp Rock at Goblin Scout' },
       };
 
       // Process command
@@ -1246,8 +1318,10 @@ describe('Multi-Target Command Processing Integration', () => {
 
       // Verify events were dispatched
       const capturedEvents = testBed.getCapturedEvents();
-      
-      const actionEvent = capturedEvents.find(e => e.type === 'core:attempt_action');
+
+      const actionEvent = capturedEvents.find(
+        (e) => e.type === 'core:attempt_action'
+      );
       expect(actionEvent).toBeDefined();
       expect(actionEvent.payload.actionId).toBe('combat:throw');
       expect(actionEvent.payload.targets.primary.id).toBe('rock_001');
@@ -1258,19 +1332,19 @@ describe('Multi-Target Command Processing Integration', () => {
       // Create entities
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Tailor' },
-        'tailoring:skill': { level: 3 }
+        'tailoring:skill': { level: 3 },
       });
 
       const customer = testBed.createEntity('customer_001', {
         'core:actor': { name: 'Alice' },
         'clothing:equipment': {
-          equipped: { torso_upper: { outer: 'jacket_001' } }
-        }
+          equipped: { torso_upper: { outer: 'jacket_001' } },
+        },
       });
 
       const jacket = testBed.createEntity('jacket_001', {
         'core:item': { name: 'Blue Jacket' },
-        'clothing:garment': { properties: ['adjustable'] }
+        'clothing:garment': { properties: ['adjustable'] },
       });
 
       // Register action
@@ -1279,13 +1353,13 @@ describe('Multi-Target Command Processing Integration', () => {
         name: 'Adjust Clothing',
         targets: {
           primary: { scope: 'location.core:actors[]', placeholder: 'person' },
-          secondary: { 
-            scope: 'target.topmost_clothing[]', 
+          secondary: {
+            scope: 'target.topmost_clothing[]',
             placeholder: 'garment',
-            contextFrom: 'primary'
-          }
+            contextFrom: 'primary',
+          },
         },
-        template: 'adjust {person}\'s {garment}'
+        template: "adjust {person}'s {garment}",
       };
       testBed.registerAction(adjustAction);
 
@@ -1293,10 +1367,18 @@ describe('Multi-Target Command Processing Integration', () => {
         actionId: 'intimacy:adjust_clothing',
         actorId: 'player',
         targets: {
-          primary: { id: 'customer_001', displayName: 'Alice', placeholder: 'person' },
-          secondary: { id: 'jacket_001', displayName: 'Blue Jacket', placeholder: 'garment' }
+          primary: {
+            id: 'customer_001',
+            displayName: 'Alice',
+            placeholder: 'person',
+          },
+          secondary: {
+            id: 'jacket_001',
+            displayName: 'Blue Jacket',
+            placeholder: 'garment',
+          },
         },
-        metadata: { formattedText: 'adjust Alice\'s Blue Jacket' }
+        metadata: { formattedText: "adjust Alice's Blue Jacket" },
       };
 
       const result = await commandProcessor.processCommand(command);
@@ -1306,8 +1388,10 @@ describe('Multi-Target Command Processing Integration', () => {
 
       // Verify proper target context was maintained
       const capturedEvents = testBed.getCapturedEvents();
-      const actionEvent = capturedEvents.find(e => e.type === 'core:attempt_action');
-      
+      const actionEvent = capturedEvents.find(
+        (e) => e.type === 'core:attempt_action'
+      );
+
       expect(actionEvent.payload.targets.primary.id).toBe('customer_001');
       expect(actionEvent.payload.targets.secondary.id).toBe('jacket_001');
     });
@@ -1316,20 +1400,20 @@ describe('Multi-Target Command Processing Integration', () => {
   describe('Error Scenarios', () => {
     it('should handle invalid target references gracefully', async () => {
       const player = testBed.createEntity('player', {
-        'core:actor': { name: 'Player' }
+        'core:actor': { name: 'Player' },
       });
 
       const command = {
         actionId: 'test:invalid',
         actorId: 'player',
         targets: {
-          primary: { id: 'nonexistent_001', displayName: 'Ghost Item' }
-        }
+          primary: { id: 'nonexistent_001', displayName: 'Ghost Item' },
+        },
       };
 
       testBed.registerAction({
         id: 'test:invalid',
-        name: 'Invalid Action'
+        name: 'Invalid Action',
       });
 
       const result = await commandProcessor.processCommand(command);
@@ -1342,13 +1426,15 @@ describe('Multi-Target Command Processing Integration', () => {
       const command = {
         actionId: 'test:malformed',
         actorId: 'player',
-        targets: null // Invalid targets
+        targets: null, // Invalid targets
       };
 
       const result = await commandProcessor.processCommand(command);
 
       expect(result.success).toBe(false);
-      expect(result.error.message).toContain('Either targetId or targets must be provided');
+      expect(result.error.message).toContain(
+        'Either targetId or targets must be provided'
+      );
     });
   });
 
@@ -1359,18 +1445,18 @@ describe('Multi-Target Command Processing Integration', () => {
       const targetIds = Array.from({ length: 50 }, (_, i) => `target_${i}`);
 
       const player = testBed.createEntity('player', {
-        'core:actor': { name: 'Player' }
+        'core:actor': { name: 'Player' },
       });
 
-      itemIds.forEach(id => {
+      itemIds.forEach((id) => {
         testBed.createEntity(id, {
-          'core:item': { name: `Item ${id}` }
+          'core:item': { name: `Item ${id}` },
         });
       });
 
-      targetIds.forEach(id => {
+      targetIds.forEach((id) => {
         testBed.createEntity(id, {
-          'core:actor': { name: `Target ${id}` }
+          'core:actor': { name: `Target ${id}` },
         });
       });
 
@@ -1379,19 +1465,19 @@ describe('Multi-Target Command Processing Integration', () => {
         actorId: 'player',
         targets: {
           primary: { id: 'item_0', displayName: 'Item 0' },
-          secondary: { id: 'target_0', displayName: 'Target 0' }
+          secondary: { id: 'target_0', displayName: 'Target 0' },
         },
         metadata: {
           combinations: itemIds.slice(0, 10).map((itemId, i) => ({
             primary: { id: itemId },
-            secondary: { id: targetIds[i % targetIds.length] }
-          }))
-        }
+            secondary: { id: targetIds[i % targetIds.length] },
+          })),
+        },
       };
 
       testBed.registerAction({
         id: 'test:large',
-        name: 'Large Action'
+        name: 'Large Action',
       });
 
       const start = performance.now();
@@ -1408,6 +1494,7 @@ describe('Multi-Target Command Processing Integration', () => {
 ## Testing Strategy
 
 ### Unit Tests
+
 1. **Command Validation**: Structure validation, entity existence
 2. **Payload Building**: Proper payload construction and enrichment
 3. **Event Dispatching**: Correct event types and payloads
@@ -1415,6 +1502,7 @@ describe('Multi-Target Command Processing Integration', () => {
 5. **Backward Compatibility**: Legacy single-target command support
 
 ### Integration Tests
+
 1. **Full Pipeline**: End-to-end command processing with real entities
 2. **Event Flow**: Verify events reach rule handlers correctly
 3. **Multi-Target Scenarios**: Complex actions with multiple targets
@@ -1444,16 +1532,19 @@ describe('Multi-Target Command Processing Integration', () => {
 ## Migration Strategy
 
 ### Phase 1: Add Support
+
 - Implement new payload structure alongside existing
 - Maintain full backward compatibility
 - Add comprehensive testing
 
 ### Phase 2: Gradual Migration
+
 - Update core actions to use new format
 - Provide migration tools for custom actions
 - Document migration patterns
 
 ### Phase 3: Optimization
+
 - Optimize performance for multi-target scenarios
 - Remove deprecated code paths
 - Enhance developer tools

@@ -2,13 +2,7 @@
  * @file Integration tests for the complete clothing removal action flow
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import ClothingIntegrationTestBed from '../../common/clothing/clothingIntegrationTestBed.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import { setupIntegrationTestUtilities } from '../../common/setup/integrationTestUtilities.js';
@@ -27,11 +21,11 @@ describe('Clothing Remove Action Integration', () => {
     // Setup test bed
     testBed = new ClothingIntegrationTestBed();
     await testBed.setup();
-    
+
     // Get utilities
     utils = setupIntegrationTestUtilities(testBed);
     container = testBed.container;
-    
+
     // Get services
     actionService = testBed.getActionService();
     entityManager = testBed.getEntityManager();
@@ -60,13 +54,19 @@ describe('Clothing Remove Action Integration', () => {
 
       // Assert
       const removeClothingActions = actions.filter(
-        action => action.id === 'clothing:remove_clothing'
+        (action) => action.id === 'clothing:remove_clothing'
       );
-      
+
       expect(removeClothingActions).toHaveLength(3);
-      expect(removeClothingActions.map(a => a.targetId)).toContain('white_cotton_crew_tshirt');
-      expect(removeClothingActions.map(a => a.targetId)).toContain('sand_beige_cotton_chinos');
-      expect(removeClothingActions.map(a => a.targetId)).toContain('white_leather_sneakers');
+      expect(removeClothingActions.map((a) => a.targetId)).toContain(
+        'white_cotton_crew_tshirt'
+      );
+      expect(removeClothingActions.map((a) => a.targetId)).toContain(
+        'sand_beige_cotton_chinos'
+      );
+      expect(removeClothingActions.map((a) => a.targetId)).toContain(
+        'white_leather_sneakers'
+      );
     });
 
     it('should successfully remove clothing and place it on ground', async () => {
@@ -77,7 +77,7 @@ describe('Clothing Remove Action Integration', () => {
         },
         position: 'test_location',
       });
-      
+
       const shirtEntity = utils.createClothingItem({
         id: 'white_cotton_crew_tshirt',
         name: 'white cotton crew t-shirt',
@@ -86,8 +86,12 @@ describe('Clothing Remove Action Integration', () => {
       // Subscribe to events
       const unequippedEvents = [];
       const movedEvents = [];
-      testBed.eventDispatcher.subscribe('clothing:unequipped', event => unequippedEvents.push(event));
-      testBed.eventDispatcher.subscribe('core:entity_moved', event => movedEvents.push(event));
+      testBed.eventDispatcher.subscribe('clothing:unequipped', (event) =>
+        unequippedEvents.push(event)
+      );
+      testBed.eventDispatcher.subscribe('core:entity_moved', (event) =>
+        movedEvents.push(event)
+      );
 
       // Act - Trigger remove clothing action
       await eventBus.emit({
@@ -115,13 +119,19 @@ describe('Clothing Remove Action Integration', () => {
 
       // Assert
       // Check equipment was removed
-      const equipment = entityManager.getComponentData(actor.id, 'clothing:equipment');
+      const equipment = entityManager.getComponentData(
+        actor.id,
+        'clothing:equipment'
+      );
       expect(equipment.equipped.torso_upper).toBeUndefined();
-      
+
       // Check item was placed on ground
-      const itemPosition = entityManager.getComponentData('white_cotton_crew_tshirt', 'core:position');
+      const itemPosition = entityManager.getComponentData(
+        'white_cotton_crew_tshirt',
+        'core:position'
+      );
       expect(itemPosition).toEqual({ locationId: 'test_location' });
-      
+
       // Check events were dispatched
       expect(unequippedEvents).toHaveLength(1);
       expect(unequippedEvents[0]).toMatchObject({
@@ -138,7 +148,7 @@ describe('Clothing Remove Action Integration', () => {
         },
         inventory: ['existing_item'],
       });
-      
+
       const shirtEntity = utils.createClothingItem({
         id: 'white_cotton_crew_tshirt',
         name: 'white cotton crew t-shirt',
@@ -160,7 +170,10 @@ describe('Clothing Remove Action Integration', () => {
       });
 
       // Assert
-      const inventory = entityManager.getComponentData(actor.id, 'core:inventory');
+      const inventory = entityManager.getComponentData(
+        actor.id,
+        'core:inventory'
+      );
       expect(inventory.items).toContain('white_cotton_crew_tshirt');
       expect(inventory.items).toContain('existing_item');
     });
@@ -169,7 +182,10 @@ describe('Clothing Remove Action Integration', () => {
       // Arrange - use array to represent layered clothing
       const actor = utils.createEntityWithEquipment({
         equipment: {
-          torso_upper: ['white_cotton_crew_tshirt', 'white_structured_linen_blazer'], // base, then outer
+          torso_upper: [
+            'white_cotton_crew_tshirt',
+            'white_structured_linen_blazer',
+          ], // base, then outer
         },
       });
 
@@ -179,7 +195,7 @@ describe('Clothing Remove Action Integration', () => {
         layer: 'outer',
         slot: 'torso_upper',
       });
-      
+
       utils.createClothingItem({
         id: 'white_cotton_crew_tshirt',
         layer: 'base',
@@ -188,7 +204,9 @@ describe('Clothing Remove Action Integration', () => {
 
       // Act
       const actions = await actionService.getActionsForEntity(actor.id);
-      const removeActions = actions.filter(a => a.id === 'clothing:remove_clothing');
+      const removeActions = actions.filter(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
 
       // Assert
       // Only the outer layer (blazer) should be removable
@@ -196,20 +214,22 @@ describe('Clothing Remove Action Integration', () => {
       expect(removeActions[0].targetId).toBe('white_structured_linen_blazer');
     });
 
-
     it('should handle cascade unequip correctly', async () => {
       // Arrange
       const actor = utils.createEntityWithEquipment({
         equipment: {
-          torso_upper: ['white_cotton_crew_tshirt', 'indigo_denim_trucker_jacket'],
+          torso_upper: [
+            'white_cotton_crew_tshirt',
+            'indigo_denim_trucker_jacket',
+          ],
         },
       });
-      
+
       const shirtEntity = utils.createClothingItem({
         id: 'white_cotton_crew_tshirt',
         name: 'white cotton crew t-shirt',
       });
-      
+
       const jacketEntity = utils.createClothingItem({
         id: 'indigo_denim_trucker_jacket',
         name: 'indigo denim trucker jacket',
@@ -231,7 +251,10 @@ describe('Clothing Remove Action Integration', () => {
       );
 
       // Assert
-      const equipment = entityManager.getComponentData(actor.id, 'clothing:equipment');
+      const equipment = entityManager.getComponentData(
+        actor.id,
+        'clothing:equipment'
+      );
       // Both items should be removed with cascade
       expect(equipment.equipped.torso_upper).toBeUndefined();
     });
@@ -260,7 +283,10 @@ describe('Clothing Remove Action Integration', () => {
 
       // Assert
       // Equipment should remain unchanged
-      const equipment = entityManager.getComponentData(actor.id, 'clothing:equipment');
+      const equipment = entityManager.getComponentData(
+        actor.id,
+        'clothing:equipment'
+      );
       expect(equipment.equipped.torso_upper).toBe('white_cotton_crew_tshirt');
     });
   });

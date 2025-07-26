@@ -2,7 +2,14 @@
  * @file Enhanced unit tests for ThematicDirectionsManagerController with better coverage
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 
 // Mock the UIStateManager
@@ -25,25 +32,33 @@ jest.mock('../../../../src/shared/characterBuilder/uiStateManager.js', () => ({
 }));
 
 // Mock the PreviousItemsDropdown
-jest.mock('../../../../src/shared/characterBuilder/previousItemsDropdown.js', () => ({
-  PreviousItemsDropdown: jest.fn().mockImplementation(({ onSelectionChange }) => {
-    // Store the callback so we can trigger it in tests
-    global.mockDropdownSelectionCallback = onSelectionChange;
-    // Don't validate element in test - just return the mock
-    return {
-      loadItems: jest.fn().mockResolvedValue(true),
-      selectItem: jest.fn(),
-      getSelectedItemId: jest.fn(() => ''),
-      getSelectedItem: jest.fn(() => null),
-      setEnabled: jest.fn(),
-    };
-  }),
-}));
+jest.mock(
+  '../../../../src/shared/characterBuilder/previousItemsDropdown.js',
+  () => ({
+    PreviousItemsDropdown: jest
+      .fn()
+      .mockImplementation(({ onSelectionChange }) => {
+        // Store the callback so we can trigger it in tests
+        global.mockDropdownSelectionCallback = onSelectionChange;
+        // Don't validate element in test - just return the mock
+        return {
+          loadItems: jest.fn().mockResolvedValue(true),
+          selectItem: jest.fn(),
+          getSelectedItemId: jest.fn(() => ''),
+          getSelectedItem: jest.fn(() => null),
+          setEnabled: jest.fn(),
+        };
+      }),
+  })
+);
 
 // Mock the FormValidationHelper
-jest.mock('../../../../src/shared/characterBuilder/formValidationHelper.js', () => ({
-  FormValidationHelper: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/shared/characterBuilder/formValidationHelper.js',
+  () => ({
+    FormValidationHelper: jest.fn(),
+  })
+);
 
 describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
   let controller;
@@ -95,7 +110,7 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
     const listeners = {};
     let textContent = '';
     let innerHTML = '';
-    
+
     const element = {
       id,
       tagName,
@@ -121,14 +136,22 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
       appendChild: jest.fn(),
       setAttribute: jest.fn(),
       getAttribute: jest.fn(),
-      get textContent() { return textContent; },
-      set textContent(value) { textContent = String(value); },
-      get innerHTML() { return innerHTML; },
-      set innerHTML(value) { innerHTML = String(value); },
+      get textContent() {
+        return textContent;
+      },
+      set textContent(value) {
+        textContent = String(value);
+      },
+      get innerHTML() {
+        return innerHTML;
+      },
+      set innerHTML(value) {
+        innerHTML = String(value);
+      },
       disabled: false,
       parentElement: null,
       parentNode: { replaceChild: jest.fn() },
-      cloneNode: jest.fn().mockReturnValue({ 
+      cloneNode: jest.fn().mockReturnValue({
         addEventListener: jest.fn(),
         id: id + '-clone',
         tagName,
@@ -194,20 +217,22 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
         'modal-cancel-btn': mockElements.modalCancelBtn,
         'close-modal-btn': mockElements.closeModalBtn,
       };
-      
+
       // If element exists in map, return it; otherwise create a new mock element
       const element = idMap[id];
       if (element) {
         return element;
       }
-      
+
       // For unmapped elements, create a new mock element to prevent null reference errors
       const newElement = createMockElement(id, 'DIV');
       console.warn(`Creating mock element for unmapped ID: ${id}`);
       return newElement;
     });
 
-    const mockCreateElement = jest.fn((tag) => createMockElement(`new-${tag}`, tag.toUpperCase()));
+    const mockCreateElement = jest.fn((tag) =>
+      createMockElement(`new-${tag}`, tag.toUpperCase())
+    );
 
     // Mock the document object by replacing its methods
     document.getElementById = mockGetElementById;
@@ -217,12 +242,16 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
     global.document = document;
 
     // Setup window object with settable location.href
-    const mockLocation = { 
+    const mockLocation = {
       href: '',
-      get href() { return this._href || ''; },
-      set href(value) { this._href = value; }
+      get href() {
+        return this._href || '';
+      },
+      set href(value) {
+        this._href = value;
+      },
     };
-    
+
     global.window = {
       location: mockLocation,
       document: document,
@@ -246,7 +275,9 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
       initialize: jest.fn().mockResolvedValue(true),
       getAllCharacterConcepts: jest.fn().mockResolvedValue([mockConcept]),
       getCharacterConcept: jest.fn(),
-      getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue(mockDirectionsWithConcepts),
+      getAllThematicDirectionsWithConcepts: jest
+        .fn()
+        .mockResolvedValue(mockDirectionsWithConcepts),
       getOrphanedThematicDirections: jest.fn(),
       updateThematicDirection: jest.fn(),
       deleteThematicDirection: jest.fn().mockResolvedValue(true),
@@ -267,7 +298,7 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
       eventBus: mockEventBus,
       schemaValidator: mockSchemaValidator,
     });
-    
+
     // Debug: Log which elements are available
     console.log('Mock elements keys:', Object.keys(mockElements));
     console.log('directionsResults element:', mockElements.directionsResults);
@@ -283,29 +314,47 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
       console.log('=== MOCK SETUP DEBUG ===');
       console.log('global.document exists:', !!global.document);
       console.log('document exists:', !!document);
-      console.log('global.document === document:', global.document === document);
-      console.log('typeof global.document.getElementById:', typeof global.document?.getElementById);
-      console.log('typeof document.getElementById:', typeof document.getElementById);
-      
+      console.log(
+        'global.document === document:',
+        global.document === document
+      );
+      console.log(
+        'typeof global.document.getElementById:',
+        typeof global.document?.getElementById
+      );
+      console.log(
+        'typeof document.getElementById:',
+        typeof document.getElementById
+      );
+
       // Test basic getElementById functionality
       const testElement = document.getElementById('directions-results');
-      console.log('document.getElementById("directions-results"):', testElement);
-      console.log('mockElements.directionsResults:', mockElements.directionsResults);
-      console.log('Are they the same?', testElement === mockElements.directionsResults);
-      
+      console.log(
+        'document.getElementById("directions-results"):',
+        testElement
+      );
+      console.log(
+        'mockElements.directionsResults:',
+        mockElements.directionsResults
+      );
+      console.log(
+        'Are they the same?',
+        testElement === mockElements.directionsResults
+      );
+
       // This test should pass if our mock is working
       expect(testElement).toBe(mockElements.directionsResults);
     });
 
     it('should initialize without errors first', async () => {
       console.log('About to call controller.initialize()');
-      
+
       await controller.initialize();
-      
+
       console.log('Initialization complete');
       console.log('Logger error calls:', mockLogger.error.mock.calls.length);
       console.log('Logger info calls:', mockLogger.info.mock.calls.length);
-      
+
       // Log any error calls
       if (mockLogger.error.mock.calls.length > 0) {
         console.error('Initialization errors found:');
@@ -313,7 +362,7 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
           console.error(`Error ${i + 1}:`, call[0], call[1]);
         });
       }
-      
+
       // Log success calls
       if (mockLogger.info.mock.calls.length > 0) {
         console.log('Info messages:');
@@ -321,7 +370,7 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
           console.log(`Info ${i + 1}:`, call[0]);
         });
       }
-      
+
       // Test should only pass if no errors
       expect(mockLogger.error.mock.calls.length).toBe(0);
     });
@@ -344,17 +393,38 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
       // Only test event listeners if initialization succeeded
       if (mockLogger.error.mock.calls.length === 0) {
         // Check that addEventListener was called on each element
-        expect(mockElements.directionFilter.addEventListener).toHaveBeenCalledWith('input', expect.any(Function));
-        expect(mockElements.refreshBtn.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
-        expect(mockElements.cleanupOrphansBtn.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
-        expect(mockElements.backBtn.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
-        expect(mockElements.retryBtn.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
-        expect(mockElements.modalCancelBtn.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
-        expect(mockElements.closeModalBtn.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
-        expect(mockElements.confirmationModal.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
+        expect(
+          mockElements.directionFilter.addEventListener
+        ).toHaveBeenCalledWith('input', expect.any(Function));
+        expect(mockElements.refreshBtn.addEventListener).toHaveBeenCalledWith(
+          'click',
+          expect.any(Function)
+        );
+        expect(
+          mockElements.cleanupOrphansBtn.addEventListener
+        ).toHaveBeenCalledWith('click', expect.any(Function));
+        expect(mockElements.backBtn.addEventListener).toHaveBeenCalledWith(
+          'click',
+          expect.any(Function)
+        );
+        expect(mockElements.retryBtn.addEventListener).toHaveBeenCalledWith(
+          'click',
+          expect.any(Function)
+        );
+        expect(
+          mockElements.modalCancelBtn.addEventListener
+        ).toHaveBeenCalledWith('click', expect.any(Function));
+        expect(
+          mockElements.closeModalBtn.addEventListener
+        ).toHaveBeenCalledWith('click', expect.any(Function));
+        expect(
+          mockElements.confirmationModal.addEventListener
+        ).toHaveBeenCalledWith('click', expect.any(Function));
       } else {
         // If initialization failed, skip event listener tests but make test fail
-        throw new Error('Controller initialization failed - see console errors above');
+        throw new Error(
+          'Controller initialization failed - see console errors above'
+        );
       }
     });
 
@@ -362,11 +432,12 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
       await controller.initialize();
 
       // Get the filter handler from the mock call
-      const filterCall = mockElements.directionFilter.addEventListener.mock.calls.find(
-        call => call[0] === 'input'
-      );
+      const filterCall =
+        mockElements.directionFilter.addEventListener.mock.calls.find(
+          (call) => call[0] === 'input'
+        );
       expect(filterCall).toBeDefined();
-      
+
       const filterHandler = filterCall[1];
       filterHandler({ target: { value: 'redemption' } });
 
@@ -380,33 +451,41 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
       mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockClear();
 
       // Get the refresh handler from the mock call
-      const refreshCall = mockElements.refreshBtn.addEventListener.mock.calls.find(
-        call => call[0] === 'click'
-      );
+      const refreshCall =
+        mockElements.refreshBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        );
       expect(refreshCall).toBeDefined();
-      
+
       const refreshHandler = refreshCall[1];
       refreshHandler();
 
       // Should reload data
-      expect(mockCharacterBuilderService.getAllThematicDirectionsWithConcepts).toHaveBeenCalled();
+      expect(
+        mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
+      ).toHaveBeenCalled();
     });
 
     it('should handle cleanup orphans button click', async () => {
       await controller.initialize();
 
       // Get the cleanup handler from the mock call
-      const cleanupCall = mockElements.cleanupOrphansBtn.addEventListener.mock.calls.find(
-        call => call[0] === 'click'
-      );
+      const cleanupCall =
+        mockElements.cleanupOrphansBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        );
       expect(cleanupCall).toBeDefined();
-      
+
       const cleanupHandler = cleanupCall[1];
       cleanupHandler();
 
       // Should show modal
-      expect(mockElements.modalTitle.textContent).toBe('Clean Up Orphaned Directions');
-      expect(mockElements.modalMessage.textContent).toContain('1 orphaned direction(s)');
+      expect(mockElements.modalTitle.textContent).toBe(
+        'Clean Up Orphaned Directions'
+      );
+      expect(mockElements.modalMessage.textContent).toContain(
+        '1 orphaned direction(s)'
+      );
       expect(mockElements.confirmationModal.style.display).toBe('flex');
     });
 
@@ -415,10 +494,10 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
 
       // Get the back handler from the mock call
       const backCall = mockElements.backBtn.addEventListener.mock.calls.find(
-        call => call[0] === 'click'
+        (call) => call[0] === 'click'
       );
       expect(backCall).toBeDefined();
-      
+
       const backHandler = backCall[1];
       backHandler();
 
@@ -432,11 +511,12 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
       mockElements.confirmationModal.style.display = 'flex';
 
       // Get the modal handler from the mock call
-      const modalCall = mockElements.confirmationModal.addEventListener.mock.calls.find(
-        call => call[0] === 'click'
-      );
+      const modalCall =
+        mockElements.confirmationModal.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        );
       expect(modalCall).toBeDefined();
-      
+
       const modalHandler = modalCall[1];
       modalHandler({ target: mockElements.confirmationModal });
 
@@ -472,8 +552,16 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
       // Test validation for different field types
       const testCases = [
         { field: 'title', value: '', expectedError: 'Field cannot be empty' },
-        { field: 'title', value: 'abc', expectedError: 'title must be at least 5 characters' },
-        { field: 'description', value: 'short', expectedError: 'description must be at least 20 characters' },
+        {
+          field: 'title',
+          value: 'abc',
+          expectedError: 'title must be at least 5 characters',
+        },
+        {
+          field: 'description',
+          value: 'short',
+          expectedError: 'description must be at least 20 characters',
+        },
       ];
 
       for (const testCase of testCases) {
@@ -492,11 +580,12 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
       mockElements.confirmationModal.style.display = 'flex';
 
       // Hide modal via cancel button
-      const cancelCall = mockElements.modalCancelBtn.addEventListener.mock.calls.find(
-        call => call[0] === 'click'
-      );
+      const cancelCall =
+        mockElements.modalCancelBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        );
       expect(cancelCall).toBeDefined();
-      
+
       const cancelHandler = cancelCall[1];
       cancelHandler();
 
@@ -519,23 +608,29 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
       };
 
       // Trigger cleanup
-      const cleanupCall = mockElements.cleanupOrphansBtn.addEventListener.mock.calls.find(
-        call => call[0] === 'click'
-      );
+      const cleanupCall =
+        mockElements.cleanupOrphansBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        );
       expect(cleanupCall).toBeDefined();
-      
+
       const cleanupHandler = cleanupCall[1];
       cleanupHandler();
 
       // Simulate confirmation
       if (confirmCallback) {
         await confirmCallback();
-        
+
         // Should delete orphaned directions
-        expect(mockCharacterBuilderService.deleteThematicDirection).toHaveBeenCalledWith('direction-2');
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith('thematic:orphans_cleaned', {
-          deletedCount: 1,
-        });
+        expect(
+          mockCharacterBuilderService.deleteThematicDirection
+        ).toHaveBeenCalledWith('direction-2');
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'thematic:orphans_cleaned',
+          {
+            deletedCount: 1,
+          }
+        );
       }
     });
   });
@@ -555,7 +650,9 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
 
     it('should handle data loading errors', async () => {
       const error = new Error('Data load failed');
-      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(error);
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
+        error
+      );
 
       await controller.initialize();
 
@@ -567,23 +664,33 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
 
     it('should handle update errors', async () => {
       await controller.initialize();
-      
+
       const error = new Error('Update failed');
-      mockCharacterBuilderService.updateThematicDirection.mockRejectedValue(error);
+      mockCharacterBuilderService.updateThematicDirection.mockRejectedValue(
+        error
+      );
 
       // Create a mock save scenario
       const mockSaveEdit = async () => {
         try {
-          await mockCharacterBuilderService.updateThematicDirection('direction-1', { title: 'New' });
+          await mockCharacterBuilderService.updateThematicDirection(
+            'direction-1',
+            { title: 'New' }
+          );
         } catch (err) {
-          mockLogger.error('ThematicDirectionsManagerController: Failed to update direction', err);
+          mockLogger.error(
+            'ThematicDirectionsManagerController: Failed to update direction',
+            err
+          );
           global.alert('Failed to save changes. Please try again.');
         }
       };
 
       await mockSaveEdit();
 
-      expect(global.alert).toHaveBeenCalledWith('Failed to save changes. Please try again.');
+      expect(global.alert).toHaveBeenCalledWith(
+        'Failed to save changes. Please try again.'
+      );
     });
   });
 
@@ -602,14 +709,15 @@ describe('ThematicDirectionsManagerController - Enhanced Coverage', () => {
         title: 'Updated Title',
       });
 
-      expect(mockCharacterBuilderService.updateThematicDirection).toHaveBeenCalledWith(
-        'direction-1',
-        { title: 'Updated Title' }
-      );
+      expect(
+        mockCharacterBuilderService.updateThematicDirection
+      ).toHaveBeenCalledWith('direction-1', { title: 'Updated Title' });
     });
 
     it('should handle empty data scenario', async () => {
-      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([]);
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        []
+      );
       mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue([]);
 
       await controller.initialize();

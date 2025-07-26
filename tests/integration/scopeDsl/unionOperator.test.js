@@ -20,7 +20,8 @@ describe('Scope DSL - Union Operator Integration', () => {
     // Create a simple component registry
     const componentRegistry = {
       getEntitiesWithComponent: jest.fn((componentId) => {
-        if (componentId === 'core:actor') return [{ id: 'actor1' }, { id: 'actor2' }];
+        if (componentId === 'core:actor')
+          return [{ id: 'actor1' }, { id: 'actor2' }];
         if (componentId === 'core:npc') return [{ id: 'npc1' }, { id: 'npc2' }];
         return [];
       }),

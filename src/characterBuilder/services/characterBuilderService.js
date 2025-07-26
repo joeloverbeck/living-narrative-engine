@@ -577,20 +577,23 @@ export class CharacterBuilderService {
    */
   async getAllThematicDirectionsWithConcepts() {
     try {
-      const allDirections = await this.#storageService.getAllThematicDirections();
+      const allDirections =
+        await this.#storageService.getAllThematicDirections();
       const result = [];
 
       for (const direction of allDirections) {
         let concept = null;
         try {
-          concept = await this.#storageService.getCharacterConcept(direction.conceptId);
+          concept = await this.#storageService.getCharacterConcept(
+            direction.conceptId
+          );
         } catch (error) {
           this.#logger.warn(
             `CharacterBuilderService: Failed to load concept for direction ${direction.id}`,
             { directionId: direction.id, conceptId: direction.conceptId }
           );
         }
-        
+
         result.push({ direction, concept });
       }
 
@@ -609,7 +612,8 @@ export class CharacterBuilderService {
    */
   async getOrphanedThematicDirections() {
     try {
-      const orphanedDirections = await this.#storageService.findOrphanedDirections();
+      const orphanedDirections =
+        await this.#storageService.findOrphanedDirections();
       this.#logger.info(
         `CharacterBuilderService: Found ${orphanedDirections.length} orphaned directions`
       );
@@ -638,10 +642,11 @@ export class CharacterBuilderService {
     }
 
     try {
-      const updatedDirection = await this.#storageService.updateThematicDirection(
-        directionId,
-        updates
-      );
+      const updatedDirection =
+        await this.#storageService.updateThematicDirection(
+          directionId,
+          updates
+        );
 
       this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, {
         directionId,
@@ -668,7 +673,8 @@ export class CharacterBuilderService {
     }
 
     try {
-      const success = await this.#storageService.deleteThematicDirection(directionId);
+      const success =
+        await this.#storageService.deleteThematicDirection(directionId);
 
       if (success) {
         this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.DIRECTION_DELETED, {

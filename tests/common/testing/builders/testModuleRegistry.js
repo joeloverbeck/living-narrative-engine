@@ -24,7 +24,7 @@ export class TestModuleRegistry {
 
   /**
    * Register a module factory
-   * 
+   *
    * @param {string} name - Module name
    * @param {Function} factory - Factory function that returns a module instance
    */
@@ -34,7 +34,7 @@ export class TestModuleRegistry {
 
   /**
    * Register a preset factory
-   * 
+   *
    * @param {string} name - Preset name
    * @param {Function} factory - Factory function that returns a configured module
    */
@@ -44,7 +44,7 @@ export class TestModuleRegistry {
 
   /**
    * Get a module factory
-   * 
+   *
    * @param {string} name - Module name
    * @returns {Function} Module factory function
    * @throws {Error} If module not found
@@ -59,7 +59,7 @@ export class TestModuleRegistry {
 
   /**
    * Get a preset factory
-   * 
+   *
    * @param {string} name - Preset name
    * @returns {Function} Preset factory function
    * @throws {Error} If preset not found
@@ -67,14 +67,16 @@ export class TestModuleRegistry {
   static getPreset(name) {
     const preset = this.#presets.get(name);
     if (!preset) {
-      throw new Error(`Preset '${name}' not registered. Available presets: ${Array.from(this.#presets.keys()).join(', ')}`);
+      throw new Error(
+        `Preset '${name}' not registered. Available presets: ${Array.from(this.#presets.keys()).join(', ')}`
+      );
     }
     return preset;
   }
 
   /**
    * Get all registered preset names
-   * 
+   *
    * @returns {string[]} Array of preset names
    */
   static getPresetNames() {

@@ -21,7 +21,11 @@ module.exports = {
         "remove it. If it's logical this module is an orphan (i.e. it's a config file), " +
         'add an exception for it in your dependency-cruiser configuration. By default ' +
         'this rule does not scrutinize dot-files (e.g. .eslintrc.js), TypeScript declaration ' +
-        'files (.d.ts), tsconfig.json and some of the babel and webpack configs.',
+        'files (.d.ts), tsconfig.json and some of the babel and webpack configs.\n\n' +
+        'IMPORTANT: This configuration excludes JSDoc typedef-only files that are imported ' +
+        'via @typedef syntax. These files appear as orphans because dependency-cruiser ' +
+        'does not reliably detect JSDoc imports, but they are actually used throughout ' +
+        'the codebase for TypeScript type definitions.',
       severity: 'warn',
       from: {
         orphan: true,
@@ -30,7 +34,31 @@ module.exports = {
           '[.]d[.]ts$', // TypeScript declaration files
           '(^|/)tsconfig[.]json$', // TypeScript config
           '(^|/)(?:babel|webpack)[.]config[.](?:js|cjs|mjs|ts|cts|mts|json)$', // other configs
-          'src/ai/notesQueryService.js', // Keep for future use
+          // JSDoc typedef-only files (used via @typedef imports, not detected by dependency-cruiser)
+          // These files contain only TypeScript typedefs and are imported via JSDoc @typedef syntax
+          // Pattern explanation: These files are used as type definitions via JSDoc @typedef imports
+          // but dependency-cruiser's JSDoc import detection doesn't work reliably in this codebase
+          '^src/types/.*\\.js$', // All TypeScript type definition files
+          '^src/interfaces/.*\\.js$', // All interface definition files
+          '^src/ports/.*\\.js$', // All port/interface definitions
+          '^src/ai/notesQueryService\\.js$', // Keep for future use
+          '^src/scopeDsl/nodes/nodeResolver\\.js$', // Scope DSL node resolver typedef
+          '^src/scopeDsl/core/gateways\\.js$', // Scope DSL gateway typedefs
+          '^src/logic/defs\\.js$', // Logic system definitions
+          '^src/persistence/persistenceTypes\\.js$', // Persistence type definitions
+          '^src/persistence/iSerializer\\.js$', // Serializer interface
+          '^src/actions/actionTypes\\.js$', // Action type definitions
+          '^src/actions/resolutionResult\\.js$', // Action resolution result types
+          '^src/actions/tracing/types\\.js$', // Action tracing types
+          '^src/actions/tracing/analysisTypes\\.js$', // Action analysis types
+          '^src/actions/formatters/formatActionTypedefs\\.js$', // Action formatter typedefs
+          '^src/turns/dtos/AIGameStateDTO\\.js$', // Data transfer objects
+          '^src/turns/ports/ICommandInputPort\\.js$', // Turn command input port
+          '^src/turns/ports/commonTypes\\.js$', // Turn common types
+          '^src/turns/interfaces/.*\\.js$', // All turn interface files
+          '^src/llms/llmConfigTypes\\.js$', // LLM configuration types
+          '^src/utils/errorTypes\\.js$', // Error type definitions
+          '^src/utils/wrapperUtils\\.js$', // Utility wrapper types
         ],
       },
       to: {},

@@ -139,7 +139,7 @@ export class InPlaceEditor {
     if (this.#isEditing) {
       this.cancelEditing();
     }
-    
+
     // Remove event listeners
     this.#element.removeEventListener('click', this.#handleClickBound);
   }
@@ -164,7 +164,7 @@ export class InPlaceEditor {
    */
   #handleClick(event) {
     if (this.#isEditing) return;
-    
+
     event.preventDefault();
     event.stopPropagation();
     this.startEditing();
@@ -184,12 +184,13 @@ export class InPlaceEditor {
     editorContainer.className = 'in-place-editor';
 
     // Create input/textarea
-    const isMultiline = this.#originalValue.length > 100 || this.#originalValue.includes('\n');
+    const isMultiline =
+      this.#originalValue.length > 100 || this.#originalValue.includes('\n');
     const input = document.createElement(isMultiline ? 'textarea' : 'input');
-    
+
     input.className = 'in-place-editor-input';
     input.value = this.#originalValue;
-    
+
     if (isMultiline) {
       input.rows = Math.max(3, Math.ceil(this.#originalValue.length / 80));
     }
@@ -222,7 +223,10 @@ export class InPlaceEditor {
     editorContainer.appendChild(actions);
 
     // Insert editor after original element
-    this.#element.parentNode.insertBefore(editorContainer, this.#element.nextSibling);
+    this.#element.parentNode.insertBefore(
+      editorContainer,
+      this.#element.nextSibling
+    );
 
     this.#editor = {
       container: editorContainer,
@@ -262,7 +266,10 @@ export class InPlaceEditor {
 
     // Keyboard shortcuts
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && (input.tagName === 'INPUT' || e.ctrlKey || e.metaKey)) {
+      if (
+        e.key === 'Enter' &&
+        (input.tagName === 'INPUT' || e.ctrlKey || e.metaKey)
+      ) {
         e.preventDefault();
         this.saveChanges();
       } else if (e.key === 'Escape') {
@@ -278,7 +285,9 @@ export class InPlaceEditor {
 
     // Handle clicks outside editor
     this.#handleOutsideClickBound = this.#handleOutsideClick.bind(this);
-    document.addEventListener('click', this.#handleOutsideClickBound, { capture: true });
+    document.addEventListener('click', this.#handleOutsideClickBound, {
+      capture: true,
+    });
   }
 
   /**
@@ -376,7 +385,9 @@ export class InPlaceEditor {
 
     // Remove editor
     if (this.#editor) {
-      document.removeEventListener('click', this.#handleOutsideClickBound, { capture: true });
+      document.removeEventListener('click', this.#handleOutsideClickBound, {
+        capture: true,
+      });
       this.#editor.container.remove();
       this.#editor = null;
     }

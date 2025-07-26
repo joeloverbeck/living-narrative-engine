@@ -40,25 +40,30 @@ The scope resolves to character entities who have clothing, but the actual cloth
 ## What the System Lacks for Secondary Targets
 
 ### 1. Action Definition Schema
+
 - No way to define multiple scopes (primary and secondary)
 - No way to specify dependencies between scopes
 - Template system only recognizes `{target}` placeholder
 
 ### 2. Target Resolution System
+
 - `TargetResolutionStage` only resolves one scope per action
 - No mechanism for dependent scope resolution (where secondary depends on primary)
 - `ActionTargetContext` only handles single target contexts
 
 ### 3. Action Formatting
+
 - `targetFormatters.js` only has formatters for single targets
 - No support for multiple placeholder substitution
 - No way to format actions with multiple resolved entities
 
 ### 4. Event Payload Structure
+
 - `core:attempt_action` payload only includes single `targetId`
 - No standard way to pass multiple targets to rules
 
 ### 5. Rule Processing
+
 - Rules expect single target and must derive secondary targets through operations
 - No standard pattern for multi-target actions
 
@@ -69,6 +74,7 @@ The scope resolves to character entities who have clothing, but the actual cloth
 The most elegant solution aligns with the existing scope DSL system by creating scope files that can receive resolved targets in their context:
 
 #### Secondary Scope File Example
+
 ```
 // File: clothing/scopes/target_topmost_clothing.scope
 // This scope receives the primary target in context
@@ -78,6 +84,7 @@ target_throwable_items := target.core:inventory.items[][{"==": [{"var": "entity.
 ```
 
 #### Enhanced Action Schema
+
 ```json
 {
   "$schema": "...",
@@ -108,10 +115,10 @@ target_throwable_items := target.core:inventory.items[][{"==": [{"var": "entity.
 class MultiTargetResolutionStage extends PipelineStage {
   async executeInternal(context) {
     const { actionDef, actor, actionContext } = context;
-    
+
     // Resolve targets in dependency order
     const resolvedTargets = {};
-    
+
     // 1. Resolve independent targets first
     for (const [key, targetDef] of Object.entries(actionDef.targets)) {
       if (!targetDef.dependsOn) {
@@ -122,7 +129,7 @@ class MultiTargetResolutionStage extends PipelineStage {
         );
       }
     }
-    
+
     // 2. Resolve dependent targets
     for (const [key, targetDef] of Object.entries(actionDef.targets)) {
       if (targetDef.dependsOn) {
@@ -139,7 +146,7 @@ class MultiTargetResolutionStage extends PipelineStage {
         );
       }
     }
-    
+
     return resolvedTargets;
   }
 }
@@ -150,61 +157,70 @@ class MultiTargetResolutionStage extends PipelineStage {
 A critical aspect of multi-target actions is generating all valid combinations as separate action candidates. This is essential for actions like "throw {item} at {target}".
 
 #### Example: Throw Action
+
 ```json
 {
   "id": "combat:throw",
   "name": "Throw Item",
   "targets": {
     "primary": {
-      "scope": "actor:throwable_items",  // knife, grenade
+      "scope": "actor:throwable_items", // knife, grenade
       "placeholder": "item",
       "description": "The item to throw"
     },
     "secondary": {
-      "scope": "combat:valid_throw_targets",  // goblin, wolf
+      "scope": "combat:valid_throw_targets", // goblin, wolf
       "placeholder": "target",
       "description": "The target to throw at"
     }
   },
   "template": "throw {item} at {target}",
-  "generateCombinations": true  // Enables cartesian product generation
+  "generateCombinations": true // Enables cartesian product generation
 }
 ```
 
 #### Generated Actions
+
 Given:
+
 - Primary targets: [knife, grenade]
 - Secondary targets: [goblin, wolf]
 
 The system generates 4 action candidates:
+
 1. "throw knife at goblin"
 2. "throw knife at wolf"
 3. "throw grenade at goblin"
 4. "throw grenade at wolf"
 
 #### Implementation in ActionFormattingStage
+
 ```javascript
 // Enhanced action formatting for multi-target combinations
-if (actionDef.generateCombinations && resolvedTargets.primary && resolvedTargets.secondary) {
+if (
+  actionDef.generateCombinations &&
+  resolvedTargets.primary &&
+  resolvedTargets.secondary
+) {
   const combinations = [];
-  
+
   for (const primaryTarget of resolvedTargets.primary) {
     for (const secondaryTarget of resolvedTargets.secondary) {
       combinations.push({
         actionId: actionDef.id,
         targets: {
           primary: primaryTarget,
-          secondary: secondaryTarget
+          secondary: secondaryTarget,
         },
         formattedText: formatMultiTargetAction(
           actionDef.template,
           { primary: primaryTarget, secondary: secondaryTarget },
           entityManager
-        )
+        ),
       });
     }
   }
-  
+
   return combinations;
 }
 ```
@@ -215,7 +231,7 @@ if (actionDef.generateCombinations && resolvedTargets.primary && resolvedTargets
 // Enhanced formatActionCommand
 function formatMultiTargetAction(template, resolvedTargets, entityManager) {
   let formatted = template;
-  
+
   for (const [key, targetDef] of Object.entries(resolvedTargets)) {
     const placeholder = `{${targetDef.placeholder}}`;
     const targetName = getTargetDisplayName(
@@ -224,7 +240,7 @@ function formatMultiTargetAction(template, resolvedTargets, entityManager) {
     );
     formatted = formatted.replace(placeholder, targetName);
   }
-  
+
   return formatted;
 }
 ```
@@ -249,6 +265,7 @@ function formatMultiTargetAction(template, resolvedTargets, entityManager) {
 ## Alternative Approaches
 
 ### Option A: Scoped Context Variables
+
 Enhance the scope DSL to support context variables that can be referenced in dependent scopes:
 
 ```
@@ -264,6 +281,7 @@ hostile_entities_in_range := entities(core:actor)[][{
 ```
 
 ### Option B: Pipeline-Based Target Resolution
+
 Implement a pipeline where each stage can access previous resolutions:
 
 ```json
@@ -276,10 +294,10 @@ Implement a pipeline where each stage can access previous resolutions:
       "placeholder": "item"
     },
     {
-      "name": "target", 
+      "name": "target",
       "scope": "combat:entities_within_item_range",
       "placeholder": "target",
-      "contextVars": ["item"]  // Can use {item} in scope resolution
+      "contextVars": ["item"] // Can use {item} in scope resolution
     }
   ],
   "template": "throw {item} at {target}"
@@ -287,6 +305,7 @@ Implement a pipeline where each stage can access previous resolutions:
 ```
 
 ### Option C: Dynamic Scope Generation
+
 Allow scopes to be generated dynamically based on primary target properties:
 
 ```javascript
@@ -301,24 +320,29 @@ if (scopeDef.dynamic) {
 ## Files Requiring Modification
 
 ### Core Schema Changes
+
 1. `/data/schemas/action.schema.json` - Add multi-target support
 2. `/data/schemas/common.schema.json` - Add target definition schema
 
 ### Action Processing Pipeline
+
 3. `/src/actions/pipeline/stages/TargetResolutionStage.js` - Handle multiple targets
 4. `/src/actions/pipeline/stages/ActionFormattingStage.js` - Format multiple placeholders
 5. `/src/actions/actionFormatter.js` - Support multi-target formatting
 6. `/src/actions/formatters/targetFormatters.js` - Add formatters for multi-target
 
 ### Data Structures
+
 7. `/src/models/actionTargetContext.js` - Extend for multiple targets
 8. `/src/actions/targetResolutionService.js` - Resolve dependent scopes
 
 ### Event System
+
 9. `/src/commands/commandProcessor.js` - Create multi-target payloads
 10. `/src/constants/eventIds.js` - Consider new event types
 
 ### New Files
+
 11. `/src/actions/pipeline/stages/MultiTargetResolutionStage.js` - New stage
 12. `/src/actions/multiTargetResolver.js` - Dependency resolution logic
 13. `/src/actions/formatters/multiTargetFormatter.js` - Multi-target formatting
@@ -326,6 +350,7 @@ if (scopeDef.dynamic) {
 ## Practical Examples
 
 ### Example 1: Throw Action with Multiple Targets
+
 ```json
 // Action definition
 {
@@ -356,12 +381,14 @@ valid_targets := entities(core:actor)[][{
 ```
 
 **Result**: If actor has knife and grenade, and location has goblin and wolf, generates:
+
 - throw knife at goblin
 - throw knife at wolf
 - throw grenade at goblin
 - throw grenade at wolf
 
 ### Example 2: Clothing Adjustment with Context
+
 ```json
 // Action definition using context-based scopes
 {
@@ -403,12 +430,13 @@ target_adjustable_garments := target.topmost_clothing[][{"in": ["adjustable", {"
 The current action system's single-target limitation prevents natural expression of many game mechanics. Implementing a multi-target system would enable:
 
 - More intuitive action descriptions
-- Complex interactions without rule gymnastics  
+- Complex interactions without rule gymnastics
 - Better player understanding of action effects
 - Reduced complexity in rule definitions
 - Natural multi-action generation for combinatorial scenarios
 
 The recommended approach is to implement the context-based secondary scope system, which:
+
 1. Aligns perfectly with the existing scope DSL architecture
 2. Allows secondary scopes to receive the primary target as context
 3. Enables multi-action generation for actions with multiple valid target combinations

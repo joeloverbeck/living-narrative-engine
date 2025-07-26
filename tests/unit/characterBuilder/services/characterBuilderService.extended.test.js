@@ -2,7 +2,14 @@
  * @file Unit tests for CharacterBuilderService extensions for thematic directions manager
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { CharacterBuilderService } from '../../../../src/characterBuilder/services/characterBuilderService.js';
 
 describe('CharacterBuilderService - Thematic Directions Manager Extensions', () => {
@@ -88,7 +95,9 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
   describe('getAllThematicDirectionsWithConcepts', () => {
     it('should return all directions with their associated concepts', async () => {
       const mockDirections = [mockDirection, mockOrphanedDirection];
-      mockStorageService.getAllThematicDirections.mockResolvedValue(mockDirections);
+      mockStorageService.getAllThematicDirections.mockResolvedValue(
+        mockDirections
+      );
       mockStorageService.getCharacterConcept
         .mockResolvedValueOnce(mockConcept) // For first direction
         .mockResolvedValueOnce(null); // For orphaned direction
@@ -106,15 +115,21 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
       });
 
       expect(mockStorageService.getAllThematicDirections).toHaveBeenCalled();
-      expect(mockStorageService.getCharacterConcept).toHaveBeenCalledWith('concept-1');
-      expect(mockStorageService.getCharacterConcept).toHaveBeenCalledWith('missing-concept');
+      expect(mockStorageService.getCharacterConcept).toHaveBeenCalledWith(
+        'concept-1'
+      );
+      expect(mockStorageService.getCharacterConcept).toHaveBeenCalledWith(
+        'missing-concept'
+      );
     });
 
     it('should handle storage service errors gracefully', async () => {
       const error = new Error('Storage service failure');
       mockStorageService.getAllThematicDirections.mockRejectedValue(error);
 
-      await expect(service.getAllThematicDirectionsWithConcepts()).rejects.toThrow(
+      await expect(
+        service.getAllThematicDirectionsWithConcepts()
+      ).rejects.toThrow(
         'Failed to get all thematic directions with concepts: Storage service failure'
       );
 
@@ -126,7 +141,9 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
 
     it('should handle individual concept loading failures', async () => {
       const mockDirections = [mockDirection];
-      mockStorageService.getAllThematicDirections.mockResolvedValue(mockDirections);
+      mockStorageService.getAllThematicDirections.mockResolvedValue(
+        mockDirections
+      );
       mockStorageService.getCharacterConcept.mockRejectedValue(
         new Error('Concept not found')
       );
@@ -158,7 +175,9 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
   describe('getOrphanedThematicDirections', () => {
     it('should return orphaned directions', async () => {
       const orphanedDirections = [mockOrphanedDirection];
-      mockStorageService.findOrphanedDirections.mockResolvedValue(orphanedDirections);
+      mockStorageService.findOrphanedDirections.mockResolvedValue(
+        orphanedDirections
+      );
 
       const result = await service.getOrphanedThematicDirections();
 
@@ -199,9 +218,14 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
     it('should update direction successfully', async () => {
       const updates = { title: 'Updated Title' };
       const updatedDirection = { ...mockDirection, title: 'Updated Title' };
-      mockStorageService.updateThematicDirection.mockResolvedValue(updatedDirection);
+      mockStorageService.updateThematicDirection.mockResolvedValue(
+        updatedDirection
+      );
 
-      const result = await service.updateThematicDirection('direction-1', updates);
+      const result = await service.updateThematicDirection(
+        'direction-1',
+        updates
+      );
 
       expect(result).toEqual(updatedDirection);
       expect(mockStorageService.updateThematicDirection).toHaveBeenCalledWith(
@@ -218,23 +242,23 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
     });
 
     it('should validate directionId parameter', async () => {
-      await expect(service.updateThematicDirection('', { title: 'New Title' })).rejects.toThrow(
-        'directionId must be a non-empty string'
-      );
+      await expect(
+        service.updateThematicDirection('', { title: 'New Title' })
+      ).rejects.toThrow('directionId must be a non-empty string');
 
-      await expect(service.updateThematicDirection(null, { title: 'New Title' })).rejects.toThrow(
-        'directionId must be a non-empty string'
-      );
+      await expect(
+        service.updateThematicDirection(null, { title: 'New Title' })
+      ).rejects.toThrow('directionId must be a non-empty string');
     });
 
     it('should validate updates parameter', async () => {
-      await expect(service.updateThematicDirection('direction-1', null)).rejects.toThrow(
-        'updates must be a valid object'
-      );
+      await expect(
+        service.updateThematicDirection('direction-1', null)
+      ).rejects.toThrow('updates must be a valid object');
 
-      await expect(service.updateThematicDirection('direction-1', 'invalid')).rejects.toThrow(
-        'updates must be a valid object'
-      );
+      await expect(
+        service.updateThematicDirection('direction-1', 'invalid')
+      ).rejects.toThrow('updates must be a valid object');
     });
 
     it('should handle storage service errors', async () => {
@@ -243,7 +267,9 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
 
       await expect(
         service.updateThematicDirection('direction-1', { title: 'New Title' })
-      ).rejects.toThrow('Failed to update thematic direction direction-1: Update failed');
+      ).rejects.toThrow(
+        'Failed to update thematic direction direction-1: Update failed'
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to update thematic direction direction-1: Update failed',
@@ -259,7 +285,9 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
       const result = await service.deleteThematicDirection('direction-1');
 
       expect(result).toBe(true);
-      expect(mockStorageService.deleteThematicDirection).toHaveBeenCalledWith('direction-1');
+      expect(mockStorageService.deleteThematicDirection).toHaveBeenCalledWith(
+        'direction-1'
+      );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         'thematic:direction_deleted',
         {
@@ -291,7 +319,9 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
       const error = new Error('Deletion failed');
       mockStorageService.deleteThematicDirection.mockRejectedValue(error);
 
-      await expect(service.deleteThematicDirection('direction-1')).rejects.toThrow(
+      await expect(
+        service.deleteThematicDirection('direction-1')
+      ).rejects.toThrow(
         'Failed to delete thematic direction direction-1: Deletion failed'
       );
 
@@ -306,7 +336,9 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
     it('should dispatch DIRECTION_UPDATED event with correct payload', async () => {
       const updates = { title: 'Updated Title' };
       const updatedDirection = { ...mockDirection, title: 'Updated Title' };
-      mockStorageService.updateThematicDirection.mockResolvedValue(updatedDirection);
+      mockStorageService.updateThematicDirection.mockResolvedValue(
+        updatedDirection
+      );
 
       await service.updateThematicDirection('direction-1', updates);
 
@@ -333,7 +365,9 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
     });
 
     it('should not dispatch events on operation failures', async () => {
-      mockStorageService.updateThematicDirection.mockRejectedValue(new Error('Update failed'));
+      mockStorageService.updateThematicDirection.mockRejectedValue(
+        new Error('Update failed')
+      );
 
       await expect(
         service.updateThematicDirection('direction-1', { title: 'New Title' })

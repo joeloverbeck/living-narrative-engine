@@ -5,20 +5,34 @@ import { LLMStrategyError } from '../../../../../src/llms/errors/LLMStrategyErro
 import { DefaultToolSchemaHandler } from '../../../../../src/llms/strategies/toolSchemaHandlers/defaultToolSchemaHandler.js';
 
 // Mock the DefaultToolSchemaHandler
-jest.mock('../../../../../src/llms/strategies/toolSchemaHandlers/defaultToolSchemaHandler.js');
+jest.mock(
+  '../../../../../src/llms/strategies/toolSchemaHandlers/defaultToolSchemaHandler.js'
+);
 
 // Create a concrete implementation for testing abstract class
 class TestOpenRouterStrategy extends BaseOpenRouterStrategy {
-  _buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig, requestOptions = {}) {
+  _buildProviderRequestPayloadAdditions(
+    baseMessagesPayload,
+    llmConfig,
+    requestOptions = {}
+  ) {
     if (this.testShouldCallSuper) {
-      return super._buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig, requestOptions);
+      return super._buildProviderRequestPayloadAdditions(
+        baseMessagesPayload,
+        llmConfig,
+        requestOptions
+      );
     }
     return { test: 'additions' };
   }
 
   async _extractJsonOutput(responseData, llmConfig, providerRequestPayload) {
     if (this.testShouldCallSuper) {
-      return super._extractJsonOutput(responseData, llmConfig, providerRequestPayload);
+      return super._extractJsonOutput(
+        responseData,
+        llmConfig,
+        providerRequestPayload
+      );
     }
     if (this.testExtractedValue !== undefined) {
       return this.testExtractedValue;
@@ -35,11 +49,11 @@ describe('BaseOpenRouterStrategy', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockHttpClient = {
       request: jest.fn(),
     };
-    
+
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -50,9 +64,9 @@ describe('BaseOpenRouterStrategy', () => {
     mockToolSchemaHandler = {
       buildDefaultToolSchema: jest.fn().mockReturnValue({ schema: 'test' }),
     };
-    
+
     DefaultToolSchemaHandler.mockImplementation(() => mockToolSchemaHandler);
-    
+
     strategy = new TestOpenRouterStrategy({
       httpClient: mockHttpClient,
       logger: mockLogger,
@@ -62,15 +76,19 @@ describe('BaseOpenRouterStrategy', () => {
   describe('constructor', () => {
     it('should initialize successfully with valid dependencies', () => {
       expect(strategy).toBeDefined();
-      expect(DefaultToolSchemaHandler).toHaveBeenCalledWith({ logger: mockLogger });
-      expect(mockLogger.debug).toHaveBeenCalledWith('TestOpenRouterStrategy initialized.');
+      expect(DefaultToolSchemaHandler).toHaveBeenCalledWith({
+        logger: mockLogger,
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'TestOpenRouterStrategy initialized.'
+      );
     });
 
     it('should throw error when httpClient is not provided', () => {
       expect(() => {
         new TestOpenRouterStrategy({ logger: mockLogger });
       }).toThrow('TestOpenRouterStrategy: httpClient dependency is required.');
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         'TestOpenRouterStrategy: httpClient dependency is required.'
       );
@@ -88,11 +106,13 @@ describe('BaseOpenRouterStrategy', () => {
       it('should throw error when not overridden by subclass', () => {
         strategy.testShouldCallSuper = true;
         const llmConfig = { configId: 'test-llm' };
-        
+
         expect(() => {
           strategy._buildProviderRequestPayloadAdditions({}, llmConfig, {});
-        }).toThrow('TestOpenRouterStrategy._buildProviderRequestPayloadAdditions: Method not implemented. Subclasses must override this method.');
-        
+        }).toThrow(
+          'TestOpenRouterStrategy._buildProviderRequestPayloadAdditions: Method not implemented. Subclasses must override this method.'
+        );
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           'TestOpenRouterStrategy._buildProviderRequestPayloadAdditions: Method not implemented. Subclasses must override this method.',
           { llmId: 'test-llm' }
@@ -102,10 +122,12 @@ describe('BaseOpenRouterStrategy', () => {
       it('should use default empty object for requestOptions when not provided', () => {
         strategy.testShouldCallSuper = true;
         const llmConfig = { configId: 'test-llm' };
-        
+
         expect(() => {
           strategy._buildProviderRequestPayloadAdditions({}, llmConfig);
-        }).toThrow('TestOpenRouterStrategy._buildProviderRequestPayloadAdditions: Method not implemented. Subclasses must override this method.');
+        }).toThrow(
+          'TestOpenRouterStrategy._buildProviderRequestPayloadAdditions: Method not implemented. Subclasses must override this method.'
+        );
       });
     });
 
@@ -113,11 +135,13 @@ describe('BaseOpenRouterStrategy', () => {
       it('should throw error when not overridden by subclass', async () => {
         strategy.testShouldCallSuper = true;
         const llmConfig = { configId: 'test-llm' };
-        
+
         await expect(
           strategy._extractJsonOutput({}, llmConfig, {})
-        ).rejects.toThrow('TestOpenRouterStrategy._extractJsonOutput: Method not implemented. Subclasses must override this method.');
-        
+        ).rejects.toThrow(
+          'TestOpenRouterStrategy._extractJsonOutput: Method not implemented. Subclasses must override this method.'
+        );
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           'TestOpenRouterStrategy._extractJsonOutput: Method not implemented. Subclasses must override this method.',
           { llmId: 'test-llm' }
@@ -146,13 +170,12 @@ describe('BaseOpenRouterStrategy', () => {
       it('should build default tool schema for valid tools array', () => {
         const tools = [{ name: 'tool1' }];
         const requestOptions = { someOption: true };
-        
+
         const result = strategy.buildToolSchema(tools, requestOptions);
-        
-        expect(mockToolSchemaHandler.buildDefaultToolSchema).toHaveBeenCalledWith(
-          'unknown',
-          requestOptions
-        );
+
+        expect(
+          mockToolSchemaHandler.buildDefaultToolSchema
+        ).toHaveBeenCalledWith('unknown', requestOptions);
         expect(result).toEqual({ schema: 'test' });
       });
 
@@ -161,9 +184,9 @@ describe('BaseOpenRouterStrategy', () => {
         mockToolSchemaHandler.buildDefaultToolSchema.mockImplementation(() => {
           throw new Error('Schema error');
         });
-        
+
         const result = strategy.buildToolSchema(tools);
-        
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           'TestOpenRouterStrategy: Error building default tool schema: Schema error',
           { error: 'Schema error' }
@@ -217,9 +240,11 @@ describe('BaseOpenRouterStrategy', () => {
     describe('parameter validation', () => {
       it('should throw ConfigurationError when llmConfig is missing', async () => {
         const params = { ...validParams, llmConfig: null };
-        
-        await expect(strategy.execute(params)).rejects.toThrow(ConfigurationError);
-        
+
+        await expect(strategy.execute(params)).rejects.toThrow(
+          ConfigurationError
+        );
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           'TestOpenRouterStrategy: Missing llmConfig. Cannot proceed.'
         );
@@ -227,9 +252,11 @@ describe('BaseOpenRouterStrategy', () => {
 
       it('should throw ConfigurationError when environmentContext is missing', async () => {
         const params = { ...validParams, environmentContext: null };
-        
-        await expect(strategy.execute(params)).rejects.toThrow(ConfigurationError);
-        
+
+        await expect(strategy.execute(params)).rejects.toThrow(
+          ConfigurationError
+        );
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           'TestOpenRouterStrategy (test-llm): Missing environmentContext. Cannot proceed.',
           { llmId: 'test-llm' }
@@ -241,9 +268,11 @@ describe('BaseOpenRouterStrategy', () => {
           ...validParams,
           llmConfig: { ...validParams.llmConfig, apiType: 'openai' },
         };
-        
-        await expect(strategy.execute(params)).rejects.toThrow(ConfigurationError);
-        
+
+        await expect(strategy.execute(params)).rejects.toThrow(
+          ConfigurationError
+        );
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           "TestOpenRouterStrategy (test-llm): Invalid apiType 'openai'. This strategy is specific to 'openrouter'.",
           {
@@ -267,9 +296,9 @@ describe('BaseOpenRouterStrategy', () => {
             getProjectRootPath: () => null,
           },
         };
-        
+
         await strategy.execute(params);
-        
+
         expect(mockHttpClient.request).toHaveBeenCalledWith(
           'http://proxy.url',
           expect.objectContaining({
@@ -284,14 +313,14 @@ describe('BaseOpenRouterStrategy', () => {
     describe('server-side execution', () => {
       it('should use direct URL with API key for server-side execution', async () => {
         await strategy.execute(validParams);
-        
+
         expect(mockHttpClient.request).toHaveBeenCalledWith(
           'https://api.openrouter.ai/v1/chat/completions',
           expect.objectContaining({
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer test-api-key',
+              Authorization: 'Bearer test-api-key',
             },
           })
         );
@@ -299,9 +328,11 @@ describe('BaseOpenRouterStrategy', () => {
 
       it('should throw ConfigurationError when API key is missing for server-side', async () => {
         const params = { ...validParams, apiKey: null };
-        
-        await expect(strategy.execute(params)).rejects.toThrow(ConfigurationError);
-        
+
+        await expect(strategy.execute(params)).rejects.toThrow(
+          ConfigurationError
+        );
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           'TestOpenRouterStrategy (test-llm): API key is missing for server-side/direct OpenRouter call. An API key must be configured and provided.',
           { llmId: 'test-llm', problematicField: 'apiKey' }
@@ -313,12 +344,14 @@ describe('BaseOpenRouterStrategy', () => {
       it('should pass request options to payload builder', async () => {
         const requestOptions = { customOption: true };
         const params = { ...validParams, requestOptions };
-        
+
         jest.spyOn(strategy, '_buildProviderRequestPayloadAdditions');
-        
+
         await strategy.execute(params);
-        
-        expect(strategy._buildProviderRequestPayloadAdditions).toHaveBeenCalledWith(
+
+        expect(
+          strategy._buildProviderRequestPayloadAdditions
+        ).toHaveBeenCalledWith(
           expect.any(Object),
           validParams.llmConfig,
           requestOptions
@@ -330,9 +363,9 @@ describe('BaseOpenRouterStrategy', () => {
       it('should pass abort signal to HTTP request', async () => {
         const abortSignal = new AbortController().signal;
         const params = { ...validParams, abortSignal };
-        
+
         await strategy.execute(params);
-        
+
         expect(mockHttpClient.request).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({ abortSignal })
@@ -343,9 +376,11 @@ describe('BaseOpenRouterStrategy', () => {
     describe('JSON extraction error handling', () => {
       it('should throw LLMStrategyError when extraction returns null', async () => {
         strategy.testExtractedValue = null;
-        
-        await expect(strategy.execute(validParams)).rejects.toThrow(LLMStrategyError);
-        
+
+        await expect(strategy.execute(validParams)).rejects.toThrow(
+          LLMStrategyError
+        );
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Failed to extract usable JSON content'),
           expect.objectContaining({
@@ -357,9 +392,11 @@ describe('BaseOpenRouterStrategy', () => {
 
       it('should throw LLMStrategyError when extraction returns empty string', async () => {
         strategy.testExtractedValue = '   ';
-        
-        await expect(strategy.execute(validParams)).rejects.toThrow(LLMStrategyError);
-        
+
+        await expect(strategy.execute(validParams)).rejects.toThrow(
+          LLMStrategyError
+        );
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Failed to extract usable JSON content'),
           expect.objectContaining({
@@ -371,9 +408,11 @@ describe('BaseOpenRouterStrategy', () => {
 
       it('should throw LLMStrategyError when extraction returns non-string', async () => {
         strategy.testExtractedValue = 123;
-        
-        await expect(strategy.execute(validParams)).rejects.toThrow(LLMStrategyError);
-        
+
+        await expect(strategy.execute(validParams)).rejects.toThrow(
+          LLMStrategyError
+        );
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Failed to extract usable JSON content'),
           expect.objectContaining({
@@ -391,11 +430,11 @@ describe('BaseOpenRouterStrategy', () => {
         httpError.status = 500;
         httpError.response = 'Server error';
         httpError.url = validParams.llmConfig.endpointUrl;
-        
+
         mockHttpClient.request.mockRejectedValue(httpError);
-        
+
         await expect(strategy.execute(validParams)).rejects.toThrow(httpError);
-        
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('HttpClientError occurred during API call'),
           expect.objectContaining({
@@ -412,11 +451,11 @@ describe('BaseOpenRouterStrategy', () => {
         httpError.response = 'Not found';
         httpError.url = validParams.llmConfig.endpointUrl;
         // Note: name is 'Error', not 'HttpClientError'
-        
+
         mockHttpClient.request.mockRejectedValue(httpError);
-        
+
         await expect(strategy.execute(validParams)).rejects.toThrow(httpError);
-        
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('HttpClientError occurred during API call'),
           expect.objectContaining({
@@ -430,11 +469,15 @@ describe('BaseOpenRouterStrategy', () => {
       it('should wrap unexpected errors in LLMStrategyError', async () => {
         const unexpectedError = new Error('Unexpected error');
         mockHttpClient.request.mockRejectedValue(unexpectedError);
-        
-        await expect(strategy.execute(validParams)).rejects.toThrow(LLMStrategyError);
-        
+
+        await expect(strategy.execute(validParams)).rejects.toThrow(
+          LLMStrategyError
+        );
+
         expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('An unexpected error occurred during API call'),
+          expect.stringContaining(
+            'An unexpected error occurred during API call'
+          ),
           expect.objectContaining({
             llmId: 'test-llm',
             originalErrorMessage: 'Unexpected error',
@@ -445,22 +488,29 @@ describe('BaseOpenRouterStrategy', () => {
       it('should not wrap ConfigurationError', async () => {
         const configError = new ConfigurationError('Config error');
         mockHttpClient.request.mockRejectedValue(configError);
-        
-        await expect(strategy.execute(validParams)).rejects.toThrow(ConfigurationError);
+
+        await expect(strategy.execute(validParams)).rejects.toThrow(
+          ConfigurationError
+        );
       });
 
       it('should not wrap LLMStrategyError', async () => {
-        const strategyError = new LLMStrategyError('Strategy error', 'test-llm');
+        const strategyError = new LLMStrategyError(
+          'Strategy error',
+          'test-llm'
+        );
         mockHttpClient.request.mockRejectedValue(strategyError);
-        
-        await expect(strategy.execute(validParams)).rejects.toThrow(LLMStrategyError);
+
+        await expect(strategy.execute(validParams)).rejects.toThrow(
+          LLMStrategyError
+        );
       });
     });
 
     describe('successful execution', () => {
       it('should return extracted JSON string on success', async () => {
         const result = await strategy.execute(validParams);
-        
+
         expect(result).toBe('{"test": "json"}');
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining('Successfully extracted JSON string'),
@@ -484,19 +534,27 @@ describe('BaseOpenRouterStrategy', () => {
         await strategy.execute(validParams);
 
         // Check that debug was called with proper content previews
-        const debugCall = mockLogger.debug.mock.calls.find(call => 
+        const debugCall = mockLogger.debug.mock.calls.find((call) =>
           call[0].includes('Constructed base prompt payload')
         );
-        
+
         expect(debugCall).toBeDefined();
         const messagesPreview = debugCall[1].messagesPreview;
-        
+
         expect(messagesPreview[0].contentPreview).toBe('short');
         expect(messagesPreview[1].contentPreview).toBe('a'.repeat(70) + '...');
-        expect(messagesPreview[2].contentPreview).toBe('[content is null/undefined]');
-        expect(messagesPreview[3].contentPreview).toBe('[content is null/undefined]');
-        expect(messagesPreview[4].contentPreview).toBe('[content is an array (e.g., vision input)]');
-        expect(messagesPreview[5].contentPreview).toBe('[content not a simple string]');
+        expect(messagesPreview[2].contentPreview).toBe(
+          '[content is null/undefined]'
+        );
+        expect(messagesPreview[3].contentPreview).toBe(
+          '[content is null/undefined]'
+        );
+        expect(messagesPreview[4].contentPreview).toBe(
+          '[content is an array (e.g., vision input)]'
+        );
+        expect(messagesPreview[5].contentPreview).toBe(
+          '[content not a simple string]'
+        );
       });
 
       it('should include provider-specific headers in request', async () => {
@@ -507,9 +565,9 @@ describe('BaseOpenRouterStrategy', () => {
             providerSpecificHeaders: { 'X-Custom': 'value' },
           },
         };
-        
+
         await strategy.execute(params);
-        
+
         expect(mockHttpClient.request).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({
@@ -522,8 +580,10 @@ describe('BaseOpenRouterStrategy', () => {
 
       it('should merge default parameters into request payload', async () => {
         await strategy.execute(validParams);
-        
-        const callBody = JSON.parse(mockHttpClient.request.mock.calls[0][1].body);
+
+        const callBody = JSON.parse(
+          mockHttpClient.request.mock.calls[0][1].body
+        );
         expect(callBody).toMatchObject({
           temperature: 0.7,
           model: 'test-model',
@@ -538,10 +598,12 @@ describe('BaseOpenRouterStrategy', () => {
             defaultParameters: undefined,
           },
         };
-        
+
         await strategy.execute(params);
-        
-        const callBody = JSON.parse(mockHttpClient.request.mock.calls[0][1].body);
+
+        const callBody = JSON.parse(
+          mockHttpClient.request.mock.calls[0][1].body
+        );
         expect(callBody).toMatchObject({
           model: 'test-model',
         });
@@ -554,11 +616,11 @@ describe('BaseOpenRouterStrategy', () => {
         // No status property
         httpError.response = 'Server error';
         httpError.url = validParams.llmConfig.endpointUrl;
-        
+
         mockHttpClient.request.mockRejectedValue(httpError);
-        
+
         await expect(strategy.execute(validParams)).rejects.toThrow(httpError);
-        
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Status: N/A'),
           expect.objectContaining({

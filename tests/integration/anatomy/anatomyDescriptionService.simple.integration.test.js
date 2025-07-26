@@ -13,10 +13,10 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
   beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
-    
+
     // Use existing test data from testBed
     testBed.loadCoreTestData();
-    
+
     // Use the service from testBed
     anatomyDescriptionService = testBed.anatomyDescriptionService;
   });
@@ -68,11 +68,15 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
       });
 
       // Create a real entity
-      const testEntity = await testBed.entityManager.createEntityInstance('core:actor');
+      const testEntity =
+        await testBed.entityManager.createEntityInstance('core:actor');
       const entityId = testEntity.id;
       const description = 'Test description';
 
-      const componentManagerSpy = jest.spyOn(testBed.mockComponentManager, 'addComponent');
+      const componentManagerSpy = jest.spyOn(
+        testBed.mockComponentManager,
+        'addComponent'
+      );
 
       // Act
       serviceWithoutPersistence.updateDescription(entityId, description);
@@ -109,7 +113,8 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
     it('should handle regenerateDescriptions with non-anatomy entity gracefully', async () => {
       // Arrange - Create entity without anatomy:body component
-      const testEntity = await testBed.entityManager.createEntityInstance('core:actor');
+      const testEntity =
+        await testBed.entityManager.createEntityInstance('core:actor');
 
       // Act & Assert - Should not throw
       expect(() => {
@@ -122,7 +127,8 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
     it('should handle getOrGenerateBodyDescription with null entity', async () => {
       // Act
-      const result = await anatomyDescriptionService.getOrGenerateBodyDescription(null);
+      const result =
+        await anatomyDescriptionService.getOrGenerateBodyDescription(null);
 
       // Assert
       expect(result).toBeNull();
@@ -130,13 +136,17 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
     it('should handle getOrGenerateBodyDescription for non-anatomy entity', async () => {
       // Arrange - Create entity without anatomy:body but with description
-      const testEntity = await testBed.entityManager.createEntityInstance('core:actor');
+      const testEntity =
+        await testBed.entityManager.createEntityInstance('core:actor');
       testBed.entityManager.addComponent(testEntity.id, 'core:description', {
         text: 'Existing description',
       });
 
       // Act
-      const result = await anatomyDescriptionService.getOrGenerateBodyDescription(testEntity);
+      const result =
+        await anatomyDescriptionService.getOrGenerateBodyDescription(
+          testEntity
+        );
 
       // Assert
       expect(result).toBe('Existing description');
@@ -146,7 +156,8 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
   describe('Error Handling', () => {
     it('should throw error for generateAllDescriptions without anatomy:body component', async () => {
       // Arrange - Create entity without anatomy:body
-      const testEntity = await testBed.entityManager.createEntityInstance('core:actor');
+      const testEntity =
+        await testBed.entityManager.createEntityInstance('core:actor');
 
       // Act & Assert
       await expect(
@@ -156,7 +167,8 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
     it('should throw error for generateAllDescriptions with invalid body structure', async () => {
       // Arrange - Create entity with invalid body component
-      const testEntity = await testBed.entityManager.createEntityInstance('core:actor');
+      const testEntity =
+        await testBed.entityManager.createEntityInstance('core:actor');
       testBed.entityManager.addComponent(testEntity.id, 'anatomy:body', {
         body: null, // Invalid body
         recipeId: 'test:recipe',
@@ -184,7 +196,10 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
       // Act & Assert - Should not throw
       expect(() => {
-        serviceWithoutPersistence.updateDescription(nonExistentId, 'description');
+        serviceWithoutPersistence.updateDescription(
+          nonExistentId,
+          'description'
+        );
       }).not.toThrow();
     });
   });
@@ -192,9 +207,13 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
   describe('Service Delegation', () => {
     it('should delegate to bodyDescriptionOrchestrator when available for generateAllDescriptions', async () => {
       // Arrange - Create entity with anatomy
-      const testEntity = await testBed.entityManager.createEntityInstance('core:actor');
+      const testEntity =
+        await testBed.entityManager.createEntityInstance('core:actor');
       testBed.entityManager.addComponent(testEntity.id, 'anatomy:body', {
-        body: { root: 'test-root', parts: { 'test-root': { id: 'test-root' } } },
+        body: {
+          root: 'test-root',
+          parts: { 'test-root': { id: 'test-root' } },
+        },
         recipeId: 'test-recipe',
       });
 
@@ -217,7 +236,10 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
       // Assert
       expect(orchestratorSpy).toHaveBeenCalledWith(testEntity);
-      expect(persistenceSpy).toHaveBeenCalledWith(testEntity.id, 'Test body description');
+      expect(persistenceSpy).toHaveBeenCalledWith(
+        testEntity.id,
+        'Test body description'
+      );
 
       orchestratorSpy.mockRestore();
       persistenceSpy.mockRestore();
@@ -225,7 +247,8 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
     it('should delegate to bodyDescriptionOrchestrator for getOrGenerateBodyDescription', async () => {
       // Arrange
-      const testEntity = await testBed.entityManager.createEntityInstance('core:actor');
+      const testEntity =
+        await testBed.entityManager.createEntityInstance('core:actor');
       testBed.entityManager.addComponent(testEntity.id, 'anatomy:body', {
         body: { root: 'test-root' },
         recipeId: 'test-recipe',
@@ -243,11 +266,17 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
       orchestratorSpy.mockResolvedValue('Orchestrator description');
 
       // Act
-      const result = await anatomyDescriptionService.getOrGenerateBodyDescription(testEntity);
+      const result =
+        await anatomyDescriptionService.getOrGenerateBodyDescription(
+          testEntity
+        );
 
       // Assert
       expect(orchestratorSpy).toHaveBeenCalledWith(testEntity);
-      expect(persistenceSpy).toHaveBeenCalledWith(testEntity.id, 'Orchestrator description');
+      expect(persistenceSpy).toHaveBeenCalledWith(
+        testEntity.id,
+        'Orchestrator description'
+      );
       expect(result).toBe('Orchestrator description');
 
       orchestratorSpy.mockRestore();
@@ -256,7 +285,8 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
     it('should delegate to bodyDescriptionOrchestrator for generateBodyDescription', async () => {
       // Arrange
-      const testEntity = await testBed.entityManager.createEntityInstance('core:actor');
+      const testEntity =
+        await testBed.entityManager.createEntityInstance('core:actor');
       testBed.entityManager.addComponent(testEntity.id, 'anatomy:body', {
         body: { root: 'test-root' },
         recipeId: 'test-recipe',
@@ -278,7 +308,10 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
       // Assert
       expect(orchestratorSpy).toHaveBeenCalledWith(testEntity);
-      expect(persistenceSpy).toHaveBeenCalledWith(testEntity.id, 'Body description from orchestrator');
+      expect(persistenceSpy).toHaveBeenCalledWith(
+        testEntity.id,
+        'Body description from orchestrator'
+      );
 
       orchestratorSpy.mockRestore();
       persistenceSpy.mockRestore();
@@ -286,8 +319,11 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
     it('should delegate part description generation to specialized service', async () => {
       // Arrange - Create a real entity instance
-      const partEntity = await testBed.entityManager.createEntityInstance('core:actor');
-      testBed.entityManager.addComponent(partEntity.id, 'anatomy:part', { subType: 'arm' });
+      const partEntity =
+        await testBed.entityManager.createEntityInstance('core:actor');
+      testBed.entityManager.addComponent(partEntity.id, 'anatomy:part', {
+        subType: 'arm',
+      });
       const partId = partEntity.id;
 
       const generatorSpy = jest.spyOn(
@@ -306,7 +342,10 @@ describe('AnatomyDescriptionService - Simple Integration', () => {
 
       // Assert
       expect(generatorSpy).toHaveBeenCalledWith(partId);
-      expect(persistenceSpy).toHaveBeenCalledWith(partId, 'Generated part description');
+      expect(persistenceSpy).toHaveBeenCalledWith(
+        partId,
+        'Generated part description'
+      );
 
       generatorSpy.mockRestore();
       persistenceSpy.mockRestore();

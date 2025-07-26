@@ -22,12 +22,7 @@
       },
       "layer": {
         "type": "string",
-        "enum": [
-          "underwear",
-          "base",
-          "outer",
-          "accessories"
-        ],
+        "enum": ["underwear", "base", "outer", "accessories"],
         "description": "The layer the item was unequipped from"
       },
       "reason": {

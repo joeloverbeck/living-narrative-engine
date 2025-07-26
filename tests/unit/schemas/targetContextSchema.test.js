@@ -6,32 +6,32 @@ import targetContextSchema from '../../../data/schemas/target-context.schema.jso
 describe('Target Context Schema Validation', () => {
   /** @type {import('ajv').ValidateFunction} */
   let validate;
-  
+
   beforeAll(() => {
     const ajv = new Ajv({ strict: false, allErrors: true });
     addFormats(ajv);
     validate = ajv.compile(targetContextSchema);
   });
-  
+
   describe('Base Context Validation', () => {
     test('✓ should validate minimal valid context', () => {
       const context = {
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 0 }
+        game: { turnNumber: 0 },
       };
-      
+
       const isValid = validate(context);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
     });
-    
+
     test('❌ should require actor, location, and game', () => {
       const invalid = {
-        actor: { id: 'player', components: {} }
+        actor: { id: 'player', components: {} },
         // missing location and game
       };
-      
+
       const isValid = validate(invalid);
       expect(isValid).toBe(false);
       expect(validate.errors).toBeDefined();
@@ -41,44 +41,44 @@ describe('Target Context Schema Validation', () => {
       const context = {
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
-        game: { 
+        game: {
           turnNumber: 42,
           timeOfDay: 'afternoon',
-          weather: 'sunny'
-        }
+          weather: 'sunny',
+        },
       };
-      
+
       const isValid = validate(context);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
     });
   });
-  
+
   describe('Target Context Validation', () => {
     test('✓ should validate context with target', () => {
       const context = {
         actor: { id: 'player', components: {} },
         target: { id: 'npc', components: {} },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
-      
+
       const isValid = validate(context);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
     });
-    
+
     test('✓ should validate context with targets object', () => {
       const context = {
         actor: { id: 'player', components: {} },
         targets: {
           primary: [{ id: 'item1', components: {} }],
-          secondary: [{ id: 'npc1', components: {} }]
+          secondary: [{ id: 'npc1', components: {} }],
         },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
-      
+
       const isValid = validate(context);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -89,12 +89,12 @@ describe('Target Context Schema Validation', () => {
         actor: { id: 'player', components: {} },
         target: { id: 'npc', components: {} },
         targets: {
-          primary: [{ id: 'npc', components: {} }]
+          primary: [{ id: 'npc', components: {} }],
         },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
-      
+
       const isValid = validate(context);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -106,9 +106,9 @@ describe('Target Context Schema Validation', () => {
       const invalid = {
         actor: { id: 'player' }, // missing components
         location: { components: {} }, // missing id
-        game: { turnNumber: 0 }
+        game: { turnNumber: 0 },
       };
-      
+
       const isValid = validate(invalid);
       expect(isValid).toBe(false);
       expect(validate.errors).toBeDefined();
@@ -116,22 +116,22 @@ describe('Target Context Schema Validation', () => {
 
     test('✓ should accept complex component structures', () => {
       const context = {
-        actor: { 
-          id: 'player', 
+        actor: {
+          id: 'player',
           components: {
             'core:inventory': { items: ['sword', 'potion'] },
-            'core:stats': { health: 100, mana: 50 }
-          }
+            'core:stats': { health: 100, mana: 50 },
+          },
         },
-        location: { 
-          id: 'room', 
+        location: {
+          id: 'room',
           components: {
-            'core:description': { name: 'Town Square' }
-          }
+            'core:description': { name: 'Town Square' },
+          },
         },
-        game: { turnNumber: 5 }
+        game: { turnNumber: 5 },
       };
-      
+
       const isValid = validate(context);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);

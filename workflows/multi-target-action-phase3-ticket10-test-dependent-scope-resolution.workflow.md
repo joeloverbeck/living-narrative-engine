@@ -1,9 +1,13 @@
 # Ticket: Test Dependent Scope Resolution
 
 ## Ticket ID: PHASE3-TICKET10
+
 ## Priority: High
+
 ## Estimated Time: 5-6 hours
+
 ## Dependencies: PHASE3-TICKET8, PHASE3-TICKET9
+
 ## Blocks: PHASE4-TICKET11, PHASE4-TICKET14
 
 ## Overview
@@ -47,28 +51,28 @@ describe('Dependent Scope Resolution', () => {
   beforeEach(() => {
     mockEntityManager = {
       getEntity: jest.fn(),
-      getAllEntities: jest.fn()
+      getAllEntities: jest.fn(),
     };
 
     mockScopeRegistry = {
-      getScope: jest.fn()
+      getScope: jest.fn(),
     };
 
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     scopeInterpreter = new ScopeInterpreter({
       entityManager: mockEntityManager,
       scopeRegistry: mockScopeRegistry,
-      logger: mockLogger
+      logger: mockLogger,
     });
 
     targetContextBuilder = new TargetContextBuilder({
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -78,11 +82,11 @@ describe('Dependent Scope Resolution', () => {
       const primaryTarget = {
         id: 'npc_001',
         components: {
-          'core:inventory': { items: ['item_001', 'item_002'] }
-        }
+          'core:inventory': { items: ['item_001', 'item_002'] },
+        },
       };
 
-      mockEntityManager.getEntity.mockImplementation(id => {
+      mockEntityManager.getEntity.mockImplementation((id) => {
         if (id === 'npc_001') return primaryTarget;
         if (id === 'item_001') return { id: 'item_001', components: {} };
         if (id === 'item_002') return { id: 'item_002', components: {} };
@@ -94,7 +98,7 @@ describe('Dependent Scope Resolution', () => {
         actor: { id: 'player', components: {} },
         target: primaryTarget,
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       // Test scope that accesses target's inventory
@@ -111,7 +115,7 @@ describe('Dependent Scope Resolution', () => {
         actor: { id: 'player', components: {} },
         // No target in context
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -130,12 +134,12 @@ describe('Dependent Scope Resolution', () => {
       const baseContext = {
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const primaryTarget = {
         id: 'npc_001',
-        components: { 'core:actor': { name: 'Alice' } }
+        components: { 'core:actor': { name: 'Alice' } },
       };
 
       const result = targetContextBuilder.buildContext(
@@ -147,7 +151,7 @@ describe('Dependent Scope Resolution', () => {
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
         game: { turnNumber: 1 },
-        target: primaryTarget
+        target: primaryTarget,
       });
     });
   });
@@ -158,15 +162,17 @@ describe('Dependent Scope Resolution', () => {
       const secondaryTarget = {
         id: 'container_001',
         components: {
-          'core:container': { 
-            contents: { items: ['treasure_001', 'treasure_002'] }
-          }
-        }
+          'core:container': {
+            contents: { items: ['treasure_001', 'treasure_002'] },
+          },
+        },
       };
 
-      mockEntityManager.getEntity.mockImplementation(id => {
-        if (id === 'treasure_001') return { id: 'treasure_001', components: {} };
-        if (id === 'treasure_002') return { id: 'treasure_002', components: {} };
+      mockEntityManager.getEntity.mockImplementation((id) => {
+        if (id === 'treasure_001')
+          return { id: 'treasure_001', components: {} };
+        if (id === 'treasure_002')
+          return { id: 'treasure_002', components: {} };
         return null;
       });
 
@@ -174,11 +180,11 @@ describe('Dependent Scope Resolution', () => {
         actor: { id: 'player', components: {} },
         targets: {
           primary: [primaryTarget],
-          secondary: [secondaryTarget]
+          secondary: [secondaryTarget],
         },
         target: secondaryTarget, // Current context for tertiary resolution
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -193,7 +199,7 @@ describe('Dependent Scope Resolution', () => {
       const baseContext = {
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const primaryTarget = { id: 'tool_001', components: {} };
@@ -204,9 +210,9 @@ describe('Dependent Scope Resolution', () => {
         ...baseContext,
         targets: {
           primary: [primaryTarget],
-          secondary: [secondaryTarget]
+          secondary: [secondaryTarget],
         },
-        target: secondaryTarget
+        target: secondaryTarget,
       };
 
       const result = targetContextBuilder.buildContext(
@@ -216,7 +222,7 @@ describe('Dependent Scope Resolution', () => {
 
       expect(result.targets).toEqual({
         primary: [primaryTarget],
-        secondary: [secondaryTarget]
+        secondary: [secondaryTarget],
       });
       expect(result.target).toEqual(secondaryTarget);
     });
@@ -226,27 +232,33 @@ describe('Dependent Scope Resolution', () => {
     it('should handle deeply nested dependencies', async () => {
       // Chain: primary → secondary → tertiary → quaternary
       const targets = {
-        primary: [{
-          id: 'player_001',
-          components: { 'core:faction': { name: 'merchants' } }
-        }],
-        secondary: [{
-          id: 'guild_001',
-          components: { 
-            'guild:members': { list: ['member_001', 'member_002'] }
-          }
-        }],
-        tertiary: [{
-          id: 'member_001',
-          components: {
-            'core:inventory': { items: ['guild_item_001'] }
-          }
-        }]
+        primary: [
+          {
+            id: 'player_001',
+            components: { 'core:faction': { name: 'merchants' } },
+          },
+        ],
+        secondary: [
+          {
+            id: 'guild_001',
+            components: {
+              'guild:members': { list: ['member_001', 'member_002'] },
+            },
+          },
+        ],
+        tertiary: [
+          {
+            id: 'member_001',
+            components: {
+              'core:inventory': { items: ['guild_item_001'] },
+            },
+          },
+        ],
       };
 
       mockEntityManager.getEntity.mockReturnValue({
         id: 'guild_item_001',
-        components: {}
+        components: {},
       });
 
       const context = {
@@ -254,7 +266,7 @@ describe('Dependent Scope Resolution', () => {
         targets,
         target: targets.tertiary[0],
         location: { id: 'guild_hall', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -268,19 +280,19 @@ describe('Dependent Scope Resolution', () => {
     it('should detect and prevent circular dependencies', () => {
       // This would be caught at the action definition validation level
       // but we should test the scope resolution doesn't infinite loop
-      
+
       const circularTarget = {
         id: 'circular_001',
         components: {
-          'core:reference': { target: 'circular_001' }
-        }
+          'core:reference': { target: 'circular_001' },
+        },
       };
 
       const context = {
         actor: { id: 'player', components: {} },
         target: circularTarget,
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       // This should not cause infinite recursion
@@ -298,12 +310,12 @@ describe('Dependent Scope Resolution', () => {
       const context = {
         actor: { id: 'player', components: {} },
         targets: {
-          primary: [{ id: 'valid_001', components: {} }]
+          primary: [{ id: 'valid_001', components: {} }],
           // Missing secondary targets
         },
         target: null, // No current target
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -313,7 +325,7 @@ describe('Dependent Scope Resolution', () => {
 
       expect(result).toEqual([]);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('No targets found for key \'secondary\''),
+        expect.stringContaining("No targets found for key 'secondary'"),
         'ContextAwareResolver'
       );
     });
@@ -325,10 +337,10 @@ describe('Dependent Scope Resolution', () => {
           id: 'incomplete_001',
           components: {
             // Missing expected component
-          }
+          },
         },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -345,7 +357,7 @@ describe('Dependent Scope Resolution', () => {
         actor: { id: 'player', components: {} },
         target: { id: 'valid_001', components: {} },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       await expect(
@@ -357,15 +369,18 @@ describe('Dependent Scope Resolution', () => {
   describe('Performance Tests', () => {
     it('should resolve dependencies efficiently with large target sets', async () => {
       // Create large target with many items
-      const largeInventory = Array.from({ length: 1000 }, (_, i) => `item_${i}`);
+      const largeInventory = Array.from(
+        { length: 1000 },
+        (_, i) => `item_${i}`
+      );
       const largeTarget = {
         id: 'large_target',
         components: {
-          'core:inventory': { items: largeInventory }
-        }
+          'core:inventory': { items: largeInventory },
+        },
       };
 
-      mockEntityManager.getEntity.mockImplementation(id => {
+      mockEntityManager.getEntity.mockImplementation((id) => {
         if (id.startsWith('item_')) {
           return { id, components: {} };
         }
@@ -376,7 +391,7 @@ describe('Dependent Scope Resolution', () => {
         actor: { id: 'player', components: {} },
         target: largeTarget,
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const start = performance.now();
@@ -394,15 +409,15 @@ describe('Dependent Scope Resolution', () => {
       const target = {
         id: 'cached_target',
         components: {
-          'core:stats': { health: 100, mana: 50 }
-        }
+          'core:stats': { health: 100, mana: 50 },
+        },
       };
 
       const context = {
         actor: { id: 'player', components: {} },
         target,
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       // Evaluate same expression multiple times
@@ -439,7 +454,7 @@ describe('TargetContextBuilder', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     builder = new TargetContextBuilder({ logger: mockLogger });
@@ -450,12 +465,12 @@ describe('TargetContextBuilder', () => {
       const baseContext = {
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const primaryTarget = {
         id: 'target_001',
-        components: { 'core:actor': { name: 'NPC' } }
+        components: { 'core:actor': { name: 'NPC' } },
       };
 
       const result = builder.buildContext(
@@ -467,7 +482,7 @@ describe('TargetContextBuilder', () => {
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
         game: { turnNumber: 1 },
-        target: primaryTarget
+        target: primaryTarget,
       });
     });
 
@@ -475,7 +490,7 @@ describe('TargetContextBuilder', () => {
       const baseContext = {
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const primaryTarget = { id: 'primary_001', components: {} };
@@ -485,16 +500,16 @@ describe('TargetContextBuilder', () => {
         ...baseContext,
         targets: {
           primary: [primaryTarget],
-          secondary: [secondaryTarget]
+          secondary: [secondaryTarget],
         },
-        target: secondaryTarget
+        target: secondaryTarget,
       };
 
       const result = builder.buildContext(contextWithTargets, 'secondary');
 
       expect(result.targets).toEqual({
         primary: [primaryTarget],
-        secondary: [secondaryTarget]
+        secondary: [secondaryTarget],
       });
       expect(result.target).toEqual(secondaryTarget);
     });
@@ -503,7 +518,7 @@ describe('TargetContextBuilder', () => {
       const baseContext = {
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = builder.buildContext(baseContext, 'primary');
@@ -518,7 +533,7 @@ describe('TargetContextBuilder', () => {
         location: { id: 'room', components: {} },
         game: { turnNumber: 1 },
         customProperty: 'custom_value',
-        target: { id: 'target_001', components: {} }
+        target: { id: 'target_001', components: {} },
       };
 
       const result = builder.buildContext(baseContext, 'primary');
@@ -543,8 +558,8 @@ describe('TargetContextBuilder', () => {
       const baseContext = {
         actor: { id: 'player', components: {} },
         targets: {
-          primary: null // Invalid targets array
-        }
+          primary: null, // Invalid targets array
+        },
       };
 
       const result = builder.buildContext(baseContext, 'secondary');
@@ -577,25 +592,25 @@ describe('Dependent Target Resolution Integration', () => {
       const adjustAction = {
         id: 'intimacy:adjust_clothing',
         name: 'Adjust Clothing',
-        description: 'Adjust someone\'s clothing',
+        description: "Adjust someone's clothing",
         targets: {
           primary: {
             scope: 'location.core:actors[]',
-            placeholder: 'person'
+            placeholder: 'person',
           },
           secondary: {
             scope: 'target.topmost_clothing[]',
             placeholder: 'garment',
-            contextFrom: 'primary'
-          }
+            contextFrom: 'primary',
+          },
         },
-        template: 'adjust {person}\'s {garment}',
-        generateCombinations: false
+        template: "adjust {person}'s {garment}",
+        generateCombinations: false,
       };
 
       // Create entities
       const player = testBed.createEntity('player', {
-        'core:position': { locationId: 'room' }
+        'core:position': { locationId: 'room' },
       });
 
       const npc = testBed.createEntity('npc_001', {
@@ -603,9 +618,9 @@ describe('Dependent Target Resolution Integration', () => {
         'core:position': { locationId: 'room' },
         'clothing:equipment': {
           equipped: {
-            torso_upper: { outer: 'jacket_001' }
-          }
-        }
+            torso_upper: { outer: 'jacket_001' },
+          },
+        },
       });
 
       const jacket = testBed.createEntity('jacket_001', {
@@ -613,35 +628,35 @@ describe('Dependent Target Resolution Integration', () => {
         'clothing:garment': {
           slot: 'torso_upper',
           layer: 'outer',
-          properties: ['adjustable']
-        }
+          properties: ['adjustable'],
+        },
       });
 
       const room = testBed.createEntity('room', {
         'core:location': { name: 'Room' },
-        'core:actors': { actors: ['player', 'npc_001'] }
+        'core:actors': { actors: ['player', 'npc_001'] },
       });
 
       // Register scope for topmost clothing
-      testBed.registerScope('location.core:actors[]',
+      testBed.registerScope(
+        'location.core:actors[]',
         'location.core:actors[][{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]'
       );
-      testBed.registerScope('target.topmost_clothing[]',
+      testBed.registerScope(
+        'target.topmost_clothing[]',
         'target.topmost_clothing[]'
       );
 
       // Process action
-      const result = await actionProcessor.process(
-        adjustAction,
-        player,
-        { location: room }
-      );
+      const result = await actionProcessor.process(adjustAction, player, {
+        location: room,
+      });
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(1);
-      
+
       const action = result.value.actions[0];
-      expect(action.command).toBe('adjust Alice\'s Blue Jacket');
+      expect(action.command).toBe("adjust Alice's Blue Jacket");
       expect(action.params.targets.primary.id).toBe('npc_001');
       expect(action.params.targets.secondary.id).toBe('jacket_001');
     });
@@ -653,42 +668,41 @@ describe('Dependent Target Resolution Integration', () => {
         targets: {
           primary: {
             scope: 'location.core:actors[]',
-            placeholder: 'person'
+            placeholder: 'person',
           },
           secondary: {
             scope: 'target.nonexistent_items[]',
             placeholder: 'item',
-            contextFrom: 'primary'
-          }
+            contextFrom: 'primary',
+          },
         },
-        template: 'adjust {person}\'s {item}'
+        template: "adjust {person}'s {item}",
       };
 
       const player = testBed.createEntity('player', {
-        'core:position': { locationId: 'room' }
+        'core:position': { locationId: 'room' },
       });
 
       const npc = testBed.createEntity('npc_001', {
         'core:actor': { name: 'Bob' },
-        'core:position': { locationId: 'room' }
+        'core:position': { locationId: 'room' },
         // No items to adjust
       });
 
       const room = testBed.createEntity('room', {
         'core:location': { name: 'Room' },
-        'core:actors': { actors: ['player', 'npc_001'] }
+        'core:actors': { actors: ['player', 'npc_001'] },
       });
 
-      testBed.registerScope('location.core:actors[]',
+      testBed.registerScope(
+        'location.core:actors[]',
         'location.core:actors[][{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]'
       );
       testBed.registerScope('target.nonexistent_items[]', '[]');
 
-      const result = await actionProcessor.process(
-        adjustAction,
-        player,
-        { location: room }
-      );
+      const result = await actionProcessor.process(adjustAction, player, {
+        location: room,
+      });
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(0);
@@ -704,72 +718,75 @@ describe('Dependent Target Resolution Integration', () => {
         targets: {
           primary: {
             scope: 'actor.core:inventory.tools[]',
-            placeholder: 'tool'
+            placeholder: 'tool',
           },
           secondary: {
             scope: 'location.core:containers[]',
             placeholder: 'container',
-            contextFrom: 'primary'
+            contextFrom: 'primary',
           },
           tertiary: {
             scope: 'target.core:contents.items[]',
             placeholder: 'item',
-            contextFrom: 'secondary'
-          }
+            contextFrom: 'secondary',
+          },
         },
         template: 'use {tool} on {container} to get {item}',
-        generateCombinations: false
+        generateCombinations: false,
       };
 
       // Create entities
       const player = testBed.createEntity('player', {
         'core:inventory': { items: ['key_001'] },
-        'core:position': { locationId: 'vault' }
+        'core:position': { locationId: 'vault' },
       });
 
       const key = testBed.createEntity('key_001', {
-        'core:item': { name: 'Master Key', type: 'tool' }
+        'core:item': { name: 'Master Key', type: 'tool' },
       });
 
       const chest = testBed.createEntity('chest_001', {
         'core:container': {
           contents: { items: ['treasure_001'] },
-          locked: true
+          locked: true,
         },
-        'core:position': { locationId: 'vault' }
+        'core:position': { locationId: 'vault' },
       });
 
       const treasure = testBed.createEntity('treasure_001', {
-        'core:item': { name: 'Gold Coins', type: 'treasure' }
+        'core:item': { name: 'Gold Coins', type: 'treasure' },
       });
 
       const vault = testBed.createEntity('vault', {
         'core:location': { name: 'Vault' },
-        'core:containers': { containers: ['chest_001'] }
+        'core:containers': { containers: ['chest_001'] },
       });
 
       // Register scopes
-      testBed.registerScope('actor.core:inventory.tools[]',
+      testBed.registerScope(
+        'actor.core:inventory.tools[]',
         'actor.core:inventory.items[][{"==": [{"var": "entity.components.core:item.type"}, "tool"]}]'
       );
-      testBed.registerScope('location.core:containers[]',
+      testBed.registerScope(
+        'location.core:containers[]',
         'location.core:containers.containers[]'
       );
-      testBed.registerScope('target.core:contents.items[]',
+      testBed.registerScope(
+        'target.core:contents.items[]',
         'target.core:container.contents.items[]'
       );
 
-      const result = await actionProcessor.process(
-        complexAction,
-        player,
-        { location: vault }
-      );
+      const result = await actionProcessor.process(complexAction, player, {
+        location: vault,
+      });
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(1);
 
       const action = result.value.actions[0];
-      expect(action.command).toBe('use Master Key on chest_001 to get Gold Coins');
+      expect(action.command).toBe(
+        'use Master Key on chest_001 to get Gold Coins'
+      );
       expect(action.params.targets.primary.id).toBe('key_001');
       expect(action.params.targets.secondary.id).toBe('chest_001');
       expect(action.params.targets.tertiary.id).toBe('treasure_001');
@@ -785,60 +802,60 @@ describe('Dependent Target Resolution Integration', () => {
         targets: {
           primary: {
             scope: 'location.core:actors[]',
-            placeholder: 'person'
+            placeholder: 'person',
           },
           secondary: {
             scope: 'target.core:inventory.items[]',
             placeholder: 'item',
-            contextFrom: 'primary'
-          }
+            contextFrom: 'primary',
+          },
         },
         template: 'take {item} from {person}',
-        generateCombinations: true
+        generateCombinations: true,
       };
 
       const player = testBed.createEntity('player', {
-        'core:position': { locationId: 'market' }
+        'core:position': { locationId: 'market' },
       });
 
       // Create many NPCs with inventories
       const npcIds = Array.from({ length: 10 }, (_, i) => `npc_${i}`);
       const allActors = ['player', ...npcIds];
 
-      npcIds.forEach(id => {
+      npcIds.forEach((id) => {
         const itemIds = Array.from({ length: 20 }, (_, j) => `${id}_item_${j}`);
-        
+
         testBed.createEntity(id, {
           'core:actor': { name: `NPC ${id}` },
           'core:position': { locationId: 'market' },
-          'core:inventory': { items: itemIds }
+          'core:inventory': { items: itemIds },
         });
 
-        itemIds.forEach(itemId => {
+        itemIds.forEach((itemId) => {
           testBed.createEntity(itemId, {
-            'core:item': { name: `Item ${itemId}` }
+            'core:item': { name: `Item ${itemId}` },
           });
         });
       });
 
       const market = testBed.createEntity('market', {
         'core:location': { name: 'Market' },
-        'core:actors': { actors: allActors }
+        'core:actors': { actors: allActors },
       });
 
-      testBed.registerScope('location.core:actors[]',
+      testBed.registerScope(
+        'location.core:actors[]',
         'location.core:actors[][{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]'
       );
-      testBed.registerScope('target.core:inventory.items[]',
+      testBed.registerScope(
+        'target.core:inventory.items[]',
         'target.core:inventory.items[]'
       );
 
       const start = performance.now();
-      const result = await actionProcessor.process(
-        performanceAction,
-        player,
-        { location: market }
-      );
+      const result = await actionProcessor.process(performanceAction, player, {
+        location: market,
+      });
       const end = performance.now();
 
       expect(result.success).toBe(true);
@@ -855,41 +872,40 @@ describe('Dependent Target Resolution Integration', () => {
         targets: {
           primary: {
             scope: 'location.core:actors[]',
-            placeholder: 'person'
+            placeholder: 'person',
           },
           secondary: {
             scope: 'target.nonexistent.property[]',
             placeholder: 'item',
-            contextFrom: 'primary'
-          }
+            contextFrom: 'primary',
+          },
         },
-        template: 'interact with {person}\'s {item}'
+        template: "interact with {person}'s {item}",
       };
 
       const player = testBed.createEntity('player', {
-        'core:position': { locationId: 'room' }
+        'core:position': { locationId: 'room' },
       });
 
       const npc = testBed.createEntity('npc_001', {
         'core:actor': { name: 'Alice' },
-        'core:position': { locationId: 'room' }
+        'core:position': { locationId: 'room' },
       });
 
       const room = testBed.createEntity('room', {
         'core:location': { name: 'Room' },
-        'core:actors': { actors: ['player', 'npc_001'] }
+        'core:actors': { actors: ['player', 'npc_001'] },
       });
 
-      testBed.registerScope('location.core:actors[]',
+      testBed.registerScope(
+        'location.core:actors[]',
         'location.core:actors[][{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]'
       );
       testBed.registerScope('target.nonexistent.property[]', '[]');
 
-      const result = await actionProcessor.process(
-        brokenAction,
-        player,
-        { location: room }
-      );
+      const result = await actionProcessor.process(brokenAction, player, {
+        location: room,
+      });
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(0);
@@ -914,7 +930,7 @@ describe('Dependent Target Actions E2E', () => {
   beforeEach(() => {
     testBed = new E2ETestBed();
     gameEngine = testBed.getGameEngine();
-    
+
     // Load example mods with dependent actions
     testBed.loadMod('clothing');
     testBed.loadMod('intimacy');
@@ -925,12 +941,12 @@ describe('Dependent Target Actions E2E', () => {
     it('should allow player to adjust NPC clothing in realistic scenario', async () => {
       // Setup realistic game world
       const world = testBed.createWorld('clothing_shop');
-      
+
       // Create player character
       const player = testBed.createPlayer('tailor', {
         'core:actor': { name: 'Master Tailor' },
         'tailoring:skill': { level: 5 },
-        'core:position': { locationId: 'shop_interior' }
+        'core:position': { locationId: 'shop_interior' },
       });
 
       // Create customer NPC
@@ -941,10 +957,10 @@ describe('Dependent Target Actions E2E', () => {
           equipped: {
             torso_upper: { outer: 'ballgown_top' },
             torso_lower: { base: 'ballgown_skirt' },
-            feet: { base: 'dress_shoes' }
-          }
+            feet: { base: 'dress_shoes' },
+          },
         },
-        'social:trust_level': 'friendly'
+        'social:trust_level': 'friendly',
       });
 
       // Create clothing items
@@ -954,37 +970,40 @@ describe('Dependent Target Actions E2E', () => {
           slot: 'torso_upper',
           layer: 'outer',
           properties: ['adjustable', 'formal', 'expensive'],
-          condition: 'good'
-        }
+          condition: 'good',
+        },
       });
 
       // Create location
       testBed.createLocation('shop_interior', {
         'core:location': { name: 'Tailor Shop Interior' },
-        'core:actors': { actors: ['tailor', 'customer_001'] }
+        'core:actors': { actors: ['tailor', 'customer_001'] },
       });
 
       // Discover available actions
       const actions = await gameEngine.getAvailableActions(player);
-      
-      const adjustActions = actions.filter(a => 
-        a.id === 'intimacy:adjust_clothing'
+
+      const adjustActions = actions.filter(
+        (a) => a.id === 'intimacy:adjust_clothing'
       );
 
       expect(adjustActions.length).toBeGreaterThan(0);
 
       // Find specific adjustment action
-      const adjustBallgown = adjustActions.find(a =>
-        a.command.includes('Lady Catherine') && 
-        a.command.includes('Silk Ballgown Top')
+      const adjustBallgown = adjustActions.find(
+        (a) =>
+          a.command.includes('Lady Catherine') &&
+          a.command.includes('Silk Ballgown Top')
       );
 
       expect(adjustBallgown).toBeDefined();
-      expect(adjustBallgown.command).toBe('adjust Lady Catherine\'s Silk Ballgown Top');
+      expect(adjustBallgown.command).toBe(
+        "adjust Lady Catherine's Silk Ballgown Top"
+      );
 
       // Execute action
       const result = await gameEngine.executeAction(player, adjustBallgown);
-      
+
       expect(result.success).toBe(true);
       expect(result.events).toContainEqual(
         expect.objectContaining({
@@ -992,8 +1011,8 @@ describe('Dependent Target Actions E2E', () => {
           payload: expect.objectContaining({
             actor: 'tailor',
             target: 'customer_001',
-            garment: 'ballgown_top'
-          })
+            garment: 'ballgown_top',
+          }),
         })
       );
     });
@@ -1005,7 +1024,7 @@ describe('Dependent Target Actions E2E', () => {
       const player = testBed.createPlayer('helper', {
         'core:actor': { name: 'Helpful Person' },
         'tailoring:skill': { level: 3 },
-        'core:position': { locationId: 'party_room' }
+        'core:position': { locationId: 'party_room' },
       });
 
       // Create multiple NPCs
@@ -1014,37 +1033,40 @@ describe('Dependent Target Actions E2E', () => {
         'core:position': { locationId: 'party_room' },
         'clothing:equipment': {
           equipped: {
-            torso_upper: { outer: 'wedding_dress' }
-          }
-        }
+            torso_upper: { outer: 'wedding_dress' },
+          },
+        },
       });
 
       const bridesmaid = testBed.createNPC('bridesmaid_001', {
         'core:actor': { name: 'Bridesmaid Sarah' },
         'core:position': { locationId: 'party_room' },
         'social:relationships': {
-          'bride_001': { relationship: 'friend', trust: 'high' }
-        }
+          bride_001: { relationship: 'friend', trust: 'high' },
+        },
       });
 
       // Test various combinations are available
       const actions = await gameEngine.getAvailableActions(player);
-      
-      const clothingActions = actions.filter(a => 
-        a.id.includes('clothing') || a.id.includes('adjust')
+
+      const clothingActions = actions.filter(
+        (a) => a.id.includes('clothing') || a.id.includes('adjust')
       );
 
       expect(clothingActions.length).toBeGreaterThan(0);
 
       // Verify dependency resolution worked correctly
-      const brideDressAction = clothingActions.find(a =>
-        a.command.includes('Bride Emma') && 
-        a.command.includes('wedding_dress')
+      const brideDressAction = clothingActions.find(
+        (a) =>
+          a.command.includes('Bride Emma') &&
+          a.command.includes('wedding_dress')
       );
 
       if (brideDressAction) {
         expect(brideDressAction.params.targets.primary.id).toBe('bride_001');
-        expect(brideDressAction.params.targets.secondary.id).toBe('wedding_dress');
+        expect(brideDressAction.params.targets.secondary.id).toBe(
+          'wedding_dress'
+        );
       }
     });
   });
@@ -1056,23 +1078,23 @@ describe('Dependent Target Actions E2E', () => {
       const player = testBed.createPlayer('tailor', {
         'core:actor': { name: 'Tailor' },
         'tailoring:skill': { level: 2 },
-        'core:position': { locationId: 'room' }
+        'core:position': { locationId: 'room' },
       });
 
       const npc = testBed.createNPC('npc_001', {
         'core:actor': { name: 'Nude Person' },
-        'core:position': { locationId: 'room' }
+        'core:position': { locationId: 'room' },
         // No clothing equipped
       });
 
       const actions = await gameEngine.getAvailableActions(player);
-      
-      const adjustActions = actions.filter(a => 
-        a.id === 'intimacy:adjust_clothing'
+
+      const adjustActions = actions.filter(
+        (a) => a.id === 'intimacy:adjust_clothing'
       );
 
       // Should not find any adjustment actions for nude NPC
-      const nudeAdjustments = adjustActions.filter(a =>
+      const nudeAdjustments = adjustActions.filter((a) =>
         a.command.includes('Nude Person')
       );
 
@@ -1085,7 +1107,7 @@ describe('Dependent Target Actions E2E', () => {
       const novice = testBed.createPlayer('novice_tailor', {
         'core:actor': { name: 'Novice Tailor' },
         'tailoring:skill': { level: 1 }, // Low skill
-        'core:position': { locationId: 'room' }
+        'core:position': { locationId: 'room' },
       });
 
       const expert = testBed.createNPC('expert_001', {
@@ -1093,23 +1115,23 @@ describe('Dependent Target Actions E2E', () => {
         'core:position': { locationId: 'room' },
         'clothing:equipment': {
           equipped: {
-            torso_upper: { outer: 'complex_robe' }
-          }
-        }
+            torso_upper: { outer: 'complex_robe' },
+          },
+        },
       });
 
       testBed.createItem('complex_robe', {
-        'core:item': { name: 'Master\'s Robe' },
+        'core:item': { name: "Master's Robe" },
         'clothing:garment': {
           properties: ['adjustable'],
-          difficulty: 5 // Requires high skill
-        }
+          difficulty: 5, // Requires high skill
+        },
       });
 
       const actions = await gameEngine.getAvailableActions(novice);
-      
-      const adjustActions = actions.filter(a =>
-        a.command.includes('Master\'s Robe')
+
+      const adjustActions = actions.filter((a) =>
+        a.command.includes("Master's Robe")
       );
 
       // Should not be available due to skill requirement
@@ -1125,7 +1147,7 @@ describe('Dependent Target Actions E2E', () => {
       const player = testBed.createPlayer('party_host', {
         'core:actor': { name: 'Party Host' },
         'tailoring:skill': { level: 10 },
-        'core:position': { locationId: 'ballroom' }
+        'core:position': { locationId: 'ballroom' },
       });
 
       // Create many NPCs with various clothing
@@ -1141,9 +1163,9 @@ describe('Dependent Target Actions E2E', () => {
           'core:position': { locationId: 'ballroom' },
           'clothing:equipment': {
             equipped: {
-              torso_upper: { outer: `outfit_${i}` }
-            }
-          }
+              torso_upper: { outer: `outfit_${i}` },
+            },
+          },
         });
 
         // Create clothing item
@@ -1151,23 +1173,23 @@ describe('Dependent Target Actions E2E', () => {
           'core:item': { name: `Outfit ${i}` },
           'clothing:garment': {
             properties: ['adjustable'],
-            difficulty: Math.floor(Math.random() * 5) + 1
-          }
+            difficulty: Math.floor(Math.random() * 5) + 1,
+          },
         });
       }
 
       // Create location with all guests
       testBed.createLocation('ballroom', {
         'core:location': { name: 'Grand Ballroom' },
-        'core:actors': { actors: ['party_host', ...npcIds] }
+        'core:actors': { actors: ['party_host', ...npcIds] },
       });
 
       const start = performance.now();
       const actions = await gameEngine.getAvailableActions(player);
       const end = performance.now();
 
-      const adjustActions = actions.filter(a => 
-        a.id === 'intimacy:adjust_clothing'
+      const adjustActions = actions.filter(
+        (a) => a.id === 'intimacy:adjust_clothing'
       );
 
       expect(adjustActions.length).toBeGreaterThan(0);
@@ -1180,18 +1202,21 @@ describe('Dependent Target Actions E2E', () => {
 ## Testing Strategy
 
 ### Unit Test Coverage
+
 1. **Scope Interpreter Context**: Target context access and resolution
 2. **Context Builder**: Proper context construction for dependencies
 3. **Error Handling**: Missing context, invalid references, malformed expressions
 4. **Performance**: Large target sets, repeated evaluations, caching
 
 ### Integration Test Coverage
+
 1. **Two-Level Dependencies**: Primary → Secondary resolution
 2. **Three-Level Dependencies**: Primary → Secondary → Tertiary chains
 3. **Error Recovery**: Broken chains, missing targets, invalid scopes
 4. **Performance**: Large dependency chains, many potential targets
 
 ### End-to-End Test Coverage
+
 1. **Real Gameplay**: Actual game scenarios with dependent actions
 2. **Complex Interactions**: Multi-character, multi-item scenarios
 3. **Edge Cases**: Skill requirements, trust levels, equipment states
@@ -1200,7 +1225,7 @@ describe('Dependent Target Actions E2E', () => {
 ## Acceptance Criteria
 
 1. ✅ Basic two-level dependencies resolve correctly
-2. ✅ Multi-level dependency chains work properly  
+2. ✅ Multi-level dependency chains work properly
 3. ✅ Missing context handled gracefully without errors
 4. ✅ Invalid references return empty results, not exceptions
 5. ✅ Performance targets met for large target sets
@@ -1221,12 +1246,14 @@ describe('Dependent Target Actions E2E', () => {
 ## Documentation Requirements
 
 ### Test Documentation
+
 - Dependency resolution flow explanations
 - Context building strategies and patterns
 - Performance optimization techniques
 - Error handling and recovery procedures
 
 ### Developer Documentation
+
 - Debugging tools for dependency issues
 - Performance profiling for dependency chains
 - Best practices for complex dependencies

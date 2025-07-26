@@ -46,7 +46,7 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       // Create a generic successful schema response
       const filename = url.split('/').pop();
       const schemaId = filename.replace('.schema.json', '');
-      
+
       const genericSchema = {
         $id: schemaId,
         type: 'object',
@@ -133,16 +133,18 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       // Assert - verify successful initialization
       // Verify that schema loading occurred (some schemas should have been fetched)
       expect(fetch).toHaveBeenCalled();
-      
+
       // Verify that essential schemas were loaded
-      const fetchCalls = fetch.mock.calls.map(call => call[0]);
+      const fetchCalls = fetch.mock.calls.map((call) => call[0]);
       const expectedSchemas = [
         'data/schemas/thematic-direction.schema.json',
-        'data/schemas/character-concept.schema.json'
+        'data/schemas/character-concept.schema.json',
       ];
-      
-      expectedSchemas.forEach(schema => {
-        expect(fetchCalls.some(call => call.includes(schema.split('/').pop()))).toBe(true);
+
+      expectedSchemas.forEach((schema) => {
+        expect(
+          fetchCalls.some((call) => call.includes(schema.split('/').pop()))
+        ).toBe(true);
       });
 
       // Verify controller initialization
@@ -213,14 +215,14 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       await app.initialize();
 
       // Assert - verify schemas were loaded (order may vary due to Promise.all)
-      const fetchCalls = fetch.mock.calls.map(call => call[0]);
+      const fetchCalls = fetch.mock.calls.map((call) => call[0]);
       const expectedSchemas = [
         'thematic-direction.schema.json',
-        'character-concept.schema.json'
+        'character-concept.schema.json',
       ];
-      
-      expectedSchemas.forEach(schema => {
-        expect(fetchCalls.some(call => call.includes(schema))).toBe(true);
+
+      expectedSchemas.forEach((schema) => {
+        expect(fetchCalls.some((call) => call.includes(schema))).toBe(true);
       });
     });
 

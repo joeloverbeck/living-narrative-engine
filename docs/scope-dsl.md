@@ -94,14 +94,16 @@ The Scope DSL supports specialized clothing operations for efficient clothing it
 #### System Architecture
 
 The clothing system uses a two-stage resolution process:
+
 1. **Clothing Field Resolution** - Creates clothing access objects with layer and slot data
 2. **Slot Access Resolution** - Extracts specific items from clothing slots with layer priority
 
 #### Layer Priority System
 
 Clothing layers are prioritized in the following order (highest to lowest priority):
+
 - `outer` - Jackets, coats, outerwear
-- `base` - Shirts, pants, basic clothing  
+- `base` - Shirts, pants, basic clothing
 - `underwear` - Undergarments
 
 #### Basic Syntax
@@ -125,7 +127,7 @@ all_underwear := actor.underwear[]
 - `topmost_clothing` - Returns topmost layer items (outer > base > underwear priority)
 - `all_clothing` - Returns items from all layers (no priority filtering)
 - `outer_clothing` - Returns only outer layer items
-- `base_clothing` - Returns only base layer items  
+- `base_clothing` - Returns only base layer items
 - `underwear` - Returns only underwear layer items
 
 #### Supported Clothing Slots
@@ -142,12 +144,14 @@ all_underwear := actor.underwear[]
 #### Implementation Details
 
 **Clothing Access Objects**: The clothing fields (`topmost_clothing`, etc.) create special objects with:
+
 - `__clothingSlotAccess: true` - Marker for clothing access objects
 - `__isClothingAccessObject: true` - Additional validation marker
 - `mode` - The layer mode (`topmost`, `all`, `outer`, `base`, `underwear`)
 - `equipped` - The raw equipment data from the `clothing:equipment` component
 
 **Slot Access**: When accessing a slot (e.g., `.torso_upper`), the system:
+
 1. Validates the slot name against supported slots
 2. Applies layer priority based on the clothing access object's mode
 3. Returns the highest priority item for that slot
@@ -246,11 +250,13 @@ removable_items := actor.outer_clothing[] | actor.base_clothing.torso_upper
 The engine calculates depth by counting different node types that contribute to expression complexity:
 
 **Depth-Contributing Operations**:
+
 - **Step nodes** (`.field`) - Each property access adds 1 to depth
-- **Filter nodes** (`[{...}]`) - Each filter expression adds 1 to depth  
+- **Filter nodes** (`[{...}]`) - Each filter expression adds 1 to depth
 - **ArrayIterationStep nodes** (`[]`) - Each array iteration adds 1 to depth
 
 **Special Cases**:
+
 - **Source nodes** (`actor`, `location`, `entities()`) - Do not count towards depth (depth starts at 0)
 - **Union nodes** (`+`, `|`) - Do not count towards depth (each side calculated independently)
 - **Bare array iterator after source** - `entities(core:item)[]` - The `[]` immediately after `entities()` does count towards depth
@@ -264,7 +270,7 @@ actor                                    // depth: 0 ✅
 // Depth 1: Single step
 actor.followers                          // depth: 1 ✅
 
-// Depth 2: Step + array iteration  
+// Depth 2: Step + array iteration
 actor.followers[]                        // depth: 2 ✅
 
 // Depth 3: Multiple steps
@@ -279,7 +285,7 @@ actor.core:inventory.items[][filter]     // depth: 5 ✅
 // Depth 6: Maximum allowed
 actor.a.b.c.d.e.f                       // depth: 6 ✅
 
-// Depth 7: Exceeds limit  
+// Depth 7: Exceeds limit
 actor.a.b.c.d.e.f.g                     // depth: 7 ❌
 
 // Special case: entities() with iterator
@@ -293,7 +299,7 @@ actor.followers + location.npcs          // left: depth 1, right: depth 1 ✅
 #### Implementation Notes
 
 - Depth is validated during AST traversal, not just parsing
-- Each branch of a union is validated independently  
+- Each branch of a union is validated independently
 - Cycle detection runs before depth validation
 - Exceeding depth limit throws `ScopeDepthError` with descriptive message
 
@@ -490,19 +496,22 @@ This distinction allows the engine to optimize different types of operations app
 #### Performance Characteristics (Validated by Tests)
 
 **Scope Resolution Times**:
-- Simple scopes (`actor`, `location`): < 1ms  
+
+- Simple scopes (`actor`, `location`): < 1ms
 - Complex filtering: < 10ms for moderate datasets
 - Large dataset unions (2000+ entities): < 100ms target
 - Deep expressions (depth 6): Performance scales linearly with depth
 
 **Memory Usage**:
+
 - Clothing access objects: Minimal overhead with lazy evaluation
 - Filter contexts: Built on-demand and garbage collected post-evaluation
 - Union results: Memory-efficient Set-based storage with automatic deduplication
 
 **Scalability Factors**:
+
 - **Entity Count**: Linear scaling for entity-based operations
-- **Expression Depth**: Linear performance degradation per depth level  
+- **Expression Depth**: Linear performance degradation per depth level
 - **Filter Complexity**: JSON Logic evaluation time depends on filter expression complexity
 - **Union Size**: Set operations remain efficient even with large result sets
 

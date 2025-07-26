@@ -37,7 +37,12 @@ class UnequipClothingHandler extends ComponentOperationHandler {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {EquipmentOrchestrator} deps.equipmentOrchestrator
    */
-  constructor({ entityManager, logger, safeEventDispatcher, equipmentOrchestrator }) {
+  constructor({
+    entityManager,
+    logger,
+    safeEventDispatcher,
+    equipmentOrchestrator,
+  }) {
     super('UnequipClothingHandler', {
       logger: { value: logger },
       entityManager: {
@@ -72,11 +77,11 @@ class UnequipClothingHandler extends ComponentOperationHandler {
       return;
     }
 
-    const { 
-      entity_ref, 
-      clothing_item_id, 
+    const {
+      entity_ref,
+      clothing_item_id,
       cascade_unequip = false,
-      destination = 'inventory' 
+      destination = 'inventory',
     } = params;
 
     // Validate entity reference
@@ -92,20 +97,26 @@ class UnequipClothingHandler extends ComponentOperationHandler {
 
     // Validate clothing_item_id
     if (!clothing_item_id || typeof clothing_item_id !== 'string') {
-      logger.warn('UNEQUIP_CLOTHING: clothing_item_id must be a non-empty string');
+      logger.warn(
+        'UNEQUIP_CLOTHING: clothing_item_id must be a non-empty string'
+      );
       return;
     }
 
     // Validate destination
     if (destination !== 'inventory' && destination !== 'ground') {
-      logger.warn(`UNEQUIP_CLOTHING: Invalid destination "${destination}". Must be "inventory" or "ground"`);
+      logger.warn(
+        `UNEQUIP_CLOTHING: Invalid destination "${destination}". Must be "inventory" or "ground"`
+      );
       return;
     }
 
     try {
       // Check if entity has equipment component
       if (!this.#entityManager.hasComponent(entityId, 'clothing:equipment')) {
-        logger.warn(`UNEQUIP_CLOTHING: Entity "${entityId}" does not have clothing:equipment component`);
+        logger.warn(
+          `UNEQUIP_CLOTHING: Entity "${entityId}" does not have clothing:equipment component`
+        );
         return;
       }
 
@@ -126,12 +137,16 @@ class UnequipClothingHandler extends ComponentOperationHandler {
       }
 
       // Handle item placement based on destination
-      await this.#handleItemPlacement(entityId, clothing_item_id, destination, logger);
+      await this.#handleItemPlacement(
+        entityId,
+        clothing_item_id,
+        destination,
+        logger
+      );
 
       logger.debug(
         `UNEQUIP_CLOTHING: Successfully unequipped "${clothing_item_id}" from "${entityId}"`
       );
-
     } catch (error) {
       safeDispatchError(
         this.#dispatcher,
@@ -156,15 +171,24 @@ class UnequipClothingHandler extends ComponentOperationHandler {
       // Check if entity has inventory
       if (this.#entityManager.hasComponent(entityId, 'core:inventory')) {
         // Add to inventory
-        const inventory = this.#entityManager.getComponentData(entityId, 'core:inventory');
+        const inventory = this.#entityManager.getComponentData(
+          entityId,
+          'core:inventory'
+        );
         if (inventory && Array.isArray(inventory.items)) {
           inventory.items.push(clothingItemId);
-          await this.#entityManager.addComponent(entityId, 'core:inventory', inventory);
+          await this.#entityManager.addComponent(
+            entityId,
+            'core:inventory',
+            inventory
+          );
           logger.debug(`Placed "${clothingItemId}" in inventory`);
         }
       } else {
         // Fallback to ground
-        logger.debug(`Entity has no inventory, placing "${clothingItemId}" on ground`);
+        logger.debug(
+          `Entity has no inventory, placing "${clothingItemId}" on ground`
+        );
         await this.#placeOnGround(entityId, clothingItemId, logger);
       }
     } else {
@@ -180,13 +204,18 @@ class UnequipClothingHandler extends ComponentOperationHandler {
    */
   async #placeOnGround(entityId, clothingItemId, logger) {
     // Get entity's position
-    const position = this.#entityManager.getComponentData(entityId, 'core:position');
+    const position = this.#entityManager.getComponentData(
+      entityId,
+      'core:position'
+    );
     if (position && position.locationId) {
       // Update clothing item's position
       await this.#entityManager.addComponent(clothingItemId, 'core:position', {
         locationId: position.locationId,
       });
-      logger.debug(`Placed "${clothingItemId}" at location "${position.locationId}"`);
+      logger.debug(
+        `Placed "${clothingItemId}" at location "${position.locationId}"`
+      );
     }
   }
 }

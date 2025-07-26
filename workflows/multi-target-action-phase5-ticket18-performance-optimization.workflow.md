@@ -1,9 +1,13 @@
 # Ticket: Performance Optimization
 
 ## Ticket ID: PHASE5-TICKET18
+
 ## Priority: Low
+
 ## Estimated Time: 8-10 hours
+
 ## Dependencies: PHASE5-TICKET17
+
 ## Blocks: None (Final ticket)
 
 ## Overview
@@ -50,7 +54,7 @@ export class MultiTargetProfiler {
       validation: [],
       scopeEvaluation: [],
       memoryUsage: [],
-      cachePerformance: { hits: 0, misses: 0 }
+      cachePerformance: { hits: 0, misses: 0 },
     };
     this.isProfilingActive = false;
   }
@@ -63,7 +67,7 @@ export class MultiTargetProfiler {
       validation: [],
       scopeEvaluation: [],
       memoryUsage: [],
-      cachePerformance: { hits: 0, misses: 0 }
+      cachePerformance: { hits: 0, misses: 0 },
     };
   }
 
@@ -88,7 +92,7 @@ export class MultiTargetProfiler {
       targetCount: Object.keys(targetDefinitions).length,
       duration: end - start,
       memoryDelta: memAfter.heapUsed - memBefore.heapUsed,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return result;
@@ -110,7 +114,7 @@ export class MultiTargetProfiler {
       combinationCount: targetCombinations,
       duration: end - start,
       memoryDelta: memAfter.heapUsed - memBefore.heapUsed,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return result;
@@ -127,7 +131,7 @@ export class MultiTargetProfiler {
       actionId,
       validationCount,
       duration: end - start,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return result;
@@ -144,7 +148,7 @@ export class MultiTargetProfiler {
       scopeExpression: scopeExpression.substring(0, 50), // Truncate for logging
       resultCount,
       duration: end - start,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return result;
@@ -167,7 +171,7 @@ export class MultiTargetProfiler {
       const usage = process.memoryUsage();
       this.metrics.memoryUsage.push({
         ...usage,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
   }
@@ -177,42 +181,59 @@ export class MultiTargetProfiler {
       summary: this.generateSummary(),
       detailed: this.metrics,
       recommendations: this.generateRecommendations(),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     return report;
   }
 
   generateSummary() {
-    const { targetResolution, combinationGeneration, validation, scopeEvaluation, cachePerformance } = this.metrics;
+    const {
+      targetResolution,
+      combinationGeneration,
+      validation,
+      scopeEvaluation,
+      cachePerformance,
+    } = this.metrics;
 
     return {
       targetResolution: {
         count: targetResolution.length,
-        avgDuration: this.average(targetResolution.map(m => m.duration)),
-        maxDuration: Math.max(...targetResolution.map(m => m.duration), 0),
-        avgMemoryDelta: this.average(targetResolution.map(m => m.memoryDelta))
+        avgDuration: this.average(targetResolution.map((m) => m.duration)),
+        maxDuration: Math.max(...targetResolution.map((m) => m.duration), 0),
+        avgMemoryDelta: this.average(
+          targetResolution.map((m) => m.memoryDelta)
+        ),
       },
       combinationGeneration: {
         count: combinationGeneration.length,
-        avgDuration: this.average(combinationGeneration.map(m => m.duration)),
-        maxDuration: Math.max(...combinationGeneration.map(m => m.duration), 0),
-        avgCombinations: this.average(combinationGeneration.map(m => m.combinationCount))
+        avgDuration: this.average(combinationGeneration.map((m) => m.duration)),
+        maxDuration: Math.max(
+          ...combinationGeneration.map((m) => m.duration),
+          0
+        ),
+        avgCombinations: this.average(
+          combinationGeneration.map((m) => m.combinationCount)
+        ),
       },
       validation: {
         count: validation.length,
-        avgDuration: this.average(validation.map(m => m.duration)),
-        avgValidationCount: this.average(validation.map(m => m.validationCount))
+        avgDuration: this.average(validation.map((m) => m.duration)),
+        avgValidationCount: this.average(
+          validation.map((m) => m.validationCount)
+        ),
       },
       scopeEvaluation: {
         count: scopeEvaluation.length,
-        avgDuration: this.average(scopeEvaluation.map(m => m.duration)),
-        avgResultCount: this.average(scopeEvaluation.map(m => m.resultCount))
+        avgDuration: this.average(scopeEvaluation.map((m) => m.duration)),
+        avgResultCount: this.average(scopeEvaluation.map((m) => m.resultCount)),
       },
       cache: {
-        hitRate: cachePerformance.hits / (cachePerformance.hits + cachePerformance.misses) || 0,
-        totalRequests: cachePerformance.hits + cachePerformance.misses
-      }
+        hitRate:
+          cachePerformance.hits /
+            (cachePerformance.hits + cachePerformance.misses) || 0,
+        totalRequests: cachePerformance.hits + cachePerformance.misses,
+      },
     };
   }
 
@@ -225,8 +246,9 @@ export class MultiTargetProfiler {
       recommendations.push({
         type: 'performance',
         severity: 'high',
-        message: 'Target resolution is slow. Consider adding more specific scopes or reducing target sets.',
-        metric: `Avg duration: ${summary.targetResolution.avgDuration.toFixed(2)}ms`
+        message:
+          'Target resolution is slow. Consider adding more specific scopes or reducing target sets.',
+        metric: `Avg duration: ${summary.targetResolution.avgDuration.toFixed(2)}ms`,
       });
     }
 
@@ -234,18 +256,21 @@ export class MultiTargetProfiler {
       recommendations.push({
         type: 'performance',
         severity: 'medium',
-        message: 'High combination count detected. Consider adding maxCombinations limits.',
-        metric: `Avg combinations: ${summary.combinationGeneration.avgCombinations.toFixed(0)}`
+        message:
+          'High combination count detected. Consider adding maxCombinations limits.',
+        metric: `Avg combinations: ${summary.combinationGeneration.avgCombinations.toFixed(0)}`,
       });
     }
 
     // Memory recommendations
-    if (summary.targetResolution.avgMemoryDelta > 1024 * 1024) { // 1MB
+    if (summary.targetResolution.avgMemoryDelta > 1024 * 1024) {
+      // 1MB
       recommendations.push({
         type: 'memory',
         severity: 'medium',
-        message: 'High memory usage during target resolution. Check for memory leaks.',
-        metric: `Avg memory delta: ${(summary.targetResolution.avgMemoryDelta / 1024 / 1024).toFixed(2)}MB`
+        message:
+          'High memory usage during target resolution. Check for memory leaks.',
+        metric: `Avg memory delta: ${(summary.targetResolution.avgMemoryDelta / 1024 / 1024).toFixed(2)}MB`,
       });
     }
 
@@ -254,8 +279,9 @@ export class MultiTargetProfiler {
       recommendations.push({
         type: 'cache',
         severity: 'low',
-        message: 'Cache hit rate is low. Consider improving cache key strategies.',
-        metric: `Hit rate: ${(summary.cache.hitRate * 100).toFixed(1)}%`
+        message:
+          'Cache hit rate is low. Consider improving cache key strategies.',
+        metric: `Hit rate: ${(summary.cache.hitRate * 100).toFixed(1)}%`,
       });
     }
 
@@ -263,11 +289,17 @@ export class MultiTargetProfiler {
   }
 
   average(numbers) {
-    return numbers.length > 0 ? numbers.reduce((a, b) => a + b, 0) / numbers.length : 0;
+    return numbers.length > 0
+      ? numbers.reduce((a, b) => a + b, 0) / numbers.length
+      : 0;
   }
 
   saveReport(report, filename) {
-    const outputPath = path.join(process.cwd(), 'performance-reports', filename);
+    const outputPath = path.join(
+      process.cwd(),
+      'performance-reports',
+      filename
+    );
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, JSON.stringify(report, null, 2));
     return outputPath;
@@ -296,15 +328,17 @@ export class TargetResolutionCache {
     this.stats = {
       hits: 0,
       misses: 0,
-      evictions: 0
+      evictions: 0,
     };
   }
 
   generateKey(scopeExpression, context, validationSchema) {
     // Create a stable cache key from scope, context, and validation
     const contextKey = this.serializeContext(context);
-    const validationKey = validationSchema ? JSON.stringify(validationSchema) : '';
-    
+    const validationKey = validationSchema
+      ? JSON.stringify(validationSchema)
+      : '';
+
     return `${scopeExpression}|${contextKey}|${validationKey}`;
   }
 
@@ -318,9 +352,9 @@ export class TargetResolutionCache {
         // Don't include timestamp as it changes constantly
       },
       target: context.target?.id,
-      targets: context.targets ? Object.keys(context.targets) : undefined
+      targets: context.targets ? Object.keys(context.targets) : undefined,
     };
-    
+
     return JSON.stringify(simplified);
   }
 
@@ -356,7 +390,7 @@ export class TargetResolutionCache {
 
     this.cache.set(key, {
       result: this.cloneResult(result),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -376,14 +410,14 @@ export class TargetResolutionCache {
       ...this.stats,
       hitRate: total > 0 ? this.stats.hits / total : 0,
       size: this.cache.size,
-      maxSize: this.maxSize
+      maxSize: this.maxSize,
     };
   }
 
   // Invalidate cache entries that might be affected by entity changes
   invalidateEntity(entityId) {
     const keysToDelete = [];
-    
+
     for (const [key, entry] of this.cache.entries()) {
       // Simple check - if entity ID appears in the key, invalidate
       if (key.includes(entityId)) {
@@ -391,21 +425,21 @@ export class TargetResolutionCache {
       }
     }
 
-    keysToDelete.forEach(key => this.cache.delete(key));
+    keysToDelete.forEach((key) => this.cache.delete(key));
     return keysToDelete.length;
   }
 
   // Invalidate cache entries for a specific location
   invalidateLocation(locationId) {
     const keysToDelete = [];
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (key.includes(`"location":"${locationId}"`)) {
         keysToDelete.push(key);
       }
     }
 
-    keysToDelete.forEach(key => this.cache.delete(key));
+    keysToDelete.forEach((key) => this.cache.delete(key));
     return keysToDelete.length;
   }
 }
@@ -433,7 +467,10 @@ export class CombinationOptimizer {
     const combinations = [];
 
     // Calculate total possible combinations
-    const totalPossible = targetSets.reduce((total, set) => total * set.length, 1);
+    const totalPossible = targetSets.reduce(
+      (total, set) => total * set.length,
+      1
+    );
 
     if (totalPossible <= globalLimit) {
       // Generate all combinations if within limits
@@ -446,7 +483,7 @@ export class CombinationOptimizer {
 
   generateAllCombinations(targetSets) {
     if (targetSets.length === 0) return [];
-    if (targetSets.length === 1) return targetSets[0].map(target => [target]);
+    if (targetSets.length === 1) return targetSets[0].map((target) => [target]);
 
     const [first, ...rest] = targetSets;
     const restCombinations = this.generateAllCombinations(rest);
@@ -475,10 +512,12 @@ export class CombinationOptimizer {
     // Generate combinations up to global limit
     const combinations = [];
     const indices = new Array(limitedSets.length).fill(0);
-    
+
     while (combinations.length < globalLimit) {
       // Create combination from current indices
-      const combination = indices.map((index, setIndex) => limitedSets[setIndex][index]);
+      const combination = indices.map(
+        (index, setIndex) => limitedSets[setIndex][index]
+      );
       combinations.push(combination);
 
       // Advance to next combination
@@ -504,9 +543,9 @@ export class CombinationOptimizer {
 
     // Fill remaining slots with random selection
     while (sampled.length < limit && sampled.length < targets.length) {
-      const remaining = targets.filter(t => !sampled.includes(t));
+      const remaining = targets.filter((t) => !sampled.includes(t));
       if (remaining.length === 0) break;
-      
+
       const randomIndex = Math.floor(Math.random() * remaining.length);
       sampled.push(remaining[randomIndex]);
     }
@@ -528,7 +567,7 @@ export class CombinationOptimizer {
 
   estimateCombinationCount(targetSets, limits = {}) {
     let estimate = 1;
-    
+
     for (let i = 0; i < targetSets.length; i++) {
       const setSize = targetSets[i].length;
       const limit = limits[i];
@@ -546,7 +585,7 @@ export class CombinationOptimizer {
       const filter = filters[setIndex];
       if (!filter) return targets;
 
-      return targets.filter(target => {
+      return targets.filter((target) => {
         try {
           return filter(target);
         } catch (error) {
@@ -596,7 +635,7 @@ export class ActionMemoryManager {
     // Clear and return to pool
     array.length = 0;
     const pool = this.objectPools.get(key);
-    
+
     // Limit pool size to prevent memory bloat
     if (pool.length < 50) {
       pool.push(array);
@@ -608,7 +647,7 @@ export class ActionMemoryManager {
     this.cleanupTasks.push({
       ref: new WeakRef(object),
       cleanup: cleanupFn,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -617,11 +656,11 @@ export class ActionMemoryManager {
     const now = Date.now();
     const threshold = 5 * 60 * 1000; // 5 minutes
 
-    this.cleanupTasks = this.cleanupTasks.filter(task => {
+    this.cleanupTasks = this.cleanupTasks.filter((task) => {
       const object = task.ref.deref();
-      
+
       // If object is GC'd or task is old, clean up
-      if (!object || (now - task.timestamp) > threshold) {
+      if (!object || now - task.timestamp > threshold) {
         try {
           task.cleanup();
         } catch (error) {
@@ -629,7 +668,7 @@ export class ActionMemoryManager {
         }
         return false; // Remove from list
       }
-      
+
       return true; // Keep in list
     });
   }
@@ -672,22 +711,23 @@ export class ActionMemoryManager {
   withMemoryManagement(actionProcessingFn) {
     return async (...args) => {
       const memBefore = process.memoryUsage();
-      
+
       try {
         // Check memory pressure before processing
         this.checkMemoryPressure();
-        
+
         // Execute action processing
         const result = await actionProcessingFn(...args);
-        
+
         return result;
       } finally {
         // Check memory after processing
         const memAfter = process.memoryUsage();
         const deltaHeap = memAfter.heapUsed - memBefore.heapUsed;
-        
+
         // If processing used a lot of memory, trigger cleanup
-        if (deltaHeap > 10 * 1024 * 1024) { // 10MB
+        if (deltaHeap > 10 * 1024 * 1024) {
+          // 10MB
           this.performCleanup();
         }
       }
@@ -702,10 +742,13 @@ export class ActionMemoryManager {
       external: usage.external,
       arrayBuffers: usage.arrayBuffers,
       poolSizes: Object.fromEntries(
-        Array.from(this.objectPools.entries()).map(([key, pool]) => [key, pool.length])
+        Array.from(this.objectPools.entries()).map(([key, pool]) => [
+          key,
+          pool.length,
+        ])
       ),
       cleanupTasks: this.cleanupTasks.length,
-      memoryPressure: usage.heapUsed > this.memoryThreshold
+      memoryPressure: usage.heapUsed > this.memoryThreshold,
     };
   }
 }
@@ -734,15 +777,15 @@ export class PerformanceMonitor extends EventEmitter {
       combinationGeneration: options.combinationThreshold || 50, // ms
       memoryUsage: options.memoryThreshold || 100 * 1024 * 1024, // 100MB
       cacheHitRate: options.cacheHitThreshold || 0.8,
-      ...options.thresholds
+      ...options.thresholds,
     };
-    
+
     this.metrics = {
       operations: 0,
       slowOperations: 0,
       averageTime: 0,
       peakMemory: 0,
-      cacheStats: { hits: 0, misses: 0 }
+      cacheStats: { hits: 0, misses: 0 },
     };
 
     this.isMonitoring = false;
@@ -752,7 +795,7 @@ export class PerformanceMonitor extends EventEmitter {
   startMonitoring() {
     this.isMonitoring = true;
     this.resetMetrics();
-    
+
     // Set up periodic reporting
     this.reportInterval = setInterval(() => {
       this.generatePeriodicReport();
@@ -763,7 +806,7 @@ export class PerformanceMonitor extends EventEmitter {
 
   stopMonitoring() {
     this.isMonitoring = false;
-    
+
     if (this.reportInterval) {
       clearInterval(this.reportInterval);
       this.reportInterval = null;
@@ -776,14 +819,15 @@ export class PerformanceMonitor extends EventEmitter {
     if (!this.isMonitoring) return;
 
     this.metrics.operations++;
-    
+
     // Update average time (running average)
-    this.metrics.averageTime = (
-      (this.metrics.averageTime * (this.metrics.operations - 1)) + duration
-    ) / this.metrics.operations;
+    this.metrics.averageTime =
+      (this.metrics.averageTime * (this.metrics.operations - 1) + duration) /
+      this.metrics.operations;
 
     // Check for slow operations
-    const threshold = this.thresholds[operationType] || this.thresholds.targetResolution;
+    const threshold =
+      this.thresholds[operationType] || this.thresholds.targetResolution;
     if (duration > threshold) {
       this.metrics.slowOperations++;
       this.handleSlowOperation(operationType, duration, metadata);
@@ -793,7 +837,7 @@ export class PerformanceMonitor extends EventEmitter {
     const currentMemory = process.memoryUsage().heapUsed;
     if (currentMemory > this.metrics.peakMemory) {
       this.metrics.peakMemory = currentMemory;
-      
+
       if (currentMemory > this.thresholds.memoryUsage) {
         this.handleHighMemoryUsage(currentMemory);
       }
@@ -803,7 +847,7 @@ export class PerformanceMonitor extends EventEmitter {
       type: operationType,
       duration,
       metadata,
-      slow: duration > threshold
+      slow: duration > threshold,
     });
   }
 
@@ -827,14 +871,14 @@ export class PerformanceMonitor extends EventEmitter {
 
   handleSlowOperation(operationType, duration, metadata) {
     const alertKey = `slow:${operationType}`;
-    
+
     if (this.alertCooldown.has(alertKey)) return;
 
     this.emit('alert:slow_operation', {
       type: operationType,
       duration,
       threshold: this.thresholds[operationType],
-      metadata
+      metadata,
     });
 
     // Cooldown to prevent spam
@@ -846,13 +890,13 @@ export class PerformanceMonitor extends EventEmitter {
 
   handleHighMemoryUsage(currentMemory) {
     const alertKey = 'memory:high';
-    
+
     if (this.alertCooldown.has(alertKey)) return;
 
     this.emit('alert:high_memory', {
       current: currentMemory,
       threshold: this.thresholds.memoryUsage,
-      usage: process.memoryUsage()
+      usage: process.memoryUsage(),
     });
 
     this.alertCooldown.add(alertKey);
@@ -863,13 +907,13 @@ export class PerformanceMonitor extends EventEmitter {
 
   handleLowCacheHitRate(hitRate) {
     const alertKey = 'cache:low_hit_rate';
-    
+
     if (this.alertCooldown.has(alertKey)) return;
 
     this.emit('alert:low_cache_hit_rate', {
       currentRate: hitRate,
       threshold: this.thresholds.cacheHitRate,
-      stats: this.metrics.cacheStats
+      stats: this.metrics.cacheStats,
     });
 
     this.alertCooldown.add(alertKey);
@@ -884,8 +928,8 @@ export class PerformanceMonitor extends EventEmitter {
       metrics: this.getMetrics(),
       system: {
         memory: process.memoryUsage(),
-        uptime: process.uptime()
-      }
+        uptime: process.uptime(),
+      },
     };
 
     this.emit('report:periodic', report);
@@ -894,12 +938,14 @@ export class PerformanceMonitor extends EventEmitter {
 
   getMetrics() {
     const total = this.metrics.cacheStats.hits + this.metrics.cacheStats.misses;
-    
+
     return {
       ...this.metrics,
-      slowOperationRate: this.metrics.operations > 0 ? 
-        this.metrics.slowOperations / this.metrics.operations : 0,
-      cacheHitRate: total > 0 ? this.metrics.cacheStats.hits / total : 0
+      slowOperationRate:
+        this.metrics.operations > 0
+          ? this.metrics.slowOperations / this.metrics.operations
+          : 0,
+      cacheHitRate: total > 0 ? this.metrics.cacheStats.hits / total : 0,
     };
   }
 
@@ -909,39 +955,43 @@ export class PerformanceMonitor extends EventEmitter {
       slowOperations: 0,
       averageTime: 0,
       peakMemory: process.memoryUsage().heapUsed,
-      cacheStats: { hits: 0, misses: 0 }
+      cacheStats: { hits: 0, misses: 0 },
     };
   }
 
   // Integration with action processing
   wrapActionProcessor(actionProcessor) {
     const monitor = this;
-    
+
     return {
       async processAction(actionId, actorId, context) {
         const start = performance.now();
-        
+
         try {
-          const result = await actionProcessor.processAction(actionId, actorId, context);
-          
+          const result = await actionProcessor.processAction(
+            actionId,
+            actorId,
+            context
+          );
+
           const duration = performance.now() - start;
           monitor.recordOperation('actionProcessing', duration, {
             actionId,
             actorId,
-            success: result.success
+            success: result.success,
           });
-          
+
           return result;
         } catch (error) {
           const duration = performance.now() - start;
           monitor.recordOperation('actionProcessing', duration, {
             actionId,
             actorId,
-            error: error.message
+            error: error.message,
           });
           throw error;
         }
-      }
+      },
     };
   }
 }
@@ -970,36 +1020,43 @@ export class OptimizedMultiTargetResolutionStage {
     this.scopeInterpreter = scopeInterpreter;
     this.ajvValidator = ajvValidator;
     this.logger = logger;
-    
+
     this.cache = new TargetResolutionCache({
       maxSize: 2000,
-      ttl: 300000 // 5 minutes
+      ttl: 300000, // 5 minutes
     });
-    
+
     this.optimizer = new CombinationOptimizer();
     this.performanceThresholds = {
       targetResolution: 100, // ms
-      combinationGeneration: 50 // ms
+      combinationGeneration: 50, // ms
     };
   }
 
   async process(actionData, context) {
     const start = performance.now();
-    
+
     try {
       if (!actionData.targetDefinitions) {
         return this.handleLegacyAction(actionData, context);
       }
 
       const targetSets = await this.resolveAllTargets(actionData, context);
-      const combinations = this.generateOptimizedCombinations(actionData, targetSets);
-      
+      const combinations = this.generateOptimizedCombinations(
+        actionData,
+        targetSets
+      );
+
       const duration = performance.now() - start;
-      globalPerformanceMonitor.recordOperation('multiTargetResolution', duration, {
-        actionId: actionData.id,
-        targetCount: Object.keys(actionData.targetDefinitions).length,
-        combinationCount: combinations.length
-      });
+      globalPerformanceMonitor.recordOperation(
+        'multiTargetResolution',
+        duration,
+        {
+          actionId: actionData.id,
+          targetCount: Object.keys(actionData.targetDefinitions).length,
+          combinationCount: combinations.length,
+        }
+      );
 
       return {
         success: true,
@@ -1009,16 +1066,15 @@ export class OptimizedMultiTargetResolutionStage {
             targetCount: Object.keys(actionData.targetDefinitions).length,
             combinationCount: combinations.length,
             processingTime: duration,
-            cacheStats: this.cache.getStats()
-          }
-        }
+            cacheStats: this.cache.getStats(),
+          },
+        },
       };
-      
     } catch (error) {
       this.logger.error('Optimized multi-target resolution failed', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -1026,14 +1082,18 @@ export class OptimizedMultiTargetResolutionStage {
   async resolveAllTargets(actionData, context) {
     const targetSets = globalMemoryManager.getPooledArray('targetSets');
     const targetNames = Object.keys(actionData.targetDefinitions);
-    
+
     try {
       for (const targetName of targetNames) {
         const targetDef = actionData.targetDefinitions[targetName];
-        const targets = await this.resolveSingleTarget(targetDef, context, actionData.id);
+        const targets = await this.resolveSingleTarget(
+          targetDef,
+          context,
+          actionData.id
+        );
         targetSets.push(targets);
       }
-      
+
       return targetSets;
     } catch (error) {
       globalMemoryManager.returnPooledArray(targetSets, 'targetSets');
@@ -1043,18 +1103,26 @@ export class OptimizedMultiTargetResolutionStage {
 
   async resolveSingleTarget(targetDef, context, actionId) {
     const start = performance.now();
-    
+
     // Check cache first
-    const cacheKey = this.cache.generateKey(targetDef.scope, context, targetDef.validation);
-    let targets = this.cache.get(targetDef.scope, context, targetDef.validation);
-    
+    const cacheKey = this.cache.generateKey(
+      targetDef.scope,
+      context,
+      targetDef.validation
+    );
+    let targets = this.cache.get(
+      targetDef.scope,
+      context,
+      targetDef.validation
+    );
+
     if (targets !== null) {
       globalPerformanceMonitor.recordCacheOperation(true);
       return targets;
     }
-    
+
     globalPerformanceMonitor.recordCacheOperation(false);
-    
+
     try {
       // Resolve scope with performance monitoring
       targets = await globalPerformanceMonitor.recordOperation(
@@ -1065,7 +1133,7 @@ export class OptimizedMultiTargetResolutionStage {
 
       // Apply validation if present
       if (targetDef.validation && Array.isArray(targets)) {
-        targets = targets.filter(target => {
+        targets = targets.filter((target) => {
           try {
             return this.ajvValidator.validate(targetDef.validation, target);
           } catch (error) {
@@ -1076,26 +1144,31 @@ export class OptimizedMultiTargetResolutionStage {
       }
 
       // Apply target-specific combination limits
-      if (targetDef.maxCombinations && targets.length > targetDef.maxCombinations) {
-        targets = this.optimizer.sampleTargets(targets, targetDef.maxCombinations);
+      if (
+        targetDef.maxCombinations &&
+        targets.length > targetDef.maxCombinations
+      ) {
+        targets = this.optimizer.sampleTargets(
+          targets,
+          targetDef.maxCombinations
+        );
       }
 
       // Cache the result
       this.cache.set(targetDef.scope, context, targetDef.validation, targets);
-      
+
       const duration = performance.now() - start;
       globalPerformanceMonitor.recordOperation('targetResolution', duration, {
         actionId,
         targetCount: targets.length,
-        cached: false
+        cached: false,
       });
 
       return targets || [];
-      
     } catch (error) {
       this.logger.error('Target resolution failed', {
         scope: targetDef.scope,
-        error: error.message
+        error: error.message,
       });
       return [];
     }
@@ -1103,11 +1176,12 @@ export class OptimizedMultiTargetResolutionStage {
 
   generateOptimizedCombinations(actionData, targetSets) {
     const start = performance.now();
-    
+
     // Calculate limits
     const globalLimit = actionData.maxCombinations || 100;
-    const perTargetLimits = Object.values(actionData.targetDefinitions)
-      .map(def => def.maxCombinations);
+    const perTargetLimits = Object.values(actionData.targetDefinitions).map(
+      (def) => def.maxCombinations
+    );
 
     // Generate combinations with optimization
     const combinations = this.optimizer.generateOptimizedCombinations(
@@ -1116,14 +1190,18 @@ export class OptimizedMultiTargetResolutionStage {
     );
 
     const duration = performance.now() - start;
-    globalPerformanceMonitor.recordOperation('combinationGeneration', duration, {
-      actionId: actionData.id,
-      combinationCount: combinations.length,
-      targetSetSizes: targetSets.map(set => set.length)
-    });
+    globalPerformanceMonitor.recordOperation(
+      'combinationGeneration',
+      duration,
+      {
+        actionId: actionData.id,
+        combinationCount: combinations.length,
+        targetSetSizes: targetSets.map((set) => set.length),
+      }
+    );
 
     // Return pooled arrays to memory manager
-    targetSets.forEach(set => {
+    targetSets.forEach((set) => {
       if (Array.isArray(set)) {
         globalMemoryManager.returnPooledArray(set, 'targets');
       }
@@ -1138,27 +1216,27 @@ export class OptimizedMultiTargetResolutionStage {
     if (!actionData.target) {
       return {
         success: true,
-        value: { targetCombinations: [] }
+        value: { targetCombinations: [] },
       };
     }
 
     // Convert to multi-target format temporarily
     const legacyTargetDef = {
       scope: actionData.target.scope,
-      validation: actionData.target.validation
+      validation: actionData.target.validation,
     };
 
     return this.resolveSingleTarget(legacyTargetDef, context, actionData.id)
-      .then(targets => ({
+      .then((targets) => ({
         success: true,
         value: {
-          targetCombinations: targets.map(target => [target]),
-          metadata: { legacy: true }
-        }
+          targetCombinations: targets.map((target) => [target]),
+          metadata: { legacy: true },
+        },
       }))
-      .catch(error => ({
+      .catch((error) => ({
         success: false,
-        error: error.message
+        error: error.message,
       }));
   }
 
@@ -1179,7 +1257,7 @@ export class OptimizedMultiTargetResolutionStage {
     return {
       cache: this.cache.getStats(),
       memory: globalMemoryManager.getMemoryStats(),
-      performance: globalPerformanceMonitor.getMetrics()
+      performance: globalPerformanceMonitor.getMetrics(),
     };
   }
 }
@@ -1204,9 +1282,9 @@ describe('Multi-Target Action Performance', () => {
     resolutionStage = new OptimizedMultiTargetResolutionStage({
       scopeInterpreter: testBed.getService('scopeInterpreter'),
       ajvValidator: testBed.getService('ajvValidator'),
-      logger: testBed.getService('logger')
+      logger: testBed.getService('logger'),
     });
-    
+
     globalPerformanceMonitor.startMonitoring();
   });
 
@@ -1223,8 +1301,8 @@ describe('Multi-Target Action Performance', () => {
       const action = testBed.createMultiTargetAction({
         targetDefinitions: {
           item: { scope: 'actor.core:inventory.items[]' },
-          person: { scope: 'location.core:actors[]' }
-        }
+          person: { scope: 'location.core:actors[]' },
+        },
       });
 
       const start = performance.now();
@@ -1242,15 +1320,15 @@ describe('Multi-Target Action Performance', () => {
       const action = testBed.createMultiTargetAction({
         maxCombinations: 100,
         targetDefinitions: {
-          item: { 
+          item: {
             scope: 'actor.core:inventory.items[]',
-            maxCombinations: 10
+            maxCombinations: 10,
           },
-          person: { 
+          person: {
             scope: 'location.core:actors[]',
-            maxCombinations: 10
-          }
-        }
+            maxCombinations: 10,
+          },
+        },
       });
 
       const start = performance.now();
@@ -1267,8 +1345,8 @@ describe('Multi-Target Action Performance', () => {
       const action = testBed.createMultiTargetAction({
         targetDefinitions: {
           item: { scope: 'actor.core:inventory.items[]' },
-          person: { scope: 'location.core:actors[]' }
-        }
+          person: { scope: 'location.core:actors[]' },
+        },
       });
 
       // First resolution (cold cache)
@@ -1284,7 +1362,7 @@ describe('Multi-Target Action Performance', () => {
       expect(result1.success).toBe(true);
       expect(result2.success).toBe(true);
       expect(duration2).toBeLessThan(duration1 * 0.5); // Should be significantly faster with cache
-      
+
       const cacheStats = resolutionStage.getPerformanceStats().cache;
       expect(cacheStats.hitRate).toBeGreaterThan(0.5);
     });
@@ -1296,8 +1374,8 @@ describe('Multi-Target Action Performance', () => {
       const action = testBed.createMultiTargetAction({
         targetDefinitions: {
           item: { scope: 'actor.core:inventory.items[]' },
-          person: { scope: 'location.core:actors[]' }
-        }
+          person: { scope: 'location.core:actors[]' },
+        },
       });
 
       const initialMemory = process.memoryUsage().heapUsed;
@@ -1326,8 +1404,8 @@ describe('Multi-Target Action Performance', () => {
         targetDefinitions: {
           item: { scope: 'actor.core:inventory.items[]' },
           person: { scope: 'location.core:actors[]' },
-          location: { scope: 'game.locations[]' }
-        }
+          location: { scope: 'game.locations[]' },
+        },
       });
 
       const memBefore = process.memoryUsage();
@@ -1351,13 +1429,16 @@ describe('Multi-Target Action Performance', () => {
       ];
 
       for (const testCase of testCases) {
-        const entities = testBed.createTestEntities(testCase.actors, testCase.items);
+        const entities = testBed.createTestEntities(
+          testCase.actors,
+          testCase.items
+        );
         const action = testBed.createMultiTargetAction({
           maxCombinations: 100,
           targetDefinitions: {
             item: { scope: 'actor.core:inventory.items[]' },
-            person: { scope: 'location.core:actors[]' }
-          }
+            person: { scope: 'location.core:actors[]' },
+          },
         });
 
         const start = performance.now();
@@ -1365,7 +1446,9 @@ describe('Multi-Target Action Performance', () => {
         const duration = performance.now() - start;
 
         expect(result.success).toBe(true);
-        expect(result.value.targetCombinations.length).toBeLessThanOrEqual(testCase.expected);
+        expect(result.value.targetCombinations.length).toBeLessThanOrEqual(
+          testCase.expected
+        );
         expect(duration).toBeLessThan(100); // Should be fast regardless of dataset size
       }
     });
@@ -1374,7 +1457,7 @@ describe('Multi-Target Action Performance', () => {
   describe('Context-Dependent Performance', () => {
     it('should handle context dependencies efficiently', async () => {
       const entities = testBed.createTestEntities(20, 30);
-      
+
       // Add containers and keys for context testing
       testBed.addContainers(10, ['brass', 'silver', 'gold']);
       testBed.addKeys(15, ['brass', 'silver', 'gold']);
@@ -1383,14 +1466,14 @@ describe('Multi-Target Action Performance', () => {
         targetDefinitions: {
           container: {
             scope: 'location.core:objects[]',
-            validation: { locked: true }
+            validation: { locked: true },
           },
           key: {
             scope: 'actor.core:inventory.items[]',
             contextFrom: 'container',
-            validation: { matchesLock: true }
-          }
-        }
+            validation: { matchesLock: true },
+          },
+        },
       });
 
       const start = performance.now();
@@ -1408,23 +1491,26 @@ describe('Multi-Target Action Performance', () => {
       const baselineScenarios = [
         { name: 'small', actors: 5, items: 5, maxTime: 25 },
         { name: 'medium', actors: 20, items: 20, maxTime: 75 },
-        { name: 'large', actors: 50, items: 50, maxTime: 150 }
+        { name: 'large', actors: 50, items: 50, maxTime: 150 },
       ];
 
       const results = [];
 
       for (const scenario of baselineScenarios) {
-        const entities = testBed.createTestEntities(scenario.actors, scenario.items);
+        const entities = testBed.createTestEntities(
+          scenario.actors,
+          scenario.items
+        );
         const action = testBed.createMultiTargetAction({
           maxCombinations: 100,
           targetDefinitions: {
             item: { scope: 'actor.core:inventory.items[]' },
-            person: { scope: 'location.core:actors[]' }
-          }
+            person: { scope: 'location.core:actors[]' },
+          },
         });
 
         const times = [];
-        
+
         // Run multiple times to get stable measurements
         for (let i = 0; i < 5; i++) {
           const start = performance.now();
@@ -1434,7 +1520,11 @@ describe('Multi-Target Action Performance', () => {
         }
 
         const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
-        results.push({ scenario: scenario.name, avgTime, maxTime: scenario.maxTime });
+        results.push({
+          scenario: scenario.name,
+          avgTime,
+          maxTime: scenario.maxTime,
+        });
 
         expect(avgTime).toBeLessThan(scenario.maxTime);
       }
@@ -1461,6 +1551,7 @@ describe('Multi-Target Action Performance', () => {
 ## Documentation Requirements
 
 ### For Developers
+
 - Performance optimization techniques and algorithms
 - Caching strategies and invalidation patterns
 - Memory management best practices
@@ -1468,6 +1559,7 @@ describe('Multi-Target Action Performance', () => {
 - Performance testing methodologies
 
 ### For Operations
+
 - Performance monitoring dashboard setup
 - Alert configuration and response procedures
 - Capacity planning guidelines

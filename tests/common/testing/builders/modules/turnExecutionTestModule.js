@@ -523,70 +523,69 @@ export class TurnExecutionTestModule extends ITestModule {
   #createStandardLLMConfig(strategy) {
     // Fallback to inline configuration matching TestConfigurationFactory output
     const baseConfigs = {
-        'tool-calling': {
-          configId: 'test-llm-toolcalling',
-          displayName: 'Test LLM (Tool Calling)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-toolcalling',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'openrouter_tool_calling',
-            toolName: 'function_call',
-          },
-          defaultParameters: { temperature: 1.0 },
-          contextTokenLimit: 8000,
+      'tool-calling': {
+        configId: 'test-llm-toolcalling',
+        displayName: 'Test LLM (Tool Calling)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-toolcalling',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'openrouter_tool_calling',
+          toolName: 'function_call',
         },
-        'json-schema': {
-          configId: 'test-llm-jsonschema',
-          displayName: 'Test LLM (JSON Schema)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-jsonschema',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'json_schema',
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 8000,
+      },
+      'json-schema': {
+        configId: 'test-llm-jsonschema',
+        displayName: 'Test LLM (JSON Schema)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-jsonschema',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'json_schema',
+          schema: {
+            name: 'turn_action_response',
             schema: {
-              name: 'turn_action_response',
-              schema: {
-                type: 'object',
-                properties: {
-                  chosenIndex: { type: 'number' },
-                  speech: { type: 'string' },
-                  thoughts: { type: 'string' },
-                },
-                required: ['chosenIndex', 'speech', 'thoughts'],
+              type: 'object',
+              properties: {
+                chosenIndex: { type: 'number' },
+                speech: { type: 'string' },
+                thoughts: { type: 'string' },
               },
+              required: ['chosenIndex', 'speech', 'thoughts'],
             },
           },
-          defaultParameters: { temperature: 1.0 },
-          contextTokenLimit: 8000,
         },
-        'limited-context': {
-          configId: 'test-llm-limited',
-          displayName: 'Test LLM (Limited Context)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-limited',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'openrouter_tool_calling',
-            toolName: 'function_call',
-          },
-          defaultParameters: { temperature: 1.0 },
-          contextTokenLimit: 1000,
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 8000,
+      },
+      'limited-context': {
+        configId: 'test-llm-limited',
+        displayName: 'Test LLM (Limited Context)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-limited',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'openrouter_tool_calling',
+          toolName: 'function_call',
         },
-      };
-      
-      
-      const config = baseConfigs[strategy];
-      if (!config) {
-        throw new Error(`Unknown LLM strategy: ${strategy}`);
-      }
-      return config;
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 1000,
+      },
+    };
+
+    const config = baseConfigs[strategy];
+    if (!config) {
+      throw new Error(`Unknown LLM strategy: ${strategy}`);
+    }
+    return config;
   }
 
   /**
@@ -599,84 +598,84 @@ export class TurnExecutionTestModule extends ITestModule {
   #createEnvironmentPresetConfig(presetName) {
     // Fallback to inline configurations matching factory patterns
     const presets = {
-        'turnExecution': {
-          llm: this.#createStandardLLMConfig('tool-calling'),
-          actors: [
-            {
-              id: 'ai-actor',
-              name: 'Test AI Actor',
-              type: 'core:actor',
-              components: {
-                'core:position': { location: 'test-location' },
-                'core:persona': { traits: ['brave', 'curious'] },
-              },
-            },
-            {
-              id: 'player-actor',
-              name: 'Test Player',
-              type: 'core:actor',
-              isPlayer: true,
-            },
-          ],
-          world: {
-            id: 'test-world',
-            name: 'Test World',
-            description: 'A world for testing',
-            locations: ['test-location', 'test-location-2'],
-          },
-        },
-        'actionProcessing': {
-          llm: this.#createStandardLLMConfig('tool-calling'),
-          actors: [
-            {
-              id: 'test-actor',
-              name: 'Test Actor',
-              type: 'core:actor',
-            },
-          ],
-          actions: [
-            { id: 'core:move', name: 'Move', requiresTarget: true },
-            { id: 'core:look', name: 'Look Around', alwaysAvailable: true },
-            { id: 'core:wait', name: 'Wait', alwaysAvailable: true },
-          ],
-          mocks: {
-            actionService: {
-              availableActions: [
-                { id: 'core:move', name: 'Move', requiresTarget: true },
-                { id: 'core:look', name: 'Look Around', alwaysAvailable: true },
-                { id: 'core:wait', name: 'Wait', alwaysAvailable: true },
-              ],
+      turnExecution: {
+        llm: this.#createStandardLLMConfig('tool-calling'),
+        actors: [
+          {
+            id: 'ai-actor',
+            name: 'Test AI Actor',
+            type: 'core:actor',
+            components: {
+              'core:position': { location: 'test-location' },
+              'core:persona': { traits: ['brave', 'curious'] },
             },
           },
+          {
+            id: 'player-actor',
+            name: 'Test Player',
+            type: 'core:actor',
+            isPlayer: true,
+          },
+        ],
+        world: {
+          id: 'test-world',
+          name: 'Test World',
+          description: 'A world for testing',
+          locations: ['test-location', 'test-location-2'],
         },
-        'promptGeneration': {
-          llm: this.#createStandardLLMConfig('json-schema'),
-          actors: [
-            {
-              id: 'prompt-test-actor',
-              name: 'Prompt Test Actor',
-              type: 'core:actor',
-              components: {
-                'core:persona': {
-                  description: 'A character for testing prompt generation',
-                  traits: ['methodical', 'observant'],
-                },
+      },
+      actionProcessing: {
+        llm: this.#createStandardLLMConfig('tool-calling'),
+        actors: [
+          {
+            id: 'test-actor',
+            name: 'Test Actor',
+            type: 'core:actor',
+          },
+        ],
+        actions: [
+          { id: 'core:move', name: 'Move', requiresTarget: true },
+          { id: 'core:look', name: 'Look Around', alwaysAvailable: true },
+          { id: 'core:wait', name: 'Wait', alwaysAvailable: true },
+        ],
+        mocks: {
+          actionService: {
+            availableActions: [
+              { id: 'core:move', name: 'Move', requiresTarget: true },
+              { id: 'core:look', name: 'Look Around', alwaysAvailable: true },
+              { id: 'core:wait', name: 'Wait', alwaysAvailable: true },
+            ],
+          },
+        },
+      },
+      promptGeneration: {
+        llm: this.#createStandardLLMConfig('json-schema'),
+        actors: [
+          {
+            id: 'prompt-test-actor',
+            name: 'Prompt Test Actor',
+            type: 'core:actor',
+            components: {
+              'core:persona': {
+                description: 'A character for testing prompt generation',
+                traits: ['methodical', 'observant'],
               },
             },
-          ],
-        },
-        // Legacy support for hyphenated names
-        'turn-execution': {
-          llm: this.#createStandardLLMConfig('tool-calling'),
-          actors: [],
-          world: { name: 'Test World' },
-        },
-        'action-processing': {
-          llm: this.#createStandardLLMConfig('tool-calling'),
-          actors: [],
-          actions: [],
-        },
-      };
+          },
+        ],
+      },
+      // Legacy support for hyphenated names
+      'turn-execution': {
+        llm: this.#createStandardLLMConfig('tool-calling'),
+        actors: [],
+        world: { name: 'Test World' },
+      },
+      'action-processing': {
+        llm: this.#createStandardLLMConfig('tool-calling'),
+        actors: [],
+        actions: [],
+      },
+    };
 
     const config = presets[presetName];
     if (!config) {

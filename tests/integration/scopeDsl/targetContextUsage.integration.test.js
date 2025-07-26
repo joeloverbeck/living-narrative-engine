@@ -5,7 +5,7 @@ describe('Target Context Usage in Scope DSL Integration', () => {
   let testBed;
   let scopeInterpreter;
   let contextBuilder;
-  
+
   beforeEach(() => {
     testBed = new ScopeDslTestBed();
     scopeInterpreter = testBed.getScopeInterpreter();
@@ -15,24 +15,24 @@ describe('Target Context Usage in Scope DSL Integration', () => {
   afterEach(() => {
     testBed.cleanup();
   });
-  
+
   test('should use actor from context in scope evaluation', async () => {
     // Arrange
     const scope = 'actor.inventory.items[]';
     const context = {
-      actor: { 
-        id: 'player', 
+      actor: {
+        id: 'player',
         components: {
-          'core:inventory': { items: ['sword', 'potion'] }
-        }
+          'core:inventory': { items: ['sword', 'potion'] },
+        },
       },
       location: { id: 'room', components: {} },
-      game: { turnNumber: 1 }
+      game: { turnNumber: 1 },
     };
-    
+
     // Act
     const result = await scopeInterpreter.evaluate(scope, context);
-    
+
     // Assert
     expect(result).toEqual(['sword', 'potion']);
   });
@@ -47,18 +47,18 @@ describe('Target Context Usage in Scope DSL Integration', () => {
         components: {
           'clothing:equipment': {
             equipped: {
-              torso_upper: { outer: 'jacket' }
-            }
-          }
-        }
+              torso_upper: { outer: 'jacket' },
+            },
+          },
+        },
       },
       location: { id: 'room', components: {} },
-      game: { turnNumber: 1 }
+      game: { turnNumber: 1 },
     };
-    
+
     // Act
     const result = await scopeInterpreter.evaluate(scope, context);
-    
+
     // Assert
     expect(result).toContain('jacket');
   });
@@ -70,15 +70,15 @@ describe('Target Context Usage in Scope DSL Integration', () => {
       actor: { id: 'player', components: {} },
       targets: {
         primary: [{ id: 'item_001', components: {} }],
-        secondary: [{ id: 'npc_002', components: {} }]
+        secondary: [{ id: 'npc_002', components: {} }],
       },
       location: { id: 'room', components: {} },
-      game: { turnNumber: 1 }
+      game: { turnNumber: 1 },
     };
-    
+
     // Act
     const result = await scopeInterpreter.evaluate(scope, context);
-    
+
     // Assert
     expect(result).toBe('item_001');
   });
@@ -89,15 +89,15 @@ describe('Target Context Usage in Scope DSL Integration', () => {
     const context = {
       actor: { id: 'player', components: {} },
       location: { id: 'room', components: {} },
-      game: { 
+      game: {
         turnNumber: 42,
-        timeOfDay: 'afternoon'
-      }
+        timeOfDay: 'afternoon',
+      },
     };
-    
+
     // Act
     const result = await scopeInterpreter.evaluate(scope, context);
-    
+
     // Assert
     expect(result).toBe(42);
   });
@@ -106,10 +106,10 @@ describe('Target Context Usage in Scope DSL Integration', () => {
     // Arrange
     const actorId = 'player_123';
     const locationId = 'room_001';
-    
+
     // Act
     const context = contextBuilder.buildBaseContext(actorId, locationId);
-    
+
     // Assert
     expect(context).toHaveProperty('actor');
     expect(context).toHaveProperty('location');

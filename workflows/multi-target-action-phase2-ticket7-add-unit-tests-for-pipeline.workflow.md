@@ -1,9 +1,13 @@
 # Ticket: Add Unit Tests for Multi-Target Pipeline
 
 ## Ticket ID: PHASE2-TICKET7
+
 ## Priority: High
+
 ## Estimated Time: 4-6 hours
+
 ## Dependencies: PHASE2-TICKET4, PHASE2-TICKET5, PHASE2-TICKET6
+
 ## Blocks: PHASE3-TICKET9, PHASE4-TICKET14
 
 ## Overview
@@ -40,34 +44,34 @@ describe('MultiTargetResolutionStage', () => {
 
   beforeEach(() => {
     mockScopeInterpreter = {
-      evaluate: jest.fn()
+      evaluate: jest.fn(),
     };
 
     mockEntityManager = {
       getEntity: jest.fn(),
-      getAllEntities: jest.fn()
+      getAllEntities: jest.fn(),
     };
 
     mockTargetResolver = {
-      resolveTargetDefinition: jest.fn()
+      resolveTargetDefinition: jest.fn(),
     };
 
     mockTargetContextBuilder = {
-      buildContext: jest.fn()
+      buildContext: jest.fn(),
     };
 
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     mockTrace = {
       step: jest.fn(),
       success: jest.fn(),
       warning: jest.fn(),
-      failure: jest.fn()
+      failure: jest.fn(),
     };
 
     stage = new MultiTargetResolutionStage({
@@ -75,7 +79,7 @@ describe('MultiTargetResolutionStage', () => {
       entityManager: mockEntityManager,
       targetResolver: mockTargetResolver,
       targetContextBuilder: mockTargetContextBuilder,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -85,10 +89,10 @@ describe('MultiTargetResolutionStage', () => {
         actionDef: {
           id: 'test:legacy',
           scope: 'actor.core:inventory.items[]',
-          template: 'use {target}'
+          template: 'use {target}',
         },
         actor: { id: 'player' },
-        actionContext: { location: null }
+        actionContext: { location: null },
       };
 
       mockScopeInterpreter.evaluate.mockResolvedValue(['item_001', 'item_002']);
@@ -102,14 +106,14 @@ describe('MultiTargetResolutionStage', () => {
       expect(result.data.resolvedTargets).toEqual({
         primary: [
           { id: 'item_001', components: {} },
-          { id: 'item_002', components: {} }
-        ]
+          { id: 'item_002', components: {} },
+        ],
       });
       expect(mockScopeInterpreter.evaluate).toHaveBeenCalledWith(
         'actor.core:inventory.items[]',
         expect.objectContaining({
           actor: { id: 'player' },
-          location: null
+          location: null,
         })
       );
     });
@@ -119,10 +123,10 @@ describe('MultiTargetResolutionStage', () => {
         actionDef: {
           id: 'test:empty',
           scope: 'actor.core:empty.items[]',
-          template: 'use {target}'
+          template: 'use {target}',
         },
         actor: { id: 'player' },
-        actionContext: { location: null }
+        actionContext: { location: null },
       };
 
       mockScopeInterpreter.evaluate.mockResolvedValue([]);
@@ -142,17 +146,17 @@ describe('MultiTargetResolutionStage', () => {
           targets: {
             primary: {
               scope: 'actor.core:inventory.items[]',
-              placeholder: 'item'
+              placeholder: 'item',
             },
             secondary: {
               scope: 'location.core:actors[]',
-              placeholder: 'target'
-            }
+              placeholder: 'target',
+            },
           },
-          template: 'use {item} on {target}'
+          template: 'use {item} on {target}',
         },
         actor: { id: 'player' },
-        actionContext: { location: { id: 'room' } }
+        actionContext: { location: { id: 'room' } },
       };
 
       // Mock primary target resolution
@@ -171,11 +175,9 @@ describe('MultiTargetResolutionStage', () => {
       expect(result.data.resolvedTargets).toEqual({
         primary: [
           { id: 'sword_001', components: {} },
-          { id: 'potion_002', components: {} }
+          { id: 'potion_002', components: {} },
         ],
-        secondary: [
-          { id: 'npc_001', components: {} }
-        ]
+        secondary: [{ id: 'npc_001', components: {} }],
       });
 
       // Should call scope interpreter for each target definition
@@ -189,18 +191,18 @@ describe('MultiTargetResolutionStage', () => {
           targets: {
             primary: {
               scope: 'location.core:actors[]',
-              placeholder: 'person'
+              placeholder: 'person',
             },
             secondary: {
               scope: 'target.topmost_clothing[]',
               placeholder: 'garment',
-              contextFrom: 'primary'
-            }
+              contextFrom: 'primary',
+            },
           },
-          template: 'adjust {person}\'s {garment}'
+          template: "adjust {person}'s {garment}",
         },
         actor: { id: 'player' },
-        actionContext: { location: { id: 'room' } }
+        actionContext: { location: { id: 'room' } },
       };
 
       // Mock primary resolution
@@ -212,19 +214,18 @@ describe('MultiTargetResolutionStage', () => {
         .mockReturnValueOnce({ id: 'npc_001', components: {} })
         .mockReturnValueOnce({ id: 'jacket_001', components: {} });
 
-      mockTargetContextBuilder.buildContext
-        .mockReturnValue({
-          actor: { id: 'player' },
-          location: { id: 'room' },
-          target: { id: 'npc_001', components: {} }
-        });
+      mockTargetContextBuilder.buildContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+        target: { id: 'npc_001', components: {} },
+      });
 
       const result = await stage.executeInternal(context, mockTrace);
 
       expect(result.shouldContinue).toBe(true);
       expect(mockTargetContextBuilder.buildContext).toHaveBeenCalledWith(
         expect.objectContaining({
-          target: { id: 'npc_001', components: {} }
+          target: { id: 'npc_001', components: {} },
         }),
         'primary'
       );
@@ -237,23 +238,23 @@ describe('MultiTargetResolutionStage', () => {
           targets: {
             primary: {
               scope: 'actor.core:inventory.items[]',
-              placeholder: 'tool'
+              placeholder: 'tool',
             },
             secondary: {
               scope: 'location.core:containers[]',
               placeholder: 'container',
-              contextFrom: 'primary'
+              contextFrom: 'primary',
             },
             tertiary: {
               scope: 'target.core:contents.items[]',
               placeholder: 'item',
-              contextFrom: 'secondary'
-            }
+              contextFrom: 'secondary',
+            },
           },
-          template: 'use {tool} on {container} to get {item}'
+          template: 'use {tool} on {container} to get {item}',
         },
         actor: { id: 'player' },
-        actionContext: { location: { id: 'room' } }
+        actionContext: { location: { id: 'room' } },
       };
 
       mockScopeInterpreter.evaluate
@@ -270,16 +271,16 @@ describe('MultiTargetResolutionStage', () => {
         .mockReturnValueOnce({
           actor: { id: 'player' },
           location: { id: 'room' },
-          target: { id: 'key_001', components: {} }
+          target: { id: 'key_001', components: {} },
         })
         .mockReturnValueOnce({
           actor: { id: 'player' },
           location: { id: 'room' },
           targets: {
             primary: [{ id: 'key_001', components: {} }],
-            secondary: [{ id: 'chest_001', components: {} }]
+            secondary: [{ id: 'chest_001', components: {} }],
           },
-          target: { id: 'chest_001', components: {} }
+          target: { id: 'chest_001', components: {} },
         });
 
       const result = await stage.executeInternal(context, mockTrace);
@@ -288,7 +289,7 @@ describe('MultiTargetResolutionStage', () => {
       expect(result.data.resolvedTargets).toEqual({
         primary: [{ id: 'key_001', components: {} }],
         secondary: [{ id: 'chest_001', components: {} }],
-        tertiary: [{ id: 'treasure_001', components: {} }]
+        tertiary: [{ id: 'treasure_001', components: {} }],
       });
     });
   });
@@ -299,10 +300,10 @@ describe('MultiTargetResolutionStage', () => {
         actionDef: {
           id: 'test:error',
           scope: 'invalid.scope[]',
-          template: 'do {target}'
+          template: 'do {target}',
         },
         actor: { id: 'player' },
-        actionContext: { location: null }
+        actionContext: { location: null },
       };
 
       mockScopeInterpreter.evaluate.mockRejectedValue(
@@ -320,10 +321,10 @@ describe('MultiTargetResolutionStage', () => {
         actionDef: {
           id: 'test:missing',
           scope: 'actor.core:inventory.items[]',
-          template: 'use {target}'
+          template: 'use {target}',
         },
         actor: { id: 'player' },
-        actionContext: { location: null }
+        actionContext: { location: null },
       };
 
       mockScopeInterpreter.evaluate.mockResolvedValue(['missing_item']);
@@ -345,24 +346,27 @@ describe('MultiTargetResolutionStage', () => {
           targets: {
             primary: {
               scope: 'location.core:actors[]',
-              placeholder: 'person'
+              placeholder: 'person',
             },
             secondary: {
               scope: 'target.invalid[]',
               placeholder: 'invalid',
-              contextFrom: 'primary'
-            }
-          }
+              contextFrom: 'primary',
+            },
+          },
         },
         actor: { id: 'player' },
-        actionContext: { location: { id: 'room' } }
+        actionContext: { location: { id: 'room' } },
       };
 
       mockScopeInterpreter.evaluate
         .mockResolvedValueOnce(['npc_001'])
         .mockRejectedValueOnce(new Error('Context error'));
 
-      mockEntityManager.getEntity.mockReturnValue({ id: 'npc_001', components: {} });
+      mockEntityManager.getEntity.mockReturnValue({
+        id: 'npc_001',
+        components: {},
+      });
       mockTargetContextBuilder.buildContext.mockReturnValue({});
 
       const result = await stage.executeInternal(context, mockTrace);
@@ -378,10 +382,10 @@ describe('MultiTargetResolutionStage', () => {
         actionDef: {
           id: 'test:performance',
           scope: 'actor.core:inventory.items[]',
-          template: 'use {target}'
+          template: 'use {target}',
         },
         actor: { id: 'player' },
-        actionContext: { location: null }
+        actionContext: { location: null },
       };
 
       // Create large target set
@@ -389,10 +393,10 @@ describe('MultiTargetResolutionStage', () => {
       mockScopeInterpreter.evaluate.mockResolvedValue(targetIds);
 
       // Mock entity responses
-      targetIds.forEach(id => {
+      targetIds.forEach((id) => {
         mockEntityManager.getEntity.mockReturnValueOnce({
           id,
-          components: { 'core:item': { name: `Item ${id}` } }
+          components: { 'core:item': { name: `Item ${id}` } },
         });
       });
 
@@ -410,28 +414,36 @@ describe('MultiTargetResolutionStage', () => {
         actionDef: {
           id: 'test:concurrent',
           targets: {
-            primary: { scope: 'actor.core:inventory.items[]', placeholder: 'item' },
-            secondary: { scope: 'location.core:actors[]', placeholder: 'actor' },
-            tertiary: { scope: 'location.core:objects[]', placeholder: 'object' }
-          }
+            primary: {
+              scope: 'actor.core:inventory.items[]',
+              placeholder: 'item',
+            },
+            secondary: {
+              scope: 'location.core:actors[]',
+              placeholder: 'actor',
+            },
+            tertiary: {
+              scope: 'location.core:objects[]',
+              placeholder: 'object',
+            },
+          },
         },
         actor: { id: 'player' },
-        actionContext: { location: { id: 'room' } }
+        actionContext: { location: { id: 'room' } },
       };
 
       // Simulate concurrent resolution
-      mockScopeInterpreter.evaluate
-        .mockImplementation(async (scope) => {
-          await new Promise(resolve => setTimeout(resolve, 10)); // 10ms delay
-          if (scope.includes('items')) return ['item_001'];
-          if (scope.includes('actors')) return ['actor_001'];
-          if (scope.includes('objects')) return ['object_001'];
-          return [];
-        });
+      mockScopeInterpreter.evaluate.mockImplementation(async (scope) => {
+        await new Promise((resolve) => setTimeout(resolve, 10)); // 10ms delay
+        if (scope.includes('items')) return ['item_001'];
+        if (scope.includes('actors')) return ['actor_001'];
+        if (scope.includes('objects')) return ['object_001'];
+        return [];
+      });
 
-      mockEntityManager.getEntity.mockImplementation(id => ({
+      mockEntityManager.getEntity.mockImplementation((id) => ({
         id,
-        components: {}
+        components: {},
       }));
 
       const start = performance.now();
@@ -454,21 +466,21 @@ describe('MultiTargetResolutionStage', () => {
             tertiary: {
               scope: 'target.contents[]',
               placeholder: 'content',
-              contextFrom: 'secondary'
+              contextFrom: 'secondary',
             },
             primary: {
               scope: 'actor.core:inventory.items[]',
-              placeholder: 'tool'
+              placeholder: 'tool',
             },
             secondary: {
               scope: 'location.containers[]',
               placeholder: 'container',
-              contextFrom: 'primary'
-            }
-          }
+              contextFrom: 'primary',
+            },
+          },
         },
         actor: { id: 'player' },
-        actionContext: { location: { id: 'room' } }
+        actionContext: { location: { id: 'room' } },
       };
 
       const scopeCalls = [];
@@ -480,7 +492,10 @@ describe('MultiTargetResolutionStage', () => {
         return [];
       });
 
-      mockEntityManager.getEntity.mockImplementation(id => ({ id, components: {} }));
+      mockEntityManager.getEntity.mockImplementation((id) => ({
+        id,
+        components: {},
+      }));
       mockTargetContextBuilder.buildContext.mockReturnValue({});
 
       await stage.executeInternal(context, mockTrace);
@@ -506,18 +521,18 @@ describe('Combination Performance', () => {
     // Create large target sets
     const primaryTargets = Array.from({ length: 50 }, (_, i) => ({
       id: `primary_${i}`,
-      displayName: `Primary ${i}`
+      displayName: `Primary ${i}`,
     }));
-    
+
     const secondaryTargets = Array.from({ length: 50 }, (_, i) => ({
       id: `secondary_${i}`,
-      displayName: `Secondary ${i}`
+      displayName: `Secondary ${i}`,
     }));
 
     mockContext.actionDef.generateCombinations = true;
     mockContext.resolvedTargets = {
       primary: primaryTargets,
-      secondary: secondaryTargets
+      secondary: secondaryTargets,
     };
 
     const start = performance.now();
@@ -530,7 +545,8 @@ describe('Combination Performance', () => {
   });
 
   it('should optimize placeholder replacement', async () => {
-    mockContext.actionDef.template = 'complex {item} action with {target} and more {item} references';
+    mockContext.actionDef.template =
+      'complex {item} action with {target} and more {item} references';
     mockContext.actionDef.generateCombinations = true;
 
     const iterations = 100;
@@ -552,13 +568,13 @@ describe('Memory Management', () => {
     // Create very large target sets
     const primaryTargets = Array.from({ length: 1000 }, (_, i) => ({
       id: `item_${i}`,
-      displayName: `Item ${i}`
+      displayName: `Item ${i}`,
     }));
 
     mockContext.actionDef.generateCombinations = true;
     mockContext.resolvedTargets = {
       primary: primaryTargets,
-      secondary: [{ id: 'target_001', displayName: 'Target' }]
+      secondary: [{ id: 'target_001', displayName: 'Target' }],
     };
 
     // Process multiple times to check for memory leaks
@@ -593,52 +609,52 @@ describe('Pipeline', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     mockTrace = {
       step: jest.fn(),
       success: jest.fn(),
       info: jest.fn(),
-      failure: jest.fn()
+      failure: jest.fn(),
     };
 
     // Create mock stages
     mockStages = [
       {
         constructor: { name: 'ComponentFilteringStage' },
-        executeInternal: jest.fn()
+        executeInternal: jest.fn(),
       },
       {
         constructor: { name: 'PrerequisiteEvaluationStage' },
-        executeInternal: jest.fn()
+        executeInternal: jest.fn(),
       },
       {
         constructor: { name: 'MultiTargetResolutionStage' },
-        executeInternal: jest.fn()
+        executeInternal: jest.fn(),
       },
       {
         constructor: { name: 'ActionFormattingStage' },
-        executeInternal: jest.fn()
-      }
+        executeInternal: jest.fn(),
+      },
     ];
 
     pipeline = new Pipeline({
       stages: mockStages,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
   describe('Stage Execution Order', () => {
     it('should execute stages in correct order', async () => {
       const context = { actionDef: { id: 'test' }, actor: { id: 'player' } };
-      
+
       // Mock all stages to continue
       mockStages.forEach((stage, index) => {
         stage.executeInternal.mockResolvedValue(
           PipelineResult.continue({
             ...context,
-            stageIndex: index
+            stageIndex: index,
           })
         );
       });
@@ -709,13 +725,16 @@ describe('Pipeline', () => {
 
   describe('Context Data Flow', () => {
     it('should pass context data between stages', async () => {
-      const initialContext = { actionDef: { id: 'test' }, actor: { id: 'player' } };
+      const initialContext = {
+        actionDef: { id: 'test' },
+        actor: { id: 'player' },
+      };
 
       // Each stage adds data to context
       mockStages[0].executeInternal.mockResolvedValue(
         PipelineResult.continue({
           ...initialContext,
-          filteredComponents: ['core:inventory']
+          filteredComponents: ['core:inventory'],
         })
       );
 
@@ -723,7 +742,7 @@ describe('Pipeline', () => {
         PipelineResult.continue({
           ...initialContext,
           filteredComponents: ['core:inventory'],
-          prerequisitesPassed: true
+          prerequisitesPassed: true,
         })
       );
 
@@ -732,7 +751,7 @@ describe('Pipeline', () => {
           ...initialContext,
           filteredComponents: ['core:inventory'],
           prerequisitesPassed: true,
-          resolvedTargets: { primary: [{ id: 'item_001' }] }
+          resolvedTargets: { primary: [{ id: 'item_001' }] },
         })
       );
 
@@ -742,7 +761,9 @@ describe('Pipeline', () => {
           filteredComponents: ['core:inventory'],
           prerequisitesPassed: true,
           resolvedTargets: { primary: [{ id: 'item_001' }] },
-          formattedActions: [{ actionId: 'test', formattedText: 'use item_001' }]
+          formattedActions: [
+            { actionId: 'test', formattedText: 'use item_001' },
+          ],
         })
       );
 
@@ -753,7 +774,7 @@ describe('Pipeline', () => {
       // Verify each stage received updated context
       expect(mockStages[1].executeInternal).toHaveBeenCalledWith(
         expect.objectContaining({
-          filteredComponents: ['core:inventory']
+          filteredComponents: ['core:inventory'],
         }),
         mockTrace
       );
@@ -761,14 +782,14 @@ describe('Pipeline', () => {
       expect(mockStages[2].executeInternal).toHaveBeenCalledWith(
         expect.objectContaining({
           filteredComponents: ['core:inventory'],
-          prerequisitesPassed: true
+          prerequisitesPassed: true,
         }),
         mockTrace
       );
 
       expect(mockStages[3].executeInternal).toHaveBeenCalledWith(
         expect.objectContaining({
-          resolvedTargets: { primary: [{ id: 'item_001' }] }
+          resolvedTargets: { primary: [{ id: 'item_001' }] },
         }),
         mockTrace
       );
@@ -780,16 +801,16 @@ describe('Pipeline', () => {
       // Create pipeline with wrong order
       const wrongOrderStages = [
         { constructor: { name: 'ActionFormattingStage' } },
-        { constructor: { name: 'MultiTargetResolutionStage' } }
+        { constructor: { name: 'MultiTargetResolutionStage' } },
       ];
 
       expect(() => {
         new Pipeline({
           stages: wrongOrderStages,
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).not.toThrow(); // Should warn but not throw
-      
+
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('out of order')
       );
@@ -797,13 +818,13 @@ describe('Pipeline', () => {
 
     it('should reject deprecated TargetResolutionStage', () => {
       const deprecatedStages = [
-        { constructor: { name: 'TargetResolutionStage' } }
+        { constructor: { name: 'TargetResolutionStage' } },
       ];
 
       expect(() => {
         new Pipeline({
           stages: deprecatedStages,
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).toThrow('TargetResolutionStage is deprecated');
     });
@@ -811,7 +832,7 @@ describe('Pipeline', () => {
     it('should allow adding stages at runtime', () => {
       const newStage = {
         constructor: { name: 'CustomStage' },
-        executeInternal: jest.fn()
+        executeInternal: jest.fn(),
       };
 
       pipeline.addStage(newStage, 2); // Insert at index 2
@@ -826,7 +847,9 @@ describe('Pipeline', () => {
 
       const stageInfo = pipeline.getStageInfo();
       expect(stageInfo).toHaveLength(3);
-      expect(stageInfo.map(s => s.name)).not.toContain('MultiTargetResolutionStage');
+      expect(stageInfo.map((s) => s.name)).not.toContain(
+        'MultiTargetResolutionStage'
+      );
     });
   });
 
@@ -855,7 +878,7 @@ describe('Pipeline', () => {
     it('should provide detailed trace information', async () => {
       const context = { actionDef: { id: 'test' }, actor: { id: 'player' } };
 
-      mockStages.forEach(stage => {
+      mockStages.forEach((stage) => {
         stage.executeInternal.mockResolvedValue(
           PipelineResult.continue(context)
         );
@@ -890,7 +913,7 @@ describe('Pipeline', () => {
     it('should execute simple pipeline efficiently', async () => {
       const context = { actionDef: { id: 'test' }, actor: { id: 'player' } };
 
-      mockStages.forEach(stage => {
+      mockStages.forEach((stage) => {
         stage.executeInternal.mockResolvedValue(
           PipelineResult.continue(context)
         );
@@ -936,8 +959,8 @@ describe('PipelineFactory', () => {
         debug: jest.fn(),
         info: jest.fn(),
         warn: jest.fn(),
-        error: jest.fn()
-      }
+        error: jest.fn(),
+      },
     };
 
     factory = new PipelineFactory(mockDependencies);
@@ -951,11 +974,11 @@ describe('PipelineFactory', () => {
 
       const stageInfo = pipeline.getStageInfo();
       expect(stageInfo).toHaveLength(4);
-      expect(stageInfo.map(s => s.name)).toEqual([
+      expect(stageInfo.map((s) => s.name)).toEqual([
         'ComponentFilteringStage',
         'PrerequisiteEvaluationStage',
         'MultiTargetResolutionStage',
-        'ActionFormattingStage'
+        'ActionFormattingStage',
       ]);
     });
 
@@ -973,14 +996,14 @@ describe('PipelineFactory', () => {
       const customStages = [
         'ComponentFilteringStage',
         'MultiTargetResolutionStage',
-        'ActionFormattingStage'
+        'ActionFormattingStage',
       ];
 
       const pipeline = factory.createCustomPipeline(customStages);
       const stageInfo = pipeline.getStageInfo();
 
       expect(stageInfo).toHaveLength(3);
-      expect(stageInfo.map(s => s.name)).toEqual(customStages);
+      expect(stageInfo.map((s) => s.name)).toEqual(customStages);
     });
 
     it('should throw error for unknown stages', () => {
@@ -1004,7 +1027,7 @@ describe('PipelineFactory', () => {
       const depsWithOptionals = {
         ...mockDependencies,
         displayNameResolver: jest.fn(),
-        maxCombinations: 150
+        maxCombinations: 150,
       };
 
       expect(() => {
@@ -1016,7 +1039,7 @@ describe('PipelineFactory', () => {
   describe('Stage Configuration', () => {
     it('should configure stages with correct dependencies', () => {
       const pipeline = factory.createStandardPipeline();
-      
+
       // This is more of an integration test to ensure stages are configured
       expect(pipeline.getStageInfo()).toHaveLength(4);
     });
@@ -1024,7 +1047,7 @@ describe('PipelineFactory', () => {
     it('should respect maxCombinations setting', () => {
       const factoryWithLimit = new PipelineFactory({
         ...mockDependencies,
-        maxCombinations: 50
+        maxCombinations: 50,
       });
 
       const pipeline = factoryWithLimit.createStandardPipeline();
@@ -1058,32 +1081,30 @@ describe('Full Pipeline Integration', () => {
         name: 'Eat',
         description: 'Consume food',
         scope: 'actor.core:inventory.items[]',
-        template: 'eat {target}'
+        template: 'eat {target}',
       };
 
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: ['apple_001', 'bread_002'] }
+        'core:inventory': { items: ['apple_001', 'bread_002'] },
       });
 
       const apple = testBed.createEntity('apple_001', {
-        'core:item': { name: 'Red Apple', type: 'food' }
+        'core:item': { name: 'Red Apple', type: 'food' },
       });
 
       const bread = testBed.createEntity('bread_002', {
-        'core:item': { name: 'Fresh Bread', type: 'food' }
+        'core:item': { name: 'Fresh Bread', type: 'food' },
       });
 
-      const result = await actionProcessor.process(
-        legacyAction,
-        player,
-        { location: null }
-      );
+      const result = await actionProcessor.process(legacyAction, player, {
+        location: null,
+      });
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(2);
-      expect(result.value.actions.map(a => a.command)).toEqual([
+      expect(result.value.actions.map((a) => a.command)).toEqual([
         'eat Red Apple',
-        'eat Fresh Bread'
+        'eat Fresh Bread',
       ]);
     });
   });
@@ -1097,60 +1118,60 @@ describe('Full Pipeline Integration', () => {
         targets: {
           primary: {
             scope: 'actor.core:inventory.tools[]',
-            placeholder: 'tool'
+            placeholder: 'tool',
           },
           secondary: {
             scope: 'actor.core:inventory.materials[]',
-            placeholder: 'material'
-          }
+            placeholder: 'material',
+          },
         },
         template: 'craft using {tool} and {material}',
-        generateCombinations: true
+        generateCombinations: true,
       };
 
       const player = testBed.createEntity('player', {
         'core:inventory': {
-          items: ['hammer_001', 'saw_002', 'wood_003', 'iron_004']
-        }
+          items: ['hammer_001', 'saw_002', 'wood_003', 'iron_004'],
+        },
       });
 
       // Create tools
       testBed.createEntity('hammer_001', {
-        'core:item': { name: 'Hammer', type: 'tool' }
+        'core:item': { name: 'Hammer', type: 'tool' },
       });
 
       testBed.createEntity('saw_002', {
-        'core:item': { name: 'Saw', type: 'tool' }
+        'core:item': { name: 'Saw', type: 'tool' },
       });
 
       // Create materials
       testBed.createEntity('wood_003', {
-        'core:item': { name: 'Wood Plank', type: 'material' }
+        'core:item': { name: 'Wood Plank', type: 'material' },
       });
 
       testBed.createEntity('iron_004', {
-        'core:item': { name: 'Iron Bar', type: 'material' }
+        'core:item': { name: 'Iron Bar', type: 'material' },
       });
 
       // Register scopes
-      testBed.registerScope('actor.core:inventory.tools[]',
+      testBed.registerScope(
+        'actor.core:inventory.tools[]',
         'actor.core:inventory.items[][{"==": [{"var": "entity.components.core:item.type"}, "tool"]}]'
       );
 
-      testBed.registerScope('actor.core:inventory.materials[]',
+      testBed.registerScope(
+        'actor.core:inventory.materials[]',
         'actor.core:inventory.items[][{"==": [{"var": "entity.components.core:item.type"}, "material"]}]'
       );
 
-      const result = await actionProcessor.process(
-        multiTargetAction,
-        player,
-        { location: null }
-      );
+      const result = await actionProcessor.process(multiTargetAction, player, {
+        location: null,
+      });
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(4); // 2 tools × 2 materials
 
-      const commands = result.value.actions.map(a => a.command);
+      const commands = result.value.actions.map((a) => a.command);
       expect(commands).toContain('craft using Hammer and Wood Plank');
       expect(commands).toContain('craft using Hammer and Iron Bar');
       expect(commands).toContain('craft using Saw and Wood Plank');
@@ -1164,15 +1185,15 @@ describe('Full Pipeline Integration', () => {
         id: 'test:simple',
         name: 'Simple',
         scope: 'actor.core:inventory.items[]',
-        template: 'use {target}'
+        template: 'use {target}',
       };
 
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: ['item_001'] }
+        'core:inventory': { items: ['item_001'] },
       });
 
       testBed.createEntity('item_001', {
-        'core:item': { name: 'Test Item' }
+        'core:item': { name: 'Test Item' },
       });
 
       const iterations = 100;
@@ -1193,28 +1214,26 @@ describe('Full Pipeline Integration', () => {
         id: 'test:large',
         name: 'Large Set',
         scope: 'actor.core:inventory.items[]',
-        template: 'process {target}'
+        template: 'process {target}',
       };
 
       // Create player with many items
       const itemIds = Array.from({ length: 100 }, (_, i) => `item_${i}`);
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: itemIds }
+        'core:inventory': { items: itemIds },
       });
 
       // Create all items
-      itemIds.forEach(id => {
+      itemIds.forEach((id) => {
         testBed.createEntity(id, {
-          'core:item': { name: `Item ${id}` }
+          'core:item': { name: `Item ${id}` },
         });
       });
 
       const start = performance.now();
-      const result = await actionProcessor.process(
-        largeSetAction,
-        player,
-        { location: null }
-      );
+      const result = await actionProcessor.process(largeSetAction, player, {
+        location: null,
+      });
       const end = performance.now();
 
       expect(result.success).toBe(true);
@@ -1228,6 +1247,7 @@ describe('Full Pipeline Integration', () => {
 ## Testing Strategy
 
 ### Unit Tests Coverage
+
 1. **Stage Isolation**: Each stage tested independently
 2. **Error Paths**: All error scenarios covered
 3. **Edge Cases**: Empty targets, invalid data, missing dependencies
@@ -1235,12 +1255,14 @@ describe('Full Pipeline Integration', () => {
 5. **Legacy Compatibility**: Existing functionality preserved
 
 ### Integration Tests Coverage
+
 1. **Full Pipeline Flow**: End-to-end action processing
 2. **Real Data**: Using actual entities and scopes
 3. **Performance Validation**: Real-world timing benchmarks
 4. **Complex Scenarios**: Multi-target, context-dependent actions
 
 ### Performance Benchmarks
+
 - Simple action processing: < 10ms
 - Large target sets (100 items): < 100ms
 - Complex multi-target: < 50ms
@@ -1262,12 +1284,14 @@ describe('Full Pipeline Integration', () => {
 ## Documentation Requirements
 
 ### Test Documentation
+
 - Clear test descriptions explaining what each test validates
 - Performance benchmark explanations and targets
 - Error scenario documentation
 - Integration test usage examples
 
 ### Code Coverage Reports
+
 - Generate coverage reports for all pipeline components
 - Identify any uncovered code paths
 - Ensure critical paths have multiple test scenarios

@@ -44,7 +44,7 @@ export { ITestModule } from './interfaces/ITestModule.js';
 // Factory function for creating test modules with jest mocks
 /**
  * Creates test module builders with jest mock function support
- * 
+ *
  * @param {Function} mockFn - Mock function creator (typically jest.fn)
  * @returns {object} Object containing test module builder functions
  */

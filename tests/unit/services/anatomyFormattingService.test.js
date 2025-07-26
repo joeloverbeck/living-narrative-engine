@@ -351,15 +351,15 @@ describe('AnatomyFormattingService', () => {
       ]);
       logger = createMockLogger();
       safeEventDispatcher = createMockSafeEventDispatcher();
-      
+
       const service = new AnatomyFormattingService({
         dataRegistry: registry,
         logger,
         safeEventDispatcher,
       });
-      
+
       service.initialize();
-      
+
       const config = service.getEquipmentIntegrationConfig();
       expect(config).toEqual({
         enabled: false,
@@ -399,15 +399,15 @@ describe('AnatomyFormattingService', () => {
       );
       logger = createMockLogger();
       safeEventDispatcher = createMockSafeEventDispatcher();
-      
+
       const service = new AnatomyFormattingService({
         dataRegistry: registry,
         logger,
         safeEventDispatcher,
       });
-      
+
       service.initialize();
-      
+
       const config = service.getEquipmentIntegrationConfig();
       expect(config).toEqual({
         enabled: false,
@@ -425,15 +425,15 @@ describe('AnatomyFormattingService', () => {
       ]);
       logger = createMockLogger();
       safeEventDispatcher = createMockSafeEventDispatcher();
-      
+
       const service = new AnatomyFormattingService({
         dataRegistry: registry,
         logger,
         safeEventDispatcher,
       });
-      
+
       service.initialize();
-      
+
       const config = service.getEquipmentIntegrationConfig();
       expect(config).toEqual({
         enabled: false,
@@ -458,21 +458,21 @@ describe('AnatomyFormattingService', () => {
       ]);
       logger = createMockLogger();
       safeEventDispatcher = createMockSafeEventDispatcher();
-      
+
       const service = new AnatomyFormattingService({
         dataRegistry: registry,
         logger,
         safeEventDispatcher,
       });
-      
+
       service.initialize();
-      
+
       const pairedParts1 = service.getPairedParts();
       const pairedParts2 = service.getPairedParts();
-      
+
       // Should return new instances
       expect(pairedParts1).not.toBe(pairedParts2);
-      
+
       // But with same content
       expect(Array.from(pairedParts1)).toEqual(Array.from(pairedParts2));
       expect(Array.from(pairedParts1)).toEqual(['arm', 'leg']);
@@ -493,21 +493,23 @@ describe('AnatomyFormattingService', () => {
           descriptorOrder: ['size'],
         },
       ]);
-      
+
       const service = new AnatomyFormattingService({
         dataRegistry: registry,
         logger,
         safeEventDispatcher,
       });
-      
+
       service.initialize();
-      
+
       // Create a custom method to test Set validation
       const testSet = new Set();
-      
+
       expect(() => {
         service._validateConfiguration('testSet', testSet, 'testMethod');
-      }).toThrow('AnatomyFormattingService.testMethod: testSet configuration is empty');
+      }).toThrow(
+        'AnatomyFormattingService.testMethod: testSet configuration is empty'
+      );
     });
 
     it('validates non-object, non-array, non-set values correctly', () => {
@@ -518,34 +520,42 @@ describe('AnatomyFormattingService', () => {
           descriptorOrder: ['size'],
         },
       ]);
-      
+
       const service = new AnatomyFormattingService({
         dataRegistry: registry,
         logger,
         safeEventDispatcher,
       });
-      
+
       service.initialize();
-      
+
       // Test with null value
       expect(() => {
         service._validateConfiguration('testValue', null, 'testMethod');
-      }).toThrow('AnatomyFormattingService.testMethod: testValue configuration is empty');
-      
+      }).toThrow(
+        'AnatomyFormattingService.testMethod: testValue configuration is empty'
+      );
+
       // Test with undefined value
       expect(() => {
         service._validateConfiguration('testValue', undefined, 'testMethod');
-      }).toThrow('AnatomyFormattingService.testMethod: testValue configuration is empty');
-      
+      }).toThrow(
+        'AnatomyFormattingService.testMethod: testValue configuration is empty'
+      );
+
       // Test with empty string
       expect(() => {
         service._validateConfiguration('testValue', '', 'testMethod');
-      }).toThrow('AnatomyFormattingService.testMethod: testValue configuration is empty');
-      
+      }).toThrow(
+        'AnatomyFormattingService.testMethod: testValue configuration is empty'
+      );
+
       // Test with false boolean
       expect(() => {
         service._validateConfiguration('testValue', false, 'testMethod');
-      }).toThrow('AnatomyFormattingService.testMethod: testValue configuration is empty');
+      }).toThrow(
+        'AnatomyFormattingService.testMethod: testValue configuration is empty'
+      );
     });
   });
 });

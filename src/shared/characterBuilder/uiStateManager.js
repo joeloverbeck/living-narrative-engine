@@ -38,7 +38,12 @@ export class UIStateManager {
    * @private
    */
   #validateElements() {
-    const required = ['emptyState', 'loadingState', 'errorState', 'resultsState'];
+    const required = [
+      'emptyState',
+      'loadingState',
+      'errorState',
+      'resultsState',
+    ];
     for (const key of required) {
       if (!this.#elements[key]) {
         throw new Error(`UIStateManager: Missing required element: ${key}`);
@@ -64,9 +69,12 @@ export class UIStateManager {
     const element = this.#getStateElement(state);
     if (element) {
       element.style.display = 'flex';
-      
+
       // Update message if provided (including empty string)
-      if (message !== null && (state === UI_STATES.LOADING || state === UI_STATES.ERROR)) {
+      if (
+        message !== null &&
+        (state === UI_STATES.LOADING || state === UI_STATES.ERROR)
+      ) {
         this.#updateStateMessage(state, message);
       }
     }
@@ -107,7 +115,7 @@ export class UIStateManager {
    * @private
    */
   #hideAllStates() {
-    Object.values(this.#elements).forEach(element => {
+    Object.values(this.#elements).forEach((element) => {
       if (element) {
         element.style.display = 'none';
       }

@@ -19,7 +19,7 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
 
   beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
-    
+
     // Load comprehensive test data like in anatomyDescriptionGenerationPipeline test
     testBed.loadEntityDefinitions({
       'core:actor': {
@@ -90,7 +90,7 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
         },
       },
     });
-    
+
     anatomyDescriptionService = testBed.anatomyDescriptionService;
   });
 
@@ -133,7 +133,9 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
       });
 
       const entity = testBed.createMockEntity();
-      entity.hasComponent = jest.fn((componentId) => componentId === ANATOMY_BODY_COMPONENT_ID);
+      entity.hasComponent = jest.fn(
+        (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID
+      );
       entity.getComponentData = jest.fn(() => ({ body: null })); // No root property
 
       // Act & Assert - Should hit line 72-73
@@ -146,9 +148,12 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
   describe('Coverage for Lines 95-102 (Part Description Delegation)', () => {
     it('should delegate part description generation and update with persistence service', async () => {
       // Arrange - Test lines 95-102
-      const partEntity = await testBed.entityManager.createEntityInstance('anatomy:body_part');
-      testBed.entityManager.addComponent(partEntity.id, 'anatomy:part', { partType: 'test' });
-      
+      const partEntity =
+        await testBed.entityManager.createEntityInstance('anatomy:body_part');
+      testBed.entityManager.addComponent(partEntity.id, 'anatomy:part', {
+        partType: 'test',
+      });
+
       const generatorSpy = jest.spyOn(
         testBed.mockPartDescriptionGenerator,
         'generatePartDescription'
@@ -165,7 +170,10 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
 
       // Assert
       expect(generatorSpy).toHaveBeenCalledWith(partEntity.id);
-      expect(persistenceSpy).toHaveBeenCalledWith(partEntity.id, 'Generated part description');
+      expect(persistenceSpy).toHaveBeenCalledWith(
+        partEntity.id,
+        'Generated part description'
+      );
 
       generatorSpy.mockRestore();
       persistenceSpy.mockRestore();
@@ -189,7 +197,9 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
       // Arrange - Test lines 131-140
       const entity = testBed.createMockEntity();
       entity.hasComponent = jest.fn(() => true);
-      entity.getComponentData = jest.fn(() => ({ body: { root: 'test-root' } }));
+      entity.getComponentData = jest.fn(() => ({
+        body: { root: 'test-root' },
+      }));
       entity.id = 'test-entity-id';
 
       const orchestratorSpy = jest.spyOn(
@@ -208,7 +218,10 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
 
       // Assert
       expect(orchestratorSpy).toHaveBeenCalledWith(entity);
-      expect(persistenceSpy).toHaveBeenCalledWith(entity.id, 'Orchestrator body description');
+      expect(persistenceSpy).toHaveBeenCalledWith(
+        entity.id,
+        'Orchestrator body description'
+      );
 
       orchestratorSpy.mockRestore();
       persistenceSpy.mockRestore();
@@ -242,7 +255,10 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
       });
 
       // Mock composer to return empty description
-      const composerSpy = jest.spyOn(testBed.bodyDescriptionComposer, 'composeDescription');
+      const composerSpy = jest.spyOn(
+        testBed.bodyDescriptionComposer,
+        'composeDescription'
+      );
       composerSpy.mockResolvedValue(''); // Empty description triggers error event
 
       // Clear previous event calls
@@ -252,10 +268,14 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
       await serviceWithoutOrchestrator.generateBodyDescription(entity);
 
       // Assert - Error event should be dispatched
-      expect(testBed.mocks.eventDispatchService.safeDispatchEvent).toHaveBeenCalledWith(
+      expect(
+        testBed.mocks.eventDispatchService.safeDispatchEvent
+      ).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining('Failed to generate body description'),
+          message: expect.stringContaining(
+            'Failed to generate body description'
+          ),
           details: expect.objectContaining({
             raw: expect.stringContaining(entity.id),
             timestamp: expect.any(String),
@@ -273,7 +293,9 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
       const entity = testBed.createMockEntity();
       entity.id = 'test-entity-id';
       entity.hasComponent = jest.fn(() => true);
-      entity.getComponentData = jest.fn(() => ({ body: { root: 'test-root' } }));
+      entity.getComponentData = jest.fn(() => ({
+        body: { root: 'test-root' },
+      }));
 
       const orchestratorSpy = jest.spyOn(
         testBed.bodyDescriptionOrchestrator,
@@ -287,11 +309,15 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
       orchestratorSpy.mockResolvedValue('Orchestrator description');
 
       // Act - Should hit lines 175-190
-      const result = await anatomyDescriptionService.getOrGenerateBodyDescription(entity);
+      const result =
+        await anatomyDescriptionService.getOrGenerateBodyDescription(entity);
 
       // Assert
       expect(orchestratorSpy).toHaveBeenCalledWith(entity);
-      expect(persistenceSpy).toHaveBeenCalledWith(entity.id, 'Orchestrator description');
+      expect(persistenceSpy).toHaveBeenCalledWith(
+        entity.id,
+        'Orchestrator description'
+      );
       expect(result).toBe('Orchestrator description');
 
       orchestratorSpy.mockRestore();
@@ -300,7 +326,8 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
 
     it('should return null for null entity', async () => {
       // Act - Should hit lines 194-196
-      const result = await anatomyDescriptionService.getOrGenerateBodyDescription(null);
+      const result =
+        await anatomyDescriptionService.getOrGenerateBodyDescription(null);
 
       // Assert
       expect(result).toBeNull();
@@ -309,11 +336,16 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
     it('should return existing description for non-anatomy entity', async () => {
       // Arrange - Test lines 199-202
       const entity = testBed.createMockEntity();
-      entity.hasComponent = jest.fn((componentId) => componentId === DESCRIPTION_COMPONENT_ID);
-      entity.getComponentData = jest.fn(() => ({ text: 'Existing description' }));
+      entity.hasComponent = jest.fn(
+        (componentId) => componentId === DESCRIPTION_COMPONENT_ID
+      );
+      entity.getComponentData = jest.fn(() => ({
+        text: 'Existing description',
+      }));
 
       // Act - Should hit lines 199-202
-      const result = await anatomyDescriptionService.getOrGenerateBodyDescription(entity);
+      const result =
+        await anatomyDescriptionService.getOrGenerateBodyDescription(entity);
 
       // Assert
       expect(result).toBe('Existing description');
@@ -358,7 +390,10 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
 
       // Act - Should hit line 245 (early return)
       expect(() => {
-        serviceWithoutPersistence.updateDescription(nonExistentId, 'description');
+        serviceWithoutPersistence.updateDescription(
+          nonExistentId,
+          'description'
+        );
       }).not.toThrow();
     });
   });
@@ -369,20 +404,27 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
       const entity = testBed.createMockEntity();
       entity.id = 'test-entity-id';
       entity.hasComponent = jest.fn(() => true);
-      entity.getComponentData = jest.fn(() => ({ body: { root: 'test-root' } }));
+      entity.getComponentData = jest.fn(() => ({
+        body: { root: 'test-root' },
+      }));
 
       // Mock the entity finder to return our mock entity
       const originalGetEntity = testBed.entityManager.getEntityInstance;
       testBed.entityManager.getEntityInstance = jest.fn(() => entity);
 
-      const generateAllSpy = jest.spyOn(anatomyDescriptionService, 'generateAllDescriptions');
+      const generateAllSpy = jest.spyOn(
+        anatomyDescriptionService,
+        'generateAllDescriptions'
+      );
       generateAllSpy.mockImplementation(() => Promise.resolve());
 
       // Act - Should hit lines 263-277
       anatomyDescriptionService.regenerateDescriptions(entity.id);
 
       // Assert
-      expect(entity.hasComponent).toHaveBeenCalledWith(ANATOMY_BODY_COMPONENT_ID);
+      expect(entity.hasComponent).toHaveBeenCalledWith(
+        ANATOMY_BODY_COMPONENT_ID
+      );
       expect(generateAllSpy).toHaveBeenCalledWith(entity);
 
       // Restore
@@ -416,7 +458,9 @@ describe('AnatomyDescriptionService - Coverage Integration', () => {
       }).not.toThrow();
 
       // Assert
-      expect(entity.hasComponent).toHaveBeenCalledWith(ANATOMY_BODY_COMPONENT_ID);
+      expect(entity.hasComponent).toHaveBeenCalledWith(
+        ANATOMY_BODY_COMPONENT_ID
+      );
 
       // Restore
       testBed.entityManager.getEntityInstance = originalGetEntity;

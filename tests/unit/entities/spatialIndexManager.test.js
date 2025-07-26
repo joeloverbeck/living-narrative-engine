@@ -910,7 +910,9 @@ describe('SpatialIndexManager', () => {
             { entityId: 'entity3', locationId: 'locationC' },
           ];
 
-          const result = await spatialIndexManager.batchAdd(additions, { stopOnError: true });
+          const result = await spatialIndexManager.batchAdd(additions, {
+            stopOnError: true,
+          });
 
           expect(addEntitySpy).toHaveBeenCalledTimes(1);
           expect(result.successful).toHaveLength(0);
@@ -937,7 +939,9 @@ describe('SpatialIndexManager', () => {
             { entityId: 'entity3', locationId: 'locationC' },
           ];
 
-          const result = await spatialIndexManager.batchAdd(additions, { stopOnError: false });
+          const result = await spatialIndexManager.batchAdd(additions, {
+            stopOnError: false,
+          });
 
           expect(addEntitySpy).toHaveBeenCalledTimes(3);
           expect(result.successful).toHaveLength(1);
@@ -962,7 +966,9 @@ describe('SpatialIndexManager', () => {
             { entityId: 'entity3', locationId: 'locationC' },
           ];
 
-          const result = await spatialIndexManager.batchAdd(additions, { stopOnError: true });
+          const result = await spatialIndexManager.batchAdd(additions, {
+            stopOnError: true,
+          });
 
           expect(addEntitySpy).toHaveBeenCalledTimes(2);
           expect(result.successful).toHaveLength(1);
@@ -994,7 +1000,9 @@ describe('SpatialIndexManager', () => {
 
           const entityIds = ['entity1', 'entity2', 'entity3'];
 
-          const result = await spatialIndexManager.batchRemove(entityIds, { stopOnError: true });
+          const result = await spatialIndexManager.batchRemove(entityIds, {
+            stopOnError: true,
+          });
 
           expect(removeSpy).toHaveBeenCalledTimes(1);
           expect(result.successful).toHaveLength(0);
@@ -1022,7 +1030,9 @@ describe('SpatialIndexManager', () => {
 
           const entityIds = ['entity1', 'entity2', 'entity3'];
 
-          const result = await spatialIndexManager.batchRemove(entityIds, { stopOnError: false });
+          const result = await spatialIndexManager.batchRemove(entityIds, {
+            stopOnError: false,
+          });
 
           expect(removeSpy).toHaveBeenCalledTimes(3);
           expect(result.successful).toHaveLength(1);
@@ -1045,7 +1055,9 @@ describe('SpatialIndexManager', () => {
 
           const entityIds = ['entity1', 'entity2', 'entity3'];
 
-          const result = await spatialIndexManager.batchRemove(entityIds, { stopOnError: true });
+          const result = await spatialIndexManager.batchRemove(entityIds, {
+            stopOnError: true,
+          });
 
           expect(removeSpy).toHaveBeenCalledTimes(2);
           expect(result.successful).toHaveLength(1);
@@ -1093,7 +1105,9 @@ describe('SpatialIndexManager', () => {
             },
           ];
 
-          const result = await spatialIndexManager.batchMove(updates, { stopOnError: true });
+          const result = await spatialIndexManager.batchMove(updates, {
+            stopOnError: true,
+          });
 
           expect(moveSpy).toHaveBeenCalledTimes(1);
           expect(result.successful).toHaveLength(0);
@@ -1133,7 +1147,9 @@ describe('SpatialIndexManager', () => {
             },
           ];
 
-          const result = await spatialIndexManager.batchMove(updates, { stopOnError: false });
+          const result = await spatialIndexManager.batchMove(updates, {
+            stopOnError: false,
+          });
 
           expect(moveSpy).toHaveBeenCalledTimes(3);
           expect(result.successful).toHaveLength(1);
@@ -1169,7 +1185,9 @@ describe('SpatialIndexManager', () => {
             },
           ];
 
-          const result = await spatialIndexManager.batchMove(updates, { stopOnError: true });
+          const result = await spatialIndexManager.batchMove(updates, {
+            stopOnError: true,
+          });
 
           expect(moveSpy).toHaveBeenCalledTimes(2);
           expect(result.successful).toHaveLength(1);
@@ -1209,14 +1227,18 @@ describe('SpatialIndexManager', () => {
             { entityId: 'entity3', locationId: 'locationC' },
           ];
 
-          const result = await spatialIndexManager.rebuild(entityLocations, { stopOnError: true });
+          const result = await spatialIndexManager.rebuild(entityLocations, {
+            stopOnError: true,
+          });
 
           expect(clearIndexSpy).toHaveBeenCalledTimes(1);
           expect(addEntitySpy).toHaveBeenCalledTimes(1);
           expect(result.successful).toHaveLength(0);
           expect(result.failed).toHaveLength(1);
           expect(result.totalProcessed).toBe(1);
-          expect(result.failed[0].error.message).toBe('Add failed during rebuild');
+          expect(result.failed[0].error.message).toBe(
+            'Add failed during rebuild'
+          );
         });
 
         it('should continue processing after error when stopOnError is false', async () => {
@@ -1239,7 +1261,9 @@ describe('SpatialIndexManager', () => {
             { entityId: 'entity3', locationId: 'locationC' },
           ];
 
-          const result = await spatialIndexManager.rebuild(entityLocations, { stopOnError: false });
+          const result = await spatialIndexManager.rebuild(entityLocations, {
+            stopOnError: false,
+          });
 
           expect(clearIndexSpy).toHaveBeenCalledTimes(1);
           expect(addEntitySpy).toHaveBeenCalledTimes(3);
@@ -1265,7 +1289,9 @@ describe('SpatialIndexManager', () => {
             { entityId: 'entity3', locationId: 'locationC' },
           ];
 
-          const result = await spatialIndexManager.rebuild(entityLocations, { stopOnError: true });
+          const result = await spatialIndexManager.rebuild(entityLocations, {
+            stopOnError: true,
+          });
 
           expect(clearIndexSpy).toHaveBeenCalledTimes(1);
           expect(addEntitySpy).toHaveBeenCalledTimes(2);
@@ -1296,9 +1322,9 @@ describe('SpatialIndexManager', () => {
     it('should log a warning with the correct format when called', () => {
       const invalidId = 123; // Invalid non-string ID
       const operation = 'testOperation';
-      
+
       spatialIndexManager.onInvalidId(invalidId, operation);
-      
+
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `SpatialIndexManager.${operation}: Invalid id (${invalidId}). Skipping.`
       );

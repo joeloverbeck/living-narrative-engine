@@ -1,9 +1,13 @@
 # Ticket: Create Modder Documentation
 
 ## Ticket ID: PHASE5-TICKET15
+
 ## Priority: Low
+
 ## Estimated Time: 8-10 hours
+
 ## Dependencies: PHASE4-TICKET14
+
 ## Blocks: PHASE5-TICKET16, PHASE5-TICKET17
 
 ## Overview
@@ -32,7 +36,7 @@ Create comprehensive documentation for modders who want to create and use multi-
 
 Create file: `docs/modding/multi-target-actions/getting-started.md`
 
-```markdown
+````markdown
 # Getting Started with Multi-Target Actions
 
 Multi-target actions allow a single action to work with multiple entities simultaneously, enabling complex interactions that would be difficult to achieve with single-target actions.
@@ -40,6 +44,7 @@ Multi-target actions allow a single action to work with multiple entities simult
 ## What Are Multi-Target Actions?
 
 Traditional actions work with a single target:
+
 ```json
 {
   "id": "core:talk_to",
@@ -52,8 +57,10 @@ Traditional actions work with a single target:
   }
 }
 ```
+````
 
 Multi-target actions can work with multiple targets:
+
 ```json
 {
   "id": "examples:give_item_to_person",
@@ -221,15 +228,15 @@ Create test entities and verify the action works:
 ```javascript
 // In your test file
 const player = testBed.createEntity('player', {
-  'core:inventory': { items: ['rock'] }
+  'core:inventory': { items: ['rock'] },
 });
 
 const rock = testBed.createEntity('rock', {
-  'core:item': { name: 'Rock', throwable: true }
+  'core:item': { name: 'Rock', throwable: true },
 });
 
 const target = testBed.createEntity('dummy', {
-  'core:object': { name: 'Training Dummy' }
+  'core:object': { name: 'Training Dummy' },
 });
 
 const result = await actionProcessor.process(
@@ -285,7 +292,7 @@ Multiple targets of the same type:
 {
   "targetDefinitions": {
     "primary_target": { "scope": "location.core:actors[]" },
-    "secondary_target": { 
+    "secondary_target": {
       "scope": "location.core:actors[]",
       "validation": {
         "not_same_as_primary": true
@@ -328,7 +335,8 @@ Multiple targets of the same type:
 - `location.core:actors[]` - People in location
 - `location.core:objects[]` - Objects in location
 - `target.core:inventory.items[]` - Target's items (context-dependent)
-```
+
+````
 
 ### Step 2: Reference Manual
 
@@ -356,7 +364,7 @@ Complete API documentation for multi-target actions in the Living Narrative Engi
   "result": "string",          // Result text template
   "maxCombinations": "number"  // Limit target combinations (default: 100)
 }
-```
+````
 
 ### Target Definitions
 
@@ -366,12 +374,12 @@ The `targetDefinitions` object contains target specifications:
 {
   "targetDefinitions": {
     "target_name": {
-      "name": "string",           // Display name
-      "description": "string",    // Purpose description
-      "scope": "string",          // Scope DSL expression
-      "required": "boolean",      // Is target required (default: true)
-      "contextFrom": "string",    // Target to use for context
-      "validation": {},           // JSON Schema validation
+      "name": "string", // Display name
+      "description": "string", // Purpose description
+      "scope": "string", // Scope DSL expression
+      "required": "boolean", // Is target required (default: true)
+      "contextFrom": "string", // Target to use for context
+      "validation": {}, // JSON Schema validation
       "maxCombinations": "number" // Per-target combination limit
     }
   }
@@ -381,6 +389,7 @@ The `targetDefinitions` object contains target specifications:
 ### Target Definition Properties
 
 #### `name` (required)
+
 Human-readable name for the target used in UI and error messages.
 
 ```json
@@ -390,6 +399,7 @@ Human-readable name for the target used in UI and error messages.
 ```
 
 #### `description` (required)
+
 Explanation of what this target represents and how it's used.
 
 ```json
@@ -399,6 +409,7 @@ Explanation of what this target represents and how it's used.
 ```
 
 #### `scope` (required)
+
 Scope DSL expression that defines where to find potential targets.
 
 ```json
@@ -408,6 +419,7 @@ Scope DSL expression that defines where to find potential targets.
 ```
 
 Common scope patterns:
+
 - `actor.core:inventory.items[]` - Actor's items
 - `location.core:actors[]` - People in location
 - `location.core:objects[]` - Objects in location
@@ -415,6 +427,7 @@ Common scope patterns:
 - `game.entities[]` - All game entities
 
 #### `required` (optional, default: true)
+
 Whether this target must be resolved for the action to be available.
 
 ```json
@@ -424,22 +437,25 @@ Whether this target must be resolved for the action to be available.
 ```
 
 #### `contextFrom` (optional)
+
 Specifies which previously resolved target to use as context for scope resolution.
 
 ```json
 {
-  "contextFrom": "container"  // Use "container" target as context
+  "contextFrom": "container" // Use "container" target as context
 }
 ```
 
 When specified, the scope can reference the context target:
+
 ```json
 {
-  "scope": "target.core:inventory.items[]"  // "target" refers to contextFrom target
+  "scope": "target.core:inventory.items[]" // "target" refers to contextFrom target
 }
 ```
 
 #### `validation` (optional)
+
 JSON Schema that potential targets must satisfy.
 
 ```json
@@ -464,11 +480,12 @@ JSON Schema that potential targets must satisfy.
 ```
 
 #### `maxCombinations` (optional)
+
 Limits the number of combinations generated for this specific target.
 
 ```json
 {
-  "maxCombinations": 10  // Only generate up to 10 combinations for this target
+  "maxCombinations": 10 // Only generate up to 10 combinations for this target
 }
 ```
 
@@ -477,6 +494,7 @@ Limits the number of combinations generated for this specific target.
 When using `contextFrom`, these variables are available in scopes:
 
 ### `target`
+
 The entity specified by `contextFrom`.
 
 ```dsl
@@ -486,6 +504,7 @@ target.id
 ```
 
 ### `targets`
+
 Object containing all resolved targets keyed by definition name.
 
 ```dsl
@@ -496,6 +515,7 @@ targets.secondary[0].components.core:actor.name
 ### Standard Variables
 
 Always available:
+
 - `actor` - Entity performing the action
 - `location` - Current location entity
 - `game` - Global game state
@@ -579,7 +599,7 @@ targets.container[0].core:contents.items[{
     "properties": {
       "id": {
         "type": "string",
-        "not": { "const": "actor.id" }  // Not the actor themselves
+        "not": { "const": "actor.id" } // Not the actor themselves
       }
     }
   }
@@ -602,7 +622,9 @@ targets.container[0].core:contents.items[{
               "types": {
                 "type": "array",
                 "contains": {
-                  "const": { "var": "target.components.core:container.lock_type" }
+                  "const": {
+                    "var": "target.components.core:container.lock_type"
+                  }
                 }
               }
             }
@@ -622,10 +644,10 @@ Control the number of target combinations generated:
 
 ```json
 {
-  "maxCombinations": 50,  // Global limit for the action
+  "maxCombinations": 50, // Global limit for the action
   "targetDefinitions": {
     "item": {
-      "maxCombinations": 10,  // Per-target limit
+      "maxCombinations": 10, // Per-target limit
       "scope": "actor.core:inventory.items[]"
     }
   }
@@ -797,26 +819,31 @@ Multi-target actions are fully backward compatible. Existing single-target actio
 ## Best Practices
 
 ### Target Naming
+
 - Use descriptive names: `weapon`, `target`, `container`
 - Avoid generic names: `thing`, `object`, `entity`
 - Be consistent across related actions
 
 ### Scope Design
+
 - Use the most specific scope possible
 - Filter at the scope level when possible
 - Cache expensive operations
 
 ### Validation Strategy
+
 - Validate the most likely failure cases first
 - Use meaningful error messages
 - Handle edge cases gracefully
 
 ### Performance Optimization
+
 - Set appropriate combination limits
 - Use early filtering in scopes
 - Avoid deep nesting in validation
 
 ### Documentation
+
 - Include clear descriptions for all targets
 - Document any special requirements
 - Provide usage examples
@@ -824,6 +851,7 @@ Multi-target actions are fully backward compatible. Existing single-target actio
 ## Common Patterns Reference
 
 ### Trading Actions
+
 ```json
 {
   "targetDefinitions": {
@@ -840,6 +868,7 @@ Multi-target actions are fully backward compatible. Existing single-target actio
 ```
 
 ### Crafting Actions
+
 ```json
 {
   "targetDefinitions": {
@@ -857,6 +886,7 @@ Multi-target actions are fully backward compatible. Existing single-target actio
 ```
 
 ### Combat Actions
+
 ```json
 {
   "targetDefinitions": {
@@ -871,7 +901,8 @@ Multi-target actions are fully backward compatible. Existing single-target actio
   }
 }
 ```
-```
+
+````
 
 ### Step 3: Tutorial Series Index
 
@@ -970,13 +1001,13 @@ All tutorial code is available in the `data/mods/examples/` directory. Each tuto
 3. Practice with the provided examples
 4. Experiment with your own action ideas
 5. Share your creations with the community
-```
+````
 
 ### Step 4: Best Practices Guide
 
 Create file: `docs/modding/multi-target-actions/best-practices.md`
 
-```markdown
+````markdown
 # Multi-Target Actions Best Practices
 
 Guidelines for creating efficient, maintainable, and user-friendly multi-target actions.
@@ -986,6 +1017,7 @@ Guidelines for creating efficient, maintainable, and user-friendly multi-target 
 ### 1. User Experience First
 
 **Clear Action Names**
+
 ```json
 // Good
 {
@@ -999,19 +1031,26 @@ Guidelines for creating efficient, maintainable, and user-friendly multi-target 
   "name": "interact with {object}"
 }
 ```
+````
 
 **Intuitive Target Order**
 Present targets in logical order:
+
 ```json
 {
   "targetDefinitions": {
-    "item": { /* what you're giving */ },
-    "recipient": { /* who receives it */ }
+    "item": {
+      /* what you're giving */
+    },
+    "recipient": {
+      /* who receives it */
+    }
   }
 }
 ```
 
 **Meaningful Descriptions**
+
 ```json
 {
   "item": {
@@ -1024,12 +1063,13 @@ Present targets in logical order:
 ### 2. Performance Optimization
 
 **Set Appropriate Limits**
+
 ```json
 {
-  "maxCombinations": 50,  // Global limit
+  "maxCombinations": 50, // Global limit
   "targetDefinitions": {
     "item": {
-      "maxCombinations": 10,  // Per-target limit
+      "maxCombinations": 10, // Per-target limit
       "scope": "actor.core:inventory.items[]"
     }
   }
@@ -1037,6 +1077,7 @@ Present targets in logical order:
 ```
 
 **Efficient Scope Design**
+
 ```json
 // Efficient - filter at scope level
 {
@@ -1051,6 +1092,7 @@ Present targets in logical order:
 ```
 
 **Early Filtering**
+
 ```json
 {
   "scope": "location.core:actors[{\"and\": [{\"conscious\": true}, {\"!=\": [\"faction\", \"hostile\"]}]}]"
@@ -1060,6 +1102,7 @@ Present targets in logical order:
 ### 3. Maintainable Code
 
 **Consistent Naming**
+
 ```json
 // Good - consistent across actions
 {
@@ -1075,6 +1118,7 @@ Present targets in logical order:
 ```
 
 **Modular Validation**
+
 ```json
 {
   "validation": {
@@ -1178,7 +1222,9 @@ For targets that use data from other targets:
                   "types": {
                     "type": "array",
                     "contains": {
-                      "const": { "var": "target.components.core:container.lock_type" }
+                      "const": {
+                        "var": "target.components.core:container.lock_type"
+                      }
                     }
                   }
                 }
@@ -1197,6 +1243,7 @@ For targets that use data from other targets:
 ### Efficient Context Usage
 
 **Cache Expensive Lookups**
+
 ```dsl
 # Good - cache target data
 target_inventory := target.core:inventory.items[]
@@ -1217,6 +1264,7 @@ target.core:inventory.items[][{
 ```
 
 **Safe Context Access**
+
 ```dsl
 # Always check existence
 target_items := target.core:inventory ? target.core:inventory.items[] : []
@@ -1226,6 +1274,7 @@ target_name := target.core:actor.name || target.core:item.name || target.id
 ```
 
 **Optimize Filtering**
+
 ```dsl
 # Good - use built-in filtering
 weapons := actor.core:inventory.weapons[]
@@ -1248,8 +1297,9 @@ weapons := actor.core:inventory.items[][{
 {
   "targetDefinitions": {
     "tradeable_item": {
-      "scope": "actor.core:inventory.items[{\"tradeable\": true}]",  // Filter 1
-      "validation": {  // Filter 2
+      "scope": "actor.core:inventory.items[{\"tradeable\": true}]", // Filter 1
+      "validation": {
+        // Filter 2
         "type": "object",
         "properties": {
           "components": {
@@ -1267,7 +1317,8 @@ weapons := actor.core:inventory.items[][{
       }
     }
   },
-  "conditions": [  // Filter 3
+  "conditions": [
+    // Filter 3
     {
       "description": "Actor can afford to lose this item",
       "condition": {
@@ -1310,7 +1361,9 @@ weapons := actor.core:inventory.items[][{
                 "types": {
                   "type": "array",
                   "contains": {
-                    "const": { "var": "target.components.core:container.lock_type" }
+                    "const": {
+                      "var": "target.components.core:container.lock_type"
+                    }
                   }
                 }
               }
@@ -1375,12 +1428,12 @@ describe('Multi-Target Action - Give Item', () => {
     it('should find tradeable items in inventory', () => {
       // Test item target resolution
     });
-    
+
     it('should reject non-tradeable items', () => {
       // Test validation
     });
   });
-  
+
   describe('Recipient Target', () => {
     it('should find conscious actors', () => {
       // Test recipient target resolution
@@ -1398,7 +1451,7 @@ describe('Give Item Action Integration', () => {
   it('should complete full give item interaction', () => {
     // Test end-to-end action processing
   });
-  
+
   it('should handle edge cases gracefully', () => {
     // Test error conditions
   });
@@ -1431,10 +1484,7 @@ describe('Performance', () => {
   "category": "social",
   "documentation": {
     "usage": "Use this action to transfer items to other characters",
-    "examples": [
-      "give potion to wounded ally",
-      "give key to door guard"
-    ],
+    "examples": ["give potion to wounded ally", "give key to door guard"],
     "notes": [
       "Both characters must be conscious",
       "Item must be marked as tradeable",
@@ -1480,6 +1530,7 @@ describe('Performance', () => {
 ### Avoid These Mistakes
 
 **Over-broad Scopes**
+
 ```json
 // Avoid - too general
 {
@@ -1494,6 +1545,7 @@ describe('Performance', () => {
 ```
 
 **Circular Dependencies**
+
 ```json
 // Avoid - circular context
 {
@@ -1503,6 +1555,7 @@ describe('Performance', () => {
 ```
 
 **Unsafe Context Access**
+
 ```json
 // Avoid - no safety checks
 {
@@ -1516,6 +1569,7 @@ describe('Performance', () => {
 ```
 
 **Performance Killers**
+
 ```json
 // Avoid - no limits
 {
@@ -1529,11 +1583,11 @@ describe('Performance', () => {
 {
   "maxCombinations": 25,
   "targetDefinitions": {
-    "item": { 
+    "item": {
       "scope": "actor.core:inventory.items[]",
       "maxCombinations": 5
     },
-    "target": { 
+    "target": {
       "scope": "location.core:actors[]",
       "maxCombinations": 5
     }
@@ -1544,6 +1598,7 @@ describe('Performance', () => {
 ## Checklist for Quality Actions
 
 ### Before Implementation
+
 - [ ] Clear, intuitive action name
 - [ ] Logical target order
 - [ ] Appropriate performance limits
@@ -1551,6 +1606,7 @@ describe('Performance', () => {
 - [ ] Comprehensive validation rules
 
 ### During Development
+
 - [ ] Test with various entity configurations
 - [ ] Verify context dependencies work correctly
 - [ ] Check performance with large datasets
@@ -1558,6 +1614,7 @@ describe('Performance', () => {
 - [ ] Ensure backward compatibility
 
 ### Before Release
+
 - [ ] Complete documentation
 - [ ] Example usage scenarios
 - [ ] Performance benchmarks
@@ -1565,6 +1622,7 @@ describe('Performance', () => {
 - [ ] Code review completed
 
 ### Post-Release
+
 - [ ] Monitor performance metrics
 - [ ] Collect user feedback
 - [ ] Update documentation as needed
@@ -1572,7 +1630,8 @@ describe('Performance', () => {
 - [ ] Share lessons learned
 
 Follow these best practices to create multi-target actions that are efficient, maintainable, and provide excellent user experiences.
-```
+
+````
 
 ### Step 5: Troubleshooting Guide
 
@@ -1605,18 +1664,19 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 {
   "scope": "location.core:actors[]"  // Instead of complex filtering
 }
-```
+````
 
 2. **Validate Schema Syntax**
+
 ```json
 // Ensure proper JSON Schema format
 {
   "validation": {
-    "type": "object",  // Always specify type
+    "type": "object", // Always specify type
     "properties": {
       "components": {
         "type": "object",
-        "required": ["core:actor"]  // Check required arrays
+        "required": ["core:actor"] // Check required arrays
       }
     }
   }
@@ -1624,25 +1684,29 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ```
 
 3. **Check Context Dependencies**
+
 ```json
 // Ensure contextFrom target exists and is resolved first
 {
   "targetDefinitions": {
-    "container": { /* resolved first */ },
-    "key": { 
-      "contextFrom": "container"  // Depends on container
+    "container": {
+      /* resolved first */
+    },
+    "key": {
+      "contextFrom": "container" // Depends on container
     }
   }
 }
 ```
 
 4. **Increase Limits**
+
 ```json
 {
-  "maxCombinations": 100,  // Increase if needed
+  "maxCombinations": 100, // Increase if needed
   "targetDefinitions": {
     "item": {
-      "maxCombinations": 20  // Per-target limit
+      "maxCombinations": 20 // Per-target limit
     }
   }
 }
@@ -1651,10 +1715,12 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ### 2. Context Variables Not Working
 
 **Symptoms:**
+
 - Scope expressions with context fail
 - Error: "Cannot resolve context variable"
 
 **Causes:**
+
 - Missing `contextFrom` property
 - Circular dependencies
 - Context target not resolved
@@ -1662,6 +1728,7 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 **Solutions:**
 
 1. **Verify Context Setup**
+
 ```json
 {
   "targetDefinitions": {
@@ -1669,7 +1736,7 @@ Common issues, solutions, and debugging techniques for multi-target actions.
       "scope": "location.core:objects[]"
     },
     "secondary": {
-      "contextFrom": "primary",  // Must specify this
+      "contextFrom": "primary", // Must specify this
       "scope": "target.core:inventory.items[]"
     }
   }
@@ -1677,11 +1744,14 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ```
 
 2. **Check Resolution Order**
+
 ```json
 // Targets resolve in definition order
 {
   "targetDefinitions": {
-    "first": { /* no context dependency */ },
+    "first": {
+      /* no context dependency */
+    },
     "second": { "contextFrom": "first" },
     "third": { "contextFrom": "second" }
   }
@@ -1689,6 +1759,7 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ```
 
 3. **Debug Context Access**
+
 ```json
 // Add safety checks
 {
@@ -1699,11 +1770,13 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ### 3. Performance Issues
 
 **Symptoms:**
+
 - Slow action processing
 - UI freezes during target resolution
 - Memory usage spikes
 
 **Causes:**
+
 - Too many target combinations
 - Expensive scope expressions
 - Deep context dependencies
@@ -1711,12 +1784,13 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 **Solutions:**
 
 1. **Set Appropriate Limits**
+
 ```json
 {
-  "maxCombinations": 50,  // Reasonable global limit
+  "maxCombinations": 50, // Reasonable global limit
   "targetDefinitions": {
     "items": {
-      "maxCombinations": 10,  // Limit per target
+      "maxCombinations": 10, // Limit per target
       "scope": "actor.core:inventory.items[]"
     }
   }
@@ -1724,6 +1798,7 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ```
 
 2. **Optimize Scope Expressions**
+
 ```json
 // Efficient - filter at source
 {
@@ -1738,6 +1813,7 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ```
 
 3. **Use Early Filtering**
+
 ```json
 {
   "scope": "location.core:actors[{\"and\": [{\"conscious\": true}, {\"faction\": \"friendly\"}]}]"
@@ -1747,10 +1823,12 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ### 4. Validation Failures
 
 **Symptoms:**
+
 - Targets found but validation fails
 - Unexpected validation errors
 
 **Causes:**
+
 - Incorrect JSON Schema syntax
 - Missing entity components
 - Type mismatches
@@ -1758,6 +1836,7 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 **Solutions:**
 
 1. **Simplify Validation**
+
 ```json
 // Start simple and add complexity
 {
@@ -1768,6 +1847,7 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ```
 
 2. **Check Component Structure**
+
 ```json
 {
   "validation": {
@@ -1776,7 +1856,8 @@ Common issues, solutions, and debugging techniques for multi-target actions.
       "components": {
         "type": "object",
         "properties": {
-          "core:item": {  // Verify component exists
+          "core:item": {
+            // Verify component exists
             "type": "object"
           }
         },
@@ -1788,6 +1869,7 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ```
 
 3. **Handle Missing Data**
+
 ```json
 {
   "validation": {
@@ -1818,10 +1900,12 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ### 5. Template Resolution Errors
 
 **Symptoms:**
+
 - Action text shows {undefined} or {null}
 - Missing or incorrect command text
 
 **Causes:**
+
 - Invalid template variable paths
 - Missing entity components
 - Incorrect property access
@@ -1829,6 +1913,7 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 **Solutions:**
 
 1. **Use Safe Property Access**
+
 ```json
 {
   "command": "give {item.components.core:item.name || 'item'} to {target.components.core:actor.name || 'target'}"
@@ -1836,6 +1921,7 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ```
 
 2. **Verify Property Paths**
+
 ```json
 // Correct component access
 {
@@ -1849,6 +1935,7 @@ Common issues, solutions, and debugging techniques for multi-target actions.
 ```
 
 3. **Add Fallbacks**
+
 ```json
 {
   "command": "{actor.components.core:actor.name} gives {item.components.core:item.name || item.id} to {recipient.components.core:actor.name || recipient.id}"
@@ -1866,14 +1953,15 @@ Add to your development configuration:
 const debugConfig = {
   logging: {
     level: 'debug',
-    categories: ['actions', 'scope', 'validation']
-  }
+    categories: ['actions', 'scope', 'validation'],
+  },
 };
 ```
 
 ### 2. Test Individual Components
 
 **Test Scope Resolution**
+
 ```javascript
 describe('Debug Scope Resolution', () => {
   it('should resolve basic scope', async () => {
@@ -1887,13 +1975,11 @@ describe('Debug Scope Resolution', () => {
 ```
 
 **Test Validation**
+
 ```javascript
 describe('Debug Validation', () => {
   it('should validate target structure', () => {
-    const isValid = ajvValidator.validate(
-      validationSchema,
-      testEntity
-    );
+    const isValid = ajvValidator.validate(validationSchema, testEntity);
     if (!isValid) {
       console.log('Validation errors:', ajvValidator.errors);
     }
@@ -1911,25 +1997,25 @@ describe('Debug Multi-Target Action', () => {
     // Create minimal test environment
     testBed.createEntity('player', {
       'core:actor': { name: 'Player' },
-      'core:inventory': { items: ['test_item'] }
+      'core:inventory': { items: ['test_item'] },
     });
-    
+
     testBed.createEntity('test_item', {
-      'core:item': { name: 'Test Item', tradeable: true }
+      'core:item': { name: 'Test Item', tradeable: true },
     });
-    
+
     testBed.createEntity('npc', {
-      'core:actor': { name: 'NPC', conscious: true }
+      'core:actor': { name: 'NPC', conscious: true },
     });
   });
-  
+
   it('should process minimal action', async () => {
     const result = await actionProcessor.process(
       'test:give_item',
       'player',
       context
     );
-    
+
     console.log('Action result:', JSON.stringify(result, null, 2));
   });
 });
@@ -1938,20 +2024,17 @@ describe('Debug Multi-Target Action', () => {
 ### 4. Performance Profiling
 
 **Measure Resolution Time**
+
 ```javascript
 describe('Performance Testing', () => {
   it('should resolve targets quickly', async () => {
     const start = performance.now();
-    
-    const result = await actionProcessor.process(
-      actionId,
-      actorId,
-      context
-    );
-    
+
+    const result = await actionProcessor.process(actionId, actorId, context);
+
     const end = performance.now();
     const duration = end - start;
-    
+
     console.log(`Resolution took ${duration}ms`);
     expect(duration).toBeLessThan(100);
   });
@@ -1959,21 +2042,22 @@ describe('Performance Testing', () => {
 ```
 
 **Monitor Memory Usage**
+
 ```javascript
 it('should not leak memory', () => {
   const initialMemory = process.memoryUsage().heapUsed;
-  
+
   // Process many actions
   for (let i = 0; i < 100; i++) {
     actionProcessor.process(actionId, actorId, context);
   }
-  
+
   // Force garbage collection
   global.gc();
-  
+
   const finalMemory = process.memoryUsage().heapUsed;
   const leakage = finalMemory - initialMemory;
-  
+
   console.log(`Memory leakage: ${leakage} bytes`);
   expect(leakage).toBeLessThan(1024 * 1024); // 1MB limit
 });
@@ -1992,28 +2076,29 @@ class ActionInspector {
     console.log('Action ID:', actionId);
     console.log('Actor ID:', actorId);
     console.log('Context:', JSON.stringify(context, null, 2));
-    
+
     const action = await actionLoader.load(actionId);
     console.log('Action Definition:', JSON.stringify(action, null, 2));
-    
-    for (const [targetName, targetDef] of Object.entries(action.targetDefinitions)) {
+
+    for (const [targetName, targetDef] of Object.entries(
+      action.targetDefinitions
+    )) {
       console.log(`\n--- Target: ${targetName} ---`);
-      
+
       try {
         const scopeResult = await scopeInterpreter.evaluate(
           targetDef.scope,
           context
         );
         console.log('Scope Result:', scopeResult);
-        
-        const validTargets = scopeResult.filter(entity => {
+
+        const validTargets = scopeResult.filter((entity) => {
           if (targetDef.validation) {
             return ajvValidator.validate(targetDef.validation, entity);
           }
           return true;
         });
         console.log('Valid Targets:', validTargets.length);
-        
       } catch (error) {
         console.error('Target Resolution Error:', error);
       }
@@ -2028,12 +2113,12 @@ class ActionInspector {
 class ScopeExpressionTester {
   static async test(expression, context) {
     console.log('Testing scope expression:', expression);
-    
+
     try {
       const result = await scopeInterpreter.evaluate(expression, context);
       console.log('Result:', result);
       console.log('Result count:', Array.isArray(result) ? result.length : 1);
-      
+
       return result;
     } catch (error) {
       console.error('Scope evaluation error:', error);
@@ -2051,16 +2136,16 @@ class ValidationTester {
     console.log('Testing validation schema');
     console.log('Schema:', JSON.stringify(schema, null, 2));
     console.log('Entity:', JSON.stringify(entity, null, 2));
-    
+
     const isValid = ajvValidator.validate(schema, entity);
-    
+
     if (isValid) {
       console.log('✅ Validation passed');
     } else {
       console.log('❌ Validation failed');
       console.log('Errors:', ajvValidator.errors);
     }
-    
+
     return isValid;
   }
 }
@@ -2071,6 +2156,7 @@ class ValidationTester {
 ### Q: Why aren't my targets being found?
 
 A: Check these common issues:
+
 1. Scope expression syntax errors
 2. Entity components missing
 3. Validation schema too restrictive
@@ -2078,7 +2164,8 @@ A: Check these common issues:
 
 ### Q: How do I debug context-dependent targets?
 
-A: 
+A:
+
 1. Verify the context target is resolved first
 2. Check the `contextFrom` property is set correctly
 3. Test context access with simple expressions
@@ -2087,6 +2174,7 @@ A:
 ### Q: My action is slow. How can I optimize it?
 
 A:
+
 1. Set appropriate `maxCombinations` limits
 2. Use specific scopes instead of broad filtering
 3. Move validation to the scope level when possible
@@ -2095,6 +2183,7 @@ A:
 ### Q: How do I handle missing entity components?
 
 A:
+
 1. Use conditional validation schemas
 2. Add existence checks in scopes
 3. Provide fallback values in templates
@@ -2103,6 +2192,7 @@ A:
 ### Q: What's the difference between scope filtering and validation?
 
 A:
+
 - **Scope filtering**: Fast, happens during entity collection
 - **Validation**: Slower, detailed structural checking
 - Use scope filtering for simple property checks
@@ -2111,6 +2201,7 @@ A:
 ### Q: How do I test multi-target actions effectively?
 
 A:
+
 1. Test each target definition separately
 2. Test with minimal entity setups
 3. Test edge cases and error conditions
@@ -2140,12 +2231,14 @@ When reporting issues, include:
 ### Professional Support
 
 For complex debugging or performance optimization, consider:
+
 - Code review services
 - Performance auditing
 - Custom debugging tools
 - Training workshops
 
 Remember: Most issues can be resolved by carefully checking scope expressions, validation schemas, and context dependencies. When in doubt, start with simple cases and build complexity gradually.
+
 ```
 
 ## Acceptance Criteria
@@ -2183,3 +2276,4 @@ Remember: Most issues can be resolved by carefully checking scope expressions, v
 3. **AI Documentation Assistant**: AI-powered help for writing actions
 4. **Community Examples**: User-contributed action patterns and examples
 5. **Localization**: Documentation in multiple languages for international modders
+```

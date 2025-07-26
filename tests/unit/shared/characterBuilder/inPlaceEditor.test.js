@@ -2,7 +2,14 @@
  * @file Unit tests for InPlaceEditor component
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { InPlaceEditor } from '../../../../src/shared/characterBuilder/inPlaceEditor.js';
 
 describe('InPlaceEditor', () => {
@@ -118,7 +125,7 @@ describe('InPlaceEditor', () => {
       input.value = 'New Text';
       saveBtn.click();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockValidator).toHaveBeenCalledWith('New Text');
       expect(mockOnSave).toHaveBeenCalledWith('New Text');
@@ -144,16 +151,16 @@ describe('InPlaceEditor', () => {
       const saveBtn = container.querySelector('.in-place-save-btn');
       saveBtn.click();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockOnSave).not.toHaveBeenCalled();
       expect(element.style.display).toBe('');
     });
 
     it('should show validation error if validation fails', async () => {
-      mockValidator.mockReturnValue({ 
-        isValid: false, 
-        error: 'Value is too short' 
+      mockValidator.mockReturnValue({
+        isValid: false,
+        error: 'Value is too short',
       });
 
       editor.startEditing();
@@ -164,10 +171,10 @@ describe('InPlaceEditor', () => {
       input.value = 'X';
       saveBtn.click();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockOnSave).not.toHaveBeenCalled();
-      
+
       const errorDisplay = container.querySelector('.in-place-editor-error');
       expect(errorDisplay.textContent).toBe('Value is too short');
       expect(errorDisplay.style.display).toBe('block');
@@ -175,9 +182,9 @@ describe('InPlaceEditor', () => {
     });
 
     it('should clear validation error on input', async () => {
-      mockValidator.mockReturnValue({ 
-        isValid: false, 
-        error: 'Value is too short' 
+      mockValidator.mockReturnValue({
+        isValid: false,
+        error: 'Value is too short',
       });
 
       editor.startEditing();
@@ -189,7 +196,7 @@ describe('InPlaceEditor', () => {
       input.value = 'X';
       saveBtn.click();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       const errorDisplay = container.querySelector('.in-place-editor-error');
       expect(errorDisplay.style.display).toBe('block');
@@ -214,7 +221,7 @@ describe('InPlaceEditor', () => {
       input.value = 'New Text';
       saveBtn.click();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'InPlaceEditor: Save failed:',
@@ -222,7 +229,9 @@ describe('InPlaceEditor', () => {
       );
 
       const errorDisplay = container.querySelector('.in-place-editor-error');
-      expect(errorDisplay.textContent).toBe('Failed to save changes. Please try again.');
+      expect(errorDisplay.textContent).toBe(
+        'Failed to save changes. Please try again.'
+      );
       expect(errorDisplay.style.display).toBe('block');
 
       consoleErrorSpy.mockRestore();
@@ -254,7 +263,7 @@ describe('InPlaceEditor', () => {
       const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' });
       input.dispatchEvent(enterEvent);
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockOnSave).toHaveBeenCalledWith('New Text');
     });
@@ -263,7 +272,7 @@ describe('InPlaceEditor', () => {
       // Create editor with long text to trigger textarea
       const longText = 'A'.repeat(150);
       element.textContent = longText;
-      
+
       editor = new InPlaceEditor({
         element,
         originalValue: longText,
@@ -277,13 +286,13 @@ describe('InPlaceEditor', () => {
 
       textarea.value = 'New Text';
 
-      const ctrlEnterEvent = new KeyboardEvent('keydown', { 
-        key: 'Enter', 
-        ctrlKey: true 
+      const ctrlEnterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        ctrlKey: true,
       });
       textarea.dispatchEvent(ctrlEnterEvent);
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockOnSave).toHaveBeenCalledWith('New Text');
     });
@@ -326,7 +335,7 @@ describe('InPlaceEditor', () => {
       // Click outside
       document.body.click();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockOnSave).toHaveBeenCalledWith('New Text');
     });
@@ -341,7 +350,7 @@ describe('InPlaceEditor', () => {
       const editorContainer = container.querySelector('.in-place-editor');
       editorContainer.click();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockOnSave).not.toHaveBeenCalled();
     });
@@ -432,7 +441,7 @@ describe('InPlaceEditor', () => {
 
       // The editor's click handler should be removed
       element.click();
-      
+
       // Only our test spy should be called
       expect(clickSpy).toHaveBeenCalledTimes(1);
     });
@@ -464,16 +473,16 @@ describe('InPlaceEditor', () => {
     it('should return early if editor is null', async () => {
       // Start editing and then manually clear the editor
       editor.startEditing();
-      
+
       // Access private field through reflection to simulate edge case
       const editorContainer = container.querySelector('.in-place-editor');
       editorContainer.remove();
-      
+
       // Force the internal state
       Object.defineProperty(editor, '_InPlaceEditor__editor', {
         value: null,
         writable: true,
-        configurable: true
+        configurable: true,
       });
 
       await editor.saveChanges();
@@ -491,7 +500,7 @@ describe('InPlaceEditor', () => {
       input.value = '  Original Text  ';
       saveBtn.click();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockOnSave).not.toHaveBeenCalled();
       expect(element.style.display).toBe('');
@@ -499,10 +508,10 @@ describe('InPlaceEditor', () => {
 
     it('should show saving state during save', async () => {
       let resolveSave;
-      const savePromise = new Promise(resolve => {
+      const savePromise = new Promise((resolve) => {
         resolveSave = resolve;
       });
-      
+
       mockOnSave.mockReturnValue(savePromise);
 
       editor.startEditing();
@@ -520,7 +529,7 @@ describe('InPlaceEditor', () => {
 
       // Resolve the save
       resolveSave();
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Should be back to normal
       expect(element.textContent).toBe('New Text');
@@ -570,7 +579,7 @@ describe('InPlaceEditor', () => {
     it('should not start editing again when clicking element while already editing', () => {
       // Start editing
       editor.startEditing();
-      
+
       const firstEditorContainer = container.querySelector('.in-place-editor');
       expect(firstEditorContainer).toBeTruthy();
 
@@ -620,15 +629,15 @@ describe('InPlaceEditor', () => {
       const input = container.querySelector('.in-place-editor-input');
       input.value = 'New Text';
 
-      const metaEnterEvent = new KeyboardEvent('keydown', { 
-        key: 'Enter', 
-        metaKey: true 
+      const metaEnterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        metaKey: true,
       });
       const preventDefaultSpy = jest.spyOn(metaEnterEvent, 'preventDefault');
-      
+
       input.dispatchEvent(metaEnterEvent);
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(preventDefaultSpy).toHaveBeenCalled();
       expect(mockOnSave).toHaveBeenCalledWith('New Text');
@@ -638,7 +647,7 @@ describe('InPlaceEditor', () => {
       // Create editor with multiline text
       const multilineText = 'Line 1\nLine 2';
       element.textContent = multilineText;
-      
+
       editor = new InPlaceEditor({
         element,
         originalValue: multilineText,
@@ -652,13 +661,13 @@ describe('InPlaceEditor', () => {
 
       textarea.value = 'New multiline\ntext';
 
-      const metaEnterEvent = new KeyboardEvent('keydown', { 
-        key: 'Enter', 
-        metaKey: true 
+      const metaEnterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        metaKey: true,
       });
       textarea.dispatchEvent(metaEnterEvent);
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockOnSave).toHaveBeenCalledWith('New multiline\ntext');
     });
@@ -667,10 +676,10 @@ describe('InPlaceEditor', () => {
       editor.startEditing();
 
       const input = container.querySelector('.in-place-editor-input');
-      
+
       const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
       const preventDefaultSpy = jest.spyOn(escapeEvent, 'preventDefault');
-      
+
       input.dispatchEvent(escapeEvent);
 
       expect(preventDefaultSpy).toHaveBeenCalled();
@@ -707,12 +716,12 @@ describe('InPlaceEditor', () => {
       // Simulate the event target being inside the original element
       Object.defineProperty(element, 'contains', {
         value: jest.fn(() => true),
-        configurable: true
+        configurable: true,
       });
 
       document.dispatchEvent(clickEvent);
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockOnSave).not.toHaveBeenCalled();
     });
@@ -721,7 +730,7 @@ describe('InPlaceEditor', () => {
       // Don't start editing, just trigger document click
       document.body.click();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockOnSave).not.toHaveBeenCalled();
     });
@@ -739,7 +748,7 @@ describe('InPlaceEditor', () => {
       // Click the outside element
       outsideElement.click();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockOnSave).toHaveBeenCalledWith('New Text');
 
@@ -804,7 +813,7 @@ describe('InPlaceEditor', () => {
       editor.startEditing();
 
       const newInput = container.querySelector('.in-place-editor-input');
-      
+
       // Verify selection happened (browser may not actually select in jsdom)
       expect(newInput.value).toBe('Original Text');
     });
@@ -820,7 +829,8 @@ describe('InPlaceEditor', () => {
       });
 
       // Mock setSelectionRange before starting editing
-      const originalSetSelectionRange = HTMLTextAreaElement.prototype.setSelectionRange;
+      const originalSetSelectionRange =
+        HTMLTextAreaElement.prototype.setSelectionRange;
       const setSelectionRangeSpy = jest.fn();
       HTMLTextAreaElement.prototype.setSelectionRange = setSelectionRangeSpy;
 
@@ -830,10 +840,14 @@ describe('InPlaceEditor', () => {
       expect(textarea.tagName).toBe('TEXTAREA');
 
       // The cursor should be at the end
-      expect(setSelectionRangeSpy).toHaveBeenCalledWith(longText.length, longText.length);
+      expect(setSelectionRangeSpy).toHaveBeenCalledWith(
+        longText.length,
+        longText.length
+      );
 
       // Restore original method
-      HTMLTextAreaElement.prototype.setSelectionRange = originalSetSelectionRange;
+      HTMLTextAreaElement.prototype.setSelectionRange =
+        originalSetSelectionRange;
     });
   });
 
@@ -854,14 +868,14 @@ describe('InPlaceEditor', () => {
 
     it('should return empty string if editor input is null', () => {
       editor.startEditing();
-      
+
       // Force the editor's input to be null by manipulating the private property
       const editorContainer = container.querySelector('.in-place-editor');
       const input = container.querySelector('.in-place-editor-input');
-      
+
       // Remove the input element
       input.remove();
-      
+
       // Access the private editor property and set input to null
       // This simulates the edge case where the input is missing
       const privateEditor = editor['_InPlaceEditor__editor'] || {};
@@ -911,7 +925,10 @@ describe('InPlaceEditor', () => {
     });
 
     it('should remove document event listener when exiting edit mode', () => {
-      const removeEventListenerSpy = jest.spyOn(document, 'removeEventListener');
+      const removeEventListenerSpy = jest.spyOn(
+        document,
+        'removeEventListener'
+      );
 
       editor.startEditing();
       editor.cancelEditing();
@@ -946,7 +963,7 @@ describe('InPlaceEditor', () => {
       editor.startEditing();
 
       const input = container.querySelector('.in-place-editor-input');
-      
+
       // Test other key press (should not trigger any action)
       const otherKeyEvent = new KeyboardEvent('keydown', { key: 'a' });
       input.dispatchEvent(otherKeyEvent);
@@ -960,7 +977,7 @@ describe('InPlaceEditor', () => {
       // Create editor with multiline text
       const multilineText = 'Line 1\nLine 2';
       element.textContent = multilineText;
-      
+
       editor = new InPlaceEditor({
         element,
         originalValue: multilineText,
@@ -973,10 +990,10 @@ describe('InPlaceEditor', () => {
       expect(textarea.tagName).toBe('TEXTAREA');
 
       // Press Enter without ctrl/meta (should not save)
-      const enterEvent = new KeyboardEvent('keydown', { 
+      const enterEvent = new KeyboardEvent('keydown', {
         key: 'Enter',
         ctrlKey: false,
-        metaKey: false
+        metaKey: false,
       });
       textarea.dispatchEvent(enterEvent);
 
@@ -989,26 +1006,26 @@ describe('InPlaceEditor', () => {
       // This tests the edge case where showValidationError is called but editor is null
       // We can't directly test this as it's a private method, but we can verify
       // the behavior doesn't break when validation fails after editor is removed
-      
-      mockValidator.mockReturnValue({ 
-        isValid: false, 
-        error: 'Test error' 
+
+      mockValidator.mockReturnValue({
+        isValid: false,
+        error: 'Test error',
       });
 
       editor.startEditing();
-      
+
       const input = container.querySelector('.in-place-editor-input');
       input.value = 'Invalid';
-      
+
       // Start save process
       const savePromise = editor.saveChanges();
-      
+
       // Immediately destroy editor (simulating edge case)
       const editorContainer = container.querySelector('.in-place-editor');
       editorContainer.remove();
-      
+
       await savePromise;
-      
+
       // Should handle gracefully without throwing
       expect(mockOnSave).not.toHaveBeenCalled();
     });
@@ -1016,27 +1033,27 @@ describe('InPlaceEditor', () => {
     it('should handle setSavingState with null editor', async () => {
       // Mock a slow save operation
       let resolveSave;
-      const slowSavePromise = new Promise(resolve => {
+      const slowSavePromise = new Promise((resolve) => {
         resolveSave = resolve;
       });
       mockOnSave.mockReturnValue(slowSavePromise);
-      
+
       editor.startEditing();
-      
+
       const input = container.querySelector('.in-place-editor-input');
       input.value = 'New Value';
-      
+
       // Start saving
       const savePromise = editor.saveChanges();
-      
+
       // Remove editor container while saving
       const editorContainer = container.querySelector('.in-place-editor');
       editorContainer.remove();
-      
+
       // Complete the save
       resolveSave();
       await savePromise;
-      
+
       // Should complete without errors
       expect(mockOnSave).toHaveBeenCalledWith('New Value');
     });

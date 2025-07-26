@@ -2,8 +2,18 @@
  * @file Unit tests for FormValidationHelper
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { FormValidationHelper, ValidationPatterns } from '../../../../src/shared/characterBuilder/formValidationHelper.js';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+import {
+  FormValidationHelper,
+  ValidationPatterns,
+} from '../../../../src/shared/characterBuilder/formValidationHelper.js';
 import { flushPromisesAndTimers } from '../../../common/jestHelpers.js';
 
 describe('FormValidationHelper', () => {
@@ -28,14 +38,22 @@ describe('FormValidationHelper', () => {
     });
 
     it('should fail validation when text is too long', () => {
-      const result = FormValidationHelper.validateTextInput('This is a very long text', 0, 10);
+      const result = FormValidationHelper.validateTextInput(
+        'This is a very long text',
+        0,
+        10
+      );
 
       expect(result.isValid).toBe(false);
       expect(result.error).toBe('Input must be no more than 10 characters');
     });
 
     it('should validate text with both min and max length requirements', () => {
-      const result = FormValidationHelper.validateTextInput('Hello World', 5, 20);
+      const result = FormValidationHelper.validateTextInput(
+        'Hello World',
+        5,
+        20
+      );
 
       expect(result.isValid).toBe(true);
     });
@@ -109,7 +127,11 @@ describe('FormValidationHelper', () => {
     });
 
     it('should update character count display', () => {
-      FormValidationHelper.updateCharacterCount(mockInput, mockCountElement, 100);
+      FormValidationHelper.updateCharacterCount(
+        mockInput,
+        mockCountElement,
+        100
+      );
 
       expect(mockCountElement.textContent).toBe('0/100');
     });
@@ -117,7 +139,11 @@ describe('FormValidationHelper', () => {
     it('should show current character count', () => {
       mockInput.value = 'Hello World';
 
-      FormValidationHelper.updateCharacterCount(mockInput, mockCountElement, 100);
+      FormValidationHelper.updateCharacterCount(
+        mockInput,
+        mockCountElement,
+        100
+      );
 
       expect(mockCountElement.textContent).toBe('11/100');
     });
@@ -125,7 +151,11 @@ describe('FormValidationHelper', () => {
     it('should add warning class when approaching limit', () => {
       mockInput.value = 'A'.repeat(85); // 85% of 100
 
-      FormValidationHelper.updateCharacterCount(mockInput, mockCountElement, 100);
+      FormValidationHelper.updateCharacterCount(
+        mockInput,
+        mockCountElement,
+        100
+      );
 
       expect(mockCountElement.classList.add).toHaveBeenCalledWith('warning');
     });
@@ -133,7 +163,11 @@ describe('FormValidationHelper', () => {
     it('should add warning class when at limit', () => {
       mockInput.value = 'A'.repeat(100);
 
-      FormValidationHelper.updateCharacterCount(mockInput, mockCountElement, 100);
+      FormValidationHelper.updateCharacterCount(
+        mockInput,
+        mockCountElement,
+        100
+      );
 
       expect(mockCountElement.classList.add).toHaveBeenCalledWith('warning');
     });
@@ -141,7 +175,11 @@ describe('FormValidationHelper', () => {
     it('should add error class when over limit', () => {
       mockInput.value = 'A'.repeat(101);
 
-      FormValidationHelper.updateCharacterCount(mockInput, mockCountElement, 100);
+      FormValidationHelper.updateCharacterCount(
+        mockInput,
+        mockCountElement,
+        100
+      );
 
       expect(mockCountElement.classList.add).toHaveBeenCalledWith('error');
     });
@@ -149,9 +187,16 @@ describe('FormValidationHelper', () => {
     it('should remove warning/error classes when under limit', () => {
       mockInput.value = 'Hello';
 
-      FormValidationHelper.updateCharacterCount(mockInput, mockCountElement, 100);
+      FormValidationHelper.updateCharacterCount(
+        mockInput,
+        mockCountElement,
+        100
+      );
 
-      expect(mockCountElement.classList.remove).toHaveBeenCalledWith('warning', 'error');
+      expect(mockCountElement.classList.remove).toHaveBeenCalledWith(
+        'warning',
+        'error'
+      );
     });
 
     it('should handle missing count element gracefully', () => {
@@ -171,7 +216,10 @@ describe('FormValidationHelper', () => {
 
       expect(mockCountElement.textContent).toBe('0');
       // classList.remove is called but not classList.add
-      expect(mockCountElement.classList.remove).toHaveBeenCalledWith('warning', 'error');
+      expect(mockCountElement.classList.remove).toHaveBeenCalledWith(
+        'warning',
+        'error'
+      );
     });
   });
 
@@ -192,7 +240,10 @@ describe('FormValidationHelper', () => {
     });
 
     it('should set up input event listener', () => {
-      FormValidationHelper.setupRealTimeValidation(mockInput, mockValidationCallback);
+      FormValidationHelper.setupRealTimeValidation(
+        mockInput,
+        mockValidationCallback
+      );
 
       expect(mockInput.addEventListener).toHaveBeenCalledWith(
         'input',
@@ -201,7 +252,10 @@ describe('FormValidationHelper', () => {
     });
 
     it('should set up blur event listener', () => {
-      FormValidationHelper.setupRealTimeValidation(mockInput, mockValidationCallback);
+      FormValidationHelper.setupRealTimeValidation(
+        mockInput,
+        mockValidationCallback
+      );
 
       expect(mockInput.addEventListener).toHaveBeenCalledWith(
         'blur',
@@ -210,7 +264,10 @@ describe('FormValidationHelper', () => {
     });
 
     it('should set up focus event listener', () => {
-      FormValidationHelper.setupRealTimeValidation(mockInput, mockValidationCallback);
+      FormValidationHelper.setupRealTimeValidation(
+        mockInput,
+        mockValidationCallback
+      );
 
       expect(mockInput.addEventListener).toHaveBeenCalledWith(
         'focus',
@@ -220,7 +277,10 @@ describe('FormValidationHelper', () => {
 
     it('should handle missing input element', () => {
       expect(() => {
-        FormValidationHelper.setupRealTimeValidation(null, mockValidationCallback);
+        FormValidationHelper.setupRealTimeValidation(
+          null,
+          mockValidationCallback
+        );
       }).not.toThrow();
     });
 
@@ -232,7 +292,10 @@ describe('FormValidationHelper', () => {
 
     it('should handle non-function validation callback', () => {
       expect(() => {
-        FormValidationHelper.setupRealTimeValidation(mockInput, 'not a function');
+        FormValidationHelper.setupRealTimeValidation(
+          mockInput,
+          'not a function'
+        );
       }).not.toThrow();
     });
 
@@ -245,10 +308,14 @@ describe('FormValidationHelper', () => {
         },
       };
 
-      FormValidationHelper.setupRealTimeValidation(mockInput, mockValidationCallback, {
-        countElement: mockCharCount,
-        maxLength: 100,
-      });
+      FormValidationHelper.setupRealTimeValidation(
+        mockInput,
+        mockValidationCallback,
+        {
+          countElement: mockCharCount,
+          maxLength: 100,
+        }
+      );
 
       // Should set up input listener with character counting
       expect(mockInput.addEventListener).toHaveBeenCalledWith(
@@ -259,15 +326,22 @@ describe('FormValidationHelper', () => {
 
     it('should work without character count element', () => {
       expect(() => {
-        FormValidationHelper.setupRealTimeValidation(mockInput, mockValidationCallback);
+        FormValidationHelper.setupRealTimeValidation(
+          mockInput,
+          mockValidationCallback
+        );
       }).not.toThrow();
     });
 
     it('should work with custom debounce time', () => {
       expect(() => {
-        FormValidationHelper.setupRealTimeValidation(mockInput, mockValidationCallback, {
-          debounceMs: 500,
-        });
+        FormValidationHelper.setupRealTimeValidation(
+          mockInput,
+          mockValidationCallback,
+          {
+            debounceMs: 500,
+          }
+        );
       }).not.toThrow();
     });
   });
@@ -293,7 +367,10 @@ describe('FormValidationHelper', () => {
     it('should show error on element', () => {
       FormValidationHelper.showFieldError(mockElement, 'Error message');
 
-      expect(mockElement.setAttribute).toHaveBeenCalledWith('aria-invalid', 'true');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith(
+        'aria-invalid',
+        'true'
+      );
       expect(mockElement.classList.add).toHaveBeenCalledWith('error');
     });
 
@@ -325,7 +402,10 @@ describe('FormValidationHelper', () => {
     it('should clear error from element', () => {
       FormValidationHelper.clearFieldError(mockElement);
 
-      expect(mockElement.setAttribute).toHaveBeenCalledWith('aria-invalid', 'false');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith(
+        'aria-invalid',
+        'false'
+      );
       expect(mockElement.classList.remove).toHaveBeenCalledWith('error');
     });
 
@@ -359,35 +439,56 @@ describe('FormValidationHelper', () => {
     it('should return true for valid non-empty input', () => {
       mockElement.value = 'Valid input';
 
-      const result = FormValidationHelper.validateRequiredField(mockElement, 'Test Field');
+      const result = FormValidationHelper.validateRequiredField(
+        mockElement,
+        'Test Field'
+      );
 
       expect(result).toBe(true);
-      expect(mockElement.setAttribute).toHaveBeenCalledWith('aria-invalid', 'false');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith(
+        'aria-invalid',
+        'false'
+      );
       expect(mockElement.classList.remove).toHaveBeenCalledWith('error');
     });
 
     it('should return false for empty input', () => {
       mockElement.value = '';
 
-      const result = FormValidationHelper.validateRequiredField(mockElement, 'Test Field');
+      const result = FormValidationHelper.validateRequiredField(
+        mockElement,
+        'Test Field'
+      );
 
       expect(result).toBe(false);
-      expect(mockElement.setAttribute).toHaveBeenCalledWith('aria-invalid', 'true');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith(
+        'aria-invalid',
+        'true'
+      );
       expect(mockElement.classList.add).toHaveBeenCalledWith('error');
     });
 
     it('should return false for whitespace-only input', () => {
       mockElement.value = '   ';
 
-      const result = FormValidationHelper.validateRequiredField(mockElement, 'Test Field');
+      const result = FormValidationHelper.validateRequiredField(
+        mockElement,
+        'Test Field'
+      );
 
       expect(result).toBe(false);
-      expect(mockElement.setAttribute).toHaveBeenCalledWith('aria-invalid', 'true');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith(
+        'aria-invalid',
+        'true'
+      );
       expect(mockElement.classList.add).toHaveBeenCalledWith('error');
     });
 
     it('should return false for null element', () => {
-      const result = FormValidationHelper.validateRequiredField(null, 'Test Field');
+      const result = FormValidationHelper.validateRequiredField(
+        null,
+        'Test Field'
+      );
 
       expect(result).toBe(false);
     });
@@ -403,12 +504,18 @@ describe('FormValidationHelper', () => {
         return element;
       });
 
-      FormValidationHelper.validateRequiredField(mockElement, 'Custom Field Name');
+      FormValidationHelper.validateRequiredField(
+        mockElement,
+        'Custom Field Name'
+      );
 
       // Verify showFieldError was called with correct message
       // We can't easily verify the actual element creation in this test setup
       // but we know the method was called with the right parameters
-      expect(mockElement.setAttribute).toHaveBeenCalledWith('aria-invalid', 'true');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith(
+        'aria-invalid',
+        'true'
+      );
       expect(mockElement.classList.add).toHaveBeenCalledWith('error');
 
       // Restore original createElement
@@ -429,7 +536,10 @@ describe('FormValidationHelper', () => {
       FormValidationHelper.validateRequiredField(mockElement);
 
       // Verify the element was set to invalid state
-      expect(mockElement.setAttribute).toHaveBeenCalledWith('aria-invalid', 'true');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith(
+        'aria-invalid',
+        'true'
+      );
       expect(mockElement.classList.add).toHaveBeenCalledWith('error');
 
       // Restore original createElement
@@ -439,7 +549,10 @@ describe('FormValidationHelper', () => {
     it('should handle element with undefined value property', () => {
       mockElement.value = undefined;
 
-      const result = FormValidationHelper.validateRequiredField(mockElement, 'Test Field');
+      const result = FormValidationHelper.validateRequiredField(
+        mockElement,
+        'Test Field'
+      );
 
       expect(result).toBe(false);
     });
@@ -472,17 +585,27 @@ describe('FormValidationHelper', () => {
       mockElement.value = 'Valid input';
       mockValidator.mockReturnValue({ isValid: true });
 
-      const result = FormValidationHelper.validateField(mockElement, mockValidator, 'Test Field');
+      const result = FormValidationHelper.validateField(
+        mockElement,
+        mockValidator,
+        'Test Field'
+      );
 
       expect(result).toBe(true);
       expect(mockValidator).toHaveBeenCalledWith('Valid input');
-      expect(mockElement.setAttribute).toHaveBeenCalledWith('aria-invalid', 'false');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith(
+        'aria-invalid',
+        'false'
+      );
       expect(mockElement.classList.remove).toHaveBeenCalledWith('error');
     });
 
     it('should return false for invalid input with custom error', () => {
       mockElement.value = 'Invalid input';
-      mockValidator.mockReturnValue({ isValid: false, error: 'Custom error message' });
+      mockValidator.mockReturnValue({
+        isValid: false,
+        error: 'Custom error message',
+      });
       mockElement.parentElement.querySelector.mockReturnValue(null);
 
       // Mock document.createElement to return a real element
@@ -492,11 +615,18 @@ describe('FormValidationHelper', () => {
         return element;
       });
 
-      const result = FormValidationHelper.validateField(mockElement, mockValidator, 'Test Field');
+      const result = FormValidationHelper.validateField(
+        mockElement,
+        mockValidator,
+        'Test Field'
+      );
 
       expect(result).toBe(false);
       expect(mockValidator).toHaveBeenCalledWith('Invalid input');
-      expect(mockElement.setAttribute).toHaveBeenCalledWith('aria-invalid', 'true');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith(
+        'aria-invalid',
+        'true'
+      );
       expect(mockElement.classList.add).toHaveBeenCalledWith('error');
 
       // Restore original createElement
@@ -515,7 +645,11 @@ describe('FormValidationHelper', () => {
         return element;
       });
 
-      const result = FormValidationHelper.validateField(mockElement, mockValidator, 'Custom Field');
+      const result = FormValidationHelper.validateField(
+        mockElement,
+        mockValidator,
+        'Custom Field'
+      );
 
       expect(result).toBe(false);
 
@@ -524,7 +658,11 @@ describe('FormValidationHelper', () => {
     });
 
     it('should return false for null element', () => {
-      const result = FormValidationHelper.validateField(null, mockValidator, 'Test Field');
+      const result = FormValidationHelper.validateField(
+        null,
+        mockValidator,
+        'Test Field'
+      );
 
       expect(result).toBe(false);
       expect(mockValidator).not.toHaveBeenCalled();
@@ -533,7 +671,11 @@ describe('FormValidationHelper', () => {
     it('should return false for non-function validator', () => {
       mockElement.value = 'Some input';
 
-      const result = FormValidationHelper.validateField(mockElement, 'not a function', 'Test Field');
+      const result = FormValidationHelper.validateField(
+        mockElement,
+        'not a function',
+        'Test Field'
+      );
 
       expect(result).toBe(false);
     });
@@ -542,7 +684,11 @@ describe('FormValidationHelper', () => {
       mockElement.value = undefined;
       mockValidator.mockReturnValue({ isValid: true });
 
-      const result = FormValidationHelper.validateField(mockElement, mockValidator, 'Test Field');
+      const result = FormValidationHelper.validateField(
+        mockElement,
+        mockValidator,
+        'Test Field'
+      );
 
       expect(result).toBe(true);
       expect(mockValidator).toHaveBeenCalledWith('');
@@ -552,7 +698,11 @@ describe('FormValidationHelper', () => {
       mockElement.value = '  test value  ';
       mockValidator.mockReturnValue({ isValid: true });
 
-      FormValidationHelper.validateField(mockElement, mockValidator, 'Test Field');
+      FormValidationHelper.validateField(
+        mockElement,
+        mockValidator,
+        'Test Field'
+      );
 
       expect(mockValidator).toHaveBeenCalledWith('test value');
     });
@@ -566,7 +716,7 @@ describe('FormValidationHelper', () => {
 
     beforeEach(() => {
       jest.useFakeTimers();
-      
+
       eventHandlers = {};
       mockInput = {
         value: '',
@@ -576,7 +726,7 @@ describe('FormValidationHelper', () => {
       };
 
       mockValidator = jest.fn();
-      
+
       mockCountElement = {
         textContent: '',
         classList: {
@@ -586,9 +736,15 @@ describe('FormValidationHelper', () => {
       };
 
       // Mock FormValidationHelper static methods
-      jest.spyOn(FormValidationHelper, 'showFieldError').mockImplementation(jest.fn());
-      jest.spyOn(FormValidationHelper, 'clearFieldError').mockImplementation(jest.fn());
-      jest.spyOn(FormValidationHelper, 'updateCharacterCount').mockImplementation(jest.fn());
+      jest
+        .spyOn(FormValidationHelper, 'showFieldError')
+        .mockImplementation(jest.fn());
+      jest
+        .spyOn(FormValidationHelper, 'clearFieldError')
+        .mockImplementation(jest.fn());
+      jest
+        .spyOn(FormValidationHelper, 'updateCharacterCount')
+        .mockImplementation(jest.fn());
     });
 
     afterEach(() => {
@@ -601,7 +757,9 @@ describe('FormValidationHelper', () => {
       mockInput.value = 'test input';
       mockValidator.mockReturnValue({ isValid: true });
 
-      FormValidationHelper.setupRealTimeValidation(mockInput, mockValidator, { debounceMs: 300 });
+      FormValidationHelper.setupRealTimeValidation(mockInput, mockValidator, {
+        debounceMs: 300,
+      });
 
       // Trigger input event multiple times quickly
       eventHandlers.input();
@@ -628,12 +786,18 @@ describe('FormValidationHelper', () => {
       eventHandlers.input();
       jest.advanceTimersByTime(300);
 
-      expect(FormValidationHelper.showFieldError).toHaveBeenCalledWith(mockInput, 'Invalid input');
+      expect(FormValidationHelper.showFieldError).toHaveBeenCalledWith(
+        mockInput,
+        'Invalid input'
+      );
     });
 
     it('should not show error on input when validation fails but input is empty', () => {
       mockInput.value = '';
-      mockValidator.mockReturnValue({ isValid: false, error: 'Required field' });
+      mockValidator.mockReturnValue({
+        isValid: false,
+        error: 'Required field',
+      });
 
       FormValidationHelper.setupRealTimeValidation(mockInput, mockValidator);
 
@@ -652,7 +816,9 @@ describe('FormValidationHelper', () => {
       eventHandlers.input();
       jest.advanceTimersByTime(300);
 
-      expect(FormValidationHelper.clearFieldError).toHaveBeenCalledWith(mockInput);
+      expect(FormValidationHelper.clearFieldError).toHaveBeenCalledWith(
+        mockInput
+      );
     });
 
     it('should update character count on input when countElement provided', () => {
@@ -672,7 +838,10 @@ describe('FormValidationHelper', () => {
 
     it('should validate immediately on blur event', () => {
       mockInput.value = 'test input';
-      mockValidator.mockReturnValue({ isValid: false, error: 'Blur validation error' });
+      mockValidator.mockReturnValue({
+        isValid: false,
+        error: 'Blur validation error',
+      });
 
       FormValidationHelper.setupRealTimeValidation(mockInput, mockValidator);
 
@@ -680,18 +849,21 @@ describe('FormValidationHelper', () => {
 
       // Validation should be called immediately without debouncing
       expect(mockValidator).toHaveBeenCalledWith('test input');
-      expect(FormValidationHelper.showFieldError).toHaveBeenCalledWith(mockInput, 'Blur validation error');
+      expect(FormValidationHelper.showFieldError).toHaveBeenCalledWith(
+        mockInput,
+        'Blur validation error'
+      );
     });
 
     it('should clear timeout on blur event', () => {
       const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
       mockValidator.mockReturnValue({ isValid: true });
-      
+
       FormValidationHelper.setupRealTimeValidation(mockInput, mockValidator);
 
       // Start a debounced validation
       eventHandlers.input();
-      
+
       // Blur should clear the timeout
       eventHandlers.blur();
 
@@ -705,7 +877,9 @@ describe('FormValidationHelper', () => {
 
       eventHandlers.focus();
 
-      expect(FormValidationHelper.clearFieldError).toHaveBeenCalledWith(mockInput);
+      expect(FormValidationHelper.clearFieldError).toHaveBeenCalledWith(
+        mockInput
+      );
     });
 
     it('should not clear error on focus when input has content', () => {
@@ -725,7 +899,9 @@ describe('FormValidationHelper', () => {
 
       eventHandlers.focus();
 
-      expect(FormValidationHelper.clearFieldError).toHaveBeenCalledWith(mockInput);
+      expect(FormValidationHelper.clearFieldError).toHaveBeenCalledWith(
+        mockInput
+      );
     });
 
     it('should call updateCharacterCount initially when countElement provided', () => {
@@ -754,7 +930,9 @@ describe('FormValidationHelper', () => {
     it('should use custom debounce time', () => {
       mockValidator.mockReturnValue({ isValid: true });
 
-      FormValidationHelper.setupRealTimeValidation(mockInput, mockValidator, { debounceMs: 500 });
+      FormValidationHelper.setupRealTimeValidation(mockInput, mockValidator, {
+        debounceMs: 500,
+      });
 
       eventHandlers.input();
 
@@ -806,7 +984,8 @@ describe('FormValidationHelper', () => {
 
     describe('description validation', () => {
       it('should validate description with correct length (20-2000 chars)', () => {
-        const validDescription = 'This is a valid description that meets the minimum length requirements for testing purposes.';
+        const validDescription =
+          'This is a valid description that meets the minimum length requirements for testing purposes.';
         const result = ValidationPatterns.description(validDescription);
         expect(result.isValid).toBe(true);
       });
@@ -847,7 +1026,9 @@ describe('FormValidationHelper', () => {
 
     describe('longText validation', () => {
       it('should validate long text with correct length (10-1000 chars)', () => {
-        const result = ValidationPatterns.longText('Valid long text input for testing');
+        const result = ValidationPatterns.longText(
+          'Valid long text input for testing'
+        );
         expect(result.isValid).toBe(true);
       });
 
@@ -867,7 +1048,8 @@ describe('FormValidationHelper', () => {
 
     describe('concept validation', () => {
       it('should validate concept with correct length (50-3000 chars)', () => {
-        const validConcept = 'This is a valid concept description that meets the minimum length requirements for testing purposes and provides sufficient detail.';
+        const validConcept =
+          'This is a valid concept description that meets the minimum length requirements for testing purposes and provides sufficient detail.';
         const result = ValidationPatterns.concept(validConcept);
         expect(result.isValid).toBe(true);
       });
@@ -911,24 +1093,24 @@ describe('FormValidationHelper', () => {
 
     it('should create and manage error elements in real DOM', () => {
       const inputElement = document.getElementById('test-input');
-      
+
       // Show error
       FormValidationHelper.showFieldError(inputElement, 'Test error message');
-      
+
       // Verify error element was created
       const errorElement = testContainer.querySelector('.error-message');
       expect(errorElement).toBeTruthy();
       expect(errorElement.textContent).toBe('Test error message');
       expect(errorElement.style.display).toBe('block');
       expect(errorElement.getAttribute('data-error-for')).toBe('test-input');
-      
+
       // Verify input element state
       expect(inputElement.getAttribute('aria-invalid')).toBe('true');
       expect(inputElement.classList.contains('error')).toBe(true);
-      
+
       // Clear error
       FormValidationHelper.clearFieldError(inputElement);
-      
+
       // Verify error was cleared
       expect(inputElement.getAttribute('aria-invalid')).toBe('false');
       expect(inputElement.classList.contains('error')).toBe(false);
@@ -939,48 +1121,54 @@ describe('FormValidationHelper', () => {
     it('should update character count with real DOM elements', () => {
       const inputElement = document.getElementById('test-input');
       const countElement = document.getElementById('char-count');
-      
+
       inputElement.value = 'Hello World';
-      
+
       FormValidationHelper.updateCharacterCount(inputElement, countElement, 50);
-      
+
       expect(countElement.textContent).toBe('11/50');
       expect(countElement.classList.contains('warning')).toBe(false);
       expect(countElement.classList.contains('error')).toBe(false);
-      
+
       // Test warning threshold
       inputElement.value = 'A'.repeat(41); // Over 80% of 50
       FormValidationHelper.updateCharacterCount(inputElement, countElement, 50);
-      
+
       expect(countElement.textContent).toBe('41/50');
       expect(countElement.classList.contains('warning')).toBe(true);
-      
+
       // Test error threshold
       inputElement.value = 'A'.repeat(51); // Over limit
       FormValidationHelper.updateCharacterCount(inputElement, countElement, 50);
-      
+
       expect(countElement.textContent).toBe('51/50');
       expect(countElement.classList.contains('error')).toBe(true);
     });
 
     it('should validate required fields with real DOM elements', () => {
       const inputElement = document.getElementById('test-input');
-      
+
       // Test empty input
       inputElement.value = '';
-      const result1 = FormValidationHelper.validateRequiredField(inputElement, 'Test Field');
-      
+      const result1 = FormValidationHelper.validateRequiredField(
+        inputElement,
+        'Test Field'
+      );
+
       expect(result1).toBe(false);
       expect(inputElement.getAttribute('aria-invalid')).toBe('true');
       expect(inputElement.classList.contains('error')).toBe(true);
-      
+
       const errorElement = testContainer.querySelector('.error-message');
       expect(errorElement.textContent).toBe('Test Field is required');
-      
+
       // Test valid input
       inputElement.value = 'Valid input';
-      const result2 = FormValidationHelper.validateRequiredField(inputElement, 'Test Field');
-      
+      const result2 = FormValidationHelper.validateRequiredField(
+        inputElement,
+        'Test Field'
+      );
+
       expect(result2).toBe(true);
       expect(inputElement.getAttribute('aria-invalid')).toBe('false');
       expect(inputElement.classList.contains('error')).toBe(false);
@@ -988,26 +1176,34 @@ describe('FormValidationHelper', () => {
 
     it('should validate fields with custom validators using real DOM', () => {
       const inputElement = document.getElementById('test-input');
-      
+
       const customValidator = (value) => {
         if (value.length < 5) {
           return { isValid: false, error: 'Minimum 5 characters required' };
         }
         return { isValid: true };
       };
-      
+
       // Test invalid input
       inputElement.value = 'Hi';
-      const result1 = FormValidationHelper.validateField(inputElement, customValidator, 'Custom Field');
-      
+      const result1 = FormValidationHelper.validateField(
+        inputElement,
+        customValidator,
+        'Custom Field'
+      );
+
       expect(result1).toBe(false);
       const errorElement = testContainer.querySelector('.error-message');
       expect(errorElement.textContent).toBe('Minimum 5 characters required');
-      
+
       // Test valid input
       inputElement.value = 'Hello World';
-      const result2 = FormValidationHelper.validateField(inputElement, customValidator, 'Custom Field');
-      
+      const result2 = FormValidationHelper.validateField(
+        inputElement,
+        customValidator,
+        'Custom Field'
+      );
+
       expect(result2).toBe(true);
       expect(inputElement.getAttribute('aria-invalid')).toBe('false');
     });
@@ -1015,46 +1211,56 @@ describe('FormValidationHelper', () => {
     it('should find existing error elements by data attribute', () => {
       const inputElement = document.getElementById('test-input');
       const parentElement = inputElement.parentElement;
-      
+
       // Create a pre-existing error element in the parent
       const existingError = document.createElement('div');
       existingError.setAttribute('data-error-for', 'test-input');
       existingError.className = 'custom-error';
       existingError.style.display = 'none';
       parentElement.appendChild(existingError);
-      
+
       // Show error should use existing element
-      FormValidationHelper.showFieldError(inputElement, 'Using existing error element');
-      
+      FormValidationHelper.showFieldError(
+        inputElement,
+        'Using existing error element'
+      );
+
       expect(existingError.textContent).toBe('Using existing error element');
       expect(existingError.style.display).toBe('block');
-      
+
       // Should not create a new error element
-      const errorElements = parentElement.querySelectorAll('[data-error-for="test-input"]');
+      const errorElements = parentElement.querySelectorAll(
+        '[data-error-for="test-input"]'
+      );
       expect(errorElements.length).toBe(1);
     });
 
     it('should find existing error elements by class name', () => {
       const inputElement = document.getElementById('test-input');
       const parentElement = inputElement.parentElement;
-      
+
       // Create a pre-existing error element with class
       const existingError = document.createElement('div');
       existingError.className = 'error-message';
       existingError.style.display = 'none';
       parentElement.appendChild(existingError);
-      
+
       // Show error should use existing element
-      FormValidationHelper.showFieldError(inputElement, 'Using existing class-based error');
-      
-      expect(existingError.textContent).toBe('Using existing class-based error');
+      FormValidationHelper.showFieldError(
+        inputElement,
+        'Using existing class-based error'
+      );
+
+      expect(existingError.textContent).toBe(
+        'Using existing class-based error'
+      );
       expect(existingError.style.display).toBe('block');
     });
 
     it('should handle elements without parent gracefully for clearFieldError', () => {
       const orphanElement = document.createElement('input');
       orphanElement.id = 'orphan-input';
-      
+
       // clearFieldError should not throw with orphan element
       expect(() => {
         FormValidationHelper.clearFieldError(orphanElement);
@@ -1064,7 +1270,7 @@ describe('FormValidationHelper', () => {
     it('should handle showFieldError with orphan element', () => {
       const orphanElement = document.createElement('input');
       orphanElement.id = 'orphan-input';
-      
+
       // showFieldError with orphan element will throw because it can't insert the error element
       // This is expected behavior - the element needs a parent to show errors
       expect(() => {
@@ -1093,10 +1299,14 @@ describe('FormValidationHelper', () => {
       };
 
       expect(() => {
-        FormValidationHelper.setupRealTimeValidation(mockInput, validationCallback, {
-          countElement: mockCharCount,
-          maxLength: 50,
-        });
+        FormValidationHelper.setupRealTimeValidation(
+          mockInput,
+          validationCallback,
+          {
+            countElement: mockCharCount,
+            maxLength: 50,
+          }
+        );
       }).not.toThrow();
 
       expect(mockInput.addEventListener).toHaveBeenCalledTimes(3); // input, blur, focus

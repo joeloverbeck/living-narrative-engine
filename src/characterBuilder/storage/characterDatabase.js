@@ -496,7 +496,10 @@ export class CharacterDatabase {
 
     // Save updated direction
     return new Promise((resolve, reject) => {
-      const transaction = this.#getTransaction([STORES.THEMATIC_DIRECTIONS], 'readwrite');
+      const transaction = this.#getTransaction(
+        [STORES.THEMATIC_DIRECTIONS],
+        'readwrite'
+      );
       const store = transaction.objectStore(STORES.THEMATIC_DIRECTIONS);
       const request = store.put(updatedDirection);
 
@@ -528,7 +531,10 @@ export class CharacterDatabase {
    */
   async deleteThematicDirection(directionId) {
     return new Promise((resolve, reject) => {
-      const transaction = this.#getTransaction([STORES.THEMATIC_DIRECTIONS], 'readwrite');
+      const transaction = this.#getTransaction(
+        [STORES.THEMATIC_DIRECTIONS],
+        'readwrite'
+      );
       const store = transaction.objectStore(STORES.THEMATIC_DIRECTIONS);
       const request = store.delete(directionId);
 
@@ -580,7 +586,10 @@ export class CharacterDatabase {
       return orphanedDirections;
     } catch (error) {
       const errorMessage = `Failed to find orphaned directions: ${error.message}`;
-      this.#logger.error('CharacterDatabase: Error finding orphaned directions', error);
+      this.#logger.error(
+        'CharacterDatabase: Error finding orphaned directions',
+        error
+      );
       throw new Error(errorMessage);
     }
   }

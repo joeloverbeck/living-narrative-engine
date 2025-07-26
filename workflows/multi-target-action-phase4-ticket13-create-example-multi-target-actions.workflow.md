@@ -1,9 +1,13 @@
 # Ticket: Create Example Multi-Target Actions
 
 ## Ticket ID: PHASE4-TICKET13
+
 ## Priority: Medium
+
 ## Estimated Time: 6-8 hours
+
 ## Dependencies: PHASE4-TICKET12
+
 ## Blocks: PHASE4-TICKET14, PHASE5-TICKET15
 
 ## Overview
@@ -93,11 +97,18 @@ Create file: `data/mods/examples/actions/basic_multi_target.action.json`
       "description": "Target must be reachable",
       "condition": {
         "and": [
-          { "!=": [{ "var": "target.components.core:position.locationId" }, null] },
-          { "==": [
-            { "var": "target.components.core:position.locationId" },
-            { "var": "actor.components.core:position.locationId" }
-          ]}
+          {
+            "!=": [
+              { "var": "target.components.core:position.locationId" },
+              null
+            ]
+          },
+          {
+            "==": [
+              { "var": "target.components.core:position.locationId" },
+              { "var": "actor.components.core:position.locationId" }
+            ]
+          }
         ]
       }
     }
@@ -204,7 +215,9 @@ Create file: `data/mods/examples/actions/context_dependent.action.json`
                   "types": {
                     "type": "array",
                     "contains": {
-                      "const": { "var": "target.components.core:container.lock_type" }
+                      "const": {
+                        "var": "target.components.core:container.lock_type"
+                      }
                     }
                   }
                 },
@@ -296,8 +309,12 @@ describe('Multi-Target Action Examples', () => {
     actionCandidateProcessor = testBed.getService('actionCandidateProcessor');
 
     // Load example action definitions
-    testBed.loadAction('data/mods/examples/actions/basic_multi_target.action.json');
-    testBed.loadAction('data/mods/examples/actions/context_dependent.action.json');
+    testBed.loadAction(
+      'data/mods/examples/actions/basic_multi_target.action.json'
+    );
+    testBed.loadAction(
+      'data/mods/examples/actions/context_dependent.action.json'
+    );
   });
 
   afterEach(() => {
@@ -310,22 +327,22 @@ describe('Multi-Target Action Examples', () => {
         'core:actor': { name: 'Player' },
         'core:position': { locationId: 'room_001' },
         'core:stats': { dexterity: 20 },
-        'core:inventory': { items: ['rock_001'] }
+        'core:inventory': { items: ['rock_001'] },
       });
 
       const npc = testBed.createEntity('npc_001', {
         'core:actor': { name: 'Guard', conscious: true },
-        'core:position': { locationId: 'room_001' }
+        'core:position': { locationId: 'room_001' },
       });
 
       const rock = testBed.createEntity('rock_001', {
-        'core:item': { name: 'Small Rock', throwable: true }
+        'core:item': { name: 'Small Rock', throwable: true },
       });
 
       const room = testBed.createEntity('room_001', {
         'core:location': { name: 'Training Room' },
         'core:actors': ['player', 'npc_001'],
-        'core:contents': { items: [] }
+        'core:contents': { items: [] },
       });
 
       const result = await actionCandidateProcessor.process(
@@ -334,13 +351,15 @@ describe('Multi-Target Action Examples', () => {
         {
           actor: { id: 'player' },
           location: { id: 'room_001' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(1);
-      expect(result.value.actions[0].command).toContain('throw Small Rock at Guard');
+      expect(result.value.actions[0].command).toContain(
+        'throw Small Rock at Guard'
+      );
     });
   });
 });
@@ -350,7 +369,7 @@ describe('Multi-Target Action Examples', () => {
 
 Create file: `docs/examples/multi-target-actions.md`
 
-```markdown
+````markdown
 # Multi-Target Action Examples
 
 This document provides comprehensive examples of multi-target actions that demonstrate the full capabilities of the multi-target action system.
@@ -373,6 +392,7 @@ Multi-target actions allow a single action to work with multiple entities simult
 Simple actions that work with multiple independent targets.
 
 #### Throw Item at Target
+
 ```json
 {
   "id": "examples:throw_item_at_target",
@@ -388,6 +408,7 @@ Simple actions that work with multiple independent targets.
   }
 }
 ```
+````
 
 **Use Case**: Combat, interaction, puzzle-solving
 
@@ -396,6 +417,7 @@ Simple actions that work with multiple independent targets.
 Actions where target resolution depends on previously resolved targets.
 
 #### Unlock Container with Key
+
 ```json
 {
   "id": "examples:unlock_container_with_key",
@@ -436,6 +458,7 @@ Actions where target resolution depends on previously resolved targets.
 **Combination Limits**: Use maxCombinations for multiple targets
 **Early Filtering**: Put the most restrictive validation first
 **Scope Optimization**: Use specific scopes rather than broad ones
+
 ```
 
 ## Acceptance Criteria
@@ -472,3 +495,4 @@ Actions where target resolution depends on previously resolved targets.
 3. **AI Validation**: AI-powered validation of action logic and performance
 4. **Dynamic Actions**: Runtime generation of actions based on game state
 5. **Advanced Context**: More sophisticated context variable systems
+```

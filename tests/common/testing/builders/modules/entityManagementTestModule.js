@@ -498,63 +498,63 @@ export class EntityManagementTestModule extends ITestModule {
   #createStandardLLMConfig(strategy) {
     // Fallback to inline configuration matching TestConfigurationFactory output
     const baseConfigs = {
-        'tool-calling': {
-          configId: 'test-llm-toolcalling',
-          displayName: 'Test LLM (Tool Calling)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-toolcalling',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'openrouter_tool_calling',
-            toolName: 'function_call',
-          },
-          defaultParameters: { temperature: 1.0 },
-          contextTokenLimit: 8000,
+      'tool-calling': {
+        configId: 'test-llm-toolcalling',
+        displayName: 'Test LLM (Tool Calling)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-toolcalling',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'openrouter_tool_calling',
+          toolName: 'function_call',
         },
-        'json-schema': {
-          configId: 'test-llm-jsonschema',
-          displayName: 'Test LLM (JSON Schema)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-jsonschema',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'json_schema',
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 8000,
+      },
+      'json-schema': {
+        configId: 'test-llm-jsonschema',
+        displayName: 'Test LLM (JSON Schema)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-jsonschema',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'json_schema',
+          schema: {
+            name: 'turn_action_response',
             schema: {
-              name: 'turn_action_response',
-              schema: {
-                type: 'object',
-                properties: {
-                  chosenIndex: { type: 'number' },
-                  speech: { type: 'string' },
-                  thoughts: { type: 'string' },
-                },
-                required: ['chosenIndex', 'speech', 'thoughts'],
+              type: 'object',
+              properties: {
+                chosenIndex: { type: 'number' },
+                speech: { type: 'string' },
+                thoughts: { type: 'string' },
               },
+              required: ['chosenIndex', 'speech', 'thoughts'],
             },
           },
-          defaultParameters: { temperature: 1.0 },
-          contextTokenLimit: 8000,
         },
-        'limited-context': {
-          configId: 'test-llm-limited',
-          displayName: 'Test LLM (Limited Context)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-limited',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'openrouter_tool_calling',
-            toolName: 'function_call',
-          },
-          defaultParameters: { temperature: 1.0 },
-          contextTokenLimit: 1000,
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 8000,
+      },
+      'limited-context': {
+        configId: 'test-llm-limited',
+        displayName: 'Test LLM (Limited Context)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-limited',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'openrouter_tool_calling',
+          toolName: 'function_call',
         },
-      };
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 1000,
+      },
+    };
     return baseConfigs[strategy] || baseConfigs['tool-calling'];
   }
 

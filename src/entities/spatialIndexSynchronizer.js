@@ -196,7 +196,12 @@ export class SpatialIndexSynchronizer {
     }
 
     // Ensure entity has a valid ID before proceeding
-    if (!entity || !entity.id || typeof entity.id !== 'string' || entity.id.trim() === '') {
+    if (
+      !entity ||
+      !entity.id ||
+      typeof entity.id !== 'string' ||
+      entity.id.trim() === ''
+    ) {
       this.logger.warn(
         'SpatialIndexSynchronizer.onPositionChanged: Invalid entity ID, skipping position update',
         { entity, componentTypeId }

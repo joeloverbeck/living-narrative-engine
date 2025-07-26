@@ -76,9 +76,7 @@
 
 #directions-container {
   flex: 1;
-  height: calc(100vh - 280px); /* Proper spacing for header/footer/padding */
-  min-height: 400px;
-  max-height: 800px;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -106,13 +104,14 @@
 
 /* Ensure results state fills container */
 #results-state {
+  flex: 1;
+  min-height: 0;
   height: 100%;
-  overflow-y: auto;
-  padding-right: 8px; /* Space for scrollbar */
 }
 
 /* Smooth scrolling */
 .directions-results {
+  padding-top: 2rem; /* Increased padding to prevent cards from sliding under header */
   padding-bottom: 2rem; /* Ensure last item isn't cut off */
 }
 
@@ -128,6 +127,7 @@
   position: relative;
   overflow: hidden;
   animation: slideIn 0.4s ease backwards;
+  scroll-margin-top: 4rem; /* Prevent cards from scrolling under the header */
 }
 
 .direction-card-editable::before {
@@ -159,11 +159,26 @@
 }
 
 /* Staggered entrance animation */
-.direction-card-editable:nth-child(1) { animation-delay: 0.1s; }
-.direction-card-editable:nth-child(2) { animation-delay: 0.2s; }
-.direction-card-editable:nth-child(3) { animation-delay: 0.3s; }
-.direction-card-editable:nth-child(4) { animation-delay: 0.4s; }
-.direction-card-editable:nth-child(5) { animation-delay: 0.5s; }
+.direction-card-editable:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+/* Ensure first card has extra spacing from header */
+.direction-card-editable:first-child {
+  margin-top: 1rem;
+}
+.direction-card-editable:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.direction-card-editable:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.direction-card-editable:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.direction-card-editable:nth-child(5) {
+  animation-delay: 0.5s;
+}
 
 /* ===== Card Header with Concept Info ===== */
 
@@ -462,20 +477,20 @@
     gap: 1rem;
     align-items: stretch;
   }
-  
+
   .direction-concept-info {
     margin-right: 0;
     margin-bottom: 0.5rem;
   }
-  
+
   .direction-actions {
     justify-content: flex-end;
   }
-  
+
   .stats-display {
     margin-top: 1rem;
   }
-  
+
   .field-editor-actions {
     flex-direction: column;
   }
@@ -485,8 +500,8 @@
   }
 
   #directions-container {
-    height: 500px;
-    max-height: 60vh;
+    flex: 1;
+    min-height: 0;
   }
 }
 
@@ -494,7 +509,7 @@
   .direction-card-editable {
     padding: 1.5rem;
   }
-  
+
   .direction-actions {
     justify-content: center;
     flex-wrap: wrap;

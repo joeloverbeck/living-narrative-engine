@@ -94,7 +94,7 @@ describe('PromptBuilder - Unit Tests', () => {
 
     test('should use console logger when no logger provided', () => {
       const consoleSpy = jest.spyOn(console, 'debug').mockImplementation();
-      
+
       const builder = new PromptBuilder({
         llmConfigService,
       });
@@ -103,7 +103,7 @@ describe('PromptBuilder - Unit Tests', () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('PromptBuilder (template-based) initialised')
       );
-      
+
       consoleSpy.mockRestore();
     });
 
@@ -273,7 +273,9 @@ describe('PromptBuilder - Unit Tests', () => {
       await builder.build('test-llm', SAMPLE_PROMPT_DATA);
 
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("PromptBuilder.build called for llmId='test-llm'")
+        expect.stringContaining(
+          "PromptBuilder.build called for llmId='test-llm'"
+        )
       );
     });
   });
@@ -297,14 +299,18 @@ describe('PromptBuilder - Unit Tests', () => {
 
       expect(result).toBe('');
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining("No configuration found for llmId 'nonexistent-llm'")
+        expect.stringContaining(
+          "No configuration found for llmId 'nonexistent-llm'"
+        )
       );
     });
 
     test('should call loadConfiguration with correct llmId', async () => {
       await builder.build('test-llm', SAMPLE_PROMPT_DATA);
 
-      expect(llmConfigService.loadConfiguration).toHaveBeenCalledWith('test-llm');
+      expect(llmConfigService.loadConfiguration).toHaveBeenCalledWith(
+        'test-llm'
+      );
     });
 
     test('should handle loadConfiguration throwing error', async () => {
@@ -312,9 +318,9 @@ describe('PromptBuilder - Unit Tests', () => {
         new Error('Configuration load failed')
       );
 
-      await expect(builder.build('test-llm', SAMPLE_PROMPT_DATA)).rejects.toThrow(
-        'Configuration load failed'
-      );
+      await expect(
+        builder.build('test-llm', SAMPLE_PROMPT_DATA)
+      ).rejects.toThrow('Configuration load failed');
     });
   });
 
@@ -342,7 +348,9 @@ describe('PromptBuilder - Unit Tests', () => {
     test('should call dataFormatter.formatPromptData with correct data', async () => {
       await builder.build('test-llm', SAMPLE_PROMPT_DATA);
 
-      expect(mockDataFormatter.formatPromptData).toHaveBeenCalledWith(SAMPLE_PROMPT_DATA);
+      expect(mockDataFormatter.formatPromptData).toHaveBeenCalledWith(
+        SAMPLE_PROMPT_DATA
+      );
     });
 
     test('should call templateService.processCharacterPrompt with formatted data', async () => {
@@ -351,12 +359,16 @@ describe('PromptBuilder - Unit Tests', () => {
 
       await builder.build('test-llm', SAMPLE_PROMPT_DATA);
 
-      expect(mockTemplateService.processCharacterPrompt).toHaveBeenCalledWith(formattedData);
+      expect(mockTemplateService.processCharacterPrompt).toHaveBeenCalledWith(
+        formattedData
+      );
     });
 
     test('should return template service output', async () => {
       const expectedPrompt = 'PROCESSED_TEMPLATE_RESULT';
-      mockTemplateService.processCharacterPrompt.mockReturnValue(expectedPrompt);
+      mockTemplateService.processCharacterPrompt.mockReturnValue(
+        expectedPrompt
+      );
 
       const result = await builder.build('test-llm', SAMPLE_PROMPT_DATA);
 
@@ -446,9 +458,9 @@ describe('PromptBuilder - Unit Tests', () => {
         throw new Error('Data formatting failed');
       });
 
-      await expect(builder.build('test-llm', SAMPLE_PROMPT_DATA)).rejects.toThrow(
-        'Data formatting failed'
-      );
+      await expect(
+        builder.build('test-llm', SAMPLE_PROMPT_DATA)
+      ).rejects.toThrow('Data formatting failed');
     });
 
     test('should handle templateService throwing error', async () => {
@@ -456,9 +468,9 @@ describe('PromptBuilder - Unit Tests', () => {
         throw new Error('Template processing failed');
       });
 
-      await expect(builder.build('test-llm', SAMPLE_PROMPT_DATA)).rejects.toThrow(
-        'Template processing failed'
-      );
+      await expect(
+        builder.build('test-llm', SAMPLE_PROMPT_DATA)
+      ).rejects.toThrow('Template processing failed');
     });
 
     test('should handle dataFormatter returning null', async () => {
@@ -466,7 +478,9 @@ describe('PromptBuilder - Unit Tests', () => {
 
       const result = await builder.build('test-llm', SAMPLE_PROMPT_DATA);
 
-      expect(mockTemplateService.processCharacterPrompt).toHaveBeenCalledWith(null);
+      expect(mockTemplateService.processCharacterPrompt).toHaveBeenCalledWith(
+        null
+      );
       expect(result).toBeTruthy(); // Should still return template service result
     });
 
@@ -523,7 +537,10 @@ describe('PromptBuilder - Unit Tests', () => {
           { text: 'This seems dangerous', timestamp: '2024-01-01T10:01:00Z' },
         ],
         notesArray: [
-          { text: 'Important detail to remember', timestamp: '2024-01-01T09:30:00Z' },
+          {
+            text: 'Important detail to remember',
+            timestamp: '2024-01-01T09:30:00Z',
+          },
           { text: 'Another crucial note', timestamp: '2024-01-01T09:45:00Z' },
         ],
         goalsArray: [
@@ -554,10 +571,14 @@ describe('PromptBuilder - Unit Tests', () => {
 
       // Verify all expected debug calls
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("PromptBuilder.build called for llmId='test-llm'")
+        expect.stringContaining(
+          "PromptBuilder.build called for llmId='test-llm'"
+        )
       );
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('PromptBuilder.build: Completed. Final prompt length =')
+        expect.stringContaining(
+          'PromptBuilder.build: Completed. Final prompt length ='
+        )
       );
     });
 
@@ -593,7 +614,7 @@ describe('PromptBuilder - Unit Tests', () => {
       expect(callOrder).toEqual([
         'loadConfiguration',
         'formatPromptData',
-        'processCharacterPrompt'
+        'processCharacterPrompt',
       ]);
     });
   });

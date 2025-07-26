@@ -15,7 +15,7 @@ class MockContextBuilder {
     return {
       actor: { id: actorId, components: {} },
       location: { id: locationId, components: {} },
-      game: { turnNumber: 1, timeOfDay: 'morning' }
+      game: { turnNumber: 1, timeOfDay: 'morning' },
     };
   }
 }
@@ -34,9 +34,10 @@ class MockScopeInterpreter {
     if (scope === 'actor.inventory.items[]') {
       return context.actor?.components?.['core:inventory']?.items || [];
     }
-    
+
     if (scope === 'target.topmost_clothing[]') {
-      const equipped = context.target?.components?.['clothing:equipment']?.equipped || {};
+      const equipped =
+        context.target?.components?.['clothing:equipment']?.equipped || {};
       const items = [];
       for (const slot of Object.values(equipped)) {
         for (const layer of Object.values(slot)) {
@@ -47,15 +48,15 @@ class MockScopeInterpreter {
       }
       return items;
     }
-    
+
     if (scope === 'targets.primary[0].id') {
       return context.targets?.primary?.[0]?.id;
     }
-    
+
     if (scope === 'game.turnNumber') {
       return context.game?.turnNumber;
     }
-    
+
     // Default fallback for unknown scopes
     return null;
   }

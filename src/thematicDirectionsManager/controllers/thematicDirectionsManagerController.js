@@ -143,9 +143,12 @@ export class ThematicDirectionsManagerController {
    */
   #cacheElements() {
     // Main containers
-    this.#elements.conceptSelector = document.getElementById('concept-selector');
-    this.#elements.directionFilter = document.getElementById('direction-filter');
-    this.#elements.directionsResults = document.getElementById('directions-results');
+    this.#elements.conceptSelector =
+      document.getElementById('concept-selector');
+    this.#elements.directionFilter =
+      document.getElementById('direction-filter');
+    this.#elements.directionsResults =
+      document.getElementById('directions-results');
 
     // State containers
     this.#elements.emptyState = document.getElementById('empty-state');
@@ -155,19 +158,24 @@ export class ThematicDirectionsManagerController {
 
     // Action buttons
     this.#elements.refreshBtn = document.getElementById('refresh-btn');
-    this.#elements.cleanupOrphansBtn = document.getElementById('cleanup-orphans-btn');
+    this.#elements.cleanupOrphansBtn = document.getElementById(
+      'cleanup-orphans-btn'
+    );
     this.#elements.backBtn = document.getElementById('back-to-menu-btn');
     this.#elements.retryBtn = document.getElementById('retry-btn');
 
     // Stats display
-    this.#elements.totalDirections = document.getElementById('total-directions');
+    this.#elements.totalDirections =
+      document.getElementById('total-directions');
     this.#elements.orphanedCount = document.getElementById('orphaned-count');
 
     // Modal elements
-    this.#elements.confirmationModal = document.getElementById('confirmation-modal');
+    this.#elements.confirmationModal =
+      document.getElementById('confirmation-modal');
     this.#elements.modalTitle = document.getElementById('modal-title');
     this.#elements.modalMessage = document.getElementById('modal-message');
-    this.#elements.modalConfirmBtn = document.getElementById('modal-confirm-btn');
+    this.#elements.modalConfirmBtn =
+      document.getElementById('modal-confirm-btn');
     this.#elements.modalCancelBtn = document.getElementById('modal-cancel-btn');
     this.#elements.closeModalBtn = document.getElementById('close-modal-btn');
   }
@@ -244,12 +252,14 @@ export class ThematicDirectionsManagerController {
 
     try {
       // Load all directions with their concepts
-      const directionsWithConcepts = await this.#characterBuilderService
-        .getAllThematicDirectionsWithConcepts();
+      const directionsWithConcepts =
+        await this.#characterBuilderService.getAllThematicDirectionsWithConcepts();
 
       // Extract unique concepts that have associated directions
-      const conceptsWithDirections = this.#extractConceptsWithDirections(directionsWithConcepts);
-      
+      const conceptsWithDirections = this.#extractConceptsWithDirections(
+        directionsWithConcepts
+      );
+
       // Update dropdown with filtered concepts
       await this.#conceptDropdown.loadItems(conceptsWithDirections);
 
@@ -264,9 +274,9 @@ export class ThematicDirectionsManagerController {
 
       this.#logger.info(
         'ThematicDirectionsManagerController: Loaded directions data',
-        { 
+        {
           directionCount: this.#directionsData.length,
-          conceptsWithDirections: conceptsWithDirections.length
+          conceptsWithDirections: conceptsWithDirections.length,
         }
       );
     } catch (error) {
@@ -288,7 +298,7 @@ export class ThematicDirectionsManagerController {
   #updateStats() {
     const totalCount = this.#directionsData.length;
     const orphanedCount = this.#directionsData.filter(
-      item => !item.concept
+      (item) => !item.concept
     ).length;
 
     if (this.#elements.totalDirections) {
@@ -315,23 +325,25 @@ export class ThematicDirectionsManagerController {
 
     // Filter by concept
     if (this.#currentConcept === 'orphaned') {
-      filteredData = filteredData.filter(item => !item.concept);
+      filteredData = filteredData.filter((item) => !item.concept);
     } else if (this.#currentConcept) {
       filteredData = filteredData.filter(
-        item => item.concept && item.concept.id === this.#currentConcept
+        (item) => item.concept && item.concept.id === this.#currentConcept
       );
     }
 
     // Filter by search text
     if (this.#currentFilter) {
-      filteredData = filteredData.filter(item => {
+      filteredData = filteredData.filter((item) => {
         const direction = item.direction;
         return (
           direction.title.toLowerCase().includes(this.#currentFilter) ||
           direction.description.toLowerCase().includes(this.#currentFilter) ||
           direction.coreTension.toLowerCase().includes(this.#currentFilter) ||
           direction.uniqueTwist.toLowerCase().includes(this.#currentFilter) ||
-          direction.narrativePotential.toLowerCase().includes(this.#currentFilter)
+          direction.narrativePotential
+            .toLowerCase()
+            .includes(this.#currentFilter)
         );
       });
     }
@@ -354,8 +366,8 @@ export class ThematicDirectionsManagerController {
   #displayDirections(directionsData) {
     // Clean up existing InPlaceEditor instances
     this.#cleanupInPlaceEditors();
-    
-    // Clear previous results  
+
+    // Clear previous results
     this.#elements.directionsResults.innerHTML = '';
 
     // Create directions container
@@ -397,8 +409,10 @@ export class ThematicDirectionsManagerController {
     header.className = 'direction-card-header';
 
     const conceptInfo = document.createElement('div');
-    conceptInfo.className = concept ? 'direction-concept-info' : 'direction-concept-info orphaned';
-    conceptInfo.textContent = concept 
+    conceptInfo.className = concept
+      ? 'direction-concept-info'
+      : 'direction-concept-info orphaned';
+    conceptInfo.textContent = concept
       ? `From concept: ${concept.concept.substring(0, 60)}${concept.concept.length > 60 ? '...' : ''}`
       : 'Orphaned direction (no associated concept)';
     header.appendChild(conceptInfo);
@@ -497,7 +511,14 @@ export class ThematicDirectionsManagerController {
    * @param {string} className - CSS class name
    * @returns {HTMLElement} Editable field element
    */
-  #createEditableField(fieldName, fieldLabel, value, directionId, elementType, className) {
+  #createEditableField(
+    fieldName,
+    fieldLabel,
+    value,
+    directionId,
+    elementType,
+    className
+  ) {
     const display = document.createElement(elementType);
     display.className = `editable-field ${className}`;
     display.textContent = value;
@@ -543,9 +564,6 @@ export class ThematicDirectionsManagerController {
     return wrapper;
   }
 
-
-
-
   /**
    * Handle field save from InPlaceEditor
    *
@@ -559,11 +577,14 @@ export class ThematicDirectionsManagerController {
     try {
       // Update the direction
       const updates = { [fieldName]: newValue.trim() };
-      await this.#characterBuilderService.updateThematicDirection(directionId, updates);
+      await this.#characterBuilderService.updateThematicDirection(
+        directionId,
+        updates
+      );
 
       // Update local data
       const dataItem = this.#directionsData.find(
-        item => item.direction.id === directionId
+        (item) => item.direction.id === directionId
       );
       if (dataItem) {
         dataItem.direction[fieldName] = newValue.trim();
@@ -631,7 +652,6 @@ export class ThematicDirectionsManagerController {
     return { isValid: true };
   }
 
-
   /**
    * Handle concept selection change
    *
@@ -655,11 +675,13 @@ export class ThematicDirectionsManagerController {
       `Are you sure you want to delete "${direction.title}"? This action cannot be undone.`,
       async () => {
         try {
-          await this.#characterBuilderService.deleteThematicDirection(direction.id);
-          
+          await this.#characterBuilderService.deleteThematicDirection(
+            direction.id
+          );
+
           // Remove from local data
           this.#directionsData = this.#directionsData.filter(
-            item => item.direction.id !== direction.id
+            (item) => item.direction.id !== direction.id
           );
 
           // Update display
@@ -693,7 +715,7 @@ export class ThematicDirectionsManagerController {
    */
   #handleCleanupOrphans() {
     const orphanedCount = this.#directionsData.filter(
-      item => !item.concept
+      (item) => !item.concept
     ).length;
 
     if (orphanedCount === 0) {
@@ -707,17 +729,19 @@ export class ThematicDirectionsManagerController {
       async () => {
         try {
           const orphanedDirections = this.#directionsData
-            .filter(item => !item.concept)
-            .map(item => item.direction);
+            .filter((item) => !item.concept)
+            .map((item) => item.direction);
 
           // Delete each orphaned direction
           for (const direction of orphanedDirections) {
-            await this.#characterBuilderService.deleteThematicDirection(direction.id);
+            await this.#characterBuilderService.deleteThematicDirection(
+              direction.id
+            );
           }
 
           // Remove from local data
           this.#directionsData = this.#directionsData.filter(
-            item => item.concept !== null
+            (item) => item.concept !== null
           );
 
           // Update display
@@ -734,7 +758,9 @@ export class ThematicDirectionsManagerController {
             { deletedCount: orphanedDirections.length }
           );
 
-          alert(`Successfully deleted ${orphanedDirections.length} orphaned direction(s).`);
+          alert(
+            `Successfully deleted ${orphanedDirections.length} orphaned direction(s).`
+          );
         } catch (error) {
           this.#logger.error(
             'ThematicDirectionsManagerController: Failed to cleanup orphans',
@@ -794,11 +820,11 @@ export class ThematicDirectionsManagerController {
 
   /**
    * Clean up InPlaceEditor instances
-   * 
+   *
    * @private
    */
   #cleanupInPlaceEditors() {
-    this.#inPlaceEditors.forEach(editor => {
+    this.#inPlaceEditors.forEach((editor) => {
       editor.destroy();
     });
     this.#inPlaceEditors.clear();
@@ -806,20 +832,20 @@ export class ThematicDirectionsManagerController {
 
   /**
    * Extract unique concepts that have associated thematic directions
-   * 
+   *
    * @private
    * @param {Array<{direction: ThematicDirection, concept: CharacterConcept|null}>} directionsWithConcepts - Array of directions with their associated concepts
    * @returns {CharacterConcept[]} Array of concepts with directions
    */
   #extractConceptsWithDirections(directionsWithConcepts) {
     const conceptMap = new Map();
-    
-    directionsWithConcepts.forEach(item => {
+
+    directionsWithConcepts.forEach((item) => {
       if (item.concept && !conceptMap.has(item.concept.id)) {
         conceptMap.set(item.concept.id, item.concept);
       }
     });
-    
+
     return Array.from(conceptMap.values());
   }
 }

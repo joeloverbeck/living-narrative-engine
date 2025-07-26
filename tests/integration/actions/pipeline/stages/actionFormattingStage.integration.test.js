@@ -3,7 +3,14 @@
  * @see src/actions/pipeline/stages/ActionFormattingStage.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ActionFormattingStage } from '../../../../../src/actions/pipeline/stages/ActionFormattingStage.js';
 import { ActionTargetContext } from '../../../../../src/models/actionTargetContext.js';
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
@@ -13,7 +20,10 @@ import ActionFormatter from '../../../../../src/actions/actionFormatter.js';
 import ConsoleLogger from '../../../../../src/logging/consoleLogger.js';
 import { EntityManagerTestBed } from '../../../../common/entities/entityManagerTestBed.js';
 import EntityDefinition from '../../../../../src/entities/entityDefinition.js';
-import { createTestAction, createComplexTestAction } from '../../../../common/actions/actionBuilderHelpers.js';
+import {
+  createTestAction,
+  createComplexTestAction,
+} from '../../../../common/actions/actionBuilderHelpers.js';
 import '../../../../../tests/common/actionResultMatchers.js';
 
 describe('ActionFormattingStage - Integration Tests', () => {
@@ -30,7 +40,7 @@ describe('ActionFormattingStage - Integration Tests', () => {
 
   beforeEach(async () => {
     testBed = new EntityManagerTestBed();
-    
+
     // Create real instances with minimal mocking
     logger = new ConsoleLogger({ enableDebug: false });
     logger.debug = jest.fn();
@@ -39,43 +49,57 @@ describe('ActionFormattingStage - Integration Tests', () => {
     logger.error = jest.fn();
 
     entityManager = testBed.entityManager;
-    
+
     // Create minimal fix suggestion engine
     const fixSuggestionEngine = {
-      suggestFixes: jest.fn().mockReturnValue([])
+      suggestFixes: jest.fn().mockReturnValue([]),
     };
-    
+
     errorContextBuilder = new ActionErrorContextBuilder({
       entityManager,
       logger,
-      fixSuggestionEngine
+      fixSuggestionEngine,
     });
-    
+
     // Create real formatter with target formatter map
     const targetFormatterMap = {
-      'none': (command) => ({ ok: true, value: command }),
-      'self': (command) => ({ ok: true, value: command.replace('{target}', 'yourself') }),
-      'entity': (command, targetContext, deps) => {
+      none: (command) => ({ ok: true, value: command }),
+      self: (command) => ({
+        ok: true,
+        value: command.replace('{target}', 'yourself'),
+      }),
+      entity: (command, targetContext, deps) => {
         const { entityManager, displayNameFn } = deps;
         const entity = entityManager.getEntityInstance(targetContext.entityId);
         if (!entity) {
-          return { ok: false, error: `Entity not found: ${targetContext.entityId}` };
+          return {
+            ok: false,
+            error: `Entity not found: ${targetContext.entityId}`,
+          };
         }
         const name = displayNameFn(entity) || entity.id;
         return { ok: true, value: command.replace('{target}', name) };
-      }
+      },
     };
 
     commandFormatter = new ActionFormatter();
-    
+
     // Spy on the format method to debug issues
     const originalFormat = commandFormatter.format.bind(commandFormatter);
-    commandFormatter.format = jest.fn((actionDef, targetContext, entityManager, options, deps) => {
-      return originalFormat(actionDef, targetContext, entityManager, options, {
-        ...deps,
-        formatterMap: targetFormatterMap
-      });
-    });
+    commandFormatter.format = jest.fn(
+      (actionDef, targetContext, entityManager, options, deps) => {
+        return originalFormat(
+          actionDef,
+          targetContext,
+          entityManager,
+          options,
+          {
+            ...deps,
+            formatterMap: targetFormatterMap,
+          }
+        );
+      }
+    );
 
     safeEventDispatcher = {
       dispatch: jest.fn().mockReturnValue(true),
@@ -90,18 +114,20 @@ describe('ActionFormattingStage - Integration Tests', () => {
     trace = {
       step: jest.fn(),
       info: jest.fn(),
-      logs: [] // Add logs array for error context builder
+      logs: [], // Add logs array for error context builder
     };
 
     // Create test actor with proper entity definition
     const actorDef = new EntityDefinition('test:actor', {
       description: 'Test actor entity',
       components: {
-        'core:name': { value: 'Test Actor' }
-      }
+        'core:name': { value: 'Test Actor' },
+      },
     });
     testBed.setupDefinitions(actorDef);
-    actor = await testBed.entityManager.createEntityInstance('test:actor', { instanceId: 'test-actor' });
+    actor = await testBed.entityManager.createEntityInstance('test:actor', {
+      instanceId: 'test-actor',
+    });
 
     // Create the stage with real dependencies
     stage = new ActionFormattingStage({
@@ -131,7 +157,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
       };
 
       const targetContext = ActionTargetContext.noTarget();
-      const actionsWithTargets = [{ actionDef, targetContexts: [targetContext] }];
+      const actionsWithTargets = [
+        { actionDef, targetContexts: [targetContext] },
+      ];
 
       // Act
       const result = await stage.execute({
@@ -145,7 +173,7 @@ describe('ActionFormattingStage - Integration Tests', () => {
       expect(result.success).toBe(true);
       expect(result.actions).toBeDefined();
       expect(result.actions).toHaveLength(1);
-      
+
       const formattedAction = result.actions[0];
       expect(formattedAction).toEqual({
         id: 'core:wait',
@@ -157,7 +185,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
 
       expect(result.errors).toHaveLength(0);
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Action formatting complete: 1 actions formatted successfully')
+        expect.stringContaining(
+          'Action formatting complete: 1 actions formatted successfully'
+        )
       );
     });
 
@@ -166,20 +196,24 @@ describe('ActionFormattingStage - Integration Tests', () => {
       const targetDef = new EntityDefinition('test:target', {
         description: 'Test target entity',
         components: {
-          'core:name': { value: 'Target Object' }
-        }
+          'core:name': { value: 'Target Object' },
+        },
       });
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Test actor entity',
         components: {
-          'core:name': { value: 'Test Actor' }
-        }
+          'core:name': { value: 'Test Actor' },
+        },
       });
       testBed.setupDefinitions(actorDef, targetDef);
-      const targetEntity = await testBed.entityManager.createEntityInstance('test:target', { instanceId: 'target-entity' });
-      
+      const targetEntity = await testBed.entityManager.createEntityInstance(
+        'test:target',
+        { instanceId: 'target-entity' }
+      );
+
       // Debug: Verify entity is created
-      const checkEntity = testBed.entityManager.getEntityInstance('target-entity');
+      const checkEntity =
+        testBed.entityManager.getEntityInstance('target-entity');
       expect(checkEntity).toBeDefined();
 
       const actionDef = {
@@ -191,7 +225,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
       };
 
       const targetContext = ActionTargetContext.forEntity('target-entity');
-      const actionsWithTargets = [{ actionDef, targetContexts: [targetContext] }];
+      const actionsWithTargets = [
+        { actionDef, targetContexts: [targetContext] },
+      ];
 
       // Act
       const result = await stage.execute({
@@ -202,9 +238,12 @@ describe('ActionFormattingStage - Integration Tests', () => {
 
       // Assert
       if (result.actions.length === 0) {
-        console.log('No actions formatted. Errors:', JSON.stringify(result.errors, null, 2));
+        console.log(
+          'No actions formatted. Errors:',
+          JSON.stringify(result.errors, null, 2)
+        );
       }
-      
+
       expect(result.success).toBe(true);
       expect(result.actions).toHaveLength(1);
       const formattedAction = result.actions[0];
@@ -217,25 +256,31 @@ describe('ActionFormattingStage - Integration Tests', () => {
       const door1Def = new EntityDefinition('test:door1', {
         description: 'Test door 1',
         components: {
-          'core:name': { value: 'Wooden Door' }
-        }
+          'core:name': { value: 'Wooden Door' },
+        },
       });
       const door2Def = new EntityDefinition('test:door2', {
         description: 'Test door 2',
         components: {
-          'core:name': { value: 'Metal Door' }
-        }
+          'core:name': { value: 'Metal Door' },
+        },
       });
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Test actor entity',
         components: {
-          'core:name': { value: 'Test Actor' }
-        }
+          'core:name': { value: 'Test Actor' },
+        },
       });
       testBed.setupDefinitions(actorDef, door1Def, door2Def);
-      
-      const target1 = await testBed.entityManager.createEntityInstance('test:door1', { instanceId: 'door-1' });
-      const target2 = await testBed.entityManager.createEntityInstance('test:door2', { instanceId: 'door-2' });
+
+      const target1 = await testBed.entityManager.createEntityInstance(
+        'test:door1',
+        { instanceId: 'door-1' }
+      );
+      const target2 = await testBed.entityManager.createEntityInstance(
+        'test:door2',
+        { instanceId: 'door-2' }
+      );
 
       const openAction = {
         id: 'core:open',
@@ -277,8 +322,8 @@ describe('ActionFormattingStage - Integration Tests', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.actions).toHaveLength(3);
-      
-      const commands = result.actions.map(a => a.command);
+
+      const commands = result.actions.map((a) => a.command);
       expect(commands).toContain('open Wooden Door');
       expect(commands).toContain('open Metal Door');
       expect(commands).toContain('examine Wooden Door');
@@ -304,7 +349,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
       });
 
       const targetContext = ActionTargetContext.forEntity('some-entity');
-      const actionsWithTargets = [{ actionDef, targetContexts: [targetContext] }];
+      const actionsWithTargets = [
+        { actionDef, targetContexts: [targetContext] },
+      ];
 
       // Act
       const result = await stage.execute({
@@ -329,7 +376,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
       });
 
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Failed to format command for action 'test:broken' with target 'some-entity'"),
+        expect.stringContaining(
+          "Failed to format command for action 'test:broken' with target 'some-entity'"
+        ),
         expect.any(Object)
       );
     });
@@ -351,7 +400,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
       });
 
       const targetContext = ActionTargetContext.forEntity('target-id');
-      const actionsWithTargets = [{ actionDef, targetContexts: [targetContext] }];
+      const actionsWithTargets = [
+        { actionDef, targetContexts: [targetContext] },
+      ];
 
       // Act
       const result = await stage.execute({
@@ -375,7 +426,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
       });
 
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Failed to format command for action 'test:throws' with target 'target-id'"),
+        expect.stringContaining(
+          "Failed to format command for action 'test:throws' with target 'target-id'"
+        ),
         expect.any(Object)
       );
     });
@@ -398,7 +451,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
       });
 
       const targetContext = ActionTargetContext.forEntity('original-target');
-      const actionsWithTargets = [{ actionDef, targetContexts: [targetContext] }];
+      const actionsWithTargets = [
+        { actionDef, targetContexts: [targetContext] },
+      ];
 
       // Act
       const result = await stage.execute({
@@ -410,7 +465,7 @@ describe('ActionFormattingStage - Integration Tests', () => {
       // Assert
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0].targetId).toBe('error-target-id');
-      
+
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining("with target 'error-target-id'"),
         expect.any(Object)
@@ -435,7 +490,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
       });
 
       const targetContext = ActionTargetContext.forEntity('original-target');
-      const actionsWithTargets = [{ actionDef, targetContexts: [targetContext] }];
+      const actionsWithTargets = [
+        { actionDef, targetContexts: [targetContext] },
+      ];
 
       // Act
       const result = await stage.execute({
@@ -470,9 +527,18 @@ describe('ActionFormattingStage - Integration Tests', () => {
       });
 
       const actionsWithTargets = [
-        { actionDef: successAction, targetContexts: [ActionTargetContext.noTarget()] },
-        { actionDef: failAction, targetContexts: [ActionTargetContext.noTarget()] },
-        { actionDef: throwAction, targetContexts: [ActionTargetContext.noTarget()] },
+        {
+          actionDef: successAction,
+          targetContexts: [ActionTargetContext.noTarget()],
+        },
+        {
+          actionDef: failAction,
+          targetContexts: [ActionTargetContext.noTarget()],
+        },
+        {
+          actionDef: throwAction,
+          targetContexts: [ActionTargetContext.noTarget()],
+        },
       ];
 
       // Act
@@ -493,7 +559,7 @@ describe('ActionFormattingStage - Integration Tests', () => {
     it('should process actions with different formatter options', async () => {
       // Arrange
       const mockEventDispatcher = { dispatch: jest.fn() };
-      
+
       stage = new ActionFormattingStage({
         commandFormatter,
         entityManager,
@@ -504,10 +570,12 @@ describe('ActionFormattingStage - Integration Tests', () => {
       });
 
       const actionDef = createTestAction('test:event-action');
-      const actionsWithTargets = [{
-        actionDef,
-        targetContexts: [ActionTargetContext.noTarget()],
-      }];
+      const actionsWithTargets = [
+        {
+          actionDef,
+          targetContexts: [ActionTargetContext.noTarget()],
+        },
+      ];
 
       // Act
       await stage.execute({
@@ -555,10 +623,12 @@ describe('ActionFormattingStage - Integration Tests', () => {
     it('should handle actions with empty target contexts array', async () => {
       // Arrange
       const actionDef = createTestAction('test:no-targets');
-      const actionsWithTargets = [{
-        actionDef,
-        targetContexts: [],
-      }];
+      const actionsWithTargets = [
+        {
+          actionDef,
+          targetContexts: [],
+        },
+      ];
 
       // Act
       const result = await stage.execute({
@@ -576,10 +646,12 @@ describe('ActionFormattingStage - Integration Tests', () => {
     it('should work without trace object', async () => {
       // Arrange
       const actionDef = createTestAction('test:no-trace');
-      const actionsWithTargets = [{
-        actionDef,
-        targetContexts: [ActionTargetContext.noTarget()],
-      }];
+      const actionsWithTargets = [
+        {
+          actionDef,
+          targetContexts: [ActionTargetContext.noTarget()],
+        },
+      ];
 
       // Act
       const result = await stage.execute({
@@ -598,10 +670,12 @@ describe('ActionFormattingStage - Integration Tests', () => {
     it('should record trace steps and info', async () => {
       // Arrange
       const actionDef = createTestAction('test:traced');
-      const actionsWithTargets = [{
-        actionDef,
-        targetContexts: [ActionTargetContext.noTarget()],
-      }];
+      const actionsWithTargets = [
+        {
+          actionDef,
+          targetContexts: [ActionTargetContext.noTarget()],
+        },
+      ];
 
       // Act
       await stage.execute({

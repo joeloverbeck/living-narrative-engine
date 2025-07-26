@@ -218,9 +218,8 @@ export class TurnExecutionFacade {
     }
 
     const startTime = Date.now();
-    
-    try {
 
+    try {
       // 1. Discover available actions
       const availableActions =
         await this.#actionService.discoverActions(actorId);
@@ -339,9 +338,8 @@ export class TurnExecutionFacade {
     }
 
     const startTime = Date.now();
-    
-    try {
 
+    try {
       // 1. Parse command to extract action and targets
       // This is a simplified version - real implementation would use command parsing
       const parsedCommand = this.#parsePlayerCommand(command);

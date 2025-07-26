@@ -37,39 +37,45 @@ jest.mock('../../../src/characterBuilder/storage/characterDatabase.js', () => {
   };
 });
 
-jest.mock('../../../src/characterBuilder/services/characterStorageService.js', () => {
-  return {
-    CharacterStorageService: jest.fn(() => ({
+jest.mock(
+  '../../../src/characterBuilder/services/characterStorageService.js',
+  () => {
+    return {
+      CharacterStorageService: jest.fn(() => ({
+        initialize: jest.fn().mockResolvedValue(undefined),
+        getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
+        getAllThematicDirections: jest.fn().mockResolvedValue([]),
+        getCharacterConcept: jest.fn(),
+        findOrphanedDirections: jest.fn().mockResolvedValue([]),
+        updateThematicDirection: jest.fn(),
+        deleteThematicDirection: jest.fn(),
+      })),
+    };
+  }
+);
+
+jest.mock(
+  '../../../src/characterBuilder/services/characterBuilderService.js',
+  () => {
+    const mockService = {
       initialize: jest.fn().mockResolvedValue(undefined),
+      createCharacterConcept: jest.fn(),
+      generateThematicDirections: jest.fn(),
       getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-      getAllThematicDirections: jest.fn().mockResolvedValue([]),
       getCharacterConcept: jest.fn(),
-      findOrphanedDirections: jest.fn().mockResolvedValue([]),
+      getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([]),
+      getOrphanedThematicDirections: jest.fn().mockResolvedValue([]),
       updateThematicDirection: jest.fn(),
       deleteThematicDirection: jest.fn(),
-    })),
-  };
-});
+      cleanupOrphanedDirections: jest.fn().mockResolvedValue(0),
+    };
 
-jest.mock('../../../src/characterBuilder/services/characterBuilderService.js', () => {
-  const mockService = {
-    initialize: jest.fn().mockResolvedValue(undefined),
-    createCharacterConcept: jest.fn(),
-    generateThematicDirections: jest.fn(),
-    getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-    getCharacterConcept: jest.fn(),
-    getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([]),
-    getOrphanedThematicDirections: jest.fn().mockResolvedValue([]),
-    updateThematicDirection: jest.fn(),
-    deleteThematicDirection: jest.fn(),
-    cleanupOrphanedDirections: jest.fn().mockResolvedValue(0),
-  };
-  
-  return {
-    CharacterBuilderService: jest.fn(() => mockService),
-    __mockService: mockService,
-  };
-});
+    return {
+      CharacterBuilderService: jest.fn(() => mockService),
+      __mockService: mockService,
+    };
+  }
+);
 
 describe('ThematicDirectionsManagerApp Startup Integration', () => {
   let app;
@@ -85,7 +91,9 @@ describe('ThematicDirectionsManagerApp Startup Integration', () => {
     originalFetch = global.fetch;
 
     // Get the mock service
-    const { __mockService } = await import('../../../src/characterBuilder/services/characterBuilderService.js');
+    const { __mockService } = await import(
+      '../../../src/characterBuilder/services/characterBuilderService.js'
+    );
     mockCharacterBuilderService = __mockService;
 
     // Mock schema loading with comprehensive schema responses
@@ -146,20 +154,30 @@ describe('ThematicDirectionsManagerApp Startup Integration', () => {
         contains: jest.fn(() => false),
       },
     });
-    
+
     // Map of required element IDs to mock elements
     const mockElements = {};
     const requiredIds = [
-      'empty-state', 'loading-state', 'error-state', 'results-state',
-      'concept-selector', 'direction-filter', 'directions-results',
-      'refresh-btn', 'cleanup-orphans-btn', 'back-to-menu-btn', 'retry-btn'
+      'empty-state',
+      'loading-state',
+      'error-state',
+      'results-state',
+      'concept-selector',
+      'direction-filter',
+      'directions-results',
+      'refresh-btn',
+      'cleanup-orphans-btn',
+      'back-to-menu-btn',
+      'retry-btn',
     ];
-    
-    requiredIds.forEach(id => {
+
+    requiredIds.forEach((id) => {
       mockElements[id] = createMockElement(id);
     });
-    
-    global.document.getElementById = jest.fn((id) => mockElements[id] || createMockElement(id));
+
+    global.document.getElementById = jest.fn(
+      (id) => mockElements[id] || createMockElement(id)
+    );
 
     global.document.querySelector = jest.fn().mockReturnValue({
       textContent: '',
@@ -179,17 +197,20 @@ describe('ThematicDirectionsManagerApp Startup Integration', () => {
     }));
 
     // Import the app class after mocks are set up
-    const module = await import('../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js');
-    ThematicDirectionsManagerApp = module.default || module.ThematicDirectionsManagerApp;
+    const module = await import(
+      '../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js'
+    );
+    ThematicDirectionsManagerApp =
+      module.default || module.ThematicDirectionsManagerApp;
   });
 
   afterEach(() => {
     // Restore original fetch
     global.fetch = originalFetch;
-    
+
     // Clean up globals
     delete global.document;
-    
+
     // Clear all mocks
     jest.clearAllMocks();
   });
@@ -230,13 +251,15 @@ describe('ThematicDirectionsManagerApp Startup Integration', () => {
 
     // Act
     await app.initialize(); // First initialization
-    
+
     // Capture console warnings to verify second init is skipped
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
     await app.initialize(); // Second initialization should be skipped
-    
+
     // Assert - should warn about already being initialized
-    expect(warnSpy).toHaveBeenCalledWith('ThematicDirectionsManagerApp: Already initialized');
+    expect(warnSpy).toHaveBeenCalledWith(
+      'ThematicDirectionsManagerApp: Already initialized'
+    );
     warnSpy.mockRestore();
   });
 
@@ -254,13 +277,13 @@ describe('ThematicDirectionsManagerApp Startup Integration', () => {
   test('should display initialization error when startup fails', async () => {
     // Arrange
     app = new ThematicDirectionsManagerApp();
-    
+
     // Mock fetch to fail on schema loading
     global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
 
     // Act & Assert
     await expect(app.initialize()).rejects.toThrow();
-    
+
     // Verify error display was attempted (document.body.innerHTML might not be set in test env)
   });
 
@@ -285,11 +308,11 @@ describe('ThematicDirectionsManagerApp Startup Integration', () => {
 
     // Assert - fetch should have been called for schema loading
     expect(global.fetch).toHaveBeenCalled();
-    
+
     // Verify some expected schema requests were made
     const fetchCalls = global.fetch.mock.calls;
-    const schemaRequests = fetchCalls.filter(call => 
-      call[0] && call[0].includes('schema')
+    const schemaRequests = fetchCalls.filter(
+      (call) => call[0] && call[0].includes('schema')
     );
     expect(schemaRequests.length).toBeGreaterThan(0);
   });

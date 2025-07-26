@@ -171,7 +171,7 @@ export class Tokenizer {
     const startLine = this.line,
       startCol = this.col,
       startPos = this.pos;
-    
+
     // Read digits and optional decimal point
     while (
       this.pos < this.input.length &&
@@ -179,7 +179,7 @@ export class Tokenizer {
     ) {
       this.advance();
     }
-    
+
     const value = this.input.slice(startPos, this.pos);
     this.tokens.push({
       type: 'NUMBER',

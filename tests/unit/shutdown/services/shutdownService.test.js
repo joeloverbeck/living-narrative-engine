@@ -77,7 +77,9 @@ describe('ShutdownService - Unit Tests', () => {
           container,
           validatedEventDispatcher,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'logger'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'logger'."
+      );
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "ShutdownService: Missing or invalid required dependency 'logger'."
@@ -93,7 +95,9 @@ describe('ShutdownService - Unit Tests', () => {
           logger: invalidLogger,
           validatedEventDispatcher,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'logger'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'logger'."
+      );
     });
 
     it('should throw error when logger is invalid (missing debug method)', () => {
@@ -105,7 +109,9 @@ describe('ShutdownService - Unit Tests', () => {
           logger: invalidLogger,
           validatedEventDispatcher,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'logger'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'logger'."
+      );
     });
 
     it('should throw error when logger is invalid (missing warn method)', () => {
@@ -117,7 +123,9 @@ describe('ShutdownService - Unit Tests', () => {
           logger: invalidLogger,
           validatedEventDispatcher,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'logger'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'logger'."
+      );
     });
 
     it('should attempt to resolve logger from container when logger is invalid', () => {
@@ -131,7 +139,9 @@ describe('ShutdownService - Unit Tests', () => {
           logger: invalidLogger,
           validatedEventDispatcher,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'logger'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'logger'."
+      );
 
       expect(container.resolve).toHaveBeenCalledWith('ILogger');
       expect(fallbackLogger.error).toHaveBeenCalledWith(
@@ -151,7 +161,9 @@ describe('ShutdownService - Unit Tests', () => {
           logger: invalidLogger,
           validatedEventDispatcher,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'logger'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'logger'."
+      );
 
       expect(container.resolve).toHaveBeenCalledWith('ILogger');
     });
@@ -162,7 +174,9 @@ describe('ShutdownService - Unit Tests', () => {
           container,
           logger,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'."
+      );
 
       expect(logger.error).toHaveBeenCalledWith(
         "ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'."
@@ -178,7 +192,9 @@ describe('ShutdownService - Unit Tests', () => {
           logger,
           validatedEventDispatcher: invalidDispatcher,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'."
+      );
 
       expect(logger.error).toHaveBeenCalledWith(
         "ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'."
@@ -194,7 +210,9 @@ describe('ShutdownService - Unit Tests', () => {
           logger,
           validatedEventDispatcher: invalidDispatcher,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'."
+      );
     });
 
     it('should create instance successfully with all valid dependencies', () => {
@@ -372,7 +390,7 @@ describe('ShutdownService - Unit Tests', () => {
 
       // The system should still be processed
       expect(anonymousSystem.shutdown).toHaveBeenCalledTimes(1);
-      
+
       // Verify it completes successfully
       expect(validatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'shutdown:shutdown_service:completed',
@@ -578,7 +596,7 @@ describe('ShutdownService - Unit Tests', () => {
       // This tests the error logging in the catch block when the failed dispatch also fails
       const criticalError = new Error('Critical shutdown error');
       const dispatchFailedError = new Error('Failed to dispatch failed event');
-      
+
       // Mock container.resolveByTag to throw an uncaught error
       container.resolveByTag.mockImplementation(() => {
         throw criticalError;
@@ -598,7 +616,7 @@ describe('ShutdownService - Unit Tests', () => {
         'ShutdownService: CRITICAL ERROR resolving SHUTDOWNABLE systems. Cannot proceed with tagged system shutdown.',
         criticalError
       );
-      
+
       // The test verifies that even if the failed event dispatch fails, the sequence completes
       expect(logger.debug).toHaveBeenCalledWith(
         'ShutdownService: Shutdown sequence finished.'
@@ -756,7 +774,9 @@ describe('ShutdownService - Unit Tests', () => {
           logger: invalidLogger,
           validatedEventDispatcher,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'logger'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'logger'."
+      );
     });
 
     it('should handle null validatedEventDispatcher', () => {
@@ -766,7 +786,9 @@ describe('ShutdownService - Unit Tests', () => {
           logger,
           validatedEventDispatcher: null,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'."
+      );
     });
 
     it('should handle validatedEventDispatcher with non-function dispatch', () => {
@@ -778,7 +800,9 @@ describe('ShutdownService - Unit Tests', () => {
           logger,
           validatedEventDispatcher: invalidDispatcher,
         });
-      }).toThrow("ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'.");
+      }).toThrow(
+        "ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'."
+      );
     });
   });
 });

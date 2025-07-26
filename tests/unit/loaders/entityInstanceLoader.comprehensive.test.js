@@ -361,14 +361,20 @@ describe('EntityInstanceLoader', () => {
 
       // Mock validation failures
       mockSchemaValidator.validate
-        .calledWith('core:health', testInstanceData.componentOverrides['core:health'])
+        .calledWith(
+          'core:health',
+          testInstanceData.componentOverrides['core:health']
+        )
         .mockReturnValue({
           isValid: false,
           errors: healthErrors,
         });
 
       mockSchemaValidator.validate
-        .calledWith('core:name', testInstanceData.componentOverrides['core:name'])
+        .calledWith(
+          'core:name',
+          testInstanceData.componentOverrides['core:name']
+        )
         .mockReturnValue({
           isValid: false,
           errors: nameErrors,
@@ -549,5 +555,4 @@ describe('EntityInstanceLoader', () => {
       });
     });
   });
-
 });

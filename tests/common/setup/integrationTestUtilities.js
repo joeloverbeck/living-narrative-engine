@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Set up integration test utilities
- * 
+ *
  * @param {object} testBed - The test bed instance
  * @returns {object} Utility functions for the test
  */
@@ -16,7 +16,7 @@ export function setupIntegrationTestUtilities(testBed) {
   return {
     /**
      * Create an entity with equipment components
-     * 
+     *
      * @param {object} options - Entity creation options
      * @param {object} [options.equipment] - Equipment configuration
      * @param {Array<string>} [options.inventory] - Initial inventory items
@@ -25,30 +25,30 @@ export function setupIntegrationTestUtilities(testBed) {
      */
     createEntityWithEquipment(options = {}) {
       const entityId = options.id || uuidv4();
-      
+
       // Build components
       const components = {
-        'core:actor': { name: options.name || 'Test Actor' }
+        'core:actor': { name: options.name || 'Test Actor' },
       };
 
       // Add equipment component if provided
       if (options.equipment) {
         components['clothing:equipment'] = {
-          equipped: options.equipment
+          equipped: options.equipment,
         };
       }
 
       // Add inventory component if provided
       if (options.inventory) {
         components['core:inventory'] = {
-          items: options.inventory
+          items: options.inventory,
         };
       }
 
       // Add position component if provided
       if (options.position) {
         components['core:position'] = {
-          locationId: options.position
+          locationId: options.position,
         };
       }
 
@@ -73,7 +73,7 @@ export function setupIntegrationTestUtilities(testBed) {
 
     /**
      * Create a clothing item entity
-     * 
+     *
      * @param {object} options - Item creation options
      * @param {string} options.id - Item ID
      * @param {string} [options.name] - Item name
@@ -83,13 +83,13 @@ export function setupIntegrationTestUtilities(testBed) {
      */
     createClothingItem(options = {}) {
       const itemId = options.id || uuidv4();
-      
+
       // Build components
       const components = {
         'core:item': {
           name: options.name || 'Test Clothing',
-          type: 'clothing'
-        }
+          type: 'clothing',
+        },
       };
 
       // Add wearable component
@@ -97,7 +97,7 @@ export function setupIntegrationTestUtilities(testBed) {
         components['clothing:wearable'] = {
           slotId: options.slot || 'torso_upper',
           layer: options.layer || 'base',
-          isWearable: true
+          isWearable: true,
         };
       }
 
@@ -122,12 +122,12 @@ export function setupIntegrationTestUtilities(testBed) {
 
     /**
      * Create multiple entities at once
-     * 
+     *
      * @param {Array<object>} entityConfigs - Array of entity configurations
      * @returns {Array<object>} Created entities
      */
     createEntities(entityConfigs) {
-      return entityConfigs.map(config => {
+      return entityConfigs.map((config) => {
         if (config.type === 'clothing') {
           return this.createClothingItem(config);
         }
@@ -137,18 +137,18 @@ export function setupIntegrationTestUtilities(testBed) {
 
     /**
      * Clean up created entities
-     * 
+     *
      * @param {Array<string>} entityIds - IDs of entities to clean up
      */
     cleanupEntities(entityIds) {
-      entityIds.forEach(id => {
+      entityIds.forEach((id) => {
         entityManager.entities.delete(id);
       });
     },
 
     /**
      * Subscribe to events and collect them
-     * 
+     *
      * @param {string} eventType - Event type to subscribe to
      * @returns {object} Object with events array and unsubscribe function
      */
@@ -160,13 +160,13 @@ export function setupIntegrationTestUtilities(testBed) {
 
       return {
         events,
-        unsubscribe
+        unsubscribe,
       };
     },
 
     /**
      * Wait for a specific event to be dispatched
-     * 
+     *
      * @param {string} eventType - Event type to wait for
      * @param {number} [timeout] - Timeout in milliseconds
      * @returns {Promise<object>} The dispatched event
@@ -184,6 +184,6 @@ export function setupIntegrationTestUtilities(testBed) {
           resolve(event);
         });
       });
-    }
+    },
   };
 }

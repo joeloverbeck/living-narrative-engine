@@ -28,16 +28,16 @@ export class FormValidationHelper {
     }
 
     if (length < minLength) {
-      return { 
-        isValid: false, 
-        error: `Input must be at least ${minLength} characters` 
+      return {
+        isValid: false,
+        error: `Input must be at least ${minLength} characters`,
       };
     }
 
     if (length > maxLength) {
-      return { 
-        isValid: false, 
-        error: `Input must be no more than ${maxLength} characters` 
+      return {
+        isValid: false,
+        error: `Input must be no more than ${maxLength} characters`,
       };
     }
 
@@ -55,15 +55,15 @@ export class FormValidationHelper {
     if (!textarea || !countElement) return;
 
     const currentLength = textarea.value.length;
-    const displayText = maxLength 
-      ? `${currentLength}/${maxLength}` 
+    const displayText = maxLength
+      ? `${currentLength}/${maxLength}`
       : `${currentLength}`;
 
     countElement.textContent = displayText;
 
     // Update styling based on length
     countElement.classList.remove('warning', 'error');
-    
+
     if (maxLength) {
       const warningThreshold = maxLength * 0.8;
       if (currentLength > maxLength) {
@@ -155,7 +155,10 @@ export class FormValidationHelper {
       FormValidationHelper.clearFieldError(element);
       return true;
     } else {
-      FormValidationHelper.showFieldError(element, result.error || `${fieldName} is invalid`);
+      FormValidationHelper.showFieldError(
+        element,
+        result.error || `${fieldName} is invalid`
+      );
       return false;
     }
   }
@@ -181,10 +184,11 @@ export class FormValidationHelper {
       timeout = setTimeout(() => {
         const value = element.value?.trim() || '';
         const result = validator(value);
-        
+
         if (result.isValid) {
           FormValidationHelper.clearFieldError(element);
-        } else if (value.length > 0) { // Only show error if user has typed something
+        } else if (value.length > 0) {
+          // Only show error if user has typed something
           FormValidationHelper.showFieldError(element, result.error);
         }
       }, debounceMs);
@@ -192,7 +196,11 @@ export class FormValidationHelper {
 
     const updateCounter = () => {
       if (countElement) {
-        FormValidationHelper.updateCharacterCount(element, countElement, maxLength);
+        FormValidationHelper.updateCharacterCount(
+          element,
+          countElement,
+          maxLength
+        );
       }
     };
 
@@ -206,7 +214,7 @@ export class FormValidationHelper {
       clearTimeout(timeout);
       const value = element.value?.trim() || '';
       const result = validator(value);
-      
+
       if (!result.isValid) {
         FormValidationHelper.showFieldError(element, result.error);
       }
@@ -235,7 +243,9 @@ export class FormValidationHelper {
     if (!container) return null;
 
     // Look for error element by class or data attribute
-    return container.querySelector('.error-message, [data-error-for="' + element.id + '"]');
+    return container.querySelector(
+      '.error-message, [data-error-for="' + element.id + '"]'
+    );
   }
 
   /**
@@ -276,7 +286,8 @@ export const ValidationPatterns = {
    * @param {string} value - Value to validate
    * @returns {{isValid: boolean, error?: string}} Validation result
    */
-  description: (value) => FormValidationHelper.validateTextInput(value, 20, 2000),
+  description: (value) =>
+    FormValidationHelper.validateTextInput(value, 20, 2000),
 
   /**
    * Short text validation (10-500 characters)

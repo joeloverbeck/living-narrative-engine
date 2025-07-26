@@ -1,9 +1,13 @@
 # Ticket: Enhance ActionFormattingStage for Multi-Target Support
 
 ## Ticket ID: PHASE2-TICKET5
+
 ## Priority: High
+
 ## Estimated Time: 6-8 hours
+
 ## Dependencies: PHASE2-TICKET4
+
 ## Blocks: PHASE4-TICKET11, PHASE4-TICKET13
 
 ## Overview
@@ -58,7 +62,7 @@ export class ActionFormattingStage extends PipelineStage {
   #entityManager;
   #displayNameResolver;
   #maxCombinations;
-  
+
   /**
    * @param {Object} deps
    * @param {EntityManager} deps.entityManager
@@ -66,20 +70,21 @@ export class ActionFormattingStage extends PipelineStage {
    * @param {number} [deps.maxCombinations=100] - Maximum combinations to generate
    * @param {ILogger} deps.logger
    */
-  constructor({ 
+  constructor({
     entityManager,
     displayNameResolver,
     maxCombinations = 100,
-    logger 
+    logger,
   }) {
     super({ logger });
     validateDependency(entityManager, 'IEntityManager');
-    
+
     this.#entityManager = entityManager;
-    this.#displayNameResolver = displayNameResolver || this.#defaultDisplayNameResolver.bind(this);
+    this.#displayNameResolver =
+      displayNameResolver || this.#defaultDisplayNameResolver.bind(this);
     this.#maxCombinations = maxCombinations;
   }
-  
+
   /**
    * Execute action formatting
    * @param {Object} context - Pipeline context
@@ -93,59 +98,65 @@ export class ActionFormattingStage extends PipelineStage {
    */
   async executeInternal(context, trace) {
     const { actionDef, actor, resolvedTargets, targetContexts } = context;
-    
+
     trace?.step(`Formatting action '${actionDef.id}'`, 'ActionFormattingStage');
-    
+
     try {
       // Handle legacy single-target formatting
       if (this.#isLegacyFormat(context)) {
         return this.#formatLegacyAction(context, trace);
       }
-      
+
       // Handle multi-target formatting
       if (actionDef.generateCombinations) {
         return this.#generateCombinations(context, trace);
       }
-      
+
       // Format single action with all targets
       return this.#formatSingleAction(context, trace);
-      
     } catch (error) {
       this.logger.error(`Error formatting action '${actionDef.id}':`, error);
       return PipelineResult.error(error, 'ActionFormattingStage');
     }
   }
-  
+
   /**
    * Check if this is legacy single-target format
    * @private
    */
   #isLegacyFormat(context) {
     const { resolvedTargets, targetContexts } = context;
-    
+
     // Legacy format has targetContexts but not multi-target resolvedTargets
-    return targetContexts && (!resolvedTargets || 
-           (Object.keys(resolvedTargets).length === 1 && resolvedTargets.primary));
+    return (
+      targetContexts &&
+      (!resolvedTargets ||
+        (Object.keys(resolvedTargets).length === 1 && resolvedTargets.primary))
+    );
   }
-  
+
   /**
    * Format legacy single-target action
    * @private
    */
   #formatLegacyAction(context, trace) {
     const { actionDef, actor, targetContexts } = context;
-    
-    trace?.step('Formatting legacy single-target action', 'ActionFormattingStage');
-    
-    const formattedActions = targetContexts.map(targetContext => {
-      const displayName = targetContext.displayName || 
-                          this.#displayNameResolver(targetContext.entityId);
-      
+
+    trace?.step(
+      'Formatting legacy single-target action',
+      'ActionFormattingStage'
+    );
+
+    const formattedActions = targetContexts.map((targetContext) => {
+      const displayName =
+        targetContext.displayName ||
+        this.#displayNameResolver(targetContext.entityId);
+
       const formattedText = actionDef.template.replace(
         /\{target\}/g,
         displayName
       );
-      
+
       return {
         actionId: actionDef.id,
         actorId: actor.id,
@@ -153,91 +164,99 @@ export class ActionFormattingStage extends PipelineStage {
         targets: {
           primary: {
             id: targetContext.entityId,
-            displayName
-          }
+            displayName,
+          },
         },
         formattedText,
         metadata: {
-          isLegacy: true
-        }
+          isLegacy: true,
+        },
       };
     });
-    
+
     trace?.success(
       `Formatted ${formattedActions.length} legacy actions`,
       'ActionFormattingStage'
     );
-    
+
     return PipelineResult.continue({
       ...context,
-      formattedActions
+      formattedActions,
     });
   }
-  
+
   /**
    * Generate all combinations of targets
    * @private
    */
   #generateCombinations(context, trace) {
     const { actionDef, actor, resolvedTargets } = context;
-    
+
     trace?.step('Generating target combinations', 'ActionFormattingStage');
-    
+
     // Get target keys that have candidates
     const targetKeys = Object.keys(resolvedTargets).filter(
-      key => resolvedTargets[key].length > 0
+      (key) => resolvedTargets[key].length > 0
     );
-    
+
     if (targetKeys.length === 0) {
       return PipelineResult.skip('No targets to combine');
     }
-    
+
     // Calculate total combinations
     const totalCombinations = targetKeys.reduce(
       (total, key) => total * resolvedTargets[key].length,
       1
     );
-    
+
     if (totalCombinations > this.#maxCombinations) {
       trace?.warn(
         `Too many combinations (${totalCombinations}), limiting to ${this.#maxCombinations}`,
         'ActionFormattingStage'
       );
     }
-    
+
     // Generate combinations
     const combinations = this.#cartesianProduct(resolvedTargets, targetKeys);
     const limitedCombinations = combinations.slice(0, this.#maxCombinations);
-    
+
     // Format each combination
-    const formattedActions = limitedCombinations.map(targetMap => 
-      this.#formatActionWithTargets(actionDef, actor, targetMap, context.targetDefinitions)
+    const formattedActions = limitedCombinations.map((targetMap) =>
+      this.#formatActionWithTargets(
+        actionDef,
+        actor,
+        targetMap,
+        context.targetDefinitions
+      )
     );
-    
+
     trace?.success(
       `Generated ${formattedActions.length} action combinations`,
       'ActionFormattingStage'
     );
-    
+
     return PipelineResult.continue({
       ...context,
       formattedActions,
       metadata: {
         totalCombinations,
-        limitedTo: formattedActions.length
-      }
+        limitedTo: formattedActions.length,
+      },
     });
   }
-  
+
   /**
    * Format single action with first of each target
    * @private
    */
   #formatSingleAction(context, trace) {
     const { actionDef, actor, resolvedTargets } = context;
-    
-    trace?.step('Formatting single multi-target action', 'ActionFormattingStage');
-    
+
+    trace?.step(
+      'Formatting single multi-target action',
+      'ActionFormattingStage'
+    );
+
     // Use first target from each definition
     const targetMap = {};
     for (const [key, targets] of Object.entries(resolvedTargets)) {
@@ -245,20 +264,20 @@ export class ActionFormattingStage extends PipelineStage {
         targetMap[key] = targets[0];
       }
     }
-    
+
     const formattedAction = this.#formatActionWithTargets(
       actionDef,
       actor,
       targetMap,
       context.targetDefinitions
     );
-    
+
     return PipelineResult.continue({
       ...context,
-      formattedActions: [formattedAction]
+      formattedActions: [formattedAction],
     });
   }
-  
+
   /**
    * Format an action with specific targets
    * @private
@@ -266,29 +285,29 @@ export class ActionFormattingStage extends PipelineStage {
   #formatActionWithTargets(actionDef, actor, targetMap, targetDefinitions) {
     let formattedText = actionDef.template;
     const targets = {};
-    
+
     // Get target definitions from action or context
     const targetDefs = targetDefinitions || actionDef.targets || {};
-    
+
     // Replace each placeholder
     for (const [key, target] of Object.entries(targetMap)) {
       const targetDef = this.#getTargetDefinition(targetDefs, key);
       const placeholder = targetDef?.placeholder || 'target';
-      const displayName = target.displayName || 
-                         this.#displayNameResolver(target.id);
-      
+      const displayName =
+        target.displayName || this.#displayNameResolver(target.id);
+
       // Replace all occurrences of the placeholder
       const placeholderRegex = new RegExp(`\\{${placeholder}\\}`, 'g');
       formattedText = formattedText.replace(placeholderRegex, displayName);
-      
+
       // Store formatted target info
       targets[key] = {
         id: target.id,
         displayName,
-        placeholder
+        placeholder,
       };
     }
-    
+
     // Build result
     const result = {
       actionId: actionDef.id,
@@ -297,18 +316,18 @@ export class ActionFormattingStage extends PipelineStage {
       formattedText,
       metadata: {
         templateOriginal: actionDef.template,
-        placeholdersReplaced: Object.keys(targets).length
-      }
+        placeholdersReplaced: Object.keys(targets).length,
+      },
     };
-    
+
     // Add legacy targetId for backward compatibility (primary target)
     if (targets.primary) {
       result.targetId = targets.primary.id;
     }
-    
+
     return result;
   }
-  
+
   /**
    * Get target definition by key
    * @private
@@ -319,10 +338,10 @@ export class ActionFormattingStage extends PipelineStage {
       // Legacy format
       return { placeholder: 'target' };
     }
-    
+
     return targetDefs[key] || null;
   }
-  
+
   /**
    * Generate cartesian product of targets
    * @private
@@ -330,22 +349,22 @@ export class ActionFormattingStage extends PipelineStage {
   #cartesianProduct(resolvedTargets, targetKeys) {
     const combinations = [];
     const indices = new Array(targetKeys.length).fill(0);
-    const limits = targetKeys.map(key => resolvedTargets[key].length);
-    
+    const limits = targetKeys.map((key) => resolvedTargets[key].length);
+
     while (true) {
       // Create combination for current indices
       const targetMap = {};
       targetKeys.forEach((key, i) => {
         targetMap[key] = resolvedTargets[key][indices[i]];
       });
-      
+
       combinations.push(targetMap);
-      
+
       // Stop if we've reached the limit
       if (combinations.length >= this.#maxCombinations) {
         break;
       }
-      
+
       // Increment indices
       let carry = 1;
       for (let i = targetKeys.length - 1; i >= 0 && carry; i--) {
@@ -356,14 +375,14 @@ export class ActionFormattingStage extends PipelineStage {
           carry = 0;
         }
       }
-      
+
       // All combinations generated
       if (carry) break;
     }
-    
+
     return combinations;
   }
-  
+
   /**
    * Default display name resolver
    * @private
@@ -372,7 +391,7 @@ export class ActionFormattingStage extends PipelineStage {
     try {
       const entity = this.#entityManager.getEntity(entityId);
       if (!entity) return entityId;
-      
+
       // Try common name sources in order
       const nameSources = [
         () => entity.getComponent('core:description')?.name,
@@ -386,17 +405,16 @@ export class ActionFormattingStage extends PipelineStage {
             return `${item.type} (${entityId})`;
           }
           return null;
-        }
+        },
       ];
-      
+
       for (const getNameFn of nameSources) {
         const name = getNameFn();
         if (name) return name;
       }
-      
+
       // Fallback to entity ID
       return entityId;
-      
     } catch (error) {
       this.logger.warn(`Error resolving display name for ${entityId}:`, error);
       return entityId;
@@ -427,14 +445,14 @@ export function validateTemplatePlaceholders(template, targetDefinitions) {
   const placeholderRegex = /\{([^}]+)\}/g;
   const foundPlaceholders = new Set();
   let match;
-  
+
   while ((match = placeholderRegex.exec(template)) !== null) {
     foundPlaceholders.add(match[1]);
   }
-  
+
   // Get defined placeholders
   const definedPlaceholders = new Set();
-  
+
   if (typeof targetDefinitions === 'string') {
     // Legacy format always uses 'target'
     definedPlaceholders.add('target');
@@ -446,21 +464,21 @@ export function validateTemplatePlaceholders(template, targetDefinitions) {
       }
     }
   }
-  
+
   // Find missing and extra placeholders
   const missing = Array.from(foundPlaceholders).filter(
-    p => !definedPlaceholders.has(p)
+    (p) => !definedPlaceholders.has(p)
   );
   const extra = Array.from(definedPlaceholders).filter(
-    p => !foundPlaceholders.has(p)
+    (p) => !foundPlaceholders.has(p)
   );
-  
+
   return {
     valid: missing.length === 0,
     missing,
     extra,
     foundPlaceholders: Array.from(foundPlaceholders),
-    definedPlaceholders: Array.from(definedPlaceholders)
+    definedPlaceholders: Array.from(definedPlaceholders),
   };
 }
 
@@ -479,25 +497,22 @@ export function escapePlaceholder(placeholder) {
  * @returns {Function} Display name formatter
  */
 export function createDisplayNameFormatter(options = {}) {
-  const {
-    includeId = false,
-    maxLength = 50,
-    ellipsis = '...'
-  } = options;
-  
+  const { includeId = false, maxLength = 50, ellipsis = '...' } = options;
+
   return (name, entityId) => {
     let displayName = name || entityId;
-    
+
     // Truncate if needed
     if (displayName.length > maxLength) {
-      displayName = displayName.substring(0, maxLength - ellipsis.length) + ellipsis;
+      displayName =
+        displayName.substring(0, maxLength - ellipsis.length) + ellipsis;
     }
-    
+
     // Add ID if requested
     if (includeId && name && name !== entityId) {
       displayName += ` (${entityId})`;
     }
-    
+
     return displayName;
   };
 }
@@ -528,61 +543,61 @@ describe('ActionFormattingStage', () => {
   let stage;
   let mockEntityManager;
   let mockContext;
-  
+
   beforeEach(() => {
     mockEntityManager = {
-      getEntity: jest.fn()
+      getEntity: jest.fn(),
     };
-    
+
     stage = new ActionFormattingStage({
       entityManager: mockEntityManager,
       logger: {
         debug: jest.fn(),
         info: jest.fn(),
         warn: jest.fn(),
-        error: jest.fn()
-      }
+        error: jest.fn(),
+      },
     });
-    
+
     mockContext = {
       actionDef: {
         id: 'test:action',
-        template: 'use {item} on {target}'
+        template: 'use {item} on {target}',
       },
       actor: { id: 'player' },
       resolvedTargets: {
         primary: [
           { id: 'item1', displayName: 'Sword' },
-          { id: 'item2', displayName: 'Shield' }
+          { id: 'item2', displayName: 'Shield' },
         ],
         secondary: [
           { id: 'npc1', displayName: 'Goblin' },
-          { id: 'npc2', displayName: 'Orc' }
-        ]
+          { id: 'npc2', displayName: 'Orc' },
+        ],
       },
       targetDefinitions: {
         primary: { placeholder: 'item' },
-        secondary: { placeholder: 'target' }
-      }
+        secondary: { placeholder: 'target' },
+      },
     };
   });
-  
+
   describe('Legacy Format Support', () => {
     it('should format legacy single-target actions', async () => {
       mockContext = {
         actionDef: {
           id: 'test:legacy',
-          template: 'attack {target}'
+          template: 'attack {target}',
         },
         actor: { id: 'player' },
         targetContexts: [
           { entityId: 'enemy1', displayName: 'Goblin' },
-          { entityId: 'enemy2', displayName: 'Orc' }
-        ]
+          { entityId: 'enemy2', displayName: 'Orc' },
+        ],
       };
-      
+
       const result = await stage.executeInternal(mockContext);
-      
+
       expect(result.shouldContinue).toBe(true);
       expect(result.data.formattedActions).toHaveLength(2);
       expect(result.data.formattedActions[0]).toEqual({
@@ -592,21 +607,21 @@ describe('ActionFormattingStage', () => {
         targets: {
           primary: {
             id: 'enemy1',
-            displayName: 'Goblin'
-          }
+            displayName: 'Goblin',
+          },
         },
         formattedText: 'attack Goblin',
-        metadata: { isLegacy: true }
+        metadata: { isLegacy: true },
       });
     });
   });
-  
+
   describe('Multi-Target Formatting', () => {
     it('should format single multi-target action', async () => {
       mockContext.actionDef.generateCombinations = false;
-      
+
       const result = await stage.executeInternal(mockContext);
-      
+
       expect(result.shouldContinue).toBe(true);
       expect(result.data.formattedActions).toHaveLength(1);
       expect(result.data.formattedActions[0]).toEqual({
@@ -617,136 +632,152 @@ describe('ActionFormattingStage', () => {
           primary: {
             id: 'item1',
             displayName: 'Sword',
-            placeholder: 'item'
+            placeholder: 'item',
           },
           secondary: {
             id: 'npc1',
             displayName: 'Goblin',
-            placeholder: 'target'
-          }
+            placeholder: 'target',
+          },
         },
         formattedText: 'use Sword on Goblin',
         metadata: {
           templateOriginal: 'use {item} on {target}',
-          placeholdersReplaced: 2
-        }
+          placeholdersReplaced: 2,
+        },
       });
     });
-    
+
     it('should generate all combinations when enabled', async () => {
       mockContext.actionDef.generateCombinations = true;
-      
+
       const result = await stage.executeInternal(mockContext);
-      
+
       expect(result.shouldContinue).toBe(true);
       expect(result.data.formattedActions).toHaveLength(4); // 2 items × 2 targets
-      
-      const texts = result.data.formattedActions.map(a => a.formattedText);
+
+      const texts = result.data.formattedActions.map((a) => a.formattedText);
       expect(texts).toEqual([
         'use Sword on Goblin',
         'use Sword on Orc',
         'use Shield on Goblin',
-        'use Shield on Orc'
+        'use Shield on Orc',
       ]);
     });
-    
+
     it('should limit combinations to maxCombinations', async () => {
       // Create stage with limit of 2
       stage = new ActionFormattingStage({
         entityManager: mockEntityManager,
         maxCombinations: 2,
-        logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+        logger: {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        },
       });
-      
+
       mockContext.actionDef.generateCombinations = true;
-      
+
       const result = await stage.executeInternal(mockContext);
-      
+
       expect(result.shouldContinue).toBe(true);
       expect(result.data.formattedActions).toHaveLength(2); // Limited to 2
       expect(result.data.metadata.totalCombinations).toBe(4);
       expect(result.data.metadata.limitedTo).toBe(2);
     });
   });
-  
+
   describe('Display Name Resolution', () => {
     it('should use custom display name resolver', async () => {
       const customResolver = jest.fn().mockReturnValue('Custom Name');
-      
+
       stage = new ActionFormattingStage({
         entityManager: mockEntityManager,
         displayNameResolver: customResolver,
-        logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+        logger: {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        },
       });
-      
+
       // Remove display names to force resolver usage
       mockContext.resolvedTargets.primary[0].displayName = null;
-      
+
       const result = await stage.executeInternal(mockContext);
-      
+
       expect(customResolver).toHaveBeenCalledWith('item1');
-      expect(result.data.formattedActions[0].targets.primary.displayName).toBe('Custom Name');
+      expect(result.data.formattedActions[0].targets.primary.displayName).toBe(
+        'Custom Name'
+      );
     });
-    
+
     it('should fall back to entity ID when name not found', async () => {
       mockEntityManager.getEntity.mockReturnValue(null);
-      
+
       mockContext.resolvedTargets.primary[0].displayName = null;
-      
+
       const result = await stage.executeInternal(mockContext);
-      
-      expect(result.data.formattedActions[0].targets.primary.displayName).toBe('item1');
+
+      expect(result.data.formattedActions[0].targets.primary.displayName).toBe(
+        'item1'
+      );
     });
   });
-  
+
   describe('Placeholder Handling', () => {
     it('should handle multiple occurrences of same placeholder', async () => {
       mockContext.actionDef.template = 'give {item} to {target}, yes {item}!';
-      
+
       const result = await stage.executeInternal(mockContext);
-      
+
       expect(result.data.formattedActions[0].formattedText).toBe(
         'give Sword to Goblin, yes Sword!'
       );
     });
-    
+
     it('should handle missing placeholders gracefully', async () => {
       mockContext.actionDef.template = 'use {item} on {target} with {tool}';
-      
+
       const result = await stage.executeInternal(mockContext);
-      
+
       // Should replace known placeholders and leave unknown ones
       expect(result.data.formattedActions[0].formattedText).toBe(
         'use Sword on Goblin with {tool}'
       );
     });
   });
-  
+
   describe('Error Handling', () => {
     it('should handle empty resolved targets', async () => {
       mockContext.resolvedTargets = {
         primary: [],
-        secondary: []
+        secondary: [],
       };
       mockContext.actionDef.generateCombinations = true;
-      
+
       const result = await stage.executeInternal(mockContext);
-      
+
       expect(result.shouldContinue).toBe(false);
       expect(result.reason).toContain('No targets to combine');
     });
-    
+
     it('should handle missing target definitions', async () => {
       mockContext.targetDefinitions = null;
       mockContext.actionDef.targets = {
         primary: { placeholder: 'item' },
-        secondary: { placeholder: 'target' }
+        secondary: { placeholder: 'target' },
       };
-      
+
       const result = await stage.executeInternal(mockContext);
-      
+
       expect(result.shouldContinue).toBe(true);
-      expect(result.data.formattedActions[0].formattedText).toBe('use Sword on Goblin');
+      expect(result.data.formattedActions[0].formattedText).toBe(
+        'use Sword on Goblin'
+      );
     });
   });
 });
@@ -763,12 +794,12 @@ import { IntegrationTestBed } from '../../common/integrationTestBed.js';
 describe('Multi-Target Action Formatting Integration', () => {
   let testBed;
   let actionProcessor;
-  
+
   beforeEach(() => {
     testBed = new IntegrationTestBed();
     actionProcessor = testBed.getService('actionCandidateProcessor');
   });
-  
+
   it('should format throw action with all combinations', async () => {
     // Create action
     const throwAction = {
@@ -778,124 +809,120 @@ describe('Multi-Target Action Formatting Integration', () => {
       targets: {
         primary: {
           scope: 'actor.core:inventory.items[]',
-          placeholder: 'item'
+          placeholder: 'item',
         },
         secondary: {
           scope: 'location.core:actors[]',
-          placeholder: 'target'
-        }
+          placeholder: 'target',
+        },
       },
       template: 'throw {item} at {target}',
-      generateCombinations: true
+      generateCombinations: true,
     };
-    
+
     // Create entities
     const player = testBed.createEntity('player', {
       'core:inventory': { items: ['rock_001', 'knife_002'] },
-      'core:position': { locationId: 'arena' }
+      'core:position': { locationId: 'arena' },
     });
-    
+
     const goblin = testBed.createEntity('goblin_001', {
       'core:actor': { name: 'Goblin Scout' },
-      'core:position': { locationId: 'arena' }
+      'core:position': { locationId: 'arena' },
     });
-    
+
     const orc = testBed.createEntity('orc_001', {
       'core:actor': { name: 'Orc Warrior' },
-      'core:position': { locationId: 'arena' }
+      'core:position': { locationId: 'arena' },
     });
-    
+
     const rock = testBed.createEntity('rock_001', {
-      'core:item': { name: 'Small Rock', type: 'throwable' }
+      'core:item': { name: 'Small Rock', type: 'throwable' },
     });
-    
+
     const knife = testBed.createEntity('knife_002', {
-      'core:item': { name: 'Throwing Knife', type: 'weapon' }
+      'core:item': { name: 'Throwing Knife', type: 'weapon' },
     });
-    
+
     const arena = testBed.createEntity('arena', {
       'core:location': { name: 'Combat Arena' },
-      'core:actors': { actors: ['player', 'goblin_001', 'orc_001'] }
+      'core:actors': { actors: ['player', 'goblin_001', 'orc_001'] },
     });
-    
+
     // Process action
-    const result = await actionProcessor.process(
-      throwAction,
-      player,
-      { location: arena }
-    );
-    
+    const result = await actionProcessor.process(throwAction, player, {
+      location: arena,
+    });
+
     expect(result.success).toBe(true);
     expect(result.value.actions).toHaveLength(4);
-    
-    const commands = result.value.actions.map(a => a.command);
+
+    const commands = result.value.actions.map((a) => a.command);
     expect(commands).toContain('throw Small Rock at Goblin Scout');
     expect(commands).toContain('throw Small Rock at Orc Warrior');
     expect(commands).toContain('throw Throwing Knife at Goblin Scout');
     expect(commands).toContain('throw Throwing Knife at Orc Warrior');
   });
-  
+
   it('should format clothing adjustment without combinations', async () => {
     // Create action
     const adjustAction = {
       id: 'intimacy:adjust_clothing',
       name: 'Adjust Clothing',
-      description: 'Adjust someone\'s clothing',
+      description: "Adjust someone's clothing",
       targets: {
         primary: {
           scope: 'location.core:actors[]',
-          placeholder: 'person'
+          placeholder: 'person',
         },
         secondary: {
           scope: 'target.topmost_clothing[]',
           placeholder: 'garment',
-          contextFrom: 'primary'
-        }
+          contextFrom: 'primary',
+        },
       },
-      template: 'adjust {person}\'s {garment}',
-      generateCombinations: false
+      template: "adjust {person}'s {garment}",
+      generateCombinations: false,
     };
-    
+
     // Create entities
     const player = testBed.createEntity('player', {
-      'core:position': { locationId: 'room' }
+      'core:position': { locationId: 'room' },
     });
-    
+
     const npc = testBed.createEntity('npc_001', {
       'core:actor': { name: 'Alice' },
       'core:position': { locationId: 'room' },
       'clothing:equipment': {
         equipped: {
           torso_upper: {
-            outer: 'jacket_001'
-          }
-        }
-      }
+            outer: 'jacket_001',
+          },
+        },
+      },
     });
-    
+
     const jacket = testBed.createEntity('jacket_001', {
       'core:item': { name: 'Blue Jacket' },
-      'clothing:garment': { 
+      'clothing:garment': {
         slot: 'torso_upper',
-        properties: ['adjustable']
-      }
+        properties: ['adjustable'],
+      },
     });
-    
+
     const room = testBed.createEntity('room', {
       'core:location': { name: 'Living Room' },
-      'core:actors': { actors: ['player', 'npc_001'] }
+      'core:actors': { actors: ['player', 'npc_001'] },
     });
-    
+
     // Process action
-    const result = await actionProcessor.process(
-      adjustAction,
-      player,
-      { location: room }
-    );
-    
+    const result = await actionProcessor.process(adjustAction, player, {
+      location: room,
+    });
+
     expect(result.success).toBe(true);
     expect(result.value.actions).toHaveLength(1);
-    expect(result.value.actions[0].command).toBe('adjust Alice\'s Blue Jacket');
+    expect(result.value.actions[0].command).toBe("adjust Alice's Blue Jacket");
   });
 });
 ```
@@ -903,6 +930,7 @@ describe('Multi-Target Action Formatting Integration', () => {
 ## Testing Strategy
 
 ### Unit Tests
+
 1. Legacy format compatibility
 2. Multi-placeholder substitution
 3. Combination generation logic
@@ -910,12 +938,14 @@ describe('Multi-Target Action Formatting Integration', () => {
 5. Error handling
 
 ### Integration Tests
+
 1. Full pipeline with formatting
 2. Complex multi-target scenarios
 3. Performance with many combinations
 4. Context-dependent formatting
 
 ### Performance Tests
+
 1. Combination generation speed
 2. Memory usage with large sets
 3. Template substitution performance

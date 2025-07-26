@@ -312,26 +312,26 @@ describe('Clothing Resolver Chain Integration', () => {
         if (entityId === 'leather_jacket_001') {
           return {
             id: 'leather_jacket_001',
-            componentTypeIds: ['core:tags']
+            componentTypeIds: ['core:tags'],
           };
         }
         if (entityId === 'jeans_004') {
           return {
-            id: 'jeans_004', 
-            componentTypeIds: ['core:tags']
+            id: 'jeans_004',
+            componentTypeIds: ['core:tags'],
           };
         }
         if (entityId === 'cotton_shirt_002') {
           return {
             id: 'cotton_shirt_002',
-            componentTypeIds: ['core:tags']
+            componentTypeIds: ['core:tags'],
           };
         }
         return null;
       });
 
       mockRuntimeContext.jsonLogicEval.evaluate.mockImplementation(
-        function(logic, context) {
+        function (logic, context) {
           // Proper JSON Logic evaluation implementation for tests
           if (logic.in && Array.isArray(logic.in) && logic.in.length === 2) {
             const [value, data] = logic.in;
@@ -342,7 +342,7 @@ describe('Clothing Resolver Chain Integration', () => {
         }
       );
 
-      mockRuntimeContext.jsonLogicEval._resolveVar = function(expr, context) {
+      mockRuntimeContext.jsonLogicEval._resolveVar = function (expr, context) {
         if (expr && expr.var) {
           const path = expr.var.split('.');
           let result = context;

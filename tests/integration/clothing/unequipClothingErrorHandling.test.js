@@ -2,13 +2,7 @@
  * @file Integration tests for error handling in clothing unequip operations
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import ClothingIntegrationTestBed from '../../common/clothing/clothingIntegrationTestBed.js';
 import { setupIntegrationTestUtilities } from '../../common/setup/integrationTestUtilities.js';
 
@@ -24,22 +18,25 @@ describe('Clothing Unequip Error Handling Integration', () => {
     // Setup test bed
     testBed = new ClothingIntegrationTestBed();
     await testBed.setup();
-    
+
     // Get utilities
     utils = setupIntegrationTestUtilities(testBed);
     container = testBed.container;
-    
+
     // Get services
     entityManager = testBed.getEntityManager();
     eventBus = testBed.getEventBus();
-    
+
     // Capture events for verification
     capturedEvents = [];
-    testBed.eventDispatcher.subscribe('clothing:unequipped', event => {
+    testBed.eventDispatcher.subscribe('clothing:unequipped', (event) => {
       capturedEvents.push({ type: 'clothing:unequipped', payload: event });
     });
-    testBed.eventDispatcher.subscribe('core:system_error_occurred', event => {
-      capturedEvents.push({ type: 'core:system_error_occurred', payload: event });
+    testBed.eventDispatcher.subscribe('core:system_error_occurred', (event) => {
+      capturedEvents.push({
+        type: 'core:system_error_occurred',
+        payload: event,
+      });
     });
   });
 
@@ -56,7 +53,7 @@ describe('Clothing Unequip Error Handling Integration', () => {
         },
         position: 'test_location',
       });
-      
+
       utils.createClothingItem({
         id: 'white_cotton_crew_tshirt',
         name: 'white cotton crew t-shirt',
@@ -65,13 +62,15 @@ describe('Clothing Unequip Error Handling Integration', () => {
       // Get the handler and mock a scenario where orchestrator sends wrong reason
       const handler = container.resolve('UnequipClothingHandler');
       const orchestrator = container.resolve('EquipmentOrchestrator');
-      
+
       // Mock the orchestrator to return a result that would trigger the old invalid reason
       const originalOrchestrate = orchestrator.orchestrateUnequipment;
-      orchestrator.orchestrateUnequipment = jest.fn().mockImplementation((...args) => {
-        // Call the original with the correct reason to ensure it works
-        return originalOrchestrate.call(orchestrator, ...args);
-      });
+      orchestrator.orchestrateUnequipment = jest
+        .fn()
+        .mockImplementation((...args) => {
+          // Call the original with the correct reason to ensure it works
+          return originalOrchestrate.call(orchestrator, ...args);
+        });
 
       // Act - Execute the unequip operation
       await handler.execute(
@@ -93,12 +92,17 @@ describe('Clothing Unequip Error Handling Integration', () => {
 
       // Assert
       // With the fix, the event should be dispatched successfully
-      const unequippedEvents = capturedEvents.filter(e => e.type === 'clothing:unequipped');
+      const unequippedEvents = capturedEvents.filter(
+        (e) => e.type === 'clothing:unequipped'
+      );
       expect(unequippedEvents).toHaveLength(1);
       expect(unequippedEvents[0].payload.reason).toBe('manual');
-      
+
       // Verify equipment was actually removed
-      const equipment = entityManager.getComponentData(actor.id, 'clothing:equipment');
+      const equipment = entityManager.getComponentData(
+        actor.id,
+        'clothing:equipment'
+      );
       expect(equipment.equipped.torso_upper).toBeUndefined();
     });
 
@@ -132,7 +136,10 @@ describe('Clothing Unequip Error Handling Integration', () => {
 
       // Assert - Should handle gracefully without crashing
       // The orchestrator should return success: false for invalid items
-      const equipment = entityManager.getComponentData(actor.id, 'clothing:equipment');
+      const equipment = entityManager.getComponentData(
+        actor.id,
+        'clothing:equipment'
+      );
       expect(equipment.equipped.torso_upper).toBe('invalid_item'); // Should remain unchanged
     });
   });
@@ -158,7 +165,9 @@ describe('Clothing Unequip Error Handling Integration', () => {
 
       // Assert
       const spatialWarnings = warnCalls.filter(([message]) =>
-        message.includes('SpatialIndexSynchronizer.onPositionChanged: Invalid entity ID')
+        message.includes(
+          'SpatialIndexSynchronizer.onPositionChanged: Invalid entity ID'
+        )
       );
       expect(spatialWarnings).toHaveLength(1);
       expect(spatialWarnings[0][1]).toMatchObject({
@@ -190,7 +199,9 @@ describe('Clothing Unequip Error Handling Integration', () => {
 
       // Assert
       const spatialWarnings = warnCalls.filter(([message]) =>
-        message.includes('SpatialIndexSynchronizer.onPositionChanged: Invalid entity ID')
+        message.includes(
+          'SpatialIndexSynchronizer.onPositionChanged: Invalid entity ID'
+        )
       );
       expect(spatialWarnings).toHaveLength(1);
 
@@ -218,7 +229,9 @@ describe('Clothing Unequip Error Handling Integration', () => {
 
       // Assert
       const spatialWarnings = warnCalls.filter(([message]) =>
-        message.includes('SpatialIndexSynchronizer.onPositionChanged: Invalid entity ID')
+        message.includes(
+          'SpatialIndexSynchronizer.onPositionChanged: Invalid entity ID'
+        )
       );
       expect(spatialWarnings).toHaveLength(1);
 
@@ -238,7 +251,7 @@ describe('Clothing Unequip Error Handling Integration', () => {
         position: 'test_location',
         inventory: ['existing_item'],
       });
-      
+
       utils.createClothingItem({
         id: 'white_cotton_crew_tshirt',
         name: 'white cotton crew t-shirt',
@@ -265,16 +278,24 @@ describe('Clothing Unequip Error Handling Integration', () => {
       );
 
       // Assert - Verify system integrity
-      const equipment = entityManager.getComponentData(actor.id, 'clothing:equipment');
+      const equipment = entityManager.getComponentData(
+        actor.id,
+        'clothing:equipment'
+      );
       expect(equipment.equipped.torso_upper).toBeUndefined();
       expect(equipment.equipped.torso_lower).toBe('sand_beige_cotton_chinos'); // Other equipment intact
 
-      const inventory = entityManager.getComponentData(actor.id, 'core:inventory');
+      const inventory = entityManager.getComponentData(
+        actor.id,
+        'core:inventory'
+      );
       expect(inventory.items).toContain('white_cotton_crew_tshirt');
       expect(inventory.items).toContain('existing_item'); // Existing inventory intact
 
       // Verify event was dispatched correctly
-      const unequippedEvents = capturedEvents.filter(e => e.type === 'clothing:unequipped');
+      const unequippedEvents = capturedEvents.filter(
+        (e) => e.type === 'clothing:unequipped'
+      );
       expect(unequippedEvents).toHaveLength(1);
       expect(unequippedEvents[0].payload).toMatchObject({
         entityId: actor.id,

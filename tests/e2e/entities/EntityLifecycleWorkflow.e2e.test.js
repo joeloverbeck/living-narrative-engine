@@ -4,7 +4,7 @@
  *
  * Tests the complete entity lifecycle from creation through removal,
  * including definition resolution, event dispatching, and repository consistency.
- * 
+ *
  * This addresses the Priority 1 critical gap identified in the entity workflows
  * E2E test coverage analysis for core entity lifecycle operations.
  */
@@ -31,10 +31,10 @@ describe('Entity Lifecycle E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:basic_entity';
       const expectedInstanceId = 'test_entity_001';
-      
+
       // Ensure definition exists
       await testBed.ensureEntityDefinitionExists(definitionId);
-      
+
       // Act
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId: expectedInstanceId,
@@ -47,7 +47,8 @@ describe('Entity Lifecycle E2E Workflow', () => {
       expect(typeof entity.hasComponent).toBe('function');
 
       // Validate entity is retrievable from entity manager
-      const retrievedEntity = await testBed.entityManager.getEntityInstance(expectedInstanceId);
+      const retrievedEntity =
+        await testBed.entityManager.getEntityInstance(expectedInstanceId);
       expect(retrievedEntity).toBeDefined();
       expect(retrievedEntity.id).toBe(expectedInstanceId);
 
@@ -71,7 +72,7 @@ describe('Entity Lifecycle E2E Workflow', () => {
       // Assert entity creation
       expect(entity).toBeDefined();
       expect(entity.id).toBe(expectedInstanceId);
-      
+
       // Validate entity has expected structure
       expect(typeof entity.getComponentData).toBe('function');
       expect(typeof entity.hasComponent).toBe('function');
@@ -93,7 +94,7 @@ describe('Entity Lifecycle E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:event_entity';
       const expectedInstanceId = 'test_event_entity_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
 
       // Act
@@ -106,8 +107,10 @@ describe('Entity Lifecycle E2E Workflow', () => {
 
       // Validate event payload details
       const entityEvents = testBed.getEntityEvents(expectedInstanceId);
-      const createEvent = entityEvents.find(event => event.type === 'ENTITY_CREATED');
-      
+      const createEvent = entityEvents.find(
+        (event) => event.type === 'ENTITY_CREATED'
+      );
+
       expect(createEvent).toBeDefined();
       expect(createEvent.entityId).toBe(expectedInstanceId);
       expect(createEvent.definitionId).toBe(definitionId);
@@ -120,9 +123,18 @@ describe('Entity Lifecycle E2E Workflow', () => {
     it('should handle multiple concurrent entity creations safely', async () => {
       // Arrange
       const entityConfigs = [
-        { definitionId: 'test:concurrent_entity_1', instanceId: 'concurrent_test_001' },
-        { definitionId: 'test:concurrent_entity_2', instanceId: 'concurrent_test_002' },
-        { definitionId: 'test:concurrent_entity_3', instanceId: 'concurrent_test_003' },
+        {
+          definitionId: 'test:concurrent_entity_1',
+          instanceId: 'concurrent_test_001',
+        },
+        {
+          definitionId: 'test:concurrent_entity_2',
+          instanceId: 'concurrent_test_002',
+        },
+        {
+          definitionId: 'test:concurrent_entity_3',
+          instanceId: 'concurrent_test_003',
+        },
       ];
 
       // Ensure all definitions exist
@@ -131,12 +143,12 @@ describe('Entity Lifecycle E2E Workflow', () => {
       }
 
       // Act - Create entities concurrently
-      const creationPromises = entityConfigs.map(config =>
+      const creationPromises = entityConfigs.map((config) =>
         testBed.createTestEntity(config.definitionId, {
           instanceId: config.instanceId,
         })
       );
-      
+
       const entities = await Promise.all(creationPromises);
 
       // Assert all entities were created successfully
@@ -148,7 +160,9 @@ describe('Entity Lifecycle E2E Workflow', () => {
 
       // Validate all entities are retrievable
       for (const config of entityConfigs) {
-        const retrievedEntity = await testBed.entityManager.getEntityInstance(config.instanceId);
+        const retrievedEntity = await testBed.entityManager.getEntityInstance(
+          config.instanceId
+        );
         expect(retrievedEntity).toBeDefined();
         expect(retrievedEntity.id).toBe(config.instanceId);
       }
@@ -184,25 +198,28 @@ describe('Entity Lifecycle E2E Workflow', () => {
       // Arrange - Create an entity first
       const definitionId = 'test:removable_entity';
       const instanceId = 'test_removable_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       await testBed.createTestEntity(definitionId, {
         instanceId,
       });
-      
+
       // Verify entity exists before removal
-      expect(await testBed.entityManager.getEntityInstance(instanceId)).toBeDefined();
-      
+      expect(
+        await testBed.entityManager.getEntityInstance(instanceId)
+      ).toBeDefined();
+
       // Act - Remove the entity
       const result = await testBed.removeTestEntity(instanceId);
 
       // Assert removal was successful
       expect(result).toBe(true);
-      
+
       // Validate entity is no longer retrievable
-      const removedEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      const removedEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       expect(removedEntity).toBeFalsy(); // Could be null or undefined
-      
+
       // Validate entity is removed from entity list
       const entityIds = testBed.entityManager.getEntityIds();
       expect(entityIds).not.toContain(instanceId);
@@ -219,7 +236,7 @@ describe('Entity Lifecycle E2E Workflow', () => {
 
       // Assert removal failed gracefully
       expect(result).toBe(false);
-      
+
       // Validate no error events were generated
       const errorEvents = testBed.getEventsByType('core:error');
       // Should either be empty or contain handled errors (not crashes)
@@ -230,7 +247,7 @@ describe('Entity Lifecycle E2E Workflow', () => {
       // Arrange - Create an entity first
       const definitionId = 'test:event_removal_entity';
       const instanceId = 'test_event_removal_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -244,8 +261,10 @@ describe('Entity Lifecycle E2E Workflow', () => {
 
       // Validate event payload details
       const entityEvents = testBed.getEntityEvents(instanceId);
-      const removeEvent = entityEvents.find(event => event.type === 'ENTITY_REMOVED');
-      
+      const removeEvent = entityEvents.find(
+        (event) => event.type === 'ENTITY_REMOVED'
+      );
+
       expect(removeEvent).toBeDefined();
       expect(removeEvent.entityId).toBe(instanceId);
       expect(removeEvent.payload).toBeDefined();
@@ -255,10 +274,14 @@ describe('Entity Lifecycle E2E Workflow', () => {
     it('should handle multiple entity removals in sequence', async () => {
       // Arrange - Create multiple entities
       const definitionId = 'test:batch_removal_entity';
-      const entityIds = ['batch_removal_001', 'batch_removal_002', 'batch_removal_003'];
-      
+      const entityIds = [
+        'batch_removal_001',
+        'batch_removal_002',
+        'batch_removal_003',
+      ];
+
       await testBed.ensureEntityDefinitionExists(definitionId);
-      
+
       for (const entityId of entityIds) {
         await testBed.createTestEntity(definitionId, {
           instanceId: entityId,
@@ -299,14 +322,14 @@ describe('Entity Lifecycle E2E Workflow', () => {
       const entity1 = await testBed.createTestEntity(definitionId, {
         instanceId: 'consistency_test_001',
       });
-      
+
       const entity2 = await testBed.createTestEntity(definitionId, {
         instanceId: 'consistency_test_002',
       });
-      
+
       // Remove first entity
       await testBed.removeTestEntity(entity1.id);
-      
+
       // Create another entity
       const entity3 = await testBed.createTestEntity(definitionId, {
         instanceId: 'consistency_test_003',
@@ -314,7 +337,7 @@ describe('Entity Lifecycle E2E Workflow', () => {
 
       // Assert repository consistency throughout operations
       await testBed.assertRepositoryConsistency();
-      
+
       // Validate final state
       const finalEntityIds = testBed.entityManager.getEntityIds();
       expect(finalEntityIds).toContain(entity2.id);
@@ -339,13 +362,19 @@ describe('Entity Lifecycle E2E Workflow', () => {
       // Act - Perform concurrent operations (mix of creation and removal)
       const operations = [
         // Create new entities
-        testBed.createTestEntity(definitionId, { instanceId: 'concurrent_new_001' }),
-        testBed.createTestEntity(definitionId, { instanceId: 'concurrent_new_002' }),
+        testBed.createTestEntity(definitionId, {
+          instanceId: 'concurrent_new_001',
+        }),
+        testBed.createTestEntity(definitionId, {
+          instanceId: 'concurrent_new_002',
+        }),
         // Remove existing entities
         testBed.removeTestEntity(initialEntities[0].id),
         testBed.removeTestEntity(initialEntities[1].id),
         // Create another entity
-        testBed.createTestEntity(definitionId, { instanceId: 'concurrent_new_003' }),
+        testBed.createTestEntity(definitionId, {
+          instanceId: 'concurrent_new_003',
+        }),
       ];
 
       const results = await Promise.allSettled(operations);
@@ -354,13 +383,16 @@ describe('Entity Lifecycle E2E Workflow', () => {
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
           // Log but don't fail - some concurrent conflicts are expected
-          console.warn(`Concurrent operation ${index} failed:`, result.reason?.message);
+          console.warn(
+            `Concurrent operation ${index} failed:`,
+            result.reason?.message
+          );
         }
       });
 
       // Most importantly, repository should remain consistent
       await testBed.assertRepositoryConsistency();
-      
+
       // Basic assertion to satisfy jest/expect-expect
       expect(results.length).toBe(5);
     });
@@ -370,19 +402,21 @@ describe('Entity Lifecycle E2E Workflow', () => {
       const definitionId = 'test:integrity_entity';
       await testBed.ensureEntityDefinitionExists(definitionId);
 
-      // Act - Create entity 
+      // Act - Create entity
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId: 'integrity_test_001',
       });
 
       // Assert data integrity is maintained
-      const retrievedEntity = await testBed.entityManager.getEntityInstance(entity.id);
-      
+      const retrievedEntity = await testBed.entityManager.getEntityInstance(
+        entity.id
+      );
+
       // Validate entity structure integrity
       expect(retrievedEntity.id).toBe(entity.id);
       expect(typeof retrievedEntity.hasComponent).toBe('function');
       expect(typeof retrievedEntity.getComponentData).toBe('function');
-      
+
       // Validate basic components exist and have data
       expect(retrievedEntity.hasComponent('core:name')).toBe(true);
       expect(retrievedEntity.hasComponent('core:description')).toBe(true);
@@ -390,8 +424,9 @@ describe('Entity Lifecycle E2E Workflow', () => {
       const nameComponent = retrievedEntity.getComponentData('core:name');
       expect(nameComponent).toBeDefined();
       expect(nameComponent.text).toBeDefined();
-      
-      const descriptionComponent = retrievedEntity.getComponentData('core:description');
+
+      const descriptionComponent =
+        retrievedEntity.getComponentData('core:description');
       expect(descriptionComponent).toBeDefined();
       expect(descriptionComponent.text).toBeDefined();
     });
@@ -407,23 +442,27 @@ describe('Entity Lifecycle E2E Workflow', () => {
       });
 
       // Add small delay to ensure different timestamps
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise((resolve) => setTimeout(resolve, 1));
 
       await testBed.removeTestEntity(entity.id);
 
       // Assert complete lifecycle was tracked
       const entityEvents = testBed.getEntityEvents(entity.id);
-      
+
       // Should have both creation and removal events
-      const createEvents = entityEvents.filter(event => event.type === 'ENTITY_CREATED');
-      const removeEvents = entityEvents.filter(event => event.type === 'ENTITY_REMOVED');
-      
+      const createEvents = entityEvents.filter(
+        (event) => event.type === 'ENTITY_CREATED'
+      );
+      const removeEvents = entityEvents.filter(
+        (event) => event.type === 'ENTITY_REMOVED'
+      );
+
       expect(createEvents).toHaveLength(1);
       expect(removeEvents).toHaveLength(1);
-      
+
       // Events should be in correct chronological order
       expect(createEvents[0].timestamp).toBeLessThan(removeEvents[0].timestamp);
-      
+
       // Event data should be consistent
       expect(createEvents[0].entityId).toBe(entity.id);
       expect(removeEvents[0].entityId).toBe(entity.id);
@@ -456,8 +495,10 @@ describe('Entity Lifecycle E2E Workflow', () => {
       // Validate batch operation metrics
       const batchStats = testBed.getPerformanceStats('batch_entity_creation');
       expect(batchStats.count).toBeGreaterThan(0);
-      
-      const countStats = testBed.getPerformanceStats('batch_entity_creation_count');
+
+      const countStats = testBed.getPerformanceStats(
+        'batch_entity_creation_count'
+      );
       expect(countStats.total).toBe(batchSize);
     });
 
@@ -478,7 +519,7 @@ describe('Entity Lifecycle E2E Workflow', () => {
       // Assert performance consistency
       const performanceStats = testBed.getPerformanceStats('entity_creation');
       expect(performanceStats.count).toBe(iterations);
-      
+
       if (performanceStats.min > 0) {
         const variance = performanceStats.max / performanceStats.min;
         expect(variance).toBeLessThan(maxVariance);

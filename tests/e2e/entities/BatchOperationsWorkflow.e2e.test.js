@@ -5,7 +5,7 @@
  * Tests the complete batch operations system including performance validation,
  * error handling, and scalability characteristics for batch entity creation,
  * component addition, and entity removal operations.
- * 
+ *
  * This addresses the Priority 3 critical gap identified in the entity workflows
  * E2E test coverage analysis for batch operations performance.
  */
@@ -32,20 +32,24 @@ describe('Batch Operations E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:batch_entity';
       const batchSize = 10;
-      const expectedInstanceIds = Array.from({ length: batchSize }, (_, i) => `batch_entity_${i + 1}`);
-      
+      const expectedInstanceIds = Array.from(
+        { length: batchSize },
+        (_, i) => `batch_entity_${i + 1}`
+      );
+
       await testBed.ensureEntityDefinitionExists(definitionId);
-      
-      const entitySpecs = expectedInstanceIds.map(instanceId => ({
+
+      const entitySpecs = expectedInstanceIds.map((instanceId) => ({
         definitionId,
-        opts: { instanceId }
+        opts: { instanceId },
       }));
 
       const startTime = performance.now();
-      
+
       // Act
-      const result = await testBed.entityManager.batchCreateEntities(entitySpecs);
-      
+      const result =
+        await testBed.entityManager.batchCreateEntities(entitySpecs);
+
       const endTime = performance.now();
       const totalTime = endTime - startTime;
 
@@ -64,13 +68,16 @@ describe('Batch Operations E2E Workflow', () => {
 
       // Assert all entities were created correctly
       for (const instanceId of expectedInstanceIds) {
-        const entity = await testBed.entityManager.getEntityInstance(instanceId);
+        const entity =
+          await testBed.entityManager.getEntityInstance(instanceId);
         expect(entity).toBeDefined();
         expect(entity.id).toBe(instanceId);
       }
 
       // Assert events were dispatched for all entities
-      const entityCreatedEvents = testBed.getEventsByType('core:entity_created');
+      const entityCreatedEvents = testBed.getEventsByType(
+        'core:entity_created'
+      );
       expect(entityCreatedEvents).toHaveLength(batchSize);
 
       // Assert repository consistency
@@ -81,21 +88,36 @@ describe('Batch Operations E2E Workflow', () => {
       // Arrange
       const validDefinitionId = 'test:valid_entity';
       const invalidDefinitionId = 'test:nonexistent_entity';
-      
+
       await testBed.ensureEntityDefinitionExists(validDefinitionId);
       // Intentionally don't create definition for invalidDefinitionId
-      
+
       const entitySpecs = [
-        { definitionId: validDefinitionId, opts: { instanceId: 'valid_entity_1' } },
-        { definitionId: invalidDefinitionId, opts: { instanceId: 'invalid_entity_1' } },
-        { definitionId: validDefinitionId, opts: { instanceId: 'valid_entity_2' } },
-        { definitionId: invalidDefinitionId, opts: { instanceId: 'invalid_entity_2' } },
+        {
+          definitionId: validDefinitionId,
+          opts: { instanceId: 'valid_entity_1' },
+        },
+        {
+          definitionId: invalidDefinitionId,
+          opts: { instanceId: 'invalid_entity_1' },
+        },
+        {
+          definitionId: validDefinitionId,
+          opts: { instanceId: 'valid_entity_2' },
+        },
+        {
+          definitionId: invalidDefinitionId,
+          opts: { instanceId: 'invalid_entity_2' },
+        },
       ];
 
       // Act
-      const result = await testBed.entityManager.batchCreateEntities(entitySpecs, {
-        stopOnError: false // Continue processing despite errors
-      });
+      const result = await testBed.entityManager.batchCreateEntities(
+        entitySpecs,
+        {
+          stopOnError: false, // Continue processing despite errors
+        }
+      );
 
       // Assert mixed success/failure results
       expect(result).toBeDefined();
@@ -106,19 +128,23 @@ describe('Batch Operations E2E Workflow', () => {
       expect(result.failures).toHaveLength(2);
 
       // Assert successful entities exist
-      const validEntity1 = await testBed.entityManager.getEntityInstance('valid_entity_1');
-      const validEntity2 = await testBed.entityManager.getEntityInstance('valid_entity_2');
+      const validEntity1 =
+        await testBed.entityManager.getEntityInstance('valid_entity_1');
+      const validEntity2 =
+        await testBed.entityManager.getEntityInstance('valid_entity_2');
       expect(validEntity1).toBeDefined();
       expect(validEntity2).toBeDefined();
 
       // Assert failed entities don't exist
-      const invalidEntity1 = await testBed.entityManager.getEntityInstance('invalid_entity_1');
-      const invalidEntity2 = await testBed.entityManager.getEntityInstance('invalid_entity_2');
+      const invalidEntity1 =
+        await testBed.entityManager.getEntityInstance('invalid_entity_1');
+      const invalidEntity2 =
+        await testBed.entityManager.getEntityInstance('invalid_entity_2');
       expect(invalidEntity1).toBeUndefined();
       expect(invalidEntity2).toBeUndefined();
 
       // Assert failure objects contain error information
-      result.failures.forEach(failure => {
+      result.failures.forEach((failure) => {
         expect(failure.item).toBeDefined();
         expect(failure.error).toBeInstanceOf(Error);
         expect(failure.item.definitionId).toBe(invalidDefinitionId);
@@ -132,16 +158,17 @@ describe('Batch Operations E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:metrics_entity';
       const batchSize = 5;
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
-      
+
       const entitySpecs = Array.from({ length: batchSize }, (_, i) => ({
         definitionId,
-        opts: { instanceId: `metrics_entity_${i + 1}` }
+        opts: { instanceId: `metrics_entity_${i + 1}` },
       }));
 
       // Act
-      const result = await testBed.entityManager.batchCreateEntities(entitySpecs);
+      const result =
+        await testBed.entityManager.batchCreateEntities(entitySpecs);
 
       // Assert comprehensive metrics
       expect(result.processingTime).toBeGreaterThan(0);
@@ -152,7 +179,9 @@ describe('Batch Operations E2E Workflow', () => {
       // Assert metrics match actual results
       expect(result.successes).toHaveLength(result.successCount);
       expect(result.failures).toHaveLength(result.failureCount);
-      expect(result.successCount + result.failureCount).toBe(result.totalProcessed);
+      expect(result.successCount + result.failureCount).toBe(
+        result.totalProcessed
+      );
 
       // Assert performance metrics are recorded
       // Note: During batch creation, individual entity creation metrics may not be recorded
@@ -167,16 +196,17 @@ describe('Batch Operations E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:component_batch_entity';
       const entityCount = 5;
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
-      
+
       // Create entities first using batch creation
       const entitySpecs = Array.from({ length: entityCount }, (_, i) => ({
         definitionId,
-        opts: { instanceId: `component_entity_${i + 1}` }
+        opts: { instanceId: `component_entity_${i + 1}` },
       }));
-      
-      const createResult = await testBed.entityManager.batchCreateEntities(entitySpecs);
+
+      const createResult =
+        await testBed.entityManager.batchCreateEntities(entitySpecs);
       expect(createResult.successCount).toBe(entityCount);
 
       const startTime = performance.now();
@@ -185,24 +215,22 @@ describe('Batch Operations E2E Workflow', () => {
       const componentResults = [];
       for (const entity of createResult.successes) {
         try {
-          await testBed.entityManager.addComponent(
-            entity.id,
-            'core:position',
-            { locationId: `location_${entity.id}` }
-          );
+          await testBed.entityManager.addComponent(entity.id, 'core:position', {
+            locationId: `location_${entity.id}`,
+          });
           componentResults.push({ success: true, entityId: entity.id });
         } catch (error) {
           componentResults.push({ success: false, entityId: entity.id, error });
         }
       }
-      
+
       const endTime = performance.now();
       const totalTime = endTime - startTime;
 
       // Assert component addition results
-      const successCount = componentResults.filter(r => r.success).length;
-      const failureCount = componentResults.filter(r => !r.success).length;
-      
+      const successCount = componentResults.filter((r) => r.success).length;
+      const failureCount = componentResults.filter((r) => !r.success).length;
+
       expect(successCount).toBe(entityCount);
       expect(failureCount).toBe(0);
 
@@ -212,15 +240,19 @@ describe('Batch Operations E2E Workflow', () => {
 
       // Assert components were added to all entities
       for (const entity of createResult.successes) {
-        const updatedEntity = await testBed.entityManager.getEntityInstance(entity.id);
+        const updatedEntity = await testBed.entityManager.getEntityInstance(
+          entity.id
+        );
         expect(updatedEntity.hasComponent('core:position')).toBe(true);
-        
+
         const componentData = updatedEntity.getComponentData('core:position');
         expect(componentData.locationId).toBe(`location_${entity.id}`);
       }
 
       // Assert component addition events were dispatched
-      const componentAddedEvents = testBed.getEventsByType('core:component_added');
+      const componentAddedEvents = testBed.getEventsByType(
+        'core:component_added'
+      );
       expect(componentAddedEvents.length).toBeGreaterThanOrEqual(entityCount);
 
       // Assert repository consistency
@@ -231,16 +263,17 @@ describe('Batch Operations E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:mixed_component_entity';
       const entityCount = 3;
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
-      
+
       // Create entities first
       const entitySpecs = Array.from({ length: entityCount }, (_, i) => ({
         definitionId,
-        opts: { instanceId: `mixed_entity_${i + 1}` }
+        opts: { instanceId: `mixed_entity_${i + 1}` },
       }));
-      
-      const createResult = await testBed.entityManager.batchCreateEntities(entitySpecs);
+
+      const createResult =
+        await testBed.entityManager.batchCreateEntities(entitySpecs);
       expect(createResult.successCount).toBe(entityCount);
 
       // Act - Mix valid and invalid component operations
@@ -249,20 +282,20 @@ describe('Batch Operations E2E Workflow', () => {
           entityId: 'mixed_entity_1',
           componentTypeId: 'core:position',
           componentData: { locationId: 'valid_location_1' },
-          shouldSucceed: true
+          shouldSucceed: true,
         },
         {
           entityId: 'nonexistent_entity',
           componentTypeId: 'core:position',
           componentData: { locationId: 'invalid_location' },
-          shouldSucceed: false
+          shouldSucceed: false,
         },
         {
           entityId: 'mixed_entity_2',
           componentTypeId: 'core:position',
           componentData: { locationId: 'valid_location_2' },
-          shouldSucceed: true
-        }
+          shouldSucceed: true,
+        },
       ];
 
       const results = [];
@@ -280,18 +313,18 @@ describe('Batch Operations E2E Workflow', () => {
       }
 
       // Assert mixed results
-      const successCount = results.filter(r => r.success).length;
-      const failureCount = results.filter(r => !r.success).length;
-      
+      const successCount = results.filter((r) => r.success).length;
+      const failureCount = results.filter((r) => !r.success).length;
+
       expect(successCount).toBe(2); // Two valid operations
       expect(failureCount).toBe(1); // One invalid entity
 
       // Assert successful operations worked
-      const successfulResults = results.filter(r => r.success);
+      const successfulResults = results.filter((r) => r.success);
       expect(successfulResults).toHaveLength(2);
 
       // Assert failed operations contain error information
-      const failedResults = results.filter(r => !r.success);
+      const failedResults = results.filter((r) => !r.success);
       expect(failedResults).toHaveLength(1);
       expect(failedResults[0].error).toBeInstanceOf(Error);
 
@@ -305,19 +338,20 @@ describe('Batch Operations E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:performance_entity';
       const batchSize = 50; // Larger batch for performance testing
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
-      
+
       const entitySpecs = Array.from({ length: batchSize }, (_, i) => ({
         definitionId,
-        opts: { instanceId: `perf_entity_${i + 1}` }
+        opts: { instanceId: `perf_entity_${i + 1}` },
       }));
 
       // Act & Assert - Entity Creation Performance
       const createStartTime = performance.now();
-      const createResult = await testBed.entityManager.batchCreateEntities(entitySpecs);
+      const createResult =
+        await testBed.entityManager.batchCreateEntities(entitySpecs);
       const createEndTime = performance.now();
-      
+
       const createTotalTime = createEndTime - createStartTime;
       const createAvgTimePerEntity = createTotalTime / batchSize;
 
@@ -328,20 +362,18 @@ describe('Batch Operations E2E Workflow', () => {
       // Act & Assert - Component Addition Performance (Sequential)
       const componentStartTime = performance.now();
       let componentSuccessCount = 0;
-      
+
       for (const entity of createResult.successes) {
         try {
-          await testBed.entityManager.addComponent(
-            entity.id,
-            'core:position',
-            { locationId: `perf_location_${entity.id}` }
-          );
+          await testBed.entityManager.addComponent(entity.id, 'core:position', {
+            locationId: `perf_location_${entity.id}`,
+          });
           componentSuccessCount++;
         } catch (error) {
           // Component addition failed
         }
       }
-      
+
       const componentEndTime = performance.now();
       const componentTotalTime = componentEndTime - componentStartTime;
       const componentAvgTimePerOperation = componentTotalTime / batchSize;
@@ -358,23 +390,30 @@ describe('Batch Operations E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:large_batch_entity';
       const largeBatchSize = 100; // Large batch to test memory management
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
-      
+
       const entitySpecs = Array.from({ length: largeBatchSize }, (_, i) => ({
         definitionId,
-        opts: { instanceId: `large_entity_${i + 1}` }
+        opts: { instanceId: `large_entity_${i + 1}` },
       }));
 
       // Monitor memory usage (approximate)
-      const memoryBefore = performance.memory ? performance.memory.usedJSHeapSize : 0;
+      const memoryBefore = performance.memory
+        ? performance.memory.usedJSHeapSize
+        : 0;
 
       // Act
-      const result = await testBed.entityManager.batchCreateEntities(entitySpecs, {
-        batchSize: 25 // Process in smaller chunks to test chunking behavior
-      });
+      const result = await testBed.entityManager.batchCreateEntities(
+        entitySpecs,
+        {
+          batchSize: 25, // Process in smaller chunks to test chunking behavior
+        }
+      );
 
-      const memoryAfter = performance.memory ? performance.memory.usedJSHeapSize : 0;
+      const memoryAfter = performance.memory
+        ? performance.memory.usedJSHeapSize
+        : 0;
 
       // Assert successful processing
       expect(result.successCount).toBe(largeBatchSize);
@@ -385,7 +424,7 @@ describe('Batch Operations E2E Workflow', () => {
       if (performance.memory) {
         const memoryIncrease = memoryAfter - memoryBefore;
         const memoryPerEntity = memoryIncrease / largeBatchSize;
-        
+
         // Memory usage should be reasonable (less than 100KB per entity)
         expect(memoryPerEntity).toBeLessThan(100000);
       }

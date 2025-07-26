@@ -19,21 +19,26 @@
   --accent-primary-hover: #1e5ba8;
   --border-primary: #dfe4ea;
   --status-error: #e74c3c;
-  
+
   /* New thematic colors */
   --narrative-purple: #6c5ce7;
   --narrative-purple-light: #a29bfe;
   --narrative-gold: #f39c12;
   --narrative-gold-light: #f1c40f;
-  --creative-gradient: linear-gradient(135deg, var(--narrative-purple) 0%, var(--narrative-gold) 100%);
-  
+  --creative-gradient: linear-gradient(
+    135deg,
+    var(--narrative-purple) 0%,
+    var(--narrative-gold) 100%
+  );
+
   /* Enhanced backgrounds */
   --bg-highlight: rgba(108, 92, 231, 0.05);
-  
+
   /* Card shadows */
   --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 10px 20px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
-  
+  --shadow-card-hover:
+    0 10px 20px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+
   /* Typography */
   --font-narrative: 'Crimson Text', 'Merriweather', serif;
   --font-ui: 'Inter', 'Open Sans', sans-serif;
@@ -68,9 +73,16 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translate(0, 0); }
-  33% { transform: translate(-20px, -20px); }
-  66% { transform: translate(20px, -10px); }
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(-20px, -20px);
+  }
+  66% {
+    transform: translate(20px, -10px);
+  }
 }
 
 .header-content {
@@ -365,8 +377,14 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .empty-state,
@@ -455,19 +473,29 @@
 }
 
 /* Staggered entrance animation */
-.direction-card:nth-child(1) { animation-delay: 0.1s; }
-.direction-card:nth-child(2) { animation-delay: 0.2s; }
-.direction-card:nth-child(3) { animation-delay: 0.3s; }
-.direction-card:nth-child(4) { animation-delay: 0.4s; }
-.direction-card:nth-child(5) { animation-delay: 0.5s; }
+.direction-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.direction-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.direction-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.direction-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.direction-card:nth-child(5) {
+  animation-delay: 0.5s;
+}
 
 @keyframes slideIn {
-  from { 
-    opacity: 0; 
+  from {
+    opacity: 0;
     transform: translateX(-20px);
   }
-  to { 
-    opacity: 1; 
+  to {
+    opacity: 1;
     transform: translateX(0);
   }
 }
@@ -621,7 +649,9 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.3);
   transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
+  transition:
+    width 0.6s,
+    height 0.6s;
 }
 
 .primary-button:hover::before {
@@ -699,8 +729,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ===== Modal ===== */
@@ -794,7 +829,7 @@
   .thematic-direction-main {
     gap: 1.5rem;
   }
-  
+
   .concept-input-panel,
   .directions-panel {
     padding: 1.5rem;
@@ -819,7 +854,7 @@
     height: 500px;
     max-height: 60vh;
   }
-  
+
   .direction-card {
     padding: 1.5rem;
   }
@@ -844,11 +879,11 @@
   .thematic-direction-header h1 {
     font-size: 1.75rem;
   }
-  
+
   .header-subtitle {
     font-size: 1rem;
   }
-  
+
   .concept-input-panel h2,
   .directions-panel h2 {
     font-size: 1.25rem;

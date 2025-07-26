@@ -43,9 +43,6 @@
       "actors_with_penis_in_intimacy.scope",
       "actors_with_vagina_facing_each_other_covered.scope"
     ],
-    "ui": [
-      "icons.json",
-      "labels.json"
-    ]
+    "ui": ["icons.json", "labels.json"]
   }
 }

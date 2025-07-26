@@ -2,13 +2,7 @@
  * @file Tests for clothing:unequipped event payload validation
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 
@@ -26,61 +20,63 @@ describe('clothing:unequipped Event Validation', () => {
     };
 
     schemaValidator = new AjvSchemaValidator({ logger: mockLogger });
-    
+
     // Load event schema and dependencies
     const fs = await import('fs');
     const path = await import('path');
-    
+
     // Load dependencies first
     const commonSchema = JSON.parse(
-      fs.readFileSync(
-        path.resolve('data/schemas/common.schema.json'),
-        'utf8'
-      )
+      fs.readFileSync(path.resolve('data/schemas/common.schema.json'), 'utf8')
     );
     await schemaValidator.addSchema(commonSchema, commonSchema.$id);
-    
+
     // Load base event schema
     const baseEventSchema = JSON.parse(
-      fs.readFileSync(
-        path.resolve('data/schemas/event.schema.json'),
-        'utf8'
-      )
+      fs.readFileSync(path.resolve('data/schemas/event.schema.json'), 'utf8')
     );
     await schemaValidator.addSchema(baseEventSchema, baseEventSchema.$id);
-    
+
     const eventSchema = JSON.parse(
       fs.readFileSync(
-        path.resolve('data/mods/clothing/events/clothing_unequipped.event.json'),
+        path.resolve(
+          'data/mods/clothing/events/clothing_unequipped.event.json'
+        ),
         'utf8'
       )
     );
-    
-    await schemaValidator.addSchema(eventSchema, eventSchema.$id);
-    
+
+    // Create a clean schema object for AJV - remove 'id' and add '$id'
+    const { id, ...cleanEventSchema } = eventSchema;
+    cleanEventSchema.$id = id;
+    await schemaValidator.addSchema(cleanEventSchema, id);
+
     // Register the payload schema separately for validation
     // ValidatedEventDispatcher expects schema ID pattern: ${eventName}#payload
-    await schemaValidator.addSchema(eventSchema.payloadSchema, 'clothing:unequipped#payload');
-    
+    await schemaValidator.addSchema(
+      eventSchema.payloadSchema,
+      'clothing:unequipped#payload'
+    );
+
     // Create a basic event dispatcher
     const basicEventDispatcher = {
       dispatch: jest.fn().mockResolvedValue(true),
       subscribe: jest.fn().mockReturnValue(() => {}),
-      unsubscribe: jest.fn()
+      unsubscribe: jest.fn(),
     };
-    
+
     // Create mock gameDataRepository
     const mockGameDataRepository = {
       getEventDefinition: jest.fn().mockReturnValue(eventSchema),
-      getEventDefinitions: jest.fn().mockReturnValue([eventSchema])
+      getEventDefinitions: jest.fn().mockReturnValue([eventSchema]),
     };
-    
+
     // Create validated event dispatcher
     eventDispatcher = new ValidatedEventDispatcher({
       eventBus: basicEventDispatcher,
       gameDataRepository: mockGameDataRepository,
       schemaValidator,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -100,7 +96,10 @@ describe('clothing:unequipped Event Validation', () => {
         timestamp: Date.now(),
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(true);
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -116,7 +115,10 @@ describe('clothing:unequipped Event Validation', () => {
         timestamp: Date.now(),
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(true);
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -132,7 +134,10 @@ describe('clothing:unequipped Event Validation', () => {
         timestamp: Date.now(),
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(true);
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -148,14 +153,17 @@ describe('clothing:unequipped Event Validation', () => {
         timestamp: Date.now(),
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(true);
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
     it('should accept valid payload with all valid layer types', async () => {
       const layers = ['underwear', 'base', 'outer', 'accessories'];
-      
+
       for (const layer of layers) {
         const payload = {
           entityId: 'player_1',
@@ -167,7 +175,10 @@ describe('clothing:unequipped Event Validation', () => {
           timestamp: Date.now(),
         };
 
-        const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+        const result = await eventDispatcher.dispatch(
+          'clothing:unequipped',
+          payload
+        );
         expect(result).toBe(true);
       }
       expect(mockLogger.error).not.toHaveBeenCalled();
@@ -186,7 +197,10 @@ describe('clothing:unequipped Event Validation', () => {
         timestamp: Date.now(),
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Payload validation FAILED'),
@@ -205,7 +219,10 @@ describe('clothing:unequipped Event Validation', () => {
         timestamp: Date.now(),
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Payload validation FAILED'),
@@ -221,7 +238,10 @@ describe('clothing:unequipped Event Validation', () => {
         cascadeCount: 0,
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Payload validation FAILED'),
@@ -240,7 +260,10 @@ describe('clothing:unequipped Event Validation', () => {
         timestamp: Date.now(),
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Payload validation FAILED'),
@@ -260,7 +283,10 @@ describe('clothing:unequipped Event Validation', () => {
         extraProperty: 'not allowed', // Additional property not allowed
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Payload validation FAILED'),
@@ -281,7 +307,10 @@ describe('clothing:unequipped Event Validation', () => {
         timestamp: Date.now(),
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(true);
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -297,7 +326,10 @@ describe('clothing:unequipped Event Validation', () => {
         timestamp: Date.now(),
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(true);
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -313,7 +345,10 @@ describe('clothing:unequipped Event Validation', () => {
         timestamp: Date.now(),
       };
 
-      const result = await eventDispatcher.dispatch('clothing:unequipped', payload);
+      const result = await eventDispatcher.dispatch(
+        'clothing:unequipped',
+        payload
+      );
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Payload validation FAILED'),

@@ -97,7 +97,9 @@ export class MockDataFetcher {
           const filePath = identifier.replace(/^\.\//, '');
           return JSON.parse(fs.readFileSync(filePath, 'utf8'));
         } catch (error) {
-          throw new Error(`Mock Fetch Error: Failed to read file ${identifier}: ${error.message}`);
+          throw new Error(
+            `Mock Fetch Error: Failed to read file ${identifier}: ${error.message}`
+          );
         }
       }
       throw new Error('Unsupported identifier: ' + identifier);

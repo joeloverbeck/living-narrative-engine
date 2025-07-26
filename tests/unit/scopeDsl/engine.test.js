@@ -736,20 +736,24 @@ describe('ScopeEngine', () => {
       const logic = { '==': [{ var: 'locked' }, false] };
 
       // Mock getEntityInstance for actor
-      mockEntityManager.getEntityInstance = jest.fn().mockImplementation((id) => {
-        if (id === actorId) {
-          return { id: actorId, componentTypeIds: ['exits'] };
+      mockEntityManager.getEntityInstance = jest
+        .fn()
+        .mockImplementation((id) => {
+          if (id === actorId) {
+            return { id: actorId, componentTypeIds: ['exits'] };
+          }
+          return id === 'loc456' ? { id } : undefined;
+        });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'exits') {
+            return exitsData;
+          }
+          return undefined;
         }
-        return id === 'loc456' ? { id } : undefined;
-      });
-      
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'exits') {
-          return exitsData;
-        }
-        return undefined;
-      });
-      
+      );
+
       mockJsonLogicEval.evaluate.mockImplementation(
         (l, context) => !context.entity.locked
       );
@@ -952,16 +956,16 @@ describe('ScopeEngine', () => {
       expect(
         resolvers[0].canResolve({ type: 'Step', field: 'topmost_clothing' })
       ).toBe(true);
-      
+
       // SlotAccessResolver only handles torso_upper when parent is a clothing field
       expect(
-        resolvers[1].canResolve({ 
-          type: 'Step', 
+        resolvers[1].canResolve({
+          type: 'Step',
           field: 'torso_upper',
-          parent: { type: 'Step', field: 'topmost_clothing' }
+          parent: { type: 'Step', field: 'topmost_clothing' },
         })
       ).toBe(true);
-      
+
       // SlotAccessResolver should NOT handle standalone torso_upper
       expect(
         resolvers[1].canResolve({ type: 'Step', field: 'torso_upper' })
@@ -1010,13 +1014,13 @@ describe('ScopeEngine', () => {
       expect(
         resolvers[0].canResolve({ type: 'Step', field: 'topmost_clothing' })
       ).toBe(true);
-      
+
       // SlotAccessResolver only handles torso_upper with clothing parent
       expect(
-        resolvers[1].canResolve({ 
-          type: 'Step', 
+        resolvers[1].canResolve({
+          type: 'Step',
           field: 'torso_upper',
-          parent: { type: 'Step', field: 'topmost_clothing' }
+          parent: { type: 'Step', field: 'topmost_clothing' },
         })
       ).toBe(true);
 
@@ -1025,7 +1029,7 @@ describe('ScopeEngine', () => {
       expect(
         resolvers[3].canResolve({ type: 'Step', field: 'torso_upper' })
       ).toBe(true);
-      
+
       // Verify that regular StepResolver can handle any field
       expect(
         resolvers[3].canResolve({ type: 'Step', field: 'some_random_field' })

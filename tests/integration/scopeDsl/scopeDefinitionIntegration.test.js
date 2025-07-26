@@ -1,5 +1,5 @@
 /**
- * @file Scope Definition Integration Tests  
+ * @file Scope Definition Integration Tests
  * @description Tests that validate .scope file loading and action system integration
  * This ensures the documented workflow from .scope files to action targeting works correctly
  */
@@ -79,7 +79,8 @@ describe('Scope Definition Integration', () => {
     });
 
     it('should parse clothing scope definitions', () => {
-      const scopeContent = 'actor.topmost_clothing.torso_upper | actor.topmost_clothing.torso_lower';
+      const scopeContent =
+        'actor.topmost_clothing.torso_upper | actor.topmost_clothing.torso_lower';
       const scopeName = 'torso_clothing';
 
       const result = parseScopeFile(scopeContent, scopeName);
@@ -174,7 +175,7 @@ describe('Scope Definition Integration', () => {
 
       // Test that scope name reference works
       expect(actionDefinition.scope).toBe('followers');
-      
+
       // In real integration, this would be resolved to namespaced scope
       const namespacedScope = `core:${actionDefinition.scope}`;
       expect(namespacedScope).toBe('core:followers');
@@ -198,21 +199,21 @@ describe('Scope Definition Integration', () => {
       const scope = scopeRegistry.getScope('test:followers');
       expect(scope).toBeDefined();
       expect(scope.ast).toBeDefined();
-      
+
       // 4. Verify that the scope definition workflow is complete
       // We focus on testing the integration between scope definitions and action system
       // rather than the full scope resolution which has its own comprehensive tests
       expect(scope.id).toBe('test:followers');
       expect(scope.expr).toBe('actor.followers[]');
       expect(scope.description).toBe('Test followers scope');
-      
+
       // 5. Verify AST structure matches expected format for action targeting
       expect(scope.ast.type).toBe('ArrayIterationStep');
       expect(scope.ast.parent.type).toBe('Step');
       expect(scope.ast.parent.field).toBe('followers');
       expect(scope.ast.parent.parent.type).toBe('Source');
       expect(scope.ast.parent.parent.kind).toBe('actor');
-      
+
       // This completes the integration test - the scope is properly defined,
       // stored, and accessible for action targeting. Full resolution testing
       // is covered by the ScopeEngine unit tests.
@@ -224,13 +225,19 @@ describe('Scope Definition Integration', () => {
       // Example from documentation: core/scopes/social.scope
       // In real implementation, this would be parsed by a multi-scope parser
       // For this test, we validate the individual expressions work
-      
-      const followersResult = parseScopeFile('actor.core:leading.followers[]', 'followers');
-      const leadersResult = parseScopeFile('actor.core:following.leaders[]', 'leaders');
+
+      const followersResult = parseScopeFile(
+        'actor.core:leading.followers[]',
+        'followers'
+      );
+      const leadersResult = parseScopeFile(
+        'actor.core:following.leaders[]',
+        'leaders'
+      );
 
       expect(followersResult.name).toBe('followers');
       expect(followersResult.expr.type).toBe('ArrayIterationStep');
-      
+
       expect(leadersResult.name).toBe('leaders');
       expect(leadersResult.expr.type).toBe('ArrayIterationStep');
     });

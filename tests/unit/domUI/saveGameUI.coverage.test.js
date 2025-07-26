@@ -214,7 +214,9 @@ describe('SaveGameUI - Coverage Tests', () => {
       saveGameUI.init(null);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid ISaveService instance provided during init')
+        expect.stringContaining(
+          'Invalid ISaveService instance provided during init'
+        )
       );
       expect(saveGameUI.saveService).toBeNull();
     });
@@ -223,7 +225,9 @@ describe('SaveGameUI - Coverage Tests', () => {
       saveGameUI.init(undefined);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid ISaveService instance provided during init')
+        expect.stringContaining(
+          'Invalid ISaveService instance provided during init'
+        )
       );
       expect(saveGameUI.saveService).toBeNull();
     });
@@ -232,7 +236,9 @@ describe('SaveGameUI - Coverage Tests', () => {
       saveGameUI.init({}); // Missing save method
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid ISaveService instance provided during init')
+        expect.stringContaining(
+          'Invalid ISaveService instance provided during init'
+        )
       );
       expect(saveGameUI.saveService).toBeNull();
     });
@@ -273,14 +279,16 @@ describe('SaveGameUI - Coverage Tests', () => {
     it('should fallback to close button when no slots and input is disabled', () => {
       const saveNameInput = mockDocument.getElementById('save-name-input');
       saveNameInput.disabled = true;
-      
+
       // Ensure no slots in container
       const container = mockDocument.getElementById('save-slots-container');
       container.innerHTML = '';
 
       const focusElement = saveGameUI._getInitialFocusElement();
 
-      expect(focusElement).toBe(mockDocument.getElementById('cancel-save-button'));
+      expect(focusElement).toBe(
+        mockDocument.getElementById('cancel-save-button')
+      );
     });
   });
 
@@ -398,13 +406,16 @@ describe('SaveGameUI - Coverage Tests', () => {
       // Mock the listManualSaveSlots to return the saved data
       mockSaveLoadService.listManualSaveSlots
         .mockResolvedValueOnce([]) // Initial call
-        .mockResolvedValueOnce([{  // After save call
-          slotId: 0,
-          saveName: 'TestSave',
-          identifier: 'test-id',
-          isEmpty: false,
-          isCorrupted: false,
-        }]);
+        .mockResolvedValueOnce([
+          {
+            // After save call
+            slotId: 0,
+            saveName: 'TestSave',
+            identifier: 'test-id',
+            isEmpty: false,
+            isCorrupted: false,
+          },
+        ]);
 
       // Set up current slots data
       saveGameUI.currentSlotsDisplayData = [
@@ -425,7 +436,9 @@ describe('SaveGameUI - Coverage Tests', () => {
       await saveGameUI._executeAndFinalizeSave('TestSave');
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Could not find metadata for newly saved slot named "TestSave" to re-select')
+        expect.stringContaining(
+          'Could not find metadata for newly saved slot named "TestSave" to re-select'
+        )
       );
     });
   });
@@ -502,7 +515,10 @@ describe('SaveGameUI - Coverage Tests', () => {
 
       expect(progressSpy).toHaveBeenCalledWith(false);
       // Should not display any status message for successful save with empty message
-      expect(statusSpy).toHaveBeenCalledWith('Saving game as "TestSave"...', 'info');
+      expect(statusSpy).toHaveBeenCalledWith(
+        'Saving game as "TestSave"...',
+        'info'
+      );
       // Verify no error or success message was shown for empty message
       expect(statusSpy).not.toHaveBeenCalledWith('', 'success');
       expect(statusSpy).not.toHaveBeenCalledWith('', 'error');
@@ -570,8 +586,11 @@ describe('SaveGameUI - Coverage Tests', () => {
     });
 
     it('should clean up properties and call super.dispose()', () => {
-      const superDisposeSpy = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(saveGameUI)), 'dispose');
-      
+      const superDisposeSpy = jest.spyOn(
+        Object.getPrototypeOf(Object.getPrototypeOf(saveGameUI)),
+        'dispose'
+      );
+
       // Set some test data
       saveGameUI.saveService = mockSaveService;
       saveGameUI.selectedSlotData = { slotId: 0 };

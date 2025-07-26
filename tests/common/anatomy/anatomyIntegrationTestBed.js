@@ -149,7 +149,11 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         const description = `A human ${partType}`;
 
         // Actually add the description component to the entity
-        if (this.entityManager && this.entityManager.addComponent && partEntity.id) {
+        if (
+          this.entityManager &&
+          this.entityManager.addComponent &&
+          partEntity.id
+        ) {
           this.entityManager.addComponent(partEntity.id, 'core:description', {
             text: description,
           });
@@ -165,7 +169,11 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         const description = `A human ${partType}`;
 
         // Actually add the description component to the entity
-        if (this.entityManager && this.entityManager.addComponent && partEntity.id) {
+        if (
+          this.entityManager &&
+          this.entityManager.addComponent &&
+          partEntity.id
+        ) {
           this.entityManager.addComponent(partEntity.id, 'core:description', {
             text: description,
           });
@@ -2001,7 +2009,6 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     const entity = this.entityManager.createEntityInstance('test:blank');
     return entity.id;
   }
-
 
   /**
    * Creates an actor entity with the specified recipe

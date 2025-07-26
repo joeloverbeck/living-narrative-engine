@@ -334,7 +334,7 @@ export class TestConfigurationFactory {
   static async createTestModule(moduleType = 'turnExecution', mockFn = null) {
     // Use dynamic import to avoid circular dependency
     const { TestModuleBuilder } = await import('./testModuleBuilder.js');
-    
+
     switch (moduleType) {
       case 'turnExecution':
         return await TestModuleBuilder.forTurnExecution();
@@ -415,7 +415,7 @@ export class TestConfigurationFactory {
         world: this.#createDefaultWorld(),
         mocks: this.#createTurnExecutionMocks(),
       },
-      'turnExecution': {
+      turnExecution: {
         llm: this.createLLMConfig('tool-calling'),
         actors: this.#createDefaultActors(),
         world: this.#createDefaultWorld(),
@@ -427,7 +427,7 @@ export class TestConfigurationFactory {
         actions: this.#createTestActions(),
         mocks: this.#createActionProcessingMocks(),
       },
-      'actionProcessing': {
+      actionProcessing: {
         llm: this.createLLMConfig('tool-calling'),
         actors: this.#createMinimalActors(),
         actions: this.#createTestActions(),
@@ -438,7 +438,7 @@ export class TestConfigurationFactory {
         actors: this.#createPromptTestActors(),
         mocks: this.#createPromptGenerationMocks(),
       },
-      'promptGeneration': {
+      promptGeneration: {
         llm: this.createLLMConfig('json-schema'),
         actors: this.#createPromptTestActors(),
         mocks: this.#createPromptGenerationMocks(),

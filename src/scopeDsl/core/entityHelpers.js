@@ -116,7 +116,11 @@ export function createEvaluationContext(
     entity = gateway.getEntityInstance(item);
     if (entity) {
       if (trace) {
-        trace.addLog('debug', `Item ${item} resolved as entity`, 'createEvaluationContext');
+        trace.addLog(
+          'debug',
+          `Item ${item} resolved as entity`,
+          'createEvaluationContext'
+        );
       }
     } else {
       // Fallback: Try component registry lookup for non-entity items
@@ -124,12 +128,20 @@ export function createEvaluationContext(
       if (components) {
         entity = { id: item, components };
         if (trace) {
-          trace.addLog('debug', `Item ${item} resolved via component lookup`, 'createEvaluationContext');
+          trace.addLog(
+            'debug',
+            `Item ${item} resolved via component lookup`,
+            'createEvaluationContext'
+          );
         }
       } else {
         entity = { id: item };
         if (trace) {
-          trace.addLog('debug', `Item ${item} created as basic entity`, 'createEvaluationContext');
+          trace.addLog(
+            'debug',
+            `Item ${item} created as basic entity`,
+            'createEvaluationContext'
+          );
         }
       }
     }
@@ -152,7 +164,7 @@ export function createEvaluationContext(
       for (const [componentId, data] of entity.components) {
         plainComponents[componentId] = data;
       }
-      
+
       // Create new entity with plain object components
       const proto = Object.getPrototypeOf(entity);
       if (proto === Object.prototype || proto === null) {
@@ -172,16 +184,20 @@ export function createEvaluationContext(
         return enhancedEntity;
       }
     }
-    
+
     // If entity already has plain object components, return as-is
     if (entity.components && typeof entity.components === 'object') {
       return entity;
     }
-    
+
     // If no components but has componentTypeIds, build them
     if (!entity.components && entity.componentTypeIds) {
-      const components = buildComponents(entityId || entity.id, entity, gateway);
-      
+      const components = buildComponents(
+        entityId || entity.id,
+        entity,
+        gateway
+      );
+
       // Check if it's a plain object or has a custom prototype
       const proto = Object.getPrototypeOf(entity);
       if (proto === Object.prototype || proto === null) {
@@ -223,7 +239,7 @@ export function createEvaluationContext(
 
       return enhancedEntity;
     }
-    
+
     // No components and no componentTypeIds - return as-is
     return entity;
   }
@@ -259,12 +275,12 @@ export function createEvaluationContext(
   // This allows queries like {"var": "components.core:tags.tags"} to work directly
   const flattenedContext = {
     entity,
-    actor, 
+    actor,
     location,
     // Flatten entity components to root level for easier access
     ...(entity?.components && { components: entity.components }),
     // Also provide direct access to entity properties
-    id: entity?.id
+    id: entity?.id,
   };
 
   return flattenedContext;

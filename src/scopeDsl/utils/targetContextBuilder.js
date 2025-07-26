@@ -7,7 +7,11 @@
 /** @typedef {import('../../interfaces/coreServices.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
-import { validateDependency, assertPresent, assertNonBlankString } from '../../utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertPresent,
+  assertNonBlankString,
+} from '../../utils/dependencyUtils.js';
 
 /**
  * Builds context objects for scope DSL evaluation
@@ -19,7 +23,7 @@ class TargetContextBuilder {
   #gameStateManager;
   /** @type {ILogger} */
   #logger;
-  
+
   /**
    * @param {object} params
    * @param {IEntityManager} params.entityManager
@@ -30,12 +34,12 @@ class TargetContextBuilder {
     validateDependency(entityManager, 'IEntityManager');
     validateDependency(gameStateManager, 'gameStateManager');
     validateDependency(logger, 'ILogger');
-    
+
     this.#entityManager = entityManager;
     this.#gameStateManager = gameStateManager;
     this.#logger = logger;
   }
-  
+
   /**
    * Build base context for primary target resolution
    * @param {string} actorId - ID of the actor entity
@@ -45,19 +49,22 @@ class TargetContextBuilder {
   buildBaseContext(actorId, locationId) {
     assertNonBlankString(actorId, 'Actor ID is required');
     assertNonBlankString(locationId, 'Location ID is required');
-    
+
     try {
       const actor = this.#buildEntityContext(actorId);
       const location = this.#buildEntityContext(locationId);
       const game = this.#buildGameContext();
-      
+
       return { actor, location, game };
     } catch (error) {
-      this.#logger.error(`Failed to build base context: ${error.message}`, error);
+      this.#logger.error(
+        `Failed to build base context: ${error.message}`,
+        error
+      );
       throw error;
     }
   }
-  
+
   /**
    * Build context for dependent target resolution
    * @param {object} baseContext - Base context from buildBaseContext
@@ -69,13 +76,13 @@ class TargetContextBuilder {
     assertPresent(baseContext, 'Base context is required');
     assertPresent(resolvedTargets, 'Resolved targets is required');
     assertPresent(targetDef, 'Target definition is required');
-    
+
     try {
       const context = { ...baseContext };
-      
+
       // Add all resolved targets
       context.targets = { ...resolvedTargets };
-      
+
       // Add specific target if contextFrom is specified
       if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
         const primaryTargets = resolvedTargets[targetDef.contextFrom];
@@ -83,14 +90,17 @@ class TargetContextBuilder {
           context.target = this.#buildEntityContext(primaryTargets[0].id);
         }
       }
-      
+
       return context;
     } catch (error) {
-      this.#logger.error(`Failed to build dependent context: ${error.message}`, error);
+      this.#logger.error(
+        `Failed to build dependent context: ${error.message}`,
+        error
+      );
       throw error;
     }
   }
-  
+
   /**
    * Build entity context with all components
    * @param {string} entityId - Entity ID
@@ -102,13 +112,13 @@ class TargetContextBuilder {
     if (!entity) {
       throw new Error(`Entity not found: ${entityId}`);
     }
-    
+
     return {
       id: entity.id,
-      components: entity.getAllComponents ? entity.getAllComponents() : {}
+      components: entity.getAllComponents ? entity.getAllComponents() : {},
     };
   }
-  
+
   /**
    * Build game state context
    * @returns {object} Game state context object
@@ -118,7 +128,7 @@ class TargetContextBuilder {
     return {
       turnNumber: this.#gameStateManager.getCurrentTurn?.() || 0,
       timeOfDay: this.#gameStateManager.getTimeOfDay?.() || undefined,
-      weather: this.#gameStateManager.getWeather?.() || undefined
+      weather: this.#gameStateManager.getWeather?.() || undefined,
     };
   }
 }

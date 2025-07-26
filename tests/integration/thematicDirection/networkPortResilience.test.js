@@ -34,7 +34,7 @@ import {
 const createMockFetch = (scenario) => {
   return jest.fn().mockImplementation((url, options) => {
     const origin = options?.headers?.origin || 'no-origin';
-    
+
     switch (scenario) {
       case 'cors-success-8080':
         if (origin.includes(':8080')) {
@@ -49,29 +49,37 @@ const createMockFetch = (scenario) => {
                 return null;
               },
             },
-            json: () => Promise.resolve({
-              choices: [{
-                message: {
-                  tool_calls: [{
-                    type: 'function',
-                    function: {
-                      name: 'generate_thematic_directions',
-                      arguments: JSON.stringify({
-                        thematicDirections: [
-                          {
-                            title: 'The Reluctant Guardian',
-                            description: 'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
-                            coreTension: 'Independence vs responsibility',
-                            uniqueTwist: 'Accidentally becomes responsible for others',
-                            narrativePotential: 'Stories of growth and sacrifice'
-                          }
-                        ]
-                      })
-                    }
-                  }]
-                }
-              }]
-            }),
+            json: () =>
+              Promise.resolve({
+                choices: [
+                  {
+                    message: {
+                      tool_calls: [
+                        {
+                          type: 'function',
+                          function: {
+                            name: 'generate_thematic_directions',
+                            arguments: JSON.stringify({
+                              thematicDirections: [
+                                {
+                                  title: 'The Reluctant Guardian',
+                                  description:
+                                    'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
+                                  coreTension: 'Independence vs responsibility',
+                                  uniqueTwist:
+                                    'Accidentally becomes responsible for others',
+                                  narrativePotential:
+                                    'Stories of growth and sacrifice',
+                                },
+                              ],
+                            }),
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              }),
           });
         }
         return Promise.reject(new Error('CORS error: Origin not allowed'));
@@ -89,29 +97,37 @@ const createMockFetch = (scenario) => {
                 return null;
               },
             },
-            json: () => Promise.resolve({
-              choices: [{
-                message: {
-                  tool_calls: [{
-                    type: 'function',
-                    function: {
-                      name: 'generate_thematic_directions',
-                      arguments: JSON.stringify({
-                        thematicDirections: [
-                          {
-                            title: 'The Reluctant Guardian',
-                            description: 'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
-                            coreTension: 'Independence vs responsibility',
-                            uniqueTwist: 'Accidentally becomes responsible for others',
-                            narrativePotential: 'Stories of growth and sacrifice'
-                          }
-                        ]
-                      })
-                    }
-                  }]
-                }
-              }]
-            }),
+            json: () =>
+              Promise.resolve({
+                choices: [
+                  {
+                    message: {
+                      tool_calls: [
+                        {
+                          type: 'function',
+                          function: {
+                            name: 'generate_thematic_directions',
+                            arguments: JSON.stringify({
+                              thematicDirections: [
+                                {
+                                  title: 'The Reluctant Guardian',
+                                  description:
+                                    'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
+                                  coreTension: 'Independence vs responsibility',
+                                  uniqueTwist:
+                                    'Accidentally becomes responsible for others',
+                                  narrativePotential:
+                                    'Stories of growth and sacrifice',
+                                },
+                              ],
+                            }),
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              }),
           });
         }
         return Promise.reject(new Error('CORS error: Origin not allowed'));
@@ -129,29 +145,37 @@ const createMockFetch = (scenario) => {
                 return null;
               },
             },
-            json: () => Promise.resolve({
-              choices: [{
-                message: {
-                  tool_calls: [{
-                    type: 'function',
-                    function: {
-                      name: 'generate_thematic_directions',
-                      arguments: JSON.stringify({
-                        thematicDirections: [
-                          {
-                            title: 'The Reluctant Guardian',
-                            description: 'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
-                            coreTension: 'Independence vs responsibility',
-                            uniqueTwist: 'Accidentally becomes responsible for others',
-                            narrativePotential: 'Stories of growth and sacrifice'
-                          }
-                        ]
-                      })
-                    }
-                  }]
-                }
-              }]
-            }),
+            json: () =>
+              Promise.resolve({
+                choices: [
+                  {
+                    message: {
+                      tool_calls: [
+                        {
+                          type: 'function',
+                          function: {
+                            name: 'generate_thematic_directions',
+                            arguments: JSON.stringify({
+                              thematicDirections: [
+                                {
+                                  title: 'The Reluctant Guardian',
+                                  description:
+                                    'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
+                                  coreTension: 'Independence vs responsibility',
+                                  uniqueTwist:
+                                    'Accidentally becomes responsible for others',
+                                  narrativePotential:
+                                    'Stories of growth and sacrifice',
+                                },
+                              ],
+                            }),
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              }),
           });
         }
         return Promise.reject(new Error('CORS error: Origin not allowed'));
@@ -175,29 +199,37 @@ const createMockFetch = (scenario) => {
               return null;
             },
           },
-          json: () => Promise.resolve({
-            choices: [{
-              message: {
-                tool_calls: [{
-                  type: 'function',
-                  function: {
-                    name: 'generate_thematic_directions',
-                    arguments: JSON.stringify({
-                      thematicDirections: [
-                        {
-                          title: 'The Reluctant Guardian',
-                          description: 'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
-                          coreTension: 'Independence vs responsibility',
-                          uniqueTwist: 'Accidentally becomes responsible for others',
-                          narrativePotential: 'Stories of growth and sacrifice'
-                        }
-                      ]
-                    })
-                  }
-                }]
-              }
-            }]
-          }),
+          json: () =>
+            Promise.resolve({
+              choices: [
+                {
+                  message: {
+                    tool_calls: [
+                      {
+                        type: 'function',
+                        function: {
+                          name: 'generate_thematic_directions',
+                          arguments: JSON.stringify({
+                            thematicDirections: [
+                              {
+                                title: 'The Reluctant Guardian',
+                                description:
+                                  'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
+                                coreTension: 'Independence vs responsibility',
+                                uniqueTwist:
+                                  'Accidentally becomes responsible for others',
+                                narrativePotential:
+                                  'Stories of growth and sacrifice',
+                              },
+                            ],
+                          }),
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            }),
         });
 
       default:
@@ -236,7 +268,7 @@ describe('Thematic Direction Network Port Resilience', () => {
     mockEnvironmentContext = new EnvironmentContext({
       logger: mockLogger,
       executionEnvironment: 'client',
-      proxyServerUrl: 'http://localhost:3001/api/llm-request'
+      proxyServerUrl: 'http://localhost:3001/api/llm-request',
     });
 
     // Create mock API key provider
@@ -247,7 +279,7 @@ describe('Thematic Direction Network Port Resilience', () => {
     // Create mock strategy factory
     mockLlmStrategyFactory = {
       getStrategy: jest.fn().mockReturnValue({
-        execute: jest.fn().mockResolvedValue({ choices: [] })
+        execute: jest.fn().mockResolvedValue({ choices: [] }),
       }),
     };
 
@@ -303,7 +335,7 @@ describe('Thematic Direction Network Port Resilience', () => {
     // Create mock HTTP client with retry logic
     mockHttpClient = new RetryHttpClient({
       logger: mockLogger,
-      dispatcher: mockDispatcher
+      dispatcher: mockDispatcher,
     });
 
     // Create request executor
@@ -317,8 +349,8 @@ describe('Thematic Direction Network Port Resilience', () => {
       llmStrategyFactory: mockLlmStrategyFactory,
       configurationManager: mockConfigurationManager,
       requestExecutor: llmRequestExecutor,
-      errorMapper: mockErrorMapper,  
-      tokenEstimator: mockTokenEstimator
+      errorMapper: mockErrorMapper,
+      tokenEstimator: mockTokenEstimator,
     });
 
     // Initialize the LLM adapter
@@ -330,26 +362,30 @@ describe('Thematic Direction Network Port Resilience', () => {
         thematicDirections: [
           {
             title: 'The Reluctant Guardian',
-            description: 'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
+            description:
+              'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
             coreTension: 'Independence vs responsibility',
             uniqueTwist: 'Accidentally becomes responsible for others',
-            narrativePotential: 'Stories of growth and sacrifice'
+            narrativePotential: 'Stories of growth and sacrifice',
           },
           {
             title: 'The Wandering Scholar',
-            description: 'A character seeking knowledge but questioning truth, must navigate dangerous secrets that challenge everything they believe.',
+            description:
+              'A character seeking knowledge but questioning truth, must navigate dangerous secrets that challenge everything they believe.',
             coreTension: 'Knowledge vs wisdom in a world of dangerous secrets',
-            uniqueTwist: 'Discovers dangerous secrets that challenge everything',
-            narrativePotential: 'Stories of discovery and moral dilemmas'
+            uniqueTwist:
+              'Discovers dangerous secrets that challenge everything',
+            narrativePotential: 'Stories of discovery and moral dilemmas',
           },
           {
             title: 'The Broken Noble',
-            description: 'A character fallen from grace seeking redemption, must confront their past mistakes and learn to work with former enemies.',
+            description:
+              'A character fallen from grace seeking redemption, must confront their past mistakes and learn to work with former enemies.',
             coreTension: 'Pride vs humility when working with former enemies',
             uniqueTwist: 'Must work with former enemies to survive',
-            narrativePotential: 'Stories of redemption and forgiveness'
-          }
-        ]
+            narrativePotential: 'Stories of redemption and forgiveness',
+          },
+        ],
       });
     });
 
@@ -358,7 +394,7 @@ describe('Thematic Direction Network Port Resilience', () => {
       logger: mockLogger,
       llmJsonService: mockLlmJsonService,
       llmStrategyFactory: mockLLMAdapter,
-      llmConfigManager: mockLlmConfigManager
+      llmConfigManager: mockLlmConfigManager,
     });
   });
 
@@ -375,7 +411,10 @@ describe('Thematic Direction Network Port Resilience', () => {
     const conceptId = 'test-concept-123';
     const concept = 'a strong female archer in a fantasy world';
 
-    const result = await thematicGenerator.generateDirections(conceptId, concept);
+    const result = await thematicGenerator.generateDirections(
+      conceptId,
+      concept
+    );
 
     expect(result).toBeDefined();
     expect(result).toHaveLength(3);
@@ -392,7 +431,10 @@ describe('Thematic Direction Network Port Resilience', () => {
     const conceptId = 'test-concept-456';
     const concept = 'a strong female archer in a fantasy world';
 
-    const result = await thematicGenerator.generateDirections(conceptId, concept);
+    const result = await thematicGenerator.generateDirections(
+      conceptId,
+      concept
+    );
 
     expect(result).toBeDefined();
     expect(result).toHaveLength(3);
@@ -425,9 +467,9 @@ describe('Thematic Direction Network Port Resilience', () => {
    */
   test('should handle network errors gracefully', async () => {
     // Mock the getAIDecision method to throw a network error
-    jest.spyOn(mockLLMAdapter, 'getAIDecision').mockRejectedValueOnce(
-      new Error('Network error: Connection refused')
-    );
+    jest
+      .spyOn(mockLLMAdapter, 'getAIDecision')
+      .mockRejectedValueOnce(new Error('Network error: Connection refused'));
 
     const conceptId = 'test-concept-error';
     const concept = 'a strong female archer in a fantasy world';
@@ -444,9 +486,9 @@ describe('Thematic Direction Network Port Resilience', () => {
    */
   test('should handle CORS errors for unsupported ports', async () => {
     // Mock the getAIDecision method to throw a CORS error
-    jest.spyOn(mockLLMAdapter, 'getAIDecision').mockRejectedValueOnce(
-      new Error('CORS error: Origin not allowed')
-    );
+    jest
+      .spyOn(mockLLMAdapter, 'getAIDecision')
+      .mockRejectedValueOnce(new Error('CORS error: Origin not allowed'));
 
     const conceptId = 'test-concept-cors-error';
     const concept = 'a strong female archer in a fantasy world';
@@ -464,7 +506,10 @@ describe('Thematic Direction Network Port Resilience', () => {
     const concept = 'a strong female archer in a fantasy world';
 
     // Verify that the getAIDecision method is called properly
-    const result = await thematicGenerator.generateDirections(conceptId, concept);
+    const result = await thematicGenerator.generateDirections(
+      conceptId,
+      concept
+    );
 
     expect(result).toBeDefined();
     expect(result).toHaveLength(3);
@@ -474,7 +519,7 @@ describe('Thematic Direction Network Port Resilience', () => {
       expect.objectContaining({
         toolSchema: expect.any(Object),
         toolName: 'generate_thematic_directions',
-        toolDescription: expect.any(String)
+        toolDescription: expect.any(String),
       })
     );
   });
@@ -493,26 +538,30 @@ describe('Thematic Direction Network Port Resilience', () => {
         thematicDirections: [
           {
             title: 'The Reluctant Guardian',
-            description: 'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
+            description:
+              'A character torn between personal freedom and duty, accidentally becomes responsible for others and must learn to balance independence with responsibility.',
             coreTension: 'Independence vs responsibility',
             uniqueTwist: 'Accidentally becomes responsible for others',
-            narrativePotential: 'Stories of growth and sacrifice'
+            narrativePotential: 'Stories of growth and sacrifice',
           },
           {
             title: 'The Wandering Scholar',
-            description: 'A character seeking knowledge but questioning truth, must navigate dangerous secrets that challenge everything they believe.',
+            description:
+              'A character seeking knowledge but questioning truth, must navigate dangerous secrets that challenge everything they believe.',
             coreTension: 'Knowledge vs wisdom in a world of dangerous secrets',
-            uniqueTwist: 'Discovers dangerous secrets that challenge everything',
-            narrativePotential: 'Stories of discovery and moral dilemmas'
+            uniqueTwist:
+              'Discovers dangerous secrets that challenge everything',
+            narrativePotential: 'Stories of discovery and moral dilemmas',
           },
           {
             title: 'The Broken Noble',
-            description: 'A character fallen from grace seeking redemption, must confront their past mistakes and learn to work with former enemies.',
+            description:
+              'A character fallen from grace seeking redemption, must confront their past mistakes and learn to work with former enemies.',
             coreTension: 'Pride vs humility when working with former enemies',
             uniqueTwist: 'Must work with former enemies to survive',
-            narrativePotential: 'Stories of redemption and forgiveness'
-          }
-        ]
+            narrativePotential: 'Stories of redemption and forgiveness',
+          },
+        ],
       });
     });
 

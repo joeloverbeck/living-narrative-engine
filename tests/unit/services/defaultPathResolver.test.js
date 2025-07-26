@@ -461,35 +461,42 @@ describe('DefaultPathResolver', () => {
     });
 
     it('should throw an Error for an empty string filename', () => {
-      const expectedErrorMsg = /Invalid or empty filename provided to resolveRulePath/;
+      const expectedErrorMsg =
+        /Invalid or empty filename provided to resolveRulePath/;
       expect(() => resolver.resolveRulePath('')).toThrow(expectedErrorMsg);
       expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
       expect(mockConfig.getRuleBasePath).not.toHaveBeenCalled();
     });
 
     it('should throw an Error for a filename containing only spaces', () => {
-      const expectedErrorMsg = /Invalid or empty filename provided to resolveRulePath/;
+      const expectedErrorMsg =
+        /Invalid or empty filename provided to resolveRulePath/;
       expect(() => resolver.resolveRulePath('   ')).toThrow(expectedErrorMsg);
       expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
       expect(mockConfig.getRuleBasePath).not.toHaveBeenCalled();
     });
 
     it('should throw an Error for a null filename', () => {
-      const expectedErrorMsg = /Invalid or empty filename provided to resolveRulePath/;
+      const expectedErrorMsg =
+        /Invalid or empty filename provided to resolveRulePath/;
       expect(() => resolver.resolveRulePath(null)).toThrow(expectedErrorMsg);
       expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
       expect(mockConfig.getRuleBasePath).not.toHaveBeenCalled();
     });
 
     it('should throw an Error for an undefined filename', () => {
-      const expectedErrorMsg = /Invalid or empty filename provided to resolveRulePath/;
-      expect(() => resolver.resolveRulePath(undefined)).toThrow(expectedErrorMsg);
+      const expectedErrorMsg =
+        /Invalid or empty filename provided to resolveRulePath/;
+      expect(() => resolver.resolveRulePath(undefined)).toThrow(
+        expectedErrorMsg
+      );
       expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
       expect(mockConfig.getRuleBasePath).not.toHaveBeenCalled();
     });
 
     it('should throw an Error for a non-string filename', () => {
-      const expectedErrorMsg = /Invalid or empty filename provided to resolveRulePath/;
+      const expectedErrorMsg =
+        /Invalid or empty filename provided to resolveRulePath/;
       expect(() => resolver.resolveRulePath(123)).toThrow(expectedErrorMsg);
       expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
       expect(mockConfig.getRuleBasePath).not.toHaveBeenCalled();
@@ -499,9 +506,12 @@ describe('DefaultPathResolver', () => {
       // Remove getRuleBasePath from the mock
       delete mockConfig.getRuleBasePath;
       resolver = new DefaultPathResolver(mockConfig);
-      
-      const expectedErrorMsg = /Configuration service does not provide getRuleBasePath/;
-      expect(() => resolver.resolveRulePath('valid.json')).toThrow(expectedErrorMsg);
+
+      const expectedErrorMsg =
+        /Configuration service does not provide getRuleBasePath/;
+      expect(() => resolver.resolveRulePath('valid.json')).toThrow(
+        expectedErrorMsg
+      );
       expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
     });
 
@@ -509,9 +519,12 @@ describe('DefaultPathResolver', () => {
       // Make getRuleBasePath not a function
       mockConfig.getRuleBasePath = 'not-a-function';
       resolver = new DefaultPathResolver(mockConfig);
-      
-      const expectedErrorMsg = /Configuration service does not provide getRuleBasePath/;
-      expect(() => resolver.resolveRulePath('valid.json')).toThrow(expectedErrorMsg);
+
+      const expectedErrorMsg =
+        /Configuration service does not provide getRuleBasePath/;
+      expect(() => resolver.resolveRulePath('valid.json')).toThrow(
+        expectedErrorMsg
+      );
       expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
     });
   });

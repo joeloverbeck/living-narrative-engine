@@ -203,7 +203,7 @@ export default function createFilterResolver({
               locationProvider,
               trace
             );
-            
+
             if (!evalCtx) {
               if (trace) {
                 trace.addLog(
@@ -224,8 +224,10 @@ export default function createFilterResolver({
                 {
                   itemId: item,
                   hasEntityComponents: !!evalCtx.entity?.components,
-                  entityComponentKeys: evalCtx.entity?.components ? Object.keys(evalCtx.entity.components) : [],
-                  logic: node.logic
+                  entityComponentKeys: evalCtx.entity?.components
+                    ? Object.keys(evalCtx.entity.components)
+                    : [],
+                  logic: node.logic,
                 }
               );
             }
@@ -234,18 +236,10 @@ export default function createFilterResolver({
             if (evalResult) {
               result.add(item);
               if (trace) {
-                trace.addLog(
-                  'debug',
-                  `Item ${item} passed filter`,
-                  source
-                );
+                trace.addLog('debug', `Item ${item} passed filter`, source);
               }
             } else if (trace) {
-              trace.addLog(
-                'debug',
-                `Item ${item} failed filter`,
-                source
-              );
+              trace.addLog('debug', `Item ${item} failed filter`, source);
             }
           } catch (error) {
             // Handle errors gracefully
