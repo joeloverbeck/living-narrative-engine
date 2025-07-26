@@ -54,6 +54,7 @@ export function getOrBuildComponents(entityId, entity, gateway, trace) {
  * @param {EntityGateway} gateway - Gateway used for lookups.
  * @param {LocationProvider} locationProvider - Provides current location.
  * @param {object} [trace] - Optional trace logger with `addLog` method.
+ * @param {object} [runtimeContext] - Optional runtime context with target/targets.
  * @returns {object|null} Context object with entity, actor and location fields.
  */
 export function createEvaluationContext(
@@ -61,7 +62,8 @@ export function createEvaluationContext(
   actorEntity,
   gateway,
   locationProvider,
-  trace
+  trace,
+  runtimeContext = null
 ) {
   // Handle null/undefined items
   if (item == null) {
@@ -282,6 +284,15 @@ export function createEvaluationContext(
     // Also provide direct access to entity properties
     id: entity?.id,
   };
+
+  // Add target context if available
+  if (runtimeContext?.target) {
+    flattenedContext.target = runtimeContext.target;
+  }
+
+  if (runtimeContext?.targets) {
+    flattenedContext.targets = runtimeContext.targets;
+  }
 
   return flattenedContext;
 }

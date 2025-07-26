@@ -1,0 +1,28 @@
+// Target Context Examples
+// Demonstrates usage of target and targets in scope expressions
+
+// Basic target access - get the target entity ID
+examples:target_id := target
+
+// Access target's name from actor component
+examples:target_name := target.components.core:actor.name
+
+// Access target's equipped clothing (topmost items)
+examples:target_clothing := target.topmost_clothing[]
+
+// Filter target's clothing by properties
+examples:target_adjustable_clothing := target.topmost_clothing[][{
+  "in": ["adjustable", {"var": "entity.properties"}]
+}]
+
+// Access target's location
+examples:target_location := target.components.core:position.locationId
+
+// Access target's inventory items
+examples:target_items := target.components.core:inventory.items[]
+
+// Get target's actor component with safe fallback
+examples:target_actor_safe := target.components.core:actor
+
+// Access specific clothing slots on target
+examples:target_torso_clothing := target.components.clothing:equipment.equipped.torso_upper.outer

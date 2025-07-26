@@ -113,7 +113,9 @@ describe('EntityServiceFacade', () => {
           ...mockDependencies,
           entityManager: null,
         });
-      }).toThrow('EntityServiceFacade: Missing or invalid entityManager dependency.');
+      }).toThrow(
+        'EntityServiceFacade: Missing or invalid entityManager dependency.'
+      );
     });
 
     test('should throw error for invalid entityManager', () => {
@@ -122,7 +124,9 @@ describe('EntityServiceFacade', () => {
           ...mockDependencies,
           entityManager: { invalidMethod: jest.fn() },
         });
-      }).toThrow('EntityServiceFacade: Missing or invalid entityManager dependency.');
+      }).toThrow(
+        'EntityServiceFacade: Missing or invalid entityManager dependency.'
+      );
     });
 
     test('should throw error for missing eventBus', () => {
@@ -131,7 +135,9 @@ describe('EntityServiceFacade', () => {
           ...mockDependencies,
           eventBus: null,
         });
-      }).toThrow('EntityServiceFacade: Missing or invalid eventBus dependency.');
+      }).toThrow(
+        'EntityServiceFacade: Missing or invalid eventBus dependency.'
+      );
     });
 
     test('should throw error for invalid eventBus', () => {
@@ -140,7 +146,9 @@ describe('EntityServiceFacade', () => {
           ...mockDependencies,
           eventBus: { invalidMethod: jest.fn() },
         });
-      }).toThrow('EntityServiceFacade: Missing or invalid eventBus dependency.');
+      }).toThrow(
+        'EntityServiceFacade: Missing or invalid eventBus dependency.'
+      );
     });
 
     test('should throw error for missing dataRegistry', () => {
@@ -149,7 +157,9 @@ describe('EntityServiceFacade', () => {
           ...mockDependencies,
           dataRegistry: null,
         });
-      }).toThrow('EntityServiceFacade: Missing or invalid dataRegistry dependency.');
+      }).toThrow(
+        'EntityServiceFacade: Missing or invalid dataRegistry dependency.'
+      );
     });
 
     test('should throw error for invalid dataRegistry', () => {
@@ -158,7 +168,9 @@ describe('EntityServiceFacade', () => {
           ...mockDependencies,
           dataRegistry: { invalidMethod: jest.fn() },
         });
-      }).toThrow('EntityServiceFacade: Missing or invalid dataRegistry dependency.');
+      }).toThrow(
+        'EntityServiceFacade: Missing or invalid dataRegistry dependency.'
+      );
     });
 
     test('should throw error for missing scopeRegistry', () => {
@@ -167,7 +179,9 @@ describe('EntityServiceFacade', () => {
           ...mockDependencies,
           scopeRegistry: null,
         });
-      }).toThrow('EntityServiceFacade: Missing or invalid scopeRegistry dependency.');
+      }).toThrow(
+        'EntityServiceFacade: Missing or invalid scopeRegistry dependency.'
+      );
     });
 
     test('should throw error for invalid scopeRegistry', () => {
@@ -176,7 +190,9 @@ describe('EntityServiceFacade', () => {
           ...mockDependencies,
           scopeRegistry: { invalidMethod: jest.fn() },
         });
-      }).toThrow('EntityServiceFacade: Missing or invalid scopeRegistry dependency.');
+      }).toThrow(
+        'EntityServiceFacade: Missing or invalid scopeRegistry dependency.'
+      );
     });
 
     test('should throw error for missing gameDataRepository', () => {
@@ -185,7 +201,9 @@ describe('EntityServiceFacade', () => {
           ...mockDependencies,
           gameDataRepository: null,
         });
-      }).toThrow('EntityServiceFacade: Missing or invalid gameDataRepository dependency.');
+      }).toThrow(
+        'EntityServiceFacade: Missing or invalid gameDataRepository dependency.'
+      );
     });
 
     test('should throw error for invalid gameDataRepository', () => {
@@ -194,7 +212,9 @@ describe('EntityServiceFacade', () => {
           ...mockDependencies,
           gameDataRepository: { invalidMethod: jest.fn() },
         });
-      }).toThrow('EntityServiceFacade: Missing or invalid gameDataRepository dependency.');
+      }).toThrow(
+        'EntityServiceFacade: Missing or invalid gameDataRepository dependency.'
+      );
     });
 
     test('should throw error for missing logger', () => {
@@ -221,7 +241,9 @@ describe('EntityServiceFacade', () => {
       const actorId = await facade.createTestActor();
 
       expect(actorId).toBe('test-entity-id');
-      expect(mockGameDataRepository.getEntityDefinition).toHaveBeenCalledWith('core:actor');
+      expect(mockGameDataRepository.getEntityDefinition).toHaveBeenCalledWith(
+        'core:actor'
+      );
       expect(mockEntityManager.createEntity).toHaveBeenCalledWith({
         definitionId: 'core:actor',
         components: {
@@ -253,7 +275,9 @@ describe('EntityServiceFacade', () => {
       const actorId = await facade.createTestActor(config);
 
       expect(actorId).toBe('test-entity-id');
-      expect(mockGameDataRepository.getEntityDefinition).toHaveBeenCalledWith('custom:actor');
+      expect(mockGameDataRepository.getEntityDefinition).toHaveBeenCalledWith(
+        'custom:actor'
+      );
       expect(mockEntityManager.createEntity).toHaveBeenCalledWith({
         definitionId: 'custom:actor',
         components: {
@@ -268,7 +292,9 @@ describe('EntityServiceFacade', () => {
     test('should throw error when actor definition not found', async () => {
       mockGameDataRepository.getEntityDefinition.mockResolvedValue(null);
 
-      await expect(facade.createTestActor()).rejects.toThrow('Actor definition not found: core:actor');
+      await expect(facade.createTestActor()).rejects.toThrow(
+        'Actor definition not found: core:actor'
+      );
     });
 
     test('should handle entity creation errors', async () => {
@@ -295,7 +321,9 @@ describe('EntityServiceFacade', () => {
         definitionId: 'core:location',
         components: {
           'core:name': { name: 'Test Location' },
-          'core:description': { description: 'A test location for testing purposes' },
+          'core:description': {
+            description: 'A test location for testing purposes',
+          },
           'core:location': {
             type: 'room',
             contents: [],
@@ -394,14 +422,18 @@ describe('EntityServiceFacade', () => {
     });
 
     test('should throw error for missing type', async () => {
-      await expect(facade.createEntity({})).rejects.toThrow('Entity type is required');
+      await expect(facade.createEntity({})).rejects.toThrow(
+        'Entity type is required'
+      );
     });
 
     test('should handle entity creation errors', async () => {
       const error = new Error('Entity creation failed');
       mockEntityManager.createEntity.mockRejectedValue(error);
 
-      await expect(facade.createEntity({ type: 'core:item' })).rejects.toThrow(error);
+      await expect(facade.createEntity({ type: 'core:item' })).rejects.toThrow(
+        error
+      );
     });
   });
 
@@ -415,13 +447,17 @@ describe('EntityServiceFacade', () => {
           'core:name': { name: 'Test Entity' },
         },
       });
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('test-entity-id');
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'test-entity-id'
+      );
     });
 
     test('should throw error for missing entity', async () => {
       mockEntityManager.getEntityInstance.mockResolvedValue(null);
 
-      await expect(facade.getEntity('missing-id')).rejects.toThrow('Entity not found: missing-id');
+      await expect(facade.getEntity('missing-id')).rejects.toThrow(
+        'Entity not found: missing-id'
+      );
     });
 
     test('should handle retrieval errors', async () => {
@@ -434,14 +470,22 @@ describe('EntityServiceFacade', () => {
 
   describe('getComponent', () => {
     test('should retrieve component from entity', async () => {
-      const component = await facade.getComponent('test-entity-id', 'core:name');
+      const component = await facade.getComponent(
+        'test-entity-id',
+        'core:name'
+      );
 
       expect(component).toEqual({ name: 'Test Entity' });
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('test-entity-id');
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'test-entity-id'
+      );
     });
 
     test('should return null for missing component', async () => {
-      const component = await facade.getComponent('test-entity-id', 'missing:component');
+      const component = await facade.getComponent(
+        'test-entity-id',
+        'missing:component'
+      );
 
       expect(component).toBeNull();
     });
@@ -449,7 +493,9 @@ describe('EntityServiceFacade', () => {
     test('should throw error for missing entity', async () => {
       mockEntityManager.getEntityInstance.mockResolvedValue(null);
 
-      await expect(facade.getComponent('missing-id', 'core:name')).rejects.toThrow('Entity not found: missing-id');
+      await expect(
+        facade.getComponent('missing-id', 'core:name')
+      ).rejects.toThrow('Entity not found: missing-id');
     });
   });
 
@@ -459,7 +505,11 @@ describe('EntityServiceFacade', () => {
 
       await facade.updateComponent('test-entity-id', 'core:name', data);
 
-      expect(mockEntityManager.updateComponent).toHaveBeenCalledWith('test-entity-id', 'core:name', data);
+      expect(mockEntityManager.updateComponent).toHaveBeenCalledWith(
+        'test-entity-id',
+        'core:name',
+        data
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'EntityServiceFacade: Component updated',
         expect.objectContaining({
@@ -473,7 +523,9 @@ describe('EntityServiceFacade', () => {
       const error = new Error('Update failed');
       mockEntityManager.updateComponent.mockRejectedValue(error);
 
-      await expect(facade.updateComponent('test-id', 'core:name', {})).rejects.toThrow(error);
+      await expect(
+        facade.updateComponent('test-id', 'core:name', {})
+      ).rejects.toThrow(error);
     });
   });
 
@@ -481,7 +533,9 @@ describe('EntityServiceFacade', () => {
     test('should delete entity by ID', async () => {
       await facade.deleteEntity('test-entity-id');
 
-      expect(mockEntityManager.removeEntity).toHaveBeenCalledWith('test-entity-id');
+      expect(mockEntityManager.removeEntity).toHaveBeenCalledWith(
+        'test-entity-id'
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'EntityServiceFacade: Entity deleted',
         { entityId: 'test-entity-id' }
@@ -526,7 +580,9 @@ describe('EntityServiceFacade', () => {
     test('should throw error for missing scope', async () => {
       mockScopeRegistry.getScope.mockResolvedValue(null);
 
-      await expect(facade.queryEntities('missing:scope')).rejects.toThrow('Scope not found: missing:scope');
+      await expect(facade.queryEntities('missing:scope')).rejects.toThrow(
+        'Scope not found: missing:scope'
+      );
     });
   });
 
@@ -580,7 +636,7 @@ describe('EntityServiceFacade', () => {
 
       const events = facade.getDispatchedEvents('EVENT1');
       expect(events).toHaveLength(2);
-      expect(events.every(event => event.type === 'EVENT1')).toBe(true);
+      expect(events.every((event) => event.type === 'EVENT1')).toBe(true);
     });
   });
 
@@ -599,7 +655,9 @@ describe('EntityServiceFacade', () => {
 
     test('should handle removal errors gracefully', async () => {
       await facade.createTestActor();
-      mockEntityManager.removeEntity.mockRejectedValue(new Error('Removal failed'));
+      mockEntityManager.removeEntity.mockRejectedValue(
+        new Error('Removal failed')
+      );
 
       await facade.clearTestData();
 

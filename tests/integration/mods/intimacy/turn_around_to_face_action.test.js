@@ -20,7 +20,10 @@ import { createMockActionErrorContextBuilder } from '../../../common/mockFactori
 import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
 import turnAroundToFaceAction from '../../../../data/mods/intimacy/actions/turn_around_to_face.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
-import { createTargetResolutionServiceWithMocks, createMockUnifiedScopeResolver } from '../../../common/mocks/mockUnifiedScopeResolver.js';
+import {
+  createTargetResolutionServiceWithMocks,
+  createMockUnifiedScopeResolver,
+} from '../../../common/mocks/mockUnifiedScopeResolver.js';
 import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionParser.js';

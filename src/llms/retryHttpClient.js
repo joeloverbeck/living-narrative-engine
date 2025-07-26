@@ -275,7 +275,5 @@ export class RetryHttpClient extends IHttpClient {
         throw lastError;
       }
     }
-
-    throw lastError;
   }
 }

@@ -66,7 +66,13 @@ export class ActionFormattingStage extends PipelineStage {
    * @returns {Promise<PipelineResult>} Formatted actions
    */
   async executeInternal(context) {
-    const { actor, actionsWithTargets = [], resolvedTargets, targetDefinitions, trace } = context;
+    const {
+      actor,
+      actionsWithTargets = [],
+      resolvedTargets,
+      targetDefinitions,
+      trace,
+    } = context;
     const source = `${this.name}Stage.execute`;
 
     trace?.step(
@@ -88,7 +94,8 @@ export class ActionFormattingStage extends PipelineStage {
    * @private
    */
   async #formatMultiTargetActions(context, trace) {
-    const { actor, resolvedTargets, targetDefinitions, actionsWithTargets } = context;
+    const { actor, resolvedTargets, targetDefinitions, actionsWithTargets } =
+      context;
     const source = `${this.name}Stage.execute`;
     const formattedActions = [];
     const errors = [];
@@ -118,7 +125,7 @@ export class ActionFormattingStage extends PipelineStage {
               name: actionDef.name,
               command: formatResult.value,
               description: actionDef.description || '',
-              params: { 
+              params: {
                 targetIds: this.#extractTargetIds(resolvedTargets),
                 isMultiTarget: true,
               },
@@ -126,14 +133,18 @@ export class ActionFormattingStage extends PipelineStage {
             formattedActions.push(actionInfo);
           } else {
             // Multi-target formatting failed, try fallback to legacy formatting
-            const primaryTarget = this.#getPrimaryTargetContext(resolvedTargets);
+            const primaryTarget =
+              this.#getPrimaryTargetContext(resolvedTargets);
             if (primaryTarget) {
               // Transform action def to use {target} placeholder for legacy formatter compatibility
               const fallbackActionDef = {
                 ...actionDef,
-                template: this.#transformTemplateForLegacyFallback(actionDef.template, targetDefinitions),
+                template: this.#transformTemplateForLegacyFallback(
+                  actionDef.template,
+                  targetDefinitions
+                ),
               };
-              
+
               const fallbackResult = this.#commandFormatter.format(
                 fallbackActionDef,
                 primaryTarget,
@@ -156,10 +167,20 @@ export class ActionFormattingStage extends PipelineStage {
                 };
                 formattedActions.push(actionInfo);
               } else {
-                errors.push(this.#createError(fallbackResult, actionDef, actor.id, trace, primaryTarget.entityId));
+                errors.push(
+                  this.#createError(
+                    fallbackResult,
+                    actionDef,
+                    actor.id,
+                    trace,
+                    primaryTarget.entityId
+                  )
+                );
               }
             } else {
-              errors.push(this.#createError(formatResult, actionDef, actor.id, trace));
+              errors.push(
+                this.#createError(formatResult, actionDef, actor.id, trace)
+              );
             }
           }
         } else {
@@ -188,11 +209,26 @@ export class ActionFormattingStage extends PipelineStage {
               };
               formattedActions.push(actionInfo);
             } else {
-              errors.push(this.#createError(formatResult, actionDef, actor.id, trace, primaryTarget.entityId));
+              errors.push(
+                this.#createError(
+                  formatResult,
+                  actionDef,
+                  actor.id,
+                  trace,
+                  primaryTarget.entityId
+                )
+              );
             }
           } else {
             // No targets available for formatting
-            errors.push(this.#createError('No targets available for action', actionDef, actor.id, trace));
+            errors.push(
+              this.#createError(
+                'No targets available for action',
+                actionDef,
+                actor.id,
+                trace
+              )
+            );
           }
         }
       } catch (error) {
@@ -218,7 +254,7 @@ export class ActionFormattingStage extends PipelineStage {
   async #formatLegacyActions(context, trace) {
     const { actor, actionsWithTargets = [] } = context;
     const source = `${this.name}Stage.execute`;
-    
+
     const formattedActions = [];
     const errors = [];
 
@@ -257,15 +293,35 @@ export class ActionFormattingStage extends PipelineStage {
               `Failed to format command for action '${actionDef.id}' with target '${targetContext.entityId}'`,
               { formatResult, actionDef, targetContext }
             );
-            errors.push(this.#createError(formatResult, actionDef, actor.id, trace, targetContext.entityId));
+            errors.push(
+              this.#createError(
+                formatResult,
+                actionDef,
+                actor.id,
+                trace,
+                targetContext.entityId
+              )
+            );
           }
         } catch (error) {
-          const targetId = error?.target?.entityId || error?.entityId || targetContext.entityId;
+          const targetId =
+            error?.target?.entityId ||
+            error?.entityId ||
+            targetContext.entityId;
           this.#logger.warn(
             `Failed to format command for action '${actionDef.id}' with target '${targetId}'`,
             { error, actionDef, targetContext }
           );
-          errors.push(this.#createError(error, actionDef, actor.id, trace, null, targetContext.entityId));
+          errors.push(
+            this.#createError(
+              error,
+              actionDef,
+              actor.id,
+              trace,
+              null,
+              targetContext.entityId
+            )
+          );
         }
       }
     }
@@ -292,7 +348,7 @@ export class ActionFormattingStage extends PipelineStage {
   #extractTargetIds(resolvedTargets) {
     const targetIds = {};
     for (const [key, targets] of Object.entries(resolvedTargets)) {
-      targetIds[key] = targets.map(t => t.id);
+      targetIds[key] = targets.map((t) => t.id);
     }
     return targetIds;
   }
@@ -303,9 +359,10 @@ export class ActionFormattingStage extends PipelineStage {
    */
   #getPrimaryTargetContext(resolvedTargets) {
     // Find first target from primary or first available target type
-    const primaryTargets = resolvedTargets.primary || Object.values(resolvedTargets)[0];
+    const primaryTargets =
+      resolvedTargets.primary || Object.values(resolvedTargets)[0];
     if (!primaryTargets || primaryTargets.length === 0) return null;
-    
+
     const target = primaryTargets[0];
     // Create a proper ActionTargetContext for the base formatter
     return {
@@ -321,16 +378,22 @@ export class ActionFormattingStage extends PipelineStage {
    */
   #transformTemplateForLegacyFallback(template, targetDefinitions) {
     if (!targetDefinitions) return template;
-    
+
     let transformedTemplate = template;
-    
+
     // Replace primary target placeholder with {target}
     const primaryDef = targetDefinitions.primary;
     if (primaryDef?.placeholder) {
-      const placeholderRegex = new RegExp(`\\{${primaryDef.placeholder}\\}`, 'g');
-      transformedTemplate = transformedTemplate.replace(placeholderRegex, '{target}');
+      const placeholderRegex = new RegExp(
+        `\\{${primaryDef.placeholder}\\}`,
+        'g'
+      );
+      transformedTemplate = transformedTemplate.replace(
+        placeholderRegex,
+        '{target}'
+      );
     }
-    
+
     // Remove other placeholders that can't be handled by legacy formatter
     for (const [key, def] of Object.entries(targetDefinitions)) {
       if (key !== 'primary' && def?.placeholder) {
@@ -338,7 +401,7 @@ export class ActionFormattingStage extends PipelineStage {
         transformedTemplate = transformedTemplate.replace(placeholderRegex, '');
       }
     }
-    
+
     return transformedTemplate.trim().replace(/\s+/g, ' '); // Clean up extra spaces
   }
 
@@ -346,7 +409,14 @@ export class ActionFormattingStage extends PipelineStage {
    * Create error context for formatting failures
    * @private
    */
-  #createError(errorOrResult, actionDef, actorId, trace, targetId = null, fallbackTargetId = null) {
+  #createError(
+    errorOrResult,
+    actionDef,
+    actorId,
+    trace,
+    targetId = null,
+    fallbackTargetId = null
+  ) {
     // Handle both error strings and format result objects
     let error, formatDetails;
     if (typeof errorOrResult === 'object' && errorOrResult.error) {
@@ -363,9 +433,10 @@ export class ActionFormattingStage extends PipelineStage {
     // 2. Error object properties (target.entityId, entityId)
     // 3. Fallback target ID (from original context)
     // 4. No target ID
-    const extractedTargetId = targetId || 
-      error?.target?.entityId || 
-      error?.entityId || 
+    const extractedTargetId =
+      targetId ||
+      error?.target?.entityId ||
+      error?.entityId ||
       fallbackTargetId ||
       null;
 

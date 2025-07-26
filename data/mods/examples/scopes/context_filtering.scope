@@ -1,0 +1,15 @@
+// Context-Dependent Filtering Examples  
+// Shows how to use JSON Logic filters with entity context
+
+// Actors with specific component properties
+examples:actors_with_properties := entities(core:actor)[][{
+  "condition_ref": "core:entity-has-actor-component"
+}]
+
+// Entities at location excluding current actor
+examples:location_others := entities(core:position)[][{
+  "and": [
+    { "condition_ref": "core:entity-at-location" },
+    { "condition_ref": "core:entity-is-not-current-actor" }
+  ]
+}]

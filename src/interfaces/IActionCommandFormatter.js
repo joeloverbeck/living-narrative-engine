@@ -60,6 +60,8 @@ export class IActionCommandFormatter {
    * @throws {Error} If the method is not implemented.
    */
   formatMultiTarget(actionDef, resolvedTargets, entityManager, options, deps) {
-    throw new Error('IActionCommandFormatter.formatMultiTarget method not implemented.');
+    throw new Error(
+      'IActionCommandFormatter.formatMultiTarget method not implemented.'
+    );
   }
 }

@@ -704,7 +704,10 @@ describe('ActionFormattingStage - Integration Tests', () => {
     beforeEach(() => {
       // Create a MultiTargetActionFormatter for these tests
       const baseFormatter = new ActionFormatter();
-      multiTargetFormatter = new MultiTargetActionFormatter(baseFormatter, logger);
+      multiTargetFormatter = new MultiTargetActionFormatter(
+        baseFormatter,
+        logger
+      );
 
       // Create stage with multi-target formatter
       multiTargetStage = new ActionFormattingStage({
@@ -733,15 +736,21 @@ describe('ActionFormattingStage - Integration Tests', () => {
           'core:actor': { name: 'Goblin Warrior' },
         },
       });
-      
+
       testBed.setupDefinitions(swordDef, goblinDef);
-      
-      const sword = await testBed.entityManager.createEntityInstance('test:sword', {
-        instanceId: 'sword-001',
-      });
-      const goblin = await testBed.entityManager.createEntityInstance('test:goblin', {
-        instanceId: 'goblin-001',
-      });
+
+      const sword = await testBed.entityManager.createEntityInstance(
+        'test:sword',
+        {
+          instanceId: 'sword-001',
+        }
+      );
+      const goblin = await testBed.entityManager.createEntityInstance(
+        'test:goblin',
+        {
+          instanceId: 'goblin-001',
+        }
+      );
 
       // Multi-target action definition
       const multiTargetActionDef = {
@@ -783,7 +792,7 @@ describe('ActionFormattingStage - Integration Tests', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.actions).toHaveLength(1);
-      
+
       const formattedAction = result.actions[0];
       expect(formattedAction).toEqual({
         id: 'combat:throw',
@@ -819,9 +828,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
           'core:name': { value: 'Orc Brute' },
         },
       });
-      
+
       testBed.setupDefinitions(knife, orc);
-      
+
       await testBed.entityManager.createEntityInstance('test:knife', {
         instanceId: 'knife-001',
       });
@@ -867,7 +876,7 @@ describe('ActionFormattingStage - Integration Tests', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.actions).toHaveLength(1);
-      
+
       const formattedAction = result.actions[0];
       expect(formattedAction.id).toBe('combat:multi_throw');
       // The command should be an array of combinations when generateCombinations is true
@@ -882,9 +891,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
           'core:name': { value: 'Test Item' },
         },
       });
-      
+
       testBed.setupDefinitions(itemDef);
-      
+
       await testBed.entityManager.createEntityInstance('test:item', {
         instanceId: 'item-001',
       });
@@ -970,9 +979,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
           'core:name': { value: 'Wooden Door' },
         },
       });
-      
+
       testBed.setupDefinitions(door);
-      
+
       await testBed.entityManager.createEntityInstance('test:door', {
         instanceId: 'door-001',
       });
@@ -987,9 +996,7 @@ describe('ActionFormattingStage - Integration Tests', () => {
               template: 'open {target}',
               scope: 'entity',
             },
-            targetContexts: [
-              ActionTargetContext.forEntity('door-001'),
-            ],
+            targetContexts: [ActionTargetContext.forEntity('door-001')],
           },
         ],
         // No resolvedTargets or targetDefinitions - triggers legacy path

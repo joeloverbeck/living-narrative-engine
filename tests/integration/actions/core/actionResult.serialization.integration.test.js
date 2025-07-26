@@ -68,7 +68,7 @@ describe('ActionResult - Serialization Integration', () => {
       };
 
       const result = ActionResult.success(complexData);
-      
+
       // Simulate saving to storage
       const serialized = result.toJSON();
       await mockStorageProvider.save('action-result-123', serialized);
@@ -115,7 +115,7 @@ describe('ActionResult - Serialization Integration', () => {
 
       expect(reconstructed).toBeFailedActionResultWithAnyError();
       expect(reconstructed.errors).toHaveLength(2);
-      
+
       const [error1, error2] = reconstructed.errors;
       expect(error1.message).toBe('Validation failed for entity');
       expect(error1.code).toBe('VALIDATION_ERROR');
@@ -185,10 +185,13 @@ describe('ActionResult - Serialization Integration', () => {
         if (testCase.result.success) {
           expect(reconstructed.value).toEqual(testCase.result.value);
         } else {
-          expect(reconstructed.errors).toHaveLength(testCase.result.errors.length);
+          expect(reconstructed.errors).toHaveLength(
+            testCase.result.errors.length
+          );
           reconstructed.errors.forEach((error, index) => {
             const originalError = testCase.result.errors[index];
-            const expectedMessage = originalError.message || String(originalError);
+            const expectedMessage =
+              originalError.message || String(originalError);
             expect(error.message).toBe(expectedMessage);
           });
         }
@@ -202,7 +205,9 @@ describe('ActionResult - Serialization Integration', () => {
           id: `entity-${i}`,
           name: `Entity ${i}`,
           properties: {
-            description: `This is a long description for entity ${i}`.repeat(10),
+            description: `This is a long description for entity ${i}`.repeat(
+              10
+            ),
             data: Array.from({ length: 50 }, (_, j) => ({
               key: `key-${j}`,
               value: `value-${i}-${j}`,
@@ -311,14 +316,17 @@ describe('ActionResult - Serialization Integration', () => {
 
     it('should handle concurrent network transmissions', async () => {
       const transmissionCount = 10;
-      const transmissions = Array.from({ length: transmissionCount }, (_, i) => {
-        const data = {
-          id: `transmission-${i}`,
-          value: i * 10,
-          timestamp: Date.now() + i,
-        };
-        return ActionResult.success(data);
-      });
+      const transmissions = Array.from(
+        { length: transmissionCount },
+        (_, i) => {
+          const data = {
+            id: `transmission-${i}`,
+            value: i * 10,
+            timestamp: Date.now() + i,
+          };
+          return ActionResult.success(data);
+        }
+      );
 
       // Send all transmissions concurrently
       const promises = transmissions.map((result, index) => {

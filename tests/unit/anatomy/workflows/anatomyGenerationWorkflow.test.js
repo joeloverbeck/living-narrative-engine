@@ -1349,7 +1349,9 @@ describe('AnatomyGenerationWorkflow', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Created clothing:slot_metadata component with 2 slot mappings')
+        expect.stringContaining(
+          'Created clothing:slot_metadata component with 2 slot mappings'
+        )
       );
     });
 
@@ -1431,7 +1433,9 @@ describe('AnatomyGenerationWorkflow', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Created clothing:slot_metadata component with 1 slot mappings')
+        expect.stringContaining(
+          'Created clothing:slot_metadata component with 1 slot mappings'
+        )
       );
     });
 
@@ -1625,15 +1629,12 @@ describe('AnatomyGenerationWorkflow', () => {
         (call) => call[1] === 'clothing:slot_metadata'
       );
 
-      expect(addComponentCall[2].slotMappings['complex-slot'].coveredSockets).toEqual([
-        'socket1',
-        'socket2',
-        'socket3',
-      ]);
-      expect(addComponentCall[2].slotMappings['complex-slot'].allowedLayers).toEqual([
-        'layer1',
-        'layer2',
-      ]);
+      expect(
+        addComponentCall[2].slotMappings['complex-slot'].coveredSockets
+      ).toEqual(['socket1', 'socket2', 'socket3']);
+      expect(
+        addComponentCall[2].slotMappings['complex-slot'].allowedLayers
+      ).toEqual(['layer1', 'layer2']);
 
       // Verify it's a new array (spread operator used)
       expect(

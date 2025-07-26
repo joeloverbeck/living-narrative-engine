@@ -1,0 +1,35 @@
+// Multi-Target Advanced Examples
+// Demonstrates accessing multiple targets from multi-target actions
+
+// Access all targets (flattened from all groups)
+examples:all_targets := targets
+
+// Access primary target group
+examples:primary_targets := targets.primary
+
+// Access secondary target group  
+examples:secondary_targets := targets.secondary
+
+// Get all primary target IDs
+examples:primary_target_ids := targets.primary[].id
+
+// Filter primary targets by type
+examples:primary_weapons := targets.primary[][{
+  "==": [{"var": "entity.type"}, "weapon"]
+}]
+
+// Get names of all primary targets with actor components
+examples:primary_target_names := targets.primary[].components.core:actor.name
+
+// Combine primary and secondary targets using union
+examples:all_targets_union := targets.primary | targets.secondary
+
+// Access nested properties on targets
+examples:primary_target_values := targets.primary[].value
+
+// Complex filtering on multiple target groups
+examples:valuable_targets := targets.primary[][{
+  ">": [{"var": "entity.value"}, 100]
+}] + targets.secondary[][{
+  ">": [{"var": "entity.value"}, 100]  
+}]

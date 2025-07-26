@@ -23,7 +23,10 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
-import { createTargetResolutionServiceWithMocks, createMockUnifiedScopeResolver } from '../../common/mocks/mockUnifiedScopeResolver.js';
+import {
+  createTargetResolutionServiceWithMocks,
+  createMockUnifiedScopeResolver,
+} from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';

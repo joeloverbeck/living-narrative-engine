@@ -577,13 +577,24 @@ export class UnifiedScopeResolver {
    * @private
    */
   #buildRuntimeContext(actorEntity, context) {
-    return {
+    const runtimeCtx = {
       entityManager: this.#entityManager,
       jsonLogicEval: this.#jsonLogicEvaluationService,
       logger: this.#logger,
       actor: actorEntity,
       location: context.actorLocation,
     };
+
+    // Add target context if available from action context
+    if (context.actionContext?.target) {
+      runtimeCtx.target = context.actionContext.target;
+    }
+
+    if (context.actionContext?.targets) {
+      runtimeCtx.targets = context.actionContext.targets;
+    }
+
+    return runtimeCtx;
   }
 
   /**
