@@ -75,6 +75,11 @@
       },
       "additionalProperties": true,
       "description": "LLM response metadata"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp"
     }
   },
   "required": [

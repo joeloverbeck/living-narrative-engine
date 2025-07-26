@@ -59,10 +59,10 @@ describeActionDiscoverySuite(
         null,
         'fail'
       );
-      // FIX: 'none' scope actions are optimized to bypass target resolution
+      // Updated: New pipeline processes both actions through target resolution
       expect(
         bed.mocks.targetResolutionService.resolveTargets
-      ).toHaveBeenCalledTimes(1);
+      ).toHaveBeenCalledTimes(2);
     });
 
     it('uses the target resolution service for scoped actions', async () => {

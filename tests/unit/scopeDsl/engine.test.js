@@ -69,11 +69,16 @@ const mockTraceContext = {
   },
 };
 
+const mockComponentRegistry = {
+  getDefinition: jest.fn(),
+};
+
 const mockRuntimeCtx = {
   entityManager: mockEntityManager,
   spatialIndexManager: mockSpatialIndexManager,
   jsonLogicEval: mockJsonLogicEval,
   logger: mockLogger,
+  componentRegistry: mockComponentRegistry,
 };
 
 describe('ScopeEngine', () => {
@@ -88,6 +93,42 @@ describe('ScopeEngine', () => {
     jest.clearAllMocks();
     // Reset entities array
     mockEntityManager.entities = [];
+  });
+
+  describe('setMaxDepth()', () => {
+    test('should update maxDepth property', () => {
+      const newMaxDepth = 10;
+      engine.setMaxDepth(newMaxDepth);
+      expect(engine.maxDepth).toBe(newMaxDepth);
+    });
+
+    test('should recreate depthGuard when it exists', () => {
+      // Initial depthGuard
+      const initialDepthGuard = engine.depthGuard;
+      expect(initialDepthGuard).toBeDefined();
+
+      // Set new max depth
+      engine.setMaxDepth(8);
+
+      // Verify depthGuard was recreated
+      expect(engine.depthGuard).toBeDefined();
+      expect(engine.depthGuard).not.toBe(initialDepthGuard);
+      expect(engine.maxDepth).toBe(8);
+    });
+
+    test('should handle edge cases for max depth values', () => {
+      // Test zero
+      engine.setMaxDepth(0);
+      expect(engine.maxDepth).toBe(0);
+
+      // Test negative value
+      engine.setMaxDepth(-5);
+      expect(engine.maxDepth).toBe(-5);
+
+      // Test large value
+      engine.setMaxDepth(1000);
+      expect(engine.maxDepth).toBe(1000);
+    });
   });
 
   describe('resolve()', () => {
@@ -938,6 +979,333 @@ describe('ScopeEngine', () => {
       // Should have custom properties
       expect(result.customProp1).toBe('value1');
       expect(result.customProp2).toBe('value2');
+    });
+  });
+
+  describe('_createEntitiesGateway', () => {
+    describe('getItemComponents', () => {
+      let entitiesGateway;
+
+      beforeEach(() => {
+        entitiesGateway = engine._createEntitiesGateway(mockRuntimeCtx);
+        jest.clearAllMocks();
+      });
+
+      test('should return components from entity with Map-based components', () => {
+        const itemId = 'item123';
+        const mockEntity = {
+          id: itemId,
+          components: new Map([
+            ['core:item', { name: 'Sword' }],
+            ['core:weapon', { damage: 10 }],
+          ]),
+        };
+
+        mockEntityManager.getEntity = jest.fn().mockReturnValue(mockEntity);
+
+        const result = entitiesGateway.getItemComponents(itemId);
+
+        expect(result).toEqual({
+          'core:item': { name: 'Sword' },
+          'core:weapon': { damage: 10 },
+        });
+      });
+
+      test('should return components from entity with object-based components', () => {
+        const itemId = 'item456';
+        const mockEntity = {
+          id: itemId,
+          components: {
+            'core:item': { name: 'Shield' },
+            'core:armor': { defense: 5 },
+          },
+        };
+
+        mockEntityManager.getEntity = undefined;
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        const result = entitiesGateway.getItemComponents(itemId);
+
+        expect(result).toEqual({
+          'core:item': { name: 'Shield' },
+          'core:armor': { defense: 5 },
+        });
+      });
+
+      test('should build components from componentTypeIds array', () => {
+        const itemId = 'item789';
+        const mockEntity = {
+          id: itemId,
+          componentTypeIds: ['core:item', 'core:clothing'],
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === 'core:item') return { name: 'Shirt' };
+            if (componentId === 'core:clothing') return { slot: 'torso' };
+            return null;
+          }),
+        };
+
+        mockEntityManager.getEntity = jest.fn().mockReturnValue(mockEntity);
+
+        const result = entitiesGateway.getItemComponents(itemId);
+
+        expect(result).toEqual({
+          'core:item': { name: 'Shirt' },
+          'core:clothing': { slot: 'torso' },
+        });
+      });
+
+      test('should use entityManager.getComponentData when entity.getComponentData is not available', () => {
+        const itemId = 'item999';
+        const mockEntity = {
+          id: itemId,
+          componentTypeIds: ['core:item', 'core:clothing'],
+        };
+
+        mockEntityManager.getEntity = jest.fn().mockReturnValue(mockEntity);
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (id === itemId && componentId === 'core:item')
+              return { name: 'Hat' };
+            if (id === itemId && componentId === 'core:clothing')
+              return { slot: 'head' };
+            return null;
+          }
+        );
+
+        const result = entitiesGateway.getItemComponents(itemId);
+
+        expect(result).toEqual({
+          'core:item': { name: 'Hat' },
+          'core:clothing': { slot: 'head' },
+        });
+      });
+
+      test('should try componentRegistry for item definitions when entity not found', () => {
+        const itemId = 'template123';
+
+        mockEntityManager.getEntity = undefined;
+        mockEntityManager.getEntityInstance.mockReturnValue(null);
+
+        mockComponentRegistry.getDefinition.mockImplementation((defId) => {
+          if (defId === `item:${itemId}`) {
+            return { components: { 'core:item': { name: 'Template Item' } } };
+          }
+          return null;
+        });
+
+        const result = entitiesGateway.getItemComponents(itemId);
+
+        expect(result).toEqual({ 'core:item': { name: 'Template Item' } });
+        expect(mockComponentRegistry.getDefinition).toHaveBeenCalledWith(
+          `item:${itemId}`
+        );
+      });
+
+      test('should try componentRegistry for clothing definitions when item definition not found', () => {
+        const itemId = 'clothing123';
+
+        mockEntityManager.getEntity = undefined;
+        mockEntityManager.getEntityInstance.mockReturnValue(null);
+
+        mockComponentRegistry.getDefinition.mockImplementation((defId) => {
+          if (defId === `clothing:${itemId}`) {
+            return { components: { 'core:clothing': { slot: 'feet' } } };
+          }
+          return null;
+        });
+
+        const result = entitiesGateway.getItemComponents(itemId);
+
+        expect(result).toEqual({ 'core:clothing': { slot: 'feet' } });
+        expect(mockComponentRegistry.getDefinition).toHaveBeenCalledWith(
+          `item:${itemId}`
+        );
+        expect(mockComponentRegistry.getDefinition).toHaveBeenCalledWith(
+          `clothing:${itemId}`
+        );
+      });
+
+      test('should return null when no entity or registry definition found', () => {
+        const itemId = 'nonexistent';
+
+        mockEntityManager.getEntity = undefined;
+        mockEntityManager.getEntityInstance.mockReturnValue(null);
+        mockComponentRegistry.getDefinition.mockReturnValue(null);
+
+        const result = entitiesGateway.getItemComponents(itemId);
+
+        expect(result).toBeNull();
+      });
+
+      test('should handle when componentRegistry is not available', () => {
+        const itemId = 'item_no_registry';
+        const runtimeCtxNoRegistry = { ...mockRuntimeCtx };
+        delete runtimeCtxNoRegistry.componentRegistry;
+
+        const gatewayNoRegistry =
+          engine._createEntitiesGateway(runtimeCtxNoRegistry);
+
+        mockEntityManager.getEntity = undefined;
+        mockEntityManager.getEntityInstance.mockReturnValue(null);
+
+        const result = gatewayNoRegistry.getItemComponents(itemId);
+
+        expect(result).toBeNull();
+      });
+
+      test('should handle entity with empty components', () => {
+        const itemId = 'empty_item';
+        const mockEntity = {
+          id: itemId,
+          components: new Map(),
+        };
+
+        mockEntityManager.getEntity = jest.fn().mockReturnValue(mockEntity);
+
+        const result = entitiesGateway.getItemComponents(itemId);
+
+        expect(result).toEqual({});
+      });
+
+      test('should handle entity with componentTypeIds but no data', () => {
+        const itemId = 'no_data_item';
+        const mockEntity = {
+          id: itemId,
+          componentTypeIds: ['core:item', 'core:missing'],
+        };
+
+        mockEntityManager.getEntity = jest.fn().mockReturnValue(mockEntity);
+        mockEntityManager.getComponentData.mockReturnValue(null);
+
+        const result = entitiesGateway.getItemComponents(itemId);
+
+        expect(result).toEqual({});
+      });
+    });
+  });
+
+  describe('Dispatcher wrapper in resolve()', () => {
+    test('should properly wrap dispatcher and call _resolveWithDepthAndCycleChecking', () => {
+      // Spy on the private method
+      const resolveWithDepthSpy = jest.spyOn(
+        engine,
+        '_resolveWithDepthAndCycleChecking'
+      );
+
+      // Simple AST that will trigger dispatcher usage
+      const ast = parseDslExpression('actor');
+
+      // Execute resolve
+      const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+
+      // Verify the method was called with correct parameters
+      expect(resolveWithDepthSpy).toHaveBeenCalled();
+
+      // Verify the result
+      expect(result).toEqual(new Set([actorId]));
+
+      // Restore the spy
+      resolveWithDepthSpy.mockRestore();
+    });
+
+    test('should pass dispatcher wrapper through context for nested resolution', () => {
+      // Create a more complex AST that requires nested resolution
+      const ast = parseDslExpression('actor.core:inventory.items[]');
+
+      const inventoryData = { items: ['item1', 'item2'] };
+      mockEntityManager.getComponentData.mockReturnValue(inventoryData);
+
+      // Spy on _resolveWithDepthAndCycleChecking to track calls
+      const resolveWithDepthSpy = jest.spyOn(
+        engine,
+        '_resolveWithDepthAndCycleChecking'
+      );
+
+      // Execute resolve
+      const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+
+      // Should be called multiple times for nested resolution
+      expect(resolveWithDepthSpy.mock.calls.length).toBeGreaterThan(1);
+
+      // Verify that the context passed includes a wrapped dispatcher
+      const contextArgs = resolveWithDepthSpy.mock.calls.map((call) => call[1]);
+      contextArgs.forEach((ctx) => {
+        if (ctx.dispatcher) {
+          expect(ctx.dispatcher).toHaveProperty('resolve');
+          expect(typeof ctx.dispatcher.resolve).toBe('function');
+        }
+      });
+
+      // Verify the result
+      expect(result).toEqual(new Set(['item1', 'item2']));
+
+      // Restore the spy
+      resolveWithDepthSpy.mockRestore();
+    });
+
+    test('should maintain proper depth tracking through dispatcher wrapper', () => {
+      // Create nested AST that will test depth tracking
+      const ast = parseDslExpression('actor.core:inventory');
+
+      mockEntityManager.getComponentData.mockReturnValue({ items: [] });
+
+      // Spy on _resolveWithDepthAndCycleChecking
+      const resolveWithDepthSpy = jest.spyOn(
+        engine,
+        '_resolveWithDepthAndCycleChecking'
+      );
+
+      // Execute resolve
+      engine.resolve(ast, actorEntity, mockRuntimeCtx);
+
+      // Check that depth increases properly in nested calls
+      const calls = resolveWithDepthSpy.mock.calls;
+
+      // First call should have depth 0
+      expect(calls[0][1].depth).toBe(0);
+
+      // Subsequent calls should have increasing depth
+      for (let i = 1; i < calls.length; i++) {
+        if (calls[i][1].depth !== undefined) {
+          expect(calls[i][1].depth).toBeGreaterThan(0);
+        }
+      }
+
+      // Restore the spy
+      resolveWithDepthSpy.mockRestore();
+    });
+
+    test('should execute dispatcher wrapper resolve function for union operations', () => {
+      // Create a union AST that will force the dispatcher wrapper to be called
+      const ast = {
+        type: 'Union',
+        left: parseDslExpression('actor'),
+        right: parseDslExpression('location'),
+      };
+
+      const locationId = 'loc789';
+      const runtimeCtxWithLocation = {
+        ...mockRuntimeCtx,
+        location: { id: locationId },
+      };
+
+      // Spy on the private method to verify the wrapper is called
+      const resolveWithDepthSpy = jest.spyOn(
+        engine,
+        '_resolveWithDepthAndCycleChecking'
+      );
+
+      // Execute resolve
+      const result = engine.resolve(ast, actorEntity, runtimeCtxWithLocation);
+
+      // Verify multiple calls were made (one for each side of the union)
+      expect(resolveWithDepthSpy.mock.calls.length).toBeGreaterThanOrEqual(3);
+
+      // Verify the result contains both actor and location
+      expect(result).toEqual(new Set([actorId, locationId]));
+
+      // Restore the spy
+      resolveWithDepthSpy.mockRestore();
     });
   });
 

@@ -17,9 +17,10 @@ import { getEntityDisplayName } from '../../../../src/utils/entityUtils.js';
 import { GameDataRepository } from '../../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.js';
 import { createMockActionErrorContextBuilder } from '../../../common/mockFactories/actions.js';
+import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
 import turnAroundToFaceAction from '../../../../data/mods/intimacy/actions/turn_around_to_face.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
-import { createTargetResolutionServiceWithMocks } from '../../../common/mocks/mockUnifiedScopeResolver.js';
+import { createTargetResolutionServiceWithMocks, createMockUnifiedScopeResolver } from '../../../common/mocks/mockUnifiedScopeResolver.js';
 import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionParser.js';
@@ -135,6 +136,12 @@ describe('Turn Around to Face Action Discovery', () => {
       safeEventDispatcher,
       getEntityDisplayNameFn: getEntityDisplayName,
       errorBuilder: actionErrorContextBuilder,
+      unifiedScopeResolver: createMockUnifiedScopeResolver({
+        scopeRegistry,
+        entityManager,
+        logger,
+      }),
+      targetContextBuilder: createMockTargetContextBuilder(),
     });
 
     // Create mock traceContextFactory as a function

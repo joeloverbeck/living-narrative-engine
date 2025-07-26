@@ -29,8 +29,13 @@
 
 .concept-selection-panel {
   /* Inherits from .cb-input-panel */
-  height: fit-content;
-  max-height: calc(100vh - 200px);
+  height: 100%;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .action-buttons {
@@ -102,6 +107,26 @@
   background: var(--accent-primary);
 }
 
+/* Custom scrollbar styling for concept selection panel */
+.concept-selection-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.concept-selection-panel::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.concept-selection-panel::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.concept-selection-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
 /* Ensure results state fills container */
 #results-state {
   flex: 1;
@@ -111,7 +136,7 @@
 
 /* Smooth scrolling */
 .directions-results {
-  padding-top: 2rem; /* Increased padding to prevent cards from sliding under header */
+  padding-top: 1rem; /* Reduced padding - header already has bottom margin */
   padding-bottom: 2rem; /* Ensure last item isn't cut off */
 }
 
@@ -165,7 +190,7 @@
 
 /* Ensure first card has extra spacing from header */
 .direction-card-editable:first-child {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 .direction-card-editable:nth-child(2) {
   animation-delay: 0.2s;
@@ -460,6 +485,114 @@
   background: var(--border-primary);
 }
 
+/* ===== Character Concept Display ===== */
+
+.concept-display-container {
+  margin: 1.5rem 0;
+  background: #ffffff;
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.concept-display-container.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.concept-display-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.concept-display-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-narrative);
+}
+
+.concept-display-content {
+  color: var(--text-primary);
+}
+
+.concept-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.concept-text {
+  font-family: var(--font-narrative);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  background: var(--bg-highlight);
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 3px solid var(--manager-accent);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.concept-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.concept-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.concept-status-draft {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.concept-status-processing {
+  background: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+}
+
+.concept-status-completed {
+  background: rgba(46, 204, 113, 0.1);
+  color: #2ecc71;
+}
+
+.concept-status-error {
+  background: rgba(231, 76, 60, 0.1);
+  color: var(--status-error);
+}
+
+.concept-date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.concept-direction-count {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 500;
+  color: var(--manager-accent);
+}
+
 /* ===== Modal Enhancements ===== */
 
 .modal-actions {
@@ -502,6 +635,21 @@
   #directions-container {
     flex: 1;
     min-height: 0;
+  }
+
+  .concept-display-container {
+    padding: 1rem;
+  }
+
+  .concept-text {
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+
+  .concept-metadata {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }
 

@@ -110,7 +110,7 @@ describe('AnatomyGenerationWorkflow', () => {
 
     it('should handle parts without names', async () => {
       // Mock entities without names
-      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+      mockEntityManager.getEntityInstance.mockImplementation(() => {
         return {
           hasComponent: jest.fn().mockReturnValue(false),
         };
@@ -1259,6 +1259,386 @@ describe('AnatomyGenerationWorkflow', () => {
 
       expect(result.rootId).toBe(rootId);
       expect(result.entities).toEqual([rootId, ...partIds]);
+    });
+  });
+
+  describe('#createClothingSlotMetadata functionality', () => {
+    const blueprintId = 'test-blueprint';
+    const recipeId = 'test-recipe';
+    const ownerId = 'owner-entity';
+    const rootId = 'root-entity';
+    const partIds = ['arm-1', 'arm-2'];
+
+    beforeEach(() => {
+      // Setup default successful generation
+      const graphResult = {
+        rootId,
+        entities: [rootId, ...partIds],
+      };
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        graphResult
+      );
+
+      // Mock entities with names for parts map
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'arm-1') {
+          return {
+            hasComponent: jest.fn(
+              (compId) => compId === 'core:name' || compId === 'anatomy:part'
+            ),
+            getComponentData: jest.fn().mockReturnValue({ text: 'left_arm' }),
+          };
+        }
+        if (id === 'arm-2') {
+          return {
+            hasComponent: jest.fn(
+              (compId) => compId === 'core:name' || compId === 'anatomy:part'
+            ),
+            getComponentData: jest.fn().mockReturnValue({ text: 'right_arm' }),
+          };
+        }
+        return {
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+      });
+
+      // Mock successful component addition by default
+      mockEntityManager.addComponent.mockResolvedValue(true);
+    });
+
+    it('should create clothing slot metadata with valid clothing slot mappings', async () => {
+      // Setup blueprint with clothing slot mappings
+      const blueprint = {
+        clothingSlotMappings: {
+          'torso-slot': {
+            anatomySockets: ['chest', 'back'],
+            allowedLayers: ['base', 'outer'],
+          },
+          'head-slot': {
+            anatomySockets: ['head'],
+            allowedLayers: ['base'],
+          },
+        },
+      };
+
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints' && id === blueprintId) {
+          return blueprint;
+        }
+        return null;
+      });
+
+      await workflow.generate(blueprintId, recipeId, { ownerId });
+
+      // Verify the clothing:slot_metadata component was created
+      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+        ownerId,
+        'clothing:slot_metadata',
+        {
+          slotMappings: {
+            'torso-slot': {
+              coveredSockets: ['chest', 'back'],
+              allowedLayers: ['base', 'outer'],
+            },
+            'head-slot': {
+              coveredSockets: ['head'],
+              allowedLayers: ['base'],
+            },
+          },
+        }
+      );
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Created clothing:slot_metadata component with 2 slot mappings')
+      );
+    });
+
+    it('should handle blueprint with clothing slot mappings but missing allowedLayers', async () => {
+      // Setup blueprint with slot mapping missing allowedLayers
+      const blueprint = {
+        clothingSlotMappings: {
+          'arm-slot': {
+            anatomySockets: ['left_arm', 'right_arm'],
+            // allowedLayers missing
+          },
+        },
+      };
+
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints' && id === blueprintId) {
+          return blueprint;
+        }
+        return null;
+      });
+
+      await workflow.generate(blueprintId, recipeId, { ownerId });
+
+      // Verify the component was created with empty allowedLayers array
+      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+        ownerId,
+        'clothing:slot_metadata',
+        {
+          slotMappings: {
+            'arm-slot': {
+              coveredSockets: ['left_arm', 'right_arm'],
+              allowedLayers: [],
+            },
+          },
+        }
+      );
+    });
+
+    it('should skip slots without anatomySockets in clothing slot mappings', async () => {
+      // Setup blueprint with mixed valid/invalid slot mappings
+      const blueprint = {
+        clothingSlotMappings: {
+          'valid-slot': {
+            anatomySockets: ['chest'],
+            allowedLayers: ['base'],
+          },
+          'invalid-slot-no-anatomy': {
+            allowedLayers: ['base'],
+            // No anatomySockets
+          },
+          'invalid-slot-null-anatomy': {
+            anatomySockets: null,
+            allowedLayers: ['base'],
+          },
+        },
+      };
+
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints' && id === blueprintId) {
+          return blueprint;
+        }
+        return null;
+      });
+
+      await workflow.generate(blueprintId, recipeId, { ownerId });
+
+      // Verify only the valid slot was included
+      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+        ownerId,
+        'clothing:slot_metadata',
+        {
+          slotMappings: {
+            'valid-slot': {
+              coveredSockets: ['chest'],
+              allowedLayers: ['base'],
+            },
+          },
+        }
+      );
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Created clothing:slot_metadata component with 1 slot mappings')
+      );
+    });
+
+    it('should skip slots with empty anatomySockets arrays', async () => {
+      // Setup blueprint with empty anatomySockets
+      const blueprint = {
+        clothingSlotMappings: {
+          'empty-slot': {
+            anatomySockets: [],
+            allowedLayers: ['base'],
+          },
+          'valid-slot': {
+            anatomySockets: ['head'],
+            allowedLayers: ['base'],
+          },
+        },
+      };
+
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints' && id === blueprintId) {
+          return blueprint;
+        }
+        return null;
+      });
+
+      await workflow.generate(blueprintId, recipeId, { ownerId });
+
+      // Verify only the slot with non-empty anatomySockets was included
+      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+        ownerId,
+        'clothing:slot_metadata',
+        {
+          slotMappings: {
+            'valid-slot': {
+              coveredSockets: ['head'],
+              allowedLayers: ['base'],
+            },
+          },
+        }
+      );
+    });
+
+    it('should not create component when no valid slot mappings exist', async () => {
+      // Setup blueprint with only invalid slot mappings
+      const blueprint = {
+        clothingSlotMappings: {
+          'invalid-slot-1': {
+            allowedLayers: ['base'],
+            // No anatomySockets
+          },
+          'invalid-slot-2': {
+            anatomySockets: [],
+            allowedLayers: ['base'],
+          },
+        },
+      };
+
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints' && id === blueprintId) {
+          return blueprint;
+        }
+        return null;
+      });
+
+      await workflow.generate(blueprintId, recipeId, { ownerId });
+
+      // Verify no clothing:slot_metadata component was created
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
+        ownerId,
+        'clothing:slot_metadata',
+        expect.anything()
+      );
+    });
+
+    it('should handle error during clothing slot metadata creation gracefully', async () => {
+      // Setup blueprint with valid clothing slot mappings
+      const blueprint = {
+        clothingSlotMappings: {
+          'torso-slot': {
+            anatomySockets: ['chest'],
+            allowedLayers: ['base'],
+          },
+        },
+      };
+
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints' && id === blueprintId) {
+          return blueprint;
+        }
+        return null;
+      });
+
+      // Mock addComponent to throw error for clothing:slot_metadata
+      mockEntityManager.addComponent.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:slot_metadata') {
+            throw new Error('Failed to add metadata component');
+          }
+          return true;
+        }
+      );
+
+      // Should not throw - error should be handled gracefully
+      const result = await workflow.generate(blueprintId, recipeId, {
+        ownerId,
+      });
+
+      expect(result.rootId).toBe(rootId);
+      expect(result.entities).toEqual([rootId, ...partIds]);
+
+      // Verify error was logged
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to create clothing slot metadata'),
+        expect.any(Error)
+      );
+    });
+
+    it('should handle blueprint without clothingSlotMappings', async () => {
+      // Setup blueprint without clothingSlotMappings
+      const blueprint = {
+        // No clothingSlotMappings property
+        slots: {},
+      };
+
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints' && id === blueprintId) {
+          return blueprint;
+        }
+        return null;
+      });
+
+      await workflow.generate(blueprintId, recipeId, { ownerId });
+
+      // Verify no clothing:slot_metadata component was created
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
+        ownerId,
+        'clothing:slot_metadata',
+        expect.anything()
+      );
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('No clothing slot mappings found')
+      );
+    });
+
+    it('should handle null blueprint', async () => {
+      // Setup null blueprint
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints' && id === blueprintId) {
+          return null;
+        }
+        return null;
+      });
+
+      await workflow.generate(blueprintId, recipeId, { ownerId });
+
+      // Verify no clothing:slot_metadata component was created
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
+        ownerId,
+        'clothing:slot_metadata',
+        expect.anything()
+      );
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('No clothing slot mappings found')
+      );
+    });
+
+    it('should preserve anatomySockets array content correctly', async () => {
+      // Setup blueprint with specific socket names to verify array copying
+      const blueprint = {
+        clothingSlotMappings: {
+          'complex-slot': {
+            anatomySockets: ['socket1', 'socket2', 'socket3'],
+            allowedLayers: ['layer1', 'layer2'],
+          },
+        },
+      };
+
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints' && id === blueprintId) {
+          return blueprint;
+        }
+        return null;
+      });
+
+      await workflow.generate(blueprintId, recipeId, { ownerId });
+
+      // Verify the array was copied correctly (not reference)
+      const addComponentCall = mockEntityManager.addComponent.mock.calls.find(
+        (call) => call[1] === 'clothing:slot_metadata'
+      );
+
+      expect(addComponentCall[2].slotMappings['complex-slot'].coveredSockets).toEqual([
+        'socket1',
+        'socket2',
+        'socket3',
+      ]);
+      expect(addComponentCall[2].slotMappings['complex-slot'].allowedLayers).toEqual([
+        'layer1',
+        'layer2',
+      ]);
+
+      // Verify it's a new array (spread operator used)
+      expect(
+        addComponentCall[2].slotMappings['complex-slot'].coveredSockets
+      ).not.toBe(blueprint.clothingSlotMappings['complex-slot'].anatomySockets);
     });
   });
 

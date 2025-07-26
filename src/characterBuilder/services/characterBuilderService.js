@@ -642,16 +642,35 @@ export class CharacterBuilderService {
     }
 
     try {
+      // Get the current direction to compare old values
+      const currentDirection =
+        await this.#storageService.getThematicDirection(directionId);
+
+      if (!currentDirection) {
+        throw new CharacterBuilderError(
+          `Thematic direction not found: ${directionId}`
+        );
+      }
+
       const updatedDirection =
         await this.#storageService.updateThematicDirection(
           directionId,
           updates
         );
 
-      this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, {
-        directionId,
-        updates,
-      });
+      // Dispatch individual events for each changed field
+      for (const [field, newValue] of Object.entries(updates)) {
+        const oldValue = currentDirection[field];
+        // Only dispatch if the value actually changed
+        if (oldValue !== newValue) {
+          this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, {
+            directionId,
+            field,
+            oldValue: oldValue || '',
+            newValue: newValue || '',
+          });
+        }
+      }
 
       return updatedDirection;
     } catch (error) {

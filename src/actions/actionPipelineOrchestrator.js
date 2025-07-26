@@ -6,7 +6,7 @@
 import { Pipeline } from './pipeline/Pipeline.js';
 import { ComponentFilteringStage } from './pipeline/stages/ComponentFilteringStage.js';
 import { PrerequisiteEvaluationStage } from './pipeline/stages/PrerequisiteEvaluationStage.js';
-import { TargetResolutionStage } from './pipeline/stages/TargetResolutionStage.js';
+import { MultiTargetResolutionStage } from './pipeline/stages/MultiTargetResolutionStage.js';
 import { ActionFormattingStage } from './pipeline/stages/ActionFormattingStage.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -17,6 +17,8 @@ import { ActionFormattingStage } from './pipeline/stages/ActionFormattingStage.j
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
 /** @typedef {import('./validation/prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
 /** @typedef {import('../interfaces/ITargetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
+/** @typedef {import('./scopes/unifiedScopeResolver.js').UnifiedScopeResolver} UnifiedScopeResolver */
+/** @typedef {import('../scopeDsl/utils/targetContextBuilder.js').default} TargetContextBuilder */
 /** @typedef {import('../interfaces/IActionCommandFormatter.js').IActionCommandFormatter} IActionCommandFormatter */
 /** @typedef {import('./errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -35,6 +37,8 @@ export class ActionPipelineOrchestrator {
   #getEntityDisplayNameFn;
   #errorBuilder;
   #logger;
+  #unifiedScopeResolver;
+  #targetContextBuilder;
 
   /**
    * Creates an ActionPipelineOrchestrator instance
@@ -49,6 +53,8 @@ export class ActionPipelineOrchestrator {
    * @param {Function} deps.getEntityDisplayNameFn - Function to get entity display names
    * @param {ActionErrorContextBuilder} deps.errorBuilder - Builder for error contexts
    * @param {ILogger} deps.logger - Logger for diagnostic output
+   * @param {UnifiedScopeResolver} deps.unifiedScopeResolver - Unified scope resolver
+   * @param {TargetContextBuilder} deps.targetContextBuilder - Target context builder
    */
   constructor({
     actionIndex,
@@ -60,6 +66,8 @@ export class ActionPipelineOrchestrator {
     getEntityDisplayNameFn,
     errorBuilder,
     logger,
+    unifiedScopeResolver,
+    targetContextBuilder,
   }) {
     this.#actionIndex = actionIndex;
     this.#prerequisiteService = prerequisiteService;
@@ -70,6 +78,8 @@ export class ActionPipelineOrchestrator {
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
     this.#errorBuilder = errorBuilder;
     this.#logger = logger;
+    this.#unifiedScopeResolver = unifiedScopeResolver;
+    this.#targetContextBuilder = targetContextBuilder;
   }
 
   /**
@@ -128,11 +138,13 @@ export class ActionPipelineOrchestrator {
         this.#errorBuilder,
         this.#logger
       ),
-      new TargetResolutionStage(
-        this.#targetService,
-        this.#errorBuilder,
-        this.#logger
-      ),
+      new MultiTargetResolutionStage({
+        unifiedScopeResolver: this.#unifiedScopeResolver,
+        entityManager: this.#entityManager,
+        targetResolver: this.#targetService,
+        targetContextBuilder: this.#targetContextBuilder,
+        logger: this.#logger,
+      }),
       new ActionFormattingStage({
         commandFormatter: this.#formatter,
         entityManager: this.#entityManager,

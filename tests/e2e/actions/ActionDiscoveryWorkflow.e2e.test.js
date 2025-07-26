@@ -167,7 +167,7 @@ describe('Complete Action Discovery Workflow E2E', () => {
     const clearDirectionsExpr =
       'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target';
     const otherActorsExpr =
-      'entities(core:actor)[{ var: "id", neq: { var: "actor.id" } }]';
+      'entities(core:actor)[{"!=": [{"var": "id"}, {"var": "actor.id"}]}]';
 
     let clearDirectionsAst, otherActorsAst;
     try {

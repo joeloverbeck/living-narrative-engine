@@ -145,7 +145,7 @@ describe('ActionIndex Integration Tests', () => {
 
       // Test NPC actions
       const npcCandidates = actionIndex.getCandidateActions(npc);
-      expect(npcCandidates).toHaveLength(3); // universal, walk (has position), interact (has position)  
+      expect(npcCandidates).toHaveLength(3); // universal, walk (has position), interact (has position)
       expect(npcCandidates.map((a) => a.id)).toEqual(
         expect.arrayContaining(['core:interact', 'core:universal'])
       );
@@ -156,7 +156,9 @@ describe('ActionIndex Integration Tests', () => {
         actionIndex.getCandidateActions(player);
       expect(playerCandidatesAfterRemoval).toHaveLength(4); // Walk still available because player has position (ActionIndex includes if ANY component matches)
       // But we can verify walk is included only because of position requirement, not movement
-      const walkAction = playerCandidatesAfterRemoval.find(a => a.id === 'core:walk');
+      const walkAction = playerCandidatesAfterRemoval.find(
+        (a) => a.id === 'core:walk'
+      );
       expect(walkAction).toBeDefined(); // Walk is still a candidate (actual validation happens later in pipeline)
     });
 
@@ -224,7 +226,9 @@ describe('ActionIndex Integration Tests', () => {
           required_components: {
             actor: ['core:position', 'core:movement', 'core:stamina'],
           },
-          forbidden_components: { actor: ['status:exhausted', 'status:injured'] },
+          forbidden_components: {
+            actor: ['status:exhausted', 'status:injured'],
+          },
         },
         // Combat actions
         {
@@ -284,8 +288,12 @@ describe('ActionIndex Integration Tests', () => {
       entityManager.addComponent(injuredSoldier.id, 'core:position', {
         locationId: 'battlefield',
       });
-      entityManager.addComponent(injuredSoldier.id, 'core:movement', { speed: 2 });
-      entityManager.addComponent(injuredSoldier.id, 'core:combat', { skill: 5 });
+      entityManager.addComponent(injuredSoldier.id, 'core:movement', {
+        speed: 2,
+      });
+      entityManager.addComponent(injuredSoldier.id, 'core:combat', {
+        skill: 5,
+      });
       entityManager.addComponent(injuredSoldier.id, 'status:injured', {
         severity: 'moderate',
       });
@@ -306,7 +314,7 @@ describe('ActionIndex Integration Tests', () => {
       const civilianCandidates = actionIndex.getCandidateActions(civilian);
       // ActionIndex includes actions if actor has ANY required component, then filters by forbidden
       // Civilian has: core:position, core:dialogue
-      // So gets: walk (requires position+movement, has position), run (position+movement+stamina, has position), 
+      // So gets: walk (requires position+movement, has position), run (position+movement+stamina, has position),
       // attack (position+combat, has position), talk (dialogue, has it), trade (inventory+dialogue, has dialogue)
       // Plus 2 universal actions = 7 total
       expect(civilianCandidates).toHaveLength(7);
@@ -321,7 +329,7 @@ describe('ActionIndex Integration Tests', () => {
 
     it('should handle buildIndex validation edge cases', () => {
       // Test buildIndex validation paths (covers lines 65-68, 81-84)
-      
+
       // Test with non-array input
       actionIndex.buildIndex(null);
       expect(logger.warn).toHaveBeenCalledWith(
@@ -349,12 +357,12 @@ describe('ActionIndex Integration Tests', () => {
       ];
 
       actionIndex.buildIndex(invalidActions);
-      
+
       // Should log debug messages for each invalid action
       expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Skipping invalid action definition:')
       );
-      
+
       // Should still build index for valid action
       expect(logger.debug).toHaveBeenCalledWith(
         'Action index built. 1 component-to-action maps created.'
@@ -369,7 +377,11 @@ describe('ActionIndex Integration Tests', () => {
           name: 'Stealth',
           required_components: { actor: ['skills:stealth'] },
           forbidden_components: {
-            actor: ['status:visible', 'status:detected', 'equipment:heavy_armor'],
+            actor: [
+              'status:visible',
+              'status:detected',
+              'equipment:heavy_armor',
+            ],
           },
         },
         {
@@ -393,12 +405,18 @@ describe('ActionIndex Integration Tests', () => {
       const character = entityManager.createEntity('complex-char');
       entityManager.addComponent(character.id, 'skills:stealth', { level: 5 });
       entityManager.addComponent(character.id, 'skills:magic', { level: 3 });
-      entityManager.addComponent(character.id, 'resources:mana', { current: 50 });
-      entityManager.addComponent(character.id, 'status:visible', { reason: 'light' });
-      entityManager.addComponent(character.id, 'status:silenced', { duration: 10 });
+      entityManager.addComponent(character.id, 'resources:mana', {
+        current: 50,
+      });
+      entityManager.addComponent(character.id, 'status:visible', {
+        reason: 'light',
+      });
+      entityManager.addComponent(character.id, 'status:silenced', {
+        duration: 10,
+      });
 
       const candidates = actionIndex.getCandidateActions(character);
-      
+
       // Should only get generic action (both stealth and magic forbidden)
       expect(candidates).toHaveLength(1);
       expect(candidates[0].id).toBe('action:generic');
@@ -419,7 +437,7 @@ describe('ActionIndex Integration Tests', () => {
 
       // Create trace context
       const trace = new TraceContext();
-      
+
       // Spy on trace methods to verify integration
       jest.spyOn(trace, 'data');
       jest.spyOn(trace, 'info');
@@ -475,7 +493,9 @@ describe('ActionIndex Integration Tests', () => {
       // Create entity with forbidden component
       const actor = entityManager.createEntity('trace-forbidden');
       entityManager.addComponent(actor.id, 'test:required', { value: true });
-      entityManager.addComponent(actor.id, 'test:forbidden', { reason: 'test' });
+      entityManager.addComponent(actor.id, 'test:forbidden', {
+        reason: 'test',
+      });
 
       // Create trace
       const trace = new TraceContext();
@@ -491,7 +511,9 @@ describe('ActionIndex Integration Tests', () => {
       );
 
       expect(trace.info).toHaveBeenCalledWith(
-        expect.stringContaining('Removed 1 actions due to forbidden components'),
+        expect.stringContaining(
+          'Removed 1 actions due to forbidden components'
+        ),
         'ActionIndex.getCandidateActions',
         expect.objectContaining({
           removedActionIds: ['trace:forbidden'],
@@ -563,7 +585,10 @@ describe('ActionIndex Integration Tests', () => {
       ];
 
       validActions.forEach((action) => {
-        const validationResult = schemaValidator.validateAgainstSchema(action, 'test-action-schema');
+        const validationResult = schemaValidator.validateAgainstSchema(
+          action,
+          'test-action-schema'
+        );
         expect(validationResult).toBe(true);
       });
 
@@ -630,7 +655,7 @@ describe('ActionIndex Integration Tests', () => {
 
       // Test with entity having null/undefined components
       const actor = entityManager.createEntity('edge-case');
-      
+
       // Manually set invalid component data
       const originalGetAllTypes = entityManager.getAllComponentTypesForEntity;
       entityManager.getAllComponentTypesForEntity = jest
@@ -638,7 +663,7 @@ describe('ActionIndex Integration Tests', () => {
         .mockReturnValue(['valid:component', null, undefined, '', '  ']);
 
       const candidates = actionIndex.getCandidateActions(actor);
-      
+
       // Should handle invalid component types gracefully
       expect(Array.isArray(candidates)).toBe(true);
 
@@ -651,7 +676,7 @@ describe('ActionIndex Integration Tests', () => {
     it('should handle large action catalogs efficiently', () => {
       // Create large action catalog (500 actions)
       const largeActionCatalog = [];
-      
+
       // Create actions with various component requirements
       for (let i = 0; i < 500; i++) {
         largeActionCatalog.push({
@@ -740,7 +765,7 @@ describe('ActionIndex Integration Tests', () => {
 
       expect(endTime - startTime).toBeLessThan(500); // All queries <500ms
       expect(allCandidates).toHaveLength(1000);
-      
+
       // Each should have found some candidates
       allCandidates.forEach((candidates) => {
         expect(candidates.length).toBeGreaterThan(0);
@@ -799,15 +824,19 @@ describe('ActionIndex Integration Tests', () => {
       expect(candidates).toHaveLength(3); // Magic available again
 
       // Add disarmed status (blocks weapon usage)
-      entityManager.addComponent(player.id, 'status:disarmed', { reason: 'trap' });
+      entityManager.addComponent(player.id, 'status:disarmed', {
+        reason: 'trap',
+      });
       candidates = actionIndex.getCandidateActions(player);
       expect(candidates).toHaveLength(2); // Weapon usage blocked
-      expect(candidates.map((a) => a.id)).not.toContain('gameplay:equip_weapon');
+      expect(candidates.map((a) => a.id)).not.toContain(
+        'gameplay:equip_weapon'
+      );
     });
 
     it('should integrate with complete action processing pipeline', () => {
       // This test simulates how ActionIndex integrates with other systems
-      
+
       // Build comprehensive action catalog
       actionIndex.buildIndex([
         ...testData.actions.basic,
@@ -822,7 +851,7 @@ describe('ActionIndex Integration Tests', () => {
 
       // Create test scenario entities
       const entities = testData.actors;
-      
+
       // Set up entities in entity manager
       Object.values(entities).forEach((actorData) => {
         const entity = entityManager.createEntity(actorData.id);
@@ -845,7 +874,9 @@ describe('ActionIndex Integration Tests', () => {
       expect(Array.isArray(lockedCandidates)).toBe(true);
 
       // Verify each entity gets appropriate actions based on components
-      expect(playerCandidates.length).toBeGreaterThanOrEqual(npcCandidates.length);
+      expect(playerCandidates.length).toBeGreaterThanOrEqual(
+        npcCandidates.length
+      );
     });
 
     it('should handle concurrent access scenarios', () => {
