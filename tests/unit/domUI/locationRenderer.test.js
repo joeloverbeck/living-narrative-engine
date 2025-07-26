@@ -1148,5 +1148,284 @@ describe('LocationRenderer', () => {
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1); // Still only once
     });
   });
+
+  describe('constructor portrait element validation', () => {
+    it('should dispatch error but not throw when portrait elements are not bound', () => {
+      // Mock documentContext.query to return null for portrait elements
+      const customMockDocumentContext = createMockDocumentContext();
+      customMockDocumentContext.query.mockImplementation((selector) => {
+        if (selector === '#location-name-display') return mockNameDisplay;
+        if (selector === '#location-description-display')
+          return mockDescriptionDisplay;
+        if (selector === '#location-exits-display') return mockExitsDisplay;
+        if (selector === '#location-characters-display')
+          return mockCharactersDisplay;
+        // Return null for portrait elements to trigger the error dispatch
+        if (selector === '#location-portrait-visuals') return null;
+        if (selector === '#location-portrait-image') return null;
+        return document.querySelector(selector);
+      });
+
+      const customRendererDeps = {
+        ...rendererDeps,
+        documentContext: customMockDocumentContext,
+      };
+
+      // Should not throw, but should dispatch an error
+      expect(() => new LocationRenderer(customRendererDeps)).not.toThrow();
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message:
+            '[LocationRenderer] Location portrait DOM elements not bound. Portraits will not be displayed.',
+        }
+      );
+    });
+  });
+
+  describe('error handling for non-LocationNotFoundError exceptions', () => {
+    let renderer;
+
+    beforeEach(() => {
+      mockEntityDisplayDataProvider.getEntityLocationId.mockReturnValue(
+        MOCK_LOCATION_ID
+      );
+      mockEntityDisplayDataProvider.getLocationDetails.mockReturnValue({
+        name: 'Test Location',
+        description: 'A test location.',
+        exits: [],
+      });
+      mockEntityDisplayDataProvider.getLocationPortraitData.mockReturnValue(
+        null
+      );
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set());
+      renderer = new LocationRenderer(rendererDeps);
+    });
+
+    it('should handle generic errors during turn processing and dispatch system error', () => {
+      const genericError = new Error('Something went wrong');
+      mockEntityDisplayDataProvider.getLocationDetails.mockImplementation(
+        () => {
+          throw genericError;
+        }
+      );
+
+      // Trigger turn started event
+      turnStartedCallback({
+        type: 'core:turn_started',
+        payload: { entityId: MOCK_PLAYER_ID, entityType: 'player' },
+      });
+
+      // Verify system error was dispatched
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message: `[LocationRenderer] Error processing 'core:turn_started' for entity '${MOCK_PLAYER_ID}': ${genericError.message}`,
+          details: { stack: genericError.stack },
+        }
+      );
+
+      // Verify error display was shown
+      expect(mockDescriptionDisplay.textContent).toContain(
+        'Error retrieving location details.'
+      );
+    });
+  });
+
+  describe('#clearDisplayWithError element not found warning', () => {
+    let renderer;
+
+    beforeEach(() => {
+      renderer = new LocationRenderer(rendererDeps);
+    });
+
+    it('should log warning when an element is not found during clearDisplayWithError', () => {
+      // Temporarily remove one of the elements
+      const originalExitsDisplay = renderer.elements.exitsDisplay;
+      renderer.elements.exitsDisplay = null;
+
+      // Trigger clearDisplayWithError by simulating a turn started event with no location
+      mockEntityDisplayDataProvider.getEntityLocationId.mockReturnValue(null);
+
+      turnStartedCallback({
+        type: 'core:turn_started',
+        payload: { entityId: MOCK_PLAYER_ID, entityType: 'player' },
+      });
+
+      // Verify warning was logged for the missing element
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[LocationRenderer] Could not find element this.elements.exitsDisplay to clear on error.'
+      );
+
+      // Restore element
+      renderer.elements.exitsDisplay = originalExitsDisplay;
+    });
+  });
+
+  describe('_renderListHeader fallback behavior', () => {
+    let renderer;
+
+    beforeEach(() => {
+      renderer = new LocationRenderer(rendererDeps);
+    });
+
+    it('should create text node when domElementFactory.h4 is not available', () => {
+      // Mock domElementFactory.h4 to be undefined
+      const originalH4 = mockDomElementFactory.h4;
+      mockDomElementFactory.h4 = undefined;
+
+      const targetElement = document.createElement('div');
+      renderer._renderListHeader('Test Header', targetElement);
+
+      // Verify text node was created and appended
+      expect(mockDocumentContext.document.createTextNode).toHaveBeenCalledWith(
+        'Test Header:'
+      );
+      expect(targetElement.textContent).toBe('Test Header:');
+
+      // Restore original h4
+      mockDomElementFactory.h4 = originalH4;
+    });
+
+    it('should create text node when domElementFactory.h4 returns null', () => {
+      // Mock domElementFactory.h4 to return null
+      mockDomElementFactory.h4.mockReturnValueOnce(null);
+
+      const targetElement = document.createElement('div');
+      renderer._renderListHeader('Test Header', targetElement);
+
+      // Verify text node was created and appended
+      expect(mockDocumentContext.document.createTextNode).toHaveBeenCalledWith(
+        'Test Header:'
+      );
+      expect(targetElement.textContent).toBe('Test Header:');
+    });
+  });
+
+  describe('renderName fallback behavior', () => {
+    let renderer;
+
+    beforeEach(() => {
+      mockEntityDisplayDataProvider.getEntityLocationId.mockReturnValue(
+        MOCK_LOCATION_ID
+      );
+      mockEntityDisplayDataProvider.getLocationDetails.mockReturnValue({
+        name: 'Test Location',
+        description: 'A test location.',
+        exits: [],
+      });
+      mockEntityDisplayDataProvider.getLocationPortraitData.mockReturnValue(
+        null
+      );
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set());
+      renderer = new LocationRenderer(rendererDeps);
+    });
+
+    it('should set textContent directly when domElementFactory.h3 returns null', () => {
+      // Mock h3 to return null
+      mockDomElementFactory.h3.mockReturnValueOnce(null);
+
+      const locationDto = {
+        name: 'Fallback Location',
+        description: 'Test description',
+        portraitPath: null,
+        portraitAltText: null,
+        exits: [],
+        characters: [],
+      };
+
+      renderer.renderName(locationDto);
+
+      // Verify textContent was set directly
+      expect(mockNameDisplay.textContent).toBe('Fallback Location');
+      expect(mockDomElementFactory.h3).toHaveBeenCalledWith(
+        undefined,
+        'Fallback Location'
+      );
+    });
+
+    it('should use default location name when name is empty and h3 returns null', () => {
+      // Mock h3 to return null
+      mockDomElementFactory.h3.mockReturnValueOnce(null);
+
+      const locationDto = {
+        name: '',
+        description: 'Test description',
+        portraitPath: null,
+        portraitAltText: null,
+        exits: [],
+        characters: [],
+      };
+
+      renderer.renderName(locationDto);
+
+      // Verify default name was used
+      expect(mockNameDisplay.textContent).toBe('Unknown Location');
+    });
+  });
+
+  describe('renderDescription fallback behavior', () => {
+    let renderer;
+
+    beforeEach(() => {
+      mockEntityDisplayDataProvider.getEntityLocationId.mockReturnValue(
+        MOCK_LOCATION_ID
+      );
+      mockEntityDisplayDataProvider.getLocationDetails.mockReturnValue({
+        name: 'Test Location',
+        description: 'A test location.',
+        exits: [],
+      });
+      mockEntityDisplayDataProvider.getLocationPortraitData.mockReturnValue(
+        null
+      );
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set());
+      renderer = new LocationRenderer(rendererDeps);
+    });
+
+    it('should set textContent directly when domElementFactory.p returns null', () => {
+      // Mock p to return null
+      mockDomElementFactory.p.mockReturnValueOnce(null);
+
+      const locationDto = {
+        name: 'Test Location',
+        description: 'Fallback Description',
+        portraitPath: null, // No portrait so description should be shown
+        portraitAltText: null,
+        exits: [],
+        characters: [],
+      };
+
+      renderer.renderDescription(locationDto);
+
+      // Verify textContent was set directly
+      expect(mockDescriptionDisplay.textContent).toBe('Fallback Description');
+      expect(mockDomElementFactory.p).toHaveBeenCalledWith(
+        undefined,
+        'Fallback Description'
+      );
+    });
+
+    it('should use default description when description is empty and p returns null', () => {
+      // Mock p to return null
+      mockDomElementFactory.p.mockReturnValueOnce(null);
+
+      const locationDto = {
+        name: 'Test Location',
+        description: '',
+        portraitPath: null, // No portrait so description should be shown
+        portraitAltText: null,
+        exits: [],
+        characters: [],
+      };
+
+      renderer.renderDescription(locationDto);
+
+      // Verify default description was used
+      expect(mockDescriptionDisplay.textContent).toBe(
+        'You see nothing remarkable.'
+      );
+    });
+  });
 });
 // --- FILE END ---

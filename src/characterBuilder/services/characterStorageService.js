@@ -456,6 +456,42 @@ export class CharacterStorageService {
   }
 
   /**
+   * Get a single thematic direction by ID
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<ThematicDirection|null>}
+   */
+  async getThematicDirection(directionId) {
+    this.#ensureInitialized();
+
+    if (!directionId || typeof directionId !== 'string') {
+      throw new CharacterStorageError('directionId must be a non-empty string');
+    }
+
+    try {
+      const direction = await this.#database.getThematicDirection(directionId);
+
+      if (direction) {
+        this.#logger.debug(
+          `CharacterStorageService: Retrieved thematic direction`,
+          { directionId }
+        );
+      } else {
+        this.#logger.debug(
+          `CharacterStorageService: Thematic direction not found`,
+          { directionId }
+        );
+      }
+
+      return direction;
+    } catch (error) {
+      const message = `Failed to get thematic direction ${directionId}: ${error.message}`;
+      this.#logger.error(message, error);
+      throw new CharacterStorageError(message, error);
+    }
+  }
+
+  /**
    * Update a single thematic direction
    *
    * @param {string} directionId - Direction ID

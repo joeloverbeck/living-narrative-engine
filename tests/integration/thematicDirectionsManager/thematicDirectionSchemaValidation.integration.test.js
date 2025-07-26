@@ -40,24 +40,28 @@ describe('Thematic Direction Schema Validation Fix Integration Tests', () => {
 
     // Create schema validator using the same pattern as production
     schemaValidator = new AjvSchemaValidator({ logger });
-    
+
     // Load the actual thematic-direction schema from file system
-    const schemaPath = path.resolve('data/schemas/thematic-direction.schema.json');
+    const schemaPath = path.resolve(
+      'data/schemas/thematic-direction.schema.json'
+    );
     const schemaContent = fs.readFileSync(schemaPath, 'utf8');
     const schema = JSON.parse(schemaContent);
-    
+
     // Add schema with full URI (as SchemaLoader does in production)
     await schemaValidator.addSchema(schema, schema.$id);
   });
 
   describe('Schema Loading Verification', () => {
     it('should have thematic-direction schema loaded with full URI', () => {
-      const fullSchemaId = 'schema://living-narrative-engine/thematic-direction.schema.json';
+      const fullSchemaId =
+        'schema://living-narrative-engine/thematic-direction.schema.json';
       expect(schemaValidator.isSchemaLoaded(fullSchemaId)).toBe(true);
     });
 
     it('should validate thematic direction using full schema URI', () => {
-      const fullSchemaId = 'schema://living-narrative-engine/thematic-direction.schema.json';
+      const fullSchemaId =
+        'schema://living-narrative-engine/thematic-direction.schema.json';
       const isValid = schemaValidator.validateAgainstSchema(
         validThematicDirection,
         fullSchemaId
@@ -66,7 +70,8 @@ describe('Thematic Direction Schema Validation Fix Integration Tests', () => {
     });
 
     it('should reject invalid thematic direction using full schema URI', () => {
-      const fullSchemaId = 'schema://living-narrative-engine/thematic-direction.schema.json';
+      const fullSchemaId =
+        'schema://living-narrative-engine/thematic-direction.schema.json';
       const invalidDirection = { ...validThematicDirection };
       delete invalidDirection.title; // Remove required field
 
@@ -80,8 +85,9 @@ describe('Thematic Direction Schema Validation Fix Integration Tests', () => {
 
   describe('Direct Schema Validation Tests', () => {
     it('should validate multiple thematic directions correctly', () => {
-      const fullSchemaId = 'schema://living-narrative-engine/thematic-direction.schema.json';
-      
+      const fullSchemaId =
+        'schema://living-narrative-engine/thematic-direction.schema.json';
+
       const directions = [
         validThematicDirection,
         {
@@ -92,22 +98,29 @@ describe('Thematic Direction Schema Validation Fix Integration Tests', () => {
       ];
 
       // Both should validate successfully
-      directions.forEach(direction => {
-        const isValid = schemaValidator.validateAgainstSchema(direction, fullSchemaId);
+      directions.forEach((direction) => {
+        const isValid = schemaValidator.validateAgainstSchema(
+          direction,
+          fullSchemaId
+        );
         expect(isValid).toBe(true);
       });
     });
 
     it('should provide meaningful error messages for validation failures', () => {
-      const fullSchemaId = 'schema://living-narrative-engine/thematic-direction.schema.json';
-      
+      const fullSchemaId =
+        'schema://living-narrative-engine/thematic-direction.schema.json';
+
       // Create invalid direction missing required field
       const invalidDirection = { ...validThematicDirection };
       delete invalidDirection.description; // Remove required field
 
-      const isValid = schemaValidator.validateAgainstSchema(invalidDirection, fullSchemaId);
+      const isValid = schemaValidator.validateAgainstSchema(
+        invalidDirection,
+        fullSchemaId
+      );
       expect(isValid).toBe(false);
-      
+
       // Should have formatted error messages available
       const errorMsg = schemaValidator.formatAjvErrors();
       expect(errorMsg).toBeTruthy();
@@ -118,28 +131,36 @@ describe('Thematic Direction Schema Validation Fix Integration Tests', () => {
   describe('Regression Prevention', () => {
     it('should use correct schema ID format consistently', () => {
       // Verify we are using the full schema URI, not the short name
-      const fullSchemaId = 'schema://living-narrative-engine/thematic-direction.schema.json';
+      const fullSchemaId =
+        'schema://living-narrative-engine/thematic-direction.schema.json';
       const shortSchemaId = 'thematic-direction';
 
       // Full URI should work
       expect(schemaValidator.isSchemaLoaded(fullSchemaId)).toBe(true);
-      
+
       // Short name should not work (unless explicitly added)
       expect(schemaValidator.isSchemaLoaded(shortSchemaId)).toBe(false);
     });
 
     it('should validate using full schema URI prevents the original error', () => {
-      // This test verifies that using the full URI prevents the 
+      // This test verifies that using the full URI prevents the
       // "Schema 'thematic-direction' not loaded" error
-      const fullSchemaId = 'schema://living-narrative-engine/thematic-direction.schema.json';
-      
+      const fullSchemaId =
+        'schema://living-narrative-engine/thematic-direction.schema.json';
+
       // Validation should work with the full URI
-      const isValid = schemaValidator.validateAgainstSchema(validThematicDirection, fullSchemaId);
+      const isValid = schemaValidator.validateAgainstSchema(
+        validThematicDirection,
+        fullSchemaId
+      );
       expect(isValid).toBe(true);
-      
+
       // This should NOT throw the "Schema not loaded" error like it did before the fix
       expect(() => {
-        schemaValidator.validateAgainstSchema(validThematicDirection, fullSchemaId);
+        schemaValidator.validateAgainstSchema(
+          validThematicDirection,
+          fullSchemaId
+        );
       }).not.toThrow(/Schema.*not loaded/);
     });
   });

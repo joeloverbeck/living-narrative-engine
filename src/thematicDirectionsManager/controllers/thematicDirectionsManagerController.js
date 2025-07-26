@@ -6,7 +6,6 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { UIStateManager } from '../../shared/characterBuilder/uiStateManager.js';
 import { PreviousItemsDropdown } from '../../shared/characterBuilder/previousItemsDropdown.js';
-import { FormValidationHelper } from '../../shared/characterBuilder/formValidationHelper.js';
 import { InPlaceEditor } from '../../shared/characterBuilder/inPlaceEditor.js';
 
 /**
@@ -35,7 +34,6 @@ export class ThematicDirectionsManagerController {
   #logger;
   #characterBuilderService;
   #eventBus;
-  #schemaValidator;
   #uiStateManager;
   #conceptDropdown;
   #currentFilter = '';
@@ -47,7 +45,9 @@ export class ThematicDirectionsManagerController {
   #elements = {};
 
   /**
-   * @param {object} dependencies
+   * Creates a new ThematicDirectionsManagerController instance
+   *
+   * @param {object} dependencies - The dependencies object
    * @param {ILogger} dependencies.logger - Logger instance
    * @param {CharacterBuilderService} dependencies.characterBuilderService - Character builder service
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher
@@ -83,7 +83,6 @@ export class ThematicDirectionsManagerController {
     this.#logger = logger;
     this.#characterBuilderService = characterBuilderService;
     this.#eventBus = eventBus;
-    this.#schemaValidator = schemaValidator;
   }
 
   /**
@@ -149,6 +148,14 @@ export class ThematicDirectionsManagerController {
       document.getElementById('direction-filter');
     this.#elements.directionsResults =
       document.getElementById('directions-results');
+
+    // Concept display elements
+    this.#elements.conceptDisplayContainer = document.getElementById(
+      'concept-display-container'
+    );
+    this.#elements.conceptDisplayContent = document.getElementById(
+      'concept-display-content'
+    );
 
     // State containers
     this.#elements.emptyState = document.getElementById('empty-state');
@@ -361,7 +368,7 @@ export class ThematicDirectionsManagerController {
    * Display directions in the UI
    *
    * @private
-   * @param {Array<{direction: ThematicDirection, concept: CharacterConcept|null}>} directionsData
+   * @param {Array<{direction: ThematicDirection, concept: CharacterConcept|null}>} directionsData - Directions with their concepts to display
    */
   #displayDirections(directionsData) {
     // Clean up existing InPlaceEditor instances
@@ -375,11 +382,10 @@ export class ThematicDirectionsManagerController {
     container.className = 'directions-container';
 
     // Add each direction
-    directionsData.forEach((item, index) => {
+    directionsData.forEach((item) => {
       const directionElement = this.#createEditableDirectionElement(
         item.direction,
-        item.concept,
-        index + 1
+        item.concept
       );
       container.appendChild(directionElement);
     });
@@ -394,10 +400,9 @@ export class ThematicDirectionsManagerController {
    * @private
    * @param {ThematicDirection} direction - Direction data
    * @param {CharacterConcept|null} concept - Associated concept
-   * @param {number} index - Direction index (1-based)
    * @returns {HTMLElement} Direction element
    */
-  #createEditableDirectionElement(direction, concept, index) {
+  #createEditableDirectionElement(direction, concept) {
     const article = document.createElement('article');
     article.className = 'direction-card-editable cb-card-editable';
     article.setAttribute('data-direction-id', direction.id);
@@ -660,6 +665,33 @@ export class ThematicDirectionsManagerController {
    */
   async #handleConceptSelection(conceptId) {
     this.#currentConcept = conceptId;
+
+    // Handle concept display
+    if (conceptId && conceptId !== 'orphaned') {
+      try {
+        // Fetch the full character concept
+        const concept =
+          await this.#characterBuilderService.getCharacterConcept(conceptId);
+        if (concept) {
+          this.#displayCharacterConcept(concept);
+        }
+      } catch (error) {
+        this.#logger.error(
+          'ThematicDirectionsManagerController: Failed to load character concept',
+          error
+        );
+        // Hide the concept display on error
+        if (this.#elements.conceptDisplayContainer) {
+          this.#elements.conceptDisplayContainer.style.display = 'none';
+        }
+      }
+    } else {
+      // Hide concept display for "All Concepts" or "Orphaned Directions"
+      if (this.#elements.conceptDisplayContainer) {
+        this.#elements.conceptDisplayContainer.style.display = 'none';
+      }
+    }
+
     this.#filterAndDisplayDirections();
   }
 
@@ -847,6 +879,71 @@ export class ThematicDirectionsManagerController {
     });
 
     return Array.from(conceptMap.values());
+  }
+
+  /**
+   * Display the selected character concept
+   *
+   * @private
+   * @param {CharacterConcept} concept - Character concept to display
+   */
+  #displayCharacterConcept(concept) {
+    if (
+      !this.#elements.conceptDisplayContainer ||
+      !this.#elements.conceptDisplayContent
+    ) {
+      return;
+    }
+
+    // Clear existing content
+    this.#elements.conceptDisplayContent.innerHTML = '';
+
+    // Create concept display structure
+    const conceptWrapper = document.createElement('div');
+    conceptWrapper.className = 'concept-content-wrapper';
+
+    // Add concept text
+    const conceptText = document.createElement('div');
+    conceptText.className = 'concept-text';
+    conceptText.textContent = concept.concept;
+    conceptWrapper.appendChild(conceptText);
+
+    // Add metadata
+    const metadataSection = document.createElement('div');
+    metadataSection.className = 'concept-metadata';
+
+    // Status badge
+    const statusBadge = document.createElement('span');
+    statusBadge.className = `concept-status concept-status-${concept.status}`;
+    statusBadge.textContent =
+      concept.status.charAt(0).toUpperCase() + concept.status.slice(1);
+    metadataSection.appendChild(statusBadge);
+
+    // Created date
+    const createdDate = document.createElement('span');
+    createdDate.className = 'concept-date';
+    const createdAt = new Date(concept.createdAt);
+    createdDate.textContent = `Created: ${createdAt.toLocaleDateString()} at ${createdAt.toLocaleTimeString()}`;
+    metadataSection.appendChild(createdDate);
+
+    // Direction count
+    if (concept.thematicDirections && concept.thematicDirections.length > 0) {
+      const directionCount = document.createElement('span');
+      directionCount.className = 'concept-direction-count';
+      directionCount.textContent = `${concept.thematicDirections.length} thematic direction${concept.thematicDirections.length === 1 ? '' : 's'}`;
+      metadataSection.appendChild(directionCount);
+    }
+
+    conceptWrapper.appendChild(metadataSection);
+
+    // Add to container
+    this.#elements.conceptDisplayContent.appendChild(conceptWrapper);
+
+    // Show the container with animation
+    this.#elements.conceptDisplayContainer.style.display = 'block';
+    // Force reflow for animation
+    this.#elements.conceptDisplayContainer.offsetHeight;
+    this.#elements.conceptDisplayContainer.classList.add('visible');
   }
 }
 

@@ -17,10 +17,11 @@ import { parseScopeDefinitions } from '../../src/scopeDsl/scopeDefinitionParser.
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../src/data/inMemoryDataRegistry.js';
 import { GameDataRepository } from '../../src/data/gameDataRepository.js';
-import { createTargetResolutionServiceWithMocks } from '../common/mocks/mockUnifiedScopeResolver.js';
+import { createTargetResolutionServiceWithMocks, createMockUnifiedScopeResolver } from '../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../common/mockFactories/actions.js';
 import { createTraceContext } from '../../src/actions/tracing/traceContext.js';
+import { createMockTargetContextBuilder } from '../common/mocks/mockTargetContextBuilder.js';
 import {
   POSITION_COMPONENT_ID,
   NAME_COMPONENT_ID,
@@ -211,6 +212,12 @@ describe('Singleton Scope Engine Location Context', () => {
       getEntityDisplayNameFn: getEntityDisplayName,
       errorBuilder: createMockActionErrorContextBuilder(),
       logger,
+      unifiedScopeResolver: createMockUnifiedScopeResolver({
+        scopeRegistry,
+        entityManager,
+        logger,
+      }),
+      targetContextBuilder: createMockTargetContextBuilder(),
     });
 
     actionDiscoveryService = new ActionDiscoveryService({

@@ -248,6 +248,113 @@ describe('EntityLifecycleMonitor', () => {
         );
       });
 
+      it('should format entity name when entity has name component and UUID', () => {
+        const mockEntity = {
+          hasComponent: jest.fn().mockReturnValue(true),
+          getComponentData: jest.fn().mockReturnValue({ text: 'John Doe' }),
+        };
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        const event = {
+          type: 'core:entity_created',
+          payload: {
+            instanceId: 'a1b2c3d4-e5f6-4789-8abc-def012345678', // Valid UUID
+            definitionId: 'def-456',
+            wasReconstructed: false,
+          },
+        };
+
+        eventHandlers['core:entity_created'](event);
+
+        expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+          'a1b2c3d4-e5f6-4789-8abc-def012345678'
+        );
+        expect(mockEntity.hasComponent).toHaveBeenCalledWith('core:name');
+        expect(mockEntity.getComponentData).toHaveBeenCalledWith('core:name');
+
+        const entry = eventList.children[0];
+        expect(entry.textContent).toContain(
+          'Entity created: John Doe from def-456'
+        );
+      });
+
+      it('should format entity name with ID when entity has name component and non-UUID ID', () => {
+        const mockEntity = {
+          hasComponent: jest.fn().mockReturnValue(true),
+          getComponentData: jest
+            .fn()
+            .mockReturnValue({ text: 'Guard Captain' }),
+        };
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        const event = {
+          type: 'core:entity_created',
+          payload: {
+            instanceId: 'guard-captain-01',
+            definitionId: 'def-456',
+            wasReconstructed: false,
+          },
+        };
+
+        eventHandlers['core:entity_created'](event);
+
+        const entry = eventList.children[0];
+        expect(entry.textContent).toContain(
+          'Entity created: Guard Captain (guard-captain-01) from def-456'
+        );
+      });
+
+      it('should handle entity with name component but no text', () => {
+        const mockEntity = {
+          hasComponent: jest.fn().mockReturnValue(true),
+          getComponentData: jest.fn().mockReturnValue({ text: null }),
+        };
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        const event = {
+          type: 'core:entity_created',
+          payload: {
+            instanceId: 'entity-123',
+            definitionId: 'def-456',
+            wasReconstructed: false,
+          },
+        };
+
+        eventHandlers['core:entity_created'](event);
+
+        const entry = eventList.children[0];
+        expect(entry.textContent).toContain(
+          'Entity created: entity-123 from def-456'
+        );
+      });
+
+      it('should handle entity without name component', () => {
+        const mockEntity = {
+          hasComponent: jest.fn().mockReturnValue(false),
+          getComponentData: jest.fn(),
+        };
+        mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+        const event = {
+          type: 'core:entity_created',
+          payload: {
+            instanceId: 'entity-no-name',
+            definitionId: 'def-456',
+            wasReconstructed: false,
+          },
+        };
+
+        eventHandlers['core:entity_created'](event);
+
+        expect(mockEntity.hasComponent).toHaveBeenCalledWith('core:name');
+        expect(mockEntity.getComponentData).not.toHaveBeenCalled();
+
+        const entry = eventList.children[0];
+        expect(entry.textContent).toContain(
+          'Entity created: entity-no-name from def-456'
+        );
+      });
+
       it('should handle reconstructed entity', () => {
         const event = {
           type: 'core:entity_created',
@@ -369,6 +476,92 @@ describe('EntityLifecycleMonitor', () => {
         expect(entry.textContent).toContain(
           'Component added: core:position on unknown'
         );
+      });
+
+      it('should add tooltip for component-added events with component data', () => {
+        const mockEntity = {
+          id: 'entity-123',
+          getComponentData: jest.fn().mockReturnValue({ x: 10, y: 20, z: 30 }),
+        };
+
+        const event = {
+          type: 'core:component_added',
+          payload: {
+            entity: mockEntity,
+            componentTypeId: 'core:position',
+          },
+        };
+
+        eventHandlers['core:component_added'](event);
+
+        const entry = eventList.children[0];
+        expect(entry.classList.contains('has-tooltip')).toBe(true);
+        expect(entry.style.position).toBe('relative');
+
+        // Check tooltip element
+        const tooltip = entry.querySelector('.component-data-tooltip');
+        expect(tooltip).toBeTruthy();
+        expect(tooltip.textContent).toBe(
+          JSON.stringify({ x: 10, y: 20, z: 30 }, null, 2)
+        );
+      });
+
+      it('should not add tooltip when component data is null', () => {
+        const mockEntity = {
+          id: 'entity-123',
+          getComponentData: jest.fn().mockReturnValue(null),
+        };
+
+        const event = {
+          type: 'core:component_added',
+          payload: {
+            entity: mockEntity,
+            componentTypeId: 'core:position',
+          },
+        };
+
+        eventHandlers['core:component_added'](event);
+
+        const entry = eventList.children[0];
+        expect(entry.classList.contains('has-tooltip')).toBe(false);
+        expect(entry.style.position).not.toBe('relative');
+
+        const tooltip = entry.querySelector('.component-data-tooltip');
+        expect(tooltip).toBeFalsy();
+      });
+
+      it('should properly format complex component data in tooltip', () => {
+        const complexData = {
+          name: 'Test Component',
+          values: [1, 2, 3],
+          nested: {
+            field: 'value',
+            another: {
+              deep: true,
+            },
+          },
+        };
+
+        const mockEntity = {
+          id: 'entity-123',
+          getComponentData: jest.fn().mockReturnValue(complexData),
+        };
+
+        const event = {
+          type: 'core:component_added',
+          payload: {
+            entity: mockEntity,
+            componentTypeId: 'core:complex',
+          },
+        };
+
+        eventHandlers['core:component_added'](event);
+
+        const entry = eventList.children[0];
+        const tooltip = entry.querySelector('.component-data-tooltip');
+        expect(tooltip).toBeTruthy();
+        expect(tooltip.textContent).toBe(JSON.stringify(complexData, null, 2));
+        expect(tooltip.classList.contains('component-data-tooltip')).toBe(true);
       });
     });
 
@@ -573,6 +766,48 @@ describe('EntityLifecycleMonitor', () => {
       expect(() => {
         eventHandlers['core:entity_created'](event);
       }).not.toThrow();
+    });
+
+    it('should handle disposal edge case where eventList is destroyed before event handling', () => {
+      // This test covers line 272 - the early return when eventList is null
+      const monitor = new EntityLifecycleMonitor({
+        logger: mockLogger,
+        documentContext: mockDocumentContext,
+        validatedEventDispatcher: mockVed,
+        domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
+      });
+
+      // Partially dispose the monitor by removing eventList and nullifying it
+      // This simulates a edge case where disposal is interrupted or partial
+      const eventListToRemove =
+        containerElement.querySelector('.entity-event-list');
+      eventListToRemove.remove();
+
+      // Now dispose the monitor which should set internal eventList to null
+      monitor.dispose();
+
+      // Clear the debug calls from dispose
+      mockLogger.debug.mockClear();
+
+      // Try to fire an event after disposal - should be handled gracefully
+      const event = {
+        type: 'core:entity_created',
+        payload: {
+          instanceId: 'test-entity',
+          definitionId: 'test-def',
+          wasReconstructed: false,
+        },
+      };
+
+      // The event handler is still registered but should return early when eventList is null
+      expect(() => {
+        eventHandlers['core:entity_created'](event);
+      }).not.toThrow();
+
+      // No logs should be created since addEventEntry returns early
+      expect(mockLogger.debug).not.toHaveBeenCalled();
+      expect(mockLogger.error).not.toHaveBeenCalled();
     });
   });
 

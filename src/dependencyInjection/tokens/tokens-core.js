@@ -210,4 +210,8 @@ export const coreTokens = freeze({
   IThematicDirectionGenerator: 'IThematicDirectionGenerator',
   ThematicDirectionGenerator: 'ThematicDirectionGenerator',
   CharacterDatabase: 'CharacterDatabase',
+  // Target Context Builder
+  ITargetContextBuilder: 'ITargetContextBuilder',
+  // Multi-Target Resolution Stage
+  IMultiTargetResolutionStage: 'IMultiTargetResolutionStage',
 });

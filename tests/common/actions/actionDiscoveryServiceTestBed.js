@@ -14,6 +14,8 @@ import {
   createMockSafeEventDispatcher,
   createMockActionCommandFormatter,
 } from '../mockFactories';
+import { createMockUnifiedScopeResolver } from '../mocks/mockUnifiedScopeResolver.js';
+import { createMockTargetContextBuilder } from '../mocks/mockTargetContextBuilder.js';
 import { ActionErrorContextBuilder } from '../../../src/actions/errors/actionErrorContextBuilder.js';
 import { FixSuggestionEngine } from '../../../src/actions/errors/fixSuggestionEngine.js';
 import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
@@ -66,6 +68,12 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
         getEntityDisplayNameFn: mocks.getEntityDisplayNameFn,
         errorBuilder: actionErrorContextBuilder,
         logger: mocks.logger,
+        unifiedScopeResolver: createMockUnifiedScopeResolver({
+          scopeRegistry: mocks.scopeRegistry ?? { registerScope: jest.fn() },
+          entityManager: mocks.entityManager,
+          logger: mocks.logger,
+        }),
+        targetContextBuilder: createMockTargetContextBuilder(),
       });
 
     return new ActionDiscoveryService({

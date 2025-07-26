@@ -8,9 +8,13 @@ describeActionDiscoverySuite(
   (getBed) => {
     beforeEach(() => {
       const bed = getBed();
-      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue({
-        targets: [{ type: 'none', entityId: null }],
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
+        (() => {
+          const { ActionResult } = require('../../../src/actions/core/actionResult.js');
+          const { ActionTargetContext } = require('../../../src/models/actionTargetContext.js');
+          return ActionResult.success([ActionTargetContext.noTarget()]);
+        })()
+      );
       bed.mocks.getActorLocationFn.mockReturnValue('room1');
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
     });

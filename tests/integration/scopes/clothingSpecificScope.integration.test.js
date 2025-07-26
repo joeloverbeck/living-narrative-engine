@@ -23,9 +23,10 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
-import { createTargetResolutionServiceWithMocks } from '../../common/mocks/mockUnifiedScopeResolver.js';
+import { createTargetResolutionServiceWithMocks, createMockUnifiedScopeResolver } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
+import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
 import fs from 'fs';
 import path from 'path';
@@ -154,6 +155,12 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       getEntityDisplayNameFn: getEntityDisplayName,
       errorBuilder: createMockActionErrorContextBuilder(),
       logger,
+      unifiedScopeResolver: createMockUnifiedScopeResolver({
+        scopeRegistry,
+        entityManager,
+        logger,
+      }),
+      targetContextBuilder: createMockTargetContextBuilder(),
     });
 
     actionDiscoveryService = new ActionDiscoveryService({

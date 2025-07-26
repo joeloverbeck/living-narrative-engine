@@ -34,6 +34,8 @@ import { ActionErrorContextBuilder } from '../../actions/errors/actionErrorConte
 import { FixSuggestionEngine } from '../../actions/errors/fixSuggestionEngine.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
 import { StructuredTrace } from '../../actions/tracing/structuredTrace.js';
+import TargetContextBuilder from '../../scopeDsl/utils/targetContextBuilder.js';
+import { MultiTargetResolutionStage } from '../../actions/pipeline/stages/MultiTargetResolutionStage.js';
 
 // --- Helper Function Imports ---
 import ActionCommandFormatter from '../../actions/actionFormatter.js';
@@ -109,6 +111,33 @@ export function registerCommandAndAction(container) {
   });
   logger.debug(
     'Command and Action Registration: Registered UnifiedScopeResolver.'
+  );
+
+  // --- Target Context Builder ---
+  // Must be registered before any stage that uses it
+  registrar.singletonFactory(tokens.ITargetContextBuilder, (c) => {
+    return new TargetContextBuilder({
+      entityManager: c.resolve(tokens.IEntityManager),
+      gameStateManager: {}, // TODO: Replace with actual game state manager when available
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered TargetContextBuilder.'
+  );
+
+  // --- Multi-Target Resolution Stage ---
+  registrar.singletonFactory(tokens.IMultiTargetResolutionStage, (c) => {
+    return new MultiTargetResolutionStage({
+      unifiedScopeResolver: c.resolve(tokens.IUnifiedScopeResolver),
+      entityManager: c.resolve(tokens.IEntityManager),
+      targetResolver: c.resolve(tokens.ITargetResolutionService),
+      targetContextBuilder: c.resolve(tokens.ITargetContextBuilder),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'Command and Action Registration: Registered MultiTargetResolutionStage.'
   );
 
   // --- Target Resolution Service ---
@@ -200,6 +229,8 @@ export function registerCommandAndAction(container) {
       getEntityDisplayNameFn: getEntityDisplayName,
       errorBuilder: c.resolve(tokens.IActionErrorContextBuilder),
       logger: c.resolve(tokens.ILogger),
+      unifiedScopeResolver: c.resolve(tokens.IUnifiedScopeResolver),
+      targetContextBuilder: c.resolve(tokens.ITargetContextBuilder),
     });
   });
   logger.debug(
