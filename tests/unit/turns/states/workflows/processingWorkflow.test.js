@@ -139,11 +139,11 @@ describe('ProcessingWorkflow._validateExecutionPreconditions', () => {
       }),
       finishProcessing: jest.fn(),
     };
-    
+
     mockExceptionHandler = {
       handle: jest.fn().mockResolvedValue(undefined),
     };
-    
+
     workflow = new ProcessingWorkflow(
       state,
       'cmd',
@@ -156,25 +156,37 @@ describe('ProcessingWorkflow._validateExecutionPreconditions', () => {
   });
 
   test('returns false when turnCtx is null', async () => {
-    const result = await workflow._validateExecutionPreconditions(null, { id: 'actor1' }, action);
-    
+    const result = await workflow._validateExecutionPreconditions(
+      null,
+      { id: 'actor1' },
+      action
+    );
+
     expect(result).toBe(false);
-    expect(logger.error).toHaveBeenCalledWith('ProcessingCommandState: Invalid turn context.');
+    expect(logger.error).toHaveBeenCalledWith(
+      'ProcessingCommandState: Invalid turn context.'
+    );
     expect(mockExceptionHandler.handle).toHaveBeenCalledWith(
       null,
       expect.any(Error),
       'actor1'
     );
-    
+
     const errorArg = mockExceptionHandler.handle.mock.calls[0][1];
     expect(errorArg.message).toBe('Invalid context');
   });
 
   test('returns false when turnCtx is undefined', async () => {
-    const result = await workflow._validateExecutionPreconditions(undefined, { id: 'actor1' }, action);
-    
+    const result = await workflow._validateExecutionPreconditions(
+      undefined,
+      { id: 'actor1' },
+      action
+    );
+
     expect(result).toBe(false);
-    expect(logger.error).toHaveBeenCalledWith('ProcessingCommandState: Invalid turn context.');
+    expect(logger.error).toHaveBeenCalledWith(
+      'ProcessingCommandState: Invalid turn context.'
+    );
     expect(mockExceptionHandler.handle).toHaveBeenCalledWith(
       undefined,
       expect.any(Error),
@@ -183,25 +195,37 @@ describe('ProcessingWorkflow._validateExecutionPreconditions', () => {
   });
 
   test('returns false when actor is null', async () => {
-    const result = await workflow._validateExecutionPreconditions(ctx, null, action);
-    
+    const result = await workflow._validateExecutionPreconditions(
+      ctx,
+      null,
+      action
+    );
+
     expect(result).toBe(false);
-    expect(logger.error).toHaveBeenCalledWith('ProcessingCommandState: Invalid actor.');
+    expect(logger.error).toHaveBeenCalledWith(
+      'ProcessingCommandState: Invalid actor.'
+    );
     expect(mockExceptionHandler.handle).toHaveBeenCalledWith(
       ctx,
       expect.any(Error),
       'actor1'
     );
-    
+
     const errorArg = mockExceptionHandler.handle.mock.calls[0][1];
     expect(errorArg.message).toBe('Invalid actor');
   });
 
   test('returns false when actor is undefined', async () => {
-    const result = await workflow._validateExecutionPreconditions(ctx, undefined, action);
-    
+    const result = await workflow._validateExecutionPreconditions(
+      ctx,
+      undefined,
+      action
+    );
+
     expect(result).toBe(false);
-    expect(logger.error).toHaveBeenCalledWith('ProcessingCommandState: Invalid actor.');
+    expect(logger.error).toHaveBeenCalledWith(
+      'ProcessingCommandState: Invalid actor.'
+    );
     expect(mockExceptionHandler.handle).toHaveBeenCalledWith(
       ctx,
       expect.any(Error),
@@ -214,11 +238,17 @@ describe('ProcessingWorkflow._validateExecutionPreconditions', () => {
       ...ctx,
       getActor: () => null,
     };
-    
-    const result = await workflow._validateExecutionPreconditions(contextWithNoActor, null, action);
-    
+
+    const result = await workflow._validateExecutionPreconditions(
+      contextWithNoActor,
+      null,
+      action
+    );
+
     expect(result).toBe(false);
-    expect(logger.error).toHaveBeenCalledWith('ProcessingCommandState: Invalid actor.');
+    expect(logger.error).toHaveBeenCalledWith(
+      'ProcessingCommandState: Invalid actor.'
+    );
     expect(mockExceptionHandler.handle).toHaveBeenCalledWith(
       contextWithNoActor,
       expect.any(Error),
@@ -227,25 +257,37 @@ describe('ProcessingWorkflow._validateExecutionPreconditions', () => {
   });
 
   test('returns false when turnAction is null', async () => {
-    const result = await workflow._validateExecutionPreconditions(ctx, { id: 'actor1' }, null);
-    
+    const result = await workflow._validateExecutionPreconditions(
+      ctx,
+      { id: 'actor1' },
+      null
+    );
+
     expect(result).toBe(false);
-    expect(logger.error).toHaveBeenCalledWith('ProcessingCommandState: Invalid turnAction.');
+    expect(logger.error).toHaveBeenCalledWith(
+      'ProcessingCommandState: Invalid turnAction.'
+    );
     expect(mockExceptionHandler.handle).toHaveBeenCalledWith(
       ctx,
       expect.any(Error),
       'actor1'
     );
-    
+
     const errorArg = mockExceptionHandler.handle.mock.calls[0][1];
     expect(errorArg.message).toBe('Invalid action');
   });
 
   test('returns false when turnAction is undefined', async () => {
-    const result = await workflow._validateExecutionPreconditions(ctx, { id: 'actor1' }, undefined);
-    
+    const result = await workflow._validateExecutionPreconditions(
+      ctx,
+      { id: 'actor1' },
+      undefined
+    );
+
     expect(result).toBe(false);
-    expect(logger.error).toHaveBeenCalledWith('ProcessingCommandState: Invalid turnAction.');
+    expect(logger.error).toHaveBeenCalledWith(
+      'ProcessingCommandState: Invalid turnAction.'
+    );
     expect(mockExceptionHandler.handle).toHaveBeenCalledWith(
       ctx,
       expect.any(Error),
@@ -254,8 +296,12 @@ describe('ProcessingWorkflow._validateExecutionPreconditions', () => {
   });
 
   test('returns true when all parameters are valid', async () => {
-    const result = await workflow._validateExecutionPreconditions(ctx, { id: 'actor1' }, action);
-    
+    const result = await workflow._validateExecutionPreconditions(
+      ctx,
+      { id: 'actor1' },
+      action
+    );
+
     expect(result).toBe(true);
     expect(logger.error).not.toHaveBeenCalled();
     expect(mockExceptionHandler.handle).not.toHaveBeenCalled();
@@ -305,11 +351,11 @@ describe('ProcessingWorkflow._executeAction validation failure scenarios', () =>
       }),
       finishProcessing: jest.fn(),
     };
-    
+
     mockExceptionHandler = {
       handle: jest.fn().mockResolvedValue(undefined),
     };
-    
+
     workflow = new ProcessingWorkflow(
       state,
       'cmd',
@@ -323,7 +369,7 @@ describe('ProcessingWorkflow._executeAction validation failure scenarios', () =>
 
   test('does not execute action when validation fails for null context', async () => {
     await workflow._executeAction(null, { id: 'actor1' }, action);
-    
+
     expect(state._processCommandInternal).not.toHaveBeenCalled();
     expect(mockExceptionHandler.handle).toHaveBeenCalledWith(
       null,
@@ -334,7 +380,7 @@ describe('ProcessingWorkflow._executeAction validation failure scenarios', () =>
 
   test('does not execute action when validation fails for null actor', async () => {
     await workflow._executeAction(ctx, null, action);
-    
+
     expect(state._processCommandInternal).not.toHaveBeenCalled();
     expect(mockExceptionHandler.handle).toHaveBeenCalledWith(
       ctx,
@@ -345,7 +391,7 @@ describe('ProcessingWorkflow._executeAction validation failure scenarios', () =>
 
   test('does not execute action when validation fails for null action', async () => {
     await workflow._executeAction(ctx, { id: 'actor1' }, null);
-    
+
     expect(state._processCommandInternal).not.toHaveBeenCalled();
     expect(mockExceptionHandler.handle).toHaveBeenCalledWith(
       ctx,
@@ -356,7 +402,7 @@ describe('ProcessingWorkflow._executeAction validation failure scenarios', () =>
 
   test('executes action when all validations pass', async () => {
     await workflow._executeAction(ctx, { id: 'actor1' }, action);
-    
+
     expect(state._processCommandInternal).toHaveBeenCalledWith(
       ctx,
       { id: 'actor1' },
@@ -409,11 +455,11 @@ describe('ProcessingWorkflow additional coverage scenarios', () => {
       }),
       finishProcessing: jest.fn(),
     };
-    
+
     mockExceptionHandler = {
       handle: jest.fn().mockResolvedValue(undefined),
     };
-    
+
     workflow = new ProcessingWorkflow(
       state,
       'cmd',
@@ -430,9 +476,9 @@ describe('ProcessingWorkflow additional coverage scenarios', () => {
     ctx.getChosenAction.mockImplementation(() => {
       throw error;
     });
-    
+
     const result = await workflow._fetchActionFromContext(ctx);
-    
+
     expect(result).toBe(null);
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Error retrieving ITurnAction from context'),
@@ -443,9 +489,12 @@ describe('ProcessingWorkflow additional coverage scenarios', () => {
 
   test('validates resolved action with missing actionDefinitionId', async () => {
     const invalidAction = { someOtherProperty: 'value' };
-    
-    const result = await workflow._validateResolvedAction(invalidAction, 'actor1');
-    
+
+    const result = await workflow._validateResolvedAction(
+      invalidAction,
+      'actor1'
+    );
+
     expect(result).toBe(false);
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('missing or empty actionDefinitionId'),
@@ -455,9 +504,12 @@ describe('ProcessingWorkflow additional coverage scenarios', () => {
 
   test('validates resolved action with empty actionDefinitionId', async () => {
     const invalidAction = { actionDefinitionId: '' };
-    
-    const result = await workflow._validateResolvedAction(invalidAction, 'actor1');
-    
+
+    const result = await workflow._validateResolvedAction(
+      invalidAction,
+      'actor1'
+    );
+
     expect(result).toBe(false);
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('missing or empty actionDefinitionId'),
@@ -467,9 +519,9 @@ describe('ProcessingWorkflow additional coverage scenarios', () => {
 
   test('handles case when no turnAction is available from context', async () => {
     ctx.getChosenAction.mockReturnValue(null);
-    
+
     const result = await workflow._obtainTurnAction(ctx, { id: 'actor1' });
-    
+
     expect(result).toBe(null);
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('No ITurnAction available')

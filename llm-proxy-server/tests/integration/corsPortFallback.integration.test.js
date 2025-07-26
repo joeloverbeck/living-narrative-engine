@@ -38,7 +38,7 @@ describe('CORS Port Fallback Integration Tests', () => {
     originalEnv = { ...process.env };
 
     // Set up CORS configuration to include both ports
-    process.env.PROXY_ALLOWED_ORIGIN = 
+    process.env.PROXY_ALLOWED_ORIGIN =
       'http://localhost:8080,http://127.0.0.1:8080,http://localhost:8081,http://127.0.0.1:8081';
 
     // Create mock logger
@@ -61,19 +61,23 @@ describe('CORS Port Fallback Integration Tests', () => {
     };
 
     mockApiKeyService = {
-      getApiKey: jest.fn(() => Promise.resolve({
-        success: true,
-        apiKey: 'test-api-key',
-      })),
+      getApiKey: jest.fn(() =>
+        Promise.resolve({
+          success: true,
+          apiKey: 'test-api-key',
+        })
+      ),
       isApiKeyRequired: jest.fn(() => true),
     };
 
     mockLlmRequestService = {
-      forwardRequest: jest.fn(() => Promise.resolve({
-        success: true,
-        data: { choices: [{ message: { content: 'test response' } }] },
-        status: 200,
-      })),
+      forwardRequest: jest.fn(() =>
+        Promise.resolve({
+          success: true,
+          data: { choices: [{ message: { content: 'test response' } }] },
+          status: 200,
+        })
+      ),
     };
 
     // Create controller
@@ -86,7 +90,7 @@ describe('CORS Port Fallback Integration Tests', () => {
 
     // Create Express app with CORS configuration
     app = express();
-    
+
     // Get app config and CORS origins
     const appConfigService = getAppConfigService(mockLogger);
     const allowedOriginsArray = appConfigService.getAllowedOriginsArray();
@@ -127,7 +131,9 @@ describe('CORS Port Fallback Integration Tests', () => {
       .set('Access-Control-Request-Headers', 'Content-Type');
 
     expect(response.status).toBe(204);
-    expect(response.headers['access-control-allow-origin']).toBe('http://localhost:8080');
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'http://localhost:8080'
+    );
     expect(response.headers['access-control-allow-methods']).toContain('POST');
   });
 
@@ -142,7 +148,9 @@ describe('CORS Port Fallback Integration Tests', () => {
       .set('Access-Control-Request-Headers', 'Content-Type');
 
     expect(response.status).toBe(204);
-    expect(response.headers['access-control-allow-origin']).toBe('http://127.0.0.1:8080');
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'http://127.0.0.1:8080'
+    );
     expect(response.headers['access-control-allow-methods']).toContain('POST');
   });
 
@@ -157,7 +165,9 @@ describe('CORS Port Fallback Integration Tests', () => {
       .set('Access-Control-Request-Headers', 'Content-Type');
 
     expect(response.status).toBe(204);
-    expect(response.headers['access-control-allow-origin']).toBe('http://localhost:8081');
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'http://localhost:8081'
+    );
     expect(response.headers['access-control-allow-methods']).toContain('POST');
   });
 
@@ -172,7 +182,9 @@ describe('CORS Port Fallback Integration Tests', () => {
       .set('Access-Control-Request-Headers', 'Content-Type');
 
     expect(response.status).toBe(204);
-    expect(response.headers['access-control-allow-origin']).toBe('http://127.0.0.1:8081');
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'http://127.0.0.1:8081'
+    );
     expect(response.headers['access-control-allow-methods']).toContain('POST');
   });
 
@@ -196,7 +208,9 @@ describe('CORS Port Fallback Integration Tests', () => {
       .send(requestBody);
 
     expect(response.status).toBe(200);
-    expect(response.headers['access-control-allow-origin']).toBe('http://localhost:8080');
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'http://localhost:8080'
+    );
     expect(mockLlmRequestService.forwardRequest).toHaveBeenCalled();
   });
 
@@ -220,7 +234,9 @@ describe('CORS Port Fallback Integration Tests', () => {
       .send(requestBody);
 
     expect(response.status).toBe(200);
-    expect(response.headers['access-control-allow-origin']).toBe('http://127.0.0.1:8081');
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'http://127.0.0.1:8081'
+    );
     expect(mockLlmRequestService.forwardRequest).toHaveBeenCalled();
   });
 

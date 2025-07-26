@@ -60,7 +60,7 @@ export default function createUnionResolver() {
 
       // Create union of both sets, flattening arrays if present
       const result = new Set();
-      
+
       // Helper to add items to result, handling arrays
       const addToResult = (item) => {
         if (Array.isArray(item)) {
@@ -74,12 +74,12 @@ export default function createUnionResolver() {
           result.add(item);
         }
       };
-      
+
       // Process left result
       for (const item of leftResult) {
         addToResult(item);
       }
-      
+
       // Process right result
       for (const item of rightResult) {
         addToResult(item);

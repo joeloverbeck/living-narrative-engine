@@ -25,15 +25,39 @@ export class TestScenarioPresets {
   // Initialize presets registration on class load
   static {
     TestModuleRegistry.registerPreset('combat', TestScenarioPresets.combat);
-    TestModuleRegistry.registerPreset('socialInteraction', TestScenarioPresets.socialInteraction);
-    TestModuleRegistry.registerPreset('exploration', TestScenarioPresets.exploration);
-    TestModuleRegistry.registerPreset('performance', TestScenarioPresets.performance);
-    TestModuleRegistry.registerPreset('entityManagement', TestScenarioPresets.entityManagement);
-    TestModuleRegistry.registerPreset('llmBehavior', TestScenarioPresets.llmBehavior);
-    TestModuleRegistry.registerPreset('fullIntegration', TestScenarioPresets.fullIntegration);
-    TestModuleRegistry.registerPreset('multiActor', TestScenarioPresets.multiActor);
+    TestModuleRegistry.registerPreset(
+      'socialInteraction',
+      TestScenarioPresets.socialInteraction
+    );
+    TestModuleRegistry.registerPreset(
+      'exploration',
+      TestScenarioPresets.exploration
+    );
+    TestModuleRegistry.registerPreset(
+      'performance',
+      TestScenarioPresets.performance
+    );
+    TestModuleRegistry.registerPreset(
+      'entityManagement',
+      TestScenarioPresets.entityManagement
+    );
+    TestModuleRegistry.registerPreset(
+      'llmBehavior',
+      TestScenarioPresets.llmBehavior
+    );
+    TestModuleRegistry.registerPreset(
+      'fullIntegration',
+      TestScenarioPresets.fullIntegration
+    );
+    TestModuleRegistry.registerPreset(
+      'multiActor',
+      TestScenarioPresets.multiActor
+    );
     TestModuleRegistry.registerPreset('stealth', TestScenarioPresets.stealth);
-    TestModuleRegistry.registerPreset('errorHandling', TestScenarioPresets.errorHandling);
+    TestModuleRegistry.registerPreset(
+      'errorHandling',
+      TestScenarioPresets.errorHandling
+    );
   }
   /**
    * Combat scenario with multiple actors and action tracking.

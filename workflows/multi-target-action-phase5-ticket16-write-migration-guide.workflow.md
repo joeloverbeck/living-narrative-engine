@@ -1,9 +1,13 @@
 # Ticket: Write Migration Guide
 
 ## Ticket ID: PHASE5-TICKET16
+
 ## Priority: Low
+
 ## Estimated Time: 6-8 hours
+
 ## Dependencies: PHASE5-TICKET15
+
 ## Blocks: PHASE5-TICKET17
 
 ## Overview
@@ -32,7 +36,7 @@ Create a comprehensive migration guide for developers and modders transitioning 
 
 Create file: `docs/migration/single-to-multi-target-actions.md`
 
-```markdown
+````markdown
 # Migration Guide: Single-Target to Multi-Target Actions
 
 This guide helps you migrate existing single-target actions to the new multi-target action system while maintaining backward compatibility and improving functionality.
@@ -89,6 +93,7 @@ The new multi-target action system is **fully backward compatible** with existin
   "result": "You give the item to {target.name}."
 }
 ```
+````
 
 ### New Format (Multi-Target)
 
@@ -405,7 +410,9 @@ Add context dependencies for advanced interactions:
                   "types": {
                     "type": "array",
                     "contains": {
-                      "const": { "var": "target.components.core:container.lock_type" }
+                      "const": {
+                        "var": "target.components.core:container.lock_type"
+                      }
                     }
                   }
                 }
@@ -424,6 +431,7 @@ Add context dependencies for advanced interactions:
 ### Phase 1: Preparation and Analysis
 
 **Step 1**: Inventory Existing Actions
+
 ```bash
 # Find all action files
 find data/mods -name "*.action.json" -type f
@@ -450,7 +458,7 @@ grep -r "target" data/mods --include="*.action.json" | wc -l
       "strategy": "minimal_conversion"
     },
     "phase2": {
-      "duration": "2-3 weeks", 
+      "duration": "2-3 weeks",
       "actions": ["give_item", "use_item", "attack"],
       "strategy": "enhanced_single_target"
     },
@@ -476,24 +484,24 @@ class ActionMigrator {
       name: oldAction.name,
       description: oldAction.description,
       category: oldAction.category,
-      targetDefinitions: {}
+      targetDefinitions: {},
     };
 
     // Convert target to targetDefinitions
     if (oldAction.target) {
       newAction.targetDefinitions.target = {
-        name: "target",
-        description: "Target for the action",
+        name: 'target',
+        description: 'Target for the action',
         scope: oldAction.target.scope,
         required: true,
-        validation: this.convertValidation(oldAction.target.validation)
+        validation: this.convertValidation(oldAction.target.validation),
       };
     }
 
     // Update conditions and effects
     newAction.conditions = this.updateConditions(oldAction.conditions);
     newAction.effects = this.updateEffects(oldAction.effects);
-    
+
     // Update templates
     newAction.command = this.updateTemplate(oldAction.command);
     newAction.result = this.updateTemplate(oldAction.result);
@@ -503,26 +511,32 @@ class ActionMigrator {
 
   static convertValidation(oldValidation) {
     if (!oldValidation) return undefined;
-    
+
     // Convert simple validation to JSON Schema
     return {
-      type: "object",
+      type: 'object',
       properties: {
         components: {
-          type: "object",
+          type: 'object',
           // Add component-specific validation based on old format
-        }
-      }
+        },
+      },
     };
   }
 
   static updateTemplate(template) {
     if (!template) return template;
-    
+
     // Update template variable references
     return template
-      .replace(/\{target\.name\}/g, '{target.components.core:actor.name || target.components.core:object.name}')
-      .replace(/\{target\.(\w+)\}/g, '{target.components.core:actor.$1 || target.components.core:object.$1}');
+      .replace(
+        /\{target\.name\}/g,
+        '{target.components.core:actor.name || target.components.core:object.name}'
+      )
+      .replace(
+        /\{target\.(\w+)\}/g,
+        '{target.components.core:actor.$1 || target.components.core:object.$1}'
+      );
   }
 }
 ```
@@ -532,65 +546,67 @@ class ActionMigrator {
 ```javascript
 // Example migration for specific action
 const oldGiveAction = {
-  "id": "core:give_item",
-  "name": "give item to {target}",
-  "target": {
-    "scope": "location.core:actors[]",
-    "validation": { "conscious": true }
+  id: 'core:give_item',
+  name: 'give item to {target}',
+  target: {
+    scope: 'location.core:actors[]',
+    validation: { conscious: true },
   },
-  "command": "give item to {target.name}",
-  "result": "You give the item to {target.name}."
+  command: 'give item to {target.name}',
+  result: 'You give the item to {target.name}.',
 };
 
 const newGiveAction = {
-  "id": "core:give_item_v2",
-  "name": "give {item} to {person}",
-  "targetDefinitions": {
-    "item": {
-      "name": "item",
-      "description": "Item to give away",
-      "scope": "actor.core:inventory.items[]",
-      "validation": {
-        "type": "object",
-        "properties": {
-          "components": {
-            "type": "object",
-            "properties": {
-              "core:item": {
-                "type": "object",
-                "properties": {
-                  "tradeable": { "type": "boolean", "const": true }
-                }
-              }
-            }
-          }
-        }
-      }
+  id: 'core:give_item_v2',
+  name: 'give {item} to {person}',
+  targetDefinitions: {
+    item: {
+      name: 'item',
+      description: 'Item to give away',
+      scope: 'actor.core:inventory.items[]',
+      validation: {
+        type: 'object',
+        properties: {
+          components: {
+            type: 'object',
+            properties: {
+              'core:item': {
+                type: 'object',
+                properties: {
+                  tradeable: { type: 'boolean', const: true },
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    "person": {
-      "name": "person", 
-      "description": "Person to receive the item",
-      "scope": "location.core:actors[]",
-      "validation": {
-        "type": "object",
-        "properties": {
-          "components": {
-            "type": "object",
-            "properties": {
-              "core:actor": {
-                "type": "object",
-                "properties": {
-                  "conscious": { "type": "boolean", "const": true }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+    person: {
+      name: 'person',
+      description: 'Person to receive the item',
+      scope: 'location.core:actors[]',
+      validation: {
+        type: 'object',
+        properties: {
+          components: {
+            type: 'object',
+            properties: {
+              'core:actor': {
+                type: 'object',
+                properties: {
+                  conscious: { type: 'boolean', const: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
-  "command": "give {item.components.core:item.name} to {person.components.core:actor.name}",
-  "result": "You give {item.components.core:item.name} to {person.components.core:actor.name}."
+  command:
+    'give {item.components.core:item.name} to {person.components.core:actor.name}',
+  result:
+    'You give {item.components.core:item.name} to {person.components.core:actor.name}.',
 };
 ```
 
@@ -605,21 +621,29 @@ describe('Action Migration', () => {
     it('should convert basic single-target action', () => {
       const oldAction = loadAction('test:old_talk');
       const newAction = ActionMigrator.convertSingleToMultiTarget(oldAction);
-      
+
       expect(newAction.targetDefinitions).toBeDefined();
       expect(newAction.targetDefinitions.target).toBeDefined();
-      expect(newAction.targetDefinitions.target.scope).toBe(oldAction.target.scope);
+      expect(newAction.targetDefinitions.target.scope).toBe(
+        oldAction.target.scope
+      );
     });
 
     it('should maintain backward compatibility', async () => {
       const testBed = new IntegrationTestBed();
-      
+
       // Test old action still works
-      const oldResult = await testBed.processAction('core:give_item_old', 'player');
+      const oldResult = await testBed.processAction(
+        'core:give_item_old',
+        'player'
+      );
       expect(oldResult.success).toBe(true);
-      
+
       // Test new action works better
-      const newResult = await testBed.processAction('core:give_item_v2', 'player');
+      const newResult = await testBed.processAction(
+        'core:give_item_v2',
+        'player'
+      );
       expect(newResult.success).toBe(true);
       expect(newResult.value.actions.length).toBeGreaterThan(0);
     });
@@ -628,15 +652,15 @@ describe('Action Migration', () => {
   describe('Performance Comparison', () => {
     it('should perform at least as well as old actions', async () => {
       const testBed = new IntegrationTestBed();
-      
+
       const oldStart = performance.now();
       await testBed.processAction('core:old_action', 'player');
       const oldDuration = performance.now() - oldStart;
-      
+
       const newStart = performance.now();
       await testBed.processAction('core:new_action', 'player');
       const newDuration = performance.now() - newStart;
-      
+
       expect(newDuration).toBeLessThanOrEqual(oldDuration * 1.5); // Allow 50% overhead
     });
   });
@@ -649,26 +673,30 @@ describe('Action Migration', () => {
 ## Migration Validation Checklist
 
 ### Functionality
+
 - [ ] Action appears in available actions list
 - [ ] Target resolution works correctly
-- [ ] Conditions evaluate properly  
+- [ ] Conditions evaluate properly
 - [ ] Effects execute successfully
 - [ ] Command text displays correctly
 - [ ] Result text shows properly
 
 ### Performance
+
 - [ ] Target resolution time d old action time + 50%
 - [ ] Memory usage similar to old actions
 - [ ] No memory leaks during repeated execution
 - [ ] Combination limits prevent excessive processing
 
 ### Compatibility
+
 - [ ] Existing save games work unchanged
 - [ ] Event payloads remain compatible
 - [ ] Rule system integration functions
 - [ ] AI memory system compatibility maintained
 
 ### Quality
+
 - [ ] Error handling improved or maintained
 - [ ] User experience enhanced
 - [ ] Code maintainability improved
@@ -687,7 +715,7 @@ describe('Action Migration', () => {
   "target": { "scope": "location.core:actors[]" }
 }
 
-// After  
+// After
 {
   "targetDefinitions": {
     "target": {
@@ -794,6 +822,7 @@ describe('Action Migration', () => {
 **Problem**: Converted action doesn't find valid targets
 
 **Solution**:
+
 1. Check scope expression syntax
 2. Verify validation schema format
 3. Test with simplified validation first
@@ -810,6 +839,7 @@ console.log('Validation result:', ajvValidator.validate(schema, entity));
 **Problem**: Action text shows {undefined} or {null}
 
 **Solution**:
+
 1. Update template variable paths
 2. Add fallback values
 3. Check entity component structure
@@ -826,6 +856,7 @@ console.log('Validation result:', ajvValidator.validate(schema, entity));
 **Problem**: Migrated actions are significantly slower
 
 **Solution**:
+
 1. Add combination limits
 2. Optimize scope expressions
 3. Move validation to scope level
@@ -848,6 +879,7 @@ console.log('Validation result:', ajvValidator.validate(schema, entity));
 **Problem**: No targets pass new validation
 
 **Solution**:
+
 1. Start with minimal validation
 2. Add validation incrementally
 3. Test with known good entities
@@ -917,30 +949,35 @@ console.log('Validation result:', ajvValidator.validate(schema, entity));
 ## Migration Timeline Example
 
 ### Week 1-2: Preparation
+
 - [ ] Analyze existing actions
 - [ ] Create migration plan
 - [ ] Set up migration tools
 - [ ] Create test framework
 
 ### Week 3-4: Simple Actions
+
 - [ ] Migrate basic single-target actions
 - [ ] Test compatibility
 - [ ] Update documentation
 - [ ] Monitor performance
 
-### Week 5-7: Enhanced Actions  
+### Week 5-7: Enhanced Actions
+
 - [ ] Add improved validation
 - [ ] Optimize performance
 - [ ] Add combination limits
 - [ ] Test with larger datasets
 
 ### Week 8-10: Multi-Target Actions
+
 - [ ] Convert suitable actions to multi-target
 - [ ] Add context dependencies where beneficial
 - [ ] Create new multi-target actions
 - [ ] Comprehensive testing
 
 ### Week 11-12: Optimization & Cleanup
+
 - [ ] Performance optimization
 - [ ] Code cleanup
 - [ ] Documentation completion
@@ -949,25 +986,29 @@ console.log('Validation result:', ajvValidator.validate(schema, entity));
 ## Success Metrics
 
 ### Functionality Metrics
+
 - 100% of migrated actions work correctly
 - 0 breaking changes to existing gameplay
 - Improved action validation and error handling
 - Enhanced user experience with better action descriptions
 
 ### Performance Metrics
+
 - Migration overhead d 20% for simple actions
 - No memory leaks in migrated actions
 - Target resolution time d 100ms for complex actions
 - Combination generation respects performance limits
 
 ### Quality Metrics
+
 - Improved test coverage (e 90%)
 - Reduced technical debt
 - Better code maintainability
 - Comprehensive documentation
 
 Remember: Migration is a process, not a destination. Take time to do it right, test thoroughly, and maintain backward compatibility throughout the transition.
-```
+
+````
 
 ### Step 2: Create Quick Migration Reference
 
@@ -985,11 +1026,12 @@ Fast reference for common migration scenarios and patterns.
 // Before
 { "target": { "scope": "...", "validation": {...} } }
 
-// After  
+// After
 { "targetDefinitions": { "target": { "name": "...", "scope": "...", "validation": {...} } } }
-```
+````
 
 ### 2. Update Template Variables
+
 ```json
 // Before
 { "command": "action {target.property}" }
@@ -999,6 +1041,7 @@ Fast reference for common migration scenarios and patterns.
 ```
 
 ### 3. Convert Validation
+
 ```json
 // Before
 { "validation": { "property": "value" } }
@@ -1009,7 +1052,7 @@ Fast reference for common migration scenarios and patterns.
     "type": "object",
     "properties": {
       "components": {
-        "type": "object", 
+        "type": "object",
         "properties": {
           "namespace:component": {
             "type": "object",
@@ -1027,6 +1070,7 @@ Fast reference for common migration scenarios and patterns.
 ## Common Migration Patterns
 
 ### Pattern: Talk Action
+
 ```json
 // Before
 {
@@ -1040,7 +1084,7 @@ Fast reference for common migration scenarios and patterns.
 
 // After
 {
-  "id": "core:talk_v2", 
+  "id": "core:talk_v2",
   "name": "talk to {person}",
   "targetDefinitions": {
     "person": {
@@ -1068,7 +1112,8 @@ Fast reference for common migration scenarios and patterns.
 }
 ```
 
-### Pattern: Use Item ’ Use Tool On Target
+### Pattern: Use Item ï¿½ Use Tool On Target
+
 ```json
 // Before
 {
@@ -1094,6 +1139,7 @@ Fast reference for common migration scenarios and patterns.
 ```
 
 ### Pattern: Give Item
+
 ```json
 // Before: Implicit item selection
 {
@@ -1122,22 +1168,26 @@ Fast reference for common migration scenarios and patterns.
 ## Quick Troubleshooting
 
 ### No Targets Found
+
 1. Check scope syntax: `actor.core:inventory.items[]`
 2. Verify validation schema format
 3. Test with minimal validation: `{ "type": "object" }`
 4. Add combination limits: `"maxCombinations": 10`
 
 ### Template Errors
-1. Update paths: `{target.name}` ’ `{target.components.core:actor.name}`
+
+1. Update paths: `{target.name}` ï¿½ `{target.components.core:actor.name}`
 2. Add fallbacks: `{target.components.core:actor.name || target.id}`
 3. Check component structure in test data
 
 ### Performance Issues
+
 1. Add limits: `"maxCombinations": 25`
 2. Filter in scope: `location.core:actors[{"conscious": true}]`
 3. Use specific scopes: `actor.core:inventory.weapons[]`
 
 ### Validation Failures
+
 1. Start simple: `{ "type": "object" }`
 2. Add properties incrementally
 3. Check required vs optional fields
@@ -1146,6 +1196,7 @@ Fast reference for common migration scenarios and patterns.
 ## Migration Commands
 
 ### Find Actions to Migrate
+
 ```bash
 # Find all single-target actions
 grep -r '"target"' data/mods --include="*.action.json"
@@ -1155,6 +1206,7 @@ grep -r '"scope".*\[\]' data/mods --include="*.action.json" | wc -l
 ```
 
 ### Test Migration
+
 ```bash
 # Run migration tests
 npm run test:migration
@@ -1167,6 +1219,7 @@ npm run test:performance:migration
 ```
 
 ### Validate Migrated Actions
+
 ```bash
 # Schema validation
 npm run validate:actions
@@ -1191,7 +1244,7 @@ npm run test:integration:actions
 If migration causes issues:
 
 1. **Revert Action Files**: Use git to restore old versions
-2. **Update Action IDs**: Change game.json to use old action IDs  
+2. **Update Action IDs**: Change game.json to use old action IDs
 3. **Clear Cache**: Restart application to clear cached actions
 4. **Test Functionality**: Verify old actions work correctly
 5. **Plan Fix**: Analyze issues and plan corrective migration
@@ -1202,7 +1255,8 @@ git checkout HEAD~1 -- data/mods/core/actions/
 npm run restart
 npm run test:integration
 ```
-```
+
+````
 
 ### Step 3: Create Migration Tools
 
@@ -1253,7 +1307,7 @@ export class ActionMigrator {
     if (oldAction.conditions) {
       newAction.conditions = this.updateConditions(oldAction.conditions);
     }
-    
+
     if (oldAction.effects) {
       newAction.effects = oldAction.effects; // Effects usually don't need changes
     }
@@ -1262,7 +1316,7 @@ export class ActionMigrator {
     if (oldAction.command) {
       newAction.command = this.updateTemplate(oldAction.command);
     }
-    
+
     if (oldAction.result) {
       newAction.result = this.updateTemplate(oldAction.result);
     }
@@ -1338,7 +1392,7 @@ export class ActionMigrator {
 
     if (oldValidation.type) {
       schema.properties.components.properties['core:item'] = {
-        type: "object", 
+        type: "object",
         properties: {
           type: { type: "string", const: oldValidation.type }
         }
@@ -1375,7 +1429,7 @@ export class ActionMigrator {
     const updated = jsonString
       .replace(/target\.(\w+)/g, 'target.components.core:actor.$1')
       .replace(/target\.components\.core:actor\.components/g, 'target.components');
-    
+
     return JSON.parse(updated);
   }
 
@@ -1390,11 +1444,11 @@ export class ActionMigrator {
     };
 
     const files = await this.findActionFiles(inputDir);
-    
+
     for (const file of files) {
       try {
         const oldAction = JSON.parse(fs.readFileSync(file, 'utf8'));
-        
+
         // Skip if already migrated
         if (oldAction.targetDefinitions) {
           results.skipped.push(file);
@@ -1402,18 +1456,18 @@ export class ActionMigrator {
         }
 
         const newAction = this.migrateAction(oldAction);
-        
+
         // Create output path
         const relativePath = path.relative(inputDir, file);
         const outputPath = path.join(outputDir, relativePath);
         const outputFile = outputPath.replace('.action.json', '_v2.action.json');
-        
+
         // Ensure output directory exists
         fs.mkdirSync(path.dirname(outputFile), { recursive: true });
-        
+
         // Write migrated action
         fs.writeFileSync(outputFile, JSON.stringify(newAction, null, 2));
-        
+
         results.migrated.push({
           original: file,
           migrated: outputFile,
@@ -1436,13 +1490,13 @@ export class ActionMigrator {
    */
   async findActionFiles(dir) {
     const files = [];
-    
+
     const scan = (currentDir) => {
       const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-      
+
       for (const entry of entries) {
         const fullPath = path.join(currentDir, entry.name);
-        
+
         if (entry.isDirectory()) {
           scan(fullPath);
         } else if (entry.name.endsWith('.action.json')) {
@@ -1510,37 +1564,37 @@ export class ActionMigrator {
 // CLI Usage
 if (import.meta.url === `file://${process.argv[1]}`) {
   const migrator = new ActionMigrator();
-  
+
   const inputDir = process.argv[2] || 'data/mods';
   const outputDir = process.argv[3] || 'data/mods/migrated';
-  
+
   console.log('Starting action migration...');
   console.log(`Input: ${inputDir}`);
   console.log(`Output: ${outputDir}`);
-  
+
   migrator.migrateDirectory(inputDir, outputDir)
     .then(results => {
       const report = migrator.generateReport(results);
-      
+
       console.log('\nMigration Summary:');
       console.log(`Total actions: ${report.summary.total}`);
       console.log(`Migrated: ${report.summary.migrated}`);
       console.log(`Errors: ${report.summary.errors}`);
       console.log(`Skipped: ${report.summary.skipped}`);
-      
+
       if (report.summary.errors > 0) {
         console.log('\nErrors:');
         results.errors.forEach(error => {
           console.log(`  ${error.file}: ${error.error}`);
         });
       }
-      
+
       // Write detailed report
       fs.writeFileSync(
         path.join(outputDir, 'migration-report.json'),
         JSON.stringify(report, null, 2)
       );
-      
+
       console.log(`\nDetailed report written to ${outputDir}/migration-report.json`);
     })
     .catch(error => {
@@ -1548,7 +1602,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       process.exit(1);
     });
 }
-```
+````
 
 ### Step 4: Create Migration Tests
 
@@ -1581,10 +1635,10 @@ describe('Action Migration Integration', () => {
         category: 'social',
         target: {
           scope: 'location.core:actors[]',
-          validation: { conscious: true }
+          validation: { conscious: true },
         },
         command: 'talk to {target.name}',
-        result: 'You talk to {target.name}.'
+        result: 'You talk to {target.name}.',
       };
 
       const migratedAction = migrator.migrateAction(oldAction);
@@ -1592,7 +1646,9 @@ describe('Action Migration Integration', () => {
       expect(migratedAction.id).toBe('test:talk_v2');
       expect(migratedAction.targetDefinitions).toBeDefined();
       expect(migratedAction.targetDefinitions.target).toBeDefined();
-      expect(migratedAction.targetDefinitions.target.scope).toBe('location.core:actors[]');
+      expect(migratedAction.targetDefinitions.target.scope).toBe(
+        'location.core:actors[]'
+      );
       expect(migratedAction.command).toContain('components.core:actor.name');
     });
 
@@ -1600,17 +1656,17 @@ describe('Action Migration Integration', () => {
       // Create test entities
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Player' },
-        'core:position': { locationId: 'room' }
+        'core:position': { locationId: 'room' },
       });
 
       const npc = testBed.createEntity('npc', {
         'core:actor': { name: 'NPC', conscious: true },
-        'core:position': { locationId: 'room' }
+        'core:position': { locationId: 'room' },
       });
 
       const room = testBed.createEntity('room', {
         'core:location': { name: 'Test Room' },
-        'core:actors': ['player', 'npc']
+        'core:actors': ['player', 'npc'],
       });
 
       // Test old format action
@@ -1619,8 +1675,8 @@ describe('Action Migration Integration', () => {
         name: 'talk to {target}',
         target: {
           scope: 'location.core:actors[]',
-          validation: { conscious: true }
-        }
+          validation: { conscious: true },
+        },
       };
 
       // Test migrated action
@@ -1633,19 +1689,29 @@ describe('Action Migration Integration', () => {
       const context = {
         actor: { id: 'player', components: player.getAllComponents() },
         location: { id: 'room', components: room.getAllComponents() },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       // Test old action still works
-      const oldResult = await testBed.processAction('test:talk_old', 'player', context);
+      const oldResult = await testBed.processAction(
+        'test:talk_old',
+        'player',
+        context
+      );
       expect(oldResult.success).toBe(true);
 
       // Test migrated action works
-      const newResult = await testBed.processAction('test:talk_old_v2', 'player', context);
+      const newResult = await testBed.processAction(
+        'test:talk_old_v2',
+        'player',
+        context
+      );
       expect(newResult.success).toBe(true);
 
       // Both should find the same target
-      expect(oldResult.value.actions.length).toBe(newResult.value.actions.length);
+      expect(oldResult.value.actions.length).toBe(
+        newResult.value.actions.length
+      );
     });
   });
 
@@ -1654,7 +1720,7 @@ describe('Action Migration Integration', () => {
       const oldAction = {
         id: 'test:performance',
         name: 'test action',
-        target: { scope: 'game.entities[]' }
+        target: { scope: 'game.entities[]' },
       };
 
       const migratedAction = migrator.migrateAction(oldAction);
@@ -1667,20 +1733,22 @@ describe('Action Migration Integration', () => {
       // Create many entities for performance testing
       const entities = [];
       for (let i = 0; i < 50; i++) {
-        entities.push(testBed.createEntity(`entity_${i}`, {
-          'core:actor': { name: `Entity ${i}`, conscious: true }
-        }));
+        entities.push(
+          testBed.createEntity(`entity_${i}`, {
+            'core:actor': { name: `Entity ${i}`, conscious: true },
+          })
+        );
       }
 
       const room = testBed.createEntity('room', {
         'core:location': { name: 'Crowded Room' },
-        'core:actors': entities.map(e => e.id)
+        'core:actors': entities.map((e) => e.id),
       });
 
       const oldAction = {
         id: 'test:performance_old',
         name: 'test action',
-        target: { scope: 'location.core:actors[]' }
+        target: { scope: 'location.core:actors[]' },
       };
 
       const migratedAction = migrator.migrateAction(oldAction);
@@ -1691,7 +1759,7 @@ describe('Action Migration Integration', () => {
       const context = {
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: room.getAllComponents() },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       // Test old action performance
@@ -1718,34 +1786,42 @@ describe('Action Migration Integration', () => {
           scope: 'location.core:actors[]',
           validation: {
             conscious: true,
-            alive: true
-          }
-        }
+            alive: true,
+          },
+        },
       };
 
       const migratedAction = migrator.migrateAction(oldAction);
 
       expect(migratedAction.targetDefinitions.target.validation).toBeDefined();
-      expect(migratedAction.targetDefinitions.target.validation.type).toBe('object');
-      expect(migratedAction.targetDefinitions.target.validation.properties.components).toBeDefined();
+      expect(migratedAction.targetDefinitions.target.validation.type).toBe(
+        'object'
+      );
+      expect(
+        migratedAction.targetDefinitions.target.validation.properties.components
+      ).toBeDefined();
     });
 
     it('should validate targets correctly', async () => {
       const player = testBed.createEntity('player', {
-        'core:actor': { name: 'Player' }
+        'core:actor': { name: 'Player' },
       });
 
       const consciousNpc = testBed.createEntity('conscious_npc', {
-        'core:actor': { name: 'Conscious NPC', conscious: true, alive: true }
+        'core:actor': { name: 'Conscious NPC', conscious: true, alive: true },
       });
 
       const unconsciousNpc = testBed.createEntity('unconscious_npc', {
-        'core:actor': { name: 'Unconscious NPC', conscious: false, alive: true }
+        'core:actor': {
+          name: 'Unconscious NPC',
+          conscious: false,
+          alive: true,
+        },
       });
 
       const room = testBed.createEntity('room', {
         'core:location': { name: 'Test Room' },
-        'core:actors': ['player', 'conscious_npc', 'unconscious_npc']
+        'core:actors': ['player', 'conscious_npc', 'unconscious_npc'],
       });
 
       const oldAction = {
@@ -1753,8 +1829,8 @@ describe('Action Migration Integration', () => {
         name: 'test action',
         target: {
           scope: 'location.core:actors[]',
-          validation: { conscious: true }
-        }
+          validation: { conscious: true },
+        },
       };
 
       const migratedAction = migrator.migrateAction(oldAction);
@@ -1763,10 +1839,14 @@ describe('Action Migration Integration', () => {
       const context = {
         actor: { id: 'player', components: player.getAllComponents() },
         location: { id: 'room', components: room.getAllComponents() },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
-      const result = await testBed.processAction(migratedAction.id, 'player', context);
+      const result = await testBed.processAction(
+        migratedAction.id,
+        'player',
+        context
+      );
 
       expect(result.success).toBe(true);
       // Should only find conscious NPC, not unconscious one
@@ -1782,7 +1862,7 @@ describe('Action Migration Integration', () => {
         name: 'test action',
         target: { scope: 'location.core:actors[]' },
         command: 'talk to {target.name}',
-        result: 'You talk to {target.name} about {target.mood}.'
+        result: 'You talk to {target.name} about {target.mood}.',
       };
 
       const migratedAction = migrator.migrateAction(oldAction);
@@ -1797,7 +1877,7 @@ describe('Action Migration Integration', () => {
         id: 'test:fallback',
         name: 'test action',
         target: { scope: 'location.core:actors[]' },
-        command: 'interact with {target.name}'
+        command: 'interact with {target.name}',
       };
 
       const migratedAction = migrator.migrateAction(oldAction);
@@ -1815,7 +1895,7 @@ describe('Action Migration Integration', () => {
         id: 'test:validate',
         name: 'test action',
         target: { scope: 'location.core:actors[]' },
-        command: 'action {target.name}'
+        command: 'action {target.name}',
       };
 
       const migratedAction = migrator.migrateAction(oldAction);
@@ -1829,20 +1909,25 @@ describe('Action Migration Integration', () => {
       const oldAction = {
         id: 'test:invalid',
         name: 'test action',
-        target: { scope: 'location.core:actors[]' }
+        target: { scope: 'location.core:actors[]' },
       };
 
       const incompleteAction = {
         id: 'test:invalid_v2',
         name: 'test action',
-        command: 'action {target.name}' // Not updated
+        command: 'action {target.name}', // Not updated
       };
 
-      const validation = migrator.validateMigration(oldAction, incompleteAction);
+      const validation = migrator.validateMigration(
+        oldAction,
+        incompleteAction
+      );
 
       expect(validation.valid).toBe(false);
       expect(validation.issues).toContain('Missing targetDefinitions');
-      expect(validation.issues).toContain('Template variables not fully updated');
+      expect(validation.issues).toContain(
+        'Template variables not fully updated'
+      );
     });
   });
 });
@@ -1864,12 +1949,14 @@ describe('Action Migration Integration', () => {
 ## Documentation Requirements
 
 ### For Developers
+
 - Complete migration process documentation
 - Automated migration tools with CLI interface
 - Test frameworks for migration validation
 - Performance benchmarking tools
 
 ### For Modders
+
 - Quick migration reference with common patterns
 - Best practices for action improvement
 - Troubleshooting guide for migration issues

@@ -1,9 +1,7 @@
 // Filename: src/tests/integration/loaderRegistry.integration.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import {
-  createMockLogger,
-} from '../../common/mockFactories/index.js';
+import { createMockLogger } from '../../common/mockFactories/index.js';
 import ActionLoader from '../../../src/loaders/actionLoader.js';
 import ComponentLoader from '../../../src/loaders/componentLoader.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -95,7 +93,7 @@ const createMockSchemaValidator = (overrides = {}) => {
 
 const createMockDataFetcher = (overrides = {}) => {
   const { pathToResponse, ...otherOverrides } = overrides;
-  
+
   const mockFetcher = {
     fetch: jest.fn().mockImplementation((path) => {
       if (pathToResponse && pathToResponse[path]) {
@@ -112,7 +110,7 @@ const createMockDataFetcher = (overrides = {}) => {
     fetchText: jest.fn().mockResolvedValue(''),
     ...otherOverrides,
   };
-  
+
   return mockFetcher;
 };
 

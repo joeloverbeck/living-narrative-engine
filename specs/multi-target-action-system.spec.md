@@ -211,6 +211,7 @@ target_adjustable := target.topmost_clothing[][{
 ### Context Variables
 
 The scope evaluation context includes:
+
 - `actor`: The entity performing the action
 - `target`: Primary target (when contextFrom="primary")
 - `targets`: Object containing all resolved targets
@@ -223,12 +224,7 @@ The scope evaluation context includes:
 
 ```javascript
 class MultiTargetResolutionStage extends PipelineStage {
-  constructor({ 
-    scopeInterpreter, 
-    entityManager, 
-    targetResolver,
-    logger 
-  }) {
+  constructor({ scopeInterpreter, entityManager, targetResolver, logger }) {
     super({ logger });
     this.#scopeInterpreter = scopeInterpreter;
     this.#entityManager = entityManager;
@@ -237,16 +233,16 @@ class MultiTargetResolutionStage extends PipelineStage {
 
   async executeInternal(context) {
     const { actionDef, actor, actionContext } = context;
-    
+
     // Handle legacy single-target actions
     if (typeof actionDef.targets === 'string' || actionDef.scope) {
       return this.#resolveLegacyTarget(actionDef, actor, actionContext);
     }
-    
+
     // Resolve multi-target actions
     const resolvedTargets = {};
     const resolutionOrder = this.#getResolutionOrder(actionDef.targets);
-    
+
     for (const targetKey of resolutionOrder) {
       const targetDef = actionDef.targets[targetKey];
       const scopeContext = this.#buildScopeContext(
@@ -255,62 +251,62 @@ class MultiTargetResolutionStage extends PipelineStage {
         resolvedTargets,
         targetDef
       );
-      
+
       const candidates = await this.#resolveScope(
         targetDef.scope,
         scopeContext
       );
-      
+
       if (!targetDef.optional && candidates.length === 0) {
         return null; // Action not available
       }
-      
+
       resolvedTargets[targetKey] = candidates;
     }
-    
+
     return {
       ...context,
-      resolvedTargets
+      resolvedTargets,
     };
   }
-  
+
   #buildScopeContext(actor, actionContext, resolvedTargets, targetDef) {
     const context = {
       actor,
       location: actionContext.location,
-      game: actionContext.game
+      game: actionContext.game,
     };
-    
+
     // Add primary target to context if requested
     if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
       context.target = resolvedTargets[targetDef.contextFrom][0];
     }
-    
+
     // Add all resolved targets
     context.targets = resolvedTargets;
-    
+
     return context;
   }
-  
+
   #getResolutionOrder(targets) {
     // Ensure targets with contextFrom are resolved after their dependencies
     const order = [];
     const pending = Object.keys(targets);
-    
+
     while (pending.length > 0) {
-      const next = pending.find(key => 
-        !targets[key].contextFrom || 
-        order.includes(targets[key].contextFrom)
+      const next = pending.find(
+        (key) =>
+          !targets[key].contextFrom || order.includes(targets[key].contextFrom)
       );
-      
+
       if (!next) {
         throw new Error('Circular dependency in target resolution');
       }
-      
+
       order.push(next);
       pending.splice(pending.indexOf(next), 1);
     }
-    
+
     return order;
   }
 }
@@ -322,33 +318,33 @@ class MultiTargetResolutionStage extends PipelineStage {
 class ActionFormattingStage extends PipelineStage {
   async executeInternal(context) {
     const { actionDef, resolvedTargets } = context;
-    
+
     if (actionDef.generateCombinations) {
       return this.#generateCombinations(context);
     }
-    
+
     return this.#formatSingleAction(context);
   }
-  
+
   #generateCombinations(context) {
     const { actionDef, resolvedTargets, actor } = context;
     const combinations = [];
-    
+
     // Get all target keys that have candidates
     const targetKeys = Object.keys(resolvedTargets).filter(
-      key => resolvedTargets[key].length > 0
+      (key) => resolvedTargets[key].length > 0
     );
-    
+
     // Generate cartesian product of all targets
     const indices = new Array(targetKeys.length).fill(0);
-    
+
     while (true) {
       // Create combination for current indices
       const targetMap = {};
       targetKeys.forEach((key, i) => {
         targetMap[key] = resolvedTargets[key][indices[i]];
       });
-      
+
       combinations.push({
         actionId: actionDef.id,
         actorId: actor.id,
@@ -357,9 +353,9 @@ class ActionFormattingStage extends PipelineStage {
           actionDef.template,
           targetMap,
           actionDef.targets
-        )
+        ),
       });
-      
+
       // Increment indices
       let carry = 1;
       for (let i = targetKeys.length - 1; i >= 0 && carry; i--) {
@@ -370,23 +366,23 @@ class ActionFormattingStage extends PipelineStage {
           carry = 0;
         }
       }
-      
+
       if (carry) break; // All combinations generated
     }
-    
+
     return combinations;
   }
-  
+
   #formatTemplate(template, targetMap, targetDefs) {
     let formatted = template;
-    
+
     for (const [key, target] of Object.entries(targetMap)) {
       const placeholder = targetDefs[key].placeholder;
       const regex = new RegExp(`\\{${placeholder}\\}`, 'g');
       const displayName = this.#getTargetDisplayName(target);
       formatted = formatted.replace(regex, displayName);
     }
-    
+
     return formatted;
   }
 }
@@ -402,16 +398,16 @@ class ActionFormattingStage extends PipelineStage {
   eventName: "core:attempt_action",
   actorId: "entity_123",
   actionId: "combat:throw",
-  
+
   // New multi-target structure
   targets: {
     primary: "knife_456",
     secondary: "goblin_789"
   },
-  
+
   // Backward compatibility
   targetId: "knife_456", // Primary target for legacy rules
-  
+
   // Additional context
   originalInput: "throw knife at goblin",
   timestamp: Date.now()
@@ -441,30 +437,35 @@ const secondaryTarget = event.payload.targets?.secondary;
 ## Implementation Phases
 
 ### Phase 1: Schema and Validation (Week 1)
+
 - [ ] Update action.schema.json with multi-target support
 - [ ] Create target-context.schema.json
 - [ ] Add validation tests for new schemas
 - [ ] Update schema documentation
 
 ### Phase 2: Core Pipeline (Week 2-3)
+
 - [ ] Implement MultiTargetResolutionStage
 - [ ] Update ActionFormattingStage for combinations
 - [ ] Modify pipeline orchestrator to use new stage
 - [ ] Add comprehensive unit tests
 
 ### Phase 3: Scope DSL Context (Week 3-4)
+
 - [ ] Extend scope interpreter context handling
 - [ ] Create context-aware scope examples
 - [ ] Test dependent scope resolution
 - [ ] Document scope context variables
 
 ### Phase 4: Integration (Week 4-5)
+
 - [ ] Update commandProcessor for multi-target payloads
 - [ ] Ensure backward compatibility
 - [ ] Create example multi-target actions
 - [ ] Integration testing
 
 ### Phase 5: Documentation and Migration (Week 5-6)
+
 - [ ] Create modder documentation
 - [ ] Write migration guide
 - [ ] Update existing actions (optional)
@@ -521,6 +522,7 @@ const secondaryTarget = event.payload.targets?.secondary;
 #### Converting Single-Target Actions
 
 Before:
+
 ```json
 {
   "id": "my_mod:simple_action",
@@ -530,6 +532,7 @@ Before:
 ```
 
 After (backward compatible):
+
 ```json
 {
   "id": "my_mod:simple_action",
@@ -657,10 +660,10 @@ Available variables in scope evaluation context:
   actor: Entity,          // The acting entity
   location: Entity,       // Current location
   game: GameState,        // Game state object
-  
+
   // When contextFrom is used
   target: Entity,         // Primary target entity
-  
+
   // When multiple targets resolved
   targets: {
     primary: Entity[],    // All primary candidates

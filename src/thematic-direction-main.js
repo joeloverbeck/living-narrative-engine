@@ -129,13 +129,17 @@ class ThematicDirectionApp {
     try {
       // thematic-direction schema is already loaded by SchemaLoader (it's in staticConfiguration.js)
       // We only need to load character-concept schema as it's not in the standard list
-      
+
       // Check if character-concept schema is already loaded
       try {
         // First check if schema already exists by checking if it's loaded
-        const isConceptSchemaLoaded = schemaValidator.isSchemaLoaded('schema://living-narrative-engine/character-concept.schema.json');
+        const isConceptSchemaLoaded = schemaValidator.isSchemaLoaded(
+          'schema://living-narrative-engine/character-concept.schema.json'
+        );
         if (isConceptSchemaLoaded) {
-          this.#logger.debug('ThematicDirectionApp: character-concept schema already loaded');
+          this.#logger.debug(
+            'ThematicDirectionApp: character-concept schema already loaded'
+          );
         } else {
           // Load character concept schema second (it references thematic-direction)
           const conceptSchemaResponse = await fetch(
@@ -152,7 +156,9 @@ class ThematicDirectionApp {
       } catch (error) {
         // If schema already exists, that's fine - just log it
         if (error.message?.includes('already exists')) {
-          this.#logger.debug('ThematicDirectionApp: character-concept schema already loaded');
+          this.#logger.debug(
+            'ThematicDirectionApp: character-concept schema already loaded'
+          );
         } else {
           throw error;
         }
@@ -177,54 +183,58 @@ class ThematicDirectionApp {
       // Define CHARACTER_CONCEPT_CREATED event
       const characterConceptCreatedEvent = {
         id: 'thematic:character_concept_created',
-        description: 'Fired when a character concept is successfully created in the thematic direction generator.',
+        description:
+          'Fired when a character concept is successfully created in the thematic direction generator.',
         payloadSchema: {
-          description: 'Defines the structure for the CHARACTER_CONCEPT_CREATED event payload.',
+          description:
+            'Defines the structure for the CHARACTER_CONCEPT_CREATED event payload.',
           type: 'object',
           required: ['conceptId', 'concept', 'autoSaved'],
           properties: {
             conceptId: {
               type: 'string',
-              description: 'The unique ID of the created character concept.'
+              description: 'The unique ID of the created character concept.',
             },
             concept: {
               type: 'string',
-              description: 'The character concept text (truncated for events).'
+              description: 'The character concept text (truncated for events).',
             },
             autoSaved: {
               type: 'boolean',
-              description: 'Whether the concept was automatically saved.'
-            }
+              description: 'Whether the concept was automatically saved.',
+            },
           },
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       };
 
       // Define THEMATIC_DIRECTIONS_GENERATED event
       const thematicDirectionsGeneratedEvent = {
         id: 'thematic:thematic_directions_generated',
-        description: 'Fired when thematic directions are successfully generated for a character concept.',
+        description:
+          'Fired when thematic directions are successfully generated for a character concept.',
         payloadSchema: {
-          description: 'Defines the structure for the THEMATIC_DIRECTIONS_GENERATED event payload.',
+          description:
+            'Defines the structure for the THEMATIC_DIRECTIONS_GENERATED event payload.',
           type: 'object',
           required: ['conceptId', 'directionCount', 'autoSaved'],
           properties: {
             conceptId: {
               type: 'string',
-              description: 'The unique ID of the character concept.'
+              description: 'The unique ID of the character concept.',
             },
             directionCount: {
               type: 'integer',
               minimum: 0,
-              description: 'The number of thematic directions generated.'
+              description: 'The number of thematic directions generated.',
             },
             autoSaved: {
               type: 'boolean',
-              description: 'Whether the directions were automatically saved.'
-            }
+              description: 'Whether the directions were automatically saved.',
+            },
           },
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       };
 
       // Register payload schemas first
@@ -238,13 +248,23 @@ class ThematicDirectionApp {
       );
 
       // Register event definitions in the data registry
-      dataRegistry.setEventDefinition('thematic:character_concept_created', characterConceptCreatedEvent);
-      dataRegistry.setEventDefinition('thematic:thematic_directions_generated', thematicDirectionsGeneratedEvent);
+      dataRegistry.setEventDefinition(
+        'thematic:character_concept_created',
+        characterConceptCreatedEvent
+      );
+      dataRegistry.setEventDefinition(
+        'thematic:thematic_directions_generated',
+        thematicDirectionsGeneratedEvent
+      );
 
-      this.#logger.info('ThematicDirectionApp: Registered event definitions for thematic:character_concept_created and thematic:thematic_directions_generated');
-
+      this.#logger.info(
+        'ThematicDirectionApp: Registered event definitions for thematic:character_concept_created and thematic:thematic_directions_generated'
+      );
     } catch (error) {
-      this.#logger.error('ThematicDirectionApp: Failed to register event definitions', error);
+      this.#logger.error(
+        'ThematicDirectionApp: Failed to register event definitions',
+        error
+      );
       throw new Error(`Event definition registration failed: ${error.message}`);
     }
   }

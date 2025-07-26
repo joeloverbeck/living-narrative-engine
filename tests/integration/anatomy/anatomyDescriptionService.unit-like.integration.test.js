@@ -93,25 +93,28 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
         getComponentData: jest.fn(() => ({ body: { root: 'test-root' } })),
       };
 
-      mockBodyDescriptionOrchestrator.generateAllDescriptions.mockResolvedValue({
-        bodyDescription: 'Test body description',
-        partDescriptions: new Map([['part1', 'Test part description']]),
-      });
+      mockBodyDescriptionOrchestrator.generateAllDescriptions.mockResolvedValue(
+        {
+          bodyDescription: 'Test body description',
+          partDescriptions: new Map([['part1', 'Test part description']]),
+        }
+      );
 
       // Act
       await anatomyDescriptionService.generateAllDescriptions(mockEntity);
 
       // Assert - Verify delegation to orchestrator (lines 47-49)
-      expect(mockBodyDescriptionOrchestrator.generateAllDescriptions).toHaveBeenCalledWith(mockEntity);
-      
+      expect(
+        mockBodyDescriptionOrchestrator.generateAllDescriptions
+      ).toHaveBeenCalledWith(mockEntity);
+
       // Verify persistence service calls (lines 53-60)
-      expect(mockDescriptionPersistenceService.updateDescription).toHaveBeenCalledWith(
-        'test-entity',
-        'Test body description'
-      );
-      expect(mockDescriptionPersistenceService.updateMultipleDescriptions).toHaveBeenCalledWith(
-        new Map([['part1', 'Test part description']])
-      );
+      expect(
+        mockDescriptionPersistenceService.updateDescription
+      ).toHaveBeenCalledWith('test-entity', 'Test body description');
+      expect(
+        mockDescriptionPersistenceService.updateMultipleDescriptions
+      ).toHaveBeenCalledWith(new Map([['part1', 'Test part description']]));
     });
   });
 
@@ -175,17 +178,20 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       };
 
       mockEntityFinder.getEntityInstance.mockReturnValue(mockPartEntity);
-      mockPartDescriptionGenerator.generatePartDescription.mockReturnValue('Generated part description');
+      mockPartDescriptionGenerator.generatePartDescription.mockReturnValue(
+        'Generated part description'
+      );
 
       // Act - Should hit lines 95-102
       anatomyDescriptionService.generatePartDescription(partId);
 
       // Assert
-      expect(mockPartDescriptionGenerator.generatePartDescription).toHaveBeenCalledWith(partId);
-      expect(mockDescriptionPersistenceService.updateDescription).toHaveBeenCalledWith(
-        partId,
-        'Generated part description'
-      );
+      expect(
+        mockPartDescriptionGenerator.generatePartDescription
+      ).toHaveBeenCalledWith(partId);
+      expect(
+        mockDescriptionPersistenceService.updateDescription
+      ).toHaveBeenCalledWith(partId, 'Generated part description');
     });
 
     it('should handle missing entity gracefully', () => {
@@ -207,17 +213,20 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
         getComponentData: jest.fn(() => ({ body: { root: 'test-root' } })),
       };
 
-      mockBodyDescriptionOrchestrator.generateBodyDescription.mockResolvedValue('Orchestrator body description');
+      mockBodyDescriptionOrchestrator.generateBodyDescription.mockResolvedValue(
+        'Orchestrator body description'
+      );
 
       // Act - Should hit lines 131-140
       await anatomyDescriptionService.generateBodyDescription(mockEntity);
 
       // Assert
-      expect(mockBodyDescriptionOrchestrator.generateBodyDescription).toHaveBeenCalledWith(mockEntity);
-      expect(mockDescriptionPersistenceService.updateDescription).toHaveBeenCalledWith(
-        'test-entity',
-        'Orchestrator body description'
-      );
+      expect(
+        mockBodyDescriptionOrchestrator.generateBodyDescription
+      ).toHaveBeenCalledWith(mockEntity);
+      expect(
+        mockDescriptionPersistenceService.updateDescription
+      ).toHaveBeenCalledWith('test-entity', 'Orchestrator body description');
     });
   });
 
@@ -257,7 +266,9 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       expect(mockEventDispatchService.safeDispatchEvent).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining('Failed to generate body description'),
+          message: expect.stringContaining(
+            'Failed to generate body description'
+          ),
           details: expect.objectContaining({
             raw: expect.stringContaining('test-entity'),
             timestamp: expect.any(String),
@@ -275,17 +286,23 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
         getComponentData: jest.fn(() => ({ body: { root: 'test-root' } })),
       };
 
-      mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription.mockResolvedValue('Orchestrator description');
-
-      // Act - Should hit lines 175-190
-      const result = await anatomyDescriptionService.getOrGenerateBodyDescription(mockEntity);
-
-      // Assert
-      expect(mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription).toHaveBeenCalledWith(mockEntity);
-      expect(mockDescriptionPersistenceService.updateDescription).toHaveBeenCalledWith(
-        'test-entity',
+      mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription.mockResolvedValue(
         'Orchestrator description'
       );
+
+      // Act - Should hit lines 175-190
+      const result =
+        await anatomyDescriptionService.getOrGenerateBodyDescription(
+          mockEntity
+        );
+
+      // Assert
+      expect(
+        mockBodyDescriptionOrchestrator.getOrGenerateBodyDescription
+      ).toHaveBeenCalledWith(mockEntity);
+      expect(
+        mockDescriptionPersistenceService.updateDescription
+      ).toHaveBeenCalledWith('test-entity', 'Orchestrator description');
       expect(result).toBe('Orchestrator description');
     });
 
@@ -302,7 +319,8 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       });
 
       // Act - Should hit lines 194-196
-      const result = await serviceWithoutOrchestrator.getOrGenerateBodyDescription(null);
+      const result =
+        await serviceWithoutOrchestrator.getOrGenerateBodyDescription(null);
 
       // Assert
       expect(result).toBeNull();
@@ -322,12 +340,17 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
 
       const mockEntity = {
         id: 'test-entity',
-        hasComponent: jest.fn((componentId) => componentId === DESCRIPTION_COMPONENT_ID),
+        hasComponent: jest.fn(
+          (componentId) => componentId === DESCRIPTION_COMPONENT_ID
+        ),
         getComponentData: jest.fn(() => ({ text: 'Existing description' })),
       };
 
       // Act - Should hit lines 199-202
-      const result = await serviceWithoutOrchestrator.getOrGenerateBodyDescription(mockEntity);
+      const result =
+        await serviceWithoutOrchestrator.getOrGenerateBodyDescription(
+          mockEntity
+        );
 
       // Assert
       expect(result).toBe('Existing description');
@@ -343,7 +366,9 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       anatomyDescriptionService.updateDescription(entityId, description);
 
       // Assert
-      expect(mockDescriptionPersistenceService.updateDescription).toHaveBeenCalledWith(entityId, description);
+      expect(
+        mockDescriptionPersistenceService.updateDescription
+      ).toHaveBeenCalledWith(entityId, description);
     });
 
     it('should fall back to component manager when persistence service unavailable', () => {
@@ -391,7 +416,10 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
 
       // Act - Should hit line 245
       expect(() => {
-        serviceWithoutPersistence.updateDescription('nonexistent-entity', 'description');
+        serviceWithoutPersistence.updateDescription(
+          'nonexistent-entity',
+          'description'
+        );
       }).not.toThrow();
     });
   });
@@ -430,7 +458,9 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
         anatomyDescriptionService.regenerateDescriptions('test-entity');
       }).not.toThrow();
 
-      expect(mockEntity.hasComponent).toHaveBeenCalledWith(ANATOMY_BODY_COMPONENT_ID);
+      expect(mockEntity.hasComponent).toHaveBeenCalledWith(
+        ANATOMY_BODY_COMPONENT_ID
+      );
     });
 
     it('should call generateAllDescriptions for anatomy entity', () => {
@@ -442,14 +472,19 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
 
       mockEntityFinder.getEntityInstance.mockReturnValue(mockEntity);
 
-      const generateAllSpy = jest.spyOn(anatomyDescriptionService, 'generateAllDescriptions');
+      const generateAllSpy = jest.spyOn(
+        anatomyDescriptionService,
+        'generateAllDescriptions'
+      );
       generateAllSpy.mockImplementation(() => Promise.resolve());
 
       // Act - Should hit lines 275-277
       anatomyDescriptionService.regenerateDescriptions('test-entity');
 
       // Assert
-      expect(mockEntity.hasComponent).toHaveBeenCalledWith(ANATOMY_BODY_COMPONENT_ID);
+      expect(mockEntity.hasComponent).toHaveBeenCalledWith(
+        ANATOMY_BODY_COMPONENT_ID
+      );
       expect(generateAllSpy).toHaveBeenCalledWith(mockEntity);
 
       generateAllSpy.mockRestore();
@@ -481,7 +516,9 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       serviceWithoutGenerator.generatePartDescription(partId);
 
       // Assert
-      expect(mockPartEntity.hasComponent).toHaveBeenCalledWith(ANATOMY_PART_COMPONENT_ID);
+      expect(mockPartEntity.hasComponent).toHaveBeenCalledWith(
+        ANATOMY_PART_COMPONENT_ID
+      );
     });
 
     it('should handle empty description from builder in fallback part generation (line 115)', () => {
@@ -509,7 +546,9 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       serviceWithoutGenerator.generatePartDescription(partId);
 
       // Assert
-      expect(mockBodyPartDescriptionBuilder.buildDescription).toHaveBeenCalledWith(mockPartEntity);
+      expect(
+        mockBodyPartDescriptionBuilder.buildDescription
+      ).toHaveBeenCalledWith(mockPartEntity);
     });
 
     it('should return existing description when current in fallback service (line 212)', async () => {
@@ -545,11 +584,16 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       };
 
       // Act - Should hit line 212
-      const result = await serviceWithoutOrchestrator.getOrGenerateBodyDescription(mockEntity);
+      const result =
+        await serviceWithoutOrchestrator.getOrGenerateBodyDescription(
+          mockEntity
+        );
 
       // Assert
       expect(result).toBe('Current existing description');
-      expect(serviceWithoutOrchestrator.isDescriptionCurrent).toHaveBeenCalledWith(mockEntity);
+      expect(
+        serviceWithoutOrchestrator.isDescriptionCurrent
+      ).toHaveBeenCalledWith(mockEntity);
     });
 
     it('should return null when composed description is empty in fallback service (line 223)', async () => {
@@ -582,10 +626,15 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       mockBodyDescriptionComposer.composeDescription.mockResolvedValue(null);
 
       // Act - Should hit line 223
-      const result = await serviceWithoutOrchestrator.getOrGenerateBodyDescription(mockEntity);
+      const result =
+        await serviceWithoutOrchestrator.getOrGenerateBodyDescription(
+          mockEntity
+        );
 
       // Assert
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(mockEntity);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(mockEntity);
       expect(result).toBeNull();
     });
 
@@ -603,17 +652,22 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       const mockEntity = {
         id: 'test-entity',
         hasComponent: jest.fn(() => true),
-        getComponentData: jest.fn(() => ({ 
-          body: { root: 'test-root' } 
+        getComponentData: jest.fn(() => ({
+          body: { root: 'test-root' },
         })),
       };
 
       // Mock the getAllParts call for the fallback path
       mockBodyGraphService.getAllParts.mockReturnValue(['part1', 'part2']);
-      mockBodyDescriptionComposer.composeDescription.mockResolvedValue('Fallback body description');
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
+        'Fallback body description'
+      );
 
       // Mock generatePartDescription method
-      const generatePartSpy = jest.spyOn(serviceWithoutOrchestrator, 'generatePartDescription');
+      const generatePartSpy = jest.spyOn(
+        serviceWithoutOrchestrator,
+        'generatePartDescription'
+      );
       generatePartSpy.mockImplementation(() => {});
 
       // Act - Should hit lines 77-83
@@ -623,7 +677,9 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       expect(mockBodyGraphService.getAllParts).toHaveBeenCalled();
       expect(generatePartSpy).toHaveBeenCalledWith('part1');
       expect(generatePartSpy).toHaveBeenCalledWith('part2');
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(mockEntity);
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(mockEntity);
 
       generatePartSpy.mockRestore();
     });
@@ -647,17 +703,27 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       };
 
       mockEntityFinder.getEntityInstance.mockReturnValue(mockPartEntity);
-      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue('Fallback part description');
+      mockBodyPartDescriptionBuilder.buildDescription.mockReturnValue(
+        'Fallback part description'
+      );
 
-      const updateDescriptionSpy = jest.spyOn(serviceWithoutGenerator, 'updateDescription');
+      const updateDescriptionSpy = jest.spyOn(
+        serviceWithoutGenerator,
+        'updateDescription'
+      );
       updateDescriptionSpy.mockImplementation(() => {});
 
       // Act - Should hit lines 106-119
       serviceWithoutGenerator.generatePartDescription(partId);
 
       // Assert
-      expect(mockBodyPartDescriptionBuilder.buildDescription).toHaveBeenCalledWith(mockPartEntity);
-      expect(updateDescriptionSpy).toHaveBeenCalledWith(partId, 'Fallback part description');
+      expect(
+        mockBodyPartDescriptionBuilder.buildDescription
+      ).toHaveBeenCalledWith(mockPartEntity);
+      expect(updateDescriptionSpy).toHaveBeenCalledWith(
+        partId,
+        'Fallback part description'
+      );
 
       updateDescriptionSpy.mockRestore();
     });
@@ -692,17 +758,30 @@ describe('AnatomyDescriptionService - Unit-like Integration', () => {
       };
 
       // Mock composeDescription to return new description
-      mockBodyDescriptionComposer.composeDescription.mockResolvedValue('New composed description');
+      mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
+        'New composed description'
+      );
 
-      const updateDescriptionSpy = jest.spyOn(serviceWithoutOrchestrator, 'updateDescription');
+      const updateDescriptionSpy = jest.spyOn(
+        serviceWithoutOrchestrator,
+        'updateDescription'
+      );
       updateDescriptionSpy.mockImplementation(() => {});
 
       // Act - Should hit lines 206-223
-      const result = await serviceWithoutOrchestrator.getOrGenerateBodyDescription(mockEntity);
+      const result =
+        await serviceWithoutOrchestrator.getOrGenerateBodyDescription(
+          mockEntity
+        );
 
       // Assert
-      expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(mockEntity);
-      expect(updateDescriptionSpy).toHaveBeenCalledWith('test-entity', 'New composed description');
+      expect(
+        mockBodyDescriptionComposer.composeDescription
+      ).toHaveBeenCalledWith(mockEntity);
+      expect(updateDescriptionSpy).toHaveBeenCalledWith(
+        'test-entity',
+        'New composed description'
+      );
       expect(result).toBe('New composed description');
 
       updateDescriptionSpy.mockRestore();

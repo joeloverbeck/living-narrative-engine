@@ -3,7 +3,14 @@
  * @see src/characterBuilder/services/characterBuilderService.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import {
   CharacterBuilderService,
   CHARACTER_BUILDER_EVENTS,
@@ -69,7 +76,7 @@ describe('CharacterBuilderService', () => {
 
     it('should throw error when logger is missing required methods', () => {
       const invalidLogger = { debug: jest.fn() }; // Missing info, warn, error
-      
+
       expect(() => {
         new CharacterBuilderService({
           logger: invalidLogger,
@@ -82,7 +89,7 @@ describe('CharacterBuilderService', () => {
 
     it('should throw error when storageService is missing required methods', () => {
       const invalidStorage = { initialize: jest.fn() }; // Missing other methods
-      
+
       expect(() => {
         new CharacterBuilderService({
           logger: mockLogger,
@@ -95,7 +102,7 @@ describe('CharacterBuilderService', () => {
 
     it('should throw error when directionGenerator is missing required methods', () => {
       const invalidGenerator = {}; // Missing generateDirections
-      
+
       expect(() => {
         new CharacterBuilderService({
           logger: mockLogger,
@@ -108,7 +115,7 @@ describe('CharacterBuilderService', () => {
 
     it('should throw error when eventBus is missing required methods', () => {
       const invalidEventBus = {}; // Missing dispatch
-      
+
       expect(() => {
         new CharacterBuilderService({
           logger: mockLogger,
@@ -165,7 +172,9 @@ describe('CharacterBuilderService', () => {
       const mockConcept = createCharacterConcept(conceptText);
       const mockSavedConcept = { ...mockConcept, id: 'saved-id' };
 
-      mockStorageService.storeCharacterConcept.mockResolvedValue(mockSavedConcept);
+      mockStorageService.storeCharacterConcept.mockResolvedValue(
+        mockSavedConcept
+      );
 
       const result = await service.createCharacterConcept(conceptText);
 
@@ -182,8 +191,10 @@ describe('CharacterBuilderService', () => {
 
     it('should create character concept without saving when autoSave is false', async () => {
       const conceptText = 'A wise mage';
-      
-      const result = await service.createCharacterConcept(conceptText, { autoSave: false });
+
+      const result = await service.createCharacterConcept(conceptText, {
+        autoSave: false,
+      });
 
       expect(mockStorageService.storeCharacterConcept).not.toHaveBeenCalled();
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
@@ -198,7 +209,7 @@ describe('CharacterBuilderService', () => {
       await expect(service.createCharacterConcept('')).rejects.toThrow(
         'concept must be a non-empty string'
       );
-      
+
       await expect(service.createCharacterConcept('   ')).rejects.toThrow(
         'concept must be a non-empty string'
       );
@@ -208,7 +219,7 @@ describe('CharacterBuilderService', () => {
       await expect(service.createCharacterConcept(null)).rejects.toThrow(
         'concept must be a non-empty string'
       );
-      
+
       await expect(service.createCharacterConcept(123)).rejects.toThrow(
         'concept must be a non-empty string'
       );
@@ -219,7 +230,9 @@ describe('CharacterBuilderService', () => {
       const validationError = new Error('Validation failed');
       validationError.name = 'CharacterConceptValidationError';
 
-      mockStorageService.storeCharacterConcept.mockRejectedValue(validationError);
+      mockStorageService.storeCharacterConcept.mockRejectedValue(
+        validationError
+      );
 
       await expect(service.createCharacterConcept(conceptText)).rejects.toThrow(
         CharacterBuilderError
@@ -254,8 +267,12 @@ describe('CharacterBuilderService', () => {
       ];
 
       mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
-      mockDirectionGenerator.generateDirections.mockResolvedValue(mockDirections);
-      mockStorageService.storeThematicDirections.mockResolvedValue(mockDirections);
+      mockDirectionGenerator.generateDirections.mockResolvedValue(
+        mockDirections
+      );
+      mockStorageService.storeThematicDirections.mockResolvedValue(
+        mockDirections
+      );
 
       const result = await service.generateThematicDirections(conceptId);
 
@@ -281,9 +298,13 @@ describe('CharacterBuilderService', () => {
       const mockDirections = [{ id: 'dir1', direction: 'Direction 1' }];
 
       mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
-      mockDirectionGenerator.generateDirections.mockResolvedValue(mockDirections);
+      mockDirectionGenerator.generateDirections.mockResolvedValue(
+        mockDirections
+      );
 
-      const result = await service.generateThematicDirections(conceptId, { autoSave: false });
+      const result = await service.generateThematicDirections(conceptId, {
+        autoSave: false,
+      });
 
       expect(result).toEqual(mockDirections);
       expect(mockStorageService.storeThematicDirections).not.toHaveBeenCalled();
@@ -293,7 +314,7 @@ describe('CharacterBuilderService', () => {
       await expect(service.generateThematicDirections(null)).rejects.toThrow(
         'conceptId must be a non-empty string'
       );
-      
+
       await expect(service.generateThematicDirections('')).rejects.toThrow(
         'conceptId must be a non-empty string'
       );
@@ -302,24 +323,26 @@ describe('CharacterBuilderService', () => {
     it('should throw error when concept not found', async () => {
       mockStorageService.getCharacterConcept.mockResolvedValue(null);
 
-      await expect(service.generateThematicDirections('missing-id')).rejects.toThrow(
-        'Character concept not found: missing-id'
-      );
+      await expect(
+        service.generateThematicDirections('missing-id')
+      ).rejects.toThrow('Character concept not found: missing-id');
     });
 
     it('should throw error for empty or invalid directions', async () => {
       const conceptId = 'test-concept-id';
-      const mockConcept = createCharacterConcept('Test concept for empty directions');
+      const mockConcept = createCharacterConcept(
+        'Test concept for empty directions'
+      );
 
       mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
-      
+
       // Mock empty directions that will always fail validation
       mockDirectionGenerator.generateDirections.mockResolvedValue([]);
 
       // The test should fail with the retry mechanism
-      await expect(service.generateThematicDirections(conceptId)).rejects.toThrow(
-        CharacterBuilderError
-      );
+      await expect(
+        service.generateThematicDirections(conceptId)
+      ).rejects.toThrow(CharacterBuilderError);
     });
   });
 
@@ -364,7 +387,9 @@ describe('CharacterBuilderService', () => {
       const error = new Error('Storage error');
       mockStorageService.listCharacterConcepts.mockRejectedValue(error);
 
-      await expect(service.getAllCharacterConcepts()).rejects.toThrow(CharacterBuilderError);
+      await expect(service.getAllCharacterConcepts()).rejects.toThrow(
+        CharacterBuilderError
+      );
       await expect(service.getAllCharacterConcepts()).rejects.toThrow(
         'Failed to list character concepts: Storage error'
       );
@@ -412,7 +437,7 @@ describe('CharacterBuilderService', () => {
       await expect(service.getCharacterConcept(null)).rejects.toThrow(
         'conceptId must be a non-empty string'
       );
-      
+
       await expect(service.getCharacterConcept('')).rejects.toThrow(
         'conceptId must be a non-empty string'
       );
@@ -445,7 +470,9 @@ describe('CharacterBuilderService', () => {
         { id: 'dir2', direction: 'Direction 2' },
       ];
 
-      mockStorageService.getThematicDirections.mockResolvedValue(mockDirections);
+      mockStorageService.getThematicDirections.mockResolvedValue(
+        mockDirections
+      );
 
       const result = await service.getThematicDirections(conceptId);
 
@@ -595,13 +622,13 @@ describe('CharacterBuilderService', () => {
     });
 
     it('should throw error for invalid updates', async () => {
-      await expect(service.updateCharacterConcept('test-id', null)).rejects.toThrow(
-        'updates must be a valid object'
-      );
-      
-      await expect(service.updateCharacterConcept('test-id', 'not-an-object')).rejects.toThrow(
-        'updates must be a valid object'
-      );
+      await expect(
+        service.updateCharacterConcept('test-id', null)
+      ).rejects.toThrow('updates must be a valid object');
+
+      await expect(
+        service.updateCharacterConcept('test-id', 'not-an-object')
+      ).rejects.toThrow('updates must be a valid object');
     });
 
     it('should throw error when concept not found', async () => {
@@ -619,9 +646,9 @@ describe('CharacterBuilderService', () => {
 
       mockStorageService.getCharacterConcept.mockRejectedValue(error);
 
-      await expect(service.updateCharacterConcept(conceptId, updates)).rejects.toThrow(
-        CharacterBuilderError
-      );
+      await expect(
+        service.updateCharacterConcept(conceptId, updates)
+      ).rejects.toThrow(CharacterBuilderError);
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,
@@ -646,13 +673,12 @@ describe('CharacterBuilderService', () => {
     });
   });
 
-
   describe('Retry configuration', () => {
     it('should use test environment timings in test mode', () => {
       // The RETRY_CONFIG is already set when process.env.NODE_ENV is 'test'
       // Just verify that the service uses appropriate timings
       expect(process.env.NODE_ENV).toBe('test');
-      
+
       // The service should have been created with test timings
       // We can verify this indirectly by checking that retries happen quickly
       // in the tests above (which they do)

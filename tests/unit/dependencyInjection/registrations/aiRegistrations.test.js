@@ -127,13 +127,18 @@ describe('AI registration helpers', () => {
     container.register(tokens.TurnStrategyFactory, {});
     container.register(tokens.ITurnContextFactory, {});
     container.register(tokens.PromptTextLoader, { loadPromptText: jest.fn() });
-    
+
     // Additional mocks for uncovered services
-    container.register(tokens.IConfiguration, { get: jest.fn(), set: jest.fn() });
+    container.register(tokens.IConfiguration, {
+      get: jest.fn(),
+      set: jest.fn(),
+    });
     container.register(tokens.IDataFetcher, { fetch: jest.fn() });
-    container.register(tokens.AnatomyDescriptionService, { describe: jest.fn() });
-    container.register(tokens.ServiceSetup, { 
-      setupService: jest.fn().mockReturnValue(logger)
+    container.register(tokens.AnatomyDescriptionService, {
+      describe: jest.fn(),
+    });
+    container.register(tokens.ServiceSetup, {
+      setupService: jest.fn().mockReturnValue(logger),
     });
     container.register(tokens.TurnContextBuilder, { build: jest.fn() });
 
@@ -203,14 +208,24 @@ describe('AI registration helpers', () => {
 
     it('should register ILLMConfigurationManager as a singleton factory', () => {
       registerLlmInfrastructure(registrar, logger);
-      expect(container.isRegistered(tokens.ILLMConfigurationManager)).toBe(true);
-      expectSingleton(container, tokens.ILLMConfigurationManager, LLMConfigurationManager);
+      expect(container.isRegistered(tokens.ILLMConfigurationManager)).toBe(
+        true
+      );
+      expectSingleton(
+        container,
+        tokens.ILLMConfigurationManager,
+        LLMConfigurationManager
+      );
     });
 
     it('should register ILLMRequestExecutor as a singleton factory', () => {
       registerLlmInfrastructure(registrar, logger);
       expect(container.isRegistered(tokens.ILLMRequestExecutor)).toBe(true);
-      expectSingleton(container, tokens.ILLMRequestExecutor, LLMRequestExecutor);
+      expectSingleton(
+        container,
+        tokens.ILLMRequestExecutor,
+        LLMRequestExecutor
+      );
     });
 
     it('should register ILLMErrorMapper as a singleton factory', () => {
@@ -300,16 +315,19 @@ describe('AI registration helpers', () => {
       { token: tokens.IAIGameStateProvider, Class: AIGameStateProvider },
     ];
 
-    test.each(services)('should register $token correctly', ({ token, Class }) => {
-      // Some services depend on IActionIndexer from the turn pipeline
-      registerAITurnPipeline(registrar, logger);
-      registerAIGameStateProviders(registrar, logger);
-      expect(container.isRegistered(token)).toBe(true);
-      if (Class && token !== tokens.IAvailableActionsProvider) {
-        // Skip singleton check for AvailableActionsProvider as it requires more dependencies
-        expectSingleton(container, token, Class);
+    test.each(services)(
+      'should register $token correctly',
+      ({ token, Class }) => {
+        // Some services depend on IActionIndexer from the turn pipeline
+        registerAITurnPipeline(registrar, logger);
+        registerAIGameStateProviders(registrar, logger);
+        expect(container.isRegistered(token)).toBe(true);
+        if (Class && token !== tokens.IAvailableActionsProvider) {
+          // Skip singleton check for AvailableActionsProvider as it requires more dependencies
+          expectSingleton(container, token, Class);
+        }
       }
-    });
+    );
 
     it('should log after registering AI game state providers', () => {
       registerAIGameStateProviders(registrar, logger);
@@ -381,7 +399,7 @@ describe('AI registration helpers', () => {
           registerPromptingEngine(registrar, logger);
           registerAIGameStateProviders(registrar, logger);
         }
-        
+
         registerAITurnPipeline(registrar, logger);
         expect(container.isRegistered(token)).toBe(true);
         if (Class) {

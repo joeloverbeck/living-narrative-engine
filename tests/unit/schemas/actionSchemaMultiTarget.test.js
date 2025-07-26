@@ -19,25 +19,25 @@ describe('Multi-Target Action Schema Validation', () => {
   beforeAll(() => {
     const ajv = new Ajv({ strict: false, allErrors: true });
     addFormats(ajv);
-    
+
     // Add common schema for base definitions
     ajv.addSchema(
       commonSchema,
       'schema://living-narrative-engine/common.schema.json'
     );
-    
+
     // Add JSON Logic schema
     ajv.addSchema(
       jsonLogicSchema,
       'schema://living-narrative-engine/json-logic.schema.json'
     );
-    
+
     // Add condition container schema
     ajv.addSchema(
       conditionContainerSchema,
       'schema://living-narrative-engine/condition-container.schema.json'
     );
-    
+
     validate = ajv.compile(actionSchema);
   });
 
@@ -51,9 +51,9 @@ describe('Multi-Target Action Schema Validation', () => {
         description: 'Test action using legacy scope',
         scope: 'test:valid_scope',
         template: 'test {target}',
-        prerequisites: []
+        prerequisites: [],
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -66,9 +66,9 @@ describe('Multi-Target Action Schema Validation', () => {
         description: 'Test action using new string targets format',
         targets: 'test:valid_scope',
         template: 'test {target}',
-        prerequisites: []
+        prerequisites: [],
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -80,9 +80,9 @@ describe('Multi-Target Action Schema Validation', () => {
         name: 'Minimal',
         description: 'Minimal valid action',
         targets: 'test:scope',
-        template: 'minimal action'
+        template: 'minimal action',
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -101,18 +101,18 @@ describe('Multi-Target Action Schema Validation', () => {
           primary: {
             scope: 'test:items',
             placeholder: 'item',
-            description: 'Item to use'
+            description: 'Item to use',
           },
           secondary: {
             scope: 'test:targets',
             placeholder: 'target',
-            description: 'Target to affect'
-          }
+            description: 'Target to affect',
+          },
         },
         template: 'use {item} on {target}',
-        generateCombinations: true
+        generateCombinations: true,
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -126,12 +126,12 @@ describe('Multi-Target Action Schema Validation', () => {
         targets: {
           primary: {
             scope: 'test:items',
-            placeholder: 'item'
-          }
+            placeholder: 'item',
+          },
         },
-        template: 'use {item}'
+        template: 'use {item}',
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -145,21 +145,21 @@ describe('Multi-Target Action Schema Validation', () => {
         targets: {
           primary: {
             scope: 'test:spells',
-            placeholder: 'spell'
+            placeholder: 'spell',
           },
           secondary: {
             scope: 'test:targets',
-            placeholder: 'target'
+            placeholder: 'target',
           },
           tertiary: {
             scope: 'test:focus_items',
             placeholder: 'focus',
-            optional: true
-          }
+            optional: true,
+          },
         },
-        template: 'cast {spell} on {target} using {focus}'
+        template: 'cast {spell} on {target} using {focus}',
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -173,17 +173,17 @@ describe('Multi-Target Action Schema Validation', () => {
         targets: {
           primary: {
             scope: 'test:items',
-            placeholder: 'item'
+            placeholder: 'item',
           },
           secondary: {
             scope: 'test:recipients',
             placeholder: 'recipient',
-            contextFrom: 'primary'
-          }
+            contextFrom: 'primary',
+          },
         },
-        template: 'give {item} to {recipient}'
+        template: 'give {item} to {recipient}',
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -200,9 +200,9 @@ describe('Multi-Target Action Schema Validation', () => {
         description: 'Invalid action with both targets and scope',
         targets: 'test:scope',
         scope: 'test:scope', // Should not have both
-        template: 'test {target}'
+        template: 'test {target}',
       };
-      
+
       const isValid = validate(action);
       expect(isValid).toBe(false);
       expect(validate.errors).toBeDefined();
@@ -213,9 +213,9 @@ describe('Multi-Target Action Schema Validation', () => {
         id: 'test:no_targets',
         name: 'No Targets',
         description: 'Invalid action with no targeting',
-        template: 'test action'
+        template: 'test action',
       };
-      
+
       const isValid = validate(action);
       expect(isValid).toBe(false);
       expect(validate.errors).toBeDefined();
@@ -229,12 +229,12 @@ describe('Multi-Target Action Schema Validation', () => {
         targets: {
           secondary: {
             scope: 'test:targets',
-            placeholder: 'target'
-          }
+            placeholder: 'target',
+          },
         },
-        template: 'test {target}'
+        template: 'test {target}',
       };
-      
+
       const isValid = validate(action);
       expect(isValid).toBe(false);
       expect(validate.errors).toBeDefined();
@@ -245,9 +245,15 @@ describe('Multi-Target Action Schema Validation', () => {
 
   describe('Placeholder Pattern Validation', () => {
     test('✓ should accept valid placeholder patterns', () => {
-      const validPlaceholders = ['target', 'item', 'destination', 'target1', 'item_type'];
-      
-      validPlaceholders.forEach(placeholder => {
+      const validPlaceholders = [
+        'target',
+        'item',
+        'destination',
+        'target1',
+        'item_type',
+      ];
+
+      validPlaceholders.forEach((placeholder) => {
         const action = {
           id: `test:valid_${placeholder}`,
           name: 'Valid Placeholder',
@@ -255,24 +261,32 @@ describe('Multi-Target Action Schema Validation', () => {
           targets: {
             primary: {
               scope: 'test:scope',
-              placeholder: placeholder
-            }
+              placeholder: placeholder,
+            },
           },
-          template: `test {${placeholder}}`
+          template: `test {${placeholder}}`,
         };
-        
+
         const isValid = validate(action);
         if (!isValid) {
-          console.error(`Failed for placeholder '${placeholder}':`, validate.errors);
+          console.error(
+            `Failed for placeholder '${placeholder}':`,
+            validate.errors
+          );
         }
         expect(isValid).toBe(true);
       });
     });
 
     test('❌ should reject invalid placeholder patterns', () => {
-      const invalidPlaceholders = ['123invalid', 'target-dash', 'target space', 'target.dot'];
-      
-      invalidPlaceholders.forEach(placeholder => {
+      const invalidPlaceholders = [
+        '123invalid',
+        'target-dash',
+        'target space',
+        'target.dot',
+      ];
+
+      invalidPlaceholders.forEach((placeholder) => {
         const action = {
           id: `test:invalid_${placeholder.replace(/[^a-zA-Z0-9]/g, '_')}`,
           name: 'Invalid Placeholder',
@@ -280,12 +294,12 @@ describe('Multi-Target Action Schema Validation', () => {
           targets: {
             primary: {
               scope: 'test:scope',
-              placeholder: placeholder
-            }
+              placeholder: placeholder,
+            },
           },
-          template: `test {${placeholder}}`
+          template: `test {${placeholder}}`,
         };
-        
+
         const isValid = validate(action);
         expect(isValid).toBe(false);
       });
@@ -297,16 +311,16 @@ describe('Multi-Target Action Schema Validation', () => {
   describe('Scope Pattern Validation', () => {
     test('✓ should accept valid namespaced scope patterns', () => {
       const validScopes = ['core:items', 'combat:weapons', 'magic_mod:spells'];
-      
-      validScopes.forEach(scope => {
+
+      validScopes.forEach((scope) => {
         const action = {
           id: `test:scope_${scope.replace(/[^a-zA-Z0-9]/g, '_')}`,
           name: 'Valid Scope',
           description: 'Test valid scope pattern',
           targets: scope,
-          template: 'test {target}'
+          template: 'test {target}',
         };
-        
+
         const isValid = validate(action);
         if (!isValid) {
           console.error(`Failed for scope '${scope}':`, validate.errors);
@@ -317,19 +331,22 @@ describe('Multi-Target Action Schema Validation', () => {
 
     test('✓ should accept special scope values', () => {
       const specialScopes = ['none', 'self'];
-      
-      specialScopes.forEach(scope => {
+
+      specialScopes.forEach((scope) => {
         const action = {
           id: `test:special_${scope}`,
           name: 'Special Scope',
           description: 'Test special scope value',
           targets: scope,
-          template: scope === 'none' ? 'wait' : 'test self'
+          template: scope === 'none' ? 'wait' : 'test self',
         };
-        
+
         const isValid = validate(action);
         if (!isValid) {
-          console.error(`Failed for special scope '${scope}':`, validate.errors);
+          console.error(
+            `Failed for special scope '${scope}':`,
+            validate.errors
+          );
         }
         expect(isValid).toBe(true);
       });
@@ -337,28 +354,35 @@ describe('Multi-Target Action Schema Validation', () => {
 
     test('✓ should accept special scope values with legacy scope property', () => {
       const specialScopes = ['none', 'self'];
-      
-      specialScopes.forEach(scope => {
+
+      specialScopes.forEach((scope) => {
         const action = {
           id: `test:legacy_${scope}`,
           name: 'Legacy Special Scope',
           description: 'Test legacy special scope value',
           scope: scope,
-          template: scope === 'none' ? 'wait' : 'test self'
+          template: scope === 'none' ? 'wait' : 'test self',
         };
-        
+
         const isValid = validate(action);
         if (!isValid) {
-          console.error(`Failed for legacy special scope '${scope}':`, validate.errors);
+          console.error(
+            `Failed for legacy special scope '${scope}':`,
+            validate.errors
+          );
         }
         expect(isValid).toBe(true);
       });
     });
 
     test('✓ should accept valid inline scope expressions', () => {
-      const inlineScopes = ['nearby_characters', 'inventory_items', 'environment'];
-      
-      inlineScopes.forEach(scope => {
+      const inlineScopes = [
+        'nearby_characters',
+        'inventory_items',
+        'environment',
+      ];
+
+      inlineScopes.forEach((scope) => {
         const action = {
           id: `test:inline_${scope}`,
           name: 'Inline Scope',
@@ -366,12 +390,12 @@ describe('Multi-Target Action Schema Validation', () => {
           targets: {
             primary: {
               scope: scope,
-              placeholder: 'target'
-            }
+              placeholder: 'target',
+            },
           },
-          template: 'test {target}'
+          template: 'test {target}',
         };
-        
+
         const isValid = validate(action);
         if (!isValid) {
           console.error(`Failed for inline scope '${scope}':`, validate.errors);
@@ -390,11 +414,11 @@ describe('Multi-Target Action Schema Validation', () => {
         name: 'Empty Target',
         description: 'Test with empty target definition',
         targets: {
-          primary: {}
+          primary: {},
         },
-        template: 'test'
+        template: 'test',
       };
-      
+
       const isValid = validate(action);
       expect(isValid).toBe(false);
       expect(validate.errors).toBeDefined();
@@ -408,17 +432,17 @@ describe('Multi-Target Action Schema Validation', () => {
         targets: {
           primary: {
             scope: 'test:items',
-            placeholder: 'item'
+            placeholder: 'item',
           },
           secondary: {
             scope: 'test:targets',
             placeholder: 'target',
-            contextFrom: 'invalid' // Only 'primary' is allowed
-          }
+            contextFrom: 'invalid', // Only 'primary' is allowed
+          },
         },
-        template: 'use {item} on {target}'
+        template: 'use {item} on {target}',
       };
-      
+
       const isValid = validate(action);
       expect(isValid).toBe(false);
       expect(validate.errors).toBeDefined();
@@ -433,12 +457,12 @@ describe('Multi-Target Action Schema Validation', () => {
           primary: {
             scope: 'test:items',
             placeholder: 'item',
-            invalidProperty: 'should not be allowed'
-          }
+            invalidProperty: 'should not be allowed',
+          },
         },
-        template: 'use {item}'
+        template: 'use {item}',
       };
-      
+
       const isValid = validate(action);
       expect(isValid).toBe(false);
       expect(validate.errors).toBeDefined();
@@ -448,9 +472,9 @@ describe('Multi-Target Action Schema Validation', () => {
       const action = {
         id: 'test:missing_fields',
         // Missing name, description, template
-        targets: 'test:scope'
+        targets: 'test:scope',
       };
-      
+
       const isValid = validate(action);
       expect(isValid).toBe(false);
       expect(validate.errors).toBeDefined();
@@ -468,17 +492,17 @@ describe('Multi-Target Action Schema Validation', () => {
         targets: {
           primary: {
             scope: 'test:items',
-            placeholder: 'item'
+            placeholder: 'item',
           },
           secondary: {
             scope: 'test:targets',
-            placeholder: 'target'
-          }
+            placeholder: 'target',
+          },
         },
         template: 'use {item} on {target}',
-        generateCombinations: true
+        generateCombinations: true,
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -492,13 +516,13 @@ describe('Multi-Target Action Schema Validation', () => {
         targets: {
           primary: {
             scope: 'test:items',
-            placeholder: 'item'
-          }
+            placeholder: 'item',
+          },
         },
         template: 'use {item}',
-        generateCombinations: false
+        generateCombinations: false,
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -512,13 +536,13 @@ describe('Multi-Target Action Schema Validation', () => {
         targets: {
           primary: {
             scope: 'test:items',
-            placeholder: 'item'
-          }
+            placeholder: 'item',
+          },
         },
-        template: 'use {item}'
+        template: 'use {item}',
         // generateCombinations omitted, should default to false
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -536,17 +560,17 @@ describe('Multi-Target Action Schema Validation', () => {
         targets: {
           primary: {
             scope: 'test:spells',
-            placeholder: 'spell'
+            placeholder: 'spell',
           },
           secondary: {
             scope: 'test:focus_items',
             placeholder: 'focus',
-            optional: true
-          }
+            optional: true,
+          },
         },
-        template: 'cast {spell} with {focus}'
+        template: 'cast {spell} with {focus}',
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);
@@ -560,13 +584,13 @@ describe('Multi-Target Action Schema Validation', () => {
         targets: {
           primary: {
             scope: 'test:items',
-            placeholder: 'item'
+            placeholder: 'item',
             // optional omitted, should default to false
-          }
+          },
         },
-        template: 'use {item}'
+        template: 'use {item}',
       };
-      
+
       const isValid = validate(action);
       if (!isValid) console.error('Validation errors:', validate.errors);
       expect(isValid).toBe(true);

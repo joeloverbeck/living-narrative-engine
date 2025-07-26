@@ -83,7 +83,9 @@ describe('PreviousItemsDropdown', () => {
           element: mockElement,
           onSelectionChange: null,
         });
-      }).toThrow('PreviousItemsDropdown: onSelectionChange callback is required');
+      }).toThrow(
+        'PreviousItemsDropdown: onSelectionChange callback is required'
+      );
     });
 
     it('should throw error if onSelectionChange is not a function', () => {
@@ -111,7 +113,7 @@ describe('PreviousItemsDropdown', () => {
 
       // Should create select element with options
       expect(mockElement.innerHTML).toContain('Choose Concept:');
-      
+
       // Verify dropdown structure was created
       // Since we're mocking innerHTML, we can't fully test DOM creation
       // but we can verify the method completed without errors
@@ -171,7 +173,7 @@ describe('PreviousItemsDropdown', () => {
         value: 'concept-1',
       };
       mockElement.querySelector.mockReturnValue(mockSelect);
-      
+
       await dropdown.loadItems(mockItems);
     });
 
@@ -210,7 +212,7 @@ describe('PreviousItemsDropdown', () => {
         dispatchEvent: jest.fn(),
       };
       mockElement.querySelector.mockReturnValue(mockSelect);
-      
+
       await dropdown.loadItems(mockItems);
     });
 
@@ -277,7 +279,7 @@ describe('PreviousItemsDropdown', () => {
         disabled: false,
       };
       mockElement.querySelector.mockReturnValue(mockSelect);
-      
+
       await dropdown.loadItems(mockItems);
     });
 
@@ -315,7 +317,7 @@ describe('PreviousItemsDropdown', () => {
       global.Event = jest.fn().mockImplementation((type) => ({
         type,
       }));
-      
+
       await dropdown.loadItems(mockItems);
     });
 
@@ -342,7 +344,9 @@ describe('PreviousItemsDropdown', () => {
         {}, // Empty object
       ];
 
-      await expect(dropdown.loadItems(itemsWithMissingProps)).resolves.not.toThrow();
+      await expect(
+        dropdown.loadItems(itemsWithMissingProps)
+      ).resolves.not.toThrow();
     });
 
     it('should handle very long item text', async () => {
@@ -354,7 +358,9 @@ describe('PreviousItemsDropdown', () => {
         },
       ];
 
-      await expect(dropdown.loadItems(itemsWithLongText)).resolves.not.toThrow();
+      await expect(
+        dropdown.loadItems(itemsWithLongText)
+      ).resolves.not.toThrow();
     });
 
     it('should handle special characters in item text', async () => {
@@ -366,7 +372,9 @@ describe('PreviousItemsDropdown', () => {
         },
       ];
 
-      await expect(dropdown.loadItems(itemsWithSpecialChars)).resolves.not.toThrow();
+      await expect(
+        dropdown.loadItems(itemsWithSpecialChars)
+      ).resolves.not.toThrow();
     });
   });
 });

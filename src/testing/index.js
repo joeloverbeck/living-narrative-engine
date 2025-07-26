@@ -11,8 +11,8 @@ export * from './facades/index.js';
 // export * from './builders/index.js';
 
 // Export facade registration and creation functions
-export { 
-  registerTestingFacades, 
-  createMockFacades, 
-  createTestModules 
+export {
+  registerTestingFacades,
+  createMockFacades,
+  createTestModules,
 } from './facades/testingFacadeRegistrations.js';

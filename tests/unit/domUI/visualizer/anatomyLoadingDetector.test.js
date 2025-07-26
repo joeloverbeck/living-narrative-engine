@@ -131,13 +131,19 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
       it('should reject undefined callback', () => {
         expect(() => {
-          anatomyLoadingDetector.waitForEntityCreation('test:entity:123', undefined);
+          anatomyLoadingDetector.waitForEntityCreation(
+            'test:entity:123',
+            undefined
+          );
         }).toThrow('Callback must be a function');
       });
 
       it('should reject non-function callback', () => {
         expect(() => {
-          anatomyLoadingDetector.waitForEntityCreation('test:entity:123', 'not-a-function');
+          anatomyLoadingDetector.waitForEntityCreation(
+            'test:entity:123',
+            'not-a-function'
+          );
         }).toThrow('Callback must be a function');
       });
     });
@@ -284,7 +290,7 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
     it('should handle entity not found in private checkAnatomyReady method', async () => {
       const entityId = 'test:entity:123';
-      
+
       // Mock entity manager to return null (entity not found)
       testBed.mockEntityManager.getEntityInstance.mockResolvedValue(null);
 
@@ -435,12 +441,13 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
       const entityId = 'test:entity:123';
 
       // Mock waitForAnatomyReady to throw an error to reach the specific error handling path
-      const originalWaitForAnatomyReady = anatomyLoadingDetector.waitForAnatomyReady;
-      anatomyLoadingDetector.waitForAnatomyReady = jest.fn().mockRejectedValue(
-        new Error('Anatomy check failed')
-      );
+      const originalWaitForAnatomyReady =
+        anatomyLoadingDetector.waitForAnatomyReady;
+      anatomyLoadingDetector.waitForAnatomyReady = jest
+        .fn()
+        .mockRejectedValue(new Error('Anatomy check failed'));
 
-      // Entity doesn't exist initially  
+      // Entity doesn't exist initially
       testBed.mockEntityManager.getEntityInstance.mockRejectedValueOnce(
         new Error('Entity not found')
       );
@@ -627,19 +634,19 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
       const entityId = 'test:entity:123';
       const callback = jest.fn();
       const mockUnsubscribe = jest.fn();
-      
+
       // Mock the subscribe to return an unsubscribe function
       testBed.mockEventDispatcher.subscribe.mockReturnValue(mockUnsubscribe);
-      
+
       // Create a subscription
       anatomyLoadingDetector.waitForEntityCreation(entityId, callback);
-      
+
       // Verify subscription was created
       expect(testBed.mockEventDispatcher.subscribe).toHaveBeenCalled();
-      
+
       // Dispose the detector
       anatomyLoadingDetector.dispose();
-      
+
       // Verify unsubscribe was called
       expect(mockUnsubscribe).toHaveBeenCalled();
     });
@@ -647,7 +654,7 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
     it('should handle multiple disposal calls gracefully', () => {
       // First disposal should work normally
       anatomyLoadingDetector.dispose();
-      
+
       // Second disposal should be no-op (early return on line 250)
       expect(() => {
         anatomyLoadingDetector.dispose();
@@ -656,7 +663,7 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
     it('should throw error when waitForAnatomyReady called after disposal', async () => {
       anatomyLoadingDetector.dispose();
-      
+
       await expect(
         anatomyLoadingDetector.waitForAnatomyReady('test:entity:123')
       ).rejects.toThrow('AnatomyLoadingDetector has been disposed');
@@ -664,15 +671,18 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
     it('should throw error when waitForEntityCreation called after disposal', () => {
       anatomyLoadingDetector.dispose();
-      
+
       expect(() => {
-        anatomyLoadingDetector.waitForEntityCreation('test:entity:123', jest.fn());
+        anatomyLoadingDetector.waitForEntityCreation(
+          'test:entity:123',
+          jest.fn()
+        );
       }).toThrow('AnatomyLoadingDetector has been disposed');
     });
 
     it('should throw error when waitForEntityWithAnatomy called after disposal', async () => {
       anatomyLoadingDetector.dispose();
-      
+
       await expect(
         anatomyLoadingDetector.waitForEntityWithAnatomy('test:entity:123')
       ).rejects.toThrow('AnatomyLoadingDetector has been disposed');
@@ -681,20 +691,20 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
     it('should handle subscription cleanup errors during disposal', () => {
       const entityId = 'test:entity:123';
       const callback = jest.fn();
-      
+
       // Create subscription with failing unsubscribe
       const mockUnsubscribe = jest.fn().mockImplementation(() => {
         throw new Error('Unsubscribe failed');
       });
       testBed.mockEventDispatcher.subscribe.mockReturnValue(mockUnsubscribe);
-      
+
       anatomyLoadingDetector.waitForEntityCreation(entityId, callback);
-      
+
       // Disposal should handle the error gracefully
       expect(() => {
         anatomyLoadingDetector.dispose();
       }).not.toThrow();
-      
+
       // Verify the warning was logged
       expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
         'Error unsubscribing from event:',
@@ -706,20 +716,25 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
       const entityId = 'test:entity:123';
       const callback = jest.fn();
       const mockEventUnsubscribe = jest.fn();
-      
+
       // Mock the subscribe to return an unsubscribe function
-      testBed.mockEventDispatcher.subscribe.mockReturnValue(mockEventUnsubscribe);
-      
-      const unsubscribe = anatomyLoadingDetector.waitForEntityCreation(entityId, callback);
-      
+      testBed.mockEventDispatcher.subscribe.mockReturnValue(
+        mockEventUnsubscribe
+      );
+
+      const unsubscribe = anatomyLoadingDetector.waitForEntityCreation(
+        entityId,
+        callback
+      );
+
       // Verify unsubscribe is a function
       expect(typeof unsubscribe).toBe('function');
-      
+
       // Call the returned unsubscribe function
       expect(() => {
         unsubscribe();
       }).not.toThrow();
-      
+
       // Verify the event subscription was removed
       expect(mockEventUnsubscribe).toHaveBeenCalled();
     });

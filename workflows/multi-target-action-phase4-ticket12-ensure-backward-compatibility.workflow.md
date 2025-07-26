@@ -1,9 +1,13 @@
 # Ticket: Ensure Backward Compatibility
 
 ## Ticket ID: PHASE4-TICKET12
+
 ## Priority: Medium
+
 ## Estimated Time: 6-8 hours
+
 ## Dependencies: All Phase 1-3 tickets
+
 ## Blocks: PHASE5-TICKET16, PHASE5-TICKET17
 
 ## Overview
@@ -68,19 +72,19 @@ export class LegacyActionAdapter {
     // If using legacy scope property, convert to targets format
     if (legacyAction.scope) {
       this.#logger.debug(`Adapting legacy action: ${legacyAction.id}`);
-      
+
       return {
         ...legacyAction,
         targets: {
           primary: {
             scope: legacyAction.scope,
             placeholder: 'target',
-            description: 'Target entity'
-          }
+            description: 'Target entity',
+          },
         },
         // Preserve original scope for reference
         _legacyScope: legacyAction.scope,
-        _isLegacyAdapted: true
+        _isLegacyAdapted: true,
       };
     }
 
@@ -101,7 +105,7 @@ export class LegacyActionAdapter {
 
     // Extract primary target as legacy targetId
     const legacyPayload = { ...multiTargetPayload };
-    
+
     if (multiTargetPayload.targets?.primary) {
       legacyPayload.targetId = multiTargetPayload.targets.primary.id;
       legacyPayload.target = multiTargetPayload.targets.primary;
@@ -117,9 +121,9 @@ export class LegacyActionAdapter {
    */
   isLegacyAction(actionDef) {
     return Boolean(
-      actionDef.scope && 
-      !actionDef.targets &&
-      typeof actionDef.scope === 'string'
+      actionDef.scope &&
+        !actionDef.targets &&
+        typeof actionDef.scope === 'string'
     );
   }
 
@@ -130,12 +134,12 @@ export class LegacyActionAdapter {
    */
   migrateAction(legacyAction) {
     const adapted = this.adaptActionDefinition(legacyAction);
-    
+
     return {
       original: legacyAction,
       modernized: adapted,
       migrationNotes: this.#generateMigrationNotes(legacyAction, adapted),
-      isFullyCompatible: this.#checkFullCompatibility(adapted)
+      isFullyCompatible: this.#checkFullCompatibility(adapted),
     };
   }
 
@@ -147,7 +151,9 @@ export class LegacyActionAdapter {
     const notes = [];
 
     if (original.scope) {
-      notes.push(`Converted legacy 'scope' property to 'targets.primary.scope'`);
+      notes.push(
+        `Converted legacy 'scope' property to 'targets.primary.scope'`
+      );
     }
 
     if (!original.template?.includes('{target}')) {
@@ -155,7 +161,9 @@ export class LegacyActionAdapter {
     }
 
     if (original.prerequisites) {
-      notes.push(`Prerequisites may need review for multi-target compatibility`);
+      notes.push(
+        `Prerequisites may need review for multi-target compatibility`
+      );
     }
 
     return notes;
@@ -229,13 +237,15 @@ export class LegacyRuleAdapter {
   #isLegacyRule(rule) {
     // Check for legacy patterns in rule logic
     const ruleString = JSON.stringify(rule);
-    
+
     // Legacy rules typically access targetId directly
-    const hasLegacyTargetAccess = ruleString.includes('targetId') && 
-                                 !ruleString.includes('targets.');
+    const hasLegacyTargetAccess =
+      ruleString.includes('targetId') && !ruleString.includes('targets.');
 
     // Legacy rules might reference specific legacy event structure
-    const hasLegacyEventStructure = ruleString.includes('event.payload.targetId');
+    const hasLegacyEventStructure = ruleString.includes(
+      'event.payload.targetId'
+    );
 
     return hasLegacyTargetAccess || hasLegacyEventStructure;
   }
@@ -257,7 +267,7 @@ export class LegacyRuleAdapter {
       adapted.target = {
         id: adapted.targets.primary.id,
         displayName: adapted.targets.primary.displayName,
-        components: adapted.targets.primary.components
+        components: adapted.targets.primary.components,
       };
     }
 
@@ -280,7 +290,7 @@ export class LegacyRuleAdapter {
       // Adapt payload for legacy compatibility
       const adaptedEvent = {
         ...event,
-        payload: this.#adaptToLegacyFormat(event.payload)
+        payload: this.#adaptToLegacyFormat(event.payload),
       };
 
       return legacyHandler(adaptedEvent, context);
@@ -296,20 +306,20 @@ export class LegacyRuleAdapter {
   validateLegacyRuleCompatibility(rule, samplePayload) {
     try {
       const adapted = this.adaptPayloadForRule(samplePayload, rule);
-      
+
       // Check that all referenced properties exist
       const issues = this.#checkPropertyAccess(rule, adapted);
-      
+
       return {
         compatible: issues.length === 0,
         issues,
-        adaptedPayload: adapted
+        adaptedPayload: adapted,
       };
     } catch (error) {
       return {
         compatible: false,
         issues: [`Rule validation failed: ${error.message}`],
-        adaptedPayload: null
+        adaptedPayload: null,
       };
     }
   }
@@ -326,13 +336,21 @@ export class LegacyRuleAdapter {
     const legacyPatterns = [
       { pattern: /event\.payload\.targetId/g, property: 'targetId' },
       { pattern: /event\.payload\.target\./g, property: 'target' },
-      { pattern: /event\.payload\.targetDisplayName/g, property: 'targetDisplayName' },
-      { pattern: /event\.payload\.targetComponents/g, property: 'targetComponents' }
+      {
+        pattern: /event\.payload\.targetDisplayName/g,
+        property: 'targetDisplayName',
+      },
+      {
+        pattern: /event\.payload\.targetComponents/g,
+        property: 'targetComponents',
+      },
     ];
 
     for (const { pattern, property } of legacyPatterns) {
       if (pattern.test(ruleString) && !(property in payload)) {
-        issues.push(`Rule accesses '${property}' but it's not available in adapted payload`);
+        issues.push(
+          `Rule accesses '${property}' but it's not available in adapted payload`
+        );
       }
     }
 
@@ -360,7 +378,7 @@ describe('Legacy Action Compatibility', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     adapter = new LegacyActionAdapter({ logger: mockLogger });
@@ -373,7 +391,7 @@ describe('Legacy Action Compatibility', () => {
         name: 'Eat',
         description: 'Consume food',
         scope: 'actor.core:inventory.items[]',
-        template: 'eat {target}'
+        template: 'eat {target}',
       };
 
       const adapted = adapter.adaptActionDefinition(legacyAction);
@@ -388,11 +406,11 @@ describe('Legacy Action Compatibility', () => {
           primary: {
             scope: 'actor.core:inventory.items[]',
             placeholder: 'target',
-            description: 'Target entity'
-          }
+            description: 'Target entity',
+          },
         },
         _legacyScope: 'actor.core:inventory.items[]',
-        _isLegacyAdapted: true
+        _isLegacyAdapted: true,
       });
     });
 
@@ -402,9 +420,9 @@ describe('Legacy Action Compatibility', () => {
         name: 'Modern Action',
         targets: {
           primary: { scope: 'scope1', placeholder: 'item' },
-          secondary: { scope: 'scope2', placeholder: 'target' }
+          secondary: { scope: 'scope2', placeholder: 'target' },
         },
-        template: 'use {item} on {target}'
+        template: 'use {item} on {target}',
       };
 
       const adapted = adapter.adaptActionDefinition(modernAction);
@@ -416,7 +434,7 @@ describe('Legacy Action Compatibility', () => {
       const noTargetAction = {
         id: 'test:no_targets',
         name: 'No Targets',
-        template: 'rest'
+        template: 'rest',
       };
 
       const adapted = adapter.adaptActionDefinition(noTargetAction);
@@ -427,12 +445,12 @@ describe('Legacy Action Compatibility', () => {
     it('should identify legacy actions correctly', () => {
       const legacyAction = {
         id: 'test:legacy',
-        scope: 'actor.items[]'
+        scope: 'actor.items[]',
       };
 
       const modernAction = {
         id: 'test:modern',
-        targets: { primary: { scope: 'scope' } }
+        targets: { primary: { scope: 'scope' } },
       };
 
       expect(adapter.isLegacyAction(legacyAction)).toBe(true);
@@ -447,8 +465,8 @@ describe('Legacy Action Compatibility', () => {
         actorId: 'player',
         targetId: 'existing_target',
         targets: {
-          primary: { id: 'existing_target', displayName: 'Target' }
-        }
+          primary: { id: 'existing_target', displayName: 'Target' },
+        },
       };
 
       const adapted = adapter.adaptEventPayload(payload);
@@ -462,13 +480,13 @@ describe('Legacy Action Compatibility', () => {
         actionId: 'test:action',
         actorId: 'player',
         targets: {
-          primary: { 
-            id: 'primary_target', 
+          primary: {
+            id: 'primary_target',
             displayName: 'Primary Target',
-            components: { 'core:item': { name: 'Test Item' } }
+            components: { 'core:item': { name: 'Test Item' } },
           },
-          secondary: { id: 'secondary_target', displayName: 'Secondary' }
-        }
+          secondary: { id: 'secondary_target', displayName: 'Secondary' },
+        },
       };
 
       const adapted = adapter.adaptEventPayload(payload);
@@ -477,14 +495,14 @@ describe('Legacy Action Compatibility', () => {
       expect(adapted.target).toEqual({
         id: 'primary_target',
         displayName: 'Primary Target',
-        components: { 'core:item': { name: 'Test Item' } }
+        components: { 'core:item': { name: 'Test Item' } },
       });
     });
 
     it('should handle payload without targets', () => {
       const payload = {
         actionId: 'test:action',
-        actorId: 'player'
+        actorId: 'player',
       };
 
       const adapted = adapter.adaptEventPayload(payload);
@@ -504,15 +522,17 @@ describe('Legacy Action Compatibility', () => {
         prerequisites: [
           {
             logic: { '>': [{ var: 'actor.level' }, 5] },
-            failure_message: 'Level too low'
-          }
-        ]
+            failure_message: 'Level too low',
+          },
+        ],
       };
 
       const migration = adapter.migrateAction(legacyAction);
 
       expect(migration.original).toEqual(legacyAction);
-      expect(migration.modernized.targets.primary.scope).toBe('actor.inventory[]');
+      expect(migration.modernized.targets.primary.scope).toBe(
+        'actor.inventory[]'
+      );
       expect(migration.migrationNotes).toContain(
         `Converted legacy 'scope' property to 'targets.primary.scope'`
       );
@@ -526,7 +546,7 @@ describe('Legacy Action Compatibility', () => {
       const problematicAction = {
         id: 'test:problematic',
         scope: 'some.scope[]',
-        template: 'do something' // Missing {target} placeholder
+        template: 'do something', // Missing {target} placeholder
       };
 
       const migration = adapter.migrateAction(problematicAction);
@@ -555,7 +575,7 @@ describe('Legacy Rule Compatibility', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     adapter = new LegacyRuleAdapter({ logger: mockLogger });
@@ -569,9 +589,9 @@ describe('Legacy Rule Compatibility', () => {
         conditions: [
           {
             logic: {
-              '==': [{ var: 'event.payload.actionId' }, 'test:eat']
-            }
-          }
+              '==': [{ var: 'event.payload.actionId' }, 'test:eat'],
+            },
+          },
         ],
         operations: [
           {
@@ -579,18 +599,18 @@ describe('Legacy Rule Compatibility', () => {
             config: {
               entityId: { var: 'event.payload.targetId' }, // Legacy access
               componentId: 'core:health',
-              changes: { current: { '+': [{ var: 'current' }, 10] } }
-            }
-          }
-        ]
+              changes: { current: { '+': [{ var: 'current' }, 10] } },
+            },
+          },
+        ],
       };
 
       const samplePayload = {
         actionId: 'test:eat',
         actorId: 'player',
         targets: {
-          primary: { id: 'apple_001', displayName: 'Red Apple' }
-        }
+          primary: { id: 'apple_001', displayName: 'Red Apple' },
+        },
       };
 
       const adapted = adapter.adaptPayloadForRule(samplePayload, legacyRule);
@@ -609,10 +629,10 @@ describe('Legacy Rule Compatibility', () => {
             type: 'modifyComponent',
             config: {
               entityId: { var: 'event.payload.targets.primary.id' }, // Modern access
-              componentId: 'core:health'
-            }
-          }
-        ]
+              componentId: 'core:health',
+            },
+          },
+        ],
       };
 
       const samplePayload = {
@@ -620,8 +640,8 @@ describe('Legacy Rule Compatibility', () => {
         actorId: 'player',
         targets: {
           primary: { id: 'target_001' },
-          secondary: { id: 'target_002' }
-        }
+          secondary: { id: 'target_002' },
+        },
       };
 
       const adapted = adapter.adaptPayloadForRule(samplePayload, modernRule);
@@ -642,9 +662,9 @@ describe('Legacy Rule Compatibility', () => {
           actionId: 'test:action',
           actorId: 'player',
           targets: {
-            primary: { id: 'target_001', displayName: 'Target' }
-          }
-        }
+            primary: { id: 'target_001', displayName: 'Target' },
+          },
+        },
       };
 
       const context = { gameState: 'active' };
@@ -660,10 +680,10 @@ describe('Legacy Rule Compatibility', () => {
             targetId: 'target_001',
             target: {
               id: 'target_001',
-              displayName: 'Target'
+              displayName: 'Target',
             },
-            targetDisplayName: 'Target'
-          })
+            targetDisplayName: 'Target',
+          }),
         },
         context
       );
@@ -676,18 +696,18 @@ describe('Legacy Rule Compatibility', () => {
         conditions: [
           {
             logic: {
-              '==': [{ var: 'event.payload.targetId' }, 'expected_target']
-            }
-          }
-        ]
+              '==': [{ var: 'event.payload.targetId' }, 'expected_target'],
+            },
+          },
+        ],
       };
 
       const samplePayload = {
         actionId: 'test:action',
         actorId: 'player',
         targets: {
-          primary: { id: 'target_001', displayName: 'Target' }
-        }
+          primary: { id: 'target_001', displayName: 'Target' },
+        },
       };
 
       const validation = adapter.validateLegacyRuleCompatibility(
@@ -705,18 +725,18 @@ describe('Legacy Rule Compatibility', () => {
         operations: [
           {
             config: {
-              entityId: { var: 'event.payload.nonexistentProperty' }
-            }
-          }
-        ]
+              entityId: { var: 'event.payload.nonexistentProperty' },
+            },
+          },
+        ],
       };
 
       const samplePayload = {
         actionId: 'test:action',
         actorId: 'player',
         targets: {
-          primary: { id: 'target_001' }
-        }
+          primary: { id: 'target_001' },
+        },
       };
 
       const validation = adapter.validateLegacyRuleCompatibility(
@@ -740,28 +760,32 @@ describe('Legacy Rule Compatibility', () => {
             displayName: 'Magic Sword',
             components: {
               'core:item': { name: 'Magic Sword', damage: 10 },
-              'core:enchantment': { type: 'fire' }
-            }
-          }
-        }
+              'core:enchantment': { type: 'fire' },
+            },
+          },
+        },
       };
 
-      const fakeRule = { operations: [{ config: { entityId: { var: 'event.payload.targetId' } } }] };
+      const fakeRule = {
+        operations: [
+          { config: { entityId: { var: 'event.payload.targetId' } } },
+        ],
+      };
       const adapted = adapter.adaptPayloadForRule(payload, fakeRule);
 
       expect(adapted.targetId).toBe('item_001');
       expect(adapted.targetDisplayName).toBe('Magic Sword');
       expect(adapted.targetComponents).toEqual({
         'core:item': { name: 'Magic Sword', damage: 10 },
-        'core:enchantment': { type: 'fire' }
+        'core:enchantment': { type: 'fire' },
       });
       expect(adapted.target).toEqual({
         id: 'item_001',
         displayName: 'Magic Sword',
         components: {
           'core:item': { name: 'Magic Sword', damage: 10 },
-          'core:enchantment': { type: 'fire' }
-        }
+          'core:enchantment': { type: 'fire' },
+        },
       });
     });
   });
@@ -802,16 +826,16 @@ describe('Backward Compatibility Integration', () => {
         scope: 'actor.core:inventory.items[]',
         template: 'eat {target}',
         required_components: {
-          actor: ['core:inventory', 'core:health']
+          actor: ['core:inventory', 'core:health'],
         },
         prerequisites: [
           {
             logic: {
-              '>': [{ var: 'actor.components.core:health.current' }, 0]
+              '>': [{ var: 'actor.components.core:health.current' }, 0],
             },
-            failure_message: 'You are unconscious and cannot eat.'
-          }
-        ]
+            failure_message: 'You are unconscious and cannot eat.',
+          },
+        ],
       };
 
       // Create legacy rule that expects old payload format
@@ -822,9 +846,9 @@ describe('Backward Compatibility Integration', () => {
         conditions: [
           {
             logic: {
-              '==': [{ var: 'event.payload.actionId' }, 'core:eat']
-            }
-          }
+              '==': [{ var: 'event.payload.actionId' }, 'core:eat'],
+            },
+          },
         ],
         operations: [
           {
@@ -836,20 +860,22 @@ describe('Backward Compatibility Integration', () => {
                 current: {
                   '+': [
                     { var: 'current' },
-                    { var: 'event.payload.target.components.core:item.health_restore' }
-                  ]
-                }
-              }
-            }
+                    {
+                      var: 'event.payload.target.components.core:item.health_restore',
+                    },
+                  ],
+                },
+              },
+            },
           },
           {
             type: 'removeComponent',
             config: {
               entityId: { var: 'event.payload.targetId' }, // Legacy access
-              componentId: 'core:item'
-            }
-          }
-        ]
+              componentId: 'core:item',
+            },
+          },
+        ],
       };
 
       // Register legacy action and rule
@@ -861,23 +887,21 @@ describe('Backward Compatibility Integration', () => {
         'core:actor': { name: 'Player' },
         'core:health': { current: 80, max: 100 },
         'core:inventory': { items: ['apple_001'] },
-        'core:position': { locationId: 'forest' }
+        'core:position': { locationId: 'forest' },
       });
 
       const apple = testBed.createEntity('apple_001', {
-        'core:item': { 
-          name: 'Red Apple', 
+        'core:item': {
+          name: 'Red Apple',
           type: 'food',
-          health_restore: 15
-        }
+          health_restore: 15,
+        },
       });
 
       // Process legacy action
-      const result = await actionProcessor.process(
-        legacyEatAction,
-        player,
-        { location: null }
-      );
+      const result = await actionProcessor.process(legacyEatAction, player, {
+        location: null,
+      });
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(1);
@@ -904,8 +928,9 @@ describe('Backward Compatibility Integration', () => {
         id: 'trade:barter',
         name: 'Barter',
         description: 'Trade items with NPCs',
-        scope: 'location.core:actors[][{"and": [{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}, {"condition_ref": "trade:can_trade"}]}]',
-        template: 'trade with {target}'
+        scope:
+          'location.core:actors[][{"and": [{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}, {"condition_ref": "trade:can_trade"}]}]',
+        template: 'trade with {target}',
       };
 
       const legacyTradeRule = {
@@ -914,9 +939,9 @@ describe('Backward Compatibility Integration', () => {
         conditions: [
           {
             logic: {
-              '==': [{ var: 'event.payload.actionId' }, 'trade:barter']
-            }
-          }
+              '==': [{ var: 'event.payload.actionId' }, 'trade:barter'],
+            },
+          },
         ],
         operations: [
           {
@@ -925,40 +950,40 @@ describe('Backward Compatibility Integration', () => {
               eventName: 'trade:trade_initiated',
               payload: {
                 trader: { var: 'event.payload.actorId' },
-                merchant: { var: 'event.payload.targetId' } // Legacy targetId access
-              }
-            }
-          }
-        ]
+                merchant: { var: 'event.payload.targetId' }, // Legacy targetId access
+              },
+            },
+          },
+        ],
       };
 
       testBed.registerAction(legacyTradeAction);
       testBed.registerRule(legacyTradeRule);
       testBed.registerCondition('trade:can_trade', {
-        logic: { '==': [{ var: 'entity.components.trade:merchant.available' }, true] }
+        logic: {
+          '==': [{ var: 'entity.components.trade:merchant.available' }, true],
+        },
       });
 
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Trader' },
-        'core:position': { locationId: 'market' }
+        'core:position': { locationId: 'market' },
       });
 
       const merchant = testBed.createEntity('merchant_001', {
         'core:actor': { name: 'Shop Keeper' },
         'core:position': { locationId: 'market' },
-        'trade:merchant': { available: true }
+        'trade:merchant': { available: true },
       });
 
       const market = testBed.createEntity('market', {
         'core:location': { name: 'Town Market' },
-        'core:actors': { actors: ['player', 'merchant_001'] }
+        'core:actors': { actors: ['player', 'merchant_001'] },
       });
 
-      const result = await actionProcessor.process(
-        legacyTradeAction,
-        player,
-        { location: market }
-      );
+      const result = await actionProcessor.process(legacyTradeAction, player, {
+        location: market,
+      });
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(1);
@@ -983,7 +1008,7 @@ describe('Backward Compatibility Integration', () => {
         id: 'legacy:simple',
         name: 'Simple Legacy',
         scope: 'actor.core:inventory.items[]',
-        template: 'use {target}'
+        template: 'use {target}',
       };
 
       // Modern multi-target action
@@ -993,69 +1018,73 @@ describe('Backward Compatibility Integration', () => {
         targets: {
           primary: {
             scope: 'actor.core:inventory.tools[]',
-            placeholder: 'tool'
+            placeholder: 'tool',
           },
           secondary: {
             scope: 'location.core:containers[]',
-            placeholder: 'container'
-          }
+            placeholder: 'container',
+          },
         },
         template: 'use {tool} on {container}',
-        generateCombinations: true
+        generateCombinations: true,
       };
 
       testBed.registerAction(legacyAction);
       testBed.registerAction(modernAction);
 
       const player = testBed.createEntity('player', {
-        'core:inventory': { 
+        'core:inventory': {
           items: ['hammer_001', 'nail_002'],
-          tools: ['hammer_001']
+          tools: ['hammer_001'],
         },
-        'core:position': { locationId: 'workshop' }
+        'core:position': { locationId: 'workshop' },
       });
 
       testBed.createEntity('hammer_001', {
-        'core:item': { name: 'Hammer', type: 'tool' }
+        'core:item': { name: 'Hammer', type: 'tool' },
       });
 
       testBed.createEntity('nail_002', {
-        'core:item': { name: 'Nail', type: 'fastener' }
+        'core:item': { name: 'Nail', type: 'fastener' },
       });
 
       testBed.createEntity('chest_001', {
         'core:container': { locked: false },
-        'core:position': { locationId: 'workshop' }
+        'core:position': { locationId: 'workshop' },
       });
 
       const workshop = testBed.createEntity('workshop', {
         'core:location': { name: 'Workshop' },
-        'core:containers': { containers: ['chest_001'] }
+        'core:containers': { containers: ['chest_001'] },
       });
 
       // Test legacy action
-      const legacyResult = await actionProcessor.process(
-        legacyAction,
-        player,
-        { location: workshop }
-      );
+      const legacyResult = await actionProcessor.process(legacyAction, player, {
+        location: workshop,
+      });
 
       expect(legacyResult.success).toBe(true);
       expect(legacyResult.value.actions).toHaveLength(2); // hammer and nail
 
-      // Test modern action  
-      testBed.registerScope('actor.core:inventory.tools[]', 'actor.core:inventory.tools[]');
-      testBed.registerScope('location.core:containers[]', 'location.core:containers.containers[]');
-
-      const modernResult = await actionProcessor.process(
-        modernAction,
-        player,
-        { location: workshop }
+      // Test modern action
+      testBed.registerScope(
+        'actor.core:inventory.tools[]',
+        'actor.core:inventory.tools[]'
       );
+      testBed.registerScope(
+        'location.core:containers[]',
+        'location.core:containers.containers[]'
+      );
+
+      const modernResult = await actionProcessor.process(modernAction, player, {
+        location: workshop,
+      });
 
       expect(modernResult.success).toBe(true);
       expect(modernResult.value.actions).toHaveLength(1); // 1 tool × 1 container
-      expect(modernResult.value.actions[0].command).toBe('use Hammer on chest_001');
+      expect(modernResult.value.actions[0].command).toBe(
+        'use Hammer on chest_001'
+      );
     });
   });
 
@@ -1064,7 +1093,7 @@ describe('Backward Compatibility Integration', () => {
       const legacyAction = {
         id: 'performance:test',
         scope: 'actor.core:inventory.items[]',
-        template: 'process {target}'
+        template: 'process {target}',
       };
 
       testBed.registerAction(legacyAction);
@@ -1072,22 +1101,20 @@ describe('Backward Compatibility Integration', () => {
       // Create player with many items
       const itemIds = Array.from({ length: 100 }, (_, i) => `item_${i}`);
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: itemIds }
+        'core:inventory': { items: itemIds },
       });
 
-      itemIds.forEach(id => {
+      itemIds.forEach((id) => {
         testBed.createEntity(id, {
-          'core:item': { name: `Item ${id}` }
+          'core:item': { name: `Item ${id}` },
         });
       });
 
       // Measure legacy action processing time
       const start = performance.now();
-      const result = await actionProcessor.process(
-        legacyAction,
-        player,
-        { location: null }
-      );
+      const result = await actionProcessor.process(legacyAction, player, {
+        location: null,
+      });
       const end = performance.now();
 
       expect(result.success).toBe(true);
@@ -1101,18 +1128,16 @@ describe('Backward Compatibility Integration', () => {
       const legacyAction = {
         id: 'error:test',
         scope: 'nonexistent.property[]',
-        template: 'fail {target}'
+        template: 'fail {target}',
       };
 
       testBed.registerAction(legacyAction);
 
       const player = testBed.createEntity('player', {});
 
-      const result = await actionProcessor.process(
-        legacyAction,
-        player,
-        { location: null }
-      );
+      const result = await actionProcessor.process(legacyAction, player, {
+        location: null,
+      });
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(0);
@@ -1145,7 +1170,7 @@ export class CompatibilityValidator {
 
   constructor({ logger }) {
     validateDependency(logger, 'ILogger');
-    
+
     this.#logger = logger;
     this.#actionAdapter = new LegacyActionAdapter({ logger });
     this.#ruleAdapter = new LegacyRuleAdapter({ logger });
@@ -1164,15 +1189,15 @@ export class CompatibilityValidator {
         total: 0,
         legacy: 0,
         modern: 0,
-        issues: []
+        issues: [],
       },
       rules: {
         total: 0,
         legacy: 0,
         modern: 0,
-        issues: []
+        issues: [],
       },
-      recommendations: []
+      recommendations: [],
     };
 
     // Validate actions
@@ -1202,22 +1227,24 @@ export class CompatibilityValidator {
       legacy: 0,
       modern: 0,
       issues: [],
-      details: []
+      details: [],
     };
 
     for (const action of actions) {
       const isLegacy = this.#actionAdapter.isLegacyAction(action);
-      
+
       if (isLegacy) {
         actionReport.legacy++;
         const migration = this.#actionAdapter.migrateAction(action);
-        
+
         actionReport.details.push({
           id: action.id,
           type: 'legacy',
           compatible: migration.isFullyCompatible,
           migrationNotes: migration.migrationNotes,
-          issues: migration.isFullyCompatible ? [] : ['Template or structure issues']
+          issues: migration.isFullyCompatible
+            ? []
+            : ['Template or structure issues'],
         });
 
         if (!migration.isFullyCompatible) {
@@ -1225,7 +1252,7 @@ export class CompatibilityValidator {
             actionId: action.id,
             severity: 'warning',
             message: 'Action may need manual review',
-            details: migration.migrationNotes
+            details: migration.migrationNotes,
           });
         }
       } else {
@@ -1234,7 +1261,7 @@ export class CompatibilityValidator {
           id: action.id,
           type: 'modern',
           compatible: true,
-          issues: []
+          issues: [],
         });
       }
     }
@@ -1252,7 +1279,7 @@ export class CompatibilityValidator {
       legacy: 0,
       modern: 0,
       issues: [],
-      details: []
+      details: [],
     };
 
     // Create sample payloads for rule testing
@@ -1260,15 +1287,15 @@ export class CompatibilityValidator {
 
     for (const rule of rules) {
       const relevantPayload = this.#findRelevantPayload(rule, samplePayloads);
-      
+
       if (relevantPayload) {
         const validation = this.#ruleAdapter.validateLegacyRuleCompatibility(
           rule,
           relevantPayload
         );
 
-        const isLegacy = !validation.compatible || 
-                        JSON.stringify(rule).includes('targetId');
+        const isLegacy =
+          !validation.compatible || JSON.stringify(rule).includes('targetId');
 
         if (isLegacy) {
           ruleReport.legacy++;
@@ -1280,7 +1307,7 @@ export class CompatibilityValidator {
           id: rule.id,
           type: isLegacy ? 'legacy' : 'modern',
           compatible: validation.compatible,
-          issues: validation.issues
+          issues: validation.issues,
         });
 
         if (!validation.compatible) {
@@ -1288,7 +1315,7 @@ export class CompatibilityValidator {
             ruleId: rule.id,
             severity: 'error',
             message: 'Rule compatibility issues detected',
-            details: validation.issues
+            details: validation.issues,
           });
         }
       }
@@ -1310,7 +1337,7 @@ export class CompatibilityValidator {
         actionId: action.id,
         actorId: 'sample_actor',
         targetId: 'sample_target',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Modern format
@@ -1318,18 +1345,18 @@ export class CompatibilityValidator {
         actionId: action.id,
         actorId: 'sample_actor',
         targets: {
-          primary: { 
-            id: 'sample_primary', 
+          primary: {
+            id: 'sample_primary',
             displayName: 'Sample Primary',
-            components: {}
+            components: {},
           },
-          secondary: { 
-            id: 'sample_secondary', 
+          secondary: {
+            id: 'sample_secondary',
             displayName: 'Sample Secondary',
-            components: {}
-          }
+            components: {},
+          },
         },
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
 
@@ -1343,7 +1370,7 @@ export class CompatibilityValidator {
   #findRelevantPayload(rule, payloads) {
     // Try to match by action ID in rule conditions
     const ruleString = JSON.stringify(rule);
-    
+
     for (const payload of payloads) {
       if (ruleString.includes(payload.actionId)) {
         return payload;
@@ -1359,11 +1386,13 @@ export class CompatibilityValidator {
    * @private
    */
   #assessOverallCompatibility(report) {
-    const hasErrors = report.actions.issues.some(i => i.severity === 'error') ||
-                     report.rules.issues.some(i => i.severity === 'error');
+    const hasErrors =
+      report.actions.issues.some((i) => i.severity === 'error') ||
+      report.rules.issues.some((i) => i.severity === 'error');
 
-    const hasWarnings = report.actions.issues.some(i => i.severity === 'warning') ||
-                       report.rules.issues.some(i => i.severity === 'warning');
+    const hasWarnings =
+      report.actions.issues.some((i) => i.severity === 'warning') ||
+      report.rules.issues.some((i) => i.severity === 'warning');
 
     if (hasErrors) return 'incompatible';
     if (hasWarnings) return 'compatible_with_warnings';
@@ -1382,7 +1411,8 @@ export class CompatibilityValidator {
         type: 'migration',
         priority: 'medium',
         message: `Consider migrating ${report.actions.legacy} legacy actions to modern format`,
-        details: 'Modern format provides better multi-target support and clearer structure'
+        details:
+          'Modern format provides better multi-target support and clearer structure',
       });
     }
 
@@ -1391,7 +1421,8 @@ export class CompatibilityValidator {
         type: 'rule_update',
         priority: 'low',
         message: `${report.rules.legacy} rules use legacy patterns`,
-        details: 'Legacy rules will continue working but consider updating for consistency'
+        details:
+          'Legacy rules will continue working but consider updating for consistency',
       });
     }
 
@@ -1400,7 +1431,7 @@ export class CompatibilityValidator {
         type: 'urgent_fix',
         priority: 'high',
         message: 'Critical compatibility issues detected',
-        details: 'Review and fix compatibility errors before deployment'
+        details: 'Review and fix compatibility errors before deployment',
       });
     }
 
@@ -1414,7 +1445,7 @@ export class CompatibilityValidator {
    */
   formatReport(report) {
     const lines = [];
-    
+
     lines.push(`# Compatibility Report: ${report.modId}`);
     lines.push(`Overall Status: ${report.overall.toUpperCase()}`);
     lines.push('');
@@ -1471,8 +1502,8 @@ class CompatibilityChecker {
         debug: () => {},
         info: console.log,
         warn: console.warn,
-        error: console.error
-      }
+        error: console.error,
+      },
     });
   }
 
@@ -1480,9 +1511,9 @@ class CompatibilityChecker {
     try {
       const mod = await this.loadMod(modPath);
       const report = this.validator.validateMod(mod);
-      
+
       console.log(this.validator.formatReport(report));
-      
+
       // Return exit code based on compatibility
       if (report.overall === 'incompatible') {
         process.exit(1);
@@ -1506,16 +1537,16 @@ class CompatibilityChecker {
       for (const modDir of modDirs) {
         const modPath = path.join(modsDir, modDir);
         const stat = await fs.stat(modPath);
-        
+
         if (stat.isDirectory()) {
           console.log(`\n=== Checking ${modDir} ===`);
-          
+
           try {
             const mod = await this.loadMod(modPath);
             const report = this.validator.validateMod(mod);
-            
+
             console.log(this.validator.formatReport(report));
-            
+
             if (report.overall === 'incompatible') {
               overallCompatible = false;
             } else if (report.overall === 'compatible_with_warnings') {
@@ -1555,14 +1586,14 @@ class CompatibilityChecker {
       name: manifest.name,
       version: manifest.version,
       actions: [],
-      rules: []
+      rules: [],
     };
 
     // Load actions
     try {
       const actionsDir = path.join(modPath, 'actions');
       const actionFiles = await fs.readdir(actionsDir);
-      
+
       for (const file of actionFiles) {
         if (file.endsWith('.action.json')) {
           const actionPath = path.join(actionsDir, file);
@@ -1578,7 +1609,7 @@ class CompatibilityChecker {
     try {
       const rulesDir = path.join(modPath, 'rules');
       const ruleFiles = await fs.readdir(rulesDir);
-      
+
       for (const file of ruleFiles) {
         if (file.endsWith('.rule.json')) {
           const rulePath = path.join(rulesDir, file);
@@ -1604,8 +1635,12 @@ if (args.length === 0) {
   checker.checkMod(args[1]);
 } else {
   console.log('Usage:');
-  console.log('  node scripts/checkCompatibility.js                # Check all mods');
-  console.log('  node scripts/checkCompatibility.js --mod <path>   # Check specific mod');
+  console.log(
+    '  node scripts/checkCompatibility.js                # Check all mods'
+  );
+  console.log(
+    '  node scripts/checkCompatibility.js --mod <path>   # Check specific mod'
+  );
   process.exit(1);
 }
 ```
@@ -1613,18 +1648,21 @@ if (args.length === 0) {
 ## Testing Strategy
 
 ### Unit Tests
+
 1. **Adapter Logic**: Conversion between legacy and modern formats
 2. **Rule Compatibility**: Legacy rule handler wrapping and adaptation
 3. **Migration Tools**: Action migration and validation
 4. **Error Handling**: Graceful handling of incompatible patterns
 
 ### Integration Tests
+
 1. **Full Pipeline**: End-to-end processing of legacy actions
 2. **Mixed Scenarios**: Legacy and modern actions in same environment
 3. **Performance**: No regression for legacy action processing
 4. **Rule Execution**: Legacy rules work with adapted payloads
 
 ### Compatibility Tests
+
 1. **Real Legacy Actions**: Test with actual existing action definitions
 2. **Legacy Rule Patterns**: Common rule patterns from existing codebase
 3. **Complex Scenarios**: Multi-step interactions using legacy components
@@ -1646,16 +1684,19 @@ if (args.length === 0) {
 ## Migration Strategy
 
 ### Phase 1: Full Compatibility (Current)
+
 - All legacy formats work unchanged
 - Automatic adaptation at runtime
 - No breaking changes introduced
 
 ### Phase 2: Gradual Migration (Future)
+
 - Tools to assist migration to modern format
 - Warnings for deprecated patterns
 - Clear migration path documented
 
 ### Phase 3: Long-term Support (Future)
+
 - Legacy support maintained indefinitely
 - Optional modern-only mode for new projects
 - Performance optimizations for modern format

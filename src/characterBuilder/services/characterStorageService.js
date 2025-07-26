@@ -246,7 +246,7 @@ export class CharacterStorageService {
         for (const direction of directions) {
           const isValid = this.#schemaValidator.validateAgainstSchema(
             direction,
-            'thematic-direction'
+            'schema://living-narrative-engine/thematic-direction.schema.json'
           );
           if (!isValid) {
             const errorMsg = this.#schemaValidator.formatAjvErrors();
@@ -482,7 +482,7 @@ export class CharacterStorageService {
       // Validate updated direction
       const isValid = this.#schemaValidator.validateAgainstSchema(
         updatedDirection,
-        'thematic-direction'
+        'schema://living-narrative-engine/thematic-direction.schema.json'
       );
       if (!isValid) {
         const errorMsg = this.#schemaValidator.formatAjvErrors();
@@ -550,10 +550,9 @@ export class CharacterStorageService {
 
     try {
       const orphanedDirections = await this.#database.findOrphanedDirections();
-      this.#logger.info(
-        `CharacterStorageService: Found orphaned directions`,
-        { orphanedCount: orphanedDirections.length }
-      );
+      this.#logger.info(`CharacterStorageService: Found orphaned directions`, {
+        orphanedCount: orphanedDirections.length,
+      });
       return orphanedDirections;
     } catch (error) {
       const message = `Failed to find orphaned directions: ${error.message}`;

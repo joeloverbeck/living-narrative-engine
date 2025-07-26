@@ -5,7 +5,10 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
-import { parseDslExpression, ScopeSyntaxError } from '../../../src/scopeDsl/parser/parser.js';
+import {
+  parseDslExpression,
+  ScopeSyntaxError,
+} from '../../../src/scopeDsl/parser/parser.js';
 import ScopeDepthError from '../../../src/errors/scopeDepthError.js';
 import ScopeCycleError from '../../../src/errors/scopeCycleError.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
@@ -19,9 +22,11 @@ describe('Error Message Validation', () => {
       } catch (error) {
         thrownError = error;
       }
-      
+
       expect(thrownError).toBeInstanceOf(ScopeSyntaxError);
-      expect(thrownError.message).toContain('Unexpected tokens after expression');
+      expect(thrownError.message).toContain(
+        'Unexpected tokens after expression'
+      );
       expect(thrownError.line).toBe(1);
       expect(thrownError.column).toBeGreaterThan(0);
       expect(thrownError.snippet).toContain('location(player)');
@@ -31,14 +36,14 @@ describe('Error Message Validation', () => {
       const multilineExpression = `actor
 .followers
 .`;
-      
+
       let thrownError;
       try {
         parseDslExpression(multilineExpression);
       } catch (error) {
         thrownError = error;
       }
-      
+
       expect(thrownError).toBeInstanceOf(ScopeSyntaxError);
       expect(thrownError.line).toBe(3);
       expect(thrownError.column).toBe(2);
@@ -52,7 +57,7 @@ describe('Error Message Validation', () => {
       } catch (error) {
         thrownError = error;
       }
-      
+
       expect(thrownError).toBeInstanceOf(ScopeSyntaxError);
       expect(thrownError.snippet).toContain('actor.followers.');
       expect(thrownError.snippet).toContain('^'); // Error pointer
@@ -65,7 +70,7 @@ describe('Error Message Validation', () => {
       } catch (error) {
         thrownError = error;
       }
-      
+
       expect(thrownError).toBeInstanceOf(ScopeSyntaxError);
       expect(thrownError.message).toContain('Expected component name');
     });
@@ -77,7 +82,7 @@ describe('Error Message Validation', () => {
       } catch (error) {
         thrownError = error;
       }
-      
+
       expect(thrownError).toBeInstanceOf(ScopeSyntaxError);
       expect(thrownError.message).toContain('Unexpected character');
     });
@@ -89,7 +94,7 @@ describe('Error Message Validation', () => {
       } catch (error) {
         thrownError = error;
       }
-      
+
       expect(thrownError).toBeInstanceOf(ScopeSyntaxError);
       expect(thrownError.message).toContain('Expected source node');
     });
@@ -105,7 +110,12 @@ describe('Error Message Validation', () => {
     it('should throw ScopeDepthError with specific depth limit message', () => {
       // Create AST manually that exceeds depth limit (7 steps)
       const source = { type: 'Source', kind: 'actor' };
-      const step1 = { type: 'Step', field: 'a', isArray: false, parent: source };
+      const step1 = {
+        type: 'Step',
+        field: 'a',
+        isArray: false,
+        parent: source,
+      };
       const step2 = { type: 'Step', field: 'b', isArray: false, parent: step1 };
       const step3 = { type: 'Step', field: 'c', isArray: false, parent: step2 };
       const step4 = { type: 'Step', field: 'd', isArray: false, parent: step3 };
@@ -128,9 +138,11 @@ describe('Error Message Validation', () => {
       } catch (error) {
         thrownError = error;
       }
-      
+
       expect(thrownError).toBeInstanceOf(ScopeDepthError);
-      expect(thrownError.message).toContain('Expression depth limit exceeded (max 6)');
+      expect(thrownError.message).toContain(
+        'Expression depth limit exceeded (max 6)'
+      );
     });
   });
 
@@ -160,7 +172,7 @@ describe('Error Message Validation', () => {
       } catch (error) {
         thrownError = error;
       }
-      
+
       expect(thrownError).toBeInstanceOf(ScopeCycleError);
       expect(thrownError.message).toContain('Cycle');
     });
@@ -186,7 +198,7 @@ describe('Error Message Validation', () => {
       } catch (error) {
         thrownError = error;
       }
-      
+
       expect(thrownError).toBeInstanceOf(ScopeCycleError);
       expect(thrownError.message).toContain('Cycle');
     });
@@ -266,23 +278,23 @@ describe('Error Message Validation', () => {
   describe('Documentation Coverage Validation', () => {
     it('should validate all documented error examples work as described', () => {
       // Test examples from documentation section 12 (Error Handling)
-      
+
       // 1. Invalid Syntax with detailed line/column info
       expect(() => parseDslExpression('invalid')).toThrow(ScopeSyntaxError);
-      
+
       // 2. Missing components gracefully handled (tested above)
-      
+
       // 3. Depth limit exceeded (tested above)
-      
+
       // 4. Cycle detection (tested above)
-      
+
       // All documented error behaviors are now validated by tests
     });
 
     it('should validate performance error behavior matches documentation', () => {
       // Test that large operations complete within documented timeframes
       const start = Date.now();
-      
+
       // Simple scope should complete quickly (< 1ms target from docs)
       const ast = parseDslExpression('actor');
       const actorEntity = { id: 'test-actor' };
@@ -293,12 +305,12 @@ describe('Error Message Validation', () => {
         },
         logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
       };
-      
+
       const engine = new ScopeEngine();
       const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-      
+
       const duration = Date.now() - start;
-      
+
       // Should complete very quickly for simple scopes
       expect(duration).toBeLessThan(10); // Give some leeway for test environment
       expect(result).toEqual(new Set(['test-actor']));

@@ -452,7 +452,9 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(0);
       expect(result.value.errors).toHaveLength(1);
-      expect(result.value.errors[0].timestamp).toBe(actionErrorContext.timestamp);
+      expect(result.value.errors[0].timestamp).toBe(
+        actionErrorContext.timestamp
+      );
       expect(result.value.errors[0].phase).toBe(actionErrorContext.phase);
       expect(result.value.cause).toBe('resolution-error');
     });
@@ -512,7 +514,9 @@ describe('ActionCandidateProcessor Integration Tests', () => {
         locationId: 'test-location-1',
       };
 
-      const thrownError = new Error('Target resolution service threw exception');
+      const thrownError = new Error(
+        'Target resolution service threw exception'
+      );
 
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
@@ -777,7 +781,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
         actorId: actor.id,
         locationId: 'test-location-1',
       };
-      
+
       // Create trace context with withSpan method
       const trace = {
         withSpan: jest.fn((name, fn, metadata) => {
@@ -1086,7 +1090,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
         actorId: actor.id,
       };
 
-      // Mock prerequisite service to throw ActionErrorContext 
+      // Mock prerequisite service to throw ActionErrorContext
       jest
         .spyOn(prerequisiteEvaluationService, 'evaluate')
         .mockImplementation(() => {

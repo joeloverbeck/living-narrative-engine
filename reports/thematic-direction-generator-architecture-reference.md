@@ -9,6 +9,7 @@
 The Thematic Direction Generator demonstrates a sophisticated, modular architecture that combines modern web development patterns with game-specific requirements. This analysis identifies key reusable components, patterns, and architectural decisions that can be leveraged across the character-builder series of pages.
 
 ### Key Architectural Strengths
+
 - **Modular CSS Architecture**: Clean separation with reusable component classes
 - **Dependency Injection Pattern**: Robust service organization with clear interfaces
 - **State-Driven UI**: Predictable state management for complex interactions
@@ -16,6 +17,7 @@ The Thematic Direction Generator demonstrates a sophisticated, modular architect
 - **Persistent Storage Integration**: Seamless concept loading and saving
 
 ### Reusability Score: 95%
+
 Most components and patterns can be directly reused or easily adapted for new character-builder pages.
 
 ---
@@ -27,39 +29,39 @@ Most components and patterns can be directly reused or easily adapted for new ch
 ```html
 <!doctype html>
 <html lang="en">
-<head>
-  <!-- Standard meta tags and favicon setup -->
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/[page-specific].css" />
-</head>
-<body>
-  <div id="[page-container]">
-    <header class="[page]-header">
-      <!-- Gradient header with title and subtitle -->
-    </header>
-    
-    <main class="[page]-main">
-      <!-- Left panel: Input controls -->
-      <section class="input-panel">
-        <!-- Previous items dropdown -->
-        <!-- Form with validation -->
-        <!-- Action buttons -->
-      </section>
-      
-      <!-- Right panel: Results display -->
-      <section class="results-panel">
-        <!-- State-based content display -->
-      </section>
-    </main>
-    
-    <footer class="[page]-footer">
-      <!-- Navigation and info -->
-    </footer>
-  </div>
-  
-  <!-- Modals -->
-  <!-- Scripts -->
-</body>
+  <head>
+    <!-- Standard meta tags and favicon setup -->
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/[page-specific].css" />
+  </head>
+  <body>
+    <div id="[page-container]">
+      <header class="[page]-header">
+        <!-- Gradient header with title and subtitle -->
+      </header>
+
+      <main class="[page]-main">
+        <!-- Left panel: Input controls -->
+        <section class="input-panel">
+          <!-- Previous items dropdown -->
+          <!-- Form with validation -->
+          <!-- Action buttons -->
+        </section>
+
+        <!-- Right panel: Results display -->
+        <section class="results-panel">
+          <!-- State-based content display -->
+        </section>
+      </main>
+
+      <footer class="[page]-footer">
+        <!-- Navigation and info -->
+      </footer>
+    </div>
+
+    <!-- Modals -->
+    <!-- Scripts -->
+  </body>
 </html>
 ```
 
@@ -109,6 +111,7 @@ The generator implements a four-state UI system that can be reused:
 ### Accessibility Implementation
 
 Key accessibility patterns implemented:
+
 - **ARIA Labels**: `aria-labelledby`, `aria-describedby`
 - **Live Regions**: `aria-live="polite"` for error messages
 - **Form Validation**: `aria-invalid` attribute management
@@ -147,21 +150,26 @@ Key accessibility patterns implemented:
   --accent-primary: #2a7bd6;
   --border-primary: #dfe4ea;
   --status-error: #e74c3c;
-  
+
   /* Narrative Theme Colors */
   --narrative-purple: #6c5ce7;
   --narrative-purple-light: #a29bfe;
   --narrative-gold: #f39c12;
   --narrative-gold-light: #f1c40f;
-  --creative-gradient: linear-gradient(135deg, var(--narrative-purple) 0%, var(--narrative-gold) 100%);
-  
+  --creative-gradient: linear-gradient(
+    135deg,
+    var(--narrative-purple) 0%,
+    var(--narrative-gold) 100%
+  );
+
   /* Typography */
   --font-narrative: 'Crimson Text', 'Merriweather', serif;
   --font-ui: 'Inter', 'Open Sans', sans-serif;
-  
+
   /* Shadows */
   --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 10px 20px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover:
+    0 10px 20px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
 }
 ```
 
@@ -299,7 +307,7 @@ Key accessibility patterns implemented:
   content: '';
   position: absolute;
   inset: 0;
-  background: url("data:image/svg+xml,%3Csvg..."); /* Decorative pattern */
+  background: url('data:image/svg+xml,%3Csvg...'); /* Decorative pattern */
   animation: float 20s ease-in-out infinite;
 }
 ```
@@ -308,17 +316,23 @@ Key accessibility patterns implemented:
 
 ```css
 /* Staggered entrance animations */
-.result-item:nth-child(1) { animation-delay: 0.1s; }
-.result-item:nth-child(2) { animation-delay: 0.2s; }
-.result-item:nth-child(3) { animation-delay: 0.3s; }
+.result-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.result-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.result-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
 
 @keyframes slideIn {
-  from { 
-    opacity: 0; 
+  from {
+    opacity: 0;
     transform: translateX(-20px);
   }
-  to { 
-    opacity: 1; 
+  to {
+    opacity: 1;
     transform: translateX(0);
   }
 }
@@ -335,7 +349,9 @@ Key accessibility patterns implemented:
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 ```
 
@@ -412,7 +428,7 @@ class [Page]Controller {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
     });
-    
+
     this.#logger = logger;
     this.#service = service;
     this.#eventBus = eventBus;
@@ -480,7 +496,7 @@ export class [Feature]Service {
 
   async create[Item](data, options = {}) {
     const { autoSave = true } = options;
-    
+
     // Input validation
     if (!data || typeof data !== 'string' || data.trim().length === 0) {
       throw new [Feature]Error('data must be a non-empty string');
@@ -494,7 +510,7 @@ export class [Feature]Service {
     while (attempt < maxRetries) {
       try {
         const item = create[Item](data);
-        
+
         let savedItem = item;
         if (autoSave) {
           savedItem = await this.#storageService.store[Item](item);
@@ -512,11 +528,11 @@ export class [Feature]Service {
         // Retry logic
         attempt++;
         lastError = error;
-        
+
         if (attempt >= maxRetries || error.name === 'ValidationError') {
           break;
         }
-        
+
         const backoffTime = Math.min(
           RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt - 1),
           RETRY_CONFIG.maxDelayMs
@@ -607,7 +623,7 @@ async #registerEventDefinitions(dataRegistry, schemaValidator) {
     itemCreatedEvent.payloadSchema,
     '[feature]:item_created#payload'
   );
-  
+
   dataRegistry.setEventDefinition('[feature]:item_created', itemCreatedEvent);
 }
 ```
@@ -633,16 +649,16 @@ class [Feature]Database {
   async initialize() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.#dbName, this.#version);
-      
+
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         this.#db = request.result;
         resolve();
       };
-      
+
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
-        
+
         if (!db.objectStoreNames.contains('[items]')) {
           const store = db.createObjectStore('[items]', { keyPath: 'id' });
           store.createIndex('createdAt', 'createdAt', { unique: false });
@@ -654,20 +670,20 @@ class [Feature]Database {
   async store[Item](item) {
     const transaction = this.#db.transaction(['[items]'], 'readwrite');
     const store = transaction.objectStore('[items]');
-    
+
     await new Promise((resolve, reject) => {
       const request = store.put(item);
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
-    
+
     return item;
   }
 
   async get[Item](id) {
     const transaction = this.#db.transaction(['[items]'], 'readonly');
     const store = transaction.objectStore('[items]');
-    
+
     return new Promise((resolve, reject) => {
       const request = store.get(id);
       request.onsuccess = () => resolve(request.result || null);
@@ -679,7 +695,7 @@ class [Feature]Database {
     const transaction = this.#db.transaction(['[items]'], 'readonly');
     const store = transaction.objectStore('[items]');
     const index = store.index('createdAt');
-    
+
     return new Promise((resolve, reject) => {
       const request = index.getAll();
       request.onsuccess = () => {
@@ -816,11 +832,13 @@ async #handleItemSelection(itemId) {
 ### 1. State Management System
 
 **Files to Copy:**
+
 - HTML state container structure
 - CSS state classes and animations
 - JavaScript state management methods
 
 **Usage:**
+
 ```javascript
 const UI_STATES = {
   EMPTY: 'empty',
@@ -835,7 +853,7 @@ const UI_STATES = {
     const element = this.#elements[`${s}State`];
     if (element) element.style.display = 'none';
   });
-  
+
   // Show requested state
   const targetElement = this.#elements[`${state}State`];
   if (targetElement) targetElement.style.display = 'block';
@@ -845,18 +863,20 @@ const UI_STATES = {
 ### 2. Form Validation System
 
 **Components:**
+
 - Input validation with character counting
 - Error message display
 - Submit button state management
 
 **Usage:**
+
 ```javascript
 #validateInput() {
   const value = this.#elements.textarea.value.trim();
   const isValid = value.length >= 10 && value.length <= 1000;
-  
+
   this.#elements.submitBtn.disabled = !isValid;
-  
+
   if (!isValid && value.length > 0) {
     if (value.length < 10) {
       this.#showFieldError('Please enter at least 10 characters.');
@@ -871,7 +891,7 @@ const UI_STATES = {
 #updateCharCount() {
   const length = this.#elements.textarea.value.length;
   this.#elements.charCount.textContent = `${length}/1000`;
-  
+
   // Visual indicators
   if (length > 900) {
     this.#elements.charCount.className = 'char-count error';
@@ -886,6 +906,7 @@ const UI_STATES = {
 ### 3. Previous Items Dropdown
 
 **Complete component for loading and selecting previous items:**
+
 - HTML dropdown structure
 - JavaScript loading and selection logic
 - Integration with storage services
@@ -893,6 +914,7 @@ const UI_STATES = {
 ### 4. Results Display System
 
 **Dynamic result rendering:**
+
 - Container structure for results
 - Staggered animation implementation
 - Card-based result display
@@ -900,6 +922,7 @@ const UI_STATES = {
 ### 5. Loading States and Spinners
 
 **Ready-to-use loading indicators:**
+
 - CSS spinner animations
 - Loading state messaging
 - Progress indication patterns
@@ -907,6 +930,7 @@ const UI_STATES = {
 ### 6. Error Handling UI
 
 **Comprehensive error display:**
+
 - Field-level error messages
 - Page-level error states
 - Retry mechanisms
@@ -918,6 +942,7 @@ const UI_STATES = {
 ### Setting Up a New Character-Builder Page
 
 #### 1. File Structure
+
 ```
 [page-name].html
 css/[page-name].css
@@ -930,84 +955,86 @@ src/[feature]/
 ```
 
 #### 2. HTML Template
+
 ```html
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>[Page Title] - Living Narrative Engine</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/[page-name].css" />
-  <!-- Favicon links -->
-</head>
-<body>
-  <div id="[page]-container">
-    <header class="[page]-header">
-      <div class="header-content">
-        <h1>[Page Title]</h1>
-        <p class="header-subtitle">[Page Description]</p>
-      </div>
-    </header>
-
-    <main class="[page]-main">
-      <section class="input-panel">
-        <h2>[Input Section Title]</h2>
-        
-        <div class="previous-items-group">
-          <label for="previous-items">Load Previous Item:</label>
-          <select id="previous-items" class="item-select">
-            <option value="">-- Select a saved item --</option>
-          </select>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>[Page Title] - Living Narrative Engine</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/[page-name].css" />
+    <!-- Favicon links -->
+  </head>
+  <body>
+    <div id="[page]-container">
+      <header class="[page]-header">
+        <div class="header-content">
+          <h1>[Page Title]</h1>
+          <p class="header-subtitle">[Page Description]</p>
         </div>
+      </header>
 
-        <form id="main-form" novalidate>
-          <div class="input-group">
-            <label for="main-input">[Input Label]</label>
-            <textarea id="main-input" required></textarea>
-            <div class="input-help">[Help text]</div>
-            <div class="input-meta">
-              <span class="char-count">0/1000</span>
-              <div class="error-message" role="alert"></div>
+      <main class="[page]-main">
+        <section class="input-panel">
+          <h2>[Input Section Title]</h2>
+
+          <div class="previous-items-group">
+            <label for="previous-items">Load Previous Item:</label>
+            <select id="previous-items" class="item-select">
+              <option value="">-- Select a saved item --</option>
+            </select>
+          </div>
+
+          <form id="main-form" novalidate>
+            <div class="input-group">
+              <label for="main-input">[Input Label]</label>
+              <textarea id="main-input" required></textarea>
+              <div class="input-help">[Help text]</div>
+              <div class="input-meta">
+                <span class="char-count">0/1000</span>
+                <div class="error-message" role="alert"></div>
+              </div>
             </div>
-          </div>
-          
-          <div class="action-buttons">
-            <button type="submit" class="primary-button large" disabled>
-              <span class="button-text">[Action Text]</span>
-              <span class="button-loading" style="display: none">
-                <span class="spinner"></span>
-                Processing...
-              </span>
-            </button>
-          </div>
-        </form>
-      </section>
 
-      <section class="results-panel">
-        <h2>[Results Title]</h2>
-        <div id="results-container">
-          <!-- State containers here -->
+            <div class="action-buttons">
+              <button type="submit" class="primary-button large" disabled>
+                <span class="button-text">[Action Text]</span>
+                <span class="button-loading" style="display: none">
+                  <span class="spinner"></span>
+                  Processing...
+                </span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="results-panel">
+          <h2>[Results Title]</h2>
+          <div id="results-container">
+            <!-- State containers here -->
+          </div>
+        </section>
+      </main>
+
+      <footer class="[page]-footer">
+        <div class="footer-content">
+          <button type="button" id="back-btn" class="secondary-button">
+            ← Back to Main Menu
+          </button>
+          <p class="footer-info">Living Narrative Engine - [Page Name]</p>
         </div>
-      </section>
-    </main>
+      </footer>
+    </div>
 
-    <footer class="[page]-footer">
-      <div class="footer-content">
-        <button type="button" id="back-btn" class="secondary-button">
-          ← Back to Main Menu
-        </button>
-        <p class="footer-info">Living Narrative Engine - [Page Name]</p>
-      </div>
-    </footer>
-  </div>
-
-  <script src="[page-name].js"></script>
-</body>
+    <script src="[page-name].js"></script>
+  </body>
 </html>
 ```
 
 #### 3. CSS Template
+
 ```css
 /* Import the narrative design system */
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
@@ -1066,6 +1093,7 @@ src/[feature]/
 ```
 
 #### 4. JavaScript Entry Point Template
+
 ```javascript
 import ConsoleLogger from './logging/consoleLogger.js';
 import AppContainer from './dependencyInjection/appContainer.js';
@@ -1178,6 +1206,7 @@ initializeWhenReady();
 When creating a new character-builder page, ensure these dependencies are available:
 
 #### Core Services
+
 - `AppContainer` - Dependency injection
 - `ConsoleLogger` - Logging
 - `SchemaLoader` - JSON schema validation
@@ -1185,11 +1214,13 @@ When creating a new character-builder page, ensure these dependencies are availa
 - `SafeEventDispatcher` - Event communication
 
 #### Storage Dependencies
+
 - IndexedDB support for persistence
 - Schema validation for data integrity
 - Event definitions for communication
 
 #### UI Dependencies
+
 - Base CSS system (`css/style.css`)
 - Component library classes
 - Font imports (Crimson Text, Inter)
@@ -1197,6 +1228,7 @@ When creating a new character-builder page, ensure these dependencies are availa
 ### Best Practices
 
 #### 1. Naming Conventions
+
 - Pages: `[feature-name]-generator.html`
 - Controllers: `[Feature]Controller`
 - Services: `[Feature]Service`
@@ -1204,24 +1236,28 @@ When creating a new character-builder page, ensure these dependencies are availa
 - CSS classes: `.[feature]-[component]`
 
 #### 2. Error Handling
+
 - Always implement circuit breaker patterns for LLM calls
 - Provide user-friendly error messages
 - Include retry mechanisms for transient failures
 - Log detailed error information for debugging
 
 #### 3. State Management
+
 - Use the four-state system (empty, loading, error, results)
 - Implement loading indicators for all async operations
 - Validate inputs before processing
 - Provide clear feedback for user actions
 
 #### 4. Accessibility
+
 - Include proper ARIA labels and roles
 - Implement keyboard navigation
 - Use semantic HTML elements
 - Provide alternative text for visual elements
 
 #### 5. Performance
+
 - Cache DOM element references
 - Use event delegation where appropriate
 - Implement lazy loading for large datasets
@@ -1230,22 +1266,27 @@ When creating a new character-builder page, ensure these dependencies are availa
 ### Common Pitfalls to Avoid
 
 #### 1. Dependency Management
+
 - **Don't**: Hardcode service dependencies
 - **Do**: Use dependency injection with proper validation
 
 #### 2. State Management
+
 - **Don't**: Manipulate DOM directly without state tracking
 - **Do**: Use the established state management patterns
 
 #### 3. Error Handling
+
 - **Don't**: Suppress errors or show generic messages
 - **Do**: Implement comprehensive error handling with user context
 
 #### 4. CSS Architecture
+
 - **Don't**: Create page-specific styles that duplicate existing patterns
 - **Do**: Extend the existing design system with reusable components
 
 #### 5. Event Communication
+
 - **Don't**: Use direct method calls between loosely coupled components
 - **Do**: Use the event bus for cross-component communication
 
@@ -1262,7 +1303,8 @@ The generator demonstrates how to integrate with the existing character concept 
 const concepts = await this.#characterBuilderService.getAllCharacterConcepts();
 
 // Concept selection and display
-const concept = await this.#characterBuilderService.getCharacterConcept(conceptId);
+const concept =
+  await this.#characterBuilderService.getCharacterConcept(conceptId);
 if (concept && concept.thematicDirections) {
   this.#showResults(concept.thematicDirections);
 }
@@ -1281,13 +1323,16 @@ const eventDefinition = {
     type: 'object',
     required: ['requiredField'],
     properties: {
-      requiredField: { type: 'string', description: 'Field description' }
-    }
-  }
+      requiredField: { type: 'string', description: 'Field description' },
+    },
+  },
 };
 
 // Registration pattern
-await schemaValidator.addSchema(eventDefinition.payloadSchema, `${eventDefinition.id}#payload`);
+await schemaValidator.addSchema(
+  eventDefinition.payloadSchema,
+  `${eventDefinition.id}#payload`
+);
 dataRegistry.setEventDefinition(eventDefinition.id, eventDefinition);
 ```
 
@@ -1319,18 +1364,21 @@ async #loadPageSpecificSchemas(schemaValidator) {
 The Thematic Direction Generator provides an excellent architectural foundation for the character-builder series. Its patterns demonstrate:
 
 ### Architectural Excellence
+
 - **Separation of Concerns**: Clear boundaries between presentation, logic, and data
 - **Scalability**: Modular design that can grow with requirements
 - **Maintainability**: Consistent patterns and comprehensive error handling
 - **Testability**: Dependency injection and event-driven architecture support testing
 
 ### Reusability Opportunities
+
 - **95% of CSS** can be directly reused across pages
 - **85% of JavaScript patterns** are adaptable to new features
 - **100% of storage patterns** are transferable to new entity types
 - **90% of UI patterns** work for similar input/output workflows
 
 ### Next Steps
+
 1. **Create a shared component library** extracting the reusable classes
 2. **Establish a page template** for rapid development of new character-builder pages
 3. **Implement consistent error handling** across all pages

@@ -40,24 +40,36 @@ describe('ThematicDirectionGenerator Integration Tests', () => {
     thematicDirections: [
       {
         title: 'The Fallen Noble',
-        description: 'Once a champion of the realm, now seeking redemption for past failures.',
-        coreTension: 'The conflict between past glory and present shame drives every action.',
-        uniqueTwist: "The knight's greatest victory was actually their most shameful defeat.",
-        narrativePotential: 'Redemption arc with opportunities for moral complexity and character growth.',
+        description:
+          'Once a champion of the realm, now seeking redemption for past failures.',
+        coreTension:
+          'The conflict between past glory and present shame drives every action.',
+        uniqueTwist:
+          "The knight's greatest victory was actually their most shameful defeat.",
+        narrativePotential:
+          'Redemption arc with opportunities for moral complexity and character growth.',
       },
       {
         title: 'The Secret Guardian',
-        description: 'Sworn to protect an ancient secret that could save or doom the kingdom.',
-        coreTension: 'The burden of knowledge versus the desire for a normal life.',
-        uniqueTwist: 'The secret they guard may actually be better left hidden.',
-        narrativePotential: 'Mystery and intrigue with potential for world-changing revelations.',
+        description:
+          'Sworn to protect an ancient secret that could save or doom the kingdom.',
+        coreTension:
+          'The burden of knowledge versus the desire for a normal life.',
+        uniqueTwist:
+          'The secret they guard may actually be better left hidden.',
+        narrativePotential:
+          'Mystery and intrigue with potential for world-changing revelations.',
       },
       {
         title: 'The Lost Knight',
-        description: 'A warrior searching for their forgotten past and true identity.',
-        coreTension: "The fear that remembering their past might destroy who they've become.",
-        uniqueTwist: 'Their amnesia was self-inflicted to escape unbearable guilt.',
-        narrativePotential: 'Identity crisis with opportunities for self-discovery and reinvention.',
+        description:
+          'A warrior searching for their forgotten past and true identity.',
+        coreTension:
+          "The fear that remembering their past might destroy who they've become.",
+        uniqueTwist:
+          'Their amnesia was self-inflicted to escape unbearable guilt.',
+        narrativePotential:
+          'Identity crisis with opportunities for self-discovery and reinvention.',
       },
     ],
   };
@@ -79,7 +91,9 @@ describe('ThematicDirectionGenerator Integration Tests', () => {
 
     // Create mock LLM strategy factory (ConfigurableLLMAdapter)
     mockLlmStrategyFactory = {
-      getAIDecision: jest.fn().mockResolvedValue(JSON.stringify(validLLMResponse)),
+      getAIDecision: jest
+        .fn()
+        .mockResolvedValue(JSON.stringify(validLLMResponse)),
     };
 
     // Create mock LLM config manager
@@ -321,7 +335,7 @@ describe('ThematicDirectionGenerator Integration Tests', () => {
 
     it('should use custom LLM config when provided', async () => {
       const customConfigId = 'custom-llm-config';
-      
+
       // Act
       await generator.generateDirections(
         validConceptId,
@@ -363,11 +377,9 @@ describe('ThematicDirectionGenerator Integration Tests', () => {
 
       // Act & Assert
       await expect(
-        generator.generateDirections(
-          validConceptId,
-          validCharacterConcept,
-          { llmConfigId: customConfigId }
-        )
+        generator.generateDirections(validConceptId, validCharacterConcept, {
+          llmConfigId: customConfigId,
+        })
       ).rejects.toThrow(`LLM configuration not found: ${customConfigId}`);
     });
   });
@@ -490,20 +502,29 @@ describe('ThematicDirectionGenerator Integration Tests', () => {
 
     it('should return correct schema with getResponseSchema method', () => {
       const schema = generator.getResponseSchema();
-      
+
       expect(schema).toBe(THEMATIC_DIRECTIONS_RESPONSE_SCHEMA);
       expect(schema).toHaveProperty('type', 'object');
       expect(schema).toHaveProperty('properties.thematicDirections');
-      expect(schema.properties.thematicDirections).toHaveProperty('type', 'array');
-      expect(schema.properties.thematicDirections).toHaveProperty('minItems', 3);
-      expect(schema.properties.thematicDirections).toHaveProperty('maxItems', 5);
+      expect(schema.properties.thematicDirections).toHaveProperty(
+        'type',
+        'array'
+      );
+      expect(schema.properties.thematicDirections).toHaveProperty(
+        'minItems',
+        3
+      );
+      expect(schema.properties.thematicDirections).toHaveProperty(
+        'maxItems',
+        5
+      );
     });
   });
 
   describe('Error Handling and Edge Cases', () => {
     it('should wrap non-ThematicDirectionGenerationError errors', async () => {
       const customError = new Error('Custom error');
-      
+
       mockLlmStrategyFactory.getAIDecision.mockRejectedValue(customError);
 
       await expect(
@@ -512,8 +533,9 @@ describe('ThematicDirectionGenerator Integration Tests', () => {
     });
 
     it('should handle very long character concepts', async () => {
-      const longConcept = 'A' + ' very'.repeat(1000) + ' long character concept';
-      
+      const longConcept =
+        'A' + ' very'.repeat(1000) + ' long character concept';
+
       const result = await generator.generateDirections(
         validConceptId,
         longConcept
@@ -552,7 +574,7 @@ describe('ThematicDirectionGenerator Integration Tests', () => {
 
       // All should resolve successfully
       const results = await Promise.all(promises);
-      
+
       expect(results).toHaveLength(3);
       results.forEach((result) => {
         expect(result).toHaveLength(3);
@@ -587,7 +609,7 @@ describe('ThematicDirectionGenerator Integration Tests', () => {
     it('should clean response before parsing', async () => {
       const dirtyResponse = '  \n\n{"thematicDirections": [...]}  \n\n';
       const cleanedResponse = '{"thematicDirections": [...]}';
-      
+
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue(dirtyResponse);
       mockLlmJsonService.clean.mockReturnValue(cleanedResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(validLLMResponse);

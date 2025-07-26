@@ -235,11 +235,14 @@ describe('ThematicDirectionController', () => {
         mockCharacterBuilderService.generateThematicDirections
       ).toHaveBeenCalledWith(mockConcept.id); // Fixed: pass id, not whole object
       expect(mockElements.resultsState.style.display).toBe('block');
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith('thematic:thematic_directions_generated', {
-        conceptId: '123',
-        directionCount: 2,
-        autoSaved: true,
-      });
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'thematic:thematic_directions_generated',
+        {
+          conceptId: '123',
+          directionCount: 2,
+          autoSaved: true,
+        }
+      );
     });
 
     it('should show error for invalid input', async () => {

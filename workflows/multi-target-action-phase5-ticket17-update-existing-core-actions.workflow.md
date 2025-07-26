@@ -1,9 +1,13 @@
 # Ticket: Update Existing Core Actions
 
 ## Ticket ID: PHASE5-TICKET17
+
 ## Priority: Low
+
 ## Estimated Time: 10-12 hours
+
 ## Dependencies: PHASE5-TICKET16
+
 ## Blocks: PHASE5-TICKET18
 
 ## Overview
@@ -32,7 +36,7 @@ Update a selected set of existing core actions to demonstrate the multi-target a
 
 Create file: `analysis/core-actions-migration-analysis.md`
 
-```markdown
+````markdown
 # Core Actions Migration Analysis
 
 Analysis of existing core actions for multi-target migration potential.
@@ -54,6 +58,7 @@ Analysis of existing core actions for multi-target migration potential.
 ### High Priority (Immediate Migration)
 
 #### 1. Give Item Action
+
 **Current**: Implicit item selection
 **Benefit**: Explicit item and recipient selection
 **Pattern**: Independent multi-target
@@ -72,7 +77,7 @@ Analysis of existing core actions for multi-target migration potential.
 
 // After
 {
-  "id": "core:give_item_v2", 
+  "id": "core:give_item_v2",
   "name": "give {item} to {person}",
   "targetDefinitions": {
     "item": {
@@ -80,14 +85,16 @@ Analysis of existing core actions for multi-target migration potential.
       "validation": { "tradeable": true }
     },
     "person": {
-      "scope": "location.core:actors[]", 
+      "scope": "location.core:actors[]",
       "validation": { "conscious": true }
     }
   }
 }
 ```
+````
 
 #### 2. Use Item Action
+
 **Current**: Generic item usage
 **Benefit**: Specific tool usage on targets
 **Pattern**: Tool + target selection
@@ -120,6 +127,7 @@ Analysis of existing core actions for multi-target migration potential.
 ```
 
 #### 3. Unlock Container Action
+
 **Current**: Manual key selection
 **Benefit**: Context-dependent key selection
 **Pattern**: Context-dependent targets
@@ -147,12 +155,14 @@ Analysis of existing core actions for multi-target migration potential.
 ### Medium Priority (Phase 2)
 
 #### 4. Attack Action
+
 **Current**: Simple target selection
 **Benefit**: Weapon + target selection
 **Pattern**: Equipment + target
 **Complexity**: Moderate
 
 #### 5. Trade Action
+
 **Current**: Basic trading
 **Benefit**: Item + person + trade item selection
 **Pattern**: Multi-item exchange
@@ -161,6 +171,7 @@ Analysis of existing core actions for multi-target migration potential.
 ### Low Priority (Future Enhancement)
 
 #### 6. Craft Action
+
 **Current**: Recipe selection
 **Benefit**: Recipe + tool + materials selection
 **Pattern**: Complex dependency chain
@@ -175,6 +186,7 @@ Analysis of existing core actions for multi-target migration potential.
 **Testing Priority**: High (frequently used)
 
 **Before**:
+
 ```json
 {
   "id": "core:give_item",
@@ -202,6 +214,7 @@ Analysis of existing core actions for multi-target migration potential.
 ```
 
 **After**:
+
 ```json
 {
   "id": "core:give_item_enhanced",
@@ -286,7 +299,7 @@ Analysis of existing core actions for multi-target migration potential.
       "description": "Add item to person's inventory",
       "operation": {
         "type": "modifyComponent",
-        "entityId": "person.id", 
+        "entityId": "person.id",
         "componentId": "core:inventory",
         "modifications": {
           "items": {
@@ -317,12 +330,14 @@ Analysis of existing core actions for multi-target migration potential.
 ```
 
 **Benefits**:
+
 - Explicit item selection prevents confusion
 - Better validation ensures only tradeable items
 - Enhanced event payload for rule system
 - Performance optimization with combination limits
 - Improved user experience with descriptive names
-```
+
+````
 
 ### Step 2: Implement Enhanced Give Item Action
 
@@ -492,7 +507,7 @@ Create file: `data/mods/core/actions/give_item_enhanced.action.json`
   "command": "give {item.components.core:item.name} to {person.components.core:actor.name}",
   "result": "You give {item.components.core:item.name} to {person.components.core:actor.name}. They seem {person.components.core:actor.mood || 'pleased'} with the gift."
 }
-```
+````
 
 ### Step 3: Implement Use Tool On Target Action
 
@@ -565,19 +580,31 @@ Create file: `data/mods/core/actions/use_tool_on_target.action.json`
         "or": [
           {
             "and": [
-              { "in": ["medical", { "var": "tool.components.core:item.categories" }] },
+              {
+                "in": [
+                  "medical",
+                  { "var": "tool.components.core:item.categories" }
+                ]
+              },
               { "!=": [{ "var": "target.components.core:health" }, null] }
             ]
           },
           {
             "and": [
-              { "in": ["repair", { "var": "tool.components.core:item.categories" }] },
+              {
+                "in": [
+                  "repair",
+                  { "var": "tool.components.core:item.categories" }
+                ]
+              },
               { "!=": [{ "var": "target.components.core:durability" }, null] }
             ]
           },
           {
             "and": [
-              { "in": ["key", { "var": "tool.components.core:item.categories" }] },
+              {
+                "in": ["key", { "var": "tool.components.core:item.categories" }]
+              },
               { "!=": [{ "var": "target.components.core:container" }, null] }
             ]
           }
@@ -685,7 +712,9 @@ Create file: `data/mods/core/actions/unlock_with_key.action.json`
                   "types": {
                     "type": "array",
                     "contains": {
-                      "const": { "var": "target.components.core:container.lock_type" }
+                      "const": {
+                        "var": "target.components.core:container.lock_type"
+                      }
                     }
                   },
                   "durability": { "type": "number", "minimum": 1 }
@@ -729,8 +758,22 @@ Create file: `data/mods/core/actions/unlock_with_key.action.json`
       "description": "Container must not be magically protected",
       "condition": {
         "or": [
-          { "==": [{ "var": "container.components.core:container.magical_protection" }, false] },
-          { "==": [{ "var": "container.components.core:container.magical_protection" }, null] }
+          {
+            "==": [
+              {
+                "var": "container.components.core:container.magical_protection"
+              },
+              false
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "container.components.core:container.magical_protection"
+              },
+              null
+            ]
+          }
         ]
       }
     }
@@ -811,40 +854,56 @@ describe('Enhanced Core Actions Integration', () => {
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Player', conscious: true, alive: true },
         'core:position': { locationId: 'room_001' },
-        'core:inventory': { items: ['potion_001'] }
+        'core:inventory': { items: ['potion_001'] },
       });
 
       const npc = testBed.createEntity('npc_001', {
-        'core:actor': { name: 'Friendly NPC', conscious: true, alive: true, faction: 'friendly' },
+        'core:actor': {
+          name: 'Friendly NPC',
+          conscious: true,
+          alive: true,
+          faction: 'friendly',
+        },
         'core:position': { locationId: 'room_001' },
         'core:inventory': { items: [] },
-        'social:relationships': { relationships: [] }
+        'social:relationships': { relationships: [] },
       });
 
       const potion = testBed.createEntity('potion_001', {
-        'core:item': { name: 'Health Potion', tradeable: true, value: 10, weight: 1 }
+        'core:item': {
+          name: 'Health Potion',
+          tradeable: true,
+          value: 10,
+          weight: 1,
+        },
       });
 
       const room = testBed.createEntity('room_001', {
         'core:location': { name: 'Test Room' },
-        'core:actors': ['player', 'npc_001']
+        'core:actors': ['player', 'npc_001'],
       });
 
       // Load enhanced give action
-      testBed.loadAction('data/mods/core/actions/give_item_enhanced.action.json');
+      testBed.loadAction(
+        'data/mods/core/actions/give_item_enhanced.action.json'
+      );
 
       const context = {
         actor: { id: 'player', components: player.getAllComponents() },
         location: { id: 'room_001', components: room.getAllComponents() },
-        game: { turnNumber: 1, timestamp: Date.now() }
+        game: { turnNumber: 1, timestamp: Date.now() },
       };
 
       // Process action
-      const result = await testBed.processAction('core:give_item_enhanced', 'player', context);
+      const result = await testBed.processAction(
+        'core:give_item_enhanced',
+        'player',
+        context
+      );
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(1);
-      
+
       const action = result.value.actions[0];
       expect(action.command).toContain('give Health Potion to Friendly NPC');
       expect(action.effects).toHaveLength(4); // Remove item, add item, update relationship, dispatch event
@@ -852,46 +911,61 @@ describe('Enhanced Core Actions Integration', () => {
       // Verify item transfer
       const updatedPlayer = testBed.getEntity('player');
       const updatedNpc = testBed.getEntity('npc_001');
-      
-      expect(updatedPlayer.getComponent('core:inventory').items).not.toContain('potion_001');
-      expect(updatedNpc.getComponent('core:inventory').items).toContain('potion_001');
+
+      expect(updatedPlayer.getComponent('core:inventory').items).not.toContain(
+        'potion_001'
+      );
+      expect(updatedNpc.getComponent('core:inventory').items).toContain(
+        'potion_001'
+      );
     });
 
     it('should only show tradeable items', async () => {
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Player', conscious: true, alive: true },
         'core:position': { locationId: 'room_001' },
-        'core:inventory': { items: ['tradeable_item', 'bound_item'] }
+        'core:inventory': { items: ['tradeable_item', 'bound_item'] },
       });
 
       const npc = testBed.createEntity('npc_001', {
-        'core:actor': { name: 'NPC', conscious: true, alive: true, faction: 'friendly' },
+        'core:actor': {
+          name: 'NPC',
+          conscious: true,
+          alive: true,
+          faction: 'friendly',
+        },
         'core:position': { locationId: 'room_001' },
-        'core:inventory': { items: [] }
+        'core:inventory': { items: [] },
       });
 
       const tradeableItem = testBed.createEntity('tradeable_item', {
-        'core:item': { name: 'Tradeable Item', tradeable: true }
+        'core:item': { name: 'Tradeable Item', tradeable: true },
       });
 
       const boundItem = testBed.createEntity('bound_item', {
-        'core:item': { name: 'Bound Item', tradeable: false }
+        'core:item': { name: 'Bound Item', tradeable: false },
       });
 
       const room = testBed.createEntity('room_001', {
         'core:location': { name: 'Test Room' },
-        'core:actors': ['player', 'npc_001']
+        'core:actors': ['player', 'npc_001'],
       });
 
-      testBed.loadAction('data/mods/core/actions/give_item_enhanced.action.json');
+      testBed.loadAction(
+        'data/mods/core/actions/give_item_enhanced.action.json'
+      );
 
       const context = {
         actor: { id: 'player', components: player.getAllComponents() },
         location: { id: 'room_001', components: room.getAllComponents() },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
-      const result = await testBed.processAction('core:give_item_enhanced', 'player', context);
+      const result = await testBed.processAction(
+        'core:give_item_enhanced',
+        'player',
+        context
+      );
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(1); // Only one action for tradeable item
@@ -904,42 +978,48 @@ describe('Enhanced Core Actions Integration', () => {
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Player', conscious: true, alive: true },
         'core:position': { locationId: 'room_001' },
-        'core:inventory': { items: ['bandage_001'] }
+        'core:inventory': { items: ['bandage_001'] },
       });
 
       const injuredNpc = testBed.createEntity('injured_npc', {
         'core:actor': { name: 'Injured NPC', conscious: true, alive: true },
         'core:position': { locationId: 'room_001' },
-        'core:health': { current: 25, maximum: 100 }
+        'core:health': { current: 25, maximum: 100 },
       });
 
       const bandage = testBed.createEntity('bandage_001', {
-        'core:item': { 
-          name: 'Medical Bandage', 
-          usable: true, 
+        'core:item': {
+          name: 'Medical Bandage',
+          usable: true,
           durability: 3,
-          categories: ['medical']
-        }
+          categories: ['medical'],
+        },
       });
 
       const room = testBed.createEntity('room_001', {
         'core:location': { name: 'Medical Room' },
-        'core:actors': ['player', 'injured_npc']
+        'core:actors': ['player', 'injured_npc'],
       });
 
-      testBed.loadAction('data/mods/core/actions/use_tool_on_target.action.json');
+      testBed.loadAction(
+        'data/mods/core/actions/use_tool_on_target.action.json'
+      );
 
       const context = {
         actor: { id: 'player', components: player.getAllComponents() },
         location: { id: 'room_001', components: room.getAllComponents() },
-        game: { turnNumber: 1, timestamp: Date.now() }
+        game: { turnNumber: 1, timestamp: Date.now() },
       };
 
-      const result = await testBed.processAction('core:use_tool_on_target', 'player', context);
+      const result = await testBed.processAction(
+        'core:use_tool_on_target',
+        'player',
+        context
+      );
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(1);
-      
+
       const action = result.value.actions[0];
       expect(action.command).toContain('use Medical Bandage on Injured NPC');
 
@@ -952,39 +1032,45 @@ describe('Enhanced Core Actions Integration', () => {
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Player', conscious: true, alive: true },
         'core:position': { locationId: 'room_001' },
-        'core:inventory': { items: ['sword_001'] }
+        'core:inventory': { items: ['sword_001'] },
       });
 
       const container = testBed.createEntity('container_001', {
         'core:object': { name: 'Wooden Chest' },
         'core:position': { locationId: 'room_001' },
-        'core:container': { locked: true }
+        'core:container': { locked: true },
       });
 
       const sword = testBed.createEntity('sword_001', {
-        'core:item': { 
-          name: 'Iron Sword', 
-          usable: true, 
+        'core:item': {
+          name: 'Iron Sword',
+          usable: true,
           durability: 50,
-          categories: ['weapon']
-        }
+          categories: ['weapon'],
+        },
       });
 
       const room = testBed.createEntity('room_001', {
         'core:location': { name: 'Storage Room' },
         'core:actors': ['player'],
-        'core:objects': ['container_001']
+        'core:objects': ['container_001'],
       });
 
-      testBed.loadAction('data/mods/core/actions/use_tool_on_target.action.json');
+      testBed.loadAction(
+        'data/mods/core/actions/use_tool_on_target.action.json'
+      );
 
       const context = {
         actor: { id: 'player', components: player.getAllComponents() },
         location: { id: 'room_001', components: room.getAllComponents() },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
-      const result = await testBed.processAction('core:use_tool_on_target', 'player', context);
+      const result = await testBed.processAction(
+        'core:use_tool_on_target',
+        'player',
+        context
+      );
 
       // Should not find valid combinations (sword not compatible with locked container)
       expect(result.success).toBe(true);
@@ -997,29 +1083,29 @@ describe('Enhanced Core Actions Integration', () => {
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Player', conscious: true, alive: true },
         'core:position': { locationId: 'room_001' },
-        'core:inventory': { items: ['brass_key'] }
+        'core:inventory': { items: ['brass_key'] },
       });
 
       const chest = testBed.createEntity('locked_chest', {
         'core:object': { name: 'Treasure Chest' },
         'core:position': { locationId: 'room_001' },
-        'core:container': { 
-          locked: true, 
+        'core:container': {
+          locked: true,
           lock_type: 'brass',
           magical_protection: false,
-          contents: []
-        }
+          contents: [],
+        },
       });
 
       const key = testBed.createEntity('brass_key', {
         'core:item': { name: 'Brass Key' },
-        'core:key': { types: ['brass'], durability: 10 }
+        'core:key': { types: ['brass'], durability: 10 },
       });
 
       const room = testBed.createEntity('room_001', {
         'core:location': { name: 'Treasure Room' },
         'core:actors': ['player'],
-        'core:objects': ['locked_chest']
+        'core:objects': ['locked_chest'],
       });
 
       testBed.loadAction('data/mods/core/actions/unlock_with_key.action.json');
@@ -1027,14 +1113,18 @@ describe('Enhanced Core Actions Integration', () => {
       const context = {
         actor: { id: 'player', components: player.getAllComponents() },
         location: { id: 'room_001', components: room.getAllComponents() },
-        game: { turnNumber: 1, timestamp: Date.now() }
+        game: { turnNumber: 1, timestamp: Date.now() },
       };
 
-      const result = await testBed.processAction('core:unlock_with_key', 'player', context);
+      const result = await testBed.processAction(
+        'core:unlock_with_key',
+        'player',
+        context
+      );
 
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(1);
-      
+
       const action = result.value.actions[0];
       expect(action.command).toContain('unlock Treasure Chest with Brass Key');
 
@@ -1051,28 +1141,28 @@ describe('Enhanced Core Actions Integration', () => {
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Player', conscious: true, alive: true },
         'core:position': { locationId: 'room_001' },
-        'core:inventory': { items: ['silver_key'] }
+        'core:inventory': { items: ['silver_key'] },
       });
 
       const chest = testBed.createEntity('locked_chest', {
         'core:object': { name: 'Treasure Chest' },
         'core:position': { locationId: 'room_001' },
-        'core:container': { 
-          locked: true, 
+        'core:container': {
+          locked: true,
           lock_type: 'brass', // Requires brass key
-          magical_protection: false
-        }
+          magical_protection: false,
+        },
       });
 
       const wrongKey = testBed.createEntity('silver_key', {
         'core:item': { name: 'Silver Key' },
-        'core:key': { types: ['silver'], durability: 10 } // Wrong type
+        'core:key': { types: ['silver'], durability: 10 }, // Wrong type
       });
 
       const room = testBed.createEntity('room_001', {
         'core:location': { name: 'Treasure Room' },
         'core:actors': ['player'],
-        'core:objects': ['locked_chest']
+        'core:objects': ['locked_chest'],
       });
 
       testBed.loadAction('data/mods/core/actions/unlock_with_key.action.json');
@@ -1080,10 +1170,14 @@ describe('Enhanced Core Actions Integration', () => {
       const context = {
         actor: { id: 'player', components: player.getAllComponents() },
         location: { id: 'room_001', components: room.getAllComponents() },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
-      const result = await testBed.processAction('core:unlock_with_key', 'player', context);
+      const result = await testBed.processAction(
+        'core:unlock_with_key',
+        'player',
+        context
+      );
 
       // Should not find valid combinations (wrong key type)
       expect(result.success).toBe(true);
@@ -1096,19 +1190,24 @@ describe('Enhanced Core Actions Integration', () => {
       // Create many items and actors for performance testing
       const items = [];
       const actors = [];
-      
+
       for (let i = 0; i < 20; i++) {
         const item = testBed.createEntity(`item_${i}`, {
-          'core:item': { name: `Item ${i}`, tradeable: true }
+          'core:item': { name: `Item ${i}`, tradeable: true },
         });
         items.push(item.id);
       }
 
       for (let i = 0; i < 10; i++) {
         const actor = testBed.createEntity(`actor_${i}`, {
-          'core:actor': { name: `Actor ${i}`, conscious: true, alive: true, faction: 'friendly' },
+          'core:actor': {
+            name: `Actor ${i}`,
+            conscious: true,
+            alive: true,
+            faction: 'friendly',
+          },
           'core:position': { locationId: 'room_001' },
-          'core:inventory': { items: [] }
+          'core:inventory': { items: [] },
         });
         actors.push(actor.id);
       }
@@ -1116,24 +1215,30 @@ describe('Enhanced Core Actions Integration', () => {
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Player', conscious: true, alive: true },
         'core:position': { locationId: 'room_001' },
-        'core:inventory': { items }
+        'core:inventory': { items },
       });
 
       const room = testBed.createEntity('room_001', {
         'core:location': { name: 'Crowded Room' },
-        'core:actors': ['player', ...actors]
+        'core:actors': ['player', ...actors],
       });
 
-      testBed.loadAction('data/mods/core/actions/give_item_enhanced.action.json');
+      testBed.loadAction(
+        'data/mods/core/actions/give_item_enhanced.action.json'
+      );
 
       const context = {
         actor: { id: 'player', components: player.getAllComponents() },
         location: { id: 'room_001', components: room.getAllComponents() },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const start = performance.now();
-      const result = await testBed.processAction('core:give_item_enhanced', 'player', context);
+      const result = await testBed.processAction(
+        'core:give_item_enhanced',
+        'player',
+        context
+      );
       const duration = performance.now() - start;
 
       expect(result.success).toBe(true);
@@ -1158,7 +1263,7 @@ Create file: `data/mods/core/mod-manifest.json` (updated)
   "dependencies": [],
   "actions": [
     "actions/talk_to_actor.action.json",
-    "actions/examine_object.action.json", 
+    "actions/examine_object.action.json",
     "actions/move_to_location.action.json",
     "actions/give_item.action.json",
     "actions/give_item_enhanced.action.json",
@@ -1190,9 +1295,7 @@ Create file: `data/mods/core/mod-manifest.json` (updated)
     "events/tool_used_on_target.event.json",
     "events/container_unlocked_with_key.event.json"
   ],
-  "entities": [
-    "entities/default_player.entity.json"
-  ],
+  "entities": ["entities/default_player.entity.json"],
   "changelog": {
     "2.1.0": [
       "Added enhanced multi-target actions",
@@ -1202,9 +1305,7 @@ Create file: `data/mods/core/mod-manifest.json` (updated)
       "Added use tool on target action",
       "Maintained backward compatibility with existing actions"
     ],
-    "2.0.0": [
-      "Initial core systems implementation"
-    ]
+    "2.0.0": ["Initial core systems implementation"]
   }
 }
 ```
@@ -1225,12 +1326,14 @@ Create file: `data/mods/core/mod-manifest.json` (updated)
 ## Documentation Requirements
 
 ### For Modders
+
 - Working examples of multi-target action patterns
 - Reference implementations showing best practices
 - Performance optimization techniques demonstrated
 - Context-dependent targeting examples
 
 ### For Developers
+
 - Integration test patterns for multi-target actions
 - Performance benchmarking methodologies
 - Event payload design for rule compatibility

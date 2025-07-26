@@ -1,9 +1,13 @@
 # Ticket: Create Context-Aware Scope Examples
 
 ## Ticket ID: PHASE3-TICKET9
+
 ## Priority: High
+
 ## Estimated Time: 4-5 hours
+
 ## Dependencies: PHASE3-TICKET8
+
 ## Blocks: PHASE3-TICKET10, PHASE4-TICKET13
 
 ## Overview
@@ -448,29 +452,33 @@ describe('Context-Aware Scope Examples', () => {
   beforeEach(() => {
     testBed = new IntegrationTestBed();
     scopeInterpreter = testBed.getService('scopeInterpreter');
-    
+
     // Load example scope definitions
     testBed.loadScopeFile('data/mods/examples/scopes/basic_context.scope');
     testBed.loadScopeFile('data/mods/examples/scopes/context_filtering.scope');
     testBed.loadScopeFile('data/mods/examples/scopes/nested_context.scope');
-    testBed.loadScopeFile('data/mods/examples/scopes/performance_patterns.scope');
-    testBed.loadScopeFile('data/mods/examples/scopes/error_safe_patterns.scope');
+    testBed.loadScopeFile(
+      'data/mods/examples/scopes/performance_patterns.scope'
+    );
+    testBed.loadScopeFile(
+      'data/mods/examples/scopes/error_safe_patterns.scope'
+    );
     testBed.loadScopeFile('data/mods/examples/scopes/real_world_usage.scope');
   });
 
   describe('Basic Context Access', () => {
     it('should access target inventory items', async () => {
       const player = testBed.createEntity('player', {});
-      
+
       const npc = testBed.createEntity('npc_001', {
-        'core:inventory': { items: ['sword_001', 'potion_002'] }
+        'core:inventory': { items: ['sword_001', 'potion_002'] },
       });
 
       const context = {
         actor: { id: 'player', components: {} },
         target: { id: 'npc_001', components: npc.getAllComponents() },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -486,21 +494,21 @@ describe('Context-Aware Scope Examples', () => {
         'clothing:equipment': {
           equipped: {
             torso_upper: { outer: 'jacket_001' },
-            legs: { base: 'pants_001' }
-          }
-        }
+            legs: { base: 'pants_001' },
+          },
+        },
       });
 
       testBed.createEntity('jacket_001', {
         'core:item': { name: 'Jacket' },
-        'clothing:garment': { slot: 'torso_upper', layer: 'outer' }
+        'clothing:garment': { slot: 'torso_upper', layer: 'outer' },
       });
 
       const context = {
         actor: { id: 'player', components: {} },
         target: { id: 'npc_001', components: npc.getAllComponents() },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -515,26 +523,26 @@ describe('Context-Aware Scope Examples', () => {
   describe('Context-Dependent Filtering', () => {
     it('should filter items actor can afford from target inventory', async () => {
       const player = testBed.createEntity('player', {
-        'core:inventory': { gold: 100 }
+        'core:inventory': { gold: 100 },
       });
 
       const merchant = testBed.createEntity('merchant_001', {
-        'core:inventory': { items: ['cheap_item', 'expensive_item'] }
+        'core:inventory': { items: ['cheap_item', 'expensive_item'] },
       });
 
       testBed.createEntity('cheap_item', {
-        'core:item': { name: 'Cheap Item', price: 50 }
+        'core:item': { name: 'Cheap Item', price: 50 },
       });
 
       testBed.createEntity('expensive_item', {
-        'core:item': { name: 'Expensive Item', price: 150 }
+        'core:item': { name: 'Expensive Item', price: 150 },
       });
 
       const context = {
         actor: { id: 'player', components: player.getAllComponents() },
         target: { id: 'merchant_001', components: merchant.getAllComponents() },
         location: { id: 'shop', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -548,38 +556,38 @@ describe('Context-Aware Scope Examples', () => {
 
     it('should filter adjustable clothing by actor skill', async () => {
       const tailor = testBed.createEntity('tailor', {
-        'tailoring:skill': { level: 3 }
+        'tailoring:skill': { level: 3 },
       });
 
       const customer = testBed.createEntity('customer_001', {
         'clothing:equipment': {
           equipped: {
-            torso_upper: { outer: 'simple_shirt', base: 'complex_vest' }
-          }
-        }
+            torso_upper: { outer: 'simple_shirt', base: 'complex_vest' },
+          },
+        },
       });
 
       testBed.createEntity('simple_shirt', {
         'core:item': { name: 'Simple Shirt' },
         'clothing:garment': {
           properties: ['adjustable'],
-          difficulty: 2
-        }
+          difficulty: 2,
+        },
       });
 
       testBed.createEntity('complex_vest', {
         'core:item': { name: 'Complex Vest' },
         'clothing:garment': {
           properties: ['adjustable'],
-          difficulty: 5
-        }
+          difficulty: 5,
+        },
       });
 
       const context = {
         actor: { id: 'tailor', components: tailor.getAllComponents() },
         target: { id: 'customer_001', components: customer.getAllComponents() },
         location: { id: 'shop', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -598,7 +606,7 @@ describe('Context-Aware Scope Examples', () => {
         actor: { id: 'player', components: {} },
         target: { id: 'incomplete_entity', components: {} }, // Missing inventory
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -616,9 +624,12 @@ describe('Context-Aware Scope Examples', () => {
 
       const context = {
         actor: { id: 'player', components: {} },
-        target: { id: 'no_name_entity', components: entityWithoutName.getAllComponents() },
+        target: {
+          id: 'no_name_entity',
+          components: entityWithoutName.getAllComponents(),
+        },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -635,7 +646,7 @@ describe('Context-Aware Scope Examples', () => {
       // Create target with many items
       const itemIds = Array.from({ length: 100 }, (_, i) => `item_${i}`);
       const target = testBed.createEntity('target_001', {
-        'core:inventory': { items: itemIds }
+        'core:inventory': { items: itemIds },
       });
 
       // Create items with varying values
@@ -643,8 +654,8 @@ describe('Context-Aware Scope Examples', () => {
         testBed.createEntity(id, {
           'core:item': {
             name: `Item ${index}`,
-            value: index * 10 // Some will be > 100
-          }
+            value: index * 10, // Some will be > 100
+          },
         });
       });
 
@@ -652,7 +663,7 @@ describe('Context-Aware Scope Examples', () => {
         actor: { id: 'player', components: {} },
         target: { id: 'target_001', components: target.getAllComponents() },
         location: { id: 'room', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const start = performance.now();
@@ -671,11 +682,11 @@ describe('Context-Aware Scope Examples', () => {
     it('should identify tradeable items target has that actor wants', async () => {
       const player = testBed.createEntity('player', {
         'core:inventory': { gold: 200 },
-        'player:preferences': { desired_item_types: ['weapon', 'armor'] }
+        'player:preferences': { desired_item_types: ['weapon', 'armor'] },
       });
 
       const merchant = testBed.createEntity('merchant_001', {
-        'core:inventory': { items: ['sword_for_sale', 'book_for_sale'] }
+        'core:inventory': { items: ['sword_for_sale', 'book_for_sale'] },
       });
 
       testBed.createEntity('sword_for_sale', {
@@ -683,8 +694,8 @@ describe('Context-Aware Scope Examples', () => {
           name: 'Iron Sword',
           category: 'weapon',
           price: 150,
-          properties: ['tradeable']
-        }
+          properties: ['tradeable'],
+        },
       });
 
       testBed.createEntity('book_for_sale', {
@@ -692,15 +703,15 @@ describe('Context-Aware Scope Examples', () => {
           name: 'Spell Book',
           category: 'book',
           price: 100,
-          properties: ['tradeable']
-        }
+          properties: ['tradeable'],
+        },
       });
 
       const context = {
         actor: { id: 'player', components: player.getAllComponents() },
         target: { id: 'merchant_001', components: merchant.getAllComponents() },
         location: { id: 'market', components: {} },
-        game: { turnNumber: 1 }
+        game: { turnNumber: 1 },
       };
 
       const result = await scopeInterpreter.evaluate(
@@ -719,7 +730,7 @@ describe('Context-Aware Scope Examples', () => {
 
 Create file: `docs/examples/context-aware-scopes.md`
 
-```markdown
+````markdown
 # Context-Aware Scope Examples
 
 This document provides comprehensive examples of using context variables in scope definitions for multi-target actions.
@@ -750,6 +761,7 @@ target_name := target.core:actor.name
 # Access target's current health
 target_health := target.core:health.current
 ```
+````
 
 ### Nested Property Access
 
@@ -920,6 +932,7 @@ disarmable_weapons := target.core:equipment.weapons[][{
 ## Best Practices
 
 ### 1. Use Descriptive Names
+
 ```dsl
 # Good
 target_affordable_items := ...
@@ -929,12 +942,14 @@ items := ...
 ```
 
 ### 2. Include Safety Checks
+
 ```dsl
 # Always check for component existence
 target_items := target.core:inventory ? target.core:inventory.items[] : []
 ```
 
 ### 3. Optimize for Performance
+
 ```dsl
 # Cache expensive lookups
 target_inventory := target.core:inventory.items[]
@@ -942,6 +957,7 @@ target_weapons := target_inventory[][{"==": [{"var": "entity.components.core:ite
 ```
 
 ### 4. Document Complex Logic
+
 ```dsl
 # Items that can be used to unlock the target container
 # Checks if actor has correct key type and sufficient lockpicking skill
@@ -973,12 +989,13 @@ unlockable_with_items := actor.core:inventory.items[][{
 ## Testing Context Scopes
 
 ### Unit Testing
+
 ```javascript
 const context = {
   actor: { id: 'player', components: playerComponents },
   target: { id: 'npc', components: npcComponents },
   location: { id: 'room', components: roomComponents },
-  game: { turnNumber: 1 }
+  game: { turnNumber: 1 },
 };
 
 const result = await scopeInterpreter.evaluate('target_items', context);
@@ -986,12 +1003,14 @@ expect(result).toEqual(['expected_item_ids']);
 ```
 
 ### Integration Testing
+
 ```javascript
 // Test full action processing with context-dependent targets
 const result = await actionProcessor.process(contextAction, player, context);
 expect(result.success).toBe(true);
 expect(result.value.actions[0].command).toBe('expected command text');
 ```
+
 ```
 
 ## Acceptance Criteria
@@ -1028,3 +1047,4 @@ expect(result.value.actions[0].command).toBe('expected command text');
 3. **Context Performance Profiler**: Tools for optimizing context usage
 4. **Dynamic Context**: Runtime context variable registration
 5. **Context Caching**: Intelligent caching of expensive context operations
+```

@@ -163,7 +163,7 @@ describe('TurnExecutionFacade', () => {
         createConnections: false,
       });
       expect(mockEntityService.createTestActor).toHaveBeenCalledTimes(2);
-      
+
       expect(result).toMatchObject({
         world: mockWorld,
         actors: {
@@ -206,7 +206,7 @@ describe('TurnExecutionFacade', () => {
           'core:actor': { type: 'ai' },
         },
       });
-      
+
       expect(result.actors).toEqual({
         npc1: 'actor-1',
         npc2: 'actor-2',
@@ -258,7 +258,7 @@ describe('TurnExecutionFacade', () => {
   describe('executeAITurn', () => {
     beforeEach(async () => {
       facade = new TurnExecutionFacade(mockDependencies);
-      
+
       // Initialize test environment first
       const mockWorld = {
         id: 'world-1',
@@ -267,7 +267,7 @@ describe('TurnExecutionFacade', () => {
       mockLLMService.configureLLMStrategy.mockResolvedValue();
       mockEntityService.createTestWorld.mockResolvedValue(mockWorld);
       mockEntityService.createTestActor.mockResolvedValue('actor-1');
-      
+
       await facade.initializeTestEnvironment();
       jest.clearAllMocks();
     });
@@ -320,7 +320,7 @@ describe('TurnExecutionFacade', () => {
 
     test('should throw error when test environment not initialized', async () => {
       const uninitializedFacade = new TurnExecutionFacade(mockDependencies);
-      
+
       await expect(
         uninitializedFacade.executeAITurn('actor-1')
       ).rejects.toThrow(
@@ -453,7 +453,7 @@ describe('TurnExecutionFacade', () => {
   describe('executePlayerTurn', () => {
     beforeEach(async () => {
       facade = new TurnExecutionFacade(mockDependencies);
-      
+
       // Initialize test environment
       const mockWorld = {
         id: 'world-1',
@@ -462,7 +462,7 @@ describe('TurnExecutionFacade', () => {
       mockLLMService.configureLLMStrategy.mockResolvedValue();
       mockEntityService.createTestWorld.mockResolvedValue(mockWorld);
       mockEntityService.createTestActor.mockResolvedValue('actor-1');
-      
+
       await facade.initializeTestEnvironment();
       jest.clearAllMocks();
     });
@@ -503,15 +503,51 @@ describe('TurnExecutionFacade', () => {
 
     test('should parse various player commands', async () => {
       const testCases = [
-        { command: 'move east', expectedAction: 'core:move', expectedTarget: 'east' },
-        { command: 'look around', expectedAction: 'core:look', expectedTarget: 'around' },
-        { command: 'examine sword', expectedAction: 'core:examine', expectedTarget: 'sword' },
-        { command: 'take key', expectedAction: 'core:take', expectedTarget: 'key' },
-        { command: 'get potion', expectedAction: 'core:take', expectedTarget: 'potion' },
-        { command: 'drop book', expectedAction: 'core:drop', expectedTarget: 'book' },
-        { command: 'say hello', expectedAction: 'core:say', expectedTarget: 'hello' },
-        { command: 'talk merchant', expectedAction: 'core:talk', expectedTarget: 'merchant' },
-        { command: 'attack goblin', expectedAction: 'core:attack', expectedTarget: 'goblin' },
+        {
+          command: 'move east',
+          expectedAction: 'core:move',
+          expectedTarget: 'east',
+        },
+        {
+          command: 'look around',
+          expectedAction: 'core:look',
+          expectedTarget: 'around',
+        },
+        {
+          command: 'examine sword',
+          expectedAction: 'core:examine',
+          expectedTarget: 'sword',
+        },
+        {
+          command: 'take key',
+          expectedAction: 'core:take',
+          expectedTarget: 'key',
+        },
+        {
+          command: 'get potion',
+          expectedAction: 'core:take',
+          expectedTarget: 'potion',
+        },
+        {
+          command: 'drop book',
+          expectedAction: 'core:drop',
+          expectedTarget: 'book',
+        },
+        {
+          command: 'say hello',
+          expectedAction: 'core:say',
+          expectedTarget: 'hello',
+        },
+        {
+          command: 'talk merchant',
+          expectedAction: 'core:talk',
+          expectedTarget: 'merchant',
+        },
+        {
+          command: 'attack goblin',
+          expectedAction: 'core:attack',
+          expectedTarget: 'goblin',
+        },
       ];
 
       mockActionService.validateAction.mockResolvedValue({ success: true });
@@ -526,7 +562,7 @@ describe('TurnExecutionFacade', () => {
 
     test('should throw error when test environment not initialized', async () => {
       const uninitializedFacade = new TurnExecutionFacade(mockDependencies);
-      
+
       await expect(
         uninitializedFacade.executePlayerTurn('actor-1', 'go north')
       ).rejects.toThrow(
@@ -573,7 +609,10 @@ describe('TurnExecutionFacade', () => {
       const error = new Error('Command parsing error');
       mockActionService.validateAction.mockRejectedValue(error);
 
-      const result = await facade.executePlayerTurn('actor-1', 'invalid command');
+      const result = await facade.executePlayerTurn(
+        'actor-1',
+        'invalid command'
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'TurnExecutionFacade: Error executing player turn',
@@ -605,14 +644,14 @@ describe('TurnExecutionFacade', () => {
       facade.setupMocks(mocks);
 
       expect(mockLLMService.setMockResponse).toHaveBeenCalledTimes(2);
-      expect(mockLLMService.setMockResponse).toHaveBeenCalledWith(
-        'actor-1',
-        { actionId: 'core:move', targets: {} }
-      );
-      expect(mockLLMService.setMockResponse).toHaveBeenCalledWith(
-        'actor-2',
-        { actionId: 'core:look', targets: {} }
-      );
+      expect(mockLLMService.setMockResponse).toHaveBeenCalledWith('actor-1', {
+        actionId: 'core:move',
+        targets: {},
+      });
+      expect(mockLLMService.setMockResponse).toHaveBeenCalledWith('actor-2', {
+        actionId: 'core:look',
+        targets: {},
+      });
     });
 
     test('should setup action result mocks', () => {
@@ -626,21 +665,23 @@ describe('TurnExecutionFacade', () => {
       facade.setupMocks(mocks);
 
       expect(mockActionService.setMockActions).toHaveBeenCalledTimes(2);
-      expect(mockActionService.setMockActions).toHaveBeenCalledWith(
-        'actor-1',
-        [{ id: 'core:move' }, { id: 'core:look' }]
-      );
-      expect(mockActionService.setMockActions).toHaveBeenCalledWith(
-        'actor-2',
-        [{ id: 'core:talk' }]
-      );
+      expect(mockActionService.setMockActions).toHaveBeenCalledWith('actor-1', [
+        { id: 'core:move' },
+        { id: 'core:look' },
+      ]);
+      expect(mockActionService.setMockActions).toHaveBeenCalledWith('actor-2', [
+        { id: 'core:talk' },
+      ]);
     });
 
     test('should setup validation result mocks', () => {
       const mocks = {
         validationResults: {
           'actor-1:core:move': { success: true },
-          'actor-2:core:special:action': { success: false, errors: ['Invalid'] },
+          'actor-2:core:special:action': {
+            success: false,
+            errors: ['Invalid'],
+          },
         },
       };
 
@@ -661,7 +702,7 @@ describe('TurnExecutionFacade', () => {
 
     test('should handle empty mocks', () => {
       facade.setupMocks({});
-      
+
       expect(mockLLMService.setMockResponse).not.toHaveBeenCalled();
       expect(mockActionService.setMockActions).not.toHaveBeenCalled();
       expect(mockActionService.setMockValidation).not.toHaveBeenCalled();
@@ -678,10 +719,10 @@ describe('TurnExecutionFacade', () => {
       mockLLMService.configureLLMStrategy.mockResolvedValue();
       mockEntityService.createTestWorld.mockResolvedValue(mockWorld);
       mockEntityService.createTestActor.mockResolvedValue('actor-1');
-      
+
       const env = await facade.initializeTestEnvironment();
       const retrieved = facade.getTestEnvironment();
-      
+
       expect(retrieved).toBe(env);
     });
 

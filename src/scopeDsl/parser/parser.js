@@ -219,7 +219,9 @@ class Parser {
     }
     if (this.match('LBRACKET')) return this.parseJsonArray();
     if (this.match('LBRACE')) return this.parseJsonLogic();
-    this.error('Expected JSON value (string, number, identifier, array, or object)');
+    this.error(
+      'Expected JSON value (string, number, identifier, array, or object)'
+    );
   }
 
   parseJsonArray() {

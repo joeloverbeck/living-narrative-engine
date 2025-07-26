@@ -59,7 +59,13 @@
           "type": "string",
           "description": "Legacy single-target scope (backward compatibility)",
           "pattern": "^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$|^(none|self)$",
-          "examples": ["core:followers", "core:environment", "core:directions", "none", "self"]
+          "examples": [
+            "core:followers",
+            "core:environment",
+            "core:directions",
+            "none",
+            "self"
+          ]
         },
         {
           "type": "object",
@@ -88,7 +94,13 @@
       "description": "DEPRECATED: Use 'targets' instead. Legacy support only. The namespaced DSL scope that defines where to look for potential targets for this action.",
       "deprecated": true,
       "pattern": "^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$|^(none|self)$",
-      "examples": ["core:followers", "core:environment", "core:directions", "none", "self"]
+      "examples": [
+        "core:followers",
+        "core:environment",
+        "core:directions",
+        "none",
+        "self"
+      ]
     },
     "generateCombinations": {
       "type": "boolean",

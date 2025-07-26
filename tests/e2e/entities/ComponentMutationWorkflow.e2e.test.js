@@ -4,7 +4,7 @@
  *
  * Tests the complete component mutation workflows including addition and removal,
  * schema validation, event dispatching, and repository consistency.
- * 
+ *
  * This addresses the Priority 2 critical gap identified in the entity workflows
  * E2E test coverage analysis for Component Mutation Safety.
  */
@@ -31,7 +31,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:component_addition_entity';
       const instanceId = 'test_component_addition_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -51,12 +51,14 @@ describe('Component Mutation E2E Workflow', () => {
 
       // Assert component was added successfully
       expect(result).toBeDefined();
-      
+
       // Validate entity has the new component
-      const retrievedEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      const retrievedEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       expect(retrievedEntity.hasComponent(componentTypeId)).toBe(true);
-      
-      const addedComponentData = retrievedEntity.getComponentData(componentTypeId);
+
+      const addedComponentData =
+        retrievedEntity.getComponentData(componentTypeId);
       expect(addedComponentData).toBeDefined();
       expect(addedComponentData.locationId).toBe('test:test_location');
     });
@@ -65,7 +67,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:component_indexing_entity';
       const instanceId = 'test_component_indexing_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -82,12 +84,14 @@ describe('Component Mutation E2E Workflow', () => {
       );
 
       // Assert component indexing is handled (verify component exists on entity)
-      const retrievedEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      const retrievedEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       expect(retrievedEntity).toBeDefined();
       expect(retrievedEntity.hasComponent(componentTypeId)).toBe(true);
-      
+
       // Validate component data is accessible
-      const retrievedComponentData = retrievedEntity.getComponentData(componentTypeId);
+      const retrievedComponentData =
+        retrievedEntity.getComponentData(componentTypeId);
       expect(retrievedComponentData).toBeDefined();
       expect(retrievedComponentData.locationId).toBe('test:test_location_2');
     });
@@ -96,7 +100,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:component_event_entity';
       const instanceId = 'test_component_event_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -114,13 +118,14 @@ describe('Component Mutation E2E Workflow', () => {
 
       // Assert component added event was dispatched
       const componentEvents = testBed.getComponentEvents(instanceId);
-      const addedEvents = componentEvents.filter(event => 
-        event.type === 'COMPONENT_ADDED' && 
-        event.componentId === componentTypeId
+      const addedEvents = componentEvents.filter(
+        (event) =>
+          event.type === 'COMPONENT_ADDED' &&
+          event.componentId === componentTypeId
       );
-      
+
       expect(addedEvents).toHaveLength(1);
-      
+
       const addEvent = addedEvents[0];
       expect(addEvent.entityId).toBe(instanceId);
       expect(addEvent.componentId).toBe(componentTypeId);
@@ -133,7 +138,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:component_validation_entity';
       const instanceId = 'test_component_validation_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -151,10 +156,12 @@ describe('Component Mutation E2E Workflow', () => {
 
       // Assert data was properly cloned (mutations to original don't affect entity)
       originalComponentData.locationId = 'test:mutated_location';
-      
-      const retrievedEntity = await testBed.entityManager.getEntityInstance(instanceId);
-      const storedComponentData = retrievedEntity.getComponentData(componentTypeId);
-      
+
+      const retrievedEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
+      const storedComponentData =
+        retrievedEntity.getComponentData(componentTypeId);
+
       expect(storedComponentData.locationId).toBe('test:test_location_4'); // Should not be affected by mutation
     });
 
@@ -172,9 +179,12 @@ describe('Component Mutation E2E Workflow', () => {
           },
         },
       };
-      
-      await testBed.ensureEntityDefinitionExists(definitionId, customDefinition);
-      
+
+      await testBed.ensureEntityDefinitionExists(
+        definitionId,
+        customDefinition
+      );
+
       const instanceId = 'test_component_override_001';
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -182,7 +192,9 @@ describe('Component Mutation E2E Workflow', () => {
 
       // Verify entity has definition component
       expect(entity.hasComponent('core:position')).toBe(true);
-      expect(entity.getComponentData('core:position').locationId).toBe('test:base_location');
+      expect(entity.getComponentData('core:position').locationId).toBe(
+        'test:base_location'
+      );
 
       // Act - Override component with new data
       const overrideComponentData = { locationId: 'test:override_location' };
@@ -193,9 +205,10 @@ describe('Component Mutation E2E Workflow', () => {
       );
 
       // Assert component was overridden
-      const retrievedEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      const retrievedEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       const positionData = retrievedEntity.getComponentData('core:position');
-      
+
       expect(positionData.locationId).toBe('test:override_location'); // Override value
     });
 
@@ -203,7 +216,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:component_schema_validation_entity';
       const instanceId = 'test_component_schema_validation_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -223,11 +236,13 @@ describe('Component Mutation E2E Workflow', () => {
           componentTypeId,
           invalidComponentData
         );
-        
+
         // If no error thrown, validate the component was not added or was sanitized
-        const retrievedEntity = await testBed.entityManager.getEntityInstance(instanceId);
+        const retrievedEntity =
+          await testBed.entityManager.getEntityInstance(instanceId);
         if (retrievedEntity.hasComponent(componentTypeId)) {
-          const componentData = retrievedEntity.getComponentData(componentTypeId);
+          const componentData =
+            retrievedEntity.getComponentData(componentTypeId);
           // Should either reject invalid data or sanitize it
           expect(typeof componentData.locationId).toBe('string');
         }
@@ -253,9 +268,12 @@ describe('Component Mutation E2E Workflow', () => {
           },
         },
       };
-      
-      await testBed.ensureEntityDefinitionExists(definitionId, customDefinition);
-      
+
+      await testBed.ensureEntityDefinitionExists(
+        definitionId,
+        customDefinition
+      );
+
       const instanceId = 'test_component_removal_001';
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -263,8 +281,12 @@ describe('Component Mutation E2E Workflow', () => {
 
       // Add component override
       const overrideData = { locationId: 'test:override_location' };
-      await testBed.entityManager.addComponent(instanceId, 'core:position', overrideData);
-      
+      await testBed.entityManager.addComponent(
+        instanceId,
+        'core:position',
+        overrideData
+      );
+
       // Verify override is active
       let positionData = entity.getComponentData('core:position');
       expect(positionData.locationId).toBe('test:override_location');
@@ -273,9 +295,10 @@ describe('Component Mutation E2E Workflow', () => {
       await testBed.entityManager.removeComponent(instanceId, 'core:position');
 
       // Assert - Component should revert to definition data
-      const retrievedEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      const retrievedEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       expect(retrievedEntity.hasComponent('core:position')).toBe(true); // Still has component from definition
-      
+
       positionData = retrievedEntity.getComponentData('core:position');
       expect(positionData.locationId).toBe('test:base_location'); // Back to definition value
     });
@@ -284,7 +307,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:component_index_removal_entity';
       const instanceId = 'test_component_index_removal_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -294,22 +317,30 @@ describe('Component Mutation E2E Workflow', () => {
       const componentData = { locationId: 'test:test_location_5' };
 
       // Add component first
-      await testBed.entityManager.addComponent(instanceId, componentTypeId, componentData);
-      
+      await testBed.entityManager.addComponent(
+        instanceId,
+        componentTypeId,
+        componentData
+      );
+
       // Verify entity has the component
-      let retrievedEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      let retrievedEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       expect(retrievedEntity.hasComponent(componentTypeId)).toBe(true);
-      expect(retrievedEntity.getComponentData(componentTypeId).locationId).toBe('test:test_location_5');
+      expect(retrievedEntity.getComponentData(componentTypeId).locationId).toBe(
+        'test:test_location_5'
+      );
 
       // Act - Remove component
       await testBed.entityManager.removeComponent(instanceId, componentTypeId);
 
       // Assert - Component should be removed or reverted
-      retrievedEntity = await testBed.entityManager.getEntityInstance(instanceId);
-      
+      retrievedEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
+
       // Component might still exist if it's from definition, but should be handled consistently
       expect(retrievedEntity).toBeDefined();
-      
+
       // If component is completely removed, it should not be present
       // If it reverts to definition, that's also acceptable behavior
       const stillHasComponent = retrievedEntity.hasComponent(componentTypeId);
@@ -325,21 +356,24 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:component_nonexistent_removal_entity';
       const instanceId = 'test_component_nonexistent_removal_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
       });
 
       const componentTypeId = 'core:position';
-      
+
       // Verify entity doesn't have this component override
       expect(entity.hasComponent(componentTypeId)).toBe(false);
 
       // Act & Assert - Removing non-existent component should be handled gracefully
       try {
-        await testBed.entityManager.removeComponent(instanceId, componentTypeId);
-        
+        await testBed.entityManager.removeComponent(
+          instanceId,
+          componentTypeId
+        );
+
         // If no error, that's fine - removal of non-existent component should be a no-op
         expect(true).toBe(true);
       } catch (error) {
@@ -353,7 +387,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:component_removal_event_entity';
       const instanceId = 'test_component_removal_event_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -363,20 +397,25 @@ describe('Component Mutation E2E Workflow', () => {
       const componentData = { locationId: 'test:removal_event_location' };
 
       // Add component first
-      await testBed.entityManager.addComponent(instanceId, componentTypeId, componentData);
+      await testBed.entityManager.addComponent(
+        instanceId,
+        componentTypeId,
+        componentData
+      );
 
       // Act - Remove component
       await testBed.entityManager.removeComponent(instanceId, componentTypeId);
 
       // Assert component removed event was dispatched
       const componentEvents = testBed.getComponentEvents(instanceId);
-      const removedEvents = componentEvents.filter(event => 
-        event.type === 'COMPONENT_REMOVED' && 
-        event.componentId === componentTypeId
+      const removedEvents = componentEvents.filter(
+        (event) =>
+          event.type === 'COMPONENT_REMOVED' &&
+          event.componentId === componentTypeId
       );
-      
+
       expect(removedEvents).toHaveLength(1);
-      
+
       const removeEvent = removedEvents[0];
       expect(removeEvent.entityId).toBe(instanceId);
       expect(removeEvent.componentId).toBe(componentTypeId);
@@ -389,7 +428,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:multiple_mutations_entity';
       const instanceId = 'test_multiple_mutations_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -398,7 +437,10 @@ describe('Component Mutation E2E Workflow', () => {
       const componentSequence = [
         { id: 'core:position', data: { locationId: 'test:seq_location_1' } },
         { id: 'core:name', data: { text: 'Test Entity 1' } },
-        { id: 'core:description', data: { text: 'A test entity for sequential mutations' } },
+        {
+          id: 'core:description',
+          data: { text: 'A test entity for sequential mutations' },
+        },
       ];
 
       // Act - Add components in sequence
@@ -411,8 +453,9 @@ describe('Component Mutation E2E Workflow', () => {
       }
 
       // Assert all components were added successfully
-      const retrievedEntity = await testBed.entityManager.getEntityInstance(instanceId);
-      
+      const retrievedEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
+
       for (const component of componentSequence) {
         expect(retrievedEntity.hasComponent(component.id)).toBe(true);
         const componentData = retrievedEntity.getComponentData(component.id);
@@ -421,16 +464,22 @@ describe('Component Mutation E2E Workflow', () => {
 
       // Verify all component events were tracked
       const componentEvents = testBed.getComponentEvents(instanceId);
-      const addedEvents = componentEvents.filter(event => event.type === 'COMPONENT_ADDED');
+      const addedEvents = componentEvents.filter(
+        (event) => event.type === 'COMPONENT_ADDED'
+      );
       expect(addedEvents).toHaveLength(componentSequence.length);
 
       // Act - Remove components in reverse order
       for (let i = componentSequence.length - 1; i >= 0; i--) {
-        await testBed.entityManager.removeComponent(instanceId, componentSequence[i].id);
+        await testBed.entityManager.removeComponent(
+          instanceId,
+          componentSequence[i].id
+        );
       }
 
       // Assert components were removed (or reverted to definition)
-      const finalEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      const finalEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       // Note: Behavior depends on whether components are completely removed or reverted
       // This test validates that the mutations were handled consistently
     });
@@ -439,32 +488,41 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:consistency_mutations_entity';
       const instanceId = 'test_consistency_mutations_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
       });
 
       // Act - Perform various component operations
-      await testBed.entityManager.addComponent(instanceId, 'core:position', { locationId: 'test:consistency_location_1' });
-      await testBed.entityManager.addComponent(instanceId, 'core:name', { text: 'Consistency Test Entity' });
-      
+      await testBed.entityManager.addComponent(instanceId, 'core:position', {
+        locationId: 'test:consistency_location_1',
+      });
+      await testBed.entityManager.addComponent(instanceId, 'core:name', {
+        text: 'Consistency Test Entity',
+      });
+
       // Modify existing component
-      await testBed.entityManager.addComponent(instanceId, 'core:position', { locationId: 'test:consistency_location_2' });
-      
+      await testBed.entityManager.addComponent(instanceId, 'core:position', {
+        locationId: 'test:consistency_location_2',
+      });
+
       // Remove and re-add component
       await testBed.entityManager.removeComponent(instanceId, 'core:name');
-      await testBed.entityManager.addComponent(instanceId, 'core:name', { text: 'Modified Consistency Test Entity' });
+      await testBed.entityManager.addComponent(instanceId, 'core:name', {
+        text: 'Modified Consistency Test Entity',
+      });
 
       // Assert entity remains consistent
-      const finalEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      const finalEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       expect(finalEntity).toBeDefined();
       expect(finalEntity.id).toBe(instanceId);
-      
+
       // Validate entity is still retrievable and functional
       expect(typeof finalEntity.hasComponent).toBe('function');
       expect(typeof finalEntity.getComponentData).toBe('function');
-      
+
       // Validate repository consistency
       await testBed.assertRepositoryConsistency();
     });
@@ -473,7 +531,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:concurrent_mutations_entity';
       const instanceId = 'test_concurrent_mutations_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -481,9 +539,15 @@ describe('Component Mutation E2E Workflow', () => {
 
       // Act - Perform concurrent component operations
       const operations = [
-        testBed.entityManager.addComponent(instanceId, 'core:position', { locationId: 'test:concurrent_location_1' }),
-        testBed.entityManager.addComponent(instanceId, 'core:name', { text: 'Concurrent Test Entity' }),
-        testBed.entityManager.addComponent(instanceId, 'core:description', { text: 'A test entity for concurrent operations' }),
+        testBed.entityManager.addComponent(instanceId, 'core:position', {
+          locationId: 'test:concurrent_location_1',
+        }),
+        testBed.entityManager.addComponent(instanceId, 'core:name', {
+          text: 'Concurrent Test Entity',
+        }),
+        testBed.entityManager.addComponent(instanceId, 'core:description', {
+          text: 'A test entity for concurrent operations',
+        }),
       ];
 
       const results = await Promise.allSettled(operations);
@@ -492,18 +556,22 @@ describe('Component Mutation E2E Workflow', () => {
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
           // Log but don't fail - some concurrent conflicts might be expected
-          console.warn(`Concurrent component operation ${index} failed:`, result.reason?.message);
+          console.warn(
+            `Concurrent component operation ${index} failed:`,
+            result.reason?.message
+          );
         }
       });
 
       // Most importantly, entity should remain consistent
-      const finalEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      const finalEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       expect(finalEntity).toBeDefined();
       expect(finalEntity.id).toBe(instanceId);
-      
+
       // Repository should remain consistent
       await testBed.assertRepositoryConsistency();
-      
+
       // Basic assertion to satisfy jest/expect-expect
       expect(results.length).toBe(3);
     });
@@ -514,7 +582,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:performance_mutations_entity';
       const instanceId = 'test_performance_mutations_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -526,7 +594,11 @@ describe('Component Mutation E2E Workflow', () => {
 
       // Act & Assert - Add component with performance validation
       const addStartTime = performance.now();
-      await testBed.entityManager.addComponent(instanceId, componentTypeId, componentData);
+      await testBed.entityManager.addComponent(
+        instanceId,
+        componentTypeId,
+        componentData
+      );
       const addEndTime = performance.now();
       const addTime = addEndTime - addStartTime;
 
@@ -545,7 +617,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:error_handling_entity';
       const instanceId = 'test_error_handling_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -577,11 +649,11 @@ describe('Component Mutation E2E Workflow', () => {
             scenario.componentTypeId,
             scenario.componentData
           );
-          
+
           // If no error thrown, validate the component state
-          const retrievedEntity = await testBed.entityManager.getEntityInstance(instanceId);
+          const retrievedEntity =
+            await testBed.entityManager.getEntityInstance(instanceId);
           // Should either handle gracefully or validate proper data
-          
         } catch (error) {
           // Errors are expected for invalid scenarios
           expect(error).toBeDefined();
@@ -589,7 +661,8 @@ describe('Component Mutation E2E Workflow', () => {
       }
 
       // Entity should remain consistent after error scenarios
-      const finalEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      const finalEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       expect(finalEntity).toBeDefined();
       expect(finalEntity.id).toBe(instanceId);
     });
@@ -598,7 +671,7 @@ describe('Component Mutation E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:error_recovery_entity';
       const instanceId = 'test_error_recovery_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId);
       const entity = await testBed.createTestEntity(definitionId, {
         instanceId,
@@ -607,19 +680,29 @@ describe('Component Mutation E2E Workflow', () => {
       // Act - Mix successful and potentially failing operations
       const operations = [
         // This should succeed
-        async () => testBed.entityManager.addComponent(instanceId, 'core:position', { locationId: 'test:recovery_location_1' }),
-        
+        async () =>
+          testBed.entityManager.addComponent(instanceId, 'core:position', {
+            locationId: 'test:recovery_location_1',
+          }),
+
         // This might fail due to invalid data
         async () => {
           try {
-            await testBed.entityManager.addComponent(instanceId, 'core:invalid', { badData: true });
+            await testBed.entityManager.addComponent(
+              instanceId,
+              'core:invalid',
+              { badData: true }
+            );
           } catch (error) {
             // Ignore expected errors
           }
         },
-        
+
         // This should succeed
-        async () => testBed.entityManager.addComponent(instanceId, 'core:name', { text: 'Recovery Test Entity' }),
+        async () =>
+          testBed.entityManager.addComponent(instanceId, 'core:name', {
+            text: 'Recovery Test Entity',
+          }),
       ];
 
       for (const operation of operations) {
@@ -627,13 +710,14 @@ describe('Component Mutation E2E Workflow', () => {
       }
 
       // Assert system remains consistent
-      const finalEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      const finalEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       expect(finalEntity).toBeDefined();
       expect(finalEntity.id).toBe(instanceId);
-      
+
       // Repository should be consistent
       await testBed.assertRepositoryConsistency();
-      
+
       // Valid components should still be present
       expect(finalEntity.hasComponent('core:position')).toBe(true);
       expect(finalEntity.hasComponent('core:name')).toBe(true);

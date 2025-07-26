@@ -22,10 +22,11 @@ describe('AnatomyDescriptionService - Core Integration', () => {
   describe('updateDescription delegation', () => {
     it('should delegate updateDescription to persistence service when available', async () => {
       // Arrange
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        withPersistence: true,
-      });
-      
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          withPersistence: true,
+        });
+
       const entity = await testBed.createTestEntity();
       const description = 'Updated description';
 
@@ -38,7 +39,9 @@ describe('AnatomyDescriptionService - Core Integration', () => {
 
       // Assert - Check that the entity has the description component
       const updatedEntity = testBed.entityManager.getEntityInstance(entity.id);
-      const descriptionData = updatedEntity.getComponentData(DESCRIPTION_COMPONENT_ID);
+      const descriptionData = updatedEntity.getComponentData(
+        DESCRIPTION_COMPONENT_ID
+      );
       expect(descriptionData).toBeTruthy();
       expect(descriptionData.text).toBe(description);
     });
@@ -51,10 +54,11 @@ describe('AnatomyDescriptionService - Core Integration', () => {
         updateComponent: jest.fn(),
       };
 
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        withPersistence: false,
-        componentManager: mockComponentManager,
-      });
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          withPersistence: false,
+          componentManager: mockComponentManager,
+        });
 
       const entity = await testBed.createTestEntity();
       const description = 'Fallback description';
@@ -72,15 +76,19 @@ describe('AnatomyDescriptionService - Core Integration', () => {
 
     it('should handle missing entity in updateDescription gracefully', async () => {
       // Arrange
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        withPersistence: false,
-      });
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          withPersistence: false,
+        });
 
       const nonExistentId = 'non-existent-' + Date.now();
 
       // Act & Assert - Should not throw
       expect(() => {
-        anatomyDescriptionService.updateDescription(nonExistentId, 'description');
+        anatomyDescriptionService.updateDescription(
+          nonExistentId,
+          'description'
+        );
       }).not.toThrow();
     });
   });
@@ -88,7 +96,8 @@ describe('AnatomyDescriptionService - Core Integration', () => {
   describe('isDescriptionCurrent behavior', () => {
     it('should always return false for isDescriptionCurrent', async () => {
       // Arrange
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService();
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService();
       const entity = await testBed.createTestEntity();
 
       // Act
@@ -109,10 +118,11 @@ describe('AnatomyDescriptionService - Core Integration', () => {
         }),
       };
 
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        bodyDescriptionOrchestrator: mockOrchestrator,
-        withPersistence: true,
-      });
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          bodyDescriptionOrchestrator: mockOrchestrator,
+          withPersistence: true,
+        });
 
       const entity = await testBed.createTestEntity(true);
 
@@ -120,7 +130,9 @@ describe('AnatomyDescriptionService - Core Integration', () => {
       await anatomyDescriptionService.generateAllDescriptions(entity);
 
       // Assert
-      expect(mockOrchestrator.generateAllDescriptions).toHaveBeenCalledWith(entity);
+      expect(mockOrchestrator.generateAllDescriptions).toHaveBeenCalledWith(
+        entity
+      );
     });
 
     it('should fall back to original implementation when orchestrator unavailable', async () => {
@@ -130,14 +142,17 @@ describe('AnatomyDescriptionService - Core Integration', () => {
       };
 
       const mockComposer = {
-        composeDescription: jest.fn().mockResolvedValue('Fallback body description'),
+        composeDescription: jest
+          .fn()
+          .mockResolvedValue('Fallback body description'),
       };
 
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        bodyDescriptionOrchestrator: null, // No orchestrator
-        bodyGraphService: mockBodyGraphService,
-        bodyDescriptionComposer: mockComposer,
-      });
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          bodyDescriptionOrchestrator: null, // No orchestrator
+          bodyGraphService: mockBodyGraphService,
+          bodyDescriptionComposer: mockComposer,
+        });
 
       const entity = await testBed.createTestEntity(true);
 
@@ -154,30 +169,38 @@ describe('AnatomyDescriptionService - Core Integration', () => {
     it('should delegate getOrGenerateBodyDescription to orchestrator', async () => {
       // Arrange
       const mockOrchestrator = {
-        getOrGenerateBodyDescription: jest.fn().mockResolvedValue('Orchestrated description'),
+        getOrGenerateBodyDescription: jest
+          .fn()
+          .mockResolvedValue('Orchestrated description'),
       };
 
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        bodyDescriptionOrchestrator: mockOrchestrator,
-        withPersistence: true,
-      });
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          bodyDescriptionOrchestrator: mockOrchestrator,
+          withPersistence: true,
+        });
 
       const entity = await testBed.createTestEntity(true);
 
       // Act
-      const result = await anatomyDescriptionService.getOrGenerateBodyDescription(entity);
+      const result =
+        await anatomyDescriptionService.getOrGenerateBodyDescription(entity);
 
       // Assert
-      expect(mockOrchestrator.getOrGenerateBodyDescription).toHaveBeenCalledWith(entity);
+      expect(
+        mockOrchestrator.getOrGenerateBodyDescription
+      ).toHaveBeenCalledWith(entity);
       expect(result).toBe('Orchestrated description');
     });
 
     it('should handle null entity in getOrGenerateBodyDescription', async () => {
       // Arrange
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService();
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService();
 
       // Act
-      const result = await anatomyDescriptionService.getOrGenerateBodyDescription(null);
+      const result =
+        await anatomyDescriptionService.getOrGenerateBodyDescription(null);
 
       // Assert
       expect(result).toBeNull();
@@ -188,20 +211,26 @@ describe('AnatomyDescriptionService - Core Integration', () => {
       const mockComposer = {
         composeDescription: jest.fn().mockResolvedValue('Existing description'),
       };
-      
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        bodyDescriptionComposer: mockComposer,
-      });
-      
+
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          bodyDescriptionComposer: mockComposer,
+        });
+
       const entity = await testBed.createTestEntity(false); // No anatomy
-      
+
       // Add description to entity
-      await testBed.entityManager.addComponent(entity.id, DESCRIPTION_COMPONENT_ID, {
-        text: 'Existing description',
-      });
+      await testBed.entityManager.addComponent(
+        entity.id,
+        DESCRIPTION_COMPONENT_ID,
+        {
+          text: 'Existing description',
+        }
+      );
 
       // Act
-      const result = await anatomyDescriptionService.getOrGenerateBodyDescription(entity);
+      const result =
+        await anatomyDescriptionService.getOrGenerateBodyDescription(entity);
 
       // Assert
       expect(result).toBe('Existing description');
@@ -212,26 +241,34 @@ describe('AnatomyDescriptionService - Core Integration', () => {
     it('should delegate part description generation to specialized service', async () => {
       // Arrange
       const mockGenerator = {
-        generatePartDescription: jest.fn().mockReturnValue('Generated part description'),
+        generatePartDescription: jest
+          .fn()
+          .mockReturnValue('Generated part description'),
       };
 
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        partDescriptionGenerator: mockGenerator,
-        withPersistence: true,
-      });
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          partDescriptionGenerator: mockGenerator,
+          withPersistence: true,
+        });
 
-      const partEntity = await testBed.entityManager.createEntityInstance('anatomy:humanoid_arm');
+      const partEntity = await testBed.entityManager.createEntityInstance(
+        'anatomy:humanoid_arm'
+      );
 
       // Act
       anatomyDescriptionService.generatePartDescription(partEntity.id);
 
       // Assert
-      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith(partEntity.id);
+      expect(mockGenerator.generatePartDescription).toHaveBeenCalledWith(
+        partEntity.id
+      );
     });
 
     it('should handle missing entity in generatePartDescription gracefully', async () => {
       // Arrange
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService();
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService();
       const nonExistentId = 'non-existent-part-' + Date.now();
 
       // Act & Assert - Should not throw

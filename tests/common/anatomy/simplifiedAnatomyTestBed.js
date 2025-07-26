@@ -50,11 +50,13 @@ export default class SimplifiedAnatomyTestBed extends BaseTestBed {
    */
   async createAnatomyDescriptionService(options = {}) {
     // Create body graph service if not provided
-    const bodyGraphService = options.bodyGraphService || new BodyGraphService({
-      entityManager: this.entityManager,
-      logger: this.mocks.logger,
-      eventDispatcher: this.mocks.eventDispatcher,
-    });
+    const bodyGraphService =
+      options.bodyGraphService ||
+      new BodyGraphService({
+        entityManager: this.entityManager,
+        logger: this.mocks.logger,
+        eventDispatcher: this.mocks.eventDispatcher,
+      });
 
     // Create mock component manager
     const mockComponentManager = options.componentManager || {
@@ -71,13 +73,14 @@ export default class SimplifiedAnatomyTestBed extends BaseTestBed {
     };
 
     // Create mock body part description builder
-    const mockBodyPartDescriptionBuilder = options.bodyPartDescriptionBuilder || {
-      buildDescription: (partEntity) => {
-        const partType =
-          partEntity?.getComponentData?.('anatomy:part')?.subType || 'part';
-        return `A ${partType} part`;
-      },
-    };
+    const mockBodyPartDescriptionBuilder =
+      options.bodyPartDescriptionBuilder || {
+        buildDescription: (partEntity) => {
+          const partType =
+            partEntity?.getComponentData?.('anatomy:part')?.subType || 'part';
+          return `A ${partType} part`;
+        },
+      };
 
     // Create mock body description composer
     const mockBodyDescriptionComposer = options.bodyDescriptionComposer || {
@@ -111,7 +114,8 @@ export default class SimplifiedAnatomyTestBed extends BaseTestBed {
       : null;
 
     // Use provided eventDispatchService or default
-    const eventDispatchService = options.eventDispatchService || this.mocks.eventDispatchService;
+    const eventDispatchService =
+      options.eventDispatchService || this.mocks.eventDispatchService;
 
     // Create anatomy description service
     return new AnatomyDescriptionService({
@@ -199,18 +203,18 @@ export default class SimplifiedAnatomyTestBed extends BaseTestBed {
    */
   async createTestEntity(hasAnatomy = true) {
     const entity = await this.entityManager.createEntityInstance('core:actor');
-    
+
     if (hasAnatomy) {
       await this.entityManager.addComponent(entity.id, 'anatomy:body', {
         body: { root: 'test-root' },
         recipeId: 'test-recipe',
       });
     }
-    
+
     await this.entityManager.addComponent(entity.id, 'core:name', {
       text: 'Test Entity',
     });
-    
+
     return entity;
   }
 
@@ -245,7 +249,7 @@ export default class SimplifiedAnatomyTestBed extends BaseTestBed {
       if (this.entityManager?.clearAll) {
         this.entityManager.clearAll();
       }
-      
+
       // Clear registry synchronously
       if (this.registry?.clear) {
         this.registry.clear();
@@ -265,7 +269,7 @@ export default class SimplifiedAnatomyTestBed extends BaseTestBed {
       // Log cleanup errors but don't throw to avoid masking test failures
       console.warn('Cleanup error in SimplifiedAnatomyTestBed:', error.message);
     }
-    
+
     await super._afterCleanup();
   }
 }

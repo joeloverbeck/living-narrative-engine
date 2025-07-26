@@ -26,20 +26,23 @@ export default function createStepResolver({ entitiesGateway }) {
     // First try to get it as a component
     const componentData = entitiesGateway.getComponentData(entityId, field);
     if (componentData !== undefined) {
-      return componentData;  // Return null or any other value, but not undefined
+      return componentData; // Return null or any other value, but not undefined
     }
-    
+
     // If not found as a component, search within all component data for the field
     const entity = entitiesGateway.getEntityInstance(entityId);
     if (entity && entity.componentTypeIds) {
       for (const componentId of entity.componentTypeIds) {
-        const compData = entitiesGateway.getComponentData(entityId, componentId);
+        const compData = entitiesGateway.getComponentData(
+          entityId,
+          componentId
+        );
         if (compData && typeof compData === 'object' && field in compData) {
           return compData[field];
         }
       }
     }
-    
+
     return undefined;
   }
 

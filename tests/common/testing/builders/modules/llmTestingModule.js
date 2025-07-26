@@ -556,63 +556,63 @@ export class LLMTestingModule extends ITestModule {
   #createStandardLLMConfig(strategy) {
     // Fallback to inline configuration matching TestConfigurationFactory output
     const baseConfigs = {
-        'tool-calling': {
-          configId: 'test-llm-toolcalling',
-          displayName: 'Test LLM (Tool Calling)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-toolcalling',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'openrouter_tool_calling',
-            toolName: 'function_call',
-          },
-          defaultParameters: { temperature: 1.0 },
-          contextTokenLimit: 8000,
+      'tool-calling': {
+        configId: 'test-llm-toolcalling',
+        displayName: 'Test LLM (Tool Calling)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-toolcalling',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'openrouter_tool_calling',
+          toolName: 'function_call',
         },
-        'json-schema': {
-          configId: 'test-llm-jsonschema',
-          displayName: 'Test LLM (JSON Schema)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-jsonschema',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'json_schema',
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 8000,
+      },
+      'json-schema': {
+        configId: 'test-llm-jsonschema',
+        displayName: 'Test LLM (JSON Schema)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-jsonschema',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'json_schema',
+          schema: {
+            name: 'turn_action_response',
             schema: {
-              name: 'turn_action_response',
-              schema: {
-                type: 'object',
-                properties: {
-                  chosenIndex: { type: 'number' },
-                  speech: { type: 'string' },
-                  thoughts: { type: 'string' },
-                },
-                required: ['chosenIndex', 'speech', 'thoughts'],
+              type: 'object',
+              properties: {
+                chosenIndex: { type: 'number' },
+                speech: { type: 'string' },
+                thoughts: { type: 'string' },
               },
+              required: ['chosenIndex', 'speech', 'thoughts'],
             },
           },
-          defaultParameters: { temperature: 1.0 },
-          contextTokenLimit: 8000,
         },
-        'limited-context': {
-          configId: 'test-llm-limited',
-          displayName: 'Test LLM (Limited Context)',
-          apiKeyEnvVar: 'TEST_API_KEY',
-          apiKeyFileName: 'test_api_key.txt',
-          endpointUrl: 'https://test-api.com/v1/chat/completions',
-          modelIdentifier: 'test-model-limited',
-          apiType: 'openrouter',
-          jsonOutputStrategy: {
-            method: 'openrouter_tool_calling',
-            toolName: 'function_call',
-          },
-          defaultParameters: { temperature: 1.0 },
-          contextTokenLimit: 1000,
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 8000,
+      },
+      'limited-context': {
+        configId: 'test-llm-limited',
+        displayName: 'Test LLM (Limited Context)',
+        apiKeyEnvVar: 'TEST_API_KEY',
+        apiKeyFileName: 'test_api_key.txt',
+        endpointUrl: 'https://test-api.com/v1/chat/completions',
+        modelIdentifier: 'test-model-limited',
+        apiType: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'openrouter_tool_calling',
+          toolName: 'function_call',
         },
-      };
+        defaultParameters: { temperature: 1.0 },
+        contextTokenLimit: 1000,
+      },
+    };
     return baseConfigs[strategy] || baseConfigs['tool-calling'];
   }
 
@@ -626,41 +626,41 @@ export class LLMTestingModule extends ITestModule {
   #createEnvironmentPresetConfig(presetName) {
     // Fallback to inline configurations matching factory patterns
     const presets = {
-        'promptGeneration': {
-          llm: this.#createStandardLLMConfig('json-schema'),
-          actors: [
-            {
-              id: 'prompt-test-actor',
-              name: 'Prompt Test Actor',
-              type: 'core:actor',
-              components: {
-                'core:persona': {
-                  description: 'A character for testing prompt generation',
-                  traits: ['methodical', 'observant'],
-                },
+      promptGeneration: {
+        llm: this.#createStandardLLMConfig('json-schema'),
+        actors: [
+          {
+            id: 'prompt-test-actor',
+            name: 'Prompt Test Actor',
+            type: 'core:actor',
+            components: {
+              'core:persona': {
+                description: 'A character for testing prompt generation',
+                traits: ['methodical', 'observant'],
               },
             },
-          ],
-          monitoring: { tokenCounting: true },
-          mockResponses: {
-            chosenIndex: 0,
-            speech: 'Test response from JSON schema strategy.',
-            thoughts: 'This is a test thought.',
-            notes: [],
           },
+        ],
+        monitoring: { tokenCounting: true },
+        mockResponses: {
+          chosenIndex: 0,
+          speech: 'Test response from JSON schema strategy.',
+          thoughts: 'This is a test thought.',
+          notes: [],
         },
-        // Legacy support for hyphenated names
-        'llm-testing': {
-          llm: this.#createStandardLLMConfig('tool-calling'),
-          actors: [],
-          scenarios: [],
-        },
-        'prompt-generation': {
-          llm: this.#createStandardLLMConfig('json-schema'),
-          actors: [],
-          monitoring: { tokenCounting: true },
-        },
-      };
+      },
+      // Legacy support for hyphenated names
+      'llm-testing': {
+        llm: this.#createStandardLLMConfig('tool-calling'),
+        actors: [],
+        scenarios: [],
+      },
+      'prompt-generation': {
+        llm: this.#createStandardLLMConfig('json-schema'),
+        actors: [],
+        monitoring: { tokenCounting: true },
+      },
+    };
 
     const config = presets[presetName];
     if (!config) {

@@ -215,7 +215,9 @@ describe('ArrayIterationResolver', () => {
           type: 'ArrayIterationStep',
           parent: { type: 'Step' },
         };
-        const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
         const ctx = { dispatcher, trace, actorEntity };
 
         const clothingAccess = {
@@ -247,7 +249,9 @@ describe('ArrayIterationResolver', () => {
           type: 'ArrayIterationStep',
           parent: { type: 'Step' },
         };
-        const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
         const ctx = { dispatcher, trace, actorEntity };
 
         const clothingAccess = {
@@ -268,7 +272,9 @@ describe('ArrayIterationResolver', () => {
         const result = resolver.resolve(node, ctx);
 
         // Should get all layers
-        expect(result).toEqual(new Set(['jacket1', 'shirt1', 'undergarment1', 'necklace1']));
+        expect(result).toEqual(
+          new Set(['jacket1', 'shirt1', 'undergarment1', 'necklace1'])
+        );
       });
 
       it('should handle clothing access objects with specific layer mode', () => {
@@ -276,7 +282,9 @@ describe('ArrayIterationResolver', () => {
           type: 'ArrayIterationStep',
           parent: { type: 'Step' },
         };
-        const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
         const ctx = { dispatcher, trace, actorEntity };
 
         const clothingAccess = {
@@ -304,7 +312,9 @@ describe('ArrayIterationResolver', () => {
           type: 'ArrayIterationStep',
           parent: { type: 'Step' },
         };
-        const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
         const ctx = { dispatcher, trace, actorEntity };
 
         const clothingAccess = {
@@ -335,7 +345,9 @@ describe('ArrayIterationResolver', () => {
           type: 'ArrayIterationStep',
           parent: { type: 'Step' },
         };
-        const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
         const ctx = { dispatcher, trace, actorEntity };
 
         const clothingAccess = {
@@ -363,7 +375,9 @@ describe('ArrayIterationResolver', () => {
           type: 'ArrayIterationStep',
           parent: { type: 'Step' },
         };
-        const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
         const ctx = { dispatcher, trace, actorEntity };
 
         const clothingAccess = {

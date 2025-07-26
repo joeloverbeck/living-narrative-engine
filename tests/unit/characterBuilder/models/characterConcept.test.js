@@ -3,7 +3,14 @@
  * @see src/characterBuilder/models/characterConcept.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { v4 as uuidv4 } from 'uuid';
 import {
   createCharacterConcept,
@@ -22,7 +29,7 @@ describe('CharacterConcept Model', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     testBed = new BaseTestBed();
-    
+
     // Create mock schema validator
     mockSchemaValidator = {
       validate: jest.fn().mockReturnValue({ isValid: true }),
@@ -177,14 +184,18 @@ describe('CharacterConcept Model', () => {
     let existingConcept;
 
     beforeEach(() => {
-      existingConcept = createCharacterConcept('Original concept for testing updates');
+      existingConcept = createCharacterConcept(
+        'Original concept for testing updates'
+      );
     });
 
     describe('successful updates', () => {
       it('should update concept text and preserve other fields', () => {
         // Advance time to ensure different timestamp
         jest.advanceTimersByTime(100);
-        const updates = { concept: 'Updated concept text with sufficient length' };
+        const updates = {
+          concept: 'Updated concept text with sufficient length',
+        };
         const result = updateCharacterConcept(existingConcept, updates);
 
         expect(result).toEqual({
@@ -192,7 +203,9 @@ describe('CharacterConcept Model', () => {
           concept: 'Updated concept text with sufficient length',
           updatedAt: expect.any(Date),
         });
-        expect(result.updatedAt.getTime()).toBeGreaterThan(existingConcept.updatedAt.getTime());
+        expect(result.updatedAt.getTime()).toBeGreaterThan(
+          existingConcept.updatedAt.getTime()
+        );
       });
 
       it('should update status with valid value', () => {
@@ -202,7 +215,9 @@ describe('CharacterConcept Model', () => {
         const result = updateCharacterConcept(existingConcept, updates);
 
         expect(result.status).toBe(CHARACTER_CONCEPT_STATUS.COMPLETED);
-        expect(result.updatedAt.getTime()).toBeGreaterThan(existingConcept.updatedAt.getTime());
+        expect(result.updatedAt.getTime()).toBeGreaterThan(
+          existingConcept.updatedAt.getTime()
+        );
       });
 
       it('should update thematic directions', () => {
@@ -212,7 +227,9 @@ describe('CharacterConcept Model', () => {
         const result = updateCharacterConcept(existingConcept, updates);
 
         expect(result.thematicDirections).toEqual(newDirections);
-        expect(result.updatedAt.getTime()).toBeGreaterThan(existingConcept.updatedAt.getTime());
+        expect(result.updatedAt.getTime()).toBeGreaterThan(
+          existingConcept.updatedAt.getTime()
+        );
       });
 
       it('should update metadata', () => {
@@ -222,7 +239,9 @@ describe('CharacterConcept Model', () => {
         const result = updateCharacterConcept(existingConcept, updates);
 
         expect(result.metadata).toEqual(newMetadata);
-        expect(result.updatedAt.getTime()).toBeGreaterThan(existingConcept.updatedAt.getTime());
+        expect(result.updatedAt.getTime()).toBeGreaterThan(
+          existingConcept.updatedAt.getTime()
+        );
       });
 
       it('should update multiple fields simultaneously', () => {
@@ -234,19 +253,27 @@ describe('CharacterConcept Model', () => {
         };
         const result = updateCharacterConcept(existingConcept, updates);
 
-        expect(result.concept).toBe('New concept with enough characters for validation');
+        expect(result.concept).toBe(
+          'New concept with enough characters for validation'
+        );
         expect(result.status).toBe(CHARACTER_CONCEPT_STATUS.PROCESSING);
         expect(result.metadata).toEqual({ source: 'test' });
-        expect(result.updatedAt.getTime()).toBeGreaterThan(existingConcept.updatedAt.getTime());
+        expect(result.updatedAt.getTime()).toBeGreaterThan(
+          existingConcept.updatedAt.getTime()
+        );
       });
 
       it('should trim whitespace from updated concept', () => {
         jest.advanceTimersByTime(10);
-        const updates = { concept: '  Updated concept with surrounding spaces  ' };
+        const updates = {
+          concept: '  Updated concept with surrounding spaces  ',
+        };
         const result = updateCharacterConcept(existingConcept, updates);
 
         expect(result.concept).toBe('Updated concept with surrounding spaces');
-        expect(result.updatedAt.getTime()).toBeGreaterThan(existingConcept.updatedAt.getTime());
+        expect(result.updatedAt.getTime()).toBeGreaterThan(
+          existingConcept.updatedAt.getTime()
+        );
       });
     });
 
@@ -280,9 +307,9 @@ describe('CharacterConcept Model', () => {
       });
 
       it('should throw error for undefined updates', () => {
-        expect(() => updateCharacterConcept(existingConcept, undefined)).toThrow(
-          'CharacterConcept: updates must be a valid object'
-        );
+        expect(() =>
+          updateCharacterConcept(existingConcept, undefined)
+        ).toThrow('CharacterConcept: updates must be a valid object');
       });
 
       it('should throw error for non-object updates', () => {
@@ -296,49 +323,59 @@ describe('CharacterConcept Model', () => {
       });
 
       it('should throw error for empty concept in updates', () => {
-        expect(() => updateCharacterConcept(existingConcept, { concept: '' })).toThrow(
-          'CharacterConcept: concept must be a non-empty string'
-        );
+        expect(() =>
+          updateCharacterConcept(existingConcept, { concept: '' })
+        ).toThrow('CharacterConcept: concept must be a non-empty string');
 
-        expect(() => updateCharacterConcept(existingConcept, { concept: '   ' })).toThrow(
-          'CharacterConcept: concept must be a non-empty string'
-        );
+        expect(() =>
+          updateCharacterConcept(existingConcept, { concept: '   ' })
+        ).toThrow('CharacterConcept: concept must be a non-empty string');
       });
 
       it('should throw error for null concept in updates', () => {
-        expect(() => updateCharacterConcept(existingConcept, { concept: null })).toThrow(
-          'CharacterConcept: concept must be a non-empty string'
-        );
+        expect(() =>
+          updateCharacterConcept(existingConcept, { concept: null })
+        ).toThrow('CharacterConcept: concept must be a non-empty string');
       });
 
       it('should throw error for non-string concept in updates', () => {
-        expect(() => updateCharacterConcept(existingConcept, { concept: 123 })).toThrow(
-          'CharacterConcept: concept must be a non-empty string'
-        );
+        expect(() =>
+          updateCharacterConcept(existingConcept, { concept: 123 })
+        ).toThrow('CharacterConcept: concept must be a non-empty string');
       });
 
       it('should throw error for concept with invalid length in updates', () => {
-        expect(() => updateCharacterConcept(existingConcept, { concept: 'short' })).toThrow(
+        expect(() =>
+          updateCharacterConcept(existingConcept, { concept: 'short' })
+        ).toThrow(
           'CharacterConcept: concept must be between 10 and 1000 characters'
         );
 
         const longConcept = 'A'.repeat(1001);
-        expect(() => updateCharacterConcept(existingConcept, { concept: longConcept })).toThrow(
+        expect(() =>
+          updateCharacterConcept(existingConcept, { concept: longConcept })
+        ).toThrow(
           'CharacterConcept: concept must be between 10 and 1000 characters'
         );
       });
 
       it('should throw error for invalid status in updates', () => {
-        expect(() => updateCharacterConcept(existingConcept, { status: 'invalid' })).toThrow(
-          'CharacterConcept: invalid status \'invalid\'. Must be one of: draft, processing, completed, error'
+        expect(() =>
+          updateCharacterConcept(existingConcept, { status: 'invalid' })
+        ).toThrow(
+          "CharacterConcept: invalid status 'invalid'. Must be one of: draft, processing, completed, error"
         );
 
-        expect(() => updateCharacterConcept(existingConcept, { status: null })).toThrow(
-          'CharacterConcept: invalid status \'null\'. Must be one of: draft, processing, completed, error'
+        expect(() =>
+          updateCharacterConcept(existingConcept, { status: null })
+        ).toThrow(
+          "CharacterConcept: invalid status 'null'. Must be one of: draft, processing, completed, error"
         );
 
-        expect(() => updateCharacterConcept(existingConcept, { status: 123 })).toThrow(
-          'CharacterConcept: invalid status \'123\'. Must be one of: draft, processing, completed, error'
+        expect(() =>
+          updateCharacterConcept(existingConcept, { status: 123 })
+        ).toThrow(
+          "CharacterConcept: invalid status '123'. Must be one of: draft, processing, completed, error"
         );
       });
     });
@@ -348,14 +385,19 @@ describe('CharacterConcept Model', () => {
     let mockConcept;
 
     beforeEach(() => {
-      mockConcept = createCharacterConcept('Valid concept for validation testing');
+      mockConcept = createCharacterConcept(
+        'Valid concept for validation testing'
+      );
     });
 
     describe('successful validation', () => {
       it('should validate concept with schema validator returning true', async () => {
         mockSchemaValidator.validate.mockReturnValue({ isValid: true });
 
-        const result = await validateCharacterConcept(mockConcept, mockSchemaValidator);
+        const result = await validateCharacterConcept(
+          mockConcept,
+          mockSchemaValidator
+        );
 
         expect(result).toBe(true);
         expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
@@ -399,7 +441,10 @@ describe('CharacterConcept Model', () => {
         };
         mockSchemaValidator.validate.mockReturnValue({ isValid: true });
 
-        await validateCharacterConcept(conceptWithStringDates, mockSchemaValidator);
+        await validateCharacterConcept(
+          conceptWithStringDates,
+          mockSchemaValidator
+        );
 
         expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
           'character-concept.schema.json',
@@ -415,29 +460,31 @@ describe('CharacterConcept Model', () => {
       it('should throw error for invalid schema validator', async () => {
         const invalidValidator = {};
 
-        await expect(validateCharacterConcept(mockConcept, invalidValidator)).rejects.toThrow();
+        await expect(
+          validateCharacterConcept(mockConcept, invalidValidator)
+        ).rejects.toThrow();
       });
 
       it('should throw error for null concept', async () => {
-        await expect(validateCharacterConcept(null, mockSchemaValidator)).rejects.toThrow(
-          'CharacterConcept: concept must be a valid object'
-        );
+        await expect(
+          validateCharacterConcept(null, mockSchemaValidator)
+        ).rejects.toThrow('CharacterConcept: concept must be a valid object');
       });
 
       it('should throw error for undefined concept', async () => {
-        await expect(validateCharacterConcept(undefined, mockSchemaValidator)).rejects.toThrow(
-          'CharacterConcept: concept must be a valid object'
-        );
+        await expect(
+          validateCharacterConcept(undefined, mockSchemaValidator)
+        ).rejects.toThrow('CharacterConcept: concept must be a valid object');
       });
 
       it('should throw error for non-object concept', async () => {
-        await expect(validateCharacterConcept('string', mockSchemaValidator)).rejects.toThrow(
-          'CharacterConcept: concept must be a valid object'
-        );
+        await expect(
+          validateCharacterConcept('string', mockSchemaValidator)
+        ).rejects.toThrow('CharacterConcept: concept must be a valid object');
 
-        await expect(validateCharacterConcept(123, mockSchemaValidator)).rejects.toThrow(
-          'CharacterConcept: concept must be a valid object'
-        );
+        await expect(
+          validateCharacterConcept(123, mockSchemaValidator)
+        ).rejects.toThrow('CharacterConcept: concept must be a valid object');
       });
 
       it('should throw error when schema validation fails', async () => {
@@ -450,7 +497,9 @@ describe('CharacterConcept Model', () => {
           errors: validationErrors,
         });
 
-        await expect(validateCharacterConcept(mockConcept, mockSchemaValidator)).rejects.toThrow(
+        await expect(
+          validateCharacterConcept(mockConcept, mockSchemaValidator)
+        ).rejects.toThrow(
           'CharacterConcept validation failed: /concept: should be string, /status: should be one of enum values'
         );
       });
@@ -464,7 +513,9 @@ describe('CharacterConcept Model', () => {
           errors: validationErrors,
         });
 
-        await expect(validateCharacterConcept(mockConcept, mockSchemaValidator)).rejects.toThrow(
+        await expect(
+          validateCharacterConcept(mockConcept, mockSchemaValidator)
+        ).rejects.toThrow(
           'CharacterConcept validation failed: root: should have required property id'
         );
       });
@@ -480,7 +531,9 @@ describe('CharacterConcept Model', () => {
           errors: validationErrors,
         });
 
-        await expect(validateCharacterConcept(mockConcept, mockSchemaValidator)).rejects.toThrow(
+        await expect(
+          validateCharacterConcept(mockConcept, mockSchemaValidator)
+        ).rejects.toThrow(
           'CharacterConcept validation failed: /concept: should be string, /id: should be UUID, root: global error'
         );
       });

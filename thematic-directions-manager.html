@@ -1,137 +1,184 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thematic Directions Manager - Living Narrative Engine</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/components.css" />
-  <link rel="stylesheet" href="css/thematic-directions-manager.css" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="manifest" href="/site.webmanifest">
-</head>
-<body>
-  <div id="thematic-directions-manager-container" class="cb-page-container">
-    <header class="cb-page-header">
-      <div class="header-content">
-        <h1>Thematic Directions Manager</h1>
-        <p class="header-subtitle">Edit and organize your character thematic directions</p>
-      </div>
-    </header>
-
-    <main class="cb-page-main thematic-directions-manager-main">
-      <!-- Left Panel: Concept Selection & Controls -->
-      <section class="cb-input-panel concept-selection-panel">
-        <h2 class="cb-panel-title">Select Character Concept</h2>
-        
-        <!-- Concept Selection -->
-        <div class="cb-form-group">
-          <label for="concept-selector">Choose Concept:</label>
-          <select id="concept-selector" class="cb-select">
-            <option value="">-- All Concepts --</option>
-            <option value="orphaned">🚨 Orphaned Directions</option>
-            <!-- Populated dynamically -->
-          </select>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thematic Directions Manager - Living Narrative Engine</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/thematic-directions-manager.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+  </head>
+  <body>
+    <div id="thematic-directions-manager-container" class="cb-page-container">
+      <header class="cb-page-header">
+        <div class="header-content">
+          <h1>Thematic Directions Manager</h1>
+          <p class="header-subtitle">
+            Edit and organize your character thematic directions
+          </p>
         </div>
+      </header>
 
-        <!-- Filter Controls -->
-        <div class="cb-form-group">
-          <label for="direction-filter">Filter Directions:</label>
-          <input type="text" id="direction-filter" class="cb-input" 
-                 placeholder="Search directions...">
-        </div>
+      <main class="cb-page-main thematic-directions-manager-main">
+        <!-- Left Panel: Concept Selection & Controls -->
+        <section class="cb-input-panel concept-selection-panel">
+          <h2 class="cb-panel-title">Select Character Concept</h2>
 
-        <!-- Actions -->
-        <div class="action-buttons">
-          <button type="button" id="refresh-btn" class="cb-button-secondary">
-            🔄 Refresh
-          </button>
-          <button type="button" id="cleanup-orphans-btn" class="cb-button-secondary">
-            🧹 Clean Orphans
-          </button>
-        </div>
-
-        <!-- Stats Display -->
-        <div class="stats-display">
-          <div class="stat-item">
-            <span class="stat-label">Total Directions:</span>
-            <span id="total-directions" class="stat-value">0</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Orphaned:</span>
-            <span id="orphaned-count" class="stat-value">0</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Right Panel: Directions Display & Editing -->
-      <section class="cb-results-panel directions-management-panel">
-        <h2 class="cb-panel-title">Thematic Directions</h2>
-        
-        <div id="directions-container" class="cb-state-container">
-          <!-- Empty State -->
-          <div id="empty-state" class="cb-empty-state">
-            <p>No thematic directions found.</p>
-            <p>Generate some directions first using the Thematic Direction Generator.</p>
-            <a href="thematic-direction-generator.html" class="cb-button-primary" style="margin-top: 1rem;">
-              Go to Generator
-            </a>
+          <!-- Concept Selection -->
+          <div class="cb-form-group">
+            <label for="concept-selector">Choose Concept:</label>
+            <select id="concept-selector" class="cb-select">
+              <option value="">-- All Concepts --</option>
+              <option value="orphaned">🚨 Orphaned Directions</option>
+              <!-- Populated dynamically -->
+            </select>
           </div>
 
-          <!-- Loading State -->
-          <div id="loading-state" class="cb-loading-state" style="display: none">
-            <div class="spinner large"></div>
-            <p>Loading directions...</p>
+          <!-- Filter Controls -->
+          <div class="cb-form-group">
+            <label for="direction-filter">Filter Directions:</label>
+            <input
+              type="text"
+              id="direction-filter"
+              class="cb-input"
+              placeholder="Search directions..."
+            />
           </div>
 
-          <!-- Error State -->
-          <div id="error-state" class="cb-error-state" style="display: none">
-            <p class="error-title">Unable to Load Directions</p>
-            <p class="error-message" id="error-message-text"></p>
-            <button type="button" class="cb-button-secondary" id="retry-btn">
-              Try Again
+          <!-- Actions -->
+          <div class="action-buttons">
+            <button type="button" id="refresh-btn" class="cb-button-secondary">
+              🔄 Refresh
+            </button>
+            <button
+              type="button"
+              id="cleanup-orphans-btn"
+              class="cb-button-secondary"
+            >
+              🧹 Clean Orphans
             </button>
           </div>
 
-          <!-- Results State -->
-          <div id="results-state" class="cb-state-container" style="display: none">
-            <div id="directions-results" class="directions-results">
-              <!-- Dynamically populated -->
+          <!-- Stats Display -->
+          <div class="stats-display">
+            <div class="stat-item">
+              <span class="stat-label">Total Directions:</span>
+              <span id="total-directions" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Orphaned:</span>
+              <span id="orphaned-count" class="stat-value">0</span>
             </div>
           </div>
+        </section>
+
+        <!-- Right Panel: Directions Display & Editing -->
+        <section class="cb-results-panel directions-management-panel">
+          <h2 class="cb-panel-title">Thematic Directions</h2>
+
+          <div id="directions-container" class="cb-state-container">
+            <!-- Empty State -->
+            <div id="empty-state" class="cb-empty-state">
+              <p>No thematic directions found.</p>
+              <p>
+                Generate some directions first using the Thematic Direction
+                Generator.
+              </p>
+              <a
+                href="thematic-direction-generator.html"
+                class="cb-button-primary"
+                style="margin-top: 1rem"
+              >
+                Go to Generator
+              </a>
+            </div>
+
+            <!-- Loading State -->
+            <div
+              id="loading-state"
+              class="cb-loading-state"
+              style="display: none"
+            >
+              <div class="spinner large"></div>
+              <p>Loading directions...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="cb-error-state" style="display: none">
+              <p class="error-title">Unable to Load Directions</p>
+              <p class="error-message" id="error-message-text"></p>
+              <button type="button" class="cb-button-secondary" id="retry-btn">
+                Try Again
+              </button>
+            </div>
+
+            <!-- Results State -->
+            <div
+              id="results-state"
+              class="cb-state-container"
+              style="display: none"
+            >
+              <div id="directions-results" class="directions-results">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="cb-page-footer">
+        <div class="footer-content">
+          <button
+            type="button"
+            id="back-to-menu-btn"
+            class="cb-button-secondary"
+          >
+            ← Back to Main Menu
+          </button>
+          <p class="footer-info">
+            Living Narrative Engine - Thematic Directions Manager
+          </p>
         </div>
-      </section>
-    </main>
+      </footer>
+    </div>
 
-    <footer class="cb-page-footer">
-      <div class="footer-content">
-        <button type="button" id="back-to-menu-btn" class="cb-button-secondary">
-          ← Back to Main Menu
-        </button>
-        <p class="footer-info">Living Narrative Engine - Thematic Directions Manager</p>
-      </div>
-    </footer>
-  </div>
-
-  <!-- Confirmation Modal -->
-  <div id="confirmation-modal" class="modal" style="display: none">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="modal-title">Confirm Action</h2>
-        <button type="button" class="close-modal" id="close-modal-btn">×</button>
-      </div>
-      <div class="modal-body">
-        <p id="modal-message">Are you sure you want to perform this action?</p>
-        <div class="modal-actions">
-          <button type="button" id="modal-confirm-btn" class="cb-button-primary">Confirm</button>
-          <button type="button" id="modal-cancel-btn" class="cb-button-secondary">Cancel</button>
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-title">Confirm Action</h2>
+          <button type="button" class="close-modal" id="close-modal-btn">
+            ×
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="modal-message">
+            Are you sure you want to perform this action?
+          </p>
+          <div class="modal-actions">
+            <button
+              type="button"
+              id="modal-confirm-btn"
+              class="cb-button-primary"
+            >
+              Confirm
+            </button>
+            <button
+              type="button"
+              id="modal-cancel-btn"
+              class="cb-button-secondary"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <script src="thematic-directions-manager.js"></script>
-</body>
+    <script src="thematic-directions-manager.js"></script>
+  </body>
 </html>

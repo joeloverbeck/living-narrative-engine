@@ -30,7 +30,9 @@ class ThematicDirectionsManagerApp {
     }
 
     try {
-      this.#logger.info('ThematicDirectionsManagerApp: Starting initialization');
+      this.#logger.info(
+        'ThematicDirectionsManagerApp: Starting initialization'
+      );
 
       // Setup DI container
       const container = new AppContainer();
@@ -62,13 +64,20 @@ class ThematicDirectionsManagerApp {
       });
 
       // Get and initialize controller
-      this.#controller = container.resolve(tokens.ThematicDirectionsManagerController);
+      this.#controller = container.resolve(
+        tokens.ThematicDirectionsManagerController
+      );
       await this.#controller.initialize();
 
       this.#initialized = true;
-      this.#logger.info('ThematicDirectionsManagerApp: Successfully initialized');
+      this.#logger.info(
+        'ThematicDirectionsManagerApp: Successfully initialized'
+      );
     } catch (error) {
-      this.#logger.error('ThematicDirectionsManagerApp: Failed to initialize', error);
+      this.#logger.error(
+        'ThematicDirectionsManagerApp: Failed to initialize',
+        error
+      );
       this.#showInitializationError(error);
       throw error;
     }
@@ -76,14 +85,17 @@ class ThematicDirectionsManagerApp {
 
   #registerController(container) {
     const registrar = new Registrar(container);
-    registrar.singletonFactory(tokens.ThematicDirectionsManagerController, (c) => {
-      return new ThematicDirectionsManagerController({
-        logger: c.resolve(tokens.ILogger),
-        characterBuilderService: c.resolve(tokens.CharacterBuilderService),
-        eventBus: c.resolve(tokens.ISafeEventDispatcher),
-        schemaValidator: c.resolve(tokens.ISchemaValidator),
-      });
-    });
+    registrar.singletonFactory(
+      tokens.ThematicDirectionsManagerController,
+      (c) => {
+        return new ThematicDirectionsManagerController({
+          logger: c.resolve(tokens.ILogger),
+          characterBuilderService: c.resolve(tokens.CharacterBuilderService),
+          eventBus: c.resolve(tokens.ISafeEventDispatcher),
+          schemaValidator: c.resolve(tokens.ISchemaValidator),
+        });
+      }
+    );
   }
 
   async #registerEventDefinitions(dataRegistry, schemaValidator) {
@@ -95,7 +107,10 @@ class ThematicDirectionsManagerApp {
           type: 'object',
           required: ['directionId', 'field', 'oldValue', 'newValue'],
           properties: {
-            directionId: { type: 'string', description: 'Updated direction ID' },
+            directionId: {
+              type: 'string',
+              description: 'Updated direction ID',
+            },
             field: { type: 'string', description: 'Updated field name' },
             oldValue: { type: 'string', description: 'Previous field value' },
             newValue: { type: 'string', description: 'New field value' },
@@ -109,7 +124,10 @@ class ThematicDirectionsManagerApp {
           type: 'object',
           required: ['directionId'],
           properties: {
-            directionId: { type: 'string', description: 'Deleted direction ID' },
+            directionId: {
+              type: 'string',
+              description: 'Deleted direction ID',
+            },
           },
         },
       },
@@ -120,14 +138,20 @@ class ThematicDirectionsManagerApp {
           type: 'object',
           required: ['deletedCount'],
           properties: {
-            deletedCount: { type: 'number', description: 'Number of deleted orphaned directions' },
+            deletedCount: {
+              type: 'number',
+              description: 'Number of deleted orphaned directions',
+            },
           },
         },
       },
     ];
 
     for (const event of events) {
-      await schemaValidator.addSchema(event.payloadSchema, `${event.id}#payload`);
+      await schemaValidator.addSchema(
+        event.payloadSchema,
+        `${event.id}#payload`
+      );
       dataRegistry.setEventDefinition(event.id, event);
     }
   }

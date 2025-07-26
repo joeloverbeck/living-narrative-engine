@@ -21,7 +21,7 @@
       },
       "required": ["id", "components"]
     },
-    
+
     "target": {
       "type": "object",
       "description": "Primary target entity when contextFrom='primary' is specified. Only available in secondary/tertiary target resolution.",
@@ -38,7 +38,7 @@
       },
       "required": ["id", "components"]
     },
-    
+
     "targets": {
       "type": "object",
       "description": "All resolved targets keyed by their definition name (primary, secondary, etc). Available during resolution of subsequent targets.",
@@ -62,7 +62,7 @@
         }
       }
     },
-    
+
     "location": {
       "type": "object",
       "description": "The location entity where the action is taking place. Usually the actor's current location.",
@@ -79,7 +79,7 @@
       },
       "required": ["id", "components"]
     },
-    
+
     "game": {
       "type": "object",
       "description": "Global game state object providing access to game-wide data",
@@ -92,7 +92,15 @@
         "timeOfDay": {
           "type": "string",
           "description": "Current time of day in the game world",
-          "enum": ["dawn", "morning", "noon", "afternoon", "evening", "night", "midnight"]
+          "enum": [
+            "dawn",
+            "morning",
+            "noon",
+            "afternoon",
+            "evening",
+            "night",
+            "midnight"
+          ]
         },
         "weather": {
           "type": "string",
@@ -102,9 +110,9 @@
       "additionalProperties": true
     }
   },
-  
+
   "required": ["actor", "location", "game"],
-  
+
   "examples": [
     {
       "$comment": "Context for primary target resolution",
@@ -164,7 +172,7 @@
       }
     }
   ],
-  
+
   "definitions": {
     "entityReference": {
       "type": "object",

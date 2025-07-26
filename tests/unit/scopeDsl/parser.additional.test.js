@@ -248,7 +248,10 @@ describe('Scope-DSL Parser - Additional Coverage Tests', () => {
       const result = parseDslExpression(
         'entities(core:item)[{"==": [{"var": "config"}, {"enabled": true, "level": 5}]}]'
       );
-      expect(result.logic['==']).toEqual([{ var: 'config' }, { enabled: true, level: 5 }]);
+      expect(result.logic['==']).toEqual([
+        { var: 'config' },
+        { enabled: true, level: 5 },
+      ]);
     });
 
     test('should handle arrays in JSON Logic', () => {

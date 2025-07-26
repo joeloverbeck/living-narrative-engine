@@ -2,7 +2,14 @@
  * @file Unit tests for ThematicDirectionsManagerController
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 
 // Mock the UIStateManager
@@ -20,16 +27,22 @@ jest.mock('../../../../src/shared/characterBuilder/uiStateManager.js', () => ({
 }));
 
 // Mock the PreviousItemsDropdown
-jest.mock('../../../../src/shared/characterBuilder/previousItemsDropdown.js', () => ({
-  PreviousItemsDropdown: jest.fn().mockImplementation(() => ({
-    loadItems: jest.fn().mockResolvedValue(true),
-  })),
-}));
+jest.mock(
+  '../../../../src/shared/characterBuilder/previousItemsDropdown.js',
+  () => ({
+    PreviousItemsDropdown: jest.fn().mockImplementation(() => ({
+      loadItems: jest.fn().mockResolvedValue(true),
+    })),
+  })
+);
 
 // Mock the FormValidationHelper (imported but not used in the controller)
-jest.mock('../../../../src/shared/characterBuilder/formValidationHelper.js', () => ({
-  FormValidationHelper: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/shared/characterBuilder/formValidationHelper.js',
+  () => ({
+    FormValidationHelper: jest.fn(),
+  })
+);
 
 describe('ThematicDirectionsManagerController', () => {
   let controller;
@@ -79,7 +92,7 @@ describe('ThematicDirectionsManagerController', () => {
   const createMockElement = (id, tagName = 'DIV') => {
     let textContent = '';
     let innerHTML = '';
-    
+
     const element = {
       id,
       tagName,
@@ -101,10 +114,18 @@ describe('ThematicDirectionsManagerController', () => {
         if (attr === 'data-field') return 'title';
         return null;
       }),
-      get textContent() { return textContent; },
-      set textContent(value) { textContent = String(value); },
-      get innerHTML() { return innerHTML; },
-      set innerHTML(value) { innerHTML = String(value); },
+      get textContent() {
+        return textContent;
+      },
+      set textContent(value) {
+        textContent = String(value);
+      },
+      get innerHTML() {
+        return innerHTML;
+      },
+      set innerHTML(value) {
+        innerHTML = String(value);
+      },
       disabled: false,
       parentElement: null,
       parentNode: { replaceChild: jest.fn() },
@@ -130,7 +151,7 @@ describe('ThematicDirectionsManagerController', () => {
   // Helper to trigger event on element
   const triggerEvent = (element, eventType, eventData = {}) => {
     const listener = element.addEventListener.mock.calls.find(
-      call => call[0] === eventType
+      (call) => call[0] === eventType
     );
     if (listener) {
       const event = {
@@ -149,25 +170,29 @@ describe('ThematicDirectionsManagerController', () => {
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks();
-    
+
     // Get mock constructors
-    const { UIStateManager } = require('../../../../src/shared/characterBuilder/uiStateManager.js');
-    const { PreviousItemsDropdown } = require('../../../../src/shared/characterBuilder/previousItemsDropdown.js');
-    
+    const {
+      UIStateManager,
+    } = require('../../../../src/shared/characterBuilder/uiStateManager.js');
+    const {
+      PreviousItemsDropdown,
+    } = require('../../../../src/shared/characterBuilder/previousItemsDropdown.js');
+
     // Create mock instances
     mockUIStateManager = {
       showState: jest.fn(),
       showError: jest.fn(),
     };
-    
+
     mockPreviousItemsDropdown = {
       loadItems: jest.fn().mockResolvedValue(true),
     };
-    
+
     // Configure mock constructors to return our instances
     UIStateManager.mockReturnValue(mockUIStateManager);
     PreviousItemsDropdown.mockReturnValue(mockPreviousItemsDropdown);
-    
+
     // Create specific mock elements
     mockDropdownElement = createMockElement('concept-selector', 'SELECT');
 
@@ -217,10 +242,13 @@ describe('ThematicDirectionsManagerController', () => {
         'modal-cancel-btn': mockElements.modalCancelBtn,
         'close-modal-btn': mockElements.closeModalBtn,
       };
-      return idMapping[id] || (() => {
-        console.warn(`Creating mock element for unmapped ID: ${id}`);
-        return createMockElement(id);
-      })();
+      return (
+        idMapping[id] ||
+        (() => {
+          console.warn(`Creating mock element for unmapped ID: ${id}`);
+          return createMockElement(id);
+        })()
+      );
     });
 
     // Mock the document object by replacing its methods
@@ -234,7 +262,10 @@ describe('ThematicDirectionsManagerController', () => {
             const editor = createMockElement('field-editor');
             editor.querySelector.mockImplementation((sel) => {
               if (sel === '.field-editor-input') {
-                const input = createMockElement('field-editor-input', 'TEXTAREA');
+                const input = createMockElement(
+                  'field-editor-input',
+                  'TEXTAREA'
+                );
                 input.value = 'test value';
                 return input;
               }
@@ -268,10 +299,14 @@ describe('ThematicDirectionsManagerController', () => {
     global.document = document;
 
     global.window = {
-      location: { 
+      location: {
         href: '',
-        get href() { return this._href || ''; },
-        set href(value) { this._href = value; }
+        get href() {
+          return this._href || '';
+        },
+        set href(value) {
+          this._href = value;
+        },
       },
     };
 
@@ -314,7 +349,9 @@ describe('ThematicDirectionsManagerController', () => {
     mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
       mockDirectionsWithConcepts
     );
-    mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue([mockConcept]);
+    mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue([
+      mockConcept,
+    ]);
     mockCharacterBuilderService.updateThematicDirection.mockResolvedValue({
       ...mockDirection,
       title: 'Updated Title',
@@ -337,18 +374,18 @@ describe('ThematicDirectionsManagerController', () => {
   // Helper function to simulate full initialization and display flow
   const initializeAndDisplayDirections = async () => {
     await controller.initialize();
-    
+
     // The controller should have loaded data and displayed directions
     // Let's trigger a manual display by simulating data load completion
     const displayContainer = document.createElement('div');
     displayContainer.className = 'directions-container';
-    
+
     // Create mock direction elements
     mockDirectionsWithConcepts.forEach((item) => {
       const directionElement = document.createElement('article');
       directionElement.className = 'direction-card-editable';
       directionElement.setAttribute('data-direction-id', item.direction.id);
-      
+
       // Add mock edit and delete buttons
       const editBtn = document.createElement('button');
       editBtn.className = 'edit-btn';
@@ -358,7 +395,7 @@ describe('ThematicDirectionsManagerController', () => {
           directionElement.classList.toggle('editing');
         }
       });
-      
+
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'delete-btn';
       deleteBtn.addEventListener = jest.fn((event, handler) => {
@@ -369,14 +406,14 @@ describe('ThematicDirectionsManagerController', () => {
           mockElements.confirmationModal.style.display = 'flex';
         }
       });
-      
+
       directionElement.appendChild(editBtn);
       directionElement.appendChild(deleteBtn);
       displayContainer.appendChild(directionElement);
     });
-    
+
     mockElements.directionsResults.appendChild(displayContainer);
-    
+
     return { displayContainer };
   };
 
@@ -435,9 +472,13 @@ describe('ThematicDirectionsManagerController', () => {
       await controller.initialize();
 
       expect(mockCharacterBuilderService.initialize).toHaveBeenCalled();
-      expect(mockCharacterBuilderService.getAllThematicDirectionsWithConcepts).toHaveBeenCalled();
+      expect(
+        mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
+      ).toHaveBeenCalled();
       // Note: getAllCharacterConcepts is no longer called as we extract concepts from directions
-      expect(mockCharacterBuilderService.getAllCharacterConcepts).not.toHaveBeenCalled();
+      expect(
+        mockCharacterBuilderService.getAllCharacterConcepts
+      ).not.toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ThematicDirectionsManagerController: Successfully initialized'
       );
@@ -457,7 +498,9 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should handle data loading failure', async () => {
       const error = new Error('Data loading failed');
-      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(error);
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
+        error
+      );
 
       await controller.initialize();
 
@@ -474,9 +517,13 @@ describe('ThematicDirectionsManagerController', () => {
     });
 
     it('should load directions data successfully', () => {
-      expect(mockCharacterBuilderService.getAllThematicDirectionsWithConcepts).toHaveBeenCalled();
+      expect(
+        mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
+      ).toHaveBeenCalled();
       // Note: getAllCharacterConcepts is no longer called as we extract concepts from directions
-      expect(mockCharacterBuilderService.getAllCharacterConcepts).not.toHaveBeenCalled();
+      expect(
+        mockCharacterBuilderService.getAllCharacterConcepts
+      ).not.toHaveBeenCalled();
       // Check for either success message - the controller logs both initialization and data loading
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ThematicDirectionsManagerController: Successfully initialized'
@@ -487,7 +534,7 @@ describe('ThematicDirectionsManagerController', () => {
       // Stats should show total count and orphaned count
       const totalDirections = mockDirectionsWithConcepts.length;
       const orphanedDirections = mockDirectionsWithConcepts.filter(
-        item => !item.concept
+        (item) => !item.concept
       ).length;
 
       expect(totalDirections).toBe(2);
@@ -496,7 +543,9 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should handle concept dropdown initialization', () => {
       // Test that the dropdown was initialized
-      const { PreviousItemsDropdown } = require('../../../../src/shared/characterBuilder/previousItemsDropdown.js');
+      const {
+        PreviousItemsDropdown,
+      } = require('../../../../src/shared/characterBuilder/previousItemsDropdown.js');
       expect(PreviousItemsDropdown).toHaveBeenCalled();
     });
 
@@ -504,7 +553,7 @@ describe('ThematicDirectionsManagerController', () => {
       // Test the search filter functionality
       const filterElement = mockElements.directionFilter;
       expect(filterElement).toBeDefined();
-      
+
       // The filtering logic happens internally through private methods
       // We can verify the filter element exists and is ready
     });
@@ -514,14 +563,25 @@ describe('ThematicDirectionsManagerController', () => {
     it('should only load concepts that have associated directions into dropdown', async () => {
       // Create a fresh controller with specific test data
       const testDirectionsData = [
-        { direction: { id: 'dir1' }, concept: { id: 'concept1', concept: 'First concept' } },
-        { direction: { id: 'dir2' }, concept: { id: 'concept2', concept: 'Second concept' } },
-        { direction: { id: 'dir3' }, concept: { id: 'concept1', concept: 'First concept' } }, // Duplicate
+        {
+          direction: { id: 'dir1' },
+          concept: { id: 'concept1', concept: 'First concept' },
+        },
+        {
+          direction: { id: 'dir2' },
+          concept: { id: 'concept2', concept: 'Second concept' },
+        },
+        {
+          direction: { id: 'dir3' },
+          concept: { id: 'concept1', concept: 'First concept' },
+        }, // Duplicate
         { direction: { id: 'dir4' }, concept: null }, // Orphaned direction
       ];
 
       // Mock the service to return our test data
-      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(testDirectionsData);
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        testDirectionsData
+      );
 
       const testController = new ThematicDirectionsManagerController({
         logger: mockLogger,
@@ -535,10 +595,13 @@ describe('ThematicDirectionsManagerController', () => {
       // Verify that only unique concepts with directions were passed to dropdown
       const loadItemsCalls = mockPreviousItemsDropdown.loadItems.mock.calls;
       expect(loadItemsCalls).toHaveLength(1);
-      
+
       const conceptsPassedToDropdown = loadItemsCalls[0][0];
       expect(conceptsPassedToDropdown).toHaveLength(2); // Only 2 unique concepts
-      expect(conceptsPassedToDropdown.map(c => c.id)).toEqual(['concept1', 'concept2']);
+      expect(conceptsPassedToDropdown.map((c) => c.id)).toEqual([
+        'concept1',
+        'concept2',
+      ]);
     });
 
     it('should handle all orphaned directions scenario', async () => {
@@ -548,7 +611,9 @@ describe('ThematicDirectionsManagerController', () => {
         { direction: { id: 'dir2' }, concept: null },
       ];
 
-      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(orphanedDirectionsData);
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        orphanedDirectionsData
+      );
 
       const testController = new ThematicDirectionsManagerController({
         logger: mockLogger,
@@ -562,13 +627,15 @@ describe('ThematicDirectionsManagerController', () => {
       // Verify empty concept list was passed to dropdown
       const loadItemsCalls = mockPreviousItemsDropdown.loadItems.mock.calls;
       expect(loadItemsCalls).toHaveLength(1);
-      
+
       const conceptsPassedToDropdown = loadItemsCalls[0][0];
       expect(conceptsPassedToDropdown).toHaveLength(0);
     });
 
     it('should handle empty directions data', async () => {
-      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([]);
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        []
+      );
 
       const testController = new ThematicDirectionsManagerController({
         logger: mockLogger,
@@ -582,7 +649,7 @@ describe('ThematicDirectionsManagerController', () => {
       // Verify empty concept list was passed to dropdown
       const loadItemsCalls = mockPreviousItemsDropdown.loadItems.mock.calls;
       expect(loadItemsCalls).toHaveLength(1);
-      
+
       const conceptsPassedToDropdown = loadItemsCalls[0][0];
       expect(conceptsPassedToDropdown).toHaveLength(0);
     });
@@ -594,7 +661,9 @@ describe('ThematicDirectionsManagerController', () => {
     });
 
     it('should handle successful direction deletion', async () => {
-      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(true);
+      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(
+        true
+      );
 
       // Test deletion flow - would need to simulate modal confirmation
       // and verify service calls and event dispatching
@@ -602,13 +671,17 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should handle deletion failures', async () => {
       const error = new Error('Deletion failed');
-      mockCharacterBuilderService.deleteThematicDirection.mockRejectedValue(error);
+      mockCharacterBuilderService.deleteThematicDirection.mockRejectedValue(
+        error
+      );
 
       // Test error handling during deletion
     });
 
     it('should dispatch deletion events', async () => {
-      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(true);
+      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(
+        true
+      );
 
       // Should dispatch deletion event after successful deletion
     });
@@ -622,27 +695,33 @@ describe('ThematicDirectionsManagerController', () => {
     it('should identify orphaned directions', () => {
       // Should correctly identify directions without valid concepts
       const orphanedCount = mockDirectionsWithConcepts.filter(
-        item => !item.concept
+        (item) => !item.concept
       ).length;
       expect(orphanedCount).toBe(1);
     });
 
     it('should handle orphan cleanup', async () => {
-      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(true);
+      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(
+        true
+      );
 
       // Test cleanup flow - would need to simulate modal confirmation
       // and verify batch deletion
     });
 
     it('should dispatch cleanup events', async () => {
-      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(true);
+      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(
+        true
+      );
 
       // Should dispatch cleanup event after successful cleanup
     });
 
     it('should handle no orphans case', () => {
       // Test behavior when no orphaned directions exist
-      const noOrphansData = [{ direction: mockDirection, concept: mockConcept }];
+      const noOrphansData = [
+        { direction: mockDirection, concept: mockConcept },
+      ];
       mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
         noOrphansData
       );
@@ -666,7 +745,9 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should handle data loading errors gracefully', async () => {
       const error = new Error('Data load failed');
-      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(error);
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
+        error
+      );
 
       await controller.initialize();
 
@@ -680,7 +761,9 @@ describe('ThematicDirectionsManagerController', () => {
       await controller.initialize();
 
       const error = new Error('Update failed');
-      mockCharacterBuilderService.updateThematicDirection.mockRejectedValue(error);
+      mockCharacterBuilderService.updateThematicDirection.mockRejectedValue(
+        error
+      );
 
       // Test that update errors are handled properly
       // Would need to trigger an update operation
@@ -690,13 +773,14 @@ describe('ThematicDirectionsManagerController', () => {
       await controller.initialize();
 
       const error = new Error('Deletion failed');
-      mockCharacterBuilderService.deleteThematicDirection.mockRejectedValue(error);
+      mockCharacterBuilderService.deleteThematicDirection.mockRejectedValue(
+        error
+      );
 
       // Test that deletion errors are handled properly
       // Would need to trigger a deletion operation
     });
   });
-
 
   describe('Data Loading and Filtering', () => {
     beforeEach(async () => {
@@ -705,7 +789,7 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should filter directions by search text', async () => {
       const filterElement = mockElements.directionFilter;
-      
+
       // Mock results container to track changes
       let resultsContent = '';
       mockElements.directionsResults.appendChild.mockImplementation((child) => {
@@ -714,7 +798,9 @@ describe('ThematicDirectionsManagerController', () => {
       mockElements.directionsResults.innerHTML = '';
       Object.defineProperty(mockElements.directionsResults, 'innerHTML', {
         get: () => resultsContent,
-        set: (value) => { resultsContent = value; },
+        set: (value) => {
+          resultsContent = value;
+        },
       });
 
       // Filter by title
@@ -727,10 +813,12 @@ describe('ThematicDirectionsManagerController', () => {
     it('should filter directions by concept selection', async () => {
       // Simulate concept dropdown selection
       const conceptDropdown = mockElements.conceptSelector;
-      
+
       // The PreviousItemsDropdown sets up its own event listener
       // We'll test that the dropdown was initialized properly
-      const { PreviousItemsDropdown } = require('../../../../src/shared/characterBuilder/previousItemsDropdown.js');
+      const {
+        PreviousItemsDropdown,
+      } = require('../../../../src/shared/characterBuilder/previousItemsDropdown.js');
       expect(PreviousItemsDropdown).toHaveBeenCalledWith({
         element: conceptDropdown,
         onSelectionChange: expect.any(Function),
@@ -741,9 +829,11 @@ describe('ThematicDirectionsManagerController', () => {
     it('should show orphaned directions when orphaned filter selected', async () => {
       // Test that orphaned directions can be filtered
       // The actual filtering is done through the concept dropdown
-      const { PreviousItemsDropdown } = require('../../../../src/shared/characterBuilder/previousItemsDropdown.js');
+      const {
+        PreviousItemsDropdown,
+      } = require('../../../../src/shared/characterBuilder/previousItemsDropdown.js');
       const dropdownInstance = PreviousItemsDropdown.mock.results[0].value;
-      
+
       // Verify dropdown was loaded with concepts
       expect(dropdownInstance.loadItems).toHaveBeenCalledWith([mockConcept]);
     });
@@ -756,12 +846,12 @@ describe('ThematicDirectionsManagerController', () => {
         eventBus: mockEventBus,
         schemaValidator: mockSchemaValidator,
       });
-      
+
       await freshController.initialize();
-      
+
       // Stats should be updated after data load
-      await new Promise(resolve => setTimeout(resolve, 0));
-      
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       expect(mockElements.totalDirections.textContent).toBe('2');
       expect(mockElements.orphanedCount.textContent).toBe('1');
       expect(mockElements.cleanupOrphansBtn.disabled).toBe(false);
@@ -769,13 +859,13 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should disable cleanup button when no orphans', async () => {
       // Mock data with no orphans
-      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([
-        { direction: mockDirection, concept: mockConcept },
-      ]);
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        [{ direction: mockDirection, concept: mockConcept }]
+      );
 
       // Reload data
       triggerEvent(mockElements.refreshBtn, 'click');
-      await new Promise(resolve => setTimeout(resolve, 0)); // Wait for async
+      await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async
 
       expect(mockElements.orphanedCount.textContent).toBe('0');
       expect(mockElements.cleanupOrphansBtn.disabled).toBe(true);
@@ -783,19 +873,20 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should show empty state when no directions match filter', async () => {
       const filterElement = mockElements.directionFilter;
-      
+
       // Set up empty state display tracking
       const emptyState = mockElements.emptyState;
       const resultsState = mockElements.resultsState;
-      
+
       // Filter with non-matching text
-      triggerEvent(filterElement, 'input', { target: { value: 'nonexistenttext' } });
+      triggerEvent(filterElement, 'input', {
+        target: { value: 'nonexistenttext' },
+      });
 
       // The controller should show empty state
       // This is handled internally by UIStateManager
     });
   });
-
 
   describe('Direction Deletion', () => {
     beforeEach(async () => {
@@ -813,7 +904,7 @@ describe('ThematicDirectionsManagerController', () => {
 
       // Simulate delete button click
       const mockDirectionToDelete = mockDirection;
-      
+
       // The actual implementation creates delete buttons dynamically
       // We'll test the modal display
       mockElements.modalTitle.textContent = 'Delete Direction';
@@ -826,57 +917,75 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should delete direction on modal confirmation', async () => {
       // Set up modal confirmation
-      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(true);
-      
+      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(
+        true
+      );
+
       // Simulate confirmation click
-      const confirmHandler = mockElements.modalConfirmBtn.addEventListener.mock.calls.find(
-        call => call[0] === 'click'
-      )?.[1];
+      const confirmHandler =
+        mockElements.modalConfirmBtn.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click'
+        )?.[1];
 
       if (confirmHandler) {
         // Set up the delete operation
         const directionId = 'direction-1';
-        mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(true);
-        
+        mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(
+          true
+        );
+
         await confirmHandler();
-        
+
         // Note: In actual implementation, the confirm handler is set up dynamically
         // when showing the modal, so we simulate the expected behavior
         await mockCharacterBuilderService.deleteThematicDirection(directionId);
-        
-        expect(mockCharacterBuilderService.deleteThematicDirection).toHaveBeenCalledWith(directionId);
+
+        expect(
+          mockCharacterBuilderService.deleteThematicDirection
+        ).toHaveBeenCalledWith(directionId);
       }
     });
 
     it('should handle deletion errors', async () => {
       const error = new Error('Delete failed');
-      mockCharacterBuilderService.deleteThematicDirection.mockRejectedValue(error);
+      mockCharacterBuilderService.deleteThematicDirection.mockRejectedValue(
+        error
+      );
 
       // Attempt deletion
       try {
-        await mockCharacterBuilderService.deleteThematicDirection('direction-1');
+        await mockCharacterBuilderService.deleteThematicDirection(
+          'direction-1'
+        );
       } catch (err) {
         expect(err).toBe(error);
       }
 
       // In actual implementation, this would show an alert
-      expect(mockCharacterBuilderService.deleteThematicDirection).toHaveBeenCalled();
+      expect(
+        mockCharacterBuilderService.deleteThematicDirection
+      ).toHaveBeenCalled();
     });
 
     it('should dispatch deletion event on success', async () => {
-      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(true);
-      
+      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(
+        true
+      );
+
       // Perform deletion
       await mockCharacterBuilderService.deleteThematicDirection('direction-1');
-      
+
       // In actual implementation, event would be dispatched after successful deletion
       mockEventBus.dispatch('thematic:direction_deleted', {
         directionId: 'direction-1',
       });
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith('thematic:direction_deleted', {
-        directionId: 'direction-1',
-      });
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'thematic:direction_deleted',
+        {
+          directionId: 'direction-1',
+        }
+      );
     });
   });
 
@@ -887,9 +996,9 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should show alert when no orphans to clean', async () => {
       // Mock no orphans
-      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([
-        { direction: mockDirection, concept: mockConcept },
-      ]);
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        [{ direction: mockDirection, concept: mockConcept }]
+      );
 
       // Reinitialize to load new data
       await controller.initialize();
@@ -909,63 +1018,86 @@ describe('ThematicDirectionsManagerController', () => {
       triggerEvent(mockElements.cleanupOrphansBtn, 'click');
 
       // Should show modal
-      expect(mockElements.modalTitle.textContent).toContain('Clean Up Orphaned Directions');
-      expect(mockElements.modalMessage.textContent).toContain('1 orphaned direction(s)');
+      expect(mockElements.modalTitle.textContent).toContain(
+        'Clean Up Orphaned Directions'
+      );
+      expect(mockElements.modalMessage.textContent).toContain(
+        '1 orphaned direction(s)'
+      );
       expect(mockElements.confirmationModal.style.display).toBe('flex');
     });
 
     it('should delete all orphaned directions on confirmation', async () => {
       // Set up successful deletion
-      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(true);
+      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(
+        true
+      );
 
       // Get orphaned directions (those without concepts)
       const orphanedDirections = mockDirectionsWithConcepts
-        .filter(item => !item.concept)
-        .map(item => item.direction);
+        .filter((item) => !item.concept)
+        .map((item) => item.direction);
 
       // Simulate batch deletion
       for (const direction of orphanedDirections) {
         await mockCharacterBuilderService.deleteThematicDirection(direction.id);
       }
 
-      expect(mockCharacterBuilderService.deleteThematicDirection).toHaveBeenCalledTimes(1);
-      expect(mockCharacterBuilderService.deleteThematicDirection).toHaveBeenCalledWith('direction-2');
+      expect(
+        mockCharacterBuilderService.deleteThematicDirection
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockCharacterBuilderService.deleteThematicDirection
+      ).toHaveBeenCalledWith('direction-2');
     });
 
     it('should dispatch cleanup event after successful cleanup', async () => {
       // Simulate successful cleanup
       const orphanedCount = 1;
-      
+
       mockEventBus.dispatch('thematic:orphans_cleaned', {
         deletedCount: orphanedCount,
       });
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith('thematic:orphans_cleaned', {
-        deletedCount: orphanedCount,
-      });
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'thematic:orphans_cleaned',
+        {
+          deletedCount: orphanedCount,
+        }
+      );
     });
 
     it('should show success alert after cleanup', async () => {
       // After successful cleanup
       const deletedCount = 1;
-      global.alert(`Successfully deleted ${deletedCount} orphaned direction(s).`);
+      global.alert(
+        `Successfully deleted ${deletedCount} orphaned direction(s).`
+      );
 
-      expect(global.alert).toHaveBeenCalledWith('Successfully deleted 1 orphaned direction(s).');
+      expect(global.alert).toHaveBeenCalledWith(
+        'Successfully deleted 1 orphaned direction(s).'
+      );
     });
 
     it('should handle cleanup errors', async () => {
       const error = new Error('Cleanup failed');
-      mockCharacterBuilderService.deleteThematicDirection.mockRejectedValue(error);
+      mockCharacterBuilderService.deleteThematicDirection.mockRejectedValue(
+        error
+      );
 
       // Attempt cleanup
       try {
-        await mockCharacterBuilderService.deleteThematicDirection('direction-2');
+        await mockCharacterBuilderService.deleteThematicDirection(
+          'direction-2'
+        );
       } catch (err) {
         expect(err).toBe(error);
       }
 
       // Would show error alert in actual implementation
-      expect(mockCharacterBuilderService.deleteThematicDirection).toHaveBeenCalled();
+      expect(
+        mockCharacterBuilderService.deleteThematicDirection
+      ).toHaveBeenCalled();
     });
   });
 
@@ -974,7 +1106,7 @@ describe('ThematicDirectionsManagerController', () => {
 
     beforeEach(async () => {
       await controller.initialize();
-      
+
       // Create mock direction card
       mockDirectionCard = createMockElement('direction-card');
       mockDirectionCard.classList.contains.mockReturnValue(false);
@@ -983,7 +1115,7 @@ describe('ThematicDirectionsManagerController', () => {
     it('should toggle edit mode on for direction card', () => {
       // Create edit button
       const editBtn = createMockElement('edit-btn', 'BUTTON');
-      
+
       // Initially not in edit mode
       expect(mockDirectionCard.classList.contains('editing')).toBe(false);
 
@@ -1002,14 +1134,16 @@ describe('ThematicDirectionsManagerController', () => {
       const activeEditor = createMockElement('active-editor');
       activeEditor.classList.contains.mockReturnValue(true);
       activeEditor.parentElement = createMockElement('field-container');
-      
+
       mockDirectionCard.querySelectorAll.mockReturnValue([activeEditor]);
 
       // Toggle off
       mockDirectionCard.classList.remove('editing');
       mockDirectionCard.classList.contains.mockReturnValue(false);
 
-      expect(mockDirectionCard.classList.remove).toHaveBeenCalledWith('editing');
+      expect(mockDirectionCard.classList.remove).toHaveBeenCalledWith(
+        'editing'
+      );
     });
   });
 
@@ -1056,15 +1190,15 @@ describe('ThematicDirectionsManagerController', () => {
       // Test that confirmation modal has the necessary elements
       const confirmBtn = mockElements.modalConfirmBtn;
       const modal = mockElements.confirmationModal;
-      
+
       expect(confirmBtn).toBeDefined();
       expect(modal).toBeDefined();
-      
+
       // The controller should be able to show and configure the modal
       mockElements.modalTitle.textContent = 'Test Confirmation';
       mockElements.modalMessage.textContent = 'Are you sure?';
       mockElements.confirmationModal.style.display = 'flex';
-      
+
       expect(mockElements.modalTitle.textContent).toBe('Test Confirmation');
       expect(mockElements.modalMessage.textContent).toBe('Are you sure?');
       expect(mockElements.confirmationModal.style.display).toBe('flex');
@@ -1073,7 +1207,7 @@ describe('ThematicDirectionsManagerController', () => {
     it('should replace event listeners to avoid duplicates', () => {
       const originalConfirmBtn = mockElements.modalConfirmBtn;
       const clonedBtn = createMockElement('cloned-confirm-btn', 'BUTTON');
-      
+
       originalConfirmBtn.cloneNode.mockReturnValue(clonedBtn);
       originalConfirmBtn.parentNode = {
         replaceChild: jest.fn(),
@@ -1094,16 +1228,22 @@ describe('ThematicDirectionsManagerController', () => {
     it('should display directions and handle interactions', async () => {
       // Initialize controller
       await controller.initialize();
-      
+
       // Verify initialization calls
       expect(mockUIStateManager.showState).toHaveBeenCalledWith('loading');
-      expect(mockCharacterBuilderService.getAllThematicDirectionsWithConcepts).toHaveBeenCalled();
+      expect(
+        mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
+      ).toHaveBeenCalled();
       // Note: getAllCharacterConcepts is no longer called as we extract concepts from directions
-      expect(mockCharacterBuilderService.getAllCharacterConcepts).not.toHaveBeenCalled();
-      
+      expect(
+        mockCharacterBuilderService.getAllCharacterConcepts
+      ).not.toHaveBeenCalled();
+
       // Simulate successful data load
-      expect(mockPreviousItemsDropdown.loadItems).toHaveBeenCalledWith([mockConcept]);
-      
+      expect(mockPreviousItemsDropdown.loadItems).toHaveBeenCalledWith([
+        mockConcept,
+      ]);
+
       // Test that results are displayed
       expect(mockElements.directionsResults.appendChild).toHaveBeenCalled();
       expect(mockElements.totalDirections.textContent).toBe('2');
@@ -1112,53 +1252,53 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should handle complete edit workflow', async () => {
       await initializeAndDisplayDirections();
-      
+
       // Create a mock field for editing
       const fieldContainer = createMockElement('field-container');
       const displayField = createMockElement('display-field');
       const editor = createMockElement('editor');
       const input = createMockElement('input', 'TEXTAREA');
       const saveBtn = createMockElement('save-btn', 'BUTTON');
-      
+
       displayField.textContent = 'Original Value';
       displayField.getAttribute = jest.fn((attr) => {
         if (attr === 'data-field') return 'title';
         if (attr === 'data-direction-id') return 'direction-1';
         return null;
       });
-      
+
       fieldContainer.querySelector = jest.fn((selector) => {
         if (selector === '.field-editor') return editor;
         if (selector === '.editable-field') return displayField;
         return null;
       });
-      
+
       editor.querySelector = jest.fn((selector) => {
         if (selector === '.field-editor-input') return input;
         if (selector === '.field-save-btn') return saveBtn;
         return null;
       });
-      
+
       displayField.parentElement = fieldContainer;
       editor.parentElement = fieldContainer;
-      
+
       // Start edit
       triggerEvent(displayField, 'click');
-      
+
       // Change value
       input.value = 'New Value';
-      
+
       // Mock successful save
       mockCharacterBuilderService.updateThematicDirection.mockResolvedValue({
         ...mockDirection,
         title: 'New Value',
       });
-      
+
       // Save edit
       const saveHandler = saveBtn.addEventListener.mock.calls.find(
-        call => call[0] === 'click'
+        (call) => call[0] === 'click'
       )?.[1];
-      
+
       if (saveHandler) {
         await saveHandler();
       }
@@ -1166,19 +1306,28 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should handle complete delete workflow', async () => {
       await initializeAndDisplayDirections();
-      
+
       // Mock successful deletion
-      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(true);
-      
+      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue(
+        true
+      );
+
       // Simulate the controller's internal deletion workflow
       // This would normally be triggered by the controller's modal confirmation handler
       await mockCharacterBuilderService.deleteThematicDirection('direction-1');
-      mockEventBus.dispatch('thematic:direction_deleted', { directionId: 'direction-1' });
-      
-      expect(mockCharacterBuilderService.deleteThematicDirection).toHaveBeenCalledWith('direction-1');
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith('thematic:direction_deleted', {
+      mockEventBus.dispatch('thematic:direction_deleted', {
         directionId: 'direction-1',
       });
+
+      expect(
+        mockCharacterBuilderService.deleteThematicDirection
+      ).toHaveBeenCalledWith('direction-1');
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'thematic:direction_deleted',
+        {
+          directionId: 'direction-1',
+        }
+      );
     });
   });
 
@@ -1193,7 +1342,7 @@ describe('ThematicDirectionsManagerController', () => {
         'ThematicDirectionsManagerController: Failed to initialize',
         error
       );
-      
+
       // Should still try to show error in UI if state manager exists
       // The actual check happens internally
     });
@@ -1215,7 +1364,7 @@ describe('ThematicDirectionsManagerController', () => {
       // Start editing field 1
       const field1 = createMockElement('field-1');
       field1.getAttribute.mockReturnValue('field1');
-      
+
       // Start editing field 2
       const field2 = createMockElement('field-2');
       field2.getAttribute.mockReturnValue('field2');
@@ -1244,7 +1393,7 @@ describe('ThematicDirectionsManagerController', () => {
     it('should handle dropdown initialization errors', async () => {
       // Mock dropdown initialization failure
       const error = new Error('Dropdown init failed');
-      
+
       // Make dropdown element invalid
       mockDropdownElement.tagName = 'DIV'; // Not a SELECT
 
@@ -1253,7 +1402,9 @@ describe('ThematicDirectionsManagerController', () => {
     });
 
     it('should handle empty directions data', async () => {
-      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([]);
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        []
+      );
       mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue([]);
 
       // Create new controller to test with empty data
@@ -1276,10 +1427,14 @@ describe('ThematicDirectionsManagerController', () => {
       const testError = new Error('Service error');
 
       // Update failure
-      mockCharacterBuilderService.updateThematicDirection.mockRejectedValue(testError);
-      
+      mockCharacterBuilderService.updateThematicDirection.mockRejectedValue(
+        testError
+      );
+
       // Delete failure
-      mockCharacterBuilderService.deleteThematicDirection.mockRejectedValue(testError);
+      mockCharacterBuilderService.deleteThematicDirection.mockRejectedValue(
+        testError
+      );
 
       // Each should be caught and logged appropriately
       expect(mockLogger.error).toBeDefined();
@@ -1302,11 +1457,13 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should show error state on failures', async () => {
       const error = new Error('Load failed');
-      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(error);
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
+        error
+      );
 
       // Trigger data reload
       triggerEvent(mockElements.refreshBtn, 'click');
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'ThematicDirectionsManagerController: Failed to load directions',

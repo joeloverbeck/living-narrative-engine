@@ -2,7 +2,14 @@
  * @file Integration tests for Thematic Directions Manager workflow
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { CharacterBuilderService } from '../../../src/characterBuilder/services/characterBuilderService.js';
 import { CharacterStorageService } from '../../../src/characterBuilder/services/characterStorageService.js';
 import { CharacterDatabase } from '../../../src/characterBuilder/storage/characterDatabase.js';
@@ -87,17 +94,27 @@ describe('Thematic Directions Manager Integration Tests', () => {
     // Map of required element IDs to mock elements
     const mockElements = {};
     const requiredIds = [
-      'empty-state', 'loading-state', 'error-state', 'results-state',
-      'concept-selector', 'direction-filter', 'directions-results',
-      'refresh-btn', 'cleanup-orphans-btn', 'back-to-menu-btn', 'retry-btn'
+      'empty-state',
+      'loading-state',
+      'error-state',
+      'results-state',
+      'concept-selector',
+      'direction-filter',
+      'directions-results',
+      'refresh-btn',
+      'cleanup-orphans-btn',
+      'back-to-menu-btn',
+      'retry-btn',
     ];
-    
-    requiredIds.forEach(id => {
+
+    requiredIds.forEach((id) => {
       mockElements[id] = createMockElement(id);
     });
 
     global.document = {
-      getElementById: jest.fn((id) => mockElements[id] || createMockElement(id)),
+      getElementById: jest.fn(
+        (id) => mockElements[id] || createMockElement(id)
+      ),
       createElement: jest.fn((tag) => ({
         tagName: tag.toUpperCase(),
         addEventListener: jest.fn(),
@@ -204,7 +221,7 @@ describe('Thematic Directions Manager Integration Tests', () => {
       directionGenerator: mockDirectionGenerator,
       eventBus: mockEventBus,
     });
-    
+
     // Add initialize method
     characterBuilderService.initialize = jest.fn().mockResolvedValue(undefined);
   });
@@ -224,17 +241,17 @@ describe('Thematic Directions Manager Integration Tests', () => {
         onsuccess: null,
         onerror: null,
       };
-      
+
       mockIndexedDB.open.mockReturnValue(mockRequest);
 
       // Initialize database with immediate callback execution
       const dbInitPromise = database.initialize();
-      
+
       // Trigger success callback immediately
       if (mockRequest.onsuccess) {
         mockRequest.onsuccess();
       }
-      
+
       await dbInitPromise;
       await storageService.initialize();
       await characterBuilderService.initialize();
@@ -247,7 +264,6 @@ describe('Thematic Directions Manager Integration Tests', () => {
       );
       // CharacterBuilderService doesn't log its own initialization
     });
-
 
     it('should properly identify and handle orphaned directions', async () => {
       const mockDirectionsWithConcepts = [
@@ -273,14 +289,14 @@ describe('Thematic Directions Manager Integration Tests', () => {
 
       // Should identify one orphaned direction
       const orphanedCount = mockDirectionsWithConcepts.filter(
-        item => !item.concept
+        (item) => !item.concept
       ).length;
       expect(orphanedCount).toBe(1);
     });
 
     it('should handle service errors gracefully', async () => {
       const error = new Error('Service initialization failed');
-      
+
       // Create a new mock service that will fail
       const failingCharacterBuilderService = {
         initialize: jest.fn().mockRejectedValue(error),
@@ -303,22 +319,24 @@ describe('Thematic Directions Manager Integration Tests', () => {
 
       // Should log the initialization error
       expect(mockLogger.error).toHaveBeenCalled();
-      
+
       // The error will be UIStateManager error (missing DOM elements) not our service error
       // because #cacheElements() runs before service initialization
       const errorCalls = mockLogger.error.mock.calls;
-      const hasInitError = errorCalls.some(call => 
-        call[0] === 'ThematicDirectionsManagerController: Failed to initialize'
+      const hasInitError = errorCalls.some(
+        (call) =>
+          call[0] ===
+          'ThematicDirectionsManagerController: Failed to initialize'
       );
       expect(hasInitError).toBe(true);
-      
+
       // Verify that an error was logged
       expect(errorCalls[0][1]).toBeInstanceOf(Error);
     });
 
     it('should handle data loading errors gracefully', async () => {
       const error = new Error('Data loading failed');
-      
+
       // Set up mocks to fail during data loading
       characterBuilderService.getAllThematicDirectionsWithConcepts = jest
         .fn()
@@ -338,16 +356,18 @@ describe('Thematic Directions Manager Integration Tests', () => {
 
       // The controller should have logged errors during initialization
       const errorCalls = mockLogger.error.mock.calls;
-      
+
       // Due to DOM element mocking, initialization will fail at UIStateManager creation
       // This is expected behavior in the test environment
-      const hasInitError = errorCalls.some(call => 
-        call[0] === 'ThematicDirectionsManagerController: Failed to initialize'
+      const hasInitError = errorCalls.some(
+        (call) =>
+          call[0] ===
+          'ThematicDirectionsManagerController: Failed to initialize'
       );
-      
+
       expect(hasInitError).toBe(true);
       expect(errorCalls.length).toBeGreaterThan(0);
-      
+
       // The test successfully demonstrates that the controller handles errors gracefully
       // by catching and logging them rather than throwing
     });
@@ -368,7 +388,8 @@ describe('Thematic Directions Manager Integration Tests', () => {
           return Promise.resolve(null);
         });
 
-      const result = await characterBuilderService.getAllThematicDirectionsWithConcepts();
+      const result =
+        await characterBuilderService.getAllThematicDirectionsWithConcepts();
 
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({
@@ -409,12 +430,18 @@ describe('Thematic Directions Manager Integration Tests', () => {
     });
 
     it('should handle direction deletions through the service chain', async () => {
-      storageService.deleteThematicDirection = jest.fn().mockResolvedValue(true);
+      storageService.deleteThematicDirection = jest
+        .fn()
+        .mockResolvedValue(true);
 
-      const result = await characterBuilderService.deleteThematicDirection(testDirection.id);
+      const result = await characterBuilderService.deleteThematicDirection(
+        testDirection.id
+      );
 
       expect(result).toBe(true);
-      expect(storageService.deleteThematicDirection).toHaveBeenCalledWith(testDirection.id);
+      expect(storageService.deleteThematicDirection).toHaveBeenCalledWith(
+        testDirection.id
+      );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         'thematic:direction_deleted',
         {
@@ -428,7 +455,8 @@ describe('Thematic Directions Manager Integration Tests', () => {
         .fn()
         .mockResolvedValue([orphanedDirection]);
 
-      const result = await characterBuilderService.getOrphanedThematicDirections();
+      const result =
+        await characterBuilderService.getOrphanedThematicDirections();
 
       expect(result).toEqual([orphanedDirection]);
       expect(storageService.findOrphanedDirections).toHaveBeenCalled();
@@ -438,7 +466,9 @@ describe('Thematic Directions Manager Integration Tests', () => {
   describe('Error Handling Integration', () => {
     it('should propagate storage errors through the service chain', async () => {
       const storageError = new Error('Database connection failed');
-      storageService.getAllThematicDirections = jest.fn().mockRejectedValue(storageError);
+      storageService.getAllThematicDirections = jest
+        .fn()
+        .mockRejectedValue(storageError);
 
       await expect(
         characterBuilderService.getAllThematicDirectionsWithConcepts()
@@ -448,9 +478,13 @@ describe('Thematic Directions Manager Integration Tests', () => {
     it('should handle validation errors in the service chain', async () => {
       const validationError = new Error('Validation failed');
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
-      mockSchemaValidator.formatAjvErrors.mockReturnValue('Invalid data format');
+      mockSchemaValidator.formatAjvErrors.mockReturnValue(
+        'Invalid data format'
+      );
 
-      storageService.updateThematicDirection = jest.fn().mockRejectedValue(validationError);
+      storageService.updateThematicDirection = jest
+        .fn()
+        .mockRejectedValue(validationError);
 
       await expect(
         characterBuilderService.updateThematicDirection(testDirection.id, {
@@ -461,7 +495,9 @@ describe('Thematic Directions Manager Integration Tests', () => {
 
     it('should handle network timeouts gracefully', async () => {
       const timeoutError = new Error('Operation timeout');
-      storageService.getAllThematicDirections = jest.fn().mockRejectedValue(timeoutError);
+      storageService.getAllThematicDirections = jest
+        .fn()
+        .mockRejectedValue(timeoutError);
 
       await expect(
         characterBuilderService.getAllThematicDirectionsWithConcepts()
@@ -483,7 +519,10 @@ describe('Thematic Directions Manager Integration Tests', () => {
         .fn()
         .mockResolvedValue(updatedDirection);
 
-      await characterBuilderService.updateThematicDirection(testDirection.id, updates);
+      await characterBuilderService.updateThematicDirection(
+        testDirection.id,
+        updates
+      );
 
       // Should dispatch the appropriate event
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
@@ -497,10 +536,14 @@ describe('Thematic Directions Manager Integration Tests', () => {
 
     it('should not dispatch events on operation failures', async () => {
       const error = new Error('Update failed');
-      storageService.updateThematicDirection = jest.fn().mockRejectedValue(error);
+      storageService.updateThematicDirection = jest
+        .fn()
+        .mockRejectedValue(error);
 
       await expect(
-        characterBuilderService.updateThematicDirection(testDirection.id, { title: 'New Title' })
+        characterBuilderService.updateThematicDirection(testDirection.id, {
+          title: 'New Title',
+        })
       ).rejects.toThrow();
 
       // Should not dispatch event on failure
@@ -516,14 +559,19 @@ describe('Thematic Directions Manager Integration Tests', () => {
       characterBuilderService.getAllCharacterConcepts = jest
         .fn()
         .mockResolvedValue(conceptsData);
-      storageService.getAllThematicDirections = jest.fn().mockResolvedValue(directionsData);
-      storageService.getCharacterConcept = jest.fn().mockImplementation((conceptId) => {
-        return Promise.resolve(
-          conceptsData.find(concept => concept.id === conceptId) || null
-        );
-      });
+      storageService.getAllThematicDirections = jest
+        .fn()
+        .mockResolvedValue(directionsData);
+      storageService.getCharacterConcept = jest
+        .fn()
+        .mockImplementation((conceptId) => {
+          return Promise.resolve(
+            conceptsData.find((concept) => concept.id === conceptId) || null
+          );
+        });
 
-      const result = await characterBuilderService.getAllThematicDirectionsWithConcepts();
+      const result =
+        await characterBuilderService.getAllThematicDirectionsWithConcepts();
 
       // Should correctly match directions with concepts
       expect(result[0].direction.conceptId).toBe(result[0].concept.id);

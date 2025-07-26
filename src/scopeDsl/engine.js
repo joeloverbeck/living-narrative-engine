@@ -106,10 +106,10 @@ class ScopeEngine extends IScopeEngine {
       getItemComponents: (itemId) => {
         // Primary path: Check if it's an entity (most clothing items)
         const entityManager = runtimeCtx?.entityManager;
-        const entity = entityManager?.getEntity 
-          ? entityManager.getEntity(itemId) 
+        const entity = entityManager?.getEntity
+          ? entityManager.getEntity(itemId)
           : entityManager?.getEntityInstance(itemId);
-        
+
         if (entity) {
           // Convert entity components to plain object for JSON Logic
           const components = {};
@@ -117,13 +117,17 @@ class ScopeEngine extends IScopeEngine {
             for (const [componentId, data] of entity.components) {
               components[componentId] = data;
             }
-          } else if (entity.components && typeof entity.components === 'object') {
+          } else if (
+            entity.components &&
+            typeof entity.components === 'object'
+          ) {
             Object.assign(components, entity.components);
           } else if (Array.isArray(entity.componentTypeIds)) {
             // Build components from componentTypeIds
             for (const componentTypeId of entity.componentTypeIds) {
-              const data = entity.getComponentData?.(componentTypeId) ||
-                           entityManager?.getComponentData(itemId, componentTypeId);
+              const data =
+                entity.getComponentData?.(componentTypeId) ||
+                entityManager?.getComponentData(itemId, componentTypeId);
               if (data) {
                 components[componentTypeId] = data;
               }
@@ -142,7 +146,9 @@ class ScopeEngine extends IScopeEngine {
           }
 
           // Check clothing-specific definitions
-          const clothingDef = componentRegistry.getDefinition?.(`clothing:${itemId}`);
+          const clothingDef = componentRegistry.getDefinition?.(
+            `clothing:${itemId}`
+          );
           if (clothingDef?.components) {
             return clothingDef.components;
           }

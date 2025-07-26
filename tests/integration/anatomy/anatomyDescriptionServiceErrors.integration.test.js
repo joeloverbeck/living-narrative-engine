@@ -18,7 +18,7 @@ describe('AnatomyDescriptionService - Error Handling', () => {
     testBed = new SimplifiedAnatomyTestBed();
     testBed.loadMinimalComponents();
     testBed.loadMinimalEntityDefinitions();
-    
+
     // Clear any leftover timers or mocks from previous tests
     jest.clearAllTimers();
     jest.clearAllMocks();
@@ -28,22 +28,25 @@ describe('AnatomyDescriptionService - Error Handling', () => {
     try {
       if (testBed) {
         // Force cleanup of entity manager before testBed cleanup
-        if (testBed.entityManager && typeof testBed.entityManager.clearAll === 'function') {
+        if (
+          testBed.entityManager &&
+          typeof testBed.entityManager.clearAll === 'function'
+        ) {
           testBed.entityManager.clearAll();
         }
         if (testBed.registry && typeof testBed.registry.clear === 'function') {
           testBed.registry.clear();
         }
-        
+
         await testBed.cleanup();
         testBed = null;
       }
-      
+
       // Additional cleanup to ensure worker process stability
       jest.clearAllTimers();
       jest.clearAllMocks();
       jest.restoreAllMocks();
-      
+
       // Force garbage collection if available
       if (typeof global !== 'undefined' && global.gc) {
         global.gc();
@@ -56,14 +59,16 @@ describe('AnatomyDescriptionService - Error Handling', () => {
   describe('Entity validation errors', () => {
     it('should throw error when entity lacks anatomy:body component', async () => {
       // Arrange - Create service without orchestrator to test fallback path
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        bodyDescriptionOrchestrator: null, // No orchestrator to test direct implementation
-      });
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          bodyDescriptionOrchestrator: null, // No orchestrator to test direct implementation
+        });
 
       // Create a mock entity that doesn't have anatomy:body component
       const mockEntity = {
         id: 'test-entity-' + Date.now(),
-        hasComponent: (componentId) => componentId !== ANATOMY_BODY_COMPONENT_ID,
+        hasComponent: (componentId) =>
+          componentId !== ANATOMY_BODY_COMPONENT_ID,
         getComponentData: jest.fn(),
       };
 
@@ -75,16 +80,22 @@ describe('AnatomyDescriptionService - Error Handling', () => {
 
     it('should throw error when body component lacks root property', async () => {
       // Arrange
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        bodyDescriptionOrchestrator: null, // No orchestrator to test direct implementation
-      });
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          bodyDescriptionOrchestrator: null, // No orchestrator to test direct implementation
+        });
 
-      const entity = await testBed.entityManager.createEntityInstance('core:actor');
+      const entity =
+        await testBed.entityManager.createEntityInstance('core:actor');
       // Add anatomy:body without root
-      await testBed.entityManager.addComponent(entity.id, ANATOMY_BODY_COMPONENT_ID, {
-        body: {}, // Missing root property
-        recipeId: 'test-recipe',
-      });
+      await testBed.entityManager.addComponent(
+        entity.id,
+        ANATOMY_BODY_COMPONENT_ID,
+        {
+          body: {}, // Missing root property
+          recipeId: 'test-recipe',
+        }
+      );
 
       // Act & Assert
       try {
@@ -111,11 +122,12 @@ describe('AnatomyDescriptionService - Error Handling', () => {
         safeDispatchEvent: eventDispatchSpy,
       };
 
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        bodyDescriptionComposer: mockComposer,
-        bodyDescriptionOrchestrator: null, // No orchestrator to test direct implementation
-        eventDispatchService: mockEventDispatchService, // Pass through dependency injection
-      });
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          bodyDescriptionComposer: mockComposer,
+          bodyDescriptionOrchestrator: null, // No orchestrator to test direct implementation
+          eventDispatchService: mockEventDispatchService, // Pass through dependency injection
+        });
 
       const entity = await testBed.createTestEntity(true);
 
@@ -131,7 +143,9 @@ describe('AnatomyDescriptionService - Error Handling', () => {
       expect(eventDispatchSpy).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining('Failed to generate body description'),
+          message: expect.stringContaining(
+            'Failed to generate body description'
+          ),
           details: expect.objectContaining({
             raw: expect.stringContaining(entity.id),
             timestamp: expect.any(String),
@@ -144,14 +158,20 @@ describe('AnatomyDescriptionService - Error Handling', () => {
   describe('Part entity error handling', () => {
     it('should handle entity without anatomy:part component gracefully', async () => {
       // Arrange
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService();
-      
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService();
+
       // Create a clean entity with only anatomy:body but no anatomy:part
-      const entity = await testBed.entityManager.createEntityInstance('core:actor');
-      await testBed.entityManager.addComponent(entity.id, ANATOMY_BODY_COMPONENT_ID, {
-        body: { root: 'test-root' },
-        recipeId: 'test-recipe',
-      });
+      const entity =
+        await testBed.entityManager.createEntityInstance('core:actor');
+      await testBed.entityManager.addComponent(
+        entity.id,
+        ANATOMY_BODY_COMPONENT_ID,
+        {
+          body: { root: 'test-root' },
+          recipeId: 'test-recipe',
+        }
+      );
       await testBed.entityManager.addComponent(entity.id, 'core:name', {
         text: 'Test Entity',
       });
@@ -169,7 +189,8 @@ describe('AnatomyDescriptionService - Error Handling', () => {
   describe('regenerateDescriptions error handling', () => {
     it('should handle missing entity in regenerateDescriptions gracefully', async () => {
       // Arrange
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService();
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService();
       const nonExistentId = 'non-existent-' + Date.now();
 
       // Act & Assert - Should not throw
@@ -178,22 +199,27 @@ describe('AnatomyDescriptionService - Error Handling', () => {
           anatomyDescriptionService.regenerateDescriptions(nonExistentId);
         } catch (error) {
           // Catch any unexpected errors to prevent worker process crashes
-          console.warn('Unexpected error in regenerateDescriptions:', error.message);
+          console.warn(
+            'Unexpected error in regenerateDescriptions:',
+            error.message
+          );
         }
       }).not.toThrow();
     });
 
     it('should handle non-anatomy entity in regenerateDescriptions gracefully', async () => {
       // Arrange
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService();
-      
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService();
+
       // Create a mock entity that truly doesn't have anatomy:body
       const mockEntity = {
         id: 'test-non-anatomy-' + Date.now(),
-        hasComponent: (componentId) => componentId !== ANATOMY_BODY_COMPONENT_ID,
+        hasComponent: (componentId) =>
+          componentId !== ANATOMY_BODY_COMPONENT_ID,
         getComponentData: jest.fn(),
       };
-      
+
       // Mock the entity finder to return our mock entity
       const originalGetEntityInstance = testBed.entityManager.getEntityInstance;
       testBed.entityManager.getEntityInstance = jest.fn((id) => {
@@ -209,13 +235,16 @@ describe('AnatomyDescriptionService - Error Handling', () => {
           anatomyDescriptionService.regenerateDescriptions(mockEntity.id);
         } catch (error) {
           // Catch any unexpected errors to prevent worker process crashes
-          console.warn('Unexpected error in regenerateDescriptions:', error.message);
+          console.warn(
+            'Unexpected error in regenerateDescriptions:',
+            error.message
+          );
         }
       }).not.toThrow();
 
       // Verify entity doesn't have anatomy:body
       expect(mockEntity.hasComponent(ANATOMY_BODY_COMPONENT_ID)).toBe(false);
-      
+
       // Restore original method
       testBed.entityManager.getEntityInstance = originalGetEntityInstance;
     });
@@ -237,13 +266,16 @@ describe('AnatomyDescriptionService - Error Handling', () => {
     it('should delegate generateBodyDescription to orchestrator when available', async () => {
       // Arrange
       const mockOrchestrator = {
-        generateBodyDescription: jest.fn().mockResolvedValue('Orchestrated description'),
+        generateBodyDescription: jest
+          .fn()
+          .mockResolvedValue('Orchestrated description'),
       };
 
-      const anatomyDescriptionService = await testBed.createAnatomyDescriptionService({
-        bodyDescriptionOrchestrator: mockOrchestrator,
-        withPersistence: true,
-      });
+      const anatomyDescriptionService =
+        await testBed.createAnatomyDescriptionService({
+          bodyDescriptionOrchestrator: mockOrchestrator,
+          withPersistence: true,
+        });
 
       const entity = await testBed.createTestEntity(true);
 
@@ -251,7 +283,9 @@ describe('AnatomyDescriptionService - Error Handling', () => {
       await anatomyDescriptionService.generateBodyDescription(entity);
 
       // Assert
-      expect(mockOrchestrator.generateBodyDescription).toHaveBeenCalledWith(entity);
+      expect(mockOrchestrator.generateBodyDescription).toHaveBeenCalledWith(
+        entity
+      );
     });
   });
 });

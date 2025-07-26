@@ -27,20 +27,20 @@ describe('UnequipClothingHandler', () => {
       getComponentData: jest.fn(),
       addComponent: jest.fn(),
     };
-    
+
     mockEquipmentOrchestrator = {
       orchestrateUnequipment: jest.fn(),
     };
-    
+
     mockLogger = {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
       debug: jest.fn(),
     };
-    
+
     mockDispatcher = { dispatch: jest.fn() };
-    
+
     // Create handler
     handler = new UnequipClothingHandler({
       entityManager: mockEntityManager,
@@ -48,7 +48,7 @@ describe('UnequipClothingHandler', () => {
       safeEventDispatcher: mockDispatcher,
       equipmentOrchestrator: mockEquipmentOrchestrator,
     });
-    
+
     // Create execution context
     executionContext = {
       evaluationContext: {
@@ -72,14 +72,14 @@ describe('UnequipClothingHandler', () => {
         entity_ref: 'actor',
         clothing_item_id: 'shirt_001',
       };
-      
+
       mockEntityManager.hasComponent.mockReturnValueOnce(true); // has equipment
       mockEntityManager.hasComponent.mockReturnValueOnce(true); // has inventory
       mockEntityManager.getComponentData.mockReturnValue({
         items: ['item1', 'item2'],
       });
       mockEntityManager.addComponent.mockResolvedValue(true);
-      
+
       mockEquipmentOrchestrator.orchestrateUnequipment.mockResolvedValue({
         success: true,
         unequipped: true,
@@ -89,13 +89,15 @@ describe('UnequipClothingHandler', () => {
       await handler.execute(params, executionContext);
 
       // Assert
-      expect(mockEquipmentOrchestrator.orchestrateUnequipment).toHaveBeenCalledWith({
+      expect(
+        mockEquipmentOrchestrator.orchestrateUnequipment
+      ).toHaveBeenCalledWith({
         entityId: 'player',
         clothingItemId: 'shirt_001',
         cascadeUnequip: false,
         reason: 'manual',
       });
-      
+
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'player',
         'core:inventory',
@@ -110,13 +112,13 @@ describe('UnequipClothingHandler', () => {
         clothing_item_id: 'shirt_001',
         destination: 'ground',
       };
-      
+
       mockEntityManager.hasComponent.mockReturnValue(true);
       mockEntityManager.getComponentData.mockReturnValue({
         locationId: 'room_001',
       });
       mockEntityManager.addComponent.mockResolvedValue(true);
-      
+
       mockEquipmentOrchestrator.orchestrateUnequipment.mockResolvedValue({
         success: true,
       });
@@ -139,7 +141,7 @@ describe('UnequipClothingHandler', () => {
         clothing_item_id: 'jacket_001',
         cascade_unequip: true,
       };
-      
+
       mockEntityManager.hasComponent.mockReturnValue(true);
       mockEquipmentOrchestrator.orchestrateUnequipment.mockResolvedValue({
         success: true,
@@ -151,7 +153,9 @@ describe('UnequipClothingHandler', () => {
       await handler.execute(params, executionContext);
 
       // Assert
-      expect(mockEquipmentOrchestrator.orchestrateUnequipment).toHaveBeenCalledWith({
+      expect(
+        mockEquipmentOrchestrator.orchestrateUnequipment
+      ).toHaveBeenCalledWith({
         entityId: 'shirt',
         clothingItemId: 'jacket_001',
         cascadeUnequip: true,
@@ -168,7 +172,9 @@ describe('UnequipClothingHandler', () => {
         'UNEQUIP_CLOTHING: params missing or invalid.',
         { params: null }
       );
-      expect(mockEquipmentOrchestrator.orchestrateUnequipment).not.toHaveBeenCalled();
+      expect(
+        mockEquipmentOrchestrator.orchestrateUnequipment
+      ).not.toHaveBeenCalled();
     });
 
     it('should return early if entity_ref is invalid', async () => {
@@ -183,7 +189,9 @@ describe('UnequipClothingHandler', () => {
 
       // Assert
       expect(mockLogger.warn).toHaveBeenCalled();
-      expect(mockEquipmentOrchestrator.orchestrateUnequipment).not.toHaveBeenCalled();
+      expect(
+        mockEquipmentOrchestrator.orchestrateUnequipment
+      ).not.toHaveBeenCalled();
     });
 
     it('should return early if clothing_item_id is invalid', async () => {
@@ -200,7 +208,9 @@ describe('UnequipClothingHandler', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'UNEQUIP_CLOTHING: clothing_item_id must be a non-empty string'
       );
-      expect(mockEquipmentOrchestrator.orchestrateUnequipment).not.toHaveBeenCalled();
+      expect(
+        mockEquipmentOrchestrator.orchestrateUnequipment
+      ).not.toHaveBeenCalled();
     });
 
     it('should return early if destination is invalid', async () => {
@@ -218,7 +228,9 @@ describe('UnequipClothingHandler', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'UNEQUIP_CLOTHING: Invalid destination "invalid". Must be "inventory" or "ground"'
       );
-      expect(mockEquipmentOrchestrator.orchestrateUnequipment).not.toHaveBeenCalled();
+      expect(
+        mockEquipmentOrchestrator.orchestrateUnequipment
+      ).not.toHaveBeenCalled();
     });
 
     it('should return early if entity has no equipment component', async () => {
@@ -227,7 +239,7 @@ describe('UnequipClothingHandler', () => {
         entity_ref: 'actor',
         clothing_item_id: 'shirt_001',
       };
-      
+
       mockEntityManager.hasComponent.mockReturnValue(false);
 
       // Act
@@ -237,7 +249,9 @@ describe('UnequipClothingHandler', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'UNEQUIP_CLOTHING: Entity "player" does not have clothing:equipment component'
       );
-      expect(mockEquipmentOrchestrator.orchestrateUnequipment).not.toHaveBeenCalled();
+      expect(
+        mockEquipmentOrchestrator.orchestrateUnequipment
+      ).not.toHaveBeenCalled();
     });
 
     it('should handle unequipment failure', async () => {
@@ -246,7 +260,7 @@ describe('UnequipClothingHandler', () => {
         entity_ref: 'actor',
         clothing_item_id: 'shirt_001',
       };
-      
+
       mockEntityManager.hasComponent.mockReturnValue(true);
       mockEquipmentOrchestrator.orchestrateUnequipment.mockResolvedValue({
         success: false,
@@ -271,14 +285,14 @@ describe('UnequipClothingHandler', () => {
         clothing_item_id: 'shirt_001',
         destination: 'inventory',
       };
-      
+
       mockEntityManager.hasComponent.mockReturnValueOnce(true); // has equipment
       mockEntityManager.hasComponent.mockReturnValueOnce(false); // no inventory
       mockEntityManager.getComponentData.mockReturnValue({
         locationId: 'room_001',
       });
       mockEntityManager.addComponent.mockResolvedValue(true);
-      
+
       mockEquipmentOrchestrator.orchestrateUnequipment.mockResolvedValue({
         success: true,
       });
@@ -303,7 +317,7 @@ describe('UnequipClothingHandler', () => {
         entity_ref: 'actor',
         clothing_item_id: 'shirt_001',
       };
-      
+
       mockEntityManager.hasComponent.mockReturnValue(true);
       mockEquipmentOrchestrator.orchestrateUnequipment.mockRejectedValue(
         new Error('Orchestration failed')
@@ -321,7 +335,7 @@ describe('UnequipClothingHandler', () => {
             error: 'Orchestration failed',
             entityId: 'player',
             clothingItemId: 'shirt_001',
-          })
+          }),
         }
       );
     });

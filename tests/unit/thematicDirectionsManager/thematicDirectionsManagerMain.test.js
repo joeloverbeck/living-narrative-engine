@@ -2,7 +2,14 @@
  * @file Unit tests for thematicDirectionsManagerMain.js
  */
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  jest,
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 
 // Mock ConsoleLogger
 const mockConsoleLogger = jest.fn().mockImplementation(() => ({
@@ -44,7 +51,9 @@ const mockTokens = {
   ISchemaValidator: Symbol('ISchemaValidator'),
   LLMAdapter: Symbol('LLMAdapter'),
   LlmConfigLoader: Symbol('LlmConfigLoader'),
-  ThematicDirectionsManagerController: Symbol('ThematicDirectionsManagerController'),
+  ThematicDirectionsManagerController: Symbol(
+    'ThematicDirectionsManagerController'
+  ),
   CharacterBuilderService: Symbol('CharacterBuilderService'),
   ISafeEventDispatcher: Symbol('ISafeEventDispatcher'),
 };
@@ -68,11 +77,17 @@ const mockControllerInitialize = jest.fn();
 const mockController = {
   initialize: mockControllerInitialize,
 };
-const mockThematicDirectionsManagerController = jest.fn().mockImplementation(() => mockController);
+const mockThematicDirectionsManagerController = jest
+  .fn()
+  .mockImplementation(() => mockController);
 
-jest.mock('../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js', () => ({
-  ThematicDirectionsManagerController: mockThematicDirectionsManagerController,
-}));
+jest.mock(
+  '../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js',
+  () => ({
+    ThematicDirectionsManagerController:
+      mockThematicDirectionsManagerController,
+  })
+);
 
 describe('thematicDirectionsManagerMain', () => {
   let originalDocument;
@@ -94,7 +109,7 @@ describe('thematicDirectionsManagerMain', () => {
 
     // Create mock DOM
     document.body.innerHTML = '<div id="app"></div>';
-    
+
     // Mock document ready state
     Object.defineProperty(document, 'readyState', {
       configurable: true,
@@ -153,8 +168,10 @@ describe('thematicDirectionsManagerMain', () => {
       if (token === mockTokens.ISchemaValidator) return mockSchemaValidator;
       if (token === mockTokens.LLMAdapter) return mockLlmAdapter;
       if (token === mockTokens.LlmConfigLoader) return mockLlmConfigLoader;
-      if (token === mockTokens.ThematicDirectionsManagerController) return mockController;
-      if (token === mockTokens.CharacterBuilderService) return mockCharacterBuilderService;
+      if (token === mockTokens.ThematicDirectionsManagerController)
+        return mockController;
+      if (token === mockTokens.CharacterBuilderService)
+        return mockCharacterBuilderService;
       if (token === mockTokens.ISafeEventDispatcher) return mockEventBus;
       if (token === mockTokens.ILogger) return mockLogger;
       return null;
@@ -180,7 +197,9 @@ describe('thematicDirectionsManagerMain', () => {
   describe('ThematicDirectionsManagerApp', () => {
     beforeEach(async () => {
       // Import the module dynamically to ensure fresh mocks
-      const module = await import('../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js');
+      const module = await import(
+        '../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js'
+      );
       ThematicDirectionsManagerApp = module.ThematicDirectionsManagerApp;
     });
 
@@ -200,7 +219,10 @@ describe('thematicDirectionsManagerMain', () => {
 
         // Verify container setup
         expect(mockAppContainer).toHaveBeenCalled();
-        expect(mockRegister).toHaveBeenCalledWith(mockTokens.ILogger, mockLogger);
+        expect(mockRegister).toHaveBeenCalledWith(
+          mockTokens.ILogger,
+          mockLogger
+        );
         expect(mockConfigureBaseContainer).toHaveBeenCalledWith(
           expect.any(Object),
           {
@@ -227,7 +249,7 @@ describe('thematicDirectionsManagerMain', () => {
           expect.any(Object),
           'thematic:orphans_cleaned#payload'
         );
-        
+
         expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(
           'thematic:direction_updated',
           expect.any(Object)
@@ -295,7 +317,9 @@ describe('thematicDirectionsManagerMain', () => {
         );
 
         // Verify error UI is shown
-        expect(document.body.innerHTML).toContain('Thematic Directions Manager Failed to Start');
+        expect(document.body.innerHTML).toContain(
+          'Thematic Directions Manager Failed to Start'
+        );
         expect(document.body.innerHTML).toContain('Schema loading failed');
       });
 
@@ -398,7 +422,9 @@ describe('thematicDirectionsManagerMain', () => {
 
         const app = new ThematicDirectionsManagerApp();
 
-        await expect(app.initialize()).rejects.toThrow('Controller init failed');
+        await expect(app.initialize()).rejects.toThrow(
+          'Controller init failed'
+        );
 
         expect(mockLogger.error).toHaveBeenCalledWith(
           'ThematicDirectionsManagerApp: Failed to initialize',
@@ -412,7 +438,9 @@ describe('thematicDirectionsManagerMain', () => {
 
         const app = new ThematicDirectionsManagerApp();
 
-        await expect(app.initialize()).rejects.toThrow('LLM adapter init failed');
+        await expect(app.initialize()).rejects.toThrow(
+          'LLM adapter init failed'
+        );
 
         expect(mockLogger.error).toHaveBeenCalledWith(
           'ThematicDirectionsManagerApp: Failed to initialize',
@@ -463,7 +491,9 @@ describe('thematicDirectionsManagerMain', () => {
 
       // Import module in isolation
       await jest.isolateModulesAsync(async () => {
-        await import('../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js');
+        await import(
+          '../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js'
+        );
       });
 
       // Allow async initialization to complete
@@ -488,7 +518,9 @@ describe('thematicDirectionsManagerMain', () => {
 
       // Import module in isolation
       await jest.isolateModulesAsync(async () => {
-        await import('../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js');
+        await import(
+          '../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js'
+        );
       });
 
       // Verify event listener was added
@@ -533,7 +565,9 @@ describe('thematicDirectionsManagerMain', () => {
 
       // Import module in isolation
       await jest.isolateModulesAsync(async () => {
-        await import('../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js');
+        await import(
+          '../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js'
+        );
       });
 
       // Allow async initialization to complete
@@ -541,7 +575,9 @@ describe('thematicDirectionsManagerMain', () => {
 
       // Verify error is displayed in body
       const html = document.body.innerHTML;
-      expect(html).toContain('Failed to initialize thematic directions manager');
+      expect(html).toContain(
+        'Failed to initialize thematic directions manager'
+      );
       expect(html).toContain('Critical startup error');
     });
   });
@@ -549,7 +585,7 @@ describe('thematicDirectionsManagerMain', () => {
   describe('Export verification', () => {
     it('should export ThematicDirectionsManagerApp class', async () => {
       let module;
-      
+
       // Reset mocks and set document to loading to prevent auto-initialization
       jest.clearAllMocks();
       Object.defineProperty(document, 'readyState', {
@@ -558,7 +594,9 @@ describe('thematicDirectionsManagerMain', () => {
       });
 
       await jest.isolateModulesAsync(async () => {
-        module = await import('../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js');
+        module = await import(
+          '../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js'
+        );
       });
 
       expect(module.ThematicDirectionsManagerApp).toBeDefined();

@@ -23,13 +23,19 @@ export class PreviousItemsDropdown {
       throw new Error('PreviousItemsDropdown: element is required');
     }
     if (element.tagName !== 'SELECT') {
-      throw new Error('PreviousItemsDropdown: element must be a SELECT element');
+      throw new Error(
+        'PreviousItemsDropdown: element must be a SELECT element'
+      );
     }
     if (!onSelectionChange) {
-      throw new Error('PreviousItemsDropdown: onSelectionChange callback is required');
+      throw new Error(
+        'PreviousItemsDropdown: onSelectionChange callback is required'
+      );
     }
     if (typeof onSelectionChange !== 'function') {
-      throw new Error('PreviousItemsDropdown: onSelectionChange must be a function');
+      throw new Error(
+        'PreviousItemsDropdown: onSelectionChange must be a function'
+      );
     }
 
     this.#element = element;
@@ -56,15 +62,19 @@ export class PreviousItemsDropdown {
     } = options;
 
     if (items === null || items === undefined) {
-      return Promise.reject(new Error('PreviousItemsDropdown: items must be an array'));
+      return Promise.reject(
+        new Error('PreviousItemsDropdown: items must be an array')
+      );
     }
-    
+
     if (!Array.isArray(items)) {
-      return Promise.reject(new Error('PreviousItemsDropdown: items must be an array'));
+      return Promise.reject(
+        new Error('PreviousItemsDropdown: items must be an array')
+      );
     }
 
     this.#items = items || [];
-    
+
     // Clear existing options
     this.#element.innerHTML = '';
 
@@ -88,7 +98,7 @@ export class PreviousItemsDropdown {
     }
 
     // Add items
-    this.#items.forEach(item => {
+    this.#items.forEach((item) => {
       const option = document.createElement('option');
       option.value = this.#getItemValue(item, valueProperty);
       option.textContent = this.#getItemLabel(item, labelProperty);
@@ -127,10 +137,12 @@ export class PreviousItemsDropdown {
   getSelectedItem() {
     const selectedId = this.getSelectedItemId();
     if (!selectedId) return null;
-    
-    return this.#items.find(item => 
-      item.id === selectedId || item.conceptId === selectedId
-    ) || null;
+
+    return (
+      this.#items.find(
+        (item) => item.id === selectedId || item.conceptId === selectedId
+      ) || null
+    );
   }
 
   /**
@@ -253,14 +265,15 @@ export class PreviousItemsDropdown {
    */
   #getItemLabel(item, labelProperty) {
     if (typeof item === 'string') return item;
-    
-    const label = item[labelProperty] || item.title || item.name || item.id || '';
-    
+
+    const label =
+      item[labelProperty] || item.title || item.name || item.id || '';
+
     // Truncate long labels
     if (label.length > 60) {
       return label.substring(0, 57) + '...';
     }
-    
+
     return label;
   }
 

@@ -164,7 +164,9 @@ describe('UIStateManager', () => {
       expect(mockEmptyState.style.display).toBe('none');
       expect(mockLoadingState.style.display).toBe('none');
       expect(mockResultsState.style.display).toBe('none');
-      expect(mockErrorState.querySelector).toHaveBeenCalledWith('.error-message, p');
+      expect(mockErrorState.querySelector).toHaveBeenCalledWith(
+        '.error-message, p'
+      );
       expect(mockErrorElement.textContent).toBe(errorMessage);
     });
 
@@ -231,7 +233,7 @@ describe('UIStateManager', () => {
 
       uiStateManager.showLoading();
       expect(uiStateManager.getCurrentState()).toBe('loading');
-      
+
       uiStateManager.showState('results');
       expect(uiStateManager.getCurrentState()).toBe('results');
     });

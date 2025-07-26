@@ -64,7 +64,12 @@ describe('testingFacadeRegistrations', () => {
         promptPipeline: { generatePrompt: jest.fn() },
         responseProcessor: { processResponse: jest.fn() },
         decisionProvider: { getDecision: jest.fn() },
-        logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+        logger: {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        },
       };
 
       mockResolve.mockImplementation((token) => {
@@ -99,7 +104,12 @@ describe('testingFacadeRegistrations', () => {
         availableActionsProvider: { getAvailableActions: jest.fn() },
         actionIndex: { getActionDefinition: jest.fn() },
         targetResolutionService: { resolveTargets: jest.fn() },
-        logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+        logger: {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        },
       };
 
       mockResolve.mockImplementation((token) => {
@@ -129,12 +139,20 @@ describe('testingFacadeRegistrations', () => {
 
     it('should create EntityServiceFacade with resolved dependencies', () => {
       const mockDependencies = {
-        entityManager: { createEntity: jest.fn(), getEntityInstance: jest.fn() },
+        entityManager: {
+          createEntity: jest.fn(),
+          getEntityInstance: jest.fn(),
+        },
         eventBus: { dispatch: jest.fn() },
         dataRegistry: { get: jest.fn() },
         scopeRegistry: { getScope: jest.fn() },
         gameDataRepository: { getEntityDefinition: jest.fn() },
-        logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+        logger: {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        },
       };
 
       mockResolve.mockImplementation((token) => {
@@ -163,23 +181,28 @@ describe('testingFacadeRegistrations', () => {
     });
 
     it('should create TurnExecutionFacade with resolved dependencies', () => {
-      const mockLLMService = { 
+      const mockLLMService = {
         getAIDecision: jest.fn(),
         generatePrompt: jest.fn(),
         processResponse: jest.fn(),
         getDecision: jest.fn(),
       };
-      const mockActionService = { 
+      const mockActionService = {
         discoverActions: jest.fn(),
         executeAction: jest.fn(),
         getAvailableActions: jest.fn(),
       };
-      const mockEntityService = { 
+      const mockEntityService = {
         createTestActor: jest.fn(),
         createEntity: jest.fn(),
         updateComponent: jest.fn(),
       };
-      const mockLogger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+      const mockLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
 
       mockResolve.mockImplementation((token) => {
         const tokenToKey = {
@@ -227,7 +250,9 @@ describe('testingFacadeRegistrations', () => {
       // Test that the mocks are properly set up with jest.fn
       expect(facades.mockDeps.logger.debug).toHaveBeenCalledTimes(0);
       expect(facades.mockDeps.llm.llmAdapter.getAIDecision).toBeDefined();
-      expect(facades.mockDeps.action.actionDiscoveryService.discoverActions).toBeDefined();
+      expect(
+        facades.mockDeps.action.actionDiscoveryService.discoverActions
+      ).toBeDefined();
       expect(facades.mockDeps.entity.entityManager.createEntity).toBeDefined();
     });
 
@@ -252,21 +277,41 @@ describe('testingFacadeRegistrations', () => {
       const facades = createMockFacades({}, simpleMockFn);
 
       // Test that fallback implementations work
-      await expect(facades.mockDeps.llm.llmAdapter.getAIDecision()).resolves.toEqual({ actionId: 'core:look' });
-      await expect(facades.mockDeps.llm.llmChooser.getAIChoice()).resolves.toBe('choice');
-      await expect(facades.mockDeps.llm.promptPipeline.generatePrompt()).resolves.toBe('prompt');
-      await expect(facades.mockDeps.llm.responseProcessor.processResponse()).resolves.toEqual({ processed: true });
-      await expect(facades.mockDeps.llm.decisionProvider.getDecision()).resolves.toEqual({ actionId: 'core:look' });
-      
-      await expect(facades.mockDeps.action.actionDiscoveryService.discoverActions()).resolves.toEqual({ actions: [] });
-      await expect(facades.mockDeps.action.actionPipelineOrchestrator.execute()).resolves.toEqual({
+      await expect(
+        facades.mockDeps.llm.llmAdapter.getAIDecision()
+      ).resolves.toEqual({ actionId: 'core:look' });
+      await expect(facades.mockDeps.llm.llmChooser.getAIChoice()).resolves.toBe(
+        'choice'
+      );
+      await expect(
+        facades.mockDeps.llm.promptPipeline.generatePrompt()
+      ).resolves.toBe('prompt');
+      await expect(
+        facades.mockDeps.llm.responseProcessor.processResponse()
+      ).resolves.toEqual({ processed: true });
+      await expect(
+        facades.mockDeps.llm.decisionProvider.getDecision()
+      ).resolves.toEqual({ actionId: 'core:look' });
+
+      await expect(
+        facades.mockDeps.action.actionDiscoveryService.discoverActions()
+      ).resolves.toEqual({ actions: [] });
+      await expect(
+        facades.mockDeps.action.actionPipelineOrchestrator.execute()
+      ).resolves.toEqual({
         success: true,
         effects: ['Action executed successfully'],
         description: 'The action was performed.',
       });
-      await expect(facades.mockDeps.action.availableActionsProvider.getAvailableActions()).resolves.toEqual([]);
-      await expect(facades.mockDeps.action.actionIndex.getActionDefinition()).resolves.toEqual({ id: 'test-action' });
-      await expect(facades.mockDeps.action.targetResolutionService.resolveTargets()).resolves.toEqual({});
+      await expect(
+        facades.mockDeps.action.availableActionsProvider.getAvailableActions()
+      ).resolves.toEqual([]);
+      await expect(
+        facades.mockDeps.action.actionIndex.getActionDefinition()
+      ).resolves.toEqual({ id: 'test-action' });
+      await expect(
+        facades.mockDeps.action.targetResolutionService.resolveTargets()
+      ).resolves.toEqual({});
     });
 
     it('should handle entity manager createEntity with mock store', async () => {
@@ -277,10 +322,12 @@ describe('testingFacadeRegistrations', () => {
         components: { 'core:name': { value: 'Test Entity' } },
       };
 
-      const entityId = await facades.mockDeps.entity.entityManager.createEntity(config);
+      const entityId =
+        await facades.mockDeps.entity.entityManager.createEntity(config);
       expect(entityId).toBe('test-entity-1');
 
-      const entity = await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
+      const entity =
+        await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
       expect(entity).toEqual({
         id: 'test-entity-1',
         components: { 'core:name': { value: 'Test Entity' } },
@@ -296,10 +343,12 @@ describe('testingFacadeRegistrations', () => {
         components: { 'core:name': { value: 'Test Entity 2' } },
       };
 
-      const entityId = await facades.mockDeps.entity.entityManager.createEntity(config);
+      const entityId =
+        await facades.mockDeps.entity.entityManager.createEntity(config);
       expect(entityId).toBe('test-entity-2');
 
-      const entity = await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
+      const entity =
+        await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
       expect(entity).toEqual({
         id: 'test-entity-2',
         components: { 'core:name': { value: 'Test Entity 2' } },
@@ -309,10 +358,12 @@ describe('testingFacadeRegistrations', () => {
     it('should handle entity manager updateComponent', async () => {
       const facades = createMockFacades({}, jest.fn);
 
-      const entityId = await facades.mockDeps.entity.entityManager.createEntity({
-        id: 'test-entity-3',
-        components: { 'core:name': { value: 'Original Name' } },
-      });
+      const entityId = await facades.mockDeps.entity.entityManager.createEntity(
+        {
+          id: 'test-entity-3',
+          components: { 'core:name': { value: 'Original Name' } },
+        }
+      );
 
       await facades.mockDeps.entity.entityManager.updateComponent(
         entityId,
@@ -320,7 +371,8 @@ describe('testingFacadeRegistrations', () => {
         { value: 'Updated Name' }
       );
 
-      const entity = await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
+      const entity =
+        await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
       expect(entity.components['core:name']).toEqual({ value: 'Updated Name' });
     });
 
@@ -328,10 +380,12 @@ describe('testingFacadeRegistrations', () => {
       const simpleMockFn = () => () => {};
       const facades = createMockFacades({}, simpleMockFn);
 
-      const entityId = await facades.mockDeps.entity.entityManager.createEntity({
-        id: 'test-entity-4',
-        components: {},
-      });
+      const entityId = await facades.mockDeps.entity.entityManager.createEntity(
+        {
+          id: 'test-entity-4',
+          components: {},
+        }
+      );
 
       await facades.mockDeps.entity.entityManager.updateComponent(
         entityId,
@@ -339,21 +393,28 @@ describe('testingFacadeRegistrations', () => {
         { value: 'New Location' }
       );
 
-      const entity = await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
-      expect(entity.components['core:location']).toEqual({ value: 'New Location' });
+      const entity =
+        await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
+      expect(entity.components['core:location']).toEqual({
+        value: 'New Location',
+      });
     });
 
     it('should handle entity manager removeEntity', async () => {
       const facades = createMockFacades({}, jest.fn);
 
-      const entityId = await facades.mockDeps.entity.entityManager.createEntity({
-        id: 'test-entity-5',
-      });
+      const entityId = await facades.mockDeps.entity.entityManager.createEntity(
+        {
+          id: 'test-entity-5',
+        }
+      );
 
-      const removed = await facades.mockDeps.entity.entityManager.removeEntity(entityId);
+      const removed =
+        await facades.mockDeps.entity.entityManager.removeEntity(entityId);
       expect(removed).toBe(true);
 
-      const entity = await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
+      const entity =
+        await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
       expect(entity).toBeNull();
     });
 
@@ -361,14 +422,18 @@ describe('testingFacadeRegistrations', () => {
       const simpleMockFn = () => () => {};
       const facades = createMockFacades({}, simpleMockFn);
 
-      const entityId = await facades.mockDeps.entity.entityManager.createEntity({
-        id: 'test-entity-6',
-      });
+      const entityId = await facades.mockDeps.entity.entityManager.createEntity(
+        {
+          id: 'test-entity-6',
+        }
+      );
 
-      const removed = await facades.mockDeps.entity.entityManager.removeEntity(entityId);
+      const removed =
+        await facades.mockDeps.entity.entityManager.removeEntity(entityId);
       expect(removed).toBe(true);
 
-      const entity = await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
+      const entity =
+        await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
       expect(entity).toBeNull();
     });
 
@@ -376,7 +441,9 @@ describe('testingFacadeRegistrations', () => {
       const facades = createMockFacades({}, jest.fn);
 
       const event = { type: 'TEST_EVENT', payload: { data: 'test' } };
-      await expect(facades.mockDeps.entity.eventBus.dispatch(event)).resolves.toBeUndefined();
+      await expect(
+        facades.mockDeps.entity.eventBus.dispatch(event)
+      ).resolves.toBeUndefined();
     });
 
     it('should handle eventBus dispatch without jest', async () => {
@@ -384,13 +451,18 @@ describe('testingFacadeRegistrations', () => {
       const facades = createMockFacades({}, simpleMockFn);
 
       const event = { type: 'TEST_EVENT', payload: { data: 'test' } };
-      await expect(facades.mockDeps.entity.eventBus.dispatch(event)).resolves.toBeUndefined();
+      await expect(
+        facades.mockDeps.entity.eventBus.dispatch(event)
+      ).resolves.toBeUndefined();
     });
 
     it('should handle gameDataRepository getEntityDefinition', () => {
       const facades = createMockFacades({}, jest.fn);
 
-      const actorDef = facades.mockDeps.entity.gameDataRepository.getEntityDefinition('core:actor');
+      const actorDef =
+        facades.mockDeps.entity.gameDataRepository.getEntityDefinition(
+          'core:actor'
+        );
       expect(actorDef).toEqual({
         id: 'core:actor',
         components: {
@@ -400,7 +472,10 @@ describe('testingFacadeRegistrations', () => {
         },
       });
 
-      const locationDef = facades.mockDeps.entity.gameDataRepository.getEntityDefinition('core:location');
+      const locationDef =
+        facades.mockDeps.entity.gameDataRepository.getEntityDefinition(
+          'core:location'
+        );
       expect(locationDef).toEqual({
         id: 'core:location',
         components: {
@@ -410,7 +485,10 @@ describe('testingFacadeRegistrations', () => {
         },
       });
 
-      const unknownDef = facades.mockDeps.entity.gameDataRepository.getEntityDefinition('unknown:entity');
+      const unknownDef =
+        facades.mockDeps.entity.gameDataRepository.getEntityDefinition(
+          'unknown:entity'
+        );
       expect(unknownDef).toBeNull();
     });
 
@@ -418,7 +496,10 @@ describe('testingFacadeRegistrations', () => {
       const simpleMockFn = () => () => {};
       const facades = createMockFacades({}, simpleMockFn);
 
-      const actorDef = facades.mockDeps.entity.gameDataRepository.getEntityDefinition('core:actor');
+      const actorDef =
+        facades.mockDeps.entity.gameDataRepository.getEntityDefinition(
+          'core:actor'
+        );
       expect(actorDef).toEqual({
         id: 'core:actor',
         components: {
@@ -428,7 +509,10 @@ describe('testingFacadeRegistrations', () => {
         },
       });
 
-      const unknownDef = facades.mockDeps.entity.gameDataRepository.getEntityDefinition('unknown:entity');
+      const unknownDef =
+        facades.mockDeps.entity.gameDataRepository.getEntityDefinition(
+          'unknown:entity'
+        );
       expect(unknownDef).toBeNull();
     });
 
@@ -439,21 +523,31 @@ describe('testingFacadeRegistrations', () => {
         components: { 'core:name': { value: 'Auto ID Entity' } },
       };
 
-      const entityId = await facades.mockDeps.entity.entityManager.createEntity(config);
+      const entityId =
+        await facades.mockDeps.entity.entityManager.createEntity(config);
       expect(entityId).toMatch(/^entity-\d+-[\d.]+$/);
 
-      const entity = await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
-      expect(entity.components).toEqual({ 'core:name': { value: 'Auto ID Entity' } });
+      const entity =
+        await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
+      expect(entity.components).toEqual({
+        'core:name': { value: 'Auto ID Entity' },
+      });
     });
 
     it('should merge custom LLM dependencies', () => {
       const customLLMDeps = {
-        llmAdapter: { getAIDecision: jest.fn().mockResolvedValue({ actionId: 'custom:action' }) },
+        llmAdapter: {
+          getAIDecision: jest
+            .fn()
+            .mockResolvedValue({ actionId: 'custom:action' }),
+        },
       };
 
       const facades = createMockFacades({ llm: customLLMDeps }, jest.fn);
 
-      expect(facades.mockDeps.llm.llmAdapter.getAIDecision).toBe(customLLMDeps.llmAdapter.getAIDecision);
+      expect(facades.mockDeps.llm.llmAdapter.getAIDecision).toBe(
+        customLLMDeps.llmAdapter.getAIDecision
+      );
       // Other LLM deps should still have defaults
       expect(facades.mockDeps.llm.llmChooser).toBeDefined();
       expect(facades.mockDeps.llm.promptPipeline).toBeDefined();
@@ -461,14 +555,16 @@ describe('testingFacadeRegistrations', () => {
 
     it('should merge custom action dependencies', () => {
       const customActionDeps = {
-        actionDiscoveryService: { discoverActions: jest.fn().mockResolvedValue({ actions: ['custom'] }) },
+        actionDiscoveryService: {
+          discoverActions: jest.fn().mockResolvedValue({ actions: ['custom'] }),
+        },
       };
 
       const facades = createMockFacades({ action: customActionDeps }, jest.fn);
 
-      expect(facades.mockDeps.action.actionDiscoveryService.discoverActions).toBe(
-        customActionDeps.actionDiscoveryService.discoverActions
-      );
+      expect(
+        facades.mockDeps.action.actionDiscoveryService.discoverActions
+      ).toBe(customActionDeps.actionDiscoveryService.discoverActions);
       // Other action deps should still have defaults
       expect(facades.mockDeps.action.actionPipelineOrchestrator).toBeDefined();
       expect(facades.mockDeps.action.availableActionsProvider).toBeDefined();
@@ -476,7 +572,9 @@ describe('testingFacadeRegistrations', () => {
 
     it('should merge custom entity dependencies', () => {
       const customEntityDeps = {
-        entityManager: { createEntity: jest.fn().mockResolvedValue('custom-entity-id') },
+        entityManager: {
+          createEntity: jest.fn().mockResolvedValue('custom-entity-id'),
+        },
       };
 
       const facades = createMockFacades({ entity: customEntityDeps }, jest.fn);

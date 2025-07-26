@@ -1,14 +1,145 @@
-ThematicDirectionApp: Loaded all schemas via SchemaLoader
-consoleLogger.js:175 AjvSchemaValidator: Error adding schema with ID 'thematic-direction': schema with key or id "schema://living-narrative-engine/thematic-direction.schema.json" already exists {schemaId: 'thematic-direction', error: Error: schema with key or id "schema://living-narrative-engine/thematic-direction.schema.json" alre…}
+SchemaLoader: Schema 'schema://living-narrative-engine/operations/systemMoveEntity.schema.json' loaded successfully with all $refs resolved.
+consoleLogger.js:187 SchemaLoader: Schema 'schema://living-narrative-engine/operations/unequipClothing.schema.json' loaded successfully with all $refs resolved.
+consoleLogger.js:151 SchemaLoader: Loaded 63 schemas: http://json-schema.org/draft-07/schema, llmTurnActionResponseSchema/v4, schema://living-narrative-engine/common.schema.json, schema://living-narrative-engine/json-logic.schema.json, schema://living-narrative-engine/condition-container.schema.json, schema://living-narrative-engine/action.schema.json, schema://living-narrative-engine/action-result.schema.json, schema://living-narrative-engine/component.schema.json, schema://living-narrative-engine/condition.schema.json, schema://living-narrative-engine/entity-definition.schema.json, schema://living-narrative-engine/entity-instance.schema.json, schema://living-narrative-engine/event.schema.json, schema://living-narrative-engine/game.schema.json, schema://living-narrative-engine/goal.schema.json, schema://living-narrative-engine/mod-manifest.schema.json, schema://living-narrative-engine/operation.schema.json, schema://living-narrative-engine/rule.schema.json, schema://living-narrative-engine/llm-configs.schema.json, schema://living-narrative-engine/prompt-text.schema.json, schema://living-narrative-engine/macro.schema.json, schema://living-narrative-engine/ui-icons.schema.json, schema://living-narrative-engine/ui-labels.schema.json, schema://living-narrative-engine/world.schema.json, schema://living-narrative-engine/anatomy.recipe.schema.json, schema://living-narrative-engine/anatomy.blueprint.schema.json, schema://living-narrative-engine/anatomy.blueprint-part.schema.json, schema://living-narrative-engine/anatomy.slot-library.schema.json, schema://living-narrative-engine/anatomy-formatting.schema.json, schema://living-narrative-engine/target-context.schema.json, schema://living-narrative-engine/thematic-direction.schema.json, schema://living-narrative-engine/base-operation.schema.json, schema://living-narrative-engine/operations/addComponent.schema.json, schema://living-narrative-engine/operations/addPerceptionLogEntry.schema.json, schema://living-narrative-engine/operations/autoMoveFollowers.schema.json, schema://living-narrative-engine/operations/breakFollowRelation.schema.json, schema://living-narrative-engine/operations/checkFollowCycle.schema.json, schema://living-narrative-engine/operations/dispatchEvent.schema.json, schema://living-narrative-engine/operations/dispatchPerceptibleEvent.schema.json, schema://living-narrative-engine/operations/dispatchSpeech.schema.json, schema://living-narrative-engine/operations/endTurn.schema.json, schema://living-narrative-engine/operations/establishFollowRelation.schema.json, schema://living-narrative-engine/operations/forEach.schema.json, schema://living-narrative-engine/operations/getName.schema.json, schema://living-narrative-engine/operations/getTimestamp.schema.json, schema://living-narrative-engine/operations/hasComponent.schema.json, schema://living-narrative-engine/operations/if.schema.json, schema://living-narrative-engine/operations/ifCoLocated.schema.json, schema://living-narrative-engine/operations/log.schema.json, schema://living-narrative-engine/operations/math.schema.json, schema://living-narrative-engine/operations/mergeClosenessCircle.schema.json, schema://living-narrative-engine/operations/modifyArrayField.schema.json, schema://living-narrative-engine/operations/modifyComponent.schema.json, schema://living-narrative-engine/operations/modifyContextArray.schema.json, schema://living-narrative-engine/operations/queryComponent.schema.json, schema://living-narrative-engine/operations/queryComponents.schema.json, schema://living-narrative-engine/operations/queryEntities.schema.json, schema://living-narrative-engine/operations/rebuildLeaderListCache.schema.json, schema://living-narrative-engine/operations/removeComponent.schema.json, schema://living-narrative-engine/operations/removeFromClosenessCircle.schema.json, schema://living-narrative-engine/operations/resolveDirection.schema.json, schema://living-narrative-engine/operations/setVariable.schema.json, schema://living-narrative-engine/operations/systemMoveEntity.schema.json, schema://living-narrative-engine/operations/unequipClothing.schema.json
+consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'thematic:direction_updated#payload'.
+consoleLogger.js:187 AjvSchemaValidator: Schema 'thematic:direction_updated#payload' verified as retrievable.
+consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'thematic:direction_deleted#payload'.
+consoleLogger.js:187 AjvSchemaValidator: Schema 'thematic:direction_deleted#payload' verified as retrievable.
+consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'thematic:orphans_cleaned#payload'.
+consoleLogger.js:187 AjvSchemaValidator: Schema 'thematic:orphans_cleaned#payload' verified as retrievable.
+consoleLogger.js:187 AI Systems Registration: Starting LLM Adapter setup...
+consoleLogger.js:187 EnvironmentContext: Client-side proxyServerUrl not provided. Using default: 'http://localhost:3001/api/llm-request'.
+consoleLogger.js:187 EnvironmentContext: Instance created. Execution environment: client.
+consoleLogger.js:187 GameDataRepository initialised (delegates to registry).
+consoleLogger.js:187 ValidatedEventDispatcher: Instance created.
+consoleLogger.js:187 SafeEventDispatcher: Instance created successfully.
+consoleLogger.js:187 ClientApiKeyProvider: Instance created.
+consoleLogger.js:187 RetryHttpClient: Instance created. {maxRetries: 3, baseDelayMs: 500, maxDelayMs: 10000}
+consoleLogger.js:187 LLMStrategyFactory: Instance created and dependencies stored.
+consoleLogger.js:187 LLMConfigurationManager: Instance created. Initial LLM ID: 'not set'.
+consoleLogger.js:187 LLMRequestExecutor: Instance created.
+consoleLogger.js:187 LLMErrorMapper: Instance created.
+consoleLogger.js:187 TokenEstimator: Instance created.
+consoleLogger.js:187 ConfigurableLLMAdapter: Instance created. Execution environment: client. Ready for initialization.
+consoleLogger.js:187 AI Systems Registration: ConfigurableLLMAdapter instance (token: LLMAdapter) created. Explicit initialization required.
+consoleLogger.js:187 ConfigurableLLMAdapter: Starting initialization.
+consoleLogger.js:187 LLMConfigurationManager: Starting asynchronous initialization.
+consoleLogger.js:187 LlmConfigLoader: Attempting to load LLM Prompt configurations from: config/llm-configs.json
+consoleLogger.js:187 LlmConfigLoader: Successfully fetched and parsed LLM Prompt configurations from config/llm-configs.json.
+consoleLogger.js:187 LlmConfigLoader: Validating against schema ID: schema://living-narrative-engine/llm-configs.schema.json
+consoleLogger.js:187 LlmConfigLoader: LLM Prompt configuration file from config/llm-configs.json passed schema validation.
+consoleLogger.js:187 LlmConfigLoader: Performing semantic validation for config/llm-configs.json.
+consoleLogger.js:187 LlmConfigLoader: Semantic validation passed for config/llm-configs.json.
+consoleLogger.js:187 LlmConfigLoader: LLM Prompt configurations from config/llm-configs.json processed successfully.
+consoleLogger.js:187 LLMConfigurationManager: Configurations loaded successfully. {numberOfConfigs: 4, defaultConfigId: 'openrouter-claude-sonnet-4-toolcalling'}
+consoleLogger.js:187 LLMConfigurationManager: Config 'openrouter-claude-sonnet-4-toolcalling' set as active from defaultConfigId.
+consoleLogger.js:187 LLMConfigurationManager: Initialization complete and operational.
+consoleLogger.js:187 ConfigurableLLMAdapter: Initialization complete.
+consoleLogger.js:151 CharacterDatabase: Successfully opened database
+consoleLogger.js:151 CharacterStorageService: Successfully initialized
+consoleLogger.js:151 CharacterBuilderService: Successfully initialized
+consoleLogger.js:187 CharacterDatabase: Retrieved 15 thematic directions
+consoleLogger.js:187 CharacterStorageService: Retrieved all thematic directions {directionCount: 15}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept 650c9a82-51bc-4a2c-b6b0-236ab55889c6: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '650c9a82-51bc-4a2c-b6b0-236ab55889c6'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept 9f5e16fb-3cd8-42a3-891d-22c078a24762: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '9f5e16fb-3cd8-42a3-891d-22c078a24762'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept 650c9a82-51bc-4a2c-b6b0-236ab55889c6: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '650c9a82-51bc-4a2c-b6b0-236ab55889c6'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept c7c8df47-cddc-475e-88b2-58a3b862fca7: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: 'c7c8df47-cddc-475e-88b2-58a3b862fca7'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept c7c8df47-cddc-475e-88b2-58a3b862fca7: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: 'c7c8df47-cddc-475e-88b2-58a3b862fca7'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept 650c9a82-51bc-4a2c-b6b0-236ab55889c6: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '650c9a82-51bc-4a2c-b6b0-236ab55889c6'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept c7c8df47-cddc-475e-88b2-58a3b862fca7: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: 'c7c8df47-cddc-475e-88b2-58a3b862fca7'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept c7c8df47-cddc-475e-88b2-58a3b862fca7: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: 'c7c8df47-cddc-475e-88b2-58a3b862fca7'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept c7c8df47-cddc-475e-88b2-58a3b862fca7: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: 'c7c8df47-cddc-475e-88b2-58a3b862fca7'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept 9f5e16fb-3cd8-42a3-891d-22c078a24762: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '9f5e16fb-3cd8-42a3-891d-22c078a24762'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept 9f5e16fb-3cd8-42a3-891d-22c078a24762: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '9f5e16fb-3cd8-42a3-891d-22c078a24762'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept 9f5e16fb-3cd8-42a3-891d-22c078a24762: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '9f5e16fb-3cd8-42a3-891d-22c078a24762'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept 650c9a82-51bc-4a2c-b6b0-236ab55889c6: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '650c9a82-51bc-4a2c-b6b0-236ab55889c6'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept 9f5e16fb-3cd8-42a3-891d-22c078a24762: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '9f5e16fb-3cd8-42a3-891d-22c078a24762'}
+consoleLogger.js:187 CharacterDatabase: Retrieved character concept 650c9a82-51bc-4a2c-b6b0-236ab55889c6: found
+consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '650c9a82-51bc-4a2c-b6b0-236ab55889c6'}
+consoleLogger.js:151 ThematicDirectionsManagerController: Loaded directions data {directionCount: 15, conceptsWithDirections: 3}
+consoleLogger.js:151 ThematicDirectionsManagerController: Successfully initialized
+consoleLogger.js:151 ThematicDirectionsManagerApp: Successfully initialized
+consoleLogger.js:187 CharacterDatabase: Retrieved thematic direction 747a92b2-7502-4449-90d7-7017911609e4 {found: true}
+consoleLogger.js:151 CharacterDatabase: Successfully updated thematic direction 747a92b2-7502-4449-90d7-7017911609e4
+consoleLogger.js:175 AjvSchemaValidator: validateAgainstSchema failed for schema 'thematic-direction': Schema 'thematic-direction' not loaded. {schemaId: 'thematic-direction', error: Error: Schema 'thematic-direction' not loaded.
+    at validateAgainstSchema (http://127.0.0.1:8080/…}
 error @ consoleLogger.js:175
-addSchema @ ajvSchemaValidator.js:214
-#loadCharacterSpecificSchemas @ thematic-direction-main.js:147
-await in #loadCharacterSpecificSchemas
-initialize @ thematic-direction-main.js:67
-await in initialize
-initialize @ thematic-direction-main.js:366Understand this error
-consoleLogger.js:187 ThematicDirectionApp: thematic-direction schema already loaded
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'character-concept'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'character-concept' verified as retrievable.
-consoleLogger.js:187 ThematicDirectionApp: Loaded JSON schemas
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'thematic:character_concept_created#payload'.
+validateAgainstSchema @ ajvSchemaValidator.js:611
+updateThematicDirection @ characterStorageService.js:483
+await in updateThematicDirection
+updateThematicDirection @ characterBuilderService.js:646
+#handleFieldSave @ thematicDirectionsManagerController.js:580
+onSave @ thematicDirectionsManagerController.js:534
+saveChanges @ inPlaceEditor.js:86
+(anonymous) @ inPlaceEditor.js:262Understand this error
+consoleLogger.js:175 Failed to update thematic direction 747a92b2-7502-4449-90d7-7017911609e4: Updated thematic direction validation failed: No specific error details provided. CharacterStorageError: Updated thematic direction validation failed: No specific error details provided.
+    at CharacterStorageService.updateThematicDirection (characterStorageService.js:489:15)
+    at async CharacterBuilderService.updateThematicDirection (characterBuilderService.js:646:9)
+    at async #handleFieldSave (thematicDirectionsManagerController.js:580:7)
+    at async InPlaceEditor.onSave (thematicDirectionsManagerController.js:534:9)
+    at async InPlaceEditor.saveChanges (inPlaceEditor.js:86:7)
+error @ consoleLogger.js:175
+updateThematicDirection @ characterStorageService.js:502
+await in updateThematicDirection
+updateThematicDirection @ characterBuilderService.js:646
+#handleFieldSave @ thematicDirectionsManagerController.js:580
+onSave @ thematicDirectionsManagerController.js:534
+saveChanges @ inPlaceEditor.js:86
+(anonymous) @ inPlaceEditor.js:262Understand this error
+consoleLogger.js:175 Failed to update thematic direction 747a92b2-7502-4449-90d7-7017911609e4: Failed to update thematic direction 747a92b2-7502-4449-90d7-7017911609e4: Updated thematic direction validation failed: No specific error details provided. CharacterStorageError: Failed to update thematic direction 747a92b2-7502-4449-90d7-7017911609e4: Updated thematic direction validation failed: No specific error details provided.
+    at CharacterStorageService.updateThematicDirection (characterStorageService.js:503:13)
+    at async CharacterBuilderService.updateThematicDirection (characterBuilderService.js:646:9)
+    at async #handleFieldSave (thematicDirectionsManagerController.js:580:7)
+    at async InPlaceEditor.onSave (thematicDirectionsManagerController.js:534:9)
+    at async InPlaceEditor.saveChanges (inPlaceEditor.js:86:7)Caused by: CharacterStorageError: Updated thematic direction validation failed: No specific error details provided.
+    at CharacterStorageService.updateThematicDirection (characterStorageService.js:489:15)
+    at async CharacterBuilderService.updateThematicDirection (characterBuilderService.js:646:9)
+    at async #handleFieldSave (thematicDirectionsManagerController.js:580:7)
+    at async InPlaceEditor.onSave (thematicDirectionsManagerController.js:534:9)
+    at async InPlaceEditor.saveChanges (inPlaceEditor.js:86:7)
+error @ consoleLogger.js:175
+updateThematicDirection @ characterBuilderService.js:659
+await in updateThematicDirection
+#handleFieldSave @ thematicDirectionsManagerController.js:580
+onSave @ thematicDirectionsManagerController.js:534
+saveChanges @ inPlaceEditor.js:86
+(anonymous) @ inPlaceEditor.js:262Understand this error
+consoleLogger.js:175 ThematicDirectionsManagerController: Failed to update direction CharacterBuilderError: Failed to update thematic direction 747a92b2-7502-4449-90d7-7017911609e4: Failed to update thematic direction 747a92b2-7502-4449-90d7-7017911609e4: Updated thematic direction validation failed: No specific error details provided.
+    at CharacterBuilderService.updateThematicDirection (characterBuilderService.js:660:13)
+    at async #handleFieldSave (thematicDirectionsManagerController.js:580:7)
+    at async InPlaceEditor.onSave (thematicDirectionsManagerController.js:534:9)
+    at async InPlaceEditor.saveChanges (inPlaceEditor.js:86:7)Caused by: CharacterStorageError: Failed to update thematic direction 747a92b2-7502-4449-90d7-7017911609e4: Updated thematic direction validation failed: No specific error details provided.
+    at CharacterStorageService.updateThematicDirection (characterStorageService.js:503:13)
+    at async CharacterBuilderService.updateThematicDirection (characterBuilderService.js:646:9)
+    at async #handleFieldSave (thematicDirectionsManagerController.js:580:7)
+    at async InPlaceEditor.onSave (thematicDirectionsManagerController.js:534:9)
+    at async InPlaceEditor.saveChanges (inPlaceEditor.js:86:7)Caused by: CharacterStorageError: Updated thematic direction validation failed: No specific error details provided.
+    at CharacterStorageService.updateThematicDirection (characterStorageService.js:489:15)
+    at async CharacterBuilderService.updateThematicDirection (characterBuilderService.js:646:9)
+    at async #handleFieldSave (thematicDirectionsManagerController.js:580:7)
+    at async InPlaceEditor.onSave (thematicDirectionsManagerController.js:534:9)
+    at async InPlaceEditor.saveChanges (inPlaceEditor.js:86:7)
+error @ consoleLogger.js:175
+#handleFieldSave @ thematicDirectionsManagerController.js:606
+await in #handleFieldSave
+onSave @ thematicDirectionsManagerController.js:534
+saveChanges @ inPlaceEditor.js:86
+(anonymous) @ inPlaceEditor.js:262Understand this error
+inPlaceEditor.js:95 InPlaceEditor: Save failed: Error: Failed to save changes. Please try again.
+    at #handleFieldSave (thematicDirectionsManagerController.js:610:13)
+    at async InPlaceEditor.onSave (thematicDirectionsManagerController.js:534:9)
+    at async InPlaceEditor.saveChanges (inPlaceEditor.js:86:7)

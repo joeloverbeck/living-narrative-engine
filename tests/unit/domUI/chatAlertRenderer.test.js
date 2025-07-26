@@ -63,16 +63,22 @@ const createMockElement = (tagName = 'div') => {
       const childNodes = this._childNodes || [];
       for (const node of childNodes) {
         if (!node.classList) continue;
-        
+
         // Handle complex selectors like '.class[data-attr="value"]'
         if (selector.includes('[data-toggle-type="details"]')) {
-          if (node.classList.contains('chat-alert-toggle') && 
-              node.dataset && node.dataset.toggleType === 'details') {
+          if (
+            node.classList.contains('chat-alert-toggle') &&
+            node.dataset &&
+            node.dataset.toggleType === 'details'
+          ) {
             return node;
           }
         } else if (selector.includes('[data-toggle-type="message"]')) {
-          if (node.classList.contains('chat-alert-toggle') && 
-              node.dataset && node.dataset.toggleType === 'message') {
+          if (
+            node.classList.contains('chat-alert-toggle') &&
+            node.dataset &&
+            node.dataset.toggleType === 'message'
+          ) {
             return node;
           }
         } else if (
@@ -83,7 +89,7 @@ const createMockElement = (tagName = 'div') => {
         } else if (node.tagName === selector.toUpperCase()) {
           return node;
         }
-        
+
         if (typeof node.querySelector === 'function') {
           const found = node.querySelector(selector);
           if (found) return found;
@@ -94,10 +100,10 @@ const createMockElement = (tagName = 'div') => {
     querySelectorAll: jest.fn(function (selector) {
       const results = [];
       const childNodes = this._childNodes || [];
-      
+
       for (const node of childNodes) {
         if (!node.classList) continue;
-        
+
         if (selector === 'button' && node.tagName === 'BUTTON') {
           results.push(node);
         } else if (
@@ -108,7 +114,7 @@ const createMockElement = (tagName = 'div') => {
         } else if (node.tagName === selector.toUpperCase()) {
           results.push(node);
         }
-        
+
         // Recursively search child nodes
         if (typeof node.querySelectorAll === 'function') {
           const childResults = node.querySelectorAll(selector);
@@ -283,7 +289,6 @@ describe('ChatAlertRenderer', () => {
       );
     });
 
-
     it('should throw error when alertRouter dependency is missing', () => {
       const invalidMocks = {
         logger: createMockLogger(),
@@ -439,7 +444,9 @@ describe('ChatAlertRenderer', () => {
       mocks.mockChatPanel._eventListeners.click({ target: nonToggleElement });
 
       // Should not throw or cause issues
-      expect(nonToggleElement.closest).toHaveBeenCalledWith('.chat-alert-toggle');
+      expect(nonToggleElement.closest).toHaveBeenCalledWith(
+        '.chat-alert-toggle'
+      );
     });
 
     it('should handle message toggle when target element cannot be found', () => {
@@ -463,7 +470,9 @@ describe('ChatAlertRenderer', () => {
 
       // Should log warning about not finding the element
       expect(mocks.logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Could not find message element for toggle button')
+        expect.stringContaining(
+          'Could not find message element for toggle button'
+        )
       );
     });
 
@@ -522,7 +531,9 @@ describe('ChatAlertRenderer', () => {
 
       // Should log warning about not finding the details content
       expect(mocks.logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Could not find details content for toggle button')
+        expect.stringContaining(
+          'Could not find details content for toggle button'
+        )
       );
     });
 
@@ -542,15 +553,18 @@ describe('ChatAlertRenderer', () => {
       mocks.mockChatPanel._eventListeners.click({ target: unknownToggleBtn });
 
       // No error should occur - the method should handle unknown types gracefully
-      expect(unknownToggleBtn.closest).toHaveBeenCalledWith('.chat-alert-toggle');
+      expect(unknownToggleBtn.closest).toHaveBeenCalledWith(
+        '.chat-alert-toggle'
+      );
     });
   });
 
   describe('Developer details extraction edge cases', () => {
     it('should extract stack trace from Error objects', () => {
       const error = new Error('Test error message');
-      error.stack = 'Error: Test error message\n    at Function.test\n    at main.js:10:5';
-      
+      error.stack =
+        'Error: Test error message\n    at Function.test\n    at main.js:10:5';
+
       const payload = {
         message: 'An error occurred',
         details: error,
@@ -581,7 +595,7 @@ describe('ChatAlertRenderer', () => {
           statusCode: 500,
           url: '/api/endpoint',
           raw: 'Internal server error',
-          stack: 'Error: Something went wrong\n    at handler.js:25:10'
+          stack: 'Error: Something went wrong\n    at handler.js:25:10',
         },
       };
       mocks.safeEventDispatcher.trigger('core:display_error', payload);
@@ -594,7 +608,7 @@ describe('ChatAlertRenderer', () => {
         'Details: Internal server error',
         '',
         'Stack Trace:',
-        'Error: Something went wrong\n    at handler.js:25:10'
+        'Error: Something went wrong\n    at handler.js:25:10',
       ].join('\n');
       expect(code.textContent).toBe(expectedDetails);
     });
@@ -679,7 +693,7 @@ describe('ChatAlertRenderer', () => {
       // Clear the mock and test undefined
       jest.clearAllMocks();
       const { mocks: freshMocks } = setup();
-      
+
       const payload2 = {
         message: 'Error with undefined details',
         details: undefined,

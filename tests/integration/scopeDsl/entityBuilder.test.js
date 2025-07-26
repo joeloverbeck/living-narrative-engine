@@ -35,17 +35,21 @@ describe('EntityBuilder Integration Tests', () => {
       getEntityInstance: (id) => entityManager.getEntityInstance(id),
       getEntities: () => Array.from(entityManager.entities.values()),
       getEntitiesWithComponent: (componentTypeId) => {
-        return Array.from(entityManager.entities.values()).filter((entity) =>
-          entity.components && entity.components[componentTypeId]
+        return Array.from(entityManager.entities.values()).filter(
+          (entity) => entity.components && entity.components[componentTypeId]
         );
       },
       hasComponent: (entityId, componentTypeId) => {
         const entity = entityManager.getEntityInstance(entityId);
-        return entity && entity.components && !!entity.components[componentTypeId];
+        return (
+          entity && entity.components && !!entity.components[componentTypeId]
+        );
       },
       getComponentData: (entityId, componentTypeId) => {
         const entity = entityManager.getEntityInstance(entityId);
-        return entity && entity.components && entity.components[componentTypeId];
+        return (
+          entity && entity.components && entity.components[componentTypeId]
+        );
       },
     };
 
@@ -88,8 +92,14 @@ describe('EntityBuilder Integration Tests', () => {
       expect(result.id).toBe('player1');
       // The enhanced entity doesn't preserve the name property unless it's part of the entity retrieved
       expect(result.components).toBeDefined();
-      expect(result.components['core:health']).toEqual({ current: 100, max: 100 });
-      expect(result.components['core:inventory']).toEqual({ items: [], capacity: 20 });
+      expect(result.components['core:health']).toEqual({
+        current: 100,
+        max: 100,
+      });
+      expect(result.components['core:inventory']).toEqual({
+        items: [],
+        capacity: 20,
+      });
     });
 
     it('should handle missing entities gracefully', () => {
@@ -124,8 +134,14 @@ describe('EntityBuilder Integration Tests', () => {
       // Verify all entities were enhanced correctly
       results.forEach((result, i) => {
         expect(result.id).toBe(`entity${i}`);
-        expect(result.components['core:position']).toEqual({ x: i * 10, y: i * 20 });
-        expect(result.components['core:velocity']).toEqual({ dx: i, dy: i * 2 });
+        expect(result.components['core:position']).toEqual({
+          x: i * 10,
+          y: i * 20,
+        });
+        expect(result.components['core:velocity']).toEqual({
+          dx: i,
+          dy: i * 2,
+        });
       });
     });
   });
@@ -139,15 +155,22 @@ describe('EntityBuilder Integration Tests', () => {
       };
 
       // Setup gateway to return component data
-      gateway.getComponentData = jest.fn()
+      gateway.getComponentData = jest
+        .fn()
         .mockReturnValueOnce({ current: 75, max: 100 })
         .mockReturnValueOnce({ defense: 10, durability: 50 });
 
       const result = entityBuilder.createWithComponents(entity);
 
       // Verify buildComponents was called correctly
-      expect(gateway.getComponentData).toHaveBeenCalledWith('testEntity', 'core:health');
-      expect(gateway.getComponentData).toHaveBeenCalledWith('testEntity', 'core:armor');
+      expect(gateway.getComponentData).toHaveBeenCalledWith(
+        'testEntity',
+        'core:health'
+      );
+      expect(gateway.getComponentData).toHaveBeenCalledWith(
+        'testEntity',
+        'core:armor'
+      );
 
       // Verify components were built correctly
       expect(result.components).toEqual({
@@ -168,7 +191,8 @@ describe('EntityBuilder Integration Tests', () => {
       };
 
       // Setup gateway to return data for custom2
-      gateway.getComponentData = jest.fn()
+      gateway.getComponentData = jest
+        .fn()
         .mockReturnValue({ value: 'from gateway' });
 
       const result = entityBuilder.createWithComponents(entity);
@@ -178,7 +202,10 @@ describe('EntityBuilder Integration Tests', () => {
       expect(entity.getComponentData).toHaveBeenCalledWith('core:custom2');
 
       // Verify gateway was called only for custom2
-      expect(gateway.getComponentData).toHaveBeenCalledWith('customEntity', 'core:custom2');
+      expect(gateway.getComponentData).toHaveBeenCalledWith(
+        'customEntity',
+        'core:custom2'
+      );
 
       // Verify mixed component sources
       expect(result.components).toEqual({
@@ -242,10 +269,15 @@ describe('EntityBuilder Integration Tests', () => {
       expect(result.id).toBe('realEntity1');
       expect(result.definitionId).toBe('test:character');
       expect(result.components).toBeDefined();
-      expect(result.components['core:health']).toEqual({ current: 100, max: 100 });
+      expect(result.components['core:health']).toEqual({
+        current: 100,
+        max: 100,
+      });
 
       // Verify the entity's getComponentData was called
-      expect(mockEntityInstance.getComponentData).toHaveBeenCalledWith('core:health');
+      expect(mockEntityInstance.getComponentData).toHaveBeenCalledWith(
+        'core:health'
+      );
     });
 
     it('should handle custom class instances with complex prototypes', () => {
@@ -279,7 +311,8 @@ describe('EntityBuilder Integration Tests', () => {
       character.componentTypeIds = ['core:stats'];
 
       // Setup gateway
-      gateway.getComponentData = jest.fn()
+      gateway.getComponentData = jest
+        .fn()
         .mockReturnValue({ strength: 10, agility: 15 });
 
       const result = entityBuilder.createWithComponents(character);
@@ -325,7 +358,7 @@ describe('EntityBuilder Integration Tests', () => {
 
       const result = entityBuilder.createWithComponents(entity);
 
-      // Verify property descriptors are preserved  
+      // Verify property descriptors are preserved
       expect(result.id).toBe('descriptorEntity');
       expect(result.name).toBe('Computed Name');
 
@@ -373,7 +406,9 @@ describe('EntityBuilder Integration Tests', () => {
       );
 
       expect(actor.id).toBe('actor1');
-      expect(actor.components['core:relationships'].followers).toContain('follower1');
+      expect(actor.components['core:relationships'].followers).toContain(
+        'follower1'
+      );
 
       // Test follower evaluation
       const follower = entityBuilder.createEntityForEvaluation('follower1');
@@ -387,21 +422,30 @@ describe('EntityBuilder Integration Tests', () => {
           id: 'parent1',
           componentTypeIds: ['core:family'],
           components: {
-            'core:family': { children: ['child1', 'child2'], spouse: 'parent2' },
+            'core:family': {
+              children: ['child1', 'child2'],
+              spouse: 'parent2',
+            },
           },
         },
         {
           id: 'parent2',
           componentTypeIds: ['core:family'],
           components: {
-            'core:family': { children: ['child1', 'child2'], spouse: 'parent1' },
+            'core:family': {
+              children: ['child1', 'child2'],
+              spouse: 'parent1',
+            },
           },
         },
         {
           id: 'child1',
           componentTypeIds: ['core:family'],
           components: {
-            'core:family': { parents: ['parent1', 'parent2'], sibling: 'child2' },
+            'core:family': {
+              parents: ['parent1', 'parent2'],
+              sibling: 'child2',
+            },
           },
         },
       ]);
@@ -414,7 +458,10 @@ describe('EntityBuilder Integration Tests', () => {
       // Verify all entities were created successfully despite circular refs
       expect(parent1.components['core:family'].spouse).toBe('parent2');
       expect(parent2.components['core:family'].spouse).toBe('parent1');
-      expect(child1.components['core:family'].parents).toEqual(['parent1', 'parent2']);
+      expect(child1.components['core:family'].parents).toEqual([
+        'parent1',
+        'parent2',
+      ]);
     });
 
     it('should integrate with multiple entity builders sharing the same gateway', () => {
@@ -423,11 +470,13 @@ describe('EntityBuilder Integration Tests', () => {
       const builder2 = new EntityBuilder(gateway);
       const builder3 = EntityBuilder.withGateway(gateway, mockLogger);
 
-      entityManager.setEntities([{
-        id: 'sharedEntity',
-        componentTypeIds: ['core:shared'],
-        components: { 'core:shared': { value: 42 } },
-      }]);
+      entityManager.setEntities([
+        {
+          id: 'sharedEntity',
+          componentTypeIds: ['core:shared'],
+          components: { 'core:shared': { value: 42 } },
+        },
+      ]);
 
       // All builders should produce consistent results
       const result1 = builder1.createEntityForEvaluation('sharedEntity');
@@ -554,7 +603,7 @@ describe('EntityBuilder Integration Tests', () => {
     it('should handle entities with 20+ component types', () => {
       const componentTypeIds = [];
       const components = {};
-      
+
       // Create 25 component types
       for (let i = 0; i < 25; i++) {
         const typeId = `core:component${i}`;
@@ -566,18 +615,22 @@ describe('EntityBuilder Integration Tests', () => {
         };
       }
 
-      entityManager.setEntities([{
-        id: 'complexEntity',
-        componentTypeIds,
-        components,
-      }]);
+      entityManager.setEntities([
+        {
+          id: 'complexEntity',
+          componentTypeIds,
+          components,
+        },
+      ]);
 
       const result = entityBuilder.createEntityForEvaluation('complexEntity');
 
       // Verify all components are present
       expect(Object.keys(result.components).length).toBe(25);
       expect(result.components['core:component15'].index).toBe(15);
-      expect(result.components['core:component24'].nested.items).toEqual([24, 25, 26]);
+      expect(result.components['core:component24'].nested.items).toEqual([
+        24, 25, 26,
+      ]);
     });
 
     it('should handle deeply nested component structures', () => {
@@ -596,16 +649,19 @@ describe('EntityBuilder Integration Tests', () => {
         },
       };
 
-      entityManager.setEntities([{
-        id: 'deepEntity',
-        componentTypeIds: ['core:deep'],
-        components: { 'core:deep': deepComponent },
-      }]);
+      entityManager.setEntities([
+        {
+          id: 'deepEntity',
+          componentTypeIds: ['core:deep'],
+          components: { 'core:deep': deepComponent },
+        },
+      ]);
 
       const result = entityBuilder.createEntityForEvaluation('deepEntity');
 
-      expect(result.components['core:deep'].level1.level2.level3.level4.level5.value)
-        .toBe('deep value');
+      expect(
+        result.components['core:deep'].level1.level2.level3.level4.level5.value
+      ).toBe('deep value');
     });
 
     it('should handle concurrent entity building operations', () => {
@@ -624,7 +680,9 @@ describe('EntityBuilder Integration Tests', () => {
       const promises = [];
       for (let i = 0; i < 100; i++) {
         promises.push(
-          Promise.resolve(entityBuilder.createEntityForEvaluation(`concurrent${i}`))
+          Promise.resolve(
+            entityBuilder.createEntityForEvaluation(`concurrent${i}`)
+          )
         );
       }
 
@@ -694,7 +752,7 @@ describe('EntityBuilder Integration Tests', () => {
 
       // Track memory usage (simplified - in real tests you'd use proper memory profiling)
       const startMemory = process.memoryUsage().heapUsed;
-      
+
       // Build a subset of entities
       const results = [];
       for (let i = 0; i < 100; i++) {
@@ -715,15 +773,17 @@ describe('EntityBuilder Integration Tests', () => {
   describe('Performance Benchmarks', () => {
     it('should build entities efficiently', () => {
       // Setup performance test data
-      entityManager.setEntities([{
-        id: 'perfTest',
-        componentTypeIds: ['core:perf1', 'core:perf2', 'core:perf3'],
-        components: {
-          'core:perf1': { data: 'test' },
-          'core:perf2': { data: 'test' },
-          'core:perf3': { data: 'test' },
+      entityManager.setEntities([
+        {
+          id: 'perfTest',
+          componentTypeIds: ['core:perf1', 'core:perf2', 'core:perf3'],
+          components: {
+            'core:perf1': { data: 'test' },
+            'core:perf2': { data: 'test' },
+            'core:perf3': { data: 'test' },
+          },
         },
-      }]);
+      ]);
 
       // Measure single entity build time
       const iterations = 1000;

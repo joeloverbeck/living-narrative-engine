@@ -1,9 +1,13 @@
 # Ticket: Comprehensive Integration Testing
 
 ## Ticket ID: PHASE4-TICKET14
+
 ## Priority: Medium
+
 ## Estimated Time: 8-10 hours
+
 ## Dependencies: PHASE4-TICKET13
+
 ## Blocks: PHASE5-TICKET15
 
 ## Overview
@@ -65,22 +69,22 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
         'core:actor': { name: 'Player' },
         'core:position': { locationId: 'room_001' },
         'core:stats': { dexterity: 20 },
-        'core:inventory': { items: ['rock_001'] }
+        'core:inventory': { items: ['rock_001'] },
       });
 
       const target = testBed.createEntity('guard_001', {
         'core:actor': { name: 'Guard', conscious: true },
-        'core:position': { locationId: 'room_001' }
+        'core:position': { locationId: 'room_001' },
       });
 
       const rock = testBed.createEntity('rock_001', {
-        'core:item': { name: 'Small Rock', throwable: true }
+        'core:item': { name: 'Small Rock', throwable: true },
       });
 
       const room = testBed.createEntity('room_001', {
         'core:location': { name: 'Training Room' },
         'core:actors': ['player', 'guard_001'],
-        'core:contents': { items: [] }
+        'core:contents': { items: [] },
       });
 
       const actionDefinition = {
@@ -101,15 +105,15 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
                     'core:item': {
                       type: 'object',
                       properties: {
-                        throwable: { type: 'boolean', const: true }
+                        throwable: { type: 'boolean', const: true },
                       },
-                      required: ['throwable']
-                    }
+                      required: ['throwable'],
+                    },
                   },
-                  required: ['core:item']
-                }
-              }
-            }
+                  required: ['core:item'],
+                },
+              },
+            },
           },
           target: {
             name: 'target',
@@ -120,19 +124,19 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
               properties: {
                 id: {
                   type: 'string',
-                  not: { const: 'actor.id' }
-                }
-              }
-            }
-          }
+                  not: { const: 'actor.id' },
+                },
+              },
+            },
+          },
         },
         conditions: [
           {
             description: 'Actor must have good aim',
             condition: {
-              '>=': [{ var: 'actor.components.core:stats.dexterity' }, 15]
-            }
-          }
+              '>=': [{ var: 'actor.components.core:stats.dexterity' }, 15],
+            },
+          },
         ],
         effects: [
           {
@@ -144,10 +148,10 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
               modifications: {
                 items: {
                   operation: 'remove',
-                  value: 'item.id'
-                }
-              }
-            }
+                  value: 'item.id',
+                },
+              },
+            },
           },
           {
             description: 'Dispatch throw event',
@@ -157,13 +161,15 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
               payload: {
                 actorId: 'actor.id',
                 itemId: 'item.id',
-                targetId: 'target.id'
-              }
-            }
-          }
+                targetId: 'target.id',
+              },
+            },
+          },
         ],
-        command: 'throw {item.components.core:item.name} at {target.components.core:actor.name}',
-        result: 'You throw {item.components.core:item.name} at {target.components.core:actor.name}.'
+        command:
+          'throw {item.components.core:item.name} at {target.components.core:actor.name}',
+        result:
+          'You throw {item.components.core:item.name} at {target.components.core:actor.name}.',
       };
 
       testBed.loadActionDefinition(actionDefinition);
@@ -175,7 +181,7 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'room_001' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -189,16 +195,20 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
 
       // Step 2: Execute the action
       const eventsSpy = testBed.createEventSpy('ITEM_THROWN_AT_TARGET');
-      
+
       const executionResult = await gameEngine.executeAction(action, 'player');
 
       expect(executionResult.success).toBe(true);
       expect(executionResult.value.command).toBe('throw Small Rock at Guard');
-      expect(executionResult.value.result).toBe('You throw Small Rock at Guard.');
+      expect(executionResult.value.result).toBe(
+        'You throw Small Rock at Guard.'
+      );
 
       // Step 3: Verify effects were applied
       const updatedPlayer = testBed.getEntity('player');
-      expect(updatedPlayer.getComponent('core:inventory').items).not.toContain('rock_001');
+      expect(updatedPlayer.getComponent('core:inventory').items).not.toContain(
+        'rock_001'
+      );
 
       // Step 4: Verify events were dispatched
       expect(eventsSpy).toHaveBeenCalledWith(
@@ -207,8 +217,8 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
           payload: expect.objectContaining({
             actorId: 'player',
             itemId: 'rock_001',
-            targetId: 'guard_001'
-          })
+            targetId: 'guard_001',
+          }),
         })
       );
     });
@@ -218,7 +228,7 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Player' },
         'core:position': { locationId: 'dungeon_001' },
-        'core:inventory': { items: ['brass_key_001'] }
+        'core:inventory': { items: ['brass_key_001'] },
       });
 
       const chest = testBed.createEntity('chest_001', {
@@ -227,23 +237,23 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
         'core:container': {
           locked: true,
           lock_type: 'brass',
-          contents: { items: ['treasure_001'] }
-        }
+          contents: { items: ['treasure_001'] },
+        },
       });
 
       const key = testBed.createEntity('brass_key_001', {
         'core:item': { name: 'Brass Key', durability: 100 },
-        'core:key': { types: ['brass', 'iron'] }
+        'core:key': { types: ['brass', 'iron'] },
       });
 
       const treasure = testBed.createEntity('treasure_001', {
-        'core:item': { name: 'Gold Coin', value: 100 }
+        'core:item': { name: 'Gold Coin', value: 100 },
       });
 
       const room = testBed.createEntity('dungeon_001', {
         'core:location': { name: 'Dungeon Room' },
         'core:actors': ['player'],
-        'core:objects': ['chest_001']
+        'core:objects': ['chest_001'],
       });
 
       const actionDefinition = {
@@ -264,15 +274,15 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
                     'core:container': {
                       type: 'object',
                       properties: {
-                        locked: { type: 'boolean', const: true }
+                        locked: { type: 'boolean', const: true },
                       },
-                      required: ['locked']
-                    }
+                      required: ['locked'],
+                    },
                   },
-                  required: ['core:container']
-                }
-              }
-            }
+                  required: ['core:container'],
+                },
+              },
+            },
           },
           key: {
             name: 'key',
@@ -291,18 +301,20 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
                         types: {
                           type: 'array',
                           contains: {
-                            const: { var: 'target.components.core:container.lock_type' }
-                          }
-                        }
+                            const: {
+                              var: 'target.components.core:container.lock_type',
+                            },
+                          },
+                        },
                       },
-                      required: ['types']
-                    }
+                      required: ['types'],
+                    },
                   },
-                  required: ['core:key']
-                }
-              }
-            }
-          }
+                  required: ['core:key'],
+                },
+              },
+            },
+          },
         },
         conditions: [
           {
@@ -310,10 +322,10 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
             condition: {
               in: [
                 { var: 'container.components.core:container.lock_type' },
-                { var: 'key.components.core:key.types' }
-              ]
-            }
-          }
+                { var: 'key.components.core:key.types' },
+              ],
+            },
+          },
         ],
         effects: [
           {
@@ -323,9 +335,9 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
               entityId: 'container.id',
               componentId: 'core:container',
               modifications: {
-                locked: false
-              }
-            }
+                locked: false,
+              },
+            },
           },
           {
             description: 'Dispatch unlock event',
@@ -335,13 +347,15 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
               payload: {
                 actorId: 'actor.id',
                 containerId: 'container.id',
-                keyId: 'key.id'
-              }
-            }
-          }
+                keyId: 'key.id',
+              },
+            },
+          },
         ],
-        command: 'unlock {container.components.core:object.name} with {key.components.core:item.name}',
-        result: 'You successfully unlock {container.components.core:object.name} with {key.components.core:item.name}.'
+        command:
+          'unlock {container.components.core:object.name} with {key.components.core:item.name}',
+        result:
+          'You successfully unlock {container.components.core:object.name} with {key.components.core:item.name}.',
       };
 
       testBed.loadActionDefinition(actionDefinition);
@@ -353,7 +367,7 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'dungeon_001' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -365,7 +379,7 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
       expect(action.targets.key.id).toBe('brass_key_001');
 
       const eventsSpy = testBed.createEventSpy('CONTAINER_UNLOCKED');
-      
+
       const executionResult = await gameEngine.executeAction(action, 'player');
 
       expect(executionResult.success).toBe(true);
@@ -381,8 +395,8 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
           payload: expect.objectContaining({
             actorId: 'player',
             containerId: 'chest_001',
-            keyId: 'brass_key_001'
-          })
+            keyId: 'brass_key_001',
+          }),
         })
       );
     });
@@ -397,19 +411,21 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
           primary: {
             name: 'primary',
             scope: 'actor.core:inventory.items[]',
-            required: true
+            required: true,
           },
           secondary: {
             name: 'secondary',
             scope: 'target.core:inventory.items[]',
             contextFrom: 'primary',
-            required: true
-          }
+            required: true,
+          },
         },
         conditions: [
           {
-            condition: { '!=': [{ var: 'primary.id' }, { var: 'secondary.id' }] }
-          }
+            condition: {
+              '!=': [{ var: 'primary.id' }, { var: 'secondary.id' }],
+            },
+          },
         ],
         effects: [
           {
@@ -418,27 +434,28 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
               eventType: 'COMPLEX_ACTION_EXECUTED',
               payload: {
                 primaryId: 'primary.id',
-                secondaryId: 'secondary.id'
-              }
-            }
-          }
+                secondaryId: 'secondary.id',
+              },
+            },
+          },
         ],
-        command: 'test {primary.components.core:item.name} with {secondary.components.core:item.name}',
-        result: 'Test completed successfully.'
+        command:
+          'test {primary.components.core:item.name} with {secondary.components.core:item.name}',
+        result: 'Test completed successfully.',
       };
 
       // Create entities with cross-references
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: ['item_a'] }
+        'core:inventory': { items: ['item_a'] },
       });
 
       const itemA = testBed.createEntity('item_a', {
         'core:item': { name: 'Item A' },
-        'core:inventory': { items: ['item_b'] }
+        'core:inventory': { items: ['item_b'] },
       });
 
       const itemB = testBed.createEntity('item_b', {
-        'core:item': { name: 'Item B' }
+        'core:item': { name: 'Item B' },
       });
 
       testBed.loadActionDefinition(actionDefinition);
@@ -450,7 +467,7 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'room' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -483,28 +500,28 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
                     'core:item': {
                       type: 'object',
                       properties: {
-                        special_property: { type: 'boolean', const: true }
+                        special_property: { type: 'boolean', const: true },
                       },
-                      required: ['special_property']
-                    }
+                      required: ['special_property'],
+                    },
                   },
-                  required: ['core:item']
-                }
-              }
-            }
-          }
+                  required: ['core:item'],
+                },
+              },
+            },
+          },
         },
         effects: [],
         command: 'use {item.components.core:item.name}',
-        result: 'Used item.'
+        result: 'Used item.',
       };
 
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: ['normal_item'] }
+        'core:inventory': { items: ['normal_item'] },
       });
 
       const normalItem = testBed.createEntity('normal_item', {
-        'core:item': { name: 'Normal Item' }
+        'core:item': { name: 'Normal Item' },
         // Missing special_property
       });
 
@@ -516,7 +533,7 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'room' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -532,26 +549,26 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
           container: {
             name: 'container',
             scope: 'location.core:objects[]',
-            required: true
+            required: true,
           },
           key: {
             name: 'key',
             scope: 'target.nonexistent_property[]',
             contextFrom: 'container',
-            required: true
-          }
+            required: true,
+          },
         },
         effects: [],
         command: 'test action',
-        result: 'Test completed.'
+        result: 'Test completed.',
       };
 
       const player = testBed.createEntity('player', {});
       const container = testBed.createEntity('container_001', {
-        'core:object': { name: 'Container' }
+        'core:object': { name: 'Container' },
       });
       const room = testBed.createEntity('room', {
-        'core:objects': ['container_001']
+        'core:objects': ['container_001'],
       });
 
       testBed.loadActionDefinition(actionDefinition);
@@ -562,7 +579,7 @@ describe('Multi-Target Action Full Pipeline Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'room' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -604,7 +621,7 @@ describe('Context Resolution Integration', () => {
           recipe: {
             name: 'recipe',
             scope: 'game.recipes[]',
-            required: true
+            required: true,
           },
           tool: {
             name: 'tool',
@@ -622,16 +639,16 @@ describe('Context Resolution Integration', () => {
                       properties: {
                         craft_types: {
                           type: 'array',
-                          contains: { var: 'target.required_tool_type' }
-                        }
+                          contains: { var: 'target.required_tool_type' },
+                        },
                       },
-                      required: ['craft_types']
-                    }
+                      required: ['craft_types'],
+                    },
                   },
-                  required: ['core:tool']
-                }
-              }
-            }
+                  required: ['core:tool'],
+                },
+              },
+            },
           },
           material: {
             name: 'material',
@@ -647,16 +664,18 @@ describe('Context Resolution Integration', () => {
                     'core:material': {
                       type: 'object',
                       properties: {
-                        type: { var: 'targets.recipe[0].required_material_type' }
+                        type: {
+                          var: 'targets.recipe[0].required_material_type',
+                        },
                       },
-                      required: ['type']
-                    }
+                      required: ['type'],
+                    },
                   },
-                  required: ['core:material']
-                }
-              }
-            }
-          }
+                  required: ['core:material'],
+                },
+              },
+            },
+          },
         },
         effects: [
           {
@@ -666,13 +685,13 @@ describe('Context Resolution Integration', () => {
               payload: {
                 recipeId: 'recipe.id',
                 toolId: 'tool.id',
-                materialId: 'material.id'
-              }
-            }
-          }
+                materialId: 'material.id',
+              },
+            },
+          },
         ],
         command: 'combine using {tool.components.core:item.name}',
-        result: 'Successfully combined items.'
+        result: 'Successfully combined items.',
       };
 
       // Create complex entity structure
@@ -680,22 +699,22 @@ describe('Context Resolution Integration', () => {
         id: 'sword_recipe',
         name: 'Iron Sword Recipe',
         required_tool_type: 'hammer',
-        required_material_type: 'metal'
+        required_material_type: 'metal',
       });
 
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: ['hammer_001'] }
+        'core:inventory': { items: ['hammer_001'] },
       });
 
       const hammer = testBed.createEntity('hammer_001', {
         'core:item': { name: 'Blacksmith Hammer' },
         'core:tool': { craft_types: ['hammer', 'metalworking'] },
-        'associated_materials': ['iron_ingot_001']
+        associated_materials: ['iron_ingot_001'],
       });
 
       const ironIngot = testBed.createEntity('iron_ingot_001', {
         'core:item': { name: 'Iron Ingot' },
-        'core:material': { type: 'metal', quality: 80 }
+        'core:material': { type: 'metal', quality: 80 },
       });
 
       testBed.loadActionDefinition(actionDefinition);
@@ -706,10 +725,10 @@ describe('Context Resolution Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'workshop' },
-          game: { 
+          game: {
             recipes: [recipe],
-            turnNumber: 1 
-          }
+            turnNumber: 1,
+          },
         }
       );
 
@@ -731,18 +750,18 @@ describe('Context Resolution Integration', () => {
             name: 'first',
             scope: 'targets.second[0].related_items[]',
             contextFrom: 'second',
-            required: true
+            required: true,
           },
           second: {
             name: 'second',
             scope: 'targets.first[0].related_items[]',
             contextFrom: 'first',
-            required: true
-          }
+            required: true,
+          },
         },
         effects: [],
         command: 'test action',
-        result: 'Test completed.'
+        result: 'Test completed.',
       };
 
       const player = testBed.createEntity('player', {});
@@ -755,7 +774,7 @@ describe('Context Resolution Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'room' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -776,7 +795,9 @@ describe('Context Resolution Integration', () => {
             scope: scopeExpression,
             availableVariables: Object.keys(context),
             targetVariable: context.target?.id,
-            targetsVariable: context.targets ? Object.keys(context.targets) : []
+            targetsVariable: context.targets
+              ? Object.keys(context.targets)
+              : [],
           });
 
           // Return mock results based on scope
@@ -786,7 +807,7 @@ describe('Context Resolution Integration', () => {
             return ['item_002'];
           }
           return [];
-        }
+        },
       };
 
       testBed.replaceService('scopeInterpreter', mockScopeInterpreter);
@@ -798,23 +819,23 @@ describe('Context Resolution Integration', () => {
           primary: {
             name: 'primary',
             scope: 'actor.core:inventory.items[]',
-            required: true
+            required: true,
           },
           secondary: {
             name: 'secondary',
             scope: 'target.associated_items[]',
             contextFrom: 'primary',
-            required: true
-          }
+            required: true,
+          },
         },
         effects: [],
         command: 'test action',
-        result: 'Test completed.'
+        result: 'Test completed.',
       };
 
       const player = testBed.createEntity('player', {});
       const item1 = testBed.createEntity('item_001', {
-        'associated_items': ['item_002']
+        associated_items: ['item_002'],
       });
       const item2 = testBed.createEntity('item_002', {});
 
@@ -826,13 +847,13 @@ describe('Context Resolution Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'room' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
       // Verify context variables were provided correctly
       expect(contextLog).toHaveLength(2);
-      
+
       // First scope evaluation (primary target)
       expect(contextLog[0].availableVariables).toContain('actor');
       expect(contextLog[0].availableVariables).toContain('location');
@@ -891,9 +912,9 @@ describe('Multi-Target Action Performance Integration', () => {
             validation: {
               type: 'array',
               minItems: 1,
-              maxItems: 5
-            }
-          }
+              maxItems: 5,
+            },
+          },
         },
         effects: [
           {
@@ -901,39 +922,39 @@ describe('Multi-Target Action Performance Integration', () => {
               type: 'dispatchEvent',
               eventType: 'LARGE_SCALE_PROCESSED',
               payload: {
-                itemCount: 'items.length'
-              }
-            }
-          }
+                itemCount: 'items.length',
+              },
+            },
+          },
         ],
         command: 'process {items.length} items',
-        result: 'Processed items successfully.'
+        result: 'Processed items successfully.',
       };
 
       // Create large inventory
       const itemIds = Array.from({ length: 100 }, (_, i) => `item_${i}`);
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: itemIds }
+        'core:inventory': { items: itemIds },
       });
 
       // Create all items
       itemIds.forEach((itemId, index) => {
         testBed.createEntity(itemId, {
-          'core:item': { name: `Item ${index}`, value: index }
+          'core:item': { name: `Item ${index}`, value: index },
         });
       });
 
       testBed.loadActionDefinition(actionDefinition);
 
       const startTime = performance.now();
-      
+
       const result = await actionCandidateProcessor.process(
         'test:large_scale_processing',
         'player',
         {
           actor: { id: 'player' },
           location: { id: 'room' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -955,7 +976,7 @@ describe('Multi-Target Action Performance Integration', () => {
           recipe: {
             name: 'recipe',
             scope: 'game.recipes[]',
-            required: true
+            required: true,
           },
           materials: {
             name: 'materials',
@@ -977,35 +998,35 @@ describe('Multi-Target Action Performance Integration', () => {
                         properties: {
                           type: {
                             type: 'string',
-                            enum: { var: 'target.required_material_types' }
-                          }
+                            enum: { var: 'target.required_material_types' },
+                          },
                         },
-                        required: ['type']
-                      }
+                        required: ['type'],
+                      },
                     },
-                    required: ['core:material']
-                  }
-                }
-              }
-            }
-          }
+                    required: ['core:material'],
+                  },
+                },
+              },
+            },
+          },
         },
         effects: [],
         command: 'craft with materials',
-        result: 'Crafting completed.'
+        result: 'Crafting completed.',
       };
 
       // Create multiple recipes with different requirements
       const recipes = Array.from({ length: 10 }, (_, i) => ({
         id: `recipe_${i}`,
         name: `Recipe ${i}`,
-        required_material_types: ['metal', 'wood', 'cloth'][i % 3]
+        required_material_types: ['metal', 'wood', 'cloth'][i % 3],
       }));
 
       // Create large material inventory
       const materialIds = Array.from({ length: 50 }, (_, i) => `material_${i}`);
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: materialIds }
+        'core:inventory': { items: materialIds },
       });
 
       // Create materials of different types
@@ -1013,24 +1034,24 @@ describe('Multi-Target Action Performance Integration', () => {
         const materialType = ['metal', 'wood', 'cloth'][index % 3];
         testBed.createEntity(materialId, {
           'core:item': { name: `${materialType} Material ${index}` },
-          'core:material': { type: materialType, quality: 50 + (index % 50) }
+          'core:material': { type: materialType, quality: 50 + (index % 50) },
         });
       });
 
       testBed.loadActionDefinition(actionDefinition);
 
       const startTime = performance.now();
-      
+
       const result = await actionCandidateProcessor.process(
         'test:complex_context_performance',
         'player',
         {
           actor: { id: 'player' },
           location: { id: 'workshop' },
-          game: { 
+          game: {
             recipes: recipes,
-            turnNumber: 1 
-          }
+            turnNumber: 1,
+          },
         }
       );
 
@@ -1040,7 +1061,7 @@ describe('Multi-Target Action Performance Integration', () => {
       // Performance requirements for complex context resolution
       expect(processingTime).toBeLessThan(300); // Should complete within 300ms
       expect(result.success).toBe(true);
-      
+
       if (result.value.actions.length > 0) {
         expect(result.value.actions.length).toBeLessThanOrEqual(200); // 10 recipes * 20 max combinations
       }
@@ -1058,27 +1079,27 @@ describe('Multi-Target Action Performance Integration', () => {
             scope: 'actor.core:inventory.items[]',
             required: true,
             multiple: true,
-            maxCombinations: 30
-          }
+            maxCombinations: 30,
+          },
         },
         effects: [],
         command: 'memory test',
-        result: 'Memory test completed.'
+        result: 'Memory test completed.',
       };
 
       // Create large dataset
       const itemIds = Array.from({ length: 200 }, (_, i) => `mem_item_${i}`);
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: itemIds }
+        'core:inventory': { items: itemIds },
       });
 
       itemIds.forEach((itemId, index) => {
         testBed.createEntity(itemId, {
-          'core:item': { 
+          'core:item': {
             name: `Memory Item ${index}`,
             description: `A test item with index ${index} for memory testing purposes.`,
-            properties: Array.from({ length: 10 }, (_, i) => `property_${i}`)
-          }
+            properties: Array.from({ length: 10 }, (_, i) => `property_${i}`),
+          },
         });
       });
 
@@ -1086,14 +1107,14 @@ describe('Multi-Target Action Performance Integration', () => {
 
       // Monitor memory usage
       const memBefore = process.memoryUsage();
-      
+
       const result = await actionCandidateProcessor.process(
         'test:memory_usage',
         'player',
         {
           actor: { id: 'player' },
           location: { id: 'room' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -1115,27 +1136,27 @@ describe('Multi-Target Action Performance Integration', () => {
           item: {
             name: 'item',
             scope: 'actor.core:inventory.items[]',
-            required: true
-          }
+            required: true,
+          },
         },
         effects: [],
         command: 'process concurrently',
-        result: 'Concurrent processing completed.'
+        result: 'Concurrent processing completed.',
       };
 
       // Create multiple players with items
       const players = Array.from({ length: 5 }, (_, i) => {
         const playerId = `player_${i}`;
         const itemId = `item_${i}`;
-        
+
         testBed.createEntity(playerId, {
-          'core:inventory': { items: [itemId] }
+          'core:inventory': { items: [itemId] },
         });
-        
+
         testBed.createEntity(itemId, {
-          'core:item': { name: `Item ${i}` }
+          'core:item': { name: `Item ${i}` },
         });
-        
+
         return playerId;
       });
 
@@ -1143,26 +1164,26 @@ describe('Multi-Target Action Performance Integration', () => {
 
       // Process actions for all players concurrently
       const startTime = performance.now();
-      
-      const promises = players.map(playerId => 
+
+      const promises = players.map((playerId) =>
         actionCandidateProcessor.process(
           'test:concurrent_processing',
           playerId,
           {
             actor: { id: playerId },
             location: { id: 'room' },
-            game: { turnNumber: 1 }
+            game: { turnNumber: 1 },
           }
         )
       );
 
       const results = await Promise.all(promises);
-      
+
       const endTime = performance.now();
       const totalTime = endTime - startTime;
 
       // All requests should succeed
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.success).toBe(true);
         expect(result.value.actions).toHaveLength(1);
       });
@@ -1213,22 +1234,22 @@ describe('Backward Compatibility Integration', () => {
                 'core:item': {
                   type: 'object',
                   properties: {
-                    examinable: { type: 'boolean', const: true }
+                    examinable: { type: 'boolean', const: true },
                   },
-                  required: ['examinable']
-                }
+                  required: ['examinable'],
+                },
               },
-              required: ['core:item']
-            }
-          }
+              required: ['core:item'],
+            },
+          },
         },
         conditions: [
           {
             description: 'Item must be in good condition',
             condition: {
-              '>=': [{ var: 'target.components.core:item.durability' }, 50]
-            }
-          }
+              '>=': [{ var: 'target.components.core:item.durability' }, 50],
+            },
+          },
         ],
         effects: [
           {
@@ -1239,18 +1260,19 @@ describe('Backward Compatibility Integration', () => {
               payload: {
                 actorId: 'actor.id',
                 itemId: 'target.id',
-                description: 'target.components.core:item.description'
-              }
-            }
-          }
+                description: 'target.components.core:item.description',
+              },
+            },
+          },
         ],
         command: 'examine {target.components.core:item.name}',
-        result: 'You examine {target.components.core:item.name}. {target.components.core:item.description}'
+        result:
+          'You examine {target.components.core:item.name}. {target.components.core:item.description}',
       };
 
       const player = testBed.createEntity('player', {
         'core:actor': { name: 'Player' },
-        'core:inventory': { items: ['ancient_scroll'] }
+        'core:inventory': { items: ['ancient_scroll'] },
       });
 
       const scroll = testBed.createEntity('ancient_scroll', {
@@ -1258,8 +1280,8 @@ describe('Backward Compatibility Integration', () => {
           name: 'Ancient Scroll',
           description: 'A scroll covered in mysterious runes.',
           examinable: true,
-          durability: 75
-        }
+          durability: 75,
+        },
       });
 
       testBed.loadActionDefinition(legacyActionDefinition);
@@ -1270,7 +1292,7 @@ describe('Backward Compatibility Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'library' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -1281,7 +1303,7 @@ describe('Backward Compatibility Integration', () => {
       expect(action.actionId).toBe('legacy:examine_item');
       expect(action.command).toBe('examine Ancient Scroll');
       expect(action.result).toContain('A scroll covered in mysterious runes.');
-      
+
       // Legacy actions should have target in legacy format
       expect(action.target).toBeDefined();
       expect(action.target.id).toBe('ancient_scroll');
@@ -1301,14 +1323,14 @@ describe('Backward Compatibility Integration', () => {
                 'core:item': {
                   type: 'object',
                   properties: {
-                    usable: { type: 'boolean', const: true }
+                    usable: { type: 'boolean', const: true },
                   },
-                  required: ['usable']
-                }
+                  required: ['usable'],
+                },
               },
-              required: ['core:item']
-            }
-          }
+              required: ['core:item'],
+            },
+          },
         },
         effects: [
           {
@@ -1319,10 +1341,10 @@ describe('Backward Compatibility Integration', () => {
               modifications: {
                 uses_remaining: {
                   operation: 'subtract',
-                  value: 1
-                }
-              }
-            }
+                  value: 1,
+                },
+              },
+            },
           },
           {
             operation: {
@@ -1331,25 +1353,25 @@ describe('Backward Compatibility Integration', () => {
               payload: {
                 actorId: 'actor.id',
                 itemId: 'target.id',
-                usesRemaining: 'target.components.core:item.uses_remaining'
-              }
-            }
-          }
+                usesRemaining: 'target.components.core:item.uses_remaining',
+              },
+            },
+          },
         ],
         command: 'use {target.components.core:item.name}',
-        result: 'You use {target.components.core:item.name}.'
+        result: 'You use {target.components.core:item.name}.',
       };
 
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: ['healing_potion'] }
+        'core:inventory': { items: ['healing_potion'] },
       });
 
       const potion = testBed.createEntity('healing_potion', {
         'core:item': {
           name: 'Healing Potion',
           usable: true,
-          uses_remaining: 3
-        }
+          uses_remaining: 3,
+        },
       });
 
       testBed.loadActionDefinition(legacyActionDefinition);
@@ -1361,7 +1383,7 @@ describe('Backward Compatibility Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'room' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -1387,8 +1409,8 @@ describe('Backward Compatibility Integration', () => {
           payload: expect.objectContaining({
             actorId: 'player',
             itemId: 'healing_potion',
-            usesRemaining: 2
-          })
+            usesRemaining: 2,
+          }),
         })
       );
     });
@@ -1410,14 +1432,14 @@ describe('Backward Compatibility Integration', () => {
               modifications: {
                 items: {
                   operation: 'remove',
-                  value: 'target.id'
-                }
-              }
-            }
-          }
+                  value: 'target.id',
+                },
+              },
+            },
+          },
         ],
         command: 'drop {target.components.core:item.name}',
-        result: 'You drop {target.components.core:item.name}.'
+        result: 'You drop {target.components.core:item.name}.',
       };
 
       // Multi-target action
@@ -1428,13 +1450,13 @@ describe('Backward Compatibility Integration', () => {
           my_item: {
             name: 'my_item',
             scope: 'actor.core:inventory.items[]',
-            required: true
+            required: true,
           },
           their_item: {
             name: 'their_item',
             scope: 'location.core:actors[0].core:inventory.items[]',
-            required: true
-          }
+            required: true,
+          },
         },
         effects: [
           {
@@ -1444,35 +1466,36 @@ describe('Backward Compatibility Integration', () => {
               payload: {
                 actorId: 'actor.id',
                 myItemId: 'my_item.id',
-                theirItemId: 'their_item.id'
-              }
-            }
-          }
+                theirItemId: 'their_item.id',
+              },
+            },
+          },
         ],
-        command: 'trade {my_item.components.core:item.name} for {their_item.components.core:item.name}',
-        result: 'Trade completed successfully.'
+        command:
+          'trade {my_item.components.core:item.name} for {their_item.components.core:item.name}',
+        result: 'Trade completed successfully.',
       };
 
       // Setup entities
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: ['player_item'] }
+        'core:inventory': { items: ['player_item'] },
       });
 
       const npc = testBed.createEntity('npc_001', {
         'core:actor': { name: 'Merchant' },
-        'core:inventory': { items: ['npc_item'] }
+        'core:inventory': { items: ['npc_item'] },
       });
 
       const playerItem = testBed.createEntity('player_item', {
-        'core:item': { name: 'Player Item' }
+        'core:item': { name: 'Player Item' },
       });
 
       const npcItem = testBed.createEntity('npc_item', {
-        'core:item': { name: 'NPC Item' }
+        'core:item': { name: 'NPC Item' },
       });
 
       const room = testBed.createEntity('room', {
-        'core:actors': ['npc_001']
+        'core:actors': ['npc_001'],
       });
 
       testBed.loadActionDefinition(legacyAction);
@@ -1485,7 +1508,7 @@ describe('Backward Compatibility Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'room' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -1500,14 +1523,18 @@ describe('Backward Compatibility Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'room' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
       expect(multiTargetResult.success).toBe(true);
       expect(multiTargetResult.value.actions).toHaveLength(1);
-      expect(multiTargetResult.value.actions[0].targets?.my_item?.id).toBe('player_item');
-      expect(multiTargetResult.value.actions[0].targets?.their_item?.id).toBe('npc_item');
+      expect(multiTargetResult.value.actions[0].targets?.my_item?.id).toBe(
+        'player_item'
+      );
+      expect(multiTargetResult.value.actions[0].targets?.their_item?.id).toBe(
+        'npc_item'
+      );
     });
   });
 
@@ -1521,13 +1548,13 @@ describe('Backward Compatibility Integration', () => {
           item: {
             name: 'item',
             scope: 'actor.core:inventory.items[]',
-            required: true
+            required: true,
           },
           person: {
             name: 'person',
             scope: 'location.core:actors[]',
-            required: true
-          }
+            required: true,
+          },
         },
         effects: [
           {
@@ -1537,13 +1564,14 @@ describe('Backward Compatibility Integration', () => {
               payload: {
                 actorId: 'actor.id',
                 targetId: 'person.id',
-                itemId: 'item.id'
-              }
-            }
-          }
+                itemId: 'item.id',
+              },
+            },
+          },
         ],
-        command: 'give {item.components.core:item.name} to {person.components.core:actor.name}',
-        result: 'Gift given successfully.'
+        command:
+          'give {item.components.core:item.name} to {person.components.core:actor.name}',
+        result: 'Gift given successfully.',
       };
 
       // Legacy rule that expects legacy event format
@@ -1553,9 +1581,9 @@ describe('Backward Compatibility Integration', () => {
         conditions: [
           {
             condition: {
-              '!=': [{ var: 'payload.actorId' }, { var: 'payload.targetId' }]
-            }
-          }
+              '!=': [{ var: 'payload.actorId' }, { var: 'payload.targetId' }],
+            },
+          },
         ],
         operations: [
           {
@@ -1563,31 +1591,31 @@ describe('Backward Compatibility Integration', () => {
             entityId: 'payload.targetId',
             componentId: 'social:relationships',
             modifications: {
-              'actor_opinion': {
+              actor_opinion: {
                 operation: 'add',
-                value: 5
-              }
-            }
-          }
-        ]
+                value: 5,
+              },
+            },
+          },
+        ],
       };
 
       // Setup entities
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: ['gift_item'] }
+        'core:inventory': { items: ['gift_item'] },
       });
 
       const npc = testBed.createEntity('npc_001', {
         'core:actor': { name: 'Friend' },
-        'social:relationships': { actor_opinion: 0 }
+        'social:relationships': { actor_opinion: 0 },
       });
 
       const gift = testBed.createEntity('gift_item', {
-        'core:item': { name: 'Gift' }
+        'core:item': { name: 'Gift' },
       });
 
       const room = testBed.createEntity('room', {
-        'core:actors': ['npc_001']
+        'core:actors': ['npc_001'],
       });
 
       testBed.loadActionDefinition(multiTargetAction);
@@ -1600,18 +1628,20 @@ describe('Backward Compatibility Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'room' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
       const action = result.value.actions[0];
       const gameEngine = testBed.getService('gameEngine');
-      
+
       await gameEngine.executeAction(action, 'player');
 
       // Verify legacy rule was triggered and executed
       const updatedNpc = testBed.getEntity('npc_001');
-      expect(updatedNpc.getComponent('social:relationships').actor_opinion).toBe(5);
+      expect(
+        updatedNpc.getComponent('social:relationships').actor_opinion
+      ).toBe(5);
     });
   });
 });
@@ -1657,19 +1687,19 @@ describe('Cross-Component Integration', () => {
                 components: {
                   type: 'object',
                   properties: {
-                    'ai:memory': { type: 'object' }
+                    'ai:memory': { type: 'object' },
                   },
-                  required: ['ai:memory']
-                }
-              }
-            }
+                  required: ['ai:memory'],
+                },
+              },
+            },
           },
           topic: {
             name: 'topic',
             scope: 'target.ai:memory.known_topics[]',
             contextFrom: 'person',
-            required: true
-          }
+            required: true,
+          },
         },
         effects: [
           {
@@ -1680,18 +1710,20 @@ describe('Cross-Component Integration', () => {
                 actorId: 'actor.id',
                 targetId: 'person.id',
                 topic: 'topic.id',
-                memoryContext: 'person.components.ai:memory'
-              }
-            }
-          }
+                memoryContext: 'person.components.ai:memory',
+              },
+            },
+          },
         ],
-        command: 'discuss {topic.name} with {person.components.core:actor.name}',
-        result: 'You discuss {topic.name} with {person.components.core:actor.name}.'
+        command:
+          'discuss {topic.name} with {person.components.core:actor.name}',
+        result:
+          'You discuss {topic.name} with {person.components.core:actor.name}.',
       };
 
       // Setup entities with AI memory components
       const player = testBed.createEntity('player', {
-        'core:actor': { name: 'Player' }
+        'core:actor': { name: 'Player' },
       });
 
       const scholar = testBed.createEntity('scholar_001', {
@@ -1699,24 +1731,32 @@ describe('Cross-Component Integration', () => {
         'ai:memory': {
           known_topics: ['ancient_history', 'magic_theory'],
           personality: 'academic',
-          knowledge_level: 8
+          knowledge_level: 8,
+        },
+      });
+
+      const ancientHistoryTopic = testBed.createGameData(
+        'topics',
+        'ancient_history',
+        {
+          id: 'ancient_history',
+          name: 'Ancient History',
+          complexity: 6,
         }
-      });
+      );
 
-      const ancientHistoryTopic = testBed.createGameData('topics', 'ancient_history', {
-        id: 'ancient_history',
-        name: 'Ancient History',
-        complexity: 6
-      });
-
-      const magicTheoryTopic = testBed.createGameData('topics', 'magic_theory', {
-        id: 'magic_theory',
-        name: 'Magic Theory',
-        complexity: 8
-      });
+      const magicTheoryTopic = testBed.createGameData(
+        'topics',
+        'magic_theory',
+        {
+          id: 'magic_theory',
+          name: 'Magic Theory',
+          complexity: 8,
+        }
+      );
 
       const room = testBed.createEntity('library', {
-        'core:actors': ['scholar_001']
+        'core:actors': ['scholar_001'],
       });
 
       testBed.loadActionDefinition(actionDefinition);
@@ -1727,7 +1767,7 @@ describe('Cross-Component Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'library' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -1735,14 +1775,21 @@ describe('Cross-Component Integration', () => {
       expect(result.value.actions).toHaveLength(2); // Two topics available
 
       const actions = result.value.actions;
-      expect(actions.some(a => a.targets.topic.id === 'ancient_history')).toBe(true);
-      expect(actions.some(a => a.targets.topic.id === 'magic_theory')).toBe(true);
+      expect(
+        actions.some((a) => a.targets.topic.id === 'ancient_history')
+      ).toBe(true);
+      expect(actions.some((a) => a.targets.topic.id === 'magic_theory')).toBe(
+        true
+      );
 
       // Execute one of the actions
       const eventsSpy = testBed.createEventSpy('AI_INTERACTION');
-      
-      const executionResult = await gameEngine.executeAction(actions[0], 'player');
-      
+
+      const executionResult = await gameEngine.executeAction(
+        actions[0],
+        'player'
+      );
+
       expect(executionResult.success).toBe(true);
       expect(eventsSpy).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1752,9 +1799,9 @@ describe('Cross-Component Integration', () => {
             targetId: 'scholar_001',
             memoryContext: expect.objectContaining({
               personality: 'academic',
-              knowledge_level: 8
-            })
-          })
+              knowledge_level: 8,
+            }),
+          }),
         })
       );
     });
@@ -1774,12 +1821,12 @@ describe('Cross-Component Integration', () => {
                 components: {
                   type: 'object',
                   properties: {
-                    'clothing:equipment': { type: 'object' }
+                    'clothing:equipment': { type: 'object' },
                   },
-                  required: ['clothing:equipment']
-                }
-              }
-            }
+                  required: ['clothing:equipment'],
+                },
+              },
+            },
           },
           garment: {
             name: 'garment',
@@ -1795,15 +1842,15 @@ describe('Cross-Component Integration', () => {
                     'clothing:garment': {
                       type: 'object',
                       properties: {
-                        adjustable: { type: 'boolean', const: true }
+                        adjustable: { type: 'boolean', const: true },
                       },
-                      required: ['adjustable']
-                    }
+                      required: ['adjustable'],
+                    },
                   },
-                  required: ['clothing:garment']
-                }
-              }
-            }
+                  required: ['clothing:garment'],
+                },
+              },
+            },
           },
           materials: {
             name: 'materials',
@@ -1822,17 +1869,19 @@ describe('Cross-Component Integration', () => {
                       'tailoring:material': {
                         type: 'object',
                         properties: {
-                          fabric_type: { var: 'targets.garment[0].components.clothing:garment.fabric_type' }
+                          fabric_type: {
+                            var: 'targets.garment[0].components.clothing:garment.fabric_type',
+                          },
                         },
-                        required: ['fabric_type']
-                      }
+                        required: ['fabric_type'],
+                      },
                     },
-                    required: ['tailoring:material']
-                  }
-                }
-              }
-            }
-          }
+                    required: ['tailoring:material'],
+                  },
+                },
+              },
+            },
+          },
         },
         effects: [
           {
@@ -1843,29 +1892,31 @@ describe('Cross-Component Integration', () => {
               modifications: {
                 fit_quality: {
                   operation: 'add',
-                  value: 'materials.reduce((sum, m) => sum + m.components.tailoring:material.quality, 0)'
-                }
-              }
-            }
-          }
+                  value:
+                    'materials.reduce((sum, m) => sum + m.components.tailoring:material.quality, 0)',
+                },
+              },
+            },
+          },
         ],
-        command: 'tailor {person.components.core:actor.name} garment with materials',
-        result: 'Tailoring completed successfully.'
+        command:
+          'tailor {person.components.core:actor.name} garment with materials',
+        result: 'Tailoring completed successfully.',
       };
 
       // Setup complex clothing system entities
       const tailor = testBed.createEntity('tailor', {
         'core:actor': { name: 'Master Tailor' },
-        'core:inventory': { items: ['silk_thread', 'cotton_thread'] }
+        'core:inventory': { items: ['silk_thread', 'cotton_thread'] },
       });
 
       const customer = testBed.createEntity('customer_001', {
         'core:actor': { name: 'Customer' },
         'clothing:equipment': {
           equipped: {
-            torso_upper: { outer: 'silk_dress' }
-          }
-        }
+            torso_upper: { outer: 'silk_dress' },
+          },
+        },
       });
 
       const silkDress = testBed.createEntity('silk_dress', {
@@ -1875,24 +1926,24 @@ describe('Cross-Component Integration', () => {
           layer: 'outer',
           fabric_type: 'silk',
           adjustable: true,
-          fit_quality: 60
-        }
+          fit_quality: 60,
+        },
       });
 
       const silkThread = testBed.createEntity('silk_thread', {
         'core:item': { name: 'Silk Thread' },
         'tailoring:material': {
           fabric_type: 'silk',
-          quality: 15
-        }
+          quality: 15,
+        },
       });
 
       const cottonThread = testBed.createEntity('cotton_thread', {
         'core:item': { name: 'Cotton Thread' },
         'tailoring:material': {
           fabric_type: 'cotton',
-          quality: 10
-        }
+          quality: 10,
+        },
       });
 
       // Mock topmost_clothing scope resolution
@@ -1906,13 +1957,13 @@ describe('Cross-Component Integration', () => {
             return ['silk_thread', 'cotton_thread'];
           }
           return [];
-        }
+        },
       };
 
       testBed.replaceService('scopeInterpreter', mockScopeInterpreter);
 
       const shop = testBed.createEntity('tailor_shop', {
-        'core:actors': ['customer_001']
+        'core:actors': ['customer_001'],
       });
 
       testBed.loadActionDefinition(actionDefinition);
@@ -1923,7 +1974,7 @@ describe('Cross-Component Integration', () => {
         {
           actor: { id: 'tailor' },
           location: { id: 'tailor_shop' },
-          game: { turnNumber: 1 }
+          game: { turnNumber: 1 },
         }
       );
 
@@ -1933,8 +1984,12 @@ describe('Cross-Component Integration', () => {
       const action = result.value.actions[0];
       expect(action.targets.person.id).toBe('customer_001');
       expect(action.targets.garment.id).toBe('silk_dress');
-      expect(action.targets.materials.some(m => m.id === 'silk_thread')).toBe(true);
-      expect(action.targets.materials.some(m => m.id === 'cotton_thread')).toBe(false);
+      expect(action.targets.materials.some((m) => m.id === 'silk_thread')).toBe(
+        true
+      );
+      expect(
+        action.targets.materials.some((m) => m.id === 'cotton_thread')
+      ).toBe(false);
     });
   });
 
@@ -1947,7 +2002,7 @@ describe('Cross-Component Integration', () => {
           item1: {
             name: 'item1',
             scope: 'actor.core:inventory.items[]',
-            required: true
+            required: true,
           },
           item2: {
             name: 'item2',
@@ -1958,10 +2013,10 @@ describe('Cross-Component Integration', () => {
               properties: {
                 id: {
                   type: 'string',
-                  not: { const: { var: 'targets.item1[0].id' } }
-                }
-              }
-            }
+                  not: { const: { var: 'targets.item1[0].id' } },
+                },
+              },
+            },
           },
           result: {
             name: 'result',
@@ -1974,11 +2029,11 @@ describe('Cross-Component Integration', () => {
                 required_items: {
                   type: 'array',
                   contains: { var: 'targets.item1[0].id' },
-                  contains: { var: 'targets.item2[0].id' }
-                }
-              }
-            }
-          }
+                  contains: { var: 'targets.item2[0].id' },
+                },
+              },
+            },
+          },
         },
         effects: [
           {
@@ -1989,34 +2044,38 @@ describe('Cross-Component Integration', () => {
                 actorId: 'actor.id',
                 item1Id: 'item1.id',
                 item2Id: 'item2.id',
-                resultId: 'result.id'
-              }
-            }
-          }
+                resultId: 'result.id',
+              },
+            },
+          },
         ],
         command: 'combine items to create {result.name}',
-        result: 'Combination process initiated.'
+        result: 'Combination process initiated.',
       };
 
       // Setup combination system
       const player = testBed.createEntity('player', {
-        'core:inventory': { items: ['fire_essence', 'water_essence'] }
+        'core:inventory': { items: ['fire_essence', 'water_essence'] },
       });
 
       const fireEssence = testBed.createEntity('fire_essence', {
-        'core:item': { name: 'Fire Essence', element: 'fire' }
+        'core:item': { name: 'Fire Essence', element: 'fire' },
       });
 
       const waterEssence = testBed.createEntity('water_essence', {
-        'core:item': { name: 'Water Essence', element: 'water' }
+        'core:item': { name: 'Water Essence', element: 'water' },
       });
 
-      const steamResult = testBed.createGameData('combination_results', 'steam_essence', {
-        id: 'steam_essence',
-        name: 'Steam Essence',
-        required_items: ['fire_essence', 'water_essence'],
-        result_type: 'essence'
-      });
+      const steamResult = testBed.createGameData(
+        'combination_results',
+        'steam_essence',
+        {
+          id: 'steam_essence',
+          name: 'Steam Essence',
+          required_items: ['fire_essence', 'water_essence'],
+          result_type: 'essence',
+        }
+      );
 
       // Mock combination results scope
       const mockScopeInterpreter = {
@@ -2027,7 +2086,7 @@ describe('Cross-Component Integration', () => {
             return ['steam_essence'];
           }
           return [];
-        }
+        },
       };
 
       testBed.replaceService('scopeInterpreter', mockScopeInterpreter);
@@ -2042,10 +2101,10 @@ describe('Cross-Component Integration', () => {
             eventType: 'COMBINATION_PROCESSING',
             payload: {
               combinationId: 'payload.resultId',
-              processingTime: 3000
-            }
-          }
-        ]
+              processingTime: 3000,
+            },
+          },
+        ],
       };
 
       const processingRule = {
@@ -2057,10 +2116,10 @@ describe('Cross-Component Integration', () => {
             eventType: 'COMBINATION_COMPLETED',
             payload: {
               combinationId: 'payload.combinationId',
-              success: true
-            }
-          }
-        ]
+              success: true,
+            },
+          },
+        ],
       };
 
       testBed.loadActionDefinition(actionDefinition);
@@ -2074,10 +2133,10 @@ describe('Cross-Component Integration', () => {
         {
           actor: { id: 'player' },
           location: { id: 'workshop' },
-          game: { 
+          game: {
             combination_results: [steamResult],
-            turnNumber: 1 
-          }
+            turnNumber: 1,
+          },
         }
       );
 
@@ -2099,8 +2158,8 @@ describe('Cross-Component Integration', () => {
             actorId: 'player',
             item1Id: 'fire_essence',
             item2Id: 'water_essence',
-            resultId: 'steam_essence'
-          })
+            resultId: 'steam_essence',
+          }),
         })
       );
 
@@ -2134,13 +2193,13 @@ export class MultiTargetTestConfiguration {
   loadMultiTargetSystem() {
     // Load all pipeline stages
     this.loadPipelineStages();
-    
+
     // Load example actions
     this.loadExampleActions();
-    
+
     // Load test schemas
     this.loadTestSchemas();
-    
+
     // Configure test environment
     this.configureTestEnvironment();
   }
@@ -2156,10 +2215,10 @@ export class MultiTargetTestConfiguration {
       'data/mods/examples/actions/context_dependent.action.json',
       'data/mods/examples/actions/complex_multi_target.action.json',
       'data/mods/examples/actions/performance_optimized.action.json',
-      'data/mods/examples/actions/error_safe.action.json'
+      'data/mods/examples/actions/error_safe.action.json',
     ];
 
-    exampleActions.forEach(actionPath => {
+    exampleActions.forEach((actionPath) => {
       try {
         this.testBed.loadAction(actionPath);
       } catch (error) {
@@ -2187,7 +2246,7 @@ export class MultiTargetTestConfiguration {
    */
   createPerformanceTestScenario(entityCount = 100) {
     const entities = [];
-    
+
     // Create large number of entities for performance testing
     for (let i = 0; i < entityCount; i++) {
       const entityId = `perf_entity_${i}`;
@@ -2195,12 +2254,12 @@ export class MultiTargetTestConfiguration {
         'core:item': {
           name: `Performance Item ${i}`,
           value: i * 10,
-          category: ['weapon', 'armor', 'consumable'][i % 3]
+          category: ['weapon', 'armor', 'consumable'][i % 3],
         },
         'core:material': {
           type: ['metal', 'wood', 'cloth'][i % 3],
-          quality: 50 + (i % 50)
-        }
+          quality: 50 + (i % 50),
+        },
       });
       entities.push(entity);
     }
@@ -2214,38 +2273,42 @@ export class MultiTargetTestConfiguration {
   createComplexContextScenario() {
     // Create interconnected entities for context testing
     const player = this.testBed.createEntity('context_player', {
-      'core:inventory': { items: ['tool_001', 'material_001', 'material_002'] }
+      'core:inventory': { items: ['tool_001', 'material_001', 'material_002'] },
     });
 
     const tool = this.testBed.createEntity('tool_001', {
       'core:item': { name: 'Complex Tool' },
-      'core:tool': { 
+      'core:tool': {
         craft_types: ['advanced'],
-        compatible_materials: ['rare_metal', 'crystal']
+        compatible_materials: ['rare_metal', 'crystal'],
       },
-      'associated_recipes': ['complex_recipe_001']
+      associated_recipes: ['complex_recipe_001'],
     });
 
     const material1 = this.testBed.createEntity('material_001', {
       'core:item': { name: 'Rare Metal' },
-      'core:material': { type: 'rare_metal', quality: 90 }
+      'core:material': { type: 'rare_metal', quality: 90 },
     });
 
     const material2 = this.testBed.createEntity('material_002', {
       'core:item': { name: 'Crystal Shard' },
-      'core:material': { type: 'crystal', quality: 85 }
+      'core:material': { type: 'crystal', quality: 85 },
     });
 
-    const recipe = this.testBed.createGameData('recipes', 'complex_recipe_001', {
-      id: 'complex_recipe_001',
-      name: 'Complex Crafting Recipe',
-      required_tool_types: ['advanced'],
-      required_materials: [
-        { type: 'rare_metal', minimum_quality: 80 },
-        { type: 'crystal', minimum_quality: 75 }
-      ],
-      result_item: 'masterwork_item'
-    });
+    const recipe = this.testBed.createGameData(
+      'recipes',
+      'complex_recipe_001',
+      {
+        id: 'complex_recipe_001',
+        name: 'Complex Crafting Recipe',
+        required_tool_types: ['advanced'],
+        required_materials: [
+          { type: 'rare_metal', minimum_quality: 80 },
+          { type: 'crystal', minimum_quality: 75 },
+        ],
+        result_item: 'masterwork_item',
+      }
+    );
 
     return { player, tool, material1, material2, recipe };
   }
@@ -2259,11 +2322,11 @@ export class MultiTargetTestConfiguration {
       'CONTEXT_RESOLUTION_COMPLETED',
       'TARGET_VALIDATION_FAILED',
       'PERFORMANCE_THRESHOLD_EXCEEDED',
-      'BACKWARD_COMPATIBILITY_WARNING'
+      'BACKWARD_COMPATIBILITY_WARNING',
     ];
 
     const spies = {};
-    eventTypes.forEach(eventType => {
+    eventTypes.forEach((eventType) => {
       spies[eventType] = this.testBed.createEventSpy(eventType);
     });
 
@@ -2278,25 +2341,28 @@ export class MultiTargetTestConfiguration {
       maxProcessingTime: 500, // ms
       maxMemoryIncrease: 50 * 1024 * 1024, // 50MB
       maxCombinations: 100,
-      minSuccessRate: 0.95
+      minSuccessRate: 0.95,
     };
 
     const finalRequirements = { ...defaultRequirements, ...requirements };
 
     const results = {
-      processingTime: metrics.processingTime <= finalRequirements.maxProcessingTime,
-      memoryUsage: metrics.memoryIncrease <= finalRequirements.maxMemoryIncrease,
-      combinationLimit: metrics.combinationsGenerated <= finalRequirements.maxCombinations,
-      successRate: metrics.successRate >= finalRequirements.minSuccessRate
+      processingTime:
+        metrics.processingTime <= finalRequirements.maxProcessingTime,
+      memoryUsage:
+        metrics.memoryIncrease <= finalRequirements.maxMemoryIncrease,
+      combinationLimit:
+        metrics.combinationsGenerated <= finalRequirements.maxCombinations,
+      successRate: metrics.successRate >= finalRequirements.minSuccessRate,
     };
 
-    const allPassed = Object.values(results).every(result => result);
+    const allPassed = Object.values(results).every((result) => result);
 
     return {
       passed: allPassed,
       results,
       metrics,
-      requirements: finalRequirements
+      requirements: finalRequirements,
     };
   }
 }
@@ -2318,8 +2384,8 @@ export class IntegrationTestUtils {
       result,
       metrics: {
         processingTime: endTime - startTime,
-        memoryIncrease: memAfter.heapUsed - memBefore.heapUsed
-      }
+        memoryIncrease: memAfter.heapUsed - memBefore.heapUsed,
+      },
     };
   }
 
@@ -2328,7 +2394,7 @@ export class IntegrationTestUtils {
       low: { entityCount: 50, maxCombinations: 20, contextDepth: 2 },
       medium: { entityCount: 100, maxCombinations: 50, contextDepth: 3 },
       high: { entityCount: 200, maxCombinations: 100, contextDepth: 4 },
-      extreme: { entityCount: 500, maxCombinations: 200, contextDepth: 5 }
+      extreme: { entityCount: 500, maxCombinations: 200, contextDepth: 5 },
     };
 
     return scenarios[complexity] || scenarios.medium;
@@ -2341,11 +2407,11 @@ export class IntegrationTestUtils {
       'eventBus',
       'scopeInterpreter',
       'entityManager',
-      'schemaValidator'
+      'schemaValidator',
     ];
 
     const serviceStatus = {};
-    services.forEach(serviceName => {
+    services.forEach((serviceName) => {
       try {
         const service = testBed.getService(serviceName);
         serviceStatus[serviceName] = service !== null && service !== undefined;
@@ -2354,11 +2420,13 @@ export class IntegrationTestUtils {
       }
     });
 
-    const allServicesAvailable = Object.values(serviceStatus).every(status => status);
+    const allServicesAvailable = Object.values(serviceStatus).every(
+      (status) => status
+    );
 
     return {
       healthy: allServicesAvailable,
-      services: serviceStatus
+      services: serviceStatus,
     };
   }
 }
@@ -2380,12 +2448,14 @@ export class IntegrationTestUtils {
 ## Documentation Requirements
 
 ### For Developers
+
 - Test execution guidelines and setup instructions
 - Performance benchmarking procedures and thresholds
 - Integration testing best practices and patterns
 - Debugging guides for test failures and system issues
 
 ### For QA Teams
+
 - Test coverage reports and validation procedures
 - Performance regression testing protocols
 - Cross-browser and environment testing procedures

@@ -3,7 +3,14 @@
  * @see src/characterBuilder/models/thematicDirection.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { v4 as uuidv4 } from 'uuid';
 import {
   createThematicDirection,
@@ -23,7 +30,7 @@ describe('ThematicDirection Model', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
     testBed = new BaseTestBed();
-    
+
     // Create mock schema validator
     mockSchemaValidator = {
       validate: jest.fn().mockReturnValue({ isValid: true }),
@@ -38,10 +45,14 @@ describe('ThematicDirection Model', () => {
   describe('createThematicDirection', () => {
     const validData = {
       title: 'The Reluctant Hero',
-      description: 'A character who must overcome their fears to become the hero they never wanted to be',
-      coreTension: 'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
-      uniqueTwist: 'The hero gains power from their fears rather than overcoming them',
-      narrativePotential: 'Rich character development arc exploring the nature of courage and sacrifice',
+      description:
+        'A character who must overcome their fears to become the hero they never wanted to be',
+      coreTension:
+        'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
+      uniqueTwist:
+        'The hero gains power from their fears rather than overcoming them',
+      narrativePotential:
+        'Rich character development arc exploring the nature of courage and sacrifice',
     };
 
     describe('successful creation', () => {
@@ -66,7 +77,9 @@ describe('ThematicDirection Model', () => {
       it('should create thematic direction with custom ID', () => {
         const conceptId = uuidv4();
         const customId = uuidv4();
-        const result = createThematicDirection(conceptId, validData, { id: customId });
+        const result = createThematicDirection(conceptId, validData, {
+          id: customId,
+        });
 
         expect(result.id).toBe(customId);
       });
@@ -79,7 +92,9 @@ describe('ThematicDirection Model', () => {
           responseTokens: 200,
           processingTime: 1500,
         };
-        const result = createThematicDirection(conceptId, validData, { llmMetadata });
+        const result = createThematicDirection(conceptId, validData, {
+          llmMetadata,
+        });
 
         expect(result.llmMetadata).toEqual(llmMetadata);
       });
@@ -88,7 +103,8 @@ describe('ThematicDirection Model', () => {
         const conceptId = '  ' + uuidv4() + '  ';
         const dataWithWhitespace = {
           title: '  The Reluctant Hero  ',
-          description: '  A character who must overcome their fears to become the hero  ',
+          description:
+            '  A character who must overcome their fears to become the hero  ',
           coreTension: '  Fear vs. Duty - Internal struggle  ',
           uniqueTwist: '  The hero gains power from their fears  ',
           narrativePotential: '  Rich character development arc  ',
@@ -98,10 +114,16 @@ describe('ThematicDirection Model', () => {
 
         expect(result.conceptId).toBe(conceptId.trim());
         expect(result.title).toBe('The Reluctant Hero');
-        expect(result.description).toBe('A character who must overcome their fears to become the hero');
+        expect(result.description).toBe(
+          'A character who must overcome their fears to become the hero'
+        );
         expect(result.coreTension).toBe('Fear vs. Duty - Internal struggle');
-        expect(result.uniqueTwist).toBe('The hero gains power from their fears');
-        expect(result.narrativePotential).toBe('Rich character development arc');
+        expect(result.uniqueTwist).toBe(
+          'The hero gains power from their fears'
+        );
+        expect(result.narrativePotential).toBe(
+          'Rich character development arc'
+        );
       });
 
       it('should generate unique IDs when no custom ID provided', () => {
@@ -156,9 +178,15 @@ describe('ThematicDirection Model', () => {
     });
 
     describe('required field validation', () => {
-      const requiredFields = ['title', 'description', 'coreTension', 'uniqueTwist', 'narrativePotential'];
+      const requiredFields = [
+        'title',
+        'description',
+        'coreTension',
+        'uniqueTwist',
+        'narrativePotential',
+      ];
 
-      requiredFields.forEach(field => {
+      requiredFields.forEach((field) => {
         it(`should throw error for missing ${field}`, () => {
           const conceptId = uuidv4();
           const invalidData = { ...validData };
@@ -206,7 +234,9 @@ describe('ThematicDirection Model', () => {
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
-        }).toThrow('ThematicDirection: title must be between 5 and 200 characters');
+        }).toThrow(
+          'ThematicDirection: title must be between 5 and 200 characters'
+        );
       });
 
       it('should throw error for title too long', () => {
@@ -214,7 +244,9 @@ describe('ThematicDirection Model', () => {
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
-        }).toThrow('ThematicDirection: title must be between 5 and 200 characters');
+        }).toThrow(
+          'ThematicDirection: title must be between 5 and 200 characters'
+        );
       });
 
       it('should accept title at minimum length', () => {
@@ -234,7 +266,9 @@ describe('ThematicDirection Model', () => {
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
-        }).toThrow('ThematicDirection: description must be between 20 and 2000 characters');
+        }).toThrow(
+          'ThematicDirection: description must be between 20 and 2000 characters'
+        );
       });
 
       it('should throw error for description too long', () => {
@@ -242,7 +276,9 @@ describe('ThematicDirection Model', () => {
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
-        }).toThrow('ThematicDirection: description must be between 20 and 2000 characters');
+        }).toThrow(
+          'ThematicDirection: description must be between 20 and 2000 characters'
+        );
       });
 
       it('should accept description at minimum length', () => {
@@ -262,7 +298,9 @@ describe('ThematicDirection Model', () => {
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
-        }).toThrow('ThematicDirection: coreTension must be between 10 and 500 characters');
+        }).toThrow(
+          'ThematicDirection: coreTension must be between 10 and 500 characters'
+        );
       });
 
       it('should throw error for coreTension too long', () => {
@@ -270,7 +308,9 @@ describe('ThematicDirection Model', () => {
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
-        }).toThrow('ThematicDirection: coreTension must be between 10 and 500 characters');
+        }).toThrow(
+          'ThematicDirection: coreTension must be between 10 and 500 characters'
+        );
       });
 
       it('should throw error for uniqueTwist too short', () => {
@@ -278,7 +318,9 @@ describe('ThematicDirection Model', () => {
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
-        }).toThrow('ThematicDirection: uniqueTwist must be between 10 and 500 characters');
+        }).toThrow(
+          'ThematicDirection: uniqueTwist must be between 10 and 500 characters'
+        );
       });
 
       it('should throw error for uniqueTwist too long', () => {
@@ -286,7 +328,9 @@ describe('ThematicDirection Model', () => {
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
-        }).toThrow('ThematicDirection: uniqueTwist must be between 10 and 500 characters');
+        }).toThrow(
+          'ThematicDirection: uniqueTwist must be between 10 and 500 characters'
+        );
       });
 
       it('should throw error for narrativePotential too short', () => {
@@ -294,15 +338,22 @@ describe('ThematicDirection Model', () => {
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
-        }).toThrow('ThematicDirection: narrativePotential must be between 10 and 1000 characters');
+        }).toThrow(
+          'ThematicDirection: narrativePotential must be between 10 and 1000 characters'
+        );
       });
 
       it('should throw error for narrativePotential too long', () => {
-        const invalidData = { ...validData, narrativePotential: 'A'.repeat(1001) }; // 1001 chars, max is 1000
+        const invalidData = {
+          ...validData,
+          narrativePotential: 'A'.repeat(1001),
+        }; // 1001 chars, max is 1000
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
-        }).toThrow('ThematicDirection: narrativePotential must be between 10 and 1000 characters');
+        }).toThrow(
+          'ThematicDirection: narrativePotential must be between 10 and 1000 characters'
+        );
       });
     });
   });
@@ -310,10 +361,14 @@ describe('ThematicDirection Model', () => {
   describe('createThematicDirectionsFromLLMResponse', () => {
     const validData = {
       title: 'The Reluctant Hero',
-      description: 'A character who must overcome their fears to become the hero they never wanted to be',
-      coreTension: 'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
-      uniqueTwist: 'The hero gains power from their fears rather than overcoming them',
-      narrativePotential: 'Rich character development arc exploring the nature of courage and sacrifice',
+      description:
+        'A character who must overcome their fears to become the hero they never wanted to be',
+      coreTension:
+        'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
+      uniqueTwist:
+        'The hero gains power from their fears rather than overcoming them',
+      narrativePotential:
+        'Rich character development arc exploring the nature of courage and sacrifice',
     };
 
     it('should create multiple thematic directions from array', () => {
@@ -323,12 +378,17 @@ describe('ThematicDirection Model', () => {
         {
           ...validData,
           title: 'The Fallen Saint',
-          description: 'A once-pure character who has been corrupted by the very power they sought to protect',
+          description:
+            'A once-pure character who has been corrupted by the very power they sought to protect',
         },
       ];
       const llmMetadata = { modelId: 'gpt-4', promptTokens: 100 };
 
-      const results = createThematicDirectionsFromLLMResponse(conceptId, directionsData, llmMetadata);
+      const results = createThematicDirectionsFromLLMResponse(
+        conceptId,
+        directionsData,
+        llmMetadata
+      );
 
       expect(results).toHaveLength(2);
       expect(results[0].title).toBe('The Reluctant Hero');
@@ -341,7 +401,10 @@ describe('ThematicDirection Model', () => {
       const conceptId = uuidv4();
       const directionsData = [validData];
 
-      const results = createThematicDirectionsFromLLMResponse(conceptId, directionsData);
+      const results = createThematicDirectionsFromLLMResponse(
+        conceptId,
+        directionsData
+      );
 
       expect(results).toHaveLength(1);
       expect(results[0].title).toBe('The Reluctant Hero');
@@ -378,10 +441,14 @@ describe('ThematicDirection Model', () => {
       id: uuidv4(),
       conceptId: uuidv4(),
       title: 'The Reluctant Hero',
-      description: 'A character who must overcome their fears to become the hero they never wanted to be',
-      coreTension: 'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
-      uniqueTwist: 'The hero gains power from their fears rather than overcoming them',
-      narrativePotential: 'Rich character development arc exploring the nature of courage and sacrifice',
+      description:
+        'A character who must overcome their fears to become the hero they never wanted to be',
+      coreTension:
+        'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
+      uniqueTwist:
+        'The hero gains power from their fears rather than overcoming them',
+      narrativePotential:
+        'Rich character development arc exploring the nature of courage and sacrifice',
       createdAt: '2024-01-15T12:00:00.000Z',
       llmMetadata: {},
     };
@@ -389,7 +456,10 @@ describe('ThematicDirection Model', () => {
     it('should validate a valid thematic direction', async () => {
       mockSchemaValidator.validate.mockReturnValue({ isValid: true });
 
-      const result = await validateThematicDirection(validDirection, mockSchemaValidator);
+      const result = await validateThematicDirection(
+        validDirection,
+        mockSchemaValidator
+      );
 
       expect(result).toBe(true);
       expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
@@ -423,29 +493,35 @@ describe('ThematicDirection Model', () => {
         isValid: false,
         errors: [
           { instancePath: '/title', message: 'must be string' },
-          { instancePath: '/description', message: 'must have minimum length of 20' },
-          { instancePath: '', message: 'must have required property \'coreTension\'' },
+          {
+            instancePath: '/description',
+            message: 'must have minimum length of 20',
+          },
+          {
+            instancePath: '',
+            message: "must have required property 'coreTension'",
+          },
         ],
       });
 
       await expect(
         validateThematicDirection(validDirection, mockSchemaValidator)
       ).rejects.toThrow(
-        'ThematicDirection validation failed: /title: must be string, /description: must have minimum length of 20, root: must have required property \'coreTension\''
+        "ThematicDirection validation failed: /title: must be string, /description: must have minimum length of 20, root: must have required property 'coreTension'"
       );
     });
 
     it('should handle validation errors without instancePath', async () => {
       mockSchemaValidator.validate.mockReturnValue({
         isValid: false,
-        errors: [
-          { message: 'invalid format' },
-        ],
+        errors: [{ message: 'invalid format' }],
       });
 
       await expect(
         validateThematicDirection(validDirection, mockSchemaValidator)
-      ).rejects.toThrow('ThematicDirection validation failed: root: invalid format');
+      ).rejects.toThrow(
+        'ThematicDirection validation failed: root: invalid format'
+      );
     });
   });
 
@@ -454,10 +530,14 @@ describe('ThematicDirection Model', () => {
       id: uuidv4(),
       conceptId: uuidv4(),
       title: 'The Reluctant Hero',
-      description: 'A character who must overcome their fears to become the hero they never wanted to be',
-      coreTension: 'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
-      uniqueTwist: 'The hero gains power from their fears rather than overcoming them',
-      narrativePotential: 'Rich character development arc exploring the nature of courage and sacrifice',
+      description:
+        'A character who must overcome their fears to become the hero they never wanted to be',
+      coreTension:
+        'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
+      uniqueTwist:
+        'The hero gains power from their fears rather than overcoming them',
+      narrativePotential:
+        'Rich character development arc exploring the nature of courage and sacrifice',
       createdAt: '2024-01-15T12:00:00.000Z',
       llmMetadata: { modelId: 'gpt-4' },
     };
@@ -488,10 +568,14 @@ describe('ThematicDirection Model', () => {
       id: uuidv4(),
       conceptId: uuidv4(),
       title: 'The Reluctant Hero',
-      description: 'A character who must overcome their fears to become the hero they never wanted to be',
-      coreTension: 'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
-      uniqueTwist: 'The hero gains power from their fears rather than overcoming them',
-      narrativePotential: 'Rich character development arc exploring the nature of courage and sacrifice',
+      description:
+        'A character who must overcome their fears to become the hero they never wanted to be',
+      coreTension:
+        'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
+      uniqueTwist:
+        'The hero gains power from their fears rather than overcoming them',
+      narrativePotential:
+        'Rich character development arc exploring the nature of courage and sacrifice',
       createdAt: '2024-01-15T12:00:00.000Z',
       llmMetadata: { modelId: 'gpt-4' },
     };
@@ -522,10 +606,14 @@ describe('ThematicDirection Model', () => {
       id: uuidv4(),
       conceptId: uuidv4(),
       title: 'The Reluctant Hero',
-      description: 'A character who must overcome their fears to become the hero they never wanted to be',
-      coreTension: 'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
-      uniqueTwist: 'The hero gains power from their fears rather than overcoming them',
-      narrativePotential: 'Rich character development arc exploring the nature of courage and sacrifice',
+      description:
+        'A character who must overcome their fears to become the hero they never wanted to be',
+      coreTension:
+        'Fear vs. Duty - Internal struggle between self-preservation and moral obligation',
+      uniqueTwist:
+        'The hero gains power from their fears rather than overcoming them',
+      narrativePotential:
+        'Rich character development arc exploring the nature of courage and sacrifice',
       createdAt: '2024-01-15T12:00:00.000Z',
       llmMetadata: {},
     };
@@ -539,7 +627,10 @@ describe('ThematicDirection Model', () => {
     it('should validate an array of valid thematic directions', async () => {
       mockSchemaValidator.validate.mockReturnValue({ isValid: true });
 
-      const result = await validateThematicDirections([validDirection1, validDirection2], mockSchemaValidator);
+      const result = await validateThematicDirections(
+        [validDirection1, validDirection2],
+        mockSchemaValidator
+      );
 
       expect(result).toBe(true);
       expect(mockSchemaValidator.validate).toHaveBeenCalledTimes(2);
@@ -560,7 +651,10 @@ describe('ThematicDirection Model', () => {
         }); // Second direction is invalid
 
       await expect(
-        validateThematicDirections([validDirection1, validDirection2], mockSchemaValidator)
+        validateThematicDirections(
+          [validDirection1, validDirection2],
+          mockSchemaValidator
+        )
       ).rejects.toThrow(
         'ThematicDirection validation failed at index 1: ThematicDirection validation failed: /title: must be string'
       );
