@@ -127,6 +127,9 @@
         },
         {
           "$ref": "./operations/mergeClosenessCircle.schema.json"
+        },
+        {
+          "$ref": "./operations/unequipClothing.schema.json"
         }
       ]
     }

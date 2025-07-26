@@ -195,6 +195,15 @@ export class SpatialIndexSynchronizer {
       return;
     }
 
+    // Ensure entity has a valid ID before proceeding
+    if (!entity || !entity.id || typeof entity.id !== 'string' || entity.id.trim() === '') {
+      this.logger.warn(
+        'SpatialIndexSynchronizer.onPositionChanged: Invalid entity ID, skipping position update',
+        { entity, componentTypeId }
+      );
+      return;
+    }
+
     const oldLocationId = oldComponentData?.locationId ?? null;
 
     // For a 'component_removed' event, 'componentData' will not be in the payload.

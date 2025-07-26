@@ -63,21 +63,61 @@ const createMockElement = (tagName = 'div') => {
       const childNodes = this._childNodes || [];
       for (const node of childNodes) {
         if (!node.classList) continue;
-        if (
+        
+        // Handle complex selectors like '.class[data-attr="value"]'
+        if (selector.includes('[data-toggle-type="details"]')) {
+          if (node.classList.contains('chat-alert-toggle') && 
+              node.dataset && node.dataset.toggleType === 'details') {
+            return node;
+          }
+        } else if (selector.includes('[data-toggle-type="message"]')) {
+          if (node.classList.contains('chat-alert-toggle') && 
+              node.dataset && node.dataset.toggleType === 'message') {
+            return node;
+          }
+        } else if (
           selector.startsWith('.') &&
           node.classList.contains(selector.substring(1))
         ) {
           return node;
-        }
-        if (node.tagName === selector.toUpperCase()) {
+        } else if (node.tagName === selector.toUpperCase()) {
           return node;
         }
+        
         if (typeof node.querySelector === 'function') {
           const found = node.querySelector(selector);
           if (found) return found;
         }
       }
       return null;
+    }),
+    querySelectorAll: jest.fn(function (selector) {
+      const results = [];
+      const childNodes = this._childNodes || [];
+      
+      for (const node of childNodes) {
+        if (!node.classList) continue;
+        
+        if (selector === 'button' && node.tagName === 'BUTTON') {
+          results.push(node);
+        } else if (
+          selector.startsWith('.') &&
+          node.classList.contains(selector.substring(1))
+        ) {
+          results.push(node);
+        } else if (node.tagName === selector.toUpperCase()) {
+          results.push(node);
+        }
+        
+        // Recursively search child nodes
+        if (typeof node.querySelectorAll === 'function') {
+          const childResults = node.querySelectorAll(selector);
+          for (let i = 0; i < childResults.length; i++) {
+            results.push(childResults[i]);
+          }
+        }
+      }
+      return results;
     }),
     closest: jest.fn(function (selector) {
       if (
@@ -228,6 +268,35 @@ describe('ChatAlertRenderer', () => {
         'error'
       );
     });
+
+    it('should throw error when safeEventDispatcher dependency is missing', () => {
+      const invalidMocks = {
+        logger: createMockLogger(),
+        documentContext: createMockDocumentContext(),
+        safeEventDispatcher: null,
+        domElementFactory: createMockDomElementFactory(),
+        alertRouter: createMockAlertRouter(),
+      };
+
+      expect(() => new ChatAlertRenderer(invalidMocks)).toThrow(
+        'ValidatedEventDispatcher dependency is missing or invalid'
+      );
+    });
+
+
+    it('should throw error when alertRouter dependency is missing', () => {
+      const invalidMocks = {
+        logger: createMockLogger(),
+        documentContext: createMockDocumentContext(),
+        safeEventDispatcher: createMockSafeEventDispatcher(),
+        domElementFactory: createMockDomElementFactory(),
+        alertRouter: null,
+      };
+
+      expect(() => new ChatAlertRenderer(invalidMocks)).toThrow(
+        'AlertRouter dependency is required'
+      );
+    });
   });
 
   describe('Throttling Logic', () => {
@@ -351,6 +420,293 @@ describe('ChatAlertRenderer', () => {
         'Details: <img src=x onerror=alert(1)>',
       ].join('\n');
       expect(code.textContent).toBe(expectedDetails);
+    });
+  });
+
+  describe('Toggle functionality edge cases', () => {
+    it('should ignore clicks on non-toggle elements', () => {
+      const longMsg = 'x'.repeat(250);
+      mocks.safeEventDispatcher.trigger('core:display_warning', {
+        message: longMsg,
+        details: {},
+      });
+
+      // Create a mock element that doesn't have the toggle class
+      const nonToggleElement = createMockElement('span');
+      nonToggleElement.closest = jest.fn(() => null);
+
+      // Simulate click on non-toggle element
+      mocks.mockChatPanel._eventListeners.click({ target: nonToggleElement });
+
+      // Should not throw or cause issues
+      expect(nonToggleElement.closest).toHaveBeenCalledWith('.chat-alert-toggle');
+    });
+
+    it('should handle message toggle when target element cannot be found', () => {
+      const longMsg = 'x'.repeat(250);
+      mocks.safeEventDispatcher.trigger('core:display_warning', {
+        message: longMsg,
+        details: {},
+      });
+
+      // Create a mock toggle button with invalid aria-controls
+      const invalidToggleBtn = createMockElement('button');
+      invalidToggleBtn.dataset.toggleType = 'message';
+      invalidToggleBtn.setAttribute('aria-controls', 'non-existent-id');
+      invalidToggleBtn.closest = jest.fn(() => invalidToggleBtn);
+
+      // Mock the documentContext to return null for the invalid ID
+      mocks.documentContext.query.mockReturnValueOnce(null);
+
+      // Simulate click on invalid toggle button
+      mocks.mockChatPanel._eventListeners.click({ target: invalidToggleBtn });
+
+      // Should log warning about not finding the element
+      expect(mocks.logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Could not find message element for toggle button')
+      );
+    });
+
+    it('should toggle message text from collapsed to expanded state', () => {
+      const longMsg = 'x'.repeat(250);
+      mocks.safeEventDispatcher.trigger('core:display_warning', {
+        message: longMsg,
+        details: {},
+      });
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const msgEl = bubble.querySelector('.chat-alert-message');
+      const toggleBtn = bubble.querySelector('.chat-alert-toggle');
+      toggleBtn.dataset.toggleType = 'message';
+
+      // Verify initial collapsed state
+      expect(msgEl.textContent.length).toBe(201); // 200 chars + ellipsis
+      expect(toggleBtn.textContent).toBe('Show more');
+      expect(toggleBtn.getAttribute('aria-expanded')).toBe('false');
+
+      // Click to expand
+      mocks.mockChatPanel._eventListeners.click({ target: toggleBtn });
+
+      // Verify expanded state
+      expect(msgEl.textContent).toBe(longMsg);
+      expect(toggleBtn.textContent).toBe('Show less');
+      expect(toggleBtn.getAttribute('aria-expanded')).toBe('true');
+
+      // Click to collapse again
+      mocks.mockChatPanel._eventListeners.click({ target: toggleBtn });
+
+      // Verify collapsed state again
+      expect(msgEl.textContent.length).toBe(201);
+      expect(toggleBtn.textContent).toBe('Show more');
+      expect(toggleBtn.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('should handle details toggle when target element cannot be found', () => {
+      const payload = {
+        message: 'Error message',
+        details: { statusCode: 500, url: '/api/test' },
+      };
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
+
+      // Create a mock toggle button with invalid aria-controls
+      const invalidToggleBtn = createMockElement('button');
+      invalidToggleBtn.dataset.toggleType = 'details';
+      invalidToggleBtn.setAttribute('aria-controls', 'non-existent-details-id');
+      invalidToggleBtn.closest = jest.fn(() => invalidToggleBtn);
+
+      // Mock the documentContext to return null for the invalid ID
+      mocks.documentContext.query.mockReturnValueOnce(null);
+
+      // Simulate click on invalid details toggle button
+      mocks.mockChatPanel._eventListeners.click({ target: invalidToggleBtn });
+
+      // Should log warning about not finding the details content
+      expect(mocks.logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Could not find details content for toggle button')
+      );
+    });
+
+    it('should handle unknown toggle type gracefully', () => {
+      const longMsg = 'x'.repeat(250);
+      mocks.safeEventDispatcher.trigger('core:display_warning', {
+        message: longMsg,
+        details: {},
+      });
+
+      // Create a mock toggle button with unknown type
+      const unknownToggleBtn = createMockElement('button');
+      unknownToggleBtn.dataset.toggleType = 'unknown-type';
+      unknownToggleBtn.closest = jest.fn(() => unknownToggleBtn);
+
+      // This should not throw an error and should do nothing
+      mocks.mockChatPanel._eventListeners.click({ target: unknownToggleBtn });
+
+      // No error should occur - the method should handle unknown types gracefully
+      expect(unknownToggleBtn.closest).toHaveBeenCalledWith('.chat-alert-toggle');
+    });
+  });
+
+  describe('Developer details extraction edge cases', () => {
+    it('should extract stack trace from Error objects', () => {
+      const error = new Error('Test error message');
+      error.stack = 'Error: Test error message\n    at Function.test\n    at main.js:10:5';
+      
+      const payload = {
+        message: 'An error occurred',
+        details: error,
+      };
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const code = bubble.querySelector('code');
+      expect(code.textContent).toBe(error.stack);
+    });
+
+    it('should handle status code objects with missing optional properties', () => {
+      const payload = {
+        message: 'Server error',
+        details: { statusCode: 404 }, // No url or raw properties
+      };
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const code = bubble.querySelector('code');
+      expect(code.textContent).toBe('Status Code: 404');
+    });
+
+    it('should handle status code objects with stack trace', () => {
+      const payload = {
+        message: 'Server error with stack',
+        details: {
+          statusCode: 500,
+          url: '/api/endpoint',
+          raw: 'Internal server error',
+          stack: 'Error: Something went wrong\n    at handler.js:25:10'
+        },
+      };
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const code = bubble.querySelector('code');
+      const expectedDetails = [
+        'Status Code: 500',
+        'URL: /api/endpoint',
+        'Details: Internal server error',
+        '',
+        'Stack Trace:',
+        'Error: Something went wrong\n    at handler.js:25:10'
+      ].join('\n');
+      expect(code.textContent).toBe(expectedDetails);
+    });
+
+    it('should handle string details', () => {
+      const payload = {
+        message: 'Simple error',
+        details: 'This is a string detail',
+      };
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const code = bubble.querySelector('code');
+      expect(code.textContent).toBe('This is a string detail');
+    });
+
+    it('should handle number details', () => {
+      const payload = {
+        message: 'Numeric error',
+        details: 12345,
+      };
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const code = bubble.querySelector('code');
+      expect(code.textContent).toBe('12345');
+    });
+
+    it('should serialize non-empty objects to JSON', () => {
+      const payload = {
+        message: 'Object error',
+        details: { customProperty: 'value', anotherProperty: 123 },
+      };
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const code = bubble.querySelector('code');
+      const expectedJson = JSON.stringify(payload.details, null, 2);
+      expect(code.textContent).toBe(expectedJson);
+    });
+
+    it('should handle JSON serialization errors gracefully', () => {
+      // Create a circular reference that will cause JSON.stringify to fail
+      const circularObj = { name: 'test' };
+      circularObj.self = circularObj;
+
+      const payload = {
+        message: 'Circular reference error',
+        details: circularObj,
+      };
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const code = bubble.querySelector('code');
+      expect(code.textContent).toBe('Could not serialize details object.');
+    });
+
+    it('should handle empty objects and return null', () => {
+      const payload = {
+        message: 'Error with empty object',
+        details: {},
+      };
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      // Should not have developer details section since empty object returns null
+      const detailsContainer = bubble.querySelector('.chat-alert-details');
+      expect(detailsContainer).toBeNull();
+    });
+
+    it('should handle null and undefined details', () => {
+      const payload1 = {
+        message: 'Error with null details',
+        details: null,
+      };
+      mocks.safeEventDispatcher.trigger('core:display_error', payload1);
+
+      let bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      let detailsContainer = bubble.querySelector('.chat-alert-details');
+      expect(detailsContainer).toBeNull();
+
+      // Clear the mock and test undefined
+      jest.clearAllMocks();
+      const { mocks: freshMocks } = setup();
+      
+      const payload2 = {
+        message: 'Error with undefined details',
+        details: undefined,
+      };
+      freshMocks.safeEventDispatcher.trigger('core:display_error', payload2);
+
+      bubble = freshMocks.mockChatPanel.appendChild.mock.calls[0][0];
+      detailsContainer = bubble.querySelector('.chat-alert-details');
+      expect(detailsContainer).toBeNull();
+    });
+  });
+
+  describe('Panel absence error logging', () => {
+    it('should log error to console when panel is not present for errors', () => {
+      const { mocks: localMocks } = setup(false);
+      mockErrorAllow.mockReturnValue(true);
+
+      const message = 'Console error message';
+      const details = 'Additional error details';
+      localMocks.safeEventDispatcher.trigger('core:display_error', {
+        message,
+        details,
+      });
+
+      expect(localMocks.logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(`[UI ERROR] ${message} | Details: ${details}`)
+      );
     });
   });
 });

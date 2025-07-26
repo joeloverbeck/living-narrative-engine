@@ -10,7 +10,7 @@ The DSL provides a way to traverse entity relationships, access components, and 
 
 ```ebnf
 scope_expression = source_node, { edge_expression } ;
-source_node = "actor" | "location" | "entities", "(", component_id, ")" ;
+source_node = "actor" | "location" | ( "entities", "(", component_id, ")" ) ;
 edge_expression = edge_syntax, [ filter_expression ] ;
 edge_syntax = identifier | identifier, "[", "]" | "[", "]" ;
 filter_expression = "[", json_logic_object, "]" ;
@@ -20,7 +20,7 @@ letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" |
 digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 json_logic_object = /* Standard JSON Logic object as defined in json-logic for modders.md */ ;
 union_expression = scope_expression, ( "+" | "|" ), scope_expression ;
-max_expression_depth = 4 ;
+max_expression_depth = 6 ;
 ```
 
 ## 2. Reserved Source Nodes
@@ -36,7 +36,7 @@ max_expression_depth = 4 ;
 
 - **Description**: The current location entity where the action is taking place. The location is derived from the runtime context in which the scope is being evaluated.
 - **Type**: Location entity reference.
-- **Parameters**: None.
+- **Parameters**: None. The `location` source node does not accept parameters.
 - **Context**: Available when the action context provides a location.
 - **Examples**:
   - `location` - refers to the current location entity.
@@ -76,10 +76,14 @@ max_expression_depth = 4 ;
 ### Standalone Array Iteration
 
 - **Format**: `[]`
-- **Description**: When used directly after a source node that returns a set of entities (like `entities(...)`), this iterates over that set. It is essential for applying filters to an initial set of entities.
+- **Description**: When used directly after a source node that returns a set of entities (like `entities(...)`), this iterates over that set. **This is mandatory for applying filters to entities from an `entities()` source**.
+- **Critical Pattern**: For filtering entities from `entities()` sources, you **must** use the pattern `entities(component)[][filter]`:
+  - First `[]` - **Required** iterator that prepares the entity set for filtering
+  - Second `[...]` - The filter expression
 - **Examples**:
-  - `entities(core:item)[]` - functionally a pass-through, but prepares the set for filtering.
-  - `entities(core:item)[][{"==":[...]}]]` - a common pattern to get all items, then iterate and filter them. The first `[]` is the iterator, the second `[...]` is the filter.
+  - `entities(core:item)[]` - prepares items for subsequent filtering
+  - `entities(core:item)[][{"==": [{"var": "entity.id"}, "item1"]}]` - **correct** filtering pattern
+  - `entities(core:item)[{"==": [{"var": "entity.id"}, "item1"]}]` - ❌ **incorrect** - missing required iterator
 
 ## 4. Special Resolvers
 
@@ -87,48 +91,74 @@ max_expression_depth = 4 ;
 
 The Scope DSL supports specialized clothing operations for efficient clothing item targeting. These operations provide a much simpler alternative to complex JSON Logic expressions.
 
+#### System Architecture
+
+The clothing system uses a two-stage resolution process:
+1. **Clothing Field Resolution** - Creates clothing access objects with layer and slot data
+2. **Slot Access Resolution** - Extracts specific items from clothing slots with layer priority
+
+#### Layer Priority System
+
+Clothing layers are prioritized in the following order (highest to lowest priority):
+- `outer` - Jackets, coats, outerwear
+- `base` - Shirts, pants, basic clothing  
+- `underwear` - Undergarments
+
 #### Basic Syntax
 
 ```dsl
-// Get all topmost clothing items
+// Get all topmost clothing items (highest priority per slot)
 all_removable := actor.topmost_clothing[]
 
-// Get specific slot's topmost item
+// Get specific slot's topmost item (layer priority applied)
 upper_shirt := actor.topmost_clothing.torso_upper
 lower_pants := actor.topmost_clothing.torso_lower
 
-// Get items from specific layers
+// Get items from specific layers only
 all_outer := actor.outer_clothing[]
 all_base := actor.base_clothing[]
 all_underwear := actor.underwear[]
 ```
 
-#### Supported Fields
+#### Supported Clothing Fields
 
 - `topmost_clothing` - Returns topmost layer items (outer > base > underwear priority)
-- `all_clothing` - Returns items from all layers
+- `all_clothing` - Returns items from all layers (no priority filtering)
 - `outer_clothing` - Returns only outer layer items
-- `base_clothing` - Returns only base layer items
+- `base_clothing` - Returns only base layer items  
 - `underwear` - Returns only underwear layer items
 
-#### Supported Slots
+#### Supported Clothing Slots
 
-- `torso_upper` - Upper torso clothing
-- `torso_lower` - Lower torso clothing
-- `legs` - Leg clothing
-- `feet` - Footwear
-- `head_gear` - Head covering
-- `hands` - Hand covering
+- `torso_upper` - Upper torso clothing (shirts, jackets)
+- `torso_lower` - Lower torso clothing (pants, skirts)
+- `legs` - Leg clothing (stockings, leg warmers)
+- `feet` - Footwear (shoes, boots, socks)
+- `head_gear` - Head covering (hats, helmets)
+- `hands` - Hand covering (gloves, mittens)
 - `left_arm_clothing` - Left arm covering
 - `right_arm_clothing` - Right arm covering
 
-#### Examples
+#### Implementation Details
+
+**Clothing Access Objects**: The clothing fields (`topmost_clothing`, etc.) create special objects with:
+- `__clothingSlotAccess: true` - Marker for clothing access objects
+- `__isClothingAccessObject: true` - Additional validation marker
+- `mode` - The layer mode (`topmost`, `all`, `outer`, `base`, `underwear`)
+- `equipped` - The raw equipment data from the `clothing:equipment` component
+
+**Slot Access**: When accessing a slot (e.g., `.torso_upper`), the system:
+1. Validates the slot name against supported slots
+2. Applies layer priority based on the clothing access object's mode
+3. Returns the highest priority item for that slot
+
+#### Advanced Examples
 
 ```dsl
-// Remove all topmost clothing items
+// Remove all topmost clothing items with iteration
 all_removable := actor.topmost_clothing[]
 
-// Access specific slot with layer priority
+// Access specific slot with automatic layer priority
 jacket := actor.topmost_clothing.torso_upper
 
 // Get all outer layer items (jackets, coats, etc.)
@@ -138,8 +168,18 @@ outer_garments := actor.outer_clothing[]
 waterproof := actor.topmost_clothing[][{"in": ["waterproof", {"var": "entity.components.core:tags.tags"}]}]
 
 // Union of specific slots
-upper_and_lower := actor.topmost_clothing.torso_upper + actor.topmost_clothing.torso_lower
+upper_and_lower := actor.topmost_clothing.torso_upper | actor.topmost_clothing.torso_lower
+
+// Complex clothing queries with multiple layers
+removable_items := actor.outer_clothing[] | actor.base_clothing.torso_upper
 ```
+
+#### Error Handling
+
+- **Missing Equipment Component**: Returns empty clothing access object with `equipped: {}`
+- **Invalid Slot Names**: Ignored by slot access resolver (falls back to standard field resolution)
+- **Empty Slot Data**: Returns empty sets gracefully
+- **Non-String Entity IDs**: Filtered out during resolution
 
 ## 5. Filter Syntax
 
@@ -165,13 +205,16 @@ upper_and_lower := actor.topmost_clothing.torso_upper + actor.topmost_clothing.t
 
 - **Format**: `scope_expression + scope_expression` or `scope_expression | scope_expression`
 - **Description**: Combine the results from two separate scope expressions into a single set.
-- **Behavior**: Returns the union (unique combination) of the entity sets. Both operators (`+` and `|`) produce identical results. The union operators are right-associative, meaning `a | b | c` is parsed as `a | (b | c)`.
+- **Behavior**: Returns the union (unique combination) of the entity sets. Both operators (`+` and `|`) produce **identical** results at both the parsing and resolution level.
+- **Parsing**: Both operators are right-associative, meaning `a | b | c` is parsed as `a | (b | c)`.
+- **Implementation**: Both operators generate identical AST structures and resolution behavior - they are true aliases of each other.
 - **Examples**:
-  - `actor.core:inventory.items[] + entities(core:item)[...]`
+  - `actor.core:inventory.items[] + entities(core:item)[][]`
   - `actor.followers | actor.partners`
   - `actor.topmost_clothing.torso_upper | actor.topmost_clothing.torso_lower`
+  - `entities(core:actor) + entities(core:npc)` ≡ `entities(core:actor) | entities(core:npc)`
 
-**Note**: The pipe operator (`|`) was added as an alternative syntax for unions. Both `+` and `|` produce identical behavior, so use whichever feels more natural for your use case.
+**Implementation Note**: The pipe operator (`|`) was added as an alternative syntax for unions. Both `+` and `|` produce **completely identical** parsing trees and resolution behavior - choose whichever feels more natural for your use case.
 
 ## 7. White-space & Comment Rules
 
@@ -193,15 +236,66 @@ upper_and_lower := actor.topmost_clothing.torso_upper + actor.topmost_clothing.t
 
 ## 8. Expression Depth Limit
 
-### Maximum Depth: 4
+### Maximum Depth: 6
 
-- **Definition**: Maximum number of chained property accesses (i.e., uses of `.`) or filters (`[{...}]`) from a source node. **Note**: A bare array iterator (`[]`) immediately after a source node does not count towards this limit.
+- **Definition**: Maximum number of chained property accesses (i.e., uses of `.`) or filters (`[{...}]`) from a source node.
 - **Purpose**: Prevent overly complex expressions, infinite recursion, and performance issues.
-- **Examples**:
-  - `actor.core:inventory.items[].components` (depth: 3) ✅
-  - `actor.a.b.c.d` (depth: 4) ✅
-  - `actor.a.b.c.d.e` (depth: 5) ❌
-  - `entities(core:item)[].id` (depth: 1) ✅ - The `[]` after entities doesn't count
+
+#### Depth Calculation Rules
+
+The engine calculates depth by counting different node types that contribute to expression complexity:
+
+**Depth-Contributing Operations**:
+- **Step nodes** (`.field`) - Each property access adds 1 to depth
+- **Filter nodes** (`[{...}]`) - Each filter expression adds 1 to depth  
+- **ArrayIterationStep nodes** (`[]`) - Each array iteration adds 1 to depth
+
+**Special Cases**:
+- **Source nodes** (`actor`, `location`, `entities()`) - Do not count towards depth (depth starts at 0)
+- **Union nodes** (`+`, `|`) - Do not count towards depth (each side calculated independently)
+- **Bare array iterator after source** - `entities(core:item)[]` - The `[]` immediately after `entities()` does count towards depth
+
+#### Depth Calculation Examples
+
+```dsl
+// Depth 0: Source only
+actor                                    // depth: 0 ✅
+
+// Depth 1: Single step
+actor.followers                          // depth: 1 ✅
+
+// Depth 2: Step + array iteration  
+actor.followers[]                        // depth: 2 ✅
+
+// Depth 3: Multiple steps
+actor.core:inventory.items               // depth: 3 ✅
+
+// Depth 4: Steps + array iteration
+actor.core:inventory.items[]             // depth: 4 ✅
+
+// Depth 5: Steps + array + filter
+actor.core:inventory.items[][filter]     // depth: 5 ✅
+
+// Depth 6: Maximum allowed
+actor.a.b.c.d.e.f                       // depth: 6 ✅
+
+// Depth 7: Exceeds limit  
+actor.a.b.c.d.e.f.g                     // depth: 7 ❌
+
+// Special case: entities() with iterator
+entities(core:item)[]                    // depth: 1 ✅ ([] counts)
+entities(core:item)[][filter]            // depth: 2 ✅
+
+// Union operations (each side calculated separately)
+actor.followers + location.npcs          // left: depth 1, right: depth 1 ✅
+```
+
+#### Implementation Notes
+
+- Depth is validated during AST traversal, not just parsing
+- Each branch of a union is validated independently  
+- Cycle detection runs before depth validation
+- Exceeding depth limit throws `ScopeDepthError` with descriptive message
 
 ## 9. Worked Examples
 
@@ -388,9 +482,36 @@ This distinction allows the engine to optimize different types of operations app
 
 ### Performance Considerations
 
-- The expression depth limit prevents infinite recursion.
-- Caching of parsed expressions and/or resolved scopes is used to improve performance during a single game turn. Scope results are cached per turn, meaning the same scope expression will only be evaluated once per game turn for efficiency.
-- The engine supports trace context for debugging and performance monitoring of scope evaluations.
+- **Depth Limiting**: The expression depth limit (6) prevents infinite recursion and constrains evaluation complexity.
+- **Caching Strategy**: Scope results are cached per game turn - the same scope expression will only be evaluated once per turn for efficiency.
+- **Union Optimization**: Union operations use Set-based deduplication for optimal performance with large result sets.
+- **Trace Context**: The engine supports optional trace context for debugging and performance monitoring of scope evaluations.
+
+#### Performance Characteristics (Validated by Tests)
+
+**Scope Resolution Times**:
+- Simple scopes (`actor`, `location`): < 1ms  
+- Complex filtering: < 10ms for moderate datasets
+- Large dataset unions (2000+ entities): < 100ms target
+- Deep expressions (depth 6): Performance scales linearly with depth
+
+**Memory Usage**:
+- Clothing access objects: Minimal overhead with lazy evaluation
+- Filter contexts: Built on-demand and garbage collected post-evaluation
+- Union results: Memory-efficient Set-based storage with automatic deduplication
+
+**Scalability Factors**:
+- **Entity Count**: Linear scaling for entity-based operations
+- **Expression Depth**: Linear performance degradation per depth level  
+- **Filter Complexity**: JSON Logic evaluation time depends on filter expression complexity
+- **Union Size**: Set operations remain efficient even with large result sets
+
+#### Best Practices for Performance
+
+1. **Minimize Expression Depth**: Prefer shallower expressions where possible
+2. **Use Efficient Filters**: Simple equality checks perform better than complex logic
+3. **Cache-Friendly Patterns**: Reuse the same scope expressions within a turn
+4. **Union Optimization**: Order union operands by expected result size (smaller first)
 
 ### Error Handling
 
@@ -398,19 +519,19 @@ This distinction allows the engine to optimize different types of operations app
 - **Cycle Detected**: The engine will throw a `ScopeCycleError` if it detects a circular reference in the expression (e.g., `actor.self.self`), preventing infinite loops.
 - Missing components or fields: The engine will handle attempts to access non-existent data gracefully. Missing components return empty sets, while missing fields within components return undefined values that are filtered out during array operations. This ensures that scope expressions never throw errors due to missing data.
 - Invalid JSON Logic: Errors within a JSON Logic filter are caught and logged, with the filter evaluating to `false`.
-- Depth Limit Exceeded: The parser will throw an error if an expression is more than 4 levels deep.
+- Depth Limit Exceeded: The parser will throw an error if an expression is more than 6 levels deep.
 
 ## 13. Common Pitfalls and Best Practices
 
 ### Common Syntax Errors
 
-**❌ INCORRECT: Missing iterator for entities() filter**
+**❌ CRITICAL ERROR: Missing iterator for entities() filter**
 
 ```
 entities(core:position)[{"==": [{"var": "entity.id"}, "test"]}]
 ```
 
-This syntax is missing the iterator `[]` between `entities()` and the filter. This can cause resolution errors.
+This syntax is **invalid** and will cause scope resolution to fail. The iterator `[]` between `entities()` and the filter is **mandatory**, not optional.
 
 **✅ CORRECT: Include iterator before filter**
 
@@ -418,7 +539,7 @@ This syntax is missing the iterator `[]` between `entities()` and the filter. Th
 entities(core:position)[][{"==": [{"var": "entity.id"}, "test"]}]
 ```
 
-The correct pattern is: `entities(component)[]` for iteration, then `[filter]` for filtering.
+The correct pattern is **always**: `entities(component)[]` for iteration, then `[filter]` for filtering. This double-bracket pattern is required by the scope resolution engine and cannot be omitted.
 
 ### Best Practices
 
@@ -446,10 +567,10 @@ If you encounter "actorEntity has invalid ID" errors:
 
 ### Migration Guide
 
-If you have existing scopes with the pattern `entities(component)[filter]`, update them to:
+**CRITICAL**: If you have existing scopes with the pattern `entities(component)[filter]`, you **must** update them to:
 
 ```
 entities(component)[][filter]
 ```
 
-This ensures compatibility with the scope resolution engine and prevents context propagation errors.
+This is not optional - the single-bracket pattern will cause scope resolution failures. The double-bracket pattern is mandatory for proper AST generation and context propagation in the scope resolution engine.

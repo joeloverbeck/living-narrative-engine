@@ -236,7 +236,7 @@ export class ThematicDirectionController {
       await this.#loadPreviousConcepts();
 
       // Dispatch success event
-      this.#eventBus.dispatch('THEMATIC_DIRECTIONS_GENERATED', {
+      this.#eventBus.dispatch('thematic:thematic_directions_generated', {
         conceptId: concept.id,
         directionCount: directions.length,
         autoSaved: true,

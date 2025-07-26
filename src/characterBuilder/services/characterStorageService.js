@@ -434,6 +434,135 @@ export class CharacterStorageService {
   }
 
   /**
+   * Get all thematic directions across all concepts
+   *
+   * @returns {Promise<ThematicDirection[]>}
+   */
+  async getAllThematicDirections() {
+    this.#ensureInitialized();
+
+    try {
+      const directions = await this.#database.getAllThematicDirections();
+      this.#logger.debug(
+        `CharacterStorageService: Retrieved all thematic directions`,
+        { directionCount: directions.length }
+      );
+      return directions;
+    } catch (error) {
+      const message = `Failed to get all thematic directions: ${error.message}`;
+      this.#logger.error(message, error);
+      throw new CharacterStorageError(message, error);
+    }
+  }
+
+  /**
+   * Update a single thematic direction
+   *
+   * @param {string} directionId - Direction ID
+   * @param {object} updates - Fields to update
+   * @returns {Promise<ThematicDirection>}
+   */
+  async updateThematicDirection(directionId, updates) {
+    this.#ensureInitialized();
+
+    if (!directionId || typeof directionId !== 'string') {
+      throw new CharacterStorageError('directionId must be a non-empty string');
+    }
+
+    if (!updates || typeof updates !== 'object') {
+      throw new CharacterStorageError('updates must be a valid object');
+    }
+
+    try {
+      const updatedDirection = await this.#database.updateThematicDirection(
+        directionId,
+        updates
+      );
+
+      // Validate updated direction
+      const isValid = this.#schemaValidator.validateAgainstSchema(
+        updatedDirection,
+        'thematic-direction'
+      );
+      if (!isValid) {
+        const errorMsg = this.#schemaValidator.formatAjvErrors();
+        throw new CharacterStorageError(
+          `Updated thematic direction validation failed: ${errorMsg}`
+        );
+      }
+
+      this.#logger.info(
+        `CharacterStorageService: Successfully updated thematic direction`,
+        { directionId }
+      );
+
+      return updatedDirection;
+    } catch (error) {
+      const message = `Failed to update thematic direction ${directionId}: ${error.message}`;
+      this.#logger.error(message, error);
+      throw new CharacterStorageError(message, error);
+    }
+  }
+
+  /**
+   * Delete a thematic direction
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<boolean>}
+   */
+  async deleteThematicDirection(directionId) {
+    this.#ensureInitialized();
+
+    if (!directionId || typeof directionId !== 'string') {
+      throw new CharacterStorageError('directionId must be a non-empty string');
+    }
+
+    try {
+      const success = await this.#database.deleteThematicDirection(directionId);
+
+      if (success) {
+        this.#logger.info(
+          `CharacterStorageService: Successfully deleted thematic direction`,
+          { directionId }
+        );
+      } else {
+        this.#logger.warn(
+          `CharacterStorageService: Thematic direction not found for deletion`,
+          { directionId }
+        );
+      }
+
+      return success;
+    } catch (error) {
+      const message = `Failed to delete thematic direction ${directionId}: ${error.message}`;
+      this.#logger.error(message, error);
+      throw new CharacterStorageError(message, error);
+    }
+  }
+
+  /**
+   * Find orphaned thematic directions
+   *
+   * @returns {Promise<ThematicDirection[]>}
+   */
+  async findOrphanedDirections() {
+    this.#ensureInitialized();
+
+    try {
+      const orphanedDirections = await this.#database.findOrphanedDirections();
+      this.#logger.info(
+        `CharacterStorageService: Found orphaned directions`,
+        { orphanedCount: orphanedDirections.length }
+      );
+      return orphanedDirections;
+    } catch (error) {
+      const message = `Failed to find orphaned directions: ${error.message}`;
+      this.#logger.error(message, error);
+      throw new CharacterStorageError(message, error);
+    }
+  }
+
+  /**
    * Close the storage service
    *
    * @returns {Promise<void>}

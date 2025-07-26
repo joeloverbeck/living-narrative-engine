@@ -179,6 +179,7 @@ export const coreTokens = freeze({
   AutoMoveFollowersHandler: 'AutoMoveFollowersHandler',
   MergeClosenessCircleHandler: 'MergeClosenessCircleHandler',
   HasBodyPartWithComponentValueHandler: 'HasBodyPartWithComponentValueHandler',
+  UnequipClothingHandler: 'UnequipClothingHandler',
   TurnActionChoicePipeline: 'TurnActionChoicePipeline',
   ITurnDecisionProvider: 'ITurnDecisionProvider',
   IHumanDecisionProvider: 'IHumanDecisionProvider',

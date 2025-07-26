@@ -1,20 +1,23 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "clothing:unequipped",
+  "$id": "clothing:unequipped",
   "description": "Fired when a clothing item is successfully unequipped from an entity",
   "payloadSchema": {
     "type": "object",
     "properties": {
       "entityId": {
         "type": "string",
+        "minLength": 1,
         "description": "The entity that unequipped the clothing"
       },
       "clothingItemId": {
         "type": "string",
+        "minLength": 1,
         "description": "The clothing item entity ID that was unequipped"
       },
       "slotId": {
         "type": "string",
+        "minLength": 1,
         "description": "The equipment slot the item was unequipped from"
       },
       "layer": {

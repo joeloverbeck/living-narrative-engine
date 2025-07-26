@@ -238,7 +238,7 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
         status: 'draft',
       });
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'CHARACTER_CONCEPT_CREATED',
+        'thematic:character_concept_created',
         expect.objectContaining({
           conceptId: savedConcept.id,
           autoSaved: true,

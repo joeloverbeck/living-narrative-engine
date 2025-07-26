@@ -233,6 +233,22 @@ actor.core:pets.petList[]  // Right - includes mod: prefix
 [{"==": [{"var": "entity.id"}, "pet1"]}]  // Right - proper JSON Logic
 ```
 
+**❌ CRITICAL ERROR - Missing iterator for entities() filter:**
+
+```
+entities(core:position)[{"==": [{"var": "entity.id"}, "test"]}]  // Wrong - missing required iterator
+```
+
+This will cause scope resolution to **fail**. The iterator `[]` between `entities()` and the filter is **mandatory**.
+
+**✅ Correct:**
+
+```
+entities(core:position)[][{"==": [{"var": "entity.id"}, "test"]}]  // Right - required double brackets
+```
+
+The double-bracket pattern `entities()[][]` is required for filtering entities - never optional.
+
 ### Common Logic Errors
 
 **❌ Trying to access non-existent components:**
@@ -249,18 +265,18 @@ This is more efficient and clearer.
 entities(core:magic)[].spells[]
 ```
 
-**❌ Exceeding Expression Depth (Max 4):**
-Expressions cannot chain more than 4 property access (`.`) or filter (`[...]`) steps after the source node. This prevents overly complex and slow scopes.
+**❌ Exceeding Expression Depth (Max 6):**
+Expressions cannot chain more than 6 property access (`.`) or filter (`[...]`) steps after the source node. This prevents overly complex and slow scopes.
 
 ```
-// This has a depth of 5, which is an error.
-actor.a.b.c.d.e // ❌
+// This has a depth of 7, which is an error.
+actor.a.b.c.d.e.f.g // ❌
 ```
 
-**✅ Keep expression depth at 4 or less:**
+**✅ Keep expression depth at 6 or less:**
 
 ```
-actor.a.b.c.d // ✅
+actor.a.b.c.d.e.f // ✅
 ```
 
 **❌ Creating an Infinite Loop (Cycle):**

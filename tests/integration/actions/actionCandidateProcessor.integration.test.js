@@ -100,6 +100,9 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       fixSuggestionEngine: mockFixSuggestionEngine,
     });
 
+    // Spy on the buildErrorContext method
+    jest.spyOn(actionErrorContextBuilder, 'buildErrorContext');
+
     // Create a mock target resolution service that returns ActionResult
     targetResolutionService = {
       resolveTargets: jest
@@ -151,6 +154,7 @@ describe('ActionCandidateProcessor Integration Tests', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('Core Flow Tests', () => {
@@ -410,6 +414,145 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       expect(result.value.cause).toBe('resolution-error');
     });
 
+    it('should handle target resolution returning ActionErrorContext objects', () => {
+      // Arrange
+      const actor = testData.actors.player;
+      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const context = {
+        actorId: actor.id,
+        locationId: 'test-location-1',
+      };
+
+      const actionErrorContext = {
+        timestamp: Date.now(),
+        phase: ERROR_PHASES.VALIDATION,
+        error: new Error('Target resolution failed'),
+        actionId: actionDef.id,
+        actorId: actor.id,
+      };
+
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(actor.components)
+      );
+      mockEntityManager.getComponentData.mockImplementation((id, type) => {
+        return actor.components[type];
+      });
+      mockEntityManager.hasComponent.mockReturnValue(true);
+
+      // Mock target resolution to return ActionResult failure with ActionErrorContext
+      targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.failure([actionErrorContext])
+      );
+
+      // Act
+      const result = processor.process(actionDef, actor, context);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(1);
+      expect(result.value.errors[0].timestamp).toBe(actionErrorContext.timestamp);
+      expect(result.value.errors[0].phase).toBe(actionErrorContext.phase);
+      expect(result.value.cause).toBe('resolution-error');
+    });
+
+    it('should handle target resolution raw errors requiring context building', () => {
+      // Arrange
+      const actor = testData.actors.player;
+      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const context = {
+        actorId: actor.id,
+        locationId: 'test-location-1',
+      };
+
+      const rawError = new Error('Raw target resolution error');
+
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(actor.components)
+      );
+      mockEntityManager.getComponentData.mockImplementation((id, type) => {
+        return actor.components[type];
+      });
+      mockEntityManager.hasComponent.mockReturnValue(true);
+
+      // Mock target resolution to return ActionResult failure with raw error
+      targetResolutionService.resolveTargets.mockReturnValue(
+        ActionResult.failure(rawError)
+      );
+
+      // Act
+      const result = processor.process(actionDef, actor, context);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(1);
+      expect(result.value.errors[0].phase).toBe(ERROR_PHASES.VALIDATION);
+      expect(result.value.cause).toBe('resolution-error');
+      expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+        error: rawError,
+        actionDef,
+        actorId: actor.id,
+        phase: ERROR_PHASES.VALIDATION,
+        trace: null,
+        additionalContext: {
+          scope: actionDef.scope,
+        },
+      });
+    });
+
+    it('should handle target resolution service throwing exceptions', () => {
+      // Arrange
+      const actor = testData.actors.player;
+      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const context = {
+        actorId: actor.id,
+        locationId: 'test-location-1',
+      };
+
+      const thrownError = new Error('Target resolution service threw exception');
+
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(actor.components)
+      );
+      mockEntityManager.getComponentData.mockImplementation((id, type) => {
+        return actor.components[type];
+      });
+      mockEntityManager.hasComponent.mockReturnValue(true);
+
+      // Mock target resolution service to throw exception
+      targetResolutionService.resolveTargets.mockImplementation(() => {
+        throw thrownError;
+      });
+
+      // Act
+      const result = processor.process(actionDef, actor, context);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(1);
+      expect(result.value.errors[0].phase).toBe(ERROR_PHASES.VALIDATION);
+      expect(result.value.cause).toBe('resolution-error');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Error resolving scope for action '${actionDef.id}': ${thrownError.message}`,
+        expect.any(Object)
+      );
+      expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+        error: thrownError,
+        actionDef,
+        actorId: actor.id,
+        phase: ERROR_PHASES.VALIDATION,
+        trace: null,
+        additionalContext: {
+          scope: actionDef.scope,
+        },
+      });
+    });
+
     it('should handle command formatting errors', () => {
       // Arrange
       const actor = testData.actors.player;
@@ -500,9 +643,187 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       );
       expect(result.value.errors).toHaveLength(1); // One error for the NPC
     });
+
+    it('should handle command formatter throwing exceptions during format call', () => {
+      // Arrange
+      const actor = testData.actors.player;
+      const actionDef = testData.actions.basic.find(
+        (a) => a.id === 'core:wait'
+      );
+      const context = {
+        actorId: actor.id,
+        locationId: 'test-location-1',
+      };
+
+      const formatError = new Error('Command formatter threw exception');
+
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(actor.components)
+      );
+      mockEntityManager.getComponentData.mockImplementation((id, type) => {
+        return actor.components[type];
+      });
+      mockEntityManager.hasComponent.mockImplementation((id, type) => {
+        return !!actor.components[type];
+      });
+
+      // Mock command formatter to throw exception
+      jest.spyOn(commandFormatter, 'format').mockImplementation(() => {
+        throw formatError;
+      });
+
+      // Act
+      const result = processor.process(actionDef, actor, context);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(1);
+      expect(result.value.errors[0].phase).toBe(ERROR_PHASES.VALIDATION);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Error formatting action '${actionDef.id}' for target 'null'.`,
+        expect.any(Object)
+      );
+      expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+        error: formatError,
+        actionDef,
+        actorId: actor.id,
+        phase: ERROR_PHASES.VALIDATION,
+        trace: null,
+        targetId: null,
+      });
+    });
+
+    it('should handle command formatter exceptions with multiple targets', () => {
+      // Arrange
+      const actor = testData.actors.player;
+      const npc1 = testData.actors.npc;
+      const npc2 = testData.actors.inventoryActor;
+      const actionDef = testData.actions.basic.find(
+        (a) => a.id === 'core:follow'
+      );
+      const context = {
+        actorId: actor.id,
+        locationId: 'test-location-1',
+      };
+
+      const formatError = new Error('Command formatter exception');
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === actor.id) return actor;
+        if (id === npc1.id) return npc1;
+        if (id === npc2.id) return npc2;
+        return null;
+      });
+
+      mockEntityManager.getAllComponentTypesForEntity.mockImplementation(
+        (id) => {
+          if (id === actor.id) return Object.keys(actor.components);
+          if (id === npc1.id) return Object.keys(npc1.components);
+          if (id === npc2.id) return Object.keys(npc2.components);
+          return [];
+        }
+      );
+
+      mockEntityManager.getComponentData.mockImplementation((id, type) => {
+        if (id === actor.id) return actor.components[type];
+        if (id === npc1.id) return npc1.components[type];
+        if (id === npc2.id) return npc2.components[type];
+        return undefined;
+      });
+
+      mockEntityManager.hasComponent.mockReturnValue(true);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        actor.id,
+        npc1.id,
+        npc2.id,
+      ]);
+
+      // Mock command formatter to throw exception for first target but succeed for second
+      jest
+        .spyOn(commandFormatter, 'format')
+        .mockImplementationOnce(() => {
+          throw formatError;
+        })
+        .mockImplementationOnce(() => ({
+          ok: true,
+          value: 'follow test-inventory-actor',
+        }));
+
+      // Act
+      const result = processor.process(actionDef, actor, context);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(1); // One succeeds
+      expect(result.value.errors).toHaveLength(1); // One throws exception
+      expect(result.value.errors[0].targetId).toBe(npc1.id);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Error formatting action '${actionDef.id}' for target '${npc1.id}'.`,
+        expect.any(Object)
+      );
+    });
   });
 
   describe('Edge Case Tests', () => {
+    it('should support trace context with withSpan method', () => {
+      // Arrange
+      const actor = testData.actors.player;
+      const actionDef = testData.actions.basic.find(
+        (a) => a.id === 'core:wait'
+      );
+      const context = {
+        actorId: actor.id,
+        locationId: 'test-location-1',
+      };
+      
+      // Create trace context with withSpan method
+      const trace = {
+        withSpan: jest.fn((name, fn, metadata) => {
+          expect(name).toBe('candidate.process');
+          expect(metadata).toEqual({
+            actionId: actionDef.id,
+            actorId: actor.id,
+            scope: actionDef.scope,
+          });
+          return fn();
+        }),
+        step: jest.fn(),
+        success: jest.fn(),
+        failure: jest.fn(),
+        info: jest.fn(),
+      };
+
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(actor.components)
+      );
+      mockEntityManager.getComponentData.mockImplementation((id, type) => {
+        return actor.components[type];
+      });
+      mockEntityManager.hasComponent.mockImplementation((id, type) => {
+        return !!actor.components[type];
+      });
+
+      // Act
+      const result = processor.process(actionDef, actor, context, trace);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(1);
+      expect(trace.withSpan).toHaveBeenCalledWith(
+        'candidate.process',
+        expect.any(Function),
+        {
+          actionId: actionDef.id,
+          actorId: actor.id,
+          scope: actionDef.scope,
+        }
+      );
+      expect(trace.step).toHaveBeenCalled();
+    });
+
     it('should support trace context', () => {
       // Arrange
       const actor = testData.actors.player;
@@ -745,6 +1066,89 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       expect(result.value.errors).toHaveLength(1);
       expect(result.value.errors[0].phase).toBe(existingErrorContext.phase);
       expect(result.value.errors[0].timestamp).toBeDefined();
+    });
+
+    it('should handle prerequisite evaluation returning ActionResult with ActionErrorContext errors', () => {
+      // Arrange
+      const actor = testData.actors.player;
+      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const context = {
+        actorId: actor.id,
+        locationId: 'test-location-1',
+      };
+
+      const actionErrorContext = {
+        timestamp: Date.now(),
+        phase: ERROR_PHASES.VALIDATION,
+        error: new Error('Prerequisites failed'),
+        actionId: actionDef.id,
+        actorId: actor.id,
+      };
+
+      // Mock prerequisite service to return failure ActionResult with ActionErrorContext
+      const prereqResult = ActionResult.failure([actionErrorContext]);
+      jest
+        .spyOn(prerequisiteEvaluationService, 'evaluate')
+        .mockImplementation(() => {
+          throw actionErrorContext;
+        });
+
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(actor.components)
+      );
+
+      // Act
+      const result = processor.process(actionDef, actor, context);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(1);
+      expect(result.value.errors[0].timestamp).toBe(actionErrorContext.timestamp);
+      expect(result.value.errors[0].phase).toBe(actionErrorContext.phase);
+      expect(result.value.cause).toBe('prerequisite-error');
+    });
+
+    it('should handle raw prerequisite evaluation errors requiring context building', () => {
+      // Arrange
+      const actor = testData.actors.player;
+      const actionDef = testData.actions.basic.find((a) => a.id === 'core:go');
+      const context = {
+        actorId: actor.id,
+        locationId: 'test-location-1',
+      };
+
+      const rawError = new Error('Raw prerequisite evaluation error');
+
+      // Mock prerequisite service to throw raw error
+      jest
+        .spyOn(prerequisiteEvaluationService, 'evaluate')
+        .mockImplementation(() => {
+          throw rawError;
+        });
+
+      mockEntityManager.getEntityInstance.mockReturnValue(actor);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(
+        Object.keys(actor.components)
+      );
+
+      // Act
+      const result = processor.process(actionDef, actor, context);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.value.actions).toHaveLength(0);
+      expect(result.value.errors).toHaveLength(1);
+      expect(result.value.errors[0].phase).toBe(ERROR_PHASES.VALIDATION);
+      expect(result.value.cause).toBe('prerequisite-error');
+      expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+        error: rawError,
+        actionDef,
+        actorId: actor.id,
+        phase: ERROR_PHASES.VALIDATION,
+        trace: null,
+      });
     });
   });
 
