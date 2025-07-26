@@ -49,6 +49,22 @@ describe('Scope-DSL Parser', () => {
           param: 'core:item',
         });
       });
+
+      test('should parse target source', () => {
+        const result = parseDslExpression('target');
+        expect(result).toEqual({
+          type: 'Source',
+          kind: 'target',
+        });
+      });
+
+      test('should parse targets source', () => {
+        const result = parseDslExpression('targets');
+        expect(result).toEqual({
+          type: 'Source',
+          kind: 'targets',
+        });
+      });
     });
 
     describe('Field access', () => {

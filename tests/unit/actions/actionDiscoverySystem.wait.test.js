@@ -34,13 +34,19 @@ describeActionDiscoverySuite(
 
       bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
         (scopeName) => {
-          const { ActionResult } = require('../../../src/actions/core/actionResult.js');
-          const { ActionTargetContext } = require('../../../src/models/actionTargetContext.js');
-          
+          const {
+            ActionResult,
+          } = require('../../../src/actions/core/actionResult.js');
+          const {
+            ActionTargetContext,
+          } = require('../../../src/models/actionTargetContext.js');
+
           if (scopeName === 'none')
             return ActionResult.success([ActionTargetContext.noTarget()]);
           if (scopeName === 'self')
-            return ActionResult.success([ActionTargetContext.forEntity(mockActorEntity.id)]);
+            return ActionResult.success([
+              ActionTargetContext.forEntity(mockActorEntity.id),
+            ]);
           return ActionResult.success([]);
         }
       );

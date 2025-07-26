@@ -100,8 +100,13 @@ export default function createSourceResolver({
 
         case 'location': {
           const location = locationProvider.getLocation();
-          if (location && location.id) {
-            result = new Set([location.id]);
+          if (location) {
+            // Handle both string and object locations
+            if (typeof location === 'string') {
+              result = new Set([location]);
+            } else if (location.id) {
+              result = new Set([location.id]);
+            }
           }
           break;
         }
@@ -127,6 +132,23 @@ export default function createSourceResolver({
                 .map((e) => e.id)
                 .filter((id) => typeof id === 'string')
             );
+          }
+          break;
+        }
+
+        case 'target': {
+          // Return target entity ID if available in context
+          if (ctx.runtimeCtx?.target) {
+            result = new Set([ctx.runtimeCtx.target.id]);
+          }
+          break;
+        }
+
+        case 'targets': {
+          // Return the targets object itself, not the IDs
+          // This allows accessing targets.primary, targets.secondary, etc.
+          if (ctx.runtimeCtx?.targets) {
+            result = new Set([ctx.runtimeCtx.targets]);
           }
           break;
         }

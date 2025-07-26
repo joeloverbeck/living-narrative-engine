@@ -43,8 +43,8 @@ class MockTargetResolutionService {
       }
 
       // Convert resolved entities to target contexts
-      const targetContexts = resolveResult.value.map(entity => 
-        new ActionTargetContext('entity', { entityId: entity.id })
+      const targetContexts = resolveResult.value.map(
+        (entity) => new ActionTargetContext('entity', { entityId: entity.id })
       );
 
       if (targetContexts.length === 0) {
@@ -52,7 +52,6 @@ class MockTargetResolutionService {
       }
 
       return ActionResult.success(targetContexts);
-
     } catch (error) {
       this.logger.error('Target resolution failed', error);
       return ActionResult.failure(`Target resolution error: ${error.message}`);
@@ -61,7 +60,7 @@ class MockTargetResolutionService {
 
   validateTargetAccess(actorEntity, targetEntities) {
     try {
-      const validationResults = targetEntities.map(target => {
+      const validationResults = targetEntities.map((target) => {
         // Simulate access validation
         if (!target || !target.id) {
           return ActionResult.failure(`Invalid target: ${target}`);
@@ -74,11 +73,15 @@ class MockTargetResolutionService {
         }
 
         // Check location-based access
-        const actorLocation = actorEntity.components?.['core:location']?.currentLocation;
-        const targetLocation = existingTarget.components?.['core:location']?.currentLocation;
-        
+        const actorLocation =
+          actorEntity.components?.['core:location']?.currentLocation;
+        const targetLocation =
+          existingTarget.components?.['core:location']?.currentLocation;
+
         if (actorLocation !== targetLocation) {
-          return ActionResult.failure(`Target ${target.id} not accessible from current location`);
+          return ActionResult.failure(
+            `Target ${target.id} not accessible from current location`
+          );
         }
 
         return ActionResult.success({ targetId: target.id, accessible: true });
@@ -86,7 +89,6 @@ class MockTargetResolutionService {
 
       // Combine all validation results
       return ActionResult.combine(validationResults);
-
     } catch (error) {
       return ActionResult.failure(`Validation error: ${error.message}`);
     }
@@ -106,7 +108,10 @@ class MockActionProcessingService {
   processAction(actionDefinition, actorEntity, discoveryContext) {
     try {
       // Step 1: Validate action
-      const validationResult = this.validateAction(actionDefinition, actorEntity);
+      const validationResult = this.validateAction(
+        actionDefinition,
+        actorEntity
+      );
       if (!validationResult.success) {
         return validationResult;
       }
@@ -129,7 +134,6 @@ class MockActionProcessingService {
       );
 
       return executionResult;
-
     } catch (error) {
       this.logger.error('Action processing failed', error);
       return ActionResult.failure(`Processing error: ${error.message}`);
@@ -179,7 +183,7 @@ class MockActionProcessingService {
 
       // Combine all execution results
       const combinedResult = ActionResult.combine(results);
-      
+
       if (combinedResult.success) {
         return ActionResult.success({
           actionId: actionDefinition.id,
@@ -190,7 +194,6 @@ class MockActionProcessingService {
       } else {
         return combinedResult; // Return the failed combination
       }
-
     } catch (error) {
       return ActionResult.failure(`Execution error: ${error.message}`);
     }
@@ -199,14 +202,18 @@ class MockActionProcessingService {
   executeOnTarget(actionDefinition, actorEntity, targetContext) {
     // Simulate different action outcomes
     if (actionDefinition.id === 'failing-action') {
-      return ActionResult.failure(`Action failed on target ${targetContext.entityId}`);
+      return ActionResult.failure(
+        `Action failed on target ${targetContext.entityId}`
+      );
     }
 
     if (actionDefinition.id === 'conditional-action') {
       // Simulate conditional success based on target properties
       // For this test, we'll check if the target ID contains 'invalid'
       if (targetContext.entityId?.includes('invalid')) {
-        return ActionResult.failure(`Cannot execute on invalid target ${targetContext.entityId}`);
+        return ActionResult.failure(
+          `Cannot execute on invalid target ${targetContext.entityId}`
+        );
       }
     }
 
@@ -303,13 +310,19 @@ describe('ActionResult - Service Integration', () => {
         entityManager: mockEntityManager,
       });
 
-      const result = service.resolveTargets('test-scope', mockActor, mockDiscoveryContext);
+      const result = service.resolveTargets(
+        'test-scope',
+        mockActor,
+        mockDiscoveryContext
+      );
 
       expect(result).toBeSuccessfulActionResultWithAnyValue();
       expect(result.value).toHaveLength(1);
       expect(result.value[0]).toBeInstanceOf(ActionTargetContext);
       expect(result.value[0].entityId).toBe('target-789');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Resolving targets for scope: test-scope');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Resolving targets for scope: test-scope'
+      );
     });
 
     it('should handle target resolution failures gracefully', () => {
@@ -324,9 +337,16 @@ describe('ActionResult - Service Integration', () => {
         entityManager: mockEntityManager,
       });
 
-      const result = service.resolveTargets('invalid-scope', mockActor, mockDiscoveryContext);
+      const result = service.resolveTargets(
+        'invalid-scope',
+        mockActor,
+        mockDiscoveryContext
+      );
 
-      expect(result).toBeFailedActionResult(['Scope not found', 'Invalid query']);
+      expect(result).toBeFailedActionResult([
+        'Scope not found',
+        'Invalid query',
+      ]);
       expect(mockLogger.debug).toHaveBeenCalled();
     });
 
@@ -338,7 +358,9 @@ describe('ActionResult - Service Integration', () => {
       });
 
       // Test accessible target (same location)
-      const accessibleResult = service.validateTargetAccess(mockActor, [mockTarget]);
+      const accessibleResult = service.validateTargetAccess(mockActor, [
+        mockTarget,
+      ]);
       expect(accessibleResult).toBeSuccessfulActionResultWithAnyValue();
       expect(accessibleResult.value[0].accessible).toBe(true);
 
@@ -353,9 +375,13 @@ describe('ActionResult - Service Integration', () => {
       };
       mockEntityManager.addEntity(inaccessibleTarget);
 
-      const inaccessibleResult = service.validateTargetAccess(mockActor, [inaccessibleTarget]);
+      const inaccessibleResult = service.validateTargetAccess(mockActor, [
+        inaccessibleTarget,
+      ]);
       expect(inaccessibleResult).toBeFailedActionResultWithAnyError();
-      expect(inaccessibleResult.errors[0].message).toContain('not accessible from current location');
+      expect(inaccessibleResult.errors[0].message).toContain(
+        'not accessible from current location'
+      );
     });
 
     it('should handle service exceptions and convert to ActionResults', () => {
@@ -370,7 +396,11 @@ describe('ActionResult - Service Integration', () => {
         entityManager: mockEntityManager,
       });
 
-      const result = throwingService.resolveTargets('test-scope', mockActor, mockDiscoveryContext);
+      const result = throwingService.resolveTargets(
+        'test-scope',
+        mockActor,
+        mockDiscoveryContext
+      );
 
       expect(result).toBeFailedActionResultWithAnyError();
       expect(result.errors[0].message).toContain('Target resolution error');
@@ -392,8 +422,12 @@ describe('ActionResult - Service Integration', () => {
         ActionResult.success([mockTarget])
       );
 
-      const successResult = service.resolveTargets('test-scope', mockActor, mockDiscoveryContext);
-      
+      const successResult = service.resolveTargets(
+        'test-scope',
+        mockActor,
+        mockDiscoveryContext
+      );
+
       // Test getOrThrow
       expect(() => successResult.getOrThrow()).not.toThrow();
       const value = successResult.getOrThrow();
@@ -419,10 +453,16 @@ describe('ActionResult - Service Integration', () => {
         ActionResult.failure('Test error')
       );
 
-      const failureResult = service.resolveTargets('test-scope', mockActor, mockDiscoveryContext);
+      const failureResult = service.resolveTargets(
+        'test-scope',
+        mockActor,
+        mockDiscoveryContext
+      );
 
       // Test getOrThrow throws
-      expect(() => failureResult.getOrThrow()).toThrow('ActionResult failure: Test error');
+      expect(() => failureResult.getOrThrow()).toThrow(
+        'ActionResult failure: Test error'
+      );
 
       // Test ifFailure
       let failureCallbackCalledOnFailure = false;

@@ -10,8 +10,12 @@ describeActionDiscoverySuite(
       const bed = getBed();
       bed.mocks.targetResolutionService.resolveTargets.mockReturnValue(
         (() => {
-          const { ActionResult } = require('../../../src/actions/core/actionResult.js');
-          const { ActionTargetContext } = require('../../../src/models/actionTargetContext.js');
+          const {
+            ActionResult,
+          } = require('../../../src/actions/core/actionResult.js');
+          const {
+            ActionTargetContext,
+          } = require('../../../src/models/actionTargetContext.js');
           return ActionResult.success([ActionTargetContext.noTarget()]);
         })()
       );

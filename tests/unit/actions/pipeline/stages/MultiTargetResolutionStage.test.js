@@ -583,12 +583,8 @@ describe('MultiTargetResolutionStage', () => {
       expect(actionWithTargets.targetContexts[1].displayName).toBe(
         'Actor Name'
       );
-      expect(actionWithTargets.targetContexts[2].displayName).toBe(
-        'Item Name'
-      );
-      expect(actionWithTargets.targetContexts[3].displayName).toBe(
-        'entity4'
-      ); // Falls back to ID
+      expect(actionWithTargets.targetContexts[2].displayName).toBe('Item Name');
+      expect(actionWithTargets.targetContexts[3].displayName).toBe('entity4'); // Falls back to ID
     });
   });
 
@@ -626,7 +622,6 @@ describe('MultiTargetResolutionStage', () => {
       expect(actionWithTargets.targetContexts[0]).toHaveProperty('displayName');
       expect(actionWithTargets.targetContexts[0]).toHaveProperty('placeholder');
     });
-
   });
 
   describe('Multiple Candidate Actions', () => {
@@ -682,7 +677,7 @@ describe('MultiTargetResolutionStage', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toHaveLength(3);
-      
+
       // Verify each action was processed
       expect(result.data.actionsWithTargets[0].actionDef).toBe(action1);
       expect(result.data.actionsWithTargets[1].actionDef).toBe(action2);
@@ -789,7 +784,7 @@ describe('MultiTargetResolutionStage', () => {
         success: jest.fn(),
       };
       mockContext.trace = mockTrace;
-      
+
       const actionDef = {
         id: 'test:traced',
         targets: {
@@ -849,7 +844,9 @@ describe('MultiTargetResolutionStage', () => {
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toHaveLength(1);
       // Verify buildDependentContext was called 3 times (for b, c, d)
-      expect(mockDeps.targetContextBuilder.buildDependentContext).toHaveBeenCalledTimes(3);
+      expect(
+        mockDeps.targetContextBuilder.buildDependentContext
+      ).toHaveBeenCalledTimes(3);
     });
   });
 });

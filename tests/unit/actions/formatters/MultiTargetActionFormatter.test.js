@@ -38,7 +38,9 @@ describe('MultiTargetActionFormatter', () => {
 
     it('should validate dependencies', () => {
       expect(() => new MultiTargetActionFormatter(null, mockLogger)).toThrow();
-      expect(() => new MultiTargetActionFormatter(mockBaseFormatter, null)).toThrow();
+      expect(
+        () => new MultiTargetActionFormatter(mockBaseFormatter, null)
+      ).toThrow();
     });
   });
 
@@ -54,7 +56,13 @@ describe('MultiTargetActionFormatter', () => {
         value: 'formatted command',
       });
 
-      const result = formatter.format(actionDef, targetContext, mockEntityManager, options, deps);
+      const result = formatter.format(
+        actionDef,
+        targetContext,
+        mockEntityManager,
+        options,
+        deps
+      );
 
       expect(mockBaseFormatter.format).toHaveBeenCalledWith(
         actionDef,
@@ -194,9 +202,7 @@ describe('MultiTargetActionFormatter', () => {
         { id: 'rock1', displayName: 'Small Rock' },
         { id: 'knife1', displayName: 'Knife' },
       ],
-      secondary: [
-        { id: 'enemy1', displayName: 'Goblin' },
-      ],
+      secondary: [{ id: 'enemy1', displayName: 'Goblin' }],
     };
 
     const targetDefinitions = {
@@ -435,6 +441,285 @@ describe('MultiTargetActionFormatter', () => {
 
       expect(result.ok).toBe(true);
       expect(result.value).toBe('use Sword with Shield');
+    });
+  });
+
+  describe('Branch Coverage Edge Cases', () => {
+    it('should handle null deps parameter', () => {
+      const actionDef = {
+        id: 'test:null_deps',
+        template: 'use {item}',
+      };
+
+      const resolvedTargets = {
+        primary: [{ id: 'item1', displayName: 'Sword' }],
+      };
+
+      const result = formatter.formatMultiTarget(
+        actionDef,
+        resolvedTargets,
+        mockEntityManager,
+        { debug: true },
+        null // null deps to cover line 56 branch
+      );
+
+      expect(result.ok).toBe(true);
+      expect(result.value).toBe('use Sword');
+    });
+
+    it('should handle undefined deps parameter', () => {
+      const actionDef = {
+        id: 'test:undefined_deps',
+        template: 'use {item}',
+      };
+
+      const resolvedTargets = {
+        primary: [{ id: 'item1', displayName: 'Sword' }],
+      };
+
+      const result = formatter.formatMultiTarget(
+        actionDef,
+        resolvedTargets,
+        mockEntityManager,
+        { debug: true }
+        // undefined deps to cover line 56 branch
+      );
+
+      expect(result.ok).toBe(true);
+      expect(result.value).toBe('use Sword');
+    });
+
+    it('should handle templates with no standard placeholders for primary targets', () => {
+      const actionDef = {
+        id: 'test:unusual_placeholders',
+        template: 'activate {weapon} with {magic}',
+      };
+
+      const resolvedTargets = {
+        primary: [{ id: 'sword1', displayName: 'Magic Sword' }],
+        secondary: [{ id: 'spell1', displayName: 'Fire Spell' }],
+      };
+
+      const targetDefinitions = {
+        primary: {}, // no placeholder defined
+        secondary: {}, // no placeholder defined
+      };
+
+      const result = formatter.formatMultiTarget(
+        actionDef,
+        resolvedTargets,
+        mockEntityManager,
+        { debug: true },
+        { targetDefinitions }
+      );
+
+      expect(result.ok).toBe(true);
+      // Should use 'weapon' (first placeholder) for primary, 'magic' (second placeholder) for secondary
+      expect(result.value).toBe('activate Magic Sword with Fire Spell');
+    });
+
+    it('should handle templates with no placeholders at all', () => {
+      const actionDef = {
+        id: 'test:no_placeholders',
+        template: 'perform action',
+      };
+
+      const resolvedTargets = {
+        primary: [{ id: 'item1', displayName: 'Sword' }],
+      };
+
+      const targetDefinitions = {
+        primary: {}, // no placeholder defined
+      };
+
+      const result = formatter.formatMultiTarget(
+        actionDef,
+        resolvedTargets,
+        mockEntityManager,
+        { debug: true },
+        { targetDefinitions }
+      );
+
+      expect(result.ok).toBe(true);
+      // Should remain unchanged as no placeholders to replace
+      expect(result.value).toBe('perform action');
+    });
+
+    it('should handle combination generation with maximum limit enforcement', () => {
+      const combinationActionDef = {
+        id: 'test:max_combinations',
+        template: 'use {item} on {target}',
+        generateCombinations: true,
+      };
+
+      // Create exactly enough targets to trigger maxCombinations limit
+      const largeTargetSet = {
+        primary: Array.from({ length: 60 }, (_, i) => ({
+          id: `item${i}`,
+          displayName: `Item ${i}`,
+        })),
+        secondary: [{ id: 'target1', displayName: 'Target' }],
+      };
+
+      const targetDefinitions = {
+        primary: { placeholder: 'item' },
+        secondary: { placeholder: 'target' },
+      };
+
+      const result = formatter.formatMultiTarget(
+        combinationActionDef,
+        largeTargetSet,
+        mockEntityManager,
+        { debug: true },
+        { targetDefinitions }
+      );
+
+      expect(result.ok).toBe(true);
+      expect(Array.isArray(result.value)).toBe(true);
+      // Should respect the 50 combination limit (maxCombinations)
+      expect(result.value.length).toBeLessThanOrEqual(50);
+    });
+
+    it('should handle combination generation with mixed empty target arrays', () => {
+      const combinationActionDef = {
+        id: 'test:mixed_empty',
+        template: 'use {item} on {target} at {location}',
+        generateCombinations: true,
+      };
+
+      const mixedTargets = {
+        primary: [{ id: 'item1', displayName: 'Sword' }],
+        secondary: [], // empty array to cover line 198 branch
+        tertiary: [{ id: 'location1', displayName: 'Forest' }],
+      };
+
+      const targetDefinitions = {
+        primary: { placeholder: 'item' },
+        secondary: { placeholder: 'target' },
+        tertiary: { placeholder: 'location' },
+      };
+
+      const result = formatter.formatMultiTarget(
+        combinationActionDef,
+        mixedTargets,
+        mockEntityManager,
+        { debug: true },
+        { targetDefinitions }
+      );
+
+      expect(result.ok).toBe(true);
+      expect(Array.isArray(result.value)).toBe(true);
+      // Should generate combinations but skip empty target arrays
+      expect(result.value.length).toBeGreaterThan(0);
+      expect(result.value[0]).toContain('Sword');
+      expect(result.value[0]).toContain('Forest');
+    });
+
+    it('should handle combination generation when some combinations have invalid data', () => {
+      // This test is designed to potentially trigger the line 94 branch
+      // by using data that might cause formatting to fail naturally
+      const combinationActionDef = {
+        id: 'test:invalid_combinations',
+        template: 'use {item} on {target}',
+        generateCombinations: true,
+      };
+
+      // Create targets with some potentially problematic data
+      const resolvedTargets = {
+        primary: [
+          { id: 'item1', displayName: 'Valid Item' },
+          { id: null }, // Invalid target that might cause issues
+          { id: 'item3', displayName: 'Another Valid Item' },
+        ],
+        secondary: [{ id: 'target1', displayName: 'Valid Target' }],
+      };
+
+      const targetDefinitions = {
+        primary: { placeholder: 'item' },
+        secondary: { placeholder: 'target' },
+      };
+
+      const result = formatter.formatMultiTarget(
+        combinationActionDef,
+        resolvedTargets,
+        mockEntityManager,
+        { debug: true },
+        { targetDefinitions }
+      );
+
+      expect(result.ok).toBe(true);
+      expect(Array.isArray(result.value)).toBe(true);
+      // Should handle invalid data gracefully and include valid combinations
+      expect(result.value.length).toBeGreaterThan(0);
+      // Check that at least one valid combination exists
+      const validCombinations = result.value.filter(
+        (cmd) =>
+          cmd.includes('Valid Item') || cmd.includes('Another Valid Item')
+      );
+      expect(validCombinations.length).toBeGreaterThan(0);
+    });
+
+    it('should handle edge cases in placeholder fallback for secondary targets', () => {
+      const actionDef = {
+        id: 'test:secondary_fallback',
+        template: 'activate {unusual} for {nonstandard}',
+      };
+
+      const resolvedTargets = {
+        primary: [{ id: 'item1', displayName: 'Primary Item' }],
+        secondary: [{ id: 'item2', displayName: 'Secondary Item' }],
+      };
+
+      // Empty target definitions to force fallback logic
+      const targetDefinitions = {
+        primary: {}, // no placeholder - should use 'unusual' (first available)
+        secondary: {}, // no placeholder - should use 'nonstandard' (second available)
+      };
+
+      const result = formatter.formatMultiTarget(
+        actionDef,
+        resolvedTargets,
+        mockEntityManager,
+        { debug: true },
+        { targetDefinitions }
+      );
+
+      expect(result.ok).toBe(true);
+      expect(result.value).toBe('activate Primary Item for Secondary Item');
+    });
+
+    it('should handle extreme combination generation with exactly 51 targets', () => {
+      // This should test the exact boundary for the maxCombinations limit
+      const combinationActionDef = {
+        id: 'test:exact_limit',
+        template: 'use {item}',
+        generateCombinations: true,
+      };
+
+      // Create exactly 51 targets to trigger the break condition
+      const largeTargets = {
+        primary: Array.from({ length: 51 }, (_, i) => ({
+          id: `item${i}`,
+          displayName: `Item ${i}`,
+        })),
+      };
+
+      const targetDefinitions = {
+        primary: { placeholder: 'item' },
+      };
+
+      const result = formatter.formatMultiTarget(
+        combinationActionDef,
+        largeTargets,
+        mockEntityManager,
+        { debug: true },
+        { targetDefinitions }
+      );
+
+      expect(result.ok).toBe(true);
+      expect(Array.isArray(result.value)).toBe(true);
+      // Should hit the 50 combination limit exactly
+      expect(result.value.length).toBe(50);
     });
   });
 });

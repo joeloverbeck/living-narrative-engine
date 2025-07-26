@@ -76,6 +76,38 @@ describe('Scope Syntax Validation', () => {
       expect(ast.left.type).toBe('ArrayIterationStep');
       expect(ast.right.type).toBe('ArrayIterationStep');
     });
+
+    it('should correctly parse target.topmost_clothing[] pattern', () => {
+      const syntax = 'target.topmost_clothing[]';
+      const ast = parseDslExpression(syntax);
+
+      expect(ast.type).toBe('ArrayIterationStep');
+      expect(ast.parent.type).toBe('Step');
+      expect(ast.parent.field).toBe('topmost_clothing');
+      expect(ast.parent.parent.type).toBe('Source');
+      expect(ast.parent.parent.kind).toBe('target');
+    });
+
+    it('should correctly parse targets.primary pattern', () => {
+      const syntax = 'targets.primary';
+      const ast = parseDslExpression(syntax);
+
+      expect(ast.type).toBe('Step');
+      expect(ast.field).toBe('primary');
+      expect(ast.parent.type).toBe('Source');
+      expect(ast.parent.kind).toBe('targets');
+    });
+
+    it('should correctly parse target with filter pattern', () => {
+      const syntax =
+        'target.topmost_clothing[][{"in": ["adjustable", {"var": "entity.components.clothing:garment.properties"}]}]';
+      const ast = parseDslExpression(syntax);
+
+      expect(ast.type).toBe('Filter');
+      expect(ast.parent.type).toBe('ArrayIterationStep');
+      expect(ast.parent.parent.parent.type).toBe('Source');
+      expect(ast.parent.parent.parent.kind).toBe('target');
+    });
   });
 
   describe('error cases', () => {

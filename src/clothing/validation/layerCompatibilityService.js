@@ -342,7 +342,6 @@ export class LayerCompatibilityService {
           // This would create a valid dependency, no conflict
           continue;
         }
-
       }
     }
 

@@ -168,13 +168,15 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
           isMultiTarget: true,
         },
       });
-      
+
       expect(mockMultiTargetFormatter.formatMultiTarget).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'test:multi_action' }),
         mockContext.resolvedTargets,
         mockEntityManager,
         expect.any(Object),
-        expect.objectContaining({ targetDefinitions: mockContext.targetDefinitions })
+        expect.objectContaining({
+          targetDefinitions: mockContext.targetDefinitions,
+        })
       );
     });
 
@@ -195,10 +197,15 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
 
     it('should handle combination generation in formatter', async () => {
       mockContext.actionsWithTargets[0].actionDef.generateCombinations = true;
-      
+
       mockMultiTargetFormatter.formatMultiTarget.mockReturnValue({
         ok: true,
-        value: ['use Sword on Goblin', 'use Sword on Orc', 'use Shield on Goblin', 'use Shield on Orc'],
+        value: [
+          'use Sword on Goblin',
+          'use Sword on Orc',
+          'use Shield on Goblin',
+          'use Shield on Orc',
+        ],
       });
 
       const result = await stage.executeInternal(mockContext);
@@ -242,7 +249,10 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
               template: 'throw {item} at {target}',
               targets: {
                 primary: { scope: 'actor.inventory[]', placeholder: 'item' },
-                secondary: { scope: 'location.actors[]', placeholder: 'target' },
+                secondary: {
+                  scope: 'location.actors[]',
+                  placeholder: 'target',
+                },
               },
             },
             targetContexts: [
@@ -284,7 +294,11 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
         actor: { id: 'player' },
         actionsWithTargets: [
           {
-            actionDef: { id: 'test:legacy', name: 'Legacy Action', template: 'legacy {target}' },
+            actionDef: {
+              id: 'test:legacy',
+              name: 'Legacy Action',
+              template: 'legacy {target}',
+            },
             targetContexts: [{ entityId: 'target1', displayName: 'Target' }],
           },
         ],
@@ -370,9 +384,7 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
               name: 'Basic Action',
               template: 'basic action',
             },
-            targetContexts: [
-              { entityId: 'target1', displayName: 'Target' },
-            ],
+            targetContexts: [{ entityId: 'target1', displayName: 'Target' }],
           },
         ],
       };
@@ -393,11 +405,19 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
         actor: { id: 'player' },
         actionsWithTargets: [
           {
-            actionDef: { id: 'test:success', name: 'Success Action', template: 'success' },
+            actionDef: {
+              id: 'test:success',
+              name: 'Success Action',
+              template: 'success',
+            },
             targetContexts: [{ entityId: 'target1', displayName: 'Target' }],
           },
           {
-            actionDef: { id: 'test:fail', name: 'Fail Action', template: 'fail' },
+            actionDef: {
+              id: 'test:fail',
+              name: 'Fail Action',
+              template: 'fail',
+            },
             targetContexts: [{ entityId: 'target2', displayName: 'Target' }],
           },
         ],
@@ -498,7 +518,11 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
         actor: { id: 'player' },
         actionsWithTargets: [
           {
-            actionDef: { id: 'test:legacy', name: 'Legacy', template: 'legacy' },
+            actionDef: {
+              id: 'test:legacy',
+              name: 'Legacy',
+              template: 'legacy',
+            },
             targetContexts: [{ entityId: 'target1', displayName: 'Target' }],
           },
         ],

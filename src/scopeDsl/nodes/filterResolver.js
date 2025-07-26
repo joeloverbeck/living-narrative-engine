@@ -187,7 +187,8 @@ export default function createFilterResolver({
               actorEntity,
               entitiesGateway,
               locationProvider,
-              trace
+              trace,
+              ctx.runtimeCtx // Pass runtime context for target/targets access
             );
             if (evalCtx && logicEval.evaluate(node.logic, evalCtx)) {
               result.add(arrayElement);
@@ -201,7 +202,8 @@ export default function createFilterResolver({
               actorEntity,
               entitiesGateway,
               locationProvider,
-              trace
+              trace,
+              ctx.runtimeCtx // Pass runtime context for target/targets access
             );
 
             if (!evalCtx) {

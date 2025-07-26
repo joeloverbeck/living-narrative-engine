@@ -125,8 +125,9 @@ describe('ActionResult - Pipeline Integration', () => {
         throw new Error('Unexpected pipeline error');
       };
 
-      const result = ActionResult.success({ test: 'data' })
-        .flatMap(throwingStage);
+      const result = ActionResult.success({ test: 'data' }).flatMap(
+        throwingStage
+      );
 
       expect(result).toBeFailedActionResult(['Unexpected pipeline error']);
     });
@@ -136,8 +137,9 @@ describe('ActionResult - Pipeline Integration', () => {
         return { success: true, value: 'not an ActionResult' };
       };
 
-      const result = ActionResult.success({ test: 'data' })
-        .flatMap(invalidStage);
+      const result = ActionResult.success({ test: 'data' }).flatMap(
+        invalidStage
+      );
 
       expect(result).toBeFailedActionResultWithAnyError();
       expect(result.errors[0].message).toContain('must return an ActionResult');
@@ -194,11 +196,12 @@ describe('ActionResult - Pipeline Integration', () => {
       const failingOperations = [
         () => ActionResult.failure('Operation 1 failed'),
         () => ActionResult.success('Success'),
-        () => ActionResult.failure(['Operation 3 error 1', 'Operation 3 error 2']),
+        () =>
+          ActionResult.failure(['Operation 3 error 1', 'Operation 3 error 2']),
         () => ActionResult.failure('Operation 4 failed'),
       ];
 
-      const results = failingOperations.map(op => op());
+      const results = failingOperations.map((op) => op());
       const combinedResult = ActionResult.combine(results);
 
       expect(combinedResult).toBeFailedActionResultWithAnyError();
@@ -219,7 +222,9 @@ describe('ActionResult - Pipeline Integration', () => {
 
       const processEntity = (entity) => {
         if (entity.value % 10 === 0) {
-          return ActionResult.failure(`Processing failed for entity ${entity.id}`);
+          return ActionResult.failure(
+            `Processing failed for entity ${entity.id}`
+          );
         }
         return ActionResult.success({
           id: entity.id,
@@ -247,11 +252,10 @@ describe('ActionResult - Pipeline Integration', () => {
       };
 
       const stage1 = () => {
-        const error = createError(
-          'Authentication failed',
-          'AUTH_ERROR',
-          { userId: 'user-123', timestamp: Date.now() }
-        );
+        const error = createError('Authentication failed', 'AUTH_ERROR', {
+          userId: 'user-123',
+          timestamp: Date.now(),
+        });
         return ActionResult.failure(error);
       };
 
@@ -288,8 +292,7 @@ describe('ActionResult - Pipeline Integration', () => {
         }
       };
 
-      const result = ActionResult.success({})
-        .flatMap(complexErrorStage);
+      const result = ActionResult.success({}).flatMap(complexErrorStage);
 
       expect(result).toBeFailedActionResultWithAnyError();
       const error = result.errors[0];
@@ -313,19 +316,19 @@ describe('ActionResult - Pipeline Integration', () => {
       };
 
       const result = ActionResult.success(initialData)
-        .map(data => ({
+        .map((data) => ({
           ...data,
           processed: true,
           processedAt: Date.now(),
         }))
-        .map(data => ({
+        .map((data) => ({
           ...data,
-          entities: data.entities.map(e => ({
+          entities: data.entities.map((e) => ({
             ...e,
             doubled: e.value * 2,
           })),
         }))
-        .map(data => ({
+        .map((data) => ({
           ...data,
           summary: {
             count: data.entities.length,
@@ -343,12 +346,12 @@ describe('ActionResult - Pipeline Integration', () => {
 
     it('should handle transformation errors in map chains', () => {
       const result = ActionResult.success({ data: [1, 2, 3] })
-        .map(obj => obj.data.map(x => x * 2))
-        .map(arr => {
+        .map((obj) => obj.data.map((x) => x * 2))
+        .map((arr) => {
           // This will throw because we're trying to access undefined
           return arr.undefined.property;
         })
-        .map(value => value + 1); // Should not execute
+        .map((value) => value + 1); // Should not execute
 
       expect(result).toBeFailedActionResultWithAnyError();
       expect(result.errors[0].message).toContain('Cannot read');
@@ -368,7 +371,7 @@ describe('ActionResult - Pipeline Integration', () => {
         } else {
           return new PipelineResult({
             success: false,
-            errors: actionResult.errors.map(e => ({
+            errors: actionResult.errors.map((e) => ({
               error: e,
               context: 'ActionResult conversion',
             })),
@@ -398,7 +401,7 @@ describe('ActionResult - Pipeline Integration', () => {
       const convertToPipelineResult = (actionResult) => {
         return new PipelineResult({
           success: actionResult.success,
-          errors: actionResult.errors.map(e => ({
+          errors: actionResult.errors.map((e) => ({
             error: e,
             context: 'Pipeline conversion',
           })),
@@ -420,7 +423,7 @@ describe('ActionResult - Pipeline Integration', () => {
 
       // Create a deep chain of 50 operations
       for (let i = 0; i < 50; i++) {
-        result = result.map(x => x + 1);
+        result = result.map((x) => x + 1);
       }
 
       expect(result).toBeSuccessfulActionResult(51);
@@ -435,12 +438,12 @@ describe('ActionResult - Pipeline Integration', () => {
       };
 
       const result = ActionResult.success(largeData)
-        .map(data => ({
+        .map((data) => ({
           ...data,
           processed: true,
           count: data.entities.length,
         }))
-        .map(data => ({
+        .map((data) => ({
           ...data,
           sample: data.entities.slice(0, 10),
         }));
@@ -458,14 +461,15 @@ describe('ActionResult - Pipeline Integration', () => {
         return ActionResult.success({ processed: value });
       };
 
-      const nullResult = ActionResult.success(null)
-        .flatMap(nullHandlingStage);
+      const nullResult = ActionResult.success(null).flatMap(nullHandlingStage);
 
-      const undefinedResult = ActionResult.success(undefined)
-        .flatMap(nullHandlingStage);
+      const undefinedResult =
+        ActionResult.success(undefined).flatMap(nullHandlingStage);
 
       expect(nullResult).toBeFailedActionResult(['Null value encountered']);
-      expect(undefinedResult).toBeFailedActionResult(['Null value encountered']);
+      expect(undefinedResult).toBeFailedActionResult([
+        'Null value encountered',
+      ]);
     });
   });
 });

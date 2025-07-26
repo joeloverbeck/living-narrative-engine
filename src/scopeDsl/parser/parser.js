@@ -161,7 +161,7 @@ class Parser {
   parseSource() {
     const idTok = this.expect(
       'IDENTIFIER',
-      'Expected source node (actor, location, or entities)'
+      'Expected source node (actor, location, entities, target, or targets)'
     );
     switch (idTok.value) {
       case 'actor':
@@ -171,6 +171,12 @@ class Parser {
         return { type: 'Source', kind: 'location', param: null };
       case 'entities':
         return this.parseEntitiesSource();
+      case 'target':
+        // Target context from action resolution
+        return { type: 'Source', kind: 'target' };
+      case 'targets':
+        // All target groups from multi-target actions
+        return { type: 'Source', kind: 'targets' };
       default:
         this.error(`Unknown source node: '${idTok.value}'`);
     }

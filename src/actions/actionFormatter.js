@@ -296,7 +296,8 @@ export default class ActionCommandFormatter extends IActionCommandFormatter {
     // Base implementation - not supported
     return {
       ok: false,
-      error: 'Multi-target formatting not supported by base ActionCommandFormatter. Use MultiTargetActionFormatter instead.',
+      error:
+        'Multi-target formatting not supported by base ActionCommandFormatter. Use MultiTargetActionFormatter instead.',
     };
   }
 }
