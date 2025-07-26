@@ -78,12 +78,15 @@ describeActionDiscoverySuite(
       });
       expect(bed.mocks.logger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          "Failed to format command for action 'bad' with target 't1'."
+          "Failed to format command for action 'bad' with target 't1'"
         ),
         expect.objectContaining({
-          actionDefinition: expect.objectContaining({ id: 'bad' }),
-          actionId: 'bad',
-          actorSnapshot: expect.any(Object),
+          actionDef: expect.objectContaining({ id: 'bad' }),
+          formatResult: expect.objectContaining({
+            ok: false,
+            error: expect.any(Error),
+          }),
+          targetContext: expect.objectContaining({ entityId: 't1' }),
         })
       );
     });

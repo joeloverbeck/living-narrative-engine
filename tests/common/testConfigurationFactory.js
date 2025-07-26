@@ -6,7 +6,7 @@
  * or createTestModules() for the simplest testing experience. The test module pattern
  * provides a fluent API with presets and intelligent defaults.
  * @see tests/common/testing/builders/testModuleBuilder.js
- * @see src/testing/facades/testingFacadeRegistrations.js
+ * @see tests/common/facades/testingFacadeRegistrations.js
  */
 
 import fs from 'fs/promises';

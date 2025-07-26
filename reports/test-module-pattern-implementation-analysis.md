@@ -16,13 +16,13 @@ While the facade pattern has delivered substantial benefits (60-70% reduction in
 
 The team successfully implemented the Service Facade Pattern with the following components:
 
-1. **Service Facades** (Located in `src/testing/facades/`):
+1. **Service Facades** (Located in `tests/common/facades/`):
    - `LLMServiceFacade` - Simplified LLM service interface
    - `ActionServiceFacade` - Unified action handling interface
    - `EntityServiceFacade` - Entity management abstraction
    - `TurnExecutionFacade` - High-level turn orchestration
 
-2. **Facade Registration System** (`src/testing/facades/testingFacadeRegistrations.js`):
+2. **Facade Registration System** (`tests/common/facades/testingFacadeRegistrations.js`):
    - `registerTestingFacades()` - DI container registration
    - `createMockFacades()` - Mock instance creation for testing
 
@@ -206,7 +206,7 @@ class TurnExecutionTestModule {
 
 ### Phase 2: Integration with Existing Code (Modifications)
 
-5. **`src/testing/facades/testingFacadeRegistrations.js`** (MODIFY)
+5. **`tests/common/facades/testingFacadeRegistrations.js`** (MODIFY)
    - Add builder integration support
    - Export builder classes
 

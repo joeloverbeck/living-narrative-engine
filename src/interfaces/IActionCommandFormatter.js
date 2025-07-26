@@ -7,12 +7,34 @@
 /** @typedef {import('../actions/formatters/formatActionTypedefs.js').FormatActionCommandResult} FormatActionCommandResult */
 
 /**
+ * @typedef {Object} MultiTargetContext
+ * @property {string} entityId - Target entity ID
+ * @property {string} displayName - Display name for target
+ * @property {string} [placeholder] - Template placeholder name
+ */
+
+/**
+ * @typedef {Object} ResolvedTarget
+ * @property {string} id - Entity ID
+ * @property {string} displayName - Display name for formatting
+ * @property {object} entity - Full entity object
+ */
+
+/**
+ * @typedef {Object} FormattingOptions
+ * @property {Function} [displayNameFn] - Custom display name resolver
+ * @property {boolean} [debug] - Enable debug logging
+ * @property {Object} [logger] - Logger instance
+ * @property {Object} [safeEventDispatcher] - Event dispatcher
+ */
+
+/**
  * @interface IActionCommandFormatter
- * @description Interface defining how action commands should be formatted.
+ * @description Enhanced interface defining how action commands should be formatted, supporting both legacy single-target and multi-target actions.
  */
 export class IActionCommandFormatter {
   /**
-   * Formats an action command string given an action definition and target context.
+   * Formats an action command string given an action definition and target context (legacy compatibility).
    *
    * @param {ActionDefinition} actionDef - The action definition.
    * @param {ActionTargetContext} targetContext - The target context describing the action target.
@@ -24,5 +46,20 @@ export class IActionCommandFormatter {
    */
   format(actionDef, targetContext, entityManager, options, extra) {
     throw new Error('IActionCommandFormatter.format method not implemented.');
+  }
+
+  /**
+   * Formats an action command with multiple targets and placeholders.
+   *
+   * @param {ActionDefinition} actionDef - The action definition with multi-target template.
+   * @param {Object<string, ResolvedTarget[]>} resolvedTargets - Targets organized by definition name.
+   * @param {EntityManager} entityManager - The entity manager for lookups.
+   * @param {FormattingOptions} options - Formatting options.
+   * @param {object} [deps] - Additional dependencies including targetDefinitions.
+   * @returns {FormatActionCommandResult} Result object containing the formatted command(s) or error info.
+   * @throws {Error} If the method is not implemented.
+   */
+  formatMultiTarget(actionDef, resolvedTargets, entityManager, options, deps) {
+    throw new Error('IActionCommandFormatter.formatMultiTarget method not implemented.');
   }
 }

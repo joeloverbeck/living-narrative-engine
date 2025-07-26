@@ -286,4 +286,17 @@ export default class ActionCommandFormatter extends IActionCommandFormatter {
       deps
     );
   }
+
+  /**
+   * @inheritdoc
+   * Note: This base implementation does not support multi-target formatting.
+   * Use MultiTargetActionFormatter for full multi-target support.
+   */
+  formatMultiTarget(actionDef, resolvedTargets, entityManager, options, deps) {
+    // Base implementation - not supported
+    return {
+      ok: false,
+      error: 'Multi-target formatting not supported by base ActionCommandFormatter. Use MultiTargetActionFormatter instead.',
+    };
+  }
 }

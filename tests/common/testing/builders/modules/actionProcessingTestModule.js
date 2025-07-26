@@ -3,7 +3,7 @@
  * @description Provides fluent API for configuring action-related tests
  */
 
-import { createMockFacades } from '../../../../../src/testing/facades/testingFacadeRegistrations.js';
+import { createMockFacades } from '../../../facades/testingFacadeRegistrations.js';
 import { ITestModule } from '../interfaces/ITestModule.js';
 import { TestModuleValidationError } from '../errors/testModuleValidationError.js';
 import { TestModuleValidator } from '../validation/testModuleValidator.js';

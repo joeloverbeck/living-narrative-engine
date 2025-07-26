@@ -1,8 +1,11 @@
 import { beforeEach, describe, it, expect, jest } from '@jest/globals';
 import { LayerCompatibilityService } from '../../../../src/clothing/validation/layerCompatibilityService.js';
-import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentError.js';
 
-/** Helper to create minimal mocks for dependencies */
+/**
+ * Helper to create minimal mocks for dependencies
+ *
+ * @returns {object} Mock objects for entityManager and logger
+ */
 function createMocks() {
   return {
     entityManager: {
@@ -449,6 +452,48 @@ describe('LayerCompatibilityService', () => {
         ])
       );
     });
+
+    it('should handle adding outer layer when accessories layer is present', async () => {
+      // This test verifies that adding a layer when outer layers exist
+      // doesn't create conflicts when layer requirements are satisfied
+      entityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_clothing: {
+                  base: 'shirt', // Base layer exists to satisfy requirements
+                  accessories: 'scarf', // Accessories layer (index 3) exists
+                },
+                legs_clothing: {
+                  base: 'pants', // Ensure base layer requirement is globally satisfied
+                },
+              },
+            };
+          }
+          if (componentId === 'clothing:wearable') {
+            return {
+              wearableType: 'jacket',
+              layer: 'outer', // Trying to add outer layer (index 2)
+              equipmentSlots: { primary: 'torso_clothing', secondary: [] },
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await service.checkLayerConflicts(
+        'entity1',
+        'jacket_item',
+        'outer',
+        'torso_clothing'
+      );
+
+      // The system should not report conflicts because the outer layer requirements
+      // are satisfied (base layer exists) and there's no direct layer overlap
+      expect(result.hasConflicts).toBe(false);
+      expect(result.conflicts).toEqual([]);
+    });
   });
 
   describe('validateLayerOrdering', () => {
@@ -649,6 +694,25 @@ describe('LayerCompatibilityService', () => {
         type: 'reorder_layers',
         description: 'Adjust layer ordering to maintain hierarchy',
         priority: 2,
+      });
+    });
+
+    it('should suggest size adjustment for size_mismatch conflicts', async () => {
+      const conflicts = [
+        {
+          type: 'size_mismatch',
+          conflictingItemId: 'tight_shirt',
+        },
+      ];
+
+      const result = await service.suggestResolutions(conflicts);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        type: 'size_adjust',
+        target: 'tight_shirt',
+        description: 'Consider different size or adjust fit',
+        priority: 3,
       });
     });
 

@@ -62,7 +62,7 @@ export class LayerCompatibilityService {
    * @param {string} clothingItemId - New clothing item to check
    * @param {string} targetLayer - Target layer for the new item
    * @param {string} targetSlot - Target equipment slot
-   * @returns {Promise<{hasConflicts: boolean, conflicts: object[], resolutionSuggestions?: string[]}>}
+   * @returns {Promise<{hasConflicts: boolean, conflicts: object[], resolutionSuggestions?: string[]}>} Conflict detection result
    */
   async checkLayerConflicts(entityId, clothingItemId, targetLayer, targetSlot) {
     try {
@@ -315,9 +315,10 @@ export class LayerCompatibilityService {
   /**
    * Checks layer ordering requirements
    *
-   * @param entityId
-   * @param targetLayer
-   * @param slotEquipment
+   * @param {string} entityId - Entity to check ordering for
+   * @param {string} targetLayer - Layer being equipped
+   * @param {object} slotEquipment - Current equipment in the slot
+   * @returns {Promise<object[]>} Array of ordering conflicts
    * @private
    */
   async #checkLayerOrdering(entityId, targetLayer, slotEquipment) {
@@ -342,16 +343,6 @@ export class LayerCompatibilityService {
           continue;
         }
 
-        // Check if this creates an ordering violation
-        if (targetIndex > i) {
-          conflicts.push({
-            type: 'ordering_violation',
-            conflictingItemId: outerItemId,
-            layer: outerLayer,
-            severity: 'medium',
-            details: `Layer ordering violation: ${targetLayer} should come before ${outerLayer}`,
-          });
-        }
       }
     }
 
