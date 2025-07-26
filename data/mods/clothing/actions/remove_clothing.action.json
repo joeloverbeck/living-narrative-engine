@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "clothing:remove_clothing",
+  "name": "Remove Clothing",
+  "description": "Remove a piece of your topmost clothing",
+  "scope": "clothing:topmost_clothing",
+  "required_components": {
+    "actor": ["clothing:equipment"]
+  },
+  "template": "remove {target}",
+  "prerequisites": []
+}

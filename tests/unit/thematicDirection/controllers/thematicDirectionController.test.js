@@ -235,7 +235,7 @@ describe('ThematicDirectionController', () => {
         mockCharacterBuilderService.generateThematicDirections
       ).toHaveBeenCalledWith(mockConcept.id); // Fixed: pass id, not whole object
       expect(mockElements.resultsState.style.display).toBe('block');
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith('THEMATIC_DIRECTIONS_GENERATED', {
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith('thematic:thematic_directions_generated', {
         conceptId: '123',
         directionCount: 2,
         autoSaved: true,

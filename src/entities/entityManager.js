@@ -464,7 +464,7 @@ class EntityManager extends IEntityManager {
    * Retrieve an entity instance by its ID.
    *
    * @param {string} instanceId - The ID of the entity instance
-   * @returns {Entity|undefined} The entity if found, otherwise undefined
+   * @returns {Entity|null} The entity if found, otherwise null
    * @throws {InvalidArgumentError} If the instanceId is invalid
    */
   getEntityInstance(instanceId) {

@@ -130,6 +130,7 @@ export function registerInterpreters(container) {
       'HAS_BODY_PART_WITH_COMPONENT_VALUE',
       bind(tokens.HasBodyPartWithComponentValueHandler)
     );
+    registry.register('UNEQUIP_CLOTHING', bind(tokens.UnequipClothingHandler));
 
     return registry;
   });

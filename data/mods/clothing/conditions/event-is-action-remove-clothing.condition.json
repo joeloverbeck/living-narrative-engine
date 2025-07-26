@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "clothing:event-is-action-remove-clothing",
+  "description": "Checks if the event is attempting the 'Remove Clothing' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "clothing:remove_clothing"]
+  }
+}

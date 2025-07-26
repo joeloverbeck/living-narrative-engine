@@ -231,10 +231,10 @@ class ThematicDirectionApp {
       );
 
       // Register event definitions in the data registry
-      dataRegistry.setEventDefinition('CHARACTER_CONCEPT_CREATED', characterConceptCreatedEvent);
-      dataRegistry.setEventDefinition('THEMATIC_DIRECTIONS_GENERATED', thematicDirectionsGeneratedEvent);
+      dataRegistry.setEventDefinition('thematic:character_concept_created', characterConceptCreatedEvent);
+      dataRegistry.setEventDefinition('thematic:thematic_directions_generated', thematicDirectionsGeneratedEvent);
 
-      this.#logger.info('ThematicDirectionApp: Registered event definitions for CHARACTER_CONCEPT_CREATED and THEMATIC_DIRECTIONS_GENERATED');
+      this.#logger.info('ThematicDirectionApp: Registered event definitions for thematic:character_concept_created and thematic:thematic_directions_generated');
 
     } catch (error) {
       this.#logger.error('ThematicDirectionApp: Failed to register event definitions', error);

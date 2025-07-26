@@ -363,9 +363,9 @@ describe('Thematic Direction Workflow Integration', () => {
       );
 
       // 4. Events should be dispatched (both service and controller emit events)
-      // Check that the service event was dispatched
+      // Check that the service event was dispatched with correct event name
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'THEMATIC_DIRECTIONS_GENERATED',
+        'thematic:thematic_directions_generated',
         expect.objectContaining({
           conceptId,
           directionCount: 3, // Service event format
@@ -373,12 +373,12 @@ describe('Thematic Direction Workflow Integration', () => {
         })
       );
 
-      // Note: The service emits events in simple format, not wrapped in type/payload structure
+      // Note: The service emits events using the proper CHARACTER_BUILDER_EVENTS constants
       // The expected calls are:
-      // 1. CHARACTER_CONCEPT_CREATED (from service)
-      // 2. THEMATIC_DIRECTIONS_GENERATED (from service) - this is what we check
+      // 1. CHARACTER_CONCEPT_CREATED (from service) - 'thematic:character_concept_created'
+      // 2. THEMATIC_DIRECTIONS_GENERATED (from service) - 'thematic:thematic_directions_generated'
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'THEMATIC_DIRECTIONS_GENERATED',
+        'thematic:thematic_directions_generated',
         expect.objectContaining({
           conceptId,
           directionCount: 3, // Service uses directionCount, not directionsCount

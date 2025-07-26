@@ -406,4 +406,182 @@ export class CharacterDatabase {
       };
     });
   }
+
+  /**
+   * Get all thematic directions
+   *
+   * @returns {Promise<ThematicDirection[]>}
+   */
+  async getAllThematicDirections() {
+    return new Promise((resolve, reject) => {
+      const transaction = this.#getTransaction([STORES.THEMATIC_DIRECTIONS]);
+      const store = transaction.objectStore(STORES.THEMATIC_DIRECTIONS);
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const results = request.result || [];
+        this.#logger.debug(
+          `CharacterDatabase: Retrieved ${results.length} thematic directions`
+        );
+        resolve(results);
+      };
+
+      request.onerror = () => {
+        const error = new Error(
+          `Failed to get all thematic directions: ${request.error?.message || 'Unknown error'}`
+        );
+        this.#logger.error(
+          'CharacterDatabase: Error getting all thematic directions',
+          error
+        );
+        reject(error);
+      };
+    });
+  }
+
+  /**
+   * Get a single thematic direction by ID
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<ThematicDirection|null>}
+   */
+  async getThematicDirection(directionId) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.#getTransaction([STORES.THEMATIC_DIRECTIONS]);
+      const store = transaction.objectStore(STORES.THEMATIC_DIRECTIONS);
+      const request = store.get(directionId);
+
+      request.onsuccess = () => {
+        const result = request.result || null;
+        this.#logger.debug(
+          `CharacterDatabase: Retrieved thematic direction ${directionId}`,
+          { found: !!result }
+        );
+        resolve(result);
+      };
+
+      request.onerror = () => {
+        const error = new Error(
+          `Failed to get thematic direction: ${request.error?.message || 'Unknown error'}`
+        );
+        this.#logger.error(
+          'CharacterDatabase: Error getting thematic direction',
+          error
+        );
+        reject(error);
+      };
+    });
+  }
+
+  /**
+   * Update a thematic direction
+   *
+   * @param {string} directionId - Direction ID
+   * @param {object} updates - Fields to update
+   * @returns {Promise<ThematicDirection>}
+   */
+  async updateThematicDirection(directionId, updates) {
+    // First get the existing direction
+    const existingDirection = await this.getThematicDirection(directionId);
+    if (!existingDirection) {
+      throw new Error(`Thematic direction not found: ${directionId}`);
+    }
+
+    // Apply updates
+    const updatedDirection = {
+      ...existingDirection,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Save updated direction
+    return new Promise((resolve, reject) => {
+      const transaction = this.#getTransaction([STORES.THEMATIC_DIRECTIONS], 'readwrite');
+      const store = transaction.objectStore(STORES.THEMATIC_DIRECTIONS);
+      const request = store.put(updatedDirection);
+
+      request.onsuccess = () => {
+        this.#logger.info(
+          `CharacterDatabase: Successfully updated thematic direction ${directionId}`
+        );
+        resolve(updatedDirection);
+      };
+
+      request.onerror = () => {
+        const error = new Error(
+          `Failed to update thematic direction: ${request.error?.message || 'Unknown error'}`
+        );
+        this.#logger.error(
+          'CharacterDatabase: Error updating thematic direction',
+          error
+        );
+        reject(error);
+      };
+    });
+  }
+
+  /**
+   * Delete a thematic direction
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<boolean>}
+   */
+  async deleteThematicDirection(directionId) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.#getTransaction([STORES.THEMATIC_DIRECTIONS], 'readwrite');
+      const store = transaction.objectStore(STORES.THEMATIC_DIRECTIONS);
+      const request = store.delete(directionId);
+
+      request.onsuccess = () => {
+        this.#logger.info(
+          `CharacterDatabase: Successfully deleted thematic direction ${directionId}`
+        );
+        resolve(true);
+      };
+
+      request.onerror = () => {
+        const error = new Error(
+          `Failed to delete thematic direction: ${request.error?.message || 'Unknown error'}`
+        );
+        this.#logger.error(
+          'CharacterDatabase: Error deleting thematic direction',
+          error
+        );
+        reject(error);
+      };
+    });
+  }
+
+  /**
+   * Find orphaned thematic directions
+   *
+   * @returns {Promise<ThematicDirection[]>}
+   */
+  async findOrphanedDirections() {
+    try {
+      const allDirections = await this.getAllThematicDirections();
+      const orphanedDirections = [];
+
+      for (const direction of allDirections) {
+        try {
+          const concept = await this.getCharacterConcept(direction.conceptId);
+          if (!concept) {
+            orphanedDirections.push(direction);
+          }
+        } catch (error) {
+          // If we can't find the concept, it's orphaned
+          orphanedDirections.push(direction);
+        }
+      }
+
+      this.#logger.info(
+        `CharacterDatabase: Found ${orphanedDirections.length} orphaned directions`
+      );
+      return orphanedDirections;
+    } catch (error) {
+      const errorMessage = `Failed to find orphaned directions: ${error.message}`;
+      this.#logger.error('CharacterDatabase: Error finding orphaned directions', error);
+      throw new Error(errorMessage);
+    }
+  }
 }

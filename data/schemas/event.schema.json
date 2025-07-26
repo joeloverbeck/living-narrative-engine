@@ -11,6 +11,9 @@
     "id": {
       "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
     },
+    "$id": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+    },
     "description": {
       "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
     },
@@ -42,6 +45,13 @@
       "$comment": "This structure allows standard JSON Schema properties (type, properties, required, etc.) within payloadSchema. Setting 'type' to ['object', 'null'] allows events with no payload. The 'additionalProperties: true' ensures flexibility for various schema structures within the payload definition."
     }
   },
-  "required": ["id", "description"],
+  "anyOf": [
+    {
+      "required": ["id", "description"]
+    },
+    {
+      "required": ["$id", "description"]
+    }
+  ],
   "additionalProperties": false
 }

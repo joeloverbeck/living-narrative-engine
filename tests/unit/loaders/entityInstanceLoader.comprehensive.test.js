@@ -237,4 +237,317 @@ describe('EntityInstanceLoader', () => {
       );
     });
   });
+
+  describe('Component Schema Not Loaded (Coverage - Lines 83-86)', () => {
+    it('should skip validation and log warning when component schema is not loaded', async () => {
+      // --- Arrange ---
+      const modId = 'test_mod';
+      const filename = 'entity-with-unloaded-schema.instance.json';
+      const resolvedPath = `data/mods/test_mod/entities/instances/${filename}`;
+      const registryKey = 'entityInstances';
+
+      const testInstanceData = {
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
+        instanceId: 'test_entity_01',
+        definitionId: 'test_mod:base_entity',
+        componentOverrides: {
+          'test_mod:unloaded_component': {
+            someData: 'value',
+          },
+          'test_mod:loaded_component': {
+            otherData: 'value2',
+          },
+        },
+      };
+
+      // Mock that one component schema is not loaded, the other is
+      mockSchemaValidator.isSchemaLoaded
+        .calledWith('test_mod:unloaded_component')
+        .mockReturnValue(false);
+      mockSchemaValidator.isSchemaLoaded
+        .calledWith('test_mod:loaded_component')
+        .mockReturnValue(true);
+
+      // The loaded component should validate successfully
+      mockSchemaValidator.validate
+        .calledWith('test_mod:loaded_component', expect.any(Object))
+        .mockReturnValue({
+          isValid: true,
+          errors: null,
+        });
+
+      // Mock that no entity with this ID already exists
+      mockDataRegistry.get.mockReturnValue(undefined);
+
+      // --- Act ---
+      const result = await loader._processFetchedItem(
+        modId,
+        filename,
+        resolvedPath,
+        testInstanceData,
+        registryKey
+      );
+
+      // --- Assert ---
+      // Verify the warning was logged for the unloaded schema
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Skipping validation for component override 'test_mod:unloaded_component'`
+        )
+      );
+
+      // Verify only the loaded component was validated
+      expect(mockSchemaValidator.validate).toHaveBeenCalledTimes(1);
+      expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
+        'test_mod:loaded_component',
+        testInstanceData.componentOverrides['test_mod:loaded_component']
+      );
+
+      // Verify the instance was still stored successfully
+      expect(mockDataRegistry.store).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        qualifiedId: 'test_mod:test_entity_01',
+        didOverride: false,
+      });
+    });
+  });
+
+  describe('Component Validation Failures (Coverage - Lines 95-106, 115-119)', () => {
+    it('should throw ValidationError when component validation fails', async () => {
+      // --- Arrange ---
+      const modId = 'core';
+      const filename = 'entity-with-invalid-components.instance.json';
+      const resolvedPath = `data/mods/core/entities/instances/${filename}`;
+      const registryKey = 'entityInstances';
+
+      const testInstanceData = {
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
+        instanceId: 'invalid_entity_01',
+        definitionId: 'core:base_entity',
+        componentOverrides: {
+          'core:health': {
+            // Invalid: missing required 'current' field
+            max: 100,
+          },
+          'core:name': {
+            // Invalid: wrong type
+            name: 123,
+          },
+        },
+      };
+
+      const healthErrors = [
+        {
+          instancePath: '',
+          schemaPath: '#/required',
+          keyword: 'required',
+          params: { missingProperty: 'current' },
+          message: "must have required property 'current'",
+        },
+      ];
+
+      const nameErrors = [
+        {
+          instancePath: '/name',
+          schemaPath: '#/properties/name/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        },
+      ];
+
+      // Mock that schemas are loaded
+      mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
+
+      // Mock validation failures
+      mockSchemaValidator.validate
+        .calledWith('core:health', testInstanceData.componentOverrides['core:health'])
+        .mockReturnValue({
+          isValid: false,
+          errors: healthErrors,
+        });
+
+      mockSchemaValidator.validate
+        .calledWith('core:name', testInstanceData.componentOverrides['core:name'])
+        .mockReturnValue({
+          isValid: false,
+          errors: nameErrors,
+        });
+
+      // --- Act & Assert ---
+      await expect(
+        loader._processFetchedItem(
+          modId,
+          filename,
+          resolvedPath,
+          testInstanceData,
+          registryKey
+        )
+      ).rejects.toThrow(
+        `Component override validation failed for instance 'invalid_entity_01' in file '${filename}' (mod: ${modId}). Invalid components: [core:health, core:name]. See previous error logs for details.`
+      );
+
+      // Verify error logging for each failed component
+      expect(mockLogger.error).toHaveBeenCalledTimes(2);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Schema validation failed for component override 'core:health'`
+        ),
+        expect.any(Object)
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Schema validation failed for component override 'core:name'`
+        ),
+        expect.any(Object)
+      );
+
+      // Verify the entity was NOT stored
+      expect(mockDataRegistry.store).not.toHaveBeenCalled();
+    });
+
+    it('should handle mixed validation results correctly', async () => {
+      // --- Arrange ---
+      const modId = 'mixed_mod';
+      const filename = 'mixed-validation.instance.json';
+      const resolvedPath = `data/mods/mixed_mod/entities/instances/${filename}`;
+      const registryKey = 'entityInstances';
+
+      const testInstanceData = {
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
+        instanceId: 'mixed_entity_01',
+        definitionId: 'mixed_mod:base',
+        componentOverrides: {
+          'mixed_mod:valid_component': { data: 'valid' },
+          'mixed_mod:invalid_component': { data: 'invalid' },
+          'mixed_mod:unloaded_component': { data: 'skip' },
+        },
+      };
+
+      // Setup mixed validation scenarios
+      mockSchemaValidator.isSchemaLoaded
+        .calledWith('mixed_mod:valid_component')
+        .mockReturnValue(true);
+      mockSchemaValidator.isSchemaLoaded
+        .calledWith('mixed_mod:invalid_component')
+        .mockReturnValue(true);
+      mockSchemaValidator.isSchemaLoaded
+        .calledWith('mixed_mod:unloaded_component')
+        .mockReturnValue(false);
+
+      mockSchemaValidator.validate
+        .calledWith('mixed_mod:valid_component', expect.any(Object))
+        .mockReturnValue({ isValid: true, errors: null });
+
+      mockSchemaValidator.validate
+        .calledWith('mixed_mod:invalid_component', expect.any(Object))
+        .mockReturnValue({
+          isValid: false,
+          errors: [{ message: 'Invalid data format' }],
+        });
+
+      // --- Act & Assert ---
+      await expect(
+        loader._processFetchedItem(
+          modId,
+          filename,
+          resolvedPath,
+          testInstanceData,
+          registryKey
+        )
+      ).rejects.toThrow(/Component override validation failed/);
+
+      // Verify warning for unloaded schema
+      expect(mockLogger.warn).toHaveBeenCalled();
+
+      // Verify error for invalid component
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('mixed_mod:invalid_component'),
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('No Component Overrides (Coverage - Line 165)', () => {
+    it('should handle instance with no componentOverrides property', async () => {
+      // --- Arrange ---
+      const modId = 'core';
+      const filename = 'minimal.instance.json';
+      const resolvedPath = `data/mods/core/entities/instances/${filename}`;
+      const registryKey = 'entityInstances';
+
+      const testInstanceData = {
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
+        instanceId: 'minimal_01',
+        definitionId: 'core:base',
+        // No componentOverrides property
+      };
+
+      mockDataRegistry.get.mockReturnValue(undefined);
+
+      // --- Act ---
+      const result = await loader._processFetchedItem(
+        modId,
+        filename,
+        resolvedPath,
+        testInstanceData,
+        registryKey
+      );
+
+      // --- Assert ---
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Instance 'minimal_01' in ${filename} has no component overrides. Skipping secondary validation.`
+        )
+      );
+
+      expect(mockSchemaValidator.validate).not.toHaveBeenCalled();
+      expect(mockDataRegistry.store).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        qualifiedId: 'core:minimal_01',
+        didOverride: false,
+      });
+    });
+
+    it('should handle instance with empty componentOverrides object', async () => {
+      // --- Arrange ---
+      const modId = 'empty_mod';
+      const filename = 'empty-overrides.instance.json';
+      const resolvedPath = `data/mods/empty_mod/entities/instances/${filename}`;
+      const registryKey = 'entityInstances';
+
+      const testInstanceData = {
+        $schema: 'schema://living-narrative-engine/entity-instance.schema.json',
+        instanceId: 'empty_01',
+        definitionId: 'empty_mod:base',
+        componentOverrides: {}, // Empty object
+      };
+
+      mockDataRegistry.get.mockReturnValue(undefined);
+
+      // --- Act ---
+      const result = await loader._processFetchedItem(
+        modId,
+        filename,
+        resolvedPath,
+        testInstanceData,
+        registryKey
+      );
+
+      // --- Assert ---
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Instance 'empty_01' in ${filename} has no component overrides. Skipping secondary validation.`
+        )
+      );
+
+      expect(mockSchemaValidator.validate).not.toHaveBeenCalled();
+      expect(mockDataRegistry.store).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        qualifiedId: 'empty_mod:empty_01',
+        didOverride: false,
+      });
+    });
+  });
+
 });

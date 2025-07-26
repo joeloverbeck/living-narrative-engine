@@ -39,6 +39,7 @@ const OPERATION_SCHEMA_FILES = [
   'resolveDirection.schema.json',
   'setVariable.schema.json',
   'systemMoveEntity.schema.json',
+  'unequipClothing.schema.json',
 ];
 
 class StaticConfiguration {

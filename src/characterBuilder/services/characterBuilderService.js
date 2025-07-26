@@ -35,12 +35,14 @@ const RETRY_CONFIG = {
  * Character builder events
  */
 export const CHARACTER_BUILDER_EVENTS = {
-  CONCEPT_CREATED: 'CHARACTER_CONCEPT_CREATED',
-  CONCEPT_UPDATED: 'CHARACTER_CONCEPT_UPDATED',
-  DIRECTIONS_GENERATED: 'THEMATIC_DIRECTIONS_GENERATED',
-  CONCEPT_SAVED: 'CHARACTER_CONCEPT_SAVED',
-  CONCEPT_DELETED: 'CHARACTER_CONCEPT_DELETED',
-  ERROR_OCCURRED: 'CHARACTER_BUILDER_ERROR_OCCURRED',
+  CONCEPT_CREATED: 'thematic:character_concept_created',
+  CONCEPT_UPDATED: 'thematic:character_concept_updated',
+  DIRECTIONS_GENERATED: 'thematic:thematic_directions_generated',
+  CONCEPT_SAVED: 'thematic:character_concept_saved',
+  CONCEPT_DELETED: 'thematic:character_concept_deleted',
+  DIRECTION_UPDATED: 'thematic:direction_updated',
+  DIRECTION_DELETED: 'thematic:direction_deleted',
+  ERROR_OCCURRED: 'thematic:character_builder_error_occurred',
 };
 
 /**
@@ -564,6 +566,120 @@ export class CharacterBuilderService {
         updates,
       });
 
+      throw new CharacterBuilderError(message, error);
+    }
+  }
+
+  /**
+   * Get all thematic directions with their associated concepts
+   *
+   * @returns {Promise<Array<{direction: ThematicDirection, concept: CharacterConcept|null}>>}
+   */
+  async getAllThematicDirectionsWithConcepts() {
+    try {
+      const allDirections = await this.#storageService.getAllThematicDirections();
+      const result = [];
+
+      for (const direction of allDirections) {
+        let concept = null;
+        try {
+          concept = await this.#storageService.getCharacterConcept(direction.conceptId);
+        } catch (error) {
+          this.#logger.warn(
+            `CharacterBuilderService: Failed to load concept for direction ${direction.id}`,
+            { directionId: direction.id, conceptId: direction.conceptId }
+          );
+        }
+        
+        result.push({ direction, concept });
+      }
+
+      return result;
+    } catch (error) {
+      const message = `Failed to get all thematic directions with concepts: ${error.message}`;
+      this.#logger.error(message, error);
+      throw new CharacterBuilderError(message, error);
+    }
+  }
+
+  /**
+   * Get orphaned thematic directions (directions without valid concepts)
+   *
+   * @returns {Promise<ThematicDirection[]>}
+   */
+  async getOrphanedThematicDirections() {
+    try {
+      const orphanedDirections = await this.#storageService.findOrphanedDirections();
+      this.#logger.info(
+        `CharacterBuilderService: Found ${orphanedDirections.length} orphaned directions`
+      );
+      return orphanedDirections;
+    } catch (error) {
+      const message = `Failed to get orphaned thematic directions: ${error.message}`;
+      this.#logger.error(message, error);
+      throw new CharacterBuilderError(message, error);
+    }
+  }
+
+  /**
+   * Update a single thematic direction
+   *
+   * @param {string} directionId - Direction ID
+   * @param {object} updates - Fields to update
+   * @returns {Promise<ThematicDirection>}
+   */
+  async updateThematicDirection(directionId, updates) {
+    if (!directionId || typeof directionId !== 'string') {
+      throw new CharacterBuilderError('directionId must be a non-empty string');
+    }
+
+    if (!updates || typeof updates !== 'object') {
+      throw new CharacterBuilderError('updates must be a valid object');
+    }
+
+    try {
+      const updatedDirection = await this.#storageService.updateThematicDirection(
+        directionId,
+        updates
+      );
+
+      this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, {
+        directionId,
+        updates,
+      });
+
+      return updatedDirection;
+    } catch (error) {
+      const message = `Failed to update thematic direction ${directionId}: ${error.message}`;
+      this.#logger.error(message, error);
+      throw new CharacterBuilderError(message, error);
+    }
+  }
+
+  /**
+   * Delete a thematic direction
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<boolean>}
+   */
+  async deleteThematicDirection(directionId) {
+    if (!directionId || typeof directionId !== 'string') {
+      throw new CharacterBuilderError('directionId must be a non-empty string');
+    }
+
+    try {
+      const success = await this.#storageService.deleteThematicDirection(directionId);
+
+      if (success) {
+        this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.DIRECTION_DELETED, {
+          directionId,
+        });
+      }
+
+      return success;
+    } catch (error) {
+      const message = `Failed to delete thematic direction ${directionId}: ${error.message}`;
+      this.#logger.error(message, error);
       throw new CharacterBuilderError(message, error);
     }
   }

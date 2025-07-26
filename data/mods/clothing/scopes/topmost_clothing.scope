@@ -1,0 +1,3 @@
+// Returns all topmost clothing items worn by the actor
+// Items are prioritized by layer: outer > base > underwear
+clothing:topmost_clothing := actor.topmost_clothing[]

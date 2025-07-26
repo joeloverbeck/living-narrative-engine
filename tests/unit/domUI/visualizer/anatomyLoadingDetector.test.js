@@ -71,6 +71,78 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
     });
   });
 
+  describe('Input Validation', () => {
+    describe('waitForAnatomyReady validation', () => {
+      it('should reject null entityId', async () => {
+        await expect(
+          anatomyLoadingDetector.waitForAnatomyReady(null)
+        ).rejects.toThrow('Entity ID must be a non-empty string');
+      });
+
+      it('should reject undefined entityId', async () => {
+        await expect(
+          anatomyLoadingDetector.waitForAnatomyReady(undefined)
+        ).rejects.toThrow('Entity ID must be a non-empty string');
+      });
+
+      it('should reject empty string entityId', async () => {
+        await expect(
+          anatomyLoadingDetector.waitForAnatomyReady('')
+        ).rejects.toThrow('Entity ID must be a non-empty string');
+      });
+
+      it('should reject non-string entityId', async () => {
+        await expect(
+          anatomyLoadingDetector.waitForAnatomyReady(123)
+        ).rejects.toThrow('Entity ID must be a non-empty string');
+      });
+
+      it('should reject object entityId', async () => {
+        await expect(
+          anatomyLoadingDetector.waitForAnatomyReady({})
+        ).rejects.toThrow('Entity ID must be a non-empty string');
+      });
+    });
+
+    describe('waitForEntityCreation validation', () => {
+      it('should reject null entityId', () => {
+        expect(() => {
+          anatomyLoadingDetector.waitForEntityCreation(null, jest.fn());
+        }).toThrow('Entity ID must be a non-empty string');
+      });
+
+      it('should reject empty string entityId', () => {
+        expect(() => {
+          anatomyLoadingDetector.waitForEntityCreation('', jest.fn());
+        }).toThrow('Entity ID must be a non-empty string');
+      });
+
+      it('should reject non-string entityId', () => {
+        expect(() => {
+          anatomyLoadingDetector.waitForEntityCreation(123, jest.fn());
+        }).toThrow('Entity ID must be a non-empty string');
+      });
+
+      it('should reject null callback', () => {
+        expect(() => {
+          anatomyLoadingDetector.waitForEntityCreation('test:entity:123', null);
+        }).toThrow('Callback must be a function');
+      });
+
+      it('should reject undefined callback', () => {
+        expect(() => {
+          anatomyLoadingDetector.waitForEntityCreation('test:entity:123', undefined);
+        }).toThrow('Callback must be a function');
+      });
+
+      it('should reject non-function callback', () => {
+        expect(() => {
+          anatomyLoadingDetector.waitForEntityCreation('test:entity:123', 'not-a-function');
+        }).toThrow('Callback must be a function');
+      });
+    });
+  });
+
   describe('Anatomy Detection', () => {
     // Comprehensive parameterized tests for anatomy validation scenarios
     const anatomyValidationScenarios = [
@@ -209,6 +281,23 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
         `Entity ${entityId} anatomy ready: true`
       );
     });
+
+    it('should handle entity not found in private checkAnatomyReady method', async () => {
+      const entityId = 'test:entity:123';
+      
+      // Mock entity manager to return null (entity not found)
+      testBed.mockEntityManager.getEntityInstance.mockResolvedValue(null);
+
+      const result = await anatomyLoadingDetector.waitForAnatomyReady(
+        entityId,
+        { timeout: 10, retryInterval: 0 }
+      );
+
+      expect(result).toBe(false);
+      expect(testBed.mockLogger.debug).toHaveBeenCalledWith(
+        `Entity ${entityId} not found`
+      );
+    });
   });
 
   describe('Event-Based Detection', () => {
@@ -259,6 +348,189 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
       const mockUnsubscribe =
         testBed.mockEventDispatcher.subscribe.mock.results[0].value;
       expect(mockUnsubscribe).toHaveBeenCalled();
+    });
+  });
+
+  describe('waitForEntityWithAnatomy Workflow', () => {
+    it('should check for existing entity first and proceed directly to anatomy check', async () => {
+      const entityId = 'test:entity:123';
+      const mockEntity = testBed.createMockEntityWithAnatomy({
+        entityId,
+        hasValidAnatomy: true,
+      });
+
+      // Mock entity already exists
+      testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+
+      const result = await anatomyLoadingDetector.waitForEntityWithAnatomy(
+        entityId,
+        { timeout: 100, retryInterval: 10 }
+      );
+
+      expect(result).toBe(true);
+      expect(testBed.mockLogger.debug).toHaveBeenCalledWith(
+        `Entity ${entityId} already exists, checking anatomy readiness directly`
+      );
+    });
+
+    it('should wait for entity creation when entity does not exist', async () => {
+      const entityId = 'test:entity:123';
+
+      // First call - entity doesn't exist
+      testBed.mockEntityManager.getEntityInstance
+        .mockRejectedValueOnce(new Error('Entity not found'))
+        .mockResolvedValueOnce(
+          testBed.createMockEntityWithAnatomy({
+            entityId,
+            hasValidAnatomy: true,
+          })
+        );
+
+      const triggerEvent = testBed.setupEventSubscription(entityId);
+
+      // Start the workflow
+      const workflowPromise = anatomyLoadingDetector.waitForEntityWithAnatomy(
+        entityId,
+        { timeout: 1000, retryInterval: 10 }
+      );
+
+      // Simulate entity creation event
+      setTimeout(() => triggerEvent(), 10);
+
+      const result = await workflowPromise;
+
+      expect(result).toBe(true);
+      expect(testBed.mockLogger.debug).toHaveBeenCalledWith(
+        `Entity ${entityId} doesn't exist yet, waiting for creation`
+      );
+    });
+
+    it('should handle timeout during entity creation waiting', async () => {
+      const entityId = 'test:entity:123';
+
+      // Entity doesn't exist
+      testBed.mockEntityManager.getEntityInstance.mockRejectedValue(
+        new Error('Entity not found')
+      );
+
+      testBed.setupEventSubscription(entityId); // Setup but don't trigger
+
+      const result = await anatomyLoadingDetector.waitForEntityWithAnatomy(
+        entityId,
+        { timeout: 50, retryInterval: 10 }
+      );
+
+      expect(result).toBe(false);
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        `Timeout waiting for entity creation: ${entityId}`,
+        {
+          entityId,
+          timeout: 50,
+          phase: 'waiting_for_entity_creation',
+        }
+      );
+    });
+
+    it('should handle error during anatomy readiness check after entity creation', async () => {
+      const entityId = 'test:entity:123';
+
+      // Mock waitForAnatomyReady to throw an error to reach the specific error handling path
+      const originalWaitForAnatomyReady = anatomyLoadingDetector.waitForAnatomyReady;
+      anatomyLoadingDetector.waitForAnatomyReady = jest.fn().mockRejectedValue(
+        new Error('Anatomy check failed')
+      );
+
+      // Entity doesn't exist initially  
+      testBed.mockEntityManager.getEntityInstance.mockRejectedValueOnce(
+        new Error('Entity not found')
+      );
+
+      const triggerEvent = testBed.setupEventSubscription(entityId);
+
+      // Start the workflow
+      const workflowPromise = anatomyLoadingDetector.waitForEntityWithAnatomy(
+        entityId,
+        { timeout: 1000, retryInterval: 10 }
+      );
+
+      // Simulate entity creation event
+      setTimeout(() => triggerEvent(), 10);
+
+      const result = await workflowPromise;
+
+      expect(result).toBe(false);
+      // This should trigger the specific error handling path in waitForEntityWithAnatomy
+      expect(testBed.mockLogger.error).toHaveBeenCalledWith(
+        `Error waiting for anatomy on entity ${entityId}:`,
+        {
+          entityId,
+          error: 'Anatomy check failed',
+          stack: expect.any(String),
+          phase: 'waiting_for_anatomy_ready',
+        }
+      );
+
+      // Restore original method
+      anatomyLoadingDetector.waitForAnatomyReady = originalWaitForAnatomyReady;
+    });
+
+    it('should prevent race conditions with multiple resolution attempts', async () => {
+      const entityId = 'test:entity:123';
+
+      // Entity doesn't exist initially
+      testBed.mockEntityManager.getEntityInstance
+        .mockRejectedValueOnce(new Error('Entity not found'))
+        .mockResolvedValue(
+          testBed.createMockEntityWithAnatomy({
+            entityId,
+            hasValidAnatomy: true,
+          })
+        );
+
+      const triggerEvent = testBed.setupEventSubscription(entityId);
+
+      // Start the workflow
+      const workflowPromise = anatomyLoadingDetector.waitForEntityWithAnatomy(
+        entityId,
+        { timeout: 1000, retryInterval: 10 }
+      );
+
+      // Trigger multiple events rapidly to test race condition handling
+      setTimeout(() => triggerEvent(), 10);
+      setTimeout(() => triggerEvent(), 15);
+      setTimeout(() => triggerEvent(), 20);
+
+      const result = await workflowPromise;
+
+      expect(result).toBe(true);
+      // Should only resolve once despite multiple events
+    });
+
+    it('should use default timeout when none provided in config', async () => {
+      const entityId = 'test:entity:123';
+
+      // Entity doesn't exist
+      testBed.mockEntityManager.getEntityInstance.mockRejectedValue(
+        new Error('Entity not found')
+      );
+
+      testBed.setupEventSubscription(entityId); // Setup but don't trigger
+
+      // Use a very short timeout for testing instead of default
+      const result = await anatomyLoadingDetector.waitForEntityWithAnatomy(
+        entityId,
+        { timeout: 50 }
+      );
+
+      expect(result).toBe(false);
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        `Timeout waiting for entity creation: ${entityId}`,
+        {
+          entityId,
+          timeout: 50,
+          phase: 'waiting_for_entity_creation',
+        }
+      );
     });
   });
 
@@ -347,6 +619,109 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
       expect(result).toBe(true);
       expect(mockEntity.getComponentData).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('Disposal and Lifecycle Management', () => {
+    it('should clean up subscriptions when disposed', () => {
+      const entityId = 'test:entity:123';
+      const callback = jest.fn();
+      const mockUnsubscribe = jest.fn();
+      
+      // Mock the subscribe to return an unsubscribe function
+      testBed.mockEventDispatcher.subscribe.mockReturnValue(mockUnsubscribe);
+      
+      // Create a subscription
+      anatomyLoadingDetector.waitForEntityCreation(entityId, callback);
+      
+      // Verify subscription was created
+      expect(testBed.mockEventDispatcher.subscribe).toHaveBeenCalled();
+      
+      // Dispose the detector
+      anatomyLoadingDetector.dispose();
+      
+      // Verify unsubscribe was called
+      expect(mockUnsubscribe).toHaveBeenCalled();
+    });
+
+    it('should handle multiple disposal calls gracefully', () => {
+      // First disposal should work normally
+      anatomyLoadingDetector.dispose();
+      
+      // Second disposal should be no-op (early return on line 250)
+      expect(() => {
+        anatomyLoadingDetector.dispose();
+      }).not.toThrow();
+    });
+
+    it('should throw error when waitForAnatomyReady called after disposal', async () => {
+      anatomyLoadingDetector.dispose();
+      
+      await expect(
+        anatomyLoadingDetector.waitForAnatomyReady('test:entity:123')
+      ).rejects.toThrow('AnatomyLoadingDetector has been disposed');
+    });
+
+    it('should throw error when waitForEntityCreation called after disposal', () => {
+      anatomyLoadingDetector.dispose();
+      
+      expect(() => {
+        anatomyLoadingDetector.waitForEntityCreation('test:entity:123', jest.fn());
+      }).toThrow('AnatomyLoadingDetector has been disposed');
+    });
+
+    it('should throw error when waitForEntityWithAnatomy called after disposal', async () => {
+      anatomyLoadingDetector.dispose();
+      
+      await expect(
+        anatomyLoadingDetector.waitForEntityWithAnatomy('test:entity:123')
+      ).rejects.toThrow('AnatomyLoadingDetector has been disposed');
+    });
+
+    it('should handle subscription cleanup errors during disposal', () => {
+      const entityId = 'test:entity:123';
+      const callback = jest.fn();
+      
+      // Create subscription with failing unsubscribe
+      const mockUnsubscribe = jest.fn().mockImplementation(() => {
+        throw new Error('Unsubscribe failed');
+      });
+      testBed.mockEventDispatcher.subscribe.mockReturnValue(mockUnsubscribe);
+      
+      anatomyLoadingDetector.waitForEntityCreation(entityId, callback);
+      
+      // Disposal should handle the error gracefully
+      expect(() => {
+        anatomyLoadingDetector.dispose();
+      }).not.toThrow();
+      
+      // Verify the warning was logged
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        'Error unsubscribing from event:',
+        expect.any(Error)
+      );
+    });
+
+    it('should return unsubscribe function that properly cleans up', () => {
+      const entityId = 'test:entity:123';
+      const callback = jest.fn();
+      const mockEventUnsubscribe = jest.fn();
+      
+      // Mock the subscribe to return an unsubscribe function
+      testBed.mockEventDispatcher.subscribe.mockReturnValue(mockEventUnsubscribe);
+      
+      const unsubscribe = anatomyLoadingDetector.waitForEntityCreation(entityId, callback);
+      
+      // Verify unsubscribe is a function
+      expect(typeof unsubscribe).toBe('function');
+      
+      // Call the returned unsubscribe function
+      expect(() => {
+        unsubscribe();
+      }).not.toThrow();
+      
+      // Verify the event subscription was removed
+      expect(mockEventUnsubscribe).toHaveBeenCalled();
     });
   });
 

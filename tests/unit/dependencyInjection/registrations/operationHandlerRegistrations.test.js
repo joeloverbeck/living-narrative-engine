@@ -63,6 +63,7 @@ describe('registerOperationHandlers', () => {
       tokens.MergeClosenessCircleHandler,
       tokens.RemoveFromClosenessCircleHandler,
       tokens.HasBodyPartWithComponentValueHandler,
+      tokens.UnequipClothingHandler,
     ];
 
     handlerTokens.forEach((token) => {
