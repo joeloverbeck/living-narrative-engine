@@ -12,7 +12,7 @@ import Span from './span.js';
 /** @typedef {import('./types.js').HierarchicalSpan} HierarchicalSpan */
 /** @typedef {import('./types.js').PerformanceSummary} PerformanceSummary */
 /** @typedef {import('./types.js').SpanOptions} SpanOptions */
-/** @typedef {import('../configuration/traceConfigLoader.js').TraceConfigurationFile} TraceConfigurationFile */
+/** @typedef {import('../../configuration/traceConfigLoader.js').TraceConfigurationFile} TraceConfigurationFile */
 
 /**
  * @class StructuredTrace

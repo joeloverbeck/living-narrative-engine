@@ -122,6 +122,8 @@ class StaticConfiguration {
       'anatomy.blueprint-part.schema.json',
       'anatomy.slot-library.schema.json',
       'anatomy-formatting.schema.json',
+      'target-context.schema.json',
+      'thematic-direction.schema.json', // Character builder thematic direction schema
       'base-operation.schema.json', // Base schema for all operations
       // Prepend the 'operations/' subdirectory to each operation schema file
       ...OPERATION_SCHEMA_FILES.map((file) => `operations/${file}`),
@@ -161,6 +163,8 @@ class StaticConfiguration {
         'schema://living-narrative-engine/anatomy.slot-library.schema.json',
       anatomyFormatting:
         'schema://living-narrative-engine/anatomy-formatting.schema.json',
+      'thematic-direction':
+        'schema://living-narrative-engine/thematic-direction.schema.json',
       // Scopes use a custom DSL format (.scope files) and are validated by the scope engine,
       // not by JSON schema validation. Explicitly return null to indicate no schema validation.
       scopes: null,

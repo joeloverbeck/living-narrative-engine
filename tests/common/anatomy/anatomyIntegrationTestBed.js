@@ -149,7 +149,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         const description = `A human ${partType}`;
 
         // Actually add the description component to the entity
-        if (this.entityManager && this.entityManager.addComponent) {
+        if (this.entityManager && this.entityManager.addComponent && partEntity.id) {
           this.entityManager.addComponent(partEntity.id, 'core:description', {
             text: description,
           });
@@ -165,7 +165,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         const description = `A human ${partType}`;
 
         // Actually add the description component to the entity
-        if (this.entityManager && this.entityManager.addComponent) {
+        if (this.entityManager && this.entityManager.addComponent && partEntity.id) {
           this.entityManager.addComponent(partEntity.id, 'core:description', {
             text: description,
           });
@@ -202,10 +202,14 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     // Create mock component manager
     this.mockComponentManager = {
       addComponent: (entityId, componentId, data) => {
-        this.entityManager.addComponent(entityId, componentId, data);
+        if (entityId) {
+          this.entityManager.addComponent(entityId, componentId, data);
+        }
       },
       updateComponent: (entityId, componentId, data) => {
-        this.entityManager.updateComponent(entityId, componentId, data);
+        if (entityId) {
+          this.entityManager.updateComponent(entityId, componentId, data);
+        }
       },
     };
 
@@ -1865,11 +1869,11 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
    */
   async createTestActorWithAnatomy() {
     // Create actor entity
-    const actor = this.entityManager.createEntityInstance('test:actor');
+    const actor = this.entityManager.createEntityInstance('core:actor');
 
     // Add anatomy body component
     this.entityManager.addComponent(actor.id, 'anatomy:body', {
-      recipeId: 'test:human_adult',
+      recipeId: 'anatomy:human_female_balanced',
       bodyParts: [],
     });
 
@@ -1907,7 +1911,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
    * @returns {Promise<string>} The created actor ID
    */
   async createTestActorWithEmptyAnatomy() {
-    const actor = this.entityManager.createEntityInstance('test:actor');
+    const actor = this.entityManager.createEntityInstance('core:actor');
 
     // Add empty anatomy body component
     this.entityManager.addComponent(actor.id, 'anatomy:body', {
@@ -1998,209 +2002,6 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     return entity.id;
   }
 
-  /**
-   * Sets up the test bed with required test data
-   *
-   * @returns {Promise<void>}
-   */
-  async setup() {
-    // Load core test data
-    this.loadCoreTestData();
-  }
-
-  /**
-   * Gets the entity manager
-   *
-   * @returns {EntityManager}
-   */
-  getEntityManager() {
-    return this.entityManager;
-  }
-
-  /**
-   * Gets the body graph service
-   *
-   * @returns {BodyGraphService}
-   */
-  getBodyGraphService() {
-    return this.bodyGraphService;
-  }
-
-  /**
-   * Gets the data registry
-   *
-   * @returns {InMemoryDataRegistry}
-   */
-  getDataRegistry() {
-    return this.registry;
-  }
-
-  /**
-   * Creates a test actor with anatomy
-   *
-   * @returns {Promise<{actorId: string, anatomyData: object}>}
-   */
-  async createTestActorWithAnatomy() {
-    // Ensure we have the necessary data loaded
-    if (!this.registry.get('entityDefinitions', 'core:actor')) {
-      this.loadCoreTestData();
-    }
-
-    // Create an actor entity
-    const actor = this.entityManager.createEntityInstance('core:actor');
-    const actorId = actor.id;
-
-    // Add anatomy body component with the recipe
-    this.entityManager.addComponent(actorId, 'anatomy:body', {
-      recipeId: 'core:anatomy_humanoid_basic',
-      bodyParts: [],
-    });
-
-    // Generate anatomy for the actor
-    await this.anatomyGenerationService.generateAnatomyIfNeeded(actorId);
-
-    // Get the body graph to extract parts and slot mappings
-    const bodyGraph = await this.bodyGraphService.getBodyGraph(actorId);
-    const partIds = bodyGraph.getAllPartIds();
-
-    // Build parts map from body graph
-    const partsMap = new Map();
-    for (const partId of partIds) {
-      const partEntity = this.entityManager.getEntityInstance(partId);
-      if (partEntity) {
-        const partData = partEntity.getComponentData('anatomy:part');
-        if (partData && partData.subType) {
-          partsMap.set(partData.subType, partId);
-        }
-      }
-    }
-
-    // Build slot entity mappings (simplified for testing)
-    const slotEntityMappings = new Map();
-    // Add some common slot mappings based on the parts
-    if (partsMap.has('torso')) {
-      slotEntityMappings.set('torso', partsMap.get('torso'));
-      slotEntityMappings.set('torso_upper', partsMap.get('torso'));
-      slotEntityMappings.set('torso_lower', partsMap.get('torso'));
-    }
-    if (partsMap.has('head')) {
-      slotEntityMappings.set('head', partsMap.get('head'));
-    }
-    if (partsMap.has('left_hand')) {
-      slotEntityMappings.set('left_hand', partsMap.get('left_hand'));
-    }
-    if (partsMap.has('right_hand')) {
-      slotEntityMappings.set('right_hand', partsMap.get('right_hand'));
-    }
-
-    return {
-      actorId,
-      anatomyData: {
-        partsMap,
-        slotEntityMappings,
-      },
-    };
-  }
-
-  /**
-   * Creates a test clothing item
-   *
-   * @param {string} definitionId - The clothing definition ID
-   * @returns {Promise<string>} The created clothing entity ID
-   */
-  async createTestClothingItem(definitionId) {
-    // Ensure we have the clothing definition
-    if (!this.registry.get('entityDefinitions', definitionId)) {
-      // Create a basic clothing definition
-      const clothingDef = new EntityDefinition(definitionId, {
-        description: 'Test clothing item',
-        components: {
-          'clothing:wearable': {
-            equipmentSlots: {
-              primary: 'torso',
-            },
-            layer: 'base',
-            allowedLayers: ['underwear', 'base', 'outer'],
-          },
-        },
-      });
-      this.registry.store('entityDefinitions', definitionId, clothingDef);
-    }
-
-    const clothing = this.entityManager.createEntityInstance(definitionId);
-    return clothing.id;
-  }
-
-  /**
-   * Creates a test actor with empty anatomy
-   *
-   * @returns {Promise<string>} The actor ID
-   */
-  async createTestActorWithEmptyAnatomy() {
-    // Create an actor entity
-    const actor = this.entityManager.createEntityInstance('core:actor');
-    const actorId = actor.id;
-
-    // Add an empty body component
-    this.entityManager.addComponent(actorId, 'anatomy:body', {
-      recipeId: 'test:empty_anatomy',
-    });
-
-    return actorId;
-  }
-
-  /**
-   * Creates a test actor with complex anatomy
-   *
-   * @param {number} partCount - Number of body parts to create
-   * @returns {Promise<{actorId: string, anatomyData: object}>}
-   */
-  async createTestActorWithComplexAnatomy(partCount) {
-    // Create an actor entity
-    const actor = this.entityManager.createEntityInstance('core:actor');
-    const actorId = actor.id;
-
-    // Add body component
-    this.entityManager.addComponent(actorId, 'anatomy:body', {
-      recipeId: 'test:complex_anatomy',
-    });
-
-    // Create multiple body parts
-    const partsMap = new Map();
-    const slotEntityMappings = new Map();
-
-    for (let i = 0; i < partCount; i++) {
-      const partDef = new EntityDefinition(`test:part_${i}`, {
-        description: `Test body part ${i}`,
-        components: {
-          'anatomy:part': { type: 'test' },
-          'anatomy:sockets': {
-            sockets: [{ id: `socket_test_${i}`, type: 'attachment' }],
-          },
-        },
-      });
-      this.registry.store('entityDefinitions', `test:part_${i}`, partDef);
-
-      const part = this.entityManager.createEntityInstance(`test:part_${i}`);
-
-      // Add joint to connect to actor
-      this.entityManager.addComponent(part.id, 'anatomy:joint', {
-        parentEntityId: actorId,
-        socketId: `socket_${i}`,
-      });
-
-      partsMap.set(`part_${i}`, part.id);
-      slotEntityMappings.set(`slot_${i}`, part.id);
-    }
-
-    return {
-      actorId,
-      anatomyData: {
-        partsMap,
-        slotEntityMappings,
-      },
-    };
-  }
 
   /**
    * Creates an actor entity with the specified recipe

@@ -65,6 +65,7 @@ describe('ThematicDirectionApp', () => {
     // Mock schema validator
     mockSchemaValidator = {
       addSchema: jest.fn().mockResolvedValue(undefined),
+      isSchemaLoaded: jest.fn().mockReturnValue(false),
     };
 
     // Mock LLM adapter
@@ -222,10 +223,7 @@ describe('ThematicDirectionApp', () => {
       await app.initialize();
 
       expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalled();
-      expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(4);
-      expect(fetch).toHaveBeenCalledWith(
-        'data/schemas/thematic-direction.schema.json'
-      );
+      expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(3);
       expect(fetch).toHaveBeenCalledWith(
         'data/schemas/character-concept.schema.json'
       );

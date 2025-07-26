@@ -14,6 +14,8 @@ export class InPlaceEditor {
   #validator;
   #isEditing = false;
   #editor = null;
+  #handleClickBound;
+  #handleOutsideClickBound;
 
   /**
    * @param {object} config - Configuration object
@@ -139,7 +141,7 @@ export class InPlaceEditor {
     }
     
     // Remove event listeners
-    this.#element.removeEventListener('click', this.#handleClick);
+    this.#element.removeEventListener('click', this.#handleClickBound);
   }
 
   /**
@@ -148,8 +150,8 @@ export class InPlaceEditor {
    * @private
    */
   #setupEditing() {
-    this.#handleClick = this.#handleClick.bind(this);
-    this.#element.addEventListener('click', this.#handleClick);
+    this.#handleClickBound = this.#handleClick.bind(this);
+    this.#element.addEventListener('click', this.#handleClickBound);
     this.#element.style.cursor = 'pointer';
     this.#element.title = 'Click to edit';
   }
@@ -275,7 +277,8 @@ export class InPlaceEditor {
     });
 
     // Handle clicks outside editor
-    document.addEventListener('click', this.#handleOutsideClick.bind(this), { capture: true });
+    this.#handleOutsideClickBound = this.#handleOutsideClick.bind(this);
+    document.addEventListener('click', this.#handleOutsideClickBound, { capture: true });
   }
 
   /**
@@ -373,7 +376,7 @@ export class InPlaceEditor {
 
     // Remove editor
     if (this.#editor) {
-      document.removeEventListener('click', this.#handleOutsideClick, { capture: true });
+      document.removeEventListener('click', this.#handleOutsideClickBound, { capture: true });
       this.#editor.container.remove();
       this.#editor = null;
     }

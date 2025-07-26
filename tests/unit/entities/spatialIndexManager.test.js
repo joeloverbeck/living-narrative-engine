@@ -897,6 +897,78 @@ describe('SpatialIndexManager', () => {
           expect(result.failed).toHaveLength(1);
           expect(result.failed[0].error.message).toBe('Addition failed');
         });
+
+        it('should stop on first error when stopOnError is true', async () => {
+          const addEntitySpy = jest.spyOn(spatialIndexManager, 'addEntity');
+          addEntitySpy.mockImplementationOnce(() => {
+            throw new Error('Addition failed');
+          });
+
+          const additions = [
+            { entityId: 'entity1', locationId: 'locationA' },
+            { entityId: 'entity2', locationId: 'locationB' },
+            { entityId: 'entity3', locationId: 'locationC' },
+          ];
+
+          const result = await spatialIndexManager.batchAdd(additions, { stopOnError: true });
+
+          expect(addEntitySpy).toHaveBeenCalledTimes(1);
+          expect(result.successful).toHaveLength(0);
+          expect(result.failed).toHaveLength(1);
+          expect(result.totalProcessed).toBe(1);
+        });
+
+        it('should continue processing after error when stopOnError is false', async () => {
+          const addEntitySpy = jest.spyOn(spatialIndexManager, 'addEntity');
+          addEntitySpy
+            .mockImplementationOnce(() => {
+              throw new Error('First addition failed');
+            })
+            .mockImplementationOnce(() => {
+              // Second call succeeds
+            })
+            .mockImplementationOnce(() => {
+              throw new Error('Third addition failed');
+            });
+
+          const additions = [
+            { entityId: 'entity1', locationId: 'locationA' },
+            { entityId: 'entity2', locationId: 'locationB' },
+            { entityId: 'entity3', locationId: 'locationC' },
+          ];
+
+          const result = await spatialIndexManager.batchAdd(additions, { stopOnError: false });
+
+          expect(addEntitySpy).toHaveBeenCalledTimes(3);
+          expect(result.successful).toHaveLength(1);
+          expect(result.failed).toHaveLength(2);
+          expect(result.totalProcessed).toBe(3);
+        });
+
+        it('should stop processing when stopOnError is true and previous errors exist', async () => {
+          const addEntitySpy = jest.spyOn(spatialIndexManager, 'addEntity');
+          // First call succeeds
+          addEntitySpy
+            .mockImplementationOnce(() => {
+              // Success
+            })
+            .mockImplementationOnce(() => {
+              throw new Error('Second failed');
+            });
+
+          const additions = [
+            { entityId: 'entity1', locationId: 'locationA' },
+            { entityId: 'entity2', locationId: 'locationB' },
+            { entityId: 'entity3', locationId: 'locationC' },
+          ];
+
+          const result = await spatialIndexManager.batchAdd(additions, { stopOnError: true });
+
+          expect(addEntitySpy).toHaveBeenCalledTimes(2);
+          expect(result.successful).toHaveLength(1);
+          expect(result.failed).toHaveLength(1);
+          expect(result.totalProcessed).toBe(2);
+        });
       });
 
       describe('batchRemove fallback', () => {
@@ -911,6 +983,73 @@ describe('SpatialIndexManager', () => {
 
           expect(removeSpy).toHaveBeenCalledTimes(2);
           expect(result.successful).toHaveLength(2);
+          expect(result.totalProcessed).toBe(2);
+        });
+
+        it('should stop on first error when stopOnError is true', async () => {
+          const removeSpy = jest.spyOn(spatialIndexManager, 'remove');
+          removeSpy.mockImplementationOnce(() => {
+            throw new Error('Remove failed');
+          });
+
+          const entityIds = ['entity1', 'entity2', 'entity3'];
+
+          const result = await spatialIndexManager.batchRemove(entityIds, { stopOnError: true });
+
+          expect(removeSpy).toHaveBeenCalledTimes(1);
+          expect(result.successful).toHaveLength(0);
+          expect(result.failed).toHaveLength(1);
+          expect(result.totalProcessed).toBe(1);
+          expect(result.failed[0].error.message).toBe('Remove failed');
+        });
+
+        it('should continue processing after error when stopOnError is false', async () => {
+          spatialIndexManager.addEntity('entity1', 'locationA');
+          spatialIndexManager.addEntity('entity2', 'locationB');
+          spatialIndexManager.addEntity('entity3', 'locationC');
+
+          const removeSpy = jest.spyOn(spatialIndexManager, 'remove');
+          removeSpy
+            .mockImplementationOnce(() => {
+              throw new Error('First remove failed');
+            })
+            .mockImplementationOnce(() => {
+              return true; // Second succeeds
+            })
+            .mockImplementationOnce(() => {
+              throw new Error('Third remove failed');
+            });
+
+          const entityIds = ['entity1', 'entity2', 'entity3'];
+
+          const result = await spatialIndexManager.batchRemove(entityIds, { stopOnError: false });
+
+          expect(removeSpy).toHaveBeenCalledTimes(3);
+          expect(result.successful).toHaveLength(1);
+          expect(result.failed).toHaveLength(2);
+          expect(result.totalProcessed).toBe(3);
+        });
+
+        it('should stop processing when stopOnError is true and previous errors exist', async () => {
+          spatialIndexManager.addEntity('entity1', 'locationA');
+          spatialIndexManager.addEntity('entity2', 'locationB');
+
+          const removeSpy = jest.spyOn(spatialIndexManager, 'remove');
+          removeSpy
+            .mockImplementationOnce(() => {
+              return true; // First succeeds
+            })
+            .mockImplementationOnce(() => {
+              throw new Error('Second remove failed');
+            });
+
+          const entityIds = ['entity1', 'entity2', 'entity3'];
+
+          const result = await spatialIndexManager.batchRemove(entityIds, { stopOnError: true });
+
+          expect(removeSpy).toHaveBeenCalledTimes(2);
+          expect(result.successful).toHaveLength(1);
+          expect(result.failed).toHaveLength(1);
           expect(result.totalProcessed).toBe(2);
         });
       });
@@ -934,6 +1073,109 @@ describe('SpatialIndexManager', () => {
           expect(result.successful).toHaveLength(1);
           expect(result.totalProcessed).toBe(1);
         });
+
+        it('should stop on first error when stopOnError is true', async () => {
+          const moveSpy = jest.spyOn(spatialIndexManager, 'move');
+          moveSpy.mockImplementationOnce(() => {
+            throw new Error('Move failed');
+          });
+
+          const updates = [
+            {
+              entityId: 'entity1',
+              oldLocationId: 'locationA',
+              newLocationId: 'locationB',
+            },
+            {
+              entityId: 'entity2',
+              oldLocationId: 'locationC',
+              newLocationId: 'locationD',
+            },
+          ];
+
+          const result = await spatialIndexManager.batchMove(updates, { stopOnError: true });
+
+          expect(moveSpy).toHaveBeenCalledTimes(1);
+          expect(result.successful).toHaveLength(0);
+          expect(result.failed).toHaveLength(1);
+          expect(result.totalProcessed).toBe(1);
+          expect(result.failed[0].error.message).toBe('Move failed');
+        });
+
+        it('should continue processing after error when stopOnError is false', async () => {
+          const moveSpy = jest.spyOn(spatialIndexManager, 'move');
+          moveSpy
+            .mockImplementationOnce(() => {
+              throw new Error('First move failed');
+            })
+            .mockImplementationOnce(() => {
+              return true; // Second succeeds
+            })
+            .mockImplementationOnce(() => {
+              throw new Error('Third move failed');
+            });
+
+          const updates = [
+            {
+              entityId: 'entity1',
+              oldLocationId: 'locationA',
+              newLocationId: 'locationB',
+            },
+            {
+              entityId: 'entity2',
+              oldLocationId: 'locationC',
+              newLocationId: 'locationD',
+            },
+            {
+              entityId: 'entity3',
+              oldLocationId: 'locationE',
+              newLocationId: 'locationF',
+            },
+          ];
+
+          const result = await spatialIndexManager.batchMove(updates, { stopOnError: false });
+
+          expect(moveSpy).toHaveBeenCalledTimes(3);
+          expect(result.successful).toHaveLength(1);
+          expect(result.failed).toHaveLength(2);
+          expect(result.totalProcessed).toBe(3);
+        });
+
+        it('should stop processing when stopOnError is true and previous errors exist', async () => {
+          const moveSpy = jest.spyOn(spatialIndexManager, 'move');
+          moveSpy
+            .mockImplementationOnce(() => {
+              return true; // First succeeds
+            })
+            .mockImplementationOnce(() => {
+              throw new Error('Second move failed');
+            });
+
+          const updates = [
+            {
+              entityId: 'entity1',
+              oldLocationId: 'locationA',
+              newLocationId: 'locationB',
+            },
+            {
+              entityId: 'entity2',
+              oldLocationId: 'locationC',
+              newLocationId: 'locationD',
+            },
+            {
+              entityId: 'entity3',
+              oldLocationId: 'locationE',
+              newLocationId: 'locationF',
+            },
+          ];
+
+          const result = await spatialIndexManager.batchMove(updates, { stopOnError: true });
+
+          expect(moveSpy).toHaveBeenCalledTimes(2);
+          expect(result.successful).toHaveLength(1);
+          expect(result.failed).toHaveLength(1);
+          expect(result.totalProcessed).toBe(2);
+        });
       });
 
       describe('rebuild fallback', () => {
@@ -953,6 +1195,84 @@ describe('SpatialIndexManager', () => {
           expect(result.successful).toHaveLength(2);
           expect(result.totalProcessed).toBe(2);
         });
+
+        it('should stop on first error when stopOnError is true', async () => {
+          const clearIndexSpy = jest.spyOn(spatialIndexManager, 'clearIndex');
+          const addEntitySpy = jest.spyOn(spatialIndexManager, 'addEntity');
+          addEntitySpy.mockImplementationOnce(() => {
+            throw new Error('Add failed during rebuild');
+          });
+
+          const entityLocations = [
+            { entityId: 'entity1', locationId: 'locationA' },
+            { entityId: 'entity2', locationId: 'locationB' },
+            { entityId: 'entity3', locationId: 'locationC' },
+          ];
+
+          const result = await spatialIndexManager.rebuild(entityLocations, { stopOnError: true });
+
+          expect(clearIndexSpy).toHaveBeenCalledTimes(1);
+          expect(addEntitySpy).toHaveBeenCalledTimes(1);
+          expect(result.successful).toHaveLength(0);
+          expect(result.failed).toHaveLength(1);
+          expect(result.totalProcessed).toBe(1);
+          expect(result.failed[0].error.message).toBe('Add failed during rebuild');
+        });
+
+        it('should continue processing after error when stopOnError is false', async () => {
+          const clearIndexSpy = jest.spyOn(spatialIndexManager, 'clearIndex');
+          const addEntitySpy = jest.spyOn(spatialIndexManager, 'addEntity');
+          addEntitySpy
+            .mockImplementationOnce(() => {
+              throw new Error('First add failed');
+            })
+            .mockImplementationOnce(() => {
+              // Second succeeds
+            })
+            .mockImplementationOnce(() => {
+              throw new Error('Third add failed');
+            });
+
+          const entityLocations = [
+            { entityId: 'entity1', locationId: 'locationA' },
+            { entityId: 'entity2', locationId: 'locationB' },
+            { entityId: 'entity3', locationId: 'locationC' },
+          ];
+
+          const result = await spatialIndexManager.rebuild(entityLocations, { stopOnError: false });
+
+          expect(clearIndexSpy).toHaveBeenCalledTimes(1);
+          expect(addEntitySpy).toHaveBeenCalledTimes(3);
+          expect(result.successful).toHaveLength(1);
+          expect(result.failed).toHaveLength(2);
+          expect(result.totalProcessed).toBe(3);
+        });
+
+        it('should stop processing when stopOnError is true and previous errors exist', async () => {
+          const clearIndexSpy = jest.spyOn(spatialIndexManager, 'clearIndex');
+          const addEntitySpy = jest.spyOn(spatialIndexManager, 'addEntity');
+          addEntitySpy
+            .mockImplementationOnce(() => {
+              // First succeeds
+            })
+            .mockImplementationOnce(() => {
+              throw new Error('Second add failed');
+            });
+
+          const entityLocations = [
+            { entityId: 'entity1', locationId: 'locationA' },
+            { entityId: 'entity2', locationId: 'locationB' },
+            { entityId: 'entity3', locationId: 'locationC' },
+          ];
+
+          const result = await spatialIndexManager.rebuild(entityLocations, { stopOnError: true });
+
+          expect(clearIndexSpy).toHaveBeenCalledTimes(1);
+          expect(addEntitySpy).toHaveBeenCalledTimes(2);
+          expect(result.successful).toHaveLength(1);
+          expect(result.failed).toHaveLength(1);
+          expect(result.totalProcessed).toBe(2);
+        });
       });
     });
 
@@ -966,6 +1286,22 @@ describe('SpatialIndexManager', () => {
         spatialIndexManager.enableBatchOperations = true;
         expect(() => spatialIndexManager.batchAdd([])).not.toThrow();
       });
+    });
+  });
+
+  //------------------------------------------
+  // onInvalidId Tests
+  //------------------------------------------
+  describe('onInvalidId', () => {
+    it('should log a warning with the correct format when called', () => {
+      const invalidId = 123; // Invalid non-string ID
+      const operation = 'testOperation';
+      
+      spatialIndexManager.onInvalidId(invalidId, operation);
+      
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        `SpatialIndexManager.${operation}: Invalid id (${invalidId}). Skipping.`
+      );
     });
   });
 });

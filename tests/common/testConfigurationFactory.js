@@ -5,7 +5,7 @@
  * NOTE: For new tests, consider using the test module pattern with TestModuleBuilder
  * or createTestModules() for the simplest testing experience. The test module pattern
  * provides a fluent API with presets and intelligent defaults.
- * @see tests/common/builders/testModuleBuilder.js
+ * @see tests/common/testing/builders/testModuleBuilder.js
  * @see src/testing/facades/testingFacadeRegistrations.js
  */
 
@@ -13,8 +13,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import { TestPathConfiguration } from './testPathConfiguration.js';
-import { TestModuleBuilder } from './builders/testModuleBuilder.js';
-import { TestConfigurationValidator } from './builders/validation/testConfigurationValidator.js';
+import { TestModuleBuilder } from './testing/builders/testModuleBuilder.js';
+import { TestConfigurationValidator } from './testing/builders/validation/testConfigurationValidator.js';
 
 /**
  * @class TestConfigurationFactory

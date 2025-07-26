@@ -4,7 +4,40 @@
   "title": "Action Schema",
   "description": "Defines the structure for an Action Definition, used by the Dynamic Action Discovery system to determine valid commands based on game state. It specifies targeting and JSON Logic prerequisites, and output format. Prerequisites are now handled solely by JSON Logic.",
   "type": "object",
-  "definitions": {},
+  "definitions": {
+    "targetDefinition": {
+      "type": "object",
+      "description": "Defines a target specification for multi-target actions",
+      "properties": {
+        "scope": {
+          "type": "string",
+          "description": "Scope ID or inline scope expression that defines where to look for this target",
+          "pattern": "^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$|^(none|self)$|^[^:]+$"
+        },
+        "placeholder": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+          "description": "Template placeholder name without braces (e.g., 'target', 'item', 'destination')"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable target description for UI/documentation purposes"
+        },
+        "contextFrom": {
+          "type": "string",
+          "enum": ["primary"],
+          "description": "Use another target as context for scope evaluation (currently only 'primary' supported)"
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this target is optional (action available even if no targets found)"
+        }
+      },
+      "required": ["scope", "placeholder"],
+      "additionalProperties": false
+    }
+  },
   "properties": {
     "$schema": {
       "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
@@ -19,10 +52,48 @@
       "type": "string",
       "description": "Optional. Human-readable name or verb for the action (e.g., 'Eat', 'Attack', 'Go'). This is the primary display name for the action in UI elements like buttons and tooltips."
     },
+    "targets": {
+      "description": "Target configuration for the action - supports both legacy single-target and new multi-target formats",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Legacy single-target scope (backward compatibility)",
+          "pattern": "^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$|^(none|self)$",
+          "examples": ["core:followers", "core:environment", "core:directions", "none", "self"]
+        },
+        {
+          "type": "object",
+          "description": "Multi-target configuration with named target roles",
+          "properties": {
+            "primary": {
+              "$ref": "#/definitions/targetDefinition",
+              "description": "Primary target (required for multi-target actions)"
+            },
+            "secondary": {
+              "$ref": "#/definitions/targetDefinition",
+              "description": "Secondary target (optional)"
+            },
+            "tertiary": {
+              "$ref": "#/definitions/targetDefinition",
+              "description": "Tertiary target (optional)"
+            }
+          },
+          "required": ["primary"],
+          "additionalProperties": false
+        }
+      ]
+    },
     "scope": {
       "type": "string",
-      "description": "Required. The namescaped DSL scope that defines where to look for potential targets for this action. Notes: inline scopes in the DSL are not supported.",
-      "examples": ["core:followers", "core:environment", "core:directions"]
+      "description": "DEPRECATED: Use 'targets' instead. Legacy support only. The namespaced DSL scope that defines where to look for potential targets for this action.",
+      "deprecated": true,
+      "pattern": "^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$|^(none|self)$",
+      "examples": ["core:followers", "core:environment", "core:directions", "none", "self"]
+    },
+    "generateCombinations": {
+      "type": "boolean",
+      "default": false,
+      "description": "Generate all target combinations as separate actions (cartesian product). Only applicable for multi-target actions."
     },
     "required_components": {
       "type": "object",
@@ -78,7 +149,134 @@
       "description": "Required. Text template for generating the command string output, using placeholders like {target} (e.g., 'eat {target}', 'wait')."
     }
   },
-  "required": ["id", "description", "name", "scope", "template"],
+  "required": ["id", "description", "name", "template"],
+  "anyOf": [
+    {
+      "description": "Action using new 'targets' property (cannot have 'scope')",
+      "required": ["targets"],
+      "not": {
+        "properties": {
+          "scope": true
+        },
+        "required": ["scope"]
+      }
+    },
+    {
+      "description": "Action using legacy 'scope' property (cannot have 'targets')",
+      "required": ["scope"],
+      "not": {
+        "properties": {
+          "targets": true
+        },
+        "required": ["targets"]
+      }
+    }
+  ],
   "additionalProperties": true,
-  "$comment": "Allows additional properties for future extensions like action costs or effects definitions."
+  "$comment": "Allows additional properties for future extensions like action costs or effects definitions.",
+  "examples": [
+    {
+      "$comment": "Legacy single-target action using deprecated 'scope' property",
+      "id": "core:eat",
+      "name": "Eat",
+      "description": "Consume an edible item from your inventory",
+      "scope": "core:edible_items",
+      "template": "eat {target}",
+      "prerequisites": []
+    },
+    {
+      "$comment": "Legacy single-target action using new 'targets' string format",
+      "id": "core:follow",
+      "name": "Follow",
+      "description": "Follow another character",
+      "targets": "core:potential_leaders",
+      "template": "follow {target}",
+      "prerequisites": [
+        {
+          "logic": { "condition_ref": "core:actor-can-move" },
+          "failure_message": "You cannot move without functioning legs."
+        }
+      ]
+    },
+    {
+      "$comment": "Multi-target action with two targets",
+      "id": "combat:throw",
+      "name": "Throw",
+      "description": "Throw an item at a target",
+      "targets": {
+        "primary": {
+          "scope": "combat:throwable_items",
+          "placeholder": "item",
+          "description": "Item to throw"
+        },
+        "secondary": {
+          "scope": "combat:valid_targets",
+          "placeholder": "target",
+          "description": "Target to hit"
+        }
+      },
+      "template": "throw {item} at {target}",
+      "generateCombinations": true,
+      "prerequisites": []
+    },
+    {
+      "$comment": "Multi-target action with contextual dependency",
+      "id": "interaction:give",
+      "name": "Give",
+      "description": "Give an item to another character",
+      "targets": {
+        "primary": {
+          "scope": "inventory:transferable_items",
+          "placeholder": "item",
+          "description": "Item to give away"
+        },
+        "secondary": {
+          "scope": "characters:nearby",
+          "placeholder": "recipient",
+          "description": "Character to receive the item",
+          "contextFrom": "primary"
+        }
+      },
+      "template": "give {item} to {recipient}",
+      "generateCombinations": false,
+      "prerequisites": [
+        {
+          "logic": { "condition_ref": "inventory:has-items" },
+          "failure_message": "You have nothing to give."
+        }
+      ]
+    },
+    {
+      "$comment": "Multi-target action with optional tertiary target",
+      "id": "magic:cast_spell",
+      "name": "Cast Spell",
+      "description": "Cast a spell with optional focus item",
+      "targets": {
+        "primary": {
+          "scope": "magic:known_spells",
+          "placeholder": "spell",
+          "description": "Spell to cast"
+        },
+        "secondary": {
+          "scope": "magic:spell_targets",
+          "placeholder": "target",
+          "description": "Target of the spell"
+        },
+        "tertiary": {
+          "scope": "magic:focus_items",
+          "placeholder": "focus",
+          "description": "Optional magical focus item",
+          "optional": true
+        }
+      },
+      "template": "cast {spell} on {target} using {focus}",
+      "generateCombinations": false,
+      "prerequisites": [
+        {
+          "logic": { "condition_ref": "magic:has-mana" },
+          "failure_message": "You don't have enough mana to cast spells."
+        }
+      ]
+    }
+  ]
 }

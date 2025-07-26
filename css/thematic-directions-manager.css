@@ -17,6 +17,8 @@
 
 #thematic-directions-manager-container {
   /* Inherits from .cb-page-container */
+  overflow: hidden; /* Prevent content from escaping bounds */
+  box-sizing: border-box;
 }
 
 .thematic-directions-manager-main {
@@ -74,11 +76,12 @@
 
 #directions-container {
   flex: 1;
-  height: calc(100vh - 250px);
+  height: calc(100vh - 280px); /* Proper spacing for header/footer/padding */
   min-height: 400px;
   max-height: 800px;
   overflow-y: auto;
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Custom scrollbar styling */

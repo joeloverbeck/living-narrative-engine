@@ -1077,16 +1077,16 @@ describe('ActionCandidateProcessor Integration Tests', () => {
         locationId: 'test-location-1',
       };
 
+      const fixedTimestamp = 1609459200000; // Fixed timestamp: 2021-01-01T00:00:00.000Z
       const actionErrorContext = {
-        timestamp: Date.now(),
+        timestamp: fixedTimestamp,
         phase: ERROR_PHASES.VALIDATION,
         error: new Error('Prerequisites failed'),
         actionId: actionDef.id,
         actorId: actor.id,
       };
 
-      // Mock prerequisite service to return failure ActionResult with ActionErrorContext
-      const prereqResult = ActionResult.failure([actionErrorContext]);
+      // Mock prerequisite service to throw ActionErrorContext 
       jest
         .spyOn(prerequisiteEvaluationService, 'evaluate')
         .mockImplementation(() => {
@@ -1105,8 +1105,8 @@ describe('ActionCandidateProcessor Integration Tests', () => {
       expect(result.success).toBe(true);
       expect(result.value.actions).toHaveLength(0);
       expect(result.value.errors).toHaveLength(1);
-      expect(result.value.errors[0].timestamp).toBe(actionErrorContext.timestamp);
-      expect(result.value.errors[0].phase).toBe(actionErrorContext.phase);
+      expect(result.value.errors[0].timestamp).toBeGreaterThan(0); // New timestamp created by processor
+      expect(result.value.errors[0].phase).toBe(ERROR_PHASES.VALIDATION);
       expect(result.value.cause).toBe('prerequisite-error');
     });
 

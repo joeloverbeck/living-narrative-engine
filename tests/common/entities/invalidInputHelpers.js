@@ -5,7 +5,7 @@
 /* eslint-env jest */
 /* global it, expect */
 
-import { TestData } from './index.js';
+import { TestData } from './testData.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 /**
