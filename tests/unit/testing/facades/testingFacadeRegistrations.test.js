@@ -7,16 +7,13 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import {
   registerTestingFacades,
   createMockFacades,
-  createTestModules,
 } from '../../../../src/testing/facades/testingFacadeRegistrations.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { LLMServiceFacade } from '../../../../src/testing/facades/llmServiceFacade.js';
 import { ActionServiceFacade } from '../../../../src/testing/facades/actionServiceFacade.js';
 import { EntityServiceFacade } from '../../../../src/testing/facades/entityServiceFacade.js';
 import { TurnExecutionFacade } from '../../../../src/testing/facades/turnExecutionFacade.js';
-import { TurnExecutionTestModule } from '../../../common/builders/modules/turnExecutionTestModule.js';
-import { ActionProcessingTestModule } from '../../../common/builders/modules/actionProcessingTestModule.js';
-import { TestScenarioPresets } from '../../../common/builders/presets/testScenarioPresets.js';
+// Test module imports removed - they're now in tests/common/testing/builders/
 
 describe('testingFacadeRegistrations', () => {
   describe('registerTestingFacades', () => {
@@ -493,111 +490,5 @@ describe('testingFacadeRegistrations', () => {
     });
   });
 
-  describe('createTestModules', () => {
-    it('should return an object with forTurnExecution and forActionProcessing functions', () => {
-      const modules = createTestModules(jest.fn);
-
-      expect(modules).toHaveProperty('forTurnExecution');
-      expect(modules).toHaveProperty('forActionProcessing');
-      expect(modules).toHaveProperty('scenarios');
-      expect(typeof modules.forTurnExecution).toBe('function');
-      expect(typeof modules.forActionProcessing).toBe('function');
-    });
-
-    it('should export createTestModules function directly', () => {
-      // Import the function directly to ensure it's exported
-      const { createTestModules: directImport } = require('../../../../src/testing/facades/testingFacadeRegistrations.js');
-      expect(directImport).toBeDefined();
-      expect(typeof directImport).toBe('function');
-      
-      // Test that it works
-      const modules = directImport(jest.fn);
-      expect(modules).toHaveProperty('forTurnExecution');
-    });
-
-    it('should create TurnExecutionTestModule instance', () => {
-      const modules = createTestModules(jest.fn);
-      const turnModule = modules.forTurnExecution();
-
-      expect(turnModule).toBeInstanceOf(TurnExecutionTestModule);
-    });
-
-    it('should create ActionProcessingTestModule instance', () => {
-      const modules = createTestModules(jest.fn);
-      const actionModule = modules.forActionProcessing();
-
-      expect(actionModule).toBeInstanceOf(ActionProcessingTestModule);
-    });
-
-    it('should provide scenario presets', () => {
-      const modules = createTestModules(jest.fn);
-
-      expect(modules.scenarios).toHaveProperty('combat');
-      expect(modules.scenarios).toHaveProperty('socialInteraction');
-      expect(modules.scenarios).toHaveProperty('exploration');
-      expect(modules.scenarios).toHaveProperty('performance');
-
-      // Test that each scenario returns a function
-      expect(typeof modules.scenarios.combat).toBe('function');
-      expect(typeof modules.scenarios.socialInteraction).toBe('function');
-      expect(typeof modules.scenarios.exploration).toBe('function');
-      expect(typeof modules.scenarios.performance).toBe('function');
-    });
-
-    it('should call TestScenarioPresets methods when scenario functions are invoked', () => {
-      // Mock the TestScenarioPresets static methods
-      const combatSpy = jest.spyOn(TestScenarioPresets, 'combat').mockReturnValue('combat-preset');
-      const socialSpy = jest.spyOn(TestScenarioPresets, 'socialInteraction').mockReturnValue('social-preset');
-      const explorationSpy = jest.spyOn(TestScenarioPresets, 'exploration').mockReturnValue('exploration-preset');
-      const performanceSpy = jest.spyOn(TestScenarioPresets, 'performance').mockReturnValue('performance-preset');
-
-      const modules = createTestModules(jest.fn);
-
-      // Call each scenario function
-      const combatResult = modules.scenarios.combat();
-      const socialResult = modules.scenarios.socialInteraction();
-      const explorationResult = modules.scenarios.exploration();
-      const performanceResult = modules.scenarios.performance();
-
-      // Verify the TestScenarioPresets methods were called
-      expect(combatSpy).toHaveBeenCalled();
-      expect(socialSpy).toHaveBeenCalled();
-      expect(explorationSpy).toHaveBeenCalled();
-      expect(performanceSpy).toHaveBeenCalled();
-
-      // Verify return values
-      expect(combatResult).toBe('combat-preset');
-      expect(socialResult).toBe('social-preset');
-      expect(explorationResult).toBe('exploration-preset');
-      expect(performanceResult).toBe('performance-preset');
-
-      // Restore mocks
-      combatSpy.mockRestore();
-      socialSpy.mockRestore();
-      explorationSpy.mockRestore();
-      performanceSpy.mockRestore();
-    });
-
-    it('should work with non-jest mock functions', () => {
-      const simpleMockFn = () => () => {};
-      const modules = createTestModules(simpleMockFn);
-
-      expect(modules.forTurnExecution).toBeDefined();
-      expect(modules.forActionProcessing).toBeDefined();
-      expect(modules.scenarios).toBeDefined();
-    });
-
-    it('should pass mock function to test modules', () => {
-      const customMockFn = jest.fn(() => jest.fn());
-      const modules = createTestModules(customMockFn);
-
-      // Create modules to verify they receive the mock function
-      const turnModule = modules.forTurnExecution();
-      const actionModule = modules.forActionProcessing();
-
-      // The modules should be created successfully with the custom mock function
-      expect(turnModule).toBeDefined();
-      expect(actionModule).toBeDefined();
-    });
-  });
+  // createTestModules tests removed - function moved to tests/common/testing/builders/ to avoid src->test dependencies
 });

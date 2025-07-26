@@ -47,6 +47,8 @@
   flex-direction: column;
   background: var(--bg-primary);
   color: var(--text-primary);
+  overflow: hidden; /* Prevent content from escaping bounds */
+  box-sizing: border-box;
 }
 
 .thematic-direction-header {
@@ -311,12 +313,13 @@
 /* CRITICAL FIX: Make the directions container scrollable */
 #directions-container {
   flex: 1;
-  height: calc(100vh - 250px); /* Adjust based on header/footer */
+  height: calc(100vh - 280px); /* Proper spacing for header/footer/padding */
   min-height: 400px;
   max-height: 800px;
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
+  box-sizing: border-box;
 }
 
 /* Ensure results state fills container */

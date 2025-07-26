@@ -436,7 +436,8 @@ describe('ThematicDirectionsManagerController', () => {
 
       expect(mockCharacterBuilderService.initialize).toHaveBeenCalled();
       expect(mockCharacterBuilderService.getAllThematicDirectionsWithConcepts).toHaveBeenCalled();
-      expect(mockCharacterBuilderService.getAllCharacterConcepts).toHaveBeenCalled();
+      // Note: getAllCharacterConcepts is no longer called as we extract concepts from directions
+      expect(mockCharacterBuilderService.getAllCharacterConcepts).not.toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ThematicDirectionsManagerController: Successfully initialized'
       );
@@ -474,7 +475,8 @@ describe('ThematicDirectionsManagerController', () => {
 
     it('should load directions data successfully', () => {
       expect(mockCharacterBuilderService.getAllThematicDirectionsWithConcepts).toHaveBeenCalled();
-      expect(mockCharacterBuilderService.getAllCharacterConcepts).toHaveBeenCalled();
+      // Note: getAllCharacterConcepts is no longer called as we extract concepts from directions
+      expect(mockCharacterBuilderService.getAllCharacterConcepts).not.toHaveBeenCalled();
       // Check for either success message - the controller logs both initialization and data loading
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ThematicDirectionsManagerController: Successfully initialized'
@@ -508,6 +510,83 @@ describe('ThematicDirectionsManagerController', () => {
     });
   });
 
+  describe('Concept Filtering Behavior', () => {
+    it('should only load concepts that have associated directions into dropdown', async () => {
+      // Create a fresh controller with specific test data
+      const testDirectionsData = [
+        { direction: { id: 'dir1' }, concept: { id: 'concept1', concept: 'First concept' } },
+        { direction: { id: 'dir2' }, concept: { id: 'concept2', concept: 'Second concept' } },
+        { direction: { id: 'dir3' }, concept: { id: 'concept1', concept: 'First concept' } }, // Duplicate
+        { direction: { id: 'dir4' }, concept: null }, // Orphaned direction
+      ];
+
+      // Mock the service to return our test data
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(testDirectionsData);
+
+      const testController = new ThematicDirectionsManagerController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      await testController.initialize();
+
+      // Verify that only unique concepts with directions were passed to dropdown
+      const loadItemsCalls = mockPreviousItemsDropdown.loadItems.mock.calls;
+      expect(loadItemsCalls).toHaveLength(1);
+      
+      const conceptsPassedToDropdown = loadItemsCalls[0][0];
+      expect(conceptsPassedToDropdown).toHaveLength(2); // Only 2 unique concepts
+      expect(conceptsPassedToDropdown.map(c => c.id)).toEqual(['concept1', 'concept2']);
+    });
+
+    it('should handle all orphaned directions scenario', async () => {
+      // Test data with only orphaned directions
+      const orphanedDirectionsData = [
+        { direction: { id: 'dir1' }, concept: null },
+        { direction: { id: 'dir2' }, concept: null },
+      ];
+
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(orphanedDirectionsData);
+
+      const testController = new ThematicDirectionsManagerController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      await testController.initialize();
+
+      // Verify empty concept list was passed to dropdown
+      const loadItemsCalls = mockPreviousItemsDropdown.loadItems.mock.calls;
+      expect(loadItemsCalls).toHaveLength(1);
+      
+      const conceptsPassedToDropdown = loadItemsCalls[0][0];
+      expect(conceptsPassedToDropdown).toHaveLength(0);
+    });
+
+    it('should handle empty directions data', async () => {
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([]);
+
+      const testController = new ThematicDirectionsManagerController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      await testController.initialize();
+
+      // Verify empty concept list was passed to dropdown
+      const loadItemsCalls = mockPreviousItemsDropdown.loadItems.mock.calls;
+      expect(loadItemsCalls).toHaveLength(1);
+      
+      const conceptsPassedToDropdown = loadItemsCalls[0][0];
+      expect(conceptsPassedToDropdown).toHaveLength(0);
+    });
+  });
 
   describe('Direction Deletion', () => {
     beforeEach(async () => {
@@ -1019,7 +1098,8 @@ describe('ThematicDirectionsManagerController', () => {
       // Verify initialization calls
       expect(mockUIStateManager.showState).toHaveBeenCalledWith('loading');
       expect(mockCharacterBuilderService.getAllThematicDirectionsWithConcepts).toHaveBeenCalled();
-      expect(mockCharacterBuilderService.getAllCharacterConcepts).toHaveBeenCalled();
+      // Note: getAllCharacterConcepts is no longer called as we extract concepts from directions
+      expect(mockCharacterBuilderService.getAllCharacterConcepts).not.toHaveBeenCalled();
       
       // Simulate successful data load
       expect(mockPreviousItemsDropdown.loadItems).toHaveBeenCalledWith([mockConcept]);

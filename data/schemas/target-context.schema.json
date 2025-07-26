@@ -1,0 +1,187 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/target-context.schema.json",
+  "title": "Target Context Schema",
+  "description": "Defines the context object structure passed to scope DSL expressions during multi-target resolution. This context enables dependent target resolution where secondary targets can use primary target data.",
+  "type": "object",
+  "properties": {
+    "actor": {
+      "type": "object",
+      "description": "The entity performing the action. Always available in scope context.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the actor entity"
+        },
+        "components": {
+          "type": "object",
+          "description": "All components attached to the actor entity",
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "components"]
+    },
+    
+    "target": {
+      "type": "object",
+      "description": "Primary target entity when contextFrom='primary' is specified. Only available in secondary/tertiary target resolution.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the target entity"
+        },
+        "components": {
+          "type": "object",
+          "description": "All components attached to the target entity",
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "components"]
+    },
+    
+    "targets": {
+      "type": "object",
+      "description": "All resolved targets keyed by their definition name (primary, secondary, etc). Available during resolution of subsequent targets.",
+      "additionalProperties": {
+        "type": "array",
+        "description": "Array of entity objects that matched the scope for this target definition",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier of the resolved entity"
+            },
+            "components": {
+              "type": "object",
+              "description": "All components attached to the resolved entity",
+              "additionalProperties": true
+            }
+          },
+          "required": ["id", "components"]
+        }
+      }
+    },
+    
+    "location": {
+      "type": "object",
+      "description": "The location entity where the action is taking place. Usually the actor's current location.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the location entity"
+        },
+        "components": {
+          "type": "object",
+          "description": "All components attached to the location entity",
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "components"]
+    },
+    
+    "game": {
+      "type": "object",
+      "description": "Global game state object providing access to game-wide data",
+      "properties": {
+        "turnNumber": {
+          "type": "integer",
+          "description": "Current game turn number",
+          "minimum": 0
+        },
+        "timeOfDay": {
+          "type": "string",
+          "description": "Current time of day in the game world",
+          "enum": ["dawn", "morning", "noon", "afternoon", "evening", "night", "midnight"]
+        },
+        "weather": {
+          "type": "string",
+          "description": "Current weather conditions"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  
+  "required": ["actor", "location", "game"],
+  
+  "examples": [
+    {
+      "$comment": "Context for primary target resolution",
+      "actor": {
+        "id": "player_123",
+        "components": {
+          "core:inventory": {
+            "items": ["sword_456", "potion_789"]
+          }
+        }
+      },
+      "location": {
+        "id": "room_001",
+        "components": {
+          "core:description": {
+            "name": "Town Square"
+          }
+        }
+      },
+      "game": {
+        "turnNumber": 42,
+        "timeOfDay": "afternoon"
+      }
+    },
+    {
+      "$comment": "Context for secondary target resolution with primary target",
+      "actor": {
+        "id": "player_123",
+        "components": {}
+      },
+      "target": {
+        "id": "npc_456",
+        "components": {
+          "clothing:equipment": {
+            "equipped": {
+              "torso_upper": {
+                "outer": "jacket_001"
+              }
+            }
+          }
+        }
+      },
+      "targets": {
+        "primary": [
+          {
+            "id": "npc_456",
+            "components": {}
+          }
+        ]
+      },
+      "location": {
+        "id": "room_001",
+        "components": {}
+      },
+      "game": {
+        "turnNumber": 42
+      }
+    }
+  ],
+  
+  "definitions": {
+    "entityReference": {
+      "type": "object",
+      "description": "Standard entity reference structure used throughout the context",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "description": "Entity identifier"
+        },
+        "components": {
+          "type": "object",
+          "description": "Component data keyed by component ID",
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "components"]
+    }
+  }
+}

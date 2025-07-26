@@ -127,29 +127,36 @@ class ThematicDirectionApp {
    */
   async #loadCharacterSpecificSchemas(schemaValidator) {
     try {
-      // Load thematic direction schema first (it has no dependencies)
-      const directionSchemaResponse = await fetch(
-        'data/schemas/thematic-direction.schema.json'
-      );
-      if (!directionSchemaResponse.ok) {
-        throw new Error(
-          `Failed to load thematic direction schema: ${directionSchemaResponse.status}`
-        );
+      // thematic-direction schema is already loaded by SchemaLoader (it's in staticConfiguration.js)
+      // We only need to load character-concept schema as it's not in the standard list
+      
+      // Check if character-concept schema is already loaded
+      try {
+        // First check if schema already exists by checking if it's loaded
+        const isConceptSchemaLoaded = schemaValidator.isSchemaLoaded('schema://living-narrative-engine/character-concept.schema.json');
+        if (isConceptSchemaLoaded) {
+          this.#logger.debug('ThematicDirectionApp: character-concept schema already loaded');
+        } else {
+          // Load character concept schema second (it references thematic-direction)
+          const conceptSchemaResponse = await fetch(
+            'data/schemas/character-concept.schema.json'
+          );
+          if (!conceptSchemaResponse.ok) {
+            throw new Error(
+              `Failed to load character concept schema: ${conceptSchemaResponse.status}`
+            );
+          }
+          const conceptSchema = await conceptSchemaResponse.json();
+          await schemaValidator.addSchema(conceptSchema, 'character-concept');
+        }
+      } catch (error) {
+        // If schema already exists, that's fine - just log it
+        if (error.message?.includes('already exists')) {
+          this.#logger.debug('ThematicDirectionApp: character-concept schema already loaded');
+        } else {
+          throw error;
+        }
       }
-      const directionSchema = await directionSchemaResponse.json();
-      await schemaValidator.addSchema(directionSchema, 'thematic-direction');
-
-      // Load character concept schema second (it references thematic-direction)
-      const conceptSchemaResponse = await fetch(
-        'data/schemas/character-concept.schema.json'
-      );
-      if (!conceptSchemaResponse.ok) {
-        throw new Error(
-          `Failed to load character concept schema: ${conceptSchemaResponse.status}`
-        );
-      }
-      const conceptSchema = await conceptSchemaResponse.json();
-      await schemaValidator.addSchema(conceptSchema, 'character-concept');
 
       this.#logger.debug('ThematicDirectionApp: Loaded JSON schemas');
     } catch (error) {

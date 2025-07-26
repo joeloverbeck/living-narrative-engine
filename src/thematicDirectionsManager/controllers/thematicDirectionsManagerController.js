@@ -7,6 +7,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import { UIStateManager } from '../../shared/characterBuilder/uiStateManager.js';
 import { PreviousItemsDropdown } from '../../shared/characterBuilder/previousItemsDropdown.js';
 import { FormValidationHelper } from '../../shared/characterBuilder/formValidationHelper.js';
+import { InPlaceEditor } from '../../shared/characterBuilder/inPlaceEditor.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -14,7 +15,7 @@ import { FormValidationHelper } from '../../shared/characterBuilder/formValidati
  * @typedef {import('../../characterBuilder/services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService
  * @typedef {import('../../characterBuilder/models/characterConcept.js').CharacterConcept} CharacterConcept
  * @typedef {import('../../characterBuilder/models/thematicDirection.js').ThematicDirection} ThematicDirection
- * @typedef {import('../../interfaces/schema-validator.js').ISchemaValidator} ISchemaValidator
+ * @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
  */
 
 /**
@@ -40,7 +41,7 @@ export class ThematicDirectionsManagerController {
   #currentFilter = '';
   #currentConcept = null;
   #directionsData = [];
-  #editingFields = new Map(); // Track active edits
+  #inPlaceEditors = new Map(); // Track InPlaceEditor instances
 
   // DOM element references
   #elements = {};
@@ -246,11 +247,11 @@ export class ThematicDirectionsManagerController {
       const directionsWithConcepts = await this.#characterBuilderService
         .getAllThematicDirectionsWithConcepts();
 
-      // Load concepts for dropdown
-      const concepts = await this.#characterBuilderService.getAllCharacterConcepts();
+      // Extract unique concepts that have associated directions
+      const conceptsWithDirections = this.#extractConceptsWithDirections(directionsWithConcepts);
       
-      // Update dropdown
-      await this.#conceptDropdown.loadItems(concepts);
+      // Update dropdown with filtered concepts
+      await this.#conceptDropdown.loadItems(conceptsWithDirections);
 
       // Store data
       this.#directionsData = directionsWithConcepts;
@@ -263,7 +264,10 @@ export class ThematicDirectionsManagerController {
 
       this.#logger.info(
         'ThematicDirectionsManagerController: Loaded directions data',
-        { directionCount: this.#directionsData.length }
+        { 
+          directionCount: this.#directionsData.length,
+          conceptsWithDirections: conceptsWithDirections.length
+        }
       );
     } catch (error) {
       this.#logger.error(
@@ -348,6 +352,9 @@ export class ThematicDirectionsManagerController {
    * @param {Array<{direction: ThematicDirection, concept: CharacterConcept|null}>} directionsData
    */
   #displayDirections(directionsData) {
+    // Clean up existing InPlaceEditor instances
+    this.#cleanupInPlaceEditors();
+    
     // Clear previous results  
     this.#elements.directionsResults.innerHTML = '';
 
@@ -399,14 +406,7 @@ export class ThematicDirectionsManagerController {
     const actions = document.createElement('div');
     actions.className = 'direction-actions';
 
-    const editBtn = document.createElement('button');
-    editBtn.className = 'direction-action-btn edit-btn';
-    editBtn.innerHTML = '✏️';
-    editBtn.title = 'Toggle edit mode';
-    editBtn.addEventListener('click', () => {
-      this.#toggleEditMode(article, direction);
-    });
-    actions.appendChild(editBtn);
+    // Edit button removed - inline editing is always available via InPlaceEditor
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'direction-action-btn delete-btn';
@@ -486,7 +486,7 @@ export class ThematicDirectionsManagerController {
   }
 
   /**
-   * Create an editable field element
+   * Create an editable field element using InPlaceEditor
    *
    * @private
    * @param {string} fieldName - Field name
@@ -498,58 +498,27 @@ export class ThematicDirectionsManagerController {
    * @returns {HTMLElement} Editable field element
    */
   #createEditableField(fieldName, fieldLabel, value, directionId, elementType, className) {
-    const container = document.createElement('div');
-    container.className = 'editable-field-container';
-
     const display = document.createElement(elementType);
     display.className = `editable-field ${className}`;
     display.textContent = value;
     display.setAttribute('data-field', fieldName);
     display.setAttribute('data-direction-id', directionId);
-    display.title = `Click to edit ${fieldLabel.toLowerCase()}`;
 
-    display.addEventListener('click', () => {
-      this.#startFieldEdit(display, fieldName, value, directionId);
+    // Create InPlaceEditor instance
+    const editorKey = `${directionId}-${fieldName}`;
+    const inPlaceEditor = new InPlaceEditor({
+      element: display,
+      originalValue: value,
+      onSave: async (newValue) => {
+        await this.#handleFieldSave(directionId, fieldName, value, newValue);
+      },
+      validator: (newValue) => this.#validateFieldValue(fieldName, newValue),
     });
 
-    const editor = document.createElement('div');
-    editor.className = 'field-editor';
-    editor.setAttribute('data-field', fieldName);
+    // Store editor instance for cleanup
+    this.#inPlaceEditors.set(editorKey, inPlaceEditor);
 
-    const input = document.createElement(fieldName === 'title' ? 'input' : 'textarea');
-    input.className = 'field-editor-input';
-    input.value = value;
-    if (input.tagName === 'TEXTAREA') {
-      input.rows = Math.max(2, Math.ceil(value.length / 80));
-    }
-
-    const actions = document.createElement('div');
-    actions.className = 'field-editor-actions';
-
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'field-editor-btn field-save-btn';
-    saveBtn.textContent = 'Save';
-    saveBtn.addEventListener('click', () => {
-      this.#saveFieldEdit(display, editor, fieldName, input.value, directionId);
-    });
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'field-editor-btn field-cancel-btn';
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.addEventListener('click', () => {
-      this.#cancelFieldEdit(display, editor);
-    });
-
-    actions.appendChild(saveBtn);
-    actions.appendChild(cancelBtn);
-
-    editor.appendChild(input);
-    editor.appendChild(actions);
-
-    container.appendChild(display);
-    container.appendChild(editor);
-
-    return container;
+    return display;
   }
 
   /**
@@ -574,88 +543,23 @@ export class ThematicDirectionsManagerController {
     return wrapper;
   }
 
+
+
+
   /**
-   * Start editing a field
+   * Handle field save from InPlaceEditor
    *
    * @private
-   * @param {HTMLElement} displayElement - Display element
-   * @param {string} fieldName - Field name
-   * @param {string} currentValue - Current value
    * @param {string} directionId - Direction ID
-   */
-  #startFieldEdit(displayElement, fieldName, currentValue, directionId) {
-    const container = displayElement.parentElement;
-    const editor = container.querySelector('.field-editor');
-    const input = editor.querySelector('.field-editor-input');
-
-    // Track editing state
-    const editKey = `${directionId}-${fieldName}`;
-    this.#editingFields.set(editKey, currentValue);
-
-    // Show editor, hide display
-    displayElement.style.display = 'none';
-    editor.classList.add('active');
-    
-    // Focus input
-    input.focus();
-    if (input.tagName === 'TEXTAREA') {
-      input.setSelectionRange(input.value.length, input.value.length);
-    } else {
-      input.select();
-    }
-
-    // Handle Enter key for save (Ctrl+Enter for textarea)
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && (input.tagName === 'INPUT' || e.ctrlKey)) {
-        e.preventDefault();
-        this.#saveFieldEdit(displayElement, editor, fieldName, input.value, directionId);
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        this.#cancelFieldEdit(displayElement, editor);
-      }
-    });
-  }
-
-  /**
-   * Save field edit
-   *
-   * @private
-   * @param {HTMLElement} displayElement - Display element
-   * @param {HTMLElement} editor - Editor element
    * @param {string} fieldName - Field name
+   * @param {string} originalValue - Original value
    * @param {string} newValue - New value
-   * @param {string} directionId - Direction ID
    */
-  async #saveFieldEdit(displayElement, editor, fieldName, newValue, directionId) {
-    const editKey = `${directionId}-${fieldName}`;
-    const originalValue = this.#editingFields.get(editKey);
-
-    // Validate the new value
-    const validation = this.#validateFieldValue(fieldName, newValue);
-    if (!validation.isValid) {
-      alert(validation.error);
-      return;
-    }
-
-    // If no change, just cancel
-    if (newValue.trim() === originalValue) {
-      this.#cancelFieldEdit(displayElement, editor);
-      return;
-    }
-
+  async #handleFieldSave(directionId, fieldName, originalValue, newValue) {
     try {
-      // Show loading state on save button
-      const saveBtn = editor.querySelector('.field-save-btn');
-      const originalText = saveBtn.textContent;
-      saveBtn.textContent = 'Saving...';
-      saveBtn.disabled = true;
-
       // Update the direction
       const updates = { [fieldName]: newValue.trim() };
       await this.#characterBuilderService.updateThematicDirection(directionId, updates);
-
-      // Update display
-      displayElement.textContent = newValue.trim();
 
       // Update local data
       const dataItem = this.#directionsData.find(
@@ -664,13 +568,6 @@ export class ThematicDirectionsManagerController {
       if (dataItem) {
         dataItem.direction[fieldName] = newValue.trim();
       }
-
-      // Hide editor, show display
-      editor.classList.remove('active');
-      displayElement.style.display = '';
-
-      // Clear editing state
-      this.#editingFields.delete(editKey);
 
       // Dispatch update event
       this.#eventBus.dispatch('thematic:direction_updated', {
@@ -689,36 +586,8 @@ export class ThematicDirectionsManagerController {
         'ThematicDirectionsManagerController: Failed to update direction',
         error
       );
-      alert('Failed to save changes. Please try again.');
-
-      // Reset save button
-      const saveBtn = editor.querySelector('.field-save-btn');
-      saveBtn.textContent = originalText;
-      saveBtn.disabled = false;
+      throw new Error('Failed to save changes. Please try again.');
     }
-  }
-
-  /**
-   * Cancel field edit
-   *
-   * @private
-   * @param {HTMLElement} displayElement - Display element
-   * @param {HTMLElement} editor - Editor element
-   */
-  #cancelFieldEdit(displayElement, editor) {
-    // Hide editor, show display
-    editor.classList.remove('active');
-    displayElement.style.display = '';
-
-    // Clear editing state
-    const directionId = displayElement.getAttribute('data-direction-id');
-    const fieldName = displayElement.getAttribute('data-field');
-    const editKey = `${directionId}-${fieldName}`;
-    this.#editingFields.delete(editKey);
-
-    // Reset input value
-    const input = editor.querySelector('.field-editor-input');
-    input.value = displayElement.textContent;
   }
 
   /**
@@ -762,32 +631,6 @@ export class ThematicDirectionsManagerController {
     return { isValid: true };
   }
 
-  /**
-   * Toggle edit mode for entire direction card
-   *
-   * @private
-   * @param {HTMLElement} cardElement - Card element
-   * @param {ThematicDirection} direction - Direction data
-   */
-  #toggleEditMode(cardElement, direction) {
-    const isEditing = cardElement.classList.contains('editing');
-    
-    if (isEditing) {
-      // Exit edit mode - save any pending changes
-      cardElement.classList.remove('editing');
-      
-      // Cancel any active field edits
-      const activeEditors = cardElement.querySelectorAll('.field-editor.active');
-      activeEditors.forEach(editor => {
-        const container = editor.parentElement;
-        const display = container.querySelector('.editable-field');
-        this.#cancelFieldEdit(display, editor);
-      });
-    } else {
-      // Enter edit mode
-      cardElement.classList.add('editing');
-    }
-  }
 
   /**
    * Handle concept selection change
@@ -947,6 +790,37 @@ export class ThematicDirectionsManagerController {
     if (this.#elements.confirmationModal) {
       this.#elements.confirmationModal.style.display = 'none';
     }
+  }
+
+  /**
+   * Clean up InPlaceEditor instances
+   * 
+   * @private
+   */
+  #cleanupInPlaceEditors() {
+    this.#inPlaceEditors.forEach(editor => {
+      editor.destroy();
+    });
+    this.#inPlaceEditors.clear();
+  }
+
+  /**
+   * Extract unique concepts that have associated thematic directions
+   * 
+   * @private
+   * @param {Array<{direction: ThematicDirection, concept: CharacterConcept|null}>} directionsWithConcepts - Array of directions with their associated concepts
+   * @returns {CharacterConcept[]} Array of concepts with directions
+   */
+  #extractConceptsWithDirections(directionsWithConcepts) {
+    const conceptMap = new Map();
+    
+    directionsWithConcepts.forEach(item => {
+      if (item.concept && !conceptMap.has(item.concept.id)) {
+        conceptMap.set(item.concept.id, item.concept);
+      }
+    });
+    
+    return Array.from(conceptMap.values());
   }
 }
 

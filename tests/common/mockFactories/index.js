@@ -16,9 +16,10 @@ export {
   createMockPathResolver,
   createMockAIPromptPipeline,
   createMockScopeEngine,
+  createMockDataFetcher,
 } from './coreServices.js';
 
-export { createMockDataFetcher, MockDataFetcher } from './dataFetcherMock.js';
+export { MockDataFetcher } from './dataFetcherMock.js';
 export {
   createMockValidatedEventDispatcherForIntegration,
   createCapturingEventBus,

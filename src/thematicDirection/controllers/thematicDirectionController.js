@@ -11,7 +11,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * @typedef {import('../../characterBuilder/services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService
  * @typedef {import('../../characterBuilder/models/characterConcept.js').CharacterConcept} CharacterConcept
  * @typedef {import('../../characterBuilder/models/thematicDirection.js').ThematicDirection} ThematicDirection
- * @typedef {import('../../interfaces/schema-validator.js').ISchemaValidator} ISchemaValidator
+ * @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
  */
 
 /**

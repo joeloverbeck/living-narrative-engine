@@ -3,8 +3,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import {
   createMockLogger,
-  createMockDataFetcher,
-} from '../../common/mockFactories.js';
+} from '../../common/mockFactories/index.js';
 import ActionLoader from '../../../src/loaders/actionLoader.js';
 import ComponentLoader from '../../../src/loaders/componentLoader.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -94,6 +93,29 @@ const createMockSchemaValidator = (overrides = {}) => {
   return mockValidator;
 };
 
+const createMockDataFetcher = (overrides = {}) => {
+  const { pathToResponse, ...otherOverrides } = overrides;
+  
+  const mockFetcher = {
+    fetch: jest.fn().mockImplementation((path) => {
+      if (pathToResponse && pathToResponse[path]) {
+        return Promise.resolve(pathToResponse[path]);
+      }
+      return Promise.resolve({});
+    }),
+    fetchJson: jest.fn().mockImplementation((path) => {
+      if (pathToResponse && pathToResponse[path]) {
+        return Promise.resolve(pathToResponse[path]);
+      }
+      return Promise.resolve({});
+    }),
+    fetchText: jest.fn().mockResolvedValue(''),
+    ...otherOverrides,
+  };
+  
+  return mockFetcher;
+};
+
 // --- Test Suite ---
 describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', () => {
   let mockConfig,
@@ -160,9 +182,6 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
     mockLogger = createMockLogger();
     dataRegistry = new InMemoryDataRegistry({ logger: mockLogger });
     jest.clearAllMocks();
-    jest.spyOn(dataRegistry, 'store');
-    jest.spyOn(dataRegistry, 'get');
-    jest.spyOn(dataRegistry, 'getAll');
     actionLoader = new ActionLoader(
       mockConfig,
       mockResolver,
@@ -198,8 +217,27 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
         [modBComponentPath]: modBComponentData,
       };
       mockFetcher = createMockDataFetcher({ pathToResponse: fetcherConfig });
-      actionLoader._dataFetcher = mockFetcher;
-      componentLoader._dataFetcher = mockFetcher;
+      // Create new loaders with the configured mock fetcher
+      actionLoader = new ActionLoader(
+        mockConfig,
+        mockResolver,
+        mockFetcher,
+        mockValidator,
+        dataRegistry,
+        mockLogger
+      );
+      componentLoader = new ComponentLoader(
+        mockConfig,
+        mockResolver,
+        mockFetcher,
+        mockValidator,
+        dataRegistry,
+        mockLogger
+      );
+      // Set up spies after loader creation
+      jest.spyOn(dataRegistry, 'store');
+      jest.spyOn(dataRegistry, 'get');
+      jest.spyOn(dataRegistry, 'getAll');
     });
 
     it('should store items from different mods with the same base ID under unique keys without warnings', async () => {
@@ -283,7 +321,19 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
         [overrideActionPathV2]: overrideActionDataV2,
       };
       mockFetcher = createMockDataFetcher({ pathToResponse: fetcherConfig });
-      actionLoader._dataFetcher = mockFetcher;
+      // Create new loader with the configured mock fetcher
+      actionLoader = new ActionLoader(
+        mockConfig,
+        mockResolver,
+        mockFetcher,
+        mockValidator,
+        dataRegistry,
+        mockLogger
+      );
+      // Set up spies after loader creation
+      jest.spyOn(dataRegistry, 'store');
+      jest.spyOn(dataRegistry, 'get');
+      jest.spyOn(dataRegistry, 'getAll');
     });
 
     it('should throw DuplicateContentError when attempting to store an item with the same final key', async () => {
@@ -353,8 +403,27 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
         [modDActionPath]: modDActionData,
       };
       mockFetcher = createMockDataFetcher({ pathToResponse: fetcherConfig });
-      actionLoader._dataFetcher = mockFetcher;
-      componentLoader._dataFetcher = mockFetcher;
+      // Create new loaders with the configured mock fetcher
+      actionLoader = new ActionLoader(
+        mockConfig,
+        mockResolver,
+        mockFetcher,
+        mockValidator,
+        dataRegistry,
+        mockLogger
+      );
+      componentLoader = new ComponentLoader(
+        mockConfig,
+        mockResolver,
+        mockFetcher,
+        mockValidator,
+        dataRegistry,
+        mockLogger
+      );
+      // Set up spies after loader creation
+      jest.spyOn(dataRegistry, 'store');
+      jest.spyOn(dataRegistry, 'get');
+      jest.spyOn(dataRegistry, 'getAll');
     });
 
     it('should store items with correct keys and augmented metadata', async () => {

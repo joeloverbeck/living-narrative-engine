@@ -4,9 +4,9 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { TestModuleBuilder } from '../common/builders/testModuleBuilder.js';
+import { TestModuleBuilder } from '../common/testing/builders/testModuleBuilder.js';
 import { TestConfigurationFactory } from '../common/testConfigurationFactory.js';
-import { TestConfigurationValidator } from '../common/builders/validation/testConfigurationValidator.js';
+import { TestConfigurationValidator } from '../common/testing/builders/validation/testConfigurationValidator.js';
 
 describe('Test Configuration Standardization Integration', () => {
   describe('TestModuleBuilder with TestConfigurationFactory', () => {

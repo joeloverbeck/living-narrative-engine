@@ -6,11 +6,11 @@
 
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
 import { expect } from '@jest/globals';
+import { AIPromptPipelineDependencySpec } from './pipelineConstants.js';
 import {
-  AIPromptPipelineDependencySpec,
   expectSuccessfulGeneration,
   expectGenerationFailure,
-} from './pipelineHelpers.js';
+} from './pipelineTestHelpers.js';
 import {
   createMockLogger,
   createMockLLMAdapter,

@@ -324,4 +324,228 @@ describe('AnatomyFormattingService', () => {
       });
     }).toThrow();
   });
+
+  describe('equipment integration configuration', () => {
+    it('merges equipment integration config without replace strategy', () => {
+      registry = createMockRegistry([
+        {
+          _modId: 'core',
+          descriptionOrder: ['head'],
+          descriptorOrder: ['size'],
+          equipmentIntegration: {
+            enabled: true,
+            prefix: 'Wearing: ',
+            separator: ', ',
+          },
+        },
+        {
+          _modId: 'modA',
+          descriptionOrder: ['torso'],
+          descriptorOrder: ['shape'],
+          equipmentIntegration: {
+            enabled: false,
+            suffix: '.',
+            itemSeparator: ' | ',
+          },
+        },
+      ]);
+      logger = createMockLogger();
+      safeEventDispatcher = createMockSafeEventDispatcher();
+      
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+      
+      service.initialize();
+      
+      const config = service.getEquipmentIntegrationConfig();
+      expect(config).toEqual({
+        enabled: false,
+        prefix: 'Wearing: ',
+        separator: ', ',
+        suffix: '.',
+        itemSeparator: ' | ',
+      });
+    });
+
+    it('replaces equipment integration config with replace strategy', () => {
+      registry = createMockRegistry(
+        [
+          {
+            _modId: 'core',
+            descriptionOrder: ['head'],
+            descriptorOrder: ['size'],
+            equipmentIntegration: {
+              enabled: true,
+              prefix: 'Wearing: ',
+              separator: ', ',
+              placement: 'before_anatomy',
+            },
+          },
+          {
+            _modId: 'modA',
+            descriptionOrder: ['torso'],
+            descriptorOrder: ['shape'],
+            equipmentIntegration: {
+              enabled: false,
+              suffix: '!',
+            },
+            mergeStrategy: { replaceObjects: true },
+          },
+        ],
+        ['core', 'modA']
+      );
+      logger = createMockLogger();
+      safeEventDispatcher = createMockSafeEventDispatcher();
+      
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+      
+      service.initialize();
+      
+      const config = service.getEquipmentIntegrationConfig();
+      expect(config).toEqual({
+        enabled: false,
+        suffix: '!',
+      });
+    });
+
+    it('returns default equipment integration config when none provided', () => {
+      registry = createMockRegistry([
+        {
+          _modId: 'core',
+          descriptionOrder: ['head'],
+          descriptorOrder: ['size'],
+        },
+      ]);
+      logger = createMockLogger();
+      safeEventDispatcher = createMockSafeEventDispatcher();
+      
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+      
+      service.initialize();
+      
+      const config = service.getEquipmentIntegrationConfig();
+      expect(config).toEqual({
+        enabled: false,
+        prefix: 'Wearing: ',
+        suffix: '.',
+        separator: ', ',
+        itemSeparator: ' | ',
+        placement: 'after_anatomy',
+      });
+    });
+  });
+
+  describe('getPairedParts return value', () => {
+    it('returns a new Set instance, not the internal reference', () => {
+      registry = createMockRegistry([
+        {
+          _modId: 'core',
+          descriptionOrder: ['head'],
+          pairedParts: ['arm', 'leg'],
+          descriptorOrder: ['size'],
+        },
+      ]);
+      logger = createMockLogger();
+      safeEventDispatcher = createMockSafeEventDispatcher();
+      
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+      
+      service.initialize();
+      
+      const pairedParts1 = service.getPairedParts();
+      const pairedParts2 = service.getPairedParts();
+      
+      // Should return new instances
+      expect(pairedParts1).not.toBe(pairedParts2);
+      
+      // But with same content
+      expect(Array.from(pairedParts1)).toEqual(Array.from(pairedParts2));
+      expect(Array.from(pairedParts1)).toEqual(['arm', 'leg']);
+    });
+  });
+
+  describe('_validateConfiguration edge cases', () => {
+    beforeEach(() => {
+      logger = createMockLogger();
+      safeEventDispatcher = createMockSafeEventDispatcher();
+    });
+
+    it('validates Set type configurations correctly', () => {
+      registry = createMockRegistry([
+        {
+          _modId: 'core',
+          descriptionOrder: ['head'],
+          descriptorOrder: ['size'],
+        },
+      ]);
+      
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+      
+      service.initialize();
+      
+      // Create a custom method to test Set validation
+      const testSet = new Set();
+      
+      expect(() => {
+        service._validateConfiguration('testSet', testSet, 'testMethod');
+      }).toThrow('AnatomyFormattingService.testMethod: testSet configuration is empty');
+    });
+
+    it('validates non-object, non-array, non-set values correctly', () => {
+      registry = createMockRegistry([
+        {
+          _modId: 'core',
+          descriptionOrder: ['head'],
+          descriptorOrder: ['size'],
+        },
+      ]);
+      
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+      
+      service.initialize();
+      
+      // Test with null value
+      expect(() => {
+        service._validateConfiguration('testValue', null, 'testMethod');
+      }).toThrow('AnatomyFormattingService.testMethod: testValue configuration is empty');
+      
+      // Test with undefined value
+      expect(() => {
+        service._validateConfiguration('testValue', undefined, 'testMethod');
+      }).toThrow('AnatomyFormattingService.testMethod: testValue configuration is empty');
+      
+      // Test with empty string
+      expect(() => {
+        service._validateConfiguration('testValue', '', 'testMethod');
+      }).toThrow('AnatomyFormattingService.testMethod: testValue configuration is empty');
+      
+      // Test with false boolean
+      expect(() => {
+        service._validateConfiguration('testValue', false, 'testMethod');
+      }).toThrow('AnatomyFormattingService.testMethod: testValue configuration is empty');
+    });
+  });
 });

@@ -15,7 +15,7 @@ import {
   TestModuleBuilder,
   TestScenarioPresets,
   createTestModules,
-} from '../../common/builders/index.js';
+} from '../../common/testing/builders/index.js';
 import { createMockFacades } from '../../../src/testing/facades/testingFacadeRegistrations.js';
 
 describe('Test Module Pattern Integration', () => {

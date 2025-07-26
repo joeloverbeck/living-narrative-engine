@@ -28,7 +28,7 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import { TestModuleBuilder } from '../../../tests/common/builders/testModuleBuilder.js';
+import { TestModuleBuilder } from '../../common/testing/builders/testModuleBuilder.js';
 
 /**
  * E2E test suite for complete AI turn execution using Test Module Pattern

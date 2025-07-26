@@ -1,5 +1,4 @@
 import { jest } from '@jest/globals';
-import fs from 'fs';
 import { deepClone } from '../../../src/utils/cloneUtils.js';
 
 /**
@@ -84,6 +83,7 @@ export class MockDataFetcher {
 
   /**
    * Sets up fetch to read JSON files from disk.
+   * Imports fs only when needed to avoid Jest worker issues.
    *
    * @private
    * @returns {void}
@@ -91,8 +91,14 @@ export class MockDataFetcher {
   #setDiskFetchImplementation() {
     this.fetch.mockImplementation(async (identifier) => {
       if (identifier.endsWith('.json')) {
-        const filePath = identifier.replace(/^\.\//, '');
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        try {
+          // Import fs only when actually needed to avoid Jest worker issues
+          const fs = await import('fs');
+          const filePath = identifier.replace(/^\.\//, '');
+          return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        } catch (error) {
+          throw new Error(`Mock Fetch Error: Failed to read file ${identifier}: ${error.message}`);
+        }
       }
       throw new Error('Unsupported identifier: ' + identifier);
     });
@@ -132,4 +138,5 @@ export class MockDataFetcher {
   }
 }
 
-export { createMockDataFetcher } from './coreServices.js';
+// Note: createMockDataFetcher is available from coreServices.js
+// Removed re-export to prevent circular dependency

@@ -41,9 +41,12 @@ describe('ThematicDirectionApp Initialization Integration', () => {
     );
 
     // Mock schema loading - provide a comprehensive mock for all schema requests
+    // This includes all schemas from staticConfiguration.getSchemaFiles()
     global.fetch = jest.fn().mockImplementation((url) => {
       // Create a generic successful schema response
-      const schemaId = url.split('/').pop().replace('.schema.json', '');
+      const filename = url.split('/').pop();
+      const schemaId = filename.replace('.schema.json', '');
+      
       const genericSchema = {
         $id: schemaId,
         type: 'object',
@@ -54,7 +57,7 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       };
 
       // Handle specific schemas with appropriate structures
-      if (url.includes('thematic-direction.schema.json')) {
+      if (filename === 'thematic-direction.schema.json') {
         return Promise.resolve({
           ok: true,
           json: () =>
@@ -70,7 +73,7 @@ describe('ThematicDirectionApp Initialization Integration', () => {
         });
       }
 
-      if (url.includes('character-concept.schema.json')) {
+      if (filename === 'character-concept.schema.json') {
         return Promise.resolve({
           ok: true,
           json: () =>
@@ -85,7 +88,22 @@ describe('ThematicDirectionApp Initialization Integration', () => {
         });
       }
 
-      // Default response for any other schema files
+      // Handle llm-configs schema specifically to prevent validation errors
+      if (filename === 'llm-configs.schema.json') {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              $id: 'llm-configs',
+              type: 'object',
+              properties: {
+                configs: { type: 'array' },
+              },
+            }),
+        });
+      }
+
+      // Default response for any other schema files (handles all schemas from staticConfiguration)
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve(genericSchema),
@@ -113,17 +131,19 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       await app.initialize();
 
       // Assert - verify successful initialization
-      // Note: Since we removed the mock, we verify completion by checking service calls
-
-      // Verify schema loading
-      expect(fetch).toHaveBeenCalledWith(
-        'data/schemas/thematic-direction.schema.json'
-      );
-      expect(fetch).toHaveBeenCalledWith(
+      // Verify that schema loading occurred (some schemas should have been fetched)
+      expect(fetch).toHaveBeenCalled();
+      
+      // Verify that essential schemas were loaded
+      const fetchCalls = fetch.mock.calls.map(call => call[0]);
+      const expectedSchemas = [
+        'data/schemas/thematic-direction.schema.json',
         'data/schemas/character-concept.schema.json'
-      );
-
-      // Note: LLM adapter initialization is handled by the DI container
+      ];
+      
+      expectedSchemas.forEach(schema => {
+        expect(fetchCalls.some(call => call.includes(schema.split('/').pop()))).toBe(true);
+      });
 
       // Verify controller initialization
       expect(mockCharacterBuilderService.initialize).toHaveBeenCalled();
@@ -193,12 +213,15 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       await app.initialize();
 
       // Assert - verify schemas were loaded (order may vary due to Promise.all)
-      expect(fetch).toHaveBeenCalledWith(
-        'data/schemas/thematic-direction.schema.json'
-      );
-      expect(fetch).toHaveBeenCalledWith(
-        'data/schemas/character-concept.schema.json'
-      );
+      const fetchCalls = fetch.mock.calls.map(call => call[0]);
+      const expectedSchemas = [
+        'thematic-direction.schema.json',
+        'character-concept.schema.json'
+      ];
+      
+      expectedSchemas.forEach(schema => {
+        expect(fetchCalls.some(call => call.includes(schema))).toBe(true);
+      });
     });
 
     test('should handle invalid schema JSON', async () => {

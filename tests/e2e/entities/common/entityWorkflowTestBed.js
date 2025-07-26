@@ -72,10 +72,59 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     this.logger = this.container.resolve(tokens.ILogger);
     this.validator = this.container.resolve(tokens.ISchemaValidator);
 
+    // Register required component schemas for testing
+    await this.registerTestComponentSchemas();
+
     // Set up event monitoring
     this.setupEventMonitoring();
     
     this.logger.debug('EntityWorkflowTestBed initialized successfully');
+  }
+
+  /**
+   * Register required component schemas for testing
+   */
+  async registerTestComponentSchemas() {
+    // Register core:position schema
+    await this.validator.addSchema(
+      {
+        type: 'object',
+        properties: {
+          locationId: { type: 'string' },
+        },
+        required: ['locationId'],
+        additionalProperties: false,
+      },
+      'core:position'
+    );
+
+    // Register core:name schema
+    await this.validator.addSchema(
+      {
+        type: 'object',
+        properties: {
+          text: { type: 'string' },
+        },
+        required: ['text'],
+        additionalProperties: false,
+      },
+      'core:name'
+    );
+
+    // Register core:description schema
+    await this.validator.addSchema(
+      {
+        type: 'object',
+        properties: {
+          text: { type: 'string' },
+        },
+        required: ['text'],
+        additionalProperties: false,
+      },
+      'core:description'
+    );
+
+    this.logger.debug('Registered test component schemas successfully');
   }
 
   /**
@@ -291,14 +340,16 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     }
 
     // Create a basic entity definition
-    const definition = customDefinition || createEntityDefinition(definitionId, {
-      'core:name': {
-        text: `Test Entity ${definitionId}`,
-      },
-      'core:description': {
-        text: `Test entity created for ${definitionId}`,
-      },
-    });
+    const definition = customDefinition ? 
+      createEntityDefinition(customDefinition.id, customDefinition.components) :
+      createEntityDefinition(definitionId, {
+        'core:name': {
+          text: `Test Entity ${definitionId}`,
+        },
+        'core:description': {
+          text: `Test entity created for ${definitionId}`,
+        },
+      });
 
     this.registry.store('entityDefinitions', definitionId, definition);
     this.logger.debug(`Created entity definition: ${definitionId}`);
@@ -508,6 +559,305 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     if (!results.isConsistent) {
       throw new Error(`Repository consistency check failed: ${results.issues.join(', ')}`);
     }
+  }
+
+  /**
+   * Validate batch operation results for correctness and consistency
+   * 
+   * @param {object} result - Batch operation result object
+   * @param {number} expectedSuccesses - Expected number of successful operations
+   * @param {number} expectedFailures - Expected number of failed operations
+   * @param {object} options - Validation options
+   * @param {boolean} [options.validateMetrics=true] - Whether to validate metrics
+   * @param {boolean} [options.validateTiming=true] - Whether to validate timing
+   * @returns {object} Validation results
+   */
+  validateBatchOperationResults(result, expectedSuccesses, expectedFailures, options = {}) {
+    const { validateMetrics = true, validateTiming = true } = options;
+    const validation = {
+      isValid: true,
+      issues: [],
+      metrics: {}
+    };
+
+    // Validate basic structure
+    if (!result || typeof result !== 'object') {
+      validation.isValid = false;
+      validation.issues.push('Batch result is not a valid object');
+      return validation;
+    }
+
+    // Validate required properties
+    const requiredProps = ['successes', 'failures', 'totalProcessed', 'successCount', 'failureCount'];
+    for (const prop of requiredProps) {
+      if (!(prop in result)) {
+        validation.isValid = false;
+        validation.issues.push(`Missing required property: ${prop}`);
+      }
+    }
+
+    // Validate counts
+    if (result.successCount !== expectedSuccesses) {
+      validation.isValid = false;
+      validation.issues.push(`Expected ${expectedSuccesses} successes, got ${result.successCount}`);
+    }
+
+    if (result.failureCount !== expectedFailures) {
+      validation.isValid = false;
+      validation.issues.push(`Expected ${expectedFailures} failures, got ${result.failureCount}`);
+    }
+
+    if (result.totalProcessed !== (expectedSuccesses + expectedFailures)) {
+      validation.isValid = false;
+      validation.issues.push(`Total processed (${result.totalProcessed}) doesn't match sum of successes and failures`);
+    }
+
+    // Validate array lengths
+    if (result.successes.length !== result.successCount) {
+      validation.isValid = false;
+      validation.issues.push(`Successes array length (${result.successes.length}) doesn't match successCount (${result.successCount})`);
+    }
+
+    if (result.failures.length !== result.failureCount) {
+      validation.isValid = false;
+      validation.issues.push(`Failures array length (${result.failures.length}) doesn't match failureCount (${result.failureCount})`);
+    }
+
+    // Validate metrics if requested
+    if (validateMetrics && 'processingTime' in result) {
+      if (typeof result.processingTime !== 'number' || result.processingTime < 0) {
+        validation.isValid = false;
+        validation.issues.push('Processing time must be a non-negative number');
+      } else {
+        validation.metrics.processingTime = result.processingTime;
+        validation.metrics.avgTimePerOperation = result.totalProcessed > 0 ? 
+          result.processingTime / result.totalProcessed : 0;
+      }
+    }
+
+    // Validate timing if requested
+    if (validateTiming && result.totalProcessed > 0) {
+      const avgTime = validation.metrics.avgTimePerOperation || 0;
+      if (avgTime > 100) { // Warning for operations taking more than 100ms on average
+        validation.issues.push(`Average operation time (${avgTime.toFixed(2)}ms) may be too slow`);
+      }
+    }
+
+    // Validate failure objects structure
+    result.failures.forEach((failure, index) => {
+      if (!failure.item || !failure.error) {
+        validation.isValid = false;
+        validation.issues.push(`Failure ${index} missing required item or error property`);
+      } else if (!(failure.error instanceof Error)) {
+        validation.isValid = false;
+        validation.issues.push(`Failure ${index} error property is not an Error instance`);
+      }
+    });
+
+    return validation;
+  }
+
+  /**
+   * Measure performance of batch operations with detailed metrics
+   * 
+   * @param {function} operation - Async operation to measure
+   * @param {number} iterations - Number of iterations to perform
+   * @param {object} options - Measurement options
+   * @returns {Promise<object>} Performance measurement results
+   */
+  async measureBatchOperationPerformance(operation, iterations = 1, options = {}) {
+    assertPresent(operation, 'operation');
+    
+    const {
+      warmupIterations = 0,
+      collectMemoryStats = false,
+      collectGCStats = false
+    } = options;
+
+    const results = {
+      iterations,
+      times: [],
+      averageTime: 0,
+      minTime: Infinity,
+      maxTime: 0,
+      totalTime: 0,
+      memoryStats: null,
+      gcStats: null
+    };
+
+    // Warmup iterations
+    for (let i = 0; i < warmupIterations; i++) {
+      await operation();
+    }
+
+    // Collect memory stats before if requested
+    if (collectMemoryStats && performance.memory) {
+      results.memoryStats = {
+        before: {
+          usedJSHeapSize: performance.memory.usedJSHeapSize,
+          totalJSHeapSize: performance.memory.totalJSHeapSize,
+          jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
+        }
+      };
+    }
+
+    // Perform measured iterations
+    for (let i = 0; i < iterations; i++) {
+      const startTime = performance.now();
+      await operation();
+      const endTime = performance.now();
+      
+      const operationTime = endTime - startTime;
+      results.times.push(operationTime);
+      results.totalTime += operationTime;
+      results.minTime = Math.min(results.minTime, operationTime);
+      results.maxTime = Math.max(results.maxTime, operationTime);
+    }
+
+    // Calculate statistics
+    results.averageTime = results.totalTime / iterations;
+
+    // Collect memory stats after if requested
+    if (collectMemoryStats && performance.memory) {
+      results.memoryStats.after = {
+        usedJSHeapSize: performance.memory.usedJSHeapSize,
+        totalJSHeapSize: performance.memory.totalJSHeapSize,
+        jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
+      };
+      
+      results.memoryStats.increase = {
+        usedJSHeapSize: results.memoryStats.after.usedJSHeapSize - results.memoryStats.before.usedJSHeapSize,
+        totalJSHeapSize: results.memoryStats.after.totalJSHeapSize - results.memoryStats.before.totalJSHeapSize
+      };
+    }
+
+    // Record performance metrics
+    this.recordPerformanceMetric('batch_operation_measurement', results.averageTime);
+
+    return results;
+  }
+
+  /**
+   * Create large entity datasets for scale testing
+   * 
+   * @param {number} count - Number of entities to create
+   * @param {object} options - Dataset creation options
+   * @returns {Promise<Array<object>>} Array of entity specifications
+   */
+  async createLargeEntityDatasets(count, options = {}) {
+    const {
+      definitionId = 'test:scale_entity',
+      includeComponentOverrides = false,
+      componentTypes = ['core:name', 'core:description'],
+      idPrefix = 'scale_entity'
+    } = options;
+
+    // Ensure entity definition exists
+    await this.ensureEntityDefinitionExists(definitionId);
+
+    const entitySpecs = [];
+    
+    for (let i = 0; i < count; i++) {
+      const spec = {
+        definitionId,
+        opts: {
+          instanceId: `${idPrefix}_${i + 1}`
+        }
+      };
+
+      // Add component overrides if requested
+      if (includeComponentOverrides) {
+        spec.opts.componentOverrides = {};
+        
+        componentTypes.forEach(componentType => {
+          switch (componentType) {
+            case 'core:name':
+              spec.opts.componentOverrides[componentType] = {
+                text: `Scale Entity ${i + 1}`
+              };
+              break;
+            case 'core:description':
+              spec.opts.componentOverrides[componentType] = {
+                text: `Description for scale entity ${i + 1}`
+              };
+              break;
+            case 'core:position':
+              spec.opts.componentOverrides[componentType] = {
+                locationId: `scale_location_${i + 1}`
+              };
+              break;
+          }
+        });
+      }
+
+      entitySpecs.push(spec);
+    }
+
+    this.logger.debug(`Created ${count} entity specifications for scale testing`);
+    return entitySpecs;
+  }
+
+  /**
+   * Validate batch operation performance against thresholds
+   * 
+   * @param {object} performanceData - Performance measurement data
+   * @param {object} thresholds - Performance thresholds
+   * @returns {object} Performance validation results
+   */
+  validateBatchPerformanceThresholds(performanceData, thresholds = {}) {
+    const {
+      maxAverageTime = 50, // 50ms default
+      maxTotalTime = 5000, // 5s default
+      maxMemoryIncrease = 50 * 1024 * 1024, // 50MB default
+      minThroughput = 10 // operations per second
+    } = thresholds;
+
+    const validation = {
+      isValid: true,
+      issues: [],
+      metrics: {
+        averageTime: performanceData.averageTime,
+        totalTime: performanceData.totalTime,
+        throughput: performanceData.iterations / (performanceData.totalTime / 1000),
+        memoryIncrease: performanceData.memoryStats?.increase?.usedJSHeapSize || 0
+      }
+    };
+
+    // Validate average time threshold
+    if (performanceData.averageTime > maxAverageTime) {
+      validation.isValid = false;
+      validation.issues.push(
+        `Average operation time (${performanceData.averageTime.toFixed(2)}ms) exceeds threshold (${maxAverageTime}ms)`
+      );
+    }
+
+    // Validate total time threshold
+    if (performanceData.totalTime > maxTotalTime) {
+      validation.isValid = false;
+      validation.issues.push(
+        `Total operation time (${performanceData.totalTime.toFixed(2)}ms) exceeds threshold (${maxTotalTime}ms)`
+      );
+    }
+
+    // Validate throughput threshold
+    if (validation.metrics.throughput < minThroughput) {
+      validation.isValid = false;
+      validation.issues.push(
+        `Throughput (${validation.metrics.throughput.toFixed(2)} ops/sec) below threshold (${minThroughput} ops/sec)`
+      );
+    }
+
+    // Validate memory increase if available
+    if (performanceData.memoryStats?.increase?.usedJSHeapSize !== undefined) {
+      if (validation.metrics.memoryIncrease > maxMemoryIncrease) {
+        validation.isValid = false;
+        validation.issues.push(
+          `Memory increase (${(validation.metrics.memoryIncrease / 1024 / 1024).toFixed(2)}MB) exceeds threshold (${(maxMemoryIncrease / 1024 / 1024).toFixed(2)}MB)`
+        );
+      }
+    }
+
+    return validation;
   }
 
   /**
