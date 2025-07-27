@@ -59,12 +59,12 @@ Add a helper method to reset the form:
     // Clear form
     this.#elements.conceptForm.reset();
 
-    // Reset character count
-    this.#elements.charCount.textContent = '0/1000';
+    // Reset character count (ValidationPatterns.concept uses 50-3000 chars)
+    this.#elements.charCount.textContent = '0/3000';
     this.#elements.charCount.classList.remove('warning', 'error');
 
-    // Clear any error messages
-    this.#elements.conceptError.textContent = '';
+    // Clear any error messages using FormValidationHelper
+    FormValidationHelper.clearFieldError(this.#elements.conceptText);
 
     // Disable save button initially
     this.#elements.saveConceptBtn.disabled = true;
@@ -122,7 +122,7 @@ async #handleConceptSave() {
     try {
         // Disable form during save
         this.#setFormEnabled(false);
-        this.#elements.saveConceptBtn.textContent = 'Saving...';
+        this.#setSaveButtonLoading(true);
 
         if (this.#editingConceptId) {
             // Update existing concept
@@ -141,8 +141,7 @@ async #handleConceptSave() {
     } finally {
         // Re-enable form
         this.#setFormEnabled(true);
-        this.#elements.saveConceptBtn.textContent =
-            this.#editingConceptId ? 'Update Concept' : 'Create Concept';
+        this.#setSaveButtonLoading(false);
     }
 }
 ```
@@ -164,10 +163,10 @@ async #createConcept(conceptText) {
 
         this.#logger.info('Concept created successfully', { id: concept.id });
 
-        // Show success message (optional)
+        // Show success message
         this.#showSuccessNotification('Character concept created successfully!');
 
-        // The UI will be updated via event listener
+        // The UI will be updated via service event (CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED)
 
     } catch (error) {
         this.#logger.error('Failed to create concept', error);
@@ -197,108 +196,53 @@ Add utility methods for form management:
 }
 
 /**
- * Show error message in the form
+ * Show error message using FormValidationHelper
  * @param {string} message
  */
 #showFormError(message) {
-    this.#elements.conceptError.textContent = message;
-    this.#elements.conceptError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    FormValidationHelper.showFieldError(this.#elements.conceptText, message);
 }
 
 /**
- * Show success notification
+ * Show success via logging (no notification system in current architecture)
  * @param {string} message
  */
 #showSuccessNotification(message) {
-    // Check if notification system exists
-    if (window.notificationSystem) {
-        window.notificationSystem.show(message, 'success');
-    } else {
-        // Fallback: log success
-        this.#logger.info(message);
-    }
+    // Log success - UI updates happen via event listeners
+    this.#logger.info(message);
 }
 ```
 
-### 7. Enhance Form Validation
+### 7. Form Validation Integration
 
-Update the validation method to be more comprehensive:
+The form validation is already handled by `FormValidationHelper` with `ValidationPatterns.concept` (50-3000 characters). The `#validateConceptForm` method only needs to call the existing validation:
 
 ```javascript
 /**
- * Validate the concept form
+ * Validate the concept form using FormValidationHelper
  * @returns {boolean}
  */
 #validateConceptForm() {
-    const conceptText = this.#elements.conceptText.value.trim();
-    const minLength = 10;
-    const maxLength = 1000;
-
-    let isValid = true;
-    let errorMessage = '';
-
-    // Check if empty
-    if (conceptText.length === 0) {
-        isValid = false;
-        errorMessage = 'Character concept is required';
-    }
-    // Check minimum length
-    else if (conceptText.length < minLength) {
-        isValid = false;
-        errorMessage = `Concept must be at least ${minLength} characters`;
-    }
-    // Check maximum length
-    else if (conceptText.length > maxLength) {
-        isValid = false;
-        errorMessage = `Concept must not exceed ${maxLength} characters`;
-    }
-    // Check for meaningful content (not just whitespace or repeated chars)
-    else if (this.#isInvalidContent(conceptText)) {
-        isValid = false;
-        errorMessage = 'Please provide a meaningful character concept';
-    }
-
-    // Update UI
-    this.#elements.conceptError.textContent = errorMessage;
-    this.#elements.saveConceptBtn.disabled = !isValid || conceptText.length === 0;
-
-    // Add/remove error styling
-    if (!isValid && conceptText.length > 0) {
-        this.#elements.conceptText.classList.add('error');
-    } else {
-        this.#elements.conceptText.classList.remove('error');
-    }
-
-    return isValid;
-}
-
-/**
- * Check if content is invalid (e.g., just repeated characters)
- * @param {string} text
- * @returns {boolean}
- */
-#isInvalidContent(text) {
-    // Check for repeated single character
-    if (text.length > 5 && new Set(text).size === 1) {
-        return true;
-    }
-
-    // Check for minimal word count (at least 3 words)
-    const words = text.split(/\s+/).filter(word => word.length > 0);
-    if (words.length < 3) {
-        return true;
-    }
-
-    return false;
+    return FormValidationHelper.validateField(
+        this.#elements.conceptText,
+        ValidationPatterns.concept,
+        'Concept'
+    );
 }
 ```
 
+Note: Real-time validation is already set up in the constructor with:
+- Character limits: 50-3000 characters (enforced by ValidationPatterns.concept)
+- Character counter: Updates automatically
+- Error messages: Handled by FormValidationHelper
+- Save button state: Managed by validation system
+
 ### 8. Add Keyboard Shortcuts
 
-Enhance the form with keyboard shortcuts:
+Keyboard shortcuts are already handled in the existing event setup. The Escape key for modal closing is already implemented in `#setupModalHandlers`. For form submission shortcuts, add to existing `#setupFormHandlers`:
 
 ```javascript
-// In #setupFormHandlers method, add:
+// Add to existing #setupFormHandlers method:
 this.#elements.conceptText.addEventListener('keydown', (e) => {
   // Ctrl/Cmd + Enter to submit
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -310,9 +254,9 @@ this.#elements.conceptText.addEventListener('keydown', (e) => {
 });
 ```
 
-### 9. Add Loading State for Save Button
+### 9. Simplify Loading State for Save Button
 
-Create a more sophisticated loading state:
+Simplify the loading state to work with the existing validation system:
 
 ```javascript
 /**
@@ -322,13 +266,8 @@ Create a more sophisticated loading state:
 #setSaveButtonLoading(isLoading) {
     if (isLoading) {
         this.#elements.saveConceptBtn.disabled = true;
-        this.#elements.saveConceptBtn.classList.add('loading');
-        this.#elements.saveConceptBtn.innerHTML = `
-            <span class="spinner"></span>
-            <span>Saving...</span>
-        `;
+        this.#elements.saveConceptBtn.textContent = 'Saving...';
     } else {
-        this.#elements.saveConceptBtn.classList.remove('loading');
         this.#elements.saveConceptBtn.textContent =
             this.#editingConceptId ? 'Update Concept' : 'Create Concept';
         // Re-validate to set correct disabled state
@@ -337,14 +276,22 @@ Create a more sophisticated loading state:
 }
 ```
 
-### 10. Add Focus Management
+### 10. Basic Focus Management
 
-Ensure proper focus management for accessibility:
+Implement basic focus management for accessibility:
 
 ```javascript
-// In #showCreateModal, enhance focus handling:
+// Update #showCreateModal to include focus management:
 #showCreateModal() {
-    // ... existing code ...
+    this.#logger.info('Showing create concept modal');
+
+    // Reset form for new concept
+    this.#editingConceptId = null;
+    this.#resetConceptForm();
+
+    // Update modal title
+    this.#elements.conceptModalTitle.textContent = 'Create Character Concept';
+    this.#elements.saveConceptBtn.textContent = 'Create Concept';
 
     // Store previous focus
     this.#previousFocus = document.activeElement;
@@ -352,63 +299,41 @@ Ensure proper focus management for accessibility:
     // Show modal
     this.#elements.conceptModal.style.display = 'flex';
 
-    // Set focus trap
-    this.#setFocusTrap(this.#elements.conceptModal);
-
     // Focus on textarea
     setTimeout(() => {
         this.#elements.conceptText.focus();
-        this.#elements.conceptText.select(); // Select any existing text
     }, 100);
+
+    // Track modal open for analytics
+    this.#eventBus.dispatch({
+        type: 'ui:modal-opened',
+        payload: { modalType: 'create-concept' }
+    });
 }
 
-// In #closeConceptModal, restore focus:
+// Update #closeConceptModal to restore focus:
 #closeConceptModal() {
-    // ... existing code ...
+    this.#logger.info('Closing concept modal');
 
-    // Remove focus trap
-    this.#removeFocusTrap();
+    // Hide modal
+    this.#elements.conceptModal.style.display = 'none';
+
+    // Reset form
+    this.#resetConceptForm();
+
+    // Clear editing state
+    this.#editingConceptId = null;
 
     // Restore previous focus
     if (this.#previousFocus && this.#previousFocus.focus) {
         this.#previousFocus.focus();
     }
-}
 
-/**
- * Set focus trap within an element
- * @param {HTMLElement} element
- */
-#setFocusTrap(element) {
-    const focusableElements = element.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    const firstFocusable = focusableElements[0];
-    const lastFocusable = focusableElements[focusableElements.length - 1];
-
-    this.#focusTrapHandler = (e) => {
-        if (e.key === 'Tab') {
-            if (e.shiftKey && document.activeElement === firstFocusable) {
-                e.preventDefault();
-                lastFocusable.focus();
-            } else if (!e.shiftKey && document.activeElement === lastFocusable) {
-                e.preventDefault();
-                firstFocusable.focus();
-            }
-        }
-    };
-
-    element.addEventListener('keydown', this.#focusTrapHandler);
-}
-
-/**
- * Remove focus trap
- */
-#removeFocusTrap() {
-    if (this.#focusTrapHandler) {
-        this.#elements.conceptModal.removeEventListener('keydown', this.#focusTrapHandler);
-        this.#focusTrapHandler = null;
-    }
+    // Dispatch modal closed event
+    this.#eventBus.dispatch({
+        type: 'ui:modal-closed',
+        payload: { modalType: 'concept' }
+    });
 }
 ```
 
@@ -429,24 +354,31 @@ Ensure proper focus management for accessibility:
 
 ## Testing Requirements
 
-1. Test form validation with various inputs:
+1. Test form validation with various inputs (using ValidationPatterns.concept):
    - Empty text
-   - Text below minimum length
-   - Text above maximum length
-   - Valid text
+   - Text below 50 characters (minimum)
+   - Text above 3000 characters (maximum)
+   - Valid text (50-3000 characters)
    - Text with only spaces
-   - Repeated characters
-2. Test character counter updates
+2. Test FormValidationHelper integration:
+   - Real-time validation setup
+   - Character counter updates (0/3000)
+   - Error message display via FormValidationHelper
 3. Test save operation success and failure
-4. Test modal close behavior
-5. Test keyboard shortcuts
-6. Test focus trap in modal
-7. Test error message display
+4. Test modal close behavior and focus restoration
+5. Test keyboard shortcuts (Ctrl+Enter, Escape)
+6. Test service integration:
+   - createCharacterConcept service call
+   - Event dispatching (CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED)
+   - Error handling from service
 
 ## Notes
 
-- Ensure all async operations have proper error handling
-- Maintain consistency with existing form patterns in the app
-- Consider adding animation for modal show/hide
-- Test with screen readers for accessibility
-- The service will dispatch events that update the UI
+- Form validation uses existing ValidationPatterns.concept (50-3000 characters)
+- Real-time validation is handled by FormValidationHelper.setupRealTimeValidation
+- Character counter shows current/3000 format
+- Error handling integrates with CharacterBuilderService retry logic and circuit breakers
+- Service events (CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED) automatically update UI
+- No custom notification system - use logging for success messages
+- Focus management includes basic restoration but no complex focus trapping
+- Integration with existing UIStateManager for error display
