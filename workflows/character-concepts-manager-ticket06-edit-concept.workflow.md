@@ -7,16 +7,23 @@ Implement the complete edit concept functionality, including loading existing co
 ## Dependencies
 
 - Ticket 01: HTML Structure (completed)
-- Ticket 02: CSS Styling (completed)
+- Ticket 02: CSS Styling (completed) 
 - Ticket 03: Controller Setup (completed)
 - Ticket 04: Create Concept (completed)
 - Ticket 05: Display Concepts (completed)
+
+## Current Implementation State
+
+**Note**: The following methods exist but are incomplete placeholders:
+- `#showEditModal()` (line 837-840 in controller - logs only)
+- `#updateConcept()` (line 1000-1004 in controller - throws "not yet implemented")
+- Service event handlers (lines 1019-1037 - placeholder implementations)
 
 ## Implementation Details
 
 ### 1. Implement Show Edit Modal Method
 
-In `CharacterConceptsManagerController`, implement the `#showEditModal` method:
+In `CharacterConceptsManagerController`, replace the placeholder `#showEditModal` method (currently at line 837-840):
 
 ```javascript
 /**
@@ -48,8 +55,8 @@ async #showEditModal(conceptId) {
         // Pre-populate form
         this.#elements.conceptText.value = concept.text;
 
-        // Update character count
-        this.#updateCharacterCount();
+        // Update character count using FormValidationHelper (existing pattern)
+        // Character count is handled automatically by FormValidationHelper setup in #setupFormHandlers
 
         // Validate form (should be valid since it's existing content)
         this.#validateConceptForm();
@@ -81,7 +88,7 @@ async #showEditModal(conceptId) {
 
 ### 2. Implement Update Concept Method
 
-Add the method that calls the service to update:
+Replace the placeholder `#updateConcept` method (currently at line 1000-1004) that calls the service to update:
 
 ```javascript
 /**
@@ -103,10 +110,10 @@ async #updateConcept(conceptId, conceptText) {
             return;
         }
 
-        // Update via service
+        // Update via service (service expects updates object, not plain text)
         const updatedConcept = await this.#characterBuilderService.updateCharacterConcept(
             conceptId,
-            conceptText
+            { text: conceptText }
         );
 
         this.#logger.info('Concept updated successfully', { id: updatedConcept.id });
@@ -192,7 +199,7 @@ Implement immediate UI update for better UX:
 
 ### 4. Enhance Form Save Handler for Edit Mode
 
-Update the save handler to handle both create and edit properly:
+Update the existing `#handleConceptSave` method (currently at line 959-992) to handle both create and edit properly:
 
 ```javascript
 /**
@@ -240,7 +247,7 @@ async #handleConceptSave() {
 
 ### 5. Add Dirty State Tracking
 
-Implement tracking for unsaved changes:
+Add new properties and methods for tracking unsaved changes:
 
 ```javascript
 // Add to class properties
@@ -277,14 +284,14 @@ async #showEditModal(conceptId) {
 #setupFormHandlers() {
     // ... existing code ...
 
+    // Character count and validation are already handled by FormValidationHelper.setupRealTimeValidation()
+    // Add change tracking to existing textarea input event
     this.#elements.conceptText.addEventListener('input', () => {
-        this.#updateCharacterCount();
-        this.#validateConceptForm();
-        this.#trackFormChanges(); // Add this
+        this.#trackFormChanges(); // Add this to existing input handler
     });
 }
 
-// Add confirmation before closing with unsaved changes
+// Update existing #closeConceptModal method (line 431-453) to check for unsaved changes
 #closeConceptModal() {
     // Check for unsaved changes
     if (this.#hasUnsavedChanges && this.#editingConceptId) {
@@ -297,7 +304,7 @@ async #showEditModal(conceptId) {
         }
     }
 
-    // ... existing close logic ...
+    // ... existing close logic from current implementation ...
 
     // Reset tracking
     this.#originalConceptText = '';
@@ -307,7 +314,7 @@ async #showEditModal(conceptId) {
 
 ### 6. Add Keyboard Shortcut for Quick Edit
 
-Implement keyboard shortcuts for quick editing:
+Enhance the existing `#attachCardEventHandlers` method (line 612-649) to add keyboard shortcuts for quick editing:
 
 ```javascript
 // In #attachCardEventHandlers, add keyboard support
@@ -425,7 +432,7 @@ async #updateConcept(conceptId, conceptText) {
 
 ### 8. Add CSS Classes for Update States
 
-Add these CSS classes to character-concepts-manager.css:
+**Note**: These CSS classes need to be added to `css/character-concepts-manager.css` as they don't currently exist:
 
 ```css
 /* Update animation states */
@@ -587,10 +594,18 @@ document.addEventListener('keydown', (e) => {
 7. Test undo functionality
 8. Test animation states
 
-## Notes
+## Implementation Notes
 
+### Critical Corrections Made
+1. **Service Method Signature**: Fixed `updateCharacterConcept(conceptId, { text: conceptText })` - service expects updates object
+2. **Missing Dependencies**: Noted existing FormValidationHelper usage for character counting
+3. **Current State**: Referenced existing placeholder methods and their line numbers
+4. **CSS Requirements**: Flagged missing animation classes that need to be added
+
+### Development Guidance
 - Maintain consistency with create functionality
 - Ensure proper error handling and rollback
 - Consider implementing conflict resolution for concurrent edits
 - Test with slow network to verify optimistic updates
 - The service will dispatch events that also update the UI
+- All placeholder methods (lines 837-840, 1000-1004, 1019-1037) need full implementation
