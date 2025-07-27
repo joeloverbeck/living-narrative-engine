@@ -340,7 +340,284 @@ describe('ActionDefinitionBuilder Integration', () => {
     });
   });
 
-  describe('error handling and edge cases', () => {
+  describe('error handling and validation integration', () => {
+    it('should handle constructor error scenarios', () => {
+      // Test missing ID
+      expect(() => new ActionDefinitionBuilder()).toThrow(
+        'Action ID is required and must be a string'
+      );
+
+      // Test null ID
+      expect(() => new ActionDefinitionBuilder(null)).toThrow(
+        'Action ID is required and must be a string'
+      );
+
+      // Test empty string ID
+      expect(() => new ActionDefinitionBuilder('')).toThrow(
+        'Action ID is required and must be a string'
+      );
+
+      // Test non-string ID
+      expect(() => new ActionDefinitionBuilder(123)).toThrow(
+        'Action ID is required and must be a string'
+      );
+
+      expect(() => new ActionDefinitionBuilder({})).toThrow(
+        'Action ID is required and must be a string'
+      );
+    });
+
+    it('should handle withName validation errors', () => {
+      const builder = new ActionDefinitionBuilder('test:name-errors');
+
+      // Test empty string
+      expect(() => builder.withName('')).toThrow(
+        'Name must be a non-empty string'
+      );
+
+      // Test whitespace-only string
+      expect(() => builder.withName('   ')).toThrow(
+        'Name must be a non-empty string'
+      );
+
+      // Test null
+      expect(() => builder.withName(null)).toThrow(
+        'Name must be a non-empty string'
+      );
+
+      // Test non-string
+      expect(() => builder.withName(123)).toThrow(
+        'Name must be a non-empty string'
+      );
+    });
+
+    it('should handle withDescription validation errors', () => {
+      const builder = new ActionDefinitionBuilder('test:desc-errors');
+
+      // Test empty string
+      expect(() => builder.withDescription('')).toThrow(
+        'Description must be a non-empty string'
+      );
+
+      // Test whitespace-only string
+      expect(() => builder.withDescription('   ')).toThrow(
+        'Description must be a non-empty string'
+      );
+
+      // Test null
+      expect(() => builder.withDescription(null)).toThrow(
+        'Description must be a non-empty string'
+      );
+
+      // Test non-string
+      expect(() => builder.withDescription({})).toThrow(
+        'Description must be a non-empty string'
+      );
+    });
+
+    it('should handle withScope validation errors', () => {
+      const builder = new ActionDefinitionBuilder('test:scope-errors');
+
+      // Test empty string
+      expect(() => builder.withScope('')).toThrow(
+        'Scope must be a non-empty string'
+      );
+
+      // Test whitespace-only string
+      expect(() => builder.withScope('   ')).toThrow(
+        'Scope must be a non-empty string'
+      );
+
+      // Test null
+      expect(() => builder.withScope(null)).toThrow(
+        'Scope must be a non-empty string'
+      );
+
+      // Test non-string
+      expect(() => builder.withScope([])).toThrow(
+        'Scope must be a non-empty string'
+      );
+    });
+
+    it('should handle withTemplate validation errors', () => {
+      const builder = new ActionDefinitionBuilder('test:template-errors');
+
+      // Test empty string
+      expect(() => builder.withTemplate('')).toThrow(
+        'Template must be a non-empty string'
+      );
+
+      // Test whitespace-only string
+      expect(() => builder.withTemplate('   ')).toThrow(
+        'Template must be a non-empty string'
+      );
+
+      // Test null
+      expect(() => builder.withTemplate(null)).toThrow(
+        'Template must be a non-empty string'
+      );
+
+      // Test non-string
+      expect(() => builder.withTemplate(false)).toThrow(
+        'Template must be a non-empty string'
+      );
+    });
+
+    it('should handle requiresComponent validation errors', () => {
+      const builder = new ActionDefinitionBuilder('test:component-errors');
+
+      // Test empty string
+      expect(() => builder.requiresComponent('')).toThrow(
+        'Component ID must be a non-empty string'
+      );
+
+      // Test whitespace-only string
+      expect(() => builder.requiresComponent('   ')).toThrow(
+        'Component ID must be a non-empty string'
+      );
+
+      // Test null
+      expect(() => builder.requiresComponent(null)).toThrow(
+        'Component ID must be a non-empty string'
+      );
+
+      // Test non-string
+      expect(() => builder.requiresComponent(123)).toThrow(
+        'Component ID must be a non-empty string'
+      );
+    });
+
+    it('should handle requiresComponents validation errors', () => {
+      const builder = new ActionDefinitionBuilder('test:components-errors');
+
+      // Test non-array
+      expect(() => builder.requiresComponents('not-array')).toThrow(
+        'Component IDs must be an array'
+      );
+
+      expect(() => builder.requiresComponents(null)).toThrow(
+        'Component IDs must be an array'
+      );
+
+      expect(() => builder.requiresComponents({})).toThrow(
+        'Component IDs must be an array'
+      );
+
+      // Test array with invalid items
+      expect(() => builder.requiresComponents(['valid', ''])).toThrow(
+        'Component ID must be a non-empty string'
+      );
+
+      expect(() => builder.requiresComponents(['valid', null])).toThrow(
+        'Component ID must be a non-empty string'
+      );
+    });
+
+    it('should handle withPrerequisite validation errors', () => {
+      const builder = new ActionDefinitionBuilder('test:prereq-errors');
+
+      // Test empty string
+      expect(() => builder.withPrerequisite('')).toThrow(
+        'Condition ID must be a non-empty string'
+      );
+
+      // Test whitespace-only string
+      expect(() => builder.withPrerequisite('   ')).toThrow(
+        'Condition ID must be a non-empty string'
+      );
+
+      // Test null
+      expect(() => builder.withPrerequisite(null)).toThrow(
+        'Condition ID must be a non-empty string'
+      );
+
+      // Test non-string
+      expect(() => builder.withPrerequisite({})).toThrow(
+        'Condition ID must be a non-empty string'
+      );
+    });
+
+    it('should handle withPrerequisites validation errors', () => {
+      const builder = new ActionDefinitionBuilder('test:prereqs-errors');
+
+      // Test non-array
+      expect(() => builder.withPrerequisites('not-array')).toThrow(
+        'Prerequisites must be an array'
+      );
+
+      expect(() => builder.withPrerequisites(null)).toThrow(
+        'Prerequisites must be an array'
+      );
+
+      expect(() => builder.withPrerequisites({})).toThrow(
+        'Prerequisites must be an array'
+      );
+
+      // Test array with invalid formats
+      expect(() => builder.withPrerequisites([123])).toThrow(
+        'Invalid prerequisite format. Expected string or {condition, message} object'
+      );
+
+      expect(() => builder.withPrerequisites([{ condition: 'test' }])).toThrow(
+        'Invalid prerequisite format. Expected string or {condition, message} object'
+      );
+
+      expect(() => builder.withPrerequisites([{ message: 'test' }])).toThrow(
+        'Invalid prerequisite format. Expected string or {condition, message} object'
+      );
+    });
+
+    it('should handle asTargetedAction validation errors', () => {
+      const builder = new ActionDefinitionBuilder('test:targeted-errors');
+
+      // Test empty scope ID
+      expect(() => builder.asTargetedAction('')).toThrow(
+        'Scope ID is required for targeted actions'
+      );
+
+      // Test whitespace-only scope ID
+      expect(() => builder.asTargetedAction('   ')).toThrow(
+        'Scope ID is required for targeted actions'
+      );
+
+      // Test null scope ID
+      expect(() => builder.asTargetedAction(null)).toThrow(
+        'Scope ID is required for targeted actions'
+      );
+
+      // Test non-string scope ID
+      expect(() => builder.asTargetedAction(123)).toThrow(
+        'Scope ID is required for targeted actions'
+      );
+    });
+
+    it('should handle build validation errors', () => {
+      // Create a builder that would fail validation (missing required fields)
+      const builder = new ActionDefinitionBuilder('test:build-error');
+      // Note: We're not adding name/description which might be required by validator
+
+      // This should throw when build() calls validate()
+      expect(() => builder.build()).toThrow(
+        'Invalid action definition:'
+      );
+    });
+
+    it('should handle fromDefinition validation errors', () => {
+      // Test missing definition
+      expect(() => ActionDefinitionBuilder.fromDefinition(null)).toThrow(
+        'Definition must have an ID'
+      );
+
+      // Test definition without ID
+      expect(() => ActionDefinitionBuilder.fromDefinition({})).toThrow(
+        'Definition must have an ID'
+      );
+
+      expect(() => ActionDefinitionBuilder.fromDefinition({ name: 'Test' })).toThrow(
+        'Definition must have an ID'
+      );
+    });
+
     it('should handle empty component arrays gracefully', () => {
       const action = new ActionDefinitionBuilder('test:empty-arrays')
         .withName('Empty Arrays')
@@ -396,5 +673,296 @@ describe('ActionDefinitionBuilder Integration', () => {
         failure_message: 'Object message',
       });
     });
+  });
+
+  describe('ActionDefinitionValidator integration', () => {
+    it('should integrate with validator for validation failures', () => {
+      // Test validation with missing required fields
+      const builderMinimal = new ActionDefinitionBuilder('test:validator-integration');
+      
+      // Should fail validation due to missing name and description
+      const validation = builderMinimal.validate();
+      expect(validation.isValid).toBe(false);
+      expect(Array.isArray(validation.errors)).toBe(true);
+      expect(validation.errors.length).toBeGreaterThan(0);
+    });
+
+    it('should validate complete definitions successfully', () => {
+      const builder = new ActionDefinitionBuilder('test:complete-validation')
+        .withName('Complete Action')
+        .withDescription('A complete action for validation testing')
+        .asBasicAction();
+
+      const validation = builder.validate();
+      expect(validation.isValid).toBe(true);
+      expect(validation.errors).toEqual([]);
+    });
+
+    it('should pass validation results through to build method', () => {
+      const builderValid = new ActionDefinitionBuilder('test:valid-build')
+        .withName('Valid Action')
+        .withDescription('Valid action description')
+        .asBasicAction();
+
+      // Should build successfully
+      const action = builderValid.build();
+      expect(action).toBeDefined();
+      expect(action.id).toBe('test:valid-build');
+
+      // Invalid builder should throw during build
+      const builderInvalid = new ActionDefinitionBuilder('test:invalid-build');
+      expect(() => builderInvalid.build()).toThrow('Invalid action definition:');
+    });
+  });
+
+  describe('system compatibility and workflow integration', () => {
+    it('should create definitions compatible with existing action processing', () => {
+      // Create actions that would work with the broader action system
+      const basicAction = new ActionDefinitionBuilder('integration:wait')
+        .withName('Wait')
+        .withDescription('Wait for a period of time')
+        .asBasicAction()
+        .build();
+
+      const targetedAction = new ActionDefinitionBuilder('integration:examine')
+        .withName('Examine')
+        .withDescription('Examine a target closely')
+        .asTargetedAction('core:nearby_items')
+        .build();
+
+      const complexAction = new ActionDefinitionBuilder('integration:complex-attack')
+        .withName('Complex Attack')
+        .withDescription('Perform a complex attack maneuver')
+        .asTargetedAction('core:enemies')
+        .asCombatAction()
+        .requiresComponents(['core:weapon', 'core:stamina'])
+        .withPrerequisites([
+          'core:has-weapon',
+          { condition: 'core:has-stamina', message: 'You are too tired to attack' }
+        ])
+        .build();
+
+      // Verify all actions have expected structure for system compatibility
+      [basicAction, targetedAction, complexAction].forEach(action => {
+        expect(action).toHaveProperty('id');
+        expect(action).toHaveProperty('name');
+        expect(action).toHaveProperty('description');
+        expect(action).toHaveProperty('scope');
+        expect(action).toHaveProperty('template');
+        expect(action).toHaveProperty('prerequisites');
+        expect(action).toHaveProperty('required_components');
+        expect(action.required_components).toHaveProperty('actor');
+        expect(Array.isArray(action.prerequisites)).toBe(true);
+        expect(Array.isArray(action.required_components.actor)).toBe(true);
+        expect(validateActionStructure(action)).toBe(true);
+      });
+    });
+
+    it('should work with test data factory patterns', () => {
+      // Test integration with existing test patterns
+      const testActions = [
+        new ActionDefinitionBuilder('factory:action1')
+          .withName('Factory Action 1')
+          .withDescription('First factory test action')
+          .asBasicAction()
+          .build(),
+        new ActionDefinitionBuilder('factory:action2')
+          .withName('Factory Action 2')
+          .withDescription('Second factory test action')
+          .asTargetedAction('test:targets')
+          .requiresComponent('test:component')
+          .build()
+      ];
+
+      // Verify all actions are valid and compatible
+      testActions.forEach(action => {
+        expect(validateActionStructure(action)).toBe(true);
+        expect(action).toBeValidActionDefinition();
+      });
+    });
+
+    it('should handle edge cases from real-world usage patterns', () => {
+      // Simulate edge cases that might occur in production usage
+      const edgeCaseActions = [
+        // Very long action name
+        new ActionDefinitionBuilder('edge:long-name')
+          .withName('A Very Long Action Name That Might Come From User Input Or Mod Content That Could Be Quite Lengthy')
+          .withDescription('Action with very long name')
+          .asBasicAction()
+          .build(),
+
+        // Action with many components and prerequisites
+        new ActionDefinitionBuilder('edge:complex-requirements')
+          .withName('Complex Requirements')
+          .withDescription('Action with many requirements')
+          .asTargetedAction('test:complex-scope')
+          .requiresComponents([
+            'core:component1', 'core:component2', 'core:component3',
+            'mod:component1', 'mod:component2', 'system:component1'
+          ])
+          .withPrerequisites([
+            'core:condition1', 'core:condition2',
+            { condition: 'mod:condition1', message: 'Mod condition failed' },
+            { condition: 'system:condition1', message: 'System condition failed' }
+          ])
+          .asCombatAction()
+          .build(),
+
+        // Action with special characters in template
+        new ActionDefinitionBuilder('edge:special-template')
+          .withName('Special Template')
+          .withDescription('Action with special template characters')
+          .asTargetedAction('test:targets', 'perform "{special}" action on {target}')
+          .build()
+      ];
+
+      edgeCaseActions.forEach(action => {
+        expect(validateActionStructure(action)).toBe(true);
+        expect(action).toBeValidActionDefinition();
+      });
+    });
+
+    it('should maintain immutability and prevent external modification', () => {
+      const builder = new ActionDefinitionBuilder('immutable:test')
+        .withName('Immutable Test')
+        .withDescription('Testing immutability')
+        .asBasicAction()
+        .requiresComponent('test:component')
+        .withPrerequisite('test:condition');
+
+      const action1 = builder.build();
+      const action2 = builder.build();
+
+      // Should be equal but not the same object
+      expect(action1).toEqual(action2);
+      expect(action1).not.toBe(action2);
+
+      // Modifying one should not affect the other
+      action1.id = 'modified';
+      expect(action2.id).toBe('immutable:test');
+
+      // Modifying arrays should not affect original
+      action1.prerequisites.push('new-condition');
+      expect(action2.prerequisites).not.toContain('new-condition');
+
+      action1.required_components.actor.push('new-component');
+      expect(action2.required_components.actor).not.toContain('new-component');
+    });
+
+    it('should handle toPartial for debugging workflows', () => {
+      const builder = new ActionDefinitionBuilder('debug:partial')
+        .withName('Partial Debug')
+        .withDescription('Testing partial output for debugging');
+
+      // Get partial state before completion
+      const partial1 = builder.toPartial();
+      expect(partial1.id).toBe('debug:partial');
+      expect(partial1.name).toBe('Partial Debug');
+      expect(partial1.description).toBe('Testing partial output for debugging');
+      expect(partial1.scope).toBeUndefined();
+
+      // Add more and check partial again
+      builder.asTargetedAction('debug:scope');
+      const partial2 = builder.toPartial();
+      expect(partial2.scope).toBe('debug:scope');
+      expect(partial2.template).toBe('partial debug {target}');
+
+      // Partials should be immutable copies
+      partial1.id = 'modified';
+      expect(builder.toPartial().id).toBe('debug:partial');
+    });
+  });
+
+  describe('enhanced performance and memory management', () => {
+    it('should handle rapid creation and destruction cycles', () => {
+      // Test memory management under rapid allocation/deallocation
+      const startTime = performance.now();
+      
+      for (let cycle = 0; cycle < 10; cycle++) {
+        const builders = Array.from({ length: 100 }, (_, i) =>
+          new ActionDefinitionBuilder(`perf:cycle${cycle}-action${i}`)
+            .withName(`Performance Action ${i}`)
+            .withDescription(`Cycle ${cycle} performance test action ${i}`)
+            .asBasicAction()
+        );
+
+        const actions = builders.map(builder => builder.build());
+        
+        // Verify all actions in this cycle
+        actions.forEach(action => {
+          expect(validateActionStructure(action)).toBe(true);
+        });
+      }
+
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      
+      // Should complete 1000 actions across 10 cycles in reasonable time
+      expect(duration).toBeLessThan(500); // Less than 500ms total
+    });
+
+    it('should maintain consistent performance across different action types', () => {
+      const actionTypes = [
+        () => new ActionDefinitionBuilder('perf:basic').withName('Basic').withDescription('Basic action').asBasicAction().build(),
+        () => new ActionDefinitionBuilder('perf:targeted').withName('Targeted').withDescription('Targeted action').asTargetedAction('test:scope').build(),
+        () => new ActionDefinitionBuilder('perf:movement').withName('Movement').withDescription('Movement action').asMovementAction().asBasicAction().build(),
+        () => new ActionDefinitionBuilder('perf:combat').withName('Combat').withDescription('Combat action').asCombatAction().asBasicAction().build(),
+        () => new ActionDefinitionBuilder('perf:complex').withName('Complex').withDescription('Complex action')
+          .asTargetedAction('test:scope').asCombatAction().requiresComponents(['test:a', 'test:b', 'test:c'])
+          .withPrerequisites(['test:x', 'test:y', 'test:z']).build()
+      ];
+
+      const times = actionTypes.map(createAction => {
+        const start = performance.now();
+        for (let i = 0; i < 100; i++) {
+          createAction();
+        }
+        return performance.now() - start;
+      });
+
+      // All action types should have similar performance characteristics
+      const maxTime = Math.max(...times);
+      const minTime = Math.min(...times);
+      const variance = maxTime - minTime;
+      
+      // Variance should be reasonable (less than 50ms difference)
+      expect(variance).toBeLessThan(50);
+      expect(maxTime).toBeLessThan(100); // No single type should take more than 100ms for 100 actions
+    });
+
+    if (typeof global !== 'undefined' && global.gc) {
+      it('should not create excessive garbage under stress', () => {
+        // Only run this test if garbage collection is available
+        const initialMemory = process.memoryUsage().heapUsed;
+        
+        // Force garbage collection before test
+        global.gc();
+        const baselineMemory = process.memoryUsage().heapUsed;
+        
+        // Create and destroy many builders
+        for (let i = 0; i < 1000; i++) {
+          const builder = new ActionDefinitionBuilder(`stress:action${i}`)
+            .withName(`Stress Action ${i}`)
+            .withDescription(`Stress test action ${i}`)
+            .asTargetedAction('stress:scope')
+            .requiresComponents(['stress:comp1', 'stress:comp2', 'stress:comp3'])
+            .withPrerequisites(['stress:cond1', 'stress:cond2', 'stress:cond3']);
+          
+          const action = builder.build();
+          
+          // Use the action briefly
+          expect(action.id).toBeDefined();
+        }
+        
+        // Force garbage collection after test
+        global.gc();
+        const finalMemory = process.memoryUsage().heapUsed;
+        
+        const memoryIncrease = finalMemory - baselineMemory;
+        
+        // Memory increase should be reasonable (less than 10MB for 1000 actions)
+        expect(memoryIncrease).toBeLessThan(10 * 1024 * 1024);
+      });
+    }
   });
 });

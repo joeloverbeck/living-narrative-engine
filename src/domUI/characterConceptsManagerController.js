@@ -1,34 +1,15 @@
-# Ticket 03: Controller Setup and Basic Structure
-
-## Overview
-
-Create the CharacterConceptsManagerController class with proper dependency injection, initialization, and basic structure for managing the Character Concepts Manager page.
-
-## Dependencies
-
-- Ticket 01: HTML Structure and Page Layout (must be completed)
-- Ticket 02: CSS Styling (should be completed)
-
-## Implementation Details
-
-### 1. Create Controller File
-
-Create a new file `src/domUI/characterConceptsManagerController.js`:
-
-```javascript
 /**
  * @file Controller for managing character concepts CRUD operations and UI
  * @see characterBuilderService.js
  */
 
-import { validateDependency } from '../utils/validationUtils.js';
-import { ensureValidLogger } from '../utils/loggerUtils.js';
-import { debounce } from '../utils/timeUtils.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
+import { FormValidationHelper, ValidationPatterns } from '../shared/characterBuilder/formValidationHelper.js';
 
-/** @typedef {import('../characterBuilder/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
+/** @typedef {import('../characterBuilder/services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
 /** @typedef {import('../events/eventBus.js').EventBus} EventBus */
 /** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
-/** @typedef {import('./uiStateManager.js').UIStateManager} UIStateManager */
+/** @typedef {import('../shared/characterBuilder/uiStateManager.js').UIStateManager} UIStateManager */
 
 /**
  * Controller for the Character Concepts Manager page
@@ -49,32 +30,35 @@ export class CharacterConceptsManagerController {
   #elements = {};
 
   /**
-   * @param {Object} deps
+   * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {CharacterBuilderService} deps.characterBuilderService
    * @param {EventBus} deps.eventBus
    */
   constructor({ logger, characterBuilderService, eventBus }) {
     // Validate dependencies
-    this.#logger = ensureValidLogger(logger);
+    validateDependency(logger, 'ILogger', logger, {
+      requiredMethods: ['debug', 'info', 'warn', 'error'],
+    });
     validateDependency(
       characterBuilderService,
       'CharacterBuilderService',
-      null,
+      logger,
       {
         requiredMethods: [
           'getAllCharacterConcepts',
           'createCharacterConcept',
           'updateCharacterConcept',
           'deleteCharacterConcept',
-          'getThematicDirectionsByConceptId',
+          'getThematicDirections',
         ],
       }
     );
-    validateDependency(eventBus, 'EventBus', null, {
+    validateDependency(eventBus, 'EventBus', logger, {
       requiredMethods: ['on', 'off', 'dispatch'],
     });
 
+    this.#logger = logger;
     this.#characterBuilderService = characterBuilderService;
     this.#eventBus = eventBus;
 
@@ -83,6 +67,7 @@ export class CharacterConceptsManagerController {
 
   /**
    * Initialize the controller and set up the page
+   *
    * @returns {Promise<void>}
    */
   async initialize() {
@@ -184,16 +169,13 @@ export class CharacterConceptsManagerController {
    * Initialize the UI state manager
    */
   async #initializeUIStateManager() {
-    const { UIStateManager } = await import('./uiStateManager.js');
+    const { UIStateManager } = await import('../shared/characterBuilder/uiStateManager.js');
 
     this.#uiStateManager = new UIStateManager({
-      container: this.#elements.conceptsContainer,
-      states: {
-        empty: this.#elements.emptyState,
-        loading: this.#elements.loadingState,
-        error: this.#elements.errorState,
-        results: this.#elements.resultsState,
-      },
+      emptyState: this.#elements.emptyState,
+      loadingState: this.#elements.loadingState,
+      errorState: this.#elements.errorState,
+      resultsState: this.#elements.resultsState,
     });
   }
 
@@ -230,13 +212,13 @@ export class CharacterConceptsManagerController {
       this.#navigateToMenu()
     );
 
-    // Search input with debouncing
-    const debouncedSearch = debounce(
-      (searchTerm) => this.#handleSearch(searchTerm),
-      300
-    );
+    // Search input with debouncing using FormValidationHelper
+    let searchTimeout;
     this.#elements.conceptSearch.addEventListener('input', (e) => {
-      debouncedSearch(e.target.value);
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        this.#handleSearch(e.target.value);
+      }, 300);
     });
 
     // Modal handlers
@@ -299,11 +281,16 @@ export class CharacterConceptsManagerController {
    * Set up form-specific event handlers
    */
   #setupFormHandlers() {
-    // Character counter
-    this.#elements.conceptText.addEventListener('input', () => {
-      this.#updateCharacterCount();
-      this.#validateConceptForm();
-    });
+    // Set up real-time validation using FormValidationHelper
+    FormValidationHelper.setupRealTimeValidation(
+      this.#elements.conceptText,
+      ValidationPatterns.concept,
+      {
+        debounceMs: 300,
+        countElement: this.#elements.charCount,
+        maxLength: 1000,
+      }
+    );
 
     // Form submission
     this.#elements.conceptForm.addEventListener('submit', (e) => {
@@ -316,8 +303,8 @@ export class CharacterConceptsManagerController {
    * Set up service event listeners
    */
   #setupServiceEventListeners() {
-    // Import event constants
-    import('../characterBuilder/characterBuilderEvents.js').then(
+    // Import event constants from CharacterBuilderService
+    import('../characterBuilder/services/characterBuilderService.js').then(
       ({ CHARACTER_BUILDER_EVENTS }) => {
         // Listen for concept events
         this.#eventBus.on(
@@ -349,59 +336,28 @@ export class CharacterConceptsManagerController {
 
   /**
    * Show error state
+   *
    * @param {string} message
    */
   #showError(message) {
-    this.#elements.errorMessageText.textContent = message;
-    this.#uiStateManager.setState('error');
-  }
-
-  /**
-   * Update character count display
-   */
-  #updateCharacterCount() {
-    const length = this.#elements.conceptText.value.length;
-    const max = 1000;
-
-    this.#elements.charCount.textContent = `${length}/${max}`;
-
-    // Update styling based on count
-    if (length > max) {
-      this.#elements.charCount.classList.add('error');
-      this.#elements.charCount.classList.remove('warning');
-    } else if (length > max * 0.9) {
-      this.#elements.charCount.classList.add('warning');
-      this.#elements.charCount.classList.remove('error');
+    if (this.#uiStateManager) {
+      this.#uiStateManager.showError(message);
     } else {
-      this.#elements.charCount.classList.remove('warning', 'error');
+      this.#logger.error(`Error state: ${message}`);
     }
   }
 
   /**
-   * Validate the concept form
+   * Validate the concept form using FormValidationHelper
+   *
    * @returns {boolean}
    */
   #validateConceptForm() {
-    const conceptText = this.#elements.conceptText.value.trim();
-    const minLength = 10;
-    const maxLength = 1000;
-
-    let isValid = true;
-    let errorMessage = '';
-
-    if (conceptText.length < minLength) {
-      isValid = false;
-      errorMessage = `Concept must be at least ${minLength} characters`;
-    } else if (conceptText.length > maxLength) {
-      isValid = false;
-      errorMessage = `Concept must not exceed ${maxLength} characters`;
-    }
-
-    // Update UI
-    this.#elements.conceptError.textContent = errorMessage;
-    this.#elements.saveConceptBtn.disabled = !isValid;
-
-    return isValid;
+    return FormValidationHelper.validateField(
+      this.#elements.conceptText,
+      ValidationPatterns.concept,
+      'Concept'
+    );
   }
 
   // Placeholder methods for operations (to be implemented in subsequent tickets)
@@ -457,96 +413,3 @@ export class CharacterConceptsManagerController {
 }
 
 export default CharacterConceptsManagerController;
-```
-
-### 2. Create UIStateManager Import
-
-Ensure the UIStateManager is available by verifying it exists or creating a simple version:
-
-```javascript
-// In src/domUI/uiStateManager.js
-export class UIStateManager {
-  #container;
-  #states;
-  #currentState;
-
-  constructor({ container, states }) {
-    this.#container = container;
-    this.#states = states;
-  }
-
-  setState(stateName) {
-    // Hide all states
-    Object.values(this.#states).forEach((element) => {
-      if (element) element.style.display = 'none';
-    });
-
-    // Show requested state
-    if (this.#states[stateName]) {
-      this.#states[stateName].style.display = 'block';
-      this.#currentState = stateName;
-    }
-  }
-
-  getCurrentState() {
-    return this.#currentState;
-  }
-}
-```
-
-### 3. Add Character Builder Events Constants
-
-Create or update `src/characterBuilder/characterBuilderEvents.js`:
-
-```javascript
-/**
- * Event constants for Character Builder operations
- */
-export const CHARACTER_BUILDER_EVENTS = {
-  // Character concepts
-  CONCEPT_CREATED: 'character-builder:concept-created',
-  CONCEPT_UPDATED: 'character-builder:concept-updated',
-  CONCEPT_DELETED: 'character-builder:concept-deleted',
-
-  // Thematic directions
-  DIRECTIONS_GENERATED: 'character-builder:directions-generated',
-  DIRECTION_CREATED: 'character-builder:direction-created',
-  DIRECTION_UPDATED: 'character-builder:direction-updated',
-  DIRECTION_DELETED: 'character-builder:direction-deleted',
-};
-```
-
-## Acceptance Criteria
-
-1. ✅ Controller class created with proper structure
-2. ✅ Dependency injection implemented correctly
-3. ✅ All dependencies validated with proper error messages
-4. ✅ DOM elements cached on initialization
-5. ✅ UIStateManager integrated for state management
-6. ✅ Event listeners set up for all interactive elements
-7. ✅ Service event listeners configured
-8. ✅ Form validation logic implemented
-9. ✅ Character counter functionality working
-10. ✅ Modal escape key handling implemented
-11. ✅ Debounced search handler configured
-12. ✅ Proper logging throughout the controller
-
-## Testing Requirements
-
-1. Test constructor with missing dependencies
-2. Test initialization flow
-3. Verify all DOM elements are cached correctly
-4. Test form validation with various inputs
-5. Test character counter updates
-6. Verify event listener setup
-7. Test navigation back to menu
-8. Test error state display
-
-## Notes
-
-- Follow existing controller patterns from the codebase
-- Use the project's validation utilities
-- Implement proper error handling and logging
-- Keep methods focused and single-purpose
-- Use private fields and methods appropriately
-- Ensure all async operations are properly handled

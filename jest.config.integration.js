@@ -25,7 +25,7 @@ module.exports = {
   // Integration tests have moderate coverage expectations
   coverageThreshold: {
     global: {
-      branches: 45,
+      branches: 50,
       functions: 50,
       lines: 50,
       statements: 50,

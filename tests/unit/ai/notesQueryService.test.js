@@ -108,6 +108,12 @@ describe('NotesQueryService', () => {
       const results = service.queryByContext(sampleNotes, 'legacy');
       expect(results).toHaveLength(0);
     });
+
+    test('should handle invalid context parameter', () => {
+      expect(service.queryByContext(sampleNotes, null)).toEqual([]);
+      expect(service.queryByContext(sampleNotes, undefined)).toEqual([]);
+      expect(service.queryByContext(sampleNotes, '')).toEqual([]);
+    });
   });
 
   describe('queryByTags', () => {
@@ -148,6 +154,12 @@ describe('NotesQueryService', () => {
       const arrayResults = service.queryByTags(sampleNotes, ['emotion']);
       expect(stringResults).toEqual(arrayResults);
     });
+
+    test('should handle invalid tags parameter', () => {
+      expect(service.queryByTags(sampleNotes, null)).toEqual([]);
+      expect(service.queryByTags(sampleNotes, undefined)).toEqual([]);
+      expect(service.queryByTags(sampleNotes, '')).toEqual([]);
+    });
   });
 
   describe('queryByText', () => {
@@ -184,6 +196,12 @@ describe('NotesQueryService', () => {
     test('should be case insensitive', () => {
       const results = service.queryByText(sampleNotes, 'NERVOUS');
       expect(results).toHaveLength(1);
+    });
+
+    test('should handle invalid searchText parameter', () => {
+      expect(service.queryByText(sampleNotes, null)).toEqual([]);
+      expect(service.queryByText(sampleNotes, undefined)).toEqual([]);
+      expect(service.queryByText(sampleNotes, '')).toEqual([]);
     });
   });
 
@@ -229,6 +247,15 @@ describe('NotesQueryService', () => {
       const results = service.queryByTimeRange(sampleNotes, 'invalid', 'date');
       expect(results).toEqual([]);
     });
+
+    test('should handle missing date parameters', () => {
+      expect(service.queryByTimeRange(sampleNotes, null, '2024-01-15T11:00:00Z')).toEqual([]);
+      expect(service.queryByTimeRange(sampleNotes, '2024-01-15T09:00:00Z', null)).toEqual([]);
+      expect(service.queryByTimeRange(sampleNotes, undefined, '2024-01-15T11:00:00Z')).toEqual([]);
+      expect(service.queryByTimeRange(sampleNotes, '2024-01-15T09:00:00Z', undefined)).toEqual([]);
+      expect(service.queryByTimeRange(sampleNotes, '', '2024-01-15T11:00:00Z')).toEqual([]);
+      expect(service.queryByTimeRange(sampleNotes, '2024-01-15T09:00:00Z', '')).toEqual([]);
+    });
   });
 
   describe('query (complex queries)', () => {
@@ -271,6 +298,24 @@ describe('NotesQueryService', () => {
       const results = service.query(sampleNotes, {});
       expect(results).toHaveLength(5);
     });
+
+    test('should handle invalid notes parameter', () => {
+      expect(service.query(null, { subject: 'John' })).toEqual([]);
+      expect(service.query(undefined, { subject: 'John' })).toEqual([]);
+      expect(service.query('invalid', { subject: 'John' })).toEqual([]);
+      expect(service.query(123, { subject: 'John' })).toEqual([]);
+    });
+
+    test('should apply text filter in complex query', () => {
+      const results = service.query(sampleNotes, {
+        text: 'nervous',
+        options: {
+          text: { exact: false }
+        }
+      });
+      expect(results).toHaveLength(1);
+      expect(results[0].text).toContain('nervous');
+    });
   });
 
   describe('getAllSubjects', () => {
@@ -303,6 +348,14 @@ describe('NotesQueryService', () => {
       const notesWithoutTags = [{ text: 'Note 1' }, { text: 'Note 2' }];
       expect(service.getAllTags(notesWithoutTags)).toEqual([]);
     });
+
+    test('should handle invalid notes parameter', () => {
+      expect(service.getAllTags(null)).toEqual([]);
+      expect(service.getAllTags(undefined)).toEqual([]);
+      expect(service.getAllTags('invalid')).toEqual([]);
+      expect(service.getAllTags(123)).toEqual([]);
+      expect(service.getAllTags({})).toEqual([]);
+    });
   });
 
   describe('getAllContexts', () => {
@@ -313,6 +366,14 @@ describe('NotesQueryService', () => {
         'tavern conversation',
         'training grounds',
       ]);
+    });
+
+    test('should handle invalid notes parameter', () => {
+      expect(service.getAllContexts(null)).toEqual([]);
+      expect(service.getAllContexts(undefined)).toEqual([]);
+      expect(service.getAllContexts('invalid')).toEqual([]);
+      expect(service.getAllContexts(123)).toEqual([]);
+      expect(service.getAllContexts({})).toEqual([]);
     });
   });
 
