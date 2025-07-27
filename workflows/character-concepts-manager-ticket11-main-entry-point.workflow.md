@@ -10,6 +10,23 @@ Create the main entry point JavaScript file for the Character Concepts Manager, 
 - Ticket 03: Controller Setup (completed)
 - All other core functionality tickets
 
+## Current State Analysis
+
+### Findings:
+1. **Main entry point file**: `src/character-concepts-manager-main.js` does NOT exist
+2. **Controller**: `CharacterConceptsManagerController` exists and is properly exported from `src/domUI/characterConceptsManagerController.js`
+3. **Dependency Injection**: 
+   - `ICharacterBuilderService` token is defined in `tokens-core.js`
+   - `CharacterBuilderService` is registered in `characterBuilderRegistrations.js`
+   - Uses `ISafeEventDispatcher` instead of `IEventBus` for the eventBus dependency
+4. **Build Configuration**: 
+   - No `esbuild.config.mjs` file exists
+   - Build is done via inline commands in `package.json` scripts
+   - Character concepts manager build would need to be added to the build script
+5. **HTML**: 
+   - `character-concepts-manager.html` exists
+   - Currently references `character-concepts-manager.js` (not built file in dist/)
+
 ## Implementation Details
 
 ### 1. Create Main Entry Point File
@@ -55,7 +72,7 @@ async function initializeApp() {
     const characterBuilderService = appContainer.resolve(
       tokens.ICharacterBuilderService
     );
-    const eventBus = appContainer.resolve(tokens.IEventBus);
+    const eventBus = appContainer.resolve(tokens.ISafeEventDispatcher);
 
     // Validate services
     if (!characterBuilderService) {
@@ -63,7 +80,7 @@ async function initializeApp() {
     }
 
     if (!eventBus) {
-      throw new Error('EventBus not found in container');
+      throw new Error('SafeEventDispatcher not found in container');
     }
 
     // Create controller
@@ -253,148 +270,45 @@ waitForDOM().then(() => {
 export { initializeApp, PAGE_NAME };
 ```
 
-### 2. Update esbuild Configuration
+### 2. Update Build Configuration
 
-Update `esbuild.config.mjs` to include the new entry point:
+Since the project uses inline esbuild commands in package.json, update the build script to include the new entry point:
 
-```javascript
-import * as esbuild from 'esbuild';
-import { readFileSync } from 'fs';
+In `package.json`, update the `build` script to include the character concepts manager:
 
-// Read package.json for version info
-const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
-
-const commonOptions = {
-  bundle: true,
-  sourcemap: true,
-  format: 'iife',
-  target: ['es2020'],
-  define: {
-    'process.env.NODE_ENV': JSON.stringify(
-      process.env.NODE_ENV || 'development'
-    ),
-    'process.env.VERSION': JSON.stringify(packageJson.version),
-  },
-  loader: {
-    '.js': 'js',
-  },
-};
-
-// Build configurations for each entry point
-const builds = [
-  {
-    entryPoints: ['src/main.js'],
-    outfile: 'dist/bundle.js',
-    ...commonOptions,
-  },
-  {
-    entryPoints: ['src/anatomy-visualizer.js'],
-    outfile: 'dist/anatomy-visualizer.js',
-    ...commonOptions,
-  },
-  {
-    entryPoints: ['src/thematic-direction-main.js'],
-    outfile: 'dist/thematic-direction-generator.js',
-    ...commonOptions,
-  },
-  {
-    entryPoints: [
-      'src/thematicDirectionsManager/thematicDirectionsManagerMain.js',
-    ],
-    outfile: 'dist/thematic-directions-manager.js',
-    ...commonOptions,
-  },
-  {
-    entryPoints: ['src/character-builder-main.js'],
-    outfile: 'dist/character-builder.js',
-    ...commonOptions,
-  },
-  {
-    // New entry point
-    entryPoints: ['src/character-concepts-manager-main.js'],
-    outfile: 'dist/character-concepts-manager.js',
-    ...commonOptions,
-  },
-];
-
-// Build all entry points
-async function buildAll() {
-  console.log('Building all entry points...');
-
-  for (const buildConfig of builds) {
-    try {
-      if (process.argv.includes('--watch')) {
-        // Watch mode
-        const ctx = await esbuild.context(buildConfig);
-        await ctx.watch();
-        console.log(`Watching ${buildConfig.entryPoints[0]}...`);
-      } else {
-        // Build mode
-        await esbuild.build(buildConfig);
-        console.log(`Built ${buildConfig.outfile}`);
-      }
-    } catch (error) {
-      console.error(`Failed to build ${buildConfig.entryPoints[0]}:`, error);
-      process.exit(1);
-    }
-  }
-
-  if (!process.argv.includes('--watch')) {
-    console.log('All builds completed successfully!');
+```json
+{
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --outfile=dist/bundle.js --platform=browser --sourcemap && esbuild src/anatomy-visualizer.js --bundle --outfile=dist/anatomy-visualizer.js --platform=browser --sourcemap && esbuild src/thematic-direction-main.js --bundle --outfile=dist/thematic-direction.js --platform=browser --sourcemap && esbuild src/thematicDirectionsManager/thematicDirectionsManagerMain.js --bundle --outfile=dist/thematic-directions-manager.js --platform=browser --sourcemap && esbuild src/character-concepts-manager-main.js --bundle --outfile=dist/character-concepts-manager.js --platform=browser --sourcemap && cpy \"*.html\" dist && cpy css dist && cpy data dist && cpy config dist && cpy \"*.{ico,png,webmanifest}\" dist"
   }
 }
-
-// Run builds
-buildAll();
 ```
 
-### 3. Update HTML Script Reference
+### 3. Verify HTML Script Reference
 
-Ensure the HTML file references the built bundle:
+The HTML file already has the correct script reference:
 
 ```html
 <!-- In character-concepts-manager.html -->
-<script src="dist/character-concepts-manager.js"></script>
+<script src="character-concepts-manager.js"></script>
 ```
 
-### 4. Add Service Registration
+This is correct because during the build process, both the HTML file and the built JavaScript file are copied to the `dist/` folder, so they're at the same level.
+### 4. Verify Service Registration
 
-Ensure CharacterBuilderService is registered in the container. Update `src/dependencyInjection/containerConfig.js`:
+The CharacterBuilderService is already registered in `src/dependencyInjection/registrations/characterBuilderRegistrations.js`. The registration happens automatically when the container is initialized. Note that it uses different token names:
 
 ```javascript
-// Add to imports
-import { CharacterBuilderService } from '../characterBuilder/characterBuilderService.js';
-
-// Add to registrations
-export function registerCharacterBuilder(container) {
-  // Register character builder service if not already registered
-  if (!container.isRegistered(tokens.ICharacterBuilderService)) {
-    container.register(
-      tokens.ICharacterBuilderService,
-      CharacterBuilderService,
-      {
-        lifetime: 'singleton',
-        factory: (deps) => {
-          const logger = deps.resolve(tokens.ILogger);
-          const eventBus = deps.resolve(tokens.IEventBus);
-          const storageProvider = deps.resolve(tokens.IStorageProvider);
-
-          return new CharacterBuilderService({
-            logger,
-            eventBus,
-            storageProvider,
-          });
-        },
-      }
-    );
-  }
-}
-
-// Ensure it's called in the main registration function
-export function registerAllServices(container) {
-  // ... other registrations ...
-  registerCharacterBuilder(container);
-}
+```javascript
+// Already registered in characterBuilderRegistrations.js:
+registrar.singletonFactory(tokens.CharacterBuilderService, (c) => {
+  return new CharacterBuilderService({
+    logger: c.resolve(tokens.ILogger),
+    storageService: c.resolve(tokens.CharacterStorageService),
+    directionGenerator: c.resolve(tokens.ThematicDirectionGenerator),
+    eventBus: c.resolve(tokens.ISafeEventDispatcher), // Note: uses ISafeEventDispatcher
+  });
+});
 ```
 
 ### 5. Add Loading State CSS
@@ -530,16 +444,15 @@ Update the index.html to include navigation to Character Concepts Manager:
 
 ### 7. Add Build Scripts
 
-Update package.json scripts:
+Add new scripts to package.json:
 
 ```json
 {
   "scripts": {
-    "build": "node esbuild.config.mjs",
-    "build:watch": "node esbuild.config.mjs --watch",
-    "build:concepts": "esbuild src/character-concepts-manager-main.js --bundle --outfile=dist/character-concepts-manager.js --sourcemap --format=iife --target=es2020",
-    "dev:concepts": "npm run build:concepts -- --watch",
-    "serve": "http-server -p 8080 -c-1"
+    "build:concepts": "esbuild src/character-concepts-manager-main.js --bundle --outfile=dist/character-concepts-manager.js --sourcemap --platform=browser",
+    "dev:concepts": "npm run build:concepts -- --watch"
+    // Note: The main build script already exists and needs to be updated as shown in step 2
+    // Note: serve script already exists as "npm run start"
   }
 }
 ```
@@ -687,7 +600,10 @@ logger.setLevel(config.logLevel);
 
 ## Notes
 
-- Ensure all dependencies are properly registered
+- Ensure all dependencies are properly registered (CharacterBuilderService is already registered)
+- The eventBus uses ISafeEventDispatcher token, not IEventBus
+- Build configuration uses inline commands in package.json, not a separate esbuild.config.mjs file
+- HTML file correctly references the script path (no dist/ prefix needed since files are copied to dist/)
 - Test with different network conditions
 - Verify bundle size is reasonable
 - Consider implementing lazy loading for large dependencies

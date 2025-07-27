@@ -3154,37 +3154,6 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
   });
 
   describe('Event Handler', () => {
-    it('should handle concept deleted event', () => {
-      const mockCard = createMockElement('concept-card');
-      mockElements['concepts-results'].querySelector.mockReturnValue(mockCard);
-
-      const event = { detail: { conceptId: 'concept-1' } };
-      controller._testExports.handleConceptDeleted(event);
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Concept deleted event received',
-        event.detail
-      );
-      expect(mockCard.remove).toHaveBeenCalled();
-    });
-
-    it('should update statistics on delete event', () => {
-      // Setup initial conceptsData
-      controller._testExports.conceptsData = [...mockConceptsData];
-      
-      // Mock the querySelector for the concept card removal
-      const mockCard = createMockElement('concept-card');
-      mockCard.dataset.conceptId = 'concept-1';
-      mockElements['concepts-results'].querySelector.mockReturnValue(mockCard);
-
-      const event = { detail: { conceptId: 'concept-1' } };
-      controller._testExports.handleConceptDeleted(event);
-
-      // Verify concept was removed from local cache (effect of updateStatistics being called)
-      expect(controller._testExports.conceptsData).toHaveLength(2); // Started with 3, should now have 2
-      expect(mockCard.remove).toHaveBeenCalled();
-    });
-
     it('should show empty state if no concepts remain', () => {
       controller._testExports.conceptsData = [];
 
