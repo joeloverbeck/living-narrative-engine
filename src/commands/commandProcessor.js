@@ -238,7 +238,12 @@ class CommandProcessor extends ICommandProcessor {
 
       // Create fallback payload
       const fallbackPayload = this.#createFallbackPayload(actor, turnAction);
-      this.#updatePayloadMetrics(fallbackPayload, extractionResult, duration, true);
+      this.#updatePayloadMetrics(
+        fallbackPayload,
+        extractionResult,
+        duration,
+        true
+      );
 
       return fallbackPayload;
     }
@@ -295,7 +300,9 @@ class CommandProcessor extends ICommandProcessor {
     }
 
     if (!turnAction.commandString && !turnAction.actionDefinitionId) {
-      throw new Error('Turn action must have either commandString or actionDefinitionId');
+      throw new Error(
+        'Turn action must have either commandString or actionDefinitionId'
+      );
     }
   }
 
@@ -307,10 +314,13 @@ class CommandProcessor extends ICommandProcessor {
    * @returns {object} Basic event payload
    */
   #createFallbackPayload(actor, turnAction) {
-    this.#logger.warn('Creating fallback payload due to enhanced creation failure');
+    this.#logger.warn(
+      'Creating fallback payload due to enhanced creation failure'
+    );
 
     // Use original simple payload creation as fallback
-    const { actionDefinitionId, resolvedParameters, commandString } = turnAction;
+    const { actionDefinitionId, resolvedParameters, commandString } =
+      turnAction;
 
     return {
       eventName: ATTEMPT_ACTION_ID,
@@ -365,10 +375,16 @@ class CommandProcessor extends ICommandProcessor {
    * @param {number} duration - Creation duration
    * @param {boolean} isFallback - Whether this was a fallback creation
    */
-  #updatePayloadMetrics(payload, extractionResult, duration, isFallback = false) {
+  #updatePayloadMetrics(
+    payload,
+    extractionResult,
+    duration,
+    isFallback = false
+  ) {
     this.#payloadCreationCount++;
     this.#totalPayloadCreationTime += duration;
-    this.#averagePayloadCreationTime = this.#totalPayloadCreationTime / this.#payloadCreationCount;
+    this.#averagePayloadCreationTime =
+      this.#totalPayloadCreationTime / this.#payloadCreationCount;
 
     if (isFallback) {
       this.#fallbackPayloadCount++;
@@ -380,7 +396,10 @@ class CommandProcessor extends ICommandProcessor {
 
     // Log metrics periodically
     if (this.#payloadCreationCount % 100 === 0) {
-      this.#logger.info('Payload creation metrics update', this.getPayloadCreationStatistics());
+      this.#logger.info(
+        'Payload creation metrics update',
+        this.getPayloadCreationStatistics()
+      );
     }
   }
 

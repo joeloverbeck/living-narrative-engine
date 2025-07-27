@@ -92,7 +92,12 @@ export class TargetManager {
    */
   addTarget(name, entityId) {
     assertNonBlankString(name, 'name', 'TargetManager.addTarget', this.#logger);
-    assertNonBlankString(entityId, 'entityId', 'TargetManager.addTarget', this.#logger);
+    assertNonBlankString(
+      entityId,
+      'entityId',
+      'TargetManager.addTarget',
+      this.#logger
+    );
 
     if (!isValidTargetName(name)) {
       this.#logger.warn('Target name does not follow conventions', { name });
@@ -123,7 +128,12 @@ export class TargetManager {
    * @returns {boolean} True if target was removed
    */
   removeTarget(name) {
-    assertNonBlankString(name, 'name', 'TargetManager.removeTarget', this.#logger);
+    assertNonBlankString(
+      name,
+      'name',
+      'TargetManager.removeTarget',
+      this.#logger
+    );
 
     const entityId = this.#targets.get(name);
     if (!entityId) {
@@ -171,7 +181,12 @@ export class TargetManager {
    * @throws {Error} If entity ID is not in targets
    */
   setPrimaryTarget(entityId) {
-    assertNonBlankString(entityId, 'entityId', 'TargetManager.setPrimaryTarget', this.#logger);
+    assertNonBlankString(
+      entityId,
+      'entityId',
+      'TargetManager.setPrimaryTarget',
+      this.#logger
+    );
 
     // Check if entity ID exists in targets
     const targetNames = Array.from(this.#targets.entries())

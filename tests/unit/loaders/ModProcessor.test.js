@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { ModProcessor } from '../../../src/loaders/ModProcessor.js';
 import LoadResultAggregator from '../../../src/loaders/LoadResultAggregator.js';
 
@@ -156,7 +163,9 @@ describe('ModProcessor', () => {
 
       expect(result.status).toBe('skipped');
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining("Manifest not found in registry for mod ID 'test-mod'")
+        expect.stringContaining(
+          "Manifest not found in registry for mod ID 'test-mod'"
+        )
       );
       expect(validatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'initialization:world_loader:mod_load_failed',
@@ -209,7 +218,7 @@ describe('ModProcessor', () => {
         },
       };
       const error = new Error('Unexpected error');
-      
+
       // Mock timer to throw error
       timer.mockImplementation(() => {
         throw error;
@@ -228,7 +237,9 @@ describe('ModProcessor', () => {
         'initialization:world_loader:mod_load_failed',
         expect.objectContaining({
           modId: 'test-mod',
-          reason: expect.stringContaining('Unexpected error in phase definitions'),
+          reason: expect.stringContaining(
+            'Unexpected error in phase definitions'
+          ),
         }),
         { allowSchemaNotFound: true }
       );
@@ -273,7 +284,9 @@ describe('ModProcessor', () => {
 
       expect(result.status).toBe('success');
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining("actions file 'action1.json' failed: Parse error"),
+        expect.stringContaining(
+          "actions file 'action1.json' failed: Parse error"
+        ),
         expect.objectContaining({
           modId: 'test-mod',
           registryKey: 'actions',
@@ -312,7 +325,9 @@ describe('ModProcessor', () => {
       );
 
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Loader for 'actions' returned an unexpected result format"),
+        expect.stringContaining(
+          "Loader for 'actions' returned an unexpected result format"
+        ),
         expect.objectContaining({ result: null })
       );
       expect(mockAggregator.aggregate).toHaveBeenCalledWith(null, 'actions');
@@ -434,7 +449,9 @@ describe('ModProcessor', () => {
       );
 
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("Skipping content type 'actions' (key: 'actions') as it's not defined or empty")
+        expect.stringContaining(
+          "Skipping content type 'actions' (key: 'actions') as it's not defined or empty"
+        )
       );
       expect(phaseLoaders[0].loader.loadItemsForMod).not.toHaveBeenCalled();
     });
@@ -453,7 +470,9 @@ describe('ModProcessor', () => {
 
       expect(result.status).toBe('skipped');
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed dispatching mod_load_failed event for test-mod'),
+        expect.stringContaining(
+          'Failed dispatching mod_load_failed event for test-mod'
+        ),
         dispatchError
       );
     });
@@ -501,7 +520,9 @@ describe('ModProcessor', () => {
 
       expect(result.status).toBe('success');
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining("actions file 'action1.json' failed: Parse error"),
+        expect.stringContaining(
+          "actions file 'action1.json' failed: Parse error"
+        ),
         expect.objectContaining({
           modId: 'test-mod',
           registryKey: 'actions',
@@ -511,7 +532,9 @@ describe('ModProcessor', () => {
         expect.any(Error)
       );
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining("actions file 'action2.json' failed: String error message"),
+        expect.stringContaining(
+          "actions file 'action2.json' failed: String error message"
+        ),
         expect.objectContaining({
           modId: 'test-mod',
           registryKey: 'actions',
@@ -562,7 +585,9 @@ describe('ModProcessor', () => {
       );
 
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("Mod 'test-mod' phase 'definitions' loaded in 250.00ms")
+        expect.stringContaining(
+          "Mod 'test-mod' phase 'definitions' loaded in 250.00ms"
+        )
       );
       expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('actions(3 E:1)')
@@ -593,7 +618,9 @@ describe('ModProcessor', () => {
 
       expect(result.status).toBe('skipped');
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("Mod 'test-mod' phase 'definitions' loaded in 100.00ms: No items processed in this phase-> Overrides(0), Errors(0)")
+        expect.stringContaining(
+          "Mod 'test-mod' phase 'definitions' loaded in 100.00ms: No items processed in this phase-> Overrides(0), Errors(0)"
+        )
       );
     });
 
@@ -635,7 +662,9 @@ describe('ModProcessor', () => {
       );
 
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining("actions file 'action1.json' failed: undefined"),
+        expect.stringContaining(
+          "actions file 'action1.json' failed: undefined"
+        ),
         expect.objectContaining({
           modId: 'test-mod',
           registryKey: 'actions',

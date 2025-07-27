@@ -60,10 +60,15 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         },
       };
 
-      const result = await commandProcessor.dispatchAction(mockActor, turnAction);
+      const result = await commandProcessor.dispatchAction(
+        mockActor,
+        turnAction
+      );
 
       expect(result.success).toBe(true);
-      expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledWith(
+      expect(
+        eventDispatchService.dispatchWithErrorHandling
+      ).toHaveBeenCalledWith(
         ATTEMPT_ACTION_ID,
         expect.objectContaining({
           eventName: 'core:attempt_action',
@@ -90,10 +95,14 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         },
       };
 
-      const result = await commandProcessor.dispatchAction(mockActor, turnAction);
+      const result = await commandProcessor.dispatchAction(
+        mockActor,
+        turnAction
+      );
 
       expect(result.success).toBe(true);
-      const dispatchedPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+      const dispatchedPayload =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
       // Verify exact legacy format
       expect(dispatchedPayload.eventName).toBe('core:attempt_action');
@@ -114,10 +123,14 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         resolvedParameters: {},
       };
 
-      const result = await commandProcessor.dispatchAction(mockActor, turnAction);
+      const result = await commandProcessor.dispatchAction(
+        mockActor,
+        turnAction
+      );
 
       expect(result.success).toBe(true);
-      const dispatchedPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+      const dispatchedPayload =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
       expect(dispatchedPayload).toMatchObject({
         eventName: 'core:attempt_action',
@@ -146,10 +159,14 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         },
       };
 
-      const result = await commandProcessor.dispatchAction(mockActor, turnAction);
+      const result = await commandProcessor.dispatchAction(
+        mockActor,
+        turnAction
+      );
 
       expect(result.success).toBe(true);
-      const dispatchedPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+      const dispatchedPayload =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
       expect(dispatchedPayload.targets).toEqual({
         primary: 'entity_1',
@@ -167,8 +184,10 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
   describe('Error Handling and Fallbacks', () => {
     it('should create fallback payload when extraction fails', async () => {
       // Force an error by mocking the MultiTargetEventBuilder to throw
-      const originalBuild = jest.requireActual('../../../src/entities/multiTarget/multiTargetEventBuilder.js').MultiTargetEventBuilder.prototype.build;
-      
+      const originalBuild = jest.requireActual(
+        '../../../src/entities/multiTarget/multiTargetEventBuilder.js'
+      ).MultiTargetEventBuilder.prototype.build;
+
       // We'll create a scenario where the builder throws an error
       const turnAction = {
         actionDefinitionId: 'test:action',
@@ -181,11 +200,15 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         },
       };
 
-      const result = await commandProcessor.dispatchAction(mockActor, turnAction);
+      const result = await commandProcessor.dispatchAction(
+        mockActor,
+        turnAction
+      );
 
       // Should still succeed with fallback payload
       expect(result.success).toBe(true);
-      const dispatchedPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+      const dispatchedPayload =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
       expect(dispatchedPayload).toMatchObject({
         eventName: 'core:attempt_action',
@@ -209,7 +232,9 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       const result = await commandProcessor.dispatchAction(null, turnAction);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Internal error: Malformed action prevented execution.');
+      expect(result.error).toBe(
+        'Internal error: Malformed action prevented execution.'
+      );
       expect(safeDispatchError).toHaveBeenCalled();
     });
 
@@ -217,7 +242,9 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       const result = await commandProcessor.dispatchAction(mockActor, null);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Internal error: Malformed action prevented execution.');
+      expect(result.error).toBe(
+        'Internal error: Malformed action prevented execution.'
+      );
       expect(safeDispatchError).toHaveBeenCalled();
     });
 
@@ -227,10 +254,15 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         resolvedParameters: {},
       };
 
-      const result = await commandProcessor.dispatchAction(mockActor, turnAction);
+      const result = await commandProcessor.dispatchAction(
+        mockActor,
+        turnAction
+      );
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Internal error: Malformed action prevented execution.');
+      expect(result.error).toBe(
+        'Internal error: Malformed action prevented execution.'
+      );
       expect(safeDispatchError).toHaveBeenCalled();
     });
   });
@@ -287,7 +319,10 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       };
 
       const startTime = performance.now();
-      const result = await commandProcessor.dispatchAction(mockActor, turnAction);
+      const result = await commandProcessor.dispatchAction(
+        mockActor,
+        turnAction
+      );
       const duration = performance.now() - startTime;
 
       expect(result.success).toBe(true);
@@ -317,10 +352,14 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         },
       };
 
-      const result = await commandProcessor.dispatchAction(mockActor, legacyTurnAction);
+      const result = await commandProcessor.dispatchAction(
+        mockActor,
+        legacyTurnAction
+      );
 
       expect(result.success).toBe(true);
-      const dispatchedPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+      const dispatchedPayload =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
       // Verify exact legacy format
       expect(dispatchedPayload).toEqual({
@@ -341,7 +380,9 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         'originalInput',
         'timestamp',
       ];
-      expect(Object.keys(dispatchedPayload).sort()).toEqual(expectedKeys.sort());
+      expect(Object.keys(dispatchedPayload).sort()).toEqual(
+        expectedKeys.sort()
+      );
     });
 
     it('should handle null targetId in legacy format', async () => {
@@ -353,10 +394,14 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         },
       };
 
-      const result = await commandProcessor.dispatchAction(mockActor, emoteAction);
+      const result = await commandProcessor.dispatchAction(
+        mockActor,
+        emoteAction
+      );
 
       expect(result.success).toBe(true);
-      const dispatchedPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+      const dispatchedPayload =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
       expect(dispatchedPayload.targetId).toBe(null);
       expect(dispatchedPayload.targets).toBeUndefined();
@@ -374,7 +419,8 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       const result = await commandProcessor.dispatchAction(mockActor, action);
 
       expect(result.success).toBe(true);
-      const dispatchedPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+      const dispatchedPayload =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
       expect(dispatchedPayload.targetId).toBe(null);
       expect(dispatchedPayload.targets).toBeUndefined();

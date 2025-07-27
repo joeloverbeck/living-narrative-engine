@@ -400,9 +400,10 @@ describe('CharacterDatabase', () => {
 
       const result = await getPromise;
 
-      expect(mockDbInstance.transaction).toHaveBeenCalledWith([
-        'characterConcepts',
-      ], 'readonly');
+      expect(mockDbInstance.transaction).toHaveBeenCalledWith(
+        ['characterConcepts'],
+        'readonly'
+      );
       expect(mockObjectStore.get).toHaveBeenCalledWith(conceptId);
       expect(result).toBe(concept);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -489,9 +490,10 @@ describe('CharacterDatabase', () => {
 
       const result = await getAllPromise;
 
-      expect(mockDbInstance.transaction).toHaveBeenCalledWith([
-        'characterConcepts',
-      ], 'readonly');
+      expect(mockDbInstance.transaction).toHaveBeenCalledWith(
+        ['characterConcepts'],
+        'readonly'
+      );
       expect(mockObjectStore.getAll).toHaveBeenCalled();
       expect(result).toBe(concepts);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -750,9 +752,10 @@ describe('CharacterDatabase', () => {
 
       const result = await getPromise;
 
-      expect(mockDbInstance.transaction).toHaveBeenCalledWith([
-        'thematicDirections',
-      ], 'readonly');
+      expect(mockDbInstance.transaction).toHaveBeenCalledWith(
+        ['thematicDirections'],
+        'readonly'
+      );
       expect(mockObjectStore.index).toHaveBeenCalledWith('conceptId');
       expect(mockIndex.getAll).toHaveBeenCalledWith(conceptId);
       expect(result).toBe(directions);
@@ -840,9 +843,10 @@ describe('CharacterDatabase', () => {
 
       const result = await getAllPromise;
 
-      expect(mockDbInstance.transaction).toHaveBeenCalledWith([
-        'thematicDirections',
-      ], 'readonly');
+      expect(mockDbInstance.transaction).toHaveBeenCalledWith(
+        ['thematicDirections'],
+        'readonly'
+      );
       expect(mockObjectStore.getAll).toHaveBeenCalled();
       expect(result).toBe(directions);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -920,9 +924,10 @@ describe('CharacterDatabase', () => {
 
       const result = await getPromise;
 
-      expect(mockDbInstance.transaction).toHaveBeenCalledWith([
-        'thematicDirections',
-      ], 'readonly');
+      expect(mockDbInstance.transaction).toHaveBeenCalledWith(
+        ['thematicDirections'],
+        'readonly'
+      );
       expect(mockObjectStore.get).toHaveBeenCalledWith(directionId);
       expect(result).toBe(direction);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -1243,7 +1248,9 @@ describe('CharacterDatabase', () => {
 
       const result = await findPromise;
 
-      expect(result).toEqual([{ id: 'direction-3', conceptId: 'nonexistent-concept' }]);
+      expect(result).toEqual([
+        { id: 'direction-3', conceptId: 'nonexistent-concept' },
+      ]);
       expect(mockLogger.info).toHaveBeenCalledWith(
         'CharacterDatabase: Found 1 orphaned directions'
       );
@@ -1350,7 +1357,9 @@ describe('CharacterDatabase', () => {
       const result = await findPromise;
 
       // Direction with error-concept should be considered orphaned
-      expect(result).toEqual([{ id: 'direction-2', conceptId: 'error-concept' }]);
+      expect(result).toEqual([
+        { id: 'direction-2', conceptId: 'error-concept' },
+      ]);
       expect(mockLogger.info).toHaveBeenCalledWith(
         'CharacterDatabase: Found 1 orphaned directions'
       );
@@ -1472,9 +1481,7 @@ describe('CharacterDatabase', () => {
     });
 
     it('should throw error when calling deleteThematicDirection without initialization', async () => {
-      await expect(
-        database.deleteThematicDirection('test-id')
-      ).rejects.toThrow(
+      await expect(database.deleteThematicDirection('test-id')).rejects.toThrow(
         'CharacterDatabase: Database not initialized. Call initialize() first.'
       );
     });

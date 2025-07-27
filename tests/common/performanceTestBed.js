@@ -47,10 +47,10 @@ async function forceGCAndGetBaseline() {
   if (global.gc) {
     global.gc();
     // Allow some time for GC to complete
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
     global.gc();
   }
-  
+
   return process.memoryUsage().heapUsed;
 }
 
@@ -62,19 +62,19 @@ async function forceGCAndGetBaseline() {
  */
 async function getStableMemoryUsage(samples = 3) {
   const measurements = [];
-  
+
   for (let i = 0; i < samples; i++) {
     if (i > 0) {
       // Small delay between measurements
-      await new Promise(resolve => setTimeout(resolve, 5));
+      await new Promise((resolve) => setTimeout(resolve, 5));
     }
     measurements.push(process.memoryUsage().heapUsed);
   }
-  
+
   // Return median to avoid outliers
   measurements.sort((a, b) => a - b);
   const mid = Math.floor(measurements.length / 2);
-  return measurements.length % 2 === 0 
+  return measurements.length % 2 === 0
     ? (measurements[mid - 1] + measurements[mid]) / 2
     : measurements[mid];
 }
@@ -92,7 +92,7 @@ export function createPerformanceTestBed() {
           let startMemoryPromise = null;
 
           if (options.trackMemory) {
-            startMemoryPromise = forceGCAndGetBaseline().then(baseline => {
+            startMemoryPromise = forceGCAndGetBaseline().then((baseline) => {
               baselineMemory = baseline;
               return getStableMemoryUsage();
             });
@@ -136,18 +136,18 @@ export function createPerformanceTestBed() {
               if (options.trackMemory && startMemoryPromise) {
                 const startMemory = await startMemoryPromise;
                 const peakMemory = await getStableMemoryUsage();
-                
+
                 // Force GC before final measurement
                 if (global.gc) {
                   global.gc();
-                  await new Promise(resolve => setTimeout(resolve, 10));
+                  await new Promise((resolve) => setTimeout(resolve, 10));
                 }
-                
+
                 const finalMemory = await getStableMemoryUsage();
-                
+
                 // Calculate memory delta from baseline
                 const memoryGrowth = Math.max(0, peakMemory - baselineMemory);
-                
+
                 metrics.memoryUsage = {
                   baseline: baselineMemory,
                   initial: startMemory,

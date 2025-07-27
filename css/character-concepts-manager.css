@@ -1034,6 +1034,114 @@ mark {
   color: var(--text-primary);
 }
 
+/* ===== Initialization Error Styles ===== */
+.init-error-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.init-error {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.init-error h2 {
+  margin: 0 0 1rem 0;
+  color: #e74c3c;
+  font-size: 1.5rem;
+}
+
+.init-error p {
+  margin: 0 0 1rem 0;
+  color: var(--text-secondary);
+}
+
+.init-error details {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.init-error summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.init-error pre {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.init-error-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.init-error-actions button {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.init-error-actions button:first-child {
+  background: var(--narrative-purple);
+  color: white;
+}
+
+.init-error-actions button:first-child:hover {
+  background: var(--narrative-purple-dark);
+  transform: translateY(-1px);
+}
+
+.init-error-actions button:last-child {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.init-error-actions button:last-child:hover {
+  background: var(--bg-tertiary);
+}
+
+/* Page loading state */
+.page-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+.page-loading .spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid var(--border-primary);
+  border-top-color: var(--narrative-purple);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
 /* ===== Accessibility Enhancement ===== */
 @media (prefers-reduced-motion: reduce) {
   *,

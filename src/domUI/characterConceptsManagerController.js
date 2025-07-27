@@ -11,7 +11,7 @@ import {
 import { UI_STATES } from '../shared/characterBuilder/uiStateManager.js';
 
 /** @typedef {import('../characterBuilder/services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
-/** @typedef {import('../events/eventBus.js').EventBus} EventBus */
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../shared/characterBuilder/uiStateManager.js').UIStateManager} UIStateManager */
 
@@ -35,7 +35,7 @@ export class CharacterConceptsManagerController {
   #searchStateRestored = false;
   #searchAnalytics = {
     searches: [],
-    noResultSearches: []
+    noResultSearches: [],
   };
 
   // Edit state tracking
@@ -61,7 +61,7 @@ export class CharacterConceptsManagerController {
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {CharacterBuilderService} deps.characterBuilderService
-   * @param {EventBus} deps.eventBus
+   * @param {ISafeEventDispatcher} deps.eventBus
    */
   constructor({ logger, characterBuilderService, eventBus }) {
     // Validate dependencies
@@ -82,8 +82,8 @@ export class CharacterConceptsManagerController {
         ],
       }
     );
-    validateDependency(eventBus, 'EventBus', logger, {
-      requiredMethods: ['on', 'off', 'dispatch'],
+    validateDependency(eventBus, 'ISafeEventDispatcher', logger, {
+      requiredMethods: ['dispatch', 'subscribe', 'unsubscribe'],
     });
 
     this.#logger = logger;
@@ -122,28 +122,28 @@ export class CharacterConceptsManagerController {
         set deleteHandler(value) {
           self.#deleteHandler = value;
         },
-        
+
         get searchFilter() {
           return self.#searchFilter;
         },
         set searchFilter(value) {
           self.#searchFilter = value;
         },
-        
+
         get searchAnalytics() {
           return self.#searchAnalytics;
         },
         set searchAnalytics(value) {
           self.#searchAnalytics = value;
         },
-        
+
         get searchStateRestored() {
           return self.#searchStateRestored;
         },
         set searchStateRestored(value) {
           self.#searchStateRestored = value;
         },
-        
+
         get elements() {
           return self.#elements;
         },
@@ -162,7 +162,7 @@ export class CharacterConceptsManagerController {
         revertOptimisticDelete: this.#revertOptimisticDelete.bind(this),
         handleConceptDeleted: this.#handleConceptDeleted.bind(this),
         updateStatistics: this.#updateStatistics.bind(this),
-        
+
         // Enhanced search methods
         filterConcepts: this.#filterConcepts.bind(this),
         fuzzyMatch: this.#fuzzyMatch.bind(this),
@@ -378,7 +378,8 @@ export class CharacterConceptsManagerController {
           // Focus first result on Enter
           if (this.#searchFilter) {
             e.preventDefault();
-            const firstCard = this.#elements.conceptsResults.querySelector('.concept-card');
+            const firstCard =
+              this.#elements.conceptsResults.querySelector('.concept-card');
             if (firstCard) {
               firstCard.focus();
             }
@@ -483,19 +484,19 @@ export class CharacterConceptsManagerController {
     import('../characterBuilder/services/characterBuilderService.js').then(
       ({ CHARACTER_BUILDER_EVENTS }) => {
         // Listen for concept events
-        this.#eventBus.on(
+        this.#eventBus.subscribe(
           CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED,
           this.#handleConceptCreated.bind(this)
         );
-        this.#eventBus.on(
+        this.#eventBus.subscribe(
           CHARACTER_BUILDER_EVENTS.CONCEPT_UPDATED,
           this.#handleConceptUpdated.bind(this)
         );
-        this.#eventBus.on(
+        this.#eventBus.subscribe(
           CHARACTER_BUILDER_EVENTS.CONCEPT_DELETED,
           this.#handleConceptDeleted.bind(this)
         );
-        this.#eventBus.on(
+        this.#eventBus.subscribe(
           CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED,
           this.#handleDirectionsGenerated.bind(this)
         );
@@ -688,7 +689,10 @@ export class CharacterConceptsManagerController {
       if (this.#searchStateRestored) {
         const filteredConcepts = this.#filterConcepts(this.#conceptsData);
         this.#displayConcepts(filteredConcepts); // uses existing display method
-        this.#updateSearchState(this.#elements.conceptSearch.value, filteredConcepts.length);
+        this.#updateSearchState(
+          this.#elements.conceptSearch.value,
+          filteredConcepts.length
+        );
         this.#searchStateRestored = false;
       }
 
@@ -852,21 +856,24 @@ export class CharacterConceptsManagerController {
       return concepts;
     }
 
-    const searchTerms = this.#searchFilter.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+    const searchTerms = this.#searchFilter
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((term) => term.length > 0);
 
     return concepts.filter(({ concept }) => {
       // Use correct property: concept.concept (not concept.text)
       const conceptText = concept.concept || concept.text;
-      
+
       // Handle null/undefined conceptText gracefully
       if (!conceptText) {
         return false;
       }
-      
+
       const conceptTextLower = conceptText.toLowerCase();
 
       // Check if all search terms are found (AND logic)
-      return searchTerms.every(term => {
+      return searchTerms.every((term) => {
         // Direct substring match (existing logic)
         if (conceptTextLower.includes(term)) {
           return true;
@@ -898,13 +905,13 @@ export class CharacterConceptsManagerController {
     );
 
     // Calculate additional statistics
-    const averageDirectionsPerConcept = totalConcepts > 0
-      ? (totalDirections / totalConcepts).toFixed(1)
-      : '0';
+    const averageDirectionsPerConcept =
+      totalConcepts > 0 ? (totalDirections / totalConcepts).toFixed(1) : '0';
 
-    const completionRate = totalConcepts > 0
-      ? Math.round((conceptsWithDirections / totalConcepts) * 100)
-      : 0;
+    const completionRate =
+      totalConcepts > 0
+        ? Math.round((conceptsWithDirections / totalConcepts) * 100)
+        : 0;
 
     const maxDirections = Math.max(
       0,
@@ -918,7 +925,7 @@ export class CharacterConceptsManagerController {
       averageDirectionsPerConcept,
       completionRate,
       maxDirections,
-      conceptsWithoutDirections: totalConcepts - conceptsWithDirections
+      conceptsWithoutDirections: totalConcepts - conceptsWithDirections,
     };
   }
 
@@ -930,8 +937,14 @@ export class CharacterConceptsManagerController {
 
     // Animate number changes
     this.#animateStatValue(this.#elements.totalConcepts, stats.totalConcepts);
-    this.#animateStatValue(this.#elements.conceptsWithDirections, stats.conceptsWithDirections);
-    this.#animateStatValue(this.#elements.totalDirections, stats.totalDirections);
+    this.#animateStatValue(
+      this.#elements.conceptsWithDirections,
+      stats.conceptsWithDirections
+    );
+    this.#animateStatValue(
+      this.#elements.totalDirections,
+      stats.totalDirections
+    );
 
     // Update additional statistics
     this.#updateAdvancedStatistics(stats);
@@ -942,7 +955,7 @@ export class CharacterConceptsManagerController {
     // Dispatch statistics event for other components
     this.#eventBus.dispatch({
       type: 'statistics:updated',
-      payload: stats
+      payload: stats,
     });
   }
 
@@ -978,7 +991,7 @@ export class CharacterConceptsManagerController {
           element.classList.remove('stat-updated');
         }, 300);
       } else {
-        const value = Math.round(currentValue + (increment * step));
+        const value = Math.round(currentValue + increment * step);
         element.textContent = value;
       }
     }, stepDuration);
@@ -1007,8 +1020,14 @@ export class CharacterConceptsManagerController {
     }
 
     // Update values
-    this.#updateAdvancedStatValue('avg-directions', stats.averageDirectionsPerConcept);
-    this.#updateAdvancedStatValue('completion-rate', `${stats.completionRate}%`);
+    this.#updateAdvancedStatValue(
+      'avg-directions',
+      stats.averageDirectionsPerConcept
+    );
+    this.#updateAdvancedStatValue(
+      'completion-rate',
+      `${stats.completionRate}%`
+    );
     this.#updateAdvancedStatValue('max-directions', stats.maxDirections);
 
     // Update progress bar
@@ -1169,8 +1188,8 @@ export class CharacterConceptsManagerController {
         textLength: concept.concept.length,
         directionCount,
         createdAt: concept.createdAt,
-        updatedAt: concept.updatedAt
-      }))
+        updatedAt: concept.updatedAt,
+      })),
     };
 
     let content, filename, mimeType;
@@ -1210,14 +1229,17 @@ export class CharacterConceptsManagerController {
       ['Total Concepts', data.statistics.totalConcepts],
       ['Concepts with Directions', data.statistics.conceptsWithDirections],
       ['Total Directions', data.statistics.totalDirections],
-      ['Average Directions per Concept', data.statistics.averageDirectionsPerConcept],
+      [
+        'Average Directions per Concept',
+        data.statistics.averageDirectionsPerConcept,
+      ],
       ['Completion Rate', `${data.statistics.completionRate}%`],
-      ['Maximum Directions', data.statistics.maxDirections]
+      ['Maximum Directions', data.statistics.maxDirections],
     ];
 
     const csv = [
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
     ].join('\n');
 
     return csv;
@@ -2183,7 +2205,10 @@ export class CharacterConceptsManagerController {
    * @param {string} searchTerm
    */
   #handleSearch(searchTerm) {
-    this.#logger.info('Enhanced search handling', { searchTerm, length: searchTerm.length });
+    this.#logger.info('Enhanced search handling', {
+      searchTerm,
+      length: searchTerm.length,
+    });
 
     // Update search filter (existing logic)
     this.#searchFilter = searchTerm.trim();
@@ -2211,8 +2236,8 @@ export class CharacterConceptsManagerController {
           searchTerm,
           resultCount: filteredConcepts.length,
           totalConcepts: this.#conceptsData.length,
-          searchMode: 'enhanced'
-        }
+          searchMode: 'enhanced',
+        },
       });
     }
   }
@@ -2224,7 +2249,7 @@ export class CharacterConceptsManagerController {
     this.#loadConceptsData().then(() => {
       // Add creation celebration
       this.#celebrateCreation();
-      
+
       // Show feedback for the new concept
       if (event.detail && event.detail.concept) {
         this.#showConceptCreatedFeedback(event.detail.concept);
@@ -2249,7 +2274,7 @@ export class CharacterConceptsManagerController {
 
     if (index === -1) {
       this.#logger.warn('Updated concept not found in cache', {
-        conceptId: updatedConcept.id
+        conceptId: updatedConcept.id,
       });
       // Reload data to sync
       this.#loadConceptsData();
@@ -2262,7 +2287,7 @@ export class CharacterConceptsManagerController {
     // Update concept
     this.#conceptsData[index] = {
       concept: updatedConcept,
-      directionCount
+      directionCount,
     };
 
     // Update specific card if visible
@@ -2319,7 +2344,9 @@ export class CharacterConceptsManagerController {
     );
 
     if (!conceptData) {
-      this.#logger.warn('Concept not found for directions update', { conceptId });
+      this.#logger.warn('Concept not found for directions update', {
+        conceptId,
+      });
       return;
     }
 
@@ -2332,7 +2359,11 @@ export class CharacterConceptsManagerController {
       this.#updateConceptCard(conceptData.concept, conceptData.directionCount);
 
       // Add generation animation
-      this.#animateDirectionsGenerated(conceptId, oldCount, conceptData.directionCount);
+      this.#animateDirectionsGenerated(
+        conceptId,
+        oldCount,
+        conceptData.directionCount
+      );
     }
 
     // Update statistics
@@ -2352,7 +2383,7 @@ export class CharacterConceptsManagerController {
     // Broadcast change to other tabs
     this.#broadcastDataChange('directions-generated', {
       conceptId,
-      directionCount: conceptData.directionCount
+      directionCount: conceptData.directionCount,
     });
   }
 
@@ -2403,11 +2434,11 @@ export class CharacterConceptsManagerController {
   #showNoSearchResults() {
     // Use existing empty state infrastructure but with search-specific content
     const hasSearchFilter = this.#searchFilter && this.#searchFilter.length > 0;
-    
+
     if (hasSearchFilter) {
       // Enhanced no search results (leverages existing empty state pattern)
       this.#elements.conceptsResults.innerHTML = '';
-      
+
       // Create enhanced search empty state
       const noResultsDiv = document.createElement('div');
       noResultsDiv.className = 'no-search-results cb-empty-state';
@@ -2490,7 +2521,10 @@ export class CharacterConceptsManagerController {
       statusElement = document.createElement('div');
       statusElement.className = 'search-status';
       // Insert after panel title
-      const panelTitle = this.#elements.conceptsResults.parentElement.querySelector('.cb-panel-title');
+      const panelTitle =
+        this.#elements.conceptsResults.parentElement.querySelector(
+          '.cb-panel-title'
+        );
       if (panelTitle) {
         panelTitle.insertAdjacentElement('afterend', statusElement);
       }
@@ -2539,7 +2573,7 @@ export class CharacterConceptsManagerController {
     // Dispatch clear event
     this.#eventBus.dispatch({
       type: 'ui:search-cleared',
-      payload: { totalConcepts: this.#conceptsData.length }
+      payload: { totalConcepts: this.#conceptsData.length },
     });
   }
 
@@ -2550,7 +2584,10 @@ export class CharacterConceptsManagerController {
    */
   #updateClearButton(visible) {
     // Find or create clear button
-    let clearButton = this.#elements.conceptSearch.parentElement.querySelector('.search-clear-btn');
+    let clearButton =
+      this.#elements.conceptSearch.parentElement.querySelector(
+        '.search-clear-btn'
+      );
 
     if (visible && !clearButton) {
       // Create clear button
@@ -2584,11 +2621,13 @@ export class CharacterConceptsManagerController {
       return this.#escapeHtml(text);
     }
 
-    const searchTerms = searchTerm.split(/\s+/).filter(term => term.length > 0);
+    const searchTerms = searchTerm
+      .split(/\s+/)
+      .filter((term) => term.length > 0);
     let highlightedText = this.#escapeHtml(text);
 
     // Highlight each search term
-    searchTerms.forEach(term => {
+    searchTerms.forEach((term) => {
       const regex = new RegExp(`(${this.#escapeRegex(term)})`, 'gi');
       highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
     });
@@ -2643,7 +2682,7 @@ export class CharacterConceptsManagerController {
     const searchData = {
       term: searchTerm,
       resultCount,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     this.#searchAnalytics.searches.push(searchData);
@@ -2662,7 +2701,7 @@ export class CharacterConceptsManagerController {
       this.#logger.info('Search analytics', {
         totalSearches: this.#searchAnalytics.searches.length,
         noResultSearches: this.#searchAnalytics.noResultSearches.length,
-        averageResults: this.#calculateAverageResults()
+        averageResults: this.#calculateAverageResults(),
       });
     }
   }
@@ -2690,7 +2729,7 @@ export class CharacterConceptsManagerController {
   #getDisplayText(concept, maxLength) {
     const conceptText = concept.concept || concept.text;
     const truncatedText = this.#truncateText(conceptText, maxLength);
-    
+
     return this.#searchFilter
       ? this.#highlightSearchTerms(truncatedText, this.#searchFilter)
       : this.#escapeHtml(truncatedText);
@@ -2702,7 +2741,9 @@ export class CharacterConceptsManagerController {
   #initializeCrossTabSync() {
     try {
       // Create broadcast channel
-      this.#broadcastChannel = new BroadcastChannel('character-concepts-manager');
+      this.#broadcastChannel = new BroadcastChannel(
+        'character-concepts-manager'
+      );
 
       // Listen for messages from other tabs
       this.#broadcastChannel.addEventListener('message', (event) => {
@@ -2713,17 +2754,18 @@ export class CharacterConceptsManagerController {
       this.#broadcastMessage({
         type: 'tab-opened',
         tabId: this.#tabId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Set up leader election
       this.#performLeaderElection();
 
       this.#logger.info('Cross-tab sync initialized', { tabId: this.#tabId });
-
     } catch (error) {
       // BroadcastChannel not supported
-      this.#logger.warn('BroadcastChannel not supported, cross-tab sync disabled');
+      this.#logger.warn(
+        'BroadcastChannel not supported, cross-tab sync disabled'
+      );
     }
   }
 
@@ -2773,7 +2815,7 @@ export class CharacterConceptsManagerController {
         this.#broadcastChannel.postMessage({
           ...message,
           tabId: this.#tabId,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       } catch (error) {
         this.#logger.error('Failed to broadcast message', error);
@@ -2791,7 +2833,7 @@ export class CharacterConceptsManagerController {
     this.#broadcastMessage({
       type: 'data-changed',
       changeType,
-      data
+      data,
     });
   }
 
@@ -2822,7 +2864,7 @@ export class CharacterConceptsManagerController {
     // Simple leader election: lowest tab ID wins
     this.#broadcastMessage({
       type: 'leader-election',
-      tabId: this.#tabId
+      tabId: this.#tabId,
     });
 
     // Wait for other tabs to respond
@@ -2831,7 +2873,7 @@ export class CharacterConceptsManagerController {
       this.#isLeaderTab = true;
       this.#broadcastMessage({
         type: 'leader-elected',
-        tabId: this.#tabId
+        tabId: this.#tabId,
       });
     }, 100);
   }
@@ -2844,7 +2886,7 @@ export class CharacterConceptsManagerController {
     if (this.#broadcastChannel) {
       this.#broadcastMessage({
         type: 'tab-closed',
-        wasLeader: this.#isLeaderTab
+        wasLeader: this.#isLeaderTab,
       });
 
       this.#broadcastChannel.close();
@@ -2882,13 +2924,15 @@ export class CharacterConceptsManagerController {
 
       // Use immediate removal in test environment, animated in production
       const removeDelay = process.env.NODE_ENV === 'test' ? 0 : 300;
-      
+
       setTimeout(() => {
         card.remove();
 
         // Check if empty
-        if (this.#elements.conceptsResults?.children?.length === 0 &&
-            this.#conceptsData.length === 0) {
+        if (
+          this.#elements.conceptsResults?.children?.length === 0 &&
+          this.#conceptsData.length === 0
+        ) {
           this.#uiStateManager?.setState('empty');
         }
       }, removeDelay);
@@ -2954,7 +2998,7 @@ export class CharacterConceptsManagerController {
     if (!container) {
       container = document.createElement('div');
       container.className = 'notification-container';
-      
+
       // Check if document.body exists (test environment)
       if (document.body) {
         document.body.appendChild(container);
@@ -3033,7 +3077,7 @@ export class CharacterConceptsManagerController {
 
     const animation = setInterval(() => {
       step++;
-      current = from + (increment * step);
+      current = from + increment * step;
 
       if (step >= steps) {
         element.textContent = to;
@@ -3050,7 +3094,7 @@ export class CharacterConceptsManagerController {
   #cleanupAnimations() {
     // Clear any running animations
     const elements = document.querySelectorAll('[data-animation]');
-    elements.forEach(el => {
+    elements.forEach((el) => {
       if (el.animationInterval) {
         clearInterval(el.animationInterval);
       }
@@ -3079,7 +3123,10 @@ export class CharacterConceptsManagerController {
     }, 100);
 
     // Show notification
-    this.#showNotification('✅ Character concept created successfully', 'success');
+    this.#showNotification(
+      '✅ Character concept created successfully',
+      'success'
+    );
   }
 
   /**
@@ -3104,16 +3151,26 @@ export class CharacterConceptsManagerController {
 
     // Remove event listeners
     if (this.#eventBus) {
-      import('../characterBuilder/services/characterBuilderService.js').then(({ CHARACTER_BUILDER_EVENTS }) => {
-        this.#eventBus.off(CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED,
-          this.#handleConceptCreated.bind(this));
-        this.#eventBus.off(CHARACTER_BUILDER_EVENTS.CONCEPT_UPDATED,
-          this.#handleConceptUpdated.bind(this));
-        this.#eventBus.off(CHARACTER_BUILDER_EVENTS.CONCEPT_DELETED,
-          this.#handleConceptDeleted.bind(this));
-        this.#eventBus.off(CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED,
-          this.#handleDirectionsGenerated.bind(this));
-      });
+      import('../characterBuilder/services/characterBuilderService.js').then(
+        ({ CHARACTER_BUILDER_EVENTS }) => {
+          this.#eventBus.unsubscribe(
+            CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED,
+            this.#handleConceptCreated.bind(this)
+          );
+          this.#eventBus.unsubscribe(
+            CHARACTER_BUILDER_EVENTS.CONCEPT_UPDATED,
+            this.#handleConceptUpdated.bind(this)
+          );
+          this.#eventBus.unsubscribe(
+            CHARACTER_BUILDER_EVENTS.CONCEPT_DELETED,
+            this.#handleConceptDeleted.bind(this)
+          );
+          this.#eventBus.unsubscribe(
+            CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED,
+            this.#handleDirectionsGenerated.bind(this)
+          );
+        }
+      );
     }
 
     // Close broadcast channel

@@ -92,8 +92,8 @@ describe('CharacterConceptsManagerController - Constructor and Dependencies', ()
     };
 
     mockEventBus = {
-      on: jest.fn(),
-      off: jest.fn(),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
       dispatch: jest.fn(),
     };
   });
@@ -163,11 +163,11 @@ describe('CharacterConceptsManagerController - Constructor and Dependencies', ()
           characterBuilderService: mockCharacterBuilderService,
           eventBus: null,
         });
-      }).toThrow('Missing required dependency: EventBus');
+      }).toThrow('Missing required dependency: ISafeEventDispatcher');
     });
 
     it('should throw error when eventBus is missing required methods', () => {
-      const invalidEventBus = { on: jest.fn() }; // Missing off, dispatch
+      const invalidEventBus = { subscribe: jest.fn() }; // Missing unsubscribe, dispatch
 
       expect(() => {
         new CharacterConceptsManagerController({
@@ -224,7 +224,9 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       let _value = '';
       Object.defineProperty(element, 'value', {
         get: () => _value,
-        set: (val) => { _value = val; },
+        set: (val) => {
+          _value = val;
+        },
         enumerable: true,
         configurable: true,
       });
@@ -255,8 +257,8 @@ describe('CharacterConceptsManagerController - Initialization', () => {
     };
 
     mockEventBus = {
-      on: jest.fn(),
-      off: jest.fn(),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
       dispatch: jest.fn(),
     };
 
@@ -400,7 +402,10 @@ describe('CharacterConceptsManagerController - Initialization', () => {
 
     // Mock document.createElement to support dataset
     const mockCreateElement = jest.fn((tagName) => {
-      const element = createMockElement(`created-${tagName}`, tagName.toUpperCase());
+      const element = createMockElement(
+        `created-${tagName}`,
+        tagName.toUpperCase()
+      );
       // Ensure dataset is properly mutable
       element.dataset = {};
       element.className = '';
@@ -588,19 +593,19 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       // Need to wait for the dynamic import to complete
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      expect(mockEventBus.on).toHaveBeenCalledWith(
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
         'thematic:character_concept_created',
         expect.any(Function)
       );
-      expect(mockEventBus.on).toHaveBeenCalledWith(
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
         'thematic:character_concept_updated',
         expect.any(Function)
       );
-      expect(mockEventBus.on).toHaveBeenCalledWith(
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
         'thematic:character_concept_deleted',
         expect.any(Function)
       );
-      expect(mockEventBus.on).toHaveBeenCalledWith(
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
         'thematic:thematic_directions_generated',
         expect.any(Function)
       );
@@ -803,7 +808,9 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
       let _value = '';
       Object.defineProperty(element, 'value', {
         get: () => _value,
-        set: (val) => { _value = val; },
+        set: (val) => {
+          _value = val;
+        },
         enumerable: true,
         configurable: true,
       });
@@ -838,8 +845,8 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
     };
 
     mockEventBus = {
-      on: jest.fn(),
-      off: jest.fn(),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
       dispatch: jest.fn(),
     };
 
@@ -983,7 +990,10 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
 
     // Mock document.createElement to support dataset
     const mockCreateElement = jest.fn((tagName) => {
-      const element = createMockElement(`created-${tagName}`, tagName.toUpperCase());
+      const element = createMockElement(
+        `created-${tagName}`,
+        tagName.toUpperCase()
+      );
       // Ensure dataset is properly mutable
       element.dataset = {};
       element.className = '';
@@ -1501,7 +1511,9 @@ describe('CharacterConceptsManagerController - Display Concepts Functionality (T
       let _value = '';
       Object.defineProperty(element, 'value', {
         get: () => _value,
-        set: (val) => { _value = val; },
+        set: (val) => {
+          _value = val;
+        },
         enumerable: true,
         configurable: true,
       });
@@ -1561,8 +1573,8 @@ describe('CharacterConceptsManagerController - Display Concepts Functionality (T
     };
 
     mockEventBus = {
-      on: jest.fn(),
-      off: jest.fn(),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
       dispatch: jest.fn(),
     };
 
@@ -2507,7 +2519,9 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
       let _value = '';
       Object.defineProperty(element, 'value', {
         get: () => _value,
-        set: (val) => { _value = val; },
+        set: (val) => {
+          _value = val;
+        },
         enumerable: true,
         configurable: true,
       });
@@ -2538,8 +2552,8 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
     };
 
     mockEventBus = {
-      on: jest.fn(),
-      off: jest.fn(),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
       dispatch: jest.fn(),
     };
 
@@ -2616,7 +2630,8 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
     mockElementsById['concept-form'].reset = jest.fn();
 
     // Set up parent-child relationships for modal elements
-    mockElementsById['delete-modal-message'].parentElement = mockElementsById['delete-confirmation-modal'];
+    mockElementsById['delete-modal-message'].parentElement =
+      mockElementsById['delete-confirmation-modal'];
     mockElementsById['delete-confirmation-modal'].appendChild = jest.fn();
 
     // Mock document methods
@@ -2866,7 +2881,7 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
     it('should update statistics after deletion', async () => {
       // Setup initial conceptsData
       controller._testExports.conceptsData = [...mockConceptsData];
-      
+
       // Mock the querySelector for the concept card removal
       const mockCard = createMockElement('concept-card');
       mockCard.dataset.conceptId = 'concept-1';
@@ -2875,8 +2890,10 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
       await controller._testExports.deleteConcept('concept-1', 3);
 
       // Verify that deleteCharacterConcept was called (proves method executed successfully)
-      expect(mockCharacterBuilderService.deleteCharacterConcept).toHaveBeenCalledWith('concept-1');
-      
+      expect(
+        mockCharacterBuilderService.deleteCharacterConcept
+      ).toHaveBeenCalledWith('concept-1');
+
       // Verify concept was removed from local cache
       expect(controller._testExports.conceptsData).toHaveLength(2); // Started with 3, should now have 2
     });
@@ -3216,7 +3233,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    
+
     // Reset localStorage and sessionStorage
     Object.defineProperty(window, 'sessionStorage', {
       value: {
@@ -3246,8 +3263,8 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     };
 
     mockEventBus = {
-      on: jest.fn(),
-      off: jest.fn(),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
       dispatch: jest.fn(),
     };
 
@@ -3304,7 +3321,10 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
       'save-concept-btn': { addEventListener: jest.fn(), disabled: false },
       'cancel-concept-btn': { addEventListener: jest.fn() },
       'close-concept-modal': { addEventListener: jest.fn() },
-      'char-count': { textContent: '0/3000', classList: { add: jest.fn(), remove: jest.fn() } },
+      'char-count': {
+        textContent: '0/3000',
+        classList: { add: jest.fn(), remove: jest.fn() },
+      },
       // Delete Modal
       'delete-confirmation-modal': { style: { display: 'none' } },
       'delete-modal-message': { innerHTML: '' },
@@ -3400,20 +3420,22 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
 
     // Don't call initialize() for Enhanced Search tests - they only need direct method access
     // We'll manually set up the required dependencies for the specific tests
-    
+
     // Manually set up the UIStateManager mock since these tests bypass initialization
-    const { UIStateManager } = require('../../../src/shared/characterBuilder/uiStateManager.js');
+    const {
+      UIStateManager,
+    } = require('../../../src/shared/characterBuilder/uiStateManager.js');
     const mockUIStateManager = new UIStateManager();
-    
+
     // Set the UIStateManager using the test utility setter
     controller._testExports.uiStateManager = mockUIStateManager;
 
     // Set up test data
     controller._testExports.conceptsData = mockConceptsData;
-    
+
     // Manually set elements for tests that need them (mapping kebab-case to camelCase for internal use)
     const elementsMapping = {};
-    Object.keys(mockElements).forEach(key => {
+    Object.keys(mockElements).forEach((key) => {
       const camelKey = key.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
       elementsMapping[camelKey] = mockElements[key];
     });
@@ -3429,7 +3451,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     it('should filter concepts with single term (case insensitive)', () => {
       // Set search filter
       controller._testExports.searchFilter = 'warrior';
-      
+
       const result = controller._testExports.filterConcepts(mockConceptsData);
       expect(result).toHaveLength(1);
       expect(result[0].concept.id).toBe('concept-1');
@@ -3437,7 +3459,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
 
     it('should filter concepts with multiple terms (AND logic)', () => {
       controller._testExports.searchFilter = 'brave warrior';
-      
+
       const result = controller._testExports.filterConcepts(mockConceptsData);
       expect(result).toHaveLength(1);
       expect(result[0].concept.id).toBe('concept-1');
@@ -3445,7 +3467,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
 
     it('should return empty array when no concepts match all terms', () => {
       controller._testExports.searchFilter = 'dragon wizard';
-      
+
       const result = controller._testExports.filterConcepts(mockConceptsData);
       expect(result).toHaveLength(0);
     });
@@ -3461,7 +3483,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
           directionCount: 1,
         },
       ];
-      
+
       controller._testExports.searchFilter = 'warrior';
       const result = controller._testExports.filterConcepts(legacyData);
       expect(result).toHaveLength(1);
@@ -3472,7 +3494,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     it('should perform fuzzy matching for terms longer than 3 characters', () => {
       const text = 'warrior';
       const searchTerm = 'warior'; // Missing one 'r'
-      
+
       const result = controller._testExports.fuzzyMatch(text, searchTerm);
       expect(result).toBe(true);
     });
@@ -3480,7 +3502,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     it('should not perform fuzzy matching for terms 3 characters or shorter', () => {
       const text = 'warrior';
       const searchTerm = 'war';
-      
+
       const result = controller._testExports.fuzzyMatch(text, searchTerm);
       expect(result).toBe(false);
     });
@@ -3488,7 +3510,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     it('should match when all characters are present in order', () => {
       const text = 'mysterious';
       const searchTerm = 'msterios'; // Missing 'y' and 'u'
-      
+
       const result = controller._testExports.fuzzyMatch(text, searchTerm);
       expect(result).toBe(true);
     });
@@ -3496,7 +3518,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     it('should not match when characters are out of order', () => {
       const text = 'warrior';
       const searchTerm = 'riaw'; // Characters out of order
-      
+
       const result = controller._testExports.fuzzyMatch(text, searchTerm);
       expect(result).toBe(false);
     });
@@ -3521,7 +3543,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     it('should escape HTML in text when no search term', () => {
       const text = '<script>alert("xss")</script>';
       const result = controller._testExports.highlightSearchTerms(text, '');
-      
+
       expect(result).toContain('&lt;script&gt;');
       expect(result).not.toContain('<script>');
     });
@@ -3529,16 +3551,22 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     it('should highlight single search term', () => {
       const text = 'A brave warrior';
       const searchTerm = 'warrior';
-      
-      const result = controller._testExports.highlightSearchTerms(text, searchTerm);
+
+      const result = controller._testExports.highlightSearchTerms(
+        text,
+        searchTerm
+      );
       expect(result).toContain('<mark>warrior</mark>');
     });
 
     it('should highlight multiple search terms', () => {
       const text = 'A brave warrior with courage';
       const searchTerm = 'brave warrior';
-      
-      const result = controller._testExports.highlightSearchTerms(text, searchTerm);
+
+      const result = controller._testExports.highlightSearchTerms(
+        text,
+        searchTerm
+      );
       expect(result).toContain('<mark>brave</mark>');
       expect(result).toContain('<mark>warrior</mark>');
     });
@@ -3546,16 +3574,22 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     it('should handle case insensitive highlighting', () => {
       const text = 'A BRAVE Warrior';
       const searchTerm = 'brave';
-      
-      const result = controller._testExports.highlightSearchTerms(text, searchTerm);
+
+      const result = controller._testExports.highlightSearchTerms(
+        text,
+        searchTerm
+      );
       expect(result).toContain('<mark>BRAVE</mark>');
     });
 
     it('should escape regex special characters in search terms', () => {
       const text = 'Cost: $10.99 (plus tax)';
       const searchTerm = '$10.99';
-      
-      const result = controller._testExports.highlightSearchTerms(text, searchTerm);
+
+      const result = controller._testExports.highlightSearchTerms(
+        text,
+        searchTerm
+      );
       expect(result).toContain('<mark>$10.99</mark>');
     });
   });
@@ -3564,7 +3598,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     it('should save search state to session storage', () => {
       controller._testExports.searchFilter = 'warrior';
       controller._testExports.saveSearchState();
-      
+
       expect(window.sessionStorage.setItem).toHaveBeenCalledWith(
         'conceptsManagerSearch',
         'warrior'
@@ -3574,7 +3608,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     it('should remove search state when filter is empty', () => {
       controller._testExports.searchFilter = '';
       controller._testExports.saveSearchState();
-      
+
       expect(window.sessionStorage.removeItem).toHaveBeenCalledWith(
         'conceptsManagerSearch'
       );
@@ -3582,9 +3616,9 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
 
     it('should restore search state from session storage', () => {
       window.sessionStorage.getItem.mockReturnValue('saved search');
-      
+
       controller._testExports.restoreSearchState();
-      
+
       expect(mockElements.conceptSearch.value).toBe('saved search');
       expect(controller._testExports.searchFilter).toBe('saved search');
       expect(controller._testExports.searchStateRestored).toBe(true);
@@ -3592,9 +3626,9 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
 
     it('should not restore if no saved search state', () => {
       window.sessionStorage.getItem.mockReturnValue(null);
-      
+
       controller._testExports.restoreSearchState();
-      
+
       expect(controller._testExports.searchStateRestored).toBe(false);
     });
   });
@@ -3604,9 +3638,9 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
       jest.useFakeTimers();
       const timestamp = Date.now();
       jest.setSystemTime(timestamp);
-      
+
       controller._testExports.trackSearchAnalytics('warrior', 1);
-      
+
       const analytics = controller._testExports.searchAnalytics;
       expect(analytics.searches).toHaveLength(1);
       expect(analytics.searches[0]).toEqual({
@@ -3614,13 +3648,13 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
         resultCount: 1,
         timestamp,
       });
-      
+
       jest.useRealTimers();
     });
 
     it('should track no-result searches separately', () => {
       controller._testExports.trackSearchAnalytics('nonexistent', 0);
-      
+
       const analytics = controller._testExports.searchAnalytics;
       expect(analytics.noResultSearches).toHaveLength(1);
       expect(analytics.noResultSearches[0].term).toBe('nonexistent');
@@ -3631,7 +3665,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
       for (let i = 0; i < 101; i++) {
         controller._testExports.trackSearchAnalytics(`search${i}`, 1);
       }
-      
+
       const analytics = controller._testExports.searchAnalytics;
       expect(analytics.searches).toHaveLength(100);
       expect(analytics.searches[0].term).toBe('search1'); // First one removed
@@ -3641,7 +3675,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
       controller._testExports.trackSearchAnalytics('term1', 5);
       controller._testExports.trackSearchAnalytics('term2', 3);
       controller._testExports.trackSearchAnalytics('term3', 1);
-      
+
       const average = controller._testExports.calculateAverageResults();
       expect(average).toBe(3); // (5+3+1)/3 = 3
     });
@@ -3656,7 +3690,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
       for (let i = 0; i < 10; i++) {
         controller._testExports.trackSearchAnalytics(`search${i}`, 1);
       }
-      
+
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Search analytics',
         expect.objectContaining({
@@ -3680,7 +3714,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
         { concept: { id: '2', concept: undefined }, directionCount: 0 },
         { concept: { id: '3' }, directionCount: 0 }, // Missing concept property
       ];
-      
+
       controller._testExports.searchFilter = 'test';
       const result = controller._testExports.filterConcepts(invalidData);
       expect(result).toEqual([]);
@@ -3689,7 +3723,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
     it('should handle very long search terms', () => {
       const longTerm = 'a'.repeat(1000);
       controller._testExports.searchFilter = longTerm;
-      
+
       const result = controller._testExports.filterConcepts(mockConceptsData);
       expect(result).toEqual([]);
     });
@@ -3704,7 +3738,7 @@ describe('CharacterConceptsManagerController - Enhanced Search', () => {
           directionCount: 1,
         },
       ];
-      
+
       controller._testExports.searchFilter = '$pecial';
       const result = controller._testExports.filterConcepts(specialData);
       expect(result).toHaveLength(1);

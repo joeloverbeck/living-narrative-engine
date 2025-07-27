@@ -32,14 +32,20 @@ describe('TargetExtractionResult', () => {
 
     it('should create with extraction metadata', () => {
       const metadata = { source: 'test', extractionTime: Date.now() };
-      const result = new TargetExtractionResult({ targetManager, extractionMetadata: metadata });
+      const result = new TargetExtractionResult({
+        targetManager,
+        extractionMetadata: metadata,
+      });
 
       expect(result.getExtractionMetadata()).toEqual(metadata);
     });
 
     it('should create with validation result', () => {
       const validationResult = { isValid: true, errors: [], warnings: [] };
-      const result = new TargetExtractionResult({ targetManager, validationResult });
+      const result = new TargetExtractionResult({
+        targetManager,
+        validationResult,
+      });
 
       expect(result.getValidationResult()).toEqual(validationResult);
       expect(result.isValid()).toBe(true);
@@ -145,7 +151,10 @@ describe('TargetExtractionResult', () => {
         errors: ['Error 1', 'Error 2'],
         warnings: [],
       };
-      const result = new TargetExtractionResult({ targetManager, validationResult });
+      const result = new TargetExtractionResult({
+        targetManager,
+        validationResult,
+      });
 
       expect(result.getErrors()).toEqual(['Error 1', 'Error 2']);
       expect(result.isValid()).toBe(false);
@@ -157,14 +166,20 @@ describe('TargetExtractionResult', () => {
         errors: [],
         warnings: ['Warning 1', 'Warning 2'],
       };
-      const result = new TargetExtractionResult({ targetManager, validationResult });
+      const result = new TargetExtractionResult({
+        targetManager,
+        validationResult,
+      });
 
       expect(result.getWarnings()).toEqual(['Warning 1', 'Warning 2']);
     });
 
     it('should handle missing errors/warnings arrays', () => {
       const validationResult = { isValid: true };
-      const result = new TargetExtractionResult({ targetManager, validationResult });
+      const result = new TargetExtractionResult({
+        targetManager,
+        validationResult,
+      });
 
       expect(result.getErrors()).toEqual([]);
       expect(result.getWarnings()).toEqual([]);
@@ -190,7 +205,9 @@ describe('TargetExtractionResult', () => {
         targets: { item: 'knife_123' },
         logger,
       });
-      const result = new TargetExtractionResult({ targetManager: singleTargetManager });
+      const result = new TargetExtractionResult({
+        targetManager: singleTargetManager,
+      });
 
       const legacy = result.toLegacyFormat();
 
@@ -255,7 +272,10 @@ describe('TargetExtractionResult', () => {
       it('should create from legacy single target', () => {
         const legacyData = { targetId: 'goblin_123' };
 
-        const result = TargetExtractionResult.fromLegacyData(legacyData, logger);
+        const result = TargetExtractionResult.fromLegacyData(
+          legacyData,
+          logger
+        );
 
         expect(result.getPrimaryTarget()).toBe('goblin_123');
         expect(result.hasMultipleTargets()).toBe(false);
@@ -268,7 +288,10 @@ describe('TargetExtractionResult', () => {
           targetId: 'goblin_456',
         };
 
-        const result = TargetExtractionResult.fromLegacyData(legacyData, logger);
+        const result = TargetExtractionResult.fromLegacyData(
+          legacyData,
+          logger
+        );
 
         expect(result.getTargets()).toEqual(legacyData.targets);
         expect(result.hasMultipleTargets()).toBe(true);
@@ -280,7 +303,10 @@ describe('TargetExtractionResult', () => {
           targets: { primary: 'new_target' },
         };
 
-        const result = TargetExtractionResult.fromLegacyData(legacyData, logger);
+        const result = TargetExtractionResult.fromLegacyData(
+          legacyData,
+          logger
+        );
 
         expect(result.getPrimaryTarget()).toBe('new_target');
       });
@@ -296,7 +322,10 @@ describe('TargetExtractionResult', () => {
           },
         };
 
-        const result = TargetExtractionResult.fromResolvedParameters(resolvedParameters, logger);
+        const result = TargetExtractionResult.fromResolvedParameters(
+          resolvedParameters,
+          logger
+        );
 
         expect(result.hasMultipleTargets()).toBe(true);
         expect(result.getTarget('item')).toBe('knife_123');
@@ -310,7 +339,10 @@ describe('TargetExtractionResult', () => {
           targetId: 'goblin_123',
         };
 
-        const result = TargetExtractionResult.fromResolvedParameters(resolvedParameters, logger);
+        const result = TargetExtractionResult.fromResolvedParameters(
+          resolvedParameters,
+          logger
+        );
 
         expect(result.getPrimaryTarget()).toBe('goblin_123');
         expect(result.hasMultipleTargets()).toBe(false);
@@ -326,7 +358,10 @@ describe('TargetExtractionResult', () => {
           },
         };
 
-        const result = TargetExtractionResult.fromResolvedParameters(resolvedParameters, logger);
+        const result = TargetExtractionResult.fromResolvedParameters(
+          resolvedParameters,
+          logger
+        );
 
         expect(result.getTarget('item')).toBe('knife_123');
         expect(result.getTarget('target')).toBe('goblin_456');
@@ -341,7 +376,10 @@ describe('TargetExtractionResult', () => {
           },
         };
 
-        const result = TargetExtractionResult.fromResolvedParameters(resolvedParameters, logger);
+        const result = TargetExtractionResult.fromResolvedParameters(
+          resolvedParameters,
+          logger
+        );
 
         expect(result.getTarget('item')).toBe(null);
         expect(result.getTarget('target')).toBe('goblin_456');
@@ -371,7 +409,9 @@ describe('TargetExtractionResult', () => {
   describe('Edge Cases', () => {
     it('should handle null primary target', () => {
       const emptyTargetManager = new TargetManager({ logger });
-      const result = new TargetExtractionResult({ targetManager: emptyTargetManager });
+      const result = new TargetExtractionResult({
+        targetManager: emptyTargetManager,
+      });
 
       expect(result.getPrimaryTarget()).toBe(null);
     });
@@ -391,7 +431,10 @@ describe('TargetExtractionResult', () => {
 
     it('should handle validation result immutability', () => {
       const validationResult = { isValid: true, errors: [], warnings: [] };
-      const result = new TargetExtractionResult({ targetManager, validationResult });
+      const result = new TargetExtractionResult({
+        targetManager,
+        validationResult,
+      });
 
       const retrieved = result.getValidationResult();
       retrieved.isValid = false;

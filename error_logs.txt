@@ -1,10 +1,27 @@
-warn no-circular: src/actions/tracing/structuredTrace.js →
-      src/actions/tracing/traceVisualizer.js →
-      src/actions/tracing/structuredTrace.js
-  warn no-circular: src/actions/tracing/structuredTrace.js →
-      src/actions/tracing/traceAnalyzer.js →
-      src/actions/tracing/structuredTrace.js
-  warn no-circular: src/actions/tracing/performanceMonitor.js →
-      src/actions/tracing/structuredTrace.js →
-      src/actions/tracing/performanceMonitor.js
-  error not-to-unresolvable: src/actions/formatters/MultiTargetActionFormatter.js → ../../../data/gameDataRepository.js
+[ConsoleLogger] Initialized. Log level set to INFO (1).
+consoleLogger.js:151 Initializing CharacterConceptsManager...
+consoleLogger.js:175 Invalid or missing method 'on' on dependency 'EventBus'.
+error @ consoleLogger.js:175
+validateDependency @ dependencyUtils.js:157
+CharacterConceptsManagerController @ characterConceptsManagerController.js:85
+initializeApp @ character-concepts-manager-main.js:64
+(anonymous) @ character-concepts-manager-main.js:246
+Promise.then
+(anonymous) @ character-concepts-manager-main.js:245
+(anonymous) @ character-concepts-manager-main.js:249Understand this error
+consoleLogger.js:175 Failed to initialize CharacterConceptsManager InvalidArgumentError: Invalid or missing method 'on' on dependency 'EventBus'.
+    at validateDependency (dependencyUtils.js:158:15)
+    at new CharacterConceptsManagerController (characterConceptsManagerController.js:85:5)
+    at initializeApp (character-concepts-manager-main.js:64:24)
+    at character-concepts-manager-main.js:246:3
+error @ consoleLogger.js:175
+initializeApp @ character-concepts-manager-main.js:90
+(anonymous) @ character-concepts-manager-main.js:246
+Promise.then
+(anonymous) @ character-concepts-manager-main.js:245
+(anonymous) @ character-concepts-manager-main.js:249Understand this error
+character-concepts-manager-main.js:247 Failed to initialize application: InvalidArgumentError: Invalid or missing method 'on' on dependency 'EventBus'.
+    at validateDependency (dependencyUtils.js:158:15)
+    at new CharacterConceptsManagerController (characterConceptsManagerController.js:85:5)
+    at initializeApp (character-concepts-manager-main.js:64:24)
+    at character-concepts-manager-main.js:246:3

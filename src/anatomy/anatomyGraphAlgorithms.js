@@ -242,7 +242,7 @@ export class AnatomyGraphAlgorithms {
       // Check if entity exists before adding to result
       const node = cacheManager?.get(id);
       let entityExists = !!node;
-      
+
       // If not in cache, try to verify entity exists via entity manager
       if (!entityExists && entityManager) {
         try {

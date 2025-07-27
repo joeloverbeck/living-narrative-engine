@@ -144,7 +144,11 @@ describe('TargetManager', () => {
 
     beforeEach(() => {
       manager = new TargetManager({
-        targets: { item: 'knife_123', target: 'goblin_456', tool: 'hammer_789' },
+        targets: {
+          item: 'knife_123',
+          target: 'goblin_456',
+          tool: 'hammer_789',
+        },
         logger,
       });
     });
@@ -166,7 +170,11 @@ describe('TargetManager', () => {
 
     it('should get target names and entity IDs', () => {
       expect(manager.getTargetNames()).toEqual(['item', 'target', 'tool']);
-      expect(manager.getEntityIds()).toEqual(['knife_123', 'goblin_456', 'hammer_789']);
+      expect(manager.getEntityIds()).toEqual([
+        'knife_123',
+        'goblin_456',
+        'hammer_789',
+      ]);
     });
 
     it('should get targets as object', () => {
@@ -239,7 +247,7 @@ describe('TargetManager', () => {
 
     it('should detect when no targets are defined', () => {
       const manager = new TargetManager({ logger });
-      
+
       const result = manager.validate();
 
       expect(result.isValid).toBe(false);
@@ -414,7 +422,7 @@ describe('TargetManager', () => {
 
     it('should handle target name priority correctly', () => {
       const manager = new TargetManager({ logger });
-      
+
       // Add in reverse priority order
       manager.addTarget('item', 'knife_123');
       manager.addTarget('self', 'actor_456');
@@ -427,7 +435,7 @@ describe('TargetManager', () => {
 
     it('should handle first target as primary when no priority names', () => {
       const manager = new TargetManager({ logger });
-      
+
       manager.addTarget('weapon', 'sword_123');
       manager.addTarget('armor', 'shield_456');
 
