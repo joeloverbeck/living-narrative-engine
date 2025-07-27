@@ -538,11 +538,11 @@ class WorldInitializer {
    * Classifies and handles batch operation errors
    *
    * @param {Error} error - Error to classify
-   * @param {object} context - Error context information
+   * @param {object} _context - Error context information (unused)
    * @returns {string} Error classification
    * @private
    */
-  #classifyBatchError(error, context) {
+  #classifyBatchError(error, _context) {
     if (error.name === 'ValidationError') {
       return 'validation';
     }
@@ -875,54 +875,6 @@ class WorldInitializer {
     return { instantiated: 0, failed: 1 };
   }
 
-  /**
-   * Original instantiates entities method - now used as fallback for small worlds
-   * Dispatches 'worldinit:entity_instantiated' or 'worldinit:entity_instantiation_failed' events.
-   *
-   * @param {string} worldName - The name of the world to instantiate entities from.
-   * @returns {Promise<typeof EMPTY_RESULT>} An object containing the list of instantiated entities and counts.
-   * @private
-   */
-  async #instantiateEntitiesFromWorldOriginal(worldName) {
-    this.#logger.debug(
-      `WorldInitializer (Pass 1): Instantiating entities from world: ${worldName}...`
-    );
-
-    const { instances, earlyResult } = await this.#loadWorldData(worldName);
-    if (earlyResult) {
-      return this.#dispatchInstantiationSummary(worldName, earlyResult);
-    }
-
-    /** @type {Entity[]} */
-    const instantiatedEntities = [];
-    let instantiatedCount = 0;
-    let failedCount = 0;
-    const seenIds = new Set();
-
-    for (const worldInstance of instances) {
-      if (this.#hasDuplicateInstanceId(seenIds, worldInstance)) {
-        continue;
-      }
-
-      const { instantiated, failed } = await this.#processInstance(
-        worldName,
-        worldInstance,
-        instantiatedEntities
-      );
-
-      instantiatedCount += instantiated;
-      failedCount += failed;
-    }
-
-    const result = {
-      entities: instantiatedEntities,
-      instantiatedCount,
-      failedCount,
-      totalProcessed: instances.length,
-    };
-
-    return this.#dispatchInstantiationSummary(worldName, result);
-  }
 
   /**
    * Instantiates initial world entities from the specified world's instances.
