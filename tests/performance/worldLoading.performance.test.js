@@ -359,18 +359,21 @@ describe('World Loading - Performance Tests', () => {
         // Environment-aware memory thresholds
         const maxGrowthMB = metrics.memoryUsage.isCI ? 300 : 200; // More lenient in CI
         const maxGrowthBytes = maxGrowthMB * 1024 * 1024;
-        
+
         // Memory growth should be reasonable for 100 entities
         expect(metrics.memoryUsage.growth).toBeLessThan(maxGrowthBytes);
 
         // Memory should be released efficiently (final should be close to initial)
         const memoryLeakThreshold = metrics.memoryUsage.isCI ? 1.5 : 1.3; // More lenient in CI
-        const finalVsInitial = metrics.memoryUsage.final / metrics.memoryUsage.initial;
+        const finalVsInitial =
+          metrics.memoryUsage.final / metrics.memoryUsage.initial;
         expect(finalVsInitial).toBeLessThan(memoryLeakThreshold);
 
         // Additional sanity check: peak shouldn't be absurdly high
         const absoluteMaxMB = metrics.memoryUsage.isCI ? 500 : 400;
-        expect(metrics.memoryUsage.peak).toBeLessThan(absoluteMaxMB * 1024 * 1024);
+        expect(metrics.memoryUsage.peak).toBeLessThan(
+          absoluteMaxMB * 1024 * 1024
+        );
 
         console.log(
           `Memory usage - Baseline: ${(metrics.memoryUsage.baseline / 1024 / 1024).toFixed(2)}MB, ` +

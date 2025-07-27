@@ -63,6 +63,7 @@ export function configureContainer(container, uiElements) {
   configureBaseContainer(container, {
     includeGameSystems: true,
     includeUI: true,
+    includeCharacterBuilder: true,
     uiElements: {
       outputDiv,
       inputElement,

@@ -142,7 +142,9 @@ describe('MultiTargetEventBuilder', () => {
           targets: { item: 'sword_123' },
           logger,
         });
-        const singleExtraction = new TargetExtractionResult({ targetManager: singleTargetManager });
+        const singleExtraction = new TargetExtractionResult({
+          targetManager: singleTargetManager,
+        });
 
         builder.setTargetsFromExtraction(singleExtraction);
 
@@ -154,7 +156,9 @@ describe('MultiTargetEventBuilder', () => {
       it('should throw error for invalid extraction result', () => {
         expect(() => {
           builder.setTargetsFromExtraction({});
-        }).toThrow('extractionResult must be a TargetExtractionResult instance');
+        }).toThrow(
+          'extractionResult must be a TargetExtractionResult instance'
+        );
       });
 
       it('should throw error for missing extraction result', () => {
@@ -195,7 +199,11 @@ describe('MultiTargetEventBuilder', () => {
       });
 
       it('should prioritize primary target name', () => {
-        const targets = { item: 'sword_123', primary: 'staff_789', target: 'goblin_456' };
+        const targets = {
+          item: 'sword_123',
+          primary: 'staff_789',
+          target: 'goblin_456',
+        };
 
         builder.setTargets(targets);
 
@@ -310,7 +318,10 @@ describe('MultiTargetEventBuilder', () => {
 
       const payload = builder.build();
 
-      expect(payload.targets).toEqual({ item: 'sword_123', target: 'goblin_456' });
+      expect(payload.targets).toEqual({
+        item: 'sword_123',
+        target: 'goblin_456',
+      });
       expect(payload.targetId).toBe('goblin_456');
     });
 
@@ -348,7 +359,7 @@ describe('MultiTargetEventBuilder', () => {
         actionId: 'core:attack',
         targetId: 'goblin_456',
       });
-      
+
       // Should not have called warn for valid payload
       expect(logger.warn).not.toHaveBeenCalled();
     });
@@ -400,7 +411,10 @@ describe('MultiTargetEventBuilder', () => {
           timestamp: 1234567890,
         };
 
-        const newBuilder = MultiTargetEventBuilder.fromPayload(existingPayload, logger);
+        const newBuilder = MultiTargetEventBuilder.fromPayload(
+          existingPayload,
+          logger
+        );
         const state = newBuilder.getState();
 
         expect(state.eventData).toEqual(existingPayload);
@@ -504,7 +518,10 @@ describe('MultiTargetEventBuilder', () => {
       expect(payload.actorId).toBe('actor_123');
       expect(payload.actionId).toBe('core:attack');
       expect(payload.originalInput).toBe('attack goblin with sword');
-      expect(payload.targets).toEqual({ item: 'sword_123', target: 'goblin_456' });
+      expect(payload.targets).toEqual({
+        item: 'sword_123',
+        target: 'goblin_456',
+      });
       expect(payload.targetId).toBe('goblin_456');
     });
 

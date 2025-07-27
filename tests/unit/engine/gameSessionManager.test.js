@@ -1,0 +1,447 @@
+/**
+ * @file Unit tests for gameSessionManager.js
+ * @see src/engine/gameSessionManager.js
+ */
+
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import GameSessionManager from '../../../src/engine/gameSessionManager.js';
+import EngineState from '../../../src/engine/engineState.js';
+import {
+  createMockLogger,
+  createMockSafeEventDispatcher,
+  createMockTurnManager,
+  createMockPlaytimeTracker,
+} from '../../common/mockFactories/index.js';
+import {
+  ENGINE_OPERATION_IN_PROGRESS_UI,
+  ENGINE_READY_UI,
+} from '../../../src/constants/eventIds.js';
+
+describe('GameSessionManager', () => {
+  let engineState;
+  let logger;
+  let turnManager;
+  let playtimeTracker;
+  let safeEventDispatcher;
+  let stopFn;
+  let resetCoreGameStateFn;
+  let startEngineFn;
+  let anatomyInitializationService;
+  let gameSessionManager;
+
+  beforeEach(() => {
+    // Create fresh mocks for each test
+    engineState = new EngineState();
+    logger = createMockLogger();
+    turnManager = createMockTurnManager();
+    playtimeTracker = createMockPlaytimeTracker();
+    safeEventDispatcher = createMockSafeEventDispatcher();
+    stopFn = jest.fn().mockResolvedValue();
+    resetCoreGameStateFn = jest.fn();
+    startEngineFn = jest.fn((worldName) => {
+      engineState.setStarted(worldName);
+    });
+    anatomyInitializationService = {
+      getPendingGenerationCount: jest.fn().mockReturnValue(0),
+      waitForAllGenerationsToComplete: jest.fn().mockResolvedValue(),
+    };
+
+    gameSessionManager = new GameSessionManager({
+      logger,
+      turnManager,
+      playtimeTracker,
+      safeEventDispatcher,
+      engineState,
+      stopFn,
+      resetCoreGameStateFn,
+      startEngineFn,
+      anatomyInitializationService,
+    });
+  });
+
+  describe('constructor', () => {
+    it('should properly initialize with all dependencies', () => {
+      // Constructor test - verify dependencies are assigned
+      expect(gameSessionManager).toBeDefined();
+      expect(gameSessionManager).toBeInstanceOf(GameSessionManager);
+    });
+
+    it('should function without optional anatomyInitializationService', () => {
+      const managerWithoutAnatomy = new GameSessionManager({
+        logger,
+        turnManager,
+        playtimeTracker,
+        safeEventDispatcher,
+        engineState,
+        stopFn,
+        resetCoreGameStateFn,
+        startEngineFn,
+        anatomyInitializationService: null,
+      });
+
+      expect(managerWithoutAnatomy).toBeDefined();
+    });
+  });
+
+  describe('prepareForNewGameSession', () => {
+    it('should reset state without stopping when engine is not initialized', async () => {
+      // Engine not initialized (default state)
+      // engineState starts as not initialized by default
+
+      await gameSessionManager.prepareForNewGameSession('TestWorld');
+
+      expect(logger.warn).not.toHaveBeenCalled();
+      expect(stopFn).not.toHaveBeenCalled();
+      expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
+      expect(engineState.activeWorld).toBe('TestWorld');
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Preparing new game session for world "TestWorld"'
+        )
+      );
+    });
+
+    it('should warn and stop existing game when engine is already initialized', async () => {
+      // Set engine as initialized (covers line 109)
+      engineState.setStarted('OldWorld');
+
+      await gameSessionManager.prepareForNewGameSession('NewWorld');
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'GameSessionManager.prepareForNewGameSession: Engine already initialized. Stopping existing game before starting new.'
+      );
+      expect(stopFn).toHaveBeenCalledTimes(1);
+      expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
+      expect(engineState.activeWorld).toBe('NewWorld');
+    });
+
+    it('should stop game when game loop is running', async () => {
+      // Set game loop as running by starting engine
+      engineState.setStarted('RunningWorld');
+
+      await gameSessionManager.prepareForNewGameSession('TestWorld');
+
+      expect(stopFn).toHaveBeenCalledTimes(1);
+      expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('prepareForLoadGameSession', () => {
+    it('should dispatch loading UI event with short save name', async () => {
+      const saveIdentifier = 'path/to/MySave.sav';
+
+      await gameSessionManager.prepareForLoadGameSession(saveIdentifier);
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Preparing to load game from identifier: path/to/MySave.sav'
+        )
+      );
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading MySave.sav...',
+          inputDisabledMessage: 'Loading game from MySave.sav...',
+        }
+      );
+      expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle Windows-style paths correctly', async () => {
+      const saveIdentifier = 'C:\\Users\\Player\\Saves\\GameSave.sav';
+
+      await gameSessionManager.prepareForLoadGameSession(saveIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading GameSave.sav...',
+          inputDisabledMessage: 'Loading game from GameSave.sav...',
+        }
+      );
+    });
+
+    it('should handle save identifier without path separators', async () => {
+      const saveIdentifier = 'QuickSave';
+
+      await gameSessionManager.prepareForLoadGameSession(saveIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading QuickSave...',
+          inputDisabledMessage: 'Loading game from QuickSave...',
+        }
+      );
+    });
+
+    it('should stop engine if initialized before loading', async () => {
+      engineState.setStarted('CurrentWorld');
+
+      await gameSessionManager.prepareForLoadGameSession('save.sav');
+
+      expect(stopFn).toHaveBeenCalledTimes(1);
+      expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle empty string save identifier edge case', async () => {
+      // This covers the edge case where split().pop() might return empty string
+      const saveIdentifier = '';
+
+      await gameSessionManager.prepareForLoadGameSession(saveIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading ...',
+          inputDisabledMessage: 'Loading game from ...',
+        }
+      );
+    });
+  });
+
+  describe('finalizeNewGameSuccess', () => {
+    it('should start all services and dispatch ready event', async () => {
+      await gameSessionManager.finalizeNewGameSuccess('NewWorld');
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Initialization successful for world "NewWorld"'
+        )
+      );
+      expect(startEngineFn).toHaveBeenCalledWith('NewWorld');
+      expect(engineState.isInitialized).toBe(true);
+      expect(engineState.activeWorld).toBe('NewWorld');
+      expect(playtimeTracker.startSession).toHaveBeenCalledTimes(1);
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_READY_UI,
+        {
+          activeWorld: 'NewWorld',
+          message: 'Enter command...',
+        }
+      );
+      expect(turnManager.start).toHaveBeenCalledTimes(1);
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('New game started and ready (World: NewWorld)')
+      );
+    });
+
+    it('should handle missing playtimeTracker gracefully', async () => {
+      // Create manager without playtimeTracker
+      const managerWithoutTracker = new GameSessionManager({
+        logger,
+        turnManager,
+        playtimeTracker: null,
+        safeEventDispatcher,
+        engineState,
+        stopFn,
+        resetCoreGameStateFn,
+        startEngineFn,
+        anatomyInitializationService,
+      });
+
+      await managerWithoutTracker.finalizeNewGameSuccess('NewWorld');
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'GameSessionManager._finalizeGameStart: PlaytimeTracker not available, cannot start session.'
+      );
+      expect(turnManager.start).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw error when turnManager is not available', async () => {
+      // Create manager without turnManager (covers lines 185-188)
+      const managerWithoutTurnManager = new GameSessionManager({
+        logger,
+        turnManager: null,
+        playtimeTracker,
+        safeEventDispatcher,
+        engineState,
+        stopFn,
+        resetCoreGameStateFn,
+        startEngineFn,
+        anatomyInitializationService,
+      });
+
+      await expect(
+        managerWithoutTurnManager.finalizeNewGameSuccess('NewWorld')
+      ).rejects.toThrow(
+        'GameSessionManager critical error: TurnManager service is unavailable during game finalization.'
+      );
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'GameSessionManager._finalizeGameStart: TurnManager not available. Game cannot start turns.'
+      );
+    });
+
+    it('should wait for pending anatomy generations before starting turns', async () => {
+      // Set up pending anatomy generations (covers lines 150-161)
+      anatomyInitializationService.getPendingGenerationCount.mockReturnValue(3);
+
+      await gameSessionManager.finalizeNewGameSuccess('NewWorld');
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'GameSessionManager._finalizeGameStart: Waiting for 3 anatomy generations to complete before starting turns...'
+      );
+      expect(
+        anatomyInitializationService.waitForAllGenerationsToComplete
+      ).toHaveBeenCalledWith(15000);
+      expect(logger.info).toHaveBeenCalledWith(
+        'GameSessionManager._finalizeGameStart: Anatomy generation completed, starting turns.'
+      );
+      expect(turnManager.start).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle anatomy generation timeout gracefully', async () => {
+      // Set up anatomy generation that times out (covers lines 162-167)
+      anatomyInitializationService.getPendingGenerationCount.mockReturnValue(2);
+      anatomyInitializationService.waitForAllGenerationsToComplete.mockRejectedValue(
+        new Error('Timeout waiting for anatomy generation')
+      );
+
+      await gameSessionManager.finalizeNewGameSuccess('NewWorld');
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'GameSessionManager._finalizeGameStart: Anatomy generation did not complete in time, starting turns anyway.',
+        {
+          error: 'Timeout waiting for anatomy generation',
+          pendingCount: 2,
+        }
+      );
+      expect(turnManager.start).toHaveBeenCalledTimes(1);
+    });
+
+    it('should skip anatomy wait when no generations are pending', async () => {
+      // No pending generations (covers lines 168-169)
+      anatomyInitializationService.getPendingGenerationCount.mockReturnValue(0);
+
+      await gameSessionManager.finalizeNewGameSuccess('NewWorld');
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        'GameSessionManager._finalizeGameStart: No pending anatomy generations detected.'
+      );
+      expect(
+        anatomyInitializationService.waitForAllGenerationsToComplete
+      ).not.toHaveBeenCalled();
+      expect(turnManager.start).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle missing anatomyInitializationService', async () => {
+      // Create manager without anatomyInitializationService
+      const managerWithoutAnatomy = new GameSessionManager({
+        logger,
+        turnManager,
+        playtimeTracker,
+        safeEventDispatcher,
+        engineState,
+        stopFn,
+        resetCoreGameStateFn,
+        startEngineFn,
+        anatomyInitializationService: null,
+      });
+
+      await managerWithoutAnatomy.finalizeNewGameSuccess('NewWorld');
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'GameSessionManager._finalizeGameStart: AnatomyInitializationService not available, cannot wait for anatomy generation.'
+      );
+      expect(turnManager.start).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('finalizeLoadSuccess', () => {
+    it('should restore game state from save data with metadata', async () => {
+      const saveData = {
+        metadata: { gameTitle: 'SavedWorld' },
+        entities: [],
+        gameState: {},
+      };
+
+      const result = await gameSessionManager.finalizeLoadSuccess(
+        saveData,
+        'save1.sav'
+      );
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Game state restored successfully from save1.sav'
+        )
+      );
+      expect(engineState.activeWorld).toBe('SavedWorld');
+      expect(startEngineFn).toHaveBeenCalledWith('SavedWorld');
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_READY_UI,
+        {
+          activeWorld: 'SavedWorld',
+          message: 'Enter command...',
+        }
+      );
+      expect(turnManager.start).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        success: true,
+        data: saveData,
+      });
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Game loaded from "save1.sav" (World: SavedWorld) and resumed.'
+        )
+      );
+    });
+
+    it('should handle save data without metadata', async () => {
+      const saveData = {
+        entities: [],
+        gameState: {},
+      };
+
+      const result = await gameSessionManager.finalizeLoadSuccess(
+        saveData,
+        'quicksave'
+      );
+
+      expect(engineState.activeWorld).toBe('Restored Game');
+      expect(startEngineFn).toHaveBeenCalledWith('Restored Game');
+      expect(result).toEqual({
+        success: true,
+        data: saveData,
+      });
+    });
+
+    it('should handle save data with empty gameTitle', async () => {
+      const saveData = {
+        metadata: { gameTitle: '' },
+        entities: [],
+      };
+
+      const result = await gameSessionManager.finalizeLoadSuccess(
+        saveData,
+        'autosave'
+      );
+
+      expect(engineState.activeWorld).toBe('Restored Game');
+      expect(startEngineFn).toHaveBeenCalledWith('Restored Game');
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('private method coverage via public methods', () => {
+    it('should dispatch UI event when provided to _prepareEngineForOperation', async () => {
+      // This tests the UI event dispatching branch (lines 94-97)
+      await gameSessionManager.prepareForLoadGameSession('test.sav');
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        'GameSessionManager._prepareEngineForOperation: Dispatching UI event.'
+      );
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle both isInitialized and isGameLoopRunning states', async () => {
+      // Test when both conditions are true (line 88)
+      engineState.setStarted('BothStatesWorld');
+
+      await gameSessionManager.prepareForNewGameSession('TestWorld');
+
+      expect(stopFn).toHaveBeenCalledTimes(1);
+      expect(resetCoreGameStateFn).toHaveBeenCalledTimes(1);
+    });
+  });
+});

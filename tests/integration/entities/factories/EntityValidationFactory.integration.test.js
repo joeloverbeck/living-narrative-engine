@@ -41,7 +41,7 @@ describe('EntityValidationFactory - Integration Tests', () => {
 
     // Create the EntityFactory with EntityValidationFactory
     const validateAndClone = createValidateAndClone(validator, logger, cloner);
-    
+
     validationFactory = new EntityValidationFactory({
       validator,
       logger,
@@ -81,7 +81,7 @@ describe('EntityValidationFactory - Integration Tests', () => {
 
     // Set up component schemas in validator
     validator.validate.mockImplementation(() => ({ isValid: true }));
-    
+
     // Reset mock calls before each test
     validator.validate.mockClear();
   });
@@ -125,17 +125,23 @@ describe('EntityValidationFactory - Integration Tests', () => {
       expect(entity).toBeDefined();
       expect(entity.id).toBe('test-actor-1');
       expect(validatedOverrides).toBeDefined();
-      expect(validatedOverrides['core:short_term_memory']).toEqual({ entries: ['test memory'] });
-      expect(validatedOverrides['core:notes']).toEqual({ notes: ['test note'] });
+      expect(validatedOverrides['core:short_term_memory']).toEqual({
+        entries: ['test memory'],
+      });
+      expect(validatedOverrides['core:notes']).toEqual({
+        notes: ['test note'],
+      });
 
       // Verify validation was called for component overrides
       expect(validator.validate).toHaveBeenCalledTimes(4); // 2 overrides + 2 entity creation calls
-      
+
       // Check that the specific components were validated
       const calls = validator.validate.mock.calls;
-      const shortTermMemoryCalls = calls.filter(call => call[0] === 'core:short_term_memory');
-      const notesCalls = calls.filter(call => call[0] === 'core:notes');
-      
+      const shortTermMemoryCalls = calls.filter(
+        (call) => call[0] === 'core:short_term_memory'
+      );
+      const notesCalls = calls.filter((call) => call[0] === 'core:notes');
+
       expect(shortTermMemoryCalls.length).toBeGreaterThan(0);
       expect(notesCalls.length).toBeGreaterThan(0);
     });
@@ -145,12 +151,18 @@ describe('EntityValidationFactory - Integration Tests', () => {
       const repository = new Map();
 
       // Test auto-generated ID
-      const generatedId = validationFactory.resolveInstanceId(undefined, idGenerator);
+      const generatedId = validationFactory.resolveInstanceId(
+        undefined,
+        idGenerator
+      );
       expect(generatedId).toBeDefined();
       expect(typeof generatedId).toBe('string');
 
       // Test specific ID
-      const specificId = validationFactory.resolveInstanceId('specific-id', idGenerator);
+      const specificId = validationFactory.resolveInstanceId(
+        'specific-id',
+        idGenerator
+      );
       expect(specificId).toBe('specific-id');
 
       // Test validation of create IDs
@@ -248,34 +260,47 @@ describe('EntityValidationFactory - Integration Tests', () => {
       validationFactory.validateReconstructData(serializedEntity);
 
       // Validate serialized components
-      const validatedComponents = validationFactory.validateSerializedComponents(
-        serializedEntity.components,
-        serializedEntity.instanceId,
-        serializedEntity.definitionId
-      );
+      const validatedComponents =
+        validationFactory.validateSerializedComponents(
+          serializedEntity.components,
+          serializedEntity.instanceId,
+          serializedEntity.definitionId
+        );
 
       // Reconstruct entity using EntityFactory
-      const entity = entityFactory.reconstruct(serializedEntity, registry, repository);
+      const entity = entityFactory.reconstruct(
+        serializedEntity,
+        registry,
+        repository
+      );
 
       // Assert
       expect(entity).toBeDefined();
       expect(entity.id).toBe('reconstructed-actor');
       expect(validatedComponents).toBeDefined();
-      expect(validatedComponents['core:short_term_memory']).toEqual({ entries: ['restored memory'] });
-      expect(validatedComponents['core:notes']).toEqual({ notes: ['restored note'] });
+      expect(validatedComponents['core:short_term_memory']).toEqual({
+        entries: ['restored memory'],
+      });
+      expect(validatedComponents['core:notes']).toEqual({
+        notes: ['restored note'],
+      });
       expect(validatedComponents['core:goals']).toBeNull();
 
       // Verify validation was called for each non-null component
       const calls = validator.validate.mock.calls;
-      const shortTermMemoryCalls = calls.filter(call => 
-        call[0] === 'core:short_term_memory' && 
-        JSON.stringify(call[1]) === JSON.stringify({ entries: ['restored memory'] })
+      const shortTermMemoryCalls = calls.filter(
+        (call) =>
+          call[0] === 'core:short_term_memory' &&
+          JSON.stringify(call[1]) ===
+            JSON.stringify({ entries: ['restored memory'] })
       );
-      const notesCalls = calls.filter(call => 
-        call[0] === 'core:notes' && 
-        JSON.stringify(call[1]) === JSON.stringify({ notes: ['restored note'] })
+      const notesCalls = calls.filter(
+        (call) =>
+          call[0] === 'core:notes' &&
+          JSON.stringify(call[1]) ===
+            JSON.stringify({ notes: ['restored note'] })
       );
-      
+
       expect(shortTermMemoryCalls.length).toBeGreaterThanOrEqual(1);
       expect(notesCalls.length).toBeGreaterThanOrEqual(1);
     });
@@ -361,26 +386,29 @@ describe('EntityValidationFactory - Integration Tests', () => {
     it('should handle empty or missing components during reconstruction', () => {
       // Test with no components
       const emptyComponents = {};
-      const validatedComponents1 = validationFactory.validateSerializedComponents(
-        emptyComponents,
-        'no-components',
-        'core:actor'
-      );
+      const validatedComponents1 =
+        validationFactory.validateSerializedComponents(
+          emptyComponents,
+          'no-components',
+          'core:actor'
+        );
       expect(validatedComponents1).toEqual({});
 
       // Test with missing components (null/undefined)
-      const validatedComponents2 = validationFactory.validateSerializedComponents(
-        null,
-        'missing-components',
-        'core:actor'
-      );
+      const validatedComponents2 =
+        validationFactory.validateSerializedComponents(
+          null,
+          'missing-components',
+          'core:actor'
+        );
       expect(validatedComponents2).toEqual({});
 
-      const validatedComponents3 = validationFactory.validateSerializedComponents(
-        undefined,
-        'missing-components',
-        'core:actor'
-      );
+      const validatedComponents3 =
+        validationFactory.validateSerializedComponents(
+          undefined,
+          'missing-components',
+          'core:actor'
+        );
       expect(validatedComponents3).toEqual({});
     });
   });
@@ -484,7 +512,9 @@ describe('EntityValidationFactory - Integration Tests', () => {
 
       // Assert
       expect(validatedOverrides).toBeDefined();
-      expect(validatedOverrides['core:new_component']).toEqual({ data: 'new component data' });
+      expect(validatedOverrides['core:new_component']).toEqual({
+        data: 'new component data',
+      });
       // Verify validation was called for the new component
       expect(validator.validate).toHaveBeenCalledTimes(1);
       const calls = validator.validate.mock.calls;
@@ -496,17 +526,26 @@ describe('EntityValidationFactory - Integration Tests', () => {
   describe('ID Resolution and Management', () => {
     it('should resolve instance IDs correctly with various input scenarios', () => {
       // Test with valid custom ID
-      const customId = validationFactory.resolveInstanceId('custom-id-123', idGenerator);
+      const customId = validationFactory.resolveInstanceId(
+        'custom-id-123',
+        idGenerator
+      );
       expect(customId).toBe('custom-id-123');
 
       // Test with generated ID
-      const generatedId1 = validationFactory.resolveInstanceId(undefined, idGenerator);
+      const generatedId1 = validationFactory.resolveInstanceId(
+        undefined,
+        idGenerator
+      );
       expect(generatedId1).toBeDefined();
       expect(typeof generatedId1).toBe('string');
       expect(generatedId1.length).toBeGreaterThan(0);
 
       // Test another generated ID to verify uniqueness
-      const generatedId2 = validationFactory.resolveInstanceId(null, idGenerator);
+      const generatedId2 = validationFactory.resolveInstanceId(
+        null,
+        idGenerator
+      );
       expect(generatedId2).toBeDefined();
       expect(typeof generatedId2).toBe('string');
 

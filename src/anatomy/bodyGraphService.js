@@ -221,8 +221,14 @@ export class BodyGraphService {
         componentId
       );
       // Check for both null and empty object (mock returns)
-      if (componentData !== null && componentData !== undefined && 
-          !(typeof componentData === 'object' && Object.keys(componentData).length === 0)) {
+      if (
+        componentData !== null &&
+        componentData !== undefined &&
+        !(
+          typeof componentData === 'object' &&
+          Object.keys(componentData).length === 0
+        )
+      ) {
         return true;
       }
     }

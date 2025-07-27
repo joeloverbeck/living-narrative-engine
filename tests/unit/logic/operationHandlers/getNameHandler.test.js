@@ -3,7 +3,14 @@
  * @see src/logic/operationHandlers/getNameHandler.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
 import { NAME_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 import { DEFAULT_FALLBACK_CHARACTER_NAME } from '../../../../src/constants/textDefaults.js';
@@ -54,48 +61,66 @@ describe('GetNameHandler', () => {
 
   describe('Constructor', () => {
     it('should initialize successfully with valid dependencies', () => {
-      expect(() => new GetNameHandler({
-        entityManager: mockEntityManager,
-        logger: mockLogger,
-        safeEventDispatcher: mockSafeEventDispatcher,
-      })).not.toThrow();
+      expect(
+        () =>
+          new GetNameHandler({
+            entityManager: mockEntityManager,
+            logger: mockLogger,
+            safeEventDispatcher: mockSafeEventDispatcher,
+          })
+      ).not.toThrow();
     });
 
     it('should throw error when entityManager is missing', () => {
-      expect(() => new GetNameHandler({
-        logger: mockLogger,
-        safeEventDispatcher: mockSafeEventDispatcher,
-      })).toThrow();
+      expect(
+        () =>
+          new GetNameHandler({
+            logger: mockLogger,
+            safeEventDispatcher: mockSafeEventDispatcher,
+          })
+      ).toThrow();
     });
 
     it('should throw error when logger is missing', () => {
-      expect(() => new GetNameHandler({
-        entityManager: mockEntityManager,
-        safeEventDispatcher: mockSafeEventDispatcher,
-      })).toThrow();
+      expect(
+        () =>
+          new GetNameHandler({
+            entityManager: mockEntityManager,
+            safeEventDispatcher: mockSafeEventDispatcher,
+          })
+      ).toThrow();
     });
 
     it('should throw error when safeEventDispatcher is missing', () => {
-      expect(() => new GetNameHandler({
-        entityManager: mockEntityManager,
-        logger: mockLogger,
-      })).toThrow();
+      expect(
+        () =>
+          new GetNameHandler({
+            entityManager: mockEntityManager,
+            logger: mockLogger,
+          })
+      ).toThrow();
     });
 
     it('should throw error when entityManager lacks required methods', () => {
-      expect(() => new GetNameHandler({
-        entityManager: {},
-        logger: mockLogger,
-        safeEventDispatcher: mockSafeEventDispatcher,
-      })).toThrow();
+      expect(
+        () =>
+          new GetNameHandler({
+            entityManager: {},
+            logger: mockLogger,
+            safeEventDispatcher: mockSafeEventDispatcher,
+          })
+      ).toThrow();
     });
 
     it('should throw error when safeEventDispatcher lacks required methods', () => {
-      expect(() => new GetNameHandler({
-        entityManager: mockEntityManager,
-        logger: mockLogger,
-        safeEventDispatcher: {},
-      })).toThrow();
+      expect(
+        () =>
+          new GetNameHandler({
+            entityManager: mockEntityManager,
+            logger: mockLogger,
+            safeEventDispatcher: {},
+          })
+      ).toThrow();
     });
   });
 
@@ -266,7 +291,8 @@ describe('GetNameHandler', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: 'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.',
+          message:
+            'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.',
         })
       );
       expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
@@ -278,7 +304,8 @@ describe('GetNameHandler', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: 'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.',
+          message:
+            'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.',
         })
       );
       expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
@@ -294,7 +321,8 @@ describe('GetNameHandler', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: 'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.',
+          message:
+            'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.',
         })
       );
       expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
@@ -311,7 +339,8 @@ describe('GetNameHandler', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: 'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.',
+          message:
+            'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.',
         })
       );
       expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
@@ -337,7 +366,9 @@ describe('GetNameHandler', () => {
         'actor-123',
         NAME_COMPONENT_ID
       );
-      expect(executionContext.evaluationContext.context.testVar).toBe('Actor Name');
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        'Actor Name'
+      );
     });
 
     it('should resolve "target" keyword to target ID from execution context', () => {
@@ -354,7 +385,9 @@ describe('GetNameHandler', () => {
         'target-456',
         NAME_COMPONENT_ID
       );
-      expect(executionContext.evaluationContext.context.testVar).toBe('Target Name');
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        'Target Name'
+      );
     });
 
     it('should use direct entity ID when provided as string', () => {
@@ -371,7 +404,9 @@ describe('GetNameHandler', () => {
         'entity-789',
         NAME_COMPONENT_ID
       );
-      expect(executionContext.evaluationContext.context.testVar).toBe('Entity Name');
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        'Entity Name'
+      );
     });
 
     it('should handle EntityRefObject when provided', () => {
@@ -388,7 +423,9 @@ describe('GetNameHandler', () => {
         'ref-object-123',
         NAME_COMPONENT_ID
       );
-      expect(executionContext.evaluationContext.context.testVar).toBe('Ref Object Name');
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        'Ref Object Name'
+      );
     });
 
     it('should log warning and use fallback when entity resolution fails', () => {
@@ -405,7 +442,9 @@ describe('GetNameHandler', () => {
           entity_ref: '   ',
         })
       );
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
       expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
     });
   });
@@ -427,9 +466,11 @@ describe('GetNameHandler', () => {
         'actor-123',
         NAME_COMPONENT_ID
       );
-      expect(executionContext.evaluationContext.context.testVar).toBe('Character Name');
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        'Character Name'
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'GET_NAME: Resolved name for \'actor-123\' -> \'Character Name\'.'
+        "GET_NAME: Resolved name for 'actor-123' -> 'Character Name'."
       );
     });
 
@@ -440,9 +481,11 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe('Trimmed Name');
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        'Trimmed Name'
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'GET_NAME: Resolved name for \'actor-123\' -> \'Trimmed Name\'.'
+        "GET_NAME: Resolved name for 'actor-123' -> 'Trimmed Name'."
       );
     });
 
@@ -456,9 +499,15 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context).toHaveProperty('testVar');
-      expect(executionContext.evaluationContext.context.testVar).toBe('Test Name');
-      expect(executionContext.evaluationContext.context).not.toHaveProperty('  testVar  ');
+      expect(executionContext.evaluationContext.context).toHaveProperty(
+        'testVar'
+      );
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        'Test Name'
+      );
+      expect(executionContext.evaluationContext.context).not.toHaveProperty(
+        '  testVar  '
+      );
     });
 
     it('should use custom default_value when provided and component is missing', () => {
@@ -471,7 +520,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe('Custom Default');
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        'Custom Default'
+      );
     });
 
     it('should trim whitespace from custom default_value', () => {
@@ -484,7 +535,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe('Custom Default');
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        'Custom Default'
+      );
     });
 
     it('should use DEFAULT_FALLBACK_CHARACTER_NAME when no custom default provided and component missing', () => {
@@ -496,7 +549,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
 
     it('should use DEFAULT_FALLBACK_CHARACTER_NAME when custom default is empty/whitespace', () => {
@@ -509,7 +564,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
   });
 
@@ -525,7 +582,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
 
     it('should use fallback when component is undefined', () => {
@@ -534,7 +593,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
 
     it('should use fallback when component text is missing', () => {
@@ -544,7 +605,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
 
     it('should use fallback when component text is null', () => {
@@ -554,7 +617,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
 
     it('should use fallback when component text is empty string', () => {
@@ -564,7 +629,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
 
     it('should use fallback when component text is whitespace only', () => {
@@ -574,7 +641,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
 
     it('should use fallback when component text is not a string', () => {
@@ -584,7 +653,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
   });
 
@@ -613,7 +684,9 @@ describe('GetNameHandler', () => {
           }),
         })
       );
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
 
     it('should handle error during getComponentData and use custom fallback', () => {
@@ -638,7 +711,9 @@ describe('GetNameHandler', () => {
           }),
         })
       );
-      expect(executionContext.evaluationContext.context.testVar).toBe('Custom Fallback');
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        'Custom Fallback'
+      );
     });
 
     it('should continue execution after error and still store fallback value', () => {
@@ -651,7 +726,9 @@ describe('GetNameHandler', () => {
 
       // Should dispatch error but still complete execution
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalled();
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
       // Should not throw or crash
     });
   });
@@ -671,7 +748,9 @@ describe('GetNameHandler', () => {
           entity_ref: {},
         })
       );
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
 
     it('should handle complex entity_ref object without entityId', () => {
@@ -688,7 +767,9 @@ describe('GetNameHandler', () => {
           entity_ref: { someOtherField: 'value' },
         })
       );
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
 
     it('should overwrite existing context variable', () => {
@@ -702,7 +783,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe('New Name');
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        'New Name'
+      );
     });
 
     it('should handle zero-length component text after trimming', () => {
@@ -715,7 +798,9 @@ describe('GetNameHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.testVar).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
+      expect(executionContext.evaluationContext.context.testVar).toBe(
+        DEFAULT_FALLBACK_CHARACTER_NAME
+      );
     });
   });
 });

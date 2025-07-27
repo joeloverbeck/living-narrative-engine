@@ -52,7 +52,12 @@ export class MultiTargetEventBuilder {
    * @returns {MultiTargetEventBuilder} This builder for chaining
    */
   setActor(actorId) {
-    assertNonBlankString(actorId, 'actorId', 'MultiTargetEventBuilder.setActor', this.#logger);
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'MultiTargetEventBuilder.setActor',
+      this.#logger
+    );
     this.#eventData.actorId = actorId;
     return this;
   }
@@ -64,7 +69,12 @@ export class MultiTargetEventBuilder {
    * @returns {MultiTargetEventBuilder} This builder for chaining
    */
   setAction(actionId) {
-    assertNonBlankString(actionId, 'actionId', 'MultiTargetEventBuilder.setAction', this.#logger);
+    assertNonBlankString(
+      actionId,
+      'actionId',
+      'MultiTargetEventBuilder.setAction',
+      this.#logger
+    );
     this.#eventData.actionId = actionId;
     return this;
   }
@@ -76,7 +86,12 @@ export class MultiTargetEventBuilder {
    * @returns {MultiTargetEventBuilder} This builder for chaining
    */
   setOriginalInput(originalInput) {
-    assertNonBlankString(originalInput, 'originalInput', 'MultiTargetEventBuilder.setOriginalInput', this.#logger);
+    assertNonBlankString(
+      originalInput,
+      'originalInput',
+      'MultiTargetEventBuilder.setOriginalInput',
+      this.#logger
+    );
     this.#eventData.originalInput = originalInput;
     return this;
   }
@@ -88,7 +103,12 @@ export class MultiTargetEventBuilder {
    * @returns {MultiTargetEventBuilder} This builder for chaining
    */
   setTargetsFromExtraction(extractionResult) {
-    assertPresent(extractionResult, 'Target extraction result is required', Error, this.#logger);
+    assertPresent(
+      extractionResult,
+      'Target extraction result is required',
+      Error,
+      this.#logger
+    );
 
     if (!(extractionResult instanceof TargetExtractionResult)) {
       throw new Error(
@@ -163,7 +183,12 @@ export class MultiTargetEventBuilder {
    */
   setLegacyTarget(targetId) {
     if (targetId !== null) {
-      assertNonBlankString(targetId, 'targetId', 'MultiTargetEventBuilder.setLegacyTarget', this.#logger);
+      assertNonBlankString(
+        targetId,
+        'targetId',
+        'MultiTargetEventBuilder.setLegacyTarget',
+        this.#logger
+      );
     }
 
     this.#eventData.targetId = targetId;
@@ -327,7 +352,12 @@ export class MultiTargetEventBuilder {
   static fromTurnAction(actor, turnAction, extractionResult, logger) {
     assertPresent(actor, 'Actor is required', Error, logger);
     assertPresent(turnAction, 'Turn action is required', Error, logger);
-    assertPresent(extractionResult, 'Extraction result is required', Error, logger);
+    assertPresent(
+      extractionResult,
+      'Extraction result is required',
+      Error,
+      logger
+    );
 
     const builder = new MultiTargetEventBuilder({ logger });
 

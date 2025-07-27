@@ -16,7 +16,7 @@ describe('BodyGraphService Integration Tests', () => {
   beforeEach(async () => {
     testBed = new AnatomyIntegrationTestBed();
     await testBed.setup();
-    
+
     bodyGraphService = testBed.container.get('BodyGraphService');
     entityManager = testBed.container.get('IEntityManager');
   });
@@ -29,7 +29,7 @@ describe('BodyGraphService Integration Tests', () => {
     it('should throw InvalidArgumentError when entityManager is missing', () => {
       const mockLogger = testBed.logger;
       const mockEventDispatcher = testBed.eventDispatcher;
-      
+
       expect(() => {
         new BodyGraphService({
           entityManager: null,
@@ -49,7 +49,7 @@ describe('BodyGraphService Integration Tests', () => {
     it('should throw InvalidArgumentError when logger is missing', () => {
       const mockEntityManager = entityManager;
       const mockEventDispatcher = testBed.eventDispatcher;
-      
+
       expect(() => {
         new BodyGraphService({
           entityManager: mockEntityManager,
@@ -69,7 +69,7 @@ describe('BodyGraphService Integration Tests', () => {
     it('should throw InvalidArgumentError when eventDispatcher is missing', () => {
       const mockEntityManager = entityManager;
       const mockLogger = testBed.logger;
-      
+
       expect(() => {
         new BodyGraphService({
           entityManager: mockEntityManager,
@@ -90,13 +90,13 @@ describe('BodyGraphService Integration Tests', () => {
       const mockEntityManager = entityManager;
       const mockLogger = testBed.logger;
       const mockEventDispatcher = testBed.eventDispatcher;
-      
+
       const service = new BodyGraphService({
         entityManager: mockEntityManager,
         logger: mockLogger,
         eventDispatcher: mockEventDispatcher,
       });
-      
+
       // The queryCache should be created internally
       expect(service).toBeDefined();
     });
@@ -116,7 +116,7 @@ describe('BodyGraphService Integration Tests', () => {
         eventDispatcher: testBed.eventDispatcher,
         queryCache: mockQueryCache,
       });
-      
+
       expect(service).toBeDefined();
     });
   });
@@ -134,57 +134,67 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should handle bodyComponent with nested body.root structure', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
 
       // Get the anatomy component
       const actorInstance = entityManager.getEntityInstance(actor.id);
       const bodyComponent = actorInstance.getComponentData('anatomy:body');
-      
+
       // Create nested structure
       const nestedBodyComponent = {
         body: {
           root: bodyComponent.body.root,
-          parts: bodyComponent.body.parts
-        }
+          parts: bodyComponent.body.parts,
+        },
       };
 
       // Build cache first
       await bodyGraphService.buildAdjacencyCache(actor.id);
 
-      const result = bodyGraphService.getAllParts(nestedBodyComponent, actor.id);
+      const result = bodyGraphService.getAllParts(
+        nestedBodyComponent,
+        actor.id
+      );
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
     });
 
     it('should handle bodyComponent with direct root structure', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
 
       // Get the anatomy component
       const actorInstance = entityManager.getEntityInstance(actor.id);
       const bodyComponent = actorInstance.getComponentData('anatomy:body');
-      
+
       // Create direct root structure
       const directRootComponent = {
         root: bodyComponent.body.root,
-        parts: bodyComponent.body.parts
+        parts: bodyComponent.body.parts,
       };
 
       // Build cache first
       await bodyGraphService.buildAdjacencyCache(actor.id);
 
-      const result = bodyGraphService.getAllParts(directRootComponent, actor.id);
+      const result = bodyGraphService.getAllParts(
+        directRootComponent,
+        actor.id
+      );
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
     });
 
     it('should return empty array when no root ID found in bodyComponent', () => {
       const invalidBodyComponent = {
-        someOtherProperty: 'value'
+        someOtherProperty: 'value',
       };
 
       const result = bodyGraphService.getAllParts(invalidBodyComponent);
@@ -193,14 +203,16 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should use actor entity ID as cache root when available in cache', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
 
       // Get the anatomy component
       const actorInstance = entityManager.getEntityInstance(actor.id);
       const bodyComponent = actorInstance.getComponentData('anatomy:body');
-      
+
       // Build cache for actor
       await bodyGraphService.buildAdjacencyCache(actor.id);
 
@@ -211,18 +223,23 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should use blueprint root when actor not in cache', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
 
       // Get the anatomy component
       const actorInstance = entityManager.getEntityInstance(actor.id);
       const bodyComponent = actorInstance.getComponentData('anatomy:body');
-      
+
       // Don't build cache for actor, use different actor ID
       const differentActorId = 'non-existent-actor';
 
-      const result = bodyGraphService.getAllParts(bodyComponent.body, differentActorId);
+      const result = bodyGraphService.getAllParts(
+        bodyComponent.body,
+        differentActorId
+      );
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
     });
@@ -231,36 +248,47 @@ describe('BodyGraphService Integration Tests', () => {
   describe('hasPartWithComponent Integration', () => {
     it('should find parts with specific components in real anatomy', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
 
       // Get the anatomy component
       const actorInstance = entityManager.getEntityInstance(actor.id);
       const bodyComponent = actorInstance.getComponentData('anatomy:body');
-      
+
       // Build cache
       await bodyGraphService.buildAdjacencyCache(actor.id);
 
       // Test finding parts with anatomy:part component
-      const hasAnatomyPart = bodyGraphService.hasPartWithComponent(bodyComponent.body, 'anatomy:part');
+      const hasAnatomyPart = bodyGraphService.hasPartWithComponent(
+        bodyComponent.body,
+        'anatomy:part'
+      );
       expect(hasAnatomyPart).toBe(true);
 
       // Test finding parts with non-existent component
-      const hasNonExistent = bodyGraphService.hasPartWithComponent(bodyComponent.body, 'non:existent');
+      const hasNonExistent = bodyGraphService.hasPartWithComponent(
+        bodyComponent.body,
+        'non:existent'
+      );
       expect(hasNonExistent).toBe(false);
     });
 
     it('should return false when no parts exist', () => {
       const emptyBodyComponent = {
-        root: 'non-existent-root'
+        root: 'non-existent-root',
       };
 
       // getAllParts should return empty array for non-existent entities
       const allParts = bodyGraphService.getAllParts(emptyBodyComponent);
       expect(allParts).toEqual([]);
-      
-      const result = bodyGraphService.hasPartWithComponent(emptyBodyComponent, 'anatomy:part');
+
+      const result = bodyGraphService.hasPartWithComponent(
+        emptyBodyComponent,
+        'anatomy:part'
+      );
       expect(result).toBe(false);
     });
   });
@@ -268,22 +296,24 @@ describe('BodyGraphService Integration Tests', () => {
   describe('hasPartWithComponentValue Integration', () => {
     it('should find parts with specific component values in real anatomy', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
 
       // Get the anatomy component
       const actorInstance = entityManager.getEntityInstance(actor.id);
       const bodyComponent = actorInstance.getComponentData('anatomy:body');
-      
+
       // Build cache
       await bodyGraphService.buildAdjacencyCache(actor.id);
 
       // Test finding parts with specific subType
       const hasHand = bodyGraphService.hasPartWithComponentValue(
-        bodyComponent.body, 
-        'anatomy:part', 
-        'subType', 
+        bodyComponent.body,
+        'anatomy:part',
+        'subType',
         'hand'
       );
       expect(hasHand.found).toBe(true);
@@ -291,9 +321,9 @@ describe('BodyGraphService Integration Tests', () => {
 
       // Test finding parts with non-existent value
       const hasNonExistent = bodyGraphService.hasPartWithComponentValue(
-        bodyComponent.body, 
-        'anatomy:part', 
-        'subType', 
+        bodyComponent.body,
+        'anatomy:part',
+        'subType',
         'non-existent-type'
       );
       expect(hasNonExistent.found).toBe(false);
@@ -301,23 +331,31 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should handle nested property paths', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
 
       // Add a component with nested properties to a part
-      const bodyComponent = entityManager.getComponentData(actor.id, 'anatomy:body');
-      const allParts = bodyGraphService.getAllParts(bodyComponent.body, actor.id);
-      
+      const bodyComponent = entityManager.getComponentData(
+        actor.id,
+        'anatomy:body'
+      );
+      const allParts = bodyGraphService.getAllParts(
+        bodyComponent.body,
+        actor.id
+      );
+
       if (allParts.length > 0) {
         const testPartId = allParts[0];
         const testPartInstance = entityManager.getEntityInstance(testPartId);
         testPartInstance.addComponent('test:nested', {
           level1: {
             level2: {
-              value: 'deep-value'
-            }
-          }
+              value: 'deep-value',
+            },
+          },
         });
 
         const result = bodyGraphService.hasPartWithComponentValue(
@@ -333,13 +371,13 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should return not found when component data is null', () => {
       const emptyBodyComponent = {
-        root: 'non-existent-root'
+        root: 'non-existent-root',
       };
 
       const result = bodyGraphService.hasPartWithComponentValue(
-        emptyBodyComponent, 
-        'anatomy:part', 
-        'subType', 
+        emptyBodyComponent,
+        'anatomy:part',
+        'subType',
         'hand'
       );
       expect(result.found).toBe(false);
@@ -348,15 +386,21 @@ describe('BodyGraphService Integration Tests', () => {
 
   describe('getBodyGraph Integration', () => {
     it('should throw InvalidArgumentError for invalid entity ID', async () => {
-      await expect(bodyGraphService.getBodyGraph(null)).rejects.toThrow(InvalidArgumentError);
-      await expect(bodyGraphService.getBodyGraph('')).rejects.toThrow(InvalidArgumentError);
-      await expect(bodyGraphService.getBodyGraph(123)).rejects.toThrow(InvalidArgumentError);
+      await expect(bodyGraphService.getBodyGraph(null)).rejects.toThrow(
+        InvalidArgumentError
+      );
+      await expect(bodyGraphService.getBodyGraph('')).rejects.toThrow(
+        InvalidArgumentError
+      );
+      await expect(bodyGraphService.getBodyGraph(123)).rejects.toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('should throw error when entity has no anatomy:body component', async () => {
       // Create actor without anatomy
       const actor = await entityManager.createEntityInstance('core:actor');
-      
+
       await expect(bodyGraphService.getBodyGraph(actor.id)).rejects.toThrow(
         `Entity ${actor.id} has no anatomy:body component`
       );
@@ -364,12 +408,14 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should return body graph with getAllPartIds method for valid anatomy', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
 
       const bodyGraph = await bodyGraphService.getBodyGraph(actor.id);
-      
+
       expect(bodyGraph).toBeDefined();
       expect(typeof bodyGraph.getAllPartIds).toBe('function');
       expect(typeof bodyGraph.getConnectedParts).toBe('function');
@@ -381,13 +427,15 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should return body graph with getConnectedParts method', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
 
       const bodyGraph = await bodyGraphService.getBodyGraph(actor.id);
       const partIds = bodyGraph.getAllPartIds();
-      
+
       if (partIds.length > 0) {
         const connectedParts = bodyGraph.getConnectedParts(partIds[0]);
         expect(Array.isArray(connectedParts)).toBe(true);
@@ -396,7 +444,9 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should build adjacency cache automatically', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
 
@@ -405,7 +455,7 @@ describe('BodyGraphService Integration Tests', () => {
 
       // Get body graph should build cache
       await bodyGraphService.getBodyGraph(actor.id);
-      
+
       // Cache should now exist
       expect(bodyGraphService.hasCache(actor.id)).toBe(true);
     });
@@ -419,10 +469,16 @@ describe('BodyGraphService Integration Tests', () => {
         logger: testBed.logger,
         eventDispatcher: testBed.eventDispatcher,
       });
-      
-      await expect(realBodyGraphService.getAnatomyData(null)).rejects.toThrow(InvalidArgumentError);
-      await expect(realBodyGraphService.getAnatomyData('')).rejects.toThrow(InvalidArgumentError);
-      await expect(realBodyGraphService.getAnatomyData(123)).rejects.toThrow(InvalidArgumentError);
+
+      await expect(realBodyGraphService.getAnatomyData(null)).rejects.toThrow(
+        InvalidArgumentError
+      );
+      await expect(realBodyGraphService.getAnatomyData('')).rejects.toThrow(
+        InvalidArgumentError
+      );
+      await expect(realBodyGraphService.getAnatomyData(123)).rejects.toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('should return null when entity has no anatomy:body component', async () => {
@@ -432,10 +488,10 @@ describe('BodyGraphService Integration Tests', () => {
         logger: testBed.logger,
         eventDispatcher: testBed.eventDispatcher,
       });
-      
+
       // Create actor without anatomy
       const actor = await entityManager.createEntityInstance('core:actor');
-      
+
       const result = await realBodyGraphService.getAnatomyData(actor.id);
       expect(result).toBeNull();
     });
@@ -447,14 +503,16 @@ describe('BodyGraphService Integration Tests', () => {
         logger: testBed.logger,
         eventDispatcher: testBed.eventDispatcher,
       });
-      
+
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
 
       const anatomyData = await realBodyGraphService.getAnatomyData(actor.id);
-      
+
       expect(anatomyData).toBeDefined();
       expect(anatomyData.recipeId).toBe('anatomy:human_female');
       expect(anatomyData.rootEntityId).toBe(actor.id);
@@ -467,19 +525,19 @@ describe('BodyGraphService Integration Tests', () => {
         logger: testBed.logger,
         eventDispatcher: testBed.eventDispatcher,
       });
-      
+
       // Create actor and manually add anatomy component without recipeId
       const actor = await entityManager.createEntityInstance('core:actor');
       const actorInstance = entityManager.getEntityInstance(actor.id);
       actorInstance.addComponent('anatomy:body', {
         body: {
           root: 'some-root',
-          parts: {}
-        }
+          parts: {},
+        },
       });
 
       const anatomyData = await realBodyGraphService.getAnatomyData(actor.id);
-      
+
       expect(anatomyData).toBeDefined();
       expect(anatomyData.recipeId).toBeNull();
       expect(anatomyData.rootEntityId).toBe(actor.id);
@@ -496,13 +554,16 @@ describe('BodyGraphService Integration Tests', () => {
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
       await bodyGraphService.buildAdjacencyCache(actor.id);
-      
+
       bodyComponent = entityManager.getComponentData(actor.id, 'anatomy:body');
     });
 
     it('should get children of an entity from cache', () => {
-      const allParts = bodyGraphService.getAllParts(bodyComponent.body, actor.id);
-      
+      const allParts = bodyGraphService.getAllParts(
+        bodyComponent.body,
+        actor.id
+      );
+
       if (allParts.length > 0) {
         const children = bodyGraphService.getChildren(allParts[0]);
         expect(Array.isArray(children)).toBe(true);
@@ -510,8 +571,11 @@ describe('BodyGraphService Integration Tests', () => {
     });
 
     it('should get parent of an entity from cache', () => {
-      const allParts = bodyGraphService.getAllParts(bodyComponent.body, actor.id);
-      
+      const allParts = bodyGraphService.getAllParts(
+        bodyComponent.body,
+        actor.id
+      );
+
       if (allParts.length > 1) {
         // Find a part that has a joint component (not the root)
         for (const partId of allParts) {
@@ -535,20 +599,23 @@ describe('BodyGraphService Integration Tests', () => {
     });
 
     it('should get all ancestors of an entity', () => {
-      const allParts = bodyGraphService.getAllParts(bodyComponent.body, actor.id);
-      
+      const allParts = bodyGraphService.getAllParts(
+        bodyComponent.body,
+        actor.id
+      );
+
       if (allParts.length > 1) {
         // Find a deeply nested part
         for (const partId of allParts) {
           const ancestors = bodyGraphService.getAncestors(partId);
           expect(Array.isArray(ancestors)).toBe(true);
-          
+
           // If there are ancestors, each should be a valid entity
           for (const ancestorId of ancestors) {
             expect(typeof ancestorId).toBe('string');
             expect(ancestorId.length).toBeGreaterThan(0);
           }
-          
+
           if (ancestors.length > 0) {
             // Test that ancestors are in order (nearest to farthest)
             break;
@@ -560,13 +627,13 @@ describe('BodyGraphService Integration Tests', () => {
     it('should get all descendants of an entity', () => {
       const rootId = bodyComponent.body.root;
       const descendants = bodyGraphService.getAllDescendants(rootId);
-      
+
       expect(Array.isArray(descendants)).toBe(true);
       expect(descendants.length).toBeGreaterThan(0);
-      
+
       // Root should not be included in descendants
       expect(descendants).not.toContain(rootId);
-      
+
       // All descendants should be valid entity IDs
       for (const descendantId of descendants) {
         expect(typeof descendantId).toBe('string');
@@ -576,8 +643,11 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should return empty array for descendants when entity has no children', () => {
       // Find a leaf node (part with no children)
-      const allParts = bodyGraphService.getAllParts(bodyComponent.body, actor.id);
-      
+      const allParts = bodyGraphService.getAllParts(
+        bodyComponent.body,
+        actor.id
+      );
+
       for (const partId of allParts) {
         const children = bodyGraphService.getChildren(partId);
         if (children.length === 0) {
@@ -592,13 +662,15 @@ describe('BodyGraphService Integration Tests', () => {
   describe('Cache Management Integration', () => {
     it('should validate cache against entity manager', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
-      
+
       // Build cache
       await bodyGraphService.buildAdjacencyCache(actor.id);
-      
+
       // Validate cache - this method returns an object with valid property and issues array
       const validationResult = bodyGraphService.validateCache();
       expect(typeof validationResult).toBe('object');
@@ -610,30 +682,34 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should check if cache exists for root entity', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
-      
+
       // Initially no cache
       expect(bodyGraphService.hasCache(actor.id)).toBe(false);
-      
+
       // Build cache
       await bodyGraphService.buildAdjacencyCache(actor.id);
-      
+
       // Now cache should exist
       expect(bodyGraphService.hasCache(actor.id)).toBe(true);
     });
 
     it('should only build cache if it does not already exist', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
-      
+
       // Build cache first time
       await bodyGraphService.buildAdjacencyCache(actor.id);
       expect(bodyGraphService.hasCache(actor.id)).toBe(true);
-      
+
       // Build cache second time - should not rebuild
       await bodyGraphService.buildAdjacencyCache(actor.id);
       expect(bodyGraphService.hasCache(actor.id)).toBe(true);
@@ -643,10 +719,12 @@ describe('BodyGraphService Integration Tests', () => {
   describe('Part Detection and Search Integration', () => {
     it('should find parts by type using real anatomy data', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
-      
+
       // Build cache
       await bodyGraphService.buildAdjacencyCache(actor.id);
 
@@ -665,37 +743,48 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should use query cache for findPartsByType', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
-      
+
       // Build cache
       await bodyGraphService.buildAdjacencyCache(actor.id);
 
       // First call should populate cache
       const firstResult = bodyGraphService.findPartsByType(actor.id, 'hand');
-      
+
       // Second call should use cache
       const secondResult = bodyGraphService.findPartsByType(actor.id, 'hand');
-      
+
       expect(firstResult).toEqual(secondResult);
     });
 
     it('should get anatomy root for any part in anatomy graph', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
-      
+
       // Build cache
       await bodyGraphService.buildAdjacencyCache(actor.id);
 
-      const bodyComponent = entityManager.getComponentData(actor.id, 'anatomy:body');
-      const allParts = bodyGraphService.getAllParts(bodyComponent.body, actor.id);
-      
+      const bodyComponent = entityManager.getComponentData(
+        actor.id,
+        'anatomy:body'
+      );
+      const allParts = bodyGraphService.getAllParts(
+        bodyComponent.body,
+        actor.id
+      );
+
       if (allParts.length > 0) {
         // Test getting root from various parts
-        for (const partId of allParts.slice(0, 3)) { // Test first 3 parts
+        for (const partId of allParts.slice(0, 3)) {
+          // Test first 3 parts
           const root = bodyGraphService.getAnatomyRoot(partId);
           expect(root).toBeDefined();
           expect(typeof root).toBe('string');
@@ -705,20 +794,28 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should get path between two entities in anatomy graph', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
-      
+
       // Build cache
       await bodyGraphService.buildAdjacencyCache(actor.id);
 
-      const bodyComponent = entityManager.getComponentData(actor.id, 'anatomy:body');
-      const allParts = bodyGraphService.getAllParts(bodyComponent.body, actor.id);
-      
+      const bodyComponent = entityManager.getComponentData(
+        actor.id,
+        'anatomy:body'
+      );
+      const allParts = bodyGraphService.getAllParts(
+        bodyComponent.body,
+        actor.id
+      );
+
       if (allParts.length > 1) {
         const fromEntity = allParts[0];
         const toEntity = allParts[1];
-        
+
         const path = bodyGraphService.getPath(fromEntity, toEntity);
         expect(Array.isArray(path)).toBe(true);
       }
@@ -728,21 +825,26 @@ describe('BodyGraphService Integration Tests', () => {
   describe('Real Anatomy Generation Workflow Integration', () => {
     it('should work with complete anatomy generation workflow', async () => {
       // Create actor
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
-      
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
+
       // Generate anatomy
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
-      
+
       // Get body graph
       const bodyGraph = await bodyGraphService.getBodyGraph(actor.id);
       const allParts = bodyGraph.getAllPartIds();
-      
+
       expect(allParts.length).toBeGreaterThan(0);
-      
+
       // Test various operations on generated anatomy
-      const bodyComponent = entityManager.getComponentData(actor.id, 'anatomy:body');
-      
+      const bodyComponent = entityManager.getComponentData(
+        actor.id,
+        'anatomy:body'
+      );
+
       // Test part detection
       const hasHands = bodyGraphService.hasPartWithComponentValue(
         bodyComponent.body,
@@ -751,11 +853,11 @@ describe('BodyGraphService Integration Tests', () => {
         'hand'
       );
       expect(hasHands.found).toBe(true);
-      
+
       // Test part finding
       const handParts = bodyGraphService.findPartsByType(actor.id, 'hand');
       expect(handParts.length).toBeGreaterThan(0);
-      
+
       // Test anatomy data retrieval using a fresh service to avoid mocking
       const realBodyGraphService = new BodyGraphService({
         entityManager: entityManager,
@@ -768,21 +870,26 @@ describe('BodyGraphService Integration Tests', () => {
 
     it('should handle male anatomy generation workflow', async () => {
       // Test with male anatomy to ensure gender-specific parts work
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_male_balanced' });
-      
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_male_balanced',
+      });
+
       // Generate anatomy
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
-      
+
       // Get body graph
       const bodyGraph = await bodyGraphService.getBodyGraph(actor.id);
       const allParts = bodyGraph.getAllPartIds();
-      
+
       expect(allParts.length).toBeGreaterThan(0);
-      
+
       // Test male-specific part detection
-      const bodyComponent = entityManager.getComponentData(actor.id, 'anatomy:body');
-      
+      const bodyComponent = entityManager.getComponentData(
+        actor.id,
+        'anatomy:body'
+      );
+
       const hasPenis = bodyGraphService.hasPartWithComponentValue(
         bodyComponent.body,
         'anatomy:part',
@@ -796,41 +903,56 @@ describe('BodyGraphService Integration Tests', () => {
   describe('Error Handling and Edge Cases', () => {
     it('should handle anatomy generation with complex nested structures', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
-      
+
       // Test with complex queries
-      const bodyComponent = entityManager.getComponentData(actor.id, 'anatomy:body');
-      
+      const bodyComponent = entityManager.getComponentData(
+        actor.id,
+        'anatomy:body'
+      );
+
       // Test finding non-existent part types
-      const unknownParts = bodyGraphService.findPartsByType(actor.id, 'unknown-part-type');
+      const unknownParts = bodyGraphService.findPartsByType(
+        actor.id,
+        'unknown-part-type'
+      );
       expect(unknownParts).toEqual([]);
-      
+
       // Test with empty string search
       const emptyParts = bodyGraphService.findPartsByType(actor.id, '');
       expect(Array.isArray(emptyParts)).toBe(true);
-      
+
       // Test getAllParts with various invalid inputs
       expect(bodyGraphService.getAllParts({})).toEqual([]);
-      expect(bodyGraphService.getAllParts({ someProperty: 'value' })).toEqual([]);
+      expect(bodyGraphService.getAllParts({ someProperty: 'value' })).toEqual(
+        []
+      );
     });
 
     it('should gracefully handle missing components in anatomy parts', async () => {
       // Create actor with anatomy
-      const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+      const actor = await testBed.createActor({
+        recipeId: 'anatomy:human_female',
+      });
       const anatomyService = testBed.container.get('AnatomyGenerationService');
       await anatomyService.generateAnatomy(actor.id);
-      
-      const bodyComponent = entityManager.getComponentData(actor.id, 'anatomy:body');
-      
+
+      const bodyComponent = entityManager.getComponentData(
+        actor.id,
+        'anatomy:body'
+      );
+
       // Test searching for components that don't exist
       const hasNonExistent = bodyGraphService.hasPartWithComponent(
         bodyComponent.body,
         'non:existent:component'
       );
       expect(hasNonExistent).toBe(false);
-      
+
       // Test searching for component values that don't exist
       const hasNonExistentValue = bodyGraphService.hasPartWithComponentValue(
         bodyComponent.body,
