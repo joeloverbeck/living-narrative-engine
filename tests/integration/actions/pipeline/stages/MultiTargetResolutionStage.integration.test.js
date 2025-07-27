@@ -174,26 +174,41 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         .mockResolvedValueOnce(ActionResult.success(new Set(['enemy-001']))) // primary target
         .mockResolvedValueOnce(ActionResult.success(new Set(['weapon-001']))); // secondary target
 
-      targetContextBuilder.buildBaseContext.mockImplementation((actorId, locationId) => ({
-        actor: {
-          id: actorId,
-          components: actor.getAllComponents ? actor.getAllComponents() : {},
-        },
-        location: {
-          id: locationId,
-          components: location && location.getAllComponents ? location.getAllComponents() : {},
-        },
-        game: { turnNumber: 1 },
-      }));
+      targetContextBuilder.buildBaseContext.mockImplementation(
+        (actorId, locationId) => ({
+          actor: {
+            id: actorId,
+            components: actor.getAllComponents ? actor.getAllComponents() : {},
+          },
+          location: {
+            id: locationId,
+            components:
+              location && location.getAllComponents
+                ? location.getAllComponents()
+                : {},
+          },
+          game: { turnNumber: 1 },
+        })
+      );
 
       // Mock buildDependentContext for secondary target resolution
-      targetContextBuilder.buildDependentContext.mockImplementation((baseContext, resolvedTargets, targetDef) => ({
-        ...baseContext,
-        targets: resolvedTargets,
-        ...(targetDef.contextFrom && resolvedTargets[targetDef.contextFrom] && Array.isArray(resolvedTargets[targetDef.contextFrom]) && resolvedTargets[targetDef.contextFrom].length > 0
-          ? { target: { id: resolvedTargets[targetDef.contextFrom][0].id, components: {} } }
-          : {}),
-      }));
+      targetContextBuilder.buildDependentContext.mockImplementation(
+        (baseContext, resolvedTargets, targetDef) => ({
+          ...baseContext,
+          targets: resolvedTargets,
+          ...(targetDef.contextFrom &&
+          resolvedTargets[targetDef.contextFrom] &&
+          Array.isArray(resolvedTargets[targetDef.contextFrom]) &&
+          resolvedTargets[targetDef.contextFrom].length > 0
+            ? {
+                target: {
+                  id: resolvedTargets[targetDef.contextFrom][0].id,
+                  components: {},
+                },
+              }
+            : {}),
+        })
+      );
 
       // Create multi-target action definition
       const actionDef = {
@@ -228,13 +243,28 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
 
       // Debug logging
       console.log('Test result:', JSON.stringify(result, null, 2));
-      console.log('unifiedScopeResolver.resolve was called:', unifiedScopeResolver.resolve.mock.calls);
-      console.log('targetContextBuilder.buildBaseContext was called:', targetContextBuilder.buildBaseContext.mock.calls);
-      
+      console.log(
+        'unifiedScopeResolver.resolve was called:',
+        unifiedScopeResolver.resolve.mock.calls
+      );
+      console.log(
+        'targetContextBuilder.buildBaseContext was called:',
+        targetContextBuilder.buildBaseContext.mock.calls
+      );
+
       // Check if entities exist
-      console.log('enemy-001 exists:', !!entityTestBed.entityManager.getEntityInstance('enemy-001'));
-      console.log('weapon-001 exists:', !!entityTestBed.entityManager.getEntityInstance('weapon-001'));
-      console.log('actor-001 exists:', !!entityTestBed.entityManager.getEntityInstance('actor-001'));
+      console.log(
+        'enemy-001 exists:',
+        !!entityTestBed.entityManager.getEntityInstance('enemy-001')
+      );
+      console.log(
+        'weapon-001 exists:',
+        !!entityTestBed.entityManager.getEntityInstance('weapon-001')
+      );
+      console.log(
+        'actor-001 exists:',
+        !!entityTestBed.entityManager.getEntityInstance('actor-001')
+      );
 
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toHaveLength(1);
@@ -345,14 +375,16 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         )
       );
 
-      targetContextBuilder.buildBaseContext.mockImplementation((actorId, locationId) => ({
-        actor: {
-          id: actorId,
-          components: actor.getAllComponents ? actor.getAllComponents() : {},
-        },
-        location: { id: locationId },
-        game: { turnNumber: 1 },
-      }));
+      targetContextBuilder.buildBaseContext.mockImplementation(
+        (actorId, locationId) => ({
+          actor: {
+            id: actorId,
+            components: actor.getAllComponents ? actor.getAllComponents() : {},
+          },
+          location: { id: locationId },
+          game: { turnNumber: 1 },
+        })
+      );
 
       const actionDef = {
         id: 'test:examine',
@@ -459,7 +491,9 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         game: { turnNumber: 1 },
       };
 
-      targetContextBuilder.buildBaseContext.mockImplementation((actorId, locationId) => baseContext);
+      targetContextBuilder.buildBaseContext.mockImplementation(
+        (actorId, locationId) => baseContext
+      );
       targetContextBuilder.buildDependentContext.mockReturnValue({
         ...baseContext,
         targets: {
@@ -601,14 +635,16 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         ActionResult.success(new Set(['player-001']))
       );
 
-      targetContextBuilder.buildBaseContext.mockImplementation((actorId, locationId) => ({
-        actor: {
-          id: actorId,
-          components: actor.getAllComponents ? actor.getAllComponents() : {},
-        },
-        location: { id: locationId },
-        game: { turnNumber: 1 },
-      }));
+      targetContextBuilder.buildBaseContext.mockImplementation(
+        (actorId, locationId) => ({
+          actor: {
+            id: actorId,
+            components: actor.getAllComponents ? actor.getAllComponents() : {},
+          },
+          location: { id: locationId },
+          game: { turnNumber: 1 },
+        })
+      );
 
       const actionDef = {
         id: 'test:self_action',
@@ -659,14 +695,16 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         ActionResult.success(new Set())
       );
 
-      targetContextBuilder.buildBaseContext.mockImplementation((actorId, locationId) => ({
-        actor: {
-          id: actorId,
-          components: actor.getAllComponents ? actor.getAllComponents() : {},
-        },
-        location: { id: locationId },
-        game: { turnNumber: 1 },
-      }));
+      targetContextBuilder.buildBaseContext.mockImplementation(
+        (actorId, locationId) => ({
+          actor: {
+            id: actorId,
+            components: actor.getAllComponents ? actor.getAllComponents() : {},
+          },
+          location: { id: locationId },
+          game: { turnNumber: 1 },
+        })
+      );
 
       const actionDef = {
         id: 'test:no_targets',
@@ -713,14 +751,16 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         ActionResult.success(new Set(['missing-001', 'missing-002']))
       );
 
-      targetContextBuilder.buildBaseContext.mockImplementation((actorId, locationId) => ({
-        actor: {
-          id: actorId,
-          components: actor.getAllComponents ? actor.getAllComponents() : {},
-        },
-        location: { id: locationId },
-        game: { turnNumber: 1 },
-      }));
+      targetContextBuilder.buildBaseContext.mockImplementation(
+        (actorId, locationId) => ({
+          actor: {
+            id: actorId,
+            components: actor.getAllComponents ? actor.getAllComponents() : {},
+          },
+          location: { id: locationId },
+          game: { turnNumber: 1 },
+        })
+      );
 
       const actionDef = {
         id: 'test:missing',
@@ -789,23 +829,35 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         .mockResolvedValueOnce(ActionResult.success(new Set(['sword-001']))) // secondary - exists
         .mockResolvedValueOnce(ActionResult.success(new Set())); // tertiary - empty (optional)
 
-      targetContextBuilder.buildBaseContext.mockImplementation((actorId, locationId) => ({
-        actor: {
-          id: actorId,
-          components: actor.getAllComponents ? actor.getAllComponents() : {},
-        },
-        location: { id: locationId },
-        game: { turnNumber: 1 },
-      }));
+      targetContextBuilder.buildBaseContext.mockImplementation(
+        (actorId, locationId) => ({
+          actor: {
+            id: actorId,
+            components: actor.getAllComponents ? actor.getAllComponents() : {},
+          },
+          location: { id: locationId },
+          game: { turnNumber: 1 },
+        })
+      );
 
       // Mock buildDependentContext for multi-target resolution
-      targetContextBuilder.buildDependentContext.mockImplementation((baseContext, resolvedTargets, targetDef) => ({
-        ...baseContext,
-        targets: resolvedTargets,
-        ...(targetDef.contextFrom && resolvedTargets[targetDef.contextFrom] && Array.isArray(resolvedTargets[targetDef.contextFrom]) && resolvedTargets[targetDef.contextFrom].length > 0
-          ? { target: { id: resolvedTargets[targetDef.contextFrom][0].id, components: {} } }
-          : {}),
-      }));
+      targetContextBuilder.buildDependentContext.mockImplementation(
+        (baseContext, resolvedTargets, targetDef) => ({
+          ...baseContext,
+          targets: resolvedTargets,
+          ...(targetDef.contextFrom &&
+          resolvedTargets[targetDef.contextFrom] &&
+          Array.isArray(resolvedTargets[targetDef.contextFrom]) &&
+          resolvedTargets[targetDef.contextFrom].length > 0
+            ? {
+                target: {
+                  id: resolvedTargets[targetDef.contextFrom][0].id,
+                  components: {},
+                },
+              }
+            : {}),
+        })
+      );
 
       const actionDef = {
         id: 'combat:attack',
@@ -916,14 +968,16 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         })
       );
 
-      targetContextBuilder.buildBaseContext.mockImplementation((actorId, locationId) => ({
-        actor: {
-          id: actorId,
-          components: actor.getAllComponents ? actor.getAllComponents() : {},
-        },
-        location: { id: locationId },
-        game: { turnNumber: 1 },
-      }));
+      targetContextBuilder.buildBaseContext.mockImplementation(
+        (actorId, locationId) => ({
+          actor: {
+            id: actorId,
+            components: actor.getAllComponents ? actor.getAllComponents() : {},
+          },
+          location: { id: locationId },
+          game: { turnNumber: 1 },
+        })
+      );
 
       const actionDef = {
         id: 'test:invalid_scope',
@@ -1142,14 +1196,16 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         ActionResult.success(new Set(['player-001']))
       );
 
-      targetContextBuilder.buildBaseContext.mockImplementation((actorId, locationId) => ({
-        actor: {
-          id: actorId,
-          components: actor.getAllComponents ? actor.getAllComponents() : {},
-        },
-        location: { id: locationId },
-        game: { turnNumber: 1 },
-      }));
+      targetContextBuilder.buildBaseContext.mockImplementation(
+        (actorId, locationId) => ({
+          actor: {
+            id: actorId,
+            components: actor.getAllComponents ? actor.getAllComponents() : {},
+          },
+          location: { id: locationId },
+          game: { turnNumber: 1 },
+        })
+      );
 
       const startTime = Date.now();
       const context = {
@@ -1198,23 +1254,35 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
           ActionResult.success(new Set(['dummy-001', 'dummy-002']))
         ); // secondary
 
-      targetContextBuilder.buildBaseContext.mockImplementation((actorId, locationId) => ({
-        actor: {
-          id: actorId,
-          components: actor.getAllComponents ? actor.getAllComponents() : {},
-        },
-        location: { id: locationId },
-        game: { turnNumber: 1 },
-      }));
+      targetContextBuilder.buildBaseContext.mockImplementation(
+        (actorId, locationId) => ({
+          actor: {
+            id: actorId,
+            components: actor.getAllComponents ? actor.getAllComponents() : {},
+          },
+          location: { id: locationId },
+          game: { turnNumber: 1 },
+        })
+      );
 
       // Mock buildDependentContext for multi-target resolution
-      targetContextBuilder.buildDependentContext.mockImplementation((baseContext, resolvedTargets, targetDef) => ({
-        ...baseContext,
-        targets: resolvedTargets,
-        ...(targetDef.contextFrom && resolvedTargets[targetDef.contextFrom] && Array.isArray(resolvedTargets[targetDef.contextFrom]) && resolvedTargets[targetDef.contextFrom].length > 0
-          ? { target: { id: resolvedTargets[targetDef.contextFrom][0].id, components: {} } }
-          : {}),
-      }));
+      targetContextBuilder.buildDependentContext.mockImplementation(
+        (baseContext, resolvedTargets, targetDef) => ({
+          ...baseContext,
+          targets: resolvedTargets,
+          ...(targetDef.contextFrom &&
+          resolvedTargets[targetDef.contextFrom] &&
+          Array.isArray(resolvedTargets[targetDef.contextFrom]) &&
+          resolvedTargets[targetDef.contextFrom].length > 0
+            ? {
+                target: {
+                  id: resolvedTargets[targetDef.contextFrom][0].id,
+                  components: {},
+                },
+              }
+            : {}),
+        })
+      );
 
       const actionDef = {
         id: 'test:compat',

@@ -461,4 +461,155 @@ describe('Character Concepts Manager HTML Structure', () => {
       expect(errorContainer.classList.contains('error-message')).toBe(true);
     });
   });
+
+  describe('CSS Class Validation', () => {
+    it('should have correct CSS classes for page layout', () => {
+      const main = document.querySelector('.cb-page-main');
+      expect(main.classList.contains('character-concepts-manager-main')).toBe(
+        true
+      );
+
+      const controlsPanel = document.querySelector('.concept-controls-panel');
+      expect(controlsPanel.classList.contains('cb-input-panel')).toBe(true);
+
+      const displayPanel = document.querySelector('.concepts-display-panel');
+      expect(displayPanel.classList.contains('cb-results-panel')).toBe(true);
+    });
+
+    it('should have correct CSS classes for concept grid and cards', () => {
+      const conceptsGrid = document.getElementById('concepts-results');
+      expect(conceptsGrid.classList.contains('concepts-grid')).toBe(true);
+    });
+
+    it('should have correct CSS classes for statistics display', () => {
+      const statsDisplay = document.querySelector('.stats-display');
+      expect(statsDisplay).toBeTruthy();
+
+      const statItems = document.querySelectorAll('.stat-item');
+      expect(statItems.length).toBeGreaterThan(0);
+
+      statItems.forEach((item) => {
+        const label = item.querySelector('.stat-label');
+        const value = item.querySelector('.stat-value');
+        expect(label).toBeTruthy();
+        expect(value).toBeTruthy();
+      });
+    });
+
+    it('should have correct CSS classes for action buttons', () => {
+      const createBtn = document.getElementById('create-concept-btn');
+      expect(createBtn.classList.contains('cb-button-primary')).toBe(true);
+
+      const actionButtons = document.querySelector('.action-buttons');
+      expect(actionButtons).toBeTruthy();
+    });
+
+    it('should have correct CSS classes for search input', () => {
+      const searchInput = document.getElementById('concept-search');
+      expect(searchInput.classList.contains('cb-input')).toBe(true);
+    });
+
+    it('should have correct CSS classes for modals', () => {
+      const conceptModal = document.getElementById('concept-modal');
+      expect(conceptModal.classList.contains('modal')).toBe(true);
+
+      const deleteModal = document.getElementById('delete-confirmation-modal');
+      expect(deleteModal.classList.contains('modal')).toBe(true);
+
+      const dangerBtn = document.getElementById('confirm-delete-btn');
+      expect(dangerBtn.classList.contains('cb-button-danger')).toBe(true);
+    });
+
+    it('should have correct CSS classes for state containers', () => {
+      const emptyState = document.getElementById('empty-state');
+      expect(emptyState.classList.contains('cb-empty-state')).toBe(true);
+
+      const loadingState = document.getElementById('loading-state');
+      expect(loadingState.classList.contains('cb-loading-state')).toBe(true);
+
+      const errorState = document.getElementById('error-state');
+      expect(errorState.classList.contains('cb-error-state')).toBe(true);
+
+      const spinner = loadingState.querySelector('.spinner.large');
+      expect(spinner).toBeTruthy();
+    });
+  });
+
+  describe('Responsive Design Structure', () => {
+    beforeEach(() => {
+      // Mock window.matchMedia for responsive testing
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: jest.fn().mockImplementation((query) => ({
+          matches: false,
+          media: query,
+          onchange: null,
+          addListener: jest.fn(),
+          removeListener: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+          dispatchEvent: jest.fn(),
+        })),
+      });
+    });
+
+    it('should have responsive-friendly structure for main layout', () => {
+      const main = document.querySelector('.character-concepts-manager-main');
+      expect(main).toBeTruthy();
+
+      // Should use CSS Grid which is responsive-friendly
+      const styles = window.getComputedStyle(main);
+      // Note: JSDOM doesn't compute actual CSS styles, but structure should be correct
+      expect(main.classList.contains('character-concepts-manager-main')).toBe(
+        true
+      );
+    });
+
+    it('should have flexible concept grid structure', () => {
+      const conceptsGrid = document.getElementById('concepts-results');
+      expect(conceptsGrid.classList.contains('concepts-grid')).toBe(true);
+    });
+
+    it('should have proper modal structure for mobile', () => {
+      const modals = document.querySelectorAll('.modal');
+      modals.forEach((modal) => {
+        const content = modal.querySelector('.modal-content');
+        expect(content).toBeTruthy();
+      });
+    });
+
+    it('should have action buttons structured for responsive layout', () => {
+      const actionContainer = document.querySelector('.action-buttons');
+      expect(actionContainer).toBeTruthy();
+    });
+  });
+
+  describe('Animation and Interaction Structure', () => {
+    it('should have elements ready for animations', () => {
+      const conceptsGrid = document.getElementById('concepts-results');
+      expect(conceptsGrid).toBeTruthy();
+
+      // Grid should be ready to contain animated concept cards
+      expect(conceptsGrid.classList.contains('concepts-grid')).toBe(true);
+    });
+
+    it('should have interactive elements with proper structure', () => {
+      const searchInput = document.getElementById('concept-search');
+      expect(searchInput).toBeTruthy();
+      expect(searchInput.type).toBe('text');
+
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach((button) => {
+        expect(button.getAttribute('type')).toBeTruthy();
+      });
+    });
+
+    it('should have hover-ready card structure (when cards are added)', () => {
+      const conceptsContainer = document.getElementById('concepts-container');
+      expect(conceptsContainer).toBeTruthy();
+      expect(conceptsContainer.classList.contains('cb-state-container')).toBe(
+        true
+      );
+    });
+  });
 });
