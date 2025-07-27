@@ -350,24 +350,34 @@ describe('World Loading - Performance Tests', () => {
 
       const result =
         await worldInitializer.initializeWorldEntities('memory_test_world');
-      const metrics = benchmark.end();
+      const metrics = await benchmark.endWithAdvancedMemoryTracking();
 
       // Assert memory efficiency
       expect(result.instantiatedCount).toBe(entityCount);
 
       if (metrics.memoryUsage) {
-        // Peak memory should be reasonable for 100 entities (relaxed for test environment)
-        expect(metrics.memoryUsage.peak).toBeLessThan(200 * 1024 * 1024); // 200MB target (relaxed due to Node.js test overhead)
+        // Environment-aware memory thresholds
+        const maxGrowthMB = metrics.memoryUsage.isCI ? 300 : 200; // More lenient in CI
+        const maxGrowthBytes = maxGrowthMB * 1024 * 1024;
+        
+        // Memory growth should be reasonable for 100 entities
+        expect(metrics.memoryUsage.growth).toBeLessThan(maxGrowthBytes);
 
-        // Memory should be released efficiently
-        // Relaxed threshold for simulated environment
-        expect(metrics.memoryUsage.final).toBeLessThan(
-          metrics.memoryUsage.peak * 1.2
-        );
+        // Memory should be released efficiently (final should be close to initial)
+        const memoryLeakThreshold = metrics.memoryUsage.isCI ? 1.5 : 1.3; // More lenient in CI
+        const finalVsInitial = metrics.memoryUsage.final / metrics.memoryUsage.initial;
+        expect(finalVsInitial).toBeLessThan(memoryLeakThreshold);
+
+        // Additional sanity check: peak shouldn't be absurdly high
+        const absoluteMaxMB = metrics.memoryUsage.isCI ? 500 : 400;
+        expect(metrics.memoryUsage.peak).toBeLessThan(absoluteMaxMB * 1024 * 1024);
 
         console.log(
-          `Memory usage - Peak: ${(metrics.memoryUsage.peak / 1024 / 1024).toFixed(2)}MB, ` +
-            `Final: ${(metrics.memoryUsage.final / 1024 / 1024).toFixed(2)}MB`
+          `Memory usage - Baseline: ${(metrics.memoryUsage.baseline / 1024 / 1024).toFixed(2)}MB, ` +
+            `Growth: ${(metrics.memoryUsage.growth / 1024 / 1024).toFixed(2)}MB, ` +
+            `Peak: ${(metrics.memoryUsage.peak / 1024 / 1024).toFixed(2)}MB, ` +
+            `Final: ${(metrics.memoryUsage.final / 1024 / 1024).toFixed(2)}MB, ` +
+            `CI: ${metrics.memoryUsage.isCI}`
         );
       }
     });

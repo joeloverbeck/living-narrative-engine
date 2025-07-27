@@ -202,14 +202,35 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       contains: jest.fn((className) => classes.has(className)),
     };
 
-    return {
+    const element = {
       id,
       tagName,
       addEventListener: jest.fn(),
       removeEventListener: jest.fn(),
       style: { display: 'block' },
       classList,
+      textContent: '',
+      disabled: false,
+      value: '',
+      reset: jest.fn(),
+      focus: jest.fn(),
+      dataset: {},
+      getAttribute: jest.fn(),
+      setAttribute: jest.fn(),
     };
+
+    // Make value property work properly for INPUT elements
+    if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
+      let _value = '';
+      Object.defineProperty(element, 'value', {
+        get: () => _value,
+        set: (val) => { _value = val; },
+        enumerable: true,
+        configurable: true,
+      });
+    }
+
+    return element;
   };
 
   beforeEach(() => {
@@ -280,6 +301,16 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       'close-delete-modal': createMockElement('close-delete-modal', 'BUTTON'),
     };
 
+    // Mock CSS class-based elements for querySelector
+    const mockElementsByClass = {
+      '.stats-display': createMockElement('stats-display'),
+      '.advanced-stats': createMockElement('advanced-stats'),
+      '.progress-fill': createMockElement('progress-fill'),
+      '.concepts-complete': createMockElement('concepts-complete'),
+      '.concepts-total': createMockElement('concepts-total'),
+      '.search-status': createMockElement('search-status'),
+    };
+
     // Create a lookup that matches the controller's camelCase property names to kebab-case IDs
     mockElements = {
       conceptsContainer: mockElementsById['concepts-container'],
@@ -294,6 +325,7 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       retryBtn: mockElementsById['retry-btn'],
       backToMenuBtn: mockElementsById['back-to-menu-btn'],
       conceptSearch: mockElementsById['concept-search'],
+      statsDisplay: mockElementsByClass['.stats-display'],
       totalConcepts: mockElementsById['total-concepts'],
       conceptsWithDirections: mockElementsById['concepts-with-directions'],
       totalDirections: mockElementsById['total-directions'],
@@ -318,9 +350,65 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       return mockElementsById[id] || null;
     });
 
+    // Mock document.querySelector to return elements by their CSS selectors
+    const mockQuerySelector = jest.fn((selector) => {
+      // Handle class selectors
+      if (mockElementsByClass[selector]) {
+        return mockElementsByClass[selector];
+      }
+      // Handle attribute selectors like [data-concept-id="concept-1"]
+      if (selector.startsWith('[data-concept-id=')) {
+        const mockCard = createMockElement('concept-card');
+        const conceptId = selector.match(/data-concept-id="([^"]+)"/)?.[1];
+        if (conceptId) {
+          mockCard.dataset = { conceptId };
+          mockCard.getAttribute = jest.fn((attr) => {
+            if (attr === 'data-concept-id') return conceptId;
+            if (attr === 'tabindex') return mockCard.tabIndex || null;
+            if (attr === 'role') return mockCard.role || null;
+            return null;
+          });
+          mockCard.setAttribute = jest.fn((attr, value) => {
+            if (attr === 'tabindex') mockCard.tabIndex = value;
+            if (attr === 'role') mockCard.role = value;
+          });
+          // Ensure classList contains works for concept-card
+          const originalContains = mockCard.classList.contains;
+          mockCard.classList.contains = jest.fn((className) => {
+            if (className === 'concept-card') return true;
+            return originalContains ? originalContains(className) : false;
+          });
+          mockCard.classList.add('concept-card');
+        }
+        return mockCard;
+      }
+      return null;
+    });
+
     // Mock document in jsdom environment
     Object.defineProperty(document, 'getElementById', {
       value: mockGetElementById,
+      writable: true,
+      configurable: true,
+    });
+
+    Object.defineProperty(document, 'querySelector', {
+      value: mockQuerySelector,
+      writable: true,
+      configurable: true,
+    });
+
+    // Mock document.createElement to support dataset
+    const mockCreateElement = jest.fn((tagName) => {
+      const element = createMockElement(`created-${tagName}`, tagName.toUpperCase());
+      // Ensure dataset is properly mutable
+      element.dataset = {};
+      element.className = '';
+      return element;
+    });
+
+    Object.defineProperty(document, 'createElement', {
+      value: mockCreateElement,
       writable: true,
       configurable: true,
     });
@@ -337,6 +425,8 @@ describe('CharacterConceptsManagerController - Initialization', () => {
     global.document = {
       ...document,
       getElementById: mockGetElementById,
+      querySelector: mockQuerySelector,
+      createElement: mockCreateElement,
       addEventListener: mockAddEventListener,
     };
 
@@ -679,23 +769,47 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
 
   // Helper to create mock DOM elements
   const createMockElement = (id, tagName = 'DIV') => {
-    return {
+    // Create a stateful classList mock
+    const classes = new Set();
+    const classList = {
+      add: jest.fn((...classNames) => {
+        classNames.forEach((className) => classes.add(className));
+      }),
+      remove: jest.fn((...classNames) => {
+        classNames.forEach((className) => classes.delete(className));
+      }),
+      contains: jest.fn((className) => classes.has(className)),
+    };
+
+    const element = {
       id,
       tagName,
       addEventListener: jest.fn(),
       removeEventListener: jest.fn(),
       style: { display: 'block' },
-      classList: {
-        add: jest.fn(),
-        remove: jest.fn(),
-        contains: jest.fn().mockReturnValue(false),
-      },
+      classList,
       textContent: '',
       disabled: false,
       value: '',
       reset: jest.fn(),
       focus: jest.fn(),
+      dataset: {},
+      getAttribute: jest.fn(),
+      setAttribute: jest.fn(),
     };
+
+    // Make value property work properly for INPUT elements
+    if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
+      let _value = '';
+      Object.defineProperty(element, 'value', {
+        get: () => _value,
+        set: (val) => { _value = val; },
+        enumerable: true,
+        configurable: true,
+      });
+    }
+
+    return element;
   };
 
   beforeEach(() => {
@@ -770,6 +884,16 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
       'close-delete-modal': createMockElement('close-delete-modal', 'BUTTON'),
     };
 
+    // Mock CSS class-based elements for querySelector
+    const mockElementsByClass = {
+      '.stats-display': createMockElement('stats-display'),
+      '.advanced-stats': createMockElement('advanced-stats'),
+      '.progress-fill': createMockElement('progress-fill'),
+      '.concepts-complete': createMockElement('concepts-complete'),
+      '.concepts-total': createMockElement('concepts-total'),
+      '.search-status': createMockElement('search-status'),
+    };
+
     // Create a lookup that matches the controller's camelCase property names to kebab-case IDs
     mockElements = {
       conceptsContainer: mockElementsById['concepts-container'],
@@ -784,6 +908,7 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
       retryBtn: mockElementsById['retry-btn'],
       backToMenuBtn: mockElementsById['back-to-menu-btn'],
       conceptSearch: mockElementsById['concept-search'],
+      statsDisplay: mockElementsByClass['.stats-display'],
       totalConcepts: mockElementsById['total-concepts'],
       conceptsWithDirections: mockElementsById['concepts-with-directions'],
       totalDirections: mockElementsById['total-directions'],
@@ -808,9 +933,65 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
       return mockElementsById[id] || null;
     });
 
+    // Mock document.querySelector to return elements by their CSS selectors
+    const mockQuerySelector = jest.fn((selector) => {
+      // Handle class selectors
+      if (mockElementsByClass[selector]) {
+        return mockElementsByClass[selector];
+      }
+      // Handle attribute selectors like [data-concept-id="concept-1"]
+      if (selector.startsWith('[data-concept-id=')) {
+        const mockCard = createMockElement('concept-card');
+        const conceptId = selector.match(/data-concept-id="([^"]+)"/)?.[1];
+        if (conceptId) {
+          mockCard.dataset = { conceptId };
+          mockCard.getAttribute = jest.fn((attr) => {
+            if (attr === 'data-concept-id') return conceptId;
+            if (attr === 'tabindex') return mockCard.tabIndex || null;
+            if (attr === 'role') return mockCard.role || null;
+            return null;
+          });
+          mockCard.setAttribute = jest.fn((attr, value) => {
+            if (attr === 'tabindex') mockCard.tabIndex = value;
+            if (attr === 'role') mockCard.role = value;
+          });
+          // Ensure classList contains works for concept-card
+          const originalContains = mockCard.classList.contains;
+          mockCard.classList.contains = jest.fn((className) => {
+            if (className === 'concept-card') return true;
+            return originalContains ? originalContains(className) : false;
+          });
+          mockCard.classList.add('concept-card');
+        }
+        return mockCard;
+      }
+      return null;
+    });
+
     // Mock document in jsdom environment
     Object.defineProperty(document, 'getElementById', {
       value: mockGetElementById,
+      writable: true,
+      configurable: true,
+    });
+
+    Object.defineProperty(document, 'querySelector', {
+      value: mockQuerySelector,
+      writable: true,
+      configurable: true,
+    });
+
+    // Mock document.createElement to support dataset
+    const mockCreateElement = jest.fn((tagName) => {
+      const element = createMockElement(`created-${tagName}`, tagName.toUpperCase());
+      // Ensure dataset is properly mutable
+      element.dataset = {};
+      element.className = '';
+      return element;
+    });
+
+    Object.defineProperty(document, 'createElement', {
+      value: mockCreateElement,
       writable: true,
       configurable: true,
     });
@@ -833,6 +1014,8 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
     global.document = {
       ...document,
       getElementById: mockGetElementById,
+      querySelector: mockQuerySelector,
+      createElement: mockCreateElement,
       addEventListener: mockAddEventListener,
       activeElement: mockElementsById['create-concept-btn'],
     };
@@ -1279,17 +1462,25 @@ describe('CharacterConceptsManagerController - Display Concepts Functionality (T
 
   // Helper to create mock DOM elements
   const createMockElement = (id, tagName = 'DIV') => {
-    return {
+    // Create a stateful classList mock
+    const classes = new Set();
+    const classList = {
+      add: jest.fn((...classNames) => {
+        classNames.forEach((className) => classes.add(className));
+      }),
+      remove: jest.fn((...classNames) => {
+        classNames.forEach((className) => classes.delete(className));
+      }),
+      contains: jest.fn((className) => classes.has(className)),
+    };
+
+    const element = {
       id,
       tagName,
       addEventListener: jest.fn(),
       removeEventListener: jest.fn(),
       style: { display: 'block' },
-      classList: {
-        add: jest.fn(),
-        remove: jest.fn(),
-        contains: jest.fn().mockReturnValue(false),
-      },
+      classList,
       textContent: '',
       innerHTML: '',
       disabled: false,
@@ -1301,7 +1492,22 @@ describe('CharacterConceptsManagerController - Display Concepts Functionality (T
       querySelectorAll: jest.fn().mockReturnValue([]),
       appendChild: jest.fn(),
       dataset: {},
+      getAttribute: jest.fn(),
+      setAttribute: jest.fn(),
     };
+
+    // Make value property work properly for INPUT elements
+    if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
+      let _value = '';
+      Object.defineProperty(element, 'value', {
+        get: () => _value,
+        set: (val) => { _value = val; },
+        enumerable: true,
+        configurable: true,
+      });
+    }
+
+    return element;
   };
 
   // Mock sample concepts with various scenarios
@@ -2259,13 +2465,19 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
 
   // Helper to create mock DOM elements
   const createMockElement = (id, tagName = 'DIV') => {
+    // Create a stateful classList mock
+    const classes = new Set();
     const classList = {
-      add: jest.fn(),
-      remove: jest.fn(),
-      contains: jest.fn().mockReturnValue(false),
+      add: jest.fn((...classNames) => {
+        classNames.forEach((className) => classes.add(className));
+      }),
+      remove: jest.fn((...classNames) => {
+        classNames.forEach((className) => classes.delete(className));
+      }),
+      contains: jest.fn((className) => classes.has(className)),
     };
 
-    return {
+    const element = {
       id,
       tagName,
       addEventListener: jest.fn(),
@@ -2286,7 +2498,22 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
       parentElement: null,
       nextSibling: null,
       remove: jest.fn(),
+      getAttribute: jest.fn(),
+      setAttribute: jest.fn(),
     };
+
+    // Make value property work properly for INPUT elements
+    if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
+      let _value = '';
+      Object.defineProperty(element, 'value', {
+        get: () => _value,
+        set: (val) => { _value = val; },
+        enumerable: true,
+        configurable: true,
+      });
+    }
+
+    return element;
   };
 
   beforeEach(async () => {
@@ -3005,6 +3232,513 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
           expect.any(Function)
         );
       }
+    });
+  });
+});
+
+// Enhanced Search Functionality Tests
+describe('CharacterConceptsManagerController - Enhanced Search', () => {
+  let mockLogger;
+  let mockCharacterBuilderService;
+  let mockEventBus;
+  let controller;
+  let mockElements;
+  let mockConceptsData;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    
+    // Reset localStorage and sessionStorage
+    Object.defineProperty(window, 'sessionStorage', {
+      value: {
+        getItem: jest.fn(),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        clear: jest.fn(),
+      },
+      writable: true,
+    });
+
+    // Create mock dependencies
+    mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    mockCharacterBuilderService = {
+      initialize: jest.fn().mockResolvedValue(),
+      getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
+      createCharacterConcept: jest.fn(),
+      updateCharacterConcept: jest.fn(),
+      deleteCharacterConcept: jest.fn(),
+      getThematicDirections: jest.fn().mockResolvedValue([]),
+    };
+
+    mockEventBus = {
+      on: jest.fn(),
+      off: jest.fn(),
+      dispatch: jest.fn(),
+    };
+
+    // Mock DOM elements for search testing (using kebab-case IDs to match HTML)
+    mockElements = {
+      // Main containers
+      'concepts-container': {
+        classList: {
+          add: jest.fn(),
+          remove: jest.fn(),
+        },
+      },
+      'concepts-results': {
+        innerHTML: '',
+        appendChild: jest.fn(),
+        querySelector: jest.fn(),
+        parentElement: {
+          querySelector: jest.fn().mockReturnValue({
+            insertAdjacentElement: jest.fn(),
+          }),
+        },
+      },
+      // State containers
+      'empty-state': { style: { display: 'none' } },
+      'loading-state': { style: { display: 'none' } },
+      'error-state': { style: { display: 'none' } },
+      'results-state': { style: { display: 'none' } },
+      'error-message-text': { textContent: '' },
+      // Controls
+      'create-concept-btn': { addEventListener: jest.fn() },
+      'create-first-btn': { addEventListener: jest.fn() },
+      'retry-btn': { addEventListener: jest.fn() },
+      'back-to-menu-btn': { addEventListener: jest.fn() },
+      'concept-search': {
+        addEventListener: jest.fn(),
+        value: '',
+        focus: jest.fn(),
+        select: jest.fn(),
+        parentElement: {
+          querySelector: jest.fn(),
+          appendChild: jest.fn(),
+          style: {},
+        },
+      },
+      // Statistics
+      'total-concepts': { textContent: '' },
+      'concepts-with-directions': { textContent: '' },
+      'total-directions': { textContent: '' },
+      // Create/Edit Modal
+      'concept-modal': { style: { display: 'none' } },
+      'concept-modal-title': { textContent: '' },
+      'concept-form': { addEventListener: jest.fn(), reset: jest.fn() },
+      'concept-text': { addEventListener: jest.fn(), value: '' },
+      'save-concept-btn': { addEventListener: jest.fn(), disabled: false },
+      'cancel-concept-btn': { addEventListener: jest.fn() },
+      'close-concept-modal': { addEventListener: jest.fn() },
+      'char-count': { textContent: '0/3000', classList: { add: jest.fn(), remove: jest.fn() } },
+      // Delete Modal
+      'delete-confirmation-modal': { style: { display: 'none' } },
+      'delete-modal-message': { innerHTML: '' },
+      'confirm-delete-btn': { addEventListener: jest.fn() },
+      'cancel-delete-btn': { addEventListener: jest.fn() },
+      'close-delete-modal': { addEventListener: jest.fn() },
+    };
+
+    // Add camelCase aliases for consistency with other test blocks
+    mockElements.conceptSearch = mockElements['concept-search'];
+
+    // Mock global document methods
+    global.document = {
+      ...global.document,
+      getElementById: jest.fn((id) => mockElements[id]),
+      querySelector: jest.fn().mockReturnValue({
+        remove: jest.fn(),
+      }),
+      createElement: jest.fn(() => {
+        // Create a stateful classList mock
+        const classes = new Set();
+        const classList = {
+          add: jest.fn((...classNames) => {
+            classNames.forEach((className) => classes.add(className));
+          }),
+          remove: jest.fn((...classNames) => {
+            classNames.forEach((className) => classes.delete(className));
+          }),
+          contains: jest.fn((className) => classes.has(className)),
+        };
+
+        const element = {
+          className: '',
+          innerHTML: '',
+          addEventListener: jest.fn(),
+          querySelector: jest.fn(),
+          style: {},
+          appendChild: jest.fn(),
+          classList,
+          getAttribute: jest.fn(),
+          setAttribute: jest.fn(),
+        };
+
+        // Create a writable dataset object that mimics DOMStringMap behavior
+        element.dataset = {};
+        Object.defineProperty(element, 'dataset', {
+          value: {},
+          writable: true,
+          configurable: true,
+          enumerable: true,
+        });
+
+        return element;
+      }),
+    };
+
+    // Mock test concepts data
+    mockConceptsData = [
+      {
+        concept: {
+          id: 'concept-1',
+          concept: 'A brave warrior with a mysterious past',
+          text: 'A brave warrior with a mysterious past', // Backward compatibility
+          createdAt: new Date(),
+        },
+        directionCount: 2,
+      },
+      {
+        concept: {
+          id: 'concept-2',
+          concept: 'A clever rogue who loves adventures',
+          text: 'A clever rogue who loves adventures',
+          createdAt: new Date(),
+        },
+        directionCount: 1,
+      },
+      {
+        concept: {
+          id: 'concept-3',
+          concept: 'A wise mage studying ancient magic',
+          text: 'A wise mage studying ancient magic',
+          createdAt: new Date(),
+        },
+        directionCount: 3,
+      },
+    ];
+
+    controller = new CharacterConceptsManagerController({
+      logger: mockLogger,
+      characterBuilderService: mockCharacterBuilderService,
+      eventBus: mockEventBus,
+    });
+
+    // Don't call initialize() for Enhanced Search tests - they only need direct method access
+    // We'll manually set up the required dependencies for the specific tests
+    
+    // Manually set up the UIStateManager mock since these tests bypass initialization
+    const { UIStateManager } = require('../../../src/shared/characterBuilder/uiStateManager.js');
+    const mockUIStateManager = new UIStateManager();
+    
+    // Set the UIStateManager using the test utility setter
+    controller._testExports.uiStateManager = mockUIStateManager;
+
+    // Set up test data
+    controller._testExports.conceptsData = mockConceptsData;
+    
+    // Manually set elements for tests that need them (mapping kebab-case to camelCase for internal use)
+    const elementsMapping = {};
+    Object.keys(mockElements).forEach(key => {
+      const camelKey = key.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+      elementsMapping[camelKey] = mockElements[key];
+    });
+    controller._testExports.elements = elementsMapping;
+  });
+
+  describe('Enhanced Filter Concepts', () => {
+    it('should return all concepts when no search filter', () => {
+      const result = controller._testExports.filterConcepts(mockConceptsData);
+      expect(result).toEqual(mockConceptsData);
+    });
+
+    it('should filter concepts with single term (case insensitive)', () => {
+      // Set search filter
+      controller._testExports.searchFilter = 'warrior';
+      
+      const result = controller._testExports.filterConcepts(mockConceptsData);
+      expect(result).toHaveLength(1);
+      expect(result[0].concept.id).toBe('concept-1');
+    });
+
+    it('should filter concepts with multiple terms (AND logic)', () => {
+      controller._testExports.searchFilter = 'brave warrior';
+      
+      const result = controller._testExports.filterConcepts(mockConceptsData);
+      expect(result).toHaveLength(1);
+      expect(result[0].concept.id).toBe('concept-1');
+    });
+
+    it('should return empty array when no concepts match all terms', () => {
+      controller._testExports.searchFilter = 'dragon wizard';
+      
+      const result = controller._testExports.filterConcepts(mockConceptsData);
+      expect(result).toHaveLength(0);
+    });
+
+    it('should handle backward compatibility with concept.text property', () => {
+      const legacyData = [
+        {
+          concept: {
+            id: 'legacy-1',
+            text: 'A brave warrior', // Only has text property
+            createdAt: new Date(),
+          },
+          directionCount: 1,
+        },
+      ];
+      
+      controller._testExports.searchFilter = 'warrior';
+      const result = controller._testExports.filterConcepts(legacyData);
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('Fuzzy Matching', () => {
+    it('should perform fuzzy matching for terms longer than 3 characters', () => {
+      const text = 'warrior';
+      const searchTerm = 'warior'; // Missing one 'r'
+      
+      const result = controller._testExports.fuzzyMatch(text, searchTerm);
+      expect(result).toBe(true);
+    });
+
+    it('should not perform fuzzy matching for terms 3 characters or shorter', () => {
+      const text = 'warrior';
+      const searchTerm = 'war';
+      
+      const result = controller._testExports.fuzzyMatch(text, searchTerm);
+      expect(result).toBe(false);
+    });
+
+    it('should match when all characters are present in order', () => {
+      const text = 'mysterious';
+      const searchTerm = 'msterios'; // Missing 'y' and 'u'
+      
+      const result = controller._testExports.fuzzyMatch(text, searchTerm);
+      expect(result).toBe(true);
+    });
+
+    it('should not match when characters are out of order', () => {
+      const text = 'warrior';
+      const searchTerm = 'riaw'; // Characters out of order
+      
+      const result = controller._testExports.fuzzyMatch(text, searchTerm);
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('Search Highlighting', () => {
+    beforeEach(() => {
+      // Mock the DOM creation for escapeHtml
+      global.document.createElement = jest.fn(() => ({
+        textContent: '',
+        get innerHTML() {
+          return this.textContent
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#x27;')
+            .replace(/\//g, '&#x2F;');
+        },
+      }));
+    });
+
+    it('should escape HTML in text when no search term', () => {
+      const text = '<script>alert("xss")</script>';
+      const result = controller._testExports.highlightSearchTerms(text, '');
+      
+      expect(result).toContain('&lt;script&gt;');
+      expect(result).not.toContain('<script>');
+    });
+
+    it('should highlight single search term', () => {
+      const text = 'A brave warrior';
+      const searchTerm = 'warrior';
+      
+      const result = controller._testExports.highlightSearchTerms(text, searchTerm);
+      expect(result).toContain('<mark>warrior</mark>');
+    });
+
+    it('should highlight multiple search terms', () => {
+      const text = 'A brave warrior with courage';
+      const searchTerm = 'brave warrior';
+      
+      const result = controller._testExports.highlightSearchTerms(text, searchTerm);
+      expect(result).toContain('<mark>brave</mark>');
+      expect(result).toContain('<mark>warrior</mark>');
+    });
+
+    it('should handle case insensitive highlighting', () => {
+      const text = 'A BRAVE Warrior';
+      const searchTerm = 'brave';
+      
+      const result = controller._testExports.highlightSearchTerms(text, searchTerm);
+      expect(result).toContain('<mark>BRAVE</mark>');
+    });
+
+    it('should escape regex special characters in search terms', () => {
+      const text = 'Cost: $10.99 (plus tax)';
+      const searchTerm = '$10.99';
+      
+      const result = controller._testExports.highlightSearchTerms(text, searchTerm);
+      expect(result).toContain('<mark>$10.99</mark>');
+    });
+  });
+
+  describe('Search State Management', () => {
+    it('should save search state to session storage', () => {
+      controller._testExports.searchFilter = 'warrior';
+      controller._testExports.saveSearchState();
+      
+      expect(window.sessionStorage.setItem).toHaveBeenCalledWith(
+        'conceptsManagerSearch',
+        'warrior'
+      );
+    });
+
+    it('should remove search state when filter is empty', () => {
+      controller._testExports.searchFilter = '';
+      controller._testExports.saveSearchState();
+      
+      expect(window.sessionStorage.removeItem).toHaveBeenCalledWith(
+        'conceptsManagerSearch'
+      );
+    });
+
+    it('should restore search state from session storage', () => {
+      window.sessionStorage.getItem.mockReturnValue('saved search');
+      
+      controller._testExports.restoreSearchState();
+      
+      expect(mockElements.conceptSearch.value).toBe('saved search');
+      expect(controller._testExports.searchFilter).toBe('saved search');
+      expect(controller._testExports.searchStateRestored).toBe(true);
+    });
+
+    it('should not restore if no saved search state', () => {
+      window.sessionStorage.getItem.mockReturnValue(null);
+      
+      controller._testExports.restoreSearchState();
+      
+      expect(controller._testExports.searchStateRestored).toBe(false);
+    });
+  });
+
+  describe('Search Analytics', () => {
+    it('should track search analytics', () => {
+      jest.useFakeTimers();
+      const timestamp = Date.now();
+      jest.setSystemTime(timestamp);
+      
+      controller._testExports.trackSearchAnalytics('warrior', 1);
+      
+      const analytics = controller._testExports.searchAnalytics;
+      expect(analytics.searches).toHaveLength(1);
+      expect(analytics.searches[0]).toEqual({
+        term: 'warrior',
+        resultCount: 1,
+        timestamp,
+      });
+      
+      jest.useRealTimers();
+    });
+
+    it('should track no-result searches separately', () => {
+      controller._testExports.trackSearchAnalytics('nonexistent', 0);
+      
+      const analytics = controller._testExports.searchAnalytics;
+      expect(analytics.noResultSearches).toHaveLength(1);
+      expect(analytics.noResultSearches[0].term).toBe('nonexistent');
+    });
+
+    it('should limit search history to 100 entries', () => {
+      // Add 101 searches
+      for (let i = 0; i < 101; i++) {
+        controller._testExports.trackSearchAnalytics(`search${i}`, 1);
+      }
+      
+      const analytics = controller._testExports.searchAnalytics;
+      expect(analytics.searches).toHaveLength(100);
+      expect(analytics.searches[0].term).toBe('search1'); // First one removed
+    });
+
+    it('should calculate average results correctly', () => {
+      controller._testExports.trackSearchAnalytics('term1', 5);
+      controller._testExports.trackSearchAnalytics('term2', 3);
+      controller._testExports.trackSearchAnalytics('term3', 1);
+      
+      const average = controller._testExports.calculateAverageResults();
+      expect(average).toBe(3); // (5+3+1)/3 = 3
+    });
+
+    it('should return 0 average for no searches', () => {
+      const average = controller._testExports.calculateAverageResults();
+      expect(average).toBe(0);
+    });
+
+    it('should log analytics every 10 searches', () => {
+      // Add 10 searches
+      for (let i = 0; i < 10; i++) {
+        controller._testExports.trackSearchAnalytics(`search${i}`, 1);
+      }
+      
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Search analytics',
+        expect.objectContaining({
+          totalSearches: 10,
+          noResultSearches: 0,
+          averageResults: 1,
+        })
+      );
+    });
+  });
+
+  describe('Performance and Edge Cases', () => {
+    it('should handle empty concepts array', () => {
+      const result = controller._testExports.filterConcepts([]);
+      expect(result).toEqual([]);
+    });
+
+    it('should handle concepts with null or undefined text', () => {
+      const invalidData = [
+        { concept: { id: '1', concept: null }, directionCount: 0 },
+        { concept: { id: '2', concept: undefined }, directionCount: 0 },
+        { concept: { id: '3' }, directionCount: 0 }, // Missing concept property
+      ];
+      
+      controller._testExports.searchFilter = 'test';
+      const result = controller._testExports.filterConcepts(invalidData);
+      expect(result).toEqual([]);
+    });
+
+    it('should handle very long search terms', () => {
+      const longTerm = 'a'.repeat(1000);
+      controller._testExports.searchFilter = longTerm;
+      
+      const result = controller._testExports.filterConcepts(mockConceptsData);
+      expect(result).toEqual([]);
+    });
+
+    it('should handle special characters in search', () => {
+      const specialData = [
+        {
+          concept: {
+            id: 'special-1',
+            concept: 'Character with $pecial (characters) [and] {brackets}',
+          },
+          directionCount: 1,
+        },
+      ];
+      
+      controller._testExports.searchFilter = '$pecial';
+      const result = controller._testExports.filterConcepts(specialData);
+      expect(result).toHaveLength(1);
     });
   });
 });

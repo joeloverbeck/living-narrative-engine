@@ -22,34 +22,94 @@ Update the CommandProcessor's `#createAttemptActionPayload` method to use the mu
 
 The current `#createAttemptActionPayload` method in CommandProcessor only extracts a single `targetId` from resolved parameters, creating the bottleneck identified in the specification. This ticket replaces that method with an enhanced version that uses the multi-target extraction service and creates rich event payloads while maintaining backward compatibility.
 
+## ⚠️ CODEBASE STATE ASSESSMENT ⚠️
+
+**CRITICAL DISCREPANCIES IDENTIFIED** (Updated: Current analysis)
+
+### 1. Missing TargetExtractionService
+- **ASSUMPTION**: `TargetExtractionService` exists in `src/services/targetExtractionService.js`
+- **REALITY**: ❌ This service does not exist in the codebase
+- **IMPACT**: The workflow implementation cannot proceed as written
+- **RESOLUTION NEEDED**: Create the TargetExtractionService or use alternative approach
+
+### 2. Private Method Access Issues
+- **ASSUMPTION**: `#createAttemptActionPayload` can be tested directly
+- **REALITY**: ❌ Method is private (# prefix) and cannot be accessed in tests as shown
+- **IMPACT**: Test implementation would fail due to access restrictions
+- **RESOLUTION NEEDED**: Either make method protected or test through public interface
+
+### 3. Constructor Signature Mismatch
+- **ASSUMPTION**: CommandProcessor constructor accepts `{ logger, eventBus }`
+- **REALITY**: ❌ Current constructor requires `{ safeEventDispatcher, eventDispatchService, logger }`
+- **IMPACT**: Test setup code shown would fail
+- **RESOLUTION NEEDED**: Update test setup to match current constructor signature
+
+### 4. Dependency Status
+- **ASSUMPTION**: Tickets 06 and 07 (multi-target data structures and extraction service) completed
+- **REALITY**: ⚠️ Partial completion
+  - ✅ Multi-target data structures exist (`src/entities/multiTarget/`)
+  - ❌ TargetExtractionService missing
+  - ✅ MultiTargetEventBuilder exists and functional
+  - ✅ TargetExtractionResult exists and functional
+- **IMPACT**: Implementation approach needs modification
+
+### 5. Current CommandProcessor State
+- **CURRENT IMPLEMENTATION**: Simple payload creation at line 186-196
+- **METHOD SIGNATURE**: `#createAttemptActionPayload(actor, turnAction)` (sync, not async)
+- **RETURNS**: Plain object with `eventName`, `actorId`, `actionId`, `targetId`, `originalInput`
+- **DEPENDENCIES**: None beyond constructor parameters
+
+### 6. Available Multi-Target Infrastructure
+- **POSITIVE FINDINGS**:
+  - ✅ `MultiTargetEventBuilder` fully implemented with comprehensive API
+  - ✅ `TargetExtractionResult` with static factories for data conversion
+  - ✅ `multiTargetValidationUtils` with payload validation
+  - ✅ `MultiTargetActionFormatter` exists for action formatting
+  - ✅ Complete multi-target type definitions in `src/types/multiTargetTypes.js`
+
+### RECOMMENDED IMPLEMENTATION ADJUSTMENTS
+
+1. **Replace TargetExtractionService dependency** with direct use of `TargetExtractionResult.fromResolvedParameters()`
+2. **Update method to remain synchronous** or justify async requirement
+3. **Fix test access patterns** to use public interfaces or dependency injection
+4. **Leverage existing multi-target infrastructure** that is already in place
+
 ## Implementation Details
 
 ### 1. Update CommandProcessor Payload Creation
 
 **File**: `src/commands/commandProcessor.js`
 
+**⚠️ CORRECTED IMPLEMENTATION APPROACH** (Updated based on codebase analysis)
+
 Replace the existing `#createAttemptActionPayload` method with the enhanced version:
 
 ```javascript
 // Add these imports at the top of the file
-import TargetExtractionService from '../services/targetExtractionService.js';
+// NOTE: TargetExtractionService does not exist - using TargetExtractionResult instead
 import MultiTargetEventBuilder from '../entities/multiTarget/multiTargetEventBuilder.js';
+import TargetExtractionResult from '../entities/multiTarget/targetExtractionResult.js';
 
 /**
  * Enhanced attempt action payload creation with multi-target support
  * @param {Object} actor - Actor entity performing the action
  * @param {Object} turnAction - Turn action data from discovery pipeline
  * @returns {Object} Enhanced event payload with multi-target support
+ * NOTE: Changed to synchronous - no async extraction service needed
  */
-async #createAttemptActionPayload(actor, turnAction) {
+#createAttemptActionPayload(actor, turnAction) {
   const startTime = performance.now();
 
   try {
     // Validate inputs
     this.#validatePayloadInputs(actor, turnAction);
 
-    // Extract target data using the multi-target extraction service
-    const extractionResult = await this.#extractTargetData(turnAction.resolvedParameters);
+    // Extract target data using existing TargetExtractionResult
+    // CORRECTED: Use static factory method instead of missing service
+    const extractionResult = TargetExtractionResult.fromResolvedParameters(
+      turnAction.resolvedParameters,
+      this.#logger
+    );
 
     // Create event payload using the builder pattern
     const eventBuilder = MultiTargetEventBuilder.fromTurnAction(
@@ -99,21 +159,8 @@ async #createAttemptActionPayload(actor, turnAction) {
   }
 }
 
-/**
- * Extracts target data using the extraction service
- * @param {Object} resolvedParameters - Parameters from action formatting
- * @returns {TargetExtractionResult} Target extraction result
- */
-async #extractTargetData(resolvedParameters) {
-  // Initialize extraction service if not already done
-  if (!this.#targetExtractionService) {
-    this.#targetExtractionService = new TargetExtractionService({
-      logger: this.#logger
-    });
-  }
-
-  return await this.#targetExtractionService.extractTargets(resolvedParameters);
-}
+// REMOVED: #extractTargetData method - not needed
+// TargetExtractionResult.fromResolvedParameters() is used directly in the main method
 
 /**
  * Creates a fallback payload when enhanced creation fails
@@ -174,22 +221,22 @@ async #extractTargetData(resolvedParameters) {
 /**
  * Gets payload creation statistics for monitoring
  * @returns {Object} Payload creation statistics
+ * NOTE: Removed extractionStats dependency on non-existent service
  */
 #getPayloadCreationStatistics() {
-  const extractionStats = this.#targetExtractionService?.getPerformanceMetrics() || {};
-
   return {
     totalPayloadsCreated: this.#payloadCreationCount || 0,
     multiTargetPayloads: this.#multiTargetPayloadCount || 0,
     legacyPayloads: this.#legacyPayloadCount || 0,
     fallbackPayloads: this.#fallbackPayloadCount || 0,
     averageCreationTime: this.#averagePayloadCreationTime || 0,
-    extractionStatistics: extractionStats
+    // REMOVED: extractionStatistics - service doesn't exist
   };
 }
 
 /**
  * Resets payload creation statistics
+ * NOTE: Removed reference to non-existent extraction service
  */
 #resetPayloadCreationStatistics() {
   this.#payloadCreationCount = 0;
@@ -197,10 +244,8 @@ async #extractTargetData(resolvedParameters) {
   this.#legacyPayloadCount = 0;
   this.#fallbackPayloadCount = 0;
   this.#averagePayloadCreationTime = 0;
-
-  if (this.#targetExtractionService) {
-    this.#targetExtractionService.resetPerformanceMetrics();
-  }
+  
+  // REMOVED: targetExtractionService reset - service doesn't exist
 }
 ```
 
@@ -251,8 +296,9 @@ Add performance monitoring capabilities to the CommandProcessor:
 
 /**
  * Enhanced createAttemptActionPayload with metrics tracking
+ * NOTE: Updated to synchronous and corrected extraction approach
  */
-async #createAttemptActionPayload(actor, turnAction) {
+#createAttemptActionPayload(actor, turnAction) {
   const startTime = performance.now();
   let extractionResult = null;
   let isFallback = false;
@@ -261,8 +307,11 @@ async #createAttemptActionPayload(actor, turnAction) {
     // Validate inputs
     this.#validatePayloadInputs(actor, turnAction);
 
-    // Extract target data
-    extractionResult = await this.#extractTargetData(turnAction.resolvedParameters);
+    // Extract target data using static factory method
+    extractionResult = TargetExtractionResult.fromResolvedParameters(
+      turnAction.resolvedParameters,
+      this.#logger
+    );
 
     // Create event payload
     const eventBuilder = MultiTargetEventBuilder.fromTurnAction(
@@ -305,6 +354,8 @@ async #createAttemptActionPayload(actor, turnAction) {
 
 **File**: `tests/unit/commands/commandProcessor.enhanced.test.js`
 
+**⚠️ CORRECTED TEST IMPLEMENTATION** (Updated based on codebase analysis)
+
 ```javascript
 /**
  * @file Tests for enhanced CommandProcessor with multi-target support
@@ -313,7 +364,7 @@ async #createAttemptActionPayload(actor, turnAction) {
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { TestBedClass } from '../../common/testbed.js';
 import CommandProcessor from '../../../src/commands/commandProcessor.js';
-import TargetExtractionService from '../../../src/services/targetExtractionService.js';
+// REMOVED: TargetExtractionService import - doesn't exist
 
 describe('CommandProcessor - Enhanced Multi-Target Support', () => {
   let testBed;
@@ -323,11 +374,16 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
   beforeEach(() => {
     testBed = new TestBedClass();
 
-    // Create mock dependencies
+    // Create mock dependencies with CORRECT constructor signature
     const logger = testBed.createMockLogger();
-    const eventBus = testBed.createMockEventBus();
+    const safeEventDispatcher = testBed.createMockSafeEventDispatcher();
+    const eventDispatchService = testBed.createMockEventDispatchService();
 
-    commandProcessor = new CommandProcessor({ logger, eventBus });
+    commandProcessor = new CommandProcessor({ 
+      logger, 
+      safeEventDispatcher, 
+      eventDispatchService 
+    });
 
     mockActor = {
       id: 'actor_123',
@@ -340,6 +396,8 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
   });
 
   describe('Enhanced Payload Creation', () => {
+    // ⚠️ NOTE: These tests need complete revision due to private method access
+    // The current approach tests through the public dispatchAction interface
     it('should create multi-target payload from formatting data', async () => {
       const turnAction = {
         actionDefinitionId: 'combat:throw',
@@ -353,10 +411,15 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         },
       };
 
-      const payload = await commandProcessor.createAttemptActionPayload(
+      // CORRECTED: Test through public interface (dispatchAction)
+      // Cannot access private #createAttemptActionPayload directly
+      const result = await commandProcessor.dispatchAction(
         mockActor,
         turnAction
       );
+      
+      // Note: Payload testing would need event system mocking
+      // or access through different testing approach
 
       expect(payload).toMatchObject({
         eventName: 'core:attempt_action',
@@ -716,12 +779,52 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
 
 ## Risk Assessment
 
-**Medium Risk**: Core CommandProcessor modification, but comprehensive testing and fallback mechanisms minimize risk. Backward compatibility is rigorously preserved.
+**UPDATED RISK: High Risk** ⚠️ 
+
+Core CommandProcessor modification with **multiple critical dependencies missing**. Comprehensive fallback mechanisms reduce operational risk, but implementation complexity increased due to codebase discrepancies.
+
+**Risk Factors**:
+- ❌ Missing TargetExtractionService dependency
+- ⚠️ Private method testing challenges
+- ⚠️ Constructor signature mismatches in original plan
+- ✅ Existing multi-target infrastructure reduces integration risk
+
+## ⚠️ IMPLEMENTATION READINESS ASSESSMENT ⚠️
+
+### READY TO PROCEED ✅
+- Multi-target data structures (TargetManager, TargetExtractionResult, MultiTargetEventBuilder)
+- Validation utilities and type definitions
+- Fallback mechanisms for backward compatibility
+- Corrected implementation approach using existing infrastructure
+
+### REQUIRES ATTENTION ⚠️
+1. **Test Strategy**: Complete revision needed for private method testing
+2. **Performance Monitoring**: Metrics need adjustment due to missing service
+3. **Documentation**: Update all references to non-existent TargetExtractionService
+
+### BLOCKERS RESOLVED ✅
+- Original dependency on TargetExtractionService → Use TargetExtractionResult.fromResolvedParameters()
+- Async method requirement → Simplified to synchronous approach
+- Constructor signature issues → Documented correct approach
+
+## CORRECTED IMPLEMENTATION SUMMARY
+
+### What Changed from Original Plan:
+1. **Removed TargetExtractionService dependency** → Direct use of TargetExtractionResult static methods
+2. **Simplified to synchronous method** → No async/await needed
+3. **Updated test approach** → Test through public interfaces, not private methods
+4. **Corrected constructor dependencies** → Use proper safeEventDispatcher and eventDispatchService
+
+### Implementation Confidence: **High** ✅
+The corrected approach leverages existing, tested multi-target infrastructure and provides a clear implementation path.
 
 ## Next Steps
 
 After this ticket completion:
 
-1. Move to Ticket 09: Add Command Processor Unit Tests
-2. Complete comprehensive testing of enhanced command processing
-3. Validate complete multi-target action flow end-to-end
+1. **IMMEDIATE**: Implement using corrected approach documented above
+2. Move to Ticket 09: Add Command Processor Unit Tests (update test strategy)
+3. Complete comprehensive testing of enhanced command processing
+4. Validate complete multi-target action flow end-to-end
+
+**Priority**: Implement TargetExtractionService if needed, or proceed with documented alternative approach using existing infrastructure.
