@@ -10,6 +10,8 @@ import {
   createFailureResult,
   dispatchFailure,
 } from './helpers/commandResultUtils.js';
+import MultiTargetEventBuilder from '../entities/multiTarget/multiTargetEventBuilder.js';
+import TargetExtractionResult from '../entities/multiTarget/targetExtractionResult.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -31,6 +33,14 @@ class CommandProcessor extends ICommandProcessor {
   #safeEventDispatcher;
   /** @type {EventDispatchService} */
   #eventDispatchService;
+
+  // Performance metrics
+  #payloadCreationCount = 0;
+  #multiTargetPayloadCount = 0;
+  #legacyPayloadCount = 0;
+  #fallbackPayloadCount = 0;
+  #totalPayloadCreationTime = 0;
+  #averagePayloadCreationTime = 0;
 
   /**
    * Creates an instance of CommandProcessor.
@@ -178,21 +188,60 @@ class CommandProcessor extends ICommandProcessor {
   }
 
   /**
-   * @description Creates the payload for an action attempt dispatch.
-   * @param {Entity} actor - The entity performing the action.
-   * @param {ITurnAction} turnAction - The resolved turn action.
-   * @returns {object} The payload for the `ATTEMPT_ACTION_ID` event.
+   * Enhanced attempt action payload creation with multi-target support
+   *
+   * @param {Entity} actor - Actor entity performing the action
+   * @param {ITurnAction} turnAction - Turn action data from discovery pipeline
+   * @returns {object} Enhanced event payload with multi-target support
    */
   #createAttemptActionPayload(actor, turnAction) {
-    const { actionDefinitionId, resolvedParameters, commandString } =
-      turnAction;
-    return {
-      eventName: ATTEMPT_ACTION_ID,
-      actorId: actor.id,
-      actionId: actionDefinitionId,
-      targetId: resolvedParameters?.targetId || null,
-      originalInput: commandString || actionDefinitionId,
-    };
+    const startTime = performance.now();
+    let extractionResult = null;
+    let isFallback = false;
+
+    try {
+      // Validate inputs
+      this.#validatePayloadInputs(actor, turnAction);
+
+      // Extract target data using existing TargetExtractionResult
+      extractionResult = TargetExtractionResult.fromResolvedParameters(
+        turnAction.resolvedParameters,
+        this.#logger
+      );
+
+      // Create event payload using the builder pattern
+      const eventBuilder = MultiTargetEventBuilder.fromTurnAction(
+        actor,
+        turnAction,
+        extractionResult,
+        this.#logger
+      );
+
+      const payload = eventBuilder.build();
+      const duration = performance.now() - startTime;
+
+      // Update metrics and log
+      this.#updatePayloadMetrics(payload, extractionResult, duration, false);
+      this.#logPayloadCreation(payload, extractionResult, duration);
+
+      return payload;
+    } catch (error) {
+      const duration = performance.now() - startTime;
+      isFallback = true;
+
+      this.#logger.error('Enhanced payload creation failed, using fallback', {
+        error: error.message,
+        actorId: actor?.id,
+        actionId: turnAction?.actionDefinitionId,
+        duration: duration.toFixed(2),
+      });
+
+      // Create fallback payload
+      const fallbackPayload = this.#createFallbackPayload(actor, turnAction);
+      this.#updatePayloadMetrics(fallbackPayload, extractionResult, duration, true);
+
+      return fallbackPayload;
+    }
   }
 
   /**
@@ -227,6 +276,139 @@ class CommandProcessor extends ICommandProcessor {
       commandString,
       actionId
     );
+  }
+
+  /**
+   * Validates inputs for payload creation
+   *
+   * @param {Entity} actor - Actor entity
+   * @param {ITurnAction} turnAction - Turn action data
+   * @throws {Error} If inputs are invalid
+   */
+  #validatePayloadInputs(actor, turnAction) {
+    if (!actor || !actor.id) {
+      throw new Error('Valid actor with ID is required for payload creation');
+    }
+
+    if (!turnAction || !turnAction.actionDefinitionId) {
+      throw new Error('Valid turn action with actionDefinitionId is required');
+    }
+
+    if (!turnAction.commandString && !turnAction.actionDefinitionId) {
+      throw new Error('Turn action must have either commandString or actionDefinitionId');
+    }
+  }
+
+  /**
+   * Creates a fallback payload when enhanced creation fails
+   *
+   * @param {Entity} actor - Actor entity
+   * @param {ITurnAction} turnAction - Turn action data
+   * @returns {object} Basic event payload
+   */
+  #createFallbackPayload(actor, turnAction) {
+    this.#logger.warn('Creating fallback payload due to enhanced creation failure');
+
+    // Use original simple payload creation as fallback
+    const { actionDefinitionId, resolvedParameters, commandString } = turnAction;
+
+    return {
+      eventName: ATTEMPT_ACTION_ID,
+      actorId: actor.id,
+      actionId: actionDefinitionId,
+      targetId: resolvedParameters?.targetId || null,
+      originalInput: commandString || actionDefinitionId,
+      timestamp: Date.now(),
+    };
+  }
+
+  /**
+   * Logs payload creation details
+   *
+   * @param {object} payload - Created payload
+   * @param {TargetExtractionResult} extractionResult - Target extraction result
+   * @param {number} duration - Creation duration in ms
+   */
+  #logPayloadCreation(payload, extractionResult, duration) {
+    const logData = {
+      eventName: payload.eventName,
+      actorId: payload.actorId,
+      actionId: payload.actionId,
+      hasMultipleTargets: extractionResult.hasMultipleTargets(),
+      targetCount: extractionResult.getTargetCount(),
+      primaryTarget: extractionResult.getPrimaryTarget(),
+      extractionSource: extractionResult.getMetadata('source'),
+      creationTime: duration.toFixed(2),
+    };
+
+    if (extractionResult.hasMultipleTargets()) {
+      logData.targets = extractionResult.getTargets();
+      this.#logger.info('Enhanced multi-target payload created', logData);
+    } else {
+      this.#logger.debug('Legacy-compatible payload created', logData);
+    }
+
+    // Performance warning for slow payload creation
+    if (duration > 10) {
+      this.#logger.warn('Payload creation took longer than expected', {
+        duration: duration.toFixed(2),
+        target: '< 10ms',
+      });
+    }
+  }
+
+  /**
+   * Updates payload creation metrics
+   *
+   * @param {object} payload - Created payload
+   * @param {TargetExtractionResult} extractionResult - Extraction result
+   * @param {number} duration - Creation duration
+   * @param {boolean} isFallback - Whether this was a fallback creation
+   */
+  #updatePayloadMetrics(payload, extractionResult, duration, isFallback = false) {
+    this.#payloadCreationCount++;
+    this.#totalPayloadCreationTime += duration;
+    this.#averagePayloadCreationTime = this.#totalPayloadCreationTime / this.#payloadCreationCount;
+
+    if (isFallback) {
+      this.#fallbackPayloadCount++;
+    } else if (extractionResult && extractionResult.hasMultipleTargets()) {
+      this.#multiTargetPayloadCount++;
+    } else {
+      this.#legacyPayloadCount++;
+    }
+
+    // Log metrics periodically
+    if (this.#payloadCreationCount % 100 === 0) {
+      this.#logger.info('Payload creation metrics update', this.getPayloadCreationStatistics());
+    }
+  }
+
+  /**
+   * Gets payload creation statistics for monitoring
+   *
+   * @returns {object} Payload creation statistics
+   */
+  getPayloadCreationStatistics() {
+    return {
+      totalPayloadsCreated: this.#payloadCreationCount || 0,
+      multiTargetPayloads: this.#multiTargetPayloadCount || 0,
+      legacyPayloads: this.#legacyPayloadCount || 0,
+      fallbackPayloads: this.#fallbackPayloadCount || 0,
+      averageCreationTime: this.#averagePayloadCreationTime || 0,
+    };
+  }
+
+  /**
+   * Resets payload creation statistics
+   */
+  resetPayloadCreationStatistics() {
+    this.#payloadCreationCount = 0;
+    this.#multiTargetPayloadCount = 0;
+    this.#legacyPayloadCount = 0;
+    this.#fallbackPayloadCount = 0;
+    this.#totalPayloadCreationTime = 0;
+    this.#averagePayloadCreationTime = 0;
   }
 }
 
