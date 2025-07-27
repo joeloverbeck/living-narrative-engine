@@ -42,6 +42,7 @@ class TargetContextBuilder {
 
   /**
    * Build base context for primary target resolution
+   *
    * @param {string} actorId - ID of the actor entity
    * @param {string} locationId - ID of the location entity
    * @returns {object} Base context object
@@ -67,6 +68,7 @@ class TargetContextBuilder {
 
   /**
    * Build context for dependent target resolution
+   *
    * @param {object} baseContext - Base context from buildBaseContext
    * @param {object} resolvedTargets - Previously resolved targets by name
    * @param {object} targetDef - Target definition with contextFrom property
@@ -103,12 +105,13 @@ class TargetContextBuilder {
 
   /**
    * Build entity context with all components
+   *
    * @param {string} entityId - Entity ID
    * @returns {object} Entity context object
    * @private
    */
   #buildEntityContext(entityId) {
-    const entity = this.#entityManager.getEntity(entityId);
+    const entity = this.#entityManager.getEntityInstance(entityId);
     if (!entity) {
       throw new Error(`Entity not found: ${entityId}`);
     }
@@ -121,6 +124,7 @@ class TargetContextBuilder {
 
   /**
    * Build game state context
+   *
    * @returns {object} Game state context object
    * @private
    */

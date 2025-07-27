@@ -7,25 +7,25 @@
 /** @typedef {import('../actions/formatters/formatActionTypedefs.js').FormatActionCommandResult} FormatActionCommandResult */
 
 /**
- * @typedef {Object} MultiTargetContext
+ * @typedef {object} MultiTargetContext
  * @property {string} entityId - Target entity ID
  * @property {string} displayName - Display name for target
  * @property {string} [placeholder] - Template placeholder name
  */
 
 /**
- * @typedef {Object} ResolvedTarget
+ * @typedef {object} ResolvedTarget
  * @property {string} id - Entity ID
  * @property {string} displayName - Display name for formatting
  * @property {object} entity - Full entity object
  */
 
 /**
- * @typedef {Object} FormattingOptions
+ * @typedef {object} FormattingOptions
  * @property {Function} [displayNameFn] - Custom display name resolver
  * @property {boolean} [debug] - Enable debug logging
- * @property {Object} [logger] - Logger instance
- * @property {Object} [safeEventDispatcher] - Event dispatcher
+ * @property {object} [logger] - Logger instance
+ * @property {object} [safeEventDispatcher] - Event dispatcher
  */
 
 /**

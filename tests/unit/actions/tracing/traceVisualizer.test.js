@@ -45,7 +45,7 @@ describe('TraceVisualizer', () => {
 
     it('should throw error if structuredTrace is null', () => {
       expect(() => new TraceVisualizer(null)).toThrow(
-        'Missing required dependency: StructuredTrace.'
+        'Missing required dependency: IStructuredTrace.'
       );
     });
 

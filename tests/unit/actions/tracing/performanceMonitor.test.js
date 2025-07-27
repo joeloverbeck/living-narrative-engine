@@ -63,7 +63,7 @@ describe('PerformanceMonitor', () => {
 
     it('should throw error if structuredTrace is null', () => {
       expect(() => new PerformanceMonitor(null)).toThrow(
-        'Missing required dependency: StructuredTrace.'
+        'Missing required dependency: IStructuredTrace.'
       );
     });
 

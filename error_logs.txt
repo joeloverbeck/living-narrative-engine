@@ -1,50 +1,10 @@
-CharacterStorageService: Retrieved character concept {conceptId: 'c7c8df47-cddc-475e-88b2-58a3b862fca7'}
-consoleLogger.js:187 CharacterDatabase: Retrieved character concept 9f5e16fb-3cd8-42a3-891d-22c078a24762: found
-consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '9f5e16fb-3cd8-42a3-891d-22c078a24762'}
-consoleLogger.js:187 CharacterDatabase: Retrieved character concept 9f5e16fb-3cd8-42a3-891d-22c078a24762: found
-consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '9f5e16fb-3cd8-42a3-891d-22c078a24762'}
-consoleLogger.js:187 CharacterDatabase: Retrieved character concept 9f5e16fb-3cd8-42a3-891d-22c078a24762: found
-consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '9f5e16fb-3cd8-42a3-891d-22c078a24762'}
-consoleLogger.js:187 CharacterDatabase: Retrieved character concept 650c9a82-51bc-4a2c-b6b0-236ab55889c6: found
-consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '650c9a82-51bc-4a2c-b6b0-236ab55889c6'}
-consoleLogger.js:187 CharacterDatabase: Retrieved character concept 9f5e16fb-3cd8-42a3-891d-22c078a24762: found
-consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '9f5e16fb-3cd8-42a3-891d-22c078a24762'}
-consoleLogger.js:187 CharacterDatabase: Retrieved character concept 650c9a82-51bc-4a2c-b6b0-236ab55889c6: found
-consoleLogger.js:187 CharacterStorageService: Retrieved character concept {conceptId: '650c9a82-51bc-4a2c-b6b0-236ab55889c6'}
-consoleLogger.js:151 ThematicDirectionsManagerController: Loaded directions data {directionCount: 15, conceptsWithDirections: 3}
-consoleLogger.js:151 ThematicDirectionsManagerController: Successfully initialized
-consoleLogger.js:151 ThematicDirectionsManagerApp: Successfully initialized
-consoleLogger.js:187 CharacterDatabase: Retrieved thematic direction 85a9d8f6-8b96-479c-8ede-442276b7eda7 {found: true}
-consoleLogger.js:151 CharacterDatabase: Successfully updated thematic direction 85a9d8f6-8b96-479c-8ede-442276b7eda7
-consoleLogger.js:151 CharacterStorageService: Successfully updated thematic direction {directionId: '85a9d8f6-8b96-479c-8ede-442276b7eda7'}
-consoleLogger.js:187 VED: Validating payload for event 'thematic:direction_updated' against schema 'thematic:direction_updated#payload'...
-consoleLogger.js:175 VED: Payload validation FAILED for event 'thematic:direction_updated'. Dispatch SKIPPED. Errors: [root]: must have required property 'field'; [root]: must have required property 'oldValue'; [root]: must have required property 'newValue' {payload: {…}, errors: Array(3)}
-error @ consoleLogger.js:175
-#validatePayload @ validatedEventDispatcher.js:144
-dispatch @ validatedEventDispatcher.js:219
-dispatchResult.#executeSafely.payload.payload @ safeEventDispatcher.js:124
-#executeSafely @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-updateThematicDirection @ characterBuilderService.js:651
-await in updateThematicDirection
-#handleFieldSave @ thematicDirectionsManagerController.js:580
-onSave @ thematicDirectionsManagerController.js:534
-saveChanges @ inPlaceEditor.js:86
-(anonymous) @ inPlaceEditor.js:262Understand this error
-consoleLogger.js:187 VED: Dispatch skipped for 'thematic:direction_updated' due to validation failure (see error above).
-consoleLogger.js:187 VED: Validating payload for event 'thematic:direction_updated' against schema 'thematic:direction_updated#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'thematic:direction_updated'.
-consoleLogger.js:187 VED: Dispatching event 'thematic:direction_updated' via EventBus... {directionId: '85a9d8f6-8b96-479c-8ede-442276b7eda7', field: 'uniqueTwist', oldValue: 'The Trickster Oracle archetype - using perceived powerlessness as ultimate leverage.', newValue: 'The Trickster Oracle archetype - using perceived powerlessness as ultimate leverage'}
-consoleLogger.js:151 ThematicDirectionsManagerController: Updated direction field {directionId: '85a9d8f6-8b96-479c-8ede-442276b7eda7', fieldName: 'uniqueTwist'}
-consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'thematic:direction_updated' (returned false). See VED logs for details. Payload: {"directionId":"85a9d8f6-8b96-479c-8ede-442276b7eda7","updates":{"uniqueTwist":"The Trickster Oracle archetype - using perceived powerlessness as ultimate leverage"}}
-warn @ consoleLogger.js:163
-dispatch @ safeEventDispatcher.js:136
-await in dispatch
-updateThematicDirection @ characterBuilderService.js:651
-await in updateThematicDirection
-#handleFieldSave @ thematicDirectionsManagerController.js:580
-onSave @ thematicDirectionsManagerController.js:534
-saveChanges @ inPlaceEditor.js:86
-(anonymous) @ inPlaceEditor.js:262Understand this warning
-consoleLogger.js:187 VED: Event 'thematic:direction_updated' dispatch successful.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'thematic:direction_updated'.
+warn no-circular: src/actions/tracing/structuredTrace.js →
+      src/actions/tracing/traceVisualizer.js →
+      src/actions/tracing/structuredTrace.js
+  warn no-circular: src/actions/tracing/structuredTrace.js →
+      src/actions/tracing/traceAnalyzer.js →
+      src/actions/tracing/structuredTrace.js
+  warn no-circular: src/actions/tracing/performanceMonitor.js →
+      src/actions/tracing/structuredTrace.js →
+      src/actions/tracing/performanceMonitor.js
+  error not-to-unresolvable: src/actions/formatters/MultiTargetActionFormatter.js → ../../../data/gameDataRepository.js

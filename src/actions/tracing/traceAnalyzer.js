@@ -14,7 +14,7 @@ import {
 /** @typedef {import('./analysisTypes.js').ErrorAnalysis} ErrorAnalysis */
 /** @typedef {import('./analysisTypes.js').ConcurrencyProfile} ConcurrencyProfile */
 /** @typedef {import('./analysisTypes.js').CriticalPathAnalysis} CriticalPathAnalysis */
-/** @typedef {import('./structuredTrace.js').StructuredTrace} StructuredTrace */
+/** @typedef {import('./tracingInterfaces.js').IStructuredTrace} IStructuredTrace */
 
 /**
  * @class TraceAnalyzer
@@ -30,11 +30,11 @@ export class TraceAnalyzer {
   /**
    * Creates a new TraceAnalyzer instance
    *
-   * @param {StructuredTrace} structuredTrace - The structured trace to analyze
+   * @param {IStructuredTrace} structuredTrace - The structured trace to analyze
    * @throws {Error} If structuredTrace is not provided or invalid
    */
   constructor(structuredTrace) {
-    validateDependency(structuredTrace, 'StructuredTrace', null, {
+    validateDependency(structuredTrace, 'IStructuredTrace', null, {
       requiredMethods: ['getSpans', 'getHierarchicalView', 'getCriticalPath'],
     });
 

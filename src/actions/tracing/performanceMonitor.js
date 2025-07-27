@@ -14,7 +14,7 @@ import {
 /** @typedef {import('./analysisTypes.js').SamplingConfig} SamplingConfig */
 /** @typedef {import('./analysisTypes.js').MemoryUsage} MemoryUsage */
 /** @typedef {import('./analysisTypes.js').RealtimeMetrics} RealtimeMetrics */
-/** @typedef {import('./structuredTrace.js').StructuredTrace} StructuredTrace */
+/** @typedef {import('./tracingInterfaces.js').IStructuredTrace} IStructuredTrace */
 
 /**
  * @class PerformanceMonitor
@@ -32,12 +32,12 @@ export class PerformanceMonitor {
   /**
    * Creates a new PerformanceMonitor instance
    *
-   * @param {StructuredTrace} structuredTrace - The structured trace to monitor
+   * @param {IStructuredTrace} structuredTrace - The structured trace to monitor
    * @param {PerformanceThresholds} [thresholds] - Performance thresholds
    * @throws {Error} If structuredTrace is not provided or invalid
    */
   constructor(structuredTrace, thresholds = {}) {
-    validateDependency(structuredTrace, 'StructuredTrace', null, {
+    validateDependency(structuredTrace, 'IStructuredTrace', null, {
       requiredMethods: ['getSpans', 'getActiveSpan'],
     });
 

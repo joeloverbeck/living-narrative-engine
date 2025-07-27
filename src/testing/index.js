@@ -5,7 +5,6 @@
  * MIGRATION GUIDE:
  * - Facades moved to: tests/common/facades/
  * - Builders moved to: tests/common/testing/builders/
- *
  * @deprecated Use imports from tests/common/facades/ directly
  */
 

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Character Concepts Manager - Living Narrative Engine</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/character-concepts-manager.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  </head>
+  <body>
+    <div id="character-concepts-manager-container" class="cb-page-container">
+      <!-- Header Section -->
+      <header class="cb-page-header">
+        <div class="header-content">
+          <h1>Character Concepts Manager</h1>
+          <p class="header-subtitle">
+            Create, organize, and manage your character concepts
+          </p>
+        </div>
+      </header>
+
+      <!-- Main Content Structure -->
+      <main class="cb-page-main character-concepts-manager-main">
+        <!-- Left Panel: Controls & Actions -->
+        <section class="cb-input-panel concept-controls-panel">
+          <h2 class="cb-panel-title">Concept Management</h2>
+
+          <!-- Quick Actions -->
+          <div class="action-buttons">
+            <button
+              id="create-concept-btn"
+              type="button"
+              class="cb-button-primary"
+            >
+              ➕ New Concept
+            </button>
+          </div>
+
+          <!-- Search/Filter -->
+          <div class="cb-form-group">
+            <label for="concept-search">Search Concepts:</label>
+            <input
+              type="text"
+              id="concept-search"
+              class="cb-input"
+              placeholder="Search by content..."
+            />
+          </div>
+
+          <!-- Statistics Display -->
+          <div class="stats-display">
+            <h3>Statistics</h3>
+            <div class="stat-item">
+              <span class="stat-label">Total Concepts:</span>
+              <span id="total-concepts" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">With Directions:</span>
+              <span id="concepts-with-directions" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Total Directions:</span>
+              <span id="total-directions" class="stat-value">0</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Panel: Concepts Grid -->
+        <section class="cb-results-panel concepts-display-panel">
+          <h2 class="cb-panel-title">Character Concepts</h2>
+
+          <div id="concepts-container" class="cb-state-container">
+            <!-- Empty State -->
+            <div id="empty-state" class="cb-empty-state">
+              <p>No character concepts yet.</p>
+              <p>Create your first concept to get started.</p>
+              <button
+                type="button"
+                class="cb-button-primary"
+                id="create-first-btn"
+              >
+                ➕ Create First Concept
+              </button>
+            </div>
+
+            <!-- Loading State -->
+            <div
+              id="loading-state"
+              class="cb-loading-state"
+              style="display: none"
+            >
+              <div class="spinner large"></div>
+              <p>Loading concepts...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="cb-error-state" style="display: none">
+              <p class="error-title">Unable to Load Concepts</p>
+              <p class="error-message" id="error-message-text"></p>
+              <button type="button" class="cb-button-secondary" id="retry-btn">
+                Try Again
+              </button>
+            </div>
+
+            <!-- Results State -->
+            <div
+              id="results-state"
+              class="cb-state-container"
+              style="display: none"
+            >
+              <div id="concepts-results" class="concepts-grid">
+                <!-- Dynamically populated concept cards -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer Section -->
+      <footer class="cb-page-footer">
+        <div class="footer-content">
+          <button
+            type="button"
+            id="back-to-menu-btn"
+            class="cb-button-secondary"
+          >
+            ← Back to Main Menu
+          </button>
+          <p class="footer-info">
+            Living Narrative Engine - Character Concepts Manager
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Create/Edit Concept Modal -->
+    <div
+      id="concept-modal"
+      class="modal"
+      style="display: none"
+      role="dialog"
+      aria-labelledby="concept-modal-title"
+    >
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="concept-modal-title">Create Character Concept</h2>
+          <button
+            type="button"
+            class="close-modal"
+            aria-label="Close modal"
+            id="close-concept-modal"
+          >
+            ×
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="concept-form" novalidate>
+            <div class="cb-form-group">
+              <label for="concept-text">
+                Character Concept:
+                <span class="required" aria-hidden="true">*</span>
+              </label>
+              <textarea
+                id="concept-text"
+                name="conceptText"
+                class="cb-textarea"
+                placeholder="e.g. a ditzy female adventurer who's good with a bow"
+                rows="6"
+                minlength="10"
+                maxlength="1000"
+                required
+                aria-describedby="concept-help concept-error"
+              ></textarea>
+              <div id="concept-help" class="input-help">
+                Describe your character in a few sentences. Focus on
+                personality, background, and key traits.
+              </div>
+              <div class="input-meta">
+                <span class="char-count" id="char-count">0/1000</span>
+                <div
+                  id="concept-error"
+                  class="error-message"
+                  role="alert"
+                  aria-live="polite"
+                ></div>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button
+                type="submit"
+                id="save-concept-btn"
+                class="cb-button-primary"
+                disabled
+              >
+                Save Concept
+              </button>
+              <button
+                type="button"
+                id="cancel-concept-btn"
+                class="cb-button-secondary"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div
+      id="delete-confirmation-modal"
+      class="modal"
+      style="display: none"
+      role="dialog"
+      aria-labelledby="delete-modal-title"
+    >
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="delete-modal-title">Confirm Deletion</h2>
+          <button
+            type="button"
+            class="close-modal"
+            aria-label="Close modal"
+            id="close-delete-modal"
+          >
+            ×
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="delete-modal-message">
+            <!-- Dynamic message will be inserted here -->
+          </p>
+          <div class="modal-actions">
+            <button
+              type="button"
+              id="confirm-delete-btn"
+              class="cb-button-danger"
+            >
+              Delete
+            </button>
+            <button
+              type="button"
+              id="cancel-delete-btn"
+              class="cb-button-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="character-concepts-manager.js"></script>
+  </body>
+</html>

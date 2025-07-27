@@ -61,7 +61,7 @@ export class ActionFormattingStage extends PipelineStage {
    * @param {import('../../../entities/entity.js').default} context.actor - The actor entity
    * @param {Array<{actionDef: import('../../../interfaces/IGameDataRepository.js').ActionDefinition, targetContexts: import('../../../models/actionTargetContext.js').ActionTargetContext[]}>} context.actionsWithTargets - Actions with their targets
    * @param {Object<string, import('../../../interfaces/IActionCommandFormatter.js').ResolvedTarget[]>} [context.resolvedTargets] - Multi-target resolved data from MultiTargetResolutionStage
-   * @param {Object} [context.targetDefinitions] - Target definitions for multi-target actions
+   * @param {object} [context.targetDefinitions] - Target definitions for multi-target actions
    * @param {import('../../tracing/traceContext.js').TraceContext|import('../../tracing/structuredTrace.js').StructuredTrace} [context.trace] - Optional trace context
    * @returns {Promise<PipelineResult>} Formatted actions
    */
@@ -91,6 +91,9 @@ export class ActionFormattingStage extends PipelineStage {
 
   /**
    * Format multi-target actions using enhanced formatter
+   *
+   * @param context
+   * @param trace
    * @private
    */
   async #formatMultiTargetActions(context, trace) {
@@ -249,6 +252,9 @@ export class ActionFormattingStage extends PipelineStage {
 
   /**
    * Format actions using legacy approach (existing implementation)
+   *
+   * @param context
+   * @param trace
    * @private
    */
   async #formatLegacyActions(context, trace) {
@@ -343,6 +349,8 @@ export class ActionFormattingStage extends PipelineStage {
 
   /**
    * Extract target IDs from resolved targets for params
+   *
+   * @param resolvedTargets
    * @private
    */
   #extractTargetIds(resolvedTargets) {
@@ -355,6 +363,8 @@ export class ActionFormattingStage extends PipelineStage {
 
   /**
    * Get primary target context for fallback formatting
+   *
+   * @param resolvedTargets
    * @private
    */
   #getPrimaryTargetContext(resolvedTargets) {
@@ -374,6 +384,9 @@ export class ActionFormattingStage extends PipelineStage {
 
   /**
    * Transform multi-target template to use {target} placeholder for legacy formatter
+   *
+   * @param template
+   * @param targetDefinitions
    * @private
    */
   #transformTemplateForLegacyFallback(template, targetDefinitions) {
@@ -407,6 +420,13 @@ export class ActionFormattingStage extends PipelineStage {
 
   /**
    * Create error context for formatting failures
+   *
+   * @param errorOrResult
+   * @param actionDef
+   * @param actorId
+   * @param trace
+   * @param targetId
+   * @param fallbackTargetId
    * @private
    */
   #createError(

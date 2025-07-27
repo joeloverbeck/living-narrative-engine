@@ -248,9 +248,7 @@ describe('Target Context Parsing', () => {
     });
 
     it('should parse target with colon in component names', () => {
-      const ast = parseDslExpression(
-        'target.components.special:component_123'
-      );
+      const ast = parseDslExpression('target.components.special:component_123');
       expect(ast.type).toBe('Step');
       expect(ast.field).toBe('special:component_123');
       expect(ast.parent.type).toBe('Step');

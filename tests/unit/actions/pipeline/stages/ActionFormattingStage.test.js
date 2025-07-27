@@ -72,7 +72,7 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
           actionDef: {
             id: 'test:multi_action',
             name: 'Use Item',
-            template: 'use {item} on {target}',
+            template: 'use {item} on {enemy}',
           },
           targetContexts: [], // Legacy format for compatibility
         },
@@ -89,7 +89,7 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
       },
       targetDefinitions: {
         primary: { placeholder: 'item' },
-        secondary: { placeholder: 'target' },
+        secondary: { placeholder: 'enemy' },
       },
     };
   });
@@ -539,6 +539,214 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
       expect(trace.info).toHaveBeenCalledWith(
         'Action formatting completed: 1 formatted actions, 0 errors',
         'ActionFormattingStage.execute'
+      );
+    });
+  });
+
+  describe('Multi-Target Fallback Coverage', () => {
+    it('should fallback to legacy formatting when multi-target fails with primary target', async () => {
+      // Test covers lines 161-181
+      mockMultiTargetFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target formatting failed',
+        details: { reason: 'Template parsing error' },
+      });
+
+      mockMultiTargetFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'fallback: use Sword',
+      });
+
+      const result = await stage.executeInternal(mockContext);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0]).toEqual({
+        id: 'test:multi_action',
+        name: 'Use Item',
+        command: 'fallback: use Sword',
+        description: '',
+        params: { targetId: 'item1' },
+      });
+
+      // Verify legacy formatter was called with transformed template
+      const formatCall = mockMultiTargetFormatter.format.mock.calls[0];
+      expect(formatCall[0]).toMatchObject({
+        id: 'test:multi_action',
+        template: 'use {target} on', // {item} -> {target}, {enemy} removed
+      });
+      expect(formatCall[1]).toMatchObject({
+        type: 'entity',
+        entityId: 'item1',
+        displayName: 'Sword',
+      });
+    });
+
+    it('should create error when multi-target fails and legacy fallback also fails', async () => {
+      // Test also covers lines 161-181
+      mockMultiTargetFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target formatting failed',
+      });
+
+      mockMultiTargetFormatter.format.mockReturnValue({
+        ok: false,
+        error: 'Legacy formatting also failed',
+        details: { missingPlaceholder: 'target' },
+      });
+
+      const result = await stage.executeInternal(mockContext);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      // Verify error context includes the target ID from primary target
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Legacy formatting also failed',
+          actionDef: expect.objectContaining({ id: 'test:multi_action' }),
+          actorId: 'player',
+          targetId: 'item1',
+          additionalContext: expect.objectContaining({
+            stage: 'action_formatting',
+            formatDetails: { missingPlaceholder: 'target' },
+          }),
+        })
+      );
+    });
+
+    it('should fallback to secondary target when multi-target fails with no primary target', async () => {
+      // Test covers lines 161-181 with secondary target fallback
+      const noPrimaryTargetContext = {
+        ...mockContext,
+        resolvedTargets: {
+          secondary: [{ id: 'npc1', displayName: 'Goblin' }],
+          // No primary targets - will use first available (secondary)
+        },
+      };
+
+      mockMultiTargetFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target formatting failed',
+      });
+
+      mockMultiTargetFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'use on Goblin',
+      });
+
+      const result = await stage.executeInternal(noPrimaryTargetContext);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.errors).toHaveLength(0);
+
+      // Verify legacy formatter was called with secondary target
+      expect(mockMultiTargetFormatter.format).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          entityId: 'npc1',
+          displayName: 'Goblin',
+        }),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object)
+      );
+    });
+
+    it('should handle formatter without formatMultiTarget when no targets exist at all', async () => {
+      // Test covers lines 223-232
+      const noTargetsContext = {
+        ...mockContext,
+        resolvedTargets: {}, // Truly empty - no targets at all
+      };
+
+      // Remove formatMultiTarget to trigger the else branch
+      mockMultiTargetFormatter.formatMultiTarget = undefined;
+
+      const result = await stage.executeInternal(noTargetsContext);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      // Verify error context for no targets available
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'No targets available for action',
+          actionDef: expect.objectContaining({ id: 'test:multi_action' }),
+          actorId: 'player',
+          targetId: null,
+          phase: ERROR_PHASES.VALIDATION,
+        })
+      );
+
+      // Verify format was not called
+      expect(mockMultiTargetFormatter.format).not.toHaveBeenCalled();
+    });
+
+    it('should handle empty resolved targets object', async () => {
+      // Additional test for edge case
+      const emptyResolvedTargetsContext = {
+        ...mockContext,
+        resolvedTargets: {},
+      };
+
+      mockMultiTargetFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'No targets to format',
+      });
+
+      const result = await stage.executeInternal(emptyResolvedTargetsContext);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+    });
+
+    it('should properly transform template placeholders for legacy fallback', async () => {
+      // Test the template transformation logic
+      const complexTemplateContext = {
+        ...mockContext,
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:complex',
+              name: 'Complex Action',
+              template: 'use {item} on {target} with {tool}',
+            },
+          },
+        ],
+        targetDefinitions: {
+          primary: { placeholder: 'item' },
+          secondary: { placeholder: 'target' },
+          tertiary: { placeholder: 'tool' },
+        },
+      };
+
+      mockMultiTargetFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Complex template failed',
+      });
+
+      mockMultiTargetFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'use Sword on',
+      });
+
+      await stage.executeInternal(complexTemplateContext);
+
+      // Verify the template was transformed correctly
+      // {item} -> {target}, then ALL {target} and {tool} are removed as secondary/tertiary
+      expect(mockMultiTargetFormatter.format).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'use on with',
+        }),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object)
       );
     });
   });

@@ -218,7 +218,7 @@ export class EntityWorkflowTestBed extends BaseTestBed {
    * @param {object} options - Creation options
    * @param {string} [options.instanceId] - Specific instance ID to use
    * @param {object} [options.componentOverrides] - Component data overrides
-   * @param {boolean} [options.validateDefinition=true] - Whether to validate definition exists
+   * @param {boolean} [options.validateDefinition] - Whether to validate definition exists
    * @returns {Promise<object>} Created entity instance
    */
   async createTestEntity(definitionId, options = {}) {
@@ -276,7 +276,7 @@ export class EntityWorkflowTestBed extends BaseTestBed {
    *
    * @param {string} entityId - Entity instance ID to remove
    * @param {object} options - Removal options
-   * @param {boolean} [options.expectSuccess=true] - Whether removal should succeed
+   * @param {boolean} [options.expectSuccess] - Whether removal should succeed
    * @returns {Promise<boolean>} Whether removal was successful
    */
   async removeTestEntity(entityId, options = {}) {
@@ -528,8 +528,8 @@ export class EntityWorkflowTestBed extends BaseTestBed {
    *
    * @param {string} eventType - Event type to wait for
    * @param {object} options - Wait options
-   * @param {number} [options.timeout=2000] - Timeout in milliseconds
-   * @param {function} [options.predicate] - Additional predicate function
+   * @param {number} [options.timeout] - Timeout in milliseconds
+   * @param {Function} [options.predicate] - Additional predicate function
    * @returns {Promise<object>} The event that was received
    */
   async waitForEvent(eventType, options = {}) {
@@ -620,8 +620,8 @@ export class EntityWorkflowTestBed extends BaseTestBed {
    * @param {number} expectedSuccesses - Expected number of successful operations
    * @param {number} expectedFailures - Expected number of failed operations
    * @param {object} options - Validation options
-   * @param {boolean} [options.validateMetrics=true] - Whether to validate metrics
-   * @param {boolean} [options.validateTiming=true] - Whether to validate timing
+   * @param {boolean} [options.validateMetrics] - Whether to validate metrics
+   * @param {boolean} [options.validateTiming] - Whether to validate timing
    * @returns {object} Validation results
    */
   validateBatchOperationResults(
@@ -745,7 +745,7 @@ export class EntityWorkflowTestBed extends BaseTestBed {
   /**
    * Measure performance of batch operations with detailed metrics
    *
-   * @param {function} operation - Async operation to measure
+   * @param {Function} operation - Async operation to measure
    * @param {number} iterations - Number of iterations to perform
    * @param {object} options - Measurement options
    * @returns {Promise<object>} Performance measurement results

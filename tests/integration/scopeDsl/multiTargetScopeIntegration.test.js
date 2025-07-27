@@ -157,20 +157,24 @@ describe('Multi-Target Scope Integration with Target Context', () => {
           entityManager.getComponentData(entityId, componentId),
       },
       locationProvider: {
-        getLocation: () => ({ 
+        getLocation: () => ({
           id: 'test_room',
           // Add entities method to return entities at this location
           entities: (componentId) => {
             if (componentId === ACTOR_COMPONENT_ID) {
               // Return all actors at this location
-              return entityManager.getEntitiesWithComponent(ACTOR_COMPONENT_ID)
-                .filter(entity => {
-                  const posData = entityManager.getComponentData(entity.id, POSITION_COMPONENT_ID);
+              return entityManager
+                .getEntitiesWithComponent(ACTOR_COMPONENT_ID)
+                .filter((entity) => {
+                  const posData = entityManager.getComponentData(
+                    entity.id,
+                    POSITION_COMPONENT_ID
+                  );
                   return posData && posData.locationId === 'test_room';
                 });
             }
             return [];
-          }
+          },
         }),
       },
       jsonLogicEval,
@@ -199,6 +203,9 @@ describe('Multi-Target Scope Integration with Target Context', () => {
 
   let playerId, npcId, jacketId, shirtId, toolId, containerId;
 
+  /**
+   *
+   */
   async function createTestEntities() {
     // Create tool first so we can reference it
     const toolEntity = await entityManager.createEntityInstance('test:item');
@@ -256,7 +263,6 @@ describe('Multi-Target Scope Integration with Target Context', () => {
       },
     });
 
-
     // Create locked container
     const containerEntity =
       await entityManager.createEntityInstance('test:container');
@@ -281,6 +287,9 @@ describe('Multi-Target Scope Integration with Target Context', () => {
     containerId = containerEntity.id;
   }
 
+  /**
+   *
+   */
   async function createTestScopes() {
     // Create scope definitions with parsed ASTs
     const scopeDefinitions = {
@@ -292,17 +301,23 @@ describe('Multi-Target Scope Integration with Target Context', () => {
       'test:adjustable_clothing': {
         id: 'test:adjustable_clothing',
         expr: 'entities(test:item)[][{"and": [{"==": [{"var": "entity.id"}, {"var": "target.components.test:equipment.equipped.torso_upper.outer"}]}, {"in": ["adjustable", {"var": "entity.components.test:adjustable.properties"}]}]}]',
-        ast: parseDslExpression('entities(test:item)[][{"and": [{"==": [{"var": "entity.id"}, {"var": "target.components.test:equipment.equipped.torso_upper.outer"}]}, {"in": ["adjustable", {"var": "entity.components.test:adjustable.properties"}]}]}]'),
+        ast: parseDslExpression(
+          'entities(test:item)[][{"and": [{"==": [{"var": "entity.id"}, {"var": "target.components.test:equipment.equipped.torso_upper.outer"}]}, {"in": ["adjustable", {"var": "entity.components.test:adjustable.properties"}]}]}]'
+        ),
       },
       'test:unlocking_tools': {
         id: 'test:unlocking_tools',
         expr: 'actor.test:inventory.items[][{"and": [{"==": [{"var": "entity.components.test:item.type"}, "tool"]}, {"==": [{"var": "target.components.core:container.locked"}, true]}]}]',
-        ast: parseDslExpression('actor.test:inventory.items[][{"and": [{"==": [{"var": "entity.components.test:item.type"}, "tool"]}, {"==": [{"var": "target.components.core:container.locked"}, true]}]}]'),
+        ast: parseDslExpression(
+          'actor.test:inventory.items[][{"and": [{"==": [{"var": "entity.components.test:item.type"}, "tool"]}, {"==": [{"var": "target.components.core:container.locked"}, true]}]}]'
+        ),
       },
       'test:all_targets': {
         id: 'test:all_targets',
         expr: 'targets.primary[].id | targets.secondary[].id | targets.tertiary[].id',
-        ast: parseDslExpression('targets.primary[].id | targets.secondary[].id | targets.tertiary[].id'),
+        ast: parseDslExpression(
+          'targets.primary[].id | targets.secondary[].id | targets.tertiary[].id'
+        ),
       },
       'test:primary_targets': {
         id: 'test:primary_targets',
@@ -522,7 +537,6 @@ describe('Multi-Target Scope Integration with Target Context', () => {
         context
       );
 
-
       // Assert: Should return only primary target IDs
       expect(result.success).toBe(true);
       expect(result.value).toBeInstanceOf(Set);
@@ -554,8 +568,9 @@ describe('Multi-Target Scope Integration with Target Context', () => {
   describe('Complex Multi-Target Scenarios', () => {
     it('should support complex nested target property access', async () => {
       // This test demonstrates accessing nested properties from target context
-      const complexExpr = 'entities(test:item)[][{"==": [{"var": "entity.id"}, {"var": "target.components.test:equipment.equipped.torso_upper.outer"}]}]';
-      
+      const complexExpr =
+        'entities(test:item)[][{"==": [{"var": "entity.id"}, {"var": "target.components.test:equipment.equipped.torso_upper.outer"}]}]';
+
       // Add the complex scope to the registry
       const complexScopeDefinition = {
         'test:complex_target_access': {
@@ -564,7 +579,7 @@ describe('Multi-Target Scope Integration with Target Context', () => {
           ast: parseDslExpression(complexExpr),
         },
       };
-      
+
       // Re-initialize with existing scopes plus the new one
       const existingScopes = scopeRegistry.getAllScopes();
       const allScopes = {};
@@ -633,10 +648,9 @@ describe('Multi-Target Scope Integration with Target Context', () => {
       // Act: Measure performance of scope resolution with large context
       const start = performance.now();
       const result = unifiedScopeResolver.resolve('test:all_targets', context, {
-        validateEntities: false // Disable validation since these are virtual targets
+        validateEntities: false, // Disable validation since these are virtual targets
       });
       const end = performance.now();
-
 
       // Assert: Should handle large contexts efficiently
       expect(result.success).toBe(true);
@@ -689,9 +703,8 @@ describe('Multi-Target Scope Integration with Target Context', () => {
 
       // Act: Resolve scope with malformed targets
       const result = unifiedScopeResolver.resolve('test:all_targets', context, {
-        validateEntities: false // Disable validation since these are virtual targets
+        validateEntities: false, // Disable validation since these are virtual targets
       });
-
 
       // Assert: Should handle gracefully and only process valid arrays
       expect(result.success).toBe(true);
@@ -737,7 +750,6 @@ describe('Multi-Target Scope Integration with Target Context', () => {
         'test:nearby_people',
         context
       );
-
 
       // Assert: Should work normally
       expect(result.success).toBe(true);
