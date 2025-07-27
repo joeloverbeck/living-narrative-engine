@@ -31,6 +31,13 @@ export class CharacterConceptsManagerController {
   #isInitialized = false;
   #previousFocus = null;
 
+  // Enhanced search state
+  #searchStateRestored = false;
+  #searchAnalytics = {
+    searches: [],
+    noResultSearches: []
+  };
+
   // Edit state tracking
   #originalConceptText = '';
   #hasUnsavedChanges = false;
@@ -109,6 +116,34 @@ export class CharacterConceptsManagerController {
         set deleteHandler(value) {
           self.#deleteHandler = value;
         },
+        
+        get searchFilter() {
+          return self.#searchFilter;
+        },
+        set searchFilter(value) {
+          self.#searchFilter = value;
+        },
+        
+        get searchAnalytics() {
+          return self.#searchAnalytics;
+        },
+        set searchAnalytics(value) {
+          self.#searchAnalytics = value;
+        },
+        
+        get searchStateRestored() {
+          return self.#searchStateRestored;
+        },
+        set searchStateRestored(value) {
+          self.#searchStateRestored = value;
+        },
+        
+        get elements() {
+          return self.#elements;
+        },
+        set elements(value) {
+          self.#elements = value;
+        },
 
         // Methods (bound to maintain correct 'this' context)
         showDeleteConfirmation: this.#showDeleteConfirmation.bind(this),
@@ -121,6 +156,28 @@ export class CharacterConceptsManagerController {
         revertOptimisticDelete: this.#revertOptimisticDelete.bind(this),
         handleConceptDeleted: this.#handleConceptDeleted.bind(this),
         updateStatistics: this.#updateStatistics.bind(this),
+        
+        // Enhanced search methods
+        filterConcepts: this.#filterConcepts.bind(this),
+        fuzzyMatch: this.#fuzzyMatch.bind(this),
+        highlightSearchTerms: this.#highlightSearchTerms.bind(this),
+        escapeRegex: this.#escapeRegex.bind(this),
+        displayFilteredConcepts: this.#displayFilteredConcepts.bind(this),
+        showNoSearchResults: this.#showNoSearchResults.bind(this),
+        updateSearchState: this.#updateSearchState.bind(this),
+        updateSearchStatus: this.#updateSearchStatus.bind(this),
+        clearSearch: this.#clearSearch.bind(this),
+        updateClearButton: this.#updateClearButton.bind(this),
+        saveSearchState: this.#saveSearchState.bind(this),
+        restoreSearchState: this.#restoreSearchState.bind(this),
+        trackSearchAnalytics: this.#trackSearchAnalytics.bind(this),
+        calculateAverageResults: this.#calculateAverageResults.bind(this),
+        getDisplayText: this.#getDisplayText.bind(this),
+        handleSearch: this.#handleSearch.bind(this),
+        // Testing utility to set UIStateManager without full initialization
+        set uiStateManager(value) {
+          self.#uiStateManager = value;
+        },
       };
     }
 
@@ -155,6 +212,9 @@ export class CharacterConceptsManagerController {
 
       // Set up keyboard shortcuts
       this.#setupKeyboardShortcuts();
+
+      // Restore search state from session
+      this.#restoreSearchState();
 
       // Load initial data
       await this.#loadConceptsData();
@@ -197,6 +257,7 @@ export class CharacterConceptsManagerController {
       conceptSearch: document.getElementById('concept-search'),
 
       // Statistics
+      statsDisplay: document.querySelector('.stats-display'),
       totalConcepts: document.getElementById('total-concepts'),
       conceptsWithDirections: document.getElementById(
         'concepts-with-directions'
@@ -286,6 +347,30 @@ export class CharacterConceptsManagerController {
       searchTimeout = setTimeout(() => {
         this.#handleSearch(e.target.value);
       }, 300);
+    });
+
+    // Search input keyboard enhancements
+    this.#elements.conceptSearch.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'Escape':
+          // Clear search on Escape
+          if (this.#searchFilter) {
+            e.preventDefault();
+            this.#clearSearch();
+          }
+          break;
+
+        case 'Enter':
+          // Focus first result on Enter
+          if (this.#searchFilter) {
+            e.preventDefault();
+            const firstCard = this.#elements.conceptsResults.querySelector('.concept-card');
+            if (firstCard) {
+              firstCard.focus();
+            }
+          }
+          break;
+      }
     });
 
     // Modal handlers
@@ -585,6 +670,14 @@ export class CharacterConceptsManagerController {
       // Update statistics
       this.#updateStatistics();
 
+      // Check if we need to restore search state
+      if (this.#searchStateRestored) {
+        const filteredConcepts = this.#filterConcepts(this.#conceptsData);
+        this.#displayConcepts(filteredConcepts); // uses existing display method
+        this.#updateSearchState(this.#elements.conceptSearch.value, filteredConcepts.length);
+        this.#searchStateRestored = false;
+      }
+
       this.#logger.info(`Loaded ${concepts.length} concepts`);
     } catch (error) {
       this.#logger.error('Failed to load concepts', error);
@@ -656,7 +749,7 @@ export class CharacterConceptsManagerController {
             </button>
         </div>
         <div class="concept-card-content">
-            <p class="concept-text">${this.#escapeHtml(this.#truncateText(concept.text, 150))}</p>
+            <p class="concept-text">${this.#getDisplayText(concept, 150)}</p>
             <div class="concept-meta">
                 <span class="direction-count">
                     <strong>${directionCount}</strong> thematic ${directionCount === 1 ? 'direction' : 'directions'}
@@ -734,27 +827,53 @@ export class CharacterConceptsManagerController {
   }
 
   /**
-   * Filter concepts based on search term
+   * Enhanced filter concepts with multi-term and fuzzy matching
+   * Extends existing basic substring filtering
    *
    * @param {Array<{concept: object, directionCount: number}>} concepts
    * @returns {Array<{concept: object, directionCount: number}>}
    */
   #filterConcepts(concepts) {
-    if (!this.#searchFilter) {
+    if (!this.#searchFilter || this.#searchFilter.length === 0) {
       return concepts;
     }
 
-    const searchLower = this.#searchFilter.toLowerCase();
+    const searchTerms = this.#searchFilter.toLowerCase().split(/\s+/).filter(term => term.length > 0);
 
     return concepts.filter(({ concept }) => {
-      return concept.text.toLowerCase().includes(searchLower);
+      // Use correct property: concept.concept (not concept.text)
+      const conceptText = concept.concept || concept.text;
+      
+      // Handle null/undefined conceptText gracefully
+      if (!conceptText) {
+        return false;
+      }
+      
+      const conceptTextLower = conceptText.toLowerCase();
+
+      // Check if all search terms are found (AND logic)
+      return searchTerms.every(term => {
+        // Direct substring match (existing logic)
+        if (conceptTextLower.includes(term)) {
+          return true;
+        }
+
+        // Enhanced fuzzy match for typos
+        if (this.#fuzzyMatch(conceptTextLower, term)) {
+          return true;
+        }
+
+        return false;
+      });
     });
   }
 
   /**
-   * Update statistics display
+   * Calculate all statistics
+   *
+   * @returns {object} Statistics object
    */
-  #updateStatistics() {
+  #calculateStatistics() {
     const totalConcepts = this.#conceptsData.length;
     const conceptsWithDirections = this.#conceptsData.filter(
       ({ directionCount }) => directionCount > 0
@@ -764,17 +883,330 @@ export class CharacterConceptsManagerController {
       0
     );
 
-    // Update UI
-    this.#elements.totalConcepts.textContent = totalConcepts;
-    this.#elements.conceptsWithDirections.textContent = conceptsWithDirections;
-    this.#elements.totalDirections.textContent = totalDirections;
+    // Calculate additional statistics
+    const averageDirectionsPerConcept = totalConcepts > 0
+      ? (totalDirections / totalConcepts).toFixed(1)
+      : '0';
 
-    // Log statistics
-    this.#logger.info('Statistics updated', {
+    const completionRate = totalConcepts > 0
+      ? Math.round((conceptsWithDirections / totalConcepts) * 100)
+      : 0;
+
+    const maxDirections = Math.max(
+      0,
+      ...this.#conceptsData.map(({ directionCount }) => directionCount)
+    );
+
+    return {
       totalConcepts,
       conceptsWithDirections,
       totalDirections,
+      averageDirectionsPerConcept,
+      completionRate,
+      maxDirections,
+      conceptsWithoutDirections: totalConcepts - conceptsWithDirections
+    };
+  }
+
+  /**
+   * Update statistics display with animations
+   */
+  #updateStatistics() {
+    const stats = this.#calculateStatistics();
+
+    // Animate number changes
+    this.#animateStatValue(this.#elements.totalConcepts, stats.totalConcepts);
+    this.#animateStatValue(this.#elements.conceptsWithDirections, stats.conceptsWithDirections);
+    this.#animateStatValue(this.#elements.totalDirections, stats.totalDirections);
+
+    // Update additional statistics
+    this.#updateAdvancedStatistics(stats);
+
+    // Log statistics
+    this.#logger.info('Statistics updated', stats);
+
+    // Dispatch statistics event for other components
+    this.#eventBus.dispatch({
+      type: 'statistics:updated',
+      payload: stats
     });
+  }
+
+  /**
+   * Animate stat value changes
+   *
+   * @param {HTMLElement} element - The element to update
+   * @param {number} newValue - The target value
+   */
+  #animateStatValue(element, newValue) {
+    if (!element) return;
+
+    const currentValue = parseInt(element.textContent) || 0;
+
+    if (currentValue === newValue) return;
+
+    const duration = 500; // ms
+    const steps = 20;
+    const increment = (newValue - currentValue) / steps;
+    const stepDuration = duration / steps;
+
+    let step = 0;
+    const animation = setInterval(() => {
+      step++;
+
+      if (step >= steps) {
+        element.textContent = newValue;
+        clearInterval(animation);
+
+        // Add completion effect
+        element.classList.add('stat-updated');
+        setTimeout(() => {
+          element.classList.remove('stat-updated');
+        }, 300);
+      } else {
+        const value = Math.round(currentValue + (increment * step));
+        element.textContent = value;
+      }
+    }, stepDuration);
+
+    // Store animation reference for cleanup
+    if (element.animationInterval) {
+      clearInterval(element.animationInterval);
+    }
+    element.animationInterval = animation;
+  }
+
+  /**
+   * Update advanced statistics display
+   *
+   * @param {object} stats - Statistics object
+   */
+  #updateAdvancedStatistics(stats) {
+    // Check if advanced stats container exists
+    let advancedStats = document.querySelector('.advanced-stats');
+
+    if (!advancedStats) {
+      // Create advanced stats section
+      advancedStats = this.#createAdvancedStatsSection();
+      this.#elements.statsDisplay = document.querySelector('.stats-display');
+      this.#elements.statsDisplay.appendChild(advancedStats);
+    }
+
+    // Update values
+    this.#updateAdvancedStatValue('avg-directions', stats.averageDirectionsPerConcept);
+    this.#updateAdvancedStatValue('completion-rate', `${stats.completionRate}%`);
+    this.#updateAdvancedStatValue('max-directions', stats.maxDirections);
+
+    // Update progress bar
+    this.#updateCompletionProgress(stats.completionRate);
+  }
+
+  /**
+   * Create advanced statistics section
+   *
+   * @returns {HTMLElement}
+   */
+  #createAdvancedStatsSection() {
+    const section = document.createElement('div');
+    section.className = 'advanced-stats';
+    section.innerHTML = `
+        <h4>Insights</h4>
+        <div class="stat-item">
+            <span class="stat-label">Average Directions:</span>
+            <span id="avg-directions" class="stat-value">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Completion Rate:</span>
+            <span id="completion-rate" class="stat-value">0%</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Most Directions:</span>
+            <span id="max-directions" class="stat-value">0</span>
+        </div>
+        <div class="completion-progress">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="progress-label">
+                <span class="concepts-complete">0</span> of
+                <span class="concepts-total">0</span> concepts have directions
+            </div>
+        </div>
+        <button type="button" class="export-stats-btn" title="Export statistics as JSON">
+            📊 Export Statistics
+        </button>
+    `;
+
+    // Add export button handler
+    const exportBtn = section.querySelector('.export-stats-btn');
+    exportBtn.addEventListener('click', () => this.#exportStatistics('json'));
+
+    return section;
+  }
+
+  /**
+   * Update advanced stat value
+   *
+   * @param {string} id - Element ID
+   * @param {string|number} value - New value
+   */
+  #updateAdvancedStatValue(id, value) {
+    const element = document.getElementById(id);
+    if (element && element.textContent !== String(value)) {
+      element.textContent = value;
+      element.classList.add('stat-updated');
+      setTimeout(() => {
+        element.classList.remove('stat-updated');
+      }, 300);
+    }
+  }
+
+  /**
+   * Update completion progress bar
+   *
+   * @param {number} percentage - Completion percentage
+   */
+  #updateCompletionProgress(percentage) {
+    const progressFill = document.querySelector('.progress-fill');
+    const conceptsComplete = document.querySelector('.concepts-complete');
+    const conceptsTotal = document.querySelector('.concepts-total');
+
+    if (progressFill) {
+      // Animate progress bar
+      progressFill.style.width = `${percentage}%`;
+
+      // Update color based on percentage
+      progressFill.classList.remove('complete', 'good', 'moderate', 'low');
+      if (percentage === 100) {
+        progressFill.classList.add('complete');
+      } else if (percentage >= 75) {
+        progressFill.classList.add('good');
+      } else if (percentage >= 50) {
+        progressFill.classList.add('moderate');
+      } else {
+        progressFill.classList.add('low');
+      }
+    }
+
+    // Update labels
+    if (conceptsComplete && conceptsTotal) {
+      const stats = this.#calculateStatistics();
+      conceptsComplete.textContent = stats.conceptsWithDirections;
+      conceptsTotal.textContent = stats.totalConcepts;
+    }
+  }
+
+  /**
+   * Celebrate creation milestones
+   */
+  #celebrateCreation() {
+    const stats = this.#calculateStatistics();
+
+    // Check for milestones
+    if (stats.totalConcepts === 1) {
+      this.#showMilestone('🎉 First Concept Created!');
+    } else if (stats.totalConcepts % 10 === 0) {
+      this.#showMilestone(`🎊 ${stats.totalConcepts} Concepts Created!`);
+    } else if (stats.completionRate === 100 && stats.totalConcepts > 1) {
+      this.#showMilestone('⭐ All Concepts Have Directions!');
+    }
+  }
+
+  /**
+   * Show milestone notification
+   *
+   * @param {string} message
+   */
+  #showMilestone(message) {
+    const milestone = document.createElement('div');
+    milestone.className = 'milestone-notification';
+    milestone.textContent = message;
+
+    document.body.appendChild(milestone);
+
+    // Animate in
+    setTimeout(() => {
+      milestone.classList.add('show');
+    }, 100);
+
+    // Remove after delay
+    setTimeout(() => {
+      milestone.classList.remove('show');
+      setTimeout(() => {
+        milestone.remove();
+      }, 500);
+    }, 3000);
+  }
+
+  /**
+   * Export statistics as JSON or CSV
+   *
+   * @param {string} format - 'json' or 'csv'
+   */
+  #exportStatistics(format = 'json') {
+    const stats = this.#calculateStatistics();
+    const timestamp = new Date().toISOString();
+
+    const data = {
+      exportDate: timestamp,
+      statistics: stats,
+      concepts: this.#conceptsData.map(({ concept, directionCount }) => ({
+        id: concept.id,
+        textLength: concept.concept.length,
+        directionCount,
+        createdAt: concept.createdAt,
+        updatedAt: concept.updatedAt
+      }))
+    };
+
+    let content, filename, mimeType;
+
+    if (format === 'csv') {
+      content = this.#convertToCSV(data);
+      filename = `character-concepts-stats-${Date.now()}.csv`;
+      mimeType = 'text/csv';
+    } else {
+      content = JSON.stringify(data, null, 2);
+      filename = `character-concepts-stats-${Date.now()}.json`;
+      mimeType = 'application/json';
+    }
+
+    // Create download
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    this.#logger.info('Statistics exported', { format, filename });
+  }
+
+  /**
+   * Convert statistics to CSV format
+   *
+   * @param {object} data
+   * @returns {string}
+   */
+  #convertToCSV(data) {
+    const headers = ['Metric', 'Value'];
+    const rows = [
+      ['Export Date', data.exportDate],
+      ['Total Concepts', data.statistics.totalConcepts],
+      ['Concepts with Directions', data.statistics.conceptsWithDirections],
+      ['Total Directions', data.statistics.totalDirections],
+      ['Average Directions per Concept', data.statistics.averageDirectionsPerConcept],
+      ['Completion Rate', `${data.statistics.completionRate}%`],
+      ['Maximum Directions', data.statistics.maxDirections]
+    ];
+
+    const csv = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    return csv;
   }
 
   /**
@@ -1471,7 +1903,7 @@ export class CharacterConceptsManagerController {
     // Update card content
     const conceptTextElement = card.querySelector('.concept-text');
     if (conceptTextElement) {
-      conceptTextElement.textContent = this.#truncateText(concept.concept, 150);
+      conceptTextElement.innerHTML = this.#getDisplayText(concept, 150);
     }
 
     // Update date if it changed
@@ -1562,6 +1994,18 @@ export class CharacterConceptsManagerController {
   #setupKeyboardShortcuts() {
     // Add global keyboard shortcuts
     document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + F to focus search
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key === 'f' &&
+        !e.target.closest('input, textarea')
+      ) {
+        e.preventDefault();
+        this.#elements.conceptSearch.focus();
+        this.#elements.conceptSearch.select();
+        return;
+      }
+
       // Undo with Ctrl+Z (when not in form)
       if (
         (e.ctrlKey || e.metaKey) &&
@@ -1718,22 +2162,55 @@ export class CharacterConceptsManagerController {
     }
   }
 
+  /**
+   * Enhanced search handling with analytics and state management
+   * Extends existing basic implementation
+   *
+   * @param {string} searchTerm
+   */
   #handleSearch(searchTerm) {
-    this.#logger.info('Handling search', { searchTerm });
+    this.#logger.info('Enhanced search handling', { searchTerm, length: searchTerm.length });
 
-    // Update search filter
+    // Update search filter (existing logic)
     this.#searchFilter = searchTerm.trim();
 
-    // Apply filter to existing data if available
-    if (this.#conceptsData && this.#conceptsData.length >= 0) {
-      const filteredConcepts = this.#filterConcepts(this.#conceptsData);
-      this.#displayConcepts(filteredConcepts);
+    // Filter concepts with enhanced logic
+    const filteredConcepts = this.#filterConcepts(this.#conceptsData);
+
+    // Update display with highlighting
+    this.#displayFilteredConcepts(filteredConcepts);
+
+    // Update search state UI with enhanced feedback
+    this.#updateSearchState(searchTerm, filteredConcepts.length);
+
+    // Save search state for session persistence
+    this.#saveSearchState();
+
+    // Enhanced analytics tracking
+    this.#trackSearchAnalytics(searchTerm, filteredConcepts.length);
+
+    // Dispatch enhanced search event
+    if (searchTerm.length > 0) {
+      this.#eventBus.dispatch({
+        type: 'ui:search-performed',
+        payload: {
+          searchTerm,
+          resultCount: filteredConcepts.length,
+          totalConcepts: this.#conceptsData.length,
+          searchMode: 'enhanced'
+        }
+      });
     }
   }
 
   #handleConceptCreated(event) {
     this.#logger.info('Concept created event received', event.detail);
-    // Implementation in Ticket 10
+
+    // Refresh data and statistics
+    this.#loadConceptsData().then(() => {
+      // Add creation celebration
+      this.#celebrateCreation();
+    });
   }
 
   #handleConceptUpdated(event) {
@@ -1774,6 +2251,346 @@ export class CharacterConceptsManagerController {
   #handleDirectionsGenerated(event) {
     this.#logger.info('Directions generated event received', event.detail);
     // Implementation in Ticket 10
+  }
+
+  /**
+   * Simple fuzzy matching for typo tolerance
+   *
+   * @param {string} text
+   * @param {string} searchTerm
+   * @returns {boolean}
+   */
+  #fuzzyMatch(text, searchTerm) {
+    // Only apply fuzzy matching for terms longer than 3 characters
+    if (searchTerm.length <= 3) {
+      return false;
+    }
+
+    // Check if text contains all characters of search term in order
+    let searchIndex = 0;
+    for (let i = 0; i < text.length && searchIndex < searchTerm.length; i++) {
+      if (text[i] === searchTerm[searchIndex]) {
+        searchIndex++;
+      }
+    }
+
+    return searchIndex === searchTerm.length;
+  }
+
+  /**
+   * Enhanced display for filtered concepts
+   * Leverages existing #displayConcepts and #showEmptyState methods
+   *
+   * @param {Array<{concept: object, directionCount: number}>} filteredConcepts
+   */
+  #displayFilteredConcepts(filteredConcepts) {
+    if (filteredConcepts.length === 0 && this.#searchFilter) {
+      // Use enhanced no search results state
+      this.#showNoSearchResults();
+    } else {
+      // Use existing display logic with highlighting enhancements
+      this.#displayConcepts(filteredConcepts);
+    }
+  }
+
+  /**
+   * Enhanced no search results state
+   * Builds upon existing #showEmptyState architecture
+   */
+  #showNoSearchResults() {
+    // Use existing empty state infrastructure but with search-specific content
+    const hasSearchFilter = this.#searchFilter && this.#searchFilter.length > 0;
+    
+    if (hasSearchFilter) {
+      // Enhanced no search results (leverages existing empty state pattern)
+      this.#elements.conceptsResults.innerHTML = '';
+      
+      // Create enhanced search empty state
+      const noResultsDiv = document.createElement('div');
+      noResultsDiv.className = 'no-search-results cb-empty-state';
+      noResultsDiv.innerHTML = `
+        <div class="no-results-icon">🔍</div>
+        <p class="no-results-title">No concepts match your search</p>
+        <p class="no-results-message">
+          No concepts found for "<strong>${this.#escapeHtml(this.#searchFilter)}</strong>"
+        </p>
+        <div class="search-suggestions">
+          <p>Try:</p>
+          <ul>
+            <li>Using different keywords</li>
+            <li>Checking for typos</li>
+            <li>Using more general terms</li>
+          </ul>
+        </div>
+        <button type="button" class="cb-button-secondary" id="clear-search-btn">
+          Clear Search
+        </button>
+      `;
+
+      // Add clear button handler
+      const clearBtn = noResultsDiv.querySelector('#clear-search-btn');
+      clearBtn.addEventListener('click', () => {
+        this.#clearSearch();
+      });
+
+      // Use existing UI state management
+      this.#uiStateManager.showState('results');
+      this.#elements.conceptsResults.appendChild(noResultsDiv);
+    } else {
+      // Fall back to existing empty state logic
+      this.#showEmptyState();
+    }
+  }
+
+  /**
+   * Update search-related UI elements
+   *
+   * @param {string} searchTerm
+   * @param {number} resultCount
+   */
+  #updateSearchState(searchTerm, resultCount) {
+    const hasSearch = searchTerm.length > 0;
+
+    // Add search active class to container
+    if (hasSearch) {
+      this.#elements.conceptsContainer.classList.add('search-active');
+    } else {
+      this.#elements.conceptsContainer.classList.remove('search-active');
+    }
+
+    // Update or create search status element
+    this.#updateSearchStatus(searchTerm, resultCount);
+
+    // Update clear button visibility
+    this.#updateClearButton(hasSearch);
+  }
+
+  /**
+   * Update search status display
+   *
+   * @param {string} searchTerm
+   * @param {number} resultCount
+   */
+  #updateSearchStatus(searchTerm, resultCount) {
+    if (!searchTerm) {
+      // Remove status if no search
+      const existingStatus = document.querySelector('.search-status');
+      if (existingStatus) {
+        existingStatus.remove();
+      }
+      return;
+    }
+
+    // Find or create status element
+    let statusElement = document.querySelector('.search-status');
+    if (!statusElement) {
+      statusElement = document.createElement('div');
+      statusElement.className = 'search-status';
+      // Insert after panel title
+      const panelTitle = this.#elements.conceptsResults.parentElement.querySelector('.cb-panel-title');
+      if (panelTitle) {
+        panelTitle.insertAdjacentElement('afterend', statusElement);
+      }
+    }
+
+    // Update status content
+    const totalCount = this.#conceptsData.length;
+    statusElement.innerHTML = `
+      <span class="search-status-text">
+        Showing <strong>${resultCount}</strong> of <strong>${totalCount}</strong> concepts
+        matching "<strong>${this.#escapeHtml(searchTerm)}</strong>"
+      </span>
+      <button type="button" class="clear-search-inline" aria-label="Clear search">
+        ✕
+      </button>
+    `;
+
+    // Add clear handler
+    const clearBtn = statusElement.querySelector('.clear-search-inline');
+    clearBtn.addEventListener('click', () => this.#clearSearch());
+  }
+
+  /**
+   * Enhanced clear search with state management
+   * Builds on existing search architecture
+   */
+  #clearSearch() {
+    this.#logger.info('Clearing enhanced search');
+
+    // Clear input (existing logic)
+    this.#elements.conceptSearch.value = '';
+    this.#searchFilter = '';
+
+    // Display all concepts using existing method
+    this.#displayConcepts(this.#conceptsData);
+
+    // Enhanced UI state updates
+    this.#updateSearchState('', this.#conceptsData.length);
+
+    // Clear search persistence
+    this.#saveSearchState();
+
+    // Focus back to search input (accessibility)
+    this.#elements.conceptSearch.focus();
+
+    // Dispatch clear event
+    this.#eventBus.dispatch({
+      type: 'ui:search-cleared',
+      payload: { totalConcepts: this.#conceptsData.length }
+    });
+  }
+
+  /**
+   * Update clear button visibility
+   *
+   * @param {boolean} visible
+   */
+  #updateClearButton(visible) {
+    // Find or create clear button
+    let clearButton = this.#elements.conceptSearch.parentElement.querySelector('.search-clear-btn');
+
+    if (visible && !clearButton) {
+      // Create clear button
+      clearButton = document.createElement('button');
+      clearButton.type = 'button';
+      clearButton.className = 'search-clear-btn';
+      clearButton.innerHTML = '✕';
+      clearButton.setAttribute('aria-label', 'Clear search');
+
+      // Insert after search input
+      this.#elements.conceptSearch.parentElement.style.position = 'relative';
+      this.#elements.conceptSearch.parentElement.appendChild(clearButton);
+
+      // Add handler
+      clearButton.addEventListener('click', () => this.#clearSearch());
+    } else if (!visible && clearButton) {
+      // Remove clear button
+      clearButton.remove();
+    }
+  }
+
+  /**
+   * Highlight search terms in text
+   *
+   * @param {string} text
+   * @param {string} searchTerm
+   * @returns {string} HTML with highlighted terms
+   */
+  #highlightSearchTerms(text, searchTerm) {
+    if (!searchTerm || searchTerm.length === 0) {
+      return this.#escapeHtml(text);
+    }
+
+    const searchTerms = searchTerm.split(/\s+/).filter(term => term.length > 0);
+    let highlightedText = this.#escapeHtml(text);
+
+    // Highlight each search term
+    searchTerms.forEach(term => {
+      const regex = new RegExp(`(${this.#escapeRegex(term)})`, 'gi');
+      highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+    });
+
+    return highlightedText;
+  }
+
+  /**
+   * Escape special regex characters
+   *
+   * @param {string} string
+   * @returns {string}
+   */
+  #escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /**
+   * Save search state to session storage
+   */
+  #saveSearchState() {
+    if (this.#searchFilter) {
+      sessionStorage.setItem('conceptsManagerSearch', this.#searchFilter);
+    } else {
+      sessionStorage.removeItem('conceptsManagerSearch');
+    }
+  }
+
+  /**
+   * Restore search state from session storage
+   */
+  #restoreSearchState() {
+    const savedSearch = sessionStorage.getItem('conceptsManagerSearch');
+    if (savedSearch && this.#elements.conceptSearch) {
+      this.#elements.conceptSearch.value = savedSearch;
+      this.#searchFilter = savedSearch;
+
+      // Apply search after concepts load
+      this.#searchStateRestored = true;
+    }
+  }
+
+  /**
+   * Track search analytics
+   *
+   * @param {string} searchTerm
+   * @param {number} resultCount
+   */
+  #trackSearchAnalytics(searchTerm, resultCount) {
+    if (!searchTerm) return;
+
+    const searchData = {
+      term: searchTerm,
+      resultCount,
+      timestamp: Date.now()
+    };
+
+    this.#searchAnalytics.searches.push(searchData);
+
+    if (resultCount === 0) {
+      this.#searchAnalytics.noResultSearches.push(searchData);
+    }
+
+    // Keep only last 100 searches
+    if (this.#searchAnalytics.searches.length > 100) {
+      this.#searchAnalytics.searches.shift();
+    }
+
+    // Log analytics periodically
+    if (this.#searchAnalytics.searches.length % 10 === 0) {
+      this.#logger.info('Search analytics', {
+        totalSearches: this.#searchAnalytics.searches.length,
+        noResultSearches: this.#searchAnalytics.noResultSearches.length,
+        averageResults: this.#calculateAverageResults()
+      });
+    }
+  }
+
+  /**
+   * Calculate average search results
+   *
+   * @returns {number}
+   */
+  #calculateAverageResults() {
+    const searches = this.#searchAnalytics.searches;
+    if (searches.length === 0) return 0;
+
+    const sum = searches.reduce((acc, search) => acc + search.resultCount, 0);
+    return Math.round(sum / searches.length);
+  }
+
+  /**
+   * Get display text with search highlighting
+   *
+   * @param {object} concept
+   * @param {number} maxLength
+   * @returns {string}
+   */
+  #getDisplayText(concept, maxLength) {
+    const conceptText = concept.concept || concept.text;
+    const truncatedText = this.#truncateText(conceptText, maxLength);
+    
+    return this.#searchFilter
+      ? this.#highlightSearchTerms(truncatedText, this.#searchFilter)
+      : this.#escapeHtml(truncatedText);
   }
 }
 

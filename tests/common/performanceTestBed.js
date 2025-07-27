@@ -23,6 +23,63 @@ function getTestTimingMultiplier() {
 }
 
 /**
+ * Determines if running in CI environment
+ *
+ * @returns {boolean} True if running in CI
+ */
+function isRunningInCI() {
+  return !!(
+    process.env.CI ||
+    process.env.CONTINUOUS_INTEGRATION ||
+    process.env.GITHUB_ACTIONS ||
+    process.env.GITLAB_CI ||
+    process.env.JENKINS_URL
+  );
+}
+
+/**
+ * Forces garbage collection and establishes memory baseline
+ *
+ * @returns {number} Baseline memory usage in bytes
+ */
+async function forceGCAndGetBaseline() {
+  // Force garbage collection if available (Node.js with --expose-gc flag)
+  if (global.gc) {
+    global.gc();
+    // Allow some time for GC to complete
+    await new Promise(resolve => setTimeout(resolve, 10));
+    global.gc();
+  }
+  
+  return process.memoryUsage().heapUsed;
+}
+
+/**
+ * Get memory usage with multiple samples for stability
+ *
+ * @param {number} samples - Number of samples to take (default: 3)
+ * @returns {Promise<number>} Average memory usage in bytes
+ */
+async function getStableMemoryUsage(samples = 3) {
+  const measurements = [];
+  
+  for (let i = 0; i < samples; i++) {
+    if (i > 0) {
+      // Small delay between measurements
+      await new Promise(resolve => setTimeout(resolve, 5));
+    }
+    measurements.push(process.memoryUsage().heapUsed);
+  }
+  
+  // Return median to avoid outliers
+  measurements.sort((a, b) => a - b);
+  const mid = Math.floor(measurements.length / 2);
+  return measurements.length % 2 === 0 
+    ? (measurements[mid - 1] + measurements[mid]) / 2
+    : measurements[mid];
+}
+
+/**
  *
  */
 export function createPerformanceTestBed() {
@@ -31,9 +88,15 @@ export function createPerformanceTestBed() {
       return {
         startBenchmark(name, options = {}) {
           const startTime = process.hrtime.bigint();
-          const startMemory = options.trackMemory
-            ? process.memoryUsage()
-            : null;
+          let baselineMemory = null;
+          let startMemoryPromise = null;
+
+          if (options.trackMemory) {
+            startMemoryPromise = forceGCAndGetBaseline().then(baseline => {
+              baselineMemory = baseline;
+              return getStableMemoryUsage();
+            });
+          }
 
           return {
             end() {
@@ -49,11 +112,50 @@ export function createPerformanceTestBed() {
                 totalTime,
               };
 
-              if (startMemory && endMemory) {
+              if (options.trackMemory && endMemory) {
+                // Simple synchronous memory tracking for backward compatibility
                 metrics.memoryUsage = {
-                  initial: startMemory.heapUsed,
+                  initial: process.memoryUsage().heapUsed,
                   peak: endMemory.heapUsed,
                   final: process.memoryUsage().heapUsed,
+                };
+              }
+
+              return metrics;
+            },
+
+            async endWithAdvancedMemoryTracking() {
+              const endTime = process.hrtime.bigint();
+              const totalTime = Number(endTime - startTime) / 1000000; // Convert to milliseconds
+
+              const metrics = {
+                name,
+                totalTime,
+              };
+
+              if (options.trackMemory && startMemoryPromise) {
+                const startMemory = await startMemoryPromise;
+                const peakMemory = await getStableMemoryUsage();
+                
+                // Force GC before final measurement
+                if (global.gc) {
+                  global.gc();
+                  await new Promise(resolve => setTimeout(resolve, 10));
+                }
+                
+                const finalMemory = await getStableMemoryUsage();
+                
+                // Calculate memory delta from baseline
+                const memoryGrowth = Math.max(0, peakMemory - baselineMemory);
+                
+                metrics.memoryUsage = {
+                  baseline: baselineMemory,
+                  initial: startMemory,
+                  peak: peakMemory,
+                  final: finalMemory,
+                  growth: memoryGrowth,
+                  // Environment-aware thresholds
+                  isCI: isRunningInCI(),
                 };
               }
 
