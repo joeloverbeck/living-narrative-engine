@@ -94,11 +94,17 @@ describeEntityManagerSuite(
         // Arrange
         const { entityManager } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
-        const entity = await getBed().createBasicEntity({ instanceId: PRIMARY });
+        const entity = await getBed().createBasicEntity({
+          instanceId: PRIMARY,
+        });
         const componentTypeId = 'core:name';
 
         // Act - call with 3 arguments to trigger line 498
-        const result = entityManager.hasComponent(PRIMARY, componentTypeId, true);
+        const result = entityManager.hasComponent(
+          PRIMARY,
+          componentTypeId,
+          true
+        );
 
         // Assert
         expect(typeof result).toBe('boolean');
@@ -123,14 +129,21 @@ describeEntityManagerSuite(
         // Arrange
         const { entityManager } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
-        await getBed().createBasicEntity({ 
+        await getBed().createBasicEntity({
           instanceId: PRIMARY,
-          overrides: { 'test:override': { value: 'test' } }
+          overrides: { 'test:override': { value: 'test' } },
         });
 
         // Act
-        const result2Args = entityManager.hasComponent(PRIMARY, 'test:override');
-        const result3Args = entityManager.hasComponent(PRIMARY, 'test:override', true);
+        const result2Args = entityManager.hasComponent(
+          PRIMARY,
+          'test:override'
+        );
+        const result3Args = entityManager.hasComponent(
+          PRIMARY,
+          'test:override',
+          true
+        );
 
         // Assert
         expect(typeof result2Args).toBe('boolean');
@@ -147,17 +160,20 @@ describeEntityManagerSuite(
           const entitySpecs = [
             {
               definitionId: TestData.DefinitionIDs.BASIC,
-              opts: { instanceId: 'batch-entity-1' }
+              opts: { instanceId: 'batch-entity-1' },
             },
             {
               definitionId: TestData.DefinitionIDs.BASIC,
-              opts: { instanceId: 'batch-entity-2' }
-            }
+              opts: { instanceId: 'batch-entity-2' },
+            },
           ];
           const options = { batchSize: 10, enableParallel: true };
 
           // Act
-          const result = await entityManager.batchCreateEntities(entitySpecs, options);
+          const result = await entityManager.batchCreateEntities(
+            entitySpecs,
+            options
+          );
 
           // Assert
           expect(result).toBeDefined();
@@ -183,17 +199,20 @@ describeEntityManagerSuite(
           const entitySpecs = [
             {
               definitionId: TestData.DefinitionIDs.BASIC,
-              opts: { instanceId: 'batch-test-entity' }
-            }
+              opts: { instanceId: 'batch-test-entity' },
+            },
           ];
-          const customOptions = { 
+          const customOptions = {
             batchSize: 5,
             enableParallel: false,
-            stopOnError: true
+            stopOnError: true,
           };
 
           // Act
-          const result = await entityManager.batchCreateEntities(entitySpecs, customOptions);
+          const result = await entityManager.batchCreateEntities(
+            entitySpecs,
+            customOptions
+          );
 
           // Assert
           expect(result).toBeDefined();
@@ -217,7 +236,7 @@ describeEntityManagerSuite(
         it('should return false when lifecycle manager is missing or lacks batch support', () => {
           // Arrange - create EntityManager without proper lifecycle manager
           const { mocks } = getBed();
-          
+
           // Create a minimal EntityManager with a lifecycle manager that lacks batch support
           const mockLifecycleManager = {
             // Missing batchCreateEntities method
@@ -266,7 +285,7 @@ describeEntityManagerSuite(
         const mockIdGenerator = jest.fn(() => 'factory-generated-id');
         const mockCloner = jest.fn((obj) => ({ ...obj }));
         const mockDefaultPolicy = { apply: jest.fn() };
-        
+
         const idGeneratorFactory = jest.fn(() => mockIdGenerator);
         const clonerFactory = jest.fn(() => mockCloner);
         const defaultPolicyFactory = jest.fn(() => mockDefaultPolicy);
@@ -292,17 +311,17 @@ describeEntityManagerSuite(
       it('should handle function dependencies for services', () => {
         // Arrange
         const { mocks } = getBed();
-        const mockEntityRepository = { 
-          add: jest.fn(), 
-          get: jest.fn(), 
-          has: jest.fn(), 
-          remove: jest.fn(), 
-          clear: jest.fn(), 
-          entities: jest.fn(() => [])
+        const mockEntityRepository = {
+          add: jest.fn(),
+          get: jest.fn(),
+          has: jest.fn(),
+          remove: jest.fn(),
+          clear: jest.fn(),
+          entities: jest.fn(() => []),
         };
-        const mockComponentMutationService = { 
+        const mockComponentMutationService = {
           addComponent: jest.fn(), // Required by EntityMutationManager
-          removeComponent: jest.fn()
+          removeComponent: jest.fn(),
         };
         const mockLifecycleManager = {
           createEntityInstance: jest.fn(),
@@ -310,9 +329,11 @@ describeEntityManagerSuite(
           reconstructEntity: jest.fn(), // Required by EntityCreationManager
           batchCreateEntities: jest.fn(),
         };
-        
+
         const entityRepositoryFactory = jest.fn(() => mockEntityRepository);
-        const componentMutationServiceFactory = jest.fn(() => mockComponentMutationService);
+        const componentMutationServiceFactory = jest.fn(
+          () => mockComponentMutationService
+        );
         const lifecycleManagerFactory = jest.fn(() => mockLifecycleManager);
 
         // Act - lines 280-283 should be triggered
@@ -383,7 +404,7 @@ describeEntityManagerSuite(
         const { mocks } = getBed();
         // Create a dependency function that should be called
         const dependencyFunction = jest.fn(() => ({ apply: jest.fn() }));
-        
+
         // Act - this should trigger line 204 where defaultDep is an object (DefaultComponentPolicy instance)
         // but we pass a function as defaultPolicy
         const entityManager = new EntityManager({

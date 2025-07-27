@@ -10,8 +10,8 @@ const baseConfig = require('./jest.config.js');
  * @type {import('@jest/types').Config.InitialOptions}
  */
 // Check if running CSS tests only to disable coverage thresholds
-const runningCssTests = process.argv.some(arg => 
-  arg.includes('tests/unit/css/') || arg.includes('css.test.js')
+const runningCssTests = process.argv.some(
+  (arg) => arg.includes('tests/unit/css/') || arg.includes('css.test.js')
 );
 
 module.exports = {
@@ -24,14 +24,16 @@ module.exports = {
   // Unit tests should be fast, set a reasonable timeout
   testTimeout: 15000, // Increased slightly to handle performance tests
   // Unit tests should have high coverage (skip for CSS tests)
-  ...(runningCssTests ? {} : {
-    coverageThreshold: {
-      global: {
-        branches: 90,
-        functions: 90,
-        lines: 90,
-        statements: 90,
-      },
-    },
-  }),
+  ...(runningCssTests
+    ? {}
+    : {
+        coverageThreshold: {
+          global: {
+            branches: 90,
+            functions: 90,
+            lines: 90,
+            statements: 90,
+          },
+        },
+      }),
 };

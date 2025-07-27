@@ -27,6 +27,7 @@ This specification addresses the critical architectural gap identified in the Li
 ### ✅ Working Components
 
 #### Multi-Target Action Formatting System
+
 The formatting system is fully functional:
 
 - **MultiTargetActionFormatter**: Supports multi-placeholder templates
@@ -35,33 +36,37 @@ The formatting system is fully functional:
 - **Template Processing**: Creates rich formatted actions
 
 **Example Working Flow**:
+
 ```javascript
 // Input template: "adjust {person}'s {clothing}"
 // Resolved targets: { person: [alice_entity], clothing: [red_dress_entity] }
 // Formatted output: "adjust Alice's red dress"
-// Action params: { 
+// Action params: {
 //   targetIds: { person: ["alice_123"], clothing: ["dress_456"] },
-//   isMultiTarget: true 
+//   isMultiTarget: true
 // }
 ```
 
 ### ❌ Gap Components
 
 #### Single-Target Event System
+
 The event system is limited to single targets:
 
 **Event Schema** (`attempt_action.event.json`):
+
 ```json
 {
   "eventName": "core:attempt_action",
   "actorId": "string (required)",
-  "actionId": "string (required)", 
-  "targetId": "string (optional)",     // ← SINGLE TARGET ONLY
+  "actionId": "string (required)",
+  "targetId": "string (optional)", // ← SINGLE TARGET ONLY
   "originalInput": "string (required)"
 }
 ```
 
 **Command Processor Bottleneck** (`commandProcessor.js:186-196`):
+
 ```javascript
 #createAttemptActionPayload(actor, turnAction) {
   const { actionDefinitionId, resolvedParameters, commandString } = turnAction;
@@ -76,6 +81,7 @@ The event system is limited to single targets:
 ```
 
 #### Rules System Limitation
+
 All rules can only access single targets:
 
 ```json
@@ -86,7 +92,7 @@ All rules can only access single targets:
       "type": "CHECK_FOLLOW_CYCLE",
       "parameters": {
         "follower_id": "{event.payload.actorId}",
-        "leader_id": "{event.payload.targetId}"    // ← SINGLE TARGET ACCESS
+        "leader_id": "{event.payload.targetId}" // ← SINGLE TARGET ACCESS
       }
     }
   ]
@@ -108,7 +114,7 @@ All rules can only access single targets:
    ├── Takes ONLY primary target: resolvedParameters?.targetId ❌
    └── Creates event payload with single targetId: "alice" ❌
 
-3. Rule Processing  
+3. Rule Processing
    ├── Rules receive attempt_action event ❌
    ├── Can ONLY access {event.payload.targetId}: "alice" ❌
    └── Cannot access secondary target "dress" ❌
@@ -121,7 +127,7 @@ All rules can only access single targets:
    - ❌ Rules cannot determine which dress to adjust
 
 2. **"throw knife at goblin"**
-   - ✅ Formatted correctly  
+   - ✅ Formatted correctly
    - ❌ Rules cannot determine throw target
 
 3. **"give coin to merchant"**
@@ -207,7 +213,7 @@ Multi-Target Data Flow (Enhanced)
         "description": "ID of the entity performing the action"
       },
       "actionId": {
-        "type": "string", 
+        "type": "string",
         "description": "ID of the action being performed"
       },
       "targets": {
@@ -258,10 +264,7 @@ Multi-Target Data Flow (Enhanced)
   "allOf": [
     {
       "description": "Must have either targets object or legacy targetId",
-      "anyOf": [
-        { "required": ["targets"] },
-        { "required": ["targetId"] }
-      ]
+      "anyOf": [{ "required": ["targets"] }, { "required": ["targetId"] }]
     },
     {
       "description": "If targets exist, targetId should be primary target",
@@ -290,6 +293,7 @@ Multi-Target Data Flow (Enhanced)
 **File**: `src/commands/commandProcessor.js`
 
 **Current Implementation** (Lines 186-196):
+
 ```javascript
 #createAttemptActionPayload(actor, turnAction) {
   const { actionDefinitionId, resolvedParameters, commandString } = turnAction;
@@ -304,13 +308,14 @@ Multi-Target Data Flow (Enhanced)
 ```
 
 **Enhanced Implementation**:
+
 ```javascript
 #createAttemptActionPayload(actor, turnAction) {
   const { actionDefinitionId, resolvedParameters, commandString } = turnAction;
-  
+
   // Extract multi-target data from formatting stage
   const multiTargetData = this.#extractMultiTargetData(resolvedParameters);
-  
+
   const payload = {
     eventName: ATTEMPT_ACTION_ID,
     actorId: actor.id,
@@ -341,7 +346,7 @@ Multi-Target Data Flow (Enhanced)
     for (const [key, targetList] of Object.entries(resolvedParameters.targetIds)) {
       if (Array.isArray(targetList) && targetList.length > 0) {
         targets[key] = targetList[0]; // Take first target from each category
-        
+
         // Set primary target (prefer 'primary' key, fallback to first key)
         if (key === 'primary' || primaryTarget === null) {
           primaryTarget = targetList[0];
@@ -370,7 +375,7 @@ Multi-Target Data Flow (Enhanced)
 ```javascript
 /**
  * Extracts target data from the action formatting stage output
- * 
+ *
  * @param {Object} resolvedParameters - Parameters from action formatting
  * @param {Object} resolvedParameters.targetIds - Multi-target data from formatting
  * @param {string} resolvedParameters.targetId - Legacy single target
@@ -379,7 +384,7 @@ Multi-Target Data Flow (Enhanced)
  */
 #extractMultiTargetData(resolvedParameters) {
   const logger = this.#logger;
-  
+
   // Validate input
   if (!resolvedParameters) {
     logger.debug('No resolved parameters provided');
@@ -391,11 +396,11 @@ Multi-Target Data Flow (Enhanced)
     try {
       const targets = this.#processTargetIds(resolvedParameters.targetIds);
       const primaryTarget = this.#determinePrimaryTarget(targets);
-      
-      logger.debug('Extracted multi-target data', { 
+
+      logger.debug('Extracted multi-target data', {
         targetCount: Object.keys(targets).length,
         primaryTarget,
-        targets 
+        targets
       });
 
       return {
@@ -422,7 +427,7 @@ Multi-Target Data Flow (Enhanced)
 
 #processTargetIds(targetIds) {
   const targets = {};
-  
+
   for (const [key, targetList] of Object.entries(targetIds)) {
     if (Array.isArray(targetList) && targetList.length > 0) {
       // Take the first target from each category
@@ -433,7 +438,7 @@ Multi-Target Data Flow (Enhanced)
       targets[key] = targetList;
     }
   }
-  
+
   return targets;
 }
 
@@ -442,7 +447,7 @@ Multi-Target Data Flow (Enhanced)
   if (targets.primary) {
     return targets.primary;
   }
-  
+
   // Fallback to first available target
   const firstKey = Object.keys(targets)[0];
   return firstKey ? targets[firstKey] : null;
@@ -454,6 +459,7 @@ Multi-Target Data Flow (Enhanced)
 ### Multi-Target Rule Access Patterns
 
 #### Pattern 1: Backward Compatible Access
+
 ```json
 {
   "id": "example:legacy_compatible_rule",
@@ -462,10 +468,7 @@ Multi-Target Data Flow (Enhanced)
     {
       "description": "Works with both legacy and multi-target events",
       "logic": {
-        "!=": [
-          {"var": "event.payload.targets.primary"},
-          null
-        ]
+        "!=": [{ "var": "event.payload.targets.primary" }, null]
       }
     }
   ],
@@ -476,7 +479,7 @@ Multi-Target Data Flow (Enhanced)
         "entityId": "{event.payload.targets.primary || event.payload.targetId}",
         "componentId": "core:health",
         "changes": {
-          "current": {"math": ["-", {"var": "current"}, 5]}
+          "current": { "math": ["-", { "var": "current" }, 5] }
         }
       }
     }
@@ -485,6 +488,7 @@ Multi-Target Data Flow (Enhanced)
 ```
 
 #### Pattern 2: Multi-Target Specific Access
+
 ```json
 {
   "id": "example:multi_target_rule",
@@ -494,8 +498,8 @@ Multi-Target Data Flow (Enhanced)
       "description": "Requires both item and target",
       "logic": {
         "and": [
-          {"!=": [{"var": "event.payload.targets.item"}, null]},
-          {"!=": [{"var": "event.payload.targets.target"}, null]}
+          { "!=": [{ "var": "event.payload.targets.item" }, null] },
+          { "!=": [{ "var": "event.payload.targets.target" }, null] }
         ]
       }
     }
@@ -514,17 +518,18 @@ Multi-Target Data Flow (Enhanced)
 ```
 
 #### Pattern 3: Conditional Multi-Target Access
+
 ```json
 {
-  "id": "example:flexible_target_rule", 
+  "id": "example:flexible_target_rule",
   "event_type": "core:attempt_action",
   "conditions": [
     {
       "description": "Handle both single and multi-target scenarios",
       "logic": {
         "or": [
-          {"!=": [{"var": "event.payload.targetId"}, null]},
-          {"!=": [{"var": "event.payload.targets.primary"}, null]}
+          { "!=": [{ "var": "event.payload.targetId" }, null] },
+          { "!=": [{ "var": "event.payload.targets.primary" }, null] }
         ]
       }
     }
@@ -557,13 +562,15 @@ To simplify multi-target rule creation, we can provide helper operations:
       },
       "logic": {
         "if": [
-          {"!=": [{"var": "event.payload.targets"}, null]},
-          {"var": ["event.payload.targets", {"var": "targetName"}]},
-          {"if": [
-            {"var": "fallbackToLegacy"},
-            {"var": "event.payload.targetId"},
-            null
-          ]}
+          { "!=": [{ "var": "event.payload.targets" }, null] },
+          { "var": ["event.payload.targets", { "var": "targetName" }] },
+          {
+            "if": [
+              { "var": "fallbackToLegacy" },
+              { "var": "event.payload.targetId" },
+              null
+            ]
+          }
         ]
       }
     },
@@ -571,8 +578,15 @@ To simplify multi-target rule creation, we can provide helper operations:
       "description": "Check if event has multiple targets",
       "logic": {
         "and": [
-          {"!=": [{"var": "event.payload.targets"}, null]},
-          {">": [{"length": {"objectKeys": {"var": "event.payload.targets"}}}, 1]}
+          { "!=": [{ "var": "event.payload.targets" }, null] },
+          {
+            ">": [
+              {
+                "length": { "objectKeys": { "var": "event.payload.targets" } }
+              },
+              1
+            ]
+          }
         ]
       }
     }
@@ -592,6 +606,7 @@ To simplify multi-target rule creation, we can provide helper operations:
 ### Compatibility Implementation
 
 #### Legacy Event Support
+
 ```javascript
 // In rule processing, both patterns work:
 
@@ -604,6 +619,7 @@ const secondaryTarget = event.payload.targets?.secondary;
 ```
 
 #### Migration Path
+
 ```javascript
 // Phase 1: Rules work with both legacy and enhanced events
 {
@@ -630,17 +646,17 @@ const secondaryTarget = event.payload.targets?.secondary;
  */
 function validateAttemptActionPayload(payload) {
   const errors = [];
-  
+
   // Required fields
   if (!payload.eventName || !payload.actorId || !payload.actionId) {
     errors.push('Missing required fields');
   }
-  
+
   // Must have either targets or targetId
   if (!payload.targets && !payload.targetId) {
     errors.push('Must specify either targets object or legacy targetId');
   }
-  
+
   // If targets exist, validate structure
   if (payload.targets) {
     if (typeof payload.targets !== 'object') {
@@ -654,16 +670,17 @@ function validateAttemptActionPayload(payload) {
       }
     }
   }
-  
+
   // Consistency check: targetId should match primary target
   if (payload.targets && payload.targetId) {
-    const primaryTarget = payload.targets.primary || Object.values(payload.targets)[0];
+    const primaryTarget =
+      payload.targets.primary || Object.values(payload.targets)[0];
     if (primaryTarget !== payload.targetId) {
       // This is a warning, not an error, for flexibility
       console.warn('targetId does not match primary target in targets object');
     }
   }
-  
+
   return { isValid: errors.length === 0, errors };
 }
 ```
@@ -671,9 +688,11 @@ function validateAttemptActionPayload(payload) {
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (Week 1-2)
+
 **Priority: Critical - Must Fix**
 
 #### Week 1: Schema and Validation
+
 - [ ] **Update Event Schema** (`attempt_action.event.json`)
   - Add `targets` object with validation rules
   - Maintain backward-compatible `targetId` field
@@ -687,6 +706,7 @@ function validateAttemptActionPayload(payload) {
   - Performance test with large target sets
 
 #### Week 2: Command Processor Enhancement
+
 - [ ] **Enhance CommandProcessor** (`commandProcessor.js`)
   - Implement `#extractMultiTargetData()` method
   - Update `#createAttemptActionPayload()` for multi-target support
@@ -700,9 +720,11 @@ function validateAttemptActionPayload(payload) {
   - Test payload creation with various input formats
 
 ### Phase 2: Rule Enhancement (Week 3-4)
+
 **Priority: System Enhancement**
 
 #### Week 3: Core Rule Updates
+
 - [ ] **Update 2-3 Core Rules**
   - Select representative rules for multi-target enhancement
   - Implement backward-compatible multi-target access patterns
@@ -716,6 +738,7 @@ function validateAttemptActionPayload(payload) {
   - Best practices guide
 
 #### Week 4: Integration Testing
+
 - [ ] **End-to-End Validation**
   - Test complete multi-target action flow
   - Validate action formatting → event creation → rule execution
@@ -723,9 +746,11 @@ function validateAttemptActionPayload(payload) {
   - Performance testing with complex multi-target scenarios
 
 ### Phase 3: Documentation & Ecosystem (Week 5-6)
+
 **Priority: Documentation and Migration**
 
 #### Week 5: Documentation
+
 - [ ] **Update Modding Documentation**
   - Multi-target action creation guide
   - Rule development patterns
@@ -738,6 +763,7 @@ function validateAttemptActionPayload(payload) {
   - Testing utilities for multi-target scenarios
 
 #### Week 6: Migration Support
+
 - [ ] **Migration Tools**
   - Automated analysis of existing rules
   - Compatibility checking tools
@@ -745,9 +771,11 @@ function validateAttemptActionPayload(payload) {
   - Rollback procedures
 
 ### Phase 4: Optimization & Advanced Features (Week 7-8)
+
 **Priority: Future Enhancements**
 
 #### Week 7: Performance Optimization
+
 - [ ] **Performance Enhancements**
   - Optimize target data extraction
   - Implement caching for complex target resolution
@@ -755,6 +783,7 @@ function validateAttemptActionPayload(payload) {
   - Benchmark and performance testing
 
 #### Week 8: Advanced Features
+
 - [ ] **Developer Experience**
   - Advanced debugging tools
   - Visual target flow debugging
@@ -764,24 +793,28 @@ function validateAttemptActionPayload(payload) {
 ### Success Criteria
 
 #### Phase 1 Success Criteria
+
 - [ ] All existing single-target actions continue to work
 - [ ] Enhanced event schema validates correctly
 - [ ] Command processor creates valid multi-target events
 - [ ] Zero performance regression for single-target actions
 
-#### Phase 2 Success Criteria  
+#### Phase 2 Success Criteria
+
 - [ ] At least 3 working multi-target action examples
 - [ ] Rules can access both primary and secondary targets
 - [ ] Complete action flow works end-to-end
 - [ ] Integration tests pass with >95% coverage
 
 #### Phase 3 Success Criteria
+
 - [ ] Comprehensive documentation available
 - [ ] Migration guide tested with sample mods
 - [ ] Developer tools functional and documented
 - [ ] Community feedback incorporated
 
 #### Phase 4 Success Criteria
+
 - [ ] Performance benchmarks meet targets
 - [ ] Advanced developer tools available
 - [ ] System ready for community adoption
@@ -792,6 +825,7 @@ function validateAttemptActionPayload(payload) {
 ### Unit Tests
 
 #### Schema Validation Tests
+
 ```javascript
 describe('Enhanced Attempt Action Event Schema', () => {
   test('validates legacy single-target events', () => {
@@ -800,25 +834,25 @@ describe('Enhanced Attempt Action Event Schema', () => {
       actorId: 'actor_123',
       actionId: 'core:follow',
       targetId: 'target_456',
-      originalInput: 'follow Alice'
+      originalInput: 'follow Alice',
     };
-    
+
     expect(validateEventSchema(legacyEvent)).toBe(true);
   });
 
   test('validates enhanced multi-target events', () => {
     const enhancedEvent = {
       eventName: 'core:attempt_action',
-      actorId: 'actor_123', 
+      actorId: 'actor_123',
       actionId: 'combat:throw',
       targets: {
         item: 'knife_789',
-        target: 'goblin_012'
+        target: 'goblin_012',
       },
       targetId: 'knife_789',
-      originalInput: 'throw knife at goblin'
+      originalInput: 'throw knife at goblin',
     };
-    
+
     expect(validateEventSchema(enhancedEvent)).toBe(true);
   });
 
@@ -828,15 +862,16 @@ describe('Enhanced Attempt Action Event Schema', () => {
       actorId: 'actor_123',
       actionId: 'invalid:action',
       targets: 'invalid_string', // Should be object
-      originalInput: 'invalid action'
+      originalInput: 'invalid action',
     };
-    
+
     expect(validateEventSchema(invalidEvent)).toBe(false);
   });
 });
 ```
 
 #### Command Processor Tests
+
 ```javascript
 describe('CommandProcessor Multi-Target Enhancement', () => {
   test('extracts multi-target data correctly', () => {
@@ -844,27 +879,27 @@ describe('CommandProcessor Multi-Target Enhancement', () => {
       isMultiTarget: true,
       targetIds: {
         person: ['alice_123'],
-        clothing: ['dress_456']
-      }
+        clothing: ['dress_456'],
+      },
     };
 
     const result = commandProcessor.extractMultiTargetData(resolvedParameters);
-    
+
     expect(result.hasMultipleTargets).toBe(true);
     expect(result.targets).toEqual({
       person: 'alice_123',
-      clothing: 'dress_456'
+      clothing: 'dress_456',
     });
     expect(result.primaryTarget).toBe('alice_123');
   });
 
   test('handles legacy single-target data', () => {
     const resolvedParameters = {
-      targetId: 'legacy_target_123'
+      targetId: 'legacy_target_123',
     };
 
     const result = commandProcessor.extractMultiTargetData(resolvedParameters);
-    
+
     expect(result.hasMultipleTargets).toBe(false);
     expect(result.primaryTarget).toBe('legacy_target_123');
   });
@@ -875,16 +910,19 @@ describe('CommandProcessor Multi-Target Enhancement', () => {
       actionDefinitionId: 'test:multi_action',
       resolvedParameters: {
         isMultiTarget: true,
-        targetIds: { item: ['item_456'], target: ['target_789'] }
+        targetIds: { item: ['item_456'], target: ['target_789'] },
       },
-      commandString: 'throw item at target'
+      commandString: 'throw item at target',
     };
 
-    const payload = commandProcessor.createAttemptActionPayload(actor, turnAction);
-    
+    const payload = commandProcessor.createAttemptActionPayload(
+      actor,
+      turnAction
+    );
+
     expect(payload.targets).toEqual({
       item: 'item_456',
-      target: 'target_789'
+      target: 'target_789',
     });
     expect(payload.targetId).toBe('item_456'); // Primary for backward compatibility
   });
@@ -894,6 +932,7 @@ describe('CommandProcessor Multi-Target Enhancement', () => {
 ### Integration Tests
 
 #### End-to-End Multi-Target Flow
+
 ```javascript
 describe('Multi-Target Action End-to-End Flow', () => {
   test('complete throw action with item and target', async () => {
@@ -909,18 +948,22 @@ describe('Multi-Target Action End-to-End Flow', () => {
 
     // Verify: Event created with multi-target data
     const events = testBed.getDispatchedEvents();
-    const attemptEvent = events.find(e => e.eventName === 'core:attempt_action');
-    
+    const attemptEvent = events.find(
+      (e) => e.eventName === 'core:attempt_action'
+    );
+
     expect(attemptEvent.targets).toEqual({
       item: knife.id,
-      target: goblin.id
+      target: goblin.id,
     });
     expect(attemptEvent.targetId).toBe(knife.id); // Backward compatibility
 
     // Verify: Rules can access both targets
     const ruleExecutions = testBed.getRuleExecutions();
-    const throwRule = ruleExecutions.find(r => r.ruleId === 'combat:throw_item');
-    
+    const throwRule = ruleExecutions.find(
+      (r) => r.ruleId === 'combat:throw_item'
+    );
+
     expect(throwRule.parameters.item).toBe(knife.id);
     expect(throwRule.parameters.target).toBe(goblin.id);
   });
@@ -934,8 +977,10 @@ describe('Multi-Target Action End-to-End Flow', () => {
 
     // Verify: Legacy behavior preserved
     const events = testBed.getDispatchedEvents();
-    const attemptEvent = events.find(e => e.eventName === 'core:attempt_action');
-    
+    const attemptEvent = events.find(
+      (e) => e.eventName === 'core:attempt_action'
+    );
+
     expect(attemptEvent.targetId).toBe(target.id);
     expect(attemptEvent.targets).toBeUndefined(); // Legacy format
 
@@ -952,26 +997,30 @@ describe('Multi-Target Action End-to-End Flow', () => {
 describe('Multi-Target Performance', () => {
   test('no performance regression for single-target actions', async () => {
     const testBed = new PerformanceTestBed();
-    
+
     // Baseline: Legacy single-target performance
-    const legacyTime = await testBed.measureActionProcessing('legacy_single_target');
-    
+    const legacyTime = await testBed.measureActionProcessing(
+      'legacy_single_target'
+    );
+
     // Enhanced: Same action with enhanced processor
-    const enhancedTime = await testBed.measureActionProcessing('enhanced_single_target');
-    
+    const enhancedTime = await testBed.measureActionProcessing(
+      'enhanced_single_target'
+    );
+
     // Verify: Less than 5% performance regression
     expect(enhancedTime).toBeLessThan(legacyTime * 1.05);
   });
 
   test('multi-target processing within performance budget', async () => {
     const testBed = new PerformanceTestBed();
-    
+
     // Test: Complex multi-target action processing
     const processingTime = await testBed.measureMultiTargetProcessing({
       targetCount: 3,
-      combinationCount: 10
+      combinationCount: 10,
     });
-    
+
     // Verify: Within 100ms performance budget
     expect(processingTime).toBeLessThan(100);
   });
@@ -983,18 +1032,20 @@ describe('Multi-Target Performance', () => {
 ### For Modders
 
 #### No Action Required
+
 Existing single-target actions continue to work without modification:
 
 ```json
 // This continues to work unchanged
 {
   "id": "my_mod:simple_action",
-  "scope": "my_mod:valid_targets", 
+  "scope": "my_mod:valid_targets",
   "template": "interact with {target}"
 }
 ```
 
 #### Enhanced Capabilities Available
+
 New multi-target actions can be created:
 
 ```json
@@ -1017,6 +1068,7 @@ New multi-target actions can be created:
 ```
 
 #### Rule Updates (Optional)
+
 Rules can optionally use enhanced target access:
 
 ```json
@@ -1027,7 +1079,7 @@ Rules can optionally use enhanced target access:
   }
 }
 
-// Enhanced rule (utilizes multi-target data)  
+// Enhanced rule (utilizes multi-target data)
 {
   "parameters": {
     "item": "{event.payload.targets.item}",
@@ -1039,11 +1091,13 @@ Rules can optionally use enhanced target access:
 ### For Engine Developers
 
 #### Required Updates
+
 1. **Event Handlers**: Update to handle enhanced event structure
 2. **Validation**: Use enhanced event validation
 3. **Testing**: Include multi-target scenarios in tests
 
 #### Optional Updates
+
 1. **Custom Formatters**: Enhance for multi-placeholder support
 2. **Debug Tools**: Add multi-target debugging capabilities
 3. **Performance**: Optimize for multi-target scenarios
@@ -1051,24 +1105,28 @@ Rules can optionally use enhanced target access:
 ### Migration Checklist
 
 #### Phase 1: Preparation
+
 - [ ] Review existing actions for multi-target potential
 - [ ] Audit rules for compatibility requirements
 - [ ] Plan testing approach for enhanced events
 - [ ] Backup existing configurations
 
 #### Phase 2: Implementation
+
 - [ ] Update engine to latest version with multi-target support
 - [ ] Test existing actions for continued functionality
 - [ ] Validate event processing with enhanced payloads
 - [ ] Monitor performance metrics
 
 #### Phase 3: Enhancement
+
 - [ ] Identify actions that benefit from multi-target capability
 - [ ] Create enhanced action definitions
 - [ ] Update corresponding rules for multi-target access
 - [ ] Test enhanced actions end-to-end
 
 #### Phase 4: Optimization
+
 - [ ] Review performance with multi-target actions
 - [ ] Optimize any performance bottlenecks
 - [ ] Document custom patterns and best practices
@@ -1079,11 +1137,13 @@ Rules can optionally use enhanced target access:
 ### Performance Targets
 
 #### Single-Target Actions
+
 - **No Regression**: Enhanced system should not slow down existing actions
 - **Target**: <5% performance overhead for legacy actions
 - **Monitoring**: Continuous performance testing with existing actions
 
-#### Multi-Target Actions  
+#### Multi-Target Actions
+
 - **Target Resolution**: <50ms for typical multi-target scenarios
 - **Event Creation**: <10ms for enhanced payload creation
 - **Rule Processing**: <100ms for complex multi-target rules
@@ -1092,6 +1152,7 @@ Rules can optionally use enhanced target access:
 ### Optimization Strategies
 
 #### Data Extraction Optimization
+
 ```javascript
 // Cache target extraction results within single action processing
 class CommandProcessor {
@@ -1100,14 +1161,14 @@ class CommandProcessor {
   #extractMultiTargetData(resolvedParameters) {
     // Use cache key based on parameters structure
     const cacheKey = this.#createCacheKey(resolvedParameters);
-    
+
     if (this.#targetExtractionCache.has(cacheKey)) {
       return this.#targetExtractionCache.get(cacheKey);
     }
-    
+
     const result = this.#performTargetExtraction(resolvedParameters);
     this.#targetExtractionCache.set(cacheKey, result);
-    
+
     return result;
   }
 
@@ -1116,13 +1177,14 @@ class CommandProcessor {
     return JSON.stringify({
       isMultiTarget: params.isMultiTarget,
       targetIds: params.targetIds,
-      targetId: params.targetId
+      targetId: params.targetId,
     });
   }
 }
 ```
 
 #### Event Payload Optimization
+
 ```javascript
 // Minimize payload size while maintaining functionality
 #createOptimizedPayload(actor, turnAction, multiTargetData) {
@@ -1138,7 +1200,7 @@ class CommandProcessor {
   if (multiTargetData.hasMultipleTargets) {
     payload.targets = multiTargetData.targets;
   }
-  
+
   // Always include targetId for backward compatibility
   payload.targetId = multiTargetData.primaryTarget;
 
@@ -1155,18 +1217,19 @@ class MultiTargetPerformanceMonitor {
     singleTargetProcessing: [],
     multiTargetProcessing: [],
     eventCreation: [],
-    ruleExecution: []
+    ruleExecution: [],
   };
 
   trackActionProcessing(actionType, processingTime) {
-    const metric = actionType === 'single' 
-      ? this.#metrics.singleTargetProcessing 
-      : this.#metrics.multiTargetProcessing;
-    
+    const metric =
+      actionType === 'single'
+        ? this.#metrics.singleTargetProcessing
+        : this.#metrics.multiTargetProcessing;
+
     metric.push({
       timestamp: Date.now(),
       processingTime,
-      actionType
+      actionType,
     });
 
     // Alert if performance degrades
@@ -1177,13 +1240,15 @@ class MultiTargetPerformanceMonitor {
 
   #detectPerformanceRegression(metrics) {
     if (metrics.length < 10) return false;
-    
+
     const recent = metrics.slice(-5);
     const baseline = metrics.slice(-15, -5);
-    
-    const recentAvg = recent.reduce((sum, m) => sum + m.processingTime, 0) / recent.length;
-    const baselineAvg = baseline.reduce((sum, m) => sum + m.processingTime, 0) / baseline.length;
-    
+
+    const recentAvg =
+      recent.reduce((sum, m) => sum + m.processingTime, 0) / recent.length;
+    const baselineAvg =
+      baseline.reduce((sum, m) => sum + m.processingTime, 0) / baseline.length;
+
     return recentAvg > baselineAvg * 1.2; // 20% regression threshold
   }
 }
@@ -1191,7 +1256,7 @@ class MultiTargetPerformanceMonitor {
 
 ## Conclusion
 
-This specification provides a comprehensive solution to bridge the critical gap between the Living Narrative Engine's sophisticated multi-target action formatting system and its currently limited single-target event/rules system. 
+This specification provides a comprehensive solution to bridge the critical gap between the Living Narrative Engine's sophisticated multi-target action formatting system and its currently limited single-target event/rules system.
 
 ### Key Benefits
 
@@ -1208,7 +1273,7 @@ The core bottleneck is in the command processor where multi-target data from the
 ### Success Metrics
 
 - ✅ All existing actions continue to work
-- ✅ Multi-target actions execute correctly end-to-end  
+- ✅ Multi-target actions execute correctly end-to-end
 - ✅ Rules can access all necessary targets
 - ✅ No performance regression
 - ✅ Clear migration path for modders

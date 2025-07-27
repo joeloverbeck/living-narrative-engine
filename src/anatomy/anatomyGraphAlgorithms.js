@@ -238,15 +238,32 @@ export class AnatomyGraphAlgorithms {
       if (visited.has(id)) continue;
 
       visited.add(id);
-      result.push(id);
 
-      // Try to get from adjacency cache first
+      // Check if entity exists before adding to result
       const node = cacheManager?.get(id);
+      let entityExists = !!node;
+      
+      // If not in cache, try to verify entity exists via entity manager
+      if (!entityExists && entityManager) {
+        try {
+          const entityInstance = entityManager.getEntityInstance(id);
+          entityExists = !!entityInstance;
+        } catch (error) {
+          // Entity doesn't exist, skip it
+          entityExists = false;
+        }
+      }
+
+      if (entityExists) {
+        result.push(id);
+      }
+
+      // Try to get children from adjacency cache first
       if (node && node.children && node.children.length > 0) {
         for (const childId of node.children) {
           stack.push({ id: childId, depth: depth + 1 });
         }
-      } else if (entityManager) {
+      } else if (entityManager && entityExists) {
         // Fallback to direct entity manager lookup - find entities with anatomy:joint
         const entitiesWithJoints =
           entityManager.getEntitiesWithComponent('anatomy:joint');

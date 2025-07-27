@@ -4,7 +4,10 @@
  */
 
 import { validateDependency } from '../utils/dependencyUtils.js';
-import { FormValidationHelper, ValidationPatterns } from '../shared/characterBuilder/formValidationHelper.js';
+import {
+  FormValidationHelper,
+  ValidationPatterns,
+} from '../shared/characterBuilder/formValidationHelper.js';
 import { UI_STATES } from '../shared/characterBuilder/uiStateManager.js';
 
 /** @typedef {import('../characterBuilder/services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
@@ -27,6 +30,16 @@ export class CharacterConceptsManagerController {
   #editingConceptId = null;
   #isInitialized = false;
   #previousFocus = null;
+
+  // Edit state tracking
+  #originalConceptText = '';
+  #hasUnsavedChanges = false;
+  #lastEdit = null;
+
+  // Delete state tracking
+  #conceptToDelete = null;
+  #deleteHandler = null;
+  #deletedCard = null;
 
   // DOM element references
   #elements = {};
@@ -64,6 +77,53 @@ export class CharacterConceptsManagerController {
     this.#characterBuilderService = characterBuilderService;
     this.#eventBus = eventBus;
 
+    // Expose internal state and methods for testing (only in non-production environments)
+    if (process.env.NODE_ENV !== 'production') {
+      const self = this;
+      this._testExports = {
+        // Properties (using getters/setters to maintain encapsulation)
+        get conceptsData() {
+          return self.#conceptsData;
+        },
+        set conceptsData(value) {
+          self.#conceptsData = value;
+        },
+
+        get conceptToDelete() {
+          return self.#conceptToDelete;
+        },
+        set conceptToDelete(value) {
+          self.#conceptToDelete = value;
+        },
+
+        get deletedCard() {
+          return self.#deletedCard;
+        },
+        set deletedCard(value) {
+          self.#deletedCard = value;
+        },
+
+        get deleteHandler() {
+          return self.#deleteHandler;
+        },
+        set deleteHandler(value) {
+          self.#deleteHandler = value;
+        },
+
+        // Methods (bound to maintain correct 'this' context)
+        showDeleteConfirmation: this.#showDeleteConfirmation.bind(this),
+        setupDeleteHandler: this.#setupDeleteHandler.bind(this),
+        deleteConcept: this.#deleteConcept.bind(this),
+        closeDeleteModal: this.#closeDeleteModal.bind(this),
+        setDeleteModalEnabled: this.#setDeleteModalEnabled.bind(this),
+        showDeleteError: this.#showDeleteError.bind(this),
+        applyOptimisticDelete: this.#applyOptimisticDelete.bind(this),
+        revertOptimisticDelete: this.#revertOptimisticDelete.bind(this),
+        handleConceptDeleted: this.#handleConceptDeleted.bind(this),
+        updateStatistics: this.#updateStatistics.bind(this),
+      };
+    }
+
     this.#logger.info('CharacterConceptsManagerController initialized');
   }
 
@@ -92,6 +152,9 @@ export class CharacterConceptsManagerController {
 
       // Set up event listeners
       this.#setupEventListeners();
+
+      // Set up keyboard shortcuts
+      this.#setupKeyboardShortcuts();
 
       // Load initial data
       await this.#loadConceptsData();
@@ -171,7 +234,9 @@ export class CharacterConceptsManagerController {
    * Initialize the UI state manager
    */
   async #initializeUIStateManager() {
-    const { UIStateManager } = await import('../shared/characterBuilder/uiStateManager.js');
+    const { UIStateManager } = await import(
+      '../shared/characterBuilder/uiStateManager.js'
+    );
 
     this.#uiStateManager = new UIStateManager({
       emptyState: this.#elements.emptyState,
@@ -421,7 +486,7 @@ export class CharacterConceptsManagerController {
     // Track modal open for analytics
     this.#eventBus.dispatch({
       type: 'ui:modal-opened',
-      payload: { modalType: 'create-concept' }
+      payload: { modalType: 'create-concept' },
     });
   }
 
@@ -430,6 +495,17 @@ export class CharacterConceptsManagerController {
    */
   #closeConceptModal() {
     this.#logger.info('Closing concept modal');
+
+    // Check for unsaved changes
+    if (this.#hasUnsavedChanges && this.#editingConceptId) {
+      const confirmClose = confirm(
+        'You have unsaved changes. Are you sure you want to close without saving?'
+      );
+
+      if (!confirmClose) {
+        return;
+      }
+    }
 
     // Hide modal
     this.#elements.conceptModal.style.display = 'none';
@@ -440,6 +516,10 @@ export class CharacterConceptsManagerController {
     // Clear editing state
     this.#editingConceptId = null;
 
+    // Reset tracking
+    this.#originalConceptText = '';
+    this.#hasUnsavedChanges = false;
+
     // Restore previous focus
     if (this.#previousFocus && this.#previousFocus.focus) {
       this.#previousFocus.focus();
@@ -448,7 +528,7 @@ export class CharacterConceptsManagerController {
     // Dispatch modal closed event
     this.#eventBus.dispatch({
       type: 'ui:modal-closed',
-      payload: { modalType: 'concept' }
+      payload: { modalType: 'concept' },
     });
   }
 
@@ -463,25 +543,31 @@ export class CharacterConceptsManagerController {
       this.#uiStateManager.showState(UI_STATES.LOADING);
 
       // Get all concepts
-      const concepts = await this.#characterBuilderService.getAllCharacterConcepts();
+      const concepts =
+        await this.#characterBuilderService.getAllCharacterConcepts();
 
       // Get direction counts for each concept
       const conceptsWithCounts = await Promise.all(
         concepts.map(async (concept) => {
           try {
-            const directions = await this.#characterBuilderService
-              .getThematicDirections(concept.id);
+            const directions =
+              await this.#characterBuilderService.getThematicDirections(
+                concept.id
+              );
 
             return {
               concept,
-              directionCount: directions.length
+              directionCount: directions.length,
             };
           } catch (error) {
-            this.#logger.error(`Failed to get directions for concept ${concept.id}`, error);
+            this.#logger.error(
+              `Failed to get directions for concept ${concept.id}`,
+              error
+            );
             // Return concept with 0 directions on error
             return {
               concept,
-              directionCount: 0
+              directionCount: 0,
             };
           }
         })
@@ -500,7 +586,6 @@ export class CharacterConceptsManagerController {
       this.#updateStatistics();
 
       this.#logger.info(`Loaded ${concepts.length} concepts`);
-
     } catch (error) {
       this.#logger.error('Failed to load concepts', error);
       this.#showError('Failed to load character concepts. Please try again.');
@@ -621,7 +706,7 @@ export class CharacterConceptsManagerController {
 
     // Button click handlers
     const buttons = card.querySelectorAll('[data-action]');
-    buttons.forEach(button => {
+    buttons.forEach((button) => {
       button.addEventListener('click', (e) => {
         e.stopPropagation();
         const action = button.dataset.action;
@@ -675,7 +760,8 @@ export class CharacterConceptsManagerController {
       ({ directionCount }) => directionCount > 0
     ).length;
     const totalDirections = this.#conceptsData.reduce(
-      (sum, { directionCount }) => sum + directionCount, 0
+      (sum, { directionCount }) => sum + directionCount,
+      0
     );
 
     // Update UI
@@ -687,7 +773,7 @@ export class CharacterConceptsManagerController {
     this.#logger.info('Statistics updated', {
       totalConcepts,
       conceptsWithDirections,
-      totalDirections
+      totalDirections,
     });
   }
 
@@ -740,8 +826,10 @@ export class CharacterConceptsManagerController {
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffSecs < 60) return 'just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    if (diffMins < 60)
+      return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+    if (diffHours < 24)
+      return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
     if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
 
     // Fall back to date
@@ -765,7 +853,9 @@ export class CharacterConceptsManagerController {
    */
   async #refreshConceptsDisplay(maintainScroll = true) {
     // Save scroll position
-    const scrollTop = maintainScroll ? this.#elements.conceptsResults.scrollTop : 0;
+    const scrollTop = maintainScroll
+      ? this.#elements.conceptsResults.scrollTop
+      : 0;
 
     // Reload data
     await this.#loadConceptsData();
@@ -834,20 +924,221 @@ export class CharacterConceptsManagerController {
    *
    * @param {string} conceptId
    */
-  #showEditModal(conceptId) {
+  async #showEditModal(conceptId) {
     this.#logger.info('Showing edit modal', { conceptId });
-    // Implementation in Ticket 06
+
+    try {
+      // Find concept in cached data
+      const conceptData = this.#conceptsData.find(
+        ({ concept }) => concept.id === conceptId
+      );
+
+      if (!conceptData) {
+        throw new Error(`Concept not found: ${conceptId}`);
+      }
+
+      const { concept } = conceptData;
+
+      // Set editing state
+      this.#editingConceptId = conceptId;
+
+      // Update modal for editing
+      this.#elements.conceptModalTitle.textContent = 'Edit Character Concept';
+      this.#elements.saveConceptBtn.textContent = 'Update Concept';
+
+      // Pre-populate form
+      this.#elements.conceptText.value = concept.concept;
+
+      // Store original text for comparison (add property if doesn't exist)
+      this.#originalConceptText = concept.concept;
+      this.#hasUnsavedChanges = false;
+
+      // Add change tracking to textarea
+      this.#elements.conceptText.addEventListener(
+        'input',
+        () => {
+          this.#trackFormChanges();
+        },
+        { once: false }
+      );
+
+      // Validate form (should be valid since it's existing content)
+      this.#validateConceptForm();
+
+      // Show modal
+      this.#elements.conceptModal.style.display = 'flex';
+
+      // Focus and select text
+      setTimeout(() => {
+        this.#elements.conceptText.focus();
+        this.#elements.conceptText.setSelectionRange(
+          this.#elements.conceptText.value.length,
+          this.#elements.conceptText.value.length
+        );
+      }, 100);
+
+      // Track modal open
+      this.#eventBus.dispatch({
+        type: 'ui:modal-opened',
+        payload: { modalType: 'edit-concept', conceptId },
+      });
+    } catch (error) {
+      this.#logger.error('Failed to show edit modal', error);
+      // Use existing UI state manager for error display
+      this.#uiStateManager.showError(
+        'Failed to load concept for editing. Please try again.'
+      );
+    }
   }
 
   /**
-   * Show delete confirmation
+   * Show delete confirmation modal
    *
-   * @param {object} concept
-   * @param {number} directionCount
+   * @param {object} concept - The concept to delete
+   * @param {number} directionCount - Number of associated directions
    */
   #showDeleteConfirmation(concept, directionCount) {
-    this.#logger.info('Showing delete confirmation', { conceptId: concept.id, directionCount });
-    // Implementation in Ticket 07
+    this.#logger.info('Showing delete confirmation', {
+      conceptId: concept.id,
+      directionCount,
+    });
+
+    // Store concept data for deletion
+    this.#conceptToDelete = { concept, directionCount };
+
+    // Build confirmation message
+    let message = `Are you sure you want to delete this character concept?`;
+
+    // Add concept preview
+    const truncatedText = this.#truncateText(
+      concept.text || concept.concept,
+      100
+    );
+    message += `\n\n"${this.#escapeHtml(truncatedText)}"`;
+
+    // Add warning about thematic directions
+    if (directionCount > 0) {
+      message += `\n\n⚠️ <strong>Warning:</strong> This will also delete `;
+      message += `<strong>${directionCount}</strong> associated thematic `;
+      message += `${directionCount === 1 ? 'direction' : 'directions'}.`;
+      message += `\n\nThis action cannot be undone.`;
+    }
+
+    // Update modal content
+    this.#elements.deleteModalMessage.innerHTML = message.replace(
+      /\n/g,
+      '<br>'
+    );
+
+    // Update delete button based on severity
+    if (directionCount > 0) {
+      this.#elements.confirmDeleteBtn.textContent = `Delete Concept & ${directionCount} Direction${directionCount === 1 ? '' : 's'}`;
+      this.#elements.confirmDeleteBtn.classList.add('severe-action');
+    } else {
+      this.#elements.confirmDeleteBtn.textContent = 'Delete Concept';
+      this.#elements.confirmDeleteBtn.classList.remove('severe-action');
+    }
+
+    // Show modal
+    this.#elements.deleteModal.style.display = 'flex';
+
+    // Focus on cancel button (safer default)
+    setTimeout(() => {
+      this.#elements.cancelDeleteBtn.focus();
+    }, 100);
+
+    // Set up delete handler
+    this.#setupDeleteHandler();
+  }
+
+  /**
+   * Set up delete confirmation handler
+   */
+  #setupDeleteHandler() {
+    // Remove any existing handler
+    if (this.#deleteHandler) {
+      this.#elements.confirmDeleteBtn.removeEventListener(
+        'click',
+        this.#deleteHandler
+      );
+    }
+
+    // Create new handler
+    this.#deleteHandler = async () => {
+      if (!this.#conceptToDelete) return;
+
+      const { concept, directionCount } = this.#conceptToDelete;
+
+      try {
+        // Disable buttons during deletion
+        this.#setDeleteModalEnabled(false);
+        this.#elements.confirmDeleteBtn.textContent = 'Deleting...';
+
+        // Perform deletion
+        await this.#deleteConcept(concept.id, directionCount);
+
+        // Close modal on success
+        this.#closeDeleteModal();
+      } catch (error) {
+        this.#logger.error('Failed to delete concept', error);
+        this.#showDeleteError('Failed to delete concept. Please try again.');
+      } finally {
+        // Re-enable buttons
+        this.#setDeleteModalEnabled(true);
+      }
+    };
+
+    // Attach handler
+    this.#elements.confirmDeleteBtn.addEventListener(
+      'click',
+      this.#deleteHandler
+    );
+  }
+
+  /**
+   * Delete a character concept and its thematic directions
+   *
+   * @param {string} conceptId - The concept ID to delete
+   * @param {number} directionCount - Number of directions (for logging)
+   */
+  async #deleteConcept(conceptId, directionCount) {
+    this.#logger.info('Deleting concept', { conceptId, directionCount });
+
+    try {
+      // Apply optimistic UI update
+      this.#applyOptimisticDelete(conceptId);
+
+      // Delete via service (handles cascade deletion)
+      await this.#characterBuilderService.deleteCharacterConcept(conceptId);
+
+      this.#logger.info('Concept deleted successfully', {
+        conceptId,
+        directionsDeleted: directionCount,
+      });
+
+      // Show success notification (using logger since no notification system exists)
+      const successMessage =
+        directionCount > 0
+          ? `Character concept deleted successfully (${directionCount} direction${directionCount === 1 ? '' : 's'} also deleted)`
+          : 'Character concept deleted successfully';
+      this.#logger.info(successMessage);
+
+      // Remove from local cache
+      this.#removeFromLocalCache(conceptId);
+
+      // Update statistics
+      this.#updateStatistics();
+
+      // Check if we need to show empty state
+      if (this.#conceptsData.length === 0) {
+        this.#uiStateManager.setState('empty');
+      }
+    } catch (error) {
+      // Revert optimistic delete on failure
+      this.#revertOptimisticDelete();
+      this.#logger.error('Failed to delete concept', error);
+      throw error;
+    }
   }
 
   /**
@@ -872,9 +1163,73 @@ export class CharacterConceptsManagerController {
     // Future: show dropdown menu with additional options
   }
 
+  /**
+   * Close the delete confirmation modal
+   */
   #closeDeleteModal() {
     this.#logger.info('Closing delete modal');
-    // Implementation in Ticket 07
+
+    // Hide modal
+    this.#elements.deleteModal.style.display = 'none';
+
+    // Clean up
+    this.#conceptToDelete = null;
+
+    // Remove handler
+    if (this.#deleteHandler) {
+      this.#elements.confirmDeleteBtn.removeEventListener(
+        'click',
+        this.#deleteHandler
+      );
+      this.#deleteHandler = null;
+    }
+
+    // Reset button text
+    this.#elements.confirmDeleteBtn.textContent = 'Delete';
+    this.#elements.confirmDeleteBtn.classList.remove('severe-action');
+
+    // Dispatch modal closed event
+    this.#eventBus.dispatch({
+      type: 'ui:modal-closed',
+      payload: { modalType: 'delete-confirmation' },
+    });
+  }
+
+  /**
+   * Enable or disable delete modal buttons
+   *
+   * @param {boolean} enabled
+   */
+  #setDeleteModalEnabled(enabled) {
+    this.#elements.confirmDeleteBtn.disabled = !enabled;
+    this.#elements.cancelDeleteBtn.disabled = !enabled;
+    this.#elements.closeDeleteModal.disabled = !enabled;
+  }
+
+  /**
+   * Show error in delete modal
+   *
+   * @param {string} message
+   */
+  #showDeleteError(message) {
+    // Create or update error element
+    let errorElement =
+      this.#elements.deleteModal.querySelector('.delete-error');
+    if (!errorElement) {
+      errorElement = document.createElement('div');
+      errorElement.className = 'delete-error error-message';
+      this.#elements.deleteModalMessage.parentElement.appendChild(errorElement);
+    }
+
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+
+    // Hide after 5 seconds
+    setTimeout(() => {
+      if (errorElement) {
+        errorElement.style.display = 'none';
+      }
+    }, 5000);
   }
 
   /**
@@ -903,8 +1258,9 @@ export class CharacterConceptsManagerController {
       this.#elements.saveConceptBtn.disabled = true;
       this.#elements.saveConceptBtn.textContent = 'Saving...';
     } else {
-      this.#elements.saveConceptBtn.textContent =
-        this.#editingConceptId ? 'Update Concept' : 'Create Concept';
+      this.#elements.saveConceptBtn.textContent = this.#editingConceptId
+        ? 'Update Concept'
+        : 'Create Concept';
       // Re-validate to set correct disabled state
       this.#validateConceptForm();
     }
@@ -938,7 +1294,8 @@ export class CharacterConceptsManagerController {
     this.#logger.info('Creating new concept', { length: conceptText.length });
 
     try {
-      const concept = await this.#characterBuilderService.createCharacterConcept(conceptText);
+      const concept =
+        await this.#characterBuilderService.createCharacterConcept(conceptText);
 
       this.#logger.info('Concept created successfully', { id: concept.id });
 
@@ -946,7 +1303,6 @@ export class CharacterConceptsManagerController {
       this.#showSuccessNotification('Character concept created successfully!');
 
       // The UI will be updated via service event (CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED)
-
     } catch (error) {
       this.#logger.error('Failed to create concept', error);
       throw error;
@@ -964,14 +1320,15 @@ export class CharacterConceptsManagerController {
     }
 
     const conceptText = this.#elements.conceptText.value.trim();
+    const isEditing = !!this.#editingConceptId;
 
     try {
       // Disable form during save
       this.#setFormEnabled(false);
       this.#setSaveButtonLoading(true);
 
-      if (this.#editingConceptId) {
-        // Update existing concept (for future implementation)
+      if (isEditing) {
+        // Update existing concept
         await this.#updateConcept(this.#editingConceptId, conceptText);
       } else {
         // Create new concept
@@ -981,9 +1338,18 @@ export class CharacterConceptsManagerController {
       // Close modal on success
       this.#closeConceptModal();
 
+      // Log success
+      this.#logger.info(
+        `Concept ${isEditing ? 'updated' : 'created'} successfully`
+      );
     } catch (error) {
-      this.#logger.error('Failed to save concept', error);
-      this.#showFormError('Failed to save concept. Please try again.');
+      this.#logger.error(
+        `Failed to ${isEditing ? 'update' : 'create'} concept`,
+        error
+      );
+      this.#uiStateManager.showError(
+        `Failed to ${isEditing ? 'update' : 'save'} concept. Please try again.`
+      );
     } finally {
       // Re-enable form
       this.#setFormEnabled(true);
@@ -992,23 +1358,372 @@ export class CharacterConceptsManagerController {
   }
 
   /**
-   * Update an existing character concept (placeholder for future implementation)
+   * Update an existing character concept
    *
    * @param {string} conceptId - The concept ID
    * @param {string} conceptText - The updated concept text
    */
   async #updateConcept(conceptId, conceptText) {
-    this.#logger.info('Update concept placeholder', { conceptId, length: conceptText.length });
-    // Implementation in Ticket 06
-    throw new Error('Update concept not yet implemented');
+    this.#logger.info('Updating concept', {
+      conceptId,
+      length: conceptText.length,
+    });
+
+    try {
+      // Check if text actually changed
+      const currentConcept = this.#conceptsData.find(
+        ({ concept }) => concept.id === conceptId
+      )?.concept;
+
+      if (currentConcept && currentConcept.concept === conceptText) {
+        this.#logger.info('No changes detected, skipping update');
+        return;
+      }
+
+      // Store last edit for undo functionality
+      if (currentConcept) {
+        this.#lastEdit = {
+          conceptId,
+          previousText: currentConcept.concept,
+          newText: conceptText,
+          timestamp: Date.now(),
+        };
+      }
+
+      // Apply optimistic update
+      this.#applyOptimisticUpdate(conceptId, conceptText);
+
+      // Update via service (service expects updates object, not plain text)
+      const updatedConcept =
+        await this.#characterBuilderService.updateCharacterConcept(conceptId, {
+          concept: conceptText,
+        });
+
+      this.#logger.info('Concept updated successfully', {
+        id: updatedConcept.id,
+      });
+
+      // Show success notification (using existing UI patterns)
+      this.#uiStateManager.showState(UI_STATES.RESULTS);
+
+      // Update local cache immediately for better UX
+      this.#updateLocalConceptCache(updatedConcept);
+
+      // Remove updating class on success
+      const card = this.#elements.conceptsResults.querySelector(
+        `[data-concept-id="${conceptId}"]`
+      );
+      if (card) {
+        card.classList.remove('concept-updating');
+        card.classList.add('concept-updated');
+        setTimeout(() => {
+          card.classList.remove('concept-updated');
+        }, 1000);
+      }
+    } catch (error) {
+      this.#logger.error('Failed to update concept', error);
+      // Revert optimistic update on failure
+      this.#revertOptimisticUpdate(conceptId);
+      throw error;
+    }
+  }
+
+  /**
+   * Update local concept cache immediately
+   *
+   * @param {object} updatedConcept
+   */
+  #updateLocalConceptCache(updatedConcept) {
+    // Find and update in local data
+    const index = this.#conceptsData.findIndex(
+      ({ concept }) => concept.id === updatedConcept.id
+    );
+
+    if (index !== -1) {
+      // Preserve direction count
+      const directionCount = this.#conceptsData[index].directionCount;
+
+      // Update concept
+      this.#conceptsData[index] = {
+        concept: updatedConcept,
+        directionCount,
+      };
+
+      // Update UI immediately
+      this.#updateConceptCard(updatedConcept, directionCount);
+    }
+  }
+
+  /**
+   * Update a single concept card in the UI
+   *
+   * @param {object} concept
+   * @param {number} directionCount
+   */
+  #updateConceptCard(concept, directionCount) {
+    // Find the card element
+    const card = this.#elements.conceptsResults.querySelector(
+      `[data-concept-id="${concept.id}"]`
+    );
+
+    if (!card) return;
+
+    // Update card content
+    const conceptTextElement = card.querySelector('.concept-text');
+    if (conceptTextElement) {
+      conceptTextElement.textContent = this.#truncateText(concept.concept, 150);
+    }
+
+    // Update date if it changed
+    const dateElement = card.querySelector('.concept-date');
+    if (dateElement && concept.updatedAt) {
+      dateElement.textContent = `Updated ${this.#formatRelativeDate(concept.updatedAt)}`;
+      dateElement.title = this.#formatFullDate(concept.updatedAt);
+    }
+
+    // Add update animation
+    card.classList.add('concept-updated');
+    setTimeout(() => {
+      card.classList.remove('concept-updated');
+    }, 1000);
+  }
+
+  /**
+   * Apply optimistic update to UI before server response
+   *
+   * @param {string} conceptId
+   * @param {string} newText
+   */
+  #applyOptimisticUpdate(conceptId, newText) {
+    // Update card immediately
+    const card = this.#elements.conceptsResults.querySelector(
+      `[data-concept-id="${conceptId}"]`
+    );
+
+    if (card) {
+      const textElement = card.querySelector('.concept-text');
+      if (textElement) {
+        textElement.textContent = this.#truncateText(newText, 150);
+        card.classList.add('concept-updating');
+      }
+    }
+  }
+
+  /**
+   * Revert optimistic update on failure
+   *
+   * @param {string} conceptId
+   */
+  #revertOptimisticUpdate(conceptId) {
+    // Find original concept
+    const originalData = this.#conceptsData.find(
+      ({ concept }) => concept.id === conceptId
+    );
+
+    if (originalData) {
+      this.#updateConceptCard(
+        originalData.concept,
+        originalData.directionCount
+      );
+    }
+
+    // Remove updating class
+    const card = this.#elements.conceptsResults.querySelector(
+      `[data-concept-id="${conceptId}"]`
+    );
+    if (card) {
+      card.classList.remove('concept-updating');
+      card.classList.add('concept-update-failed');
+      setTimeout(() => {
+        card.classList.remove('concept-update-failed');
+      }, 2000);
+    }
+  }
+
+  /**
+   * Track changes to form
+   */
+  #trackFormChanges() {
+    const currentText = this.#elements.conceptText.value.trim();
+    this.#hasUnsavedChanges = currentText !== this.#originalConceptText;
+
+    // Update save button state
+    if (this.#hasUnsavedChanges) {
+      this.#elements.saveConceptBtn.classList.add('has-changes');
+    } else {
+      this.#elements.saveConceptBtn.classList.remove('has-changes');
+    }
+  }
+
+  /**
+   * Add keyboard shortcuts for edit functionality
+   * This method should be called during initialization
+   */
+  #setupKeyboardShortcuts() {
+    // Add global keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Undo with Ctrl+Z (when not in form)
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key === 'z' &&
+        !e.target.closest('input, textarea')
+      ) {
+        e.preventDefault();
+        this.#undoLastEdit();
+        return;
+      }
+
+      // Handle shortcuts for focused concept cards
+      const focusedCard = document.activeElement.closest('[data-concept-id]');
+      if (!focusedCard) return;
+
+      const conceptId = focusedCard.dataset.conceptId;
+
+      switch (e.key) {
+        case 'Enter':
+        case ' ':
+          if (!e.target.closest('button')) {
+            e.preventDefault();
+            // Find concept and view details
+            const conceptData = this.#conceptsData.find(
+              ({ concept }) => concept.id === conceptId
+            );
+            if (conceptData) {
+              this.#viewConceptDetails(conceptData.concept);
+            }
+          }
+          break;
+        case 'e':
+        case 'E':
+          if (!e.target.closest('input, textarea')) {
+            e.preventDefault();
+            this.#showEditModal(conceptId);
+          }
+          break;
+        case 'Delete':
+          if (!e.target.closest('input, textarea')) {
+            e.preventDefault();
+            // Find concept and show delete confirmation
+            const conceptData = this.#conceptsData.find(
+              ({ concept }) => concept.id === conceptId
+            );
+            if (conceptData) {
+              this.#showDeleteConfirmation(
+                conceptData.concept,
+                conceptData.directionCount
+              );
+            }
+          }
+          break;
+      }
+    });
+  }
+
+  /**
+   * Undo last edit if available
+   */
+  async #undoLastEdit() {
+    if (!this.#lastEdit || Date.now() - this.#lastEdit.timestamp > 30000) {
+      // No recent edit to undo (30 second window)
+      this.#logger.info('No recent edit to undo');
+      return;
+    }
+
+    try {
+      await this.#updateConcept(
+        this.#lastEdit.conceptId,
+        this.#lastEdit.previousText
+      );
+
+      this.#uiStateManager.showState(UI_STATES.RESULTS);
+      this.#lastEdit = null;
+    } catch (error) {
+      this.#logger.error('Failed to undo edit', error);
+      this.#uiStateManager.showError('Failed to undo edit');
+    }
+  }
+
+  /**
+   * Apply optimistic delete to UI
+   *
+   * @param {string} conceptId
+   */
+  #applyOptimisticDelete(conceptId) {
+    const card = this.#elements.conceptsResults.querySelector(
+      `[data-concept-id="${conceptId}"]`
+    );
+
+    if (card) {
+      // Store for potential revert
+      this.#deletedCard = {
+        element: card,
+        nextSibling: card.nextSibling,
+        parent: card.parentElement,
+      };
+
+      // Add deletion animation
+      card.classList.add('concept-deleting');
+
+      // Remove after animation
+      setTimeout(() => {
+        if (card.parentElement) {
+          card.remove();
+        }
+      }, 300);
+    }
+  }
+
+  /**
+   * Revert optimistic delete on failure
+   */
+  #revertOptimisticDelete() {
+    if (this.#deletedCard) {
+      const { element, nextSibling, parent } = this.#deletedCard;
+
+      // Remove deleting class
+      element.classList.remove('concept-deleting');
+      element.classList.add('concept-delete-failed');
+
+      // Re-insert if removed
+      if (!element.parentElement && parent) {
+        if (nextSibling && nextSibling.parentElement === parent) {
+          parent.insertBefore(element, nextSibling);
+        } else {
+          parent.appendChild(element);
+        }
+      }
+
+      // Clean up after animation
+      setTimeout(() => {
+        element.classList.remove('concept-delete-failed');
+      }, 2000);
+
+      this.#deletedCard = null;
+    }
+  }
+
+  /**
+   * Remove concept from local cache
+   *
+   * @param {string} conceptId
+   */
+  #removeFromLocalCache(conceptId) {
+    const index = this.#conceptsData.findIndex(
+      ({ concept }) => concept.id === conceptId
+    );
+
+    if (index !== -1) {
+      this.#conceptsData.splice(index, 1);
+      this.#logger.info('Removed concept from local cache', { conceptId });
+    }
   }
 
   #handleSearch(searchTerm) {
     this.#logger.info('Handling search', { searchTerm });
-    
+
     // Update search filter
     this.#searchFilter = searchTerm.trim();
-    
+
     // Apply filter to existing data if available
     if (this.#conceptsData && this.#conceptsData.length >= 0) {
       const filteredConcepts = this.#filterConcepts(this.#conceptsData);
@@ -1026,9 +1741,34 @@ export class CharacterConceptsManagerController {
     // Implementation in Ticket 10
   }
 
+  /**
+   * Handle concept deleted event
+   *
+   * @param {CustomEvent} event
+   */
   #handleConceptDeleted(event) {
     this.#logger.info('Concept deleted event received', event.detail);
-    // Implementation in Ticket 10
+
+    const { conceptId } = event.detail;
+
+    // Remove from local cache if not already removed
+    this.#removeFromLocalCache(conceptId);
+
+    // Remove card from UI if still present
+    const card = this.#elements.conceptsResults.querySelector(
+      `[data-concept-id="${conceptId}"]`
+    );
+    if (card) {
+      card.remove();
+    }
+
+    // Update statistics
+    this.#updateStatistics();
+
+    // Check if empty
+    if (this.#conceptsData.length === 0) {
+      this.#uiStateManager.setState('empty');
+    }
   }
 
   #handleDirectionsGenerated(event) {

@@ -249,12 +249,24 @@ describe('NotesQueryService', () => {
     });
 
     test('should handle missing date parameters', () => {
-      expect(service.queryByTimeRange(sampleNotes, null, '2024-01-15T11:00:00Z')).toEqual([]);
-      expect(service.queryByTimeRange(sampleNotes, '2024-01-15T09:00:00Z', null)).toEqual([]);
-      expect(service.queryByTimeRange(sampleNotes, undefined, '2024-01-15T11:00:00Z')).toEqual([]);
-      expect(service.queryByTimeRange(sampleNotes, '2024-01-15T09:00:00Z', undefined)).toEqual([]);
-      expect(service.queryByTimeRange(sampleNotes, '', '2024-01-15T11:00:00Z')).toEqual([]);
-      expect(service.queryByTimeRange(sampleNotes, '2024-01-15T09:00:00Z', '')).toEqual([]);
+      expect(
+        service.queryByTimeRange(sampleNotes, null, '2024-01-15T11:00:00Z')
+      ).toEqual([]);
+      expect(
+        service.queryByTimeRange(sampleNotes, '2024-01-15T09:00:00Z', null)
+      ).toEqual([]);
+      expect(
+        service.queryByTimeRange(sampleNotes, undefined, '2024-01-15T11:00:00Z')
+      ).toEqual([]);
+      expect(
+        service.queryByTimeRange(sampleNotes, '2024-01-15T09:00:00Z', undefined)
+      ).toEqual([]);
+      expect(
+        service.queryByTimeRange(sampleNotes, '', '2024-01-15T11:00:00Z')
+      ).toEqual([]);
+      expect(
+        service.queryByTimeRange(sampleNotes, '2024-01-15T09:00:00Z', '')
+      ).toEqual([]);
     });
   });
 
@@ -310,8 +322,8 @@ describe('NotesQueryService', () => {
       const results = service.query(sampleNotes, {
         text: 'nervous',
         options: {
-          text: { exact: false }
-        }
+          text: { exact: false },
+        },
       });
       expect(results).toHaveLength(1);
       expect(results[0].text).toContain('nervous');

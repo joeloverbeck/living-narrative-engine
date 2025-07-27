@@ -54,7 +54,7 @@ export class RulesTestingFramework {
       passed: 0,
       failed: 0,
       warnings: 0,
-      tests: []
+      tests: [],
     };
   }
 
@@ -66,7 +66,7 @@ export class RulesTestingFramework {
   async runTestSuite(testSuite) {
     this.#logger.info('Starting rule test suite', {
       suiteName: testSuite.name,
-      testCount: testSuite.tests.length
+      testCount: testSuite.tests.length,
     });
 
     this.#resetTestResults();
@@ -93,13 +93,13 @@ export class RulesTestingFramework {
       totalTests: testEvents.length,
       passed: 0,
       failed: 0,
-      details: []
+      details: [],
     };
 
     for (const testEvent of testEvents) {
       const result = await this.#testRuleWithSingleEvent(rule, testEvent);
       results.details.push(result);
-      
+
       if (result.passed) {
         results.passed++;
       } else {
@@ -127,9 +127,9 @@ export class RulesTestingFramework {
         minTime: Infinity,
         maxTime: 0,
         timeoutCount: 0,
-        errorCount: 0
+        errorCount: 0,
       },
-      executionDetails: []
+      executionDetails: [],
     };
 
     const testEvent = this.#createStandardTestEvent();
@@ -138,29 +138,29 @@ export class RulesTestingFramework {
 
     for (let i = 0; i < iterations; i++) {
       const startTime = performance.now();
-      
+
       try {
         const executionPromise = this.#executeRuleWithEvent(rule, testEvent);
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Timeout')), timeout)
         );
 
         await Promise.race([executionPromise, timeoutPromise]);
-        
+
         const duration = performance.now() - startTime;
         results.metrics.totalExecutions++;
         results.metrics.totalTime += duration;
         results.metrics.minTime = Math.min(results.metrics.minTime, duration);
         results.metrics.maxTime = Math.max(results.metrics.maxTime, duration);
 
-        if (i % 10 === 0) { // Sample every 10th execution
+        if (i % 10 === 0) {
+          // Sample every 10th execution
           results.executionDetails.push({
             iteration: i,
             duration: duration.toFixed(2),
-            status: 'success'
+            status: 'success',
           });
         }
-
       } catch (error) {
         if (error.message === 'Timeout') {
           results.metrics.timeoutCount++;
@@ -171,13 +171,14 @@ export class RulesTestingFramework {
         results.executionDetails.push({
           iteration: i,
           status: 'error',
-          error: error.message
+          error: error.message,
         });
       }
     }
 
     if (results.metrics.totalExecutions > 0) {
-      results.metrics.averageTime = results.metrics.totalTime / results.metrics.totalExecutions;
+      results.metrics.averageTime =
+        results.metrics.totalTime / results.metrics.totalExecutions;
     }
 
     return results;
@@ -195,15 +196,21 @@ export class RulesTestingFramework {
       enhancedRuleId: enhancedRule.id,
       compatibilityTests: [],
       isCompatible: true,
-      issues: []
+      issues: [],
     };
 
     // Test with legacy events
     const legacyEvents = this.#generateLegacyTestEvents();
-    
+
     for (const event of legacyEvents) {
-      const originalResult = await this.#executeRuleWithEvent(originalRule, event);
-      const enhancedResult = await this.#executeRuleWithEvent(enhancedRule, event);
+      const originalResult = await this.#executeRuleWithEvent(
+        originalRule,
+        event
+      );
+      const enhancedResult = await this.#executeRuleWithEvent(
+        enhancedRule,
+        event
+      );
 
       const compatibilityTest = {
         eventType: event.actionId,
@@ -212,8 +219,8 @@ export class RulesTestingFramework {
         outputsMatch: this.#compareRuleOutputs(originalResult, enhancedResult),
         details: {
           original: originalResult,
-          enhanced: enhancedResult
-        }
+          enhanced: enhancedResult,
+        },
       };
 
       results.compatibilityTests.push(compatibilityTest);
@@ -243,8 +250,8 @@ export class RulesTestingFramework {
         hasOperations: false,
         conditionCount: 0,
         operationCount: 0,
-        complexity: 'low'
-      }
+        complexity: 'low',
+      },
     };
 
     try {
@@ -262,7 +269,7 @@ export class RulesTestingFramework {
       if (rule.conditions && Array.isArray(rule.conditions)) {
         validation.structure.hasConditions = true;
         validation.structure.conditionCount = rule.conditions.length;
-        
+
         for (const condition of rule.conditions) {
           this.#validateCondition(condition, validation);
         }
@@ -272,7 +279,7 @@ export class RulesTestingFramework {
       if (rule.operations && Array.isArray(rule.operations)) {
         validation.structure.hasOperations = true;
         validation.structure.operationCount = rule.operations.length;
-        
+
         for (const operation of rule.operations) {
           this.#validateOperation(operation, validation);
         }
@@ -282,13 +289,16 @@ export class RulesTestingFramework {
       validation.structure.complexity = this.#assessRuleComplexity(rule);
 
       if (!validation.structure.hasConditions) {
-        validation.warnings.push('Rule has no conditions - will always execute');
+        validation.warnings.push(
+          'Rule has no conditions - will always execute'
+        );
       }
 
       if (!validation.structure.hasOperations) {
-        validation.warnings.push('Rule has no operations - will not perform any actions');
+        validation.warnings.push(
+          'Rule has no operations - will not perform any actions'
+        );
       }
-
     } catch (error) {
       validation.errors.push(`Rule validation error: ${error.message}`);
       validation.isValid = false;
@@ -336,7 +346,7 @@ export class RulesTestingFramework {
       duration: 0,
       errors: [],
       warnings: [],
-      details: null
+      details: null,
     };
 
     const startTime = performance.now();
@@ -348,10 +358,16 @@ export class RulesTestingFramework {
           testResult.details = await this.#testRuleExecution(test);
           break;
         case 'performance':
-          testResult.details = await this.validateRulePerformance(test.rule, test.loadConfig);
+          testResult.details = await this.validateRulePerformance(
+            test.rule,
+            test.loadConfig
+          );
           break;
         case 'compatibility':
-          testResult.details = await this.testBackwardCompatibility(test.originalRule, test.enhancedRule);
+          testResult.details = await this.testBackwardCompatibility(
+            test.originalRule,
+            test.enhancedRule
+          );
           break;
         case 'structure':
           testResult.details = this.validateRuleStructure(test.rule);
@@ -362,7 +378,6 @@ export class RulesTestingFramework {
 
       // Evaluate test results
       testResult.passed = this.#evaluateTestResult(test, testResult.details);
-
     } catch (error) {
       testResult.errors.push(error.message);
       testResult.passed = false;
@@ -382,22 +397,28 @@ export class RulesTestingFramework {
       ruleId: test.rule.id,
       eventTests: [],
       totalPassed: 0,
-      totalFailed: 0
+      totalFailed: 0,
     };
 
     for (const eventTest of test.events) {
-      const executionResult = await this.#executeRuleWithEvent(test.rule, eventTest.event);
-      
+      const executionResult = await this.#executeRuleWithEvent(
+        test.rule,
+        eventTest.event
+      );
+
       const eventTestResult = {
         eventDescription: eventTest.description,
         event: eventTest.event,
         execution: executionResult,
-        passed: this.#validateExpectedOutcome(executionResult, eventTest.expected),
-        expected: eventTest.expected
+        passed: this.#validateExpectedOutcome(
+          executionResult,
+          eventTest.expected
+        ),
+        expected: eventTest.expected,
       };
 
       results.eventTests.push(eventTestResult);
-      
+
       if (eventTestResult.passed) {
         results.totalPassed++;
       } else {
@@ -420,7 +441,7 @@ export class RulesTestingFramework {
       conditionsMet: false,
       operationsExecuted: [],
       errors: [],
-      executionTime: 0
+      executionTime: 0,
     };
 
     const startTime = performance.now();
@@ -428,13 +449,15 @@ export class RulesTestingFramework {
     try {
       // Check conditions
       result.conditionsMet = await this.#evaluateRuleConditions(rule, event);
-      
+
       if (result.conditionsMet) {
         // Execute operations
-        result.operationsExecuted = await this.#executeRuleOperations(rule, event);
+        result.operationsExecuted = await this.#executeRuleOperations(
+          rule,
+          event
+        );
         result.success = true;
       }
-
     } catch (error) {
       result.errors.push(error.message);
     }
@@ -456,7 +479,9 @@ export class RulesTestingFramework {
 
     for (const condition of rule.conditions) {
       if (condition.type === 'json_logic' && condition.logic) {
-        const result = await this.#evaluateJsonLogic(condition.logic, { event });
+        const result = await this.#evaluateJsonLogic(condition.logic, {
+          event,
+        });
         if (!result) {
           return false;
         }
@@ -481,17 +506,19 @@ export class RulesTestingFramework {
 
     for (const operation of rule.operations) {
       try {
-        const operationResult = await this.#executeOperation(operation, { event });
+        const operationResult = await this.#executeOperation(operation, {
+          event,
+        });
         executed.push({
           type: operation.type,
           success: true,
-          result: operationResult
+          result: operationResult,
         });
       } catch (error) {
         executed.push({
           type: operation.type,
           success: false,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -531,16 +558,19 @@ export class RulesTestingFramework {
       }
 
       // Return primitive values
-      if (typeof logic === 'string' || typeof logic === 'number' || typeof logic === 'boolean') {
+      if (
+        typeof logic === 'string' ||
+        typeof logic === 'number' ||
+        typeof logic === 'boolean'
+      ) {
         return logic;
       }
 
       return true; // Default for unhandled logic
-
     } catch (error) {
       this.#logger.warn('JSON Logic evaluation error', {
         logic,
-        error: error.message
+        error: error.message,
       });
       return false;
     }
@@ -579,7 +609,7 @@ export class RulesTestingFramework {
       type: operation.type,
       executed: true,
       data: operation.data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
@@ -596,11 +626,11 @@ export class RulesTestingFramework {
         actionId: 'combat:throw',
         targets: {
           item: 'test_knife',
-          target: 'test_goblin'
+          target: 'test_goblin',
         },
         targetId: 'test_knife',
         originalInput: 'throw knife at goblin',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       },
       {
         eventName: 'core:attempt_action',
@@ -608,11 +638,11 @@ export class RulesTestingFramework {
         actionId: 'interaction:use_item_on',
         targets: {
           item: 'test_potion',
-          target: 'test_ally'
+          target: 'test_ally',
         },
         targetId: 'test_potion',
         originalInput: 'use potion on ally',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       },
       {
         eventName: 'core:attempt_action',
@@ -621,12 +651,12 @@ export class RulesTestingFramework {
         targets: {
           tool: 'test_hammer',
           ingredient: 'test_iron',
-          location: 'test_forge'
+          location: 'test_forge',
         },
         targetId: 'test_hammer',
         originalInput: 'craft at forge with hammer using iron',
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     ];
   }
 
@@ -643,7 +673,7 @@ export class RulesTestingFramework {
         actionId: 'core:follow',
         targetId: 'test_target',
         originalInput: 'follow target',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       },
       {
         eventName: 'core:attempt_action',
@@ -651,7 +681,7 @@ export class RulesTestingFramework {
         actionId: 'core:attack',
         targetId: 'test_enemy',
         originalInput: 'attack enemy',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       },
       {
         eventName: 'core:attempt_action',
@@ -659,8 +689,8 @@ export class RulesTestingFramework {
         actionId: 'core:emote',
         targetId: null,
         originalInput: 'smile',
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     ];
   }
 
@@ -678,7 +708,7 @@ export class RulesTestingFramework {
         actionId: 'test:action',
         targetId: 'test_target',
         originalInput: 'malformed actor',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       },
       // Empty targets object
       {
@@ -688,7 +718,7 @@ export class RulesTestingFramework {
         targets: {},
         targetId: 'test_target',
         originalInput: 'empty targets',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       },
       // Large targets object
       {
@@ -700,8 +730,8 @@ export class RulesTestingFramework {
         ),
         targetId: 'target0',
         originalInput: 'many targets',
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     ];
   }
 
@@ -716,11 +746,11 @@ export class RulesTestingFramework {
       actionId: 'test:performance',
       targets: {
         item: 'perf_item',
-        target: 'perf_target'
+        target: 'perf_target',
       },
       targetId: 'perf_target',
       originalInput: 'performance test',
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
@@ -737,7 +767,7 @@ export class RulesTestingFramework {
       passed: 0,
       failed: 0,
       warnings: 0,
-      tests: []
+      tests: [],
     };
   }
 
@@ -747,7 +777,7 @@ export class RulesTestingFramework {
    */
   #recordTestResult(testResult) {
     this.#testResults.tests.push(testResult);
-    
+
     if (testResult.passed) {
       this.#testResults.passed++;
     } else {
@@ -766,7 +796,7 @@ export class RulesTestingFramework {
    */
   #generateTestSummary(suiteName) {
     const total = this.#testResults.passed + this.#testResults.failed;
-    
+
     return {
       suiteName,
       total,
@@ -774,7 +804,7 @@ export class RulesTestingFramework {
       failed: this.#testResults.failed,
       warnings: this.#testResults.warnings,
       passRate: total > 0 ? (this.#testResults.passed / total) * 100 : 0,
-      details: this.#testResults.tests
+      details: this.#testResults.tests,
     };
   }
 
@@ -821,10 +851,10 @@ export const multiTargetRulesTestSuite = {
               and: [
                 { '==': [{ var: 'event.eventName' }, 'core:attempt_action'] },
                 { '==': [{ var: 'event.actionId' }, 'combat:throw'] },
-                { var: 'event.targets' }
-              ]
-            }
-          }
+                { var: 'event.targets' },
+              ],
+            },
+          },
         ],
         operations: [
           {
@@ -832,10 +862,10 @@ export const multiTargetRulesTestSuite = {
             data: {
               thrower: { var: 'event.actorId' },
               item: { var: 'event.targets.item' },
-              target: { var: 'event.targets.target' }
-            }
-          }
-        ]
+              target: { var: 'event.targets.target' },
+            },
+          },
+        ],
       },
       events: [
         {
@@ -846,17 +876,17 @@ export const multiTargetRulesTestSuite = {
             actionId: 'combat:throw',
             targets: {
               item: 'test_knife',
-              target: 'test_goblin'
+              target: 'test_goblin',
             },
             targetId: 'test_knife',
             originalInput: 'throw knife at goblin',
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           expected: {
             conditionsMet: true,
             operationsExecuted: 1,
-            success: true
-          }
+            success: true,
+          },
         },
         {
           description: 'Missing targets object',
@@ -866,15 +896,15 @@ export const multiTargetRulesTestSuite = {
             actionId: 'combat:throw',
             targetId: 'test_knife',
             originalInput: 'throw knife',
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           expected: {
             conditionsMet: false,
             operationsExecuted: 0,
-            success: false
-          }
-        }
-      ]
+            success: false,
+          },
+        },
+      ],
     },
     {
       name: 'Interaction Rule Backward Compatibility',
@@ -887,10 +917,10 @@ export const multiTargetRulesTestSuite = {
             logic: {
               and: [
                 { '==': [{ var: 'event.eventName' }, 'core:attempt_action'] },
-                { '==': [{ var: 'event.actionId' }, 'core:use'] }
-              ]
-            }
-          }
+                { '==': [{ var: 'event.actionId' }, 'core:use'] },
+              ],
+            },
+          },
         ],
         operations: [
           {
@@ -901,12 +931,12 @@ export const multiTargetRulesTestSuite = {
                 if: [
                   { var: 'event.targets.item' },
                   { var: 'event.targets.item' },
-                  { var: 'event.targetId' }
-                ]
-              }
-            }
-          }
-        ]
+                  { var: 'event.targetId' },
+                ],
+              },
+            },
+          },
+        ],
       },
       events: [
         {
@@ -917,13 +947,13 @@ export const multiTargetRulesTestSuite = {
             actionId: 'core:use',
             targetId: 'test_item',
             originalInput: 'use item',
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           expected: {
             conditionsMet: true,
             operationsExecuted: 1,
-            success: true
-          }
+            success: true,
+          },
         },
         {
           description: 'Enhanced format event',
@@ -933,19 +963,19 @@ export const multiTargetRulesTestSuite = {
             actionId: 'core:use',
             targets: {
               item: 'test_item',
-              target: 'test_surface'
+              target: 'test_surface',
             },
             targetId: 'test_item',
             originalInput: 'use item on surface',
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           expected: {
             conditionsMet: true,
             operationsExecuted: 1,
-            success: true
-          }
-        }
-      ]
+            success: true,
+          },
+        },
+      ],
     },
     {
       name: 'Complex Multi-Target Rule Performance',
@@ -958,10 +988,10 @@ export const multiTargetRulesTestSuite = {
             logic: {
               and: [
                 { var: 'event.targets' },
-                { '>': [{ var: 'event.targets | keys | length' }, 3] }
-              ]
-            }
-          }
+                { '>': [{ var: 'event.targets | keys | length' }, 3] },
+              ],
+            },
+          },
         ],
         operations: [
           {
@@ -969,17 +999,17 @@ export const multiTargetRulesTestSuite = {
             data: {
               actor: { var: 'event.actorId' },
               targets: { var: 'event.targets' },
-              count: { var: 'event.targets | keys | length' }
-            }
-          }
-        ]
+              count: { var: 'event.targets | keys | length' },
+            },
+          },
+        ],
       },
       loadConfig: {
         iterations: 200,
-        timeout: 500
-      }
-    }
-  ]
+        timeout: 500,
+      },
+    },
+  ],
 };
 
 /**
@@ -987,7 +1017,8 @@ export const multiTargetRulesTestSuite = {
  */
 export const backwardCompatibilityTestSuite = {
   name: 'Backward Compatibility Test Suite',
-  description: 'Ensures enhanced rules maintain compatibility with legacy events',
+  description:
+    'Ensures enhanced rules maintain compatibility with legacy events',
   tests: [
     {
       name: 'Enhanced Combat Rule Compatibility',
@@ -1000,20 +1031,20 @@ export const backwardCompatibilityTestSuite = {
             logic: {
               and: [
                 { '==': [{ var: 'event.eventName' }, 'core:attempt_action'] },
-                { '==': [{ var: 'event.actionId' }, 'core:attack'] }
-              ]
-            }
-          }
+                { '==': [{ var: 'event.actionId' }, 'core:attack'] },
+              ],
+            },
+          },
         ],
         operations: [
           {
             type: 'execute_attack',
             data: {
               attacker: { var: 'event.actorId' },
-              target: { var: 'event.targetId' }
-            }
-          }
-        ]
+              target: { var: 'event.targetId' },
+            },
+          },
+        ],
       },
       enhancedRule: {
         id: 'core:attack_enhanced',
@@ -1023,10 +1054,10 @@ export const backwardCompatibilityTestSuite = {
             logic: {
               and: [
                 { '==': [{ var: 'event.eventName' }, 'core:attempt_action'] },
-                { '==': [{ var: 'event.actionId' }, 'core:attack'] }
-              ]
-            }
-          }
+                { '==': [{ var: 'event.actionId' }, 'core:attack'] },
+              ],
+            },
+          },
         ],
         operations: [
           {
@@ -1037,16 +1068,16 @@ export const backwardCompatibilityTestSuite = {
                 if: [
                   { var: 'event.targets.target' },
                   { var: 'event.targets.target' },
-                  { var: 'event.targetId' }
-                ]
+                  { var: 'event.targetId' },
+                ],
               },
-              weapon: { var: 'event.targets.weapon' }
-            }
-          }
-        ]
-      }
-    }
-  ]
+              weapon: { var: 'event.targets.weapon' },
+            },
+          },
+        ],
+      },
+    },
+  ],
 };
 
 /**
@@ -1066,16 +1097,18 @@ export const ruleStructureTestSuite = {
         conditions: [
           {
             type: 'json_logic',
-            logic: { '==': [{ var: 'event.eventName' }, 'core:attempt_action'] }
-          }
+            logic: {
+              '==': [{ var: 'event.eventName' }, 'core:attempt_action'],
+            },
+          },
         ],
         operations: [
           {
             type: 'test_operation',
-            data: { test: 'value' }
-          }
-        ]
-      }
+            data: { test: 'value' },
+          },
+        ],
+      },
     },
     {
       name: 'Invalid Rule Structure',
@@ -1083,16 +1116,16 @@ export const ruleStructureTestSuite = {
       rule: {
         // Missing required fields
         conditions: 'invalid_conditions',
-        operations: null
-      }
-    }
-  ]
+        operations: null,
+      },
+    },
+  ],
 };
 
 export default {
   multiTargetRulesTestSuite,
   backwardCompatibilityTestSuite,
-  ruleStructureTestSuite
+  ruleStructureTestSuite,
 };
 ```
 
@@ -1120,7 +1153,7 @@ export class PerformanceTestingUtils {
       iterations = 100,
       warmupIterations = 10,
       timeout = 1000,
-      measureMemory = true
+      measureMemory = true,
     } = config;
 
     const metrics = {
@@ -1128,22 +1161,24 @@ export class PerformanceTestingUtils {
         total: iterations,
         completed: 0,
         failed: 0,
-        timeouts: 0
+        timeouts: 0,
       },
       timing: {
         total: 0,
         average: 0,
         min: Infinity,
         max: 0,
-        percentiles: {}
+        percentiles: {},
       },
-      memory: measureMemory ? {
-        initialUsage: 0,
-        peakUsage: 0,
-        finalUsage: 0,
-        leaked: 0
-      } : null,
-      errors: []
+      memory: measureMemory
+        ? {
+            initialUsage: 0,
+            peakUsage: 0,
+            finalUsage: 0,
+            leaked: 0,
+          }
+        : null,
+      errors: [],
     };
 
     // Record initial memory
@@ -1165,13 +1200,13 @@ export class PerformanceTestingUtils {
     // Actual performance measurement
     for (let i = 0; i < iterations; i++) {
       const startTime = performance.now();
-      
+
       try {
         await this.#executeWithTimeout(ruleExecutor, timeout);
-        
+
         const duration = performance.now() - startTime;
         executionTimes.push(duration);
-        
+
         metrics.iterations.completed++;
         metrics.timing.total += duration;
         metrics.timing.min = Math.min(metrics.timing.min, duration);
@@ -1184,7 +1219,6 @@ export class PerformanceTestingUtils {
             performance.memory.usedJSHeapSize
           );
         }
-
       } catch (error) {
         if (error.message === 'Timeout') {
           metrics.iterations.timeouts++;
@@ -1193,7 +1227,7 @@ export class PerformanceTestingUtils {
           metrics.errors.push({
             iteration: i,
             error: error.message,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
         }
       }
@@ -1201,14 +1235,16 @@ export class PerformanceTestingUtils {
 
     // Calculate final metrics
     if (metrics.iterations.completed > 0) {
-      metrics.timing.average = metrics.timing.total / metrics.iterations.completed;
+      metrics.timing.average =
+        metrics.timing.total / metrics.iterations.completed;
       metrics.timing.percentiles = this.#calculatePercentiles(executionTimes);
     }
 
     // Record final memory
     if (measureMemory && performance.memory) {
       metrics.memory.finalUsage = performance.memory.usedJSHeapSize;
-      metrics.memory.leaked = metrics.memory.finalUsage - metrics.memory.initialUsage;
+      metrics.memory.leaked =
+        metrics.memory.finalUsage - metrics.memory.initialUsage;
     }
 
     return metrics;
@@ -1256,20 +1292,20 @@ export class PerformanceTestingUtils {
    */
   static generatePerformanceReport(metrics) {
     const report = [];
-    
+
     report.push('=== Performance Test Report ===');
     report.push(`Total iterations: ${metrics.iterations.total}`);
     report.push(`Completed: ${metrics.iterations.completed}`);
     report.push(`Failed: ${metrics.iterations.failed}`);
     report.push(`Timeouts: ${metrics.iterations.timeouts}`);
     report.push('');
-    
+
     if (metrics.iterations.completed > 0) {
       report.push('=== Timing Metrics ===');
       report.push(`Average: ${metrics.timing.average.toFixed(2)}ms`);
       report.push(`Min: ${metrics.timing.min.toFixed(2)}ms`);
       report.push(`Max: ${metrics.timing.max.toFixed(2)}ms`);
-      
+
       if (metrics.timing.percentiles) {
         report.push('');
         report.push('=== Percentiles ===');
@@ -1282,17 +1318,27 @@ export class PerformanceTestingUtils {
     if (metrics.memory) {
       report.push('');
       report.push('=== Memory Usage ===');
-      report.push(`Initial: ${(metrics.memory.initialUsage / 1024 / 1024).toFixed(2)}MB`);
-      report.push(`Peak: ${(metrics.memory.peakUsage / 1024 / 1024).toFixed(2)}MB`);
-      report.push(`Final: ${(metrics.memory.finalUsage / 1024 / 1024).toFixed(2)}MB`);
-      report.push(`Leaked: ${(metrics.memory.leaked / 1024 / 1024).toFixed(2)}MB`);
+      report.push(
+        `Initial: ${(metrics.memory.initialUsage / 1024 / 1024).toFixed(2)}MB`
+      );
+      report.push(
+        `Peak: ${(metrics.memory.peakUsage / 1024 / 1024).toFixed(2)}MB`
+      );
+      report.push(
+        `Final: ${(metrics.memory.finalUsage / 1024 / 1024).toFixed(2)}MB`
+      );
+      report.push(
+        `Leaked: ${(metrics.memory.leaked / 1024 / 1024).toFixed(2)}MB`
+      );
     }
 
     if (metrics.errors.length > 0) {
       report.push('');
       report.push('=== Errors ===');
       metrics.errors.slice(0, 5).forEach((error, index) => {
-        report.push(`${index + 1}. Iteration ${error.iteration}: ${error.error}`);
+        report.push(
+          `${index + 1}. Iteration ${error.iteration}: ${error.error}`
+        );
       });
       if (metrics.errors.length > 5) {
         report.push(`... and ${metrics.errors.length - 5} more errors`);
@@ -1347,7 +1393,7 @@ export class RulesTestRunner {
     this.#framework = new RulesTestingFramework({
       logger,
       rulesEngine,
-      eventBus
+      eventBus,
     });
 
     try {
@@ -1356,11 +1402,12 @@ export class RulesTestRunner {
         console.log(`Running ${suite.name}...`);
         const result = await this.#framework.runTestSuite(suite);
         this.#results.push(result);
-        console.log(`Completed ${suite.name}: ${result.passed}/${result.total} passed`);
+        console.log(
+          `Completed ${suite.name}: ${result.passed}/${result.total} passed`
+        );
       }
 
       return this.#generateOverallResults();
-
     } finally {
       this.#cleanup();
     }
@@ -1384,7 +1431,7 @@ export class RulesTestRunner {
     this.#framework = new RulesTestingFramework({
       logger,
       rulesEngine,
-      eventBus
+      eventBus,
     });
 
     try {
@@ -1406,7 +1453,7 @@ export class RulesTestRunner {
       totalFailed: 0,
       totalWarnings: 0,
       overallPassRate: 0,
-      suiteResults: this.#results
+      suiteResults: this.#results,
     };
 
     for (const result of this.#results) {
@@ -1417,7 +1464,8 @@ export class RulesTestRunner {
     }
 
     if (overall.totalTests > 0) {
-      overall.overallPassRate = (overall.totalPassed / overall.totalTests) * 100;
+      overall.overallPassRate =
+        (overall.totalPassed / overall.totalTests) * 100;
     }
 
     return overall;
@@ -1502,6 +1550,7 @@ None (new testing framework only)
 ## Next Steps
 
 After this ticket completion:
+
 1. Move to Ticket 14: Comprehensive Integration Testing
 2. Use framework to test entire multi-target action system
 3. Validate end-to-end functionality with comprehensive test scenarios

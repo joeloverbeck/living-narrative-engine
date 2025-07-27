@@ -301,10 +301,18 @@ describe('Character Concepts Manager CSS Tests', () => {
 
   describe('CSS Structure Quality', () => {
     it('should not have unintentional duplicate selectors', () => {
-      const selectors = cssContent.match(/^[^{]*(?=\s*\{)/gm) || [];
+      // Remove @keyframes blocks before extracting selectors
+      const cssWithoutKeyframes = cssContent.replace(
+        /@keyframes[^{]*\{[^}]*(?:\{[^}]*\}[^}]*)*\}/g,
+        ''
+      );
+
+      const selectors = cssWithoutKeyframes.match(/^[^{]*(?=\s*\{)/gm) || [];
       const cleanSelectors = selectors
         .map((s) => s.trim())
-        .filter((s) => s && !s.startsWith('/*') && !s.startsWith('@'));
+        .filter((s) => s && !s.startsWith('/*') && !s.startsWith('@'))
+        // Filter out animation percentage selectors (0%, 50%, 100%, etc.)
+        .filter((s) => !s.match(/^\d+%$/));
 
       // Allow some expected duplicates like media queries
       const duplicates = cleanSelectors.filter(

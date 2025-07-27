@@ -13,25 +13,28 @@ This report analyzes the current implementation of multi-target actions in the L
 The multi-target formatting system is fully functional and includes:
 
 **MultiTargetActionFormatter** (`src/actions/formatters/MultiTargetActionFormatter.js`)
+
 - Supports multi-placeholder templates (e.g., "adjust {person}'s {clothing}")
 - Generates target combinations for complex scenarios
 - Handles both single actions and combination generation
 - Maintains backward compatibility with legacy formatters
 
 **ActionFormattingStage** (`src/actions/pipeline/stages/ActionFormattingStage.js`)
+
 - Processes multi-target resolved data
 - Extracts multiple `targetIds` and includes them in action parameters
 - Provides fallback to legacy formatting when needed
 - Creates rich action information with `isMultiTarget` flag
 
 **Example of Working Multi-Target Formatting:**
+
 ```javascript
 // Input template: "adjust {person}'s {clothing}"
 // Resolved targets: { person: [alice_entity], clothing: [red_dress_entity] }
 // Output: "adjust Alice's red dress"
-// Action params: { 
+// Action params: {
 //   targetIds: { person: ["alice_123"], clothing: ["dress_456"] },
-//   isMultiTarget: true 
+//   isMultiTarget: true
 // }
 ```
 
@@ -40,17 +43,19 @@ The multi-target formatting system is fully functional and includes:
 The event system remains restricted to single targets:
 
 **Event Schema** (`data/mods/core/events/attempt_action.event.json`)
+
 ```json
 {
   "eventName": "core:attempt_action",
   "actorId": "string (required)",
-  "actionId": "string (required)", 
-  "targetId": "string (optional)",     // ← SINGLE TARGET ONLY
+  "actionId": "string (required)",
+  "targetId": "string (optional)", // ← SINGLE TARGET ONLY
   "originalInput": "string (required)"
 }
 ```
 
 **Command Processor** (`src/commands/commandProcessor.js:186-196`)
+
 ```javascript
 #createAttemptActionPayload(actor, turnAction) {
   const { actionDefinitionId, resolvedParameters, commandString } = turnAction;
@@ -69,6 +74,7 @@ The event system remains restricted to single targets:
 All rules can only access a single target through the event payload:
 
 **Example Rule** (`data/mods/core/rules/follow.rule.json`)
+
 ```json
 {
   "event_type": "core:attempt_action",
@@ -77,7 +83,7 @@ All rules can only access a single target through the event payload:
       "type": "CHECK_FOLLOW_CYCLE",
       "parameters": {
         "follower_id": "{event.payload.actorId}",
-        "leader_id": "{event.payload.targetId}"    // ← SINGLE TARGET ONLY
+        "leader_id": "{event.payload.targetId}" // ← SINGLE TARGET ONLY
       }
     }
   ]
@@ -85,6 +91,7 @@ All rules can only access a single target through the event payload:
 ```
 
 **Pattern Analysis**: All 11 core rules examined follow this same pattern:
+
 - `{event.payload.actorId}` - Actor performing action
 - `{event.payload.targetId}` - Single target (if any)
 - `{event.payload.actionId}` - Action being performed
@@ -105,9 +112,9 @@ All rules can only access a single target through the event payload:
    ├── Takes ONLY primary target: resolvedParameters?.targetId
    └── Creates event payload with single targetId: "alice"
 
-3. Rule Processing  
+3. Rule Processing
    ├── Rules receive attempt_action event
-   ├── Can ONLY access {event.payload.targetId}: "alice"  
+   ├── Can ONLY access {event.payload.targetId}: "alice"
    └── Cannot access secondary target "dress"
 ```
 
@@ -127,7 +134,7 @@ For an action like "adjust Alice's red dress":
    - Rule problem: Cannot determine which clothing item to adjust
 
 2. **"throw {item} at {target}"**
-   - Formatted: "throw knife at goblin"  
+   - Formatted: "throw knife at goblin"
    - Event: `targetId: "knife_456"` (goblin information lost)
    - Rule problem: Cannot determine throw target
 
@@ -171,6 +178,7 @@ The `specs/multi-target-action-system.spec.md` defines an enhanced event payload
 ### Target Data Extraction (Working)
 
 In `ActionFormattingStage.js:356-362`:
+
 ```javascript
 #extractTargetIds(resolvedTargets) {
   const targetIds = {};
@@ -186,10 +194,11 @@ In `ActionFormattingStage.js:356-362`:
 ### Command Processor Bottleneck (Critical Gap)
 
 In `commandProcessor.js:186-196`, the bottleneck occurs:
+
 ```javascript
 // Multi-target data from formatting stage is available here
 // but only primary target is extracted:
-targetId: resolvedParameters?.targetId || null
+targetId: resolvedParameters?.targetId || null;
 ```
 
 **The `resolvedParameters` object likely contains the full multi-target data, but only the primary target is extracted.**
@@ -197,6 +206,7 @@ targetId: resolvedParameters?.targetId || null
 ### Event Schema Limitation (Missing Implementation)
 
 The `attempt_action.event.json` schema needs to be updated to support:
+
 ```json
 {
   "properties": {
@@ -240,6 +250,7 @@ The `attempt_action.event.json` schema needs to be updated to support:
 ### Priority 1: Critical Path (Must Fix)
 
 1. **Update Event Schema** (`attempt_action.event.json`)
+
    ```json
    {
      "targets": {
@@ -251,6 +262,7 @@ The `attempt_action.event.json` schema needs to be updated to support:
    ```
 
 2. **Enhance Command Processor** (`commandProcessor.js`)
+
    ```javascript
    #createAttemptActionPayload(actor, turnAction) {
      return {
@@ -306,21 +318,25 @@ The `attempt_action.event.json` schema needs to be updated to support:
 ## Implementation Strategy
 
 ### Phase 1: Foundation (Week 1-2)
+
 - Update event schema with backward-compatible multi-target support
 - Modify command processor to pass multi-target data
 - Test with existing single-target rules (should continue working)
 
-### Phase 2: Rule Enhancement (Week 3-4)  
+### Phase 2: Rule Enhancement (Week 3-4)
+
 - Update 2-3 core rules to demonstrate multi-target capability
 - Create example multi-target actions with corresponding rules
 - Validate end-to-end multi-target action execution
 
 ### Phase 3: Documentation & Testing (Week 5-6)
+
 - Update all documentation with multi-target examples
 - Create comprehensive test suite for multi-target scenarios
 - Provide migration guide for modders
 
 ### Phase 4: Ecosystem Enhancement (Week 7-8)
+
 - Add development tools for multi-target debugging
 - Create rule templates for common patterns
 - Implement validation and warning systems

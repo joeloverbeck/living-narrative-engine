@@ -58,7 +58,7 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
 
     // Create entity manager with test data
     entityManager = new SimpleEntityManager();
-    
+
     // Add test entity with component
     entityManager.addComponent(ENTITY_ID, COMPONENT_TYPE, {
       items: ['sword', 'shield'],
@@ -170,7 +170,10 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
       await handler.execute(params, executionContext);
 
       // Verify the change persisted in the entity manager
-      const updatedComponent = entityManager.getComponentData(ENTITY_ID, COMPONENT_TYPE);
+      const updatedComponent = entityManager.getComponentData(
+        ENTITY_ID,
+        COMPONENT_TYPE
+      );
       expect(updatedComponent.items).toEqual(['sword', 'shield', 'magic_wand']);
     });
 
@@ -185,8 +188,15 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
 
       await handler.execute(params, executionContext);
 
-      const updatedComponent = entityManager.getComponentData(ENTITY_ID, COMPONENT_TYPE);
-      expect(updatedComponent.nested.equipment).toEqual(['helmet', 'boots', 'gauntlets']);
+      const updatedComponent = entityManager.getComponentData(
+        ENTITY_ID,
+        COMPONENT_TYPE
+      );
+      expect(updatedComponent.nested.equipment).toEqual([
+        'helmet',
+        'boots',
+        'gauntlets',
+      ]);
     });
   });
 
@@ -212,7 +222,8 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         {
-          message: 'MODIFY_ARRAY_FIELD: Failed to commit changes via addComponent.',
+          message:
+            'MODIFY_ARRAY_FIELD: Failed to commit changes via addComponent.',
           details: {
             error: 'Database connection failed',
             entityId: ENTITY_ID,
@@ -244,7 +255,9 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
       await handler.execute(params, executionContext);
 
       // Covers line 332: Early return when commitChanges fails
-      expect(executionContext.evaluationContext.context.failed_result).toBeUndefined();
+      expect(
+        executionContext.evaluationContext.context.failed_result
+      ).toBeUndefined();
 
       // Restore original method
       entityManager.addComponent = originalAddComponent;
@@ -520,7 +533,9 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
       await handler.execute(params, executionContext);
 
       // Covers lines 337-350: Pop result writing
-      expect(executionContext.evaluationContext.context.popped_item).toBe('shield');
+      expect(executionContext.evaluationContext.context.popped_item).toBe(
+        'shield'
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "MODIFY_ARRAY_FIELD: Stored result in context variable 'popped_item'."
       );
@@ -666,7 +681,10 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
       await eventBus.dispatch('test:modify_array', {});
 
       // Verify the modification happened
-      const updatedComponent = entityManager.getComponentData(ENTITY_ID, COMPONENT_TYPE);
+      const updatedComponent = entityManager.getComponentData(
+        ENTITY_ID,
+        COMPONENT_TYPE
+      );
       expect(updatedComponent.items).toContain('system_added_item');
     });
 
@@ -692,7 +710,10 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
       // Verify operation completed efficiently (should be fast even with large arrays)
       expect(endTime - startTime).toBeLessThan(100); // 100ms threshold
 
-      const updatedComponent = entityManager.getComponentData(ENTITY_ID, COMPONENT_TYPE);
+      const updatedComponent = entityManager.getComponentData(
+        ENTITY_ID,
+        COMPONENT_TYPE
+      );
       expect(updatedComponent.largeItems).toHaveLength(1001);
       expect(updatedComponent.largeItems[1000]).toBe('new_large_item');
     });
@@ -721,8 +742,15 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
 
       await handler.execute(params, executionContext);
 
-      const updatedComponent = entityManager.getComponentData(ENTITY_ID, COMPONENT_TYPE);
-      expect(updatedComponent.player.inventory.bags.main).toEqual(['coin', 'key', 'potion']);
+      const updatedComponent = entityManager.getComponentData(
+        ENTITY_ID,
+        COMPONENT_TYPE
+      );
+      expect(updatedComponent.player.inventory.bags.main).toEqual([
+        'coin',
+        'key',
+        'potion',
+      ]);
     });
 
     test('should trim field parameter and handle whitespace', async () => {
@@ -736,7 +764,10 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
 
       await handler.execute(params, executionContext);
 
-      const updatedComponent = entityManager.getComponentData(ENTITY_ID, COMPONENT_TYPE);
+      const updatedComponent = entityManager.getComponentData(
+        ENTITY_ID,
+        COMPONENT_TYPE
+      );
       expect(updatedComponent.items).toContain('trimmed_item');
     });
   });

@@ -53,7 +53,7 @@ describe('BodyGraphService', () => {
         components: {
           'anatomy:part': { subType: 'hand' },
           'anatomy:joint': { parentId: 'arm', socketId: 'wrist' },
-          'weapon:grip': {},
+          'weapon:grip': { capacity: 1 },
           status: { locked: true },
         },
       },

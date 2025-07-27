@@ -43,7 +43,7 @@ import MultiTargetEventBuilder from '../entities/multiTarget/multiTargetEventBui
  */
 async #createAttemptActionPayload(actor, turnAction) {
   const startTime = performance.now();
-  
+
   try {
     // Validate inputs
     this.#validatePayloadInputs(actor, turnAction);
@@ -53,9 +53,9 @@ async #createAttemptActionPayload(actor, turnAction) {
 
     // Create event payload using the builder pattern
     const eventBuilder = MultiTargetEventBuilder.fromTurnAction(
-      actor, 
-      turnAction, 
-      extractionResult, 
+      actor,
+      turnAction,
+      extractionResult,
       this.#logger
     );
 
@@ -107,8 +107,8 @@ async #createAttemptActionPayload(actor, turnAction) {
 async #extractTargetData(resolvedParameters) {
   // Initialize extraction service if not already done
   if (!this.#targetExtractionService) {
-    this.#targetExtractionService = new TargetExtractionService({ 
-      logger: this.#logger 
+    this.#targetExtractionService = new TargetExtractionService({
+      logger: this.#logger
     });
   }
 
@@ -126,7 +126,7 @@ async #extractTargetData(resolvedParameters) {
 
   // Use original simple payload creation as fallback
   const { actionDefinitionId, resolvedParameters, commandString } = turnAction;
-  
+
   return {
     eventName: 'core:attempt_action',
     actorId: actor.id,
@@ -177,7 +177,7 @@ async #extractTargetData(resolvedParameters) {
  */
 #getPayloadCreationStatistics() {
   const extractionStats = this.#targetExtractionService?.getPerformanceMetrics() || {};
-  
+
   return {
     totalPayloadsCreated: this.#payloadCreationCount || 0,
     multiTargetPayloads: this.#multiTargetPayloadCount || 0,
@@ -197,7 +197,7 @@ async #extractTargetData(resolvedParameters) {
   this.#legacyPayloadCount = 0;
   this.#fallbackPayloadCount = 0;
   this.#averagePayloadCreationTime = 0;
-  
+
   if (this.#targetExtractionService) {
     this.#targetExtractionService.resetPerformanceMetrics();
   }
@@ -256,7 +256,7 @@ async #createAttemptActionPayload(actor, turnAction) {
   const startTime = performance.now();
   let extractionResult = null;
   let isFallback = false;
-  
+
   try {
     // Validate inputs
     this.#validatePayloadInputs(actor, turnAction);
@@ -266,9 +266,9 @@ async #createAttemptActionPayload(actor, turnAction) {
 
     // Create event payload
     const eventBuilder = MultiTargetEventBuilder.fromTurnAction(
-      actor, 
-      turnAction, 
-      extractionResult, 
+      actor,
+      turnAction,
+      extractionResult,
       this.#logger
     );
 
@@ -322,16 +322,16 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
 
   beforeEach(() => {
     testBed = new TestBedClass();
-    
+
     // Create mock dependencies
     const logger = testBed.createMockLogger();
     const eventBus = testBed.createMockEventBus();
-    
+
     commandProcessor = new CommandProcessor({ logger, eventBus });
-    
+
     mockActor = {
       id: 'actor_123',
-      name: 'Test Actor'
+      name: 'Test Actor',
     };
   });
 
@@ -348,23 +348,26 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
           isMultiTarget: true,
           targetIds: {
             item: ['knife_123'],
-            target: ['goblin_456']
-          }
-        }
+            target: ['goblin_456'],
+          },
+        },
       };
 
-      const payload = await commandProcessor.createAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor.createAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       expect(payload).toMatchObject({
         eventName: 'core:attempt_action',
         actorId: 'actor_123',
         actionId: 'combat:throw',
-        originalInput: 'throw knife at goblin'
+        originalInput: 'throw knife at goblin',
       });
 
       expect(payload.targets).toEqual({
         item: 'knife_123',
-        target: 'goblin_456'
+        target: 'goblin_456',
       });
 
       expect(payload.targetId).toBe('goblin_456'); // Primary target for backward compatibility
@@ -376,18 +379,21 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         actionDefinitionId: 'core:follow',
         commandString: 'follow Alice',
         resolvedParameters: {
-          targetId: 'alice_789'
-        }
+          targetId: 'alice_789',
+        },
       };
 
-      const payload = await commandProcessor.createAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor.createAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       expect(payload).toMatchObject({
         eventName: 'core:attempt_action',
         actorId: 'actor_123',
         actionId: 'core:follow',
         targetId: 'alice_789',
-        originalInput: 'follow Alice'
+        originalInput: 'follow Alice',
       });
 
       expect(payload.targets).toBeUndefined(); // No targets object for single target
@@ -398,17 +404,20 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       const turnAction = {
         actionDefinitionId: 'core:emote',
         commandString: 'smile',
-        resolvedParameters: {}
+        resolvedParameters: {},
       };
 
-      const payload = await commandProcessor.createAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor.createAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       expect(payload).toMatchObject({
         eventName: 'core:attempt_action',
         actorId: 'actor_123',
         actionId: 'core:emote',
         targetId: null,
-        originalInput: 'smile'
+        originalInput: 'smile',
       });
 
       expect(payload.targets).toBeUndefined();
@@ -425,19 +434,22 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
             secondary: ['entity_2'],
             item: ['item_3'],
             tool: ['tool_4'],
-            location: ['location_5']
-          }
-        }
+            location: ['location_5'],
+          },
+        },
       };
 
-      const payload = await commandProcessor.createAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor.createAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       expect(payload.targets).toEqual({
         primary: 'entity_1',
         secondary: 'entity_2',
         item: 'item_3',
         tool: 'tool_4',
-        location: 'location_5'
+        location: 'location_5',
       });
 
       expect(payload.targetId).toBe('entity_1'); // Primary target
@@ -452,18 +464,21 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         commandString: 'test action',
         resolvedParameters: {
           isMultiTarget: true,
-          targetIds: null // This will cause extraction to fail
-        }
+          targetIds: null, // This will cause extraction to fail
+        },
       };
 
-      const payload = await commandProcessor.createAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor.createAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       // Should still create a valid payload
       expect(payload).toMatchObject({
         eventName: 'core:attempt_action',
         actorId: 'actor_123',
         actionId: 'test:action',
-        originalInput: 'test action'
+        originalInput: 'test action',
       });
 
       expect(payload.targetId).toBe(null);
@@ -473,7 +488,7 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       const turnAction = {
         actionDefinitionId: 'test:action',
         commandString: 'test action',
-        resolvedParameters: {}
+        resolvedParameters: {},
       };
 
       await expect(
@@ -484,18 +499,22 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
     it('should handle invalid turn action gracefully', async () => {
       await expect(
         commandProcessor.createAttemptActionPayload(mockActor, null)
-      ).rejects.toThrow('Valid turn action with actionDefinitionId is required');
+      ).rejects.toThrow(
+        'Valid turn action with actionDefinitionId is required'
+      );
     });
 
     it('should handle missing action definition ID', async () => {
       const turnAction = {
         commandString: 'test action',
-        resolvedParameters: {}
+        resolvedParameters: {},
       };
 
       await expect(
         commandProcessor.createAttemptActionPayload(mockActor, turnAction)
-      ).rejects.toThrow('Valid turn action with actionDefinitionId is required');
+      ).rejects.toThrow(
+        'Valid turn action with actionDefinitionId is required'
+      );
     });
   });
 
@@ -505,26 +524,29 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         {
           actionDefinitionId: 'test:legacy',
           commandString: 'legacy action',
-          resolvedParameters: { targetId: 'target_1' }
+          resolvedParameters: { targetId: 'target_1' },
         },
         {
           actionDefinitionId: 'test:multi',
           commandString: 'multi action',
           resolvedParameters: {
             isMultiTarget: true,
-            targetIds: { item: ['item_1'], target: ['target_1'] }
-          }
+            targetIds: { item: ['item_1'], target: ['target_1'] },
+          },
         },
         {
           actionDefinitionId: 'test:legacy2',
           commandString: 'legacy action 2',
-          resolvedParameters: { targetId: 'target_2' }
-        }
+          resolvedParameters: { targetId: 'target_2' },
+        },
       ];
 
       // Create multiple payloads
       for (const turnAction of turnActions) {
-        await commandProcessor.createAttemptActionPayload(mockActor, turnAction);
+        await commandProcessor.createAttemptActionPayload(
+          mockActor,
+          turnAction
+        );
       }
 
       const stats = commandProcessor.getPayloadCreationStatistics();
@@ -545,13 +567,16 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
           targetIds: {
             item: ['item_1'],
             target: ['target_1'],
-            secondary: ['secondary_1']
-          }
-        }
+            secondary: ['secondary_1'],
+          },
+        },
       };
 
       const startTime = performance.now();
-      const payload = await commandProcessor.createAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor.createAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
       const duration = performance.now() - startTime;
 
       expect(payload).toBeDefined();
@@ -563,11 +588,11 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       const turnAction = {
         actionDefinitionId: 'test:action',
         commandString: 'test action',
-        resolvedParameters: { targetId: 'target_1' }
+        resolvedParameters: { targetId: 'target_1' },
       };
 
       await commandProcessor.createAttemptActionPayload(mockActor, turnAction);
-      
+
       // Reset metrics
       commandProcessor.resetPayloadCreationStatistics();
       const stats = commandProcessor.getPayloadCreationStatistics();
@@ -583,11 +608,14 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         actionDefinitionId: 'core:follow',
         commandString: 'follow Alice',
         resolvedParameters: {
-          targetId: 'alice_789'
-        }
+          targetId: 'alice_789',
+        },
       };
 
-      const payload = await commandProcessor.createAttemptActionPayload(mockActor, legacyTurnAction);
+      const payload = await commandProcessor.createAttemptActionPayload(
+        mockActor,
+        legacyTurnAction
+      );
 
       // Verify exact legacy format
       expect(payload).toEqual({
@@ -596,11 +624,18 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         actionId: 'core:follow',
         targetId: 'alice_789',
         originalInput: 'follow Alice',
-        timestamp: expect.any(Number)
+        timestamp: expect.any(Number),
       });
 
       // Ensure no additional fields
-      const expectedKeys = ['eventName', 'actorId', 'actionId', 'targetId', 'originalInput', 'timestamp'];
+      const expectedKeys = [
+        'eventName',
+        'actorId',
+        'actionId',
+        'targetId',
+        'originalInput',
+        'timestamp',
+      ];
       expect(Object.keys(payload).sort()).toEqual(expectedKeys.sort());
     });
 
@@ -609,11 +644,14 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
         actionDefinitionId: 'core:emote',
         commandString: 'smile',
         resolvedParameters: {
-          targetId: null
-        }
+          targetId: null,
+        },
       };
 
-      const payload = await commandProcessor.createAttemptActionPayload(mockActor, emoteAction);
+      const payload = await commandProcessor.createAttemptActionPayload(
+        mockActor,
+        emoteAction
+      );
 
       expect(payload.targetId).toBe(null);
       expect(payload.targets).toBeUndefined();
@@ -683,6 +721,7 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
 ## Next Steps
 
 After this ticket completion:
+
 1. Move to Ticket 09: Add Command Processor Unit Tests
 2. Complete comprehensive testing of enhanced command processing
 3. Validate complete multi-target action flow end-to-end

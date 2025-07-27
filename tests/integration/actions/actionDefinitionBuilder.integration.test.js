@@ -597,9 +597,7 @@ describe('ActionDefinitionBuilder Integration', () => {
       // Note: We're not adding name/description which might be required by validator
 
       // This should throw when build() calls validate()
-      expect(() => builder.build()).toThrow(
-        'Invalid action definition:'
-      );
+      expect(() => builder.build()).toThrow('Invalid action definition:');
     });
 
     it('should handle fromDefinition validation errors', () => {
@@ -613,9 +611,9 @@ describe('ActionDefinitionBuilder Integration', () => {
         'Definition must have an ID'
       );
 
-      expect(() => ActionDefinitionBuilder.fromDefinition({ name: 'Test' })).toThrow(
-        'Definition must have an ID'
-      );
+      expect(() =>
+        ActionDefinitionBuilder.fromDefinition({ name: 'Test' })
+      ).toThrow('Definition must have an ID');
     });
 
     it('should handle empty component arrays gracefully', () => {
@@ -678,8 +676,10 @@ describe('ActionDefinitionBuilder Integration', () => {
   describe('ActionDefinitionValidator integration', () => {
     it('should integrate with validator for validation failures', () => {
       // Test validation with missing required fields
-      const builderMinimal = new ActionDefinitionBuilder('test:validator-integration');
-      
+      const builderMinimal = new ActionDefinitionBuilder(
+        'test:validator-integration'
+      );
+
       // Should fail validation due to missing name and description
       const validation = builderMinimal.validate();
       expect(validation.isValid).toBe(false);
@@ -711,7 +711,9 @@ describe('ActionDefinitionBuilder Integration', () => {
 
       // Invalid builder should throw during build
       const builderInvalid = new ActionDefinitionBuilder('test:invalid-build');
-      expect(() => builderInvalid.build()).toThrow('Invalid action definition:');
+      expect(() => builderInvalid.build()).toThrow(
+        'Invalid action definition:'
+      );
     });
   });
 
@@ -730,7 +732,9 @@ describe('ActionDefinitionBuilder Integration', () => {
         .asTargetedAction('core:nearby_items')
         .build();
 
-      const complexAction = new ActionDefinitionBuilder('integration:complex-attack')
+      const complexAction = new ActionDefinitionBuilder(
+        'integration:complex-attack'
+      )
         .withName('Complex Attack')
         .withDescription('Perform a complex attack maneuver')
         .asTargetedAction('core:enemies')
@@ -738,12 +742,15 @@ describe('ActionDefinitionBuilder Integration', () => {
         .requiresComponents(['core:weapon', 'core:stamina'])
         .withPrerequisites([
           'core:has-weapon',
-          { condition: 'core:has-stamina', message: 'You are too tired to attack' }
+          {
+            condition: 'core:has-stamina',
+            message: 'You are too tired to attack',
+          },
         ])
         .build();
 
       // Verify all actions have expected structure for system compatibility
-      [basicAction, targetedAction, complexAction].forEach(action => {
+      [basicAction, targetedAction, complexAction].forEach((action) => {
         expect(action).toHaveProperty('id');
         expect(action).toHaveProperty('name');
         expect(action).toHaveProperty('description');
@@ -771,11 +778,11 @@ describe('ActionDefinitionBuilder Integration', () => {
           .withDescription('Second factory test action')
           .asTargetedAction('test:targets')
           .requiresComponent('test:component')
-          .build()
+          .build(),
       ];
 
       // Verify all actions are valid and compatible
-      testActions.forEach(action => {
+      testActions.forEach((action) => {
         expect(validateActionStructure(action)).toBe(true);
         expect(action).toBeValidActionDefinition();
       });
@@ -786,7 +793,9 @@ describe('ActionDefinitionBuilder Integration', () => {
       const edgeCaseActions = [
         // Very long action name
         new ActionDefinitionBuilder('edge:long-name')
-          .withName('A Very Long Action Name That Might Come From User Input Or Mod Content That Could Be Quite Lengthy')
+          .withName(
+            'A Very Long Action Name That Might Come From User Input Or Mod Content That Could Be Quite Lengthy'
+          )
           .withDescription('Action with very long name')
           .asBasicAction()
           .build(),
@@ -797,13 +806,21 @@ describe('ActionDefinitionBuilder Integration', () => {
           .withDescription('Action with many requirements')
           .asTargetedAction('test:complex-scope')
           .requiresComponents([
-            'core:component1', 'core:component2', 'core:component3',
-            'mod:component1', 'mod:component2', 'system:component1'
+            'core:component1',
+            'core:component2',
+            'core:component3',
+            'mod:component1',
+            'mod:component2',
+            'system:component1',
           ])
           .withPrerequisites([
-            'core:condition1', 'core:condition2',
+            'core:condition1',
+            'core:condition2',
             { condition: 'mod:condition1', message: 'Mod condition failed' },
-            { condition: 'system:condition1', message: 'System condition failed' }
+            {
+              condition: 'system:condition1',
+              message: 'System condition failed',
+            },
           ])
           .asCombatAction()
           .build(),
@@ -812,11 +829,14 @@ describe('ActionDefinitionBuilder Integration', () => {
         new ActionDefinitionBuilder('edge:special-template')
           .withName('Special Template')
           .withDescription('Action with special template characters')
-          .asTargetedAction('test:targets', 'perform "{special}" action on {target}')
-          .build()
+          .asTargetedAction(
+            'test:targets',
+            'perform "{special}" action on {target}'
+          )
+          .build(),
       ];
 
-      edgeCaseActions.forEach(action => {
+      edgeCaseActions.forEach((action) => {
         expect(validateActionStructure(action)).toBe(true);
         expect(action).toBeValidActionDefinition();
       });
@@ -877,7 +897,7 @@ describe('ActionDefinitionBuilder Integration', () => {
     it('should handle rapid creation and destruction cycles', () => {
       // Test memory management under rapid allocation/deallocation
       const startTime = performance.now();
-      
+
       for (let cycle = 0; cycle < 10; cycle++) {
         const builders = Array.from({ length: 100 }, (_, i) =>
           new ActionDefinitionBuilder(`perf:cycle${cycle}-action${i}`)
@@ -886,33 +906,61 @@ describe('ActionDefinitionBuilder Integration', () => {
             .asBasicAction()
         );
 
-        const actions = builders.map(builder => builder.build());
-        
+        const actions = builders.map((builder) => builder.build());
+
         // Verify all actions in this cycle
-        actions.forEach(action => {
+        actions.forEach((action) => {
           expect(validateActionStructure(action)).toBe(true);
         });
       }
 
       const endTime = performance.now();
       const duration = endTime - startTime;
-      
+
       // Should complete 1000 actions across 10 cycles in reasonable time
       expect(duration).toBeLessThan(500); // Less than 500ms total
     });
 
     it('should maintain consistent performance across different action types', () => {
       const actionTypes = [
-        () => new ActionDefinitionBuilder('perf:basic').withName('Basic').withDescription('Basic action').asBasicAction().build(),
-        () => new ActionDefinitionBuilder('perf:targeted').withName('Targeted').withDescription('Targeted action').asTargetedAction('test:scope').build(),
-        () => new ActionDefinitionBuilder('perf:movement').withName('Movement').withDescription('Movement action').asMovementAction().asBasicAction().build(),
-        () => new ActionDefinitionBuilder('perf:combat').withName('Combat').withDescription('Combat action').asCombatAction().asBasicAction().build(),
-        () => new ActionDefinitionBuilder('perf:complex').withName('Complex').withDescription('Complex action')
-          .asTargetedAction('test:scope').asCombatAction().requiresComponents(['test:a', 'test:b', 'test:c'])
-          .withPrerequisites(['test:x', 'test:y', 'test:z']).build()
+        () =>
+          new ActionDefinitionBuilder('perf:basic')
+            .withName('Basic')
+            .withDescription('Basic action')
+            .asBasicAction()
+            .build(),
+        () =>
+          new ActionDefinitionBuilder('perf:targeted')
+            .withName('Targeted')
+            .withDescription('Targeted action')
+            .asTargetedAction('test:scope')
+            .build(),
+        () =>
+          new ActionDefinitionBuilder('perf:movement')
+            .withName('Movement')
+            .withDescription('Movement action')
+            .asMovementAction()
+            .asBasicAction()
+            .build(),
+        () =>
+          new ActionDefinitionBuilder('perf:combat')
+            .withName('Combat')
+            .withDescription('Combat action')
+            .asCombatAction()
+            .asBasicAction()
+            .build(),
+        () =>
+          new ActionDefinitionBuilder('perf:complex')
+            .withName('Complex')
+            .withDescription('Complex action')
+            .asTargetedAction('test:scope')
+            .asCombatAction()
+            .requiresComponents(['test:a', 'test:b', 'test:c'])
+            .withPrerequisites(['test:x', 'test:y', 'test:z'])
+            .build(),
       ];
 
-      const times = actionTypes.map(createAction => {
+      const times = actionTypes.map((createAction) => {
         const start = performance.now();
         for (let i = 0; i < 100; i++) {
           createAction();
@@ -924,7 +972,7 @@ describe('ActionDefinitionBuilder Integration', () => {
       const maxTime = Math.max(...times);
       const minTime = Math.min(...times);
       const variance = maxTime - minTime;
-      
+
       // Variance should be reasonable (less than 50ms difference)
       expect(variance).toBeLessThan(50);
       expect(maxTime).toBeLessThan(100); // No single type should take more than 100ms for 100 actions
@@ -934,32 +982,40 @@ describe('ActionDefinitionBuilder Integration', () => {
       it('should not create excessive garbage under stress', () => {
         // Only run this test if garbage collection is available
         const initialMemory = process.memoryUsage().heapUsed;
-        
+
         // Force garbage collection before test
         global.gc();
         const baselineMemory = process.memoryUsage().heapUsed;
-        
+
         // Create and destroy many builders
         for (let i = 0; i < 1000; i++) {
           const builder = new ActionDefinitionBuilder(`stress:action${i}`)
             .withName(`Stress Action ${i}`)
             .withDescription(`Stress test action ${i}`)
             .asTargetedAction('stress:scope')
-            .requiresComponents(['stress:comp1', 'stress:comp2', 'stress:comp3'])
-            .withPrerequisites(['stress:cond1', 'stress:cond2', 'stress:cond3']);
-          
+            .requiresComponents([
+              'stress:comp1',
+              'stress:comp2',
+              'stress:comp3',
+            ])
+            .withPrerequisites([
+              'stress:cond1',
+              'stress:cond2',
+              'stress:cond3',
+            ]);
+
           const action = builder.build();
-          
+
           // Use the action briefly
           expect(action.id).toBeDefined();
         }
-        
+
         // Force garbage collection after test
         global.gc();
         const finalMemory = process.memoryUsage().heapUsed;
-        
+
         const memoryIncrease = finalMemory - baselineMemory;
-        
+
         // Memory increase should be reasonable (less than 10MB for 1000 actions)
         expect(memoryIncrease).toBeLessThan(10 * 1024 * 1024);
       });

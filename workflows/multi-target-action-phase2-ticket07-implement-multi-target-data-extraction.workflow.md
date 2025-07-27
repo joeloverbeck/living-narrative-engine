@@ -42,7 +42,7 @@ import TargetExtractionResult from '../entities/multiTarget/targetExtractionResu
  */
 #extractMultiTargetData(resolvedParameters) {
   const startTime = performance.now();
-  
+
   try {
     // Validate input
     if (!resolvedParameters) {
@@ -63,7 +63,7 @@ import TargetExtractionResult from '../entities/multiTarget/targetExtractionResu
       error: error.message,
       resolvedParameters: this.#sanitizeForLogging(resolvedParameters)
     });
-    
+
     // Return empty result on error rather than throwing
     return TargetExtractionResult.createEmpty(this.#logger);
   } finally {
@@ -99,7 +99,7 @@ import TargetExtractionResult from '../entities/multiTarget/targetExtractionResu
   try {
     // Process targetIds object from formatting stage
     const targets = this.#convertTargetIdsToTargets(resolvedParameters.targetIds);
-    
+
     if (Object.keys(targets).length === 0) {
       this.#logger.warn('Multi-target formatting produced no valid targets', {
         originalTargetIds: resolvedParameters.targetIds
@@ -130,10 +130,10 @@ import TargetExtractionResult from '../entities/multiTarget/targetExtractionResu
       error: error.message,
       targetIds: resolvedParameters.targetIds
     });
-    
+
     extractionMetadata.error = error.message;
     extractionMetadata.success = false;
-    
+
     return new TargetExtractionResult({
       targetManager,
       extractionMetadata
@@ -163,10 +163,10 @@ import TargetExtractionResult from '../entities/multiTarget/targetExtractionResu
   if (resolvedParameters.targetId && resolvedParameters.targetId.trim()) {
     try {
       targetManager.addTarget('primary', resolvedParameters.targetId);
-      
+
       extractionMetadata.targetId = resolvedParameters.targetId;
       extractionMetadata.primaryTarget = resolvedParameters.targetId;
-      
+
       this.#logger.debug('Legacy target data extracted', {
         targetId: resolvedParameters.targetId
       });
@@ -175,7 +175,7 @@ import TargetExtractionResult from '../entities/multiTarget/targetExtractionResu
         error: error.message,
         targetId: resolvedParameters.targetId
       });
-      
+
       extractionMetadata.error = error.message;
     }
   } else {
@@ -197,7 +197,7 @@ import TargetExtractionResult from '../entities/multiTarget/targetExtractionResu
  */
 #convertTargetIdsToTargets(targetIds) {
   const targets = {};
-  
+
   if (!targetIds || typeof targetIds !== 'object') {
     return targets;
   }
@@ -212,7 +212,7 @@ import TargetExtractionResult from '../entities/multiTarget/targetExtractionResu
 
       // Handle different target list formats
       let targetId = null;
-      
+
       if (Array.isArray(targetList)) {
         // Take first target from array (combination generation may produce multiple)
         if (targetList.length > 0 && targetList[0]) {
@@ -315,7 +315,7 @@ export class TargetExtractionService {
       multiTargetCount: 0,
       legacyCount: 0,
       errorCount: 0,
-      totalTime: 0
+      totalTime: 0,
     };
   }
 
@@ -326,13 +326,13 @@ export class TargetExtractionService {
    */
   async extractTargets(resolvedParameters) {
     const startTime = performance.now();
-    
+
     try {
       this.#performanceMetrics.extractionCount++;
-      
+
       // Create extraction result based on parameter type
       let result;
-      
+
       if (this.#isMultiTargetParameters(resolvedParameters)) {
         this.#performanceMetrics.multiTargetCount++;
         result = await this.#extractMultiTargetData(resolvedParameters);
@@ -352,24 +352,23 @@ export class TargetExtractionService {
         hasMultipleTargets: result.hasMultipleTargets(),
         targetCount: result.getTargetCount(),
         primaryTarget: result.getPrimaryTarget(),
-        extractionTime: duration.toFixed(2)
+        extractionTime: duration.toFixed(2),
       });
 
       return result;
-
     } catch (error) {
       this.#performanceMetrics.errorCount++;
-      
+
       this.#logger.error('Target extraction failed', {
         error: error.message,
-        resolvedParameters: this.#sanitizeParameters(resolvedParameters)
+        resolvedParameters: this.#sanitizeParameters(resolvedParameters),
       });
 
       // Return empty result with error metadata
       const errorResult = TargetExtractionResult.createEmpty(this.#logger);
       errorResult.addMetadata('error', error.message);
       errorResult.addMetadata('extractionTime', performance.now() - startTime);
-      
+
       return errorResult;
     }
   }
@@ -396,14 +395,16 @@ export class TargetExtractionService {
    */
   async #extractMultiTargetData(resolvedParameters) {
     const targetManager = new TargetManager({ logger: this.#logger });
-    
+
     // Process each target category
     const targets = {};
     const categoryMetadata = {};
-    
-    for (const [category, targetList] of Object.entries(resolvedParameters.targetIds)) {
+
+    for (const [category, targetList] of Object.entries(
+      resolvedParameters.targetIds
+    )) {
       const extractedTarget = this.#extractTargetFromList(category, targetList);
-      
+
       if (extractedTarget) {
         targets[category] = extractedTarget.targetId;
         categoryMetadata[category] = extractedTarget.metadata;
@@ -421,12 +422,12 @@ export class TargetExtractionService {
       originalTargetIds: resolvedParameters.targetIds,
       categoryMetadata,
       targetCount: Object.keys(targets).length,
-      primaryTarget: targetManager.getPrimaryTarget()
+      primaryTarget: targetManager.getPrimaryTarget(),
     };
 
     return new TargetExtractionResult({
       targetManager,
-      extractionMetadata
+      extractionMetadata,
     });
   }
 
@@ -439,12 +440,12 @@ export class TargetExtractionService {
     const targetManager = new TargetManager({ logger: this.#logger });
     const extractionMetadata = {
       source: 'legacy_single_target',
-      isMultiTarget: false
+      isMultiTarget: false,
     };
 
     if (resolvedParameters && resolvedParameters.targetId) {
       const targetId = resolvedParameters.targetId.trim();
-      
+
       if (targetId) {
         targetManager.addTarget('primary', targetId);
         extractionMetadata.targetId = targetId;
@@ -456,7 +457,7 @@ export class TargetExtractionService {
 
     return new TargetExtractionResult({
       targetManager,
-      extractionMetadata
+      extractionMetadata,
     });
   }
 
@@ -471,7 +472,7 @@ export class TargetExtractionService {
       let targetId = null;
       const metadata = {
         originalFormat: Array.isArray(targetList) ? 'array' : typeof targetList,
-        originalValue: targetList
+        originalValue: targetList,
       };
 
       if (Array.isArray(targetList)) {
@@ -491,18 +492,17 @@ export class TargetExtractionService {
       if (!targetId) {
         this.#logger.warn('No valid target found in category', {
           category,
-          targetList
+          targetList,
         });
         return null;
       }
 
       return { targetId, metadata };
-
     } catch (error) {
       this.#logger.error('Error extracting target from list', {
         category,
         targetList,
-        error: error.message
+        error: error.message,
       });
       return null;
     }
@@ -521,10 +521,12 @@ export class TargetExtractionService {
     return {
       isMultiTarget: resolvedParameters.isMultiTarget,
       hasTargetIds: !!resolvedParameters.targetIds,
-      targetIdsKeys: resolvedParameters.targetIds ? Object.keys(resolvedParameters.targetIds) : [],
+      targetIdsKeys: resolvedParameters.targetIds
+        ? Object.keys(resolvedParameters.targetIds)
+        : [],
       hasTargetId: !!resolvedParameters.targetId,
       targetIdType: typeof resolvedParameters.targetId,
-      parameterCount: Object.keys(resolvedParameters).length
+      parameterCount: Object.keys(resolvedParameters).length,
     };
   }
 
@@ -534,10 +536,11 @@ export class TargetExtractionService {
    */
   getPerformanceMetrics() {
     const metrics = { ...this.#performanceMetrics };
-    
+
     if (metrics.extractionCount > 0) {
       metrics.averageTime = metrics.totalTime / metrics.extractionCount;
-      metrics.multiTargetRate = metrics.multiTargetCount / metrics.extractionCount;
+      metrics.multiTargetRate =
+        metrics.multiTargetCount / metrics.extractionCount;
       metrics.errorRate = metrics.errorCount / metrics.extractionCount;
     } else {
       metrics.averageTime = 0;
@@ -557,7 +560,7 @@ export class TargetExtractionService {
       multiTargetCount: 0,
       legacyCount: 0,
       errorCount: 0,
-      totalTime: 0
+      totalTime: 0,
     };
   }
 
@@ -575,21 +578,26 @@ export class TargetExtractionService {
     // Additional validation can be added here when action definitions are available
     if (actionDefinition) {
       // TODO: Implement action-specific target validation
-      this.#logger.debug('Action-specific target validation not yet implemented', {
-        actionId: actionDefinition.id,
-        targetCount: extractionResult.getTargetCount()
-      });
+      this.#logger.debug(
+        'Action-specific target validation not yet implemented',
+        {
+          actionId: actionDefinition.id,
+          targetCount: extractionResult.getTargetCount(),
+        }
+      );
     }
 
     // Check for common issues
     if (extractionResult.getTargetCount() === 0) {
-      warnings.push('No targets extracted - verify this is expected for the action');
+      warnings.push(
+        'No targets extracted - verify this is expected for the action'
+      );
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 }
@@ -632,8 +640,8 @@ describe('TargetExtractionService', () => {
         isMultiTarget: true,
         targetIds: {
           item: ['knife_123'],
-          target: ['goblin_456']
-        }
+          target: ['goblin_456'],
+        },
       };
 
       const result = await service.extractTargets(resolvedParameters);
@@ -651,8 +659,8 @@ describe('TargetExtractionService', () => {
         isMultiTarget: true,
         targetIds: {
           item: ['knife_123', 'sword_456', 'bow_789'],
-          target: ['goblin_012']
-        }
+          target: ['goblin_012'],
+        },
       };
 
       const result = await service.extractTargets(resolvedParameters);
@@ -667,8 +675,8 @@ describe('TargetExtractionService', () => {
         isMultiTarget: true,
         targetIds: {
           item: 'knife_123',
-          target: 'goblin_456'
-        }
+          target: 'goblin_456',
+        },
       };
 
       const result = await service.extractTargets(resolvedParameters);
@@ -683,8 +691,8 @@ describe('TargetExtractionService', () => {
         isMultiTarget: true,
         targetIds: {
           item: [],
-          target: ['goblin_456']
-        }
+          target: ['goblin_456'],
+        },
       };
 
       const result = await service.extractTargets(resolvedParameters);
@@ -698,7 +706,7 @@ describe('TargetExtractionService', () => {
   describe('Legacy Target Extraction', () => {
     it('should extract legacy single target', async () => {
       const resolvedParameters = {
-        targetId: 'target_123'
+        targetId: 'target_123',
       };
 
       const result = await service.extractTargets(resolvedParameters);
@@ -711,7 +719,7 @@ describe('TargetExtractionService', () => {
 
     it('should handle null legacy target', async () => {
       const resolvedParameters = {
-        targetId: null
+        targetId: null,
       };
 
       const result = await service.extractTargets(resolvedParameters);
@@ -723,7 +731,7 @@ describe('TargetExtractionService', () => {
 
     it('should handle empty string legacy target', async () => {
       const resolvedParameters = {
-        targetId: '   '
+        targetId: '   ',
       };
 
       const result = await service.extractTargets(resolvedParameters);
@@ -752,7 +760,7 @@ describe('TargetExtractionService', () => {
     it('should handle malformed targetIds object', async () => {
       const resolvedParameters = {
         isMultiTarget: true,
-        targetIds: 'invalid_string'
+        targetIds: 'invalid_string',
       };
 
       const result = await service.extractTargets(resolvedParameters);
@@ -765,8 +773,8 @@ describe('TargetExtractionService', () => {
       const resolvedParameters = {
         isMultiTarget: true,
         targetIds: {
-          item: [null, undefined, '', 'valid_target']
-        }
+          item: [null, undefined, '', 'valid_target'],
+        },
       };
 
       const result = await service.extractTargets(resolvedParameters);
@@ -780,9 +788,9 @@ describe('TargetExtractionService', () => {
     it('should track extraction metrics', async () => {
       // Perform multiple extractions
       await service.extractTargets({ targetId: 'target1' });
-      await service.extractTargets({ 
-        isMultiTarget: true, 
-        targetIds: { item: ['item1'], target: ['target1'] } 
+      await service.extractTargets({
+        isMultiTarget: true,
+        targetIds: { item: ['item1'], target: ['target1'] },
       });
       await service.extractTargets({ targetId: 'target2' });
 
@@ -793,12 +801,12 @@ describe('TargetExtractionService', () => {
       expect(metrics.legacyCount).toBe(2);
       expect(metrics.errorCount).toBe(0);
       expect(metrics.averageTime).toBeGreaterThan(0);
-      expect(metrics.multiTargetRate).toBeCloseTo(1/3);
+      expect(metrics.multiTargetRate).toBeCloseTo(1 / 3);
     });
 
     it('should reset metrics', async () => {
       await service.extractTargets({ targetId: 'target1' });
-      
+
       service.resetPerformanceMetrics();
       const metrics = service.getPerformanceMetrics();
 
@@ -813,8 +821,8 @@ describe('TargetExtractionService', () => {
         isMultiTarget: true,
         targetIds: {
           item: ['knife_123'],
-          target: ['goblin_456']
-        }
+          target: ['goblin_456'],
+        },
       };
 
       const result = await service.extractTargets(resolvedParameters);
@@ -829,7 +837,9 @@ describe('TargetExtractionService', () => {
       const validation = service.validateExtractedTargets(result);
 
       expect(validation.isValid).toBe(true);
-      expect(validation.warnings).toContain('No targets extracted - verify this is expected for the action');
+      expect(validation.warnings).toContain(
+        'No targets extracted - verify this is expected for the action'
+      );
     });
   });
 });
@@ -895,6 +905,7 @@ describe('TargetExtractionService', () => {
 ## Next Steps
 
 After this ticket completion:
+
 1. Move to Ticket 08: Update Attempt Action Payload Creation
 2. Integrate extraction service with command processor
 3. Test complete end-to-end multi-target flow

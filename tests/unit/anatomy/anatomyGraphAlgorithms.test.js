@@ -451,6 +451,16 @@ describe('AnatomyGraphAlgorithms', () => {
       ];
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        const entityMap = {
+          'torso-1': { id: 'torso-1' },
+          'left-arm-1': { id: 'left-arm-1' },
+          'left-hand-1': { id: 'left-hand-1' },
+          'right-arm-1': { id: 'right-arm-1' },
+          'right-hand-1': { id: 'right-hand-1' },
+        };
+        return entityMap[id] || null;
+      });
       mockEntityManager.getComponentData.mockImplementation(
         (id, componentId) => {
           if (componentId === 'anatomy:joint') {
@@ -535,7 +545,7 @@ describe('AnatomyGraphAlgorithms', () => {
       ).toEqual([]);
       expect(
         AnatomyGraphAlgorithms.getAllParts('test', emptyCacheManager, null)
-      ).toEqual(['test']);
+      ).toEqual([]);
     });
 
     it('should use default max depth values', () => {

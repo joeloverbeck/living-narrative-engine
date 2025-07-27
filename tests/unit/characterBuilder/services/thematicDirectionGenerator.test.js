@@ -271,26 +271,38 @@ describe('ThematicDirectionGenerator', () => {
         thematicDirections: [
           {
             title: 'Path of Redemption',
-            description: 'A journey of atonement for past mistakes and finding inner peace through service to others.',
-            coreTension: 'The conflict between past sins and the desire for forgiveness',
-            uniqueTwist: 'The warrior must face their former victims to earn redemption',
-            narrativePotential: 'Opportunities for moral choices, character growth, and emotional confrontations with the past'
+            description:
+              'A journey of atonement for past mistakes and finding inner peace through service to others.',
+            coreTension:
+              'The conflict between past sins and the desire for forgiveness',
+            uniqueTwist:
+              'The warrior must face their former victims to earn redemption',
+            narrativePotential:
+              'Opportunities for moral choices, character growth, and emotional confrontations with the past',
           },
           {
             title: "Guardian's Burden",
-            description: 'Taking responsibility for protecting those who cannot protect themselves while struggling with personal demons.',
-            coreTension: 'The weight of responsibility versus personal desires and limitations',
-            uniqueTwist: "The guardian's power comes at the cost of their own humanity",
-            narrativePotential: 'Explores themes of sacrifice, duty, and the price of heroism in a complex moral landscape'
+            description:
+              'Taking responsibility for protecting those who cannot protect themselves while struggling with personal demons.',
+            coreTension:
+              'The weight of responsibility versus personal desires and limitations',
+            uniqueTwist:
+              "The guardian's power comes at the cost of their own humanity",
+            narrativePotential:
+              'Explores themes of sacrifice, duty, and the price of heroism in a complex moral landscape',
           },
           {
             title: 'Lost Honor Reclaimed',
-            description: 'Rebuilding reputation and honor after a fall from grace through deeds rather than words.',
-            coreTension: "Society's judgment versus personal knowledge of one's true character",
-            uniqueTwist: 'The character must choose between easy vindication and harder genuine growth',
-            narrativePotential: 'Character development through actions, facing prejudice, and proving worth to skeptical allies'
-          }
-        ]
+            description:
+              'Rebuilding reputation and honor after a fall from grace through deeds rather than words.',
+            coreTension:
+              "Society's judgment versus personal knowledge of one's true character",
+            uniqueTwist:
+              'The character must choose between easy vindication and harder genuine growth',
+            narrativePotential:
+              'Character development through actions, facing prejudice, and proving worth to skeptical allies',
+          },
+        ],
       };
 
       const mockActiveConfig = {
@@ -301,17 +313,27 @@ describe('ThematicDirectionGenerator', () => {
         mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
         mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
         mockLlmJsonService.parseAndRepair.mockResolvedValue(mockParsedResponse);
-        mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(mockActiveConfig);
-        
+        mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(
+          mockActiveConfig
+        );
+
         // Mock the validation function to succeed
-        jest.doMock('../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js', () => ({
-          ...jest.requireActual('../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js'),
-          validateThematicDirectionsResponse: jest.fn().mockReturnValue(true),
-        }));
+        jest.doMock(
+          '../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js',
+          () => ({
+            ...jest.requireActual(
+              '../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js'
+            ),
+            validateThematicDirectionsResponse: jest.fn().mockReturnValue(true),
+          })
+        );
       });
 
       it('should generate thematic directions successfully', async () => {
-        const result = await generator.generateDirections(validConceptId, validCharacterConcept);
+        const result = await generator.generateDirections(
+          validConceptId,
+          validCharacterConcept
+        );
 
         expect(result).toHaveLength(3);
         expect(result[0]).toHaveProperty('id');
@@ -326,7 +348,10 @@ describe('ThematicDirectionGenerator', () => {
       });
 
       it('should log generation start and success', async () => {
-        await generator.generateDirections(validConceptId, validCharacterConcept);
+        await generator.generateDirections(
+          validConceptId,
+          validCharacterConcept
+        );
 
         expect(mockLogger.info).toHaveBeenCalledWith(
           expect.stringContaining('Starting generation for concept'),
@@ -347,7 +372,10 @@ describe('ThematicDirectionGenerator', () => {
       });
 
       it('should call LLM with proper prompt and options', async () => {
-        await generator.generateDirections(validConceptId, validCharacterConcept);
+        await generator.generateDirections(
+          validConceptId,
+          validCharacterConcept
+        );
 
         expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledWith(
           expect.stringContaining(validCharacterConcept),
@@ -355,13 +383,18 @@ describe('ThematicDirectionGenerator', () => {
           expect.objectContaining({
             toolSchema: THEMATIC_DIRECTIONS_RESPONSE_SCHEMA,
             toolName: 'generate_thematic_directions',
-            toolDescription: expect.stringContaining('Generate thematic directions'),
+            toolDescription: expect.stringContaining(
+              'Generate thematic directions'
+            ),
           })
         );
       });
 
       it('should process LLM response through JSON service', async () => {
-        await generator.generateDirections(validConceptId, validCharacterConcept);
+        await generator.generateDirections(
+          validConceptId,
+          validCharacterConcept
+        );
 
         expect(mockLlmJsonService.clean).toHaveBeenCalledWith(mockLlmResponse);
         expect(mockLlmJsonService.parseAndRepair).toHaveBeenCalledWith(
@@ -373,7 +406,10 @@ describe('ThematicDirectionGenerator', () => {
       });
 
       it('should include LLM metadata in results', async () => {
-        const result = await generator.generateDirections(validConceptId, validCharacterConcept);
+        const result = await generator.generateDirections(
+          validConceptId,
+          validCharacterConcept
+        );
 
         expect(result[0].llmMetadata).toEqual(
           expect.objectContaining({
@@ -389,25 +425,37 @@ describe('ThematicDirectionGenerator', () => {
         const customConfigId = 'custom-config';
         mockLlmConfigManager.setActiveConfiguration.mockResolvedValue(true);
 
-        await generator.generateDirections(validConceptId, validCharacterConcept, {
-          llmConfigId: customConfigId,
-        });
+        await generator.generateDirections(
+          validConceptId,
+          validCharacterConcept,
+          {
+            llmConfigId: customConfigId,
+          }
+        );
 
-        expect(mockLlmConfigManager.setActiveConfiguration).toHaveBeenCalledWith(customConfigId);
+        expect(
+          mockLlmConfigManager.setActiveConfiguration
+        ).toHaveBeenCalledWith(customConfigId);
       });
 
       it('should load configuration if setting active fails', async () => {
         const customConfigId = 'custom-config';
         const mockConfig = { configId: customConfigId };
-        
+
         mockLlmConfigManager.setActiveConfiguration.mockResolvedValue(false);
         mockLlmConfigManager.loadConfiguration.mockResolvedValue(mockConfig);
 
-        await generator.generateDirections(validConceptId, validCharacterConcept, {
-          llmConfigId: customConfigId,
-        });
+        await generator.generateDirections(
+          validConceptId,
+          validCharacterConcept,
+          {
+            llmConfigId: customConfigId,
+          }
+        );
 
-        expect(mockLlmConfigManager.loadConfiguration).toHaveBeenCalledWith(customConfigId);
+        expect(mockLlmConfigManager.loadConfiguration).toHaveBeenCalledWith(
+          customConfigId
+        );
       });
     });
 
@@ -435,7 +483,7 @@ describe('ThematicDirectionGenerator', () => {
 
       it('should throw error when custom LLM config not found', async () => {
         const customConfigId = 'non-existent-config';
-        
+
         mockLlmConfigManager.setActiveConfiguration.mockResolvedValue(false);
         mockLlmConfigManager.loadConfiguration.mockResolvedValue(null);
 
@@ -466,7 +514,7 @@ describe('ThematicDirectionGenerator', () => {
       it('should throw error when JSON cleaning fails', async () => {
         const mockLlmResponse = 'valid response';
         const cleaningError = new Error('JSON cleaning failed');
-        
+
         mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
         mockLlmJsonService.clean.mockImplementation(() => {
           throw cleaningError;
@@ -483,7 +531,7 @@ describe('ThematicDirectionGenerator', () => {
       it('should throw error when JSON parsing fails', async () => {
         const mockLlmResponse = 'valid response';
         const parsingError = new Error('JSON parsing failed');
-        
+
         mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
         mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
         mockLlmJsonService.parseAndRepair.mockRejectedValue(parsingError);
@@ -499,18 +547,25 @@ describe('ThematicDirectionGenerator', () => {
       it('should throw error when response validation fails', async () => {
         const mockLlmResponse = 'valid response';
         const mockParsedResponse = { invalid: 'structure' };
-        
+
         mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
         mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
         mockLlmJsonService.parseAndRepair.mockResolvedValue(mockParsedResponse);
 
         // Mock validation to throw error
-        jest.doMock('../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js', () => ({
-          ...jest.requireActual('../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js'),
-          validateThematicDirectionsResponse: jest.fn().mockImplementation(() => {
-            throw new Error('Invalid response structure');
-          }),
-        }));
+        jest.doMock(
+          '../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js',
+          () => ({
+            ...jest.requireActual(
+              '../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js'
+            ),
+            validateThematicDirectionsResponse: jest
+              .fn()
+              .mockImplementation(() => {
+                throw new Error('Invalid response structure');
+              }),
+          })
+        );
 
         await expect(
           generator.generateDirections(validConceptId, validCharacterConcept)
@@ -539,13 +594,15 @@ describe('ThematicDirectionGenerator', () => {
       });
 
       it('should re-throw ThematicDirectionGenerationError from LLM call', async () => {
-        const originalError = new ThematicDirectionGenerationError('Original error');
+        const originalError = new ThematicDirectionGenerationError(
+          'Original error'
+        );
         mockLlmStrategyFactory.getAIDecision.mockRejectedValue(originalError);
 
         await expect(
           generator.generateDirections(validConceptId, validCharacterConcept)
         ).rejects.toThrow(ThematicDirectionGenerationError);
-        
+
         // The error will be wrapped by #callLLM, then re-thrown by generateDirections since it's already a ThematicDirectionGenerationError
         await expect(
           generator.generateDirections(validConceptId, validCharacterConcept)
@@ -567,7 +624,7 @@ describe('ThematicDirectionGenerator', () => {
       it('should wrap non-LLM errors with full context', async () => {
         const mockLlmResponse = 'valid response';
         const mockParsedResponse = { thematicDirections: [] }; // This will cause validation to fail
-        
+
         mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockLlmResponse);
         mockLlmJsonService.clean.mockReturnValue(mockLlmResponse);
         mockLlmJsonService.parseAndRepair.mockResolvedValue(mockParsedResponse);
@@ -577,7 +634,9 @@ describe('ThematicDirectionGenerator', () => {
         ).rejects.toThrow(ThematicDirectionGenerationError);
         await expect(
           generator.generateDirections(validConceptId, validCharacterConcept)
-        ).rejects.toThrow('Invalid response structure: ThematicDirectionsPrompt: Must contain 3-5 thematic directions');
+        ).rejects.toThrow(
+          'Invalid response structure: ThematicDirectionsPrompt: Must contain 3-5 thematic directions'
+        );
       });
     });
   });
@@ -598,26 +657,32 @@ describe('ThematicDirectionGenerator', () => {
           thematicDirections: [
             {
               title: 'Test Direction',
-              description: 'A test thematic direction with sufficient length to meet validation requirements',
+              description:
+                'A test thematic direction with sufficient length to meet validation requirements',
               coreTension: 'Core tension description',
               uniqueTwist: 'Unique twist description',
-              narrativePotential: 'Narrative potential description with enough content'
+              narrativePotential:
+                'Narrative potential description with enough content',
             },
             {
               title: 'Second Direction',
-              description: 'Another test thematic direction with sufficient length to meet validation requirements',
+              description:
+                'Another test thematic direction with sufficient length to meet validation requirements',
               coreTension: 'Another core tension description',
               uniqueTwist: 'Another unique twist description',
-              narrativePotential: 'Another narrative potential description with enough content'
+              narrativePotential:
+                'Another narrative potential description with enough content',
             },
             {
               title: 'Third Direction',
-              description: 'A third test thematic direction with sufficient length to meet validation requirements',
+              description:
+                'A third test thematic direction with sufficient length to meet validation requirements',
               coreTension: 'A third core tension description',
               uniqueTwist: 'A third unique twist description',
-              narrativePotential: 'A third narrative potential description with enough content'
-            }
-          ]
+              narrativePotential:
+                'A third narrative potential description with enough content',
+            },
+          ],
         };
 
         expect(() => generator.validateResponse(validResponse)).not.toThrow();
@@ -627,12 +692,19 @@ describe('ThematicDirectionGenerator', () => {
         const invalidResponse = { invalid: 'structure' };
 
         // Mock the validation function to throw error
-        jest.doMock('../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js', () => ({
-          ...jest.requireActual('../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js'),
-          validateThematicDirectionsResponse: jest.fn().mockImplementation(() => {
-            throw new Error('Invalid structure');
-          }),
-        }));
+        jest.doMock(
+          '../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js',
+          () => ({
+            ...jest.requireActual(
+              '../../../../src/characterBuilder/prompts/thematicDirectionsPrompt.js'
+            ),
+            validateThematicDirectionsResponse: jest
+              .fn()
+              .mockImplementation(() => {
+                throw new Error('Invalid structure');
+              }),
+          })
+        );
 
         expect(() => generator.validateResponse(invalidResponse)).toThrow();
       });
@@ -641,7 +713,7 @@ describe('ThematicDirectionGenerator', () => {
     describe('getResponseSchema', () => {
       it('should return the correct response schema', () => {
         const schema = generator.getResponseSchema();
-        
+
         expect(schema).toEqual(THEMATIC_DIRECTIONS_RESPONSE_SCHEMA);
         expect(schema).toHaveProperty('type', 'object');
         expect(schema).toHaveProperty('properties');

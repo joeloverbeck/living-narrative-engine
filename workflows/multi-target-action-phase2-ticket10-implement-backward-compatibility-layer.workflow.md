@@ -51,7 +51,7 @@ export class BackwardCompatibilityService {
       legacyFormatValidations: 0,
       enhancedFormatValidations: 0,
       compatibilityIssues: 0,
-      performanceRegressions: 0
+      performanceRegressions: 0,
     };
   }
 
@@ -63,7 +63,7 @@ export class BackwardCompatibilityService {
    */
   validatePayloadCompatibility(payload, context = {}) {
     const startTime = performance.now();
-    
+
     try {
       this.#compatibilityMetrics.totalValidations++;
 
@@ -72,7 +72,7 @@ export class BackwardCompatibilityService {
         formatType: this.#determineFormatType(payload),
         issues: [],
         warnings: [],
-        recommendations: []
+        recommendations: [],
       };
 
       // Validate based on format type
@@ -96,12 +96,11 @@ export class BackwardCompatibilityService {
       this.#logValidationResult(validation, duration, context);
 
       return validation;
-
     } catch (error) {
       this.#logger.error('Compatibility validation failed', {
         error: error.message,
         payload: this.#sanitizePayload(payload),
-        context
+        context,
       });
 
       return {
@@ -109,7 +108,7 @@ export class BackwardCompatibilityService {
         formatType: 'unknown',
         issues: [`Validation error: ${error.message}`],
         warnings: [],
-        recommendations: ['Review payload structure and retry validation']
+        recommendations: ['Review payload structure and retry validation'],
       };
     }
   }
@@ -125,7 +124,11 @@ export class BackwardCompatibilityService {
     }
 
     // Enhanced format has targets object and targetId
-    if (payload.targets && typeof payload.targets === 'object' && payload.targetId) {
+    if (
+      payload.targets &&
+      typeof payload.targets === 'object' &&
+      payload.targetId
+    ) {
       return 'enhanced';
     }
 
@@ -144,7 +147,12 @@ export class BackwardCompatibilityService {
    * @param {Object} context - Validation context
    */
   #validateLegacyFormat(payload, validation, context) {
-    const requiredFields = ['eventName', 'actorId', 'actionId', 'originalInput'];
+    const requiredFields = [
+      'eventName',
+      'actorId',
+      'actionId',
+      'originalInput',
+    ];
     const optionalFields = ['targetId', 'timestamp'];
     const allowedFields = [...requiredFields, ...optionalFields];
 
@@ -158,11 +166,15 @@ export class BackwardCompatibilityService {
 
     // Check for unexpected fields
     const payloadFields = Object.keys(payload);
-    const unexpectedFields = payloadFields.filter(field => !allowedFields.includes(field));
-    
+    const unexpectedFields = payloadFields.filter(
+      (field) => !allowedFields.includes(field)
+    );
+
     if (unexpectedFields.length > 0) {
       validation.isCompatible = false;
-      validation.issues.push(`Unexpected fields in legacy format: ${unexpectedFields.join(', ')}`);
+      validation.issues.push(
+        `Unexpected fields in legacy format: ${unexpectedFields.join(', ')}`
+      );
     }
 
     // Validate field types
@@ -171,13 +183,20 @@ export class BackwardCompatibilityService {
     // Validate eventName value
     if (payload.eventName !== 'core:attempt_action') {
       validation.isCompatible = false;
-      validation.issues.push(`Invalid eventName: expected 'core:attempt_action', got '${payload.eventName}'`);
+      validation.issues.push(
+        `Invalid eventName: expected 'core:attempt_action', got '${payload.eventName}'`
+      );
     }
 
     // Validate targetId format
     if (payload.targetId !== null && payload.targetId !== undefined) {
-      if (typeof payload.targetId !== 'string' || payload.targetId.trim() === '') {
-        validation.warnings.push('targetId should be a non-empty string or null');
+      if (
+        typeof payload.targetId !== 'string' ||
+        payload.targetId.trim() === ''
+      ) {
+        validation.warnings.push(
+          'targetId should be a non-empty string or null'
+        );
       }
     }
 
@@ -197,7 +216,7 @@ export class BackwardCompatibilityService {
   #validateEnhancedFormat(payload, validation, context) {
     // Use existing validation utility
     const payloadValidation = validateAttemptActionPayload(payload);
-    
+
     if (!payloadValidation.isValid) {
       validation.isCompatible = false;
       validation.issues.push(...payloadValidation.errors);
@@ -223,14 +242,16 @@ export class BackwardCompatibilityService {
       { field: 'actorId', type: 'string' },
       { field: 'actionId', type: 'string' },
       { field: 'originalInput', type: 'string' },
-      { field: 'timestamp', type: 'number', optional: true }
+      { field: 'timestamp', type: 'number', optional: true },
     ];
 
     for (const check of typeChecks) {
       if (payload.hasOwnProperty(check.field)) {
         if (typeof payload[check.field] !== check.type) {
           validation.isCompatible = false;
-          validation.issues.push(`Field ${check.field} must be ${check.type}, got ${typeof payload[check.field]}`);
+          validation.issues.push(
+            `Field ${check.field} must be ${check.type}, got ${typeof payload[check.field]}`
+          );
         }
       }
     }
@@ -240,7 +261,9 @@ export class BackwardCompatibilityService {
       const targetId = payload.targetId;
       if (targetId !== null && typeof targetId !== 'string') {
         validation.isCompatible = false;
-        validation.issues.push(`targetId must be string or null, got ${typeof targetId}`);
+        validation.issues.push(
+          `targetId must be string or null, got ${typeof targetId}`
+        );
       }
     }
   }
@@ -253,14 +276,17 @@ export class BackwardCompatibilityService {
   #validateEnhancedFormatSpecifics(payload, validation) {
     // Targets object validation
     if (payload.targets) {
-      if (typeof payload.targets !== 'object' || Array.isArray(payload.targets)) {
+      if (
+        typeof payload.targets !== 'object' ||
+        Array.isArray(payload.targets)
+      ) {
         validation.isCompatible = false;
         validation.issues.push('targets must be a non-array object');
         return;
       }
 
       const targetCount = Object.keys(payload.targets).length;
-      
+
       // Should have at least one target if targets object exists
       if (targetCount === 0) {
         validation.isCompatible = false;
@@ -277,7 +303,9 @@ export class BackwardCompatibilityService {
 
       // Performance warning for excessive targets
       if (targetCount > 10) {
-        validation.warnings.push(`High target count (${targetCount}) may impact performance`);
+        validation.warnings.push(
+          `High target count (${targetCount}) may impact performance`
+        );
       }
     }
   }
@@ -291,21 +319,29 @@ export class BackwardCompatibilityService {
     // Enhanced format must have targetId for backward compatibility
     if (payload.targets && !payload.hasOwnProperty('targetId')) {
       validation.isCompatible = false;
-      validation.issues.push('Enhanced format must include targetId for backward compatibility');
+      validation.issues.push(
+        'Enhanced format must include targetId for backward compatibility'
+      );
     }
 
     // targetId should match one of the targets
     if (payload.targets && payload.targetId) {
       const targetValues = Object.values(payload.targets);
       if (!targetValues.includes(payload.targetId)) {
-        validation.warnings.push('targetId does not match any target in targets object');
-        validation.recommendations.push('Ensure targetId represents the primary target');
+        validation.warnings.push(
+          'targetId does not match any target in targets object'
+        );
+        validation.recommendations.push(
+          'Ensure targetId represents the primary target'
+        );
       }
     }
 
     // Recommend migration path for multi-target actions
     if (payload.targets && Object.keys(payload.targets).length > 1) {
-      validation.recommendations.push('Consider updating rules to use enhanced target access patterns');
+      validation.recommendations.push(
+        'Consider updating rules to use enhanced target access patterns'
+      );
     }
   }
 
@@ -318,15 +354,22 @@ export class BackwardCompatibilityService {
   #validatePerformanceCompatibility(payload, validation, context) {
     // Check payload size
     const payloadSize = JSON.stringify(payload).length;
-    if (payloadSize > 10000) { // 10KB limit
-      validation.warnings.push(`Large payload size (${payloadSize} bytes) may impact performance`);
+    if (payloadSize > 10000) {
+      // 10KB limit
+      validation.warnings.push(
+        `Large payload size (${payloadSize} bytes) may impact performance`
+      );
     }
 
     // Check for performance regression indicators
     if (context.processingTime && context.processingTime > 10) {
       this.#compatibilityMetrics.performanceRegressions++;
-      validation.warnings.push(`Processing time (${context.processingTime.toFixed(2)}ms) exceeds recommended limit`);
-      validation.recommendations.push('Consider optimizing action or target resolution');
+      validation.warnings.push(
+        `Processing time (${context.processingTime.toFixed(2)}ms) exceeds recommended limit`
+      );
+      validation.recommendations.push(
+        'Consider optimizing action or target resolution'
+      );
     }
   }
 
@@ -346,7 +389,7 @@ export class BackwardCompatibilityService {
       actorId: enhancedPayload.actorId,
       actionId: enhancedPayload.actionId,
       targetId: enhancedPayload.targetId,
-      originalInput: enhancedPayload.originalInput
+      originalInput: enhancedPayload.originalInput,
     };
 
     // Include timestamp if present
@@ -358,7 +401,9 @@ export class BackwardCompatibilityService {
       originalFormat: 'enhanced',
       adaptedFormat: 'legacy',
       hasTargets: !!enhancedPayload.targets,
-      targetCount: enhancedPayload.targets ? Object.keys(enhancedPayload.targets).length : 0
+      targetCount: enhancedPayload.targets
+        ? Object.keys(enhancedPayload.targets).length
+        : 0,
     });
 
     return legacyPayload;
@@ -380,14 +425,15 @@ export class BackwardCompatibilityService {
     // Convert single target to targets object if requested
     if (options.createTargetsObject && legacyPayload.targetId) {
       enhancedPayload.targets = {
-        primary: legacyPayload.targetId
+        primary: legacyPayload.targetId,
       };
     }
 
     this.#logger.debug('Created enhanced adapter', {
       originalFormat: 'legacy',
       adaptedFormat: 'enhanced',
-      createdTargetsObject: options.createTargetsObject && !!legacyPayload.targetId
+      createdTargetsObject:
+        options.createTargetsObject && !!legacyPayload.targetId,
     });
 
     return enhancedPayload;
@@ -408,7 +454,7 @@ export class BackwardCompatibilityService {
       hasTargetId: payload.hasOwnProperty('targetId'),
       hasTargets: !!payload.targets,
       targetCount: payload.targets ? Object.keys(payload.targets).length : 0,
-      fieldCount: Object.keys(payload).length
+      fieldCount: Object.keys(payload).length,
     };
   }
 
@@ -425,7 +471,7 @@ export class BackwardCompatibilityService {
       issueCount: validation.issues.length,
       warningCount: validation.warnings.length,
       validationTime: duration.toFixed(2),
-      context
+      context,
     };
 
     if (validation.isCompatible) {
@@ -434,7 +480,7 @@ export class BackwardCompatibilityService {
       this.#logger.warn('Compatibility validation failed', {
         ...logData,
         issues: validation.issues,
-        warnings: validation.warnings
+        warnings: validation.warnings,
       });
     }
   }
@@ -445,12 +491,17 @@ export class BackwardCompatibilityService {
    */
   getCompatibilityMetrics() {
     const metrics = { ...this.#compatibilityMetrics };
-    
+
     if (metrics.totalValidations > 0) {
-      metrics.legacyFormatRate = metrics.legacyFormatValidations / metrics.totalValidations;
-      metrics.enhancedFormatRate = metrics.enhancedFormatValidations / metrics.totalValidations;
-      metrics.compatibilityRate = (metrics.totalValidations - metrics.compatibilityIssues) / metrics.totalValidations;
-      metrics.performanceRegressionRate = metrics.performanceRegressions / metrics.totalValidations;
+      metrics.legacyFormatRate =
+        metrics.legacyFormatValidations / metrics.totalValidations;
+      metrics.enhancedFormatRate =
+        metrics.enhancedFormatValidations / metrics.totalValidations;
+      metrics.compatibilityRate =
+        (metrics.totalValidations - metrics.compatibilityIssues) /
+        metrics.totalValidations;
+      metrics.performanceRegressionRate =
+        metrics.performanceRegressions / metrics.totalValidations;
     } else {
       metrics.legacyFormatRate = 0;
       metrics.enhancedFormatRate = 0;
@@ -470,7 +521,7 @@ export class BackwardCompatibilityService {
       legacyFormatValidations: 0,
       enhancedFormatValidations: 0,
       compatibilityIssues: 0,
-      performanceRegressions: 0
+      performanceRegressions: 0,
     };
   }
 
@@ -488,12 +539,12 @@ export class BackwardCompatibilityService {
       enhancedPayloads: 0,
       issues: [],
       warnings: [],
-      recommendations: []
+      recommendations: [],
     };
 
     for (const payload of payloads) {
       const validation = this.validatePayloadCompatibility(payload);
-      
+
       if (validation.isCompatible) {
         report.compatiblePayloads++;
       } else {
@@ -536,7 +587,7 @@ import BackwardCompatibilityService from '../services/backwardCompatibilityServi
 // Add to constructor
 constructor({ logger, eventBus }) {
   // ... existing initialization ...
-  
+
   this.#backwardCompatibilityService = new BackwardCompatibilityService({ logger });
 }
 
@@ -547,17 +598,17 @@ async #createAttemptActionPayload(actor, turnAction) {
   const startTime = performance.now();
   let extractionResult = null;
   let isFallback = false;
-  
+
   try {
     // ... existing payload creation logic ...
-    
+
     const payload = eventBuilder.build();
     const duration = performance.now() - startTime;
 
     // Validate backward compatibility
     const compatibilityValidation = this.#backwardCompatibilityService.validatePayloadCompatibility(
-      payload, 
-      { 
+      payload,
+      {
         processingTime: duration,
         isMultiTarget: extractionResult.hasMultipleTargets(),
         source: 'enhanced_creation'
@@ -578,7 +629,7 @@ async #createAttemptActionPayload(actor, turnAction) {
         issues: compatibilityValidation.issues,
         payload: this.#sanitizePayload(payload)
       });
-      
+
       // Try to create compatible fallback
       if (compatibilityValidation.formatType === 'enhanced') {
         const legacyPayload = this.#backwardCompatibilityService.createLegacyAdapter(payload);
@@ -691,7 +742,7 @@ describe('BackwardCompatibilityService', () => {
         actorId: 'actor_123',
         actionId: 'core:follow',
         targetId: 'target_456',
-        originalInput: 'follow Alice'
+        originalInput: 'follow Alice',
       };
 
       const validation = service.validatePayloadCompatibility(legacyPayload);
@@ -707,10 +758,10 @@ describe('BackwardCompatibilityService', () => {
         actionId: 'combat:throw',
         targets: {
           item: 'knife_123',
-          target: 'goblin_456'
+          target: 'goblin_456',
         },
         targetId: 'knife_123',
-        originalInput: 'throw knife at goblin'
+        originalInput: 'throw knife at goblin',
       };
 
       const validation = service.validatePayloadCompatibility(enhancedPayload);
@@ -721,7 +772,7 @@ describe('BackwardCompatibilityService', () => {
 
     it('should detect unknown format', () => {
       const unknownPayload = {
-        randomField: 'value'
+        randomField: 'value',
       };
 
       const validation = service.validatePayloadCompatibility(unknownPayload);
@@ -739,7 +790,7 @@ describe('BackwardCompatibilityService', () => {
         actionId: 'core:follow',
         targetId: 'target_456',
         originalInput: 'follow Alice',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const validation = service.validatePayloadCompatibility(legacyPayload);
@@ -755,13 +806,15 @@ describe('BackwardCompatibilityService', () => {
         actionId: 'core:follow',
         targetId: 'target_456',
         originalInput: 'follow Alice',
-        targets: { item: 'item_123' } // Should not exist in legacy
+        targets: { item: 'item_123' }, // Should not exist in legacy
       };
 
       const validation = service.validatePayloadCompatibility(invalidPayload);
 
       expect(validation.isCompatible).toBe(false);
-      expect(validation.issues).toContain('Legacy format should not contain targets object');
+      expect(validation.issues).toContain(
+        'Legacy format should not contain targets object'
+      );
     });
 
     it('should validate legacy format with null targetId', () => {
@@ -770,7 +823,7 @@ describe('BackwardCompatibilityService', () => {
         actorId: 'actor_123',
         actionId: 'core:emote',
         targetId: null,
-        originalInput: 'smile'
+        originalInput: 'smile',
       };
 
       const validation = service.validatePayloadCompatibility(emotePayload);
@@ -781,15 +834,18 @@ describe('BackwardCompatibilityService', () => {
     it('should reject legacy format missing required fields', () => {
       const incompletePayload = {
         eventName: 'core:attempt_action',
-        actorId: 'actor_123'
+        actorId: 'actor_123',
         // Missing actionId and originalInput
       };
 
-      const validation = service.validatePayloadCompatibility(incompletePayload);
+      const validation =
+        service.validatePayloadCompatibility(incompletePayload);
 
       expect(validation.isCompatible).toBe(false);
       expect(validation.issues).toContain('Missing required field: actionId');
-      expect(validation.issues).toContain('Missing required field: originalInput');
+      expect(validation.issues).toContain(
+        'Missing required field: originalInput'
+      );
     });
   });
 
@@ -801,11 +857,11 @@ describe('BackwardCompatibilityService', () => {
         actionId: 'combat:throw',
         targets: {
           item: 'knife_123',
-          target: 'goblin_456'
+          target: 'goblin_456',
         },
         targetId: 'knife_123',
         originalInput: 'throw knife at goblin',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const validation = service.validatePayloadCompatibility(enhancedPayload);
@@ -821,15 +877,19 @@ describe('BackwardCompatibilityService', () => {
         actionId: 'combat:throw',
         targets: {
           item: 'knife_123',
-          target: 'goblin_456'
+          target: 'goblin_456',
         },
-        originalInput: 'throw knife at goblin'
+        originalInput: 'throw knife at goblin',
       };
 
-      const validation = service.validatePayloadCompatibility(payloadWithoutTargetId);
+      const validation = service.validatePayloadCompatibility(
+        payloadWithoutTargetId
+      );
 
       expect(validation.isCompatible).toBe(false);
-      expect(validation.issues).toContain('Enhanced format must include targetId for backward compatibility');
+      expect(validation.issues).toContain(
+        'Enhanced format must include targetId for backward compatibility'
+      );
     });
 
     it('should warn about targetId mismatch', () => {
@@ -839,16 +899,19 @@ describe('BackwardCompatibilityService', () => {
         actionId: 'combat:throw',
         targets: {
           item: 'knife_123',
-          target: 'goblin_456'
+          target: 'goblin_456',
         },
         targetId: 'different_id',
-        originalInput: 'throw knife at goblin'
+        originalInput: 'throw knife at goblin',
       };
 
-      const validation = service.validatePayloadCompatibility(mismatchedPayload);
+      const validation =
+        service.validatePayloadCompatibility(mismatchedPayload);
 
       expect(validation.isCompatible).toBe(true);
-      expect(validation.warnings).toContain('targetId does not match any target in targets object');
+      expect(validation.warnings).toContain(
+        'targetId does not match any target in targets object'
+      );
     });
 
     it('should reject empty targets object', () => {
@@ -858,10 +921,11 @@ describe('BackwardCompatibilityService', () => {
         actionId: 'test:action',
         targets: {},
         targetId: 'target_123',
-        originalInput: 'test action'
+        originalInput: 'test action',
       };
 
-      const validation = service.validatePayloadCompatibility(emptyTargetsPayload);
+      const validation =
+        service.validatePayloadCompatibility(emptyTargetsPayload);
 
       expect(validation.isCompatible).toBe(false);
       expect(validation.issues).toContain('targets object cannot be empty');
@@ -876,11 +940,11 @@ describe('BackwardCompatibilityService', () => {
         actionId: 'combat:throw',
         targets: {
           item: 'knife_123',
-          target: 'goblin_456'
+          target: 'goblin_456',
         },
         targetId: 'knife_123',
         originalInput: 'throw knife at goblin',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const legacyPayload = service.createLegacyAdapter(enhancedPayload);
@@ -891,7 +955,7 @@ describe('BackwardCompatibilityService', () => {
         actionId: 'combat:throw',
         targetId: 'knife_123',
         originalInput: 'throw knife at goblin',
-        timestamp: enhancedPayload.timestamp
+        timestamp: enhancedPayload.timestamp,
       });
 
       // Verify no targets object
@@ -904,11 +968,11 @@ describe('BackwardCompatibilityService', () => {
         actorId: 'actor_123',
         actionId: 'core:follow',
         targetId: 'target_456',
-        originalInput: 'follow Alice'
+        originalInput: 'follow Alice',
       };
 
       const enhancedPayload = service.createEnhancedAdapter(legacyPayload, {
-        createTargetsObject: true
+        createTargetsObject: true,
       });
 
       expect(enhancedPayload).toEqual({
@@ -918,8 +982,8 @@ describe('BackwardCompatibilityService', () => {
         targetId: 'target_456',
         originalInput: 'follow Alice',
         targets: {
-          primary: 'target_456'
-        }
+          primary: 'target_456',
+        },
       });
     });
   });
@@ -933,7 +997,7 @@ describe('BackwardCompatibilityService', () => {
         targetId: 'target_123',
         originalInput: 'large payload test',
         // Add large amount of data
-        largeData: 'x'.repeat(15000)
+        largeData: 'x'.repeat(15000),
       };
 
       const validation = service.validatePayloadCompatibility(largePayload);
@@ -949,11 +1013,11 @@ describe('BackwardCompatibilityService', () => {
         actorId: 'actor_123',
         actionId: 'test:slow',
         targetId: 'target_123',
-        originalInput: 'slow processing test'
+        originalInput: 'slow processing test',
       };
 
       const validation = service.validatePayloadCompatibility(payload, {
-        processingTime: 15 // Exceeds 10ms limit
+        processingTime: 15, // Exceeds 10ms limit
       });
 
       expect(validation.warnings).toContain(
@@ -970,7 +1034,7 @@ describe('BackwardCompatibilityService', () => {
           actorId: 'actor_1',
           actionId: 'core:follow',
           targetId: 'target_1',
-          originalInput: 'follow'
+          originalInput: 'follow',
         },
         {
           eventName: 'core:attempt_action',
@@ -978,12 +1042,12 @@ describe('BackwardCompatibilityService', () => {
           actionId: 'combat:throw',
           targets: { item: 'item_1', target: 'target_2' },
           targetId: 'item_1',
-          originalInput: 'throw'
+          originalInput: 'throw',
         },
         {
-          eventName: 'invalid:format'
+          eventName: 'invalid:format',
           // Missing required fields
-        }
+        },
       ];
 
       const report = service.validateSystemCompatibility(payloads);
@@ -993,7 +1057,7 @@ describe('BackwardCompatibilityService', () => {
       expect(report.incompatiblePayloads).toBe(1);
       expect(report.legacyPayloads).toBe(1);
       expect(report.enhancedPayloads).toBe(1);
-      expect(report.compatibilityRate).toBeCloseTo(2/3);
+      expect(report.compatibilityRate).toBeCloseTo(2 / 3);
     });
   });
 
@@ -1005,7 +1069,7 @@ describe('BackwardCompatibilityService', () => {
           actorId: 'actor_1',
           actionId: 'core:follow',
           targetId: 'target_1',
-          originalInput: 'follow'
+          originalInput: 'follow',
         },
         {
           eventName: 'core:attempt_action',
@@ -1013,12 +1077,12 @@ describe('BackwardCompatibilityService', () => {
           actionId: 'combat:throw',
           targets: { item: 'item_1', target: 'target_2' },
           targetId: 'item_1',
-          originalInput: 'throw'
-        }
+          originalInput: 'throw',
+        },
       ];
 
       // Validate multiple payloads
-      payloads.forEach(payload => {
+      payloads.forEach((payload) => {
         service.validatePayloadCompatibility(payload);
       });
 
@@ -1038,7 +1102,7 @@ describe('BackwardCompatibilityService', () => {
         actorId: 'actor_1',
         actionId: 'core:follow',
         targetId: 'target_1',
-        originalInput: 'follow'
+        originalInput: 'follow',
       });
 
       // Reset metrics
@@ -1114,6 +1178,7 @@ describe('BackwardCompatibilityService', () => {
 ## Next Steps
 
 After this ticket completion:
+
 1. Complete Phase 2 with full backward compatibility assurance
 2. Move to Phase 3: Rules System Integration
 3. Begin rule enhancement for multi-target support
