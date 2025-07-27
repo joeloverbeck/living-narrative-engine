@@ -377,8 +377,10 @@ describe('ThematicDirectionsManagerController - Concept Display', () => {
     it('should have overflow-y auto for scrolling when content overflows', () => {
       // Check computed styles would show overflow-y: auto
       // In a real browser environment, this would be testable with getComputedStyle
-      expect(conceptPanel.classList.contains('concept-selection-panel')).toBe(true);
-      
+      expect(conceptPanel.classList.contains('concept-selection-panel')).toBe(
+        true
+      );
+
       // Test that the panel element exists and has the correct class
       // The actual scrollbar behavior would be tested in integration/e2e tests
       expect(conceptPanel).toBeDefined();
@@ -399,7 +401,9 @@ describe('ThematicDirectionsManagerController - Concept Display', () => {
     it('should have proper box-sizing for scroll behavior', () => {
       // The panel should have the concept-selection-panel class
       // which in CSS has box-sizing: border-box
-      expect(conceptPanel.classList.contains('concept-selection-panel')).toBe(true);
+      expect(conceptPanel.classList.contains('concept-selection-panel')).toBe(
+        true
+      );
     });
   });
 });

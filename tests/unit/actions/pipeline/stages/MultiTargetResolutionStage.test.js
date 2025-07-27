@@ -529,7 +529,7 @@ describe('MultiTargetResolutionStage', () => {
       // Mock different component name sources
       const mockEntity1 = {
         id: 'entity1',
-        getComponent: jest.fn((comp) => {
+        getComponentData: jest.fn((comp) => {
           if (comp === 'core:description') return { name: 'Description Name' };
           return null;
         }),
@@ -537,7 +537,7 @@ describe('MultiTargetResolutionStage', () => {
 
       const mockEntity2 = {
         id: 'entity2',
-        getComponent: jest.fn((comp) => {
+        getComponentData: jest.fn((comp) => {
           if (comp === 'core:actor') return { name: 'Actor Name' };
           return null;
         }),
@@ -545,7 +545,7 @@ describe('MultiTargetResolutionStage', () => {
 
       const mockEntity3 = {
         id: 'entity3',
-        getComponent: jest.fn((comp) => {
+        getComponentData: jest.fn((comp) => {
           if (comp === 'core:item') return { name: 'Item Name' };
           return null;
         }),
@@ -553,7 +553,7 @@ describe('MultiTargetResolutionStage', () => {
 
       const mockEntity4 = {
         id: 'entity4',
-        getComponent: jest.fn(() => null), // No name components
+        getComponentData: jest.fn(() => null), // No name components
       };
 
       // Setup entity manager to return the correct entity for each ID
@@ -752,6 +752,370 @@ describe('MultiTargetResolutionStage', () => {
       // Both actions fail validation, so no actions are returned
       expect(result.data.actionsWithTargets).toHaveLength(1);
       expect(result.data.actionsWithTargets[0].actionDef).toBe(action2);
+    });
+  });
+
+  describe('Dependent Scope Resolution in MultiTargetResolutionStage', () => {
+    describe('Basic Context Dependencies', () => {
+      it('should resolve secondary target with primary context', async () => {
+        // Define action with dependent targets
+        const actionDef = {
+          id: 'test:dependent_action',
+          targets: {
+            primary: {
+              scope: 'location.npcs',
+              placeholder: 'npc',
+            },
+            secondary: {
+              scope: 'target.inventory.items',
+              placeholder: 'item',
+              contextFrom: 'primary',
+            },
+          },
+        };
+
+        mockContext.candidateActions = [actionDef];
+
+        // Mock primary target resolution
+        mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
+          ActionResult.success(new Set(['npc_001']))
+        );
+
+        // Mock entity data
+        mockDeps.entityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'npc_001')
+            return {
+              id: 'npc_001',
+              components: {
+                'core:inventory': { items: ['item_001', 'item_002'] },
+              },
+            };
+          return { id, components: {} };
+        });
+
+        // Mock context building for dependent resolution
+        mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+          actor: { id: 'player' },
+          location: { id: 'room' },
+          game: { turnNumber: 1 },
+        });
+
+        mockDeps.targetContextBuilder.buildDependentContext.mockReturnValue({
+          actor: { id: 'player' },
+          location: { id: 'room' },
+          game: { turnNumber: 1 },
+          targets: { primary: [{ id: 'npc_001' }] },
+          target: {
+            id: 'npc_001',
+            components: {
+              'core:inventory': { items: ['item_001', 'item_002'] },
+            },
+          },
+        });
+
+        // Mock secondary target resolution
+        mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
+          ActionResult.success(new Set(['item_001', 'item_002']))
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        expect(
+          mockDeps.targetContextBuilder.buildDependentContext
+        ).toHaveBeenCalled();
+      });
+
+      it('should handle missing primary target gracefully', async () => {
+        const actionDef = {
+          id: 'test:dependent_action',
+          targets: {
+            primary: {
+              scope: 'location.npcs',
+              placeholder: 'npc',
+            },
+            secondary: {
+              scope: 'target.inventory.items',
+              placeholder: 'item',
+              contextFrom: 'primary',
+            },
+          },
+        };
+
+        mockContext.candidateActions = [actionDef];
+
+        // Mock empty primary target resolution
+        mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
+          ActionResult.success(new Set())
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        expect(result.data.actionsWithTargets).toHaveLength(0);
+      });
+    });
+
+    describe('Multi-Level Dependencies', () => {
+      it('should resolve tertiary target with secondary context', async () => {
+        const actionDef = {
+          id: 'test:three_level_action',
+          targets: {
+            primary: {
+              scope: 'actor.tools',
+              placeholder: 'tool',
+            },
+            secondary: {
+              scope: 'location.containers',
+              placeholder: 'container',
+              contextFrom: 'primary',
+            },
+            tertiary: {
+              scope: 'target.contents.items',
+              placeholder: 'item',
+              contextFrom: 'secondary',
+            },
+          },
+        };
+
+        mockContext.candidateActions = [actionDef];
+
+        // Mock resolutions in order
+        mockDeps.unifiedScopeResolver.resolve
+          .mockResolvedValueOnce(ActionResult.success(new Set(['tool_001'])))
+          .mockResolvedValueOnce(
+            ActionResult.success(new Set(['container_001']))
+          )
+          .mockResolvedValueOnce(
+            ActionResult.success(new Set(['treasure_001', 'treasure_002']))
+          );
+
+        // Mock entity instances
+        mockDeps.entityManager.getEntityInstance.mockImplementation((id) => {
+          switch (id) {
+            case 'tool_001':
+              return { id: 'tool_001', components: {} };
+            case 'container_001':
+              return {
+                id: 'container_001',
+                components: {
+                  'core:container': {
+                    contents: { items: ['treasure_001', 'treasure_002'] },
+                  },
+                },
+              };
+            default:
+              return { id, components: {} };
+          }
+        });
+
+        // Mock context building
+        mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+          actor: { id: 'player' },
+          location: { id: 'room' },
+          game: { turnNumber: 1 },
+        });
+
+        mockDeps.targetContextBuilder.buildDependentContext
+          .mockReturnValueOnce({
+            // Context for secondary resolution
+            targets: { primary: [{ id: 'tool_001' }] },
+          })
+          .mockReturnValueOnce({
+            // Context for tertiary resolution
+            targets: {
+              primary: [{ id: 'tool_001' }],
+              secondary: [{ id: 'container_001' }],
+            },
+            target: { id: 'container_001' },
+          });
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        expect(result.data.actionsWithTargets).toHaveLength(1);
+        expect(
+          mockDeps.targetContextBuilder.buildDependentContext
+        ).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('Complex Dependency Chains', () => {
+      it('should handle deeply nested dependencies', async () => {
+        // Note: The actual implementation supports up to 3-4 levels of dependencies
+        // based on the resolution order algorithm
+        const actionDef = {
+          id: 'test:deep_chain',
+          targets: {
+            a: { scope: 'actor.factions', placeholder: 'faction' },
+            b: {
+              scope: 'game.guilds[faction]',
+              placeholder: 'guild',
+              contextFrom: 'a',
+            },
+            c: {
+              scope: 'target.members',
+              placeholder: 'member',
+              contextFrom: 'b',
+            },
+            d: { scope: 'target.items', placeholder: 'item', contextFrom: 'c' },
+          },
+        };
+
+        mockContext.candidateActions = [actionDef];
+
+        // Mock successful resolutions for each level
+        mockDeps.unifiedScopeResolver.resolve
+          .mockResolvedValueOnce(
+            ActionResult.success(new Set(['faction_merchants']))
+          )
+          .mockResolvedValueOnce(ActionResult.success(new Set(['guild_001'])))
+          .mockResolvedValueOnce(ActionResult.success(new Set(['member_001'])))
+          .mockResolvedValueOnce(ActionResult.success(new Set(['item_001'])));
+
+        // Mock base context
+        mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+          actor: { id: 'player' },
+          location: { id: 'room' },
+          game: { turnNumber: 1 },
+        });
+
+        // Mock dependent context for each level
+        mockDeps.targetContextBuilder.buildDependentContext.mockReturnValue({});
+
+        // Mock entity instances
+        mockDeps.entityManager.getEntityInstance.mockReturnValue({
+          id: 'entity',
+          components: {},
+        });
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        // The resolution order algorithm should handle this properly
+        expect(mockDeps.unifiedScopeResolver.resolve).toHaveBeenCalledTimes(4);
+      });
+
+      it('should detect circular dependencies in target definitions', async () => {
+        // Circular dependency: a depends on b, b depends on a
+        const actionDef = {
+          id: 'test:circular',
+          targets: {
+            a: { scope: 'targets.b', placeholder: 'a', contextFrom: 'b' },
+            b: { scope: 'targets.a', placeholder: 'b', contextFrom: 'a' },
+          },
+        };
+
+        mockContext.candidateActions = [actionDef];
+
+        const result = await stage.executeInternal(mockContext);
+
+        // The stage should detect this and fail gracefully
+        expect(result.success).toBe(true);
+        expect(result.data.actionsWithTargets).toHaveLength(0);
+        expect(result.errors).toBeDefined();
+      });
+    });
+
+    describe('Error Conditions', () => {
+      it('should handle broken dependency chains gracefully', async () => {
+        const actionDef = {
+          id: 'test:broken_chain',
+          targets: {
+            primary: { scope: 'location.npcs', placeholder: 'npc' },
+            secondary: {
+              scope: 'target.missing_property',
+              placeholder: 'item',
+              contextFrom: 'primary',
+            },
+          },
+        };
+
+        mockContext.candidateActions = [actionDef];
+
+        // Primary resolves successfully
+        mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
+          ActionResult.success(new Set(['npc_001']))
+        );
+
+        // Secondary fails due to missing property
+        mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
+          ActionResult.success(new Set())
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        expect(result.data.actionsWithTargets).toHaveLength(0);
+      });
+
+      it('should handle resolution errors gracefully', async () => {
+        const actionDef = {
+          id: 'test:error_action',
+          targets: {
+            primary: {
+              scope: 'invalid.scope.expression',
+              placeholder: 'target',
+            },
+          },
+        };
+
+        mockContext.candidateActions = [actionDef];
+
+        // Mock resolution failure
+        mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
+          ActionResult.failure({
+            error: 'Invalid scope expression',
+            phase: 'scope_resolution',
+          })
+        );
+
+        const result = await stage.executeInternal(mockContext);
+
+        expect(result.success).toBe(true);
+        expect(result.data.actionsWithTargets).toHaveLength(0);
+      });
+    });
+
+    describe('Performance Tests', () => {
+      it('should handle large numbers of dependent targets efficiently', async () => {
+        const itemCount = 100;
+        const itemIds = Array.from(
+          { length: itemCount },
+          (_, i) => `item_${i}`
+        );
+
+        const actionDef = {
+          id: 'test:large_dependency',
+          targets: {
+            primary: { scope: 'location.npcs', placeholder: 'npc' },
+            secondary: {
+              scope: 'target.inventory.items',
+              placeholder: 'item',
+              contextFrom: 'primary',
+            },
+          },
+        };
+
+        mockContext.candidateActions = [actionDef];
+
+        // Mock resolutions
+        mockDeps.unifiedScopeResolver.resolve
+          .mockResolvedValueOnce(ActionResult.success(new Set(['npc_001'])))
+          .mockResolvedValueOnce(ActionResult.success(new Set(itemIds)));
+
+        mockDeps.entityManager.getEntityInstance.mockReturnValue({
+          id: 'generic',
+          components: {},
+        });
+
+        const start = performance.now();
+        const result = await stage.executeInternal(mockContext);
+        const end = performance.now();
+
+        expect(result.success).toBe(true);
+        expect(end - start).toBeLessThan(500); // Should complete quickly
+      });
     });
   });
 

@@ -119,7 +119,11 @@ export default function createArrayIterationResolver() {
           if (parentValue !== null && parentValue !== undefined) {
             result.add(parentValue);
           }
-        } else if (node.parent.type === 'Step' && node.parent.field === 'entities' && node.parent.param) {
+        } else if (
+          node.parent.type === 'Step' &&
+          node.parent.field === 'entities' &&
+          node.parent.param
+        ) {
           // Pass through for location.entities(component)[] case
           if (parentValue !== null && parentValue !== undefined) {
             result.add(parentValue);

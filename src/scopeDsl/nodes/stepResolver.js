@@ -122,7 +122,6 @@ export default function createStepResolver({ entitiesGateway }) {
     resolve(node, ctx) {
       const trace = ctx.trace;
 
-
       // Validate context has required properties
       if (!ctx.actorEntity) {
         const error = new Error(
@@ -152,7 +151,6 @@ export default function createStepResolver({ entitiesGateway }) {
         }
       );
 
-
       // Return empty set if parent is empty
       if (parentResult.size === 0) {
         return new Set();
@@ -163,24 +161,36 @@ export default function createStepResolver({ entitiesGateway }) {
       for (const parentValue of parentResult) {
         if (typeof parentValue === 'string') {
           // Special case: location.entities(componentId)
-          if (node.field === 'entities' && node.param && node.parent?.type === 'Source' && node.parent?.kind === 'location') {
+          if (
+            node.field === 'entities' &&
+            node.param &&
+            node.parent?.type === 'Source' &&
+            node.parent?.kind === 'location'
+          ) {
             // Get all entities with the specified component at this location
             const componentId = node.param;
             const locationId = parentValue;
-            const entitiesWithComponent = entitiesGateway.getEntitiesWithComponent(componentId);
-            
-            
+            const entitiesWithComponent =
+              entitiesGateway.getEntitiesWithComponent(componentId);
+
             if (entitiesWithComponent) {
               for (const entity of entitiesWithComponent) {
                 // Check if entity is at this location
-                const posData = entitiesGateway.getComponentData(entity.id, 'core:position');
+                const posData = entitiesGateway.getComponentData(
+                  entity.id,
+                  'core:position'
+                );
                 if (posData && posData.locationId === locationId) {
                   result.add(entity.id);
                 }
               }
             }
           } else {
-            const val = resolveEntityParentValue(parentValue, node.field, trace);
+            const val = resolveEntityParentValue(
+              parentValue,
+              node.field,
+              trace
+            );
             if (node.field === 'components') {
               if (val) result.add(val);
             } else if (val !== undefined) {
@@ -203,7 +213,6 @@ export default function createStepResolver({ entitiesGateway }) {
           resultSize: result.size,
         }
       );
-
 
       return result;
     },

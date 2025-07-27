@@ -181,11 +181,16 @@ export default [
       'llm-proxy-server/',
       'dist/',
       'coverage/',
+      'coverage-temp/',
+      '.claude/',
       '.DS_Store',
       '*.log',
       'CONTRIBUTING.md',
       'data/',
       'dependencyInjection/', // You added this, assuming it's for non-JS dependencyInjection files or generated files
+      // Defensive patterns to prevent future issues
+      '[0-9]/', // Prevent numeric directories like '2'
+      '[0-9][0-9]/', // Prevent two-digit numeric directories
       // 'llm-proxy-server/', // Add this if you want the root linter to COMPLETELY ignore it.
       // If you want the root linter to process it with specific rules (like block 5b),
       // then REMOVE this line and ensure block 5b's 'files' is correct.

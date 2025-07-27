@@ -7,7 +7,7 @@
 /** @typedef {import('../../interfaces/IActionCommandFormatter.js').IActionCommandFormatter} IActionCommandFormatter */
 /** @typedef {import('../../interfaces/IActionCommandFormatter.js').ResolvedTarget} ResolvedTarget */
 /** @typedef {import('../../interfaces/IActionCommandFormatter.js').FormattingOptions} FormattingOptions */
-/** @typedef {import('../../../data/gameDataRepository.js').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../data/gameDataRepository.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./formatActionTypedefs.js').FormatActionCommandResult} FormatActionCommandResult */
 

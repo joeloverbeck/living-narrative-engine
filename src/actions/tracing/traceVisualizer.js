@@ -11,7 +11,7 @@ import {
 
 /** @typedef {import('./analysisTypes.js').VisualizationOptions} VisualizationOptions */
 /** @typedef {import('./analysisTypes.js').WaterfallEntry} WaterfallEntry */
-/** @typedef {import('./structuredTrace.js').StructuredTrace} StructuredTrace */
+/** @typedef {import('./tracingInterfaces.js').IStructuredTrace} IStructuredTrace */
 
 /**
  * @class TraceVisualizer
@@ -24,11 +24,11 @@ export class TraceVisualizer {
   /**
    * Creates a new TraceVisualizer instance
    *
-   * @param {StructuredTrace} structuredTrace - The structured trace to visualize
+   * @param {IStructuredTrace} structuredTrace - The structured trace to visualize
    * @throws {Error} If structuredTrace is not provided or invalid
    */
   constructor(structuredTrace) {
-    validateDependency(structuredTrace, 'StructuredTrace', null, {
+    validateDependency(structuredTrace, 'IStructuredTrace', null, {
       requiredMethods: ['getSpans', 'getHierarchicalView', 'getCriticalPath'],
     });
 

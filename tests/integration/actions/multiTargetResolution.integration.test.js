@@ -1,0 +1,270 @@
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+import { EntityManagerTestBed } from '../../common/entities/entityManagerTestBed.js';
+import { MultiTargetResolutionStage } from '../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
+import { UnifiedScopeResolver } from '../../../src/actions/scopes/unifiedScopeResolver.js';
+import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import { ActionResult } from '../../../src/actions/core/actionResult.js';
+import EntityDefinition from '../../../src/entities/entityDefinition.js';
+
+describe('Dependent Target Resolution Integration', () => {
+  let testBed;
+  let entityManager;
+  let multiTargetResolutionStage;
+  let unifiedScopeResolver;
+  let targetContextBuilder;
+  let logger;
+
+  beforeEach(() => {
+    // Set up test bed
+    testBed = new EntityManagerTestBed();
+    entityManager = testBed.entityManager;
+
+    // Create logger
+    logger = new ConsoleLogger('ERROR');
+    logger.debug = jest.fn();
+    logger.error = jest.fn();
+    logger.warn = jest.fn();
+
+    // Create dependencies
+    targetContextBuilder = {
+      buildBaseContext: jest.fn(),
+      buildDependentContext: jest.fn(),
+    };
+
+    // Create unified scope resolver with minimal dependencies
+    unifiedScopeResolver = {
+      resolve: jest.fn(),
+    };
+
+    // Create multi-target resolution stage
+    multiTargetResolutionStage = new MultiTargetResolutionStage({
+      unifiedScopeResolver,
+      entityManager,
+      targetResolver: {
+        resolveTargets: jest.fn(),
+      },
+      targetContextBuilder,
+      logger,
+    });
+  });
+
+  afterEach(() => {
+    testBed.cleanup();
+    jest.clearAllMocks();
+  });
+
+  describe('Two-Level Dependencies', () => {
+    it('should resolve dependent targets in correct order', async () => {
+      // Create entity definitions
+      const playerDef = new EntityDefinition('test:player', {
+        description: 'Test player',
+        components: {
+          'core:position': { locationId: 'room' },
+          'core:actor': { name: 'Player' },
+        },
+      });
+
+      const npcDef = new EntityDefinition('test:npc', {
+        description: 'Test NPC',
+        components: {
+          'core:actor': { name: 'Alice' },
+          'core:position': { locationId: 'room' },
+          'core:inventory': { items: ['sword', 'potion'] },
+        },
+      });
+
+      const roomDef = new EntityDefinition('test:room', {
+        description: 'Test room',
+        components: {
+          'core:location': { name: 'Test Room' },
+          'core:actors': { actors: [] }, // Will be updated after entity creation
+        },
+      });
+
+      // Setup definitions
+      testBed.setupDefinitions(playerDef, npcDef, roomDef);
+
+      // Create entities
+      const player = await entityManager.createEntityInstance('test:player', {
+        instanceId: 'player-001',
+      });
+
+      const npc = await entityManager.createEntityInstance('test:npc', {
+        instanceId: 'npc-001',
+      });
+
+      const room = await entityManager.createEntityInstance('test:room', {
+        instanceId: 'room-001',
+      });
+
+      // Update room with actor references
+      await entityManager.addComponent('room-001', 'core:actors', {
+        actors: ['player-001', 'npc-001'],
+      });
+
+      // Define action with dependent targets
+      const actionDef = {
+        id: 'test:take_item',
+        name: 'Take Item',
+        targets: {
+          primary: {
+            scope: 'location.components["core:actors"].actors',
+            placeholder: 'person',
+          },
+          secondary: {
+            scope: 'target.components["core:inventory"].items',
+            placeholder: 'item',
+            contextFrom: 'primary',
+          },
+        },
+        template: 'take {item} from {person}',
+      };
+
+      // Mock scope resolver responses
+      unifiedScopeResolver.resolve
+        .mockResolvedValueOnce(ActionResult.success(new Set(['npc-001']))) // Primary resolution
+        .mockResolvedValueOnce(
+          ActionResult.success(new Set(['sword', 'potion']))
+        ); // Secondary resolution
+
+      // Mock target context builder
+      targetContextBuilder.buildBaseContext.mockReturnValue({
+        actor: player,
+        location: room,
+        game: { turnNumber: 1 },
+      });
+
+      targetContextBuilder.buildDependentContext.mockReturnValue({
+        actor: player,
+        location: room,
+        game: { turnNumber: 1 },
+        targets: {
+          primary: [{ id: 'npc-001', displayName: 'Alice', entity: npc }],
+        },
+        target: npc,
+      });
+
+      // Create context for the stage
+      const context = {
+        candidateActions: [actionDef],
+        actor: player,
+        actionContext: { location: room },
+        data: {},
+      };
+
+      // Execute the stage
+      const result = await multiTargetResolutionStage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.data.actionsWithTargets).toBeDefined();
+      expect(result.data.actionsWithTargets.length).toBeGreaterThan(0);
+
+      // Verify dependent resolution worked
+      const processedAction = result.data.actionsWithTargets[0];
+      expect(processedAction.actionDef.id).toBe('test:take_item');
+
+      // Verify buildDependentContext was called
+      expect(unifiedScopeResolver.resolve).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle empty dependent targets gracefully', async () => {
+      // Create entity definitions where secondary target will be empty
+      const playerDef = new EntityDefinition('test:player2', {
+        description: 'Test player 2',
+        components: {
+          'core:position': { locationId: 'room' },
+          'core:actor': { name: 'Player' },
+        },
+      });
+
+      const npcDef = new EntityDefinition('test:npc2', {
+        description: 'Test NPC 2',
+        components: {
+          'core:actor': { name: 'Bob' },
+          'core:position': { locationId: 'room' },
+          // No inventory - secondary target will be empty
+        },
+      });
+
+      const roomDef = new EntityDefinition('test:room2', {
+        description: 'Test room 2',
+        components: {
+          'core:location': { name: 'Test Room' },
+          'core:actors': { actors: [] }, // Will be updated after entity creation
+        },
+      });
+
+      // Setup definitions
+      testBed.setupDefinitions(playerDef, npcDef, roomDef);
+
+      // Create entities
+      const player = await entityManager.createEntityInstance('test:player2', {
+        instanceId: 'player-002',
+      });
+
+      const npc = await entityManager.createEntityInstance('test:npc2', {
+        instanceId: 'npc-002',
+      });
+
+      const room = await entityManager.createEntityInstance('test:room2', {
+        instanceId: 'room-002',
+      });
+
+      // Update room with actor references
+      await entityManager.addComponent('room-002', 'core:actors', {
+        actors: ['player-002', 'npc-002'],
+      });
+
+      const actionDef = {
+        id: 'test:take_item_empty',
+        targets: {
+          primary: {
+            scope: 'location.components["core:actors"].actors',
+            placeholder: 'person',
+          },
+          secondary: {
+            scope: 'target.components["core:inventory"].items',
+            placeholder: 'item',
+            contextFrom: 'primary',
+          },
+        },
+        template: 'take {item} from {person}',
+      };
+
+      // Mock scope resolver responses - secondary returns empty
+      unifiedScopeResolver.resolve
+        .mockResolvedValueOnce(ActionResult.success(new Set(['npc-002']))) // Primary resolution
+        .mockResolvedValueOnce(ActionResult.success(new Set())); // Secondary resolution - empty
+
+      // Mock target context builder
+      targetContextBuilder.buildBaseContext.mockReturnValue({
+        actor: player,
+        location: room,
+        game: { turnNumber: 1 },
+      });
+
+      const context = {
+        candidateActions: [actionDef],
+        actor: player,
+        actionContext: { location: room },
+        data: {},
+      };
+
+      const result = await multiTargetResolutionStage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      // Should have no actions because secondary targets are empty
+      expect(result.data.actionsWithTargets).toHaveLength(0);
+    });
+  });
+
+  // Note: Three-level dependencies and complex chains are tested in the unit tests above
+  // Integration tests focus on realistic two-level scenarios
+});

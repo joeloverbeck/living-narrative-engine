@@ -194,3 +194,10 @@ llm-proxy-server/.env
 # Adapt this pattern to how you name your private mod folders.
 # For example, if they start with "p-", use "p-*".
 data/mods/p-*
+
+# Prevent accidental numeric directories (e.g., from shell redirection errors)
+/[0-9]/
+/[0-9][0-9]/
+
+# Temporary coverage directories
+coverage-temp/

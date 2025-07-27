@@ -92,6 +92,9 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
     const allActionsWithTargets = [];
     const errors = [];
+    let lastResolvedTargets = null;
+    let lastTargetDefinitions = null;
+    let allTargetContexts = [];
 
     // Process each candidate action
     for (const actionDef of candidateActions) {
@@ -115,6 +118,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
           );
           if (result.success && result.data.actionsWithTargets) {
             allActionsWithTargets.push(...result.data.actionsWithTargets);
+            // For backward compatibility, merge target contexts
+            if (result.data.targetContexts) {
+              allTargetContexts.push(...result.data.targetContexts);
+            }
           }
         } else {
           // Resolve multi-target action
@@ -124,6 +131,16 @@ export class MultiTargetResolutionStage extends PipelineStage {
           );
           if (result.success && result.data.actionsWithTargets) {
             allActionsWithTargets.push(...result.data.actionsWithTargets);
+            // Store the last resolved targets and contexts for top-level access
+            if (result.data.resolvedTargets) {
+              lastResolvedTargets = result.data.resolvedTargets;
+            }
+            if (result.data.targetDefinitions) {
+              lastTargetDefinitions = result.data.targetDefinitions;
+            }
+            if (result.data.targetContexts) {
+              allTargetContexts.push(...result.data.targetContexts);
+            }
           }
         }
       } catch (error) {
@@ -145,11 +162,25 @@ export class MultiTargetResolutionStage extends PipelineStage {
       'MultiTargetResolutionStage'
     );
 
+    // Build final result data
+    const resultData = {
+      ...context.data,
+      actionsWithTargets: allActionsWithTargets,
+    };
+
+    // Add backward compatibility fields if we have target data
+    if (allTargetContexts.length > 0) {
+      resultData.targetContexts = allTargetContexts;
+    }
+    if (lastResolvedTargets) {
+      resultData.resolvedTargets = lastResolvedTargets;
+    }
+    if (lastTargetDefinitions) {
+      resultData.targetDefinitions = lastTargetDefinitions;
+    }
+
     return PipelineResult.success({
-      data: {
-        ...context.data,
-        actionsWithTargets: allActionsWithTargets,
-      },
+      data: resultData,
       errors,
     });
   }
@@ -291,6 +322,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
     for (const targetKey of resolutionOrder) {
       const targetDef = targetDefs[targetKey];
+      
       trace?.step(
         `Resolving ${targetKey} target`,
         'MultiTargetResolutionStage'
@@ -333,9 +365,11 @@ export class MultiTargetResolutionStage extends PipelineStage {
           const entity = this.#entityManager.getEntityInstance(entityId);
           if (!entity) return null; // Filter out missing entities
 
+          const displayName = this.#getEntityDisplayName(entityId);
+          
           return {
             id: entityId,
-            displayName: this.#getEntityDisplayName(entityId),
+            displayName,
             entity,
           };
         })
@@ -360,6 +394,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
     const hasTargets = Object.values(resolvedTargets).some(
       (targets) => targets.length > 0
     );
+    
     if (!hasTargets) {
       return PipelineResult.success({
         data: {
@@ -445,7 +480,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
     const baseContext = this.#contextBuilder.buildBaseContext(
       actor.id,
       actionContext.location?.id ||
-        actor.getComponent('core:position')?.locationId
+        actor.getComponentData('core:position')?.locationId
     );
 
     // Add resolved targets if this is a dependent target
@@ -532,9 +567,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
       // Try common name sources
       const name =
-        entity.getComponent('core:description')?.name ||
-        entity.getComponent('core:actor')?.name ||
-        entity.getComponent('core:item')?.name ||
+        entity.getComponentData('core:name')?.value ||
+        entity.getComponentData('core:description')?.name ||
+        entity.getComponentData('core:actor')?.name ||
+        entity.getComponentData('core:item')?.name ||
         entityId;
 
       return name;

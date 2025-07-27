@@ -47,6 +47,8 @@ export default class SimplifiedAnatomyTestBed extends BaseTestBed {
 
   /**
    * Create anatomy description service with minimal dependencies
+   *
+   * @param options
    */
   async createAnatomyDescriptionService(options = {}) {
     // Create body graph service if not provided
@@ -200,6 +202,8 @@ export default class SimplifiedAnatomyTestBed extends BaseTestBed {
 
   /**
    * Helper to create a test entity with anatomy
+   *
+   * @param hasAnatomy
    */
   async createTestEntity(hasAnatomy = true) {
     const entity = await this.entityManager.createEntityInstance('core:actor');
@@ -220,6 +224,8 @@ export default class SimplifiedAnatomyTestBed extends BaseTestBed {
 
   /**
    * Helper method to load components into the registry
+   *
+   * @param components
    */
   loadComponents(components) {
     for (const [id, data] of Object.entries(components)) {
@@ -229,6 +235,8 @@ export default class SimplifiedAnatomyTestBed extends BaseTestBed {
 
   /**
    * Helper method to load entity definitions into the registry
+   *
+   * @param entities
    */
   loadEntityDefinitions(entities) {
     for (const [id, data] of Object.entries(entities)) {
