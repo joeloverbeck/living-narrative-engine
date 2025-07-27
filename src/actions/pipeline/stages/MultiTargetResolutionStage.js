@@ -322,7 +322,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
     for (const targetKey of resolutionOrder) {
       const targetDef = targetDefs[targetKey];
-      
+
       trace?.step(
         `Resolving ${targetKey} target`,
         'MultiTargetResolutionStage'
@@ -366,7 +366,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
           if (!entity) return null; // Filter out missing entities
 
           const displayName = this.#getEntityDisplayName(entityId);
-          
+
           return {
             id: entityId,
             displayName,
@@ -394,7 +394,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
     const hasTargets = Object.values(resolvedTargets).some(
       (targets) => targets.length > 0
     );
-    
+
     if (!hasTargets) {
       return PipelineResult.success({
         data: {
