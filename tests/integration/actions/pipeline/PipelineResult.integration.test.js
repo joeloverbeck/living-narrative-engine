@@ -4,7 +4,14 @@
  * @see src/actions/pipeline/PipelineResult.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { PipelineResult } from '../../../../src/actions/pipeline/PipelineResult.js';
 import { ActionResult } from '../../../../src/actions/core/actionResult.js';
 import { Pipeline } from '../../../../src/actions/pipeline/Pipeline.js';
@@ -337,7 +344,9 @@ describe('PipelineResult - Integration Tests', () => {
       expect(pipelineResult.data).toHaveProperty('operationId');
 
       // Verify error details are preserved
-      expect(pipelineResult.errors[0].message).toBe('Database connection timeout');
+      expect(pipelineResult.errors[0].message).toBe(
+        'Database connection timeout'
+      );
       expect(pipelineResult.errors[0].code).toBe('DB_TIMEOUT');
       expect(pipelineResult.errors[0].retryable).toBe(true);
       expect(pipelineResult.errors[1].message).toBe('Entity validation failed');
@@ -353,7 +362,10 @@ describe('PipelineResult - Integration Tests', () => {
       const undefinedActionResult = ActionResult.success(undefined);
       const emptyActionResult = ActionResult.success({});
 
-      const additionalData = { serviceId: 'test-service', timestamp: Date.now() };
+      const additionalData = {
+        serviceId: 'test-service',
+        timestamp: Date.now(),
+      };
 
       // Act & Assert - null value
       const nullPipelineResult = PipelineResult.fromActionResult(
@@ -474,11 +486,16 @@ describe('PipelineResult - Integration Tests', () => {
       expect(chainedResult.data.validationPassed).toBe(false);
 
       // Verify original actions preserved
-      expect(chainedResult.actions).toEqual([{ id: 'initial-scan', completed: true }]);
+      expect(chainedResult.actions).toEqual([
+        { id: 'initial-scan', completed: true },
+      ]);
 
       // Verify errors accumulated (line 114)
       expect(chainedResult.errors.length).toBeGreaterThan(0);
-      expect(chainedResult.errors[0]).toEqual({ warning: 'Low visibility', severity: 'minor' });
+      expect(chainedResult.errors[0]).toEqual({
+        warning: 'Low visibility',
+        severity: 'minor',
+      });
     });
 
     it('should handle chaining failure scenarios and error accumulation', () => {
@@ -514,13 +531,18 @@ describe('PipelineResult - Integration Tests', () => {
 
       // Verify error accumulation (line 114)
       expect(chainedResult.errors.length).toBe(3); // 1 initial warning + 2 service errors
-      expect(chainedResult.errors[0]).toEqual({ warning: 'initial warning', phase: 'setup' });
+      expect(chainedResult.errors[0]).toEqual({
+        warning: 'initial warning',
+        phase: 'setup',
+      });
       expect(chainedResult.errors[1].message).toBe('Service unavailable');
       expect(chainedResult.errors[2].message).toBe('Timeout occurred');
 
       // Verify original data preserved when chaining fails (line 122-123)
       expect(chainedResult.data).toEqual({ step: 1, value: 'initial' });
-      expect(chainedResult.actions).toEqual([{ id: 'step1', status: 'completed' }]);
+      expect(chainedResult.actions).toEqual([
+        { id: 'step1', status: 'completed' },
+      ]);
       expect(chainedResult.continueProcessing).toBe(false);
     });
 
@@ -542,7 +564,9 @@ describe('PipelineResult - Integration Tests', () => {
       expect(chainedResult).toBe(failedResult); // Should return same instance
       expect(serviceFunction).not.toHaveBeenCalled();
       expect(chainedResult.success).toBe(false);
-      expect(chainedResult.errors).toEqual([{ error: 'Initial failure', phase: 'SETUP' }]);
+      expect(chainedResult.errors).toEqual([
+        { error: 'Initial failure', phase: 'SETUP' },
+      ]);
     });
 
     it('should handle ActionResult with missing errors property in chain', () => {
@@ -563,7 +587,8 @@ describe('PipelineResult - Integration Tests', () => {
       };
 
       // Act - chain with malformed ActionResult (targets line 114 fallback)
-      const chainedResult = initialResult.chainActionResult(serviceWithoutErrors);
+      const chainedResult =
+        initialResult.chainActionResult(serviceWithoutErrors);
 
       // Assert - verify graceful handling of missing errors
       expect(chainedResult.success).toBe(false);
@@ -574,9 +599,9 @@ describe('PipelineResult - Integration Tests', () => {
     it('should handle multiple chaining operations with data merging', () => {
       // Arrange - complex multi-step pipeline simulation
       const initialResult = PipelineResult.success({
-        data: { 
+        data: {
           entityId: 'player1',
-          baseStats: { strength: 10, agility: 8 } 
+          baseStats: { strength: 10, agility: 8 },
         },
         actions: [],
         errors: [],
@@ -597,11 +622,14 @@ describe('PipelineResult - Integration Tests', () => {
         return ActionResult.success({
           ...data,
           finalStats: {
-            strength: data.baseStats.strength + (data.equipmentBonus?.strength || 0),
+            strength:
+              data.baseStats.strength + (data.equipmentBonus?.strength || 0),
             agility: data.baseStats.agility,
             defense: data.equipmentBonus?.defense || 0,
           },
-          totalDamage: (data.equipment?.weapon?.damage || 0) + (data.baseStats?.strength || 0),
+          totalDamage:
+            (data.equipment?.weapon?.damage || 0) +
+            (data.baseStats?.strength || 0),
         });
       };
 
@@ -665,7 +693,7 @@ describe('PipelineResult - Integration Tests', () => {
 
       const levelUpService = (data) => {
         const newLevel = data.currentLevel + 1;
-        
+
         // Simulate event dispatching
         mockSafeEventDispatcher.dispatch({
           type: 'ENTITY_LEVEL_CHANGED',
@@ -719,7 +747,7 @@ describe('PipelineResult - Integration Tests', () => {
         error.code = 'MANA_INSUFFICIENT';
         error.requiredMana = 50;
         error.currentMana = 25;
-        
+
         return ActionResult.failure(error);
       };
 
@@ -759,7 +787,7 @@ describe('PipelineResult - Integration Tests', () => {
 
       // Act - process large data set through pipeline
       const processingService = (data) => {
-        const processedEntities = data.entities.map(entity => ({
+        const processedEntities = data.entities.map((entity) => ({
           ...entity,
           processed: true,
           processedAt: Date.now(),
@@ -774,13 +802,15 @@ describe('PipelineResult - Integration Tests', () => {
           entities: processedEntities,
           processingSummary: {
             totalEntities: processedEntities.length,
-            averageLevel: processedEntities.reduce((sum, e) => sum + e.data.level, 0) / processedEntities.length,
+            averageLevel:
+              processedEntities.reduce((sum, e) => sum + e.data.level, 0) /
+              processedEntities.length,
           },
         });
       };
 
       const result = initialResult.chainActionResult(processingService);
-      
+
       const endTime = Date.now();
       const memAfter = process.memoryUsage().heapUsed;
 
@@ -807,16 +837,18 @@ describe('PipelineResult - Integration Tests', () => {
 
         const dataFetchService = (data) => {
           // Simulate async data fetching
-          return new Promise(resolve => {
+          return new Promise((resolve) => {
             setTimeout(() => {
-              resolve(ActionResult.success({
-                ...data,
-                entities: Array.from({ length: 100 }, (_, i) => ({ 
-                  id: `entity_${data.operationId}_${i}`,
-                  data: `data_${i}` 
-                })),
-                fetchedAt: Date.now(),
-              }));
+              resolve(
+                ActionResult.success({
+                  ...data,
+                  entities: Array.from({ length: 100 }, (_, i) => ({
+                    id: `entity_${data.operationId}_${i}`,
+                    data: `data_${i}`,
+                  })),
+                  fetchedAt: Date.now(),
+                })
+              );
             }, Math.random() * 50); // Random delay 0-50ms
           });
         };
@@ -827,7 +859,7 @@ describe('PipelineResult - Integration Tests', () => {
       const startTime = Date.now();
 
       // Act - run multiple concurrent operations
-      const concurrentOperations = Array.from({ length: 10 }, (_, i) => 
+      const concurrentOperations = Array.from({ length: 10 }, (_, i) =>
         createConcurrentOperation(i)
       );
 
@@ -873,15 +905,14 @@ describe('PipelineResult - Integration Tests', () => {
   describe('Error Handling and Edge Cases', () => {
     it('should handle ActionResult conversion with various input scenarios', () => {
       // Test cases that should throw (truly invalid inputs)
-      const throwingCases = [
-        null,
-        undefined,
-      ];
+      const throwingCases = [null, undefined];
 
       throwingCases.forEach((invalidInput, index) => {
         // Act & Assert - should throw for null/undefined
         expect(() => {
-          PipelineResult.fromActionResult(invalidInput, { test: `throwing_case_${index}` });
+          PipelineResult.fromActionResult(invalidInput, {
+            test: `throwing_case_${index}`,
+          });
         }).toThrow();
       });
 
@@ -899,7 +930,9 @@ describe('PipelineResult - Integration Tests', () => {
         // Act & Assert - should handle gracefully or provide reasonable behavior
         let result;
         expect(() => {
-          result = PipelineResult.fromActionResult(edgeCase, { test: `edge_case_${index}` });
+          result = PipelineResult.fromActionResult(edgeCase, {
+            test: `edge_case_${index}`,
+          });
         }).not.toThrow();
 
         // Verify result is a valid PipelineResult

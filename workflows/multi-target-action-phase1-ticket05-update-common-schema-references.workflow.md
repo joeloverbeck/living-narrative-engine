@@ -54,7 +54,14 @@ Update the common schema file to include multi-target event structures:
       "type": "string",
       "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
       "description": "Target name for multi-target actions (alphanumeric with underscores)",
-      "examples": ["primary", "secondary", "item", "recipient", "target", "tool"]
+      "examples": [
+        "primary",
+        "secondary",
+        "item",
+        "recipient",
+        "target",
+        "tool"
+      ]
     },
     "targetsObject": {
       "type": "object",
@@ -133,10 +140,7 @@ Update the common schema file to include multi-target event structures:
             }
           },
           "required": ["eventName", "actorId", "actionId", "originalInput"],
-          "anyOf": [
-            { "required": ["targets"] },
-            { "required": ["targetId"] }
-          ]
+          "anyOf": [{ "required": ["targets"] }, { "required": ["targetId"] }]
         }
       ]
     },
@@ -181,22 +185,28 @@ Update the common schema file to include multi-target event structures:
           "description": "Number of targets in the event"
         },
         "primaryTarget": {
-          "anyOf": [
-            { "$ref": "#/definitions/entityId" },
-            { "type": "null" }
-          ],
+          "anyOf": [{ "$ref": "#/definitions/entityId" }, { "type": "null" }],
           "description": "Determined primary target"
         },
         "consistencyIssues": {
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["targetId_mismatch", "primary_target_mismatch", "duplicate_targets"]
+            "enum": [
+              "targetId_mismatch",
+              "primary_target_mismatch",
+              "duplicate_targets"
+            ]
           },
           "description": "Array of consistency issue types"
         }
       },
-      "required": ["hasMultipleTargets", "targetCount", "primaryTarget", "consistencyIssues"],
+      "required": [
+        "hasMultipleTargets",
+        "targetCount",
+        "primaryTarget",
+        "consistencyIssues"
+      ],
       "additionalProperties": false
     }
   }
@@ -316,11 +326,10 @@ Create comprehensive type definitions for multi-target structures:
  * @property {boolean} [isMultiTarget] - Multi-target flag
  */
 
-export {
-  // Type definitions are exported via JSDoc comments above
-  // This allows them to be imported in other files using:
-  // /** @typedef {import('./multiTargetTypes.js').AttemptActionPayload} AttemptActionPayload */
-};
+export // Type definitions are exported via JSDoc comments above
+// This allows them to be imported in other files using:
+// /** @typedef {import('./multiTargetTypes.js').AttemptActionPayload} AttemptActionPayload */
+ {};
 ```
 
 ### 3. Update Validation Utilities
@@ -358,7 +367,7 @@ export function validateTargetsObject(targets, context = 'targets') {
   }
 
   const targetKeys = Object.keys(targets);
-  
+
   // Check for empty object
   if (targetKeys.length === 0) {
     errors.push(`${context} object cannot be empty`);
@@ -369,7 +378,9 @@ export function validateTargetsObject(targets, context = 'targets') {
   for (const [key, targetId] of Object.entries(targets)) {
     // Validate target key format
     if (!isValidTargetName(key)) {
-      warnings.push(`${context} key "${key}" should follow naming conventions (alphanumeric with underscores)`);
+      warnings.push(
+        `${context} key "${key}" should follow naming conventions (alphanumeric with underscores)`
+      );
     }
 
     // Validate target ID
@@ -379,7 +390,9 @@ export function validateTargetsObject(targets, context = 'targets') {
     }
 
     if (!isValidEntityId(targetId)) {
-      warnings.push(`${context}["${key}"] ID "${targetId}" should follow entity ID format`);
+      warnings.push(
+        `${context}["${key}"] ID "${targetId}" should follow entity ID format`
+      );
     }
   }
 
@@ -393,7 +406,7 @@ export function validateTargetsObject(targets, context = 'targets') {
   return {
     isValid: errors.length === 0,
     errors,
-    warnings
+    warnings,
   };
 }
 
@@ -409,7 +422,7 @@ export function validateAttemptActionPayload(payload) {
     hasMultipleTargets: false,
     targetCount: 0,
     primaryTarget: null,
-    consistencyIssues: []
+    consistencyIssues: [],
   };
 
   try {
@@ -423,7 +436,10 @@ export function validateAttemptActionPayload(payload) {
 
     // Validate targets object if present
     if (payload.targets) {
-      const targetsValidation = validateTargetsObject(payload.targets, 'payload.targets');
+      const targetsValidation = validateTargetsObject(
+        payload.targets,
+        'payload.targets'
+      );
       errors.push(...targetsValidation.errors);
       warnings.push(...targetsValidation.warnings);
 
@@ -436,7 +452,6 @@ export function validateAttemptActionPayload(payload) {
 
     // Validate consistency between targets and targetId
     validateTargetConsistency(payload, warnings, details);
-
   } catch (error) {
     errors.push(`Validation error: ${error.message}`);
   }
@@ -445,7 +460,7 @@ export function validateAttemptActionPayload(payload) {
     isValid: errors.length === 0,
     errors,
     warnings,
-    details
+    details,
   };
 }
 
@@ -459,7 +474,7 @@ function validateRequiredFields(payload, errors) {
     { field: 'eventName', expectedValue: 'core:attempt_action' },
     { field: 'actorId', type: 'string' },
     { field: 'actionId', type: 'string' },
-    { field: 'originalInput', type: 'string' }
+    { field: 'originalInput', type: 'string' },
   ];
 
   for (const { field, expectedValue, type } of requiredFields) {
@@ -492,7 +507,8 @@ function validateRequiredFields(payload, errors) {
  */
 function validateTargetRequirements(payload, errors, details) {
   const hasTargets = payload.targets && Object.keys(payload.targets).length > 0;
-  const hasTargetId = payload.targetId !== undefined && payload.targetId !== null;
+  const hasTargetId =
+    payload.targetId !== undefined && payload.targetId !== null;
 
   if (!hasTargets && !hasTargetId) {
     errors.push('Event must have either targets object or targetId field');
@@ -501,7 +517,9 @@ function validateTargetRequirements(payload, errors, details) {
 
   // If using targets object, must also have targetId for backward compatibility
   if (hasTargets && !hasTargetId) {
-    errors.push('targetId is required for backward compatibility when targets object is present');
+    errors.push(
+      'targetId is required for backward compatibility when targets object is present'
+    );
   }
 
   // Validate targetId type if present
@@ -522,16 +540,20 @@ function validateTargetConsistency(payload, warnings, details) {
   }
 
   const targetValues = Object.values(payload.targets);
-  
+
   // Check if targetId matches any target in targets object
   if (!targetValues.includes(payload.targetId)) {
-    warnings.push(`targetId "${payload.targetId}" does not match any target in targets object`);
+    warnings.push(
+      `targetId "${payload.targetId}" does not match any target in targets object`
+    );
     details.consistencyIssues.push('targetId_mismatch');
   }
 
   // Check if targetId matches expected primary target
   if (details.primaryTarget && payload.targetId !== details.primaryTarget) {
-    warnings.push(`targetId "${payload.targetId}" does not match expected primary target "${details.primaryTarget}"`);
+    warnings.push(
+      `targetId "${payload.targetId}" does not match expected primary target "${details.primaryTarget}"`
+    );
     details.consistencyIssues.push('primary_target_mismatch');
   }
 }
@@ -573,7 +595,7 @@ export function isValidTargetName(targetName) {
   if (typeof targetName !== 'string') {
     return false;
   }
-  
+
   // Allow alphanumeric characters and underscores, must start with letter
   return /^[a-zA-Z][a-zA-Z0-9_]*$/.test(targetName);
 }
@@ -587,7 +609,7 @@ export function isValidEntityId(entityId) {
   if (typeof entityId !== 'string' || !entityId.trim()) {
     return false;
   }
-  
+
   // Allow letters, numbers, underscores, and colons (for namespaced IDs)
   return /^[a-zA-Z0-9_:]+$/.test(entityId);
 }
@@ -601,9 +623,11 @@ export function isValidNamespacedId(namespacedId) {
   if (typeof namespacedId !== 'string' || !namespacedId.trim()) {
     return false;
   }
-  
+
   // Allow 'namespace:id' format or simple 'id'
-  return /^[a-zA-Z][a-zA-Z0-9_]*:[a-zA-Z][a-zA-Z0-9_]*$|^[a-zA-Z][a-zA-Z0-9_]*$/.test(namespacedId);
+  return /^[a-zA-Z][a-zA-Z0-9_]*:[a-zA-Z][a-zA-Z0-9_]*$|^[a-zA-Z][a-zA-Z0-9_]*$/.test(
+    namespacedId
+  );
 }
 
 /**
@@ -614,12 +638,17 @@ export function isValidNamespacedId(namespacedId) {
  * @param {Object} details - Additional details
  * @returns {Object} Standardized validation result
  */
-export function createValidationResult(isValid, errors = [], warnings = [], details = {}) {
+export function createValidationResult(
+  isValid,
+  errors = [],
+  warnings = [],
+  details = {}
+) {
   return {
     isValid,
     errors: [...errors],
     warnings: [...warnings],
-    details: { ...details }
+    details: { ...details },
   };
 }
 
@@ -633,14 +662,14 @@ export function mergeValidationResults(...results) {
     isValid: true,
     errors: [],
     warnings: [],
-    details: {}
+    details: {},
   };
 
   for (const result of results) {
     if (!result.isValid) {
       merged.isValid = false;
     }
-    
+
     merged.errors.push(...(result.errors || []));
     merged.warnings.push(...(result.warnings || []));
     Object.assign(merged.details, result.details || {});
@@ -668,7 +697,7 @@ import {
   isValidEntityId,
   isValidNamespacedId,
   createValidationResult,
-  mergeValidationResults
+  mergeValidationResults,
 } from '../../../src/utils/multiTargetValidationUtils.js';
 
 describe('MultiTargetValidationUtils', () => {
@@ -676,7 +705,7 @@ describe('MultiTargetValidationUtils', () => {
     it('should validate correct targets object', () => {
       const targets = {
         item: 'knife_123',
-        target: 'goblin_456'
+        target: 'goblin_456',
       };
 
       const result = validateTargetsObject(targets);
@@ -702,38 +731,46 @@ describe('MultiTargetValidationUtils', () => {
     it('should warn about invalid target names', () => {
       const targets = {
         'invalid-name': 'entity_123',
-        '123invalid': 'entity_456'
+        '123invalid': 'entity_456',
       };
 
       const result = validateTargetsObject(targets);
 
       expect(result.isValid).toBe(true);
-      expect(result.warnings).toContain('targets key "invalid-name" should follow naming conventions (alphanumeric with underscores)');
-      expect(result.warnings).toContain('targets key "123invalid" should follow naming conventions (alphanumeric with underscores)');
+      expect(result.warnings).toContain(
+        'targets key "invalid-name" should follow naming conventions (alphanumeric with underscores)'
+      );
+      expect(result.warnings).toContain(
+        'targets key "123invalid" should follow naming conventions (alphanumeric with underscores)'
+      );
     });
 
     it('should reject empty target values', () => {
       const targets = {
         item: '',
-        target: 'valid_target'
+        target: 'valid_target',
       };
 
       const result = validateTargetsObject(targets);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('targets["item"] must be a non-empty string');
+      expect(result.errors).toContain(
+        'targets["item"] must be a non-empty string'
+      );
     });
 
     it('should warn about duplicate targets', () => {
       const targets = {
         item: 'same_entity',
-        target: 'same_entity'
+        target: 'same_entity',
       };
 
       const result = validateTargetsObject(targets);
 
       expect(result.isValid).toBe(true);
-      expect(result.warnings).toContain('targets object contains duplicate target IDs');
+      expect(result.warnings).toContain(
+        'targets object contains duplicate target IDs'
+      );
     });
   });
 
@@ -744,7 +781,7 @@ describe('MultiTargetValidationUtils', () => {
         actorId: 'actor_123',
         actionId: 'core:follow',
         targetId: 'target_456',
-        originalInput: 'follow Alice'
+        originalInput: 'follow Alice',
       };
 
       const result = validateAttemptActionPayload(payload);
@@ -761,10 +798,10 @@ describe('MultiTargetValidationUtils', () => {
         actionId: 'combat:throw',
         targets: {
           item: 'knife_123',
-          target: 'goblin_456'
+          target: 'goblin_456',
         },
         targetId: 'knife_123',
-        originalInput: 'throw knife at goblin'
+        originalInput: 'throw knife at goblin',
       };
 
       const result = validateAttemptActionPayload(payload);
@@ -779,7 +816,7 @@ describe('MultiTargetValidationUtils', () => {
     it('should reject payload with missing required fields', () => {
       const payload = {
         eventName: 'core:attempt_action',
-        actorId: 'actor_123'
+        actorId: 'actor_123',
         // Missing actionId and originalInput
       };
 
@@ -795,13 +832,15 @@ describe('MultiTargetValidationUtils', () => {
         eventName: 'core:attempt_action',
         actorId: 'actor_123',
         actionId: 'core:action',
-        originalInput: 'some action'
+        originalInput: 'some action',
       };
 
       const result = validateAttemptActionPayload(payload);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Event must have either targets object or targetId field');
+      expect(result.errors).toContain(
+        'Event must have either targets object or targetId field'
+      );
     });
   });
 
@@ -809,7 +848,7 @@ describe('MultiTargetValidationUtils', () => {
     it('should prefer explicit primary key', () => {
       const targets = {
         primary: 'primary_target',
-        secondary: 'secondary_target'
+        secondary: 'secondary_target',
       };
 
       const result = determinePrimaryTarget(targets);
@@ -820,7 +859,7 @@ describe('MultiTargetValidationUtils', () => {
     it('should fallback to common patterns', () => {
       const targets = {
         item: 'item_target',
-        recipient: 'recipient_target'
+        recipient: 'recipient_target',
       };
 
       const result = determinePrimaryTarget(targets);
@@ -831,7 +870,7 @@ describe('MultiTargetValidationUtils', () => {
     it('should fallback to first target', () => {
       const targets = {
         custom1: 'custom_target_1',
-        custom2: 'custom_target_2'
+        custom2: 'custom_target_2',
       };
 
       const result = determinePrimaryTarget(targets);
@@ -909,7 +948,7 @@ describe('MultiTargetValidationUtils', () => {
           isValid: false,
           errors: ['error1', 'error2'],
           warnings: ['warning1'],
-          details: { custom: 'data' }
+          details: { custom: 'data' },
         });
       });
 
@@ -920,15 +959,22 @@ describe('MultiTargetValidationUtils', () => {
           isValid: true,
           errors: [],
           warnings: [],
-          details: {}
+          details: {},
         });
       });
     });
 
     describe('mergeValidationResults', () => {
       it('should merge multiple validation results', () => {
-        const result1 = createValidationResult(true, [], ['warning1'], { field1: 'data1' });
-        const result2 = createValidationResult(false, ['error1'], ['warning2'], { field2: 'data2' });
+        const result1 = createValidationResult(true, [], ['warning1'], {
+          field1: 'data1',
+        });
+        const result2 = createValidationResult(
+          false,
+          ['error1'],
+          ['warning2'],
+          { field2: 'data2' }
+        );
 
         const merged = mergeValidationResults(result1, result2);
 
@@ -1001,6 +1047,7 @@ describe('MultiTargetValidationUtils', () => {
 ## Next Steps
 
 After this ticket completion:
+
 1. Complete Ticket 06: Create Multi-Target Data Structures
 2. Move to Phase 2: Command Processor Enhancement
 3. Use enhanced schemas and types throughout implementation

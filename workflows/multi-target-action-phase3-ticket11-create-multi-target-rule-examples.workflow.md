@@ -41,9 +41,9 @@ With the enhanced event schema and command processor now supporting multi-target
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"==": [{"var": "event.actionId"}, "combat:throw"]},
-              {"var": "event.targets"}
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              { "==": [{ "var": "event.actionId" }, "combat:throw"] },
+              { "var": "event.targets" }
             ]
           }
         }
@@ -53,11 +53,11 @@ With the enhanced event schema and command processor now supporting multi-target
           "type": "log_rule_execution",
           "data": {
             "message": "Multi-target throw detected",
-            "actorId": {"var": "event.actorId"},
-            "thrownItem": {"var": "event.targets.item"},
-            "targetEntity": {"var": "event.targets.target"},
-            "primaryTarget": {"var": "event.targetId"},
-            "allTargets": {"var": "event.targets"}
+            "actorId": { "var": "event.actorId" },
+            "thrownItem": { "var": "event.targets.item" },
+            "targetEntity": { "var": "event.targets.target" },
+            "primaryTarget": { "var": "event.targetId" },
+            "allTargets": { "var": "event.targets" }
           }
         },
         {
@@ -67,8 +67,8 @@ With the enhanced event schema and command processor now supporting multi-target
               "description": "Verify item exists and is throwable",
               "logic": {
                 "and": [
-                  {"var": "event.targets.item"},
-                  {"!=": [{"var": "event.targets.item"}, ""]}
+                  { "var": "event.targets.item" },
+                  { "!=": [{ "var": "event.targets.item" }, ""] }
                 ]
               }
             },
@@ -76,8 +76,8 @@ With the enhanced event schema and command processor now supporting multi-target
               "description": "Verify target is valid",
               "logic": {
                 "and": [
-                  {"var": "event.targets.target"},
-                  {"!=": [{"var": "event.targets.target"}, ""]}
+                  { "var": "event.targets.target" },
+                  { "!=": [{ "var": "event.targets.target" }, ""] }
                 ]
               }
             }
@@ -87,17 +87,22 @@ With the enhanced event schema and command processor now supporting multi-target
     },
     {
       "id": "core:multi_target_interaction_example",
-      "name": "Multi-Target Interaction Example", 
+      "name": "Multi-Target Interaction Example",
       "description": "Example rule for complex interactions with multiple target types",
       "conditions": [
         {
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"in": [{"var": "event.actionId"}, ["interaction:use_item_on", "interaction:combine"]]},
-              {"var": "event.targets"},
-              {">": [{"var": "event.targets | keys | length"}, 1]}
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              {
+                "in": [
+                  { "var": "event.actionId" },
+                  ["interaction:use_item_on", "interaction:combine"]
+                ]
+              },
+              { "var": "event.targets" },
+              { ">": [{ "var": "event.targets | keys | length" }, 1] }
             ]
           }
         }
@@ -106,23 +111,23 @@ With the enhanced event schema and command processor now supporting multi-target
         {
           "type": "process_multi_target_interaction",
           "data": {
-            "actor": {"var": "event.actorId"},
-            "action": {"var": "event.actionId"},
-            "targets": {"var": "event.targets"},
-            "targetCount": {"var": "event.targets | keys | length"},
-            "primaryTarget": {"var": "event.targetId"}
+            "actor": { "var": "event.actorId" },
+            "action": { "var": "event.actionId" },
+            "targets": { "var": "event.targets" },
+            "targetCount": { "var": "event.targets | keys | length" },
+            "primaryTarget": { "var": "event.targetId" }
           }
         },
         {
           "type": "foreach_target",
-          "iterate": {"var": "event.targets | entries"},
+          "iterate": { "var": "event.targets | entries" },
           "operations": [
             {
               "type": "log_target_processing",
               "data": {
-                "targetType": {"var": "current.0"},
-                "targetId": {"var": "current.1"},
-                "processingOrder": {"var": "index"}
+                "targetType": { "var": "current.0" },
+                "targetId": { "var": "current.1" },
+                "processingOrder": { "var": "index" }
               }
             }
           ]
@@ -138,8 +143,8 @@ With the enhanced event schema and command processor now supporting multi-target
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"==": [{"var": "event.actionId"}, "core:follow"]}
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              { "==": [{ "var": "event.actionId" }, "core:follow"] }
             ]
           }
         }
@@ -148,12 +153,12 @@ With the enhanced event schema and command processor now supporting multi-target
         {
           "type": "handle_follow_action",
           "data": {
-            "actor": {"var": "event.actorId"},
-            "targetId": {"var": "event.targetId"},
-            "hasMultipleTargets": {"!!": {"var": "event.targets"}},
+            "actor": { "var": "event.actorId" },
+            "targetId": { "var": "event.targetId" },
+            "hasMultipleTargets": { "!!": { "var": "event.targets" } },
             "targetType": {
               "if": [
-                {"var": "event.targets"},
+                { "var": "event.targets" },
                 "enhanced_format",
                 "legacy_format"
               ]
@@ -162,13 +167,13 @@ With the enhanced event schema and command processor now supporting multi-target
         },
         {
           "type": "conditional_multi_target_processing",
-          "condition": {"var": "event.targets"},
+          "condition": { "var": "event.targets" },
           "ifTrue": [
             {
-              "type": "log_rule_execution", 
+              "type": "log_rule_execution",
               "data": {
                 "message": "Enhanced format follow action",
-                "targets": {"var": "event.targets"}
+                "targets": { "var": "event.targets" }
               }
             }
           ],
@@ -177,7 +182,7 @@ With the enhanced event schema and command processor now supporting multi-target
               "type": "log_rule_execution",
               "data": {
                 "message": "Legacy format follow action",
-                "targetId": {"var": "event.targetId"}
+                "targetId": { "var": "event.targetId" }
               }
             }
           ]
@@ -193,9 +198,14 @@ With the enhanced event schema and command processor now supporting multi-target
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"in": [{"var": "event.actionId"}, ["combat:attack", "combat:throw", "combat:cast_spell"]]},
-              {"var": "event.targets"}
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              {
+                "in": [
+                  { "var": "event.actionId" },
+                  ["combat:attack", "combat:throw", "combat:cast_spell"]
+                ]
+              },
+              { "var": "event.targets" }
             ]
           }
         }
@@ -204,12 +214,12 @@ With the enhanced event schema and command processor now supporting multi-target
         {
           "type": "setup_combat_context",
           "data": {
-            "attacker": {"var": "event.actorId"},
-            "weapon": {"var": "event.targets.weapon"},
-            "target": {"var": "event.targets.target"},
-            "location": {"var": "event.targets.location"},
-            "spell": {"var": "event.targets.spell"},
-            "item": {"var": "event.targets.item"}
+            "attacker": { "var": "event.actorId" },
+            "weapon": { "var": "event.targets.weapon" },
+            "target": { "var": "event.targets.target" },
+            "location": { "var": "event.targets.location" },
+            "spell": { "var": "event.targets.spell" },
+            "item": { "var": "event.targets.item" }
           }
         },
         {
@@ -219,22 +229,26 @@ With the enhanced event schema and command processor now supporting multi-target
               "name": "weapon_validation",
               "condition": {
                 "if": [
-                  {"var": "event.targets.weapon"},
-                  {"and": [
-                    {"!=": [{"var": "event.targets.weapon"}, ""]},
-                    {"var": "entities[event.targets.weapon].components['core:item'].isWeapon"}
-                  ]},
+                  { "var": "event.targets.weapon" },
+                  {
+                    "and": [
+                      { "!=": [{ "var": "event.targets.weapon" }, ""] },
+                      {
+                        "var": "entities[event.targets.weapon].components['core:item'].isWeapon"
+                      }
+                    ]
+                  },
                   true
                 ]
               }
             },
             {
-              "name": "target_validation", 
+              "name": "target_validation",
               "condition": {
                 "and": [
-                  {"var": "event.targets.target"},
-                  {"!=": [{"var": "event.targets.target"}, ""]},
-                  {"var": "entities[event.targets.target]"}
+                  { "var": "event.targets.target" },
+                  { "!=": [{ "var": "event.targets.target" }, ""] },
+                  { "var": "entities[event.targets.target]" }
                 ]
               }
             }
@@ -243,7 +257,7 @@ With the enhanced event schema and command processor now supporting multi-target
         {
           "type": "execute_combat_action",
           "data": {
-            "actionType": {"var": "event.actionId"},
+            "actionType": { "var": "event.actionId" },
             "combatContext": "setup_combat_context_result",
             "validationResults": "validate_combat_targets_result"
           }
@@ -266,9 +280,9 @@ With the enhanced event schema and command processor now supporting multi-target
       "description": "Pattern to detect if event has multi-target data",
       "logic": {
         "and": [
-          {"var": "event.targets"},
-          {"!=": [{"var": "event.targets"}, {}]},
-          {">": [{"var": "event.targets | keys | length"}, 0]}
+          { "var": "event.targets" },
+          { "!=": [{ "var": "event.targets" }, {}] },
+          { ">": [{ "var": "event.targets | keys | length" }, 0] }
         ]
       }
     },
@@ -276,17 +290,17 @@ With the enhanced event schema and command processor now supporting multi-target
       "description": "Pattern to get primary target (backward compatible)",
       "logic": {
         "if": [
-          {"var": "event.targetId"},
-          {"var": "event.targetId"},
+          { "var": "event.targetId" },
+          { "var": "event.targetId" },
           {
             "if": [
-              {"var": "event.targets.primary"},
-              {"var": "event.targets.primary"},
+              { "var": "event.targets.primary" },
+              { "var": "event.targets.primary" },
               {
                 "if": [
-                  {"var": "event.targets.target"},
-                  {"var": "event.targets.target"},
-                  {"var": "event.targets | values | first"}
+                  { "var": "event.targets.target" },
+                  { "var": "event.targets.target" },
+                  { "var": "event.targets | values | first" }
                 ]
               }
             ]
@@ -297,14 +311,14 @@ With the enhanced event schema and command processor now supporting multi-target
     "iterate_targets": {
       "description": "Pattern to iterate over all targets",
       "foreach": {
-        "items": {"var": "event.targets | entries"},
+        "items": { "var": "event.targets | entries" },
         "as": "target_entry",
         "operations": [
           {
             "type": "process_target",
             "data": {
-              "targetType": {"var": "target_entry.0"},
-              "targetId": {"var": "target_entry.1"}
+              "targetType": { "var": "target_entry.0" },
+              "targetId": { "var": "target_entry.1" }
             }
           }
         ]
@@ -314,14 +328,10 @@ With the enhanced event schema and command processor now supporting multi-target
       "description": "Pattern to count targets",
       "logic": {
         "if": [
-          {"var": "event.targets"},
-          {"var": "event.targets | keys | length"},
+          { "var": "event.targets" },
+          { "var": "event.targets | keys | length" },
           {
-            "if": [
-              {"var": "event.targetId"},
-              1,
-              0
-            ]
+            "if": [{ "var": "event.targetId" }, 1, 0]
           }
         ]
       }
@@ -331,9 +341,9 @@ With the enhanced event schema and command processor now supporting multi-target
       "parameters": ["targetType"],
       "logic": {
         "and": [
-          {"var": "event.targets"},
-          {"var": "event.targets[targetType]"},
-          {"!=": [{"var": "event.targets[targetType]"}, ""]}
+          { "var": "event.targets" },
+          { "var": "event.targets[targetType]" },
+          { "!=": [{ "var": "event.targets[targetType]" }, ""] }
         ]
       }
     },
@@ -342,9 +352,9 @@ With the enhanced event schema and command processor now supporting multi-target
       "parameters": ["targetType", "defaultValue"],
       "logic": {
         "if": [
-          {"var": "event.targets[targetType]"},
-          {"var": "event.targets[targetType]"},
-          {"var": "defaultValue"}
+          { "var": "event.targets[targetType]" },
+          { "var": "event.targets[targetType]" },
+          { "var": "defaultValue" }
         ]
       }
     },
@@ -353,12 +363,12 @@ With the enhanced event schema and command processor now supporting multi-target
       "parameters": ["requiredTypes"],
       "logic": {
         "reduce": [
-          {"var": "requiredTypes"},
+          { "var": "requiredTypes" },
           {
             "and": [
-              {"var": "accumulator"},
-              {"var": "event.targets[current]"},
-              {"!=": [{"var": "event.targets[current]"}, ""]}
+              { "var": "accumulator" },
+              { "var": "event.targets[current]" },
+              { "!=": [{ "var": "event.targets[current]" }, ""] }
             ]
           },
           true
@@ -386,11 +396,11 @@ With the enhanced event schema and command processor now supporting multi-target
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"==": [{"var": "event.actionId"}, "crafting:craft"]},
-              {"var": "event.targets"},
-              {"var": "event.targets.ingredients"},
-              {"var": "event.targets.tool"}
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              { "==": [{ "var": "event.actionId" }, "crafting:craft"] },
+              { "var": "event.targets" },
+              { "var": "event.targets.ingredients" },
+              { "var": "event.targets.tool" }
             ]
           }
         }
@@ -399,24 +409,28 @@ With the enhanced event schema and command processor now supporting multi-target
         {
           "type": "validate_crafting_requirements",
           "data": {
-            "crafter": {"var": "event.actorId"},
-            "tool": {"var": "event.targets.tool"},
-            "mainIngredient": {"var": "event.targets.ingredient"},
-            "allTargets": {"var": "event.targets"}
+            "crafter": { "var": "event.actorId" },
+            "tool": { "var": "event.targets.tool" },
+            "mainIngredient": { "var": "event.targets.ingredient" },
+            "allTargets": { "var": "event.targets" }
           }
         },
         {
           "type": "calculate_crafting_outcome",
           "factors": {
-            "toolQuality": {"var": "entities[event.targets.tool].components['core:item'].quality"},
-            "crafterSkill": {"var": "entities[event.actorId].components['core:skills'].crafting"},
-            "ingredientCount": {"var": "event.targets | keys | length"}
+            "toolQuality": {
+              "var": "entities[event.targets.tool].components['core:item'].quality"
+            },
+            "crafterSkill": {
+              "var": "entities[event.actorId].components['core:skills'].crafting"
+            },
+            "ingredientCount": { "var": "event.targets | keys | length" }
           }
         }
       ]
     },
     {
-      "id": "core:trade_multi_target_example", 
+      "id": "core:trade_multi_target_example",
       "name": "Trade Multi-Target Example",
       "description": "Trading rule handling multiple items and currencies",
       "conditions": [
@@ -424,11 +438,11 @@ With the enhanced event schema and command processor now supporting multi-target
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"==": [{"var": "event.actionId"}, "interaction:trade"]},
-              {"var": "event.targets"},
-              {"var": "event.targets.trader"},
-              {">": [{"var": "event.targets | keys | length"}, 2]}
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              { "==": [{ "var": "event.actionId" }, "interaction:trade"] },
+              { "var": "event.targets" },
+              { "var": "event.targets.trader" },
+              { ">": [{ "var": "event.targets | keys | length" }, 2] }
             ]
           }
         }
@@ -437,18 +451,28 @@ With the enhanced event schema and command processor now supporting multi-target
         {
           "type": "setup_trade_context",
           "data": {
-            "customer": {"var": "event.actorId"},
-            "trader": {"var": "event.targets.trader"},
+            "customer": { "var": "event.actorId" },
+            "trader": { "var": "event.targets.trader" },
             "offeredItems": {
               "filter": [
-                {"var": "event.targets | entries"},
-                {"in": [{"var": "current.0"}, ["item", "currency", "offering"]]}
+                { "var": "event.targets | entries" },
+                {
+                  "in": [
+                    { "var": "current.0" },
+                    ["item", "currency", "offering"]
+                  ]
+                }
               ]
             },
             "requestedItems": {
               "filter": [
-                {"var": "event.targets | entries"},
-                {"in": [{"var": "current.0"}, ["wanted", "seeking", "request"]]}
+                { "var": "event.targets | entries" },
+                {
+                  "in": [
+                    { "var": "current.0" },
+                    ["wanted", "seeking", "request"]
+                  ]
+                }
               ]
             }
           }
@@ -456,18 +480,23 @@ With the enhanced event schema and command processor now supporting multi-target
         {
           "type": "validate_trade_items",
           "foreach": {
-            "items": {"var": "event.targets | entries"},
+            "items": { "var": "event.targets | entries" },
             "operations": [
               {
                 "type": "validate_item_ownership",
                 "data": {
-                  "itemId": {"var": "current.1"},
-                  "itemType": {"var": "current.0"},
+                  "itemId": { "var": "current.1" },
+                  "itemType": { "var": "current.0" },
                   "owner": {
                     "if": [
-                      {"in": [{"var": "current.0"}, ["item", "currency", "offering"]]},
-                      {"var": "event.actorId"},
-                      {"var": "event.targets.trader"}
+                      {
+                        "in": [
+                          { "var": "current.0" },
+                          ["item", "currency", "offering"]
+                        ]
+                      },
+                      { "var": "event.actorId" },
+                      { "var": "event.targets.trader" }
                     ]
                   }
                 }
@@ -479,17 +508,17 @@ With the enhanced event schema and command processor now supporting multi-target
     },
     {
       "id": "core:spell_multi_target_example",
-      "name": "Spell Multi-Target Example", 
+      "name": "Spell Multi-Target Example",
       "description": "Spellcasting with multiple targets and components",
       "conditions": [
         {
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"==": [{"var": "event.actionId"}, "magic:cast_spell"]},
-              {"var": "event.targets"},
-              {"var": "event.targets.spell"}
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              { "==": [{ "var": "event.actionId" }, "magic:cast_spell"] },
+              { "var": "event.targets" },
+              { "var": "event.targets.spell" }
             ]
           }
         }
@@ -498,15 +527,15 @@ With the enhanced event schema and command processor now supporting multi-target
         {
           "type": "gather_spell_components",
           "data": {
-            "caster": {"var": "event.actorId"},
-            "spell": {"var": "event.targets.spell"},
-            "target": {"var": "event.targets.target"},
+            "caster": { "var": "event.actorId" },
+            "spell": { "var": "event.targets.spell" },
+            "target": { "var": "event.targets.target" },
             "components": {
-              "material": {"var": "event.targets.component"},
-              "focus": {"var": "event.targets.focus"},
-              "catalyst": {"var": "event.targets.catalyst"}
+              "material": { "var": "event.targets.component" },
+              "focus": { "var": "event.targets.focus" },
+              "catalyst": { "var": "event.targets.catalyst" }
             },
-            "location": {"var": "event.targets.location"}
+            "location": { "var": "event.targets.location" }
           }
         },
         {
@@ -516,8 +545,10 @@ With the enhanced event schema and command processor now supporting multi-target
               "name": "mana_cost",
               "condition": {
                 ">=": [
-                  {"var": "entities[event.actorId].components['core:mana'].current"},
-                  {"var": "spells[event.targets.spell].manaCost"}
+                  {
+                    "var": "entities[event.actorId].components['core:mana'].current"
+                  },
+                  { "var": "spells[event.targets.spell].manaCost" }
                 ]
               }
             },
@@ -525,8 +556,8 @@ With the enhanced event schema and command processor now supporting multi-target
               "name": "spell_components",
               "condition": {
                 "if": [
-                  {"var": "spells[event.targets.spell].requiresComponents"},
-                  {"var": "event.targets.component"},
+                  { "var": "spells[event.targets.spell].requiresComponents" },
+                  { "var": "event.targets.component" },
                   true
                 ]
               }
@@ -535,11 +566,13 @@ With the enhanced event schema and command processor now supporting multi-target
               "name": "valid_target",
               "condition": {
                 "if": [
-                  {"var": "spells[event.targets.spell].requiresTarget"},
-                  {"and": [
-                    {"var": "event.targets.target"},
-                    {"var": "entities[event.targets.target]"}
-                  ]},
+                  { "var": "spells[event.targets.spell].requiresTarget" },
+                  {
+                    "and": [
+                      { "var": "event.targets.target" },
+                      { "var": "entities[event.targets.target]" }
+                    ]
+                  },
                   true
                 ]
               }
@@ -557,9 +590,9 @@ With the enhanced event schema and command processor now supporting multi-target
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"var": "event.targets"},
-              {">": [{"var": "event.targets | keys | length"}, 5]}
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              { "var": "event.targets" },
+              { ">": [{ "var": "event.targets | keys | length" }, 5] }
             ]
           }
         }
@@ -573,13 +606,10 @@ With the enhanced event schema and command processor now supporting multi-target
             "cacheResults": true
           },
           "data": {
-            "actor": {"var": "event.actorId"},
-            "action": {"var": "event.actionId"},
+            "actor": { "var": "event.actorId" },
+            "action": { "var": "event.actionId" },
             "targetBatches": {
-              "chunk": [
-                {"var": "event.targets | entries"},
-                3
-              ]
+              "chunk": [{ "var": "event.targets | entries" }, 3]
             }
           }
         },
@@ -631,17 +661,17 @@ With the enhanced event schema and command processor now supporting multi-target
         "conditions": [
           {
             "type": "json_logic",
-            "logic": {"var": "event.targets"}
+            "logic": { "var": "event.targets" }
           }
         ],
         "operations": [
           {
             "type": "test_assertion",
             "assertions": [
-              {"==": [{"var": "event.targets | keys | length"}, 2]},
-              {"==": [{"var": "event.targets.item"}, "test_item"]},
-              {"==": [{"var": "event.targets.target"}, "test_target"]},
-              {"==": [{"var": "event.targetId"}, "test_target"]}
+              { "==": [{ "var": "event.targets | keys | length" }, 2] },
+              { "==": [{ "var": "event.targets.item" }, "test_item"] },
+              { "==": [{ "var": "event.targets.target" }, "test_target"] },
+              { "==": [{ "var": "event.targetId" }, "test_target"] }
             ]
           }
         ]
@@ -649,7 +679,7 @@ With the enhanced event schema and command processor now supporting multi-target
     },
     {
       "id": "test:backward_compatibility",
-      "name": "Backward Compatibility Test", 
+      "name": "Backward Compatibility Test",
       "description": "Test legacy format compatibility",
       "testEvent": {
         "eventName": "core:attempt_action",
@@ -668,16 +698,16 @@ With the enhanced event schema and command processor now supporting multi-target
         "conditions": [
           {
             "type": "json_logic",
-            "logic": {"var": "event.targetId"}
+            "logic": { "var": "event.targetId" }
           }
         ],
         "operations": [
           {
             "type": "test_assertion",
             "assertions": [
-              {"==": [{"var": "event.targetId"}, "test_target"]},
-              {"!": {"var": "event.targets"}},
-              {"==": [{"var": "event.actionId"}, "core:follow"]}
+              { "==": [{ "var": "event.targetId" }, "test_target"] },
+              { "!": { "var": "event.targets" } },
+              { "==": [{ "var": "event.actionId" }, "core:follow"] }
             ]
           }
         ]
@@ -691,17 +721,17 @@ With the enhanced event schema and command processor now supporting multi-target
         {
           "description": "Multi-target event",
           "event": {
-            "eventName": "core:attempt_action", 
+            "eventName": "core:attempt_action",
             "actorId": "test_actor",
             "actionId": "test:action",
-            "targets": {"item": "item1", "target": "target1"},
+            "targets": { "item": "item1", "target": "target1" },
             "targetId": "target1",
             "originalInput": "test",
             "timestamp": 1234567890
           },
           "expectedPatternResults": {
             "detect_multi_target": true,
-            "get_primary_target": "target1", 
+            "get_primary_target": "target1",
             "count_targets": 2,
             "has_target_type_item": true,
             "has_target_type_location": false
@@ -711,7 +741,7 @@ With the enhanced event schema and command processor now supporting multi-target
           "description": "Legacy event",
           "event": {
             "eventName": "core:attempt_action",
-            "actorId": "test_actor", 
+            "actorId": "test_actor",
             "actionId": "core:follow",
             "targetId": "legacy_target",
             "originalInput": "follow",
@@ -762,7 +792,7 @@ With the enhanced event schema and command processor now supporting multi-target
 ## Files Created
 
 - `data/mods/core/rules/examples/multiTargetExamples.json`
-- `data/mods/core/rules/templates/multiTargetPatterns.json` 
+- `data/mods/core/rules/templates/multiTargetPatterns.json`
 - `data/mods/core/rules/examples/advancedMultiTargetExamples.json`
 - `data/mods/core/rules/tests/multiTargetRuleTests.json`
 
@@ -792,6 +822,7 @@ None (new rule files only)
 ## Next Steps
 
 After this ticket completion:
+
 1. Move to Ticket 12: Update Core Rules for Multi-Target Support
 2. Begin updating existing core rules to utilize multi-target data
 3. Validate rule examples work with actual game scenarios

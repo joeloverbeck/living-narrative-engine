@@ -33,12 +33,15 @@ The multi-target action system requires robust data structures to handle target 
  * @file Target management for multi-target actions
  */
 
-import { assertPresent, assertNonBlankString } from '../../utils/validationUtils.js';
+import {
+  assertPresent,
+  assertNonBlankString,
+} from '../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
-import { 
-  isValidTargetName, 
-  isValidEntityId, 
-  determinePrimaryTarget 
+import {
+  isValidTargetName,
+  isValidEntityId,
+  determinePrimaryTarget,
 } from '../../utils/multiTargetValidationUtils.js';
 
 /** @typedef {import('../../types/multiTargetTypes.js').TargetsObject} TargetsObject */
@@ -83,7 +86,7 @@ export class TargetManager {
    */
   setTargets(targets) {
     assertPresent(targets, 'Targets object is required');
-    
+
     if (typeof targets !== 'object' || Array.isArray(targets)) {
       throw new Error('Targets must be an object');
     }
@@ -105,7 +108,7 @@ export class TargetManager {
     this.#logger.debug('Targets set', {
       targetCount: this.#targets.size,
       primaryTarget: this.#primaryTarget,
-      targets: this.getTargetsObject()
+      targets: this.getTargetsObject(),
     });
   }
 
@@ -134,7 +137,11 @@ export class TargetManager {
       this.#primaryTarget = entityId;
     }
 
-    this.#logger.debug('Target added', { name, entityId, isPrimary: this.#primaryTarget === entityId });
+    this.#logger.debug('Target added', {
+      name,
+      entityId,
+      isPrimary: this.#primaryTarget === entityId,
+    });
   }
 
   /**
@@ -154,9 +161,10 @@ export class TargetManager {
 
     // Update primary target if it was removed
     if (this.#primaryTarget === entityId) {
-      this.#primaryTarget = this.#targets.size > 0 
-        ? determinePrimaryTarget(this.getTargetsObject()) 
-        : null;
+      this.#primaryTarget =
+        this.#targets.size > 0
+          ? determinePrimaryTarget(this.getTargetsObject())
+          : null;
     }
 
     this.#logger.debug('Target removed', { name, entityId });
@@ -293,13 +301,15 @@ export class TargetManager {
 
     // Validate primary target
     if (this.#primaryTarget && !this.hasEntityId(this.#primaryTarget)) {
-      errors.push(`Primary target "${this.#primaryTarget}" not found in targets`);
+      errors.push(
+        `Primary target "${this.#primaryTarget}" not found in targets`
+      );
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -311,7 +321,7 @@ export class TargetManager {
     return new TargetManager({
       targets: this.getTargetsObject(),
       primaryTarget: this.#primaryTarget,
-      logger: this.#logger
+      logger: this.#logger,
     });
   }
 
@@ -328,7 +338,7 @@ export class TargetManager {
     }
 
     const otherTargets = other.getTargetsObject();
-    
+
     for (const [name, entityId] of Object.entries(otherTargets)) {
       if (!this.hasTarget(name) || overwrite) {
         this.#targets.set(name, entityId);
@@ -341,7 +351,7 @@ export class TargetManager {
 
     this.#logger.debug('Targets merged', {
       mergedCount: Object.keys(otherTargets).length,
-      totalCount: this.#targets.size
+      totalCount: this.#targets.size,
     });
   }
 
@@ -354,7 +364,7 @@ export class TargetManager {
       targets: this.getTargetsObject(),
       primaryTarget: this.#primaryTarget,
       targetCount: this.#targets.size,
-      isMultiTarget: this.isMultiTarget()
+      isMultiTarget: this.isMultiTarget(),
     };
   }
 
@@ -368,7 +378,7 @@ export class TargetManager {
     return new TargetManager({
       targets: json.targets || {},
       primaryTarget: json.primaryTarget,
-      logger
+      logger,
     });
   }
 }
@@ -410,7 +420,7 @@ export class TargetExtractionResult {
    */
   constructor({ targetManager, extractionMetadata = {}, validationResult }) {
     assertPresent(targetManager, 'TargetManager is required');
-    
+
     if (!(targetManager instanceof TargetManager)) {
       throw new Error('targetManager must be a TargetManager instance');
     }
@@ -550,13 +560,13 @@ export class TargetExtractionResult {
    */
   toLegacyFormat() {
     const primaryTarget = this.getPrimaryTarget();
-    
+
     return {
       hasMultipleTargets: this.hasMultipleTargets(),
       targets: this.getTargets(),
       primaryTarget,
       // Legacy field for backward compatibility
-      targetId: primaryTarget
+      targetId: primaryTarget,
     };
   }
 
@@ -572,7 +582,7 @@ export class TargetExtractionResult {
       targetCount: this.getTargetCount(),
       extractionMetadata: this.getExtractionMetadata(),
       validationResult: this.getValidationResult(),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
@@ -589,7 +599,7 @@ export class TargetExtractionResult {
       isValid: this.isValid(),
       errorCount: this.getErrors().length,
       warningCount: this.getWarnings().length,
-      extractionSource: this.getMetadata('source') || 'unknown'
+      extractionSource: this.getMetadata('source') || 'unknown',
     };
   }
 
@@ -615,8 +625,8 @@ export class TargetExtractionResult {
       targetManager,
       extractionMetadata: {
         source: 'legacy_conversion',
-        originalData: legacyData
-      }
+        originalData: legacyData,
+      },
     });
   }
 
@@ -631,7 +641,7 @@ export class TargetExtractionResult {
     const metadata = {
       source: 'resolved_parameters',
       isMultiTarget: false,
-      extractionTime: Date.now()
+      extractionTime: Date.now(),
     };
 
     // Handle multi-target data from formatting stage
@@ -641,7 +651,9 @@ export class TargetExtractionResult {
 
       // Convert targetIds object to flat targets
       const targets = {};
-      for (const [key, targetList] of Object.entries(resolvedParameters.targetIds)) {
+      for (const [key, targetList] of Object.entries(
+        resolvedParameters.targetIds
+      )) {
         if (Array.isArray(targetList) && targetList.length > 0) {
           targets[key] = targetList[0]; // Take first target from each category
         } else if (typeof targetList === 'string') {
@@ -650,7 +662,7 @@ export class TargetExtractionResult {
       }
 
       targetManager.setTargets(targets);
-    } 
+    }
     // Handle legacy single target
     else if (resolvedParameters.targetId) {
       targetManager.addTarget('primary', resolvedParameters.targetId);
@@ -658,7 +670,7 @@ export class TargetExtractionResult {
 
     return new TargetExtractionResult({
       targetManager,
-      extractionMetadata: metadata
+      extractionMetadata: metadata,
     });
   }
 
@@ -669,13 +681,13 @@ export class TargetExtractionResult {
    */
   static createEmpty(logger) {
     const targetManager = new TargetManager({ logger });
-    
+
     return new TargetExtractionResult({
       targetManager,
       extractionMetadata: {
         source: 'empty',
-        reason: 'no_targets_required'
-      }
+        reason: 'no_targets_required',
+      },
     });
   }
 }
@@ -692,7 +704,10 @@ export default TargetExtractionResult;
  * @file Builder for creating multi-target event payloads
  */
 
-import { assertPresent, assertNonBlankString } from '../../utils/validationUtils.js';
+import {
+  assertPresent,
+  assertNonBlankString,
+} from '../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { validateAttemptActionPayload } from '../../utils/multiTargetValidationUtils.js';
 import TargetExtractionResult from './targetExtractionResult.js';
@@ -725,7 +740,7 @@ export class MultiTargetEventBuilder {
   reset() {
     this.#eventData = {
       eventName: 'core:attempt_action',
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     return this;
   }
@@ -770,9 +785,11 @@ export class MultiTargetEventBuilder {
    */
   setTargetsFromExtraction(extractionResult) {
     assertPresent(extractionResult, 'Target extraction result is required');
-    
+
     if (!(extractionResult instanceof TargetExtractionResult)) {
-      throw new Error('extractionResult must be a TargetExtractionResult instance');
+      throw new Error(
+        'extractionResult must be a TargetExtractionResult instance'
+      );
     }
 
     const targets = extractionResult.getTargets();
@@ -789,7 +806,7 @@ export class MultiTargetEventBuilder {
     this.#logger.debug('Targets set from extraction result', {
       hasMultipleTargets: extractionResult.hasMultipleTargets(),
       targetCount: extractionResult.getTargetCount(),
-      primaryTarget
+      primaryTarget,
     });
 
     return this;
@@ -809,24 +826,25 @@ export class MultiTargetEventBuilder {
     }
 
     const targetKeys = Object.keys(targets);
-    
+
     // Set targets object if multiple targets exist
     if (targetKeys.length > 1) {
       this.#eventData.targets = { ...targets };
     }
 
     // Determine primary target
-    const primary = primaryTarget || 
-                   targets.primary || 
-                   targets.target || 
-                   Object.values(targets)[0];
+    const primary =
+      primaryTarget ||
+      targets.primary ||
+      targets.target ||
+      Object.values(targets)[0];
 
     this.#eventData.targetId = primary;
 
     this.#logger.debug('Targets set manually', {
       targetCount: targetKeys.length,
       hasMultipleTargets: targetKeys.length > 1,
-      primaryTarget: primary
+      primaryTarget: primary,
     });
 
     return this;
@@ -841,9 +859,9 @@ export class MultiTargetEventBuilder {
     if (targetId !== null) {
       assertNonBlankString(targetId, 'Target ID');
     }
-    
+
     this.#eventData.targetId = targetId;
-    
+
     // Remove targets object for pure legacy format
     delete this.#eventData.targets;
 
@@ -860,7 +878,7 @@ export class MultiTargetEventBuilder {
     if (typeof timestamp !== 'number' || timestamp < 0) {
       throw new Error('Timestamp must be a non-negative number');
     }
-    
+
     this.#eventData.timestamp = timestamp;
     return this;
   }
@@ -879,13 +897,13 @@ export class MultiTargetEventBuilder {
 
     // Validate the complete payload
     const validationResult = validateAttemptActionPayload(payload);
-    
+
     if (!validationResult.isValid) {
       const errorMessage = `Invalid event payload: ${validationResult.errors.join(', ')}`;
       this.#logger.error('Event payload validation failed', {
         errors: validationResult.errors,
         warnings: validationResult.warnings,
-        payload
+        payload,
       });
       throw new Error(errorMessage);
     }
@@ -894,14 +912,14 @@ export class MultiTargetEventBuilder {
     if (validationResult.warnings.length > 0) {
       this.#logger.warn('Event payload has warnings', {
         warnings: validationResult.warnings,
-        payload
+        payload,
       });
     }
 
     this.#logger.debug('Event payload built successfully', {
       hasMultipleTargets: validationResult.details.hasMultipleTargets,
       targetCount: validationResult.details.targetCount,
-      primaryTarget: validationResult.details.primaryTarget
+      primaryTarget: validationResult.details.primaryTarget,
     });
 
     return payload;
@@ -921,7 +939,9 @@ export class MultiTargetEventBuilder {
    */
   #validateRequiredFields() {
     const requiredFields = ['actorId', 'actionId', 'originalInput'];
-    const missingFields = requiredFields.filter(field => !this.#eventData[field]);
+    const missingFields = requiredFields.filter(
+      (field) => !this.#eventData[field]
+    );
 
     if (missingFields.length > 0) {
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
@@ -929,7 +949,9 @@ export class MultiTargetEventBuilder {
 
     // Must have either targets or targetId
     if (!this.#eventData.targets && this.#eventData.targetId === undefined) {
-      throw new Error('Event must have either targets object or targetId field');
+      throw new Error(
+        'Event must have either targets object or targetId field'
+      );
     }
   }
 
@@ -941,7 +963,7 @@ export class MultiTargetEventBuilder {
     return {
       eventData: { ...this.#eventData },
       hasRequiredFields: this.#hasRequiredFields(),
-      hasTargets: this.#hasTargets()
+      hasTargets: this.#hasTargets(),
     };
   }
 
@@ -951,7 +973,7 @@ export class MultiTargetEventBuilder {
    */
   #hasRequiredFields() {
     const requiredFields = ['actorId', 'actionId', 'originalInput'];
-    return requiredFields.every(field => this.#eventData[field]);
+    return requiredFields.every((field) => this.#eventData[field]);
   }
 
   /**
@@ -970,12 +992,12 @@ export class MultiTargetEventBuilder {
    */
   static fromPayload(payload, logger) {
     assertPresent(payload, 'Payload is required');
-    
+
     const builder = new MultiTargetEventBuilder({ logger });
-    
+
     // Copy all fields from payload
     builder.#eventData = { ...payload };
-    
+
     return builder;
   }
 
@@ -993,11 +1015,13 @@ export class MultiTargetEventBuilder {
     assertPresent(extractionResult, 'Extraction result is required');
 
     const builder = new MultiTargetEventBuilder({ logger });
-    
+
     return builder
       .setActor(actor.id)
       .setAction(turnAction.actionDefinitionId)
-      .setOriginalInput(turnAction.commandString || turnAction.actionDefinitionId)
+      .setOriginalInput(
+        turnAction.commandString || turnAction.actionDefinitionId
+      )
       .setTargetsFromExtraction(extractionResult);
   }
 }
@@ -1039,7 +1063,7 @@ describe('TargetManager', () => {
     it('should create target manager with initial targets', () => {
       const targets = {
         item: 'knife_123',
-        target: 'goblin_456'
+        target: 'goblin_456',
       };
 
       const manager = new TargetManager({ targets, logger });
@@ -1062,9 +1086,9 @@ describe('TargetManager', () => {
     });
 
     it('should remove targets', () => {
-      const manager = new TargetManager({ 
+      const manager = new TargetManager({
         targets: { item: 'knife_123', target: 'goblin_456' },
-        logger 
+        logger,
       });
 
       const removed = manager.removeTarget('item');
@@ -1078,9 +1102,9 @@ describe('TargetManager', () => {
 
   describe('Primary Target Management', () => {
     it('should determine primary target automatically', () => {
-      const manager = new TargetManager({ 
+      const manager = new TargetManager({
         targets: { item: 'knife_123', target: 'goblin_456' },
-        logger 
+        logger,
       });
 
       // Should prefer 'target' over 'item' based on patterns
@@ -1088,18 +1112,18 @@ describe('TargetManager', () => {
     });
 
     it('should use explicit primary target', () => {
-      const manager = new TargetManager({ 
+      const manager = new TargetManager({
         targets: { primary: 'primary_123', secondary: 'secondary_456' },
-        logger 
+        logger,
       });
 
       expect(manager.getPrimaryTarget()).toBe('primary_123');
     });
 
     it('should allow setting primary target explicitly', () => {
-      const manager = new TargetManager({ 
+      const manager = new TargetManager({
         targets: { item: 'knife_123', target: 'goblin_456' },
-        logger 
+        logger,
       });
 
       manager.setPrimaryTarget('knife_123');
@@ -1108,9 +1132,9 @@ describe('TargetManager', () => {
     });
 
     it('should throw error when setting invalid primary target', () => {
-      const manager = new TargetManager({ 
+      const manager = new TargetManager({
         targets: { item: 'knife_123' },
-        logger 
+        logger,
       });
 
       expect(() => {
@@ -1121,9 +1145,9 @@ describe('TargetManager', () => {
 
   describe('Validation', () => {
     it('should validate correct targets', () => {
-      const manager = new TargetManager({ 
+      const manager = new TargetManager({
         targets: { item: 'knife_123', target: 'goblin_456' },
-        logger 
+        logger,
       });
 
       const result = manager.validate();
@@ -1149,15 +1173,17 @@ describe('TargetManager', () => {
       const result = manager.validate();
 
       expect(result.isValid).toBe(true);
-      expect(result.warnings).toContain('Duplicate entity IDs found in targets');
+      expect(result.warnings).toContain(
+        'Duplicate entity IDs found in targets'
+      );
     });
   });
 
   describe('Utility Methods', () => {
     it('should check target existence', () => {
-      const manager = new TargetManager({ 
+      const manager = new TargetManager({
         targets: { item: 'knife_123', target: 'goblin_456' },
-        logger 
+        logger,
       });
 
       expect(manager.hasTarget('item')).toBe(true);
@@ -1167,9 +1193,9 @@ describe('TargetManager', () => {
     });
 
     it('should get target names and entity IDs', () => {
-      const manager = new TargetManager({ 
+      const manager = new TargetManager({
         targets: { item: 'knife_123', target: 'goblin_456' },
-        logger 
+        logger,
       });
 
       expect(manager.getTargetNames()).toEqual(['item', 'target']);
@@ -1177,9 +1203,9 @@ describe('TargetManager', () => {
     });
 
     it('should clone target manager', () => {
-      const original = new TargetManager({ 
+      const original = new TargetManager({
         targets: { item: 'knife_123', target: 'goblin_456' },
-        logger 
+        logger,
       });
 
       const clone = original.clone();
@@ -1190,14 +1216,14 @@ describe('TargetManager', () => {
     });
 
     it('should merge with another target manager', () => {
-      const manager1 = new TargetManager({ 
+      const manager1 = new TargetManager({
         targets: { item: 'knife_123' },
-        logger 
+        logger,
       });
 
-      const manager2 = new TargetManager({ 
+      const manager2 = new TargetManager({
         targets: { target: 'goblin_456', tool: 'sword_789' },
-        logger 
+        logger,
       });
 
       manager1.merge(manager2);
@@ -1210,10 +1236,10 @@ describe('TargetManager', () => {
 
   describe('JSON Serialization', () => {
     it('should convert to JSON', () => {
-      const manager = new TargetManager({ 
+      const manager = new TargetManager({
         targets: { item: 'knife_123', target: 'goblin_456' },
         primaryTarget: 'knife_123',
-        logger 
+        logger,
       });
 
       const json = manager.toJSON();
@@ -1222,14 +1248,14 @@ describe('TargetManager', () => {
         targets: { item: 'knife_123', target: 'goblin_456' },
         primaryTarget: 'knife_123',
         targetCount: 2,
-        isMultiTarget: true
+        isMultiTarget: true,
       });
     });
 
     it('should create from JSON', () => {
       const json = {
         targets: { item: 'knife_123', target: 'goblin_456' },
-        primaryTarget: 'knife_123'
+        primaryTarget: 'knife_123',
       };
 
       const manager = TargetManager.fromJSON(json, logger);
@@ -1303,6 +1329,7 @@ describe('TargetManager', () => {
 ## Next Steps
 
 After this ticket completion:
+
 1. Complete Phase 1 with established data structures
-2. Move to Phase 2: Command Processor Enhancement  
+2. Move to Phase 2: Command Processor Enhancement
 3. Use these data structures in command processor implementation

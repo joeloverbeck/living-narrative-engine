@@ -42,8 +42,13 @@ Enhance existing combat rules to support multi-target scenarios:
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"in": [{"var": "event.actionId"}, ["core:attack", "combat:attack", "combat:strike"]]}
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              {
+                "in": [
+                  { "var": "event.actionId" },
+                  ["core:attack", "combat:attack", "combat:strike"]
+                ]
+              }
             ]
           }
         }
@@ -52,24 +57,26 @@ Enhance existing combat rules to support multi-target scenarios:
         {
           "type": "setup_attack_context",
           "data": {
-            "attacker": {"var": "event.actorId"},
+            "attacker": { "var": "event.actorId" },
             "primaryTarget": {
               "if": [
-                {"var": "event.targets.target"},
-                {"var": "event.targets.target"},
-                {"var": "event.targetId"}
+                { "var": "event.targets.target" },
+                { "var": "event.targets.target" },
+                { "var": "event.targetId" }
               ]
             },
             "weapon": {
               "if": [
-                {"var": "event.targets.weapon"},
-                {"var": "event.targets.weapon"},
-                {"var": "entities[event.actorId].components['core:equipment'].mainHand"}
+                { "var": "event.targets.weapon" },
+                { "var": "event.targets.weapon" },
+                {
+                  "var": "entities[event.actorId].components['core:equipment'].mainHand"
+                }
               ]
             },
             "attackType": {
               "if": [
-                {"var": "event.targets"},
+                { "var": "event.targets" },
                 "multi_target_enhanced",
                 "legacy_single_target"
               ]
@@ -81,15 +88,15 @@ Enhance existing combat rules to support multi-target scenarios:
           "validations": [
             {
               "name": "attacker_exists",
-              "condition": {"var": "entities[event.actorId]"}
+              "condition": { "var": "entities[event.actorId]" }
             },
             {
-              "name": "target_exists", 
+              "name": "target_exists",
               "condition": {
                 "if": [
-                  {"var": "event.targets.target"},
-                  {"var": "entities[event.targets.target]"},
-                  {"var": "entities[event.targetId]"}
+                  { "var": "event.targets.target" },
+                  { "var": "entities[event.targets.target]" },
+                  { "var": "entities[event.targetId]" }
                 ]
               }
             },
@@ -97,11 +104,15 @@ Enhance existing combat rules to support multi-target scenarios:
               "name": "weapon_validity",
               "condition": {
                 "if": [
-                  {"var": "event.targets.weapon"},
-                  {"and": [
-                    {"var": "entities[event.targets.weapon]"},
-                    {"var": "entities[event.targets.weapon].components['core:item'].isWeapon"}
-                  ]},
+                  { "var": "event.targets.weapon" },
+                  {
+                    "and": [
+                      { "var": "entities[event.targets.weapon]" },
+                      {
+                        "var": "entities[event.targets.weapon].components['core:item'].isWeapon"
+                      }
+                    ]
+                  },
                   true
                 ]
               }
@@ -111,24 +122,32 @@ Enhance existing combat rules to support multi-target scenarios:
         {
           "type": "calculate_attack_outcome",
           "factors": {
-            "attackerStats": {"var": "entities[event.actorId].components['core:stats']"},
+            "attackerStats": {
+              "var": "entities[event.actorId].components['core:stats']"
+            },
             "targetStats": {
               "if": [
-                {"var": "event.targets.target"},
-                {"var": "entities[event.targets.target].components['core:stats']"},
-                {"var": "entities[event.targetId].components['core:stats']"}
+                { "var": "event.targets.target" },
+                {
+                  "var": "entities[event.targets.target].components['core:stats']"
+                },
+                { "var": "entities[event.targetId].components['core:stats']" }
               ]
             },
             "weaponStats": {
               "if": [
-                {"var": "event.targets.weapon"},
-                {"var": "entities[event.targets.weapon].components['core:item']"},
-                {"var": "entities[entities[event.actorId].components['core:equipment'].mainHand].components['core:item']"}
+                { "var": "event.targets.weapon" },
+                {
+                  "var": "entities[event.targets.weapon].components['core:item']"
+                },
+                {
+                  "var": "entities[entities[event.actorId].components['core:equipment'].mainHand].components['core:item']"
+                }
               ]
             },
             "environmentalFactors": {
-              "location": {"var": "event.targets.location"},
-              "conditions": {"var": "event.targets.conditions"}
+              "location": { "var": "event.targets.location" },
+              "conditions": { "var": "event.targets.conditions" }
             }
           }
         },
@@ -139,17 +158,19 @@ Enhance existing combat rules to support multi-target scenarios:
               "type": "damage_calculation",
               "target": {
                 "if": [
-                  {"var": "event.targets.target"},
-                  {"var": "event.targets.target"},
-                  {"var": "event.targetId"}
+                  { "var": "event.targets.target" },
+                  { "var": "event.targets.target" },
+                  { "var": "event.targetId" }
                 ]
               },
-              "source": {"var": "event.actorId"},
+              "source": { "var": "event.actorId" },
               "weapon": {
                 "if": [
-                  {"var": "event.targets.weapon"},
-                  {"var": "event.targets.weapon"},
-                  {"var": "entities[event.actorId].components['core:equipment'].mainHand"}
+                  { "var": "event.targets.weapon" },
+                  { "var": "event.targets.weapon" },
+                  {
+                    "var": "entities[event.actorId].components['core:equipment'].mainHand"
+                  }
                 ]
               }
             }
@@ -159,22 +180,29 @@ Enhance existing combat rules to support multi-target scenarios:
     },
     {
       "id": "core:attempt_throw",
-      "name": "Attempt Throw", 
+      "name": "Attempt Throw",
       "description": "Enhanced throw rule with explicit item and target support",
       "conditions": [
         {
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"in": [{"var": "event.actionId"}, ["core:throw", "combat:throw"]]},
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              {
+                "in": [
+                  { "var": "event.actionId" },
+                  ["core:throw", "combat:throw"]
+                ]
+              },
               {
                 "or": [
-                  {"and": [
-                    {"var": "event.targets.item"},
-                    {"var": "event.targets.target"}
-                  ]},
-                  {"var": "event.targetId"}
+                  {
+                    "and": [
+                      { "var": "event.targets.item" },
+                      { "var": "event.targets.target" }
+                    ]
+                  },
+                  { "var": "event.targetId" }
                 ]
               }
             ]
@@ -185,15 +213,17 @@ Enhance existing combat rules to support multi-target scenarios:
         {
           "type": "setup_throw_context",
           "data": {
-            "thrower": {"var": "event.actorId"},
+            "thrower": { "var": "event.actorId" },
             "thrownItem": {
               "if": [
-                {"var": "event.targets.item"},
-                {"var": "event.targets.item"},
+                { "var": "event.targets.item" },
+                { "var": "event.targets.item" },
                 {
                   "if": [
-                    {"var": "event.targetId"},
-                    {"var": "entities[event.actorId].components['core:inventory'].heldItem"},
+                    { "var": "event.targetId" },
+                    {
+                      "var": "entities[event.actorId].components['core:inventory'].heldItem"
+                    },
                     null
                   ]
                 }
@@ -201,17 +231,19 @@ Enhance existing combat rules to support multi-target scenarios:
             },
             "target": {
               "if": [
-                {"var": "event.targets.target"},
-                {"var": "event.targets.target"},
-                {"var": "event.targetId"}
+                { "var": "event.targets.target" },
+                { "var": "event.targets.target" },
+                { "var": "event.targetId" }
               ]
             },
             "throwType": {
               "if": [
-                {"and": [
-                  {"var": "event.targets.item"},
-                  {"var": "event.targets.target"}
-                ]},
+                {
+                  "and": [
+                    { "var": "event.targets.item" },
+                    { "var": "event.targets.target" }
+                  ]
+                },
                 "multi_target_throw",
                 "legacy_throw"
               ]
@@ -225,8 +257,10 @@ Enhance existing combat rules to support multi-target scenarios:
               "name": "item_throwable",
               "condition": {
                 "if": [
-                  {"var": "event.targets.item"},
-                  {"var": "entities[event.targets.item].components['core:item'].isThrowable"},
+                  { "var": "event.targets.item" },
+                  {
+                    "var": "entities[event.targets.item].components['core:item'].isThrowable"
+                  },
                   true
                 ]
               }
@@ -235,11 +269,15 @@ Enhance existing combat rules to support multi-target scenarios:
               "name": "item_in_inventory",
               "condition": {
                 "if": [
-                  {"var": "event.targets.item"},
-                  {"in": [
-                    {"var": "event.targets.item"},
-                    {"var": "entities[event.actorId].components['core:inventory'].items"}
-                  ]},
+                  { "var": "event.targets.item" },
+                  {
+                    "in": [
+                      { "var": "event.targets.item" },
+                      {
+                        "var": "entities[event.actorId].components['core:inventory'].items"
+                      }
+                    ]
+                  },
                   true
                 ]
               }
@@ -248,8 +286,12 @@ Enhance existing combat rules to support multi-target scenarios:
               "name": "target_in_range",
               "condition": {
                 "<=": [
-                  {"var": "distance(event.actorId, event.targets.target || event.targetId)"},
-                  {"var": "entities[event.targets.item || 'default'].components['core:item'].throwRange || 10"}
+                  {
+                    "var": "distance(event.actorId, event.targets.target || event.targetId)"
+                  },
+                  {
+                    "var": "entities[event.targets.item || 'default'].components['core:item'].throwRange || 10"
+                  }
                 ]
               }
             }
@@ -260,30 +302,34 @@ Enhance existing combat rules to support multi-target scenarios:
           "effects": [
             {
               "type": "remove_from_inventory",
-              "actor": {"var": "event.actorId"},
+              "actor": { "var": "event.actorId" },
               "item": {
                 "if": [
-                  {"var": "event.targets.item"},
-                  {"var": "event.targets.item"},
-                  {"var": "entities[event.actorId].components['core:inventory'].heldItem"}
+                  { "var": "event.targets.item" },
+                  { "var": "event.targets.item" },
+                  {
+                    "var": "entities[event.actorId].components['core:inventory'].heldItem"
+                  }
                 ]
               }
             },
             {
               "type": "projectile_motion",
-              "from": {"var": "event.actorId"},
+              "from": { "var": "event.actorId" },
               "to": {
                 "if": [
-                  {"var": "event.targets.target"},
-                  {"var": "event.targets.target"},
-                  {"var": "event.targetId"}
+                  { "var": "event.targets.target" },
+                  { "var": "event.targets.target" },
+                  { "var": "event.targetId" }
                 ]
               },
               "item": {
                 "if": [
-                  {"var": "event.targets.item"},
-                  {"var": "event.targets.item"},
-                  {"var": "entities[event.actorId].components['core:inventory'].heldItem"}
+                  { "var": "event.targets.item" },
+                  { "var": "event.targets.item" },
+                  {
+                    "var": "entities[event.actorId].components['core:inventory'].heldItem"
+                  }
                 ]
               }
             }
@@ -313,8 +359,13 @@ Enhance interaction rules for multi-target scenarios:
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"in": [{"var": "event.actionId"}, ["core:use", "interaction:use", "interaction:use_item_on"]]}
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              {
+                "in": [
+                  { "var": "event.actionId" },
+                  ["core:use", "interaction:use", "interaction:use_item_on"]
+                ]
+              }
             ]
           }
         }
@@ -323,23 +374,23 @@ Enhance interaction rules for multi-target scenarios:
         {
           "type": "determine_use_context",
           "data": {
-            "user": {"var": "event.actorId"},
+            "user": { "var": "event.actorId" },
             "item": {
               "if": [
-                {"var": "event.targets.item"},
-                {"var": "event.targets.item"},
-                {"var": "event.targetId"}
+                { "var": "event.targets.item" },
+                { "var": "event.targets.item" },
+                { "var": "event.targetId" }
               ]
             },
-            "target": {"var": "event.targets.target"},
-            "location": {"var": "event.targets.location"},
+            "target": { "var": "event.targets.target" },
+            "location": { "var": "event.targets.location" },
             "useType": {
               "if": [
-                {"var": "event.targets.target"},
+                { "var": "event.targets.target" },
                 "use_item_on_target",
                 {
                   "if": [
-                    {"var": "event.targets.location"},
+                    { "var": "event.targets.location" },
                     "use_item_at_location",
                     "use_item_standalone"
                   ]
@@ -355,9 +406,13 @@ Enhance interaction rules for multi-target scenarios:
               "name": "item_usable",
               "condition": {
                 "if": [
-                  {"var": "event.targets.item"},
-                  {"var": "entities[event.targets.item].components['core:item'].isUsable"},
-                  {"var": "entities[event.targetId].components['core:item'].isUsable"}
+                  { "var": "event.targets.item" },
+                  {
+                    "var": "entities[event.targets.item].components['core:item'].isUsable"
+                  },
+                  {
+                    "var": "entities[event.targetId].components['core:item'].isUsable"
+                  }
                 ]
               }
             },
@@ -365,8 +420,10 @@ Enhance interaction rules for multi-target scenarios:
               "name": "target_compatible",
               "condition": {
                 "if": [
-                  {"var": "event.targets.target"},
-                  {"var": "entities[event.targets.target].components['core:interactive']"},
+                  { "var": "event.targets.target" },
+                  {
+                    "var": "entities[event.targets.target].components['core:interactive']"
+                  },
                   true
                 ]
               }
@@ -377,12 +434,14 @@ Enhance interaction rules for multi-target scenarios:
                 "in": [
                   {
                     "if": [
-                      {"var": "event.targets.item"},
-                      {"var": "event.targets.item"},
-                      {"var": "event.targetId"}
+                      { "var": "event.targets.item" },
+                      { "var": "event.targets.item" },
+                      { "var": "event.targetId" }
                     ]
                   },
-                  {"var": "entities[event.actorId].components['core:inventory'].items"}
+                  {
+                    "var": "entities[event.actorId].components['core:inventory'].items"
+                  }
                 ]
               }
             }
@@ -393,28 +452,28 @@ Enhance interaction rules for multi-target scenarios:
           "effects": [
             {
               "type": "conditional_item_effects",
-              "condition": {"var": "validation_results.all_passed"},
+              "condition": { "var": "validation_results.all_passed" },
               "ifTrue": [
                 {
                   "type": "apply_item_effects",
                   "item": {
                     "if": [
-                      {"var": "event.targets.item"},
-                      {"var": "event.targets.item"},
-                      {"var": "event.targetId"}
+                      { "var": "event.targets.item" },
+                      { "var": "event.targets.item" },
+                      { "var": "event.targetId" }
                     ]
                   },
-                  "user": {"var": "event.actorId"},
-                  "target": {"var": "event.targets.target"},
-                  "location": {"var": "event.targets.location"}
+                  "user": { "var": "event.actorId" },
+                  "target": { "var": "event.targets.target" },
+                  "location": { "var": "event.targets.location" }
                 },
                 {
                   "type": "update_item_durability",
                   "item": {
                     "if": [
-                      {"var": "event.targets.item"},
-                      {"var": "event.targets.item"},
-                      {"var": "event.targetId"}
+                      { "var": "event.targets.item" },
+                      { "var": "event.targets.item" },
+                      { "var": "event.targetId" }
                     ]
                   }
                 }
@@ -422,7 +481,7 @@ Enhance interaction rules for multi-target scenarios:
               "ifFalse": [
                 {
                   "type": "notify_use_failed",
-                  "reason": {"var": "validation_results.failed_checks"}
+                  "reason": { "var": "validation_results.failed_checks" }
                 }
               ]
             }
@@ -439,15 +498,22 @@ Enhance interaction rules for multi-target scenarios:
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"in": [{"var": "event.actionId"}, ["core:give", "interaction:give", "interaction:trade"]]},
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              {
+                "in": [
+                  { "var": "event.actionId" },
+                  ["core:give", "interaction:give", "interaction:trade"]
+                ]
+              },
               {
                 "or": [
-                  {"and": [
-                    {"var": "event.targets.item"},
-                    {"var": "event.targets.recipient"}
-                  ]},
-                  {"var": "event.targetId"}
+                  {
+                    "and": [
+                      { "var": "event.targets.item" },
+                      { "var": "event.targets.recipient" }
+                    ]
+                  },
+                  { "var": "event.targetId" }
                 ]
               }
             ]
@@ -458,27 +524,31 @@ Enhance interaction rules for multi-target scenarios:
         {
           "type": "setup_give_context",
           "data": {
-            "giver": {"var": "event.actorId"},
+            "giver": { "var": "event.actorId" },
             "recipient": {
               "if": [
-                {"var": "event.targets.recipient"},
-                {"var": "event.targets.recipient"},
-                {"var": "event.targetId"}
+                { "var": "event.targets.recipient" },
+                { "var": "event.targets.recipient" },
+                { "var": "event.targetId" }
               ]
             },
             "item": {
               "if": [
-                {"var": "event.targets.item"},
-                {"var": "event.targets.item"},
-                {"var": "entities[event.actorId].components['core:inventory'].heldItem"}
+                { "var": "event.targets.item" },
+                { "var": "event.targets.item" },
+                {
+                  "var": "entities[event.actorId].components['core:inventory'].heldItem"
+                }
               ]
             },
             "giveType": {
               "if": [
-                {"and": [
-                  {"var": "event.targets.item"},
-                  {"var": "event.targets.recipient"}
-                ]},
+                {
+                  "and": [
+                    { "var": "event.targets.item" },
+                    { "var": "event.targets.recipient" }
+                  ]
+                },
                 "explicit_give",
                 "contextual_give"
               ]
@@ -494,12 +564,16 @@ Enhance interaction rules for multi-target scenarios:
                 "in": [
                   {
                     "if": [
-                      {"var": "event.targets.item"},
-                      {"var": "event.targets.item"},
-                      {"var": "entities[event.actorId].components['core:inventory'].heldItem"}
+                      { "var": "event.targets.item" },
+                      { "var": "event.targets.item" },
+                      {
+                        "var": "entities[event.actorId].components['core:inventory'].heldItem"
+                      }
                     ]
                   },
-                  {"var": "entities[event.actorId].components['core:inventory'].items"}
+                  {
+                    "var": "entities[event.actorId].components['core:inventory'].items"
+                  }
                 ]
               }
             },
@@ -507,8 +581,12 @@ Enhance interaction rules for multi-target scenarios:
               "name": "recipient_can_receive",
               "condition": {
                 "<=": [
-                  {"var": "entities[event.targets.recipient || event.targetId].components['core:inventory'].items | length"},
-                  {"var": "entities[event.targets.recipient || event.targetId].components['core:inventory'].maxItems"}
+                  {
+                    "var": "entities[event.targets.recipient || event.targetId].components['core:inventory'].items | length"
+                  },
+                  {
+                    "var": "entities[event.targets.recipient || event.targetId].components['core:inventory'].maxItems"
+                  }
                 ]
               }
             },
@@ -516,7 +594,9 @@ Enhance interaction rules for multi-target scenarios:
               "name": "item_tradeable",
               "condition": {
                 "!=": [
-                  {"var": "entities[event.targets.item || entities[event.actorId].components['core:inventory'].heldItem].components['core:item'].bound"},
+                  {
+                    "var": "entities[event.targets.item || entities[event.actorId].components['core:inventory'].heldItem].components['core:item'].bound"
+                  },
                   true
                 ]
               }
@@ -528,31 +608,33 @@ Enhance interaction rules for multi-target scenarios:
           "effects": [
             {
               "type": "transfer_item",
-              "from": {"var": "event.actorId"},
+              "from": { "var": "event.actorId" },
               "to": {
                 "if": [
-                  {"var": "event.targets.recipient"},
-                  {"var": "event.targets.recipient"},
-                  {"var": "event.targetId"}
+                  { "var": "event.targets.recipient" },
+                  { "var": "event.targets.recipient" },
+                  { "var": "event.targetId" }
                 ]
               },
               "item": {
                 "if": [
-                  {"var": "event.targets.item"},
-                  {"var": "event.targets.item"},
-                  {"var": "entities[event.actorId].components['core:inventory'].heldItem"}
+                  { "var": "event.targets.item" },
+                  { "var": "event.targets.item" },
+                  {
+                    "var": "entities[event.actorId].components['core:inventory'].heldItem"
+                  }
                 ]
               }
             },
             {
               "type": "update_relationship",
               "between": [
-                {"var": "event.actorId"},
+                { "var": "event.actorId" },
                 {
                   "if": [
-                    {"var": "event.targets.recipient"},
-                    {"var": "event.targets.recipient"},
-                    {"var": "event.targetId"}
+                    { "var": "event.targets.recipient" },
+                    { "var": "event.targets.recipient" },
+                    { "var": "event.targetId" }
                   ]
                 }
               ],
@@ -584,12 +666,12 @@ Enhance movement rules with location targeting:
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"==": [{"var": "event.actionId"}, "core:follow"]},
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              { "==": [{ "var": "event.actionId" }, "core:follow"] },
               {
                 "or": [
-                  {"var": "event.targets.target"},
-                  {"var": "event.targetId"}
+                  { "var": "event.targets.target" },
+                  { "var": "event.targetId" }
                 ]
               }
             ]
@@ -600,25 +682,25 @@ Enhance movement rules with location targeting:
         {
           "type": "setup_follow_context",
           "data": {
-            "follower": {"var": "event.actorId"},
+            "follower": { "var": "event.actorId" },
             "target": {
               "if": [
-                {"var": "event.targets.target"},
-                {"var": "event.targets.target"},
-                {"var": "event.targetId"}
+                { "var": "event.targets.target" },
+                { "var": "event.targets.target" },
+                { "var": "event.targetId" }
               ]
             },
             "followType": {
               "if": [
-                {"var": "event.targets"},
+                { "var": "event.targets" },
                 "enhanced_follow",
                 "legacy_follow"
               ]
             },
             "followDistance": {
               "if": [
-                {"var": "event.targets.distance"},
-                {"var": "event.targets.distance"},
+                { "var": "event.targets.distance" },
+                { "var": "event.targets.distance" },
                 "default"
               ]
             }
@@ -637,7 +719,9 @@ Enhance movement rules with location targeting:
               "name": "target_followable",
               "condition": {
                 "!=": [
-                  {"var": "entities[event.targets.target || event.targetId].components['core:actor'].followable"},
+                  {
+                    "var": "entities[event.targets.target || event.targetId].components['core:actor'].followable"
+                  },
                   false
                 ]
               }
@@ -646,12 +730,12 @@ Enhance movement rules with location targeting:
               "name": "not_self_follow",
               "condition": {
                 "!=": [
-                  {"var": "event.actorId"},
+                  { "var": "event.actorId" },
                   {
                     "if": [
-                      {"var": "event.targets.target"},
-                      {"var": "event.targets.target"},
-                      {"var": "event.targetId"}
+                      { "var": "event.targets.target" },
+                      { "var": "event.targets.target" },
+                      { "var": "event.targetId" }
                     ]
                   }
                 ]
@@ -664,30 +748,30 @@ Enhance movement rules with location targeting:
           "effects": [
             {
               "type": "set_following_state",
-              "follower": {"var": "event.actorId"},
+              "follower": { "var": "event.actorId" },
               "target": {
                 "if": [
-                  {"var": "event.targets.target"},
-                  {"var": "event.targets.target"},
-                  {"var": "event.targetId"}
+                  { "var": "event.targets.target" },
+                  { "var": "event.targets.target" },
+                  { "var": "event.targetId" }
                 ]
               },
               "distance": {
                 "if": [
-                  {"var": "event.targets.distance"},
-                  {"var": "event.targets.distance"},
+                  { "var": "event.targets.distance" },
+                  { "var": "event.targets.distance" },
                   3
                 ]
               }
             },
             {
               "type": "notify_follow_started",
-              "follower": {"var": "event.actorId"},
+              "follower": { "var": "event.actorId" },
               "target": {
                 "if": [
-                  {"var": "event.targets.target"},
-                  {"var": "event.targets.target"},
-                  {"var": "event.targetId"}
+                  { "var": "event.targets.target" },
+                  { "var": "event.targets.target" },
+                  { "var": "event.targetId" }
                 ]
               }
             }
@@ -704,13 +788,18 @@ Enhance movement rules with location targeting:
           "type": "json_logic",
           "logic": {
             "and": [
-              {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-              {"in": [{"var": "event.actionId"}, ["core:go", "movement:move", "movement:travel"]]},
+              { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+              {
+                "in": [
+                  { "var": "event.actionId" },
+                  ["core:go", "movement:move", "movement:travel"]
+                ]
+              },
               {
                 "or": [
-                  {"var": "event.targets.location"},
-                  {"var": "event.targets.destination"},
-                  {"var": "event.targetId"}
+                  { "var": "event.targets.location" },
+                  { "var": "event.targets.destination" },
+                  { "var": "event.targetId" }
                 ]
               }
             ]
@@ -721,25 +810,25 @@ Enhance movement rules with location targeting:
         {
           "type": "setup_movement_context",
           "data": {
-            "mover": {"var": "event.actorId"},
+            "mover": { "var": "event.actorId" },
             "destination": {
               "if": [
-                {"var": "event.targets.location"},
-                {"var": "event.targets.location"},
+                { "var": "event.targets.location" },
+                { "var": "event.targets.location" },
                 {
                   "if": [
-                    {"var": "event.targets.destination"},
-                    {"var": "event.targets.destination"},
-                    {"var": "event.targetId"}
+                    { "var": "event.targets.destination" },
+                    { "var": "event.targets.destination" },
+                    { "var": "event.targetId" }
                   ]
                 }
               ]
             },
-            "route": {"var": "event.targets.route"},
-            "speed": {"var": "event.targets.speed"},
+            "route": { "var": "event.targets.route" },
+            "speed": { "var": "event.targets.speed" },
             "movementType": {
               "if": [
-                {"var": "event.targets"},
+                { "var": "event.targets" },
                 "enhanced_movement",
                 "legacy_movement"
               ]
@@ -765,7 +854,9 @@ Enhance movement rules with location targeting:
               "name": "movement_allowed",
               "condition": {
                 "!=": [
-                  {"var": "entities[event.actorId].components['core:status'].immobilized"},
+                  {
+                    "var": "entities[event.actorId].components['core:status'].immobilized"
+                  },
                   true
                 ]
               }
@@ -777,25 +868,27 @@ Enhance movement rules with location targeting:
           "effects": [
             {
               "type": "update_location",
-              "entity": {"var": "event.actorId"},
+              "entity": { "var": "event.actorId" },
               "newLocation": {
                 "if": [
-                  {"var": "event.targets.location"},
-                  {"var": "event.targets.location"},
+                  { "var": "event.targets.location" },
+                  { "var": "event.targets.location" },
                   {
                     "if": [
-                      {"var": "event.targets.destination"},
-                      {"var": "event.targets.destination"},
-                      {"var": "event.targetId"}
+                      { "var": "event.targets.destination" },
+                      { "var": "event.targets.destination" },
+                      { "var": "event.targetId" }
                     ]
                   }
                 ]
               },
               "movementSpeed": {
                 "if": [
-                  {"var": "event.targets.speed"},
-                  {"var": "event.targets.speed"},
-                  {"var": "entities[event.actorId].components['core:stats'].speed"}
+                  { "var": "event.targets.speed" },
+                  { "var": "event.targets.speed" },
+                  {
+                    "var": "entities[event.actorId].components['core:stats'].speed"
+                  }
                 ]
               }
             }
@@ -841,7 +934,7 @@ export class RuleMigrationHelper {
       migrationOpportunities: [],
       riskAssessment: 'low',
       backwardCompatible: true,
-      recommendations: []
+      recommendations: [],
     };
 
     // Analyze conditions for target access patterns
@@ -866,18 +959,19 @@ export class RuleMigrationHelper {
     const enhancedRule = JSON.parse(JSON.stringify(rule)); // Deep clone
 
     // Add backward compatibility note
-    enhancedRule.description = (enhancedRule.description || '') + 
+    enhancedRule.description =
+      (enhancedRule.description || '') +
       ' (Enhanced with multi-target support while maintaining backward compatibility)';
 
     // Enhance conditions
     enhancedRule.conditions = this.#enhanceConditions(
-      rule.conditions || [], 
+      rule.conditions || [],
       migrationOptions
     );
 
     // Enhance operations
     enhancedRule.operations = this.#enhanceOperations(
-      rule.operations || [], 
+      rule.operations || [],
       migrationOptions
     );
 
@@ -894,7 +988,7 @@ export class RuleMigrationHelper {
     const validation = {
       isCompatible: true,
       issues: [],
-      warnings: []
+      warnings: [],
     };
 
     // Check that original conditions are preserved
@@ -938,7 +1032,11 @@ export class RuleMigrationHelper {
         this.#analyzeDataObject(operation.data, analysis, 'operation');
       }
       if (operation.condition) {
-        this.#analyzeJsonLogic(operation.condition, analysis, 'operation_condition');
+        this.#analyzeJsonLogic(
+          operation.condition,
+          analysis,
+          'operation_condition'
+        );
       }
     }
   }
@@ -951,19 +1049,27 @@ export class RuleMigrationHelper {
    */
   #analyzeJsonLogic(logic, analysis, context) {
     const jsonString = JSON.stringify(logic);
-    
+
     // Look for targetId access
     if (jsonString.includes('event.targetId')) {
       analysis.migrationOpportunities.push({
         type: 'target_id_access',
         context,
-        description: 'Direct targetId access can be enhanced with fallback to targets object',
-        enhancement: 'Add conditional logic to check targets object first'
+        description:
+          'Direct targetId access can be enhanced with fallback to targets object',
+        enhancement: 'Add conditional logic to check targets object first',
       });
     }
 
     // Look for action-specific patterns that could benefit from multi-target
-    const multiTargetActions = ['throw', 'attack', 'use', 'give', 'trade', 'craft'];
+    const multiTargetActions = [
+      'throw',
+      'attack',
+      'use',
+      'give',
+      'trade',
+      'craft',
+    ];
     for (const action of multiTargetActions) {
       if (jsonString.includes(action)) {
         analysis.migrationOpportunities.push({
@@ -971,7 +1077,7 @@ export class RuleMigrationHelper {
           context,
           action,
           description: `Action '${action}' could benefit from multi-target enhancement`,
-          enhancement: 'Add support for targets object access patterns'
+          enhancement: 'Add support for targets object access patterns',
         });
       }
     }
@@ -985,13 +1091,13 @@ export class RuleMigrationHelper {
    */
   #analyzeDataObject(data, analysis, context) {
     const dataString = JSON.stringify(data);
-    
+
     if (dataString.includes('event.targetId')) {
       analysis.migrationOpportunities.push({
         type: 'data_target_access',
         context,
         description: 'Data object accesses targetId directly',
-        enhancement: 'Enhance with conditional multi-target access'
+        enhancement: 'Enhance with conditional multi-target access',
       });
     }
   }
@@ -1004,7 +1110,9 @@ export class RuleMigrationHelper {
     const opportunityCount = analysis.migrationOpportunities.length;
 
     if (opportunityCount === 0) {
-      analysis.recommendations.push('No multi-target migration opportunities identified');
+      analysis.recommendations.push(
+        'No multi-target migration opportunities identified'
+      );
       return;
     }
 
@@ -1013,15 +1121,19 @@ export class RuleMigrationHelper {
       analysis.recommendations.push('Low-risk migration with minimal changes');
     } else if (opportunityCount <= 5) {
       analysis.riskAssessment = 'medium';
-      analysis.recommendations.push('Medium complexity migration - test thoroughly');
+      analysis.recommendations.push(
+        'Medium complexity migration - test thoroughly'
+      );
     } else {
       analysis.riskAssessment = 'high';
-      analysis.recommendations.push('High complexity migration - consider phased approach');
+      analysis.recommendations.push(
+        'High complexity migration - consider phased approach'
+      );
     }
 
     // Specific recommendations based on opportunity types
     const opportunityTypes = new Set(
-      analysis.migrationOpportunities.map(opp => opp.type)
+      analysis.migrationOpportunities.map((opp) => opp.type)
     );
 
     if (opportunityTypes.has('target_id_access')) {
@@ -1050,11 +1162,11 @@ export class RuleMigrationHelper {
    * @returns {Array} Enhanced conditions
    */
   #enhanceConditions(conditions, options) {
-    return conditions.map(condition => {
+    return conditions.map((condition) => {
       if (condition.type === 'json_logic' && condition.logic) {
         return {
           ...condition,
-          logic: this.#enhanceJsonLogic(condition.logic, options)
+          logic: this.#enhanceJsonLogic(condition.logic, options),
         };
       }
       return condition;
@@ -1068,7 +1180,7 @@ export class RuleMigrationHelper {
    * @returns {Array} Enhanced operations
    */
   #enhanceOperations(operations, options) {
-    return operations.map(operation => {
+    return operations.map((operation) => {
       const enhanced = { ...operation };
 
       if (operation.data) {
@@ -1076,7 +1188,10 @@ export class RuleMigrationHelper {
       }
 
       if (operation.condition) {
-        enhanced.condition = this.#enhanceJsonLogic(operation.condition, options);
+        enhanced.condition = this.#enhanceJsonLogic(
+          operation.condition,
+          options
+        );
       }
 
       return enhanced;
@@ -1092,7 +1207,7 @@ export class RuleMigrationHelper {
   #enhanceJsonLogic(logic, options) {
     // This is a simplified enhancement - in practice would need more sophisticated logic
     const logicString = JSON.stringify(logic);
-    
+
     if (logicString.includes('event.targetId')) {
       // Replace direct targetId access with conditional access
       return this.#createConditionalTargetAccess(logic);
@@ -1112,7 +1227,11 @@ export class RuleMigrationHelper {
 
     // Look for targetId references and enhance them
     for (const [key, value] of Object.entries(data)) {
-      if (value && typeof value === 'object' && value.var === 'event.targetId') {
+      if (
+        value &&
+        typeof value === 'object' &&
+        value.var === 'event.targetId'
+      ) {
         enhanced[key] = this.#createConditionalTargetVar();
       }
     }
@@ -1128,11 +1247,11 @@ export class RuleMigrationHelper {
   #createConditionalTargetAccess(originalLogic) {
     // Create a conditional that checks targets object first, then falls back to targetId
     return {
-      "if": [
-        {"var": "event.targets.target"},
-        {"var": "event.targets.target"},
-        {"var": "event.targetId"}
-      ]
+      if: [
+        { var: 'event.targets.target' },
+        { var: 'event.targets.target' },
+        { var: 'event.targetId' },
+      ],
     };
   }
 
@@ -1142,11 +1261,11 @@ export class RuleMigrationHelper {
    */
   #createConditionalTargetVar() {
     return {
-      "if": [
-        {"var": "event.targets.target"},
-        {"var": "event.targets.target"},
-        {"var": "event.targetId"}
-      ]
+      if: [
+        { var: 'event.targets.target' },
+        { var: 'event.targets.target' },
+        { var: 'event.targetId' },
+      ],
     };
   }
 
@@ -1243,6 +1362,7 @@ export default RuleMigrationHelper;
 ## Next Steps
 
 After this ticket completion:
+
 1. Move to Ticket 13: Add Rules Testing Framework
 2. Create comprehensive testing framework for rule validation
 3. Begin comprehensive integration testing of multi-target system

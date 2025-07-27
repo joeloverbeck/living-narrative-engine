@@ -45,6 +45,7 @@ module.exports = {
     '!src/commands/interfaces/**',
     '!src/turns/interfaces/**',
     '!src/prompting/interfaces/**',
+    '!src/llms/interfaces/**',
     '!src/actions/actionTypes.js',
     '!src/actions/resolutionResult.js',
     '!src/index.js',

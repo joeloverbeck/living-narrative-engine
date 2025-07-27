@@ -28,7 +28,7 @@ With the complete multi-target action system implemented and tested, comprehensi
 
 **File**: `docs/multi-target-actions/system-architecture.md`
 
-```markdown
+````markdown
 # Multi-Target Action System Architecture
 
 ## Overview
@@ -55,8 +55,10 @@ The system extends the core event schema to support multiple targets:
   "timestamp": 1641024000000
 }
 ```
+````
 
 **Key Features:**
+
 - `targets` object contains multiple named targets
 - `targetId` preserved for backward compatibility
 - Enhanced payload while maintaining legacy format support
@@ -66,12 +68,14 @@ The system extends the core event schema to support multiple targets:
 The CommandProcessor has been enhanced to extract and process multi-target data:
 
 **Enhanced Capabilities:**
+
 - Multi-target data extraction from formatting stage
 - Enhanced event payload creation with builder pattern
 - Backward compatibility layer ensuring legacy actions work unchanged
 - Performance monitoring and metrics collection
 
 **Processing Pipeline:**
+
 1. Action formatting produces multi-target data
 2. CommandProcessor extracts target information
 3. Enhanced payload builder creates appropriate event format
@@ -83,19 +87,21 @@ The CommandProcessor has been enhanced to extract and process multi-target data:
 Rules can now access multi-target data while maintaining compatibility:
 
 **Enhanced Access Patterns:**
+
 ```json
 {
   "condition": {
     "if": [
-      {"var": "event.targets.item"},
-      {"var": "event.targets.item"},
-      {"var": "event.targetId"}
+      { "var": "event.targets.item" },
+      { "var": "event.targets.item" },
+      { "var": "event.targetId" }
     ]
   }
 }
 ```
 
 **Backward Compatible Patterns:**
+
 - Legacy rules continue working without modification
 - Enhanced rules can access both legacy and multi-target formats
 - Conditional logic provides graceful fallbacks
@@ -209,9 +215,9 @@ Rules can be enhanced using standard patterns:
   "data": {
     "target": {
       "if": [
-        {"var": "event.targets.custom_type"},
-        {"var": "event.targets.custom_type"},
-        {"var": "event.targetId"}
+        { "var": "event.targets.custom_type" },
+        { "var": "event.targets.custom_type" },
+        { "var": "event.targetId" }
       ]
     }
   }
@@ -233,7 +239,8 @@ Rules can be enhanced using standard patterns:
 - Gradual migration utilities
 - Enhanced debugging and monitoring tools
 - Performance optimization opportunities
-```
+
+````
 
 ### 2. Create Developer Implementation Guide
 
@@ -264,7 +271,7 @@ To create an action that supports multiple targets, ensure the action formatting
     }
   }
 }
-```
+````
 
 ### Key Requirements
 
@@ -285,9 +292,9 @@ To create an action that supports multiple targets, ensure the action formatting
       "type": "json_logic",
       "logic": {
         "and": [
-          {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-          {"==": [{"var": "event.actionId"}, "combat:throw"]},
-          {"var": "event.targets"}
+          { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+          { "==": [{ "var": "event.actionId" }, "combat:throw"] },
+          { "var": "event.targets" }
         ]
       }
     }
@@ -296,9 +303,9 @@ To create an action that supports multiple targets, ensure the action formatting
     {
       "type": "execute_throw",
       "data": {
-        "thrower": {"var": "event.actorId"},
-        "item": {"var": "event.targets.item"},
-        "target": {"var": "event.targets.target"}
+        "thrower": { "var": "event.actorId" },
+        "item": { "var": "event.targets.item" },
+        "target": { "var": "event.targets.target" }
       }
     }
   ]
@@ -315,8 +322,8 @@ To create an action that supports multiple targets, ensure the action formatting
       "type": "json_logic",
       "logic": {
         "and": [
-          {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-          {"==": [{"var": "event.actionId"}, "core:follow"]}
+          { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+          { "==": [{ "var": "event.actionId" }, "core:follow"] }
         ]
       }
     }
@@ -325,12 +332,12 @@ To create an action that supports multiple targets, ensure the action formatting
     {
       "type": "execute_follow",
       "data": {
-        "follower": {"var": "event.actorId"},
+        "follower": { "var": "event.actorId" },
         "target": {
           "if": [
-            {"var": "event.targets.target"},
-            {"var": "event.targets.target"},
-            {"var": "event.targetId"}
+            { "var": "event.targets.target" },
+            { "var": "event.targets.target" },
+            { "var": "event.targetId" }
           ]
         }
       }
@@ -344,41 +351,41 @@ To create an action that supports multiple targets, ensure the action formatting
 ### Target Access Patterns
 
 #### Get Primary Target
+
 ```json
 {
   "primaryTarget": {
     "if": [
-      {"var": "event.targetId"},
-      {"var": "event.targetId"},
-      {"var": "event.targets | values | first"}
+      { "var": "event.targetId" },
+      { "var": "event.targetId" },
+      { "var": "event.targets | values | first" }
     ]
   }
 }
 ```
 
 #### Check for Specific Target Type
+
 ```json
 {
   "hasItem": {
-    "and": [
-      {"var": "event.targets"},
-      {"var": "event.targets.item"}
-    ]
+    "and": [{ "var": "event.targets" }, { "var": "event.targets.item" }]
   }
 }
 ```
 
 #### Iterate Over All Targets
+
 ```json
 {
   "type": "foreach_target",
-  "items": {"var": "event.targets | entries"},
+  "items": { "var": "event.targets | entries" },
   "operations": [
     {
       "type": "process_target",
       "data": {
-        "targetType": {"var": "current.0"},
-        "targetId": {"var": "current.1"}
+        "targetType": { "var": "current.0" },
+        "targetId": { "var": "current.1" }
       }
     }
   ]
@@ -386,18 +393,15 @@ To create an action that supports multiple targets, ensure the action formatting
 ```
 
 #### Count Targets
+
 ```json
 {
   "targetCount": {
     "if": [
-      {"var": "event.targets"},
-      {"var": "event.targets | keys | length"},
+      { "var": "event.targets" },
+      { "var": "event.targets | keys | length" },
       {
-        "if": [
-          {"var": "event.targetId"},
-          1,
-          0
-        ]
+        "if": [{ "var": "event.targetId" }, 1, 0]
       }
     ]
   }
@@ -407,27 +411,29 @@ To create an action that supports multiple targets, ensure the action formatting
 ### Validation Patterns
 
 #### Required Target Types
+
 ```json
 {
   "condition": {
     "and": [
-      {"var": "event.targets.item"},
-      {"var": "event.targets.target"},
-      {"!=": [{"var": "event.targets.item"}, ""]},
-      {"!=": [{"var": "event.targets.target"}, ""]}
+      { "var": "event.targets.item" },
+      { "var": "event.targets.target" },
+      { "!=": [{ "var": "event.targets.item" }, ""] },
+      { "!=": [{ "var": "event.targets.target" }, ""] }
     ]
   }
 }
 ```
 
 #### Optional Target Types
+
 ```json
 {
   "weaponId": {
     "if": [
-      {"var": "event.targets.weapon"},
-      {"var": "event.targets.weapon"},
-      {"var": "entities[event.actorId].components['core:equipment'].mainHand"}
+      { "var": "event.targets.weapon" },
+      { "var": "event.targets.weapon" },
+      { "var": "entities[event.actorId].components['core:equipment'].mainHand" }
     ]
   }
 }
@@ -450,11 +456,11 @@ const testEvent = {
   actionId: 'combat:throw',
   targets: {
     item: 'test_knife',
-    target: 'test_goblin'
+    target: 'test_goblin',
   },
   targetId: 'test_knife',
   originalInput: 'throw knife at goblin',
-  timestamp: Date.now()
+  timestamp: Date.now(),
 };
 
 const result = await framework.testRuleWithEvents(rule, [testEvent]);
@@ -473,15 +479,18 @@ const turnAction = {
     isMultiTarget: true,
     targetIds: {
       item: ['knife_123'],
-      target: ['goblin_456']
-    }
-  }
+      target: ['goblin_456'],
+    },
+  },
 };
 
-const payload = await commandProcessor.createAttemptActionPayload(actor, turnAction);
+const payload = await commandProcessor.createAttemptActionPayload(
+  actor,
+  turnAction
+);
 expect(payload.targets).toEqual({
   item: 'knife_123',
-  target: 'goblin_456'
+  target: 'goblin_456',
 });
 ```
 
@@ -501,7 +510,9 @@ Monitor key metrics:
 ```javascript
 const stats = commandProcessor.getPayloadCreationStatistics();
 console.log(`Average creation time: ${stats.averageCreationTime}ms`);
-console.log(`Multi-target rate: ${stats.multiTargetPayloads / stats.totalPayloadsCreated * 100}%`);
+console.log(
+  `Multi-target rate: ${(stats.multiTargetPayloads / stats.totalPayloadsCreated) * 100}%`
+);
 ```
 
 ## Debugging
@@ -509,30 +520,40 @@ console.log(`Multi-target rate: ${stats.multiTargetPayloads / stats.totalPayload
 ### Common Issues
 
 #### Missing Targets Object
+
 **Symptom**: Rules expecting targets object receive undefined
 **Solution**: Verify `isMultiTarget: true` in resolved parameters
 
 #### Targets Object Empty
+
 **Symptom**: Targets object exists but has no properties
 **Solution**: Check target extraction logic in formatting stage
 
 #### Backward Compatibility Issues
+
 **Symptom**: Legacy actions fail after enhancement
 **Solution**: Ensure conditional logic provides fallback to `targetId`
 
 ### Debugging Tools
 
 #### Payload Inspection
+
 ```javascript
 console.log('Payload structure:', JSON.stringify(payload, null, 2));
 console.log('Has targets:', !!payload.targets);
-console.log('Target count:', payload.targets ? Object.keys(payload.targets).length : 0);
+console.log(
+  'Target count:',
+  payload.targets ? Object.keys(payload.targets).length : 0
+);
 ```
 
 #### Rule Execution Tracing
+
 ```javascript
 eventBus.on('rule_executed', (execution) => {
-  console.log(`Rule ${execution.ruleId}: ${execution.success ? 'SUCCESS' : 'FAILED'}`);
+  console.log(
+    `Rule ${execution.ruleId}: ${execution.success ? 'SUCCESS' : 'FAILED'}`
+  );
   if (!execution.success) {
     console.log('Errors:', execution.errors);
   }
@@ -558,7 +579,10 @@ import RuleMigrationHelper from '../utils/ruleMigrationHelper.js';
 const helper = new RuleMigrationHelper({ logger });
 const analysis = helper.analyzeRuleForMigration(originalRule);
 const enhancedRule = helper.generateEnhancedRule(originalRule);
-const validation = helper.validateBackwardCompatibility(originalRule, enhancedRule);
+const validation = helper.validateBackwardCompatibility(
+  originalRule,
+  enhancedRule
+);
 ```
 
 ## Best Practices
@@ -607,8 +631,8 @@ Resolve targets at runtime:
 ```json
 {
   "targets": {
-    "nearest_enemy": {"resolve": "findNearestEnemy"},
-    "best_weapon": {"resolve": "findBestWeapon"}
+    "nearest_enemy": { "resolve": "findNearestEnemy" },
+    "best_weapon": { "resolve": "findBestWeapon" }
   }
 }
 ```
@@ -632,16 +656,19 @@ Model relationships between targets:
 ### Common Error Messages
 
 **"Multi-target data extraction failed"**
+
 - Check resolved parameters structure
 - Verify targetIds is valid object
 - Ensure isMultiTarget flag is set
 
 **"Payload compatibility validation failed"**
+
 - Review enhanced event schema
 - Check for required fields
 - Validate target data types
 
 **"Rule execution timeout"**
+
 - Simplify rule conditions
 - Optimize JSON Logic expressions
 - Check for infinite loops
@@ -653,7 +680,8 @@ Model relationships between targets:
 - Use debugging tools and logging
 - Consult performance monitoring data
 - Review integration test patterns
-```
+
+````
 
 ### 3. Create API Reference Documentation
 
@@ -689,7 +717,7 @@ const payload = await commandProcessor.createAttemptActionPayload(actor, {
     }
   }
 });
-```
+````
 
 #### `getPayloadCreationStatistics()`
 
@@ -698,6 +726,7 @@ Returns payload creation metrics for monitoring.
 **Returns:** Object - Statistics object
 
 **Properties:**
+
 - `totalPayloadsCreated` (number): Total payloads created
 - `multiTargetPayloads` (number): Multi-target payloads created
 - `legacyPayloads` (number): Legacy payloads created
@@ -713,6 +742,7 @@ Returns payload creation metrics for monitoring.
 Extracts target data from resolved parameters.
 
 **Parameters:**
+
 - `resolvedParameters` (Object): Parameters from action formatting
 
 **Returns:** Promise<TargetExtractionResult> - Extraction result
@@ -728,6 +758,7 @@ Returns extraction performance metrics.
 Validates extracted targets against action requirements.
 
 **Parameters:**
+
 - `extractionResult` (TargetExtractionResult): Extraction result
 - `actionDefinition` (Object): Action definition (optional)
 
@@ -765,6 +796,7 @@ Returns primary target ID.
 Returns target ID for specific type.
 
 **Parameters:**
+
 - `type` (string): Target type name
 
 **Returns:** string|null
@@ -780,17 +812,19 @@ Returns all targets as object.
 Adds metadata to extraction result.
 
 **Parameters:**
+
 - `key` (string): Metadata key
-- `value` (*): Metadata value
+- `value` (\*): Metadata value
 
 #### `getMetadata(key)`
 
 Gets metadata value.
 
 **Parameters:**
+
 - `key` (string): Metadata key
 
-**Returns:** * - Metadata value
+**Returns:** \* - Metadata value
 
 ## MultiTargetEventBuilder API
 
@@ -801,6 +835,7 @@ Gets metadata value.
 Creates builder from turn action data.
 
 **Parameters:**
+
 - `actor` (Object): Actor entity
 - `turnAction` (Object): Turn action data
 - `extractionResult` (TargetExtractionResult): Extraction result
@@ -825,6 +860,7 @@ Builds the final event payload.
 Validates payload for backward compatibility.
 
 **Parameters:**
+
 - `payload` (Object): Event payload
 - `context` (Object): Validation context
 
@@ -835,6 +871,7 @@ Validates payload for backward compatibility.
 Creates legacy format from enhanced payload.
 
 **Parameters:**
+
 - `enhancedPayload` (Object): Enhanced format payload
 
 **Returns:** Object - Legacy format payload
@@ -844,6 +881,7 @@ Creates legacy format from enhanced payload.
 Creates enhanced format from legacy payload.
 
 **Parameters:**
+
 - `legacyPayload` (Object): Legacy format payload
 - `options` (Object): Adaptation options
 
@@ -864,6 +902,7 @@ Returns compatibility metrics.
 Runs comprehensive rule test suite.
 
 **Parameters:**
+
 - `testSuite` (Object): Test suite configuration
 
 **Returns:** Promise<Object> - Test results
@@ -873,6 +912,7 @@ Runs comprehensive rule test suite.
 Tests single rule against multiple events.
 
 **Parameters:**
+
 - `rule` (Object): Rule to test
 - `testEvents` (Array): Array of test events
 
@@ -883,6 +923,7 @@ Tests single rule against multiple events.
 Validates rule performance under load.
 
 **Parameters:**
+
 - `rule` (Object): Rule to test
 - `loadConfig` (Object): Load test configuration
 
@@ -893,6 +934,7 @@ Validates rule performance under load.
 Generates test events for rule testing.
 
 **Parameters:**
+
 - `config` (Object): Event generation configuration
 
 **Returns:** Array - Test events
@@ -920,7 +962,7 @@ Generates test events for rule testing.
 
 ```json
 {
-  "eventName": "core:attempt_action", 
+  "eventName": "core:attempt_action",
   "actorId": "string",
   "actionId": "string",
   "targetId": "string|null",
@@ -936,6 +978,7 @@ Generates test events for rule testing.
 Thrown when target extraction fails.
 
 **Properties:**
+
 - `message` (string): Error message
 - `resolvedParameters` (Object): Original parameters
 - `extractionAttempt` (Object): Extraction attempt details
@@ -945,6 +988,7 @@ Thrown when target extraction fails.
 Thrown when compatibility validation fails.
 
 **Properties:**
+
 - `message` (string): Error message
 - `payload` (Object): Problematic payload
 - `issues` (Array): Compatibility issues
@@ -954,6 +998,7 @@ Thrown when compatibility validation fails.
 Thrown when payload validation fails.
 
 **Properties:**
+
 - `message` (string): Error message
 - `payload` (Object): Invalid payload
 - `validationErrors` (Array): Validation errors
@@ -998,7 +1043,8 @@ Thrown when payload validation fails.
   }
 }
 ```
-```
+
+````
 
 ### 4. Create Examples and Tutorials
 
@@ -1029,7 +1075,7 @@ The action formatting stage should produce:
     }
   }
 }
-```
+````
 
 #### Step 2: Enhanced Rule Creation
 
@@ -1045,10 +1091,10 @@ Create a rule that can access both targets:
       "type": "json_logic",
       "logic": {
         "and": [
-          {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-          {"==": [{"var": "event.actionId"}, "combat:throw"]},
-          {"var": "event.targets.item"},
-          {"var": "event.targets.target"}
+          { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+          { "==": [{ "var": "event.actionId" }, "combat:throw"] },
+          { "var": "event.targets.item" },
+          { "var": "event.targets.target" }
         ]
       }
     }
@@ -1057,9 +1103,9 @@ Create a rule that can access both targets:
     {
       "type": "validate_throw_action",
       "data": {
-        "thrower": {"var": "event.actorId"},
-        "weapon": {"var": "event.targets.item"},
-        "target": {"var": "event.targets.target"}
+        "thrower": { "var": "event.actorId" },
+        "weapon": { "var": "event.targets.item" },
+        "target": { "var": "event.targets.target" }
       }
     },
     {
@@ -1067,14 +1113,14 @@ Create a rule that can access both targets:
       "effects": [
         {
           "type": "remove_item_from_inventory",
-          "actor": {"var": "event.actorId"},
-          "item": {"var": "event.targets.item"}
+          "actor": { "var": "event.actorId" },
+          "item": { "var": "event.targets.item" }
         },
         {
           "type": "calculate_throw_damage",
-          "weapon": {"var": "event.targets.item"},
-          "target": {"var": "event.targets.target"},
-          "thrower": {"var": "event.actorId"}
+          "weapon": { "var": "event.targets.item" },
+          "target": { "var": "event.targets.target" },
+          "thrower": { "var": "event.actorId" }
         }
       ]
     }
@@ -1091,11 +1137,11 @@ const testEvent = {
   actionId: 'combat:throw',
   targets: {
     item: 'knife_123',
-    target: 'goblin_456'
+    target: 'goblin_456',
   },
   targetId: 'knife_123',
   originalInput: 'throw knife at goblin',
-  timestamp: Date.now()
+  timestamp: Date.now(),
 };
 
 const result = await testingFramework.testRuleWithEvents(rule, [testEvent]);
@@ -1118,8 +1164,8 @@ This tutorial shows how to enhance an existing single-target action to support m
       "type": "json_logic",
       "logic": {
         "and": [
-          {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-          {"==": [{"var": "event.actionId"}, "core:follow"]}
+          { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+          { "==": [{ "var": "event.actionId" }, "core:follow"] }
         ]
       }
     }
@@ -1128,8 +1174,8 @@ This tutorial shows how to enhance an existing single-target action to support m
     {
       "type": "start_following",
       "data": {
-        "follower": {"var": "event.actorId"},
-        "target": {"var": "event.targetId"}
+        "follower": { "var": "event.actorId" },
+        "target": { "var": "event.targetId" }
       }
     }
   ]
@@ -1146,8 +1192,8 @@ This tutorial shows how to enhance an existing single-target action to support m
       "type": "json_logic",
       "logic": {
         "and": [
-          {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-          {"==": [{"var": "event.actionId"}, "core:follow"]}
+          { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+          { "==": [{ "var": "event.actionId" }, "core:follow"] }
         ]
       }
     }
@@ -1156,25 +1202,25 @@ This tutorial shows how to enhance an existing single-target action to support m
     {
       "type": "start_following",
       "data": {
-        "follower": {"var": "event.actorId"},
+        "follower": { "var": "event.actorId" },
         "target": {
           "if": [
-            {"var": "event.targets.target"},
-            {"var": "event.targets.target"},
-            {"var": "event.targetId"}
+            { "var": "event.targets.target" },
+            { "var": "event.targets.target" },
+            { "var": "event.targetId" }
           ]
         },
         "distance": {
           "if": [
-            {"var": "event.targets.distance"},
-            {"var": "event.targets.distance"},
+            { "var": "event.targets.distance" },
+            { "var": "event.targets.distance" },
             3
           ]
         },
         "mode": {
           "if": [
-            {"var": "event.targets.mode"},
-            {"var": "event.targets.mode"},
+            { "var": "event.targets.mode" },
+            { "var": "event.targets.mode" },
             "normal"
           ]
         }
@@ -1194,7 +1240,7 @@ const legacyEvent = {
   actionId: 'core:follow',
   targetId: 'npc_456',
   originalInput: 'follow NPC',
-  timestamp: Date.now()
+  timestamp: Date.now(),
 };
 
 // Test enhanced format
@@ -1205,15 +1251,19 @@ const enhancedEvent = {
   targets: {
     target: 'npc_456',
     distance: '5',
-    mode: 'stealth'
+    mode: 'stealth',
   },
   targetId: 'npc_456',
   originalInput: 'follow NPC at distance 5 in stealth mode',
-  timestamp: Date.now()
+  timestamp: Date.now(),
 };
 
-const legacyResult = await testingFramework.testRuleWithEvents(rule, [legacyEvent]);
-const enhancedResult = await testingFramework.testRuleWithEvents(rule, [enhancedEvent]);
+const legacyResult = await testingFramework.testRuleWithEvents(rule, [
+  legacyEvent,
+]);
+const enhancedResult = await testingFramework.testRuleWithEvents(rule, [
+  enhancedEvent,
+]);
 
 expect(legacyResult.passed).toBe(1);
 expect(enhancedResult.passed).toBe(1);
@@ -1255,12 +1305,12 @@ This tutorial demonstrates a complex scenario where an action requires multiple 
       "type": "json_logic",
       "logic": {
         "and": [
-          {"==": [{"var": "event.eventName"}, "core:attempt_action"]},
-          {"==": [{"var": "event.actionId"}, "crafting:forge_weapon"]},
-          {"var": "event.targets.tool"},
-          {"var": "event.targets.material"},
-          {"var": "event.targets.location"},
-          {"var": "event.targets.recipe"}
+          { "==": [{ "var": "event.eventName" }, "core:attempt_action"] },
+          { "==": [{ "var": "event.actionId" }, "crafting:forge_weapon"] },
+          { "var": "event.targets.tool" },
+          { "var": "event.targets.material" },
+          { "var": "event.targets.location" },
+          { "var": "event.targets.recipe" }
         ]
       }
     }
@@ -1273,8 +1323,10 @@ This tutorial demonstrates a complex scenario where an action requires multiple 
           "name": "tool_available",
           "condition": {
             "in": [
-              {"var": "event.targets.tool"},
-              {"var": "entities[event.actorId].components['core:inventory'].items"}
+              { "var": "event.targets.tool" },
+              {
+                "var": "entities[event.actorId].components['core:inventory'].items"
+              }
             ]
           }
         },
@@ -1282,8 +1334,10 @@ This tutorial demonstrates a complex scenario where an action requires multiple 
           "name": "material_sufficient",
           "condition": {
             ">=": [
-              {"var": "entities[event.targets.material].components['core:item'].quantity"},
-              {"var": "recipes[event.targets.recipe].materialRequired"}
+              {
+                "var": "entities[event.targets.material].components['core:item'].quantity"
+              },
+              { "var": "recipes[event.targets.recipe].materialRequired" }
             ]
           }
         },
@@ -1291,8 +1345,8 @@ This tutorial demonstrates a complex scenario where an action requires multiple 
           "name": "location_accessible",
           "condition": {
             "==": [
-              {"var": "entities[event.actorId].location"},
-              {"var": "event.targets.location"}
+              { "var": "entities[event.actorId].location" },
+              { "var": "event.targets.location" }
             ]
           }
         },
@@ -1300,8 +1354,10 @@ This tutorial demonstrates a complex scenario where an action requires multiple 
           "name": "recipe_known",
           "condition": {
             "in": [
-              {"var": "event.targets.recipe"},
-              {"var": "entities[event.actorId].components['core:knowledge'].recipes"}
+              { "var": "event.targets.recipe" },
+              {
+                "var": "entities[event.actorId].components['core:knowledge'].recipes"
+              }
             ]
           }
         }
@@ -1314,19 +1370,21 @@ This tutorial demonstrates a complex scenario where an action requires multiple 
           "type": "consume_materials",
           "materials": [
             {
-              "id": {"var": "event.targets.material"},
-              "quantity": {"var": "recipes[event.targets.recipe].materialRequired"}
+              "id": { "var": "event.targets.material" },
+              "quantity": {
+                "var": "recipes[event.targets.recipe].materialRequired"
+              }
             }
           ]
         },
         {
           "type": "apply_tool_durability",
-          "tool": {"var": "event.targets.tool"},
-          "usage": {"var": "recipes[event.targets.recipe].toolUsage"}
+          "tool": { "var": "event.targets.tool" },
+          "usage": { "var": "recipes[event.targets.recipe].toolUsage" }
         },
         {
           "type": "create_item",
-          "recipe": {"var": "event.targets.recipe"},
+          "recipe": { "var": "event.targets.recipe" },
           "quality": {
             "var": "calculateCraftingQuality(entities[event.actorId].components['core:skills'].crafting, entities[event.targets.tool].components['core:item'].quality)"
           }
@@ -1354,8 +1412,8 @@ This tutorial shows how to optimize rules that handle many targets efficiently.
       "type": "json_logic",
       "logic": {
         "and": [
-          {"var": "event.targets"},
-          {">": [{"var": "event.targets | keys | length"}, 5]}
+          { "var": "event.targets" },
+          { ">": [{ "var": "event.targets | keys | length" }, 5] }
         ]
       }
     }
@@ -1369,12 +1427,9 @@ This tutorial shows how to optimize rules that handle many targets efficiently.
         "earlyTermination": true
       },
       "data": {
-        "actor": {"var": "event.actorId"},
+        "actor": { "var": "event.actorId" },
         "targetBatches": {
-          "chunk": [
-            {"var": "event.targets | entries"},
-            5
-          ]
+          "chunk": [{ "var": "event.targets | entries" }, 5]
         }
       }
     },
@@ -1398,16 +1453,16 @@ const performanceTest = async () => {
     actorId: 'performance_actor',
     actionId: 'test:large_targets',
     targets: Object.fromEntries(
-      Array.from({length: 20}, (_, i) => [`target_${i}`, `value_${i}`])
+      Array.from({ length: 20 }, (_, i) => [`target_${i}`, `value_${i}`])
     ),
     targetId: 'target_0',
     originalInput: 'large target test',
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 
   const metrics = await testingFramework.validateRulePerformance(rule, {
     iterations: 100,
-    timeout: 200
+    timeout: 200,
   });
 
   console.log(`Average execution time: ${metrics.timing.average}ms`);
@@ -1424,7 +1479,7 @@ const performanceTest = async () => {
   "action": "combat:dual_wield_attack",
   "targets": {
     "primary_weapon": "sword_123",
-    "secondary_weapon": "dagger_456", 
+    "secondary_weapon": "dagger_456",
     "primary_target": "orc_789",
     "secondary_target": "goblin_012"
   }
@@ -1480,6 +1535,7 @@ const performanceTest = async () => {
 ### 1. Consistent Naming
 
 Use descriptive, consistent names for target types:
+
 - `primary_target`, `secondary_target` for multiple targets of same type
 - `tool`, `material`, `location` for different functional roles
 - `source`, `destination` for movement or transfer actions
@@ -1493,11 +1549,13 @@ Always validate targets exist and are appropriate:
   "validations": [
     {
       "name": "target_exists",
-      "condition": {"var": "entities[event.targets.target]"}
+      "condition": { "var": "entities[event.targets.target]" }
     },
     {
       "name": "target_accessible",
-      "condition": {"var": "isAccessible(event.actorId, event.targets.target)"}
+      "condition": {
+        "var": "isAccessible(event.actorId, event.targets.target)"
+      }
     }
   ]
 }
@@ -1511,9 +1569,9 @@ Provide fallbacks for missing optional targets:
 {
   "weaponId": {
     "if": [
-      {"var": "event.targets.weapon"},
-      {"var": "event.targets.weapon"},
-      {"var": "entities[event.actorId].components['core:equipment'].mainHand"}
+      { "var": "event.targets.weapon" },
+      { "var": "event.targets.weapon" },
+      { "var": "entities[event.actorId].components['core:equipment'].mainHand" }
     ]
   }
 }
@@ -1584,6 +1642,7 @@ Include performance checks for complex operations:
 // Solution: Store only necessary target IDs
 "data": {"targetIds": {"var": "event.targets | values"}}
 ```
+
 ```
 
 ## Testing Requirements
@@ -1653,3 +1712,4 @@ After this ticket completion:
 1. Move to Ticket 16: Create Migration Utilities and Scripts
 2. Develop automated migration tools for existing content
 3. Create scripts for system deployment and maintenance
+```

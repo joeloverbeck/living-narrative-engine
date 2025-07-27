@@ -73,10 +73,14 @@ describe('PartDescriptionGenerator - Integration', () => {
     it('should generate description for real anatomy part entity', async () => {
       // Arrange - Create real anatomy part entity
       const partEntity = await entityManager.createEntityInstance('core:actor');
-      await entityManager.addComponent(partEntity.id, ANATOMY_PART_COMPONENT_ID, {
-        subType: 'arm',
-        side: 'left',
-      });
+      await entityManager.addComponent(
+        partEntity.id,
+        ANATOMY_PART_COMPONENT_ID,
+        {
+          subType: 'arm',
+          side: 'left',
+        }
+      );
 
       // Act
       const result = generator.generatePartDescription(partEntity.id);
@@ -85,7 +89,7 @@ describe('PartDescriptionGenerator - Integration', () => {
       expect(result).toBeDefined();
       expect(typeof result).toBe('string');
       expect(result.length).toBeGreaterThan(0);
-      
+
       // Verify entity was actually processed
       const entity = entityManager.getEntityInstance(partEntity.id);
       expect(entity).toBeDefined();
@@ -112,26 +116,36 @@ describe('PartDescriptionGenerator - Integration', () => {
 
       // Assert
       expect(result).toBeNull();
-      
+
       // Verify entity exists but lacks anatomy:part component
       const retrievedEntity = entityManager.getEntityInstance(entity.id);
       expect(retrievedEntity).toBeDefined();
-      expect(retrievedEntity.hasComponent(ANATOMY_PART_COMPONENT_ID)).toBe(false);
+      expect(retrievedEntity.hasComponent(ANATOMY_PART_COMPONENT_ID)).toBe(
+        false
+      );
     });
 
     it('should handle different anatomy part subtypes', async () => {
       // Arrange - Create different anatomy parts
       const armEntity = await entityManager.createEntityInstance('core:actor');
-      await entityManager.addComponent(armEntity.id, ANATOMY_PART_COMPONENT_ID, {
-        subType: 'arm',
-        side: 'right',
-      });
+      await entityManager.addComponent(
+        armEntity.id,
+        ANATOMY_PART_COMPONENT_ID,
+        {
+          subType: 'arm',
+          side: 'right',
+        }
+      );
 
       const legEntity = await entityManager.createEntityInstance('core:actor');
-      await entityManager.addComponent(legEntity.id, ANATOMY_PART_COMPONENT_ID, {
-        subType: 'leg',
-        side: 'left',
-      });
+      await entityManager.addComponent(
+        legEntity.id,
+        ANATOMY_PART_COMPONENT_ID,
+        {
+          subType: 'leg',
+          side: 'left',
+        }
+      );
 
       // Act
       const armResult = generator.generatePartDescription(armEntity.id);
@@ -146,9 +160,13 @@ describe('PartDescriptionGenerator - Integration', () => {
     it('should generate description without automatic persistence', async () => {
       // Arrange - Create anatomy part entity
       const partEntity = await entityManager.createEntityInstance('core:actor');
-      await entityManager.addComponent(partEntity.id, ANATOMY_PART_COMPONENT_ID, {
-        subType: 'torso',
-      });
+      await entityManager.addComponent(
+        partEntity.id,
+        ANATOMY_PART_COMPONENT_ID,
+        {
+          subType: 'torso',
+        }
+      );
 
       // Act
       const result = generator.generatePartDescription(partEntity.id);
@@ -157,20 +175,26 @@ describe('PartDescriptionGenerator - Integration', () => {
       expect(result).toBeDefined();
       expect(typeof result).toBe('string');
       expect(result.length).toBeGreaterThan(0);
-      
+
       // Verify the real PartDescriptionGenerator doesn't automatically persist descriptions
       // (that's handled by other services in the system)
       const entity = entityManager.getEntityInstance(partEntity.id);
-      const descriptionComponent = entity.getComponentData(DESCRIPTION_COMPONENT_ID);
+      const descriptionComponent = entity.getComponentData(
+        DESCRIPTION_COMPONENT_ID
+      );
       expect(descriptionComponent).toBeUndefined();
     });
 
     it('should return null when bodyPartDescriptionBuilder returns null', async () => {
       // Arrange - Create anatomy part entity
       const partEntity = await entityManager.createEntityInstance('core:actor');
-      await entityManager.addComponent(partEntity.id, ANATOMY_PART_COMPONENT_ID, {
-        subType: 'nullDescriptionPart',
-      });
+      await entityManager.addComponent(
+        partEntity.id,
+        ANATOMY_PART_COMPONENT_ID,
+        {
+          subType: 'nullDescriptionPart',
+        }
+      );
 
       // Create generator with mock that returns null
       const nullBuilder = {
@@ -184,7 +208,9 @@ describe('PartDescriptionGenerator - Integration', () => {
       });
 
       // Act
-      const result = generatorWithNullBuilder.generatePartDescription(partEntity.id);
+      const result = generatorWithNullBuilder.generatePartDescription(
+        partEntity.id
+      );
 
       // Assert
       expect(result).toBeNull();
@@ -193,9 +219,13 @@ describe('PartDescriptionGenerator - Integration', () => {
     it('should return null when bodyPartDescriptionBuilder returns empty string', async () => {
       // Arrange - Create anatomy part entity
       const partEntity = await entityManager.createEntityInstance('core:actor');
-      await entityManager.addComponent(partEntity.id, ANATOMY_PART_COMPONENT_ID, {
-        subType: 'emptyDescriptionPart',
-      });
+      await entityManager.addComponent(
+        partEntity.id,
+        ANATOMY_PART_COMPONENT_ID,
+        {
+          subType: 'emptyDescriptionPart',
+        }
+      );
 
       // Create generator with mock that returns empty string
       const emptyBuilder = {
@@ -209,7 +239,9 @@ describe('PartDescriptionGenerator - Integration', () => {
       });
 
       // Act
-      const result = generatorWithEmptyBuilder.generatePartDescription(partEntity.id);
+      const result = generatorWithEmptyBuilder.generatePartDescription(
+        partEntity.id
+      );
 
       // Assert
       expect(result).toBeNull();
@@ -221,7 +253,7 @@ describe('PartDescriptionGenerator - Integration', () => {
       // Arrange - Create multiple anatomy part entities
       const partEntities = [];
       const partIds = [];
-      
+
       for (let i = 0; i < 3; i++) {
         const entity = await entityManager.createEntityInstance('core:actor');
         await entityManager.addComponent(entity.id, ANATOMY_PART_COMPONENT_ID, {
@@ -237,9 +269,9 @@ describe('PartDescriptionGenerator - Integration', () => {
       // Assert
       expect(result).toBeInstanceOf(Map);
       expect(result.size).toBe(3);
-      
+
       // Verify each part has a description
-      partIds.forEach(partId => {
+      partIds.forEach((partId) => {
         expect(result.has(partId)).toBe(true);
         expect(typeof result.get(partId)).toBe('string');
         expect(result.get(partId).length).toBeGreaterThan(0);
@@ -248,12 +280,18 @@ describe('PartDescriptionGenerator - Integration', () => {
 
     it('should handle mixed valid and invalid entities in real entity manager', async () => {
       // Arrange - Mix of valid anatomy parts, non-anatomy entities, and non-existent IDs
-      const validPartEntity = await entityManager.createEntityInstance('core:actor');
-      await entityManager.addComponent(validPartEntity.id, ANATOMY_PART_COMPONENT_ID, {
-        subType: 'validPart',
-      });
+      const validPartEntity =
+        await entityManager.createEntityInstance('core:actor');
+      await entityManager.addComponent(
+        validPartEntity.id,
+        ANATOMY_PART_COMPONENT_ID,
+        {
+          subType: 'validPart',
+        }
+      );
 
-      const nonAnatomyEntity = await entityManager.createEntityInstance('core:actor');
+      const nonAnatomyEntity =
+        await entityManager.createEntityInstance('core:actor');
       // Don't add anatomy:part component
 
       const nonExistentId = 'non-existent-' + Date.now();
@@ -286,7 +324,7 @@ describe('PartDescriptionGenerator - Integration', () => {
     it('should handle performance with larger datasets', async () => {
       // Arrange - Create 25 anatomy part entities for performance testing
       const partIds = [];
-      
+
       for (let i = 0; i < 25; i++) {
         const entity = await entityManager.createEntityInstance('core:actor');
         await entityManager.addComponent(entity.id, ANATOMY_PART_COMPONENT_ID, {
@@ -303,7 +341,7 @@ describe('PartDescriptionGenerator - Integration', () => {
       // Assert
       expect(result).toBeInstanceOf(Map);
       expect(result.size).toBe(25);
-      
+
       // Performance assertion - should complete reasonably quickly
       const executionTime = endTime - startTime;
       expect(executionTime).toBeLessThan(1000); // Should complete within 1 second
@@ -312,9 +350,13 @@ describe('PartDescriptionGenerator - Integration', () => {
     it('should handle duplicate part IDs correctly', async () => {
       // Arrange - Create anatomy part and include duplicate IDs
       const partEntity = await entityManager.createEntityInstance('core:actor');
-      await entityManager.addComponent(partEntity.id, ANATOMY_PART_COMPONENT_ID, {
-        subType: 'duplicatedPart',
-      });
+      await entityManager.addComponent(
+        partEntity.id,
+        ANATOMY_PART_COMPONENT_ID,
+        {
+          subType: 'duplicatedPart',
+        }
+      );
 
       const partIds = [partEntity.id, partEntity.id, partEntity.id];
 
@@ -408,16 +450,21 @@ describe('PartDescriptionGenerator - Integration', () => {
       const results = [];
       for (const componentData of testCases) {
         const entity = await entityManager.createEntityInstance('core:actor');
-        await entityManager.addComponent(entity.id, DESCRIPTION_COMPONENT_ID, componentData);
+        await entityManager.addComponent(
+          entity.id,
+          DESCRIPTION_COMPONENT_ID,
+          componentData
+        );
         results.push(generator.needsRegeneration(entity.id));
       }
 
       // Also test the null case by checking entity without any description component
-      const entityWithoutDesc = await entityManager.createEntityInstance('core:actor');
+      const entityWithoutDesc =
+        await entityManager.createEntityInstance('core:actor');
       results.push(generator.needsRegeneration(entityWithoutDesc.id));
 
       // Assert - All should return true for regeneration needed
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result).toBe(true);
       });
     });
@@ -447,9 +494,13 @@ describe('PartDescriptionGenerator - Integration', () => {
     it('should handle body part description builder errors', async () => {
       // Arrange - Create anatomy part entity
       const partEntity = await entityManager.createEntityInstance('core:actor');
-      await entityManager.addComponent(partEntity.id, ANATOMY_PART_COMPONENT_ID, {
-        subType: 'errorPart',
-      });
+      await entityManager.addComponent(
+        partEntity.id,
+        ANATOMY_PART_COMPONENT_ID,
+        {
+          subType: 'errorPart',
+        }
+      );
 
       // Create generator with broken description builder
       const brokenBuilder = {
@@ -475,10 +526,14 @@ describe('PartDescriptionGenerator - Integration', () => {
     it('should complete full workflow from entity creation to description generation', async () => {
       // Arrange & Act - Complete workflow
       const partEntity = await entityManager.createEntityInstance('core:actor');
-      await entityManager.addComponent(partEntity.id, ANATOMY_PART_COMPONENT_ID, {
-        subType: 'workflowPart',
-        side: 'left',
-      });
+      await entityManager.addComponent(
+        partEntity.id,
+        ANATOMY_PART_COMPONENT_ID,
+        {
+          subType: 'workflowPart',
+          side: 'left',
+        }
+      );
 
       // Check if regeneration is needed (entity has no description component)
       const needsRegen = generator.needsRegeneration(partEntity.id);
@@ -491,13 +546,19 @@ describe('PartDescriptionGenerator - Integration', () => {
       expect(description.length).toBeGreaterThan(0);
 
       // Manually add description component to simulate persistence layer
-      await entityManager.addComponent(partEntity.id, DESCRIPTION_COMPONENT_ID, {
-        text: description,
-      });
+      await entityManager.addComponent(
+        partEntity.id,
+        DESCRIPTION_COMPONENT_ID,
+        {
+          text: description,
+        }
+      );
 
       // Verify description was added
       const updatedEntity = entityManager.getEntityInstance(partEntity.id);
-      const descComponent = updatedEntity.getComponentData(DESCRIPTION_COMPONENT_ID);
+      const descComponent = updatedEntity.getComponentData(
+        DESCRIPTION_COMPONENT_ID
+      );
       expect(descComponent).toBeDefined();
       expect(descComponent.text).toBe(description);
 
@@ -519,7 +580,11 @@ describe('PartDescriptionGenerator - Integration', () => {
       const partIds = [];
       for (const partSpec of bodyParts) {
         const entity = await entityManager.createEntityInstance('core:actor');
-        await entityManager.addComponent(entity.id, ANATOMY_PART_COMPONENT_ID, partSpec);
+        await entityManager.addComponent(
+          entity.id,
+          ANATOMY_PART_COMPONENT_ID,
+          partSpec
+        );
         partIds.push(entity.id);
       }
 
@@ -528,9 +593,9 @@ describe('PartDescriptionGenerator - Integration', () => {
 
       // Assert
       expect(descriptions.size).toBe(bodyParts.length);
-      
+
       // Verify all parts have descriptions
-      partIds.forEach(partId => {
+      partIds.forEach((partId) => {
         expect(descriptions.has(partId)).toBe(true);
         expect(descriptions.get(partId)).toBeDefined();
         expect(typeof descriptions.get(partId)).toBe('string');

@@ -1,0 +1,593 @@
+import { jest } from '@jest/globals';
+import createStepResolver from '../../../../src/scopeDsl/nodes/stepResolver.js';
+import {
+  createMockEntity,
+  createTestEntity,
+} from '../../../common/mockFactories/entities.js';
+
+describe('StepResolver', () => {
+  let resolver;
+  let entitiesGateway;
+  let dispatcher;
+  let trace;
+  let consoleErrorSpy;
+
+  beforeEach(() => {
+    // Mock entitiesGateway
+    entitiesGateway = {
+      getEntityInstance: jest.fn(),
+      getComponentData: jest.fn(),
+      getEntitiesWithComponent: jest.fn(),
+    };
+
+    // Mock dispatcher
+    dispatcher = {
+      resolve: jest.fn(),
+    };
+
+    // Mock trace
+    trace = {
+      addLog: jest.fn(),
+    };
+
+    // Spy on console.error for error logging tests
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    resolver = createStepResolver({ entitiesGateway });
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
+  describe('canResolve', () => {
+    it('should return true for Step nodes', () => {
+      const node = { type: 'Step' };
+      expect(resolver.canResolve(node)).toBe(true);
+    });
+
+    it('should return false for non-Step nodes', () => {
+      expect(resolver.canResolve({ type: 'Source' })).toBe(false);
+      expect(resolver.canResolve({ type: 'Union' })).toBe(false);
+      expect(resolver.canResolve({ type: 'Filter' })).toBe(false);
+    });
+  });
+
+  describe('resolve', () => {
+    describe('error handling', () => {
+      it('should throw error when actorEntity is missing from context', () => {
+        const node = { type: 'Step', field: 'name', parent: {} };
+        const ctx = { dispatcher, trace }; // Missing actorEntity
+
+        expect(() => resolver.resolve(node, ctx)).toThrow(
+          'StepResolver: actorEntity is missing from context'
+        );
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          '[CRITICAL] StepResolver missing actorEntity:',
+          expect.objectContaining({
+            hasCtx: true,
+            ctxKeys: ['dispatcher', 'trace'],
+            nodeType: 'Step',
+            field: 'name',
+            parentNodeType: undefined,
+            depth: undefined,
+            callStack: expect.any(String),
+          })
+        );
+      });
+
+      it('should throw error when context is null', () => {
+        const node = { type: 'Step', field: 'name', parent: {} };
+
+        expect(() => resolver.resolve(node, null)).toThrow();
+      });
+
+      it('should throw error when context is undefined', () => {
+        const node = { type: 'Step', field: 'name', parent: {} };
+
+        expect(() => resolver.resolve(node, undefined)).toThrow();
+      });
+
+      it('should log detailed error information including parent node type', () => {
+        const node = {
+          type: 'Step',
+          field: 'position',
+          parent: { type: 'Source', kind: 'actor' },
+        };
+        const ctx = { dispatcher, trace, depth: 3 };
+
+        expect(() => resolver.resolve(node, ctx)).toThrow();
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          '[CRITICAL] StepResolver missing actorEntity:',
+          expect.objectContaining({
+            parentNodeType: 'Source',
+            depth: 3,
+          })
+        );
+      });
+    });
+
+    describe('basic field resolution', () => {
+      it('should resolve field from entity', () => {
+        const node = { type: 'Step', field: 'core:name', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set(['entity1']));
+        entitiesGateway.getComponentData.mockReturnValue({
+          first: 'John',
+          last: 'Doe',
+        });
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set([{ first: 'John', last: 'Doe' }]));
+        expect(entitiesGateway.getComponentData).toHaveBeenCalledWith(
+          'entity1',
+          'core:name'
+        );
+      });
+
+      it('should resolve field from object', () => {
+        const node = { type: 'Step', field: 'name', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const obj = { name: 'Test Object', value: 42 };
+        dispatcher.resolve.mockReturnValue(new Set([obj]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set(['Test Object']));
+      });
+
+      it('should return empty set when parent result is empty', () => {
+        const node = { type: 'Step', field: 'name', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set());
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+        expect(trace.addLog).toHaveBeenCalledWith(
+          'info',
+          "Resolving Step node with field 'name'. Parent result size: 0",
+          'StepResolver',
+          { field: 'name', parentSize: 0 }
+        );
+      });
+
+      it('should handle undefined field values from entities', () => {
+        const node = { type: 'Step', field: 'nonexistent', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set(['entity1']));
+        entitiesGateway.getComponentData.mockReturnValue(undefined);
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+      });
+
+      it('should handle undefined field values from objects', () => {
+        const node = { type: 'Step', field: 'nonexistent', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const obj = { name: 'Test' };
+        dispatcher.resolve.mockReturnValue(new Set([obj]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+      });
+
+      it('should handle null field values from objects', () => {
+        const node = { type: 'Step', field: 'nullable', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const obj = { nullable: null, other: 'value' };
+        dispatcher.resolve.mockReturnValue(new Set([obj]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set([null]));
+      });
+
+      it('should search within all component data when field not found as component', () => {
+        const node = { type: 'Step', field: 'health', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const entity = {
+          id: 'entity1',
+          componentTypeIds: ['core:stats', 'core:position'],
+        };
+
+        dispatcher.resolve.mockReturnValue(new Set(['entity1']));
+        entitiesGateway.getEntityInstance.mockReturnValue(entity);
+
+        // First call returns undefined (not a component)
+        entitiesGateway.getComponentData
+          .mockReturnValueOnce(undefined)
+          // Then return component data for each componentTypeId
+          .mockReturnValueOnce({ health: 100, mana: 50 })
+          .mockReturnValueOnce({ x: 10, y: 20 });
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set([100]));
+        expect(entitiesGateway.getComponentData).toHaveBeenCalledWith(
+          'entity1',
+          'health'
+        );
+        expect(entitiesGateway.getComponentData).toHaveBeenCalledWith(
+          'entity1',
+          'core:stats'
+        );
+      });
+
+      it('should handle non-object component data when searching fields', () => {
+        const node = { type: 'Step', field: 'value', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const entity = {
+          id: 'entity1',
+          componentTypeIds: ['core:simple', 'core:array', 'core:complex'],
+        };
+
+        dispatcher.resolve.mockReturnValue(new Set(['entity1']));
+        entitiesGateway.getEntityInstance.mockReturnValue(entity);
+
+        // First call returns undefined (not a component)
+        entitiesGateway.getComponentData
+          .mockReturnValueOnce(undefined)
+          // Then return various types of component data
+          .mockReturnValueOnce('string-value') // string, not object
+          .mockReturnValueOnce([1, 2, 3]) // array
+          .mockReturnValueOnce({ value: 42 }); // object with the field
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set([42]));
+      });
+    });
+
+    describe('location.entities() special case', () => {
+      it('should handle location.entities(componentId) with matching entities', () => {
+        const node = {
+          type: 'Step',
+          field: 'entities',
+          param: 'core:npc',
+          parent: { type: 'Source', kind: 'location' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set(['location1']));
+
+        const entitiesWithComponent = [
+          { id: 'npc1' },
+          { id: 'npc2' },
+          { id: 'npc3' },
+        ];
+        entitiesGateway.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+
+        // Mock position data for entities
+        entitiesGateway.getComponentData
+          .mockReturnValueOnce({ locationId: 'location1' }) // npc1 is at location1
+          .mockReturnValueOnce({ locationId: 'location2' }) // npc2 is at location2
+          .mockReturnValueOnce({ locationId: 'location1' }); // npc3 is at location1
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set(['npc1', 'npc3']));
+        expect(entitiesGateway.getEntitiesWithComponent).toHaveBeenCalledWith(
+          'core:npc'
+        );
+        expect(entitiesGateway.getComponentData).toHaveBeenCalledWith(
+          'npc1',
+          'core:position'
+        );
+        expect(entitiesGateway.getComponentData).toHaveBeenCalledWith(
+          'npc2',
+          'core:position'
+        );
+        expect(entitiesGateway.getComponentData).toHaveBeenCalledWith(
+          'npc3',
+          'core:position'
+        );
+      });
+
+      it('should return empty set when no entities have the component', () => {
+        const node = {
+          type: 'Step',
+          field: 'entities',
+          param: 'core:rare',
+          parent: { type: 'Source', kind: 'location' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set(['location1']));
+        entitiesGateway.getEntitiesWithComponent.mockReturnValue(null);
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+      });
+
+      it('should return empty set when no entities are at the location', () => {
+        const node = {
+          type: 'Step',
+          field: 'entities',
+          param: 'core:npc',
+          parent: { type: 'Source', kind: 'location' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set(['location1']));
+
+        const entitiesWithComponent = [{ id: 'npc1' }, { id: 'npc2' }];
+        entitiesGateway.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+
+        // All entities are at different locations
+        entitiesGateway.getComponentData
+          .mockReturnValueOnce({ locationId: 'location2' })
+          .mockReturnValueOnce({ locationId: 'location3' });
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+      });
+
+      it('should handle entities without position component', () => {
+        const node = {
+          type: 'Step',
+          field: 'entities',
+          param: 'core:item',
+          parent: { type: 'Source', kind: 'location' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set(['location1']));
+
+        const entitiesWithComponent = [{ id: 'item1' }, { id: 'item2' }];
+        entitiesGateway.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+
+        // No position component data
+        entitiesGateway.getComponentData
+          .mockReturnValueOnce(undefined)
+          .mockReturnValueOnce(undefined);
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+      });
+
+      it('should only apply special logic for location.entities pattern', () => {
+        // Test that entities field on non-location source doesn't trigger special logic
+        const node = {
+          type: 'Step',
+          field: 'entities',
+          param: 'core:npc',
+          parent: { type: 'Source', kind: 'actor' }, // Not location
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set(['actor1']));
+        entitiesGateway.getComponentData.mockReturnValue([
+          'entity1',
+          'entity2',
+        ]);
+
+        const result = resolver.resolve(node, ctx);
+
+        // Should use normal field resolution, not special location logic
+        expect(result).toEqual(new Set([['entity1', 'entity2']]));
+        expect(entitiesGateway.getEntitiesWithComponent).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('multiple parent values', () => {
+      it('should handle multiple entity parent values', () => {
+        const node = { type: 'Step', field: 'core:name', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set(['entity1', 'entity2']));
+        entitiesGateway.getComponentData
+          .mockReturnValueOnce({ first: 'John', last: 'Doe' })
+          .mockReturnValueOnce({ first: 'Jane', last: 'Smith' });
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(
+          new Set([
+            { first: 'John', last: 'Doe' },
+            { first: 'Jane', last: 'Smith' },
+          ])
+        );
+      });
+
+      it('should handle mixed entity and object parent values', () => {
+        const node = { type: 'Step', field: 'name', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const obj = { name: 'Object Name' };
+        dispatcher.resolve.mockReturnValue(new Set(['entity1', obj]));
+        entitiesGateway.getComponentData.mockReturnValue({
+          first: 'Entity',
+          last: 'Name',
+        });
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(
+          new Set([{ first: 'Entity', last: 'Name' }, 'Object Name'])
+        );
+      });
+    });
+
+    describe('trace logging', () => {
+      it('should log trace messages when trace is provided', () => {
+        const node = { type: 'Step', field: 'test', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set(['entity1']));
+        entitiesGateway.getComponentData.mockReturnValue('test-value');
+
+        resolver.resolve(node, ctx);
+
+        expect(trace.addLog).toHaveBeenCalledWith(
+          'info',
+          "Resolving Step node with field 'test'. Parent result size: 1",
+          'StepResolver',
+          { field: 'test', parentSize: 1 }
+        );
+
+        expect(trace.addLog).toHaveBeenCalledWith(
+          'info',
+          "Step node resolved. Field: 'test', Result size: 1",
+          'StepResolver',
+          { field: 'test', resultSize: 1 }
+        );
+      });
+
+      it('should not log trace messages when trace is not provided', () => {
+        const node = { type: 'Step', field: 'test', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace: null, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set(['entity1']));
+        entitiesGateway.getComponentData.mockReturnValue('test-value');
+
+        // Should not throw
+        expect(() => resolver.resolve(node, ctx)).not.toThrow();
+      });
+    });
+
+    describe('edge cases', () => {
+      it('should handle null parent values', () => {
+        const node = { type: 'Step', field: 'name', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set([null]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+      });
+
+      it('should handle numeric parent values', () => {
+        const node = { type: 'Step', field: 'name', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set([123]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+      });
+
+      it('should handle boolean parent values', () => {
+        const node = { type: 'Step', field: 'name', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set([true, false]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+      });
+
+      it('should pass full context to dispatcher when resolving parent', () => {
+        const node = {
+          type: 'Step',
+          field: 'name',
+          parent: { type: 'Source' },
+        };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = {
+          dispatcher,
+          trace,
+          actorEntity,
+          depth: 5,
+          customProp: 'value',
+        };
+
+        dispatcher.resolve.mockReturnValue(new Set());
+
+        resolver.resolve(node, ctx);
+
+        expect(dispatcher.resolve).toHaveBeenCalledWith(
+          { type: 'Source' },
+          ctx
+        );
+      });
+    });
+  });
+});

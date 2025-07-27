@@ -34,7 +34,15 @@ With all multi-target system components implemented, comprehensive integration t
  * @file Comprehensive integration tests for multi-target action system
  */
 
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from '@jest/globals';
 import { TestBedClass } from '../common/testbed.js';
 import GameEngine from '../../src/engine/gameEngine.js';
 import CommandProcessor from '../../src/commands/commandProcessor.js';
@@ -64,17 +72,17 @@ describe('Multi-Target Action System Integration', () => {
 
     gameEngine = new GameEngine({ logger, eventBus, entityManager });
     commandProcessor = new CommandProcessor({ logger, eventBus });
-    testingFramework = new RulesTestingFramework({ 
-      logger, 
-      rulesEngine: gameEngine.getRulesEngine(), 
-      eventBus 
+    testingFramework = new RulesTestingFramework({
+      logger,
+      rulesEngine: gameEngine.getRulesEngine(),
+      eventBus,
     });
 
     // Setup test world with entities
     mockWorld = await testBed.createMockWorld({
       actors: ['player', 'npc1', 'npc2'],
       items: ['knife', 'potion', 'scroll', 'hammer'],
-      locations: ['room1', 'room2', 'forge']
+      locations: ['room1', 'room2', 'forge'],
     });
   });
 
@@ -97,14 +105,17 @@ describe('Multi-Target Action System Integration', () => {
           isMultiTarget: true,
           targetIds: {
             item: [knife.id],
-            target: [target.id]
-          }
-        }
+            target: [target.id],
+          },
+        },
       };
 
       // Process action through command processor
       const startTime = performance.now();
-      const payload = await commandProcessor.createAttemptActionPayload(actor, turnAction);
+      const payload = await commandProcessor.createAttemptActionPayload(
+        actor,
+        turnAction
+      );
       const processingTime = performance.now() - startTime;
 
       // Validate payload structure
@@ -112,12 +123,12 @@ describe('Multi-Target Action System Integration', () => {
         eventName: 'core:attempt_action',
         actorId: actor.id,
         actionId: 'combat:throw',
-        originalInput: 'throw knife at npc1'
+        originalInput: 'throw knife at npc1',
       });
 
       expect(payload.targets).toEqual({
         item: knife.id,
-        target: target.id
+        target: target.id,
       });
 
       expect(payload.targetId).toBe(knife.id); // Primary target for backward compatibility
@@ -136,8 +147,9 @@ describe('Multi-Target Action System Integration', () => {
 
       // Validate rule execution
       expect(ruleExecutions.length).toBeGreaterThan(0);
-      const throwRule = ruleExecutions.find(exec => 
-        exec.ruleId.includes('throw') || exec.ruleId.includes('combat')
+      const throwRule = ruleExecutions.find(
+        (exec) =>
+          exec.ruleId.includes('throw') || exec.ruleId.includes('combat')
       );
       expect(throwRule).toBeDefined();
       expect(throwRule.success).toBe(true);
@@ -152,12 +164,15 @@ describe('Multi-Target Action System Integration', () => {
         actionDefinitionId: 'core:follow',
         commandString: 'follow npc1',
         resolvedParameters: {
-          targetId: target.id
-        }
+          targetId: target.id,
+        },
       };
 
       // Process legacy action
-      const payload = await commandProcessor.createAttemptActionPayload(actor, legacyTurnAction);
+      const payload = await commandProcessor.createAttemptActionPayload(
+        actor,
+        legacyTurnAction
+      );
 
       // Validate legacy format preserved
       expect(payload).toEqual({
@@ -166,7 +181,7 @@ describe('Multi-Target Action System Integration', () => {
         actionId: 'core:follow',
         targetId: target.id,
         originalInput: 'follow npc1',
-        timestamp: expect.any(Number)
+        timestamp: expect.any(Number),
       });
 
       // Ensure no targets object
@@ -181,7 +196,7 @@ describe('Multi-Target Action System Integration', () => {
       await gameEngine.processEvent(payload);
 
       // Validate rule execution
-      const followRule = ruleExecutions.find(exec => 
+      const followRule = ruleExecutions.find((exec) =>
         exec.ruleId.includes('follow')
       );
       expect(followRule).toBeDefined();
@@ -202,17 +217,20 @@ describe('Multi-Target Action System Integration', () => {
           targetIds: {
             tool: [hammer.id],
             location: [forge.id],
-            material: [knife.id]
-          }
-        }
+            material: [knife.id],
+          },
+        },
       };
 
-      const payload = await commandProcessor.createAttemptActionPayload(actor, craftingAction);
+      const payload = await commandProcessor.createAttemptActionPayload(
+        actor,
+        craftingAction
+      );
 
       expect(payload.targets).toEqual({
         tool: hammer.id,
         location: forge.id,
-        material: knife.id
+        material: knife.id,
       });
 
       // Validate crafting rule can access all targets
@@ -226,10 +244,10 @@ describe('Multi-Target Action System Integration', () => {
                 { '==': [{ var: 'event.actionId' }, 'crafting:craft'] },
                 { var: 'event.targets.tool' },
                 { var: 'event.targets.location' },
-                { var: 'event.targets.material' }
-              ]
-            }
-          }
+                { var: 'event.targets.material' },
+              ],
+            },
+          },
         ],
         operations: [
           {
@@ -237,13 +255,15 @@ describe('Multi-Target Action System Integration', () => {
             data: {
               tool: { var: 'event.targets.tool' },
               location: { var: 'event.targets.location' },
-              material: { var: 'event.targets.material' }
-            }
-          }
-        ]
+              material: { var: 'event.targets.material' },
+            },
+          },
+        ],
       };
 
-      const ruleResult = await testingFramework.testRuleWithEvents(testRule, [payload]);
+      const ruleResult = await testingFramework.testRuleWithEvents(testRule, [
+        payload,
+      ]);
       expect(ruleResult.passed).toBe(1);
       expect(ruleResult.failed).toBe(0);
     });
@@ -264,9 +284,9 @@ describe('Multi-Target Action System Integration', () => {
             targetIds: {
               item: [`item_${i}`],
               target: [`target_${i}`],
-              location: [`location_${i}`]
-            }
-          }
+              location: [`location_${i}`],
+            },
+          },
         });
       }
 
@@ -275,7 +295,10 @@ describe('Multi-Target Action System Integration', () => {
 
       // Process all actions
       for (const action of actions) {
-        const payload = await commandProcessor.createAttemptActionPayload(actor, action);
+        const payload = await commandProcessor.createAttemptActionPayload(
+          actor,
+          action
+        );
         payloads.push(payload);
       }
 
@@ -292,7 +315,7 @@ describe('Multi-Target Action System Integration', () => {
         expect(payload.targets).toEqual({
           item: `item_${index}`,
           target: `target_${index}`,
-          location: `location_${index}`
+          location: `location_${index}`,
         });
       });
     });
@@ -308,8 +331,8 @@ describe('Multi-Target Action System Integration', () => {
           actionDefinitionId: 'core:follow',
           commandString: `follow target_${i}`,
           resolvedParameters: {
-            targetId: `target_${i}`
-          }
+            targetId: `target_${i}`,
+          },
         });
 
         // Enhanced action
@@ -320,21 +343,24 @@ describe('Multi-Target Action System Integration', () => {
             isMultiTarget: true,
             targetIds: {
               item: [`item_${i}`],
-              target: [`target_${i}`]
-            }
-          }
+              target: [`target_${i}`],
+            },
+          },
         });
       }
 
       const startTime = performance.now();
       const results = {
         legacy: { count: 0, totalTime: 0 },
-        enhanced: { count: 0, totalTime: 0 }
+        enhanced: { count: 0, totalTime: 0 },
       };
 
       for (const action of mixedActions) {
         const actionStart = performance.now();
-        const payload = await commandProcessor.createAttemptActionPayload(actor, action);
+        const payload = await commandProcessor.createAttemptActionPayload(
+          actor,
+          action
+        );
         const actionTime = performance.now() - actionStart;
 
         if (payload.targets) {
@@ -354,8 +380,9 @@ describe('Multi-Target Action System Integration', () => {
 
       // Validate performance parity
       const legacyAverage = results.legacy.totalTime / results.legacy.count;
-      const enhancedAverage = results.enhanced.totalTime / results.enhanced.count;
-      
+      const enhancedAverage =
+        results.enhanced.totalTime / results.enhanced.count;
+
       expect(legacyAverage).toBeLessThan(5);
       expect(enhancedAverage).toBeLessThan(10);
       expect(totalTime).toBeLessThan(1000); // Total < 1s for 100 actions
@@ -372,8 +399,8 @@ describe('Multi-Target Action System Integration', () => {
           commandString: 'test',
           resolvedParameters: {
             isMultiTarget: true,
-            targetIds: null
-          }
+            targetIds: null,
+          },
         },
         // Empty targetIds object
         {
@@ -381,8 +408,8 @@ describe('Multi-Target Action System Integration', () => {
           commandString: 'test',
           resolvedParameters: {
             isMultiTarget: true,
-            targetIds: {}
-          }
+            targetIds: {},
+          },
         },
         // Invalid targetIds structure
         {
@@ -390,21 +417,24 @@ describe('Multi-Target Action System Integration', () => {
           commandString: 'test',
           resolvedParameters: {
             isMultiTarget: true,
-            targetIds: 'invalid_string'
-          }
-        }
+            targetIds: 'invalid_string',
+          },
+        },
       ];
 
       for (const action of malformedActions) {
         // Should not throw errors
-        const payload = await commandProcessor.createAttemptActionPayload(actor, action);
-        
+        const payload = await commandProcessor.createAttemptActionPayload(
+          actor,
+          action
+        );
+
         // Should create valid fallback payload
         expect(payload).toMatchObject({
           eventName: 'core:attempt_action',
           actorId: actor.id,
           actionId: action.actionDefinitionId,
-          originalInput: action.commandString
+          originalInput: action.commandString,
         });
 
         // Should have valid timestamp
@@ -414,30 +444,33 @@ describe('Multi-Target Action System Integration', () => {
 
     it('should handle extraction service failures gracefully', async () => {
       const actor = mockWorld.actors.player;
-      
+
       // Mock extraction service to fail
       const originalExtractTargets = commandProcessor._extractTargetData;
-      commandProcessor._extractTargetData = jest.fn().mockRejectedValue(
-        new Error('Extraction service failure')
-      );
+      commandProcessor._extractTargetData = jest
+        .fn()
+        .mockRejectedValue(new Error('Extraction service failure'));
 
       const action = {
         actionDefinitionId: 'test:action',
         commandString: 'test action',
         resolvedParameters: {
           isMultiTarget: true,
-          targetIds: { item: ['test'] }
-        }
+          targetIds: { item: ['test'] },
+        },
       };
 
       // Should create fallback payload
-      const payload = await commandProcessor.createAttemptActionPayload(actor, action);
-      
+      const payload = await commandProcessor.createAttemptActionPayload(
+        actor,
+        action
+      );
+
       expect(payload).toMatchObject({
         eventName: 'core:attempt_action',
         actorId: actor.id,
         actionId: 'test:action',
-        originalInput: 'test action'
+        originalInput: 'test action',
       });
 
       // Restore original method
@@ -453,10 +486,13 @@ describe('Multi-Target Action System Integration', () => {
         errorActions.push({
           actionDefinitionId: null, // Invalid action ID
           commandString: `error action ${i}`,
-          resolvedParameters: Math.random() > 0.5 ? null : {
-            isMultiTarget: true,
-            targetIds: Math.random() > 0.5 ? null : { invalid: ['data'] }
-          }
+          resolvedParameters:
+            Math.random() > 0.5
+              ? null
+              : {
+                  isMultiTarget: true,
+                  targetIds: Math.random() > 0.5 ? null : { invalid: ['data'] },
+                },
         });
       }
 
@@ -465,7 +501,10 @@ describe('Multi-Target Action System Integration', () => {
 
       for (const action of errorActions) {
         try {
-          const payload = await commandProcessor.createAttemptActionPayload(actor, action);
+          const payload = await commandProcessor.createAttemptActionPayload(
+            actor,
+            action
+          );
           if (payload && payload.eventName) {
             successCount++;
           }
@@ -491,10 +530,10 @@ describe('Multi-Target Action System Integration', () => {
               and: [
                 { '==': [{ var: 'event.eventName' }, 'core:attempt_action'] },
                 { '==': [{ var: 'event.actionId' }, 'integration:test'] },
-                { var: 'event.targets' }
-              ]
-            }
-          }
+                { var: 'event.targets' },
+              ],
+            },
+          },
         ],
         operations: [
           {
@@ -503,10 +542,10 @@ describe('Multi-Target Action System Integration', () => {
               actor: { var: 'event.actorId' },
               targets: { var: 'event.targets' },
               targetCount: { var: 'event.targets | keys | length' },
-              primaryTarget: { var: 'event.targetId' }
-            }
-          }
-        ]
+              primaryTarget: { var: 'event.targetId' },
+            },
+          },
+        ],
       };
 
       const testEvent = {
@@ -516,15 +555,17 @@ describe('Multi-Target Action System Integration', () => {
         targets: {
           item: 'test_item',
           target: 'test_target',
-          location: 'test_location'
+          location: 'test_location',
         },
         targetId: 'test_item',
         originalInput: 'integration test',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
-      const result = await testingFramework.testRuleWithEvents(enhancedRule, [testEvent]);
-      
+      const result = await testingFramework.testRuleWithEvents(enhancedRule, [
+        testEvent,
+      ]);
+
       expect(result.passed).toBe(1);
       expect(result.failed).toBe(0);
       expect(result.details[0].execution.conditionsMet).toBe(true);
@@ -540,10 +581,10 @@ describe('Multi-Target Action System Integration', () => {
             logic: {
               and: [
                 { '==': [{ var: 'event.eventName' }, 'core:attempt_action'] },
-                { '==': [{ var: 'event.actionId' }, 'core:follow'] }
-              ]
-            }
-          }
+                { '==': [{ var: 'event.actionId' }, 'core:follow'] },
+              ],
+            },
+          },
         ],
         operations: [
           {
@@ -554,12 +595,12 @@ describe('Multi-Target Action System Integration', () => {
                 if: [
                   { var: 'event.targets.target' },
                   { var: 'event.targets.target' },
-                  { var: 'event.targetId' }
-                ]
-              }
-            }
-          }
-        ]
+                  { var: 'event.targetId' },
+                ],
+              },
+            },
+          },
+        ],
       };
 
       const legacyEvent = {
@@ -568,7 +609,7 @@ describe('Multi-Target Action System Integration', () => {
         actionId: 'core:follow',
         targetId: 'test_target',
         originalInput: 'follow target',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const enhancedEvent = {
@@ -576,30 +617,42 @@ describe('Multi-Target Action System Integration', () => {
         actorId: 'test_actor',
         actionId: 'core:follow',
         targets: {
-          target: 'test_target'
+          target: 'test_target',
         },
         targetId: 'test_target',
         originalInput: 'follow target',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
-      const legacyResult = await testingFramework.testRuleWithEvents(compatibleRule, [legacyEvent]);
-      const enhancedResult = await testingFramework.testRuleWithEvents(compatibleRule, [enhancedEvent]);
+      const legacyResult = await testingFramework.testRuleWithEvents(
+        compatibleRule,
+        [legacyEvent]
+      );
+      const enhancedResult = await testingFramework.testRuleWithEvents(
+        compatibleRule,
+        [enhancedEvent]
+      );
 
       // Both should succeed
       expect(legacyResult.passed).toBe(1);
       expect(enhancedResult.passed).toBe(1);
 
       // Both should execute the same operations
-      expect(legacyResult.details[0].execution.operationsExecuted).toHaveLength(1);
-      expect(enhancedResult.details[0].execution.operationsExecuted).toHaveLength(1);
+      expect(legacyResult.details[0].execution.operationsExecuted).toHaveLength(
+        1
+      );
+      expect(
+        enhancedResult.details[0].execution.operationsExecuted
+      ).toHaveLength(1);
     });
   });
 
   describe('Memory and Resource Management', () => {
     it('should not leak memory during extended operation', async () => {
       const actor = mockWorld.actors.player;
-      const initialMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+      const initialMemory = performance.memory
+        ? performance.memory.usedJSHeapSize
+        : 0;
 
       // Process many actions to test for memory leaks
       for (let batch = 0; batch < 10; batch++) {
@@ -610,9 +663,9 @@ describe('Multi-Target Action System Integration', () => {
             isMultiTarget: true,
             targetIds: {
               item: [`item_${batch}_${i}`],
-              target: [`target_${batch}_${i}`]
-            }
-          }
+              target: [`target_${batch}_${i}`],
+            },
+          },
         }));
 
         for (const action of actions) {
@@ -625,7 +678,9 @@ describe('Multi-Target Action System Integration', () => {
         }
       }
 
-      const finalMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+      const finalMemory = performance.memory
+        ? performance.memory.usedJSHeapSize
+        : 0;
       const memoryIncrease = finalMemory - initialMemory;
 
       // Memory increase should be reasonable (less than 10MB for 500 actions)
@@ -636,9 +691,9 @@ describe('Multi-Target Action System Integration', () => {
 
     it('should clean up resources properly', async () => {
       const actor = mockWorld.actors.player;
-      const processor = new CommandProcessor({ 
-        logger: testBed.createMockLogger(), 
-        eventBus: testBed.createMockEventBus() 
+      const processor = new CommandProcessor({
+        logger: testBed.createMockLogger(),
+        eventBus: testBed.createMockEventBus(),
       });
 
       // Process actions
@@ -647,8 +702,8 @@ describe('Multi-Target Action System Integration', () => {
         commandString: `cleanup test ${i}`,
         resolvedParameters: {
           isMultiTarget: true,
-          targetIds: { item: [`item_${i}`] }
-        }
+          targetIds: { item: [`item_${i}`] },
+        },
       }));
 
       for (const action of actions) {
@@ -693,7 +748,7 @@ describe('Multi-Target System Load Testing', () => {
     testBed = new TestBedClass();
     const logger = testBed.createMockLogger();
     const eventBus = testBed.createMockEventBus();
-    
+
     commandProcessor = new CommandProcessor({ logger, eventBus });
     mockActor = { id: 'load_test_actor', name: 'Load Test Actor' };
   });
@@ -712,22 +767,28 @@ describe('Multi-Target System Load Testing', () => {
           targetIds: {
             item: ['load_item'],
             target: ['load_target'],
-            location: ['load_location']
-          }
-        }
+            location: ['load_location'],
+          },
+        },
       });
 
       const ruleExecutor = async () => {
         const action = actionGenerator();
-        return await commandProcessor.createAttemptActionPayload(mockActor, action);
+        return await commandProcessor.createAttemptActionPayload(
+          mockActor,
+          action
+        );
       };
 
-      const metrics = await PerformanceTestingUtils.measureRulePerformance(ruleExecutor, {
-        iterations: 1000,
-        warmupIterations: 50,
-        timeout: 100,
-        measureMemory: true
-      });
+      const metrics = await PerformanceTestingUtils.measureRulePerformance(
+        ruleExecutor,
+        {
+          iterations: 1000,
+          warmupIterations: 50,
+          timeout: 100,
+          measureMemory: true,
+        }
+      );
 
       // Validate performance requirements
       expect(metrics.iterations.completed).toBeGreaterThan(950); // >95% success rate
@@ -740,13 +801,15 @@ describe('Multi-Target System Load Testing', () => {
         expect(metrics.memory.leaked).toBeLessThan(5 * 1024 * 1024); // < 5MB leaked
       }
 
-      console.log('\n' + PerformanceTestingUtils.generatePerformanceReport(metrics));
+      console.log(
+        '\n' + PerformanceTestingUtils.generatePerformanceReport(metrics)
+      );
     });
 
     it('should maintain performance under concurrent load', async () => {
       const concurrentActors = Array.from({ length: 10 }, (_, i) => ({
         id: `concurrent_actor_${i}`,
-        name: `Concurrent Actor ${i}`
+        name: `Concurrent Actor ${i}`,
       }));
 
       const actionPromises = concurrentActors.map(async (actor) => {
@@ -757,16 +820,19 @@ describe('Multi-Target System Load Testing', () => {
             isMultiTarget: true,
             targetIds: {
               item: [`item_${actor.id}_${i}`],
-              target: [`target_${actor.id}_${i}`]
-            }
-          }
+              target: [`target_${actor.id}_${i}`],
+            },
+          },
         }));
 
         const results = [];
         const startTime = performance.now();
 
         for (const action of actions) {
-          const payload = await commandProcessor.createAttemptActionPayload(actor, action);
+          const payload = await commandProcessor.createAttemptActionPayload(
+            actor,
+            action
+          );
           results.push(payload);
         }
 
@@ -774,7 +840,7 @@ describe('Multi-Target System Load Testing', () => {
           actorId: actor.id,
           count: results.length,
           duration: performance.now() - startTime,
-          results
+          results,
         };
       });
 
@@ -782,16 +848,21 @@ describe('Multi-Target System Load Testing', () => {
 
       // Validate all actors completed successfully
       expect(actorResults).toHaveLength(10);
-      actorResults.forEach(result => {
+      actorResults.forEach((result) => {
         expect(result.count).toBe(100);
         expect(result.duration).toBeLessThan(1000); // < 1s per actor
         expect(result.results).toHaveLength(100);
       });
 
       // Validate total system performance
-      const totalActions = actorResults.reduce((sum, result) => sum + result.count, 0);
-      const maxDuration = Math.max(...actorResults.map(result => result.duration));
-      
+      const totalActions = actorResults.reduce(
+        (sum, result) => sum + result.count,
+        0
+      );
+      const maxDuration = Math.max(
+        ...actorResults.map((result) => result.duration)
+      );
+
       expect(totalActions).toBe(1000);
       expect(maxDuration).toBeLessThan(1000); // Concurrent execution benefit
     });
@@ -805,19 +876,29 @@ describe('Multi-Target System Load Testing', () => {
         resolvedParameters: {
           isMultiTarget: true,
           targetIds: Object.fromEntries(
-            Array.from({ length: 100 }, (_, i) => [`target_type_${i}`, [`target_${i}`]])
-          )
-        }
+            Array.from({ length: 100 }, (_, i) => [
+              `target_type_${i}`,
+              [`target_${i}`],
+            ])
+          ),
+        },
       };
 
-      const initialMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+      const initialMemory = performance.memory
+        ? performance.memory.usedJSHeapSize
+        : 0;
 
       // Process many large actions
       for (let i = 0; i < 50; i++) {
-        await commandProcessor.createAttemptActionPayload(mockActor, largeTargetAction);
+        await commandProcessor.createAttemptActionPayload(
+          mockActor,
+          largeTargetAction
+        );
       }
 
-      const finalMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+      const finalMemory = performance.memory
+        ? performance.memory.usedJSHeapSize
+        : 0;
       const memoryIncrease = finalMemory - initialMemory;
 
       // Memory increase should be reasonable despite large objects
@@ -829,7 +910,7 @@ describe('Multi-Target System Load Testing', () => {
     it('should recover from memory pressure gracefully', async () => {
       // Simulate memory pressure by creating many large payloads
       const memoryIntensiveActions = [];
-      
+
       for (let i = 0; i < 100; i++) {
         memoryIntensiveActions.push({
           actionDefinitionId: 'memory:intensive',
@@ -838,11 +919,11 @@ describe('Multi-Target System Load Testing', () => {
             isMultiTarget: true,
             targetIds: Object.fromEntries(
               Array.from({ length: 50 }, (_, j) => [
-                `type_${i}_${j}`, 
-                Array.from({ length: 10 }, (_, k) => `target_${i}_${j}_${k}`)
+                `type_${i}_${j}`,
+                Array.from({ length: 10 }, (_, k) => `target_${i}_${j}_${k}`),
               ])
-            )
-          }
+            ),
+          },
         });
       }
 
@@ -851,7 +932,10 @@ describe('Multi-Target System Load Testing', () => {
 
       for (const action of memoryIntensiveActions) {
         try {
-          const payload = await commandProcessor.createAttemptActionPayload(mockActor, action);
+          const payload = await commandProcessor.createAttemptActionPayload(
+            mockActor,
+            action
+          );
           if (payload && payload.eventName) {
             successCount++;
           }
@@ -869,7 +953,7 @@ describe('Multi-Target System Load Testing', () => {
   describe('Edge Case Load Testing', () => {
     it('should handle rapid switching between legacy and enhanced formats', async () => {
       const actions = [];
-      
+
       // Create alternating legacy and enhanced actions
       for (let i = 0; i < 1000; i++) {
         if (i % 2 === 0) {
@@ -878,8 +962,8 @@ describe('Multi-Target System Load Testing', () => {
             actionDefinitionId: 'format:legacy',
             commandString: `legacy action ${i}`,
             resolvedParameters: {
-              targetId: `legacy_target_${i}`
-            }
+              targetId: `legacy_target_${i}`,
+            },
           });
         } else {
           // Enhanced action
@@ -890,9 +974,9 @@ describe('Multi-Target System Load Testing', () => {
               isMultiTarget: true,
               targetIds: {
                 item: [`enhanced_item_${i}`],
-                target: [`enhanced_target_${i}`]
-              }
-            }
+                target: [`enhanced_target_${i}`],
+              },
+            },
           });
         }
       }
@@ -900,13 +984,16 @@ describe('Multi-Target System Load Testing', () => {
       const startTime = performance.now();
       const results = {
         legacy: { count: 0, successCount: 0 },
-        enhanced: { count: 0, successCount: 0 }
+        enhanced: { count: 0, successCount: 0 },
       };
 
       for (const action of actions) {
         try {
-          const payload = await commandProcessor.createAttemptActionPayload(mockActor, action);
-          
+          const payload = await commandProcessor.createAttemptActionPayload(
+            mockActor,
+            action
+          );
+
           if (payload.targets) {
             results.enhanced.count++;
             if (payload.eventName) results.enhanced.successCount++;
@@ -935,13 +1022,13 @@ describe('Multi-Target System Load Testing', () => {
       // Create actions with various error conditions
       for (let i = 0; i < 200; i++) {
         const errorType = i % 5;
-        
+
         switch (errorType) {
           case 0: // Null resolved parameters
             errorProneActions.push({
               actionDefinitionId: 'error:null_params',
               commandString: `error action ${i}`,
-              resolvedParameters: null
+              resolvedParameters: null,
             });
             break;
           case 1: // Invalid targetIds structure
@@ -950,8 +1037,8 @@ describe('Multi-Target System Load Testing', () => {
               commandString: `error action ${i}`,
               resolvedParameters: {
                 isMultiTarget: true,
-                targetIds: 'invalid_string'
-              }
+                targetIds: 'invalid_string',
+              },
             });
             break;
           case 2: // Empty targetIds object
@@ -960,8 +1047,8 @@ describe('Multi-Target System Load Testing', () => {
               commandString: `error action ${i}`,
               resolvedParameters: {
                 isMultiTarget: true,
-                targetIds: {}
-              }
+                targetIds: {},
+              },
             });
             break;
           case 3: // Malformed targetIds
@@ -973,9 +1060,9 @@ describe('Multi-Target System Load Testing', () => {
                 targetIds: {
                   item: null,
                   target: undefined,
-                  location: []
-                }
-              }
+                  location: [],
+                },
+              },
             });
             break;
           case 4: // Valid action (control)
@@ -986,9 +1073,9 @@ describe('Multi-Target System Load Testing', () => {
                 isMultiTarget: true,
                 targetIds: {
                   item: [`valid_item_${i}`],
-                  target: [`valid_target_${i}`]
-                }
-              }
+                  target: [`valid_target_${i}`],
+                },
+              },
             });
             break;
         }
@@ -1000,10 +1087,18 @@ describe('Multi-Target System Load Testing', () => {
 
       for (const action of errorProneActions) {
         try {
-          const payload = await commandProcessor.createAttemptActionPayload(mockActor, action);
+          const payload = await commandProcessor.createAttemptActionPayload(
+            mockActor,
+            action
+          );
           processedCount++;
-          
-          if (payload && payload.eventName && payload.actorId && payload.actionId) {
+
+          if (
+            payload &&
+            payload.eventName &&
+            payload.actorId &&
+            payload.actionId
+          ) {
             validPayloadCount++;
           }
         } catch (error) {
@@ -1060,26 +1155,38 @@ describe('Multi-Target Game Scenarios', () => {
 
       // Execute combat sequence
       await gameEngine.processPlayerAction(scenario.actor, 'equip sword');
-      await gameEngine.processPlayerAction(scenario.actor, 'attack goblin with sword');
-      await gameEngine.processPlayerAction(scenario.actor, 'throw dagger at goblin');
+      await gameEngine.processPlayerAction(
+        scenario.actor,
+        'attack goblin with sword'
+      );
+      await gameEngine.processPlayerAction(
+        scenario.actor,
+        'throw dagger at goblin'
+      );
 
       // Validate event sequence
-      const attemptActions = events.filter(e => e.eventName === 'core:attempt_action');
+      const attemptActions = events.filter(
+        (e) => e.eventName === 'core:attempt_action'
+      );
       expect(attemptActions).toHaveLength(3);
 
       // Validate multi-target events
-      const throwEvent = attemptActions.find(e => e.actionId === 'combat:throw');
+      const throwEvent = attemptActions.find(
+        (e) => e.actionId === 'combat:throw'
+      );
       expect(throwEvent).toBeDefined();
       expect(throwEvent.targets).toEqual({
         item: 'dagger',
-        target: 'goblin'
+        target: 'goblin',
       });
 
-      const attackEvent = attemptActions.find(e => e.actionId === 'combat:attack');
+      const attackEvent = attemptActions.find(
+        (e) => e.actionId === 'combat:attack'
+      );
       expect(attackEvent).toBeDefined();
       expect(attackEvent.targets).toEqual({
         weapon: 'sword',
-        target: 'goblin'
+        target: 'goblin',
       });
     });
   });
@@ -1095,17 +1202,22 @@ describe('Multi-Target Game Scenarios', () => {
 
       // Execute crafting workflow
       await gameEngine.processPlayerAction(scenario.actor, 'go to forge');
-      await gameEngine.processPlayerAction(scenario.actor, 'craft sword using iron with hammer at forge');
+      await gameEngine.processPlayerAction(
+        scenario.actor,
+        'craft sword using iron with hammer at forge'
+      );
 
-      const craftEvent = events.find(e => 
-        e.eventName === 'core:attempt_action' && e.actionId === 'crafting:craft'
+      const craftEvent = events.find(
+        (e) =>
+          e.eventName === 'core:attempt_action' &&
+          e.actionId === 'crafting:craft'
       );
 
       expect(craftEvent).toBeDefined();
       expect(craftEvent.targets).toEqual({
         material: 'iron',
         tool: 'hammer',
-        location: 'forge'
+        location: 'forge',
       });
     });
   });
@@ -1120,18 +1232,26 @@ describe('Multi-Target Game Scenarios', () => {
       });
 
       // Execute social sequence
-      await gameEngine.processPlayerAction(scenario.actor, 'give potion to Alice');
-      await gameEngine.processPlayerAction(scenario.actor, 'trade sword for gold with merchant');
+      await gameEngine.processPlayerAction(
+        scenario.actor,
+        'give potion to Alice'
+      );
+      await gameEngine.processPlayerAction(
+        scenario.actor,
+        'trade sword for gold with merchant'
+      );
 
-      const tradeEvent = events.find(e => 
-        e.eventName === 'core:attempt_action' && e.actionId === 'interaction:trade'
+      const tradeEvent = events.find(
+        (e) =>
+          e.eventName === 'core:attempt_action' &&
+          e.actionId === 'interaction:trade'
       );
 
       expect(tradeEvent).toBeDefined();
       expect(tradeEvent.targets).toEqual({
         offering: 'sword',
         requesting: 'gold',
-        trader: 'merchant'
+        trader: 'merchant',
       });
     });
   });
@@ -1159,25 +1279,25 @@ export class PerformanceDashboard {
         legacy: 0,
         errors: 0,
         averageTime: 0,
-        maxTime: 0
+        maxTime: 0,
       },
       ruleExecution: {
         total: 0,
         successful: 0,
         failed: 0,
-        averageTime: 0
+        averageTime: 0,
       },
       memory: {
         initial: 0,
         peak: 0,
         current: 0,
-        leaked: 0
+        leaked: 0,
       },
       system: {
         uptime: 0,
         totalEvents: 0,
-        errorRate: 0
-      }
+        errorRate: 0,
+      },
     };
     this.#startTime = performance.now();
   }
@@ -1191,7 +1311,7 @@ export class PerformanceDashboard {
    */
   recordPayloadCreation(payload, duration, isMultiTarget, hasError = false) {
     this.#metrics.payloadCreation.total++;
-    
+
     if (hasError) {
       this.#metrics.payloadCreation.errors++;
     } else if (isMultiTarget) {
@@ -1201,9 +1321,16 @@ export class PerformanceDashboard {
     }
 
     // Update timing metrics
-    const totalTime = this.#metrics.payloadCreation.averageTime * (this.#metrics.payloadCreation.total - 1) + duration;
-    this.#metrics.payloadCreation.averageTime = totalTime / this.#metrics.payloadCreation.total;
-    this.#metrics.payloadCreation.maxTime = Math.max(this.#metrics.payloadCreation.maxTime, duration);
+    const totalTime =
+      this.#metrics.payloadCreation.averageTime *
+        (this.#metrics.payloadCreation.total - 1) +
+      duration;
+    this.#metrics.payloadCreation.averageTime =
+      totalTime / this.#metrics.payloadCreation.total;
+    this.#metrics.payloadCreation.maxTime = Math.max(
+      this.#metrics.payloadCreation.maxTime,
+      duration
+    );
   }
 
   /**
@@ -1213,15 +1340,19 @@ export class PerformanceDashboard {
    */
   recordRuleExecution(ruleResult, duration) {
     this.#metrics.ruleExecution.total++;
-    
+
     if (ruleResult.success) {
       this.#metrics.ruleExecution.successful++;
     } else {
       this.#metrics.ruleExecution.failed++;
     }
 
-    const totalTime = this.#metrics.ruleExecution.averageTime * (this.#metrics.ruleExecution.total - 1) + duration;
-    this.#metrics.ruleExecution.averageTime = totalTime / this.#metrics.ruleExecution.total;
+    const totalTime =
+      this.#metrics.ruleExecution.averageTime *
+        (this.#metrics.ruleExecution.total - 1) +
+      duration;
+    this.#metrics.ruleExecution.averageTime =
+      totalTime / this.#metrics.ruleExecution.total;
   }
 
   /**
@@ -1230,11 +1361,11 @@ export class PerformanceDashboard {
   updateMemoryMetrics() {
     if (performance.memory) {
       const current = performance.memory.usedJSHeapSize;
-      
+
       if (this.#metrics.memory.initial === 0) {
         this.#metrics.memory.initial = current;
       }
-      
+
       this.#metrics.memory.current = current;
       this.#metrics.memory.peak = Math.max(this.#metrics.memory.peak, current);
       this.#metrics.memory.leaked = current - this.#metrics.memory.initial;
@@ -1247,40 +1378,51 @@ export class PerformanceDashboard {
    */
   generateReport() {
     this.updateMemoryMetrics();
-    
+
     const uptime = performance.now() - this.#startTime;
-    const errorRate = this.#metrics.payloadCreation.total > 0 
-      ? (this.#metrics.payloadCreation.errors / this.#metrics.payloadCreation.total) * 100 
-      : 0;
+    const errorRate =
+      this.#metrics.payloadCreation.total > 0
+        ? (this.#metrics.payloadCreation.errors /
+            this.#metrics.payloadCreation.total) *
+          100
+        : 0;
 
     return {
       timestamp: new Date().toISOString(),
       uptime: uptime.toFixed(2),
       payloadCreation: {
         ...this.#metrics.payloadCreation,
-        multiTargetRate: this.#metrics.payloadCreation.total > 0 
-          ? (this.#metrics.payloadCreation.multiTarget / this.#metrics.payloadCreation.total) * 100 
-          : 0,
-        errorRate: errorRate
+        multiTargetRate:
+          this.#metrics.payloadCreation.total > 0
+            ? (this.#metrics.payloadCreation.multiTarget /
+                this.#metrics.payloadCreation.total) *
+              100
+            : 0,
+        errorRate: errorRate,
       },
       ruleExecution: {
         ...this.#metrics.ruleExecution,
-        successRate: this.#metrics.ruleExecution.total > 0 
-          ? (this.#metrics.ruleExecution.successful / this.#metrics.ruleExecution.total) * 100 
-          : 0
+        successRate:
+          this.#metrics.ruleExecution.total > 0
+            ? (this.#metrics.ruleExecution.successful /
+                this.#metrics.ruleExecution.total) *
+              100
+            : 0,
       },
       memory: {
         ...this.#metrics.memory,
         initialMB: (this.#metrics.memory.initial / 1024 / 1024).toFixed(2),
         peakMB: (this.#metrics.memory.peak / 1024 / 1024).toFixed(2),
         currentMB: (this.#metrics.memory.current / 1024 / 1024).toFixed(2),
-        leakedMB: (this.#metrics.memory.leaked / 1024 / 1024).toFixed(2)
+        leakedMB: (this.#metrics.memory.leaked / 1024 / 1024).toFixed(2),
       },
       system: {
         uptime: uptime.toFixed(2),
-        totalEvents: this.#metrics.payloadCreation.total + this.#metrics.ruleExecution.total,
-        errorRate: errorRate.toFixed(2)
-      }
+        totalEvents:
+          this.#metrics.payloadCreation.total +
+          this.#metrics.ruleExecution.total,
+        errorRate: errorRate.toFixed(2),
+      },
     };
   }
 
@@ -1290,7 +1432,7 @@ export class PerformanceDashboard {
    */
   generateDashboard() {
     const report = this.generateReport();
-    
+
     return `
 ╔════════════════════════════════════════════════════════════════╗
 ║                    PERFORMANCE DASHBOARD                       ║
@@ -1333,25 +1475,25 @@ export class PerformanceDashboard {
         legacy: 0,
         errors: 0,
         averageTime: 0,
-        maxTime: 0
+        maxTime: 0,
       },
       ruleExecution: {
         total: 0,
         successful: 0,
         failed: 0,
-        averageTime: 0
+        averageTime: 0,
       },
       memory: {
         initial: 0,
         peak: 0,
         current: 0,
-        leaked: 0
+        leaked: 0,
       },
       system: {
         uptime: 0,
         totalEvents: 0,
-        errorRate: 0
-      }
+        errorRate: 0,
+      },
     };
     this.#startTime = performance.now();
   }
@@ -1425,6 +1567,7 @@ None (new integration tests only)
 ## Next Steps
 
 After this ticket completion:
+
 1. All Phase 3 tickets completed
 2. Move to Phase 4: Documentation & Migration
 3. Create comprehensive documentation and migration guides

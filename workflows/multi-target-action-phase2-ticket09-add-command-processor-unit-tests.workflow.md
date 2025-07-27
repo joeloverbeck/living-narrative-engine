@@ -33,7 +33,14 @@ The enhanced CommandProcessor now includes multi-target data extraction and payl
  * @file Comprehensive tests for CommandProcessor multi-target functionality
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TestBedClass } from '../../common/testbed.js';
 import CommandProcessor from '../../../src/commands/commandProcessor.js';
 import TargetExtractionService from '../../../src/services/targetExtractionService.js';
@@ -49,20 +56,20 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
 
   beforeEach(() => {
     testBed = new TestBedClass();
-    
+
     // Create comprehensive mocks
     mockLogger = testBed.createMockLogger();
     mockEventBus = testBed.createMockEventBus();
-    
-    commandProcessor = new CommandProcessor({ 
-      logger: mockLogger, 
-      eventBus: mockEventBus 
+
+    commandProcessor = new CommandProcessor({
+      logger: mockLogger,
+      eventBus: mockEventBus,
     });
-    
+
     mockActor = {
       id: 'test_actor_123',
       name: 'Test Actor',
-      components: new Map()
+      components: new Map(),
     };
   });
 
@@ -80,17 +87,20 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
           targetIds: {
             target: ['goblin_456'],
             weapon: ['sword_123', 'axe_789'], // Multiple options
-            tool: ['shield_012']
-          }
-        }
+            tool: ['shield_012'],
+          },
+        },
       };
 
-      const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor._testCreateAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       expect(payload.targets).toEqual({
         target: 'goblin_456',
         weapon: 'sword_123', // First option selected
-        tool: 'shield_012'
+        tool: 'shield_012',
       });
 
       expect(payload.targetId).toBe('goblin_456'); // Primary target
@@ -108,16 +118,19 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
           targetIds: {
             item: 'coin_123', // String format
             recipient: ['merchant_456'], // Array format
-            location: [] // Empty array
-          }
-        }
+            location: [], // Empty array
+          },
+        },
       };
 
-      const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor._testCreateAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       expect(payload.targets).toEqual({
         item: 'coin_123',
-        recipient: 'merchant_456'
+        recipient: 'merchant_456',
         // location should be omitted due to empty array
       });
 
@@ -131,12 +144,15 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
         resolvedParameters: {
           isMultiTarget: true,
           targetIds: {
-            primary: ['book_123']
-          }
-        }
+            primary: ['book_123'],
+          },
+        },
       };
 
-      const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor._testCreateAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       // Single target should not create targets object
       expect(payload.targets).toBeUndefined();
@@ -153,18 +169,21 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
             primary_material: ['iron_ore_123'],
             secondary_material: ['coal_456'],
             crafting_station: ['forge_789'],
-            output_container: ['chest_012']
-          }
-        }
+            output_container: ['chest_012'],
+          },
+        },
       };
 
-      const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor._testCreateAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       expect(payload.targets).toEqual({
         primary_material: 'iron_ore_123',
         secondary_material: 'coal_456',
         crafting_station: 'forge_789',
-        output_container: 'chest_012'
+        output_container: 'chest_012',
       });
 
       expect(payload.targetId).toBe('iron_ore_123'); // First alphabetically in absence of standard patterns
@@ -177,11 +196,14 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
         actionDefinitionId: 'core:follow',
         commandString: 'follow Alice',
         resolvedParameters: {
-          targetId: 'alice_789'
-        }
+          targetId: 'alice_789',
+        },
       };
 
-      const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor._testCreateAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       // Verify exact legacy format
       expect(payload).toEqual({
@@ -190,7 +212,7 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
         actionId: 'core:follow',
         targetId: 'alice_789',
         originalInput: 'follow Alice',
-        timestamp: expect.any(Number)
+        timestamp: expect.any(Number),
       });
 
       // Ensure no additional fields
@@ -203,11 +225,14 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
         actionDefinitionId: 'core:emote',
         commandString: 'smile',
         resolvedParameters: {
-          targetId: null
-        }
+          targetId: null,
+        },
       };
 
-      const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor._testCreateAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       expect(payload.targetId).toBe(null);
       expect(payload.targets).toBeUndefined();
@@ -218,10 +243,13 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
       const turnAction = {
         actionDefinitionId: 'core:rest',
         commandString: 'rest',
-        resolvedParameters: {}
+        resolvedParameters: {},
       };
 
-      const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor._testCreateAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       expect(payload.targetId).toBe(null);
       expect(payload.targets).toBeUndefined();
@@ -232,15 +260,18 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
         actionDefinitionId: 'core:move',
         commandString: 'move north',
         resolvedParameters: {
-          targetId: 'north_exit_123'
-        }
+          targetId: 'north_exit_123',
+        },
       };
 
       const iterations = 100;
       const startTime = performance.now();
 
       for (let i = 0; i < iterations; i++) {
-        await commandProcessor._testCreateAttemptActionPayload(mockActor, legacyAction);
+        await commandProcessor._testCreateAttemptActionPayload(
+          mockActor,
+          legacyAction
+        );
       }
 
       const endTime = performance.now();
@@ -261,18 +292,21 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
             invalid: [null, undefined, '', 'valid_target_123'],
             empty: [],
             'bad-name': ['target_456'],
-            '123numeric': ['target_789']
-          }
-        }
+            '123numeric': ['target_789'],
+          },
+        },
       };
 
-      const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor._testCreateAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       // Should extract valid targets only
       expect(payload.targets).toEqual({
         invalid: 'valid_target_123',
         'bad-name': 'target_456',
-        '123numeric': 'target_789'
+        '123numeric': 'target_789',
       });
 
       expect(payload.targetId).toBe('valid_target_123'); // First valid target
@@ -282,7 +316,9 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
       // Mock extraction service to throw error
       const originalService = commandProcessor._targetExtractionService;
       commandProcessor._targetExtractionService = {
-        extractTargets: jest.fn().mockRejectedValue(new Error('Extraction failed'))
+        extractTargets: jest
+          .fn()
+          .mockRejectedValue(new Error('Extraction failed')),
       };
 
       const turnAction = {
@@ -290,11 +326,14 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
         commandString: 'failing action',
         resolvedParameters: {
           isMultiTarget: true,
-          targetIds: { target: ['target_123'] }
-        }
+          targetIds: { target: ['target_123'] },
+        },
       };
 
-      const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor._testCreateAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
 
       // Should create fallback payload
       expect(payload.eventName).toBe('core:attempt_action');
@@ -311,31 +350,38 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
         commandProcessor._testCreateAttemptActionPayload(null, {
           actionDefinitionId: 'test:action',
           commandString: 'test',
-          resolvedParameters: {}
+          resolvedParameters: {},
         })
       ).rejects.toThrow('Valid actor with ID is required');
 
       // Test actor without ID
       await expect(
-        commandProcessor._testCreateAttemptActionPayload({}, {
-          actionDefinitionId: 'test:action',
-          commandString: 'test',
-          resolvedParameters: {}
-        })
+        commandProcessor._testCreateAttemptActionPayload(
+          {},
+          {
+            actionDefinitionId: 'test:action',
+            commandString: 'test',
+            resolvedParameters: {},
+          }
+        )
       ).rejects.toThrow('Valid actor with ID is required');
 
       // Test invalid turn action
       await expect(
         commandProcessor._testCreateAttemptActionPayload(mockActor, null)
-      ).rejects.toThrow('Valid turn action with actionDefinitionId is required');
+      ).rejects.toThrow(
+        'Valid turn action with actionDefinitionId is required'
+      );
 
       // Test turn action without actionDefinitionId
       await expect(
         commandProcessor._testCreateAttemptActionPayload(mockActor, {
           commandString: 'test',
-          resolvedParameters: {}
+          resolvedParameters: {},
         })
-      ).rejects.toThrow('Valid turn action with actionDefinitionId is required');
+      ).rejects.toThrow(
+        'Valid turn action with actionDefinitionId is required'
+      );
     });
 
     it('should handle extremely large target sets', async () => {
@@ -350,12 +396,15 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
         commandString: 'action with many targets',
         resolvedParameters: {
           isMultiTarget: true,
-          targetIds: largeTargetIds
-        }
+          targetIds: largeTargetIds,
+        },
       };
 
       const startTime = performance.now();
-      const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, turnAction);
+      const payload = await commandProcessor._testCreateAttemptActionPayload(
+        mockActor,
+        turnAction
+      );
       const duration = performance.now() - startTime;
 
       expect(Object.keys(payload.targets)).toHaveLength(50);
@@ -369,38 +418,41 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
         {
           actionDefinitionId: 'test:legacy1',
           commandString: 'legacy action 1',
-          resolvedParameters: { targetId: 'target_1' }
+          resolvedParameters: { targetId: 'target_1' },
         },
         {
           actionDefinitionId: 'test:multi1',
           commandString: 'multi action 1',
           resolvedParameters: {
             isMultiTarget: true,
-            targetIds: { item: ['item_1'], target: ['target_1'] }
-          }
+            targetIds: { item: ['item_1'], target: ['target_1'] },
+          },
         },
         {
           actionDefinitionId: 'test:legacy2',
           commandString: 'legacy action 2',
-          resolvedParameters: { targetId: 'target_2' }
+          resolvedParameters: { targetId: 'target_2' },
         },
         {
           actionDefinitionId: 'test:multi2',
           commandString: 'multi action 2',
           resolvedParameters: {
             isMultiTarget: true,
-            targetIds: { 
-              primary: ['primary_1'], 
+            targetIds: {
+              primary: ['primary_1'],
               secondary: ['secondary_1'],
-              tool: ['tool_1']
-            }
-          }
-        }
+              tool: ['tool_1'],
+            },
+          },
+        },
       ];
 
       // Process multiple actions
       for (const action of actions) {
-        await commandProcessor._testCreateAttemptActionPayload(mockActor, action);
+        await commandProcessor._testCreateAttemptActionPayload(
+          mockActor,
+          action
+        );
       }
 
       const stats = commandProcessor._getPayloadCreationStatistics();
@@ -420,9 +472,9 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
           action: {
             actionDefinitionId: 'simple:legacy',
             commandString: 'simple',
-            resolvedParameters: { targetId: 'target_1' }
+            resolvedParameters: { targetId: 'target_1' },
           },
-          maxTime: 5
+          maxTime: 5,
         },
         {
           name: 'simple multi-target',
@@ -431,10 +483,10 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
             commandString: 'simple multi',
             resolvedParameters: {
               isMultiTarget: true,
-              targetIds: { item: ['item_1'], target: ['target_1'] }
-            }
+              targetIds: { item: ['item_1'], target: ['target_1'] },
+            },
           },
-          maxTime: 10
+          maxTime: 10,
         },
         {
           name: 'complex multi-target',
@@ -444,29 +496,36 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
             resolvedParameters: {
               isMultiTarget: true,
               targetIds: {
-                primary: ['p1'], secondary: ['s1'], tertiary: ['t1'],
-                item1: ['i1'], item2: ['i2'], tool: ['tool1'], location: ['loc1']
-              }
-            }
+                primary: ['p1'],
+                secondary: ['s1'],
+                tertiary: ['t1'],
+                item1: ['i1'],
+                item2: ['i2'],
+                tool: ['tool1'],
+                location: ['loc1'],
+              },
+            },
           },
-          maxTime: 15
-        }
+          maxTime: 15,
+        },
       ];
 
       for (const scenario of scenarios) {
         const startTime = performance.now();
-        
+
         const payload = await commandProcessor._testCreateAttemptActionPayload(
-          mockActor, 
+          mockActor,
           scenario.action
         );
-        
+
         const duration = performance.now() - startTime;
 
         expect(payload).toBeDefined();
         expect(duration).toBeLessThan(scenario.maxTime);
-        
-        console.log(`${scenario.name}: ${duration.toFixed(2)}ms (target: <${scenario.maxTime}ms)`);
+
+        console.log(
+          `${scenario.name}: ${duration.toFixed(2)}ms (target: <${scenario.maxTime}ms)`
+        );
       }
     });
 
@@ -475,15 +534,16 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
       const actions = Array.from({ length: burstSize }, (_, i) => ({
         actionDefinitionId: `burst:action_${i}`,
         commandString: `burst action ${i}`,
-        resolvedParameters: i % 2 === 0 
-          ? { targetId: `target_${i}` }
-          : {
-              isMultiTarget: true,
-              targetIds: { 
-                item: [`item_${i}`], 
-                target: [`target_${i}`] 
-              }
-            }
+        resolvedParameters:
+          i % 2 === 0
+            ? { targetId: `target_${i}` }
+            : {
+                isMultiTarget: true,
+                targetIds: {
+                  item: [`item_${i}`],
+                  target: [`target_${i}`],
+                },
+              },
       }));
 
       const startTime = performance.now();
@@ -491,19 +551,22 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
 
       for (const action of actions) {
         const actionStart = performance.now();
-        const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, action);
+        const payload = await commandProcessor._testCreateAttemptActionPayload(
+          mockActor,
+          action
+        );
         const actionTime = performance.now() - actionStart;
-        
+
         results.push({ payload, duration: actionTime });
       }
 
       const totalTime = performance.now() - startTime;
       const averageTime = totalTime / burstSize;
-      const maxTime = Math.max(...results.map(r => r.duration));
+      const maxTime = Math.max(...results.map((r) => r.duration));
 
       expect(averageTime).toBeLessThan(10); // Average should be fast
       expect(maxTime).toBeLessThan(25); // Even slowest should be reasonable
-      expect(results.every(r => r.payload)).toBe(true); // All should succeed
+      expect(results.every((r) => r.payload)).toBe(true); // All should succeed
     });
   });
 
@@ -516,9 +579,9 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
           isMultiTarget: true,
           targetIds: {
             item: ['item_123'],
-            target: ['target_456']
-          }
-        }
+            target: ['target_456'],
+          },
+        },
       };
 
       // Mock the process method to test full integration
@@ -532,9 +595,9 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
           actionId: 'integration:test',
           targets: {
             item: 'item_123',
-            target: 'target_456'
+            target: 'target_456',
           },
-          targetId: 'target_456'
+          targetId: 'target_456',
         })
       );
     });
@@ -544,8 +607,8 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
         actionDefinitionId: 'integration:legacy',
         commandString: 'legacy integration test',
         resolvedParameters: {
-          targetId: 'legacy_target_123'
-        }
+          targetId: 'legacy_target_123',
+        },
       };
 
       await commandProcessor.processCommand(mockActor, legacyAction);
@@ -556,7 +619,7 @@ describe('CommandProcessor - Multi-Target Functionality', () => {
           eventName: 'core:attempt_action',
           actorId: 'test_actor_123',
           actionId: 'integration:legacy',
-          targetId: 'legacy_target_123'
+          targetId: 'legacy_target_123',
         })
       );
 
@@ -588,15 +651,15 @@ describe('CommandProcessor - Backward Compatibility', () => {
 
   beforeEach(() => {
     testBed = new TestBedClass();
-    
+
     const logger = testBed.createMockLogger();
     const eventBus = testBed.createMockEventBus();
-    
+
     commandProcessor = new CommandProcessor({ logger, eventBus });
-    
+
     mockActor = {
       id: 'compatibility_actor',
-      name: 'Compatibility Test Actor'
+      name: 'Compatibility Test Actor',
     };
   });
 
@@ -610,27 +673,30 @@ describe('CommandProcessor - Backward Compatibility', () => {
         {
           actionDefinitionId: 'core:follow',
           commandString: 'follow Alice',
-          resolvedParameters: { targetId: 'alice_123' }
+          resolvedParameters: { targetId: 'alice_123' },
         },
         {
           actionDefinitionId: 'core:attack',
           commandString: 'attack goblin',
-          resolvedParameters: { targetId: 'goblin_456' }
+          resolvedParameters: { targetId: 'goblin_456' },
         },
         {
           actionDefinitionId: 'core:examine',
           commandString: 'examine book',
-          resolvedParameters: { targetId: 'book_789' }
+          resolvedParameters: { targetId: 'book_789' },
         },
         {
           actionDefinitionId: 'core:emote',
           commandString: 'smile',
-          resolvedParameters: { targetId: null }
-        }
+          resolvedParameters: { targetId: null },
+        },
       ];
 
       for (const action of legacyActions) {
-        const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, action);
+        const payload = await commandProcessor._testCreateAttemptActionPayload(
+          mockActor,
+          action
+        );
 
         // Verify exact legacy structure
         expect(payload).toMatchObject({
@@ -639,11 +705,18 @@ describe('CommandProcessor - Backward Compatibility', () => {
           actionId: action.actionDefinitionId,
           targetId: action.resolvedParameters.targetId,
           originalInput: action.commandString,
-          timestamp: expect.any(Number)
+          timestamp: expect.any(Number),
         });
 
         // Verify no extra fields
-        const expectedKeys = ['eventName', 'actorId', 'actionId', 'targetId', 'originalInput', 'timestamp'];
+        const expectedKeys = [
+          'eventName',
+          'actorId',
+          'actionId',
+          'targetId',
+          'originalInput',
+          'timestamp',
+        ];
         expect(Object.keys(payload).sort()).toEqual(expectedKeys.sort());
 
         // Verify no targets object
@@ -658,17 +731,23 @@ describe('CommandProcessor - Backward Compatibility', () => {
         { targetId: undefined, expected: null },
         { targetId: '', expected: null },
         { targetId: '   ', expected: null },
-        { targetId: 'core:namespaced_target', expected: 'core:namespaced_target' }
+        {
+          targetId: 'core:namespaced_target',
+          expected: 'core:namespaced_target',
+        },
       ];
 
       for (const variation of targetVariations) {
         const action = {
           actionDefinitionId: 'test:target_variation',
           commandString: 'test action',
-          resolvedParameters: { targetId: variation.targetId }
+          resolvedParameters: { targetId: variation.targetId },
         };
 
-        const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, action);
+        const payload = await commandProcessor._testCreateAttemptActionPayload(
+          mockActor,
+          action
+        );
 
         expect(payload.targetId).toBe(variation.expected);
         expect(payload.targets).toBeUndefined();
@@ -679,11 +758,14 @@ describe('CommandProcessor - Backward Compatibility', () => {
       const action = {
         actionDefinitionId: 'test:timestamp',
         commandString: 'timestamp test',
-        resolvedParameters: { targetId: 'target_123' }
+        resolvedParameters: { targetId: 'target_123' },
       };
 
       const beforeTime = Date.now();
-      const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, action);
+      const payload = await commandProcessor._testCreateAttemptActionPayload(
+        mockActor,
+        action
+      );
       const afterTime = Date.now();
 
       expect(payload.timestamp).toBeGreaterThanOrEqual(beforeTime);
@@ -697,12 +779,15 @@ describe('CommandProcessor - Backward Compatibility', () => {
       const legacyAction = {
         actionDefinitionId: 'performance:legacy',
         commandString: 'performance test',
-        resolvedParameters: { targetId: 'target_123' }
+        resolvedParameters: { targetId: 'target_123' },
       };
 
       // Warm up
       for (let i = 0; i < 10; i++) {
-        await commandProcessor._testCreateAttemptActionPayload(mockActor, legacyAction);
+        await commandProcessor._testCreateAttemptActionPayload(
+          mockActor,
+          legacyAction
+        );
       }
 
       // Measure performance
@@ -710,7 +795,10 @@ describe('CommandProcessor - Backward Compatibility', () => {
       const startTime = performance.now();
 
       for (let i = 0; i < iterations; i++) {
-        await commandProcessor._testCreateAttemptActionPayload(mockActor, legacyAction);
+        await commandProcessor._testCreateAttemptActionPayload(
+          mockActor,
+          legacyAction
+        );
       }
 
       const endTime = performance.now();
@@ -724,14 +812,17 @@ describe('CommandProcessor - Backward Compatibility', () => {
       const action = {
         actionDefinitionId: 'memory:test',
         commandString: 'memory test',
-        resolvedParameters: { targetId: 'target_123' }
+        resolvedParameters: { targetId: 'target_123' },
       };
 
       const initialMemory = process.memoryUsage().heapUsed;
 
       // Create many payloads
       for (let i = 0; i < 1000; i++) {
-        await commandProcessor._testCreateAttemptActionPayload(mockActor, action);
+        await commandProcessor._testCreateAttemptActionPayload(
+          mockActor,
+          action
+        );
       }
 
       // Force garbage collection if available
@@ -754,31 +845,34 @@ describe('CommandProcessor - Backward Compatibility', () => {
           name: 'missing commandString',
           action: {
             actionDefinitionId: 'test:missing_command',
-            resolvedParameters: { targetId: 'target_123' }
+            resolvedParameters: { targetId: 'target_123' },
           },
-          expectedInput: 'test:missing_command'
+          expectedInput: 'test:missing_command',
         },
         {
           name: 'missing resolvedParameters',
           action: {
             actionDefinitionId: 'test:missing_params',
-            commandString: 'test command'
+            commandString: 'test command',
           },
-          expectedTargetId: null
+          expectedTargetId: null,
         },
         {
           name: 'empty resolvedParameters',
           action: {
             actionDefinitionId: 'test:empty_params',
             commandString: 'test command',
-            resolvedParameters: {}
+            resolvedParameters: {},
           },
-          expectedTargetId: null
-        }
+          expectedTargetId: null,
+        },
       ];
 
       for (const edgeCase of edgeCases) {
-        const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, edgeCase.action);
+        const payload = await commandProcessor._testCreateAttemptActionPayload(
+          mockActor,
+          edgeCase.action
+        );
 
         expect(payload.eventName).toBe('core:attempt_action');
         expect(payload.actorId).toBe('compatibility_actor');
@@ -801,22 +895,25 @@ describe('CommandProcessor - Backward Compatibility', () => {
         {
           actionDefinitionId: 'test:malformed1',
           commandString: 'test',
-          resolvedParameters: { targetId: 123 } // Number instead of string
+          resolvedParameters: { targetId: 123 }, // Number instead of string
         },
         {
           actionDefinitionId: 'test:malformed2',
           commandString: 'test',
-          resolvedParameters: { targetId: {} } // Object instead of string
+          resolvedParameters: { targetId: {} }, // Object instead of string
         },
         {
           actionDefinitionId: 'test:malformed3',
           commandString: 'test',
-          resolvedParameters: { targetId: ['array'] } // Array instead of string
-        }
+          resolvedParameters: { targetId: ['array'] }, // Array instead of string
+        },
       ];
 
       for (const malformedCase of malformedCases) {
-        const payload = await commandProcessor._testCreateAttemptActionPayload(mockActor, malformedCase);
+        const payload = await commandProcessor._testCreateAttemptActionPayload(
+          mockActor,
+          malformedCase
+        );
 
         expect(payload.eventName).toBe('core:attempt_action');
         expect(payload.targetId).toBe(null); // Should convert invalid to null
@@ -828,15 +925,15 @@ describe('CommandProcessor - Backward Compatibility', () => {
   describe('Event Bus Integration Compatibility', () => {
     it('should dispatch legacy events in exact same format', async () => {
       const mockEventBus = testBed.createMockEventBus();
-      const processor = new CommandProcessor({ 
-        logger: testBed.createMockLogger(), 
-        eventBus: mockEventBus 
+      const processor = new CommandProcessor({
+        logger: testBed.createMockLogger(),
+        eventBus: mockEventBus,
       });
 
       const legacyAction = {
         actionDefinitionId: 'compatibility:dispatch',
         commandString: 'dispatch test',
-        resolvedParameters: { targetId: 'target_123' }
+        resolvedParameters: { targetId: 'target_123' },
       };
 
       await processor.processCommand(mockActor, legacyAction);
@@ -851,7 +948,7 @@ describe('CommandProcessor - Backward Compatibility', () => {
         actionId: 'compatibility:dispatch',
         targetId: 'target_123',
         originalInput: 'dispatch test',
-        timestamp: expect.any(Number)
+        timestamp: expect.any(Number),
       });
 
       // Verify no additional fields
@@ -884,10 +981,10 @@ describe('CommandProcessor - Performance Benchmarks', () => {
   beforeEach(() => {
     testBed = new TestBedClass();
     performanceTest = new PerformanceTestBase('CommandProcessor Benchmarks');
-    
+
     commandProcessor = new CommandProcessor({
       logger: testBed.createMockLogger(),
-      eventBus: testBed.createMockEventBus()
+      eventBus: testBed.createMockEventBus(),
     });
 
     mockActor = { id: 'perf_actor_123', name: 'Performance Actor' };
@@ -902,24 +999,28 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       const legacyAction = {
         actionDefinitionId: 'perf:legacy',
         commandString: 'performance test legacy',
-        resolvedParameters: { targetId: 'target_123' }
+        resolvedParameters: { targetId: 'target_123' },
       };
 
       const result = await performanceTest.runBenchmark(
-        () => commandProcessor._testCreateAttemptActionPayload(mockActor, legacyAction),
+        () =>
+          commandProcessor._testCreateAttemptActionPayload(
+            mockActor,
+            legacyAction
+          ),
         {
           iterations: 1000,
           warmupIterations: 100,
-          description: 'Legacy Action Payload Creation'
+          description: 'Legacy Action Payload Creation',
         }
       );
 
       const validation = performanceTest.validatePerformance({
-        maxMeanTime: 2,      // 2ms mean
-        maxP95Time: 5,       // 5ms P95
-        maxP99Time: 10,      // 10ms P99
-        maxErrorRate: 0,     // No errors allowed
-        maxMemoryPerOp: 1024 // 1KB per operation
+        maxMeanTime: 2, // 2ms mean
+        maxP95Time: 5, // 5ms P95
+        maxP99Time: 10, // 10ms P99
+        maxErrorRate: 0, // No errors allowed
+        maxMemoryPerOp: 1024, // 1KB per operation
       });
 
       expect(validation.passed).toBe(true);
@@ -935,26 +1036,30 @@ describe('CommandProcessor - Performance Benchmarks', () => {
           targetIds: {
             item: ['item_123'],
             target: ['target_456'],
-            tool: ['tool_789']
-          }
-        }
+            tool: ['tool_789'],
+          },
+        },
       };
 
       const result = await performanceTest.runBenchmark(
-        () => commandProcessor._testCreateAttemptActionPayload(mockActor, multiTargetAction),
+        () =>
+          commandProcessor._testCreateAttemptActionPayload(
+            mockActor,
+            multiTargetAction
+          ),
         {
           iterations: 1000,
           warmupIterations: 100,
-          description: 'Multi-Target Action Payload Creation'
+          description: 'Multi-Target Action Payload Creation',
         }
       );
 
       const validation = performanceTest.validatePerformance({
-        maxMeanTime: 5,      // 5ms mean
-        maxP95Time: 10,      // 10ms P95
-        maxP99Time: 20,      // 20ms P99
-        maxErrorRate: 0,     // No errors allowed
-        maxMemoryPerOp: 2048 // 2KB per operation
+        maxMeanTime: 5, // 5ms mean
+        maxP95Time: 10, // 10ms P95
+        maxP99Time: 20, // 20ms P99
+        maxErrorRate: 0, // No errors allowed
+        maxMemoryPerOp: 2048, // 2KB per operation
       });
 
       expect(validation.passed).toBe(true);
@@ -975,26 +1080,30 @@ describe('CommandProcessor - Performance Benchmarks', () => {
             consumable: ['potion_678'],
             location: ['room_901'],
             container: ['chest_234'],
-            ally: ['ally_567']
-          }
-        }
+            ally: ['ally_567'],
+          },
+        },
       };
 
       const result = await performanceTest.runBenchmark(
-        () => commandProcessor._testCreateAttemptActionPayload(mockActor, complexAction),
+        () =>
+          commandProcessor._testCreateAttemptActionPayload(
+            mockActor,
+            complexAction
+          ),
         {
           iterations: 500,
           warmupIterations: 50,
-          description: 'Complex Multi-Target Action'
+          description: 'Complex Multi-Target Action',
         }
       );
 
       const validation = performanceTest.validatePerformance({
-        maxMeanTime: 10,     // 10ms mean for complex
-        maxP95Time: 20,      // 20ms P95
-        maxP99Time: 40,      // 40ms P99
+        maxMeanTime: 10, // 10ms mean for complex
+        maxP95Time: 20, // 20ms P95
+        maxP99Time: 40, // 40ms P99
         maxErrorRate: 0,
-        maxMemoryPerOp: 4096 // 4KB for complex operations
+        maxMemoryPerOp: 4096, // 4KB for complex operations
       });
 
       expect(validation.passed).toBe(true);
@@ -1007,13 +1116,17 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       const legacyAction = {
         actionDefinitionId: 'compare:legacy',
         commandString: 'comparison test',
-        resolvedParameters: { targetId: 'target_123' }
+        resolvedParameters: { targetId: 'target_123' },
       };
 
       // Measure enhanced system performance
       const enhancedTest = new PerformanceTestBase('Enhanced System');
       await enhancedTest.runBenchmark(
-        () => commandProcessor._testCreateAttemptActionPayload(mockActor, legacyAction),
+        () =>
+          commandProcessor._testCreateAttemptActionPayload(
+            mockActor,
+            legacyAction
+          ),
         { iterations: 1000, description: 'Enhanced Legacy Performance' }
       );
 
@@ -1022,8 +1135,11 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       // The enhanced system should be within 20% of baseline performance
       // This would ideally be compared against a baseline measurement
       expect(enhancedMetrics.timing.mean).toBeLessThan(3); // Should be very fast
-      
-      console.log('Enhanced system legacy performance:', enhancedMetrics.timing.mean.toFixed(2) + 'ms');
+
+      console.log(
+        'Enhanced system legacy performance:',
+        enhancedMetrics.timing.mean.toFixed(2) + 'ms'
+      );
     });
 
     it('should scale efficiently with target count', async () => {
@@ -1042,13 +1158,16 @@ describe('CommandProcessor - Performance Benchmarks', () => {
           resolvedParameters: {
             isMultiTarget: count > 1,
             targetIds: count > 1 ? targetIds : undefined,
-            targetId: count === 1 ? 'entity_1' : undefined
-          }
+            targetId: count === 1 ? 'entity_1' : undefined,
+          },
         };
 
-        const testRunner = new PerformanceTestBase(`Scaling Test - ${count} targets`);
+        const testRunner = new PerformanceTestBase(
+          `Scaling Test - ${count} targets`
+        );
         await testRunner.runBenchmark(
-          () => commandProcessor._testCreateAttemptActionPayload(mockActor, action),
+          () =>
+            commandProcessor._testCreateAttemptActionPayload(mockActor, action),
           { iterations: 200, description: `${count} targets` }
         );
 
@@ -1056,14 +1175,16 @@ describe('CommandProcessor - Performance Benchmarks', () => {
         results.push({
           targetCount: count,
           meanTime: metrics.timing.mean,
-          p95Time: metrics.timing.p95
+          p95Time: metrics.timing.p95,
         });
       }
 
       // Verify scaling is reasonable
       for (const result of results) {
         expect(result.meanTime).toBeLessThan(result.targetCount * 2); // Linear scaling assumption
-        console.log(`${result.targetCount} targets: ${result.meanTime.toFixed(2)}ms mean`);
+        console.log(
+          `${result.targetCount} targets: ${result.meanTime.toFixed(2)}ms mean`
+        );
       }
     });
   });
@@ -1074,7 +1195,7 @@ describe('CommandProcessor - Performance Benchmarks', () => {
         {
           actionDefinitionId: 'memory:legacy',
           commandString: 'memory test legacy',
-          resolvedParameters: { targetId: 'target_123' }
+          resolvedParameters: { targetId: 'target_123' },
         },
         {
           actionDefinitionId: 'memory:multi',
@@ -1084,10 +1205,10 @@ describe('CommandProcessor - Performance Benchmarks', () => {
             targetIds: {
               item: ['item_123'],
               target: ['target_456'],
-              tool: ['tool_789']
-            }
-          }
-        }
+              tool: ['tool_789'],
+            },
+          },
+        },
       ];
 
       const initialMemory = process.memoryUsage().heapUsed;
@@ -1096,7 +1217,10 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       for (let cycle = 0; cycle < 10; cycle++) {
         for (let i = 0; i < 100; i++) {
           const action = actions[i % actions.length];
-          await commandProcessor._testCreateAttemptActionPayload(mockActor, action);
+          await commandProcessor._testCreateAttemptActionPayload(
+            mockActor,
+            action
+          );
         }
 
         // Periodic garbage collection
@@ -1116,7 +1240,9 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       // Should not increase memory significantly
       expect(memoryIncrease).toBeLessThan(5 * 1024 * 1024); // Less than 5MB increase
 
-      console.log(`Memory increase over 1000 operations: ${(memoryIncrease / 1024).toFixed(2)}KB`);
+      console.log(
+        `Memory increase over 1000 operations: ${(memoryIncrease / 1024).toFixed(2)}KB`
+      );
     });
   });
 });
@@ -1185,6 +1311,7 @@ describe('CommandProcessor - Performance Benchmarks', () => {
 ## Next Steps
 
 After this ticket completion:
+
 1. Move to Ticket 10: Implement Backward Compatibility Layer
 2. Finalize Phase 2 with complete CommandProcessor enhancement
 3. Begin Phase 3: Rules System Integration

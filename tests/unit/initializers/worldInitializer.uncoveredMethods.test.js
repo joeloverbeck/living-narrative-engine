@@ -174,7 +174,8 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
     it('should return early result when entitySpecs is empty', async () => {
       // Arrange: Enable batch processing and create empty world
       mockConfig.isFeatureEnabled.mockImplementation((key) => {
-        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION') return true;
+        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION')
+          return true;
         return false;
       });
 
@@ -183,7 +184,8 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
       });
 
       // Act
-      const result = await worldInitializer.initializeWorldEntities('test:world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
 
       // Assert: Should return early with empty result
       expect(result).toEqual({
@@ -201,7 +203,8 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
     it('should handle empty entitySpecs after validation failures in batch mode', async () => {
       // Arrange: Enable batch processing
       mockConfig.isFeatureEnabled.mockImplementation((key) => {
-        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION') return true;
+        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION')
+          return true;
         return false;
       });
 
@@ -222,7 +225,8 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
       mockRepository.getEntityInstanceDefinition.mockReturnValue(null);
 
       // Act
-      const result = await worldInitializer.initializeWorldEntities('test:world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
 
       // Assert: Should handle all validation failures
       expect(result.instantiatedCount).toBe(0);
@@ -235,7 +239,8 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
     it('should classify ValidationError correctly', async () => {
       // Arrange: Enable batch processing and setup failure
       mockConfig.isFeatureEnabled.mockImplementation((key) => {
-        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION') return true;
+        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION')
+          return true;
         return false;
       });
 
@@ -269,7 +274,7 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
 
       // Assert: Should log the failure but continue (non-critical)
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "WorldInitializer: Failed to create entity in batch: test:instance0",
+        'WorldInitializer: Failed to create entity in batch: test:instance0',
         validationError
       );
     });
@@ -277,7 +282,8 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
     it('should classify EntityNotFoundError correctly', async () => {
       // Arrange: Enable batch processing and setup failure
       mockConfig.isFeatureEnabled.mockImplementation((key) => {
-        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION') return true;
+        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION')
+          return true;
         return false;
       });
 
@@ -311,7 +317,7 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
 
       // Assert: Should log the failure but continue (non-critical)
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "WorldInitializer: Failed to create entity in batch: test:instance0",
+        'WorldInitializer: Failed to create entity in batch: test:instance0',
         entityNotFoundError
       );
     });
@@ -319,7 +325,8 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
     it('should classify timeout errors correctly and trigger fallback', async () => {
       // Arrange: Enable batch processing and setup timeout failure
       mockConfig.isFeatureEnabled.mockImplementation((key) => {
-        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION') return true;
+        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION')
+          return true;
         return false;
       });
 
@@ -353,7 +360,8 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
       );
 
       // Act
-      const result = await worldInitializer.initializeWorldEntities('test:world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
 
       // Assert: Should trigger fallback to sequential processing
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -365,7 +373,8 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
     it('should classify RepositoryConsistencyError and trigger fallback', async () => {
       // Arrange: Enable batch processing and setup consistency failure
       mockConfig.isFeatureEnabled.mockImplementation((key) => {
-        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION') return true;
+        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION')
+          return true;
         return false;
       });
 
@@ -400,7 +409,8 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
       );
 
       // Act
-      const result = await worldInitializer.initializeWorldEntities('test:world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
 
       // Assert: Should trigger fallback due to critical failure
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -412,7 +422,8 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
     it('should classify unknown errors correctly', async () => {
       // Arrange: Enable batch processing and setup unknown failure
       mockConfig.isFeatureEnabled.mockImplementation((key) => {
-        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION') return true;
+        if (key === 'performance.ENABLE_WORLD_LOADING_OPTIMIZATION')
+          return true;
         return false;
       });
 
@@ -446,10 +457,9 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
 
       // Assert: Should log the failure but continue (non-critical)
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "WorldInitializer: Failed to create entity in batch: test:instance0",
+        'WorldInitializer: Failed to create entity in batch: test:instance0',
         unknownError
       );
     });
   });
-
 });

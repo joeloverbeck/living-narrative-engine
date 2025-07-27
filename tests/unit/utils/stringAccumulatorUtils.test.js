@@ -41,32 +41,4 @@ describe('StringAccumulator', () => {
     expect(acc.toString()).toBe('123true');
     expect(acc.length).toBe('123true'.length);
   });
-
-  test('benchmark test comparing StringAccumulator vs direct +=', () => {
-    const iterations = 10000;
-
-    const acc = new StringAccumulator();
-    const startAcc = Date.now();
-    for (let i = 0; i < iterations; i++) {
-      acc.append('x');
-    }
-    const accResult = acc.toString();
-    const accTime = Date.now() - startAcc;
-
-    let direct = '';
-    const startDirect = Date.now();
-    for (let i = 0; i < iterations; i++) {
-      direct += 'x';
-    }
-    const directTime = Date.now() - startDirect;
-
-    // Log timings for developer awareness; test stays green regardless.
-
-    console.log(
-      `Benchmark: StringAccumulator=${accTime}ms, direct +==${directTime}ms`
-    );
-
-    expect(accResult).toHaveLength(iterations);
-    expect(direct).toHaveLength(iterations);
-  });
 });

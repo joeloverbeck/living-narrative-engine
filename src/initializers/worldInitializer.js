@@ -875,7 +875,6 @@ class WorldInitializer {
     return { instantiated: 0, failed: 1 };
   }
 
-
   /**
    * Instantiates initial world entities from the specified world's instances.
    * Spatial index management is handled automatically by SpatialIndexSynchronizer through event listening.

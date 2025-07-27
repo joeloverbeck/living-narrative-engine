@@ -53,7 +53,7 @@ export class ContentMigrationAnalyzer {
       actionsAnalyzed: 0,
       migrationOpportunities: [],
       compatibilityIssues: [],
-      recommendations: []
+      recommendations: [],
     };
   }
 
@@ -64,34 +64,33 @@ export class ContentMigrationAnalyzer {
    */
   async analyzeProject(projectPath) {
     this.#logger.info('Starting project migration analysis', { projectPath });
-    
+
     this.#resetAnalysisResults();
 
     try {
       // Analyze rules
       await this.#analyzeRules(projectPath);
-      
+
       // Analyze actions
       await this.#analyzeActions(projectPath);
-      
+
       // Analyze schemas
       await this.#analyzeSchemas(projectPath);
-      
+
       // Generate recommendations
       this.#generateRecommendations();
 
       this.#logger.info('Project analysis completed', {
         totalFiles: this.#analysisResults.totalFiles,
         opportunities: this.#analysisResults.migrationOpportunities.length,
-        issues: this.#analysisResults.compatibilityIssues.length
+        issues: this.#analysisResults.compatibilityIssues.length,
       });
 
       return this.#analysisResults;
-
     } catch (error) {
       this.#logger.error('Project analysis failed', {
         error: error.message,
-        projectPath
+        projectPath,
       });
       throw error;
     }
@@ -111,7 +110,7 @@ export class ContentMigrationAnalyzer {
       try {
         const content = await fs.readFile(filePath, 'utf-8');
         const ruleData = JSON.parse(content);
-        
+
         if (ruleData.rules && Array.isArray(ruleData.rules)) {
           for (const rule of ruleData.rules) {
             await this.#analyzeRule(rule, filePath);
@@ -126,7 +125,7 @@ export class ContentMigrationAnalyzer {
         this.#analysisResults.compatibilityIssues.push({
           type: 'file_parse_error',
           file: filePath,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -145,7 +144,7 @@ export class ContentMigrationAnalyzer {
       filePath,
       opportunities: [],
       issues: [],
-      complexity: 'low'
+      complexity: 'low',
     };
 
     // Analyze conditions
@@ -179,7 +178,11 @@ export class ContentMigrationAnalyzer {
   #analyzeRuleConditions(conditions, analysis) {
     for (const condition of conditions) {
       if (condition.type === 'json_logic' && condition.logic) {
-        this.#analyzeJsonLogicForMigration(condition.logic, analysis, 'condition');
+        this.#analyzeJsonLogicForMigration(
+          condition.logic,
+          analysis,
+          'condition'
+        );
       }
     }
   }
@@ -194,9 +197,13 @@ export class ContentMigrationAnalyzer {
       if (operation.data) {
         this.#analyzeDataForMigration(operation.data, analysis, 'operation');
       }
-      
+
       if (operation.condition) {
-        this.#analyzeJsonLogicForMigration(operation.condition, analysis, 'operation_condition');
+        this.#analyzeJsonLogicForMigration(
+          operation.condition,
+          analysis,
+          'operation_condition'
+        );
       }
     }
   }
@@ -218,13 +225,20 @@ export class ContentMigrationAnalyzer {
         pattern: 'event.targetId',
         recommendation: 'Replace with conditional multi-target access',
         priority: 'medium',
-        effort: 'low'
+        effort: 'low',
       });
     }
 
     // Action-specific patterns
     const multiTargetActions = [
-      'throw', 'attack', 'use', 'give', 'trade', 'craft', 'cast', 'combine'
+      'throw',
+      'attack',
+      'use',
+      'give',
+      'trade',
+      'craft',
+      'cast',
+      'combine',
     ];
 
     for (const action of multiTargetActions) {
@@ -236,7 +250,7 @@ export class ContentMigrationAnalyzer {
           pattern: `action contains '${action}'`,
           recommendation: `Consider multi-target enhancement for ${action} actions`,
           priority: 'high',
-          effort: 'medium'
+          effort: 'medium',
         });
       }
     }
@@ -249,7 +263,7 @@ export class ContentMigrationAnalyzer {
         pattern: 'complex target-related logic',
         recommendation: 'Simplify using multi-target patterns',
         priority: 'low',
-        effort: 'high'
+        effort: 'high',
       });
     }
   }
@@ -270,7 +284,7 @@ export class ContentMigrationAnalyzer {
         pattern: 'event.targetId in data',
         recommendation: 'Enhance with conditional multi-target access',
         priority: 'medium',
-        effort: 'low'
+        effort: 'low',
       });
     }
 
@@ -283,7 +297,7 @@ export class ContentMigrationAnalyzer {
         pattern: 'entities[event.targetId]',
         recommendation: 'Use dynamic target resolution',
         priority: 'medium',
-        effort: 'medium'
+        effort: 'medium',
       });
     }
   }
@@ -295,11 +309,11 @@ export class ContentMigrationAnalyzer {
    */
   #hasComplexTargetLogic(logic) {
     const logicString = JSON.stringify(logic);
-    
+
     // Check for multiple nested conditions involving targets
     const targetReferences = (logicString.match(/event\.target/g) || []).length;
     const nestedConditions = (logicString.match(/"and":|"or":/g) || []).length;
-    
+
     return targetReferences > 2 && nestedConditions > 1;
   }
 
@@ -308,7 +322,10 @@ export class ContentMigrationAnalyzer {
    * @param {string} projectPath - Project path
    */
   async #analyzeActions(projectPath) {
-    const actionPattern = path.join(projectPath, 'data/mods/*/actions/**/*.json');
+    const actionPattern = path.join(
+      projectPath,
+      'data/mods/*/actions/**/*.json'
+    );
     const actionFiles = await glob(actionPattern);
 
     this.#logger.info(`Analyzing ${actionFiles.length} action files`);
@@ -317,7 +334,7 @@ export class ContentMigrationAnalyzer {
       try {
         const content = await fs.readFile(filePath, 'utf-8');
         const actionData = JSON.parse(content);
-        
+
         if (actionData.actions && Array.isArray(actionData.actions)) {
           for (const action of actionData.actions) {
             this.#analyzeAction(action, filePath);
@@ -331,7 +348,7 @@ export class ContentMigrationAnalyzer {
         this.#analysisResults.compatibilityIssues.push({
           type: 'action_parse_error',
           file: filePath,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -347,8 +364,19 @@ export class ContentMigrationAnalyzer {
 
     // Check for actions that could benefit from multi-target support
     const multiTargetCandidates = [
-      'throw', 'attack', 'use', 'give', 'trade', 'craft', 'cast', 'combine',
-      'transfer', 'activate', 'repair', 'enhance', 'enchant'
+      'throw',
+      'attack',
+      'use',
+      'give',
+      'trade',
+      'craft',
+      'cast',
+      'combine',
+      'transfer',
+      'activate',
+      'repair',
+      'enhance',
+      'enchant',
     ];
 
     for (const candidate of multiTargetCandidates) {
@@ -360,7 +388,7 @@ export class ContentMigrationAnalyzer {
           candidate,
           recommendation: `Action '${action.id}' could benefit from multi-target support`,
           priority: 'medium',
-          effort: 'medium'
+          effort: 'medium',
         });
       }
     }
@@ -374,7 +402,7 @@ export class ContentMigrationAnalyzer {
         parameterCount: Object.keys(action.parameters).length,
         recommendation: 'Consider restructuring as multi-target action',
         priority: 'low',
-        effort: 'high'
+        effort: 'high',
       });
     }
   }
@@ -391,7 +419,7 @@ export class ContentMigrationAnalyzer {
       try {
         const content = await fs.readFile(filePath, 'utf-8');
         const schema = JSON.parse(content);
-        
+
         // Check for event schemas that might need updating
         if (schema.id && schema.id.includes('event')) {
           this.#analyzeEventSchema(schema, filePath);
@@ -402,7 +430,7 @@ export class ContentMigrationAnalyzer {
         this.#analysisResults.compatibilityIssues.push({
           type: 'schema_parse_error',
           file: filePath,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -423,9 +451,10 @@ export class ContentMigrationAnalyzer {
         schemaId: schema.id,
         filePath,
         type: 'schema_enhancement',
-        recommendation: 'Schema could be enhanced to support multi-target format',
+        recommendation:
+          'Schema could be enhanced to support multi-target format',
         priority: 'high',
-        effort: 'low'
+        effort: 'low',
       });
     }
   }
@@ -458,8 +487,12 @@ export class ContentMigrationAnalyzer {
     const issues = this.#analysisResults.compatibilityIssues;
 
     // Prioritize recommendations
-    const highPriorityOpportunities = opportunities.filter(o => o.priority === 'high');
-    const mediumPriorityOpportunities = opportunities.filter(o => o.priority === 'medium');
+    const highPriorityOpportunities = opportunities.filter(
+      (o) => o.priority === 'high'
+    );
+    const mediumPriorityOpportunities = opportunities.filter(
+      (o) => o.priority === 'medium'
+    );
 
     // Generate strategic recommendations
     this.#analysisResults.recommendations = [
@@ -469,8 +502,8 @@ export class ContentMigrationAnalyzer {
         items: [
           `Address ${issues.length} compatibility issues`,
           `Enhance ${highPriorityOpportunities.length} high-priority rules`,
-          'Update event schemas to support multi-target format'
-        ]
+          'Update event schemas to support multi-target format',
+        ],
       },
       {
         category: 'phased_migration',
@@ -479,27 +512,29 @@ export class ContentMigrationAnalyzer {
           'Phase 1: Fix compatibility issues and update schemas',
           'Phase 2: Enhance high-priority rules and actions',
           'Phase 3: Gradually enhance medium-priority opportunities',
-          'Phase 4: Consider low-priority enhancements based on value'
-        ]
+          'Phase 4: Consider low-priority enhancements based on value',
+        ],
       },
       {
         category: 'effort_estimation',
         title: 'Effort Estimation',
         items: [
-          `Low effort: ${opportunities.filter(o => o.effort === 'low').length} items`,
-          `Medium effort: ${opportunities.filter(o => o.effort === 'medium').length} items`,
-          `High effort: ${opportunities.filter(o => o.effort === 'high').length} items`
-        ]
+          `Low effort: ${opportunities.filter((o) => o.effort === 'low').length} items`,
+          `Medium effort: ${opportunities.filter((o) => o.effort === 'medium').length} items`,
+          `High effort: ${opportunities.filter((o) => o.effort === 'high').length} items`,
+        ],
       },
       {
         category: 'risk_assessment',
         title: 'Risk Assessment',
         items: [
-          issues.length > 0 ? 'High risk due to compatibility issues' : 'Low risk migration',
+          issues.length > 0
+            ? 'High risk due to compatibility issues'
+            : 'Low risk migration',
           'Backward compatibility maintained throughout process',
-          'Incremental migration allows for testing at each step'
-        ]
-      }
+          'Incremental migration allows for testing at each step',
+        ],
+      },
     ];
   }
 
@@ -521,8 +556,12 @@ export class ContentMigrationAnalyzer {
     report.push(`- **Total Files Analyzed**: ${results.totalFiles}`);
     report.push(`- **Rules Analyzed**: ${results.rulesAnalyzed}`);
     report.push(`- **Actions Analyzed**: ${results.actionsAnalyzed}`);
-    report.push(`- **Migration Opportunities**: ${results.migrationOpportunities.length}`);
-    report.push(`- **Compatibility Issues**: ${results.compatibilityIssues.length}`);
+    report.push(
+      `- **Migration Opportunities**: ${results.migrationOpportunities.length}`
+    );
+    report.push(
+      `- **Compatibility Issues**: ${results.compatibilityIssues.length}`
+    );
     report.push('');
 
     // Recommendations
@@ -538,19 +577,28 @@ export class ContentMigrationAnalyzer {
     // Detailed opportunities
     if (results.migrationOpportunities.length > 0) {
       report.push('## Migration Opportunities');
-      
-      const groupedOpportunities = this.#groupOpportunitiesByType(results.migrationOpportunities);
-      
-      for (const [type, opportunities] of Object.entries(groupedOpportunities)) {
+
+      const groupedOpportunities = this.#groupOpportunitiesByType(
+        results.migrationOpportunities
+      );
+
+      for (const [type, opportunities] of Object.entries(
+        groupedOpportunities
+      )) {
         report.push(`### ${type} (${opportunities.length} items)`);
-        
-        for (const opportunity of opportunities.slice(0, 5)) { // Show first 5
-          report.push(`- **${opportunity.ruleId || opportunity.actionId || opportunity.schemaId}**`);
+
+        for (const opportunity of opportunities.slice(0, 5)) {
+          // Show first 5
+          report.push(
+            `- **${opportunity.ruleId || opportunity.actionId || opportunity.schemaId}**`
+          );
           report.push(`  - File: ${opportunity.filePath}`);
           report.push(`  - Recommendation: ${opportunity.recommendation}`);
-          report.push(`  - Priority: ${opportunity.priority}, Effort: ${opportunity.effort}`);
+          report.push(
+            `  - Priority: ${opportunity.priority}, Effort: ${opportunity.effort}`
+          );
         }
-        
+
         if (opportunities.length > 5) {
           report.push(`  - ... and ${opportunities.length - 5} more`);
         }
@@ -561,16 +609,19 @@ export class ContentMigrationAnalyzer {
     // Issues
     if (results.compatibilityIssues.length > 0) {
       report.push('## Compatibility Issues');
-      
-      const groupedIssues = this.#groupIssuesByType(results.compatibilityIssues);
-      
+
+      const groupedIssues = this.#groupIssuesByType(
+        results.compatibilityIssues
+      );
+
       for (const [type, issues] of Object.entries(groupedIssues)) {
         report.push(`### ${type} (${issues.length} items)`);
-        
-        for (const issue of issues.slice(0, 3)) { // Show first 3
+
+        for (const issue of issues.slice(0, 3)) {
+          // Show first 3
           report.push(`- **${issue.file}**: ${issue.error}`);
         }
-        
+
         if (issues.length > 3) {
           report.push(`  - ... and ${issues.length - 3} more`);
         }
@@ -619,7 +670,7 @@ export class ContentMigrationAnalyzer {
       actionsAnalyzed: 0,
       migrationOpportunities: [],
       compatibilityIssues: [],
-      recommendations: []
+      recommendations: [],
     };
   }
 
@@ -631,13 +682,17 @@ export class ContentMigrationAnalyzer {
   async exportResults(outputPath) {
     const report = this.generateReport();
     await fs.writeFile(outputPath, report, 'utf-8');
-    
+
     const jsonPath = outputPath.replace(/\.[^.]+$/, '.json');
-    await fs.writeFile(jsonPath, JSON.stringify(this.#analysisResults, null, 2), 'utf-8');
-    
+    await fs.writeFile(
+      jsonPath,
+      JSON.stringify(this.#analysisResults, null, 2),
+      'utf-8'
+    );
+
     this.#logger.info('Analysis results exported', {
       reportPath: outputPath,
-      dataPath: jsonPath
+      dataPath: jsonPath,
     });
   }
 }
@@ -675,7 +730,7 @@ export class AutomatedMigrationTool {
       rulesUpdated: 0,
       schemasUpdated: 0,
       backupsCreated: 0,
-      errors: []
+      errors: [],
     };
   }
 
@@ -690,13 +745,13 @@ export class AutomatedMigrationTool {
       createBackups = true,
       dryRun = false,
       validateAfterMigration = true,
-      backupSuffix = '.pre-multi-target'
+      backupSuffix = '.pre-multi-target',
     } = options;
 
     this.#logger.info('Starting automated migration', {
       opportunities: migrationPlan.migrationOpportunities.length,
       dryRun,
-      createBackups
+      createBackups,
     });
 
     this.#resetMigrationResults();
@@ -718,13 +773,15 @@ export class AutomatedMigrationTool {
         await this.#validateMigrations(migrationPlan);
       }
 
-      this.#logger.info('Migration completed successfully', this.#migrationResults);
+      this.#logger.info(
+        'Migration completed successfully',
+        this.#migrationResults
+      );
       return this.#migrationResults;
-
     } catch (error) {
       this.#logger.error('Migration failed', {
         error: error.message,
-        results: this.#migrationResults
+        results: this.#migrationResults,
       });
       throw error;
     }
@@ -739,7 +796,7 @@ export class AutomatedMigrationTool {
     this.#logger.info('Creating backups');
 
     const filesToBackup = new Set();
-    
+
     // Collect all files that will be modified
     for (const opportunity of migrationPlan.migrationOpportunities) {
       if (opportunity.filePath) {
@@ -752,13 +809,16 @@ export class AutomatedMigrationTool {
         const backupPath = `${filePath}${suffix}`;
         await fs.copyFile(filePath, backupPath);
         this.#migrationResults.backupsCreated++;
-        
-        this.#logger.debug('Backup created', { original: filePath, backup: backupPath });
+
+        this.#logger.debug('Backup created', {
+          original: filePath,
+          backup: backupPath,
+        });
       } catch (error) {
         this.#migrationResults.errors.push({
           type: 'backup_error',
           file: filePath,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -771,7 +831,7 @@ export class AutomatedMigrationTool {
    */
   async #updateSchemas(migrationPlan, dryRun) {
     const schemaOpportunities = migrationPlan.migrationOpportunities.filter(
-      op => op.type === 'schema_enhancement'
+      (op) => op.type === 'schema_enhancement'
     );
 
     this.#logger.info(`Updating ${schemaOpportunities.length} schemas`);
@@ -784,7 +844,7 @@ export class AutomatedMigrationTool {
         this.#migrationResults.errors.push({
           type: 'schema_update_error',
           file: opportunity.filePath,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -803,15 +863,15 @@ export class AutomatedMigrationTool {
     // Add targets property to event schemas
     if (schema.dataSchema && schema.dataSchema.properties) {
       const properties = schema.dataSchema.properties;
-      
+
       if (!properties.targets && properties.targetId) {
         properties.targets = {
           type: 'object',
           description: 'Multi-target data for enhanced actions',
           additionalProperties: {
             type: 'string',
-            description: 'Target ID for specific target type'
-          }
+            description: 'Target ID for specific target type',
+          },
         };
 
         // Make targets optional for backward compatibility
@@ -820,12 +880,12 @@ export class AutomatedMigrationTool {
         }
         // Ensure targets is not required
         schema.dataSchema.required = schema.dataSchema.required.filter(
-          field => field !== 'targets'
+          (field) => field !== 'targets'
         );
 
         this.#logger.debug('Enhanced schema with targets property', {
           schemaId: schema.id,
-          filePath
+          filePath,
         });
 
         if (!dryRun) {
@@ -843,15 +903,18 @@ export class AutomatedMigrationTool {
    */
   async #migrateRules(migrationPlan, dryRun) {
     const ruleOpportunities = migrationPlan.migrationOpportunities.filter(
-      op => op.ruleId
+      (op) => op.ruleId
     );
 
     this.#logger.info(`Migrating ${ruleOpportunities.length} rules`);
 
     // Group opportunities by file for efficient processing
-    const opportunitiesByFile = this.#groupOpportunitiesByFile(ruleOpportunities);
+    const opportunitiesByFile =
+      this.#groupOpportunitiesByFile(ruleOpportunities);
 
-    for (const [filePath, opportunities] of Object.entries(opportunitiesByFile)) {
+    for (const [filePath, opportunities] of Object.entries(
+      opportunitiesByFile
+    )) {
       try {
         await this.#migrateRuleFile(filePath, opportunities, dryRun);
         this.#migrationResults.filesProcessed++;
@@ -859,7 +922,7 @@ export class AutomatedMigrationTool {
         this.#migrationResults.errors.push({
           type: 'rule_migration_error',
           file: filePath,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -880,8 +943,10 @@ export class AutomatedMigrationTool {
       // Multiple rules file
       for (let i = 0; i < ruleData.rules.length; i++) {
         const rule = ruleData.rules[i];
-        const ruleOpportunities = opportunities.filter(op => op.ruleId === rule.id);
-        
+        const ruleOpportunities = opportunities.filter(
+          (op) => op.ruleId === rule.id
+        );
+
         if (ruleOpportunities.length > 0) {
           const enhancedRule = await this.#enhanceRule(rule, ruleOpportunities);
           ruleData.rules[i] = enhancedRule;
@@ -891,10 +956,15 @@ export class AutomatedMigrationTool {
       }
     } else if (ruleData.id) {
       // Single rule file
-      const ruleOpportunities = opportunities.filter(op => op.ruleId === ruleData.id);
-      
+      const ruleOpportunities = opportunities.filter(
+        (op) => op.ruleId === ruleData.id
+      );
+
       if (ruleOpportunities.length > 0) {
-        const enhancedRule = await this.#enhanceRule(ruleData, ruleOpportunities);
+        const enhancedRule = await this.#enhanceRule(
+          ruleData,
+          ruleOpportunities
+        );
         Object.assign(ruleData, enhancedRule);
         modified = true;
         this.#migrationResults.rulesUpdated++;
@@ -904,10 +974,10 @@ export class AutomatedMigrationTool {
     if (modified && !dryRun) {
       const updatedContent = JSON.stringify(ruleData, null, 2);
       await fs.writeFile(filePath, updatedContent, 'utf-8');
-      
+
       this.#logger.debug('Rule file migrated', {
         filePath,
-        rulesUpdated: opportunities.length
+        rulesUpdated: opportunities.length,
       });
     }
   }
@@ -922,7 +992,7 @@ export class AutomatedMigrationTool {
     // Use migration helper to generate enhanced rule
     const enhancedRule = this.#migrationHelper.generateEnhancedRule(rule, {
       preserveBackwardCompatibility: true,
-      addMultiTargetSupport: true
+      addMultiTargetSupport: true,
     });
 
     // Apply specific enhancements based on opportunities
@@ -941,11 +1011,14 @@ export class AutomatedMigrationTool {
     }
 
     // Validate backward compatibility
-    const validation = this.#migrationHelper.validateBackwardCompatibility(rule, enhancedRule);
+    const validation = this.#migrationHelper.validateBackwardCompatibility(
+      rule,
+      enhancedRule
+    );
     if (!validation.isCompatible) {
       this.#logger.warn('Backward compatibility issue detected', {
         ruleId: rule.id,
-        issues: validation.issues
+        issues: validation.issues,
       });
     }
 
@@ -964,14 +1037,14 @@ export class AutomatedMigrationTool {
       /"var":\s*"event\.targetId"/g,
       '{"if":[{"var":"event.targets.target"},{"var":"event.targets.target"},{"var":"event.targetId"}]}'
     );
-    
+
     try {
       const updatedRule = JSON.parse(updatedString);
       Object.assign(rule, updatedRule);
     } catch (error) {
       this.#logger.warn('Failed to enhance direct target access', {
         ruleId: rule.id,
-        error: error.message
+        error: error.message,
       });
     }
   }
@@ -986,12 +1059,14 @@ export class AutomatedMigrationTool {
     if (rule.conditions) {
       const hasTargetsCondition = {
         type: 'json_logic',
-        logic: { var: 'event.targets' }
+        logic: { var: 'event.targets' },
       };
 
       // Check if condition already exists
-      const hasCondition = rule.conditions.some(condition => 
-        condition.logic && JSON.stringify(condition.logic).includes('event.targets')
+      const hasCondition = rule.conditions.some(
+        (condition) =>
+          condition.logic &&
+          JSON.stringify(condition.logic).includes('event.targets')
       );
 
       if (!hasCondition) {
@@ -1022,13 +1097,17 @@ export class AutomatedMigrationTool {
    */
   #enhanceDataObject(data) {
     for (const [key, value] of Object.entries(data)) {
-      if (value && typeof value === 'object' && value.var === 'event.targetId') {
+      if (
+        value &&
+        typeof value === 'object' &&
+        value.var === 'event.targetId'
+      ) {
         data[key] = {
           if: [
             { var: 'event.targets.target' },
             { var: 'event.targets.target' },
-            { var: 'event.targetId' }
-          ]
+            { var: 'event.targetId' },
+          ],
         };
       }
     }
@@ -1042,15 +1121,17 @@ export class AutomatedMigrationTool {
     this.#logger.info('Validating migrations');
 
     // Re-analyze migrated files to check for issues
-    const analyzer = new (await import('./contentMigrationAnalyzer.js')).ContentMigrationAnalyzer({
-      logger: this.#logger
+    const analyzer = new (
+      await import('./contentMigrationAnalyzer.js')
+    ).ContentMigrationAnalyzer({
+      logger: this.#logger,
     });
 
     // Get unique file paths
     const migratedFiles = new Set(
       migrationPlan.migrationOpportunities
-        .filter(op => op.filePath)
-        .map(op => op.filePath)
+        .filter((op) => op.filePath)
+        .map((op) => op.filePath)
     );
 
     let validationErrors = 0;
@@ -1064,14 +1145,14 @@ export class AutomatedMigrationTool {
         this.#migrationResults.errors.push({
           type: 'validation_error',
           file: filePath,
-          error: 'Invalid JSON after migration'
+          error: 'Invalid JSON after migration',
         });
       }
     }
 
     this.#logger.info('Migration validation completed', {
       filesValidated: migratedFiles.size,
-      errors: validationErrors
+      errors: validationErrors,
     });
   }
 
@@ -1098,7 +1179,7 @@ export class AutomatedMigrationTool {
       rulesUpdated: 0,
       schemasUpdated: 0,
       backupsCreated: 0,
-      errors: []
+      errors: [],
     };
   }
 
@@ -1125,18 +1206,23 @@ export class AutomatedMigrationTool {
     report.push('');
 
     // Success rate
-    const totalOperations = results.filesProcessed + results.rulesUpdated + results.schemasUpdated;
-    const successRate = totalOperations > 0 ? 
-      ((totalOperations - results.errors.length) / totalOperations * 100).toFixed(1) : 
-      '100.0';
-    
+    const totalOperations =
+      results.filesProcessed + results.rulesUpdated + results.schemasUpdated;
+    const successRate =
+      totalOperations > 0
+        ? (
+            ((totalOperations - results.errors.length) / totalOperations) *
+            100
+          ).toFixed(1)
+        : '100.0';
+
     report.push(`**Success Rate**: ${successRate}%`);
     report.push('');
 
     // Errors
     if (results.errors.length > 0) {
       report.push('## Errors');
-      
+
       const errorsByType = results.errors.reduce((groups, error) => {
         const type = error.type || 'unknown';
         if (!groups[type]) groups[type] = [];
@@ -1146,11 +1232,11 @@ export class AutomatedMigrationTool {
 
       for (const [type, errors] of Object.entries(errorsByType)) {
         report.push(`### ${type} (${errors.length} items)`);
-        
+
         for (const error of errors.slice(0, 5)) {
           report.push(`- **${error.file}**: ${error.error}`);
         }
-        
+
         if (errors.length > 5) {
           report.push(`  - ... and ${errors.length - 5} more`);
         }
@@ -1200,24 +1286,29 @@ program
   .option('-v, --verbose', 'Verbose output')
   .action(async (projectPath, options) => {
     try {
-      console.log(chalk.blue('🔍 Analyzing project for migration opportunities...'));
-      
+      console.log(
+        chalk.blue('🔍 Analyzing project for migration opportunities...')
+      );
+
       const logger = createLogger(options.verbose);
       const analyzer = new ContentMigrationAnalyzer({ logger });
-      
+
       const results = await analyzer.analyzeProject(projectPath);
-      
+
       console.log(chalk.green('\n✅ Analysis completed successfully!'));
       console.log(`📊 Results:`);
       console.log(`   • Files analyzed: ${results.totalFiles}`);
       console.log(`   • Rules analyzed: ${results.rulesAnalyzed}`);
       console.log(`   • Actions analyzed: ${results.actionsAnalyzed}`);
-      console.log(`   • Migration opportunities: ${results.migrationOpportunities.length}`);
-      console.log(`   • Compatibility issues: ${results.compatibilityIssues.length}`);
-      
+      console.log(
+        `   • Migration opportunities: ${results.migrationOpportunities.length}`
+      );
+      console.log(
+        `   • Compatibility issues: ${results.compatibilityIssues.length}`
+      );
+
       await analyzer.exportResults(options.output);
       console.log(chalk.green(`📄 Report saved to: ${options.output}`));
-      
     } catch (error) {
       console.error(chalk.red('❌ Analysis failed:'), error.message);
       process.exit(1);
@@ -1236,26 +1327,31 @@ program
   .action(async (analysisFile, options) => {
     try {
       console.log(chalk.blue('🚀 Starting automated migration...'));
-      
+
       // Load analysis results
       const analysisData = await fs.readFile(analysisFile, 'utf-8');
       const migrationPlan = JSON.parse(analysisData);
-      
+
       const logger = createLogger(options.verbose);
       const migrationTool = new AutomatedMigrationTool({ logger });
-      
+
       const migrationOptions = {
         dryRun: options.dryRun,
         createBackups: options.backup,
-        validateAfterMigration: options.validate
+        validateAfterMigration: options.validate,
       };
-      
+
       if (options.dryRun) {
-        console.log(chalk.yellow('🔍 Performing dry run - no files will be modified'));
+        console.log(
+          chalk.yellow('🔍 Performing dry run - no files will be modified')
+        );
       }
-      
-      const results = await migrationTool.migrateProject(migrationPlan, migrationOptions);
-      
+
+      const results = await migrationTool.migrateProject(
+        migrationPlan,
+        migrationOptions
+      );
+
       console.log(chalk.green('\n✅ Migration completed successfully!'));
       console.log(`📊 Results:`);
       console.log(`   • Files processed: ${results.filesProcessed}`);
@@ -1263,9 +1359,11 @@ program
       console.log(`   • Schemas updated: ${results.schemasUpdated}`);
       console.log(`   • Backups created: ${results.backupsCreated}`);
       console.log(`   • Errors: ${results.errors.length}`);
-      
+
       if (results.errors.length > 0) {
-        console.log(chalk.yellow('\n⚠️  Some errors occurred during migration:'));
+        console.log(
+          chalk.yellow('\n⚠️  Some errors occurred during migration:')
+        );
         for (const error of results.errors.slice(0, 5)) {
           console.log(`   • ${error.file}: ${error.error}`);
         }
@@ -1273,7 +1371,6 @@ program
           console.log(`   • ... and ${results.errors.length - 5} more errors`);
         }
       }
-      
     } catch (error) {
       console.error(chalk.red('❌ Migration failed:'), error.message);
       process.exit(1);
@@ -1289,31 +1386,36 @@ program
   .action(async (projectPath, options) => {
     try {
       console.log(chalk.blue('🔍 Validating migrated content...'));
-      
+
       const logger = createLogger(options.verbose);
       const analyzer = new ContentMigrationAnalyzer({ logger });
-      
+
       // Re-analyze to check for remaining issues
       const results = await analyzer.analyzeProject(projectPath);
-      
+
       const remainingIssues = results.compatibilityIssues.length;
       const highPriorityOpportunities = results.migrationOpportunities.filter(
-        op => op.priority === 'high'
+        (op) => op.priority === 'high'
       ).length;
-      
+
       if (remainingIssues === 0 && highPriorityOpportunities === 0) {
-        console.log(chalk.green('✅ Validation passed - no critical issues found!'));
+        console.log(
+          chalk.green('✅ Validation passed - no critical issues found!')
+        );
       } else {
         console.log(chalk.yellow('⚠️  Validation found some issues:'));
         console.log(`   • Compatibility issues: ${remainingIssues}`);
-        console.log(`   • High-priority opportunities: ${highPriorityOpportunities}`);
+        console.log(
+          `   • High-priority opportunities: ${highPriorityOpportunities}`
+        );
       }
-      
+
       console.log(`📊 Overall status:`);
       console.log(`   • Files analyzed: ${results.totalFiles}`);
-      console.log(`   • Total opportunities: ${results.migrationOpportunities.length}`);
+      console.log(
+        `   • Total opportunities: ${results.migrationOpportunities.length}`
+      );
       console.log(`   • Total issues: ${results.compatibilityIssues.length}`);
-      
     } catch (error) {
       console.error(chalk.red('❌ Validation failed:'), error.message);
       process.exit(1);
@@ -1330,15 +1432,14 @@ program
   .action(async (projectPath, options) => {
     try {
       const backupDir = options.output || `${projectPath}-backup-${Date.now()}`;
-      
+
       console.log(chalk.blue(`💾 Creating project backup...`));
       console.log(`   Source: ${projectPath}`);
       console.log(`   Destination: ${backupDir}`);
-      
+
       await copyDirectory(projectPath, backupDir);
-      
+
       console.log(chalk.green('✅ Backup created successfully!'));
-      
     } catch (error) {
       console.error(chalk.red('❌ Backup failed:'), error.message);
       process.exit(1);
@@ -1350,32 +1451,48 @@ function createLogger(verbose) {
   return {
     info: (message, data) => {
       if (verbose) {
-        console.log(chalk.blue('ℹ️ '), message, data ? chalk.gray(JSON.stringify(data)) : '');
+        console.log(
+          chalk.blue('ℹ️ '),
+          message,
+          data ? chalk.gray(JSON.stringify(data)) : ''
+        );
       }
     },
     warn: (message, data) => {
-      console.log(chalk.yellow('⚠️ '), message, data ? chalk.gray(JSON.stringify(data)) : '');
+      console.log(
+        chalk.yellow('⚠️ '),
+        message,
+        data ? chalk.gray(JSON.stringify(data)) : ''
+      );
     },
     error: (message, data) => {
-      console.log(chalk.red('❌'), message, data ? chalk.gray(JSON.stringify(data)) : '');
+      console.log(
+        chalk.red('❌'),
+        message,
+        data ? chalk.gray(JSON.stringify(data)) : ''
+      );
     },
     debug: (message, data) => {
       if (verbose) {
-        console.log(chalk.gray('🔍'), message, data ? chalk.gray(JSON.stringify(data)) : '');
+        console.log(
+          chalk.gray('🔍'),
+          message,
+          data ? chalk.gray(JSON.stringify(data)) : ''
+        );
       }
-    }
+    },
   };
 }
 
 async function copyDirectory(src, dest) {
   await fs.mkdir(dest, { recursive: true });
-  
+
   const entries = await fs.readdir(src, { withFileTypes: true });
-  
+
   for (const entry of entries) {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
-    
+
     if (entry.isDirectory()) {
       await copyDirectory(srcPath, destPath);
     } else {
@@ -1392,7 +1509,7 @@ program.parse();
 
 **File**: `tools/migration/README.md`
 
-```markdown
+````markdown
 # Multi-Target Migration Tools
 
 This directory contains tools for migrating existing content to the new multi-target action system.
@@ -1400,12 +1517,15 @@ This directory contains tools for migrating existing content to the new multi-ta
 ## Tools Overview
 
 ### 1. Content Migration Analyzer
+
 Analyzes existing project content to identify migration opportunities and compatibility issues.
 
 ### 2. Automated Migration Tool
+
 Performs automated migration of rules and schemas to support multi-target format.
 
 ### 3. Migration CLI
+
 Command-line interface for running migration tools.
 
 ## Usage
@@ -1416,6 +1536,7 @@ Command-line interface for running migration tools.
 cd tools/migration
 npm install
 ```
+````
 
 ### Analysis
 
@@ -1495,14 +1616,17 @@ The analysis generates a detailed report including:
 ### Common Issues
 
 **Analysis fails with JSON parse errors**
+
 - Some rule files may have syntax errors
 - Review and fix JSON syntax issues before migration
 
 **Migration produces validation errors**
+
 - Check generated rules for logical consistency
 - Some complex rules may need manual enhancement
 
 **Backup creation fails**
+
 - Ensure sufficient disk space
 - Check file permissions
 
@@ -1512,6 +1636,7 @@ The analysis generates a detailed report including:
 2. Check error messages for detailed failure information
 3. Use verbose mode (`-v`) for additional debugging information
 4. Consult main documentation for rule enhancement patterns
+
 ```
 
 ## Testing Requirements
@@ -1581,3 +1706,4 @@ After this ticket completion:
 1. Move to Ticket 17: Performance Optimization and Monitoring
 2. Create performance monitoring and optimization tools
 3. Prepare for final system deployment
+```
