@@ -1,0 +1,53 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "examples:throw_item_at_target",
+  "name": "Throw Item at Target",
+  "description": "Throw an item at someone or something",
+  "targets": {
+    "primary": {
+      "scope": "examples:throwable_items",
+      "placeholder": "item",
+      "description": "Item to throw"
+    },
+    "secondary": {
+      "scope": "examples:throw_targets",
+      "placeholder": "target",
+      "description": "Who or what to throw at"
+    }
+  },
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["core:inventory", "core:stats"]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "or": [
+          { ">=": [{ "var": "actor.components.core:stats.dexterity" }, 15] },
+          { "<=": [{ "var": "distance_to_target" }, 2] }
+        ]
+      },
+      "failure_message": "You need better aim or need to get closer to the target."
+    },
+    {
+      "logic": {
+        "and": [
+          {
+            "!=": [
+              { "var": "target.components.core:position.locationId" },
+              null
+            ]
+          },
+          {
+            "==": [
+              { "var": "target.components.core:position.locationId" },
+              { "var": "actor.components.core:position.locationId" }
+            ]
+          }
+        ]
+      },
+      "failure_message": "The target must be in the same location as you."
+    }
+  ],
+  "template": "throw {item} at {target}"
+}

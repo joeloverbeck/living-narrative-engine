@@ -1,0 +1,484 @@
+/**
+ * @file Performance benchmarks for ActionIndex
+ * @description Comprehensive performance testing to ensure the ActionIndex meets
+ * performance requirements for large-scale action catalogs and entity queries
+ */
+
+import {
+  jest,
+  describe,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+} from '@jest/globals';
+import { ActionIndex } from '../../../src/actions/actionIndex.js';
+import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import { TestDataFactory } from '../../common/actions/testDataFactory.js';
+import { createMockLogger } from '../../common/mockFactories/index.js';
+
+describe('ActionIndex Performance Tests', () => {
+  let logger;
+  let entityManager;
+  let actionIndex;
+  let schemaValidator;
+  let testData;
+
+  beforeEach(() => {
+    // Create logger
+    logger = createMockLogger();
+
+    // Create realistic entity manager that mimics production behavior
+    const entities = new Map();
+    entityManager = {
+      entities,
+      createEntity: (id) => {
+        const entity = {
+          id,
+          components: {},
+          hasComponent: (componentId) => componentId in entity.components,
+          getComponentData: (componentId) =>
+            entity.components[componentId] || null,
+        };
+        entities.set(id, entity);
+        return entity;
+      },
+      getEntityById: (id) => entities.get(id),
+      getEntityInstance: (id) => entities.get(id),
+      addComponent: (entityId, componentId, data) => {
+        const entity = entities.get(entityId);
+        if (entity) {
+          entity.components[componentId] = data;
+        }
+      },
+      removeComponent: (entityId, componentId) => {
+        const entity = entities.get(entityId);
+        if (entity && entity.components[componentId]) {
+          delete entity.components[componentId];
+        }
+      },
+      getAllComponentTypesForEntity: (entityId) => {
+        const entity =
+          typeof entityId === 'string' ? entities.get(entityId) : entityId;
+        return entity ? Object.keys(entity.components || {}) : [];
+      },
+      hasComponent: (entityId, componentId) => {
+        const entity = entities.get(entityId);
+        return entity ? componentId in entity.components : false;
+      },
+      clear: () => entities.clear(),
+    };
+
+    // Create ActionIndex instance
+    actionIndex = new ActionIndex({ logger, entityManager });
+
+    // Create schema validator for integration tests
+    schemaValidator = new AjvSchemaValidator({ logger });
+
+    // Load test data
+    testData = TestDataFactory.createCompleteTestDataset();
+  });
+
+  afterEach(() => {
+    entityManager.clear();
+    jest.clearAllMocks();
+  });
+
+  describe('Large Action Catalog Performance', () => {
+    it('should handle large action catalogs efficiently (target: build <100ms, query <10ms)', () => {
+      // Create large action catalog (500 actions)
+      const largeActionCatalog = [];
+
+      // Create actions with various component requirements
+      for (let i = 0; i < 500; i++) {
+        largeActionCatalog.push({
+          id: `catalog:action_${i}`,
+          name: `Action ${i}`,
+          required_components: {
+            actor: [`component_${i % 20}`], // 20 different components
+          },
+        });
+      }
+
+      // Add universal actions
+      for (let i = 0; i < 50; i++) {
+        largeActionCatalog.push({
+          id: `universal:action_${i}`,
+          name: `Universal Action ${i}`,
+          // No requirements
+        });
+      }
+
+      // Measure build performance
+      const buildStart = performance.now();
+      actionIndex.buildIndex(largeActionCatalog);
+      const buildEnd = performance.now();
+      const buildTime = buildEnd - buildStart;
+
+      expect(buildTime).toBeLessThan(100); // Should complete in <100ms
+
+      console.log(
+        `Large catalog build time: ${buildTime.toFixed(2)}ms for ${largeActionCatalog.length} actions`
+      );
+
+      // Create entity with multiple components
+      const actor = entityManager.createEntity('performance-test');
+      for (let i = 0; i < 10; i++) {
+        entityManager.addComponent(actor.id, `component_${i}`, { value: i });
+      }
+
+      // Measure query performance
+      const queryStart = performance.now();
+      const candidates = actionIndex.getCandidateActions(actor);
+      const queryEnd = performance.now();
+      const queryTime = queryEnd - queryStart;
+
+      expect(queryTime).toBeLessThan(10); // Should complete in <10ms
+
+      // Should find all universal actions + actions for owned components
+      // 50 universal + 10 components * 25 actions per component = 300 total
+      expect(candidates.length).toBe(300);
+
+      console.log(
+        `Large catalog query time: ${queryTime.toFixed(2)}ms for ${candidates.length} candidate actions`
+      );
+    });
+
+    it('should scale linearly with catalog size', () => {
+      const testCases = [
+        { size: 100, name: '100 actions' },
+        { size: 250, name: '250 actions' },
+        { size: 500, name: '500 actions' },
+        { size: 1000, name: '1000 actions' },
+      ];
+
+      const results = [];
+
+      testCases.forEach(({ size, name }) => {
+        // Create action catalog of specified size
+        const actionCatalog = Array.from({ length: size }, (_, i) => ({
+          id: `scale:action_${i}`,
+          name: `Scale Action ${i}`,
+          required_components: {
+            actor: [`component_${i % 20}`],
+          },
+        }));
+
+        // Measure build time
+        const buildStart = performance.now();
+        actionIndex.buildIndex(actionCatalog);
+        const buildEnd = performance.now();
+        const buildTime = buildEnd - buildStart;
+
+        // Create test entity
+        const actor = entityManager.createEntity(`scale-test-${size}`);
+        entityManager.addComponent(actor.id, 'component_0', { value: 0 });
+
+        // Measure query time
+        const queryStart = performance.now();
+        const candidates = actionIndex.getCandidateActions(actor);
+        const queryEnd = performance.now();
+        const queryTime = queryEnd - queryStart;
+
+        results.push({
+          size,
+          buildTime,
+          queryTime,
+          buildTimePerAction: buildTime / size,
+          candidateCount: candidates.length,
+        });
+
+        console.log(
+          `${name}: build=${buildTime.toFixed(2)}ms, query=${queryTime.toFixed(2)}ms, candidates=${candidates.length}`
+        );
+      });
+
+      // Check that build time scales reasonably (should be roughly linear)
+      const buildTimeRatio = results[results.length - 1].buildTime / results[0].buildTime;
+      const sizeRatio = results[results.length - 1].size / results[0].size;
+      expect(buildTimeRatio).toBeLessThan(sizeRatio * 2); // Allow some overhead
+
+      // Query time should remain relatively constant
+      results.forEach(({ queryTime }) => {
+        expect(queryTime).toBeLessThan(20); // Should stay under 20ms regardless of catalog size
+      });
+    });
+  });
+
+  describe('Index Rebuild Performance', () => {
+    it('should handle frequent index rebuilds efficiently (target: <50ms per rebuild)', () => {
+      const rebuildResults = [];
+
+      // Test multiple rebuilds
+      for (let rebuild = 0; rebuild < 10; rebuild++) {
+        const actions = [];
+        for (let i = 0; i < 100; i++) {
+          actions.push({
+            id: `rebuild_${rebuild}:action_${i}`,
+            name: `Rebuild ${rebuild} Action ${i}`,
+            required_components: { actor: [`component_${i % 10}`] },
+          });
+        }
+
+        const start = performance.now();
+        actionIndex.buildIndex(actions);
+        const end = performance.now();
+        const rebuildTime = end - start;
+
+        rebuildResults.push(rebuildTime);
+        expect(rebuildTime).toBeLessThan(50); // Each rebuild <50ms
+
+        console.log(`Rebuild ${rebuild}: ${rebuildTime.toFixed(2)}ms`);
+      }
+
+      // Check for performance consistency across rebuilds
+      const avgRebuildTime = rebuildResults.reduce((sum, time) => sum + time, 0) / rebuildResults.length;
+      const maxRebuildTime = Math.max(...rebuildResults);
+      const minRebuildTime = Math.min(...rebuildResults);
+
+      console.log(`Rebuild performance: avg=${avgRebuildTime.toFixed(2)}ms, min=${minRebuildTime.toFixed(2)}ms, max=${maxRebuildTime.toFixed(2)}ms`);
+
+      // Variation should be reasonable (max shouldn't be more than 3x min)
+      expect(maxRebuildTime / minRebuildTime).toBeLessThan(3);
+    });
+
+    it('should not degrade with repeated rebuilds (memory leak test)', () => {
+      const memorySnapshots = [];
+      const rebuildTimes = [];
+
+      for (let cycle = 0; cycle < 5; cycle++) {
+        // Force garbage collection if available
+        if (global.gc) {
+          global.gc();
+        }
+
+        const beforeMemory = typeof process !== 'undefined' && process.memoryUsage
+          ? process.memoryUsage().heapUsed
+          : 0;
+
+        // Perform multiple rebuilds in this cycle
+        const cycleStart = performance.now();
+        for (let rebuild = 0; rebuild < 3; rebuild++) {
+          const actions = Array.from({ length: 200 }, (_, i) => ({
+            id: `cycle_${cycle}_rebuild_${rebuild}:action_${i}`,
+            name: `Cycle ${cycle} Rebuild ${rebuild} Action ${i}`,
+            required_components: { actor: [`component_${i % 15}`] },
+          }));
+
+          actionIndex.buildIndex(actions);
+        }
+        const cycleEnd = performance.now();
+        const cycleTime = cycleEnd - cycleStart;
+
+        rebuildTimes.push(cycleTime);
+
+        // Force garbage collection if available
+        if (global.gc) {
+          global.gc();
+        }
+
+        const afterMemory = typeof process !== 'undefined' && process.memoryUsage
+          ? process.memoryUsage().heapUsed
+          : 0;
+
+        memorySnapshots.push(afterMemory - beforeMemory);
+
+        console.log(`Cycle ${cycle}: ${cycleTime.toFixed(2)}ms, memory change: ${((afterMemory - beforeMemory) / 1024).toFixed(2)}KB`);
+      }
+
+      // Performance should not degrade significantly
+      const firstCycleTime = rebuildTimes[0];
+      const lastCycleTime = rebuildTimes[rebuildTimes.length - 1];
+      expect(lastCycleTime / firstCycleTime).toBeLessThan(2); // Performance shouldn't double
+
+      // Memory usage should remain reasonable (if we can measure it)
+      if (typeof process !== 'undefined' && process.memoryUsage) {
+        const firstCycleMemory = memorySnapshots[0];
+        const lastCycleMemory = memorySnapshots[memorySnapshots.length - 1];
+        if (firstCycleMemory > 0) {
+          expect(lastCycleMemory / firstCycleMemory).toBeLessThan(3); // Memory shouldn't triple
+        }
+      }
+    });
+  });
+
+  describe('Large Entity Query Performance', () => {
+    it('should maintain memory efficiency with large entity sets (target: <500ms for 1000 entities)', () => {
+      // Build index with comprehensive actions
+      actionIndex.buildIndex(testData.actions.comprehensive);
+
+      // Record initial memory state
+      const initialMemory = typeof process !== 'undefined' && process.memoryUsage
+        ? process.memoryUsage().heapUsed
+        : 0;
+
+      // Create many entities
+      const entities = [];
+      const entityCreationStart = performance.now();
+      
+      for (let i = 0; i < 1000; i++) {
+        const entity = entityManager.createEntity(`entity_${i}`);
+        entityManager.addComponent(entity.id, 'core:position', {
+          locationId: `location_${i % 10}`,
+        });
+        entities.push(entity);
+      }
+      
+      const entityCreationEnd = performance.now();
+      const entityCreationTime = entityCreationEnd - entityCreationStart;
+
+      console.log(`Entity creation time: ${entityCreationTime.toFixed(2)}ms for 1000 entities`);
+
+      // Query all entities
+      const startTime = performance.now();
+      const allCandidates = entities.map((entity) =>
+        actionIndex.getCandidateActions(entity)
+      );
+      const endTime = performance.now();
+      const queryTime = endTime - startTime;
+
+      expect(queryTime).toBeLessThan(500); // All queries <500ms
+      expect(allCandidates).toHaveLength(1000);
+
+      // Each should have found some candidates
+      allCandidates.forEach((candidates) => {
+        expect(candidates.length).toBeGreaterThan(0);
+      });
+
+      // Calculate performance metrics
+      const avgQueryTime = queryTime / 1000;
+      const totalCandidates = allCandidates.reduce((sum, candidates) => sum + candidates.length, 0);
+      const avgCandidatesPerEntity = totalCandidates / 1000;
+
+      console.log(`Bulk query performance: ${queryTime.toFixed(2)}ms total, ${avgQueryTime.toFixed(3)}ms per entity`);
+      console.log(`Average candidates per entity: ${avgCandidatesPerEntity.toFixed(1)}`);
+
+      // Memory efficiency check
+      const finalMemory = typeof process !== 'undefined' && process.memoryUsage
+        ? process.memoryUsage().heapUsed
+        : 0;
+
+      if (initialMemory > 0 && finalMemory > 0) {
+        const memoryIncrease = finalMemory - initialMemory;
+        const memoryPerEntity = memoryIncrease / 1000;
+        
+        console.log(`Memory usage: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB total, ${memoryPerEntity.toFixed(0)} bytes per entity`);
+        
+        // Should use less than 5KB per entity on average
+        expect(memoryPerEntity).toBeLessThan(5120);
+      }
+    });
+
+    it('should handle concurrent query scenarios efficiently', () => {
+      // Build index with test actions
+      actionIndex.buildIndex(testData.actions.basic);
+
+      // Create entities
+      const entities = [];
+      for (let i = 0; i < 100; i++) {
+        const entity = entityManager.createEntity(`concurrent_${i}`);
+        entityManager.addComponent(entity.id, 'core:position', {});
+        entities.push(entity);
+      }
+
+      // Simulate concurrent access with overlapping queries
+      const queryPromises = entities.map((entity, index) => {
+        return new Promise((resolve) => {
+          // Add some random delay to simulate real concurrent access
+          setTimeout(() => {
+            const queryStart = performance.now();
+            const candidates = actionIndex.getCandidateActions(entity);
+            const queryEnd = performance.now();
+            const queryTime = queryEnd - queryStart;
+            
+            resolve({
+              entityId: entity.id,
+              candidateCount: candidates.length,
+              queryTime: queryTime,
+              index: index,
+            });
+          }, Math.random() * 20); // Random delay up to 20ms
+        });
+      });
+
+      return Promise.all(queryPromises).then((results) => {
+        expect(results).toHaveLength(100);
+        
+        // All queries should complete successfully
+        results.forEach((result) => {
+          expect(result.candidateCount).toBeGreaterThan(0);
+          expect(typeof result.entityId).toBe('string');
+          expect(result.queryTime).toBeLessThan(10); // Each query should be fast
+        });
+
+        // Calculate statistics
+        const totalQueryTime = results.reduce((sum, result) => sum + result.queryTime, 0);
+        const avgQueryTime = totalQueryTime / results.length;
+        const maxQueryTime = Math.max(...results.map(r => r.queryTime));
+        const minQueryTime = Math.min(...results.map(r => r.queryTime));
+
+        console.log(`Concurrent query performance: avg=${avgQueryTime.toFixed(3)}ms, min=${minQueryTime.toFixed(3)}ms, max=${maxQueryTime.toFixed(3)}ms`);
+
+        // Performance should be consistent even with concurrent access
+        expect(avgQueryTime).toBeLessThan(5);
+        expect(maxQueryTime).toBeLessThan(15);
+      });
+    });
+  });
+
+  describe('Performance Regression Detection', () => {
+    it('should maintain performance baselines', () => {
+      // Establish performance baselines to detect regressions
+      const performanceBaselines = {
+        catalogBuild100: 20, // ms for 100 actions
+        catalogBuild500: 100, // ms for 500 actions
+        singleQuery: 5, // ms per query
+        bulkQuery100: 50, // ms for 100 entities
+        indexRebuild: 50, // ms per rebuild
+      };
+
+      // Test catalog build performance (100 actions)
+      const smallCatalog = Array.from({ length: 100 }, (_, i) => ({
+        id: `baseline:small_${i}`,
+        name: `Small Baseline ${i}`,
+        required_components: { actor: [`component_${i % 10}`] },
+      }));
+
+      const smallBuildStart = performance.now();
+      actionIndex.buildIndex(smallCatalog);
+      const smallBuildTime = performance.now() - smallBuildStart;
+
+      expect(smallBuildTime).toBeLessThan(performanceBaselines.catalogBuild100);
+
+      // Test catalog build performance (500 actions)
+      const largeCatalog = Array.from({ length: 500 }, (_, i) => ({
+        id: `baseline:large_${i}`,
+        name: `Large Baseline ${i}`,
+        required_components: { actor: [`component_${i % 20}`] },
+      }));
+
+      const largeBuildStart = performance.now();
+      actionIndex.buildIndex(largeCatalog);
+      const largeBuildTime = performance.now() - largeBuildStart;
+
+      expect(largeBuildTime).toBeLessThan(performanceBaselines.catalogBuild500);
+
+      // Test single query performance
+      const testEntity = entityManager.createEntity('baseline-entity');
+      entityManager.addComponent(testEntity.id, 'component_0', { value: 0 });
+
+      const queryStart = performance.now();
+      const candidates = actionIndex.getCandidateActions(testEntity);
+      const queryTime = performance.now() - queryStart;
+
+      expect(queryTime).toBeLessThan(performanceBaselines.singleQuery);
+      expect(candidates.length).toBeGreaterThan(0);
+
+      console.log('Performance baselines maintained:');
+      console.log(`Small catalog build: ${smallBuildTime.toFixed(2)}ms (limit: ${performanceBaselines.catalogBuild100}ms)`);
+      console.log(`Large catalog build: ${largeBuildTime.toFixed(2)}ms (limit: ${performanceBaselines.catalogBuild500}ms)`);
+      console.log(`Single query: ${queryTime.toFixed(3)}ms (limit: ${performanceBaselines.singleQuery}ms)`);
+    });
+  });
+});

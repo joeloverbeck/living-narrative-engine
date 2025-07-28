@@ -831,10 +831,8 @@ describe('MultiTargetActionFormatter - Integration Tests', () => {
 
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
-      // Should still generate combinations skipping empty arrays
-      expect(result.value.length).toBeGreaterThan(0);
-      expect(result.value[0]).toContain('Raw Material');
-      expect(result.value[0]).toContain('Container');
+      // Should not generate combinations when required targets have no candidates
+      expect(result.value.length).toBe(0);
     });
 
     it('should handle single target type combinations correctly', async () => {
