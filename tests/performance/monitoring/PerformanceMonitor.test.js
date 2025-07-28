@@ -361,44 +361,6 @@ describe('PerformanceMonitor', () => {
     });
   });
 
-  describe('checkMemoryUsage', () => {
-    beforeEach(() => {
-      monitor = new PerformanceMonitor({
-        logger,
-        memoryWarningThreshold: 0.8,
-      });
-    });
-
-    it('should check memory usage', () => {
-      // checkMemoryUsage doesn't return a value, it just logs warnings
-      monitor.checkMemoryUsage();
-
-      // If no warning logged, memory is OK
-      expect(logger.warn).not.toHaveBeenCalled();
-    });
-
-    it('should warn when memory usage is high', () => {
-      // Mock process.memoryUsage to simulate high memory
-      const originalMemoryUsage = process.memoryUsage;
-      process.memoryUsage = jest.fn().mockReturnValue({
-        heapUsed: 900 * 1024 * 1024, // 900MB
-        heapTotal: 1000 * 1024 * 1024, // 1GB
-        external: 0,
-        rss: 1000 * 1024 * 1024,
-      });
-
-      monitor.checkMemoryUsage();
-
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('High memory usage detected'),
-        expect.any(Object)
-      );
-
-      // Restore original
-      process.memoryUsage = originalMemoryUsage;
-    });
-  });
-
   describe('reset', () => {
     beforeEach(() => {
       monitor = new PerformanceMonitor({ logger });

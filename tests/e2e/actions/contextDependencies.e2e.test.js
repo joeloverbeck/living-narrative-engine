@@ -25,7 +25,7 @@ describe('Context Dependencies E2E', () => {
   let executionHelper;
 
   beforeEach(() => {
-    testBuilder = createMultiTargetTestBuilder(jest.fn);
+    testBuilder = createMultiTargetTestBuilder(jest);
   });
 
   afterEach(() => {
@@ -41,11 +41,14 @@ describe('Context Dependencies E2E', () => {
     it('should resolve targets based on contextFrom relationships', async () => {
       // Action: "unlock container with matching key"
       // Context: key selection depends on container's lock type
-      testEnv = await testBuilder
+      const builder = testBuilder
         .initialize()
         .buildScenario('unlock')
-        .withAction(TEST_ACTION_IDS.UNLOCK_CONTAINER)
-        .createEntities()
+        .withAction(TEST_ACTION_IDS.UNLOCK_CONTAINER);
+
+      await builder.createEntities();
+
+      testEnv = await builder
         .withMockDiscovery({
           targets: {
             primary: {
@@ -105,9 +108,8 @@ describe('Context Dependencies E2E', () => {
       );
 
       // Verify correct context-dependent target selected
-      const executionResult =
-        testEnv.actionService.actionPipelineOrchestrator.execute.mock.results[0]
-          .value;
+      // The executionHelper stores the actual resolved result
+      const executionResult = result.result.mockExecutionResult;
 
       expect(executionResult.resolvedTargets).toEqual({
         primary: TEST_ENTITY_IDS.CHEST,
@@ -129,12 +131,14 @@ describe('Context Dependencies E2E', () => {
     it('should handle multi-level context dependencies', async () => {
       // Action: "bandage person's wounded body part"
       // Context chain: body part → person
-      testEnv = await testBuilder
+      const builder = testBuilder
         .initialize()
         .buildScenario('bandage')
-        .withAction(TEST_ACTION_IDS.BANDAGE_WOUND)
-        .createEntities()
-        .build();
+        .withAction(TEST_ACTION_IDS.BANDAGE_WOUND);
+
+      await builder.createEntities();
+
+      testEnv = await builder.build();
 
       // Modify wounded person to have specific wounds
       const alice = testEnv.getEntity('wounded1');
@@ -162,6 +166,8 @@ describe('Context Dependencies E2E', () => {
           },
         },
       };
+
+      const actor = testEnv.getEntity('actor');
 
       testEnv.facades.actionService.setMockActions(actor.id, [
         {
@@ -191,8 +197,6 @@ describe('Context Dependencies E2E', () => {
       testEnv.facades.actionService.actionPipelineOrchestrator.execute = jest
         .fn()
         .mockResolvedValue(mockExecution);
-
-      const actor = testEnv.getEntity('actor');
       executionHelper = createExecutionHelper(
         testEnv.actionService,
         testEnv.eventBus,
@@ -205,9 +209,7 @@ describe('Context Dependencies E2E', () => {
       );
 
       // Verify nested resolution
-      const executionResult =
-        testEnv.actionService.actionPipelineOrchestrator.execute.mock.results[0]
-          .value;
+      const executionResult = result.result.mockExecutionResult;
 
       multiTargetAssertions.expectContextResolution(executionResult, {
         level1: { person: 'alice_001' },
@@ -230,12 +232,14 @@ describe('Context Dependencies E2E', () => {
     it('should resolve contexts based on runtime conditions', async () => {
       // Action: "steal from richest merchant"
       // Context: merchant selection based on wealth comparison
-      testEnv = await testBuilder
+      const builder = testBuilder
         .initialize()
         .buildScenario('steal')
-        .withAction(TEST_ACTION_IDS.STEAL_FROM_RICHEST)
-        .createEntities()
-        .build();
+        .withAction(TEST_ACTION_IDS.STEAL_FROM_RICHEST);
+
+      await builder.createEntities();
+
+      testEnv = await builder.build();
 
       // Create multiple merchants with different wealth
       const merchants = [
@@ -258,6 +262,8 @@ describe('Context Dependencies E2E', () => {
           candidates: merchants,
         },
       };
+
+      const actor = testEnv.getEntity('actor');
 
       testEnv.facades.actionService.setMockActions(actor.id, [
         {
@@ -283,8 +289,6 @@ describe('Context Dependencies E2E', () => {
       testEnv.facades.actionService.actionPipelineOrchestrator.execute = jest
         .fn()
         .mockResolvedValue(mockExecution);
-
-      const actor = testEnv.getEntity('actor');
       executionHelper = createExecutionHelper(
         testEnv.actionService,
         testEnv.eventBus,
@@ -297,9 +301,7 @@ describe('Context Dependencies E2E', () => {
       );
 
       // Verify dynamic selection
-      const executionResult =
-        testEnv.actionService.actionPipelineOrchestrator.execute.mock.results[0]
-          .value;
+      const executionResult = result.result.mockExecutionResult;
 
       expect(executionResult.resolvedTargets.primary).toBe('merchant_002');
       expect(executionResult.contextCriteria).toEqual({
@@ -314,12 +316,14 @@ describe('Context Dependencies E2E', () => {
   describe('Circular Dependency Detection', () => {
     it('should detect and handle circular context dependencies', async () => {
       // Create circular dependency: A depends on B, B depends on C, C depends on A
-      testEnv = await testBuilder
+      const builder = testBuilder
         .initialize()
         .buildScenario('circular')
-        .withAction(TEST_ACTION_IDS.CIRCULAR_DEPENDENCY)
-        .createEntities()
-        .build();
+        .withAction(TEST_ACTION_IDS.CIRCULAR_DEPENDENCY);
+
+      await builder.createEntities();
+
+      testEnv = await builder.build();
 
       // Mock validation that detects circular dependency
       const circularError = {
@@ -332,6 +336,8 @@ describe('Context Dependencies E2E', () => {
             'Target resolution forms a circular dependency: primary → tertiary → secondary → primary',
         },
       };
+
+      const actor = testEnv.getEntity('actor');
 
       testEnv.facades.actionService.setMockActions(actor.id, [
         {
@@ -348,8 +354,6 @@ describe('Context Dependencies E2E', () => {
         TEST_ACTION_IDS.CIRCULAR_DEPENDENCY,
         circularError
       );
-
-      const actor = testEnv.getEntity('actor');
       executionHelper = createExecutionHelper(
         testEnv.actionService,
         testEnv.eventBus,
@@ -368,10 +372,12 @@ describe('Context Dependencies E2E', () => {
       });
 
       // Verify circular dependency detected
-      multiTargetAssertions.expectCircularDependency(
-        validationResult,
-        ['primary', 'tertiary', 'secondary', 'primary']
-      );
+      multiTargetAssertions.expectCircularDependency(validationResult, [
+        'primary',
+        'tertiary',
+        'secondary',
+        'primary',
+      ]);
 
       expect(validationResult.code).toBe('CIRCULAR_DEPENDENCY');
     });
@@ -379,12 +385,14 @@ describe('Context Dependencies E2E', () => {
 
   describe('Context Validation Failures', () => {
     it('should handle invalid context resolutions gracefully', async () => {
-      testEnv = await testBuilder
+      const builder = testBuilder
         .initialize()
         .buildScenario('validation')
-        .withAction(TEST_ACTION_IDS.BANDAGE_WOUND)
-        .createEntities()
-        .build();
+        .withAction(TEST_ACTION_IDS.BANDAGE_WOUND);
+
+      await builder.createEntities();
+
+      testEnv = await builder.build();
 
       const actor = testEnv.getEntity('actor');
       executionHelper = createExecutionHelper(
@@ -413,7 +421,8 @@ describe('Context Dependencies E2E', () => {
           command: "enchant nobody's weapon",
           mockValidation: {
             success: false,
-            error: 'Context resolution failed: Primary target "nobody" not found',
+            error:
+              'Context resolution failed: Primary target "nobody" not found',
             code: 'CONTEXT_RESOLUTION_FAILED',
             details: {
               target: 'primary',
@@ -421,7 +430,8 @@ describe('Context Dependencies E2E', () => {
             },
           },
           expectedError: {
-            error: 'Context resolution failed: Primary target "nobody" not found',
+            error:
+              'Context resolution failed: Primary target "nobody" not found',
             code: 'CONTEXT_RESOLUTION_FAILED',
             details: {
               target: 'primary',

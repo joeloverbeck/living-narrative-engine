@@ -15,7 +15,10 @@ import {
 } from '@jest/globals';
 import { createMultiTargetTestBuilder } from './helpers/multiTargetTestBuilder.js';
 import { createExecutionHelper } from './helpers/multiTargetExecutionHelper.js';
-import { multiTargetAssertions, installCustomMatchers } from './helpers/multiTargetAssertions.js';
+import {
+  multiTargetAssertions,
+  installCustomMatchers,
+} from './helpers/multiTargetAssertions.js';
 import { TEST_ACTION_IDS } from './fixtures/multiTargetActions.js';
 import { TEST_ENTITY_IDS } from './fixtures/testEntities.js';
 import {
@@ -47,12 +50,13 @@ describe('Action Side Effects E2E', () => {
   describe('Component Modification Side Effects', () => {
     it('should apply all component changes from multi-target action', async () => {
       // Test dual-equip action that modifies multiple components
-      testEnv = await testBuilder
+      const builder = testBuilder
         .initialize()
         .buildScenario('equip')
-        .withAction('test:equip_dual')
-        .createEntities()
-        .build();
+        .withAction('test:equip_dual');
+
+      await builder.createEntities();
+      testEnv = await builder.build();
 
       const actor = testEnv.getEntity('actor');
       const weapon = testEnv.getEntity('weapon');
@@ -142,10 +146,8 @@ describe('Action Side Effects E2E', () => {
         'equip sword and shield'
       );
 
-      // Get execution result
-      const executionResult =
-        testEnv.actionService.actionPipelineOrchestrator.execute.mock.results[0]
-          .value;
+      // Get execution result from the helper's result
+      const executionResult = result.mockExecutionResult || result.result;
 
       // Verify primary component changes
       expect(executionResult.stateChanges[actor.id]['core:equipment']).toEqual({
@@ -171,12 +173,13 @@ describe('Action Side Effects E2E', () => {
   describe('Event Dispatching and Propagation', () => {
     it('should dispatch all events for multi-target actions', async () => {
       // Test combat action that generates multiple events
-      testEnv = await testBuilder
+      const builder = testBuilder
         .initialize()
         .buildScenario('throw')
-        .withAction(TEST_ACTION_IDS.BASIC_THROW)
-        .createEntities()
-        .build();
+        .withAction(TEST_ACTION_IDS.BASIC_THROW);
+
+      await builder.createEntities();
+      testEnv = await builder.build();
 
       const actor = testEnv.getEntity('actor');
       const target = testEnv.getEntity('target');
@@ -185,16 +188,23 @@ describe('Action Side Effects E2E', () => {
       // Track dispatched events
       const dispatchedEvents = [];
       const mockEventBus = {
-        dispatch: jest.fn((event) => {
+        dispatch: jest.fn(async (eventName, payload = {}) => {
+          // Create event object like production EventBus does
+          const event = {
+            type: eventName,
+            payload: payload,
+          };
           dispatchedEvents.push(event);
         }),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
         on: jest.fn(),
         off: jest.fn(),
       };
 
       // Replace event bus in execution helper
       executionHelper = createExecutionHelper(
-        testEnv.facades.mockDeps.commandProcessor,
+        testEnv.actionService,
         mockEventBus,
         testEnv.entityTestBed.entityManager
       );
@@ -203,48 +213,36 @@ describe('Action Side Effects E2E', () => {
       testEnv.facades.actionService.actionPipelineOrchestrator.execute = jest
         .fn()
         .mockImplementation(async () => {
-          // Simulate event dispatching during execution
-          mockEventBus.dispatch({
-            type: 'ACTION_INITIATED',
-            payload: {
-              actionId: TEST_ACTION_IDS.BASIC_THROW,
-              actorId: actor.id,
-              targets: { primary: item.id, secondary: target.id },
-            },
+          // Simulate event dispatching during execution using production EventBus interface
+          await mockEventBus.dispatch('ACTION_INITIATED', {
+            actionId: TEST_ACTION_IDS.BASIC_THROW,
+            actorId: actor.id,
+            targets: { primary: item.id, secondary: target.id },
           });
 
-          mockEventBus.dispatch({
-            type: 'INVENTORY_ITEM_REMOVED',
-            payload: { entityId: actor.id, itemId: item.id },
+          await mockEventBus.dispatch('INVENTORY_ITEM_REMOVED', {
+            entityId: actor.id,
+            itemId: item.id,
           });
 
-          mockEventBus.dispatch({
-            type: 'ITEM_THROWN_AT_TARGET',
-            payload: {
-              actorId: actor.id,
-              itemId: item.id,
-              targetId: target.id,
-              distance: 3,
-            },
+          await mockEventBus.dispatch('ITEM_THROWN_AT_TARGET', {
+            actorId: actor.id,
+            itemId: item.id,
+            targetId: target.id,
+            distance: 3,
           });
 
-          mockEventBus.dispatch({
-            type: 'ENTITY_DAMAGED',
-            payload: {
-              entityId: target.id,
-              damage: 5,
-              damageType: 'impact',
-              sourceId: actor.id,
-            },
+          await mockEventBus.dispatch('ENTITY_DAMAGED', {
+            entityId: target.id,
+            damage: 5,
+            damageType: 'impact',
+            sourceId: actor.id,
           });
 
-          mockEventBus.dispatch({
-            type: 'ACTION_COMPLETED',
-            payload: {
-              actionId: TEST_ACTION_IDS.BASIC_THROW,
-              actorId: actor.id,
-              success: true,
-            },
+          await mockEventBus.dispatch('ACTION_COMPLETED', {
+            actionId: TEST_ACTION_IDS.BASIC_THROW,
+            actorId: actor.id,
+            success: true,
           });
 
           return {
@@ -294,12 +292,13 @@ describe('Action Side Effects E2E', () => {
   describe('Cascading Effects', () => {
     it('should handle effects that trigger other effects', async () => {
       // Test explosion that causes area damage
-      testEnv = await testBuilder
+      const builder = testBuilder
         .initialize()
         .buildScenario('explosion')
-        .withAction(TEST_ACTION_IDS.THROW_EXPLOSIVE)
-        .createEntities()
-        .build();
+        .withAction(TEST_ACTION_IDS.THROW_EXPLOSIVE);
+
+      await builder.createEntities();
+      testEnv = await builder.build();
 
       const actor = testEnv.getEntity('actor');
       const explosive = testEnv.getEntity('explosive');
@@ -308,15 +307,22 @@ describe('Action Side Effects E2E', () => {
       // Track cascading events
       const cascadeEvents = [];
       const mockEventBus = {
-        dispatch: jest.fn((event) => {
+        dispatch: jest.fn(async (eventName, payload = {}) => {
+          // Create event object like production EventBus does
+          const event = {
+            type: eventName,
+            payload: payload,
+          };
           cascadeEvents.push(event);
         }),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
         on: jest.fn(),
         off: jest.fn(),
       };
 
       executionHelper = createExecutionHelper(
-        testEnv.facades.mockDeps.commandProcessor,
+        testEnv.actionService,
         mockEventBus,
         testEnv.entityTestBed.entityManager
       );
@@ -326,18 +332,15 @@ describe('Action Side Effects E2E', () => {
         .fn()
         .mockImplementation(async () => {
           // Primary explosion event
-          mockEventBus.dispatch({
-            type: 'EXPLOSION_TRIGGERED',
-            payload: {
-              position: { x: 2, y: 0 },
-              radius: 5,
-              damage: 50,
-            },
+          await mockEventBus.dispatch('EXPLOSION_TRIGGERED', {
+            position: { x: 2, y: 0 },
+            radius: 5,
+            damage: 50,
           });
 
           // Calculate damage for each target based on distance
           const explosionCenter = { x: 2, y: 0 };
-          targets.forEach((target, index) => {
+          for (const [index, target] of targets.entries()) {
             const targetPos = { x: 2 + index * 2, y: index };
             const distance = Math.sqrt(
               Math.pow(targetPos.x - explosionCenter.x, 2) +
@@ -348,16 +351,13 @@ describe('Action Side Effects E2E', () => {
               const damageReduction = distance / 5; // Linear falloff
               const damage = Math.floor(50 * (1 - damageReduction * 0.7));
 
-              mockEventBus.dispatch({
-                type: 'AREA_DAMAGE_APPLIED',
-                payload: {
-                  targetId: target.id,
-                  damage,
-                  distance: Math.round(distance * 100) / 100,
-                },
+              await mockEventBus.dispatch('AREA_DAMAGE_APPLIED', {
+                targetId: target.id,
+                damage,
+                distance: Math.round(distance * 100) / 100,
               });
             }
-          });
+          }
 
           return {
             success: true,
@@ -417,9 +417,7 @@ describe('Action Side Effects E2E', () => {
             count: targets.length,
             validator: (event) => {
               // Verify damage decreases with distance
-              return (
-                event.payload.damage > 0 && event.payload.damage <= 50
-              );
+              return event.payload.damage > 0 && event.payload.damage <= 50;
             },
           },
         ],
@@ -430,12 +428,13 @@ describe('Action Side Effects E2E', () => {
   describe('Transaction-like Behavior', () => {
     it('should maintain consistency with all-or-nothing execution', async () => {
       // Test trade action that must complete fully or rollback
-      testEnv = await testBuilder
+      const builder = testBuilder
         .initialize()
         .buildScenario('trade')
-        .withAction(TEST_ACTION_IDS.TRADE_ITEMS)
-        .createEntities()
-        .build();
+        .withAction(TEST_ACTION_IDS.TRADE_ITEMS);
+
+      await builder.createEntities();
+      testEnv = await builder.build();
 
       const player = testEnv.getEntity('player');
       const merchant = testEnv.getEntity('merchant');
@@ -513,9 +512,7 @@ describe('Action Side Effects E2E', () => {
       const stateAfter = testEnv.captureGameState();
 
       // Verify transaction rolled back
-      const executionResult =
-        testEnv.actionService.actionPipelineOrchestrator.execute.mock.results[0]
-          .value;
+      const executionResult = result.mockExecutionResult || result.result;
 
       multiTargetAssertions.expectTransactionConsistency(executionResult, {
         shouldSucceed: false,
@@ -530,12 +527,13 @@ describe('Action Side Effects E2E', () => {
   describe('Complex State Synchronization', () => {
     it('should maintain consistency across multiple related entities', async () => {
       // Test formation change affecting multiple entities
-      testEnv = await testBuilder
+      const builder = testBuilder
         .initialize()
         .buildScenario('formation')
-        .withAction(TEST_ACTION_IDS.ORDER_FORMATION)
-        .createEntities()
-        .build();
+        .withAction(TEST_ACTION_IDS.ORDER_FORMATION);
+
+      await builder.createEntities();
+      testEnv = await builder.build();
 
       const leader = testEnv.getEntity('leader');
       const followers = testEnv.getEntity('followers');
@@ -607,12 +605,13 @@ describe('Action Side Effects E2E', () => {
         testEnv.entityTestBed.entityManager
       );
 
-      await executionHelper.executeAndTrack(leader, 'order defensive formation');
+      const result = await executionHelper.executeAndTrack(
+        leader,
+        'order defensive formation'
+      );
 
-      // Get execution result
-      const executionResult =
-        testEnv.actionService.actionPipelineOrchestrator.execute.mock.results[0]
-          .value;
+      // Get execution result from the helper's result
+      const executionResult = result.mockExecutionResult || result.result;
 
       // Verify state synchronization
       multiTargetAssertions.expectStateSynchronization(
@@ -633,6 +632,9 @@ describe('Action Side Effects E2E', () => {
 
 /**
  * Helper to calculate formation positions
+ *
+ * @param formationType
+ * @param index
  * @private
  */
 function getFormationPosition(formationType, index) {

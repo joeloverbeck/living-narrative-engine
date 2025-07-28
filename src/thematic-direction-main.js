@@ -151,7 +151,7 @@ class ThematicDirectionApp {
             );
           }
           const conceptSchema = await conceptSchemaResponse.json();
-          await schemaValidator.addSchema(conceptSchema, 'character-concept');
+          await schemaValidator.addSchema(conceptSchema, 'schema://living-narrative-engine/character-concept.schema.json');
         }
       } catch (error) {
         // If schema already exists, that's fine - just log it

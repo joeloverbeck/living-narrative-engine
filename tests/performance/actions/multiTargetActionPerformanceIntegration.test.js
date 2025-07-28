@@ -19,7 +19,7 @@ describe('Multi-Target Action Performance Integration', () => {
     entityTestBed = new EntityManagerTestBed();
     const testBed = createTestBed();
     mockLogger = testBed.mockLogger;
-    
+
     // Create facades
     facades = createMockFacades({}, jest.fn);
     actionServiceFacade = facades.actionService;
@@ -104,9 +104,10 @@ describe('Multi-Target Action Performance Integration', () => {
       actionServiceFacade.setMockActions('player', mockDiscoveryResult);
 
       const startTime = performance.now();
-      
-      const availableActions = await actionServiceFacade.discoverActions('player');
-      
+
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
+
       const endTime = performance.now();
       const processingTime = endTime - startTime;
 
@@ -206,10 +207,12 @@ describe('Multi-Target Action Performance Integration', () => {
             actionId: actionDefinition.id,
             targets: {
               recipe: { id: recipe.id, displayName: recipe.name },
-              materials: [{ 
-                id: matchingMaterials[j], 
-                displayName: `Material ${matchingMaterials[j]}` 
-              }],
+              materials: [
+                {
+                  id: matchingMaterials[j],
+                  displayName: `Material ${matchingMaterials[j]}`,
+                },
+              ],
             },
             command: 'craft with materials',
             available: true,
@@ -220,9 +223,10 @@ describe('Multi-Target Action Performance Integration', () => {
       actionServiceFacade.setMockActions('player', mockDiscoveryResult);
 
       const startTime = performance.now();
-      
-      const availableActions = await actionServiceFacade.discoverActions('player');
-      
+
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
+
       const endTime = performance.now();
       const processingTime = endTime - startTime;
 
@@ -295,7 +299,8 @@ describe('Multi-Target Action Performance Integration', () => {
       }
       const memBefore = process.memoryUsage();
 
-      const availableActions = await actionServiceFacade.discoverActions('player');
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       const memAfter = process.memoryUsage();
       const memoryIncrease = memAfter.heapUsed - memBefore.heapUsed;
@@ -326,7 +331,10 @@ describe('Multi-Target Action Performance Integration', () => {
         };
 
         // Create test data
-        const itemIds = Array.from({ length: 50 }, (_, i) => `iter${iter}_item_${i}`);
+        const itemIds = Array.from(
+          { length: 50 },
+          (_, i) => `iter${iter}_item_${i}`
+        );
         const playerEntity = await entityTestBed.createEntity('actor', {
           instanceId: `player_${iter}`,
           overrides: {
@@ -335,14 +343,17 @@ describe('Multi-Target Action Performance Integration', () => {
         });
 
         // Mock discovery
-        const mockDiscoveryResult = itemIds.map(id => ({
+        const mockDiscoveryResult = itemIds.map((id) => ({
           actionId: actionDefinition.id,
           targets: { item: { id, displayName: `Item ${id}` } },
           command: 'test action',
           available: true,
         }));
 
-        actionServiceFacade.setMockActions(`player_${iter}`, mockDiscoveryResult);
+        actionServiceFacade.setMockActions(
+          `player_${iter}`,
+          mockDiscoveryResult
+        );
 
         // Process actions
         await actionServiceFacade.discoverActions(`player_${iter}`);
@@ -408,12 +419,14 @@ describe('Multi-Target Action Performance Integration', () => {
         players.push({ playerId, itemId });
 
         // Mock discovery for each player
-        actionServiceFacade.setMockActions(playerId, [{
-          actionId: actionDefinition.id,
-          targets: { item: { id: itemId, displayName: `Item ${i}` } },
-          command: 'process concurrently',
-          available: true,
-        }]);
+        actionServiceFacade.setMockActions(playerId, [
+          {
+            actionId: actionDefinition.id,
+            targets: { item: { id: itemId, displayName: `Item ${i}` } },
+            command: 'process concurrently',
+            available: true,
+          },
+        ]);
       }
 
       // Process actions for all players concurrently
@@ -553,10 +566,10 @@ describe('Multi-Target Action Performance Integration', () => {
 
         // Create test data
         const itemIds = Array.from(
-          { length: scenario.itemCount }, 
+          { length: scenario.itemCount },
           (_, i) => `bench_item_${i}`
         );
-        
+
         const playerEntity = await entityTestBed.createEntity('actor', {
           instanceId: 'benchmark_player_' + scenario.name.replace(/\s+/g, '_'),
           overrides: {
@@ -565,26 +578,27 @@ describe('Multi-Target Action Performance Integration', () => {
         });
 
         // Mock discovery
-        const mockDiscoveryResult = itemIds.slice(0, 10).map(id => ({
+        const mockDiscoveryResult = itemIds.slice(0, 10).map((id) => ({
           actionId: actionDefinition.id,
           targets: { item: { id, displayName: `Item ${id}` } },
           command: 'benchmark action',
           available: true,
         }));
 
-        const playerId = 'benchmark_player_' + scenario.name.replace(/\s+/g, '_');
+        const playerId =
+          'benchmark_player_' + scenario.name.replace(/\s+/g, '_');
         actionServiceFacade.setMockActions(playerId, mockDiscoveryResult);
 
         const startTime = performance.now();
-        
+
         const actions = await actionServiceFacade.discoverActions(playerId);
-        
+
         const endTime = performance.now();
         const processingTime = endTime - startTime;
 
         expect(processingTime).toBeLessThan(scenario.expectedTime);
         expect(actions.length).toBeLessThanOrEqual(10);
-        
+
         // Clean up for next scenario
         actionServiceFacade.clearMockData();
       }

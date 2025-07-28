@@ -177,7 +177,7 @@ describe('CharacterStorageService', () => {
           id: mockConcept.id,
           concept: mockConcept.concept,
         }),
-        'character-concept'
+        'schema://living-narrative-engine/character-concept.schema.json'
       );
       expect(mockDatabase.saveCharacterConcept).toHaveBeenCalledWith(
         mockConcept

@@ -219,15 +219,17 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
     // For multiple target types, create cartesian product (limited)
     const combinations = [];
-    
+
     // Create arrays of valid targets for each key
-    const targetArrays = targetKeys.map(key => resolvedTargets[key].filter(t => t && t.length !== 0));
-    
+    const targetArrays = targetKeys.map((key) =>
+      resolvedTargets[key].filter((t) => t && t.length !== 0)
+    );
+
     // If any target array is empty, return empty combinations
-    if (targetArrays.some(arr => arr.length === 0)) {
+    if (targetArrays.some((arr) => arr.length === 0)) {
       return [];
     }
-    
+
     // Generate cartesian product recursively
     const generateCartesian = (arrays, current = [], index = 0) => {
       if (index === arrays.length) {
@@ -241,14 +243,18 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         }
         return;
       }
-      
+
       // Limit each dimension to prevent explosion
       const maxPerDimension = Math.min(arrays[index].length, 10);
-      for (let i = 0; i < maxPerDimension && combinations.length < maxCombinations; i++) {
+      for (
+        let i = 0;
+        i < maxPerDimension && combinations.length < maxCombinations;
+        i++
+      ) {
         generateCartesian(arrays, [...current, arrays[index][i]], index + 1);
       }
     };
-    
+
     generateCartesian(targetArrays);
     return combinations;
   }

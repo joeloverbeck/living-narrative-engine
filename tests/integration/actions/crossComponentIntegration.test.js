@@ -20,7 +20,7 @@ describe('Cross-Component Integration', () => {
     entityTestBed = new EntityManagerTestBed();
     const testBed = createTestBed();
     mockLogger = testBed.mockLogger;
-    
+
     // Create facades
     facades = createMockFacades({}, jest.fn);
     actionServiceFacade = facades.actionService;
@@ -77,7 +77,8 @@ describe('Cross-Component Integration', () => {
             },
           },
         ],
-        template: 'discuss {topic.name} with {person.components.core:actor.name}',
+        template:
+          'discuss {topic.name} with {person.components.core:actor.name}',
       };
 
       // Setup entities with AI memory components
@@ -123,8 +124,8 @@ describe('Cross-Component Integration', () => {
           actionId: actionDefinition.id,
           targets: {
             person: { id: 'scholar_001', displayName: 'Scholar' },
-            topic: { 
-              id: 'ancient_history', 
+            topic: {
+              id: 'ancient_history',
               displayName: 'Ancient History',
               name: 'Ancient History',
               complexity: 6,
@@ -142,8 +143,8 @@ describe('Cross-Component Integration', () => {
           actionId: actionDefinition.id,
           targets: {
             person: { id: 'scholar_001', displayName: 'Scholar' },
-            topic: { 
-              id: 'magic_theory', 
+            topic: {
+              id: 'magic_theory',
               displayName: 'Magic Theory',
               name: 'Magic Theory',
               complexity: 8,
@@ -169,7 +170,8 @@ describe('Cross-Component Integration', () => {
           'Updated scholar AI memory with conversation',
           'Generated dynamic dialogue based on memory context',
         ],
-        description: 'You discuss Ancient History with Scholar. The scholar remembers your previous conversation and continues where you left off.',
+        description:
+          'You discuss Ancient History with Scholar. The scholar remembers your previous conversation and continues where you left off.',
         command: 'discuss Ancient History with Scholar',
         aiUpdates: {
           memoryEvent: {
@@ -178,7 +180,8 @@ describe('Cross-Component Integration', () => {
             participant: 'player',
             topic: 'ancient_history',
             sentiment: 'positive',
-            details: 'Continued discussion about the fall of the ancient empire',
+            details:
+              'Continued discussion about the fall of the ancient empire',
           },
           relationshipChange: 0.1,
         },
@@ -188,13 +191,14 @@ describe('Cross-Component Integration', () => {
         .spyOn(actionServiceFacade.actionPipelineOrchestrator, 'execute')
         .mockResolvedValue(mockExecutionResult);
 
-      const availableActions = await actionServiceFacade.discoverActions('player');
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(2);
-      
+
       // Verify AI context is included
       const ancientHistoryAction = availableActions.find(
-        a => a.targets.topic.id === 'ancient_history'
+        (a) => a.targets.topic.id === 'ancient_history'
       );
       expect(ancientHistoryAction.aiContext).toBeDefined();
       expect(ancientHistoryAction.aiContext.previousInteractions).toBe(1);
@@ -210,9 +214,13 @@ describe('Cross-Component Integration', () => {
       });
 
       expect(executionResult.success).toBe(true);
-      expect(executionResult.effects).toContain('Updated scholar AI memory with conversation');
+      expect(executionResult.effects).toContain(
+        'Updated scholar AI memory with conversation'
+      );
       expect(executionResult.aiUpdates).toBeDefined();
-      expect(executionResult.aiUpdates.memoryEvent.topic).toBe('ancient_history');
+      expect(executionResult.aiUpdates.memoryEvent.topic).toBe(
+        'ancient_history'
+      );
     });
 
     it('should integrate with clothing system for complex multi-target actions', async () => {
@@ -279,7 +287,9 @@ describe('Cross-Component Integration', () => {
                         type: 'object',
                         properties: {
                           fabric_type: {
-                            const: { var: 'targets.garment[0].components.clothing:garment.fabric_type' },
+                            const: {
+                              var: 'targets.garment[0].components.clothing:garment.fabric_type',
+                            },
                           },
                         },
                         required: ['fabric_type'],
@@ -323,7 +333,8 @@ describe('Cross-Component Integration', () => {
             },
           },
         ],
-        template: 'tailor {person.components.core:actor.name} garment with materials',
+        template:
+          'tailor {person.components.core:actor.name} garment with materials',
       };
 
       // Setup complex clothing system entities
@@ -407,9 +418,7 @@ describe('Cross-Component Integration', () => {
           targets: {
             person: { id: 'customer_001', displayName: 'Customer' },
             garment: { id: 'silk_dress', displayName: 'Silk Dress' },
-            materials: [
-              { id: 'silk_thread', displayName: 'Silk Thread' },
-            ],
+            materials: [{ id: 'silk_thread', displayName: 'Silk Thread' }],
           },
           command: 'tailor Customer garment with materials',
           available: true,
@@ -427,21 +436,22 @@ describe('Cross-Component Integration', () => {
 
       actionServiceFacade.setMockActions('tailor', mockDiscoveryResult);
 
-      const availableActions = await actionServiceFacade.discoverActions('tailor');
+      const availableActions =
+        await actionServiceFacade.discoverActions('tailor');
 
       expect(availableActions).toHaveLength(1);
-      
+
       // Verify only matching material (silk thread) was included
       const action = availableActions[0];
       expect(action.targets.materials).toHaveLength(1);
       expect(action.targets.materials[0].id).toBe('silk_thread');
-      
+
       // Cotton thread should not be included due to fabric type mismatch
       const hasCottonThread = action.targets.materials.some(
-        m => m.id === 'cotton_thread'
+        (m) => m.id === 'cotton_thread'
       );
       expect(hasCottonThread).toBe(false);
-      
+
       // Verify clothing context
       expect(action.clothingContext).toBeDefined();
       expect(action.clothingContext.materialMatch).toBe(true);
@@ -538,7 +548,7 @@ describe('Cross-Component Integration', () => {
           targets: {
             item1: { id: 'fire_essence', displayName: 'Fire Essence' },
             item2: { id: 'water_essence', displayName: 'Water Essence' },
-            result: { 
+            result: {
               id: 'steam_essence',
               displayName: 'Steam Essence',
               name: 'Steam Essence',
@@ -595,7 +605,8 @@ describe('Cross-Component Integration', () => {
         .spyOn(actionServiceFacade.actionPipelineOrchestrator, 'execute')
         .mockResolvedValue(mockExecutionResult);
 
-      const availableActions = await actionServiceFacade.discoverActions('player');
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(1);
 
@@ -613,13 +624,17 @@ describe('Cross-Component Integration', () => {
       expect(executionResult.success).toBe(true);
       expect(executionResult.eventChain).toBeDefined();
       expect(executionResult.eventChain).toHaveLength(3);
-      
+
       // Verify event chain progression
       expect(executionResult.eventChain[0].type).toBe('COMBINATION_STARTED');
       expect(executionResult.eventChain[1].type).toBe('COMBINATION_PROCESSING');
-      expect(executionResult.eventChain[1].triggeredBy).toBe('COMBINATION_STARTED');
+      expect(executionResult.eventChain[1].triggeredBy).toBe(
+        'COMBINATION_STARTED'
+      );
       expect(executionResult.eventChain[2].type).toBe('COMBINATION_COMPLETED');
-      expect(executionResult.eventChain[2].triggeredBy).toBe('COMBINATION_PROCESSING');
+      expect(executionResult.eventChain[2].triggeredBy).toBe(
+        'COMBINATION_PROCESSING'
+      );
     });
 
     it('should handle cascading events from multi-target actions', async () => {
@@ -693,7 +708,8 @@ describe('Cross-Component Integration', () => {
             },
           },
         ],
-        template: 'activate {device.components.core:object.name} with {power_source.components.core:item.name}',
+        template:
+          'activate {device.components.core:object.name} with {power_source.components.core:item.name}',
       };
 
       // Setup tech system entities
@@ -760,7 +776,8 @@ describe('Cross-Component Integration', () => {
           'Cascading event: PORTAL_NETWORK_ONLINE triggered',
           'Cascading event: NEW_DESTINATIONS_AVAILABLE triggered',
         ],
-        description: 'You activate Portal Device with Power Cell. The device hums to life and synchronizes with the portal network.',
+        description:
+          'You activate Portal Device with Power Cell. The device hums to life and synchronizes with the portal network.',
         command: 'activate Portal Device with Power Cell',
         cascadingEvents: [
           {
@@ -817,22 +834,22 @@ describe('Cross-Component Integration', () => {
       expect(executionResult.success).toBe(true);
       expect(executionResult.cascadingEvents).toBeDefined();
       expect(executionResult.cascadingEvents).toHaveLength(4);
-      
+
       // Verify cascading event sequence
       const syncEvent = executionResult.cascadingEvents.find(
-        e => e.type === 'DEVICE_NETWORK_SYNC'
+        (e) => e.type === 'DEVICE_NETWORK_SYNC'
       );
       expect(syncEvent.triggeredBy).toBe('DEVICE_ACTIVATED');
       expect(syncEvent.payload.connectedDevices).toHaveLength(2);
-      
+
       const networkEvent = executionResult.cascadingEvents.find(
-        e => e.type === 'PORTAL_NETWORK_ONLINE'
+        (e) => e.type === 'PORTAL_NETWORK_ONLINE'
       );
       expect(networkEvent.triggeredBy).toBe('DEVICE_NETWORK_SYNC');
       expect(networkEvent.payload.networkDevices).toHaveLength(3);
-      
+
       const destinationsEvent = executionResult.cascadingEvents.find(
-        e => e.type === 'NEW_DESTINATIONS_AVAILABLE'
+        (e) => e.type === 'NEW_DESTINATIONS_AVAILABLE'
       );
       expect(destinationsEvent.triggeredBy).toBe('PORTAL_NETWORK_ONLINE');
       expect(destinationsEvent.payload.destinations).toHaveLength(2);
@@ -957,7 +974,8 @@ describe('Cross-Component Integration', () => {
             },
           },
         ],
-        template: 'teach {student.components.core:actor.name} {skill.name} using {book.components.core:item.name}',
+        template:
+          'teach {student.components.core:actor.name} {skill.name} using {book.components.core:item.name}',
       };
 
       // Setup complex teaching scenario
@@ -1012,15 +1030,19 @@ describe('Cross-Component Integration', () => {
           actionId: actionDefinition.id,
           targets: {
             student: { id: 'student_001', displayName: 'Eager Student' },
-            skill: { 
+            skill: {
               id: 'swordsmanship',
               displayName: 'Swordsmanship',
               name: 'Swordsmanship',
               type: 'combat',
             },
-            book: { id: 'swordsmanship_manual', displayName: 'Swordsmanship Manual' },
+            book: {
+              id: 'swordsmanship_manual',
+              displayName: 'Swordsmanship Manual',
+            },
           },
-          command: 'teach Eager Student Swordsmanship using Swordsmanship Manual',
+          command:
+            'teach Eager Student Swordsmanship using Swordsmanship Manual',
           available: true,
         },
       ];
@@ -1036,7 +1058,8 @@ describe('Cross-Component Integration', () => {
           'Teacher experience increased by 10',
           'Dispatched SKILL_LEARNED event',
         ],
-        description: 'You teach Eager Student Swordsmanship using Swordsmanship Manual. The student shows great progress!',
+        description:
+          'You teach Eager Student Swordsmanship using Swordsmanship Manual. The student shows great progress!',
         command: 'teach Eager Student Swordsmanship using Swordsmanship Manual',
         systemUpdates: {
           skillSystem: {
@@ -1072,11 +1095,17 @@ describe('Cross-Component Integration', () => {
 
       expect(executionResult.success).toBe(true);
       expect(executionResult.systemUpdates).toBeDefined();
-      
+
       // Verify all systems were updated
-      expect(executionResult.systemUpdates.skillSystem.newSkill).toBe('swordsmanship');
-      expect(executionResult.systemUpdates.inventorySystem.usesRemaining).toBe(4);
-      expect(executionResult.systemUpdates.teachingSystem.experienceGained).toBe(10);
+      expect(executionResult.systemUpdates.skillSystem.newSkill).toBe(
+        'swordsmanship'
+      );
+      expect(executionResult.systemUpdates.inventorySystem.usesRemaining).toBe(
+        4
+      );
+      expect(
+        executionResult.systemUpdates.teachingSystem.experienceGained
+      ).toBe(10);
     });
   });
 });

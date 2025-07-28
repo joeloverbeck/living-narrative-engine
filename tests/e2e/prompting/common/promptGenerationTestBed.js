@@ -361,9 +361,13 @@ export class PromptGenerationTestBed {
    * Clean up resources after tests
    */
   async cleanup() {
+    // Clean up event subscription first
     if (this.eventSubscription) {
       this.eventSubscription();
+      this.eventSubscription = null;
     }
+
+    // Clear all data structures
     this.events = [];
     this.testActors = {};
     this.testActions = [];
@@ -379,6 +383,21 @@ export class PromptGenerationTestBed {
 
     this.testConfiguration = null;
     this.testConfigurationCleanup = null;
+
+    // Clear service references to prevent cross-test contamination
+    if (this.container) {
+      // Clear any cached instances to prevent schema persistence
+      // The container itself doesn't need explicit cleanup, but we clear references
+      this.entityManager = null;
+      this.aiPromptPipeline = null;
+      this.llmAdapter = null;
+      this.eventBus = null;
+      this.logger = null;
+      this.registry = null;
+      this.scopeRegistry = null;
+      this.dslParser = null;
+      this.container = null;
+    }
   }
 
   /**

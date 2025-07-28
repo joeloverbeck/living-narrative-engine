@@ -19,7 +19,7 @@ describe('Backward Compatibility Integration', () => {
     entityTestBed = new EntityManagerTestBed();
     const testBed = createTestBed();
     mockLogger = testBed.mockLogger;
-    
+
     // Create facades
     facades = createMockFacades({}, jest.fn);
     actionServiceFacade = facades.actionService;
@@ -107,9 +107,9 @@ describe('Backward Compatibility Integration', () => {
         {
           actionId: legacyActionDefinition.id,
           // Legacy format with single target
-          target: { 
-            id: 'ancient_scroll', 
-            displayName: 'Ancient Scroll' 
+          target: {
+            id: 'ancient_scroll',
+            displayName: 'Ancient Scroll',
           },
           command: 'examine Ancient Scroll',
           available: true,
@@ -118,16 +118,17 @@ describe('Backward Compatibility Integration', () => {
 
       actionServiceFacade.setMockActions('player', mockDiscoveryResult);
 
-      const availableActions = await actionServiceFacade.discoverActions('player');
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(1);
       expect(availableActions[0].actionId).toBe('legacy:examine_item');
       expect(availableActions[0].command).toBe('examine Ancient Scroll');
-      
+
       // Legacy actions should have target in legacy format
       expect(availableActions[0].target).toBeDefined();
       expect(availableActions[0].target.id).toBe('ancient_scroll');
-      
+
       // Should not have multi-target format
       expect(availableActions[0].targets).toBeUndefined();
     });
@@ -213,14 +214,18 @@ describe('Backward Compatibility Integration', () => {
       ]);
 
       // Mock validation to pass
-      actionServiceFacade.setMockValidation('player', legacyActionDefinition.id, {
-        success: true,
-        validatedAction: {
-          actionId: legacyActionDefinition.id,
-          actorId: 'player',
-          target: { id: 'healing_potion' },
-        },
-      });
+      actionServiceFacade.setMockValidation(
+        'player',
+        legacyActionDefinition.id,
+        {
+          success: true,
+          validatedAction: {
+            actionId: legacyActionDefinition.id,
+            actorId: 'player',
+            target: { id: 'healing_potion' },
+          },
+        }
+      );
 
       // Mock execution result
       const mockExecutionResult = {
@@ -245,7 +250,9 @@ describe('Backward Compatibility Integration', () => {
       });
 
       expect(executionResult.success).toBe(true);
-      expect(executionResult.effects).toContain('Item healing_potion uses_remaining reduced by 1');
+      expect(executionResult.effects).toContain(
+        'Item healing_potion uses_remaining reduced by 1'
+      );
       expect(executionResult.effects).toContain('Dispatched ITEM_USED event');
     });
   });
@@ -304,7 +311,8 @@ describe('Backward Compatibility Integration', () => {
             },
           },
         ],
-        template: 'trade {my_item.components.core:item.name} for {their_item.components.core:item.name}',
+        template:
+          'trade {my_item.components.core:item.name} for {their_item.components.core:item.name}',
       };
 
       // Setup entities
@@ -367,19 +375,24 @@ describe('Backward Compatibility Integration', () => {
 
       actionServiceFacade.setMockActions('player', mockDiscoveryResult);
 
-      const availableActions = await actionServiceFacade.discoverActions('player');
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(2);
-      
+
       // Verify legacy action format
-      const legacyActionResult = availableActions.find(a => a.actionId === 'legacy:drop_item');
+      const legacyActionResult = availableActions.find(
+        (a) => a.actionId === 'legacy:drop_item'
+      );
       expect(legacyActionResult).toBeDefined();
       expect(legacyActionResult.target).toBeDefined();
       expect(legacyActionResult.target.id).toBe('player_item');
       expect(legacyActionResult.targets).toBeUndefined();
-      
+
       // Verify multi-target action format
-      const multiTargetResult = availableActions.find(a => a.actionId === 'modern:trade_items');
+      const multiTargetResult = availableActions.find(
+        (a) => a.actionId === 'modern:trade_items'
+      );
       expect(multiTargetResult).toBeDefined();
       expect(multiTargetResult.targets).toBeDefined();
       expect(multiTargetResult.targets.my_item.id).toBe('player_item');
@@ -419,7 +432,8 @@ describe('Backward Compatibility Integration', () => {
             },
           },
         ],
-        template: 'give {item.components.core:item.name} to {person.components.core:actor.name}',
+        template:
+          'give {item.components.core:item.name} to {person.components.core:actor.name}',
       };
 
       // Legacy rule that expects legacy event format
@@ -507,9 +521,7 @@ describe('Backward Compatibility Integration', () => {
       // Mock execution with event dispatch
       const mockExecutionResult = {
         success: true,
-        effects: [
-          'Dispatched ITEM_GIVEN event',
-        ],
+        effects: ['Dispatched ITEM_GIVEN event'],
         description: 'Gift given successfully.',
         command: 'give Gift to Friend',
         events: [
@@ -538,7 +550,7 @@ describe('Backward Compatibility Integration', () => {
       });
 
       expect(executionResult.success).toBe(true);
-      
+
       // Verify event was dispatched with legacy-compatible format
       expect(executionResult.events).toBeDefined();
       expect(executionResult.events[0].type).toBe('ITEM_GIVEN');
@@ -680,7 +692,8 @@ describe('Backward Compatibility Integration', () => {
         },
       ]);
 
-      const availableActions = await actionServiceFacade.discoverActions('player');
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(1);
       // Should use targets format, not legacy target

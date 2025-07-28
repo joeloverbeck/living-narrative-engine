@@ -29,7 +29,7 @@ describe('Multi-Target Action Execution E2E', () => {
   let executionHelper;
 
   beforeEach(() => {
-    testBuilder = createMultiTargetTestBuilder(jest.fn);
+    testBuilder = createMultiTargetTestBuilder(jest);
   });
 
   afterEach(() => {
@@ -44,11 +44,13 @@ describe('Multi-Target Action Execution E2E', () => {
   describe('Basic Multi-Target Execution', () => {
     it('should execute a throw action with item and target', async () => {
       // Setup: Create actor with throwable item, target in same location
-      testEnv = await testBuilder
+      const builder = await testBuilder
         .initialize()
         .buildScenario('throw')
         .withAction(TEST_ACTION_IDS.BASIC_THROW)
-        .createEntities()
+        .createEntities();
+
+      testEnv = await builder
         .withMockDiscovery({
           targets: {
             primary: { id: TEST_ENTITY_IDS.ROCK, displayName: 'Small Rock' },
@@ -82,7 +84,7 @@ describe('Multi-Target Action Execution E2E', () => {
       // Execute: Process multi-target throw command
       const result = await executionHelper.executeAndTrack(
         actor,
-        'throw rock at goblin'
+        'throw Small Rock at Guard'
       );
 
       // Verify: Command executed successfully
@@ -90,7 +92,8 @@ describe('Multi-Target Action Execution E2E', () => {
       expect(result.result.command).toBe('throw Small Rock at Guard');
 
       // Verify: Operation handlers executed in correct sequence
-      const mockExecute = testEnv.actionService.actionPipelineOrchestrator.execute;
+      const mockExecute =
+        testEnv.actionService.actionPipelineOrchestrator.execute;
       expect(mockExecute).toHaveBeenCalledWith({
         action: {
           actionId: TEST_ACTION_IDS.BASIC_THROW,
@@ -105,7 +108,11 @@ describe('Multi-Target Action Execution E2E', () => {
       });
 
       // Verify: Expected operations in result
-      const executionResult = mockExecute.mock.results[0].value;
+      const executionResult =
+        mockExecute.mock.results[0].value instanceof Promise
+          ? await mockExecute.mock.results[0].value
+          : mockExecute.mock.results[0].value;
+
       multiTargetAssertions.expectOperationSequence(
         executionResult.operations,
         expectedOperationSequences.throwItem
@@ -122,11 +129,13 @@ describe('Multi-Target Action Execution E2E', () => {
   describe('Complex Multi-Target with Three+ Targets', () => {
     it('should handle actions with three or more targets', async () => {
       // Test: "enchant sword with fire using scroll"
-      testEnv = await testBuilder
+      const builder = await testBuilder
         .initialize()
         .buildScenario('enchant')
         .withAction(TEST_ACTION_IDS.ENCHANT_ITEM)
-        .createEntities()
+        .createEntities();
+
+      testEnv = await builder
         .withMockDiscovery({
           targets: {
             primary: { id: TEST_ENTITY_IDS.SWORD, displayName: 'Iron Sword' },
@@ -187,9 +196,12 @@ describe('Multi-Target Action Execution E2E', () => {
       });
 
       // Verify complex state changes would occur
+      const mock = testEnv.actionService.actionPipelineOrchestrator.execute;
       const executionResult =
-        testEnv.actionService.actionPipelineOrchestrator.execute.mock
-          .results[0].value;
+        mock.mock.results[0].value instanceof Promise
+          ? await mock.mock.results[0].value
+          : mock.mock.results[0].value;
+
       expect(executionResult.processedTargets).toEqual({
         item: TEST_ENTITY_IDS.SWORD,
         element: 'fire',
@@ -200,27 +212,31 @@ describe('Multi-Target Action Execution E2E', () => {
       expect(executionResult.effects).toContain(
         'Enchanted sword_001 with fire element'
       );
-      expect(executionResult.effects).toContain('Consumed catalyst crystal_001');
+      expect(executionResult.effects).toContain(
+        'Consumed catalyst crystal_001'
+      );
     });
   });
 
   describe('Operation Handler Sequencing', () => {
     it('should execute operations in correct dependency order', async () => {
       // Test transfer of multiple items ensuring capacity checks first
-      testEnv = await testBuilder
+      const builder = await testBuilder
         .initialize()
         .buildScenario('transfer')
         .withAction(TEST_ACTION_IDS.TRANSFER_ITEMS)
-        .createEntities()
-        .build();
+        .createEntities();
+
+      testEnv = await builder.build();
 
       // Create test items
       const items = ['item_001', 'item_002', 'item_003'];
       const operationLog = [];
 
       // Mock execution that tracks operation order
-      testEnv.facades.actionService.actionPipelineOrchestrator.execute =
-        jest.fn().mockImplementation(async ({ action }) => {
+      testEnv.facades.actionService.actionPipelineOrchestrator.execute = jest
+        .fn()
+        .mockImplementation(async ({ action }) => {
           // Simulate operation execution order
           operationLog.push({ type: 'validateContainer', target: 'chest_001' });
           operationLog.push({
@@ -259,15 +275,12 @@ describe('Multi-Target Action Execution E2E', () => {
         available: true,
       };
 
-      testEnv.facades.actionService.setMockActions(
-        actor.id,
-        [
-          {
-            actionId: TEST_ACTION_IDS.TRANSFER_ITEMS,
-            ...mockDiscovery,
-          },
-        ]
-      );
+      testEnv.facades.actionService.setMockActions(actor.id, [
+        {
+          actionId: TEST_ACTION_IDS.TRANSFER_ITEMS,
+          ...mockDiscovery,
+        },
+      ]);
 
       testEnv.facades.actionService.setMockValidation(
         actor.id,
@@ -302,20 +315,26 @@ describe('Multi-Target Action Execution E2E', () => {
   describe('Conditional Operation Execution', () => {
     it('should handle conditional operations based on target state', async () => {
       // Test healing that only affects wounded allies
-      testEnv = await testBuilder
+      const builder = await testBuilder
         .initialize()
         .buildScenario('heal')
         .withAction(TEST_ACTION_IDS.HEAL_WOUNDED)
-        .createEntities()
-        .build();
+        .createEntities();
+
+      testEnv = await builder.build();
 
       const healOperations = [];
 
       // Mock execution that only heals wounded targets
-      testEnv.facades.actionService.actionPipelineOrchestrator.execute =
-        jest.fn().mockImplementation(async ({ action }) => {
+      testEnv.facades.actionService.actionPipelineOrchestrator.execute = jest
+        .fn()
+        .mockImplementation(async ({ action }) => {
           // Get all potential targets
-          const allTargets = ['wounded_ally_1', 'wounded_ally_2', 'healthy_ally'];
+          const allTargets = [
+            'wounded_ally_1',
+            'wounded_ally_2',
+            'healthy_ally',
+          ];
 
           // Simulate checking each target's health
           for (const targetId of allTargets) {
@@ -323,8 +342,8 @@ describe('Multi-Target Action Execution E2E', () => {
               targetId === 'wounded_ally_1'
                 ? 'wounded1'
                 : targetId === 'wounded_ally_2'
-                ? 'wounded2'
-                : 'healthy',
+                  ? 'wounded2'
+                  : 'healthy',
               'core:health'
             );
 
@@ -384,7 +403,9 @@ describe('Multi-Target Action Execution E2E', () => {
 
       // Verify only wounded allies were healed
       const healedTargets = healOperations
-        .filter((op) => op.type === 'modifyComponent' && op.operation === 'heal')
+        .filter(
+          (op) => op.type === 'modifyComponent' && op.operation === 'heal'
+        )
         .map((op) => op.entityId);
 
       expect(healedTargets).toEqual(['wounded_ally_1', 'wounded_ally_2']);
@@ -396,20 +417,28 @@ describe('Multi-Target Action Execution E2E', () => {
   describe('Operation Failure and Rollback', () => {
     it('should rollback all changes when an operation fails', async () => {
       // Test container capacity exceeded scenario
-      testEnv = await testBuilder
+      const builder = await testBuilder
         .initialize()
         .buildScenario('transfer')
         .withAction(TEST_ACTION_IDS.TRANSFER_ITEMS)
-        .createEntities()
-        .build();
+        .createEntities();
 
-      const items = ['item_001', 'item_002', 'item_003', 'item_004', 'item_005'];
+      testEnv = await builder.build();
+
+      const items = [
+        'item_001',
+        'item_002',
+        'item_003',
+        'item_004',
+        'item_005',
+      ];
       let operationIndex = 0;
       const executedOperations = [];
 
       // Mock execution that fails partway through
-      testEnv.facades.actionService.actionPipelineOrchestrator.execute =
-        jest.fn().mockImplementation(async () => {
+      testEnv.facades.actionService.actionPipelineOrchestrator.execute = jest
+        .fn()
+        .mockImplementation(async () => {
           // Simulate operations executing until failure
           executedOperations.push({
             type: 'validateContainer',
@@ -491,9 +520,11 @@ describe('Multi-Target Action Execution E2E', () => {
       );
 
       // Get execution result from mock
+      const mock = testEnv.actionService.actionPipelineOrchestrator.execute;
       const executionResult =
-        testEnv.actionService.actionPipelineOrchestrator.execute.mock.results[0]
-          .value;
+        mock.mock.results[0].value instanceof Promise
+          ? await mock.mock.results[0].value
+          : mock.mock.results[0].value;
 
       // Verify rollback occurred
       expect(executionResult.error).toBe('Container capacity exceeded');

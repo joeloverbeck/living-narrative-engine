@@ -159,7 +159,7 @@ export async function validateCharacterConcept(concept, schemaValidator) {
   };
 
   const result = schemaValidator.validate(
-    'character-concept.schema.json',
+    'schema://living-narrative-engine/character-concept.schema.json',
     conceptForValidation
   );
 

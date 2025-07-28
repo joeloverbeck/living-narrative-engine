@@ -49,12 +49,10 @@
 
 .cb-page-container {
   min-height: 100vh;
-  max-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
   color: var(--text-primary);
-  overflow: hidden;
 }
 
 .cb-page-header {
@@ -119,8 +117,8 @@
   margin: 0 auto;
   padding: 2rem 1rem;
   width: 100%;
-  overflow: hidden;
   min-height: 0;
+  overflow: auto;
 }
 
 .cb-page-footer {
@@ -607,6 +605,10 @@
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
+  /* Explicit visibility properties */
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .modal-content {

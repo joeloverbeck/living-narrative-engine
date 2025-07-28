@@ -28,10 +28,7 @@
   "prerequisites": [
     {
       "logic": {
-        "!=": [
-          { "var": "recipient.id" },
-          { "var": "actor.id" }
-        ]
+        "!=": [{ "var": "recipient.id" }, { "var": "actor.id" }]
       },
       "failure_message": "You cannot give items to yourself."
     },
@@ -46,10 +43,7 @@
     },
     {
       "logic": {
-        "==": [
-          { "var": "recipient.components.core:actor.conscious" },
-          true
-        ]
+        "==": [{ "var": "recipient.components.core:actor.conscious" }, true]
       },
       "failure_message": "The recipient must be conscious to receive items."
     }

@@ -146,7 +146,7 @@ export class CharacterStorageService {
         // Validate the serialized concept against schema
         const isValid = this.#schemaValidator.validateAgainstSchema(
           serializedConcept,
-          'character-concept'
+          'schema://living-narrative-engine/character-concept.schema.json'
         );
         if (!isValid) {
           const errorMsg = this.#schemaValidator.formatAjvErrors();
@@ -160,7 +160,7 @@ export class CharacterStorageService {
               validationErrors: errorMsg,
               originalData: concept,
               serializedData: serializedConcept,
-              schemaId: 'character-concept',
+              schemaId: 'schema://living-narrative-engine/character-concept.schema.json',
             }
           );
           throw new CharacterStorageError(

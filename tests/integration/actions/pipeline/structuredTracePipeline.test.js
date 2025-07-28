@@ -348,7 +348,6 @@ describe('Pipeline - Structured Trace Integration', () => {
     });
   });
 
-
   describe('Stage failure scenarios', () => {
     it('should continue to capture spans when pipeline stops early', async () => {
       // Arrange
@@ -380,5 +379,4 @@ describe('Pipeline - Structured Trace Integration', () => {
       );
     });
   });
-
 });

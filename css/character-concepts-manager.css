@@ -23,6 +23,9 @@
   height: fit-content;
   position: sticky;
   top: 2rem;
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+  align-self: start;
 }
 
 .concepts-display-panel {
@@ -276,6 +279,7 @@
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
   padding: 1rem;
+  overflow: visible;
 }
 
 /* Ensure grid items don't stretch */
@@ -470,6 +474,23 @@
 #concept-modal .cb-textarea {
   min-height: 150px;
   resize: vertical;
+}
+
+/* Fix for modal-content animation - ensure visibility */
+.modal .modal-content {
+  /* Initial state for animation */
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+  transition: 
+    opacity 0.25s ease-in-out 0.05s,
+    transform 0.25s ease-in-out 0.05s;
+}
+
+/* When modal is displayed (display: flex), animate content in */
+.modal[style*="display: flex"] .modal-content,
+.modal[style*="display:flex"] .modal-content {
+  opacity: 1 !important;
+  transform: scale(1) translateY(0) !important;
 }
 
 /* Character counter styling */

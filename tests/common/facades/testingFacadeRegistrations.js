@@ -185,9 +185,14 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
     actionDiscoveryService: {
       discoverActions: (() => {
         const mock = mockFn();
+        const defaultActions = [
+          { id: 'core:look', name: 'Look' },
+          { id: 'core:wait', name: 'Wait' },
+          { id: 'core:move', name: 'Move' }
+        ];
         return mock.mockResolvedValue
-          ? mock.mockResolvedValue({ actions: [] })
-          : async () => ({ actions: [] });
+          ? mock.mockResolvedValue({ actions: defaultActions })
+          : async () => ({ actions: defaultActions });
       })(),
     },
     actionPipelineOrchestrator: {
@@ -209,9 +214,14 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
     availableActionsProvider: {
       getAvailableActions: (() => {
         const mock = mockFn();
+        const defaultActions = [
+          { id: 'core:look', name: 'Look' },
+          { id: 'core:wait', name: 'Wait' },
+          { id: 'core:move', name: 'Move' }
+        ];
         return mock.mockResolvedValue
-          ? mock.mockResolvedValue([])
-          : async () => [];
+          ? mock.mockResolvedValue(defaultActions)
+          : async () => defaultActions;
       })(),
     },
     actionIndex: {
@@ -291,11 +301,30 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
         const mock = mockFn();
         if (mock.mockImplementation) {
           return mock.mockImplementation(async (entityId) => {
-            return mockEntityStore.get(entityId) || null;
+            // Add better error handling and debugging
+            if (!entityId) {
+              console.warn('getEntityInstance called with undefined entityId');
+              return null;
+            }
+            const entity = mockEntityStore.get(entityId);
+            if (!entity) {
+              console.warn(`Entity not found in mock store: ${entityId}. Available entities: ${Array.from(mockEntityStore.keys()).join(', ')}`);
+            }
+            return entity;
           });
         } else {
           // Fallback for non-Jest mock functions
-          return async (entityId) => mockEntityStore.get(entityId) || null;
+          return async (entityId) => {
+            if (!entityId) {
+              console.warn('getEntityInstance called with undefined entityId');
+              return null;
+            }
+            const entity = mockEntityStore.get(entityId);
+            if (!entity) {
+              console.warn(`Entity not found in mock store: ${entityId}. Available entities: ${Array.from(mockEntityStore.keys()).join(', ')}`);
+            }
+            return entity;
+          };
         }
       })(),
       updateComponent: (() => {
@@ -377,16 +406,43 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
     logger: mockLogger,
   });
 
+  // Add cleanup methods to facades
+  const addCleanupMethods = (facade, store) => {
+    facade.cleanup = () => {
+      if (store) {
+        store.clear();
+      }
+    };
+    return facade;
+  };
+
+  // Add debugging method to entity service
+  entityService.getTestEntities = () => {
+    return mockEntityStore;
+  };
+
   return {
     llmService,
     actionService,
-    entityService,
+    entityService: addCleanupMethods(entityService, mockEntityStore),
     turnExecutionFacade,
+    logger: mockLogger, // Direct access to logger for test utilities
     mockDeps: {
       llm: mockLLMDeps,
       action: mockActionDeps,
       entity: mockEntityDeps,
       logger: mockLogger,
+    },
+    // Global cleanup method
+    cleanupAll() {
+      mockEntityStore.clear();
+      // Clear any other shared resources
+      if (mockLogger.debug && mockLogger.debug.mockClear) {
+        mockLogger.debug.mockClear();
+        mockLogger.info.mockClear();
+        mockLogger.warn.mockClear();
+        mockLogger.error.mockClear();
+      }
     },
   };
 }

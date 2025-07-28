@@ -48,6 +48,7 @@ The `generateCombinations` property is a boolean flag that controls how multi-ta
 When set to `true`, the system generates the Cartesian product of all valid targets, creating multiple action instances for all possible combinations.
 
 #### Example: Throw Action
+
 ```json
 {
   "id": "combat:throw",
@@ -61,10 +62,12 @@ When set to `true`, the system generates the Cartesian product of all valid targ
 ```
 
 If the scope resolution finds:
+
 - Primary targets: ["rock", "knife", "spear"]
 - Secondary targets: ["goblin", "orc"]
 
 The system generates 6 actions:
+
 1. "throw rock at goblin"
 2. "throw rock at orc"
 3. "throw knife at goblin"
@@ -95,6 +98,7 @@ The system generates 6 actions:
 ```
 
 The Cartesian product generation includes safeguards:
+
 - Maximum 50 combinations to prevent UI overflow
 - Maximum 10 items per dimension
 - Early termination when limits are reached
@@ -104,6 +108,7 @@ The Cartesian product generation includes safeguards:
 When set to `false`, the system creates a single action using the first valid target from each target definition.
 
 #### Example: Give Action
+
 ```json
 {
   "id": "interaction:give",
@@ -117,6 +122,7 @@ When set to `false`, the system creates a single action using the first valid ta
 ```
 
 If the scope resolution finds:
+
 - Primary targets: ["gold", "sword", "potion"]
 - Secondary targets: ["merchant", "guard"]
 
@@ -128,20 +134,20 @@ The system generates only ONE action: "give gold to merchant"
 // Format single action with first target from each definition
 #formatSingleMultiTarget(template, resolvedTargets, targetDefinitions, _options) {
   let formattedTemplate = template;
-  
+
   for (const [targetKey, targets] of Object.entries(resolvedTargets)) {
     if (targets.length === 0) continue;
-    
+
     const target = targets[0]; // Use first target
     const placeholder = targetDefinitions?.[targetKey]?.placeholder;
-    
+
     const placeholderRegex = new RegExp(`\\{${placeholder}\\}`, 'g');
     formattedTemplate = formattedTemplate.replace(
       placeholderRegex,
       target.displayName || target.id
     );
   }
-  
+
   return { ok: true, value: formattedTemplate };
 }
 ```
@@ -149,12 +155,14 @@ The system generates only ONE action: "give gold to merchant"
 ### 2.4 Use Case Guidelines
 
 **Use `generateCombinations: true` when:**
+
 - Players should see all possible combinations
 - Each combination represents a distinct, meaningful choice
 - The number of combinations won't overwhelm the UI
 - Examples: combat actions, crafting recipes
 
 **Use `generateCombinations: false` when:**
+
 - Only one combination makes sense at a time
 - The action involves a specific sequence or dependency
 - You want to reduce UI clutter
@@ -185,6 +193,7 @@ When a target definition includes `contextFrom`, the scope resolution process:
 3. Allows scope DSL expressions to access properties of previous targets
 
 #### Example: Unlock Container with Key
+
 ```json
 {
   "id": "examples:unlock_container_with_key",
@@ -210,20 +219,20 @@ When a target definition includes `contextFrom`, the scope resolution process:
 #getResolutionOrder(targetDefs) {
   const order = [];
   const pending = new Set(Object.keys(targetDefs));
-  
+
   while (pending.size > 0) {
     const ready = Array.from(pending).filter((key) => {
       const targetDef = targetDefs[key];
       if (!targetDef.contextFrom) return true;
       return order.includes(targetDef.contextFrom);
     });
-    
+
     ready.forEach((key) => {
       order.push(key);
       pending.delete(key);
     });
   }
-  
+
   return order; // e.g., ["primary", "secondary", "tertiary"]
 }
 ```
@@ -233,10 +242,10 @@ When a target definition includes `contextFrom`, the scope resolution process:
 ```javascript
 buildDependentContext(baseContext, resolvedTargets, targetDef) {
   const context = { ...baseContext };
-  
+
   // Add all resolved targets
   context.targets = { ...resolvedTargets };
-  
+
   // Add specific target if contextFrom is specified
   if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
     const primaryTargets = resolvedTargets[targetDef.contextFrom];
@@ -244,7 +253,7 @@ buildDependentContext(baseContext, resolvedTargets, targetDef) {
       context.target = this.#buildEntityContext(primaryTargets[0].id);
     }
   }
-  
+
   return context;
 }
 ```
@@ -289,8 +298,8 @@ When both properties are used together:
 {
   "targets": {
     "primary": { "scope": "weapons", "placeholder": "weapon" },
-    "secondary": { 
-      "scope": "matching_ammo", 
+    "secondary": {
+      "scope": "matching_ammo",
       "placeholder": "ammo",
       "contextFrom": "primary"
     }
@@ -300,6 +309,7 @@ When both properties are used together:
 ```
 
 The system:
+
 1. Resolves primary targets first
 2. For each primary target, resolves secondary targets with that primary as context
 3. If `generateCombinations` is true, creates all valid combinations
@@ -374,6 +384,7 @@ The `generateCombinations` and `contextFrom` properties provide powerful mechani
 - **`contextFrom`** enables sophisticated dependent target resolution where secondary targets can be filtered based on primary target properties
 
 Together, these properties enable complex interactions like:
+
 - "throw [any throwable item] at [any valid target]" (combinations)
 - "unlock [container] with [matching key]" (contextual dependency)
 - "cast [spell] on [valid target for that spell type]" (context + combinations)

@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:ui_search_performed",
+  "description": "Dispatched when a search operation is performed on character concepts for analytics purposes.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "searchTerm": {
+        "description": "The search term entered by the user",
+        "type": "string",
+        "minLength": 1
+      },
+      "resultCount": {
+        "description": "Number of concepts that match the search",
+        "type": "number",
+        "minimum": 0
+      },
+      "totalConcepts": {
+        "description": "Total number of concepts available",
+        "type": "number",
+        "minimum": 0
+      },
+      "searchMode": {
+        "description": "Mode of search performed",
+        "type": "string",
+        "enum": ["enhanced", "basic"]
+      },
+      "timestamp": {
+        "description": "Timestamp when the search was performed",
+        "type": "number"
+      }
+    },
+    "required": ["searchTerm", "resultCount", "totalConcepts", "searchMode"],
+    "additionalProperties": false
+  }
+}

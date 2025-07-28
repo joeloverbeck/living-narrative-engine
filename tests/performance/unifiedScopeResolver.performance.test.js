@@ -264,49 +264,6 @@ describe('UnifiedScopeResolver Performance', () => {
     });
   });
 
-  describe('memory usage', () => {
-    it('should not exceed memory limits with extensive caching', () => {
-      // Create many different contexts to test memory usage
-      const contextCount = process.env.CI ? 100 : 200; // Reduce in CI to prevent timeouts
-      const contexts = Array.from({ length: contextCount }, (_, i) => ({
-        actor: { id: `actor${i}`, componentTypeIds: ['core:actor'] },
-        actorLocation: `location${i}`,
-        actionContext: {},
-      }));
-
-      const initialMemory = process.memoryUsage().heapUsed;
-      const maxExecutionTime = 5000; // 5 second safety timeout for memory test
-
-      // Populate cache with many entries
-      const memoryTestStart = performance.now();
-      contexts.forEach((context, i) => {
-        if (performance.now() - memoryTestStart > maxExecutionTime) {
-          throw new Error(
-            'Memory usage test timeout exceeded - potential infinite loop'
-          );
-        }
-        const scopeName = `scope${i % 10}`; // 10 different scopes
-        resolver.resolve(scopeName, context, { useCache: true });
-      });
-
-      const finalMemory = process.memoryUsage().heapUsed;
-      const memoryIncrease = (finalMemory - initialMemory) / 1024 / 1024; // MB
-
-      console.log(`Memory Usage Results:`);
-      console.log(
-        `  Initial memory: ${(initialMemory / 1024 / 1024).toFixed(2)}MB`
-      );
-      console.log(
-        `  Final memory: ${(finalMemory / 1024 / 1024).toFixed(2)}MB`
-      );
-      console.log(`  Memory increase: ${memoryIncrease.toFixed(2)}MB`);
-      console.log(`  Cache size: ${cacheStrategy.size} entries`);
-
-      // Memory increase should be reasonable (less than 10MB for this test)
-      expect(memoryIncrease).toBeLessThan(10);
-
-      // Cache should respect maxSize limit
-      expect(cacheStrategy.size).toBeLessThanOrEqual(1000);
-    });
-  });
+  // Memory usage tests have been moved to tests/memory/unifiedScopeResolver.memory.test.js
+  // to provide better isolation and stability for memory-specific testing
 });

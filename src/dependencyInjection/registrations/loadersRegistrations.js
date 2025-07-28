@@ -46,6 +46,8 @@ import {
   LLM_TURN_ACTION_RESPONSE_SCHEMA,
   LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
 } from '../../turns/schemas/llmOutputSchemas.js';
+import CHARACTER_CONCEPT_SCHEMA from '../../../data/schemas/character-concept.schema.json' assert { type: 'json' };
+import THEMATIC_DIRECTION_SCHEMA from '../../../data/schemas/thematic-direction.schema.json' assert { type: 'json' };
 
 // --- Loader Imports ---
 import ActionLoader from '../../loaders/actionLoader.js';
@@ -129,6 +131,21 @@ export function registerLoaders(container) {
           {
             schema: LLM_TURN_ACTION_RESPONSE_SCHEMA,
             id: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+          },
+          // Register thematic-direction with full URI (matches $ref in character-concept schema)
+          {
+            schema: THEMATIC_DIRECTION_SCHEMA,
+            id: 'schema://living-narrative-engine/thematic-direction.schema.json',
+          },
+          // Register character-concept with full URI for consistency
+          {
+            schema: CHARACTER_CONCEPT_SCHEMA,
+            id: 'schema://living-narrative-engine/character-concept.schema.json',
+          },
+          // TEMPORARY DEBUG: Also register with short ID to see if this fixes the reference resolution
+          {
+            schema: CHARACTER_CONCEPT_SCHEMA,
+            id: 'character-concept',
           },
         ],
       })

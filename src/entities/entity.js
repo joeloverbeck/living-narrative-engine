@@ -170,6 +170,53 @@ class Entity {
   }
 
   /**
+   * Alias for getComponentData for backward compatibility with tests.
+   *
+   * @param {string} componentTypeId - The unique string identifier for the component type.
+   * @returns {object | undefined} The component data object if found, otherwise undefined.
+   */
+  getComponent(componentTypeId) {
+    return this.getComponentData(componentTypeId);
+  }
+
+  /**
+   * Gets all component data as an object mapping component IDs to their data.
+   * Provided for test compatibility.
+   *
+   * @returns {Object<string, object>} Object mapping component type IDs to their data
+   */
+  getAllComponents() {
+    const components = {};
+    for (const componentTypeId of this.#data.allComponentTypeIds) {
+      const componentData = this.getComponentData(componentTypeId);
+      if (componentData !== undefined) {
+        components[componentTypeId] = componentData;
+      }
+    }
+    return components;
+  }
+
+  /**
+   * Modifies an existing component by merging the provided data with the current component data.
+   * This is a convenience method for tests that expect to modify rather than replace components.
+   *
+   * @param {string} componentTypeId - The unique string identifier for the component type.
+   * @param {object} updates - Object containing the updates to merge with existing component data.
+   * @returns {boolean} True if the component was successfully modified.
+   */
+  modifyComponent(componentTypeId, updates) {
+    const currentData = this.getComponentData(componentTypeId);
+    if (currentData === undefined) {
+      // Component doesn't exist, add it with the updates
+      return this.addComponent(componentTypeId, updates);
+    }
+
+    // Merge updates with current data
+    const mergedData = { ...currentData, ...updates };
+    return this.addComponent(componentTypeId, mergedData);
+  }
+
+  /**
    * Provides direct access to the underlying EntityInstanceData.
    * Use with caution; direct modification of overrides should generally
    * go through entity.addComponent() or entity.removeComponent() if those

@@ -26,7 +26,7 @@ describe('Operation Handler Performance Tests', () => {
       debug: jest.fn(),
       trace: jest.fn(),
     };
-    
+
     mockDispatcher = {
       dispatch: jest.fn().mockResolvedValue(true),
     };
@@ -95,7 +95,9 @@ describe('Operation Handler Performance Tests', () => {
       expect(updatedComponent.largeItems).toHaveLength(1001);
       expect(updatedComponent.largeItems[1000]).toBe('new_large_item');
 
-      console.log(`Large array modification completed in ${operationTime.toFixed(2)}ms`);
+      console.log(
+        `Large array modification completed in ${operationTime.toFixed(2)}ms`
+      );
     });
 
     test('should handle multiple rapid operations efficiently', async () => {
@@ -130,7 +132,9 @@ describe('Operation Handler Performance Tests', () => {
       const maxTime = Math.max(...times);
       const minTime = Math.min(...times);
 
-      console.log(`\nRapid Operations Performance (${operationCount} operations):`);
+      console.log(
+        `\nRapid Operations Performance (${operationCount} operations):`
+      );
       console.log(`  Total time: ${totalTime.toFixed(2)}ms`);
       console.log(`  Average time: ${averageTime.toFixed(3)}ms`);
       console.log(`  Max time: ${maxTime.toFixed(3)}ms`);
@@ -142,7 +146,10 @@ describe('Operation Handler Performance Tests', () => {
       expect(totalTime).toBeLessThan(1000); // Total < 1s for 100 operations
 
       // Verify all operations succeeded
-      const finalComponent = entityManager.getComponentData(ENTITY_ID, COMPONENT_TYPE);
+      const finalComponent = entityManager.getComponentData(
+        ENTITY_ID,
+        COMPONENT_TYPE
+      );
       expect(finalComponent.rapidItems).toHaveLength(operationCount);
     });
 
@@ -155,7 +162,9 @@ describe('Operation Handler Performance Tests', () => {
         const testArray = Array.from({ length: size }, (_, i) => `item_${i}`);
         const testComponentType = `test:component_${size}`;
 
-        entityManager.addComponent(`entity_${size}`, testComponentType, { testItems: testArray });
+        entityManager.addComponent(`entity_${size}`, testComponentType, {
+          testItems: testArray,
+        });
 
         const params = {
           entity_ref: `entity_${size}`,
@@ -176,7 +185,8 @@ describe('Operation Handler Performance Tests', () => {
           iterationTimes.push(endTime - startTime);
         }
 
-        const avgTime = iterationTimes.reduce((sum, t) => sum + t, 0) / iterations;
+        const avgTime =
+          iterationTimes.reduce((sum, t) => sum + t, 0) / iterations;
         results.push({ size, avgTime });
 
         console.log(`Array size ${size}: ${avgTime.toFixed(3)}ms average`);

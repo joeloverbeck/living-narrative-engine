@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:ui_modal_opened",
+  "description": "Dispatched when a UI modal is opened for analytics and state tracking purposes.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "modalType": {
+        "description": "Type of modal that was opened",
+        "type": "string",
+        "enum": ["create-concept", "edit-concept", "delete-confirmation"]
+      },
+      "conceptId": {
+        "description": "ID of the concept being edited (for edit-concept modal type)",
+        "type": "string"
+      }
+    },
+    "required": ["modalType"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:ui_modal_closed",
+  "description": "Dispatched when a UI modal is closed for analytics and state tracking purposes.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "modalType": {
+        "description": "Type of modal that was closed",
+        "type": "string",
+        "enum": ["concept", "delete-confirmation"]
+      }
+    },
+    "required": ["modalType"],
+    "additionalProperties": false
+  }
+}

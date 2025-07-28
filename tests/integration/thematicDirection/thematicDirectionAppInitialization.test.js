@@ -78,7 +78,7 @@ describe('ThematicDirectionApp Initialization Integration', () => {
           ok: true,
           json: () =>
             Promise.resolve({
-              $id: 'character-concept',
+              $id: 'schema://living-narrative-engine/character-concept.schema.json',
               type: 'object',
               properties: {
                 conceptText: { type: 'string' },

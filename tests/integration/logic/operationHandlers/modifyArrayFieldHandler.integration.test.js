@@ -687,7 +687,6 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
       );
       expect(updatedComponent.items).toContain('system_added_item');
     });
-
   });
 
   describe('Field Path Integration', () => {

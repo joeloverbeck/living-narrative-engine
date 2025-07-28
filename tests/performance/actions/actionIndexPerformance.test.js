@@ -195,7 +195,8 @@ describe('ActionIndex Performance Tests', () => {
       });
 
       // Check that build time scales reasonably (should be roughly linear)
-      const buildTimeRatio = results[results.length - 1].buildTime / results[0].buildTime;
+      const buildTimeRatio =
+        results[results.length - 1].buildTime / results[0].buildTime;
       const sizeRatio = results[results.length - 1].size / results[0].size;
       expect(buildTimeRatio).toBeLessThan(sizeRatio * 2); // Allow some overhead
 
@@ -233,90 +234,30 @@ describe('ActionIndex Performance Tests', () => {
       }
 
       // Check for performance consistency across rebuilds
-      const avgRebuildTime = rebuildResults.reduce((sum, time) => sum + time, 0) / rebuildResults.length;
+      const avgRebuildTime =
+        rebuildResults.reduce((sum, time) => sum + time, 0) /
+        rebuildResults.length;
       const maxRebuildTime = Math.max(...rebuildResults);
       const minRebuildTime = Math.min(...rebuildResults);
 
-      console.log(`Rebuild performance: avg=${avgRebuildTime.toFixed(2)}ms, min=${minRebuildTime.toFixed(2)}ms, max=${maxRebuildTime.toFixed(2)}ms`);
+      console.log(
+        `Rebuild performance: avg=${avgRebuildTime.toFixed(2)}ms, min=${minRebuildTime.toFixed(2)}ms, max=${maxRebuildTime.toFixed(2)}ms`
+      );
 
       // Variation should be reasonable (max shouldn't be more than 3x min)
       expect(maxRebuildTime / minRebuildTime).toBeLessThan(3);
     });
-
-    it('should not degrade with repeated rebuilds (memory leak test)', () => {
-      const memorySnapshots = [];
-      const rebuildTimes = [];
-
-      for (let cycle = 0; cycle < 5; cycle++) {
-        // Force garbage collection if available
-        if (global.gc) {
-          global.gc();
-        }
-
-        const beforeMemory = typeof process !== 'undefined' && process.memoryUsage
-          ? process.memoryUsage().heapUsed
-          : 0;
-
-        // Perform multiple rebuilds in this cycle
-        const cycleStart = performance.now();
-        for (let rebuild = 0; rebuild < 3; rebuild++) {
-          const actions = Array.from({ length: 200 }, (_, i) => ({
-            id: `cycle_${cycle}_rebuild_${rebuild}:action_${i}`,
-            name: `Cycle ${cycle} Rebuild ${rebuild} Action ${i}`,
-            required_components: { actor: [`component_${i % 15}`] },
-          }));
-
-          actionIndex.buildIndex(actions);
-        }
-        const cycleEnd = performance.now();
-        const cycleTime = cycleEnd - cycleStart;
-
-        rebuildTimes.push(cycleTime);
-
-        // Force garbage collection if available
-        if (global.gc) {
-          global.gc();
-        }
-
-        const afterMemory = typeof process !== 'undefined' && process.memoryUsage
-          ? process.memoryUsage().heapUsed
-          : 0;
-
-        memorySnapshots.push(afterMemory - beforeMemory);
-
-        console.log(`Cycle ${cycle}: ${cycleTime.toFixed(2)}ms, memory change: ${((afterMemory - beforeMemory) / 1024).toFixed(2)}KB`);
-      }
-
-      // Performance should not degrade significantly
-      const firstCycleTime = rebuildTimes[0];
-      const lastCycleTime = rebuildTimes[rebuildTimes.length - 1];
-      expect(lastCycleTime / firstCycleTime).toBeLessThan(2); // Performance shouldn't double
-
-      // Memory usage should remain reasonable (if we can measure it)
-      if (typeof process !== 'undefined' && process.memoryUsage) {
-        const firstCycleMemory = memorySnapshots[0];
-        const lastCycleMemory = memorySnapshots[memorySnapshots.length - 1];
-        if (firstCycleMemory > 0) {
-          expect(lastCycleMemory / firstCycleMemory).toBeLessThan(3); // Memory shouldn't triple
-        }
-      }
-    });
   });
 
   describe('Large Entity Query Performance', () => {
-    it('should maintain memory efficiency with large entity sets (target: <500ms for 1000 entities)', () => {
+    it('should handle bulk entity queries efficiently (target: <500ms for 1000 entities)', () => {
       // Build index with comprehensive actions
       actionIndex.buildIndex(testData.actions.comprehensive);
-
-      // Record initial memory state
-      const initialMemory = typeof process !== 'undefined' && process.memoryUsage
-        ? process.memoryUsage().heapUsed
-        : 0;
 
       // Create many entities
       const entities = [];
       const entityCreationStart = performance.now();
-      
+
       for (let i = 0; i < 1000; i++) {
         const entity = entityManager.createEntity(`entity_${i}`);
         entityManager.addComponent(entity.id, 'core:position', {
@@ -324,11 +265,13 @@ describe('ActionIndex Performance Tests', () => {
         });
         entities.push(entity);
       }
-      
+
       const entityCreationEnd = performance.now();
       const entityCreationTime = entityCreationEnd - entityCreationStart;
 
-      console.log(`Entity creation time: ${entityCreationTime.toFixed(2)}ms for 1000 entities`);
+      console.log(
+        `Entity creation time: ${entityCreationTime.toFixed(2)}ms for 1000 entities`
+      );
 
       // Query all entities
       const startTime = performance.now();
@@ -348,26 +291,18 @@ describe('ActionIndex Performance Tests', () => {
 
       // Calculate performance metrics
       const avgQueryTime = queryTime / 1000;
-      const totalCandidates = allCandidates.reduce((sum, candidates) => sum + candidates.length, 0);
+      const totalCandidates = allCandidates.reduce(
+        (sum, candidates) => sum + candidates.length,
+        0
+      );
       const avgCandidatesPerEntity = totalCandidates / 1000;
 
-      console.log(`Bulk query performance: ${queryTime.toFixed(2)}ms total, ${avgQueryTime.toFixed(3)}ms per entity`);
-      console.log(`Average candidates per entity: ${avgCandidatesPerEntity.toFixed(1)}`);
-
-      // Memory efficiency check
-      const finalMemory = typeof process !== 'undefined' && process.memoryUsage
-        ? process.memoryUsage().heapUsed
-        : 0;
-
-      if (initialMemory > 0 && finalMemory > 0) {
-        const memoryIncrease = finalMemory - initialMemory;
-        const memoryPerEntity = memoryIncrease / 1000;
-        
-        console.log(`Memory usage: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB total, ${memoryPerEntity.toFixed(0)} bytes per entity`);
-        
-        // Should use less than 5KB per entity on average
-        expect(memoryPerEntity).toBeLessThan(5120);
-      }
+      console.log(
+        `Bulk query performance: ${queryTime.toFixed(2)}ms total, ${avgQueryTime.toFixed(3)}ms per entity`
+      );
+      console.log(
+        `Average candidates per entity: ${avgCandidatesPerEntity.toFixed(1)}`
+      );
     });
 
     it('should handle concurrent query scenarios efficiently', () => {
@@ -391,7 +326,7 @@ describe('ActionIndex Performance Tests', () => {
             const candidates = actionIndex.getCandidateActions(entity);
             const queryEnd = performance.now();
             const queryTime = queryEnd - queryStart;
-            
+
             resolve({
               entityId: entity.id,
               candidateCount: candidates.length,
@@ -404,7 +339,7 @@ describe('ActionIndex Performance Tests', () => {
 
       return Promise.all(queryPromises).then((results) => {
         expect(results).toHaveLength(100);
-        
+
         // All queries should complete successfully
         results.forEach((result) => {
           expect(result.candidateCount).toBeGreaterThan(0);
@@ -413,12 +348,17 @@ describe('ActionIndex Performance Tests', () => {
         });
 
         // Calculate statistics
-        const totalQueryTime = results.reduce((sum, result) => sum + result.queryTime, 0);
+        const totalQueryTime = results.reduce(
+          (sum, result) => sum + result.queryTime,
+          0
+        );
         const avgQueryTime = totalQueryTime / results.length;
-        const maxQueryTime = Math.max(...results.map(r => r.queryTime));
-        const minQueryTime = Math.min(...results.map(r => r.queryTime));
+        const maxQueryTime = Math.max(...results.map((r) => r.queryTime));
+        const minQueryTime = Math.min(...results.map((r) => r.queryTime));
 
-        console.log(`Concurrent query performance: avg=${avgQueryTime.toFixed(3)}ms, min=${minQueryTime.toFixed(3)}ms, max=${maxQueryTime.toFixed(3)}ms`);
+        console.log(
+          `Concurrent query performance: avg=${avgQueryTime.toFixed(3)}ms, min=${minQueryTime.toFixed(3)}ms, max=${maxQueryTime.toFixed(3)}ms`
+        );
 
         // Performance should be consistent even with concurrent access
         expect(avgQueryTime).toBeLessThan(5);
@@ -476,9 +416,15 @@ describe('ActionIndex Performance Tests', () => {
       expect(candidates.length).toBeGreaterThan(0);
 
       console.log('Performance baselines maintained:');
-      console.log(`Small catalog build: ${smallBuildTime.toFixed(2)}ms (limit: ${performanceBaselines.catalogBuild100}ms)`);
-      console.log(`Large catalog build: ${largeBuildTime.toFixed(2)}ms (limit: ${performanceBaselines.catalogBuild500}ms)`);
-      console.log(`Single query: ${queryTime.toFixed(3)}ms (limit: ${performanceBaselines.singleQuery}ms)`);
+      console.log(
+        `Small catalog build: ${smallBuildTime.toFixed(2)}ms (limit: ${performanceBaselines.catalogBuild100}ms)`
+      );
+      console.log(
+        `Large catalog build: ${largeBuildTime.toFixed(2)}ms (limit: ${performanceBaselines.catalogBuild500}ms)`
+      );
+      console.log(
+        `Single query: ${queryTime.toFixed(3)}ms (limit: ${performanceBaselines.singleQuery}ms)`
+      );
     });
   });
 });

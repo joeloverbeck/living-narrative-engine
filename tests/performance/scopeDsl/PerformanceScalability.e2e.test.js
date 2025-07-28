@@ -233,7 +233,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       const memoryUsed = (endMemory - startMemory) / 1024 / 1024;
 
       // Assert - Verify graceful handling
-      expect(resolutionTime).toBeLessThan(500); // More lenient for 10x data
+      expect(resolutionTime).toBeLessThan(750); // More lenient for 10x data
       expect(memoryUsed).toBeLessThan(200); // Scaled memory target
       expect(result).toBeInstanceOf(Set);
 

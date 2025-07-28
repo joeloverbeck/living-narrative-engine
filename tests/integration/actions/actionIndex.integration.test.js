@@ -672,7 +672,6 @@ describe('ActionIndex Integration Tests', () => {
     });
   });
 
-
   describe('Complex Integration Scenarios', () => {
     it('should work with dynamic component addition/removal during gameplay', () => {
       // Build index with gameplay actions

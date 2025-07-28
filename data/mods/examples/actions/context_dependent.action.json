@@ -38,10 +38,7 @@
     },
     {
       "logic": {
-        "==": [
-          { "var": "container.components.core:container.locked" },
-          true
-        ]
+        "==": [{ "var": "container.components.core:container.locked" }, true]
       },
       "failure_message": "The container is already unlocked."
     }
