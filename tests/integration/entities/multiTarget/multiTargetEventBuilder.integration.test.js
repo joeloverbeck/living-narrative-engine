@@ -64,11 +64,16 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
   describe('CommandProcessor Integration', () => {
     it('should integrate properly with CommandProcessor.dispatchAction', async () => {
       // Test the real integration path from CommandProcessor
-      const result = await commandProcessor.dispatchAction(mockEntity, mockTurnAction);
+      const result = await commandProcessor.dispatchAction(
+        mockEntity,
+        mockTurnAction
+      );
 
       expect(result.success).toBe(true);
       expect(result.originalInput).toBe(mockTurnAction.commandString);
-      expect(mockEventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledWith(
+      expect(
+        mockEventDispatchService.dispatchWithErrorHandling
+      ).toHaveBeenCalledWith(
         ATTEMPT_ACTION_ID,
         expect.objectContaining({
           eventName: 'core:attempt_action',
@@ -95,13 +100,17 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
         },
       };
 
-      const result = await commandProcessor.dispatchAction(mockEntity, multiTargetAction);
+      const result = await commandProcessor.dispatchAction(
+        mockEntity,
+        multiTargetAction
+      );
 
       expect(result.success).toBe(true);
-      
+
       // Get the actual payload that was dispatched
-      const [, actualPayload] = mockEventDispatchService.dispatchWithErrorHandling.mock.calls[0];
-      
+      const [, actualPayload] =
+        mockEventDispatchService.dispatchWithErrorHandling.mock.calls[0];
+
       expect(actualPayload).toMatchObject({
         eventName: 'core:attempt_action',
         actorId: mockEntity.id,
@@ -109,7 +118,7 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
         originalInput: multiTargetAction.commandString,
         targetId: 'goblin_1', // Primary target
       });
-      
+
       // Check if targets object exists when multiple targets are provided
       if (actualPayload.targets) {
         expect(actualPayload.targets).toMatchObject({
@@ -128,10 +137,15 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
         resolvedParameters: null, // This will cause extraction to fail
       };
 
-      const result = await commandProcessor.dispatchAction(mockEntity, problematicAction);
+      const result = await commandProcessor.dispatchAction(
+        mockEntity,
+        problematicAction
+      );
 
       expect(result.success).toBe(true);
-      expect(mockEventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledWith(
+      expect(
+        mockEventDispatchService.dispatchWithErrorHandling
+      ).toHaveBeenCalledWith(
         ATTEMPT_ACTION_ID,
         expect.objectContaining({
           eventName: ATTEMPT_ACTION_ID,
@@ -294,18 +308,17 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
         .build();
 
       // Simulate direct event dispatch
-      const dispatchResult = await mockEventDispatchService.dispatchWithErrorHandling(
-        ATTEMPT_ACTION_ID,
-        payload,
-        'Test event dispatch'
-      );
+      const dispatchResult =
+        await mockEventDispatchService.dispatchWithErrorHandling(
+          ATTEMPT_ACTION_ID,
+          payload,
+          'Test event dispatch'
+        );
 
       expect(dispatchResult).toBe(true);
-      expect(mockEventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledWith(
-        ATTEMPT_ACTION_ID,
-        payload,
-        'Test event dispatch'
-      );
+      expect(
+        mockEventDispatchService.dispatchWithErrorHandling
+      ).toHaveBeenCalledWith(ATTEMPT_ACTION_ID, payload, 'Test event dispatch');
     });
   });
 
@@ -351,13 +364,18 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
   describe('Error Handling Integration', () => {
     it('should handle CommandProcessor dispatch failures gracefully', async () => {
       // Mock event dispatch service to fail
-      mockEventDispatchService.dispatchWithErrorHandling.mockResolvedValue(false);
+      mockEventDispatchService.dispatchWithErrorHandling.mockResolvedValue(
+        false
+      );
 
-      const result = await commandProcessor.dispatchAction(mockEntity, mockTurnAction);
+      const result = await commandProcessor.dispatchAction(
+        mockEntity,
+        mockTurnAction
+      );
 
       expect(result.success).toBe(false);
       expect(result.originalInput).toBe(mockTurnAction.commandString);
-      
+
       // Check that system error was dispatched with correct event ID
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
@@ -373,7 +391,10 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
     it('should handle invalid actor gracefully', async () => {
       const invalidActor = null;
 
-      const result = await commandProcessor.dispatchAction(invalidActor, mockTurnAction);
+      const result = await commandProcessor.dispatchAction(
+        invalidActor,
+        mockTurnAction
+      );
 
       expect(result.success).toBe(false);
       expect(result.originalInput).toBe(mockTurnAction.commandString);
@@ -382,7 +403,10 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
     it('should handle invalid turn action gracefully', async () => {
       const invalidTurnAction = null;
 
-      const result = await commandProcessor.dispatchAction(mockEntity, invalidTurnAction);
+      const result = await commandProcessor.dispatchAction(
+        mockEntity,
+        invalidTurnAction
+      );
 
       expect(result.success).toBe(false);
     });
