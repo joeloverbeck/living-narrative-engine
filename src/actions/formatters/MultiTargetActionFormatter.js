@@ -199,7 +199,7 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
   }
 
   /**
-   * Generate combinations of targets (simplified version)
+   * Generate combinations of targets (full cartesian product with limits)
    *
    * @param {Object<string, ResolvedTarget[]>} resolvedTargets - Resolved targets by definition name
    * @returns {Array<object>} Array of target combinations
@@ -219,24 +219,37 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
     // For multiple target types, create cartesian product (limited)
     const combinations = [];
-    const [firstKey, ...restKeys] = targetKeys;
-    const firstTargets = resolvedTargets[firstKey].slice(0, 10); // Limit first dimension
-
-    for (const firstTarget of firstTargets) {
-      if (combinations.length >= maxCombinations) break;
-
-      const combination = { [firstKey]: [firstTarget] };
-
-      // Add first target from each remaining type
-      for (const key of restKeys) {
-        if (resolvedTargets[key].length > 0) {
-          combination[key] = [resolvedTargets[key][0]];
-        }
-      }
-
-      combinations.push(combination);
+    
+    // Create arrays of valid targets for each key
+    const targetArrays = targetKeys.map(key => resolvedTargets[key].filter(t => t && t.length !== 0));
+    
+    // If any target array is empty, return empty combinations
+    if (targetArrays.some(arr => arr.length === 0)) {
+      return [];
     }
-
+    
+    // Generate cartesian product recursively
+    const generateCartesian = (arrays, current = [], index = 0) => {
+      if (index === arrays.length) {
+        if (combinations.length < maxCombinations) {
+          // Create combination object with target keys
+          const combination = {};
+          targetKeys.forEach((key, i) => {
+            combination[key] = [current[i]];
+          });
+          combinations.push(combination);
+        }
+        return;
+      }
+      
+      // Limit each dimension to prevent explosion
+      const maxPerDimension = Math.min(arrays[index].length, 10);
+      for (let i = 0; i < maxPerDimension && combinations.length < maxCombinations; i++) {
+        generateCartesian(arrays, [...current, arrays[index][i]], index + 1);
+      }
+    };
+    
+    generateCartesian(targetArrays);
     return combinations;
   }
 }

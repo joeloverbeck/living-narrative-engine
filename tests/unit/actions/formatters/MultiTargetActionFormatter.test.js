@@ -609,10 +609,8 @@ describe('MultiTargetActionFormatter', () => {
 
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
-      // Should generate combinations but skip empty target arrays
-      expect(result.value.length).toBeGreaterThan(0);
-      expect(result.value[0]).toContain('Sword');
-      expect(result.value[0]).toContain('Forest');
+      // Should not generate combinations when required targets have no candidates
+      expect(result.value.length).toBe(0);
     });
 
     it('should handle combination generation when some combinations have invalid data', () => {
