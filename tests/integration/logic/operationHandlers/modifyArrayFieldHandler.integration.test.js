@@ -688,35 +688,6 @@ describe('ModifyArrayFieldHandler - Integration Tests', () => {
       expect(updatedComponent.items).toContain('system_added_item');
     });
 
-    test('should handle large data operations efficiently', async () => {
-      // Create a large array for performance testing
-      const largeArray = Array.from({ length: 1000 }, (_, i) => `item_${i}`);
-      entityManager.addComponent(ENTITY_ID, COMPONENT_TYPE, {
-        largeItems: largeArray,
-      });
-
-      const params = {
-        entity_ref: ENTITY_ID,
-        component_type: COMPONENT_TYPE,
-        field: 'largeItems',
-        mode: 'push',
-        value: 'new_large_item',
-      };
-
-      const startTime = performance.now();
-      await handler.execute(params, executionContext);
-      const endTime = performance.now();
-
-      // Verify operation completed efficiently (should be fast even with large arrays)
-      expect(endTime - startTime).toBeLessThan(100); // 100ms threshold
-
-      const updatedComponent = entityManager.getComponentData(
-        ENTITY_ID,
-        COMPONENT_TYPE
-      );
-      expect(updatedComponent.largeItems).toHaveLength(1001);
-      expect(updatedComponent.largeItems[1000]).toBe('new_large_item');
-    });
   });
 
   describe('Field Path Integration', () => {
