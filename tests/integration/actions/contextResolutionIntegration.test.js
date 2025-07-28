@@ -19,11 +19,11 @@ describe('Context Resolution Integration', () => {
     entityTestBed = new EntityManagerTestBed();
     const testBed = createTestBed();
     mockLogger = testBed.mockLogger;
-    
+
     // Create facades
     facades = createMockFacades({}, jest.fn);
     actionServiceFacade = facades.actionService;
-    
+
     // Initialize context log for tracking
     contextLog = [];
   });
@@ -86,7 +86,9 @@ describe('Context Resolution Integration', () => {
                       type: 'object',
                       properties: {
                         type: {
-                          const: { var: 'targets.recipe[0].required_material_type' },
+                          const: {
+                            var: 'targets.recipe[0].required_material_type',
+                          },
                         },
                       },
                       required: ['type'],
@@ -147,32 +149,34 @@ describe('Context Resolution Integration', () => {
       });
 
       // Mock the target resolution service to track context
-      const mockTargetResolution = jest.fn().mockImplementation(async (params) => {
-        contextLog.push({
-          targetName: params.targetName,
-          context: params.context,
-          availableVariables: Object.keys(params.context || {}),
-        });
+      const mockTargetResolution = jest
+        .fn()
+        .mockImplementation(async (params) => {
+          contextLog.push({
+            targetName: params.targetName,
+            context: params.context,
+            availableVariables: Object.keys(params.context || {}),
+          });
 
-        // Simulate resolution based on target
-        if (params.targetName === 'recipe') {
-          return {
-            success: true,
-            resolvedTargets: [recipe],
-          };
-        } else if (params.targetName === 'tool') {
-          return {
-            success: true,
-            resolvedTargets: [{ id: 'hammer_001' }],
-          };
-        } else if (params.targetName === 'material') {
-          return {
-            success: true,
-            resolvedTargets: [{ id: 'iron_ingot_001' }],
-          };
-        }
-        return { success: false };
-      });
+          // Simulate resolution based on target
+          if (params.targetName === 'recipe') {
+            return {
+              success: true,
+              resolvedTargets: [recipe],
+            };
+          } else if (params.targetName === 'tool') {
+            return {
+              success: true,
+              resolvedTargets: [{ id: 'hammer_001' }],
+            };
+          } else if (params.targetName === 'material') {
+            return {
+              success: true,
+              resolvedTargets: [{ id: 'iron_ingot_001' }],
+            };
+          }
+          return { success: false };
+        });
 
       jest
         .spyOn(actionServiceFacade.targetResolutionService, 'resolveTargets')
@@ -181,7 +185,7 @@ describe('Context Resolution Integration', () => {
       // The test is checking if target resolution happens during discovery,
       // but the mock bypasses the actual discovery process.
       // We need to trigger the actual discovery process instead of mocking it.
-      
+
       // Mock the underlying action discovery service
       jest
         .spyOn(actionServiceFacade.actionDiscoveryService, 'discoverActions')
@@ -193,36 +197,39 @@ describe('Context Resolution Integration', () => {
             scope: actionDefinition.targets.recipe.scope,
             context: { actor: playerEntity, location: null, game: {} },
           });
-          
+
           await mockTargetResolution({
             targetName: 'tool',
             scope: actionDefinition.targets.tool.scope,
-            context: { 
-              actor: playerEntity, 
-              location: null, 
-              game: {},
-              target: recipe, 
-              targets: { recipe: [recipe] } 
-            },
-          });
-          
-          await mockTargetResolution({
-            targetName: 'material',
-            scope: actionDefinition.targets.material.scope,
-            context: { 
+            context: {
               actor: playerEntity,
               location: null,
               game: {},
-              targets: { recipe: [recipe], tool: [{ id: 'hammer_001' }] } 
+              target: recipe,
+              targets: { recipe: [recipe] },
             },
           });
-          
+
+          await mockTargetResolution({
+            targetName: 'material',
+            scope: actionDefinition.targets.material.scope,
+            context: {
+              actor: playerEntity,
+              location: null,
+              game: {},
+              targets: { recipe: [recipe], tool: [{ id: 'hammer_001' }] },
+            },
+          });
+
           return {
             actions: [
               {
                 actionId: actionDefinition.id,
                 targets: {
-                  recipe: { id: 'sword_recipe', displayName: 'Iron Sword Recipe' },
+                  recipe: {
+                    id: 'sword_recipe',
+                    displayName: 'Iron Sword Recipe',
+                  },
                   tool: { id: 'hammer_001', displayName: 'Blacksmith Hammer' },
                   material: { id: 'iron_ingot_001', displayName: 'Iron Ingot' },
                 },
@@ -234,7 +241,8 @@ describe('Context Resolution Integration', () => {
           };
         });
 
-      const availableActions = await actionServiceFacade.discoverActions('player');
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(1);
       expect(availableActions[0].targets.recipe.id).toBe('sword_recipe');
@@ -243,23 +251,27 @@ describe('Context Resolution Integration', () => {
 
       // Verify context was passed correctly through the chain
       expect(contextLog.length).toBeGreaterThanOrEqual(3);
-      
+
       // First resolution (recipe) should have base context
-      const recipeContext = contextLog.find(log => log.targetName === 'recipe');
+      const recipeContext = contextLog.find(
+        (log) => log.targetName === 'recipe'
+      );
       expect(recipeContext).toBeDefined();
       expect(recipeContext.availableVariables).toContain('actor');
       expect(recipeContext.availableVariables).toContain('location');
       expect(recipeContext.availableVariables).toContain('game');
 
       // Second resolution (tool) should have recipe in context
-      const toolContext = contextLog.find(log => log.targetName === 'tool');
+      const toolContext = contextLog.find((log) => log.targetName === 'tool');
       if (toolContext) {
         expect(toolContext.availableVariables).toContain('target');
         expect(toolContext.availableVariables).toContain('targets');
       }
 
       // Third resolution (material) should have both recipe and tool in context
-      const materialContext = contextLog.find(log => log.targetName === 'material');
+      const materialContext = contextLog.find(
+        (log) => log.targetName === 'material'
+      );
       if (materialContext) {
         expect(materialContext.availableVariables).toContain('targets');
       }
@@ -299,11 +311,12 @@ describe('Context Resolution Integration', () => {
           errors: [],
         });
 
-      const availableActions = await actionServiceFacade.discoverActions('player');
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       // Should handle circular dependency gracefully by returning no actions
       expect(availableActions).toHaveLength(0);
-      
+
       // Verify no infinite loop occurred
       expect(mockLogger.error).not.toHaveBeenCalledWith(
         expect.stringContaining('Maximum call stack')
@@ -316,31 +329,33 @@ describe('Context Resolution Integration', () => {
       let contextSnapshots = [];
 
       // Create custom target resolution mock that captures context
-      const mockTargetResolution = jest.fn().mockImplementation(async (params) => {
-        contextSnapshots.push({
-          stage: params.targetName,
-          scope: params.scope,
-          availableVariables: Object.keys(params.context || {}),
-          targetVariable: params.context?.target?.id,
-          targetsVariable: params.context?.targets
-            ? Object.keys(params.context.targets)
-            : [],
-        });
+      const mockTargetResolution = jest
+        .fn()
+        .mockImplementation(async (params) => {
+          contextSnapshots.push({
+            stage: params.targetName,
+            scope: params.scope,
+            availableVariables: Object.keys(params.context || {}),
+            targetVariable: params.context?.target?.id,
+            targetsVariable: params.context?.targets
+              ? Object.keys(params.context.targets)
+              : [],
+          });
 
-        // Return mock results based on target
-        if (params.targetName === 'primary') {
-          return {
-            success: true,
-            resolvedTargets: [{ id: 'item_001', name: 'Test Item' }],
-          };
-        } else if (params.targetName === 'secondary') {
-          return {
-            success: true,
-            resolvedTargets: [{ id: 'item_002', name: 'Secondary Item' }],
-          };
-        }
-        return { success: false };
-      });
+          // Return mock results based on target
+          if (params.targetName === 'primary') {
+            return {
+              success: true,
+              resolvedTargets: [{ id: 'item_001', name: 'Test Item' }],
+            };
+          } else if (params.targetName === 'secondary') {
+            return {
+              success: true,
+              resolvedTargets: [{ id: 'item_002', name: 'Secondary Item' }],
+            };
+          }
+          return { success: false };
+        });
 
       jest
         .spyOn(actionServiceFacade.targetResolutionService, 'resolveTargets')
@@ -395,20 +410,20 @@ describe('Context Resolution Integration', () => {
             scope: actionDefinition.targets.primary.scope,
             context: { actor: playerEntity, location: null, game: {} },
           });
-          
+
           // For the secondary target, include the primary target in context
           await mockTargetResolution({
             targetName: 'secondary',
             scope: actionDefinition.targets.secondary.scope,
-            context: { 
+            context: {
               actor: playerEntity,
               location: null,
               game: {},
               target: { id: 'item_001', name: 'Test Item' },
-              targets: { primary: [{ id: 'item_001', name: 'Test Item' }] }
+              targets: { primary: [{ id: 'item_001', name: 'Test Item' }] },
             },
           });
-          
+
           return {
             actions: [
               {
@@ -431,7 +446,9 @@ describe('Context Resolution Integration', () => {
       expect(contextSnapshots).toHaveLength(2);
 
       // First scope evaluation (primary target)
-      const primarySnapshot = contextSnapshots.find(s => s.stage === 'primary');
+      const primarySnapshot = contextSnapshots.find(
+        (s) => s.stage === 'primary'
+      );
       expect(primarySnapshot).toBeDefined();
       expect(primarySnapshot.availableVariables).toContain('actor');
       expect(primarySnapshot.availableVariables).toContain('location');
@@ -440,7 +457,9 @@ describe('Context Resolution Integration', () => {
       expect(primarySnapshot.targetsVariable).toEqual([]);
 
       // Second scope evaluation (secondary target with context)
-      const secondarySnapshot = contextSnapshots.find(s => s.stage === 'secondary');
+      const secondarySnapshot = contextSnapshots.find(
+        (s) => s.stage === 'secondary'
+      );
       expect(secondarySnapshot).toBeDefined();
       expect(secondarySnapshot.availableVariables).toContain('actor');
       expect(secondarySnapshot.availableVariables).toContain('location');
@@ -499,7 +518,9 @@ describe('Context Resolution Integration', () => {
                       type: 'object',
                       properties: {
                         type: {
-                          const: { var: 'target.components.core:item.material_type' },
+                          const: {
+                            var: 'target.components.core:item.material_type',
+                          },
                         },
                       },
                       required: ['type'],
@@ -567,15 +588,16 @@ describe('Context Resolution Integration', () => {
           errors: [],
         });
 
-      const availableActions = await actionServiceFacade.discoverActions('player');
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(1);
       // Should only include iron material, not wood
       expect(availableActions[0].targets.material.id).toBe('iron_001');
-      
+
       // Verify wood was not included due to context validation
       const hasWoodAction = availableActions.some(
-        action => action.targets.material.id === 'wood_001'
+        (action) => action.targets.material.id === 'wood_001'
       );
       expect(hasWoodAction).toBe(false);
     });
@@ -645,11 +667,15 @@ describe('Context Resolution Integration', () => {
                       properties: {
                         compatible_elements: {
                           type: 'array',
-                          contains: { var: 'targets.rune[0].components.core:rune.element' },
+                          contains: {
+                            var: 'targets.rune[0].components.core:rune.element',
+                          },
                         },
                         item_types: {
                           type: 'array',
-                          contains: { var: 'targets.item[0].components.core:item.type' },
+                          contains: {
+                            var: 'targets.item[0].components.core:item.type',
+                          },
                         },
                       },
                     },
@@ -712,25 +738,30 @@ describe('Context Resolution Integration', () => {
               targets: {
                 item: { id: 'sword_001', displayName: 'Steel Sword' },
                 rune: { id: 'fire_rune_001', displayName: 'Fire Rune' },
-                catalyst: { id: 'universal_catalyst_001', displayName: 'Universal Catalyst' },
+                catalyst: {
+                  id: 'universal_catalyst_001',
+                  displayName: 'Universal Catalyst',
+                },
               },
-              command: 'enchant Steel Sword with Fire Rune using Universal Catalyst',
+              command:
+                'enchant Steel Sword with Fire Rune using Universal Catalyst',
               available: true,
             },
           ],
           errors: [],
         });
 
-      const availableActions = await actionServiceFacade.discoverActions('player');
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(1);
-      
+
       // Verify all three targets were resolved correctly
       const action = availableActions[0];
       expect(action.targets.item.id).toBe('sword_001');
       expect(action.targets.rune.id).toBe('fire_rune_001');
       expect(action.targets.catalyst.id).toBe('universal_catalyst_001');
-      
+
       // Catalyst should be compatible with both item type and rune element
       expect(action.command).toContain('Universal Catalyst');
     });

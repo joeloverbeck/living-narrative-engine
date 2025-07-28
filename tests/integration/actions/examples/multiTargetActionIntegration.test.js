@@ -16,12 +16,12 @@ describe('Multi-Target Action Examples - Integration', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.mockLogger;
-    
+
     // Create mock base formatter
     const mockBaseFormatter = {
-      format: jest.fn().mockReturnValue({ ok: true, value: 'formatted' })
+      format: jest.fn().mockReturnValue({ ok: true, value: 'formatted' }),
     };
-    
+
     formatter = new MultiTargetActionFormatter(mockBaseFormatter, mockLogger);
   });
 
@@ -33,19 +33,22 @@ describe('Multi-Target Action Examples - Integration', () => {
     let actionDef;
 
     beforeEach(() => {
-      const actionPath = join(process.cwd(), 'data/mods/examples/actions/basic_multi_target.action.json');
+      const actionPath = join(
+        process.cwd(),
+        'data/mods/examples/actions/basic_multi_target.action.json'
+      );
       actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
     });
 
     it('should format throw action with single target pair', () => {
       const resolvedTargets = {
         primary: [{ id: 'rock_001', displayName: 'Small Rock' }],
-        secondary: [{ id: 'npc_001', displayName: 'Guard' }]
+        secondary: [{ id: 'npc_001', displayName: 'Guard' }],
       };
 
       const targetDefinitions = {
         primary: { placeholder: 'item' },
-        secondary: { placeholder: 'target' }
+        secondary: { placeholder: 'target' },
       };
 
       const result = formatter.formatMultiTarget(
@@ -69,17 +72,17 @@ describe('Multi-Target Action Examples - Integration', () => {
       const resolvedTargets = {
         primary: [
           { id: 'rock_001', displayName: 'Small Rock' },
-          { id: 'apple_001', displayName: 'Red Apple' }
+          { id: 'apple_001', displayName: 'Red Apple' },
         ],
         secondary: [
           { id: 'npc_001', displayName: 'Guard' },
-          { id: 'target_001', displayName: 'Practice Dummy' }
-        ]
+          { id: 'target_001', displayName: 'Practice Dummy' },
+        ],
       };
 
       const targetDefinitions = {
         primary: { placeholder: 'item' },
-        secondary: { placeholder: 'target' }
+        secondary: { placeholder: 'target' },
       };
 
       const result = formatter.formatMultiTarget(
@@ -94,7 +97,7 @@ describe('Multi-Target Action Examples - Integration', () => {
       if (actionDef.generateCombinations) {
         expect(result.value).toHaveLength(4); // 2x2 combinations
         expect(result.value[0]).toMatch(/throw .+ at .+/);
-        
+
         // Check that all combinations are present
         expect(result.value).toContain('throw Small Rock at Guard');
         expect(result.value).toContain('throw Small Rock at Practice Dummy');
@@ -106,12 +109,12 @@ describe('Multi-Target Action Examples - Integration', () => {
     it('should handle empty target lists gracefully', () => {
       const resolvedTargets = {
         primary: [],
-        secondary: []
+        secondary: [],
       };
 
       const targetDefinitions = {
         primary: { placeholder: 'item' },
-        secondary: { placeholder: 'target' }
+        secondary: { placeholder: 'target' },
       };
 
       const result = formatter.formatMultiTarget(
@@ -135,19 +138,22 @@ describe('Multi-Target Action Examples - Integration', () => {
     let actionDef;
 
     beforeEach(() => {
-      const actionPath = join(process.cwd(), 'data/mods/examples/actions/context_dependent.action.json');
+      const actionPath = join(
+        process.cwd(),
+        'data/mods/examples/actions/context_dependent.action.json'
+      );
       actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
     });
 
     it('should format unlock action with contextual dependencies', () => {
       const resolvedTargets = {
         primary: [{ id: 'chest_001', displayName: 'Wooden Chest' }],
-        secondary: [{ id: 'key_001', displayName: 'Brass Key' }]
+        secondary: [{ id: 'key_001', displayName: 'Brass Key' }],
       };
 
       const targetDefinitions = {
         primary: { placeholder: 'container' },
-        secondary: { placeholder: 'key', contextFrom: 'primary' }
+        secondary: { placeholder: 'key', contextFrom: 'primary' },
       };
 
       const result = formatter.formatMultiTarget(
@@ -169,21 +175,21 @@ describe('Multi-Target Action Examples - Integration', () => {
 
     it('should not generate combinations when disabled', () => {
       expect(actionDef.generateCombinations).toBe(false);
-      
+
       const resolvedTargets = {
         primary: [
           { id: 'chest_001', displayName: 'Wooden Chest' },
-          { id: 'safe_001', displayName: 'Metal Safe' }
+          { id: 'safe_001', displayName: 'Metal Safe' },
         ],
         secondary: [
           { id: 'key_001', displayName: 'Brass Key' },
-          { id: 'key_002', displayName: 'Steel Key' }
-        ]
+          { id: 'key_002', displayName: 'Steel Key' },
+        ],
       };
 
       const targetDefinitions = {
         primary: { placeholder: 'container' },
-        secondary: { placeholder: 'key', contextFrom: 'primary' }
+        secondary: { placeholder: 'key', contextFrom: 'primary' },
       };
 
       const result = formatter.formatMultiTarget(
@@ -204,7 +210,10 @@ describe('Multi-Target Action Examples - Integration', () => {
     let actionDef;
 
     beforeEach(() => {
-      const actionPath = join(process.cwd(), 'data/mods/examples/actions/optional_targets.action.json');
+      const actionPath = join(
+        process.cwd(),
+        'data/mods/examples/actions/optional_targets.action.json'
+      );
       actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
     });
 
@@ -212,13 +221,13 @@ describe('Multi-Target Action Examples - Integration', () => {
       const resolvedTargets = {
         primary: [{ id: 'apple_001', displayName: 'Red Apple' }],
         secondary: [{ id: 'npc_001', displayName: 'Merchant' }],
-        tertiary: [] // Empty optional target
+        tertiary: [], // Empty optional target
       };
 
       const targetDefinitions = {
         primary: { placeholder: 'item' },
         secondary: { placeholder: 'recipient' },
-        tertiary: { placeholder: 'note', optional: true }
+        tertiary: { placeholder: 'note', optional: true },
       };
 
       const result = formatter.formatMultiTarget(
@@ -242,13 +251,13 @@ describe('Multi-Target Action Examples - Integration', () => {
       const resolvedTargets = {
         primary: [{ id: 'apple_001', displayName: 'Red Apple' }],
         secondary: [{ id: 'npc_001', displayName: 'Merchant' }],
-        tertiary: [{ id: 'note_001', displayName: 'Thank You Note' }]
+        tertiary: [{ id: 'note_001', displayName: 'Thank You Note' }],
       };
 
       const targetDefinitions = {
         primary: { placeholder: 'item' },
         secondary: { placeholder: 'recipient' },
-        tertiary: { placeholder: 'note', optional: true }
+        tertiary: { placeholder: 'note', optional: true },
       };
 
       const result = formatter.formatMultiTarget(
@@ -277,11 +286,11 @@ describe('Multi-Target Action Examples - Integration', () => {
         id: 'test:invalid',
         name: 'Invalid Action',
         template: 'invalid {missing} template',
-        generateCombinations: false
+        generateCombinations: false,
       };
 
       const resolvedTargets = {
-        primary: [{ id: 'item_001', displayName: 'Test Item' }]
+        primary: [{ id: 'item_001', displayName: 'Test Item' }],
       };
 
       const result = formatter.formatMultiTarget(
@@ -302,15 +311,15 @@ describe('Multi-Target Action Examples - Integration', () => {
         id: 'test:no_template',
         name: 'No Template Action',
         // Missing template property
-        generateCombinations: false
+        generateCombinations: false,
       };
 
       const resolvedTargets = {
-        primary: [{ id: 'item_001', displayName: 'Test Item' }]
+        primary: [{ id: 'item_001', displayName: 'Test Item' }],
       };
 
       const targetDefinitions = {
-        primary: { placeholder: 'item' }
+        primary: { placeholder: 'item' },
       };
 
       const result = formatter.formatMultiTarget(

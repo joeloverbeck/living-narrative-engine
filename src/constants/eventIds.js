@@ -259,3 +259,54 @@ export const WORLDINIT_ENTITY_INSTANTIATED_ID = 'worldinit:entity_instantiated';
  */
 export const WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID =
   'worldinit:entity_instantiation_failed';
+
+// --- AI Decision & Action Execution Event IDs ---
+
+/**
+ * Fired when an AI decision process is requested.
+ *
+ * @type {string}
+ */
+export const AI_DECISION_REQUESTED = 'core:ai_decision_requested';
+
+/**
+ * Fired when an AI decision is successfully received.
+ *
+ * @type {string}
+ */
+export const AI_DECISION_RECEIVED = 'core:ai_decision_received';
+
+/**
+ * Fired when an AI decision process fails.
+ *
+ * @type {string}
+ */
+export const AI_DECISION_FAILED = 'core:ai_decision_failed';
+
+/**
+ * Fired when action execution starts.
+ *
+ * @type {string}
+ */
+export const ACTION_EXECUTION_STARTED = 'core:action_execution_started';
+
+/**
+ * Fired when action execution completes successfully.
+ *
+ * @type {string}
+ */
+export const ACTION_EXECUTION_COMPLETED = 'core:action_execution_completed';
+
+/**
+ * Fired when action execution fails.
+ *
+ * @type {string}
+ */
+export const ACTION_EXECUTION_FAILED = 'core:action_execution_failed';
+
+/**
+ * Fired when action validation fails.
+ *
+ * @type {string}
+ */
+export const ACTION_VALIDATION_FAILED = 'core:action_validation_failed';

@@ -257,5 +257,4 @@ describe('Action Schema Backward Compatibility Integration', () => {
       expect(missingTargetingActions.length).toBe(0);
     });
   });
-
 });

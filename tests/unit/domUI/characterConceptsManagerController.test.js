@@ -1060,10 +1060,10 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
       );
       expect(mockElements.saveConceptBtn.textContent).toBe('Create Concept');
       expect(mockElements.conceptModal.style.display).toBe('flex');
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'ui:modal-opened',
-        payload: { modalType: 'create-concept' },
-      });
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'core:ui_modal_opened',
+        { modalType: 'create-concept' }
+      );
     });
 
     it('should focus on textarea when modal opens', () => {
@@ -1147,10 +1147,10 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
       closeBtnHandler();
 
       expect(mockElements.conceptModal.style.display).toBe('none');
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'ui:modal-closed',
-        payload: { modalType: 'concept' },
-      });
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'core:ui_modal_closed',
+        { modalType: 'concept' }
+      );
     });
 
     it('should restore previous focus when closing modal', () => {
@@ -2050,12 +2050,12 @@ describe('CharacterConceptsManagerController - Display Concepts Functionality (T
 
       it('should properly structure event dispatch payload', () => {
         const expectedEvent = {
-          type: 'ui:modal-opened',
+          type: 'core:ui_modal_opened',
           payload: { modalType: 'edit-concept', conceptId: 'concept-1' },
         };
 
         // Verify event structure is correct
-        expect(expectedEvent.type).toBe('ui:modal-opened');
+        expect(expectedEvent.type).toBe('core:ui_modal_opened');
         expect(expectedEvent.payload.modalType).toBe('edit-concept');
         expect(expectedEvent.payload.conceptId).toBe('concept-1');
       });
@@ -2975,10 +2975,10 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
     it('should dispatch modal closed event', () => {
       controller._testExports.closeDeleteModal();
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'ui:modal-closed',
-        payload: { modalType: 'delete-confirmation' },
-      });
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'core:ui_modal_closed',
+        { modalType: 'delete-confirmation' }
+      );
     });
   });
 

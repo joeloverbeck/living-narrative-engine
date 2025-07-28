@@ -19,6 +19,10 @@ module.exports = {
   ],
   // E2E tests may take even longer
   testTimeout: 60000,
+  // Enable force exit to prevent hanging
+  forceExit: true,
+  // Increase memory limits for E2E tests
+  workerIdleMemoryLimit: '512MB',
   // E2E tests have lower coverage expectations due to their nature
   coverageThreshold: {
     global: {

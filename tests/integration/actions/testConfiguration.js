@@ -99,7 +99,9 @@ export class MultiTargetTestConfiguration {
     const player = await this.entityTestBed.createEntity('actor', {
       instanceId: 'context_player',
       overrides: {
-        'core:inventory': { items: ['tool_001', 'material_001', 'material_002'] },
+        'core:inventory': {
+          items: ['tool_001', 'material_001', 'material_002'],
+        },
       },
     });
 
@@ -163,9 +165,9 @@ export class MultiTargetTestConfiguration {
 
     const monitor = {
       capturedEvents,
-      
+
       startCapture(eventTypes = ['*']) {
-        eventTypes.forEach(eventType => {
+        eventTypes.forEach((eventType) => {
           const handler = (event) => {
             capturedEvents.push({
               timestamp: Date.now(),
@@ -174,7 +176,7 @@ export class MultiTargetTestConfiguration {
               metadata: event.metadata,
             });
           };
-          
+
           eventHandlers.set(eventType, handler);
           if (eventBus.subscribe) {
             eventBus.subscribe(eventType, handler);
@@ -192,29 +194,32 @@ export class MultiTargetTestConfiguration {
       },
 
       getEventsByType(eventType) {
-        return capturedEvents.filter(e => e.type === eventType);
+        return capturedEvents.filter((e) => e.type === eventType);
       },
 
       getEventChain(startEventType) {
         const chain = [];
-        const startEvent = capturedEvents.find(e => e.type === startEventType);
-        
+        const startEvent = capturedEvents.find(
+          (e) => e.type === startEventType
+        );
+
         if (startEvent) {
           chain.push(startEvent);
           // Find events triggered by this event
           const findTriggeredEvents = (triggerEvent) => {
-            const triggered = capturedEvents.filter(e => 
-              e.metadata?.triggeredBy === triggerEvent.type &&
-              e.timestamp > triggerEvent.timestamp
+            const triggered = capturedEvents.filter(
+              (e) =>
+                e.metadata?.triggeredBy === triggerEvent.type &&
+                e.timestamp > triggerEvent.timestamp
             );
-            triggered.forEach(e => {
+            triggered.forEach((e) => {
               chain.push(e);
               findTriggeredEvents(e);
             });
           };
           findTriggeredEvents(startEvent);
         }
-        
+
         return chain;
       },
 
@@ -271,27 +276,27 @@ export class MultiTargetTestConfiguration {
    */
   createStressTestScenario(complexity = 'medium') {
     const scenarios = {
-      low: { 
-        entityCount: 50, 
-        maxCombinations: 20, 
+      low: {
+        entityCount: 50,
+        maxCombinations: 20,
         contextDepth: 2,
         concurrentActions: 3,
       },
-      medium: { 
-        entityCount: 100, 
-        maxCombinations: 50, 
+      medium: {
+        entityCount: 100,
+        maxCombinations: 50,
         contextDepth: 3,
         concurrentActions: 5,
       },
-      high: { 
-        entityCount: 200, 
-        maxCombinations: 100, 
+      high: {
+        entityCount: 200,
+        maxCombinations: 100,
         contextDepth: 4,
         concurrentActions: 10,
       },
-      extreme: { 
-        entityCount: 500, 
-        maxCombinations: 200, 
+      extreme: {
+        entityCount: 500,
+        maxCombinations: 200,
         contextDepth: 5,
         concurrentActions: 20,
       },
@@ -346,7 +351,7 @@ export class MultiTargetTestConfiguration {
 
     let result;
     let error;
-    
+
     try {
       result = await operation();
     } catch (err) {
@@ -381,9 +386,9 @@ export class MultiTargetTestConfiguration {
       return null;
     }
 
-    const times = this.performanceMetrics.map(m => m.processingTime);
-    const memories = this.performanceMetrics.map(m => m.memoryIncrease);
-    const successes = this.performanceMetrics.filter(m => m.success).length;
+    const times = this.performanceMetrics.map((m) => m.processingTime);
+    const memories = this.performanceMetrics.map((m) => m.memoryIncrease);
+    const successes = this.performanceMetrics.filter((m) => m.success).length;
 
     return {
       totalOperations: this.performanceMetrics.length,
@@ -452,19 +457,19 @@ export class IntegrationTestUtils {
    */
   static async createBatchEntities(entityTestBed, prefix, count, overridesFn) {
     const entities = [];
-    
+
     for (let i = 0; i < count; i++) {
       const entityId = `${prefix}_${i}`;
       const overrides = overridesFn ? overridesFn(i) : {};
-      
+
       const entity = await entityTestBed.createEntity('basic', {
         instanceId: entityId,
         overrides,
       });
-      
+
       entities.push(entity);
     }
-    
+
     return entities;
   }
 
@@ -477,26 +482,28 @@ export class IntegrationTestUtils {
   static assertActionDiscovery(actions, expectations) {
     expect(actions).toBeDefined();
     expect(Array.isArray(actions)).toBe(true);
-    
+
     if (expectations.count !== undefined) {
       expect(actions).toHaveLength(expectations.count);
     }
-    
+
     if (expectations.minCount !== undefined) {
       expect(actions.length).toBeGreaterThanOrEqual(expectations.minCount);
     }
-    
+
     if (expectations.maxCount !== undefined) {
       expect(actions.length).toBeLessThanOrEqual(expectations.maxCount);
     }
-    
+
     if (expectations.hasActionId) {
-      const hasAction = actions.some(a => a.actionId === expectations.hasActionId);
+      const hasAction = actions.some(
+        (a) => a.actionId === expectations.hasActionId
+      );
       expect(hasAction).toBe(true);
     }
-    
+
     if (expectations.allHaveTargets) {
-      actions.forEach(action => {
+      actions.forEach((action) => {
         expect(action.targets || action.target).toBeDefined();
       });
     }
@@ -512,14 +519,14 @@ export class IntegrationTestUtils {
    */
   static async waitForCondition(condition, timeout = 1000, checkInterval = 50) {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       if (await condition()) {
         return true;
       }
-      await new Promise(resolve => setTimeout(resolve, checkInterval));
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
     }
-    
+
     return false;
   }
 
@@ -533,7 +540,7 @@ export class IntegrationTestUtils {
     const defaults = {
       actor: { id: 'test_actor' },
       location: { id: 'test_location' },
-      game: { 
+      game: {
         turnNumber: 1,
         config: {},
       },
@@ -556,7 +563,7 @@ export class TestDataGenerators {
   static generateItem(seed = 0) {
     const types = ['weapon', 'armor', 'consumable', 'material', 'tool'];
     const materials = ['metal', 'wood', 'cloth', 'crystal', 'stone'];
-    
+
     return {
       'core:item': {
         name: `Generated Item ${seed}`,
@@ -580,7 +587,7 @@ export class TestDataGenerators {
   static generateActor(seed = 0) {
     const names = ['Guard', 'Merchant', 'Scholar', 'Adventurer', 'Citizen'];
     const personalities = ['friendly', 'neutral', 'suspicious', 'helpful'];
-    
+
     return {
       'core:actor': {
         name: `${names[seed % names.length]} ${seed}`,
@@ -618,7 +625,8 @@ export class TestDataGenerators {
       const targetName = `target${i + 1}`;
       targets[targetName] = {
         name: targetName,
-        scope: i === 0 ? 'actor.core:inventory.items[]' : 'location.core:objects[]',
+        scope:
+          i === 0 ? 'actor.core:inventory.items[]' : 'location.core:objects[]',
         required: true,
         ...(hasContext && i > 0 ? { contextFrom: `target${i}` } : {}),
       };
@@ -641,13 +649,15 @@ export class TestDataGenerators {
       id: 'test:generated_complex_action',
       name: 'perform complex action',
       targets,
-      prerequisites: hasPrerequisites ? [
-        {
-          logic: {
-            '>=': [{ var: 'actor.components.core:stats.strength' }, 10],
-          },
-        },
-      ] : [],
+      prerequisites: hasPrerequisites
+        ? [
+            {
+              logic: {
+                '>=': [{ var: 'actor.components.core:stats.strength' }, 10],
+              },
+            },
+          ]
+        : [],
       operations,
       template: 'perform complex action',
     };

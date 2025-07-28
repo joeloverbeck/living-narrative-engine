@@ -14,7 +14,10 @@ import {
 } from '@jest/globals';
 import { TestBedClass } from '../common/entities/testBed.js';
 import CommandProcessor from '../../src/commands/commandProcessor.js';
-import { createRuleTestEnvironment, createSystemLogicInterpreterWithHandlers } from '../common/rules/ruleTestUtilities.js';
+import {
+  createRuleTestEnvironment,
+  createSystemLogicInterpreterWithHandlers,
+} from '../common/rules/ruleTestUtilities.js';
 
 describe('Multi-Target Action System Integration', () => {
   let testBed;
@@ -33,28 +36,28 @@ describe('Multi-Target Action System Integration', () => {
   beforeEach(async () => {
     // Create basic mock services for CommandProcessor testing
     const logger = testBed.logger;
-    
+
     // Create mock event bus with proper unsubscribe functionality
     eventBus = {
       subscribe: jest.fn().mockReturnValue(() => {}), // Return a mock unsubscribe function
       dispatch: jest.fn(),
       publish: jest.fn(),
     };
-    
+
     // Create mock safe event dispatcher
     const safeEventDispatcher = {
       dispatch: jest.fn().mockResolvedValue(true),
     };
-    
+
     // Create mock event dispatch service
     const eventDispatchService = {
       dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
     };
-    
-    commandProcessor = new CommandProcessor({ 
-      logger, 
+
+    commandProcessor = new CommandProcessor({
+      logger,
       safeEventDispatcher,
-      eventDispatchService
+      eventDispatchService,
     });
 
     // Setup simple mock entities for testing
@@ -104,25 +107,22 @@ describe('Multi-Target Action System Integration', () => {
 
       // Process action through command processor
       const startTime = performance.now();
-      const result = await commandProcessor.dispatchAction(
-        actor,
-        turnAction
-      );
+      const result = await commandProcessor.dispatchAction(actor, turnAction);
       const processingTime = performance.now() - startTime;
-      
+
       // Validate command result
       expect(result.success).toBe(true);
       expect(result.originalInput).toBe('throw knife at npc1');
-      
+
       // Note: Integration test focuses on CommandProcessor functionality
       // Payload verification would require proper event bus integration
       // For now, we verify the command processing succeeds with multi-target data
-      
+
       // Validate the command processor correctly handles multi-target action
       expect(result.success).toBe(true);
       expect(result.originalInput).toBe('throw knife at npc1');
       expect(result.actionResult.actionId).toBe('combat:throw');
-      
+
       // Verify that the action was processed correctly by checking processor metrics
       const metrics = commandProcessor.getPayloadCreationStatistics();
       expect(metrics.totalPayloadsCreated).toBeGreaterThan(0);
@@ -157,7 +157,7 @@ describe('Multi-Target Action System Integration', () => {
       expect(result.success).toBe(true);
       expect(result.originalInput).toBe('follow npc1');
       expect(result.actionResult.actionId).toBe('core:follow');
-      
+
       // Verify that legacy actions are processed correctly
       const metrics = commandProcessor.getPayloadCreationStatistics();
       expect(metrics.totalPayloadsCreated).toBeGreaterThan(0);
@@ -193,7 +193,7 @@ describe('Multi-Target Action System Integration', () => {
 
       expect(result.success).toBe(true);
       expect(result.actionResult.actionId).toBe('crafting:craft');
-      
+
       // Verify multi-target action was processed correctly
       const metrics = commandProcessor.getPayloadCreationStatistics();
       expect(metrics.totalPayloadsCreated).toBeGreaterThan(0);
@@ -231,7 +231,7 @@ describe('Multi-Target Action System Integration', () => {
       const ruleTestEnv = createRuleTestEnvironment({
         rules: [testRule],
       });
-      
+
       // Create a test event payload for rule testing
       const testEventPayload = {
         eventName: 'core:attempt_action',
@@ -248,12 +248,14 @@ describe('Multi-Target Action System Integration', () => {
       };
 
       // Test rule with the event payload
-      await ruleTestEnv.eventBus.dispatch('core:attempt_action', testEventPayload);
-      
+      await ruleTestEnv.eventBus.dispatch(
+        'core:attempt_action',
+        testEventPayload
+      );
+
       // Verify rule test environment works (simplified integration test)
     });
   });
-
 
   describe('Error Handling and Recovery', () => {
     it('should gracefully handle malformed multi-target data', async () => {
@@ -290,10 +292,7 @@ describe('Multi-Target Action System Integration', () => {
 
       for (const action of malformedActions) {
         // Should not throw errors
-        const result = await commandProcessor.dispatchAction(
-          actor,
-          action
-        );
+        const result = await commandProcessor.dispatchAction(actor, action);
 
         // Should create valid fallback result
         expect(result).toMatchObject({
@@ -317,10 +316,7 @@ describe('Multi-Target Action System Integration', () => {
       };
 
       // Even with potential extraction failures, dispatchAction should handle gracefully
-      const result = await commandProcessor.dispatchAction(
-        actor,
-        action
-      );
+      const result = await commandProcessor.dispatchAction(actor, action);
 
       expect(result).toMatchObject({
         success: expect.any(Boolean),
@@ -353,10 +349,7 @@ describe('Multi-Target Action System Integration', () => {
 
       for (const action of errorActions) {
         try {
-          const result = await commandProcessor.dispatchAction(
-            actor,
-            action
-          );
+          const result = await commandProcessor.dispatchAction(actor, action);
           if (result && result.success !== undefined) {
             successCount++;
           }
@@ -418,13 +411,13 @@ describe('Multi-Target Action System Integration', () => {
       const ruleTestEnv = createRuleTestEnvironment({
         rules: [enhancedRule],
       });
-      
+
       // Dispatch the test event
       await ruleTestEnv.eventBus.dispatch('core:attempt_action', testEvent);
-      
+
       // Allow async processing
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       // Verify rule execution - check if the event was processed
       // For integration testing, we verify the infrastructure works
       expect(testEvent.actionId).toBe('integration:test');
@@ -494,20 +487,22 @@ describe('Multi-Target Action System Integration', () => {
 
       // Test both legacy and enhanced events
       await legacyTestEnv.eventBus.dispatch('core:attempt_action', legacyEvent);
-      await enhancedTestEnv.eventBus.dispatch('core:attempt_action', enhancedEvent);
+      await enhancedTestEnv.eventBus.dispatch(
+        'core:attempt_action',
+        enhancedEvent
+      );
 
       // Allow async processing
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Both should succeed - verify the event data structure
       expect(legacyEvent.actionId).toBe('core:follow');
       expect(legacyEvent.targetId).toBe('test_target');
       expect(legacyEvent.targets).toBeUndefined();
-      
-      expect(enhancedEvent.actionId).toBe('core:follow'); 
+
+      expect(enhancedEvent.actionId).toBe('core:follow');
       expect(enhancedEvent.targets).toBeDefined();
       expect(enhancedEvent.targets.target).toBe('test_target');
     });
   });
-
 });

@@ -316,6 +316,18 @@ class AjvSchemaValidator {
           this.#logger.debug(
             `AjvSchemaValidator: Successfully preloaded schema '${entry.id}'.`
           );
+          
+          // Verify schema was added and can be retrieved
+          const retrievedSchema = this.#ajv.getSchema(entry.id);
+          if (retrievedSchema) {
+            this.#logger.debug(
+              `AjvSchemaValidator: Schema '${entry.id}' verified as retrievable after preload.`
+            );
+          } else {
+            this.#logger.warn(
+              `AjvSchemaValidator: Schema '${entry.id}' was preloaded but cannot be retrieved. This may indicate a $ref resolution issue.`
+            );
+          }
         } else {
           this.#logger.debug(
             `AjvSchemaValidator: Schema '${entry.id}' already loaded. Skipping.`
@@ -411,6 +423,7 @@ class AjvSchemaValidator {
    * @returns {boolean}
    */
   isSchemaLoaded(schemaId) {
+
     try {
       this.#ensureAjv();
       this.#requireValidSchemaId(schemaId);
@@ -564,10 +577,30 @@ class AjvSchemaValidator {
 
     this._validateBatchInput(schemasArray);
 
-    try {
-      this.#ajv.addSchema(schemasArray);
+    // Filter out schemas that already exist to prevent duplicates
+    const newSchemas = schemasArray.filter(schema => {
+      const schemaId = schema.$id;
+      const exists = this.#ajv.getSchema(schemaId);
+      if (exists) {
+        this.#logger.debug(
+          `AjvSchemaValidator: Schema '${schemaId}' already exists, skipping duplicate.`
+        );
+        return false;
+      }
+      return true;
+    });
+
+    if (newSchemas.length === 0) {
       this.#logger.debug(
-        `AjvSchemaValidator: Successfully added ${schemasArray.length} schemas in batch.`
+        `AjvSchemaValidator: All ${schemasArray.length} schemas already exist, no new schemas to add.`
+      );
+      return Promise.resolve();
+    }
+
+    try {
+      this.#ajv.addSchema(newSchemas);
+      this.#logger.debug(
+        `AjvSchemaValidator: Successfully added ${newSchemas.length} new schemas in batch (${schemasArray.length - newSchemas.length} already existed).`
       );
     } catch (error) {
       this.#logger.error(
@@ -598,6 +631,7 @@ class AjvSchemaValidator {
    * @returns {boolean} - True if valid, false otherwise
    */
   validateAgainstSchema(data, schemaId, context = {}) {
+    
     try {
       const result = validateAgainstSchemaUtil(
         this,

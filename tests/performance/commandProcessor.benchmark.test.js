@@ -251,55 +251,6 @@ describe('CommandProcessor - Performance Benchmarks', () => {
     });
   });
 
-  describe('Memory Usage Analysis', () => {
-    it('should not leak memory during extended operation', async () => {
-      const actions = [
-        {
-          actionDefinitionId: 'memory:legacy',
-          commandString: 'memory test legacy',
-          resolvedParameters: { targetId: 'target_123' },
-        },
-        {
-          actionDefinitionId: 'memory:multi',
-          commandString: 'memory test multi',
-          resolvedParameters: {
-            isMultiTarget: true,
-            targetIds: {
-              item: ['item_123'],
-              target: ['target_456'],
-              tool: ['tool_789'],
-            },
-          },
-        },
-      ];
-
-      const initialMemory = process.memoryUsage().heapUsed;
-
-      // Run many operations
-      for (let cycle = 0; cycle < 10; cycle++) {
-        for (let i = 0; i < 100; i++) {
-          const action = actions[i % actions.length];
-          await commandProcessor.dispatchAction(mockActor, action);
-        }
-
-        // Periodic garbage collection
-        if (global.gc && cycle % 2 === 0) {
-          global.gc();
-        }
-      }
-
-      // Final garbage collection
-      if (global.gc) {
-        global.gc();
-      }
-
-      const finalMemory = process.memoryUsage().heapUsed;
-      const memoryIncrease = finalMemory - initialMemory;
-
-      // Should not increase memory significantly
-      expect(memoryIncrease).toBeLessThan(10 * 1024 * 1024); // Less than 10MB increase
-    });
-  });
 
   describe('Throughput Analysis', () => {
     it('should maintain high throughput under sustained load', async () => {

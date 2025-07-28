@@ -34,28 +34,28 @@ describe('Multi-Target Action Integration Performance Tests', () => {
   beforeEach(async () => {
     // Create basic mock services for CommandProcessor testing
     const logger = testBed.logger;
-    
+
     // Create mock event bus with proper unsubscribe functionality
     eventBus = {
       subscribe: jest.fn().mockReturnValue(() => {}), // Return a mock unsubscribe function
       dispatch: jest.fn(),
       publish: jest.fn(),
     };
-    
+
     // Create mock safe event dispatcher
     const safeEventDispatcher = {
       dispatch: jest.fn().mockResolvedValue(true),
     };
-    
+
     // Create mock event dispatch service
     const eventDispatchService = {
       dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
     };
-    
-    commandProcessor = new CommandProcessor({ 
-      logger, 
+
+    commandProcessor = new CommandProcessor({
+      logger,
       safeEventDispatcher,
-      eventDispatchService
+      eventDispatchService,
     });
 
     // Setup simple mock entities for testing
@@ -109,10 +109,7 @@ describe('Multi-Target Action Integration Performance Tests', () => {
 
       // Process all actions
       for (const action of actions) {
-        const result = await commandProcessor.dispatchAction(
-          actor,
-          action
-        );
+        const result = await commandProcessor.dispatchAction(actor, action);
         expect(result.success).toBe(true);
         results.push(result);
       }
@@ -132,7 +129,9 @@ describe('Multi-Target Action Integration Performance Tests', () => {
       });
 
       // Log performance metrics
-      console.log(`High volume performance: ${averageTime.toFixed(2)}ms average per action`);
+      console.log(
+        `High volume performance: ${averageTime.toFixed(2)}ms average per action`
+      );
       console.log(`Total time for 100 actions: ${totalTime.toFixed(2)}ms`);
     });
 
@@ -173,10 +172,7 @@ describe('Multi-Target Action Integration Performance Tests', () => {
 
       for (const action of mixedActions) {
         const actionStart = performance.now();
-        const result = await commandProcessor.dispatchAction(
-          actor,
-          action
-        );
+        const result = await commandProcessor.dispatchAction(actor, action);
         const actionTime = performance.now() - actionStart;
 
         // Determine if action was multi-target based on the action parameters
@@ -207,7 +203,9 @@ describe('Multi-Target Action Integration Performance Tests', () => {
       // Log performance comparison
       console.log(`Legacy actions average: ${legacyAverage.toFixed(2)}ms`);
       console.log(`Enhanced actions average: ${enhancedAverage.toFixed(2)}ms`);
-      console.log(`Performance ratio (enhanced/legacy): ${(enhancedAverage / legacyAverage).toFixed(2)}`);
+      console.log(
+        `Performance ratio (enhanced/legacy): ${(enhancedAverage / legacyAverage).toFixed(2)}`
+      );
     });
   });
 
@@ -250,7 +248,9 @@ describe('Multi-Target Action Integration Performance Tests', () => {
       // Memory increase should be reasonable (less than 10MB for 500 actions)
       if (performance.memory) {
         expect(memoryIncrease).toBeLessThan(10 * 1024 * 1024);
-        console.log(`Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB for 500 actions`);
+        console.log(
+          `Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB for 500 actions`
+        );
       } else {
         console.log('Memory monitoring not available in this environment');
       }
@@ -265,7 +265,7 @@ describe('Multi-Target Action Integration Performance Tests', () => {
       const eventDispatchService = {
         dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
       };
-      
+
       const processor = new CommandProcessor({
         logger,
         safeEventDispatcher,

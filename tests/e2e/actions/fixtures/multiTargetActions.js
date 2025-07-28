@@ -10,26 +10,28 @@ export const multiTargetActions = {
     name: 'Throw Item',
     targets: {
       primary: {
-        scope: 'actor.inventory[{"==": [{"var": "components.core:item.throwable"}, true]}]',
+        scope:
+          'actor.inventory[{"==": [{"var": "components.core:item.throwable"}, true]}]',
         placeholder: 'item',
-        description: 'Item to throw'
+        description: 'Item to throw',
       },
       secondary: {
-        scope: 'location.actors[{"==": [{"var": "components.core:actor.conscious"}, true]}]',
+        scope:
+          'location.actors[{"==": [{"var": "components.core:actor.conscious"}, true]}]',
         placeholder: 'target',
-        description: 'Target to throw at'
-      }
+        description: 'Target to throw at',
+      },
     },
     prerequisites: [
       {
         logic: {
-          '>=': [{ var: 'actor.components.core:stats.dexterity' }, 10]
+          '>=': [{ var: 'actor.components.core:stats.dexterity' }, 10],
         },
-        failure_message: 'You need at least 10 dexterity to throw items.'
-      }
+        failure_message: 'You need at least 10 dexterity to throw items.',
+      },
     ],
     template: 'throw {item} at {target}',
-    generateCombinations: true
+    generateCombinations: true,
   },
 
   // Context-dependent unlock action
@@ -38,18 +40,20 @@ export const multiTargetActions = {
     name: 'Unlock Container',
     targets: {
       primary: {
-        scope: 'location.objects[{"==": [{"var": "components.core:container.locked"}, true]}]',
+        scope:
+          'location.objects[{"==": [{"var": "components.core:container.locked"}, true]}]',
         placeholder: 'container',
-        description: 'Locked container'
+        description: 'Locked container',
       },
       secondary: {
-        scope: 'actor.inventory[{"in": [{"var": "container.components.core:container.lock_type"}, {"var": "components.core:key.types"}]}]',
+        scope:
+          'actor.inventory[{"in": [{"var": "container.components.core:container.lock_type"}, {"var": "components.core:key.types"}]}]',
         placeholder: 'key',
         description: 'Matching key',
-        contextFrom: 'primary'
-      }
+        contextFrom: 'primary',
+      },
     },
-    template: 'unlock {container} with {key}'
+    template: 'unlock {container} with {key}',
   },
 
   // Complex 3+ target enchantment action
@@ -58,30 +62,32 @@ export const multiTargetActions = {
     name: 'Enchant Item',
     targets: {
       primary: {
-        scope: 'actor.inventory[{"==": [{"var": "components.core:item.enchantable"}, true]}]',
+        scope:
+          'actor.inventory[{"==": [{"var": "components.core:item.enchantable"}, true]}]',
         placeholder: 'item',
-        description: 'Item to enchant'
+        description: 'Item to enchant',
       },
       secondary: {
         scope: 'test:elements',
         placeholder: 'element',
-        description: 'Enchantment element'
+        description: 'Enchantment element',
       },
       tertiary: {
-        scope: 'actor.inventory[{"==": [{"var": "components.core:item.catalyst"}, true]}]',
+        scope:
+          'actor.inventory[{"==": [{"var": "components.core:item.catalyst"}, true]}]',
         placeholder: 'catalyst',
-        description: 'Enchantment catalyst'
-      }
+        description: 'Enchantment catalyst',
+      },
     },
     prerequisites: [
       {
         logic: {
-          '>=': [{ var: 'actor.components.core:stats.intelligence' }, 15]
+          '>=': [{ var: 'actor.components.core:stats.intelligence' }, 15],
         },
-        failure_message: 'You need at least 15 intelligence to enchant items.'
-      }
+        failure_message: 'You need at least 15 intelligence to enchant items.',
+      },
     ],
-    template: 'enchant {item} with {element} using {catalyst}'
+    template: 'enchant {item} with {element} using {catalyst}',
   },
 
   // Action with optional targets
@@ -92,21 +98,22 @@ export const multiTargetActions = {
       primary: {
         scope: 'actor.inventory[]',
         placeholder: 'item',
-        description: 'Item to give'
+        description: 'Item to give',
       },
       secondary: {
         scope: 'location.actors[{"!=": [{"var": "id"}, {"var": "actor.id"}]}]',
         placeholder: 'recipient',
-        description: 'Person to give to'
+        description: 'Person to give to',
       },
       tertiary: {
-        scope: 'actor.inventory[{"==": [{"var": "components.core:item.type"}, "note"]}]',
+        scope:
+          'actor.inventory[{"==": [{"var": "components.core:item.type"}, "note"]}]',
         placeholder: 'note',
         description: 'Optional note',
-        optional: true
-      }
+        optional: true,
+      },
     },
-    template: 'give {item} to {recipient}{ with {note}}'
+    template: 'give {item} to {recipient}{ with {note}}',
   },
 
   // Action with conditional operations
@@ -115,20 +122,21 @@ export const multiTargetActions = {
     name: 'Heal Wounded',
     targets: {
       primary: {
-        scope: 'location.actors[{"<": [{"var": "components.core:health.current"}, {"var": "components.core:health.max"}]}]',
+        scope:
+          'location.actors[{"<": [{"var": "components.core:health.current"}, {"var": "components.core:health.max"}]}]',
         placeholder: 'wounded',
-        description: 'Wounded person'
-      }
+        description: 'Wounded person',
+      },
     },
     prerequisites: [
       {
         logic: {
-          '>=': [{ var: 'actor.components.core:stats.wisdom' }, 12]
+          '>=': [{ var: 'actor.components.core:stats.wisdom' }, 12],
         },
-        failure_message: 'You need at least 12 wisdom to heal others.'
-      }
+        failure_message: 'You need at least 12 wisdom to heal others.',
+      },
     ],
-    template: 'heal {wounded}'
+    template: 'heal {wounded}',
   },
 
   // Transfer multiple items action
@@ -139,15 +147,16 @@ export const multiTargetActions = {
       primary: {
         scope: 'actor.inventory[]',
         placeholder: 'items',
-        description: 'Items to transfer'
+        description: 'Items to transfer',
       },
       secondary: {
-        scope: 'location.objects[{"!=": [{"var": "components.core:container"}, null]}]',
+        scope:
+          'location.objects[{"!=": [{"var": "components.core:container"}, null]}]',
         placeholder: 'container',
-        description: 'Container to transfer to'
-      }
+        description: 'Container to transfer to',
+      },
     },
-    template: 'transfer {items} to {container}'
+    template: 'transfer {items} to {container}',
   },
 
   // Nested context dependency - bandage specific wound
@@ -158,16 +167,17 @@ export const multiTargetActions = {
       primary: {
         scope: 'location.actors[]',
         placeholder: 'person',
-        description: 'Person to help'
+        description: 'Person to help',
       },
       secondary: {
-        scope: 'person.components.core:body.parts[{"==": [{"var": "wounded"}, true]}]',
+        scope:
+          'person.components.core:body.parts[{"==": [{"var": "wounded"}, true]}]',
         placeholder: 'bodyPart',
         description: 'Wounded body part',
-        contextFrom: 'primary'
-      }
+        contextFrom: 'primary',
+      },
     },
-    template: 'bandage {person}\'s {bodyPart}'
+    template: "bandage {person}'s {bodyPart}",
   },
 
   // Dynamic selection - steal from richest
@@ -178,17 +188,20 @@ export const multiTargetActions = {
       primary: {
         scope: 'location.actors[{"!=": [{"var": "id"}, {"var": "actor.id"}]}]',
         placeholder: 'target',
-        description: 'Target to steal from'
-      }
+        description: 'Target to steal from',
+      },
     },
     prerequisites: [
       {
         logic: {
-          'max': [{ var: 'targets.primary' }, { var: 'components.core:wealth.gold' }]
-        }
-      }
+          max: [
+            { var: 'targets.primary' },
+            { var: 'components.core:wealth.gold' },
+          ],
+        },
+      },
     ],
-    template: 'steal from {target}'
+    template: 'steal from {target}',
   },
 
   // Area effect action - explosion
@@ -197,17 +210,18 @@ export const multiTargetActions = {
     name: 'Throw Explosive',
     targets: {
       primary: {
-        scope: 'actor.inventory[{"==": [{"var": "components.core:item.explosive"}, true]}]',
+        scope:
+          'actor.inventory[{"==": [{"var": "components.core:item.explosive"}, true]}]',
         placeholder: 'explosive',
-        description: 'Explosive item'
+        description: 'Explosive item',
       },
       secondary: {
         scope: 'location.actors[{"!=": [{"var": "id"}, {"var": "actor.id"}]}]',
         placeholder: 'target',
-        description: 'Primary target'
-      }
+        description: 'Primary target',
+      },
     },
-    template: 'throw {explosive} at {target}'
+    template: 'throw {explosive} at {target}',
   },
 
   // Trade action with validation
@@ -218,32 +232,33 @@ export const multiTargetActions = {
       primary: {
         scope: 'actor.inventory[]',
         placeholder: 'offer',
-        description: 'Items to offer'
+        description: 'Items to offer',
       },
       secondary: {
-        scope: 'location.actors[{"==": [{"var": "components.core:actor.trader"}, true]}]',
+        scope:
+          'location.actors[{"==": [{"var": "components.core:actor.trader"}, true]}]',
         placeholder: 'trader',
-        description: 'Trader'
+        description: 'Trader',
       },
       tertiary: {
         scope: 'trader.components.core:inventory.items[]',
         placeholder: 'desired',
         description: 'Desired items',
-        contextFrom: 'secondary'
-      }
+        contextFrom: 'secondary',
+      },
     },
     prerequisites: [
       {
         logic: {
           '>=': [
             { var: 'actor.components.core:wealth.gold' },
-            { var: 'trader.components.core:trader.asking_price' }
-          ]
+            { var: 'trader.components.core:trader.asking_price' },
+          ],
         },
-        failure_message: 'You don\'t have enough gold for this trade.'
-      }
+        failure_message: "You don't have enough gold for this trade.",
+      },
     ],
-    template: 'trade {offer} to {trader} for {desired}'
+    template: 'trade {offer} to {trader} for {desired}',
   },
 
   // Formation change affecting multiple entities
@@ -254,18 +269,50 @@ export const multiTargetActions = {
       primary: {
         scope: 'test:formations',
         placeholder: 'formation',
-        description: 'Formation type'
-      }
+        description: 'Formation type',
+      },
     },
     prerequisites: [
       {
         logic: {
-          '>': [{ var: 'actor.components.core:leadership.followers.length' }, 0]
+          '>': [
+            { var: 'actor.components.core:leadership.followers.length' },
+            0,
+          ],
         },
-        failure_message: 'You need followers to order a formation.'
-      }
+        failure_message: 'You need followers to order a formation.',
+      },
     ],
-    template: 'order {formation} formation'
+    template: 'order {formation} formation',
+  },
+
+  // Dual equip action for testing multiple component modifications
+  equipDual: {
+    id: 'test:equip_dual',
+    name: 'Equip Dual',
+    targets: {
+      primary: {
+        scope:
+          'actor.inventory[{"==": [{"var": "components.core:item.equippable"}, true]}]',
+        placeholder: 'weapon',
+        description: 'Weapon to equip',
+      },
+      secondary: {
+        scope:
+          'actor.inventory[{"==": [{"var": "components.core:item.equippable"}, true]}]',
+        placeholder: 'shield',
+        description: 'Shield to equip',
+      },
+    },
+    prerequisites: [
+      {
+        logic: {
+          '>=': [{ var: 'actor.components.core:stats.strength' }, 10],
+        },
+        failure_message: 'You need at least 10 strength to dual wield.',
+      },
+    ],
+    template: 'equip {weapon} and {shield}',
   },
 
   // Circular dependency test action (should fail)
@@ -274,31 +321,40 @@ export const multiTargetActions = {
     name: 'Circular Test',
     targets: {
       primary: {
-        scope: 'test:entities[{"==": [{"var": "id"}, {"var": "targets.tertiary.related"}]}]',
+        scope:
+          'test:entities[{"==": [{"var": "id"}, {"var": "targets.tertiary.related"}]}]',
         placeholder: 'first',
         description: 'First target',
-        contextFrom: 'tertiary'
+        contextFrom: 'tertiary',
       },
       secondary: {
-        scope: 'test:entities[{"==": [{"var": "id"}, {"var": "targets.primary.connected"}]}]',
+        scope:
+          'test:entities[{"==": [{"var": "id"}, {"var": "targets.primary.connected"}]}]',
         placeholder: 'second',
         description: 'Second target',
-        contextFrom: 'primary'
+        contextFrom: 'primary',
       },
       tertiary: {
-        scope: 'test:entities[{"==": [{"var": "id"}, {"var": "targets.secondary.linked"}]}]',
+        scope:
+          'test:entities[{"==": [{"var": "id"}, {"var": "targets.secondary.linked"}]}]',
         placeholder: 'third',
         description: 'Third target',
-        contextFrom: 'secondary'
-      }
+        contextFrom: 'secondary',
+      },
     },
-    template: 'test {first} {second} {third}'
-  }
+    template: 'test {first} {second} {third}',
+  },
 };
 
 // Export helper to get action by ID
+/**
+ *
+ * @param actionId
+ */
 export function getTestAction(actionId) {
-  return Object.values(multiTargetActions).find(action => action.id === actionId);
+  return Object.values(multiTargetActions).find(
+    (action) => action.id === actionId
+  );
 }
 
 // Export action IDs for easy reference
@@ -314,5 +370,6 @@ export const TEST_ACTION_IDS = {
   THROW_EXPLOSIVE: 'test:throw_explosive',
   TRADE_ITEMS: 'test:trade_items',
   ORDER_FORMATION: 'test:order_formation',
-  CIRCULAR_DEPENDENCY: 'test:circular_action'
+  EQUIP_DUAL: 'test:equip_dual',
+  CIRCULAR_DEPENDENCY: 'test:circular_action',
 };

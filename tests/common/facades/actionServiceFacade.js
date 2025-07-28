@@ -355,6 +355,18 @@ export class ActionServiceFacade {
   }
 
   /**
+   * Gets mock actions for testing purposes.
+   * This allows test helpers to access the mock actions that were set.
+   *
+   * @param {string} actorId - The actor ID to get mock actions for.
+   * @returns {object[]} The mock actions for this actor.
+   */
+  getMockActions(actorId) {
+    const mockKey = `${actorId}:discover`;
+    return this.#mockActions.get(mockKey) || [];
+  }
+
+  /**
    * Sets mock validation results for testing purposes.
    * This allows tests to simulate action validation without actual rule processing.
    *

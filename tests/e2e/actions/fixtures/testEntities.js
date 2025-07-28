@@ -9,28 +9,28 @@ export const testEntityTemplates = {
     definitionId: 'test:actor',
     components: {
       'core:actor': { name: 'Test Actor', conscious: true },
-      'core:stats': { 
-        strength: 10, 
-        dexterity: 10, 
-        intelligence: 10, 
-        wisdom: 10 
+      'core:stats': {
+        strength: 10,
+        dexterity: 10,
+        intelligence: 10,
+        wisdom: 10,
       },
       'core:position': { locationId: null },
       'core:inventory': { items: [], capacity: 20 },
-      'core:health': { current: 100, max: 100 }
-    }
+      'core:health': { current: 100, max: 100 },
+    },
   },
 
   // Throwable item template
   throwableItem: {
     definitionId: 'test:throwable_item',
     components: {
-      'core:item': { 
+      'core:item': {
         name: 'Rock',
         throwable: true,
-        weight: 1
-      }
-    }
+        weight: 1,
+      },
+    },
   },
 
   // Container template
@@ -43,21 +43,21 @@ export const testEntityTemplates = {
         locked: false,
         lock_type: null,
         capacity: 50,
-        items: []
-      }
-    }
+        items: [],
+      },
+    },
   },
 
   // Key template
   key: {
     definitionId: 'test:key',
     components: {
-      'core:item': { 
+      'core:item': {
         name: 'Key',
-        weight: 0.1
+        weight: 0.1,
       },
-      'core:key': { types: [] }
-    }
+      'core:key': { types: [] },
+    },
   },
 
   // Enchantable item template
@@ -67,13 +67,13 @@ export const testEntityTemplates = {
       'core:item': {
         name: 'Sword',
         enchantable: true,
-        weight: 3
+        weight: 3,
       },
       'core:weapon': {
         damage: 10,
-        type: 'slashing'
-      }
-    }
+        type: 'slashing',
+      },
+    },
   },
 
   // Catalyst item template
@@ -83,9 +83,9 @@ export const testEntityTemplates = {
       'core:item': {
         name: 'Magic Crystal',
         catalyst: true,
-        weight: 0.5
-      }
-    }
+        weight: 0.5,
+      },
+    },
   },
 
   // Location template
@@ -95,8 +95,8 @@ export const testEntityTemplates = {
       'core:location': { name: 'Test Room' },
       'core:actors': [],
       'core:objects': [],
-      'core:contents': { items: [] }
-    }
+      'core:contents': { items: [] },
+    },
   },
 
   // Wounded actor template
@@ -112,10 +112,10 @@ export const testEntityTemplates = {
           right_arm: { wounded: false },
           torso: { wounded: false },
           left_leg: { wounded: false },
-          right_leg: { wounded: false }
-        }
-      }
-    }
+          right_leg: { wounded: false },
+        },
+      },
+    },
   },
 
   // Merchant template
@@ -128,9 +128,9 @@ export const testEntityTemplates = {
       'core:trader': {
         prices: {},
         asking_price: 0,
-        buyback_rate: 0.5
-      }
-    }
+        buyback_rate: 0.5,
+      },
+    },
   },
 
   // Explosive item template
@@ -141,14 +141,14 @@ export const testEntityTemplates = {
         name: 'Bomb',
         explosive: true,
         throwable: true,
-        weight: 2
+        weight: 2,
       },
       'core:explosive': {
         damage: 50,
         radius: 5,
-        falloff: 0.7 // Damage reduction per meter
-      }
-    }
+        falloff: 0.7, // Damage reduction per meter
+      },
+    },
   },
 
   // Note item template
@@ -158,17 +158,34 @@ export const testEntityTemplates = {
       'core:item': {
         name: 'Note',
         type: 'note',
-        weight: 0.05
+        weight: 0.05,
       },
       'core:readable': {
-        text: 'Test message'
-      }
-    }
-  }
+        text: 'Test message',
+      },
+    },
+  },
+
+  // Shield/armor item template
+  armorItem: {
+    definitionId: 'test:armor_item',
+    components: {
+      'core:item': {
+        name: 'Shield',
+        equippable: true,
+        slot: 'offHand',
+        weight: 5,
+      },
+      'core:armor': {
+        defense: 5,
+      },
+    },
+  },
 };
 
 /**
  * Creates an entity configuration with overrides
+ *
  * @param {string} templateName - Name of the template to use
  * @param {object} overrides - Component overrides
  * @returns {object} Entity configuration
@@ -181,12 +198,13 @@ export function createEntityConfig(templateName, overrides = {}) {
 
   return {
     definitionId: template.definitionId,
-    components: deepMerge(template.components, overrides)
+    components: deepMerge(template.components, overrides),
   };
 }
 
 /**
  * Creates multiple test entities for a scenario
+ *
  * @param {object} scenario - Scenario configuration
  * @returns {object} Map of entity configs by role
  */
@@ -197,140 +215,299 @@ export function createScenarioEntities(scenario) {
     case 'throw':
       entities.actor = createEntityConfig('actor', {
         'core:stats': { dexterity: 15 },
-        'core:inventory': { items: ['rock_001'] }
+        'core:inventory': { items: ['rock_001'] },
       });
       entities.target = createEntityConfig('actor', {
-        'core:actor': { name: 'Target Guard' }
+        'core:actor': { name: 'Target Guard' },
       });
       entities.item = createEntityConfig('throwableItem');
       entities.location = createEntityConfig('location', {
-        'core:actors': ['player', 'guard_001']
+        'core:actors': ['player', 'guard_001'],
       });
       break;
 
     case 'unlock':
       entities.actor = createEntityConfig('actor', {
-        'core:inventory': { items: ['brass_key_001', 'iron_key_001'] }
+        'core:inventory': { items: ['brass_key_001', 'iron_key_001'] },
       });
       entities.container = createEntityConfig('container', {
-        'core:container': { 
-          locked: true, 
+        'core:container': {
+          locked: true,
           lock_type: 'brass',
-          items: ['treasure_001']
-        }
+          items: ['treasure_001'],
+        },
       });
       entities.brassKey = createEntityConfig('key', {
         'core:item': { name: 'Brass Key' },
-        'core:key': { types: ['brass'] }
+        'core:key': { types: ['brass'] },
       });
       entities.ironKey = createEntityConfig('key', {
         'core:item': { name: 'Iron Key' },
-        'core:key': { types: ['iron'] }
+        'core:key': { types: ['iron'] },
       });
       entities.location = createEntityConfig('location', {
         'core:actors': ['player'],
-        'core:objects': ['chest_001']
+        'core:objects': ['chest_001'],
       });
       break;
 
     case 'enchant':
       entities.actor = createEntityConfig('actor', {
         'core:stats': { intelligence: 20 },
-        'core:inventory': { items: ['sword_001', 'crystal_001'] }
+        'core:inventory': { items: ['sword_001', 'crystal_001'] },
       });
       entities.weapon = createEntityConfig('enchantableItem');
       entities.catalyst = createEntityConfig('catalyst');
       entities.location = createEntityConfig('location', {
-        'core:actors': ['player']
+        'core:actors': ['player'],
       });
       break;
 
     case 'heal':
       entities.healer = createEntityConfig('actor', {
         'core:stats': { wisdom: 15 },
-        'core:actor': { name: 'Healer' }
+        'core:actor': { name: 'Healer' },
       });
       entities.wounded1 = createEntityConfig('woundedActor', {
         'core:actor': { name: 'Wounded Ally 1' },
-        'core:health': { current: 30, max: 100 }
+        'core:health': { current: 30, max: 100 },
       });
       entities.wounded2 = createEntityConfig('woundedActor', {
         'core:actor': { name: 'Wounded Ally 2' },
-        'core:health': { current: 60, max: 100 }
+        'core:health': { current: 60, max: 100 },
       });
       entities.healthy = createEntityConfig('actor', {
         'core:actor': { name: 'Healthy Ally' },
-        'core:health': { current: 100, max: 100 }
+        'core:health': { current: 100, max: 100 },
       });
       entities.location = createEntityConfig('location', {
-        'core:actors': ['healer', 'wounded1', 'wounded2', 'healthy']
+        'core:actors': ['healer', 'wounded1', 'wounded2', 'healthy'],
       });
       break;
 
     case 'explosion':
       entities.actor = createEntityConfig('actor', {
         'core:inventory': { items: ['bomb_001'] },
-        'core:position': { x: 0, y: 0, locationId: 'battlefield' }
+        'core:position': { x: 0, y: 0, locationId: 'battlefield' },
       });
       entities.explosive = createEntityConfig('explosiveItem');
       // Create targets at various distances
       entities.targets = [
         createEntityConfig('actor', {
           'core:actor': { name: 'Enemy 1' },
-          'core:position': { x: 2, y: 0, locationId: 'battlefield' }
+          'core:position': { x: 2, y: 0, locationId: 'battlefield' },
         }),
         createEntityConfig('actor', {
           'core:actor': { name: 'Enemy 2' },
-          'core:position': { x: 3, y: 3, locationId: 'battlefield' }
+          'core:position': { x: 3, y: 3, locationId: 'battlefield' },
         }),
         createEntityConfig('actor', {
           'core:actor': { name: 'Enemy 3' },
-          'core:position': { x: 5, y: 0, locationId: 'battlefield' }
-        })
+          'core:position': { x: 5, y: 0, locationId: 'battlefield' },
+        }),
       ];
       entities.location = createEntityConfig('location', {
         'core:location': { name: 'Battlefield' },
-        'core:actors': ['player', 'enemy1', 'enemy2', 'enemy3']
+        'core:actors': ['player', 'enemy1', 'enemy2', 'enemy3'],
       });
       break;
 
     case 'trade':
       entities.player = createEntityConfig('actor', {
         'core:wealth': { gold: 100 },
-        'core:inventory': { items: ['item_001', 'item_002'] }
+        'core:inventory': { items: ['item_001', 'item_002'] },
       });
       entities.merchant = createEntityConfig('merchant', {
         'core:trader': { asking_price: 50 },
-        'core:inventory': { items: ['rare_item_001'] }
+        'core:inventory': { items: ['rare_item_001'] },
       });
       entities.location = createEntityConfig('location', {
-        'core:actors': ['player', 'merchant']
+        'core:actors': ['player', 'merchant'],
       });
       break;
 
     case 'formation':
       entities.leader = createEntityConfig('actor', {
         'core:actor': { name: 'Leader' },
-        'core:leadership': { 
-          followers: ['follower1', 'follower2', 'follower3']
-        }
+        'core:leadership': {
+          followers: ['follower1', 'follower2', 'follower3'],
+        },
       });
       entities.followers = [
         createEntityConfig('actor', {
           'core:actor': { name: 'Follower 1' },
-          'core:following': { leader: 'leader' }
+          'core:following': { leader: 'leader' },
         }),
         createEntityConfig('actor', {
           'core:actor': { name: 'Follower 2' },
-          'core:following': { leader: 'leader' }
+          'core:following': { leader: 'leader' },
         }),
         createEntityConfig('actor', {
           'core:actor': { name: 'Follower 3' },
-          'core:following': { leader: 'leader' }
-        })
+          'core:following': { leader: 'leader' },
+        }),
       ];
       entities.location = createEntityConfig('location', {
-        'core:actors': ['leader', 'follower1', 'follower2', 'follower3']
+        'core:actors': ['leader', 'follower1', 'follower2', 'follower3'],
+      });
+      break;
+
+    case 'equip':
+      entities.actor = createEntityConfig('actor', {
+        'core:stats': { strength: 15, attack: 10, defense: 10 },
+        'core:inventory': { items: ['sword_001', 'shield_001'] },
+        'core:equipment': { mainHand: null, offHand: null },
+      });
+      entities.weapon = createEntityConfig('enchantableItem', {
+        'core:item': {
+          name: 'Iron Sword',
+          equippable: true,
+          slot: 'mainHand',
+          weight: 5,
+        },
+        'core:weapon': { damage: 10 },
+      });
+      entities.shield = createEntityConfig('armorItem', {
+        'core:item': {
+          name: 'Wooden Shield',
+          equippable: true,
+          slot: 'offHand',
+          weight: 8,
+        },
+        'core:armor': { defense: 5 },
+      });
+      entities.location = createEntityConfig('location', {
+        'core:actors': ['player'],
+      });
+      break;
+
+    case 'transfer':
+      entities.actor = createEntityConfig('actor', {
+        'core:inventory': { items: ['item_001', 'item_002', 'item_003'] },
+      });
+      entities.container = createEntityConfig('container', {
+        'core:container': {
+          locked: false,
+          capacity: 50,
+          items: [],
+        },
+      });
+      entities.location = createEntityConfig('location', {
+        'core:actors': ['player'],
+        'core:objects': ['chest_001'],
+      });
+      break;
+
+    case 'bandage':
+      entities.actor = createEntityConfig('actor', {
+        'core:stats': { wisdom: 15 },
+        'core:inventory': { items: ['bandage_001'] },
+      });
+      entities.wounded1 = createEntityConfig('woundedActor', {
+        'core:actor': { name: 'Alice' },
+        'core:body': {
+          parts: {
+            head: { wounded: false },
+            left_arm: { wounded: true, severity: 'moderate' },
+            right_arm: { wounded: false },
+            torso: { wounded: true },
+            left_leg: { wounded: true, severity: 'minor' },
+            right_leg: { wounded: false },
+          },
+        },
+      });
+      entities.target = createEntityConfig('woundedActor', {
+        'core:actor': { name: 'Wounded Person' },
+        'core:body': {
+          parts: {
+            head: { wounded: false },
+            left_arm: { wounded: true },
+            right_arm: { wounded: false },
+            torso: { wounded: true },
+            left_leg: { wounded: false },
+            right_leg: { wounded: false },
+          },
+        },
+      });
+      entities.location = createEntityConfig('location', {
+        'core:actors': ['player', 'alice_001', 'wounded_person'],
+      });
+      break;
+
+    case 'steal':
+      entities.actor = createEntityConfig('actor', {
+        'core:stats': { stealth: 15 },
+        'core:inventory': { items: [] },
+      });
+      entities.merchant = createEntityConfig('actor', {
+        'core:actor': { name: 'Wealthy Merchant' },
+        'core:wealth': { gold: 500 },
+        'core:inventory': { items: ['valuable_001', 'valuable_002'] },
+      });
+      entities.location = createEntityConfig('location', {
+        'core:actors': ['player', 'merchant_002'],
+      });
+      break;
+
+    case 'circular':
+      entities.actor = createEntityConfig('actor');
+      entities.entityA = createEntityConfig('actor', {
+        'core:test': { related: 'entity_c' },
+      });
+      entities.entityB = createEntityConfig('actor', {
+        'core:test': { connected: 'entity_a' },
+      });
+      entities.entityC = createEntityConfig('actor', {
+        'core:test': { linked: 'entity_b' },
+      });
+      entities.location = createEntityConfig('location', {
+        'core:actors': ['player'],
+        'core:objects': ['entity_a', 'entity_b', 'entity_c'],
+      });
+      break;
+
+    case 'validation':
+      entities.actor = createEntityConfig('actor', {
+        'core:stats': { wisdom: 15 },
+        'core:inventory': { items: ['bandage_001'] },
+      });
+      entities.wounded1 = createEntityConfig('actor', {
+        'core:actor': { name: 'Alice' },
+        'core:body': {
+          parts: {
+            left_arm: { wounded: true, severity: 'moderate' },
+            right_arm: { wounded: false },
+            left_leg: { wounded: true, severity: 'minor' },
+          },
+        },
+      });
+      entities.wounded2 = createEntityConfig('actor', {
+        'core:actor': { name: 'Bob' },
+        'core:body': {
+          parts: {
+            head: { wounded: false },
+            torso: { wounded: false },
+          },
+        },
+      });
+      entities.healthy = createEntityConfig('actor', {
+        'core:actor': { name: 'Charlie' },
+        'core:body': {
+          parts: {
+            head: { wounded: false },
+            torso: { wounded: false },
+            left_arm: { wounded: false },
+            right_arm: { wounded: false },
+          },
+        },
+      });
+      entities.location = createEntityConfig('location', {
+        'core:actors': [
+          'player',
+          'wounded_ally_1',
+          'wounded_ally_2',
+          'healthy_ally',
+        ],
       });
       break;
 
@@ -343,18 +520,25 @@ export function createScenarioEntities(scenario) {
 
 /**
  * Deep merge utility for component overrides
+ *
+ * @param target
+ * @param source
  */
 function deepMerge(target, source) {
   const result = { ...target };
-  
+
   for (const key in source) {
-    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+    if (
+      source[key] &&
+      typeof source[key] === 'object' &&
+      !Array.isArray(source[key])
+    ) {
       result[key] = deepMerge(result[key] || {}, source[key]);
     } else {
       result[key] = source[key];
     }
   }
-  
+
   return result;
 }
 
@@ -371,5 +555,5 @@ export const TEST_ENTITY_IDS = {
   BOMB: 'bomb_001',
   MERCHANT: 'merchant_001',
   ROOM: 'room_001',
-  BATTLEFIELD: 'battlefield_001'
+  BATTLEFIELD: 'battlefield_001',
 };

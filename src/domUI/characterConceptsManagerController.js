@@ -184,6 +184,10 @@ export class CharacterConceptsManagerController {
         set uiStateManager(value) {
           self.#uiStateManager = value;
         },
+        
+        // Modal display methods for testing
+        showCreateModal: this.#showCreateModal.bind(this),
+        showEditModal: this.#showEditModal.bind(this),
       };
     }
 
@@ -538,6 +542,41 @@ export class CharacterConceptsManagerController {
   }
 
   /**
+   * Set up real-time validation for the concept form
+   */
+  #setupConceptFormValidation() {
+    // Remove any existing listeners to prevent duplicates
+    const newTextarea = this.#elements.conceptText.cloneNode(true);
+    this.#elements.conceptText.parentNode.replaceChild(newTextarea, this.#elements.conceptText);
+    this.#elements.conceptText = newTextarea;
+
+    // Set up real-time validation using FormValidationHelper
+    FormValidationHelper.setupRealTimeValidation(
+      this.#elements.conceptText,
+      ValidationPatterns.concept,
+      {
+        debounceMs: 300,
+        countElement: this.#elements.charCount,
+        maxLength: 3000,
+      }
+    );
+
+    // Add input event listener for validation and button state
+    this.#elements.conceptText.addEventListener('input', () => {
+      // Update character count
+      FormValidationHelper.updateCharacterCount(
+        this.#elements.conceptText,
+        this.#elements.charCount,
+        3000
+      );
+
+      // Validate and update button state
+      const isValid = this.#validateConceptForm();
+      this.#elements.saveConceptBtn.disabled = !isValid;
+    });
+  }
+
+  /**
    * Reset the concept form to initial state
    */
   #resetConceptForm() {
@@ -568,6 +607,9 @@ export class CharacterConceptsManagerController {
     this.#editingConceptId = null;
     this.#resetConceptForm();
 
+    // Set up real-time validation for create modal
+    this.#setupConceptFormValidation();
+
     // Update modal title
     this.#elements.conceptModalTitle.textContent = 'Create Character Concept';
     this.#elements.saveConceptBtn.textContent = 'Create Concept';
@@ -578,15 +620,26 @@ export class CharacterConceptsManagerController {
     // Show modal
     this.#elements.conceptModal.style.display = 'flex';
 
+    // Debug logging for modal visibility
+    const computedStyle = window.getComputedStyle(this.#elements.conceptModal);
+    this.#logger.info('Modal display debug info:', {
+      display: computedStyle.display,
+      visibility: computedStyle.visibility,
+      opacity: computedStyle.opacity,
+      zIndex: computedStyle.zIndex,
+      position: computedStyle.position,
+      modalExists: !!this.#elements.conceptModal,
+      modalParent: this.#elements.conceptModal?.parentElement?.tagName,
+    });
+
     // Focus on textarea
     setTimeout(() => {
       this.#elements.conceptText.focus();
     }, 100);
 
     // Track modal open for analytics
-    this.#eventBus.dispatch({
-      type: 'ui:modal-opened',
-      payload: { modalType: 'create-concept' },
+    this.#eventBus.dispatch('core:ui_modal_opened', {
+      modalType: 'create-concept',
     });
   }
 
@@ -626,10 +679,7 @@ export class CharacterConceptsManagerController {
     }
 
     // Dispatch modal closed event
-    this.#eventBus.dispatch({
-      type: 'ui:modal-closed',
-      payload: { modalType: 'concept' },
-    });
+    this.#eventBus.dispatch('core:ui_modal_closed', { modalType: 'concept' });
   }
 
   /**
@@ -953,10 +1003,7 @@ export class CharacterConceptsManagerController {
     this.#logger.info('Statistics updated', stats);
 
     // Dispatch statistics event for other components
-    this.#eventBus.dispatch({
-      type: 'statistics:updated',
-      payload: stats,
-    });
+    this.#eventBus.dispatch('core:statistics_updated', stats);
   }
 
   /**
@@ -1436,6 +1483,21 @@ export class CharacterConceptsManagerController {
       // Show modal
       this.#elements.conceptModal.style.display = 'flex';
 
+      // Debug logging for modal visibility
+      const computedStyle = window.getComputedStyle(
+        this.#elements.conceptModal
+      );
+      this.#logger.info('Edit modal display debug info:', {
+        display: computedStyle.display,
+        visibility: computedStyle.visibility,
+        opacity: computedStyle.opacity,
+        zIndex: computedStyle.zIndex,
+        position: computedStyle.position,
+        modalExists: !!this.#elements.conceptModal,
+        modalParent: this.#elements.conceptModal?.parentElement?.tagName,
+        conceptId: conceptId,
+      });
+
       // Focus and select text
       setTimeout(() => {
         this.#elements.conceptText.focus();
@@ -1446,9 +1508,9 @@ export class CharacterConceptsManagerController {
       }, 100);
 
       // Track modal open
-      this.#eventBus.dispatch({
-        type: 'ui:modal-opened',
-        payload: { modalType: 'edit-concept', conceptId },
+      this.#eventBus.dispatch('core:ui_modal_opened', {
+        modalType: 'edit-concept',
+        conceptId,
       });
     } catch (error) {
       this.#logger.error('Failed to show edit modal', error);
@@ -1657,9 +1719,8 @@ export class CharacterConceptsManagerController {
     this.#elements.confirmDeleteBtn.classList.remove('severe-action');
 
     // Dispatch modal closed event
-    this.#eventBus.dispatch({
-      type: 'ui:modal-closed',
-      payload: { modalType: 'delete-confirmation' },
+    this.#eventBus.dispatch('core:ui_modal_closed', {
+      modalType: 'delete-confirmation',
     });
   }
 
@@ -2230,20 +2291,17 @@ export class CharacterConceptsManagerController {
 
     // Dispatch enhanced search event
     if (searchTerm.length > 0) {
-      this.#eventBus.dispatch({
-        type: 'ui:search-performed',
-        payload: {
-          searchTerm,
-          resultCount: filteredConcepts.length,
-          totalConcepts: this.#conceptsData.length,
-          searchMode: 'enhanced',
-        },
+      this.#eventBus.dispatch('core:ui_search_performed', {
+        searchTerm,
+        resultCount: filteredConcepts.length,
+        totalConcepts: this.#conceptsData.length,
+        searchMode: 'enhanced',
       });
     }
   }
 
   #handleConceptCreated(event) {
-    this.#logger.info('Concept created event received', event.detail);
+    this.#logger.info('Concept created event received', event.payload);
 
     // Refresh data and statistics
     this.#loadConceptsData().then(() => {
@@ -2251,8 +2309,8 @@ export class CharacterConceptsManagerController {
       this.#celebrateCreation();
 
       // Show feedback for the new concept
-      if (event.detail && event.detail.concept) {
-        this.#showConceptCreatedFeedback(event.detail.concept);
+      if (event.payload && event.payload.concept) {
+        this.#showConceptCreatedFeedback(event.payload.concept);
       }
     });
   }
@@ -2263,9 +2321,9 @@ export class CharacterConceptsManagerController {
    * @param {CustomEvent} event
    */
   #handleConceptUpdated(event) {
-    this.#logger.info('Concept updated event received', event.detail);
+    this.#logger.info('Concept updated event received', event.payload);
 
-    const { concept: updatedConcept } = event.detail;
+    const { concept: updatedConcept } = event.payload;
 
     // Find and update in local cache
     const index = this.#conceptsData.findIndex(
@@ -2308,9 +2366,9 @@ export class CharacterConceptsManagerController {
    * @param {CustomEvent} event
    */
   #handleConceptDeleted(event) {
-    this.#logger.info('Concept deleted event received', event.detail);
+    this.#logger.info('Concept deleted event received', event.payload);
 
-    const { conceptId } = event.detail;
+    const { conceptId } = event.payload;
 
     // Remove from local cache if not already removed
     this.#removeFromLocalCache(conceptId);
@@ -2323,7 +2381,7 @@ export class CharacterConceptsManagerController {
 
     // Show deletion feedback (skip in test environment to avoid DOM issues)
     if (process.env.NODE_ENV !== 'test') {
-      const cascadedDirections = event.detail.cascadedDirections || 0;
+      const cascadedDirections = event.payload.cascadedDirections || 0;
       this.#showConceptDeletedFeedback(cascadedDirections);
     }
   }
@@ -2334,9 +2392,9 @@ export class CharacterConceptsManagerController {
    * @param {CustomEvent} event
    */
   #handleDirectionsGenerated(event) {
-    this.#logger.info('Directions generated event received', event.detail);
+    this.#logger.info('Directions generated event received', event.payload);
 
-    const { conceptId, directions, count } = event.detail;
+    const { conceptId, directions, count } = event.payload;
 
     // Update direction count in cache
     const conceptData = this.#conceptsData.find(
@@ -2571,9 +2629,8 @@ export class CharacterConceptsManagerController {
     this.#elements.conceptSearch.focus();
 
     // Dispatch clear event
-    this.#eventBus.dispatch({
-      type: 'ui:search-cleared',
-      payload: { totalConcepts: this.#conceptsData.length },
+    this.#eventBus.dispatch('core:ui_search_cleared', {
+      totalConcepts: this.#conceptsData.length,
     });
   }
 

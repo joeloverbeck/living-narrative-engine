@@ -29,6 +29,7 @@ export class EntityServiceFacade {
   #testEntities = new Map();
   #testComponents = new Map();
   #mockEvents = [];
+  #eventSubscriptions = new Map();
 
   /**
    * Creates an instance of EntityServiceFacade.
@@ -109,6 +110,7 @@ export class EntityServiceFacade {
    * components and reducing the setup required.
    *
    * @param {object} [config] - Configuration for the test actor.
+   * @param {string} [config.id] - Optional entity ID.
    * @param {string} [config.name] - Name for the actor.
    * @param {string} [config.location] - Location ID for the actor.
    * @param {object} [config.components] - Additional components to add.
@@ -117,6 +119,7 @@ export class EntityServiceFacade {
    */
   async createTestActor(config = {}) {
     const {
+      id,
       name = 'Test Actor',
       location = 'test-location',
       components = {},
@@ -124,6 +127,7 @@ export class EntityServiceFacade {
     } = config;
 
     this.#logger.debug('EntityServiceFacade: Creating test actor', {
+      id,
       name,
       location,
       type,
@@ -148,6 +152,7 @@ export class EntityServiceFacade {
       // Create the entity
       const actorId = await this.#entityManager.createEntity({
         definitionId: type,
+        id,
         components: baseComponents,
       });
 
@@ -313,11 +318,25 @@ export class EntityServiceFacade {
   async getEntity(entityId) {
     this.#logger.debug('EntityServiceFacade: Getting entity', { entityId });
 
+    // Better parameter validation
+    if (!entityId) {
+      const error = new Error('EntityServiceFacade: entityId parameter is required and cannot be null/undefined');
+      this.#logger.error('EntityServiceFacade: Invalid entityId parameter', { entityId });
+      throw error;
+    }
+
     try {
       const entity = await this.#entityManager.getEntityInstance(entityId);
 
       if (!entity) {
-        throw new Error(`Entity not found: ${entityId}`);
+        // Get available entity IDs for better debugging
+        const availableEntities = this.#testEntities ? Array.from(this.#testEntities.keys()) : [];
+        const errorMsg = `Entity not found: ${entityId}. Available entities: [${availableEntities.join(', ')}]`;
+        this.#logger.warn('EntityServiceFacade: Entity not found', { 
+          entityId, 
+          availableEntities 
+        });
+        throw new Error(errorMsg);
       }
 
       return entity;
@@ -470,10 +489,23 @@ export class EntityServiceFacade {
       await this.#eventBus.dispatch(event);
 
       // Track event for testing
-      this.#mockEvents.push({
+      const trackedEvent = {
         ...event,
         timestamp: Date.now(),
-      });
+      };
+      this.#mockEvents.push(trackedEvent);
+
+      // Notify subscribers
+      if (this.#eventSubscriptions.has(event.type)) {
+        const handlers = this.#eventSubscriptions.get(event.type);
+        handlers.forEach(handler => {
+          try {
+            handler(trackedEvent);
+          } catch (error) {
+            this.#logger.warn('EntityServiceFacade: Error in event handler', error);
+          }
+        });
+      }
 
       this.#logger.debug('EntityServiceFacade: Event dispatched', {
         type: event.type,
@@ -499,6 +531,28 @@ export class EntityServiceFacade {
   }
 
   /**
+   * Subscribes to an event type for testing purposes.
+   * This allows tests to listen for specific events during test execution.
+   *
+   * @param {string} eventType - The type of event to listen for.
+   * @param {Function} handler - The event handler function.
+   */
+  subscribeToEvent(eventType, handler) {
+    this.#logger.debug('EntityServiceFacade: Subscribing to event', { eventType });
+    
+    // Initialize subscriptions map if not exists
+    if (!this.#eventSubscriptions) {
+      this.#eventSubscriptions = new Map();
+    }
+    
+    if (!this.#eventSubscriptions.has(eventType)) {
+      this.#eventSubscriptions.set(eventType, []);
+    }
+    
+    this.#eventSubscriptions.get(eventType).push(handler);
+  }
+
+  /**
    * Clears all test data.
    * This is useful for test cleanup between test cases.
    */
@@ -520,6 +574,7 @@ export class EntityServiceFacade {
     this.#testEntities.clear();
     this.#testComponents.clear();
     this.#mockEvents.length = 0;
+    this.#eventSubscriptions.clear();
 
     this.#logger.debug('EntityServiceFacade: Test data cleared');
   }

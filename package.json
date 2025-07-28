@@ -65,6 +65,7 @@
     "test:integration": "jest --config jest.config.integration.js --env=jsdom --silent --coverage",
     "test:e2e": "jest --config jest.config.e2e.js --env=jsdom --silent --coverage",
     "test:performance": "jest --config jest.config.performance.js --env=jsdom --silent",
+    "test:memory": "node --expose-gc ./node_modules/.bin/jest --config jest.config.memory.js --env=jsdom --silent",
     "test:single": "jest --env=jsdom --silent=false --runInBand",
     "test:ci": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "create-mod": "node scripts/createMod.mjs",

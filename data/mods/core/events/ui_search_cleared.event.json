@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:ui_search_cleared",
+  "description": "Dispatched when the search is cleared and all concepts are displayed again.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "totalConcepts": {
+        "description": "Total number of concepts now displayed",
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "required": ["totalConcepts"],
+    "additionalProperties": false
+  }
+}

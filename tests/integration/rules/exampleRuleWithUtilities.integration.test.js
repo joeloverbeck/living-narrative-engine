@@ -3,8 +3,15 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createRuleTestEnvironment, createSystemLogicInterpreterWithHandlers, generateTestEvents } from '../../common/rules/ruleTestUtilities.js';
-import { measureRulePerformance, generatePerformanceReport } from '../../common/rules/performanceTestingUtils.js';
+import {
+  createRuleTestEnvironment,
+  createSystemLogicInterpreterWithHandlers,
+  generateTestEvents,
+} from '../../common/rules/ruleTestUtilities.js';
+import {
+  measureRulePerformance,
+  generatePerformanceReport,
+} from '../../common/rules/performanceTestingUtils.js';
 import followRule from '../../../data/mods/core/rules/follow.rule.json';
 import logSuccessAndEndTurn from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import logFailureAndEndTurn from '../../../data/mods/core/macros/logFailureAndEndTurn.macro.json';
@@ -19,7 +26,12 @@ import SetVariableHandler from '../../../src/logic/operationHandlers/setVariable
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-import { FOLLOWING_COMPONENT_ID, LEADING_COMPONENT_ID, NAME_COMPONENT_ID, POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import {
+  FOLLOWING_COMPONENT_ID,
+  LEADING_COMPONENT_ID,
+  NAME_COMPONENT_ID,
+  POSITION_COMPONENT_ID,
+} from '../../../src/constants/componentIds.js';
 
 describe('Example Rule Test with Utilities', () => {
   let testEnv;
@@ -64,12 +76,13 @@ describe('Example Rule Test with Utilities', () => {
       conditions: {
         'core:event-is-action-follow': {
           id: 'core:event-is-action-follow',
-          description: 'Checks if the triggering event is for the core:follow action.',
+          description:
+            'Checks if the triggering event is for the core:follow action.',
           logic: {
-            "==": [{ "var": "event.payload.actionId" }, "core:follow"]
-          }
-        }
-      }
+            '==': [{ var: 'event.payload.actionId' }, 'core:follow'],
+          },
+        },
+      },
     });
 
     // Create rebuild leader list cache handler
@@ -103,9 +116,9 @@ describe('Example Rule Test with Utilities', () => {
         safeEventDispatcher: testEnv.safeEventDispatcher,
       }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger: testEnv.logger }),
-      DISPATCH_EVENT: new DispatchEventHandler({ 
-        dispatcher: testEnv.eventBus, 
-        logger: testEnv.logger 
+      DISPATCH_EVENT: new DispatchEventHandler({
+        dispatcher: testEnv.eventBus,
+        logger: testEnv.logger,
       }),
       END_TURN: new EndTurnHandler({
         safeEventDispatcher: testEnv.safeEventDispatcher,
@@ -138,18 +151,23 @@ describe('Example Rule Test with Utilities', () => {
     });
 
     // Check results
-    const followingData = testEnv.entityManager.getComponentData('follower1', FOLLOWING_COMPONENT_ID);
+    const followingData = testEnv.entityManager.getComponentData(
+      'follower1',
+      FOLLOWING_COMPONENT_ID
+    );
     expect(followingData).toEqual({ leaderId: 'leader1' });
 
-    const leadingData = testEnv.entityManager.getComponentData('leader1', LEADING_COMPONENT_ID);
+    const leadingData = testEnv.entityManager.getComponentData(
+      'leader1',
+      LEADING_COMPONENT_ID
+    );
     expect(leadingData).toEqual({ followers: ['follower1'] });
 
     // Check captured events
-    const eventTypes = testEnv.capturedEvents.map(e => e.eventType);
+    const eventTypes = testEnv.capturedEvents.map((e) => e.eventType);
     expect(eventTypes).toContain('core:display_successful_action_result');
     expect(eventTypes).toContain('core:turn_ended');
   });
-
 
   it('should generate various test events', () => {
     const events = generateTestEvents({
@@ -161,7 +179,7 @@ describe('Example Rule Test with Utilities', () => {
     });
 
     expect(events.length).toBeGreaterThan(5);
-    expect(events.some(e => e.type === 'core:attempt_action')).toBe(true);
-    expect(events.some(e => e.type === 'core:turn_started')).toBe(true);
+    expect(events.some((e) => e.type === 'core:attempt_action')).toBe(true);
+    expect(events.some((e) => e.type === 'core:turn_started')).toBe(true);
   });
 });

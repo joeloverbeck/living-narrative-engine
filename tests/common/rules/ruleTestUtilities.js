@@ -88,7 +88,7 @@ export function createRuleTestEnvironment(config = {}) {
 
   // Track unsubscribe functions
   const unsubscribeFunctions = [];
-  
+
   eventsToCapture.forEach((eventType) => {
     const unsubscribe = eventBus.subscribe(eventType, (event) => {
       capturedEvents.push({ eventType: event.type, payload: event.payload });
@@ -110,7 +110,7 @@ export function createRuleTestEnvironment(config = {}) {
     schemaValidator,
     cleanup: () => {
       // Call all unsubscribe functions
-      unsubscribeFunctions.forEach(fn => fn());
+      unsubscribeFunctions.forEach((fn) => fn());
     },
   };
 }
@@ -122,8 +122,12 @@ export function createRuleTestEnvironment(config = {}) {
  * @param {object} handlers - Operation handlers to register
  * @returns {object} Configured SystemLogicInterpreter
  */
-export function createSystemLogicInterpreterWithHandlers(environment, handlers) {
-  const { entityManager, eventBus, dataRegistry, logger, jsonLogic } = environment;
+export function createSystemLogicInterpreterWithHandlers(
+  environment,
+  handlers
+) {
+  const { entityManager, eventBus, dataRegistry, logger, jsonLogic } =
+    environment;
 
   // Create operation registry
   const operationRegistry = new OperationRegistry({ logger });
@@ -202,14 +206,16 @@ export function validateRuleStructure(rule, ruleSchema) {
     } else {
       validation.structure.hasEventType = true;
       if (!rule.event_type.includes(':')) {
-        validation.warnings.push('event_type should be namespaced (e.g., "core:attempt_action")');
+        validation.warnings.push(
+          'event_type should be namespaced (e.g., "core:attempt_action")'
+        );
       }
     }
 
     // Validate optional condition
     if (rule.condition) {
       validation.structure.hasCondition = true;
-      
+
       if (rule.condition.condition_ref) {
         if (typeof rule.condition.condition_ref !== 'string') {
           validation.errors.push('condition_ref must be a string');
@@ -234,7 +240,6 @@ export function validateRuleStructure(rule, ruleSchema) {
 
     // Assess complexity
     validation.structure.complexity = assessRuleComplexity(rule);
-
   } catch (error) {
     validation.errors.push(`Rule validation error: ${error.message}`);
     validation.isValid = false;
@@ -251,7 +256,7 @@ export function validateRuleStructure(rule, ruleSchema) {
  */
 function assessRuleComplexity(rule) {
   let score = 0;
-  
+
   // Check condition complexity
   if (rule.condition) {
     if (rule.condition.condition_ref) {
@@ -267,23 +272,22 @@ function assessRuleComplexity(rule) {
       }
     }
   }
-  
+
   // Check action complexity
   if (rule.actions) {
     score += Math.min(rule.actions.length * 0.5, 3);
-    
+
     // Check for complex operations
-    const hasComplexOps = rule.actions.some(a => 
-      a.type === 'IF' || 
-      a.type === 'FOR_EACH' || 
-      a.type === 'IF_CO_LOCATED'
+    const hasComplexOps = rule.actions.some(
+      (a) =>
+        a.type === 'IF' || a.type === 'FOR_EACH' || a.type === 'IF_CO_LOCATED'
     );
-    
+
     if (hasComplexOps) {
       score += 2;
     }
   }
-  
+
   if (score <= 2) return 'low';
   if (score <= 5) return 'medium';
   return 'high';
@@ -332,7 +336,7 @@ function generateActionTestEvents(config = {}) {
         targetId: config.targetId || 'test_target',
         originalInput: 'follow target',
         timestamp: Date.now(),
-      }
+      },
     },
     {
       type: 'core:attempt_action',
@@ -342,7 +346,7 @@ function generateActionTestEvents(config = {}) {
         targetId: 'north',
         originalInput: 'go north',
         timestamp: Date.now(),
-      }
+      },
     },
     {
       type: 'core:attempt_action',
@@ -352,7 +356,7 @@ function generateActionTestEvents(config = {}) {
         targetId: null,
         originalInput: 'wait',
         timestamp: Date.now(),
-      }
+      },
     },
   ];
 }
@@ -371,7 +375,7 @@ function generateSystemTestEvents(config = {}) {
         entityId: config.entityId || 'test_actor',
         turnNumber: 1,
         timestamp: Date.now(),
-      }
+      },
     },
     {
       type: 'core:turn_ended',
@@ -379,7 +383,7 @@ function generateSystemTestEvents(config = {}) {
         entityId: config.entityId || 'test_actor',
         turnNumber: 1,
         timestamp: Date.now(),
-      }
+      },
     },
     {
       type: 'core:entity_speech',
@@ -388,7 +392,7 @@ function generateSystemTestEvents(config = {}) {
         message: 'Test speech',
         locationId: config.locationId || 'test_location',
         timestamp: Date.now(),
-      }
+      },
     },
   ];
 }
@@ -410,7 +414,7 @@ function generateEdgeCaseEvents(config = {}) {
         targetId: 'test_target',
         originalInput: 'missing actor',
         timestamp: Date.now(),
-      }
+      },
     },
     // Null values
     {
@@ -421,7 +425,7 @@ function generateEdgeCaseEvents(config = {}) {
         targetId: null,
         originalInput: 'null target',
         timestamp: Date.now(),
-      }
+      },
     },
     // Complex payload
     {
@@ -435,11 +439,11 @@ function generateEdgeCaseEvents(config = {}) {
         amount: 10,
         metadata: {
           source: 'test',
-          priority: 'high'
+          priority: 'high',
         },
         originalInput: 'complex action',
         timestamp: Date.now(),
-      }
+      },
     },
   ];
 }

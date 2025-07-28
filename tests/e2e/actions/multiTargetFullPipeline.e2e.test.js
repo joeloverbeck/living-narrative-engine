@@ -102,26 +102,21 @@ describe('Multi-Target Action Full Pipeline E2E', () => {
       actionServiceFacade.setMockActions('player', mockDiscoveryResult);
 
       // Mock validation to pass
-      actionServiceFacade.setMockValidation(
-        'player',
-        actionDefinition.id,
-        {
-          success: true,
-          validatedAction: {
-            actionId: actionDefinition.id,
-            actorId: 'player',
-            targets: {
-              primary: { id: 'rock_001' },
-              secondary: { id: 'guard_001' },
-            },
+      actionServiceFacade.setMockValidation('player', actionDefinition.id, {
+        success: true,
+        validatedAction: {
+          actionId: actionDefinition.id,
+          actorId: 'player',
+          targets: {
+            primary: { id: 'rock_001' },
+            secondary: { id: 'guard_001' },
           },
-        }
-      );
+        },
+      });
 
       // Step 1: Discover available actions
-      const availableActions = await actionServiceFacade.discoverActions(
-        'player'
-      );
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(1);
       expect(availableActions[0].actionId).toBe(actionDefinition.id);
@@ -266,26 +261,21 @@ describe('Multi-Target Action Full Pipeline E2E', () => {
       actionServiceFacade.setMockActions('player', mockDiscoveryResult);
 
       // Mock validation to pass
-      actionServiceFacade.setMockValidation(
-        'player',
-        actionDefinition.id,
-        {
-          success: true,
-          validatedAction: {
-            actionId: actionDefinition.id,
-            actorId: 'player',
-            targets: {
-              primary: { id: 'chest_001' },
-              secondary: { id: 'brass_key_001' },
-            },
+      actionServiceFacade.setMockValidation('player', actionDefinition.id, {
+        success: true,
+        validatedAction: {
+          actionId: actionDefinition.id,
+          actorId: 'player',
+          targets: {
+            primary: { id: 'chest_001' },
+            secondary: { id: 'brass_key_001' },
           },
-        }
-      );
+        },
+      });
 
       // Process action discovery
-      const availableActions = await actionServiceFacade.discoverActions(
-        'player'
-      );
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(1);
       expect(availableActions[0].targets.primary.id).toBe('chest_001');
@@ -409,9 +399,8 @@ describe('Multi-Target Action Full Pipeline E2E', () => {
 
       actionServiceFacade.setMockActions('player', mockDiscoveryResult);
 
-      const availableActions = await actionServiceFacade.discoverActions(
-        'player'
-      );
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(1);
       expect(availableActions[0].targets.primary.id).toBe('item_a');
@@ -536,9 +525,8 @@ describe('Multi-Target Action Full Pipeline E2E', () => {
       // Mock discovery returning no actions due to missing context
       actionServiceFacade.setMockActions('player', []);
 
-      const availableActions = await actionServiceFacade.discoverActions(
-        'player'
-      );
+      const availableActions =
+        await actionServiceFacade.discoverActions('player');
 
       expect(availableActions).toHaveLength(0);
     });
@@ -592,9 +580,8 @@ describe('Multi-Target Action Full Pipeline E2E', () => {
 
       actionServiceFacade.setMockActions('player', mockDiscoveryWithoutNote);
 
-      const actionsWithoutNote = await actionServiceFacade.discoverActions(
-        'player'
-      );
+      const actionsWithoutNote =
+        await actionServiceFacade.discoverActions('player');
 
       expect(actionsWithoutNote).toHaveLength(1);
       expect(actionsWithoutNote[0].command).toBe('give Red Apple to Merchant');
@@ -623,9 +610,8 @@ describe('Multi-Target Action Full Pipeline E2E', () => {
 
       actionServiceFacade.setMockActions('player', mockDiscoveryWithNote);
 
-      const actionsWithNote = await actionServiceFacade.discoverActions(
-        'player'
-      );
+      const actionsWithNote =
+        await actionServiceFacade.discoverActions('player');
 
       expect(actionsWithNote).toHaveLength(1);
       expect(actionsWithNote[0].command).toContain('with Thank You Note');

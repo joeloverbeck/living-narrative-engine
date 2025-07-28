@@ -96,7 +96,7 @@ describe('Schema Validation Performance Tests', () => {
       // Performance assertions
       expect(avgTime).toBeLessThan(maxValidationTime);
       expect(maxTime).toBeLessThan(maxValidationTime);
-      
+
       // Ensure reasonable distribution
       expect(minTime).toBeGreaterThan(0);
       expect(maxTime / minTime).toBeLessThan(500); // Reasonable variation for performance tests
@@ -105,7 +105,7 @@ describe('Schema Validation Performance Tests', () => {
     test('should handle batch validation efficiently', async () => {
       const batchSize = 50;
       const testFiles = actionFiles.slice(0, batchSize);
-      
+
       // Load all files first
       const actionDataBatch = [];
       for (const filePath of testFiles) {
@@ -121,64 +121,68 @@ describe('Schema Validation Performance Tests', () => {
       // Batch validation performance test
       const startTime = performance.now();
       const results = [];
-      
+
       for (const { filePath, actionData } of actionDataBatch) {
         const isValid = validate(actionData);
         results.push({ filePath, isValid });
       }
-      
+
       const totalTime = performance.now() - startTime;
       const averageTimePerValidation = totalTime / actionDataBatch.length;
 
       console.log(`\nBatch Validation Performance:`);
       console.log(`  Batch size: ${actionDataBatch.length} actions`);
       console.log(`  Total time: ${totalTime.toFixed(2)}ms`);
-      console.log(`  Average per validation: ${averageTimePerValidation.toFixed(3)}ms`);
+      console.log(
+        `  Average per validation: ${averageTimePerValidation.toFixed(3)}ms`
+      );
 
       // Performance expectations for batch processing
       expect(totalTime).toBeLessThan(250); // Total batch should be < 250ms
       expect(averageTimePerValidation).toBeLessThan(5); // Average should still be < 5ms
-      
+
       // All validations should succeed
-      const validCount = results.filter(r => r.isValid).length;
+      const validCount = results.filter((r) => r.isValid).length;
       expect(validCount).toBe(actionDataBatch.length);
     });
 
     test('should maintain performance under repeated validation', async () => {
       const testFile = actionFiles[0]; // Use first action file
-      
+
       // Load the test action
       const fileContent = await readFile(testFile, 'utf-8');
       const actionData = JSON.parse(fileContent);
-      
+
       const iterations = 1000;
       const times = [];
-      
+
       // Warmup
       for (let i = 0; i < 10; i++) {
         validate(actionData);
       }
-      
+
       // Measure repeated validations
       for (let i = 0; i < iterations; i++) {
         const start = performance.now();
         const isValid = validate(actionData);
         const time = performance.now() - start;
-        
+
         times.push(time);
         expect(isValid).toBe(true);
       }
-      
+
       const avgTime = times.reduce((sum, t) => sum + t, 0) / times.length;
       const maxTime = Math.max(...times);
       const minTime = Math.min(...times);
-      
-      console.log(`\nRepeated Validation Performance (${iterations} iterations):`);
+
+      console.log(
+        `\nRepeated Validation Performance (${iterations} iterations):`
+      );
       console.log(`  Average time: ${avgTime.toFixed(3)}ms`);
       console.log(`  Max time: ${maxTime.toFixed(3)}ms`);
       console.log(`  Min time: ${minTime.toFixed(3)}ms`);
-      console.log(`  Performance variation: ${((maxTime / minTime) - 1) * 100}%`);
-      
+      console.log(`  Performance variation: ${(maxTime / minTime - 1) * 100}%`);
+
       // Performance should be consistent
       expect(avgTime).toBeLessThan(1); // Should be very fast for repeated validations
       expect(maxTime).toBeLessThan(5); // Even max should be reasonable

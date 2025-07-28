@@ -5,8 +5,14 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createRuleTestEnvironment, createSystemLogicInterpreterWithHandlers } from '../common/rules/ruleTestUtilities.js';
-import { measureRulePerformance, generatePerformanceReport } from '../common/rules/performanceTestingUtils.js';
+import {
+  createRuleTestEnvironment,
+  createSystemLogicInterpreterWithHandlers,
+} from '../common/rules/ruleTestUtilities.js';
+import {
+  measureRulePerformance,
+  generatePerformanceReport,
+} from '../common/rules/performanceTestingUtils.js';
 import followRule from '../../data/mods/core/rules/follow.rule.json';
 import logSuccessAndEndTurn from '../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import EndTurnHandler from '../../src/logic/operationHandlers/endTurnHandler.js';
@@ -87,11 +93,11 @@ describe('Rule Execution Performance Tests', () => {
     const report = generatePerformanceReport(metrics);
     console.log('Follow Rule Performance Report:');
     console.log(report);
-    
+
     // Verify metrics
     expect(metrics.iterations.completed).toBeGreaterThan(0);
     expect(metrics.timing.average).toBeLessThan(100); // Should complete in < 100ms
-    
+
     // Verify rule execution was successful
     expect(metrics.iterations.completed).toBe(50); // All iterations should complete
     expect(metrics.iterations.timeouts).toBe(0); // No timeouts should occur
@@ -134,15 +140,17 @@ describe('Rule Execution Performance Tests', () => {
     // Log results
     console.log('Performance consistency results:');
     performanceResults.forEach((result, index) => {
-      console.log(`Test ${index + 1}: ${result.actionType} - ${result.averageTime.toFixed(2)}ms avg`);
+      console.log(
+        `Test ${index + 1}: ${result.actionType} - ${result.averageTime.toFixed(2)}ms avg`
+      );
     });
 
     // Verify consistency - performance shouldn't vary dramatically
-    const times = performanceResults.map(r => r.averageTime);
+    const times = performanceResults.map((r) => r.averageTime);
     const maxTime = Math.max(...times);
     const minTime = Math.min(...times);
     const variationRatio = maxTime / minTime;
-    
+
     expect(variationRatio).toBeLessThan(3); // Max 3x variation between tests
   });
 
@@ -167,11 +175,15 @@ describe('Rule Execution Performance Tests', () => {
 
     // Validate performance
     expect(totalTime).toBeLessThan(1000); // Should complete within 1 second
-    
+
     const averageTimePerExecution = totalTime / 20;
     expect(averageTimePerExecution).toBeLessThan(50); // Average < 50ms per execution
 
-    console.log(`High-frequency execution: 20 rules in ${totalTime.toFixed(2)}ms`);
-    console.log(`Average per execution: ${averageTimePerExecution.toFixed(2)}ms`);
+    console.log(
+      `High-frequency execution: 20 rules in ${totalTime.toFixed(2)}ms`
+    );
+    console.log(
+      `Average per execution: ${averageTimePerExecution.toFixed(2)}ms`
+    );
   });
 });

@@ -120,6 +120,7 @@ export class TurnExecutionFacade {
           const { type: actorType, ...restActorDef } = actorDef;
 
           const actorId = await this.#entityService.createTestActor({
+            id: actorDef.id, // Explicitly pass the ID so it gets used
             name: actorDef.name || `Test ${actorType || 'AI'} Actor`,
             location: actorDef.location || world.mainLocationId,
             components: actorDef.components || {
@@ -128,18 +129,45 @@ export class TurnExecutionFacade {
             ...restActorDef,
           });
 
-          createdActors[actorDef.id || actorId] = actorId;
+          // Use the provided ID as the key for direct access
+          const mapKey = actorDef.id || actorId;
+          createdActors[mapKey] = actorId;
           actorIds.push(actorId);
+          
+          this.#logger.debug('TurnExecutionFacade: Created actor', { 
+            providedId: actorDef.id, 
+            actualId: actorId, 
+            mapKey 
+          });
+        }
+        
+        // Create a default player actor if none exists
+        const hasPlayerActor = actors.some(actor => actor.type === 'player');
+        if (!hasPlayerActor) {
+          const playerActorId = await this.#entityService.createTestActor({
+            id: 'default-player-actor',
+            name: 'Test Player Actor',
+            location: world.mainLocationId,
+            components: {
+              'core:actor': { type: 'player' },
+            },
+          });
+          
+          createdActors.playerActorId = playerActorId;
+          createdActors['default-player-actor'] = playerActorId;
+          actorIds.push(playerActorId);
         }
       } else {
         // Legacy support - create default AI and player actors
         const aiActorId = await this.#entityService.createTestActor({
+          id: 'default-ai-actor',
           name: 'AI Test Actor',
           location: world.mainLocationId,
           ...actorConfig,
         });
 
         const playerActorId = await this.#entityService.createTestActor({
+          id: 'default-player-actor',
           name: 'Player Test Actor',
           location: world.mainLocationId,
           components: {
@@ -149,6 +177,8 @@ export class TurnExecutionFacade {
 
         createdActors.aiActorId = aiActorId;
         createdActors.playerActorId = playerActorId;
+        createdActors['default-ai-actor'] = aiActorId;
+        createdActors['default-player-actor'] = playerActorId;
         actorIds.push(aiActorId, playerActorId);
       }
 
@@ -234,12 +264,34 @@ export class TurnExecutionFacade {
       }
 
       // 2. Get AI decision
+      // Dispatch AI decision requested event
+      await this.#entityService.dispatchEvent({
+        type: 'core:ai_decision_requested',
+        payload: {
+          actorId,
+          availableActions,
+          context,
+          timestamp: Date.now(),
+        },
+      });
+
       const aiDecision = await this.#llmService.getAIDecision(actorId, {
         ...context,
         availableActions,
       });
 
       if (!aiDecision || !aiDecision.actionId) {
+        // Dispatch AI decision failed event
+        await this.#entityService.dispatchEvent({
+          type: 'core:ai_decision_failed',
+          payload: {
+            actorId,
+            error: 'AI decision did not specify a valid action',
+            aiDecision,
+            timestamp: Date.now(),
+          },
+        });
+
         return {
           success: false,
           error: 'AI decision did not specify a valid action',
@@ -247,6 +299,16 @@ export class TurnExecutionFacade {
           duration: Date.now() - startTime,
         };
       }
+
+      // Dispatch AI decision received event
+      await this.#entityService.dispatchEvent({
+        type: 'core:ai_decision_received',
+        payload: {
+          actorId,
+          decision: aiDecision,
+          timestamp: Date.now(),
+        },
+      });
 
       // 3. Validate the chosen action
       const validation = await this.#actionService.validateAction({
@@ -256,6 +318,18 @@ export class TurnExecutionFacade {
       });
 
       if (!validation.success) {
+        // Dispatch action validation failed event
+        await this.#entityService.dispatchEvent({
+          type: 'core:action_validation_failed',
+          payload: {
+            actorId,
+            actionId: aiDecision.actionId,
+            error: validation.error || 'Action validation failed',
+            validation,
+            timestamp: Date.now(),
+          },
+        });
+
         return {
           success: false,
           error: 'Action validation failed',
@@ -268,6 +342,17 @@ export class TurnExecutionFacade {
       // 4. Execute the action (unless validateOnly)
       let execution = null;
       if (!options.validateOnly) {
+        // Dispatch action execution started event
+        await this.#entityService.dispatchEvent({
+          type: 'core:action_execution_started',
+          payload: {
+            actorId,
+            actionId: aiDecision.actionId,
+            targets: aiDecision.targets || {},
+            timestamp: Date.now(),
+          },
+        });
+
         execution = await this.#actionService.executeAction({
           actionId: aiDecision.actionId,
           actorId,
@@ -275,6 +360,17 @@ export class TurnExecutionFacade {
         });
 
         if (!execution.success) {
+          // Dispatch action execution failed event
+          await this.#entityService.dispatchEvent({
+            type: 'core:action_execution_failed',
+            payload: {
+              actorId,
+              actionId: aiDecision.actionId,
+              error: execution.error || 'Action execution failed',
+              timestamp: Date.now(),
+            },
+          });
+
           return {
             success: false,
             error: 'Action execution failed',
@@ -284,6 +380,17 @@ export class TurnExecutionFacade {
             duration: Date.now() - startTime,
           };
         }
+
+        // Dispatch action execution completed event
+        await this.#entityService.dispatchEvent({
+          type: 'core:action_execution_completed',
+          payload: {
+            actorId,
+            actionId: aiDecision.actionId,
+            result: execution,
+            timestamp: Date.now(),
+          },
+        });
       }
 
       const result = {
@@ -543,6 +650,45 @@ export class TurnExecutionFacade {
    */
   get entityService() {
     return this.#entityService;
+  }
+
+  /**
+   * Starts a new turn cycle.
+   * This method initializes the turn state and prepares for turn execution.
+   *
+   * @param {object} [options] - Optional configuration for the turn.
+   * @returns {Promise<object>} Turn start result.
+   */
+  async startTurn(options = {}) {
+    this.#logger.debug('TurnExecutionFacade: Starting turn', { options });
+
+    try {
+      // Initialize turn state if needed
+      if (!this.#isInitialized) {
+        await this.initializeTestEnvironment();
+      }
+
+      // Signal turn start
+      await this.#entityService.dispatchEvent({
+        type: 'TURN_STARTED_ID',
+        payload: {
+          timestamp: Date.now(),
+          options,
+        },
+      });
+
+      this.#logger.debug('TurnExecutionFacade: Turn started successfully');
+      return {
+        success: true,
+        timestamp: Date.now(),
+      };
+    } catch (error) {
+      this.#logger.error('TurnExecutionFacade: Error starting turn', error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
   }
 
   /**

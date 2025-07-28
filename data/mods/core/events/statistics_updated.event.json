@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:statistics_updated",
+  "description": "Dispatched when character concept statistics are updated, providing analytics data about concepts and thematic directions.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "totalConcepts": {
+        "description": "Total number of character concepts",
+        "type": "number",
+        "minimum": 0
+      },
+      "conceptsWithDirections": {
+        "description": "Number of concepts that have thematic directions",
+        "type": "number",
+        "minimum": 0
+      },
+      "totalDirections": {
+        "description": "Total number of thematic directions across all concepts",
+        "type": "number",
+        "minimum": 0
+      },
+      "averageDirectionsPerConcept": {
+        "description": "Average number of directions per concept (formatted as string)",
+        "type": "string"
+      },
+      "completionRate": {
+        "description": "Percentage of concepts that have directions",
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100
+      }
+    },
+    "required": [
+      "totalConcepts",
+      "conceptsWithDirections",
+      "totalDirections",
+      "averageDirectionsPerConcept",
+      "completionRate"
+    ],
+    "additionalProperties": true
+  }
+}

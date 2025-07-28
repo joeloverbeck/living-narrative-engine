@@ -2,10 +2,20 @@
  * @file System load testing for multi-target action system
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TestBedClass } from '../common/entities/testBed.js';
 import CommandProcessor from '../../src/commands/commandProcessor.js';
-import { measureRulePerformance, generatePerformanceReport } from '../common/rules/performanceTestingUtils.js';
+import {
+  measureRulePerformance,
+  generatePerformanceReport,
+} from '../common/rules/performanceTestingUtils.js';
 
 describe('Multi-Target System Load Testing', () => {
   let testBed;
@@ -15,20 +25,20 @@ describe('Multi-Target System Load Testing', () => {
   beforeEach(() => {
     testBed = new TestBedClass();
     const logger = testBed.logger;
-    
+
     // Create mock services
     const safeEventDispatcher = {
       dispatch: jest.fn().mockResolvedValue(true),
     };
-    
+
     const eventDispatchService = {
       dispatchWithErrorHandling: jest.fn().mockResolvedValue(true),
     };
 
-    commandProcessor = new CommandProcessor({ 
-      logger, 
+    commandProcessor = new CommandProcessor({
+      logger,
       safeEventDispatcher,
-      eventDispatchService
+      eventDispatchService,
     });
     mockActor = { id: 'load_test_actor', name: 'Load Test Actor' };
   });
@@ -54,21 +64,15 @@ describe('Multi-Target System Load Testing', () => {
 
       const ruleExecutor = async () => {
         const action = actionGenerator();
-        return await commandProcessor.dispatchAction(
-          mockActor,
-          action
-        );
+        return await commandProcessor.dispatchAction(mockActor, action);
       };
 
-      const metrics = await measureRulePerformance(
-        ruleExecutor,
-        {
-          iterations: 1000,
-          warmupIterations: 50,
-          timeout: 100,
-          measureMemory: true,
-        }
-      );
+      const metrics = await measureRulePerformance(ruleExecutor, {
+        iterations: 1000,
+        warmupIterations: 50,
+        timeout: 100,
+        measureMemory: true,
+      });
 
       // Validate performance requirements
       expect(metrics.iterations.completed).toBeGreaterThan(950); // >95% success rate
@@ -81,9 +85,7 @@ describe('Multi-Target System Load Testing', () => {
         expect(metrics.memory.leaked).toBeLessThan(5 * 1024 * 1024); // < 5MB leaked
       }
 
-      console.log(
-        '\n' + generatePerformanceReport(metrics)
-      );
+      console.log('\n' + generatePerformanceReport(metrics));
     });
 
     it('should maintain performance under concurrent load', async () => {
@@ -109,10 +111,7 @@ describe('Multi-Target System Load Testing', () => {
         const startTime = performance.now();
 
         for (const action of actions) {
-          const result = await commandProcessor.dispatchAction(
-            actor,
-            action
-          );
+          const result = await commandProcessor.dispatchAction(actor, action);
           results.push(result);
         }
 
@@ -170,10 +169,7 @@ describe('Multi-Target System Load Testing', () => {
 
       // Process many large actions
       for (let i = 0; i < 50; i++) {
-        await commandProcessor.dispatchAction(
-          mockActor,
-          largeTargetAction
-        );
+        await commandProcessor.dispatchAction(mockActor, largeTargetAction);
       }
 
       const finalMemory = performance.memory
