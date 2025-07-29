@@ -89,8 +89,8 @@ describe('Character Concepts Manager - Event Flow Integration', () => {
               required: ['modalType'],
             },
           },
-          'core:ui-search-performed': {
-            id: 'core:ui-search-performed',
+          'core:ui_search_performed': {
+            id: 'core:ui_search_performed',
             payloadSchema: {
               type: 'object',
               properties: {
@@ -108,8 +108,8 @@ describe('Character Concepts Manager - Event Flow Integration', () => {
               ],
             },
           },
-          'core:ui-search-cleared': {
-            id: 'core:ui-search-cleared',
+          'core:ui_search_cleared': {
+            id: 'core:ui_search_cleared',
             payloadSchema: {
               type: 'object',
               properties: {
@@ -204,8 +204,8 @@ describe('Character Concepts Manager - Event Flow Integration', () => {
       expect(dispatchedEvents[0]).toEqual({ eventName, payload });
     });
 
-    it('should successfully dispatch core:ui:modal-opened event with correct format', async () => {
-      const eventName = 'core:ui-modal-opened';
+    it('should successfully dispatch core:ui_modal_opened event with correct format', async () => {
+      const eventName = 'core:ui_modal_opened';
       const payload = { modalType: 'create-concept' };
 
       await mockValidatedEventDispatcher.dispatch(eventName, payload);
@@ -218,8 +218,8 @@ describe('Character Concepts Manager - Event Flow Integration', () => {
       expect(dispatchedEvents[0]).toEqual({ eventName, payload });
     });
 
-    it('should successfully dispatch core:ui:modal-closed event with correct format', async () => {
-      const eventName = 'core:ui-modal-closed';
+    it('should successfully dispatch core:ui_modal_closed event with correct format', async () => {
+      const eventName = 'core:ui_modal_closed';
       const payload = { modalType: 'concept' };
 
       await mockValidatedEventDispatcher.dispatch(eventName, payload);
@@ -232,8 +232,8 @@ describe('Character Concepts Manager - Event Flow Integration', () => {
       expect(dispatchedEvents[0]).toEqual({ eventName, payload });
     });
 
-    it('should successfully dispatch ui:search-performed event with correct format', async () => {
-      const eventName = 'core:ui-search-performed';
+    it('should successfully dispatch ui_search_performed event with correct format', async () => {
+      const eventName = 'core:ui_search_performed';
       const payload = {
         searchTerm: 'test',
         resultCount: 1,
@@ -252,8 +252,8 @@ describe('Character Concepts Manager - Event Flow Integration', () => {
       expect(dispatchedEvents[0]).toEqual({ eventName, payload });
     });
 
-    it('should successfully dispatch ui:search-cleared event with correct format', async () => {
-      const eventName = 'core:ui-search-cleared';
+    it('should successfully dispatch ui_search_cleared event with correct format', async () => {
+      const eventName = 'core:ui_search_cleared';
       const payload = { totalConcepts: 2 };
 
       await mockValidatedEventDispatcher.dispatch(eventName, payload);
@@ -324,13 +324,13 @@ describe('Character Concepts Manager - Event Flow Integration', () => {
         'core:statistics_updated',
         'core:ui_modal_opened',
         'core:ui_modal_closed',
-        'core:ui-search-performed',
-        'core:ui-search-cleared',
+        'core:ui_search_performed',
+        'core:ui_search_cleared',
       ];
 
       for (const eventName of validEventNames) {
         // Verify event name matches expected pattern
-        expect(eventName).toMatch(/^[a-z]+:[a-z-]+$/);
+        expect(eventName).toMatch(/^[a-z]+:[a-z_-]+$/);
 
         // Verify event can be dispatched successfully
         await mockValidatedEventDispatcher.dispatch(eventName, {
@@ -348,8 +348,8 @@ describe('Character Concepts Manager - Event Flow Integration', () => {
         'core:statistics_updated',
         'core:ui_modal_opened',
         'core:ui_modal_closed',
-        'core:ui-search-performed',
-        'core:ui-search-cleared',
+        'core:ui_search_performed',
+        'core:ui_search_cleared',
       ];
 
       expectedEvents.forEach((eventName) => {

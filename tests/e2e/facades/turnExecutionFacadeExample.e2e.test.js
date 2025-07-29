@@ -285,9 +285,15 @@ describe('Turn Execution Facade Example E2E', () => {
       freshFacade.executeAITurn('nonexistent-actor')
     ).rejects.toThrow('Test environment not initialized');
 
-    // Test invalid actor
+    // Test invalid actor - set up mock to return no available actions
+    turnExecutionFacade.setupMocks({
+      actionResults: {
+        'nonexistent-actor': [], // Empty array means no available actions
+      },
+    });
+
     const result = await turnExecutionFacade.executeAITurn('nonexistent-actor');
     expect(result.success).toBe(false);
-    expect(result.error).toContain('available actions');
+    expect(result.error).toContain('No available actions');
   });
 });
