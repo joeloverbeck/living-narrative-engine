@@ -12,6 +12,14 @@ const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// 2. setImmediate polyfill (needed by some test utilities)
+if (typeof global.setImmediate === 'undefined') {
+  global.setImmediate = (fn, ...args) => {
+    return setTimeout(fn, 0, ...args);
+  };
+  global.clearImmediate = clearTimeout;
+}
+
 // Set reasonable default Jest test timeout - reduced from 30s to prevent hanging
 // Individual test files can override this for specific performance tests
 jest.setTimeout(15000);

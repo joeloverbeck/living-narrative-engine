@@ -542,7 +542,7 @@ export class CharacterBuilderService {
 
       // Save updated concept
       const savedConcept =
-        await this.#storageService.saveCharacterConcept(updatedConcept);
+        await this.#storageService.storeCharacterConcept(updatedConcept);
 
       this.#logger.info(
         `CharacterBuilderService: Updated character concept ${conceptId}`

@@ -5,6 +5,18 @@
  * testing. This replaces the complex 20+ service setup with a single facade.
  */
 
+import {
+  AI_DECISION_REQUESTED,
+  AI_DECISION_RECEIVED,
+  AI_DECISION_FAILED,
+  ACTION_EXECUTION_STARTED,
+  ACTION_EXECUTION_COMPLETED,
+  ACTION_EXECUTION_FAILED,
+  ACTION_VALIDATION_FAILED,
+  TURN_STARTED_ID,
+  TURN_ENDED_ID,
+} from '../../../src/constants/eventIds.js';
+
 /** @typedef {import('./llmServiceFacade.js').LLMServiceFacade} LLMServiceFacade */
 /** @typedef {import('./actionServiceFacade.js').ActionServiceFacade} ActionServiceFacade */
 /** @typedef {import('./entityServiceFacade.js').EntityServiceFacade} EntityServiceFacade */
@@ -266,7 +278,7 @@ export class TurnExecutionFacade {
       // 2. Get AI decision
       // Dispatch AI decision requested event
       await this.#entityService.dispatchEvent({
-        type: 'core:ai_decision_requested',
+        type: AI_DECISION_REQUESTED,
         payload: {
           actorId,
           availableActions,
@@ -283,7 +295,7 @@ export class TurnExecutionFacade {
       if (!aiDecision || !aiDecision.actionId) {
         // Dispatch AI decision failed event
         await this.#entityService.dispatchEvent({
-          type: 'core:ai_decision_failed',
+          type: AI_DECISION_FAILED,
           payload: {
             actorId,
             error: 'AI decision did not specify a valid action',
@@ -302,7 +314,7 @@ export class TurnExecutionFacade {
 
       // Dispatch AI decision received event
       await this.#entityService.dispatchEvent({
-        type: 'core:ai_decision_received',
+        type: AI_DECISION_RECEIVED,
         payload: {
           actorId,
           decision: aiDecision,
@@ -320,7 +332,7 @@ export class TurnExecutionFacade {
       if (!validation.success) {
         // Dispatch action validation failed event
         await this.#entityService.dispatchEvent({
-          type: 'core:action_validation_failed',
+          type: ACTION_VALIDATION_FAILED,
           payload: {
             actorId,
             actionId: aiDecision.actionId,
@@ -344,7 +356,7 @@ export class TurnExecutionFacade {
       if (!options.validateOnly) {
         // Dispatch action execution started event
         await this.#entityService.dispatchEvent({
-          type: 'core:action_execution_started',
+          type: ACTION_EXECUTION_STARTED,
           payload: {
             actorId,
             actionId: aiDecision.actionId,
@@ -362,7 +374,7 @@ export class TurnExecutionFacade {
         if (!execution.success) {
           // Dispatch action execution failed event
           await this.#entityService.dispatchEvent({
-            type: 'core:action_execution_failed',
+            type: ACTION_EXECUTION_FAILED,
             payload: {
               actorId,
               actionId: aiDecision.actionId,
@@ -383,7 +395,7 @@ export class TurnExecutionFacade {
 
         // Dispatch action execution completed event
         await this.#entityService.dispatchEvent({
-          type: 'core:action_execution_completed',
+          type: ACTION_EXECUTION_COMPLETED,
           payload: {
             actorId,
             actionId: aiDecision.actionId,
@@ -609,6 +621,7 @@ export class TurnExecutionFacade {
       drop: 'core:drop',
       say: 'core:say',
       talk: 'core:talk',
+      attack: 'core:attack',
     };
 
     const actionId = verbMap[verb] || `core:${verb}`;
@@ -670,7 +683,7 @@ export class TurnExecutionFacade {
 
       // Signal turn start
       await this.#entityService.dispatchEvent({
-        type: 'TURN_STARTED_ID',
+        type: TURN_STARTED_ID,
         payload: {
           timestamp: Date.now(),
           options,
@@ -684,6 +697,40 @@ export class TurnExecutionFacade {
       };
     } catch (error) {
       this.#logger.error('TurnExecutionFacade: Error starting turn', error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * Ends the current turn cycle.
+   * This method finalizes the turn state and prepares for the next turn.
+   *
+   * @param {object} [options] - Optional configuration for ending the turn.
+   * @returns {Promise<object>} Turn end result.
+   */
+  async endTurn(options = {}) {
+    this.#logger.debug('TurnExecutionFacade: Ending turn', { options });
+
+    try {
+      // Signal turn end
+      await this.#entityService.dispatchEvent({
+        type: TURN_ENDED_ID,
+        payload: {
+          timestamp: Date.now(),
+          options,
+        },
+      });
+
+      this.#logger.debug('TurnExecutionFacade: Turn ended successfully');
+      return {
+        success: true,
+        timestamp: Date.now(),
+      };
+    } catch (error) {
+      this.#logger.error('TurnExecutionFacade: Error ending turn', error);
       return {
         success: false,
         error: error.message,

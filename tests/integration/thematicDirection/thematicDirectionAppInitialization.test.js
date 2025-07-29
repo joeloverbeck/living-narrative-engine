@@ -13,12 +13,18 @@ import {
 } from '@jest/globals';
 import { ThematicDirectionApp } from '../../../src/thematic-direction-main.js';
 
-// Mock external dependencies (but allow actual container configuration for integration testing)
+// Mock external dependencies for integration testing
 jest.mock('../../../src/characterBuilder/services/characterBuilderService.js');
+jest.mock('../../../src/loaders/schemaLoader.js');
+jest.mock('../../../src/validation/ajvSchemaValidator.js');
+jest.mock('../../../src/turns/adapters/configurableLLMAdapter.js');
 
 describe('ThematicDirectionApp Initialization Integration', () => {
   let app;
   let mockCharacterBuilderService;
+  let mockSchemaLoader;
+  let mockSchemaValidator;
+  let mockLlmAdapter;
   let mockDocument;
 
   beforeEach(() => {
@@ -40,40 +46,42 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       () => mockCharacterBuilderService
     );
 
-    // Mock schema loading - provide a comprehensive mock for all schema requests
-    // This includes all schemas from staticConfiguration.getSchemaFiles()
+    // Mock SchemaLoader
+    const SchemaLoader = require('../../../src/loaders/schemaLoader.js').default;
+    mockSchemaLoader = {
+      loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
+      getSchemaLoadingSummary: jest.fn().mockReturnValue({
+        totalConfigured: 126,
+        loadedSchemas: ['thematic-direction', 'character-concept'],
+        issues: []
+      })
+    };
+    SchemaLoader.mockImplementation(() => mockSchemaLoader);
+
+    // Mock AjvSchemaValidator
+    const AjvSchemaValidator = require('../../../src/validation/ajvSchemaValidator.js').default;
+    mockSchemaValidator = {
+      addSchema: jest.fn().mockResolvedValue(undefined),
+      addSchemas: jest.fn().mockResolvedValue(undefined),
+      isSchemaLoaded: jest.fn().mockReturnValue(false),
+      getLoadedSchemaIds: jest.fn().mockReturnValue(['thematic-direction', 'character-concept']),
+      validateAgainstSchema: jest.fn().mockReturnValue(true),
+      formatAjvErrors: jest.fn().mockReturnValue('No errors')
+    };
+    AjvSchemaValidator.mockImplementation(() => mockSchemaValidator);
+
+    // Mock ConfigurableLLMAdapter
+    const { ConfigurableLLMAdapter } = require('../../../src/turns/adapters/configurableLLMAdapter.js');
+    mockLlmAdapter = {
+      init: jest.fn().mockResolvedValue(undefined),
+      getAIDecision: jest.fn().mockResolvedValue({ success: true, decision: 'test decision' }),
+      getCurrentActiveLlmId: jest.fn().mockReturnValue('test-llm-id')
+    };
+    ConfigurableLLMAdapter.mockImplementation(() => mockLlmAdapter);
+
+    // Mock fetch for character-concept schema loading (still used by the app for this specific schema)
     global.fetch = jest.fn().mockImplementation((url) => {
-      // Create a generic successful schema response
-      const filename = url.split('/').pop();
-      const schemaId = filename.replace('.schema.json', '');
-
-      const genericSchema = {
-        $id: schemaId,
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          type: { type: 'string' },
-        },
-      };
-
-      // Handle specific schemas with appropriate structures
-      if (filename === 'thematic-direction.schema.json') {
-        return Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              $id: 'thematic-direction',
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                narrative: { type: 'string' },
-                themes: { type: 'array', items: { type: 'string' } },
-              },
-            }),
-        });
-      }
-
-      if (filename === 'character-concept.schema.json') {
+      if (url.includes('character-concept.schema.json')) {
         return Promise.resolve({
           ok: true,
           json: () =>
@@ -87,26 +95,11 @@ describe('ThematicDirectionApp Initialization Integration', () => {
             }),
         });
       }
-
-      // Handle llm-configs schema specifically to prevent validation errors
-      if (filename === 'llm-configs.schema.json') {
-        return Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              $id: 'llm-configs',
-              type: 'object',
-              properties: {
-                configs: { type: 'array' },
-              },
-            }),
-        });
-      }
-
-      // Default response for any other schema files (handles all schemas from staticConfiguration)
+      
+      // Default response for any other fetch requests
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(genericSchema),
+        json: () => Promise.resolve({ $id: 'generic-schema', type: 'object' }),
       });
     });
 
@@ -131,29 +124,30 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       await app.initialize();
 
       // Assert - verify successful initialization
-      // Verify that schema loading occurred (some schemas should have been fetched)
-      expect(fetch).toHaveBeenCalled();
-
-      // Verify that essential schemas were loaded
-      const fetchCalls = fetch.mock.calls.map((call) => call[0]);
-      const expectedSchemas = [
-        'data/schemas/thematic-direction.schema.json',
-        'data/schemas/character-concept.schema.json',
-      ];
-
-      expectedSchemas.forEach((schema) => {
-        expect(
-          fetchCalls.some((call) => call.includes(schema.split('/').pop()))
-        ).toBe(true);
-      });
+      // Verify that SchemaLoader was used to load all schemas
+      expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalled();
+      
+      // Verify that character-concept schema was loaded manually (as per the implementation)
+      expect(fetch).toHaveBeenCalledWith('data/schemas/character-concept.schema.json');
+      
+      // Verify schema validator was used to add the character-concept schema
+      expect(mockSchemaValidator.addSchema).toHaveBeenCalled();
+      
+      // Verify LLM adapter initialization
+      expect(mockLlmAdapter.init).toHaveBeenCalled();
 
       // Verify controller initialization
       expect(mockCharacterBuilderService.initialize).toHaveBeenCalled();
     });
 
     test('should handle initialization with proper DI registration', async () => {
-      // This test verifies that the fix for container.getRegistrar() issue works
+      // This test verifies that the DI container setup works correctly
       await expect(app.initialize()).resolves.not.toThrow();
+      
+      // Verify that all major services were properly initialized
+      expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalled();
+      expect(mockLlmAdapter.init).toHaveBeenCalled();
+      expect(mockCharacterBuilderService.initialize).toHaveBeenCalled();
     });
 
     test('should prevent multiple initializations', async () => {
@@ -161,34 +155,24 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       await app.initialize();
       await app.initialize();
 
-      // Assert - should succeed without errors and service should only be initialized once
+      // Assert - should succeed without errors and services should only be initialized once
+      expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(1);
+      expect(mockLlmAdapter.init).toHaveBeenCalledTimes(1);
       expect(mockCharacterBuilderService.initialize).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('Error handling during initialization', () => {
     test('should handle schema loading errors', async () => {
-      // Arrange - Create fresh app instance for this test
+      // Arrange - Create fresh app instance and mock SchemaLoader to fail
       const failingApp = new ThematicDirectionApp();
-      global.fetch = jest.fn().mockImplementation((url) => {
-        if (url.includes('character-concept.schema.json')) {
-          return Promise.resolve({
-            ok: false,
-            status: 404,
-          });
-        }
-        // Default successful response for other schemas
-        const schemaId = url.split('/').pop().replace('.schema.json', '');
-        return Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              $id: schemaId,
-              type: 'object',
-              properties: { id: { type: 'string' } },
-            }),
-        });
-      });
+      
+      // Mock SchemaLoader to throw an error
+      const SchemaLoader = require('../../../src/loaders/schemaLoader.js').default;
+      const failingSchemaLoader = {
+        loadAndCompileAllSchemas: jest.fn().mockRejectedValue(new Error('Schema loading failed')),
+      };
+      SchemaLoader.mockImplementation(() => failingSchemaLoader);
 
       // Act & Assert
       await expect(failingApp.initialize()).rejects.toThrow(
@@ -196,12 +180,28 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       );
     });
 
-    test('should handle fetch network errors', async () => {
-      // Arrange
+    test('should handle character schema fetch network errors', async () => {
+      // Arrange - Create fresh app instance and make fetch fail for character-concept schema
       const failingApp = new ThematicDirectionApp();
       global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+      
+      // Mock other services to succeed so we can isolate the fetch error
+      const SchemaLoader = require('../../../src/loaders/schemaLoader.js').default;
+      const workingSchemaLoader = {
+        loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
+      };
+      SchemaLoader.mockImplementation(() => workingSchemaLoader);
+      
+      // Also mock ConfigurableLLMAdapter for this fresh instance
+      const { ConfigurableLLMAdapter } = require('../../../src/turns/adapters/configurableLLMAdapter.js');
+      const workingLlmAdapter = {
+        init: jest.fn().mockResolvedValue(undefined),
+        getAIDecision: jest.fn().mockResolvedValue({ success: true, decision: 'test decision' }),
+        getCurrentActiveLlmId: jest.fn().mockReturnValue('test-llm-id')
+      };
+      ConfigurableLLMAdapter.mockImplementation(() => workingLlmAdapter);
 
-      // Act & Assert
+      // Act & Assert - should fail due to character-concept schema fetch error
       await expect(failingApp.initialize()).rejects.toThrow('Network error');
     });
 
@@ -210,44 +210,50 @@ describe('ThematicDirectionApp Initialization Integration', () => {
   });
 
   describe('Schema loading workflow', () => {
-    test('should load schemas in correct order', async () => {
+    test('should load schemas through SchemaLoader and manual character schema loading', async () => {
       // Act
       await app.initialize();
 
-      // Assert - verify schemas were loaded (order may vary due to Promise.all)
-      const fetchCalls = fetch.mock.calls.map((call) => call[0]);
-      const expectedSchemas = [
-        'thematic-direction.schema.json',
-        'character-concept.schema.json',
-      ];
-
-      expectedSchemas.forEach((schema) => {
-        expect(fetchCalls.some((call) => call.includes(schema))).toBe(true);
-      });
+      // Assert - verify SchemaLoader was called for bulk schema loading
+      expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalled();
+      
+      // Verify character-concept schema was loaded manually
+      expect(fetch).toHaveBeenCalledWith('data/schemas/character-concept.schema.json');
+      expect(mockSchemaValidator.addSchema).toHaveBeenCalled();
     });
 
-    test('should handle invalid schema JSON', async () => {
-      // Arrange - Create fresh app instance for this test
+    test('should handle invalid character schema JSON', async () => {
+      // Arrange - Create fresh app instance and make character-concept schema JSON invalid
       const failingApp = new ThematicDirectionApp();
       global.fetch = jest.fn().mockImplementation((url) => {
-        if (url.includes('thematic-direction.schema.json')) {
+        if (url.includes('character-concept.schema.json')) {
           return Promise.resolve({
             ok: true,
             json: () => Promise.reject(new Error('Invalid JSON')),
           });
         }
         // Default response for other schemas
-        const schemaId = url.split('/').pop().replace('.schema.json', '');
         return Promise.resolve({
           ok: true,
-          json: () =>
-            Promise.resolve({
-              $id: schemaId,
-              type: 'object',
-              properties: { id: { type: 'string' } },
-            }),
+          json: () => Promise.resolve({ $id: 'generic-schema', type: 'object' }),
         });
       });
+      
+      // Mock SchemaLoader to succeed so we isolate the character schema error
+      const SchemaLoader = require('../../../src/loaders/schemaLoader.js').default;
+      const workingSchemaLoader = {
+        loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
+      };
+      SchemaLoader.mockImplementation(() => workingSchemaLoader);
+      
+      // Also mock ConfigurableLLMAdapter for this fresh instance
+      const { ConfigurableLLMAdapter } = require('../../../src/turns/adapters/configurableLLMAdapter.js');
+      const workingLlmAdapter = {
+        init: jest.fn().mockResolvedValue(undefined),
+        getAIDecision: jest.fn().mockResolvedValue({ success: true, decision: 'test decision' }),
+        getCurrentActiveLlmId: jest.fn().mockReturnValue('test-llm-id')
+      };
+      ConfigurableLLMAdapter.mockImplementation(() => workingLlmAdapter);
 
       // Act & Assert
       await expect(failingApp.initialize()).rejects.toThrow('Invalid JSON');
@@ -256,14 +262,14 @@ describe('ThematicDirectionApp Initialization Integration', () => {
 
   describe('Dependency injection registration', () => {
     test('should register ThematicDirectionController correctly', async () => {
-      // This is a high-level test to ensure the registration pattern works
-      // The detailed registration logic is tested in the unit tests
-
       // Act
       await expect(app.initialize()).resolves.not.toThrow();
 
-      // The fact that initialization completes without throwing the
-      // "container.getRegistrar is not a function" error proves the fix works
+      // Assert - verify that all essential services were initialized
+      // This confirms that the DI container setup and service resolution works
+      expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalled();
+      expect(mockLlmAdapter.init).toHaveBeenCalled();
+      expect(mockCharacterBuilderService.initialize).toHaveBeenCalled();
     });
   });
 

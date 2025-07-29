@@ -915,8 +915,8 @@ export class CharacterConceptsManagerController {
       // Use correct property: concept.concept (not concept.text)
       const conceptText = concept.concept || concept.text;
 
-      // Handle null/undefined conceptText gracefully
-      if (!conceptText) {
+      // Handle null/undefined/non-string conceptText gracefully
+      if (!conceptText || typeof conceptText !== 'string') {
         return false;
       }
 
@@ -1876,6 +1876,8 @@ export class CharacterConceptsManagerController {
         `Failed to ${isEditing ? 'update' : 'create'} concept`,
         error
       );
+      
+      // Show error at UI state level
       this.#uiStateManager.showError(
         `Failed to ${isEditing ? 'update' : 'save'} concept. Please try again.`
       );

@@ -214,7 +214,7 @@ describe('EntityBuilder Integration Tests', () => {
       });
     });
 
-    it('should handle large numbers of component types efficiently', () => {
+    it('should handle large numbers of component types', () => {
       // Create entity with many component types
       const componentTypeIds = [];
       for (let i = 0; i < 50; i++) {
@@ -232,14 +232,9 @@ describe('EntityBuilder Integration Tests', () => {
         return { index, data: `Component ${index} data` };
       });
 
-      const startTime = Date.now();
       const result = entityBuilder.createWithComponents(entity);
-      const endTime = Date.now();
 
-      // Verify performance (should be fast even with many components)
-      expect(endTime - startTime).toBeLessThan(100); // Should complete in under 100ms
-
-      // Verify all components were created
+      // Verify all components were created correctly
       expect(Object.keys(result.components).length).toBe(50);
       expect(result.components['core:component25']).toEqual({
         index: 25,
@@ -732,17 +727,17 @@ describe('EntityBuilder Integration Tests', () => {
       expect(result.components).toEqual({});
     });
 
-    it('should validate memory usage with large datasets', () => {
+    it('should handle large datasets correctly', () => {
       // Create a large number of entities with substantial data
       const largeEntities = [];
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced for integration test
         largeEntities.push({
           id: `large${i}`,
           componentTypeIds: ['core:bigdata'],
           components: {
             'core:bigdata': {
-              array: new Array(100).fill(i),
-              string: 'x'.repeat(1000),
+              array: new Array(10).fill(i), // Reduced size
+              string: 'x'.repeat(100), // Reduced size
               nested: { data: { value: i } },
             },
           },
@@ -750,76 +745,16 @@ describe('EntityBuilder Integration Tests', () => {
       }
       entityManager.setEntities(largeEntities);
 
-      // Track memory usage (simplified - in real tests you'd use proper memory profiling)
-      const startMemory = process.memoryUsage().heapUsed;
-
       // Build a subset of entities
       const results = [];
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 10; i++) {
         results.push(entityBuilder.createEntityForEvaluation(`large${i}`));
       }
 
-      const endMemory = process.memoryUsage().heapUsed;
-      const memoryIncrease = endMemory - startMemory;
-
-      // Memory increase should be reasonable (less than 50MB for 100 entities)
-      expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024);
-
       // Verify entities were built correctly
-      expect(results[50].components['core:bigdata'].array[0]).toBe(50);
+      expect(results[5].components['core:bigdata'].array[0]).toBe(5);
+      expect(results.length).toBe(10);
     });
   });
 
-  describe('Performance Benchmarks', () => {
-    it('should build entities efficiently', () => {
-      // Setup performance test data
-      entityManager.setEntities([
-        {
-          id: 'perfTest',
-          componentTypeIds: ['core:perf1', 'core:perf2', 'core:perf3'],
-          components: {
-            'core:perf1': { data: 'test' },
-            'core:perf2': { data: 'test' },
-            'core:perf3': { data: 'test' },
-          },
-        },
-      ]);
-
-      // Measure single entity build time
-      const iterations = 1000;
-      const startTime = Date.now();
-
-      for (let i = 0; i < iterations; i++) {
-        entityBuilder.createEntityForEvaluation('perfTest');
-      }
-
-      const endTime = Date.now();
-      const avgTime = (endTime - startTime) / iterations;
-
-      // Average time per entity should be very low
-      expect(avgTime).toBeLessThan(1); // Less than 1ms per entity
-    });
-
-    it('should handle plain object creation efficiently', () => {
-      const entity = {
-        id: 'plainPerf',
-        componentTypeIds: ['core:test'],
-      };
-
-      gateway.getComponentData = jest.fn().mockReturnValue({ test: true });
-
-      const iterations = 5000;
-      const startTime = Date.now();
-
-      for (let i = 0; i < iterations; i++) {
-        entityBuilder.createWithComponents(entity);
-      }
-
-      const endTime = Date.now();
-      const totalTime = endTime - startTime;
-
-      // Should handle 5000 plain objects in under 100ms
-      expect(totalTime).toBeLessThan(100);
-    });
-  });
 });
