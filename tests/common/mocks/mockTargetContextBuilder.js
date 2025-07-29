@@ -8,16 +8,19 @@ import { jest } from '@jest/globals';
 /**
  * Creates a mock TargetContextBuilder instance
  *
+ * @param entityManager
  * @returns {object} Mock TargetContextBuilder
  */
-export function createMockTargetContextBuilder() {
+export function createMockTargetContextBuilder(entityManager) {
   return {
     buildBaseContext: jest.fn().mockImplementation((actorId, locationId) => {
+      const actorEntity = entityManager?.getEntityInstance?.(actorId);
+      const locationEntity = entityManager?.getEntityInstance?.(locationId);
+      
       return {
-        actor: actorId,
-        location: locationId,
-        gameState: {},
-        // Add any other properties that the real implementation returns
+        actor: actorEntity || { id: actorId, components: {} },
+        location: locationEntity || { id: locationId, components: {} },
+        game: {},
       };
     }),
 

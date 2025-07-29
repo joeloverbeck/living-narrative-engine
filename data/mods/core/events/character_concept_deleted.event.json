@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "thematic:character_concept_deleted",
+  "description": "Dispatched when a character concept is deleted.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "description": "Unique identifier of the deleted concept",
+        "type": "string"
+      }
+    },
+    "required": ["conceptId"],
+    "additionalProperties": true
+  }
+}

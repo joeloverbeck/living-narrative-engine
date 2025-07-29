@@ -64,6 +64,8 @@
       "action_decided.event.json",
       "attempt_action.event.json",
       "character_builder_error_occurred.event.json",
+      "character_concept_created.event.json",
+      "character_concept_deleted.event.json",
       "component_added.event.json",
       "component_removed.event.json",
       "disable_input.event.json",
@@ -122,7 +124,10 @@
       "turn_started.rule.json",
       "wait.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"],
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ],
     "scopes": [
       "actors_in_location.scope",
       "clear_directions.scope",

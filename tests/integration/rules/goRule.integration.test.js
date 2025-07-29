@@ -496,4 +496,123 @@ describe('core_handle_go rule integration', () => {
     const result = testEnv.jsonLogic.evaluate(prereq, ctx.context);
     expect(result).toBe(false);
   });
+
+  describe('Multi-target backward compatibility', () => {
+    it('handles multi-target event payload format', async () => {
+      testEnv.reset([
+        {
+          id: 'actor1',
+          components: {
+            [NAME_COMPONENT_ID]: { text: 'Hero' },
+            [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+            'anatomy:body': { rootEntityId: 'body-actor1' },
+          },
+        },
+        {
+          id: 'body-actor1',
+          components: {
+            'anatomy:part': { parentId: null, type: 'body' },
+          },
+        },
+        {
+          id: 'leg-left-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+            'core:movement': { locked: false },
+          },
+        },
+        {
+          id: 'leg-right-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+            'core:movement': { locked: false },
+          },
+        },
+        { id: 'locA', components: { [NAME_COMPONENT_ID]: { text: 'Loc A' } } },
+        { id: 'locB', components: { [NAME_COMPONENT_ID]: { text: 'Loc B' } } },
+      ]);
+      setupListener();
+      testEnv.entityManager.addComponent('locA', EXITS_COMPONENT_ID, [
+        { direction: 'north', target: 'locB' },
+      ]);
+
+      // Test with new multi-target event structure
+      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        actorId: 'actor1',
+        actionId: 'core:go',
+        targets: { primary: 'locB' },
+        targetId: 'locB', // Backward compatibility
+        originalInput: 'go north',
+      });
+
+      // Same assertions as legacy test
+      expect(
+        testEnv.entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
+      ).toEqual({ locationId: 'locB' });
+      
+      const types = events.map((e) => e.type);
+      expect(types).toContain('core:perceptible_event');
+      expect(types).toContain('core:entity_moved');
+      expect(types).toContain('core:display_successful_action_result');
+      expect(types).toContain('core:turn_ended');
+    });
+
+    it('maintains backward compatibility with legacy event format', async () => {
+      testEnv.reset([
+        {
+          id: 'actor1',
+          components: {
+            [NAME_COMPONENT_ID]: { text: 'Hero' },
+            [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+            'anatomy:body': { rootEntityId: 'body-actor1' },
+          },
+        },
+        {
+          id: 'body-actor1',
+          components: {
+            'anatomy:part': { parentId: null, type: 'body' },
+          },
+        },
+        {
+          id: 'leg-left-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+            'core:movement': { locked: false },
+          },
+        },
+        {
+          id: 'leg-right-actor1',
+          components: {
+            'anatomy:part': { parentId: 'body-actor1', type: 'leg' },
+            'core:movement': { locked: false },
+          },
+        },
+        { id: 'locA', components: { [NAME_COMPONENT_ID]: { text: 'Loc A' } } },
+        { id: 'locB', components: { [NAME_COMPONENT_ID]: { text: 'Loc B' } } },
+      ]);
+      setupListener();
+      testEnv.entityManager.addComponent('locA', EXITS_COMPONENT_ID, [
+        { direction: 'north', target: 'locB' },
+      ]);
+
+      // Test with legacy event structure (no targets field)
+      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        actorId: 'actor1',
+        actionId: 'core:go',
+        targetId: 'locB',
+        originalInput: 'go north',
+      });
+
+      // Same results expected
+      expect(
+        testEnv.entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
+      ).toEqual({ locationId: 'locB' });
+      
+      const types = events.map((e) => e.type);
+      expect(types).toContain('core:perceptible_event');
+      expect(types).toContain('core:entity_moved');
+      expect(types).toContain('core:display_successful_action_result');
+      expect(types).toContain('core:turn_ended');
+    });
+  });
 });

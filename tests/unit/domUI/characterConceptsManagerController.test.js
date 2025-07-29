@@ -12,6 +12,89 @@ import {
 } from '@jest/globals';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
 
+// Helper function to create mock DOM elements that work with getComputedStyle
+const createMockDOMElement = (id, tagName = 'DIV') => {
+  // Create a mock element with all necessary properties
+  const element = {
+    id,
+    tagName,
+    nodeType: 1, // ELEMENT_NODE
+    nodeName: tagName,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    style: { display: 'block' },
+    classList: (() => {
+      const classes = new Set();
+      return {
+        add: jest.fn((...classNames) => {
+          classNames.forEach(className => classes.add(className));
+        }),
+        remove: jest.fn((...classNames) => {
+          classNames.forEach(className => classes.delete(className));
+        }),
+        contains: jest.fn((className) => {
+          return classes.has(className);
+        }),
+      };
+    })(),
+    textContent: '',
+    innerHTML: '',
+    disabled: false,
+    value: '',
+    reset: jest.fn(),
+    focus: jest.fn(),
+    dataset: {},
+    getAttribute: jest.fn(),
+    setAttribute: jest.fn(),
+    querySelector: jest.fn(),
+    querySelectorAll: jest.fn(() => []),
+    appendChild: jest.fn(),
+    parentNode: {
+      replaceChild: jest.fn((newChild, oldChild) => oldChild),
+    },
+    parentElement: null,
+    cloneNode: jest.fn(function(deep) {
+      return createMockDOMElement(id + '-clone', tagName);
+    }),
+    tabIndex: -1,
+    className: '',
+  };
+  
+  
+  // For INPUT and TEXTAREA elements, ensure proper value handling
+  if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
+    let _value = '';
+    Object.defineProperty(element, 'value', {
+      get: () => _value,
+      set: (val) => {
+        _value = val;
+      },
+      enumerable: true,
+      configurable: true,
+    });
+  }
+  
+  // Don't set prototype to avoid Node validation issues
+  // Just make sure it has the properties needed
+  
+  // Mock window.getComputedStyle for this element
+  const originalGetComputedStyle = window.getComputedStyle;
+  window.getComputedStyle = jest.fn((el) => {
+    if (el === element) {
+      return {
+        display: element.style.display || 'block',
+        visibility: 'visible',
+        opacity: '1',
+        zIndex: 'auto',
+        position: 'static',
+      };
+    }
+    return originalGetComputedStyle ? originalGetComputedStyle(el) : {};
+  });
+  
+  return element;
+};
+
 // Mock the UIStateManager
 jest.mock('../../../src/shared/characterBuilder/uiStateManager.js', () => ({
   UIStateManager: jest.fn().mockImplementation(() => ({
@@ -190,49 +273,7 @@ describe('CharacterConceptsManagerController - Initialization', () => {
 
   // Helper to create mock DOM elements
   const createMockElement = (id, tagName = 'DIV') => {
-    // Create a stateful classList mock
-    const classes = new Set();
-    const classList = {
-      add: jest.fn((...classNames) => {
-        classNames.forEach((className) => classes.add(className));
-      }),
-      remove: jest.fn((...classNames) => {
-        classNames.forEach((className) => classes.delete(className));
-      }),
-      contains: jest.fn((className) => classes.has(className)),
-    };
-
-    const element = {
-      id,
-      tagName,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      style: { display: 'block' },
-      classList,
-      textContent: '',
-      disabled: false,
-      value: '',
-      reset: jest.fn(),
-      focus: jest.fn(),
-      dataset: {},
-      getAttribute: jest.fn(),
-      setAttribute: jest.fn(),
-    };
-
-    // Make value property work properly for INPUT elements
-    if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
-      let _value = '';
-      Object.defineProperty(element, 'value', {
-        get: () => _value,
-        set: (val) => {
-          _value = val;
-        },
-        enumerable: true,
-        configurable: true,
-      });
-    }
-
-    return element;
+    return createMockDOMElement(id, tagName);
   };
 
   beforeEach(() => {
@@ -443,6 +484,8 @@ describe('CharacterConceptsManagerController - Initialization', () => {
   });
 
   afterEach(() => {
+    // Clean up any DOM elements created during tests
+    document.body.innerHTML = '';
     delete global.document;
   });
 
@@ -774,49 +817,7 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
 
   // Helper to create mock DOM elements
   const createMockElement = (id, tagName = 'DIV') => {
-    // Create a stateful classList mock
-    const classes = new Set();
-    const classList = {
-      add: jest.fn((...classNames) => {
-        classNames.forEach((className) => classes.add(className));
-      }),
-      remove: jest.fn((...classNames) => {
-        classNames.forEach((className) => classes.delete(className));
-      }),
-      contains: jest.fn((className) => classes.has(className)),
-    };
-
-    const element = {
-      id,
-      tagName,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      style: { display: 'block' },
-      classList,
-      textContent: '',
-      disabled: false,
-      value: '',
-      reset: jest.fn(),
-      focus: jest.fn(),
-      dataset: {},
-      getAttribute: jest.fn(),
-      setAttribute: jest.fn(),
-    };
-
-    // Make value property work properly for INPUT elements
-    if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
-      let _value = '';
-      Object.defineProperty(element, 'value', {
-        get: () => _value,
-        set: (val) => {
-          _value = val;
-        },
-        enumerable: true,
-        configurable: true,
-      });
-    }
-
-    return element;
+    return createMockDOMElement(id, tagName);
   };
 
   beforeEach(() => {
@@ -1038,6 +1039,8 @@ describe('CharacterConceptsManagerController - Create Concept Functionality (Tic
   });
 
   afterEach(() => {
+    // Clean up any DOM elements created during tests
+    document.body.innerHTML = '';
     delete global.document;
   });
 
@@ -1472,54 +1475,7 @@ describe('CharacterConceptsManagerController - Display Concepts Functionality (T
 
   // Helper to create mock DOM elements
   const createMockElement = (id, tagName = 'DIV') => {
-    // Create a stateful classList mock
-    const classes = new Set();
-    const classList = {
-      add: jest.fn((...classNames) => {
-        classNames.forEach((className) => classes.add(className));
-      }),
-      remove: jest.fn((...classNames) => {
-        classNames.forEach((className) => classes.delete(className));
-      }),
-      contains: jest.fn((className) => classes.has(className)),
-    };
-
-    const element = {
-      id,
-      tagName,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      style: { display: 'block' },
-      classList,
-      textContent: '',
-      innerHTML: '',
-      disabled: false,
-      value: '',
-      reset: jest.fn(),
-      focus: jest.fn(),
-      scrollTop: 0,
-      querySelector: jest.fn(),
-      querySelectorAll: jest.fn().mockReturnValue([]),
-      appendChild: jest.fn(),
-      dataset: {},
-      getAttribute: jest.fn(),
-      setAttribute: jest.fn(),
-    };
-
-    // Make value property work properly for INPUT elements
-    if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
-      let _value = '';
-      Object.defineProperty(element, 'value', {
-        get: () => _value,
-        set: (val) => {
-          _value = val;
-        },
-        enumerable: true,
-        configurable: true,
-      });
-    }
-
-    return element;
+    return createMockDOMElement(id, tagName);
   };
 
   // Mock sample concepts with various scenarios
@@ -1652,6 +1608,8 @@ describe('CharacterConceptsManagerController - Display Concepts Functionality (T
   });
 
   afterEach(() => {
+    // Clean up any DOM elements created during tests
+    document.body.innerHTML = '';
     delete global.document;
     delete global.requestAnimationFrame;
   });
@@ -2512,6 +2470,10 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
       remove: jest.fn(),
       getAttribute: jest.fn(),
       setAttribute: jest.fn(),
+      cloneNode: jest.fn((deep) => createMockElement(id + '-clone', tagName)),
+      parentNode: {
+        replaceChild: jest.fn((newChild, oldChild) => oldChild),
+      },
     };
 
     // Make value property work properly for INPUT elements
@@ -3174,7 +3136,7 @@ describe('CharacterConceptsManagerController - Delete Concept Functionality (Tic
     it('should show empty state if no concepts remain', () => {
       controller._testExports.conceptsData = [];
 
-      const event = { detail: { conceptId: 'concept-1' } };
+      const event = { payload: { conceptId: 'concept-1' } };
       controller._testExports.handleConceptDeleted(event);
 
       // Verify empty state is set

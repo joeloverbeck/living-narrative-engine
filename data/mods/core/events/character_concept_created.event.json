@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "thematic:character_concept_created",
+  "description": "Dispatched when a new character concept is created.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "description": "Unique identifier of the created concept",
+        "type": "string"
+      },
+      "concept": {
+        "description": "The character concept text",
+        "type": "string"
+      },
+      "autoSaved": {
+        "description": "Whether the concept was automatically saved",
+        "type": "boolean"
+      }
+    },
+    "required": ["conceptId", "concept"],
+    "additionalProperties": true
+  }
+}

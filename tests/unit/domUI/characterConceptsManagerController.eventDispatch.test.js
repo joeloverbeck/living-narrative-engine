@@ -87,7 +87,7 @@ describe('CharacterConceptsManagerController - Event Dispatch Patterns Fix', () 
       matches.forEach((match) => {
         const eventName = match[1];
         // Verify event name format is namespace:category:action or category:action
-        expect(eventName).toMatch(/^([a-z]+:)?[a-z]+:[a-z-]+$/);
+        expect(eventName).toMatch(/^([a-z]+:)?[a-z]+:[a-z_]+$/);
       });
     });
 

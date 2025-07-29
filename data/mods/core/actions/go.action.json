@@ -3,8 +3,14 @@
   "id": "core:go",
   "name": "Go",
   "description": "Moves your character to the specified location, if the way is clear.",
-  "scope": "core:clear_directions",
-  "template": "go to {target}",
+  "targets": {
+    "primary": {
+      "scope": "core:clear_directions",
+      "placeholder": "destination",
+      "description": "Location to move to"
+    }
+  },
+  "template": "go to {destination}",
   "prerequisites": [
     {
       "logic": {
