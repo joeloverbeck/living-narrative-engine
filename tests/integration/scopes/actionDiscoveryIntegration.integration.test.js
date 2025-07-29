@@ -284,7 +284,7 @@ describe('Scope Integration Tests', () => {
       actionIndex = new ActionIndex({ logger, entityManager });
       const allActions = gameDataRepository.getAllActionDefinitions();
       actionIndex.buildIndex(allActions);
-      
+
       // Need to recreate the ActionPipelineOrchestrator with updated dependencies
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
@@ -326,9 +326,13 @@ describe('Scope Integration Tests', () => {
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = { 
+      const context = {
         jsonLogicEval,
-        location: { id: entityManager.getEntityInstance(actorId).getComponentData(POSITION_COMPONENT_ID)?.locationId }
+        location: {
+          id: entityManager
+            .getEntityInstance(actorId)
+            .getComponentData(POSITION_COMPONENT_ID)?.locationId,
+        },
       };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
@@ -413,7 +417,7 @@ describe('Scope Integration Tests', () => {
       actionIndex = new ActionIndex({ logger, entityManager });
       const allActions = gameDataRepository.getAllActionDefinitions();
       actionIndex.buildIndex(allActions);
-      
+
       // Need to recreate the ActionPipelineOrchestrator with updated dependencies
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
@@ -455,9 +459,13 @@ describe('Scope Integration Tests', () => {
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = { 
+      const context = {
         jsonLogicEval,
-        location: { id: entityManager.getEntityInstance(actorId).getComponentData(POSITION_COMPONENT_ID)?.locationId }
+        location: {
+          id: entityManager
+            .getEntityInstance(actorId)
+            .getComponentData(POSITION_COMPONENT_ID)?.locationId,
+        },
       };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
@@ -520,7 +528,7 @@ describe('Scope Integration Tests', () => {
       actionIndex = new ActionIndex({ logger, entityManager });
       const allActions = gameDataRepository.getAllActionDefinitions();
       actionIndex.buildIndex(allActions);
-      
+
       // Need to recreate the ActionPipelineOrchestrator with updated dependencies
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
@@ -562,9 +570,13 @@ describe('Scope Integration Tests', () => {
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = { 
+      const context = {
         jsonLogicEval,
-        location: { id: entityManager.getEntityInstance(actorId).getComponentData(POSITION_COMPONENT_ID)?.locationId }
+        location: {
+          id: entityManager
+            .getEntityInstance(actorId)
+            .getComponentData(POSITION_COMPONENT_ID)?.locationId,
+        },
       };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
@@ -615,7 +627,7 @@ describe('Scope Integration Tests', () => {
       actionIndex = new ActionIndex({ logger, entityManager });
       const allActions = gameDataRepository.getAllActionDefinitions();
       actionIndex.buildIndex(allActions);
-      
+
       // Need to recreate the ActionPipelineOrchestrator with updated dependencies
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
@@ -657,9 +669,13 @@ describe('Scope Integration Tests', () => {
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = { 
+      const context = {
         jsonLogicEval,
-        location: { id: entityManager.getEntityInstance(actorId).getComponentData(POSITION_COMPONENT_ID)?.locationId }
+        location: {
+          id: entityManager
+            .getEntityInstance(actorId)
+            .getComponentData(POSITION_COMPONENT_ID)?.locationId,
+        },
       };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,

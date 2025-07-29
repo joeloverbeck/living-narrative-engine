@@ -23,6 +23,7 @@ describe('TargetResolutionService - Missing Coverage', () => {
       },
       entityManager: {
         getComponentData: jest.fn(),
+        getEntityInstance: jest.fn(),
       },
       logger: {
         info: jest.fn(),

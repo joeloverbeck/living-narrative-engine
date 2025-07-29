@@ -23,7 +23,10 @@ describe('TargetResolutionService - additional branches', () => {
   beforeEach(() => {
     mockScopeRegistry = { getScope: jest.fn() };
     mockScopeEngine = { resolve: jest.fn() };
-    mockEntityManager = {};
+    mockEntityManager = {
+      getComponentData: jest.fn(),
+      getEntityInstance: jest.fn()
+    };
     mockLogger = {
       error: jest.fn(),
       warn: jest.fn(),

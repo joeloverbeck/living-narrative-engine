@@ -35,8 +35,11 @@ import { configureBaseContainer } from './baseContainerConfig.js';
  * - Orchestration services (game-specific)
  *
  * @param {AppContainer} container
+ * @param {object} [options] - Configuration options
+ * @param {boolean} [options.includeCharacterBuilder] - Whether to include character builder services
  */
-export async function configureMinimalContainer(container) {
+export async function configureMinimalContainer(container, options = {}) {
+  const { includeCharacterBuilder = false } = options;
   const registrar = new Registrar(container);
 
   // --- Bootstrap logger with a default level (e.g., INFO) ---
@@ -57,6 +60,7 @@ export async function configureMinimalContainer(container) {
     includeGameSystems: false,
     includeUI: false,
     includeAnatomySystems: true,
+    includeCharacterBuilder: includeCharacterBuilder,
     logger: logger,
   });
 

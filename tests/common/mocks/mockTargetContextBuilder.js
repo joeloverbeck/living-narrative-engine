@@ -16,7 +16,7 @@ export function createMockTargetContextBuilder(entityManager) {
     buildBaseContext: jest.fn().mockImplementation((actorId, locationId) => {
       const actorEntity = entityManager?.getEntityInstance?.(actorId);
       const locationEntity = entityManager?.getEntityInstance?.(locationId);
-      
+
       return {
         actor: actorEntity || { id: actorId, components: {} },
         location: locationEntity || { id: locationId, components: {} },

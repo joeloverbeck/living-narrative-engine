@@ -12,6 +12,7 @@ describe('TargetResolutionService additional coverage', () => {
   let service;
   let mockScopeRegistry;
   let mockScopeEngine;
+  let mockEntityManager;
   let mockLogger;
   let mockDispatcher;
   let mockJsonLogic;
@@ -20,6 +21,10 @@ describe('TargetResolutionService additional coverage', () => {
   beforeEach(() => {
     mockScopeRegistry = { getScope: jest.fn() };
     mockScopeEngine = { resolve: jest.fn() };
+    mockEntityManager = {
+      getComponentData: jest.fn(),
+      getEntityInstance: jest.fn()
+    };
     mockLogger = {
       error: jest.fn(),
       warn: jest.fn(),
@@ -33,7 +38,7 @@ describe('TargetResolutionService additional coverage', () => {
     service = createTargetResolutionServiceWithMocks({
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
-      entityManager: {},
+      entityManager: mockEntityManager,
       logger: mockLogger,
       safeEventDispatcher: mockDispatcher,
       jsonLogicEvaluationService: mockJsonLogic,

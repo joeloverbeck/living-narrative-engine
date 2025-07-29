@@ -188,7 +188,7 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
         const defaultActions = [
           { id: 'core:look', name: 'Look' },
           { id: 'core:wait', name: 'Wait' },
-          { id: 'core:move', name: 'Move' }
+          { id: 'core:move', name: 'Move' },
         ];
         return mock.mockResolvedValue
           ? mock.mockResolvedValue({ actions: defaultActions })
@@ -217,7 +217,7 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
         const defaultActions = [
           { id: 'core:look', name: 'Look' },
           { id: 'core:wait', name: 'Wait' },
-          { id: 'core:move', name: 'Move' }
+          { id: 'core:move', name: 'Move' },
         ];
         return mock.mockResolvedValue
           ? mock.mockResolvedValue(defaultActions)
@@ -308,7 +308,9 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
             }
             const entity = mockEntityStore.get(entityId);
             if (!entity) {
-              console.warn(`Entity not found in mock store: ${entityId}. Available entities: ${Array.from(mockEntityStore.keys()).join(', ')}`);
+              console.warn(
+                `Entity not found in mock store: ${entityId}. Available entities: ${Array.from(mockEntityStore.keys()).join(', ')}`
+              );
             }
             return entity;
           });
@@ -321,7 +323,9 @@ export function createMockFacades(mockDeps = {}, mockFn = () => () => {}) {
             }
             const entity = mockEntityStore.get(entityId);
             if (!entity) {
-              console.warn(`Entity not found in mock store: ${entityId}. Available entities: ${Array.from(mockEntityStore.keys()).join(', ')}`);
+              console.warn(
+                `Entity not found in mock store: ${entityId}. Available entities: ${Array.from(mockEntityStore.keys()).join(', ')}`
+              );
             }
             return entity;
           };

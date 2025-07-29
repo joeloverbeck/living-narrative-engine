@@ -455,6 +455,29 @@ describe('CharacterDatabase', () => {
       );
       expect(mockLogger.error).toHaveBeenCalled();
     });
+
+    it('should handle get error with null error object', async () => {
+      const conceptId = 'test-concept-1';
+
+      const getRequest = {
+        onsuccess: null,
+        onerror: null,
+        error: null,
+      };
+      mockObjectStore.get.mockReturnValue(getRequest);
+
+      const getPromise = database.getCharacterConcept(conceptId);
+
+      // Simulate get error with null error
+      setTimeout(() => {
+        getRequest.onerror();
+      }, 0);
+
+      await expect(getPromise).rejects.toThrow(
+        'Failed to get character concept: Unknown error'
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
   });
 
   describe('getAllCharacterConcepts', () => {
@@ -539,6 +562,27 @@ describe('CharacterDatabase', () => {
 
       await expect(getAllPromise).rejects.toThrow(
         `Failed to get character concepts: ${errorMessage}`
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('should handle getAll error with null error object', async () => {
+      const getAllRequest = {
+        onsuccess: null,
+        onerror: null,
+        error: null,
+      };
+      mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+      const getAllPromise = database.getAllCharacterConcepts();
+
+      // Simulate getAll error with null error
+      setTimeout(() => {
+        getAllRequest.onerror();
+      }, 0);
+
+      await expect(getAllPromise).rejects.toThrow(
+        'Failed to get character concepts: Unknown error'
       );
       expect(mockLogger.error).toHaveBeenCalled();
     });
@@ -640,6 +684,37 @@ describe('CharacterDatabase', () => {
       );
       expect(mockLogger.error).toHaveBeenCalled();
     });
+
+    it('should handle delete error with null transaction error', async () => {
+      const conceptId = 'test-concept-1';
+
+      // Mock transaction for both stores
+      const conceptStore = { ...mockObjectStore, delete: jest.fn() };
+      const directionsStore = { ...mockObjectStore, delete: jest.fn() };
+
+      mockTransaction.objectStore
+        .mockReturnValueOnce(conceptStore)
+        .mockReturnValueOnce(directionsStore);
+
+      // Mock cursor for finding directions
+      const cursorRequest = { onsuccess: null };
+      mockIndex.openCursor.mockReturnValue(cursorRequest);
+      directionsStore.index = jest.fn().mockReturnValue(mockIndex);
+
+      mockTransaction.error = null;
+
+      const deletePromise = database.deleteCharacterConcept(conceptId);
+
+      // Simulate transaction error with null error
+      setTimeout(() => {
+        mockTransaction.onerror();
+      }, 0);
+
+      await expect(deletePromise).rejects.toThrow(
+        'Failed to delete character concept: Unknown error'
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
   });
 
   describe('saveThematicDirections', () => {
@@ -713,6 +788,29 @@ describe('CharacterDatabase', () => {
 
       await expect(savePromise).rejects.toThrow(
         `Failed to save thematic direction: ${errorMessage}`
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('should handle save error for thematic directions with null error object', async () => {
+      const directions = [{ id: 'direction-1', conceptId: 'concept-1' }];
+
+      const putRequest = {
+        onsuccess: null,
+        onerror: null,
+        error: null,
+      };
+      mockObjectStore.put.mockReturnValue(putRequest);
+
+      const savePromise = database.saveThematicDirections(directions);
+
+      // Simulate save error with null error
+      setTimeout(() => {
+        putRequest.onerror();
+      }, 0);
+
+      await expect(savePromise).rejects.toThrow(
+        'Failed to save thematic direction: Unknown error'
       );
       expect(mockLogger.error).toHaveBeenCalled();
     });
@@ -808,6 +906,29 @@ describe('CharacterDatabase', () => {
       );
       expect(mockLogger.error).toHaveBeenCalled();
     });
+
+    it('should handle get error for thematic directions by concept ID with null error object', async () => {
+      const conceptId = 'concept-1';
+
+      const getAllRequest = {
+        onsuccess: null,
+        onerror: null,
+        error: null,
+      };
+      mockIndex.getAll.mockReturnValue(getAllRequest);
+
+      const getPromise = database.getThematicDirectionsByConceptId(conceptId);
+
+      // Simulate get error with null error
+      setTimeout(() => {
+        getAllRequest.onerror();
+      }, 0);
+
+      await expect(getPromise).rejects.toThrow(
+        'Failed to get thematic directions: Unknown error'
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
   });
 
   describe('getAllThematicDirections', () => {
@@ -895,6 +1016,27 @@ describe('CharacterDatabase', () => {
       );
       expect(mockLogger.error).toHaveBeenCalled();
     });
+
+    it('should handle getAll error for thematic directions with null error object', async () => {
+      const getAllRequest = {
+        onsuccess: null,
+        onerror: null,
+        error: null,
+      };
+      mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+      const getAllPromise = database.getAllThematicDirections();
+
+      // Simulate getAll error with null error
+      setTimeout(() => {
+        getAllRequest.onerror();
+      }, 0);
+
+      await expect(getAllPromise).rejects.toThrow(
+        'Failed to get all thematic directions: Unknown error'
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
   });
 
   describe('getThematicDirection', () => {
@@ -978,6 +1120,29 @@ describe('CharacterDatabase', () => {
 
       await expect(getPromise).rejects.toThrow(
         `Failed to get thematic direction: ${errorMessage}`
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('should handle get error for single thematic direction with null error object', async () => {
+      const directionId = 'direction-1';
+
+      const getRequest = {
+        onsuccess: null,
+        onerror: null,
+        error: null,
+      };
+      mockObjectStore.get.mockReturnValue(getRequest);
+
+      const getPromise = database.getThematicDirection(directionId);
+
+      // Simulate get error with null error
+      setTimeout(() => {
+        getRequest.onerror();
+      }, 0);
+
+      await expect(getPromise).rejects.toThrow(
+        'Failed to get thematic direction: Unknown error'
       );
       expect(mockLogger.error).toHaveBeenCalled();
     });
@@ -1115,6 +1280,47 @@ describe('CharacterDatabase', () => {
       );
       expect(mockLogger.error).toHaveBeenCalled();
     });
+
+    it('should handle update error with null error object', async () => {
+      const directionId = 'direction-1';
+      const existingDirection = { id: directionId, conceptId: 'concept-1' };
+      const updates = { text: 'Updated text' };
+
+      // Mock successful get
+      const getRequest = {
+        onsuccess: null,
+        onerror: null,
+        result: existingDirection,
+      };
+      mockObjectStore.get.mockReturnValue(getRequest);
+
+      // Mock put error with null error
+      const putRequest = {
+        onsuccess: null,
+        onerror: null,
+        error: null,
+      };
+      mockObjectStore.put.mockReturnValue(putRequest);
+
+      const updatePromise = database.updateThematicDirection(
+        directionId,
+        updates
+      );
+
+      // Simulate successful get and put error
+      setTimeout(() => {
+        getRequest.onsuccess();
+
+        setTimeout(() => {
+          putRequest.onerror();
+        }, 0);
+      }, 0);
+
+      await expect(updatePromise).rejects.toThrow(
+        'Failed to update thematic direction: Unknown error'
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
   });
 
   describe('deleteThematicDirection', () => {
@@ -1174,6 +1380,29 @@ describe('CharacterDatabase', () => {
 
       await expect(deletePromise).rejects.toThrow(
         `Failed to delete thematic direction: ${errorMessage}`
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('should handle delete error for thematic direction with null error object', async () => {
+      const directionId = 'direction-1';
+
+      const deleteRequest = {
+        onsuccess: null,
+        onerror: null,
+        error: null,
+      };
+      mockObjectStore.delete.mockReturnValue(deleteRequest);
+
+      const deletePromise = database.deleteThematicDirection(directionId);
+
+      // Simulate delete error with null error
+      setTimeout(() => {
+        deleteRequest.onerror();
+      }, 0);
+
+      await expect(deletePromise).rejects.toThrow(
+        'Failed to delete thematic direction: Unknown error'
       );
       expect(mockLogger.error).toHaveBeenCalled();
     });

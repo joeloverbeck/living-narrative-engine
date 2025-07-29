@@ -33,23 +33,19 @@ async function initializeApp() {
       );
     }, INIT_TIMEOUT);
 
-    // Bootstrap with minimal configuration
+    // Bootstrap with minimal configuration that includes character builder services
     const bootstrapResult = await bootstrapper.bootstrap({
       containerConfigType: 'minimal',
       skipModLoading: true, // We'll load mods manually
       includeAnatomyFormatting: false,
+      includeCharacterBuilder: true, // Required for CharacterBuilderService
       postInitHook: null,
     });
 
-    if (!bootstrapResult.success) {
-      throw new Error(
-        `Bootstrap failed: ${bootstrapResult.error?.message || 'Unknown error'}`
-      );
-    }
-
+    // CommonBootstrapper throws on failure, so if we reach here, bootstrap succeeded
     // Extract services from bootstrap result
     container = bootstrapResult.container;
-    logger = bootstrapResult.logger;
+    logger = bootstrapResult.services.logger;
     logger = ensureValidLogger(logger);
 
     logger.info(`Initializing ${PAGE_NAME}...`);
@@ -62,7 +58,10 @@ async function initializeApp() {
         await modsLoader.loadMods('default', ['core']);
         logger.info('Core mod loaded successfully');
       } catch (modError) {
-        logger.warn('Failed to load core mod, continuing without event validation', modError);
+        logger.warn(
+          'Failed to load core mod, continuing without event validation',
+          modError
+        );
       }
     }
 

@@ -27,10 +27,10 @@ const createMockDOMElement = (id, tagName = 'DIV') => {
       const classes = new Set();
       return {
         add: jest.fn((...classNames) => {
-          classNames.forEach(className => classes.add(className));
+          classNames.forEach((className) => classes.add(className));
         }),
         remove: jest.fn((...classNames) => {
-          classNames.forEach(className => classes.delete(className));
+          classNames.forEach((className) => classes.delete(className));
         }),
         contains: jest.fn((className) => {
           return classes.has(className);
@@ -53,14 +53,13 @@ const createMockDOMElement = (id, tagName = 'DIV') => {
       replaceChild: jest.fn((newChild, oldChild) => oldChild),
     },
     parentElement: null,
-    cloneNode: jest.fn(function(deep) {
+    cloneNode: jest.fn(function (deep) {
       return createMockDOMElement(id + '-clone', tagName);
     }),
     tabIndex: -1,
     className: '',
   };
-  
-  
+
   // For INPUT and TEXTAREA elements, ensure proper value handling
   if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
     let _value = '';
@@ -73,10 +72,10 @@ const createMockDOMElement = (id, tagName = 'DIV') => {
       configurable: true,
     });
   }
-  
+
   // Don't set prototype to avoid Node validation issues
   // Just make sure it has the properties needed
-  
+
   // Mock window.getComputedStyle for this element
   const originalGetComputedStyle = window.getComputedStyle;
   window.getComputedStyle = jest.fn((el) => {
@@ -91,7 +90,7 @@ const createMockDOMElement = (id, tagName = 'DIV') => {
     }
     return originalGetComputedStyle ? originalGetComputedStyle(el) : {};
   });
-  
+
   return element;
 };
 

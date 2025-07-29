@@ -24,7 +24,7 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
     facades = createMockFacades({}, jest.fn);
     turnExecutionFacade = facades.turnExecutionFacade;
     llmService = facades.llmService;
-    
+
     // Initialize test environment with AI actors
     testEnvironment = await turnExecutionFacade.initializeTestEnvironment({
       llmStrategy: 'tool-calling',
@@ -55,7 +55,7 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
       targets: { direction: 'north' },
       reasoning: 'Exploring the area',
     });
-    
+
     // Act - Get AI decision
     const decision = await llmService.getAIDecision({
       actorId: 'ai-actor-1',
@@ -69,7 +69,7 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
         turn: 1,
       },
     });
-    
+
     // Assert
     expect(decision).toBeDefined();
     expect(decision.actionId).toBe('core:move');
@@ -84,14 +84,14 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
 
   test('should handle LLM failures with fallback', async () => {
     // Arrange - Configure LLM to fail
-    llmService.getAIDecision = jest.fn().mockRejectedValue(
-      new Error('LLM service unavailable')
-    );
-    
+    llmService.getAIDecision = jest
+      .fn()
+      .mockRejectedValue(new Error('LLM service unavailable'));
+
     // Act - Attempt AI decision with fallback
     let decision = null;
     let error = null;
-    
+
     try {
       decision = await llmService.getAIDecision({
         actorId: 'ai-actor-1',
@@ -106,7 +106,7 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
         reason: 'llm_unavailable_fallback',
       };
     }
-    
+
     // Assert
     expect(error).toBeTruthy();
     expect(error.message).toContain('unavailable');
@@ -117,25 +117,30 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
 
   test('should handle LLM timeouts gracefully', async () => {
     // Arrange - Configure LLM with delay
-    llmService.getAIDecision = jest.fn().mockImplementation(
-      () => new Promise(resolve => setTimeout(
-        () => resolve({ actionId: 'core:wait', targets: {} }),
-        6000
-      ))
-    );
-    
+    llmService.getAIDecision = jest
+      .fn()
+      .mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () => resolve({ actionId: 'core:wait', targets: {} }),
+              6000
+            )
+          )
+      );
+
     // Act - Create timeout
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('AI decision timeout')), 1000);
     });
-    
+
     const decisionPromise = llmService.getAIDecision({
       actorId: 'ai-actor-1',
     });
-    
+
     let result = null;
     let timedOut = false;
-    
+
     try {
       result = await Promise.race([decisionPromise, timeoutPromise]);
     } catch (error) {
@@ -143,7 +148,7 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
       // Use default action
       result = { actionId: 'core:wait', targets: {} };
     }
-    
+
     // Assert
     expect(timedOut).toBe(true);
     expect(result.actionId).toBe('core:wait');
@@ -165,21 +170,27 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
         isValid: false,
       },
     ];
-    
+
     for (const testCase of testCases) {
       llmService.getAIDecision = jest.fn().mockResolvedValue(testCase.response);
-      
+
       // Act
       const decision = await llmService.getAIDecision({
         actorId: 'ai-actor-1',
       });
-      
+
       // Simple validation
       let isValid = false;
-      if (decision && decision.actionId && typeof decision.actionId === 'string') {
-        isValid = decision.actionId.startsWith('core:') || decision.actionId.startsWith('test:');
+      if (
+        decision &&
+        decision.actionId &&
+        typeof decision.actionId === 'string'
+      ) {
+        isValid =
+          decision.actionId.startsWith('core:') ||
+          decision.actionId.startsWith('test:');
       }
-      
+
       // Assert
       expect(isValid).toBe(testCase.isValid);
     }
@@ -192,45 +203,48 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
       { name: 'slow', shouldFail: false, delay: 500 },
       { name: 'error', shouldFail: true, delay: 0 },
     ];
-    
+
     for (const condition of conditions) {
       // Configure based on condition
       if (condition.shouldFail) {
-        llmService.getAIDecision = jest.fn().mockRejectedValue(
-          new Error(`${condition.name} condition failure`)
-        );
+        llmService.getAIDecision = jest
+          .fn()
+          .mockRejectedValue(new Error(`${condition.name} condition failure`));
       } else {
-        llmService.getAIDecision = jest.fn().mockImplementation(
-          () => new Promise(resolve => 
-            setTimeout(
-              () => resolve({ actionId: 'core:wait', targets: {} }),
-              condition.delay
-            )
-          )
-        );
+        llmService.getAIDecision = jest
+          .fn()
+          .mockImplementation(
+            () =>
+              new Promise((resolve) =>
+                setTimeout(
+                  () => resolve({ actionId: 'core:wait', targets: {} }),
+                  condition.delay
+                )
+              )
+          );
       }
-      
+
       // Act
       const start = performance.now();
       let decision = null;
-      
+
       try {
         decision = await llmService.getAIDecision({ actorId: 'ai-actor-1' });
       } catch (error) {
         // Use fallback
         decision = { actionId: 'core:wait', targets: {}, fallback: true };
       }
-      
+
       const duration = performance.now() - start;
-      
+
       // Assert
       expect(decision).toBeDefined();
       expect(decision.actionId).toBe('core:wait');
-      
+
       if (condition.shouldFail) {
         expect(decision.fallback).toBe(true);
       }
-      
+
       // Performance check
       expect(duration).toBeLessThan(1000);
     }
@@ -240,7 +254,7 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
     // Arrange - Run multiple AI decisions
     const iterations = 10;
     const results = [];
-    
+
     // Configure mostly successful responses
     let callCount = 0;
     llmService.getAIDecision = jest.fn().mockImplementation(async () => {
@@ -251,11 +265,11 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
       }
       return { actionId: 'core:wait', targets: {} };
     });
-    
+
     // Act
     for (let i = 0; i < iterations; i++) {
       let success = false;
-      
+
       try {
         const decision = await llmService.getAIDecision({
           actorId: `ai-actor-${(i % 2) + 1}`,
@@ -265,14 +279,14 @@ describe('AI Action Decision Integration E2E - Simplified', () => {
         // Count fallback as success
         success = true;
       }
-      
+
       results.push({ iteration: i, success });
     }
-    
+
     // Assert - High success rate
-    const successCount = results.filter(r => r.success).length;
+    const successCount = results.filter((r) => r.success).length;
     const successRate = successCount / results.length;
-    
+
     expect(successRate).toBeGreaterThanOrEqual(0.9); // 90% success rate
     expect(callCount).toBe(iterations);
   });

@@ -3,33 +3,43 @@
  * Tests the complete user workflow for creating, editing, and managing character concepts
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
 
 // Mock FormValidationHelper to avoid DOM issues in tests
-jest.mock('../../../src/shared/characterBuilder/formValidationHelper.js', () => ({
-  FormValidationHelper: {
-    validateField: jest.fn().mockReturnValue(true),
-    setupRealTimeValidation: jest.fn(),
-    showFieldError: jest.fn(),
-    clearFieldError: jest.fn(),
-    updateCharacterCount: jest.fn((element, countElement, max) => {
-      if (countElement) {
-        countElement.textContent = `${element.value.length}/${max}`;
-      }
-    }),
-  },
-  ValidationPatterns: {
-    concept: {
-      pattern: /.+/,
-      minLength: 10,
-      maxLength: 3000,
+jest.mock(
+  '../../../src/shared/characterBuilder/formValidationHelper.js',
+  () => ({
+    FormValidationHelper: {
+      validateField: jest.fn().mockReturnValue(true),
+      setupRealTimeValidation: jest.fn(),
+      showFieldError: jest.fn(),
+      clearFieldError: jest.fn(),
+      updateCharacterCount: jest.fn((element, countElement, max) => {
+        if (countElement) {
+          countElement.textContent = `${element.value.length}/${max}`;
+        }
+      }),
     },
-  },
-}));
+    ValidationPatterns: {
+      concept: {
+        pattern: /.+/,
+        minLength: 10,
+        maxLength: 3000,
+      },
+    },
+  })
+);
 
 describe('Character Concepts Manager Modal - E2E Tests', () => {
   let container;
@@ -280,7 +290,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       titleElement: document.createElement('h1'),
       document: document,
     };
-    
+
     configureContainer(container, mockUiElements);
 
     // Get services
@@ -292,9 +302,10 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
     const mockConcepts = [
       {
         id: 'e2e-test-1',
-        concept: 'A cunning rogue with a heart of gold, skilled in stealth and lockpicking',
+        concept:
+          'A cunning rogue with a heart of gold, skilled in stealth and lockpicking',
         created: Date.now() - 172800000, // 2 days ago
-        updated: Date.now() - 86400000,  // 1 day ago
+        updated: Date.now() - 86400000, // 1 day ago
       },
       {
         id: 'e2e-test-2',
@@ -304,27 +315,37 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       },
     ];
 
-    characterBuilderService.getAllCharacterConcepts = jest.fn().mockResolvedValue(mockConcepts);
+    characterBuilderService.getAllCharacterConcepts = jest
+      .fn()
+      .mockResolvedValue(mockConcepts);
     // Mock getThematicDirections to return appropriate counts
-    characterBuilderService.getThematicDirections = jest.fn().mockImplementation(async (conceptId) => {
-      if (conceptId === 'e2e-test-1') {
-        return new Array(5); // Return array with 5 items for first concept
-      }
-      return []; // Return empty array for other concepts
-    });
-    characterBuilderService.createCharacterConcept = jest.fn().mockImplementation(async (text) => ({
-      id: 'new-e2e-' + Date.now(),
-      concept: text,
-      created: Date.now(),
-      updated: Date.now(),
-    }));
-    characterBuilderService.updateCharacterConcept = jest.fn().mockImplementation(async (id, updates) => ({
-      id,
-      concept: updates.concept,
-      created: Date.now() - 172800000,
-      updated: Date.now(),
-    }));
-    characterBuilderService.deleteCharacterConcept = jest.fn().mockResolvedValue(true);
+    characterBuilderService.getThematicDirections = jest
+      .fn()
+      .mockImplementation(async (conceptId) => {
+        if (conceptId === 'e2e-test-1') {
+          return new Array(5); // Return array with 5 items for first concept
+        }
+        return []; // Return empty array for other concepts
+      });
+    characterBuilderService.createCharacterConcept = jest
+      .fn()
+      .mockImplementation(async (text) => ({
+        id: 'new-e2e-' + Date.now(),
+        concept: text,
+        created: Date.now(),
+        updated: Date.now(),
+      }));
+    characterBuilderService.updateCharacterConcept = jest
+      .fn()
+      .mockImplementation(async (id, updates) => ({
+        id,
+        concept: updates.concept,
+        created: Date.now() - 172800000,
+        updated: Date.now(),
+      }));
+    characterBuilderService.deleteCharacterConcept = jest
+      .fn()
+      .mockResolvedValue(true);
 
     // Create and initialize controller
     controller = new CharacterConceptsManagerController({
@@ -334,9 +355,9 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
     });
 
     await controller.initialize();
-    
+
     // Wait for initial render and async data loading
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   });
 
   afterEach(() => {
@@ -352,33 +373,33 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       // Step 1: User sees empty state initially (assuming no concepts)
       // Create a new controller with empty concepts
       characterBuilderService.getAllCharacterConcepts.mockResolvedValue([]);
-      
+
       const emptyController = new CharacterConceptsManagerController({
         logger,
         characterBuilderService,
         eventBus,
       });
-      
+
       await emptyController.initialize();
-      
+
       // Wait for async operations and DOM updates with polling
       let attempts = 0;
       const maxAttempts = 10;
       let emptyState, resultsState;
-      
+
       while (attempts < maxAttempts) {
         emptyState = document.getElementById('empty-state');
         resultsState = document.getElementById('results-state');
-        
+
         // Check if UI has updated to show empty state
         if (emptyState && emptyState.style.display !== 'none') {
           break;
         }
-        
-        await new Promise(resolve => setTimeout(resolve, 100));
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
         attempts++;
       }
-      
+
       // Check that empty state is visible and results state is hidden
       expect(emptyState.style.display).not.toBe('none');
       expect(resultsState.style.display).toBe('none');
@@ -395,8 +416,9 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
 
       // Step 4: User types concept text
       const conceptText = document.getElementById('concept-text');
-      const userInput = 'A brave warrior princess who defies tradition and fights for justice';
-      
+      const userInput =
+        'A brave warrior princess who defies tradition and fights for justice';
+
       // Simulate typing
       conceptText.focus();
       conceptText.value = userInput;
@@ -413,13 +435,17 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
 
       // Step 7: User clicks save
       const form = document.getElementById('concept-form');
-      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      form.dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true })
+      );
 
       // Wait for async save
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Step 8: Verify save was called
-      expect(characterBuilderService.createCharacterConcept).toHaveBeenCalledWith(userInput);
+      expect(
+        characterBuilderService.createCharacterConcept
+      ).toHaveBeenCalledWith(userInput);
 
       // Step 9: Modal should close
       expect(modal.style.display).toBe('none');
@@ -432,19 +458,19 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       let attempts = 0;
       const maxAttempts = 10;
       let resultsState;
-      
+
       while (attempts < maxAttempts) {
         resultsState = document.getElementById('results-state');
-        
+
         // Check if UI has updated to show results
         if (resultsState && resultsState.style.display !== 'none') {
           break;
         }
-        
-        await new Promise(resolve => setTimeout(resolve, 100));
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
         attempts++;
       }
-      
+
       expect(resultsState.style.display).not.toBe('none');
 
       // Step 2: Find and click on a concept card
@@ -454,9 +480,9 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       // Simulate clicking on the first concept
       if (controller._testExports && controller._testExports.showEditModal) {
         await controller._testExports.showEditModal('e2e-test-1');
-        
+
         // Wait for modal to fully open
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Step 3: Edit modal should open with existing data
         const modal = document.getElementById('concept-modal');
@@ -468,21 +494,26 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
         expect(conceptText.value).toContain('cunning rogue');
 
         // Step 4: User modifies the text
-        const updatedText = conceptText.value + ' - now with magical abilities!';
+        const updatedText =
+          conceptText.value + ' - now with magical abilities!';
         conceptText.value = updatedText;
         conceptText.dispatchEvent(new Event('input', { bubbles: true }));
 
         // Step 5: User saves changes
         const saveBtn = document.getElementById('save-concept-btn');
         saveBtn.disabled = false;
-        
-        const form = document.getElementById('concept-form');
-        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
-        await new Promise(resolve => setTimeout(resolve, 200));
+        const form = document.getElementById('concept-form');
+        form.dispatchEvent(
+          new Event('submit', { bubbles: true, cancelable: true })
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         // Step 6: Verify update was called
-        expect(characterBuilderService.updateCharacterConcept).toHaveBeenCalled();
+        expect(
+          characterBuilderService.updateCharacterConcept
+        ).toHaveBeenCalled();
 
         // Step 7: Modal closing is handled by the controller after successful update
         // In a real application, the modal would close after the service call succeeds
@@ -502,7 +533,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
 
       // Check modal visibility
       expect(modal.style.display).toBe('flex');
-      
+
       // Check computed styles
       const modalStyles = window.getComputedStyle(modal);
       expect(modalStyles.position).toBe('fixed');
@@ -560,7 +591,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       document.getElementById('create-concept-btn').click();
       const modal = document.getElementById('concept-modal');
       const textarea = document.getElementById('concept-text');
-      
+
       expect(modal.style.display).toBe('flex');
 
       // Click inside textarea
@@ -586,7 +617,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
 
       // Validation would typically disable the button
       expect(conceptText.value.length).toBeLessThan(10);
-      
+
       // In real app, FormValidationHelper would show error
       // Here we simulate it
       if (conceptText.value.length < 10) {
@@ -603,7 +634,9 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
     it('should allow search while modal is open', async () => {
       // Open modal
       document.getElementById('create-concept-btn').click();
-      expect(document.getElementById('concept-modal').style.display).toBe('flex');
+      expect(document.getElementById('concept-modal').style.display).toBe(
+        'flex'
+      );
 
       // Perform search
       const searchInput = document.getElementById('concept-search');
@@ -617,16 +650,24 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
 
   describe('Delete Confirmation Flow', () => {
     it('should show delete confirmation with appropriate warnings', () => {
-      if (controller._testExports && controller._testExports.showDeleteConfirmation) {
+      if (
+        controller._testExports &&
+        controller._testExports.showDeleteConfirmation
+      ) {
         const conceptWithDirections = {
           id: 'e2e-test-1',
           concept: 'A cunning rogue with a heart of gold',
         };
 
         // Show delete confirmation
-        controller._testExports.showDeleteConfirmation(conceptWithDirections, 5);
+        controller._testExports.showDeleteConfirmation(
+          conceptWithDirections,
+          5
+        );
 
-        const deleteModal = document.getElementById('delete-confirmation-modal');
+        const deleteModal = document.getElementById(
+          'delete-confirmation-modal'
+        );
         const deleteMessage = document.getElementById('delete-modal-message');
         const confirmBtn = document.getElementById('confirm-delete-btn');
 
@@ -635,7 +676,9 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
 
         // Message should warn about directions
         expect(deleteMessage.innerHTML).toContain('<strong>5</strong>');
-        expect(deleteMessage.innerHTML).toContain('associated thematic directions');
+        expect(deleteMessage.innerHTML).toContain(
+          'associated thematic directions'
+        );
 
         // Confirm button should indicate severity
         expect(confirmBtn.textContent).toContain('Delete');
@@ -651,32 +694,37 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
 
       // Create a new concept
       document.getElementById('create-concept-btn').click();
-      
+
       // Wait for modal to open
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const conceptText = document.getElementById('concept-text');
       const saveBtn = document.getElementById('save-concept-btn');
-      
+
       // Type a valid concept (meeting minimum length requirement)
-      conceptText.value = 'A new test concept for statistics tracking that is definitely long enough';
+      conceptText.value =
+        'A new test concept for statistics tracking that is definitely long enough';
       conceptText.dispatchEvent(new Event('input', { bubbles: true }));
-      
+
       // Wait for validation
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Enable save button (in case validation didn't auto-enable it)
       saveBtn.disabled = false;
 
       // Submit the form
       const form = document.getElementById('concept-form');
-      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      form.dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true })
+      );
 
       // Wait for async operations
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Verify the service was called
-      expect(characterBuilderService.createCharacterConcept).toHaveBeenCalledWith(
+      expect(
+        characterBuilderService.createCharacterConcept
+      ).toHaveBeenCalledWith(
         'A new test concept for statistics tracking that is definitely long enough'
       );
     });

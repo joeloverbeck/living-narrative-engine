@@ -549,7 +549,7 @@ describe('core_handle_go rule integration', () => {
       expect(
         testEnv.entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
       ).toEqual({ locationId: 'locB' });
-      
+
       const types = events.map((e) => e.type);
       expect(types).toContain('core:perceptible_event');
       expect(types).toContain('core:entity_moved');
@@ -607,7 +607,7 @@ describe('core_handle_go rule integration', () => {
       expect(
         testEnv.entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
       ).toEqual({ locationId: 'locB' });
-      
+
       const types = events.map((e) => e.type);
       expect(types).toContain('core:perceptible_event');
       expect(types).toContain('core:entity_moved');

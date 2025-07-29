@@ -321,8 +321,12 @@ export class EntityServiceFacade {
 
     // Better parameter validation
     if (!entityId) {
-      const error = new Error('EntityServiceFacade: entityId parameter is required and cannot be null/undefined');
-      this.#logger.error('EntityServiceFacade: Invalid entityId parameter', { entityId });
+      const error = new Error(
+        'EntityServiceFacade: entityId parameter is required and cannot be null/undefined'
+      );
+      this.#logger.error('EntityServiceFacade: Invalid entityId parameter', {
+        entityId,
+      });
       throw error;
     }
 
@@ -334,7 +338,7 @@ export class EntityServiceFacade {
         id: entityId,
         components: {},
         hasComponent: (componentId) => false,
-        ...metadata
+        ...metadata,
       };
     }
 
@@ -342,20 +346,24 @@ export class EntityServiceFacade {
     // Note: In test mode, getEntityInstance might be synchronous
     try {
       const entity = this.#entityManager.getEntityInstance(entityId);
-      
+
       // Handle both sync and async returns from the mock
       if (entity && entity.then) {
         // It's a promise - this shouldn't happen in test mode but handle it
-        throw new Error('EntityServiceFacade: getEntity called in sync mode but entity manager returned a promise');
+        throw new Error(
+          'EntityServiceFacade: getEntity called in sync mode but entity manager returned a promise'
+        );
       }
 
       if (!entity) {
         // Get available entity IDs for better debugging
-        const availableEntities = this.#testEntities ? Array.from(this.#testEntities.keys()) : [];
+        const availableEntities = this.#testEntities
+          ? Array.from(this.#testEntities.keys())
+          : [];
         const errorMsg = `Entity not found: ${entityId}. Available entities: [${availableEntities.join(', ')}]`;
-        this.#logger.warn('EntityServiceFacade: Entity not found', { 
-          entityId, 
-          availableEntities 
+        this.#logger.warn('EntityServiceFacade: Entity not found', {
+          entityId,
+          availableEntities,
         });
         throw new Error(errorMsg);
       }
@@ -523,11 +531,14 @@ export class EntityServiceFacade {
       // Notify subscribers
       if (this.#eventSubscriptions.has(event.type)) {
         const handlers = this.#eventSubscriptions.get(event.type);
-        handlers.forEach(handler => {
+        handlers.forEach((handler) => {
           try {
             handler(trackedEvent);
           } catch (error) {
-            this.#logger.warn('EntityServiceFacade: Error in event handler', error);
+            this.#logger.warn(
+              'EntityServiceFacade: Error in event handler',
+              error
+            );
           }
         });
       }
@@ -563,17 +574,19 @@ export class EntityServiceFacade {
    * @param {Function} handler - The event handler function.
    */
   subscribeToEvent(eventType, handler) {
-    this.#logger.debug('EntityServiceFacade: Subscribing to event', { eventType });
-    
+    this.#logger.debug('EntityServiceFacade: Subscribing to event', {
+      eventType,
+    });
+
     // Initialize subscriptions map if not exists
     if (!this.#eventSubscriptions) {
       this.#eventSubscriptions = new Map();
     }
-    
+
     if (!this.#eventSubscriptions.has(eventType)) {
       this.#eventSubscriptions.set(eventType, []);
     }
-    
+
     this.#eventSubscriptions.get(eventType).push(handler);
   }
 

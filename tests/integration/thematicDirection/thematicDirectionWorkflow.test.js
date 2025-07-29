@@ -19,9 +19,7 @@ import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js'
 import { ThematicDirectionController } from '../../../src/thematicDirection/controllers/thematicDirectionController.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 import { createThematicDirectionsFromLLMResponse } from '../../../src/characterBuilder/models/thematicDirection.js';
-import {
-  waitForCondition,
-} from '../../common/jestHelpers.js';
+import { waitForCondition } from '../../common/jestHelpers.js';
 
 // Mock the validation function to ensure it always passes
 jest.mock(
@@ -243,7 +241,7 @@ describe('Thematic Direction Workflow Integration', () => {
   afterEach(() => {
     // Restore original document
     global.document = originalDocument;
-    
+
     // Clear all mocks
     jest.clearAllMocks();
     jest.restoreAllMocks();
@@ -338,9 +336,9 @@ describe('Thematic Direction Workflow Integration', () => {
 
       // Act - Initialize controller
       await controller.initialize();
-      
+
       // Allow promises to resolve
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Set textarea value and trigger input validation
       mockElements.textarea.value = conceptText;
@@ -361,9 +359,9 @@ describe('Thematic Direction Workflow Integration', () => {
       if (submitCall) {
         const submitHandler = submitCall[1];
         await submitHandler(mockEvent);
-        
+
         // Allow promises to resolve after form submission
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
       } else {
         throw new Error('Form submit handler was not registered');
       }
@@ -446,9 +444,9 @@ describe('Thematic Direction Workflow Integration', () => {
 
       // Act
       await controller.initialize();
-      
+
       // Allow promises to resolve
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       mockElements.textarea.value = conceptText;
       mockElements.textarea.dispatchEvent(new Event('input'));
@@ -458,18 +456,20 @@ describe('Thematic Direction Workflow Integration', () => {
       mockElements.form.dispatchEvent(submitEvent);
 
       // Allow more time for async operations to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Wait for error state to be displayed or error event dispatch
-      await waitForCondition(() => 
-        mockElements.errorState?.style?.display === 'block' ||
-        mockLogger.error.mock.calls.length > 0,
+      await waitForCondition(
+        () =>
+          mockElements.errorState?.style?.display === 'block' ||
+          mockLogger.error.mock.calls.length > 0,
         100 // Increase max iterations
       );
 
       // Assert - check if error handling occurred (either UI or logging)
-      const errorOccurred = mockElements.errorState?.style?.display === 'block' ||
-                           mockLogger.error.mock.calls.length > 0;
+      const errorOccurred =
+        mockElements.errorState?.style?.display === 'block' ||
+        mockLogger.error.mock.calls.length > 0;
       expect(errorOccurred).toBe(true);
     });
 
@@ -493,9 +493,9 @@ describe('Thematic Direction Workflow Integration', () => {
 
       // Act
       await controller.initialize();
-      
+
       // Allow promises to resolve
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       mockElements.textarea.value = conceptText;
       mockElements.textarea.dispatchEvent(new Event('input'));
@@ -505,18 +505,20 @@ describe('Thematic Direction Workflow Integration', () => {
       mockElements.form.dispatchEvent(submitEvent);
 
       // Allow more time for async operations to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Wait for error state to be displayed or error event dispatch
-      await waitForCondition(() => 
-        mockElements.errorState?.style?.display === 'block' ||
-        mockLogger.error.mock.calls.length > 0,
+      await waitForCondition(
+        () =>
+          mockElements.errorState?.style?.display === 'block' ||
+          mockLogger.error.mock.calls.length > 0,
         100 // Increase max iterations
       );
 
       // Assert - check if error handling occurred (either UI or logging)
-      const errorOccurred = mockElements.errorState?.style?.display === 'block' ||
-                           mockLogger.error.mock.calls.length > 0;
+      const errorOccurred =
+        mockElements.errorState?.style?.display === 'block' ||
+        mockLogger.error.mock.calls.length > 0;
       expect(errorOccurred).toBe(true);
     });
   });
@@ -557,9 +559,9 @@ describe('Thematic Direction Workflow Integration', () => {
 
       // Act
       await controller.initialize();
-      
+
       // Allow promises to resolve
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Select first concept from dropdown and trigger handler
       mockElements.previousConceptsSelect.value = 'concept-1';
@@ -631,9 +633,9 @@ describe('Thematic Direction Workflow Integration', () => {
 
       // Act
       await controller.initialize();
-      
+
       // Allow promises to resolve
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       mockElements.textarea.value = conceptText;
       const submitEvent = new Event('submit');
@@ -641,14 +643,16 @@ describe('Thematic Direction Workflow Integration', () => {
       mockElements.form.dispatchEvent(submitEvent);
 
       // Wait for error state to be displayed or error event dispatch
-      await waitForCondition(() => 
-        mockElements.errorState?.style?.display === 'block' ||
-        mockLogger.error.mock.calls.length > 0
+      await waitForCondition(
+        () =>
+          mockElements.errorState?.style?.display === 'block' ||
+          mockLogger.error.mock.calls.length > 0
       );
 
       // Assert - check if error handling occurred (either UI or logging)
-      const errorOccurred = mockElements.errorState?.style?.display === 'block' ||
-                           mockLogger.error.mock.calls.length > 0;
+      const errorOccurred =
+        mockElements.errorState?.style?.display === 'block' ||
+        mockLogger.error.mock.calls.length > 0;
       expect(errorOccurred).toBe(true);
     });
   });
@@ -698,7 +702,10 @@ function createMockDOMElements() {
             handler(event);
           } catch (error) {
             // Log error but allow async error handling to work
-            console.warn('Event handler error (will be handled asynchronously):', error.message);
+            console.warn(
+              'Event handler error (will be handled asynchronously):',
+              error.message
+            );
           }
         });
         return true;

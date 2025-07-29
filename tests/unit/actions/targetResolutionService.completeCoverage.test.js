@@ -22,6 +22,7 @@ describe('TargetResolutionService - Complete Coverage', () => {
       getComponentData: jest.fn(),
       hasComponent: jest.fn(),
       getAllComponentTypesForEntity: jest.fn(),
+      getEntityInstance: jest.fn(),
     };
     mockLogger = {
       error: jest.fn(),

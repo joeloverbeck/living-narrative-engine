@@ -316,7 +316,7 @@ class AjvSchemaValidator {
           this.#logger.debug(
             `AjvSchemaValidator: Successfully preloaded schema '${entry.id}'.`
           );
-          
+
           // Verify schema was added and can be retrieved
           const retrievedSchema = this.#ajv.getSchema(entry.id);
           if (retrievedSchema) {
@@ -423,7 +423,6 @@ class AjvSchemaValidator {
    * @returns {boolean}
    */
   isSchemaLoaded(schemaId) {
-
     try {
       this.#ensureAjv();
       this.#requireValidSchemaId(schemaId);
@@ -578,7 +577,7 @@ class AjvSchemaValidator {
     this._validateBatchInput(schemasArray);
 
     // Filter out schemas that already exist to prevent duplicates
-    const newSchemas = schemasArray.filter(schema => {
+    const newSchemas = schemasArray.filter((schema) => {
       const schemaId = schema.$id;
       const exists = this.#ajv.getSchema(schemaId);
       if (exists) {
@@ -631,7 +630,6 @@ class AjvSchemaValidator {
    * @returns {boolean} - True if valid, false otherwise
    */
   validateAgainstSchema(data, schemaId, context = {}) {
-    
     try {
       const result = validateAgainstSchemaUtil(
         this,

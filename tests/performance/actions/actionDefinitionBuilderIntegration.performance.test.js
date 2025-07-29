@@ -156,8 +156,16 @@ describe('ActionDefinitionBuilder Integration Performance', () => {
 
       console.log('Action type performance consistency:');
       times.forEach((time, index) => {
-        const typeNames = ['basic', 'targeted', 'movement', 'combat', 'complex'];
-        console.log(`  ${typeNames[index]}: ${time.toFixed(2)}ms for 100 actions`);
+        const typeNames = [
+          'basic',
+          'targeted',
+          'movement',
+          'combat',
+          'complex',
+        ];
+        console.log(
+          `  ${typeNames[index]}: ${time.toFixed(2)}ms for 100 actions`
+        );
       });
       console.log(`  Variance: ${variance.toFixed(2)}ms`);
     });

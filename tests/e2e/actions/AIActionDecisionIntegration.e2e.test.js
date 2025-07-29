@@ -172,7 +172,8 @@ class AIFallbackStrategy {
    * @returns {object} Fallback action decision
    */
   async selectFallbackAction(actorId, context) {
-    const availableActions = await this.#actionService.getAvailableActions(actorId);
+    const availableActions =
+      await this.#actionService.getAvailableActions(actorId);
 
     if (availableActions.length === 0) {
       this.#logger.warn(`No available actions for actor ${actorId}`);
@@ -252,10 +253,12 @@ describe('AI Action Decision Integration E2E', () => {
     // Suppress certain expected errors during tests
     console.error = (...args) => {
       const errorMessage = args[0]?.toString() || '';
-      if (errorMessage.includes('Entity not found:') && 
-          (errorMessage.includes('ai-actor-1') || 
-           errorMessage.includes('ai-actor-2') || 
-           errorMessage.includes('ai-actor-3'))) {
+      if (
+        errorMessage.includes('Entity not found:') &&
+        (errorMessage.includes('ai-actor-1') ||
+          errorMessage.includes('ai-actor-2') ||
+          errorMessage.includes('ai-actor-3'))
+      ) {
         // Ignore expected entity not found errors for AI actors
         return;
       }
@@ -264,10 +267,13 @@ describe('AI Action Decision Integration E2E', () => {
 
     // Handle uncaught exceptions that might crash the Jest worker
     process.on('uncaughtException', (error) => {
-      if (error.message && error.message.includes('Entity not found:') && 
-          (error.message.includes('ai-actor-1') || 
-           error.message.includes('ai-actor-2') || 
-           error.message.includes('ai-actor-3'))) {
+      if (
+        error.message &&
+        error.message.includes('Entity not found:') &&
+        (error.message.includes('ai-actor-1') ||
+          error.message.includes('ai-actor-2') ||
+          error.message.includes('ai-actor-3'))
+      ) {
         // Ignore expected entity not found errors
         return;
       }
@@ -277,10 +283,14 @@ describe('AI Action Decision Integration E2E', () => {
 
     // Handle unhandled promise rejections
     process.on('unhandledRejection', (reason, promise) => {
-      if (reason && reason.message && reason.message.includes('Entity not found:') && 
-          (reason.message.includes('ai-actor-1') || 
-           reason.message.includes('ai-actor-2') || 
-           reason.message.includes('ai-actor-3'))) {
+      if (
+        reason &&
+        reason.message &&
+        reason.message.includes('Entity not found:') &&
+        (reason.message.includes('ai-actor-1') ||
+          reason.message.includes('ai-actor-2') ||
+          reason.message.includes('ai-actor-3'))
+      ) {
         // Ignore expected entity not found errors
         return;
       }
@@ -334,12 +344,20 @@ describe('AI Action Decision Integration E2E', () => {
           { id: 'ai-actor-3', name: 'AI Merchant', type: 'ai' },
         ],
       });
-      
+
       // Debug: Log what actors were actually created
       console.log('Test environment actors:', testEnvironment.actors);
-      console.log('Available test entities:', entityService.getTestEntities ? Array.from(entityService.getTestEntities().keys()) : 'N/A');
+      console.log(
+        'Available test entities:',
+        entityService.getTestEntities
+          ? Array.from(entityService.getTestEntities().keys())
+          : 'N/A'
+      );
     } catch (initError) {
-      console.warn('Warning during test environment initialization:', initError.message);
+      console.warn(
+        'Warning during test environment initialization:',
+        initError.message
+      );
       // Still throw the error as we need the test environment to run tests
       throw initError;
     }
@@ -364,7 +382,7 @@ describe('AI Action Decision Integration E2E', () => {
         } catch (clearError) {
           // Ignore errors during cleanup
         }
-        
+
         try {
           await turnExecutionFacade.dispose();
         } catch (disposeError) {
@@ -383,7 +401,7 @@ describe('AI Action Decision Integration E2E', () => {
       }
     } finally {
       clearTimeout(cleanupTimeout);
-      
+
       // Reset all variables to prevent memory leaks
       facades = null;
       actionService = null;
@@ -451,7 +469,9 @@ describe('AI Action Decision Integration E2E', () => {
       // Arrange - AI actor with available actions
       const aiActor = await entityService.getEntity('ai-actor-1');
       await actionService.discoverActions(aiActor.id);
-      const availableActions = await actionService.getAvailableActions(aiActor.id);
+      const availableActions = await actionService.getAvailableActions(
+        aiActor.id
+      );
 
       expect(availableActions.length).toBeGreaterThan(0);
 
@@ -528,7 +548,9 @@ describe('AI Action Decision Integration E2E', () => {
       });
 
       await actionService.discoverActions(aiActor.id);
-      const availableActions = await actionService.getAvailableActions(aiActor.id);
+      const availableActions = await actionService.getAvailableActions(
+        aiActor.id
+      );
 
       // Configure LLM to select area effect action
       configureLLMResponse({
@@ -609,7 +631,9 @@ describe('AI Action Decision Integration E2E', () => {
       expect(['llm_unavailable', 'random_fallback']).toContain(decision.reason);
 
       // Valid default action selected
-      const availableActions = await actionService.getAvailableActions(aiActor.id);
+      const availableActions = await actionService.getAvailableActions(
+        aiActor.id
+      );
       const selectedAction = availableActions.find(
         (a) => a.id === decision.actionId
       );
@@ -680,7 +704,7 @@ describe('AI Action Decision Integration E2E', () => {
         'ai-actor-1',
         'ai-actor-2',
         'ai-actor-3',
-      ].filter(id => id !== undefined && id !== null);
+      ].filter((id) => id !== undefined && id !== null);
 
       // Configure intermittent LLM failures
       let callCount = 0;
@@ -704,9 +728,11 @@ describe('AI Action Decision Integration E2E', () => {
           console.warn('Skipping undefined actorId in turnOrder');
           continue;
         }
-        
+
         const actor = await entityService.getEntity(actorId);
-        const isAI = (actor && actor.hasComponent && actor.hasComponent('core:ai')) || actorId.includes('ai-');
+        const isAI =
+          (actor && actor.hasComponent && actor.hasComponent('core:ai')) ||
+          actorId.includes('ai-');
 
         if (isAI) {
           // AI turn with potential failure
@@ -785,14 +811,18 @@ describe('AI Action Decision Integration E2E', () => {
       // Assert - Timeout triggered at 5s
       expect(timedOut).toBe(true);
       expect(decision).toBeDefined();
-      expect(['llm_unavailable', 'random_fallback', 'timeout']).toContain(decision.reason);
+      expect(['llm_unavailable', 'random_fallback', 'timeout']).toContain(
+        decision.reason
+      );
 
       // Fallback action selected
       expect(decision.actionId).toBeDefined();
 
       // No blocking of game flow
       const otherActor = entityService.getEntity('ai-actor-2');
-      const otherActions = await actionService.getAvailableActions(otherActor.id);
+      const otherActions = await actionService.getAvailableActions(
+        otherActor.id
+      );
       expect(otherActions.length).toBeGreaterThan(0);
 
       // Performance check
@@ -856,7 +886,9 @@ describe('AI Action Decision Integration E2E', () => {
       // Arrange
       const aiActor = entityService.getEntity('ai-actor-1');
       await actionService.discoverActions(aiActor.id);
-      const availableActions = await actionService.getAvailableActions(aiActor.id);
+      const availableActions = await actionService.getAvailableActions(
+        aiActor.id
+      );
 
       // Configure LLM to return invalid action
       configureLLMResponse({
@@ -1226,9 +1258,7 @@ describe('AI Action Decision Integration E2E', () => {
 
       // Discover actions for all actors
       await Promise.all(
-        aiActors.map((actorId) =>
-          actionService.discoverActions(actorId)
-        )
+        aiActors.map((actorId) => actionService.discoverActions(actorId))
       );
 
       // Configure LLM with varying response times
@@ -1316,7 +1346,9 @@ describe('AI Action Decision Integration E2E', () => {
           decision = await Promise.race([
             llmService.getAIDecision({
               actorId: aiActor.id,
-              availableActions: await actionService.getAvailableActions(aiActor.id),
+              availableActions: await actionService.getAvailableActions(
+                aiActor.id
+              ),
             }),
             new Promise((_, reject) =>
               setTimeout(() => reject(new Error('Timeout')), timeout)

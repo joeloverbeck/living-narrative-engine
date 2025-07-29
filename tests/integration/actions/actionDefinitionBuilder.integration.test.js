@@ -166,7 +166,6 @@ describe('ActionDefinitionBuilder Integration', () => {
     });
   });
 
-
   describe('builder pattern validation', () => {
     it('should maintain fluent interface throughout complex chains', () => {
       const builder = new ActionDefinitionBuilder('test:fluent');
@@ -821,5 +820,4 @@ describe('ActionDefinitionBuilder Integration', () => {
       expect(builder.toPartial().id).toBe('debug:partial');
     });
   });
-
 });

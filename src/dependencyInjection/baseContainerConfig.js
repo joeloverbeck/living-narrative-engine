@@ -13,7 +13,10 @@ import { registerRuntime } from './registrations/runtimeRegistrations.js';
 import { tokens } from './tokens.js';
 
 // Game-specific registrations (conditionally imported)
-import { registerAI } from './registrations/aiRegistrations.js';
+import {
+  registerAI,
+  registerMinimalAIForCharacterBuilder,
+} from './registrations/aiRegistrations.js';
 import { registerTurnLifecycle } from './registrations/turnLifecycleRegistrations.js';
 import { registerOrchestration } from './registrations/orchestrationRegistrations.js';
 import { registerUI } from './registrations/uiRegistrations.js';
@@ -76,6 +79,16 @@ export async function configureBaseContainer(container, options = {}) {
       logger.debug(
         '[BaseContainerConfig] Registering character builder services...'
       );
+    }
+    // Character builder needs minimal AI services (LlmJsonService, LLMAdapter, etc.)
+    // If game systems aren't included, register only the minimal AI services needed
+    if (!includeGameSystems) {
+      if (logger) {
+        logger.debug(
+          '[BaseContainerConfig] Registering minimal AI services for character builder...'
+        );
+      }
+      registerMinimalAIForCharacterBuilder(container, logger);
     }
     registerCharacterBuilder(container);
   }

@@ -251,7 +251,6 @@ describe('CommandProcessor - Performance Benchmarks', () => {
     });
   });
 
-
   describe('Throughput Analysis', () => {
     it('should maintain high throughput under sustained load', async () => {
       const testDuration = 5000; // 5 seconds

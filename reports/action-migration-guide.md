@@ -7,7 +7,7 @@ This guide provides comprehensive instructions for migrating actions from the le
 ## Table of Contents
 
 1. [Action System Overview](#action-system-overview)
-2. [Legacy vs Multi-Target Comparison](#legacy-vs-multi-target-comparison)  
+2. [Legacy vs Multi-Target Comparison](#legacy-vs-multi-target-comparison)
 3. [Migration Process](#migration-process)
 4. [Rule System Integration](#rule-system-integration)
 5. [Event Payload Changes](#event-payload-changes)
@@ -60,6 +60,7 @@ Action Definition → Discovery → Validation → Execution → Rule Processing
 ```
 
 **Characteristics:**
+
 - Single `scope` property defines target search
 - Single `{target}` placeholder in template
 - Simple target resolution to `targetId` in events
@@ -78,7 +79,7 @@ Action Definition → Discovery → Validation → Execution → Rule Processing
       "description": "Item to throw"
     },
     "secondary": {
-      "scope": "examples:throw_targets", 
+      "scope": "examples:throw_targets",
       "placeholder": "target",
       "description": "Who or what to throw at"
     }
@@ -97,6 +98,7 @@ Action Definition → Discovery → Validation → Execution → Rule Processing
 ```
 
 **Characteristics:**
+
 - `targets` object with named target roles (primary, secondary, tertiary)
 - Each target has its own scope, placeholder, and description
 - Support for context-dependent targets (`contextFrom` property)
@@ -106,21 +108,22 @@ Action Definition → Discovery → Validation → Execution → Rule Processing
 
 ### Key Differences Summary
 
-| Aspect | Legacy Format | Multi-Target Format |
-|--------|---------------|-------------------|
-| Target Definition | Single `scope` string | `targets` object with named roles |
-| Template | `{target}` placeholder | Multiple named placeholders `{item}`, `{target}` |
-| Event Payload | `targetId` field | `targets` object + `targetId` for compatibility |
-| Complexity | Simple actions only | Complex multi-step interactions |
-| Context Dependencies | Not supported | Context-dependent target resolution |
-| Optional Targets | Not supported | Optional tertiary targets |
-| Combinations | Manual | Automatic with `generateCombinations` |
+| Aspect               | Legacy Format          | Multi-Target Format                              |
+| -------------------- | ---------------------- | ------------------------------------------------ |
+| Target Definition    | Single `scope` string  | `targets` object with named roles                |
+| Template             | `{target}` placeholder | Multiple named placeholders `{item}`, `{target}` |
+| Event Payload        | `targetId` field       | `targets` object + `targetId` for compatibility  |
+| Complexity           | Simple actions only    | Complex multi-step interactions                  |
+| Context Dependencies | Not supported          | Context-dependent target resolution              |
+| Optional Targets     | Not supported          | Optional tertiary targets                        |
+| Combinations         | Manual                 | Automatic with `generateCombinations`            |
 
 ## Migration Process
 
 ### Step 1: Identify Migration Candidates
 
 Actions should be migrated if they:
+
 - Could logically involve multiple entities
 - Have complex target relationships
 - Need context-dependent target resolution
@@ -131,6 +134,7 @@ Actions should be migrated if they:
 #### 2.1 Replace `scope` with `targets`
 
 **Before:**
+
 ```json
 {
   "scope": "core:potential_leaders"
@@ -138,6 +142,7 @@ Actions should be migrated if they:
 ```
 
 **After:**
+
 ```json
 {
   "targets": {
@@ -153,6 +158,7 @@ Actions should be migrated if they:
 #### 2.2 Update Template Placeholders
 
 **Before:**
+
 ```json
 {
   "template": "follow {target}"
@@ -160,6 +166,7 @@ Actions should be migrated if they:
 ```
 
 **After:**
+
 ```json
 {
   "template": "follow {leader}"
@@ -174,7 +181,7 @@ Each target should have a clear description for UI and documentation:
 {
   "primary": {
     "scope": "core:potential_leaders",
-    "placeholder": "leader", 
+    "placeholder": "leader",
     "description": "Character to follow"
   }
 }
@@ -218,7 +225,7 @@ For actions with optional additional targets:
     },
     "secondary": {
       "scope": "location.actors[{\"!=\": [{\"var\": \"id\"}, {\"var\": \"actor.id\"}]}]",
-      "placeholder": "recipient", 
+      "placeholder": "recipient",
       "description": "Person to give to"
     },
     "tertiary": {
@@ -259,7 +266,7 @@ Prerequisites can now reference specific targets:
 {
   "eventName": "core:attempt_action",
   "actorId": "player_001",
-  "actionId": "core:follow", 
+  "actionId": "core:follow",
   "targetId": "npc_001",
   "originalInput": "follow John"
 }
@@ -301,7 +308,7 @@ Prerequisites can now reference specific targets:
 
 ```json
 {
-  "type": "SET_VARIABLE", 
+  "type": "SET_VARIABLE",
   "parameters": {
     "variable_name": "primaryTargetId",
     "value": "{event.payload.targets.primary}"
@@ -310,7 +317,7 @@ Prerequisites can now reference specific targets:
 {
   "type": "SET_VARIABLE",
   "parameters": {
-    "variable_name": "secondaryTargetId", 
+    "variable_name": "secondaryTargetId",
     "value": "{event.payload.targets.secondary}"
   }
 }
@@ -416,19 +423,19 @@ describe('Multi-Target Action Integration', () => {
     // Setup entities
     const thrownItem = await createTestEntity('throwable_item');
     const target = await createTestEntity('target_actor');
-    
+
     // Mock action discovery
     const mockAction = {
       actionId: 'examples:throw_item_at_target',
       targets: {
         primary: { id: thrownItem.id },
-        secondary: { id: target.id }
-      }
+        secondary: { id: target.id },
+      },
     };
-    
+
     // Execute action
     const result = await actionService.executeAction(mockAction);
-    
+
     // Verify results
     expect(result.success).toBe(true);
     expect(result.targets.primary).toBe(thrownItem.id);
@@ -475,10 +482,11 @@ describe('Multi-Target Action Integration', () => {
 ### Example 1: Simple Single-Target Migration
 
 #### Before (Legacy)
+
 ```json
 {
   "id": "core:eat",
-  "name": "Eat", 
+  "name": "Eat",
   "description": "Consume an edible item",
   "scope": "core:edible_items",
   "template": "eat {target}",
@@ -492,11 +500,12 @@ describe('Multi-Target Action Integration', () => {
 ```
 
 #### After (Multi-Target)
+
 ```json
 {
   "id": "core:eat",
   "name": "Eat",
-  "description": "Consume an edible item", 
+  "description": "Consume an edible item",
   "targets": {
     "primary": {
       "scope": "core:edible_items",
@@ -517,6 +526,7 @@ describe('Multi-Target Action Integration', () => {
 ### Example 2: Complex Multi-Target Action
 
 #### New Multi-Target Action
+
 ```json
 {
   "id": "crafting:combine_items",
@@ -525,7 +535,7 @@ describe('Multi-Target Action Integration', () => {
   "targets": {
     "primary": {
       "scope": "actor.inventory[{\"==\": [{\"var\": \"components.core:item.combinable\"}, true]}]",
-      "placeholder": "firstItem", 
+      "placeholder": "firstItem",
       "description": "First item to combine"
     },
     "secondary": {
@@ -537,7 +547,7 @@ describe('Multi-Target Action Integration', () => {
     "tertiary": {
       "scope": "actor.inventory[{\"==\": [{\"var\": \"components.core:item.type\"}, \"catalyst\"]}]",
       "placeholder": "catalyst",
-      "description": "Optional crafting catalyst", 
+      "description": "Optional crafting catalyst",
       "optional": true
     }
   },
@@ -557,6 +567,7 @@ describe('Multi-Target Action Integration', () => {
 ### Example 3: Rule Migration for Multi-Target
 
 #### Before (Legacy Rule)
+
 ```json
 {
   "type": "MODIFY_COMPONENT",
@@ -571,14 +582,15 @@ describe('Multi-Target Action Integration', () => {
 ```
 
 #### After (Multi-Target Rule)
+
 ```json
 {
-  "type": "MODIFY_COMPONENT", 
+  "type": "MODIFY_COMPONENT",
   "parameters": {
     "entity_ref": { "entityId": "{event.payload.targets.primary}" },
-    "component_type": "core:health", 
+    "component_type": "core:health",
     "field": "current",
-    "mode": "add", 
+    "mode": "add",
     "value": 10
   }
 },
@@ -594,7 +606,7 @@ describe('Multi-Target Action Integration', () => {
         "parameters": {
           "entity_ref": { "entityId": "{event.payload.targets.secondary}" },
           "component_type": "core:health",
-          "field": "current", 
+          "field": "current",
           "mode": "add",
           "value": 5
         }

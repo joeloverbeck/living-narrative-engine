@@ -20,7 +20,10 @@ describe('TargetResolutionService uncovered branches', () => {
   beforeEach(() => {
     mockScopeRegistry = { getScope: jest.fn() };
     mockScopeEngine = { resolve: jest.fn() };
-    mockEntityManager = { getComponentData: jest.fn() };
+    mockEntityManager = { 
+      getComponentData: jest.fn(),
+      getEntityInstance: jest.fn()
+    };
     mockLogger = {
       error: jest.fn(),
       warn: jest.fn(),

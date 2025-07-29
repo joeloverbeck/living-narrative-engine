@@ -295,12 +295,12 @@ describe('testingFacadeRegistrations', () => {
 
       await expect(
         facades.mockDeps.action.actionDiscoveryService.discoverActions()
-      ).resolves.toEqual({ 
+      ).resolves.toEqual({
         actions: [
           { id: 'core:look', name: 'Look' },
           { id: 'core:wait', name: 'Wait' },
-          { id: 'core:move', name: 'Move' }
-        ] 
+          { id: 'core:move', name: 'Move' },
+        ],
       });
       await expect(
         facades.mockDeps.action.actionPipelineOrchestrator.execute()
@@ -314,7 +314,7 @@ describe('testingFacadeRegistrations', () => {
       ).resolves.toEqual([
         { id: 'core:look', name: 'Look' },
         { id: 'core:wait', name: 'Wait' },
-        { id: 'core:move', name: 'Move' }
+        { id: 'core:move', name: 'Move' },
       ]);
       await expect(
         facades.mockDeps.action.actionIndex.getActionDefinition()

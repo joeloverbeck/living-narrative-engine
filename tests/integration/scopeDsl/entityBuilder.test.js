@@ -730,7 +730,8 @@ describe('EntityBuilder Integration Tests', () => {
     it('should handle large datasets correctly', () => {
       // Create a large number of entities with substantial data
       const largeEntities = [];
-      for (let i = 0; i < 100; i++) { // Reduced for integration test
+      for (let i = 0; i < 100; i++) {
+        // Reduced for integration test
         largeEntities.push({
           id: `large${i}`,
           componentTypeIds: ['core:bigdata'],
@@ -756,5 +757,4 @@ describe('EntityBuilder Integration Tests', () => {
       expect(results.length).toBe(10);
     });
   });
-
 });

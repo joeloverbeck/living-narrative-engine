@@ -160,7 +160,8 @@ export class CharacterStorageService {
               validationErrors: errorMsg,
               originalData: concept,
               serializedData: serializedConcept,
-              schemaId: 'schema://living-narrative-engine/character-concept.schema.json',
+              schemaId:
+                'schema://living-narrative-engine/character-concept.schema.json',
             }
           );
           throw new CharacterStorageError(
