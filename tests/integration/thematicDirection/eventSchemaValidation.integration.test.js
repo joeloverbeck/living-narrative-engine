@@ -246,7 +246,11 @@ describe('Thematic Direction - Event Schema Validation Integration', () => {
     }
 
     // Add character-concept schema which depends on thematic-direction
-    if (!schemaValidator.isSchemaLoaded('schema://living-narrative-engine/character-concept.schema.json')) {
+    if (
+      !schemaValidator.isSchemaLoaded(
+        'schema://living-narrative-engine/character-concept.schema.json'
+      )
+    ) {
       await schemaValidator.addSchema(
         characterConceptSchema,
         'schema://living-narrative-engine/character-concept.schema.json'

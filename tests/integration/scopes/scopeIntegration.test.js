@@ -124,7 +124,8 @@ describe('Scope Integration Tests', () => {
     });
     registry.store('conditions', 'core:actor-can-move', {
       id: 'core:actor-can-move',
-      description: 'Checks if the actor has functioning legs capable of movement',
+      description:
+        'Checks if the actor has functioning legs capable of movement',
       logic: {
         hasPartWithComponentValue: ['actor', 'core:movement', 'locked', false],
       },
@@ -169,7 +170,7 @@ describe('Scope Integration Tests', () => {
     const currentEntityManager = overrides.entityManager || entityManager;
     const currentActionIndex = overrides.actionIndex || actionIndex;
     const currentJsonLogicEval = overrides.jsonLogicEval || jsonLogicEval;
-    
+
     const targetResolutionService = createTargetResolutionServiceWithMocks({
       scopeRegistry,
       scopeEngine,
@@ -202,7 +203,8 @@ describe('Scope Integration Tests', () => {
         dslParser: new DefaultDslParser(),
         actionErrorContextBuilder: createMockActionErrorContextBuilder(),
       }),
-      targetContextBuilder: createMockTargetContextBuilder(currentEntityManager),
+      targetContextBuilder:
+        createMockTargetContextBuilder(currentEntityManager),
     });
 
     return new ActionDiscoveryService({
@@ -259,7 +261,11 @@ describe('Scope Integration Tests', () => {
       const allActions = gameDataRepository.getAllActionDefinitions();
       actionIndex.buildIndex(allActions);
 
-      actionDiscoveryService = createActionDiscoveryService({ entityManager, actionIndex, jsonLogicEval });
+      actionDiscoveryService = createActionDiscoveryService({
+        entityManager,
+        actionIndex,
+        jsonLogicEval,
+      });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {
@@ -351,8 +357,13 @@ describe('Scope Integration Tests', () => {
       registry.store('conditions', 'core:actor-can-move', {
         id: 'core:actor-can-move',
         logic: {
-          hasPartWithComponentValue: ["actor", "core:movement", "locked", false]
-        }
+          hasPartWithComponentValue: [
+            'actor',
+            'core:movement',
+            'locked',
+            false,
+          ],
+        },
       });
 
       gameDataRepository = new GameDataRepository(registry, logger);
@@ -425,7 +436,11 @@ describe('Scope Integration Tests', () => {
       const allActions = gameDataRepository.getAllActionDefinitions();
       actionIndex.buildIndex(allActions);
 
-      actionDiscoveryService = createActionDiscoveryService({ entityManager, actionIndex, jsonLogicEval });
+      actionDiscoveryService = createActionDiscoveryService({
+        entityManager,
+        actionIndex,
+        jsonLogicEval,
+      });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {
@@ -443,7 +458,7 @@ describe('Scope Integration Tests', () => {
       const goActions = result.actions.filter(
         (action) => action.id === 'core:go'
       );
-      
+
       expect(goActions.length).toBeGreaterThan(0);
 
       // Due to current implementation with base ActionCommandFormatter,
@@ -473,8 +488,13 @@ describe('Scope Integration Tests', () => {
       registry.store('conditions', 'core:actor-can-move', {
         id: 'core:actor-can-move',
         logic: {
-          hasPartWithComponentValue: ["actor", "core:movement", "locked", false]
-        }
+          hasPartWithComponentValue: [
+            'actor',
+            'core:movement',
+            'locked',
+            false,
+          ],
+        },
       });
 
       gameDataRepository = new GameDataRepository(registry, logger);
@@ -524,7 +544,11 @@ describe('Scope Integration Tests', () => {
       const allActions = gameDataRepository.getAllActionDefinitions();
       actionIndex.buildIndex(allActions);
 
-      actionDiscoveryService = createActionDiscoveryService({ entityManager, actionIndex, jsonLogicEval });
+      actionDiscoveryService = createActionDiscoveryService({
+        entityManager,
+        actionIndex,
+        jsonLogicEval,
+      });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {
@@ -563,13 +587,16 @@ describe('Scope Integration Tests', () => {
       const allActions = gameDataRepository.getAllActionDefinitions();
       actionIndex.buildIndex(allActions);
 
-      actionDiscoveryService = createActionDiscoveryService({ entityManager, actionIndex, jsonLogicEval });
+      actionDiscoveryService = createActionDiscoveryService({
+        entityManager,
+        actionIndex,
+        jsonLogicEval,
+      });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const result = await actionDiscoveryService.getValidActions(
-        actorEntity,
-        { location: { id: room1Id } }
-      );
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        location: { id: room1Id },
+      });
 
       const waitActions = result.actions.filter(
         (action) => action.id === 'core:wait'

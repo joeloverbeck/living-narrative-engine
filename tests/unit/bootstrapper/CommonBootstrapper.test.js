@@ -56,7 +56,9 @@ describe('CommonBootstrapper', () => {
       const result = await bootstrapper.bootstrap();
 
       expect(AppContainer).toHaveBeenCalled();
-      expect(configureMinimalContainer).toHaveBeenCalledWith(mockContainer);
+      expect(configureMinimalContainer).toHaveBeenCalledWith(mockContainer, {
+        includeCharacterBuilder: false,
+      });
       expect(initializeCoreServices).toHaveBeenCalled();
       expect(loadModsFromGameConfig).toHaveBeenCalledWith(
         mockServices.modsLoader,

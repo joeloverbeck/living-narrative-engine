@@ -32,7 +32,10 @@ describe('TargetResolutionService error paths', () => {
     service = createTargetResolutionServiceWithMocks({
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
-      entityManager: {},
+      entityManager: {
+        getComponentData: jest.fn(),
+        getEntityInstance: jest.fn()
+      },
       logger: mockLogger,
       safeEventDispatcher: mockSafeDispatcher,
       jsonLogicEvaluationService: mockJsonLogic,

@@ -111,7 +111,17 @@ describe('MultiTargetActionFormatter', () => {
       );
 
       expect(result.ok).toBe(true);
-      expect(result.value).toBe('throw Small Rock at Goblin');
+      // New behavior: multiple entities generate array of combinations
+      expect(Array.isArray(result.value)).toBe(true);
+      expect(result.value).toHaveLength(4); // 2 items × 2 targets
+      expect(result.value).toEqual(
+        expect.arrayContaining([
+          'throw Small Rock at Goblin',
+          'throw Small Rock at Orc',
+          'throw Knife at Goblin',
+          'throw Knife at Orc',
+        ])
+      );
     });
 
     it('should handle missing placeholder in target definitions', () => {
@@ -131,7 +141,17 @@ describe('MultiTargetActionFormatter', () => {
       );
 
       expect(result.ok).toBe(true);
-      expect(result.value).toBe('throw Small Rock at Goblin');
+      // New behavior: multiple entities generate array of combinations
+      expect(Array.isArray(result.value)).toBe(true);
+      expect(result.value).toHaveLength(4); // 2 items × 2 targets
+      expect(result.value).toEqual(
+        expect.arrayContaining([
+          'throw Small Rock at Goblin',
+          'throw Small Rock at Orc',
+          'throw Knife at Goblin',
+          'throw Knife at Orc',
+        ])
+      );
     });
 
     it('should handle empty target arrays', () => {
@@ -167,6 +187,7 @@ describe('MultiTargetActionFormatter', () => {
       );
 
       expect(result.ok).toBe(true);
+      // Single entity per target still returns string (legacy behavior)
       expect(result.value).toBe('throw rock1 at enemy1');
     });
 
@@ -184,8 +205,21 @@ describe('MultiTargetActionFormatter', () => {
         deps
       );
 
+      if (!result.ok) {
+        console.log('Format error:', result.error);
+      }
       expect(result.ok).toBe(true);
-      expect(result.value).toBe('use Small Rock on Goblin');
+      // New behavior: multiple entities generate array of combinations
+      expect(Array.isArray(result.value)).toBe(true);
+      expect(result.value).toHaveLength(4); // 2 items × 2 targets
+      expect(result.value).toEqual(
+        expect.arrayContaining([
+          'use Small Rock on Goblin',
+          'use Small Rock on Orc',
+          'use Knife on Goblin',
+          'use Knife on Orc',
+        ])
+      );
     });
   });
 

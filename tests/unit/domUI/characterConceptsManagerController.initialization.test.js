@@ -135,7 +135,7 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       delete mockElements['concepts-container'];
 
       await expect(controller.initialize()).rejects.toThrow(
-        "Required element not found: conceptsContainer"
+        'Required element not found: conceptsContainer'
       );
     });
   });
@@ -182,10 +182,9 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       await controller.initialize();
 
       // Verify event listeners were added
-      expect(mockElements['back-to-menu-btn'].addEventListener).toHaveBeenCalledWith(
-        'click',
-        expect.any(Function)
-      );
+      expect(
+        mockElements['back-to-menu-btn'].addEventListener
+      ).toHaveBeenCalledWith('click', expect.any(Function));
 
       expect(
         mockElements['concept-search'].addEventListener
@@ -232,12 +231,9 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       await controller.initialize();
 
       const FormValidationHelper =
-        require('../../../src/shared/characterBuilder/formValidationHelper.js')
-          .FormValidationHelper;
+        require('../../../src/shared/characterBuilder/formValidationHelper.js').FormValidationHelper;
 
-      expect(
-        FormValidationHelper.setupRealTimeValidation
-      ).toHaveBeenCalledWith(
+      expect(FormValidationHelper.setupRealTimeValidation).toHaveBeenCalledWith(
         mockElements['concept-text'],
         expect.any(Function),
         {
@@ -298,13 +294,10 @@ describe('CharacterConceptsManagerController - Initialization', () => {
 
     it('should set up FormValidationHelper for real-time validation', () => {
       const FormValidationHelper =
-        require('../../../src/shared/characterBuilder/formValidationHelper.js')
-          .FormValidationHelper;
+        require('../../../src/shared/characterBuilder/formValidationHelper.js').FormValidationHelper;
 
       // Check that validation was set up for create form
-      expect(
-        FormValidationHelper.setupRealTimeValidation
-      ).toHaveBeenCalledWith(
+      expect(FormValidationHelper.setupRealTimeValidation).toHaveBeenCalledWith(
         mockElements['concept-text'],
         expect.any(Function),
         {
@@ -313,10 +306,8 @@ describe('CharacterConceptsManagerController - Initialization', () => {
           maxLength: 3000,
         }
       );
-
     });
   });
-
 
   describe('Error State Display', () => {
     beforeEach(async () => {

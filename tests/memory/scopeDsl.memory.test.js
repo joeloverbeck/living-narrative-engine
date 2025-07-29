@@ -279,10 +279,15 @@ describe('ScopeDSL - Memory Tests', () => {
         const actor = actors[i % actors.length];
 
         resolutionPromises.push(
-          ScopeTestUtilities.resolveScopeE2E('test:concurrent_scope', actor, gameContext, {
-            scopeRegistry,
-            scopeEngine,
-          })
+          ScopeTestUtilities.resolveScopeE2E(
+            'test:concurrent_scope',
+            actor,
+            gameContext,
+            {
+              scopeRegistry,
+              scopeEngine,
+            }
+          )
         );
       }
 
@@ -290,7 +295,7 @@ describe('ScopeDSL - Memory Tests', () => {
 
       // Force GC after resolutions
       await global.memoryTestUtils.forceGCAndWait();
-      
+
       const endMemory = process.memoryUsage().heapUsed;
       const memoryUsed = (endMemory - startMemory) / 1024 / 1024;
 

@@ -37,7 +37,10 @@ describe("Action Definition: 'core:dismiss'", () => {
       const primaryTarget = actionData.targets.primary;
       expect(primaryTarget).toHaveProperty('scope', 'core:followers');
       expect(primaryTarget).toHaveProperty('placeholder', 'follower');
-      expect(primaryTarget).toHaveProperty('description', 'The follower to dismiss from service');
+      expect(primaryTarget).toHaveProperty(
+        'description',
+        'The follower to dismiss from service'
+      );
     });
 
     test('should have semantic template placeholder', () => {
@@ -50,7 +53,7 @@ describe("Action Definition: 'core:dismiss'", () => {
 
     test('should maintain required_components for actor', () => {
       expect(actionData.required_components).toEqual({
-        actor: ['core:leading']
+        actor: ['core:leading'],
       });
     });
   });
@@ -63,9 +66,9 @@ describe("Action Definition: 'core:dismiss'", () => {
           primary: {
             scope: 'core:followers',
             // Missing required placeholder
-            description: 'The follower to dismiss from service'
-          }
-        }
+            description: 'The follower to dismiss from service',
+          },
+        },
       };
 
       const isValid = validate(invalidAction);
@@ -74,8 +77,8 @@ describe("Action Definition: 'core:dismiss'", () => {
         expect.arrayContaining([
           expect.objectContaining({
             instancePath: '/targets/primary',
-            message: expect.stringContaining('placeholder')
-          })
+            message: expect.stringContaining('placeholder'),
+          }),
         ])
       );
     });
@@ -87,9 +90,9 @@ describe("Action Definition: 'core:dismiss'", () => {
           primary: {
             scope: 'core:followers',
             placeholder: '123invalid', // Should start with letter
-            description: 'The follower to dismiss from service'
-          }
-        }
+            description: 'The follower to dismiss from service',
+          },
+        },
       };
 
       const isValid = validate(invalidAction);
@@ -104,9 +107,9 @@ describe("Action Definition: 'core:dismiss'", () => {
           secondary: {
             scope: 'core:followers',
             placeholder: 'follower',
-            description: 'The follower to dismiss from service'
-          }
-        }
+            description: 'The follower to dismiss from service',
+          },
+        },
       };
 
       const isValid = validate(invalidAction);

@@ -26,6 +26,7 @@ import { initializeAnatomyFormattingStage } from './stages/anatomyFormattingStag
  * @property {Function} [postInitHook=null] - Custom post-initialization hook
  * @property {boolean} [includeAnatomyFormatting=false] - Whether to initialize anatomy formatting
  * @property {boolean} [skipModLoading=false] - Whether to skip mod loading (for testing)
+ * @property {boolean} [includeCharacterBuilder=false] - Whether to include character builder services
  */
 
 /**
@@ -55,6 +56,7 @@ export class CommonBootstrapper {
       postInitHook = null,
       includeAnatomyFormatting = false,
       skipModLoading = false,
+      includeCharacterBuilder = false,
     } = options;
 
     let container;
@@ -74,7 +76,7 @@ export class CommonBootstrapper {
         }
         configureContainer(container, uiElements);
       } else {
-        configureMinimalContainer(container);
+        configureMinimalContainer(container, { includeCharacterBuilder });
       }
 
       // Step 2: Resolve core services

@@ -442,3 +442,24 @@ export function registerAI(container) {
   registerAITurnHandler(registrar, logger);
   logger.debug('AI Systems Registration: All registrations complete.');
 }
+
+/**
+ * Registers minimal AI services needed for character builder services.
+ * This includes only the essential AI services without full game systems.
+ *
+ * @param {AppContainer} container - The DI container.
+ * @param {ILogger} logger - Logger instance for debug output.
+ */
+export function registerMinimalAIForCharacterBuilder(container, logger) {
+  const registrar = new Registrar(container);
+  logger.debug('Minimal AI Registration: Starting for character builder...');
+
+  // Register only the minimal LLM infrastructure needed for character builder
+  registerLlmInfrastructure(registrar, logger);
+
+  // Register LlmJsonService which is specifically needed by ThematicDirectionGenerator
+  registrar.singletonFactory(tokens.LlmJsonService, () => new LlmJsonService());
+  logger.debug(`Minimal AI Registration: Registered ${tokens.LlmJsonService}.`);
+
+  logger.debug('Minimal AI Registration: Complete for character builder.');
+}

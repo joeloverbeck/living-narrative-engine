@@ -597,7 +597,9 @@ describe('CharacterBuilderService', () => {
       const updatedConcept = { ...existingConcept, ...updates };
 
       mockStorageService.getCharacterConcept.mockResolvedValue(existingConcept);
-      mockStorageService.storeCharacterConcept.mockResolvedValue(updatedConcept);
+      mockStorageService.storeCharacterConcept.mockResolvedValue(
+        updatedConcept
+      );
 
       const result = await service.updateCharacterConcept(conceptId, updates);
 

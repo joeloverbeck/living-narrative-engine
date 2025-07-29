@@ -173,7 +173,7 @@ describe('Multi-Target Action Examples - Integration', () => {
       }
     });
 
-    it('should not generate combinations when disabled', () => {
+    it('should generate combinations for multiple entities even when generateCombinations is not explicitly set', () => {
       expect(actionDef.generateCombinations).toBe(false);
 
       const resolvedTargets = {
@@ -201,8 +201,17 @@ describe('Multi-Target Action Examples - Integration', () => {
       );
 
       expect(result.ok).toBe(true);
-      // Should only format first target from each list
-      expect(result.value).toBe('unlock Wooden Chest with Brass Key');
+      // FIXED: Now generates combinations automatically when multiple entities are resolved
+      expect(Array.isArray(result.value)).toBe(true);
+      expect(result.value).toHaveLength(4); // 2 chests × 2 keys
+      expect(result.value).toEqual(
+        expect.arrayContaining([
+          'unlock Wooden Chest with Brass Key',
+          'unlock Wooden Chest with Steel Key',
+          'unlock Metal Safe with Brass Key',
+          'unlock Metal Safe with Steel Key',
+        ])
+      );
     });
   });
 

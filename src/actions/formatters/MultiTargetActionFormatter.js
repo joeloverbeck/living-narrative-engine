@@ -62,8 +62,8 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       const { targetDefinitions } = deps || {};
       let template = actionDef.template || actionDef.name;
 
-      // Handle combination generation if enabled
-      if (actionDef.generateCombinations) {
+      // Handle combination generation if explicitly enabled
+      if (actionDef.generateCombinations === true) {
         return this.#formatCombinations(
           actionDef,
           resolvedTargets,
@@ -72,7 +72,22 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         );
       }
 
-      // Format single action with first target from each definition
+      // Check if we need to generate multiple actions for multi-entity targets
+      const hasMultipleEntities = Object.values(resolvedTargets).some(
+        (targets) => Array.isArray(targets) && targets.length > 1
+      );
+
+      if (hasMultipleEntities) {
+        // Generate combinations automatically when targets resolve to multiple entities
+        return this.#formatCombinations(
+          actionDef,
+          resolvedTargets,
+          targetDefinitions,
+          options
+        );
+      }
+
+      // Format single action with first target from each definition (legacy behavior for single entities)
       return this.#formatSingleMultiTarget(
         template,
         resolvedTargets,
@@ -104,7 +119,7 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
     for (const combination of combinations) {
       const result = this.#formatSingleMultiTarget(
-        actionDef.template,
+        actionDef.template || actionDef.name,
         combination,
         targetDefinitions,
         _options

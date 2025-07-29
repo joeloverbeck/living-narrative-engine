@@ -105,26 +105,26 @@ export function createMockElements() {
     // Main containers
     'concepts-container': createMockElement('concepts-container'),
     'concepts-results': createMockElement('concepts-results'),
-    
+
     // State containers
     'empty-state': createMockElement('empty-state'),
     'loading-state': createMockElement('loading-state'),
     'error-state': createMockElement('error-state'),
     'results-state': createMockElement('results-state'),
     'error-message-text': createMockElement('error-message-text'),
-    
+
     // Controls
     'create-concept-btn': createMockElement('create-concept-btn'),
     'create-first-btn': createMockElement('create-first-btn'),
     'retry-btn': createMockElement('retry-btn'),
     'back-to-menu-btn': createMockElement('back-to-menu-btn'),
     'concept-search': createMockElement('concept-search', { value: '' }),
-    
+
     // Statistics
     'total-concepts': createMockElement('total-concepts'),
     'concepts-with-directions': createMockElement('concepts-with-directions'),
     'total-directions': createMockElement('total-directions'),
-    
+
     // Create/Edit Modal
     'concept-modal': createMockElement('concept-modal'),
     'concept-modal-title': createMockElement('concept-modal-title'),
@@ -135,21 +135,21 @@ export function createMockElements() {
     'save-concept-btn': createMockElement('save-concept-btn'),
     'cancel-concept-btn': createMockElement('cancel-concept-btn'),
     'close-concept-modal': createMockElement('close-concept-modal'),
-    
+
     // Delete Modal
     'delete-confirmation-modal': createMockElement('delete-confirmation-modal'),
     'delete-modal-message': createMockElement('delete-modal-message'),
     'confirm-delete-btn': createMockElement('confirm-delete-btn'),
     'cancel-delete-btn': createMockElement('cancel-delete-btn'),
     'close-delete-modal': createMockElement('close-delete-modal'),
-    
+
     // Search elements
     'search-concepts': createMockElement('search-concepts', {
       value: '',
     }),
     'clear-search-btn': createMockElement('clear-search-btn'),
     'search-status': createMockElement('search-status'),
-    
+
     // Create modal elements
     'create-concept-btn': createMockElement('create-concept-btn'),
     'create-modal': createMockElement('create-modal'),
@@ -161,7 +161,7 @@ export function createMockElements() {
     'create-char-count': createMockElement('create-char-count'),
     'create-error': createMockElement('create-error'),
     'save-create-btn': createMockElement('save-create-btn'),
-    
+
     // Edit modal elements
     'edit-modal': createMockElement('edit-modal'),
     'edit-modal-overlay': createMockElement('edit-modal-overlay'),
@@ -172,7 +172,7 @@ export function createMockElements() {
     'edit-char-count': createMockElement('edit-char-count'),
     'edit-error': createMockElement('edit-error'),
     'save-edit-btn': createMockElement('save-edit-btn'),
-    
+
     // Delete modal elements
     'delete-modal': createMockElement('delete-modal'),
     'delete-modal-overlay': createMockElement('delete-modal-overlay'),
@@ -182,7 +182,7 @@ export function createMockElements() {
     'cancel-delete-btn': createMockElement('cancel-delete-btn'),
     'confirm-delete-btn': createMockElement('confirm-delete-btn'),
   };
-  
+
   return elements;
 }
 
@@ -194,7 +194,7 @@ export function createMockElements() {
 export function setupDocumentMock(elements) {
   // Create a mock stats display element
   const statsDisplay = createMockElement('stats-display');
-  
+
   document.getElementById = jest.fn((id) => elements[id] || null);
   document.querySelector = jest.fn((selector) => {
     // Handle ID selectors
@@ -209,7 +209,7 @@ export function setupDocumentMock(elements) {
     // For other selectors, return null or implement as needed
     return null;
   });
-  
+
   // Mock document.activeElement
   Object.defineProperty(document, 'activeElement', {
     writable: true,

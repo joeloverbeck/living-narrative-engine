@@ -145,16 +145,16 @@ export class TurnExecutionFacade {
           const mapKey = actorDef.id || actorId;
           createdActors[mapKey] = actorId;
           actorIds.push(actorId);
-          
-          this.#logger.debug('TurnExecutionFacade: Created actor', { 
-            providedId: actorDef.id, 
-            actualId: actorId, 
-            mapKey 
+
+          this.#logger.debug('TurnExecutionFacade: Created actor', {
+            providedId: actorDef.id,
+            actualId: actorId,
+            mapKey,
           });
         }
-        
+
         // Create a default player actor if none exists
-        const hasPlayerActor = actors.some(actor => actor.type === 'player');
+        const hasPlayerActor = actors.some((actor) => actor.type === 'player');
         if (!hasPlayerActor) {
           const playerActorId = await this.#entityService.createTestActor({
             id: 'default-player-actor',
@@ -164,7 +164,7 @@ export class TurnExecutionFacade {
               'core:actor': { type: 'player' },
             },
           });
-          
+
           createdActors.playerActorId = playerActorId;
           createdActors['default-player-actor'] = playerActorId;
           actorIds.push(playerActorId);

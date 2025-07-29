@@ -3,7 +3,7 @@
  * @see tests/common/entities/simpleEntityManager.js
  */
 
-import { deepClone } from '../../../src/utils';
+import { deepClone } from '../../../src/utils/cloneUtils.js';
 
 /**
  * Minimal EntityManager implementation providing only the methods
@@ -62,6 +62,7 @@ export default class SimpleEntityManager {
         entity.components[componentType] ?? null,
       hasComponent: (componentType) =>
         Object.prototype.hasOwnProperty.call(entity.components, componentType),
+      getAllComponents: () => entity.components,
     };
   }
 

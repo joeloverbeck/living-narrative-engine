@@ -341,13 +341,30 @@ function buildActorWithComponents(
   source,
   logger
 ) {
+
   if (!actorEntity) {
     return null;
   }
 
   // If actor already has components, return as-is
-  if (actorEntity.components) {
+  if (
+    actorEntity.components &&
+    Object.keys(actorEntity.components).length > 0
+  ) {
     return actorEntity;
+  }
+
+  // Try to load components from entity manager using the entity ID
+  const entityInstance = entityManager.getEntityInstance(actorEntity.id);
+  if (entityInstance && entityInstance.getAllComponents) {
+    const components = entityInstance.getAllComponents();
+    if (components && Object.keys(components).length > 0) {
+      return {
+        ...actorEntity,
+        id: actorEntity.id,
+        components,
+      };
+    }
   }
 
   // If no component type IDs, create empty components

@@ -29,9 +29,13 @@ describe('Go Action Multi-Target Schema Validation', () => {
   it('ensures targets structure is properly defined', () => {
     expect(goActionMigrated.targets).toBeDefined();
     expect(goActionMigrated.targets.primary).toBeDefined();
-    expect(goActionMigrated.targets.primary.scope).toBe('core:clear_directions');
+    expect(goActionMigrated.targets.primary.scope).toBe(
+      'core:clear_directions'
+    );
     expect(goActionMigrated.targets.primary.placeholder).toBe('destination');
-    expect(goActionMigrated.targets.primary.description).toBe('Location to move to');
+    expect(goActionMigrated.targets.primary.description).toBe(
+      'Location to move to'
+    );
   });
 
   it('ensures template uses new placeholder', () => {
@@ -45,10 +49,16 @@ describe('Go Action Multi-Target Schema Validation', () => {
   it('maintains all other required properties', () => {
     expect(goActionMigrated.id).toBe('core:go');
     expect(goActionMigrated.name).toBe('Go');
-    expect(goActionMigrated.description).toBe('Moves your character to the specified location, if the way is clear.');
+    expect(goActionMigrated.description).toBe(
+      'Moves your character to the specified location, if the way is clear.'
+    );
     expect(goActionMigrated.prerequisites).toBeDefined();
     expect(goActionMigrated.prerequisites).toHaveLength(1);
-    expect(goActionMigrated.prerequisites[0].logic.condition_ref).toBe('core:actor-can-move');
-    expect(goActionMigrated.prerequisites[0].failure_message).toBe('You cannot move without functioning legs.');
+    expect(goActionMigrated.prerequisites[0].logic.condition_ref).toBe(
+      'core:actor-can-move'
+    );
+    expect(goActionMigrated.prerequisites[0].failure_message).toBe(
+      'You cannot move without functioning legs.'
+    );
   });
 });

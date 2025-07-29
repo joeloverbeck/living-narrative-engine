@@ -18,8 +18,15 @@
     {
       "type": "GET_NAME",
       "parameters": {
-        "entity_ref": "target",
-        "result_variable": "targetName"
+        "entity_ref": "primary",
+        "result_variable": "primaryName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "garmentName"
       }
     },
     {
@@ -36,7 +43,7 @@
       "comment": "Construct the perceptible log message for observers.",
       "parameters": {
         "variable_name": "perceptibleLogMessage",
-        "value": "{context.actorName} has smoothed {context.targetName}'s displaced garment with possessive care."
+        "value": "{context.actorName} has smoothed {context.primaryName}'s {context.garmentName} with possessive care."
       }
     },
     {
@@ -44,7 +51,7 @@
       "comment": "Construct the success message for the actor's UI.",
       "parameters": {
         "variable_name": "successMessage",
-        "value": "{context.actorName} smooths {context.targetName}'s displaced garment with possessive care."
+        "value": "{context.actorName} smooths {context.primaryName}'s {context.garmentName} with possessive care."
       }
     },
     {
@@ -55,7 +62,7 @@
         "description_text": "{context.perceptibleLogMessage}",
         "perception_type": "action_target_general",
         "actor_id": "{event.payload.actorId}",
-        "target_id": "{event.payload.targetId}"
+        "target_id": "{event.payload.primaryId}"
       }
     },
     { "macro": "core:displaySuccessAndEndTurn" }

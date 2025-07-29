@@ -37,7 +37,9 @@ export function captureGameState({
       // Create shallow copies to avoid deep references
       entities[id] = {
         id,
-        components: entity.components ? cloneValidatedState(entity.components) : {},
+        components: entity.components
+          ? cloneValidatedState(entity.components)
+          : {},
       };
       testEntityIds.push(id);
     }
@@ -365,7 +367,7 @@ export function createStatePerformanceMonitor() {
       Object.defineProperty(this, 'metrics', {
         value: null,
         writable: false,
-        configurable: false
+        configurable: false,
       });
     },
   };

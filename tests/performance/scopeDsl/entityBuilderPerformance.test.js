@@ -99,7 +99,9 @@ describe('EntityBuilder Performance', () => {
 
       // Log performance metrics
       console.log(`Entity build performance:`);
-      console.log(`  Total time for ${iterations} iterations: ${endTime - startTime}ms`);
+      console.log(
+        `  Total time for ${iterations} iterations: ${endTime - startTime}ms`
+      );
       console.log(`  Average time per entity: ${avgTime.toFixed(3)}ms`);
     });
 
@@ -127,8 +129,12 @@ describe('EntityBuilder Performance', () => {
       // Log performance metrics
       console.log(`Plain object creation performance:`);
       console.log(`  Total time for ${iterations} iterations: ${totalTime}ms`);
-      console.log(`  Average time per object: ${(totalTime / iterations).toFixed(3)}ms`);
-      console.log(`  Objects per second: ${Math.round(iterations / (totalTime / 1000))}`);
+      console.log(
+        `  Average time per object: ${(totalTime / iterations).toFixed(3)}ms`
+      );
+      console.log(
+        `  Objects per second: ${Math.round(iterations / (totalTime / 1000))}`
+      );
     });
   });
 
@@ -170,7 +176,9 @@ describe('EntityBuilder Performance', () => {
       console.log(`Large component set performance:`);
       console.log(`  Components processed: 50`);
       console.log(`  Processing time: ${processingTime}ms`);
-      console.log(`  Time per component: ${(processingTime / 50).toFixed(2)}ms`);
+      console.log(
+        `  Time per component: ${(processingTime / 50).toFixed(2)}ms`
+      );
     });
   });
 
@@ -214,8 +222,12 @@ describe('EntityBuilder Performance', () => {
       // Log memory metrics
       console.log(`Memory usage performance:`);
       console.log(`  Entities processed: 100`);
-      console.log(`  Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`);
-      console.log(`  Memory per entity: ${(memoryIncrease / 100 / 1024).toFixed(2)}KB`);
+      console.log(
+        `  Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`
+      );
+      console.log(
+        `  Memory per entity: ${(memoryIncrease / 100 / 1024).toFixed(2)}KB`
+      );
     });
   });
 
@@ -234,7 +246,7 @@ describe('EntityBuilder Performance', () => {
 
       // Build many entities concurrently using Promise-based approach
       const startTime = performance.now();
-      
+
       const promises = [];
       for (let i = 0; i < 100; i++) {
         promises.push(
@@ -258,7 +270,9 @@ describe('EntityBuilder Performance', () => {
         console.log(`Concurrent processing performance:`);
         console.log(`  Total entities: 100`);
         console.log(`  Total time: ${totalTime.toFixed(2)}ms`);
-        console.log(`  Average time per entity: ${(totalTime / 100).toFixed(2)}ms`);
+        console.log(
+          `  Average time per entity: ${(totalTime / 100).toFixed(2)}ms`
+        );
       });
     });
   });
@@ -275,10 +289,18 @@ describe('EntityBuilder Performance', () => {
 
       // Log performance targets for reference
       console.log(`EntityBuilder Performance Targets:`);
-      console.log(`  Single entity build: < ${performanceTargets.singleEntityBuild}ms`);
-      console.log(`  Plain object creation: < ${performanceTargets.plainObjectCreation}ms`);
-      console.log(`  Large component set: < ${performanceTargets.largeComponentSet}ms`);
-      console.log(`  Memory per entity: < ${performanceTargets.memoryPerEntity}KB`);
+      console.log(
+        `  Single entity build: < ${performanceTargets.singleEntityBuild}ms`
+      );
+      console.log(
+        `  Plain object creation: < ${performanceTargets.plainObjectCreation}ms`
+      );
+      console.log(
+        `  Large component set: < ${performanceTargets.largeComponentSet}ms`
+      );
+      console.log(
+        `  Memory per entity: < ${performanceTargets.memoryPerEntity}KB`
+      );
 
       // This test always passes - it's for documentation purposes
       expect(performanceTargets).toBeDefined();

@@ -120,7 +120,10 @@ describe('ThematicDirectionApp', () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ id: 'schema://living-narrative-engine/character-concept.schema.json' }),
+        json: () =>
+          Promise.resolve({
+            id: 'schema://living-narrative-engine/character-concept.schema.json',
+          }),
       });
 
     app = new ThematicDirectionApp();

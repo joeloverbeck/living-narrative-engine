@@ -165,8 +165,8 @@ describe('Scope Definition Integration', () => {
           primary: {
             scope: 'followers', // References scope by name
             placeholder: 'follower',
-            description: 'The follower to dismiss from service'
-          }
+            description: 'The follower to dismiss from service',
+          },
         },
         template: 'dismiss {follower}',
         prerequisites: [

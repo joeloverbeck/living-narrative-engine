@@ -39,6 +39,7 @@ This specification provides comprehensive implementation requirements and guidan
 ```
 
 **Key Characteristics:**
+
 - Uses legacy `scope` property with single scope string
 - Simple `{target}` placeholder in template
 - Single prerequisite checking movement capability
@@ -70,6 +71,7 @@ This specification provides comprehensive implementation requirements and guidan
 ```
 
 **Key Characteristics:**
+
 - Directly accesses `event.payload.targetId`
 - Single target resolution pattern
 - No support for multi-target payloads
@@ -116,6 +118,7 @@ This specification provides comprehensive implementation requirements and guidan
 ```
 
 **Migration Changes:**
+
 - `scope` → `targets.primary.scope`
 - Added `placeholder` and `description` for clarity
 - Updated template: `{target}` → `{destination}`
@@ -147,6 +150,7 @@ This specification provides comprehensive implementation requirements and guidan
 ```
 
 **Migration Strategy:**
+
 - **Backward Compatible**: Continue using `event.payload.targetId`
 - **Future Ready**: Rule can handle both legacy and multi-target events
 - **No Logic Changes**: Core movement logic remains identical
@@ -167,6 +171,7 @@ This specification provides comprehensive implementation requirements and guidan
 ```
 
 **Backward Compatibility Features:**
+
 - `targetId` field maintained with primary target value
 - Both `targets` and `targetId` fields present
 - Existing rules continue to work unchanged
@@ -212,15 +217,18 @@ This specification provides comprehensive implementation requirements and guidan
 ### Phase 1: Action Definition Migration
 
 **Files to Modify:**
+
 - `data/mods/core/actions/go.action.json`
 
 **Changes Required:**
+
 1. Replace `scope` with `targets.primary` object
 2. Update template placeholder
 3. Add target description
 4. Validate against updated schema
 
 **Validation Steps:**
+
 1. Schema validation passes
 2. Action discovery system recognizes new format
 3. Target resolution produces identical results
@@ -229,14 +237,17 @@ This specification provides comprehensive implementation requirements and guidan
 ### Phase 2: Rule Definition Updates
 
 **Files to Modify:**
+
 - `data/mods/core/rules/go.rule.json`
 
 **Changes Required:**
+
 1. Update comments to reflect multi-target awareness
 2. Ensure `event.payload.targetId` access pattern continues
 3. Add documentation for backward compatibility approach
 
 **Validation Steps:**
+
 1. Rule processes both legacy and multi-target events
 2. Movement logic remains identical
 3. Error handling unchanged
@@ -262,6 +273,7 @@ This specification provides comprehensive implementation requirements and guidan
    - `tests/e2e/scopeDsl/ActionSystemIntegration.e2e.test.js`
 
 **New Test Requirements:**
+
 1. Multi-target event payload validation
 2. Backward compatibility verification
 3. Schema validation for new format
@@ -274,12 +286,14 @@ This specification provides comprehensive implementation requirements and guidan
 #### goRule.integration.test.js
 
 **Required Changes:**
+
 1. **Import Updates**: No changes needed - rule uses same targetId access
 2. **Test Data**: Update action definition reference if needed
 3. **Event Payloads**: Add tests for multi-target event format
 4. **Validation**: Ensure rule handles both payload formats
 
 **New Test Cases:**
+
 ```javascript
 it('handles multi-target event payload format', async () => {
   // Test with new multi-target event structure
@@ -290,7 +304,7 @@ it('handles multi-target event payload format', async () => {
     targetId: 'locB', // Backward compatibility
     originalInput: 'go north',
   });
-  
+
   // Same assertions as legacy test
   expect(
     testEnv.entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
@@ -305,7 +319,7 @@ it('maintains backward compatibility with legacy event format', async () => {
     targetId: 'locB',
     originalInput: 'go north',
   });
-  
+
   // Same results expected
   expect(
     testEnv.entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
@@ -316,31 +330,31 @@ it('maintains backward compatibility with legacy event format', async () => {
 #### actionDiscoverySystem.go.test.js
 
 **Required Changes:**
+
 1. **Action Definition**: Update import to reference migrated action
 2. **Mock Expectations**: Verify new template format generation
 3. **Target Resolution**: Ensure scope resolution works with new format
 
 **Updated Test Case:**
+
 ```javascript
 it('should discover "go to The Town" action with new multi-target format', async () => {
   const bed = getBed();
-  
+
   // Mock should return new template format
-  bed.mocks.actionCommandFormatter.format.mockImplementation(
-    (actionDef) => {
-      if (actionDef.id === 'core:go')
-        return { ok: true, value: 'go to The Town' }; // Updated placeholder
-      return { ok: false, error: 'invalid' };
-    }
-  );
-  
+  bed.mocks.actionCommandFormatter.format.mockImplementation((actionDef) => {
+    if (actionDef.id === 'core:go')
+      return { ok: true, value: 'go to The Town' }; // Updated placeholder
+    return { ok: false, error: 'invalid' };
+  });
+
   const result = await bed.service.getValidActions(mockHeroEntity, {
     jsonLogicEval: {},
   });
-  
+
   expect(result.errors).toEqual([]);
   // Verify action structure includes targets format
-  const goAction = result.actions.find(a => a.actionId === 'core:go');
+  const goAction = result.actions.find((a) => a.actionId === 'core:go');
   expect(goAction).toBeDefined();
   expect(goAction.targets).toBeDefined();
   expect(goAction.targets.primary).toBeDefined();
@@ -375,7 +389,9 @@ describe('Go Action Multi-Target Schema Validation', () => {
   it('ensures targets structure is properly defined', () => {
     expect(goActionMigrated.targets).toBeDefined();
     expect(goActionMigrated.targets.primary).toBeDefined();
-    expect(goActionMigrated.targets.primary.scope).toBe('core:clear_directions');
+    expect(goActionMigrated.targets.primary.scope).toBe(
+      'core:clear_directions'
+    );
     expect(goActionMigrated.targets.primary.placeholder).toBe('destination');
     expect(goActionMigrated.targets.primary.description).toBeDefined();
   });
@@ -446,6 +462,7 @@ describe('Go Action Multi-Target Schema Validation', () => {
 The migration maintains full backward compatibility through dual-format support:
 
 **Legacy Format Support:**
+
 ```json
 {
   "actorId": "player_001",
@@ -456,6 +473,7 @@ The migration maintains full backward compatibility through dual-format support:
 ```
 
 **Multi-Target Format:**
+
 ```json
 {
   "actorId": "player_001",
@@ -467,6 +485,7 @@ The migration maintains full backward compatibility through dual-format support:
 ```
 
 **Compatibility Mechanism:**
+
 - `targetId` field always present (contains primary target)
 - Rules can access either `event.payload.targetId` or `event.payload.targets.primary`
 - Schema validation accepts both formats
@@ -475,6 +494,7 @@ The migration maintains full backward compatibility through dual-format support:
 ### Rule Compatibility
 
 **Current Rule Access Pattern:**
+
 ```json
 {
   "type": "SET_VARIABLE",
@@ -486,6 +506,7 @@ The migration maintains full backward compatibility through dual-format support:
 ```
 
 **Compatibility Strategy:**
+
 - **Keep Existing**: Continue using `event.payload.targetId`
 - **Dual Support**: System ensures `targetId` always equals `targets.primary`
 - **No Changes**: Rule logic remains completely unchanged
@@ -494,6 +515,7 @@ The migration maintains full backward compatibility through dual-format support:
 ### Data Migration
 
 **No Data Migration Required:**
+
 - Existing save files continue to work
 - Legacy action definitions supported during transition
 - Game state remains compatible
@@ -514,11 +536,13 @@ cp data/mods/core/rules/go.rule.json data/mods/core/rules/go.rule.json.backup
 **File**: `data/mods/core/actions/go.action.json`
 
 **Changes to Apply:**
+
 1. Replace `scope` field with `targets` object
 2. Update template placeholder
 3. Add target description
 
 **Implementation:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
@@ -549,11 +573,13 @@ cp data/mods/core/rules/go.rule.json data/mods/core/rules/go.rule.json.backup
 **File**: `data/mods/core/rules/go.rule.json`
 
 **Changes to Apply:**
+
 1. Update main comment to note multi-target compatibility
 2. Add comment explaining backward compatibility approach
 3. No logic changes required
 
 **Implementation:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
@@ -597,12 +623,14 @@ npm run test:ci
 ### Step 5: Update Test Files
 
 **Priority Order:**
+
 1. Schema validation tests (highest impact)
 2. Integration tests (core functionality)
 3. Unit tests (specific components)
 4. E2E tests (user workflows)
 
 **Validation After Each Update:**
+
 ```bash
 npm run test:single -- --testPathPattern="[specific-test-pattern]"
 ```

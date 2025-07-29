@@ -184,7 +184,7 @@ export class CharacterConceptsManagerController {
         set uiStateManager(value) {
           self.#uiStateManager = value;
         },
-        
+
         // Modal display methods for testing
         showCreateModal: this.#showCreateModal.bind(this),
         showEditModal: this.#showEditModal.bind(this),
@@ -547,7 +547,10 @@ export class CharacterConceptsManagerController {
   #setupConceptFormValidation() {
     // Remove any existing listeners to prevent duplicates
     const newTextarea = this.#elements.conceptText.cloneNode(true);
-    this.#elements.conceptText.parentNode.replaceChild(newTextarea, this.#elements.conceptText);
+    this.#elements.conceptText.parentNode.replaceChild(
+      newTextarea,
+      this.#elements.conceptText
+    );
     this.#elements.conceptText = newTextarea;
 
     // Set up real-time validation using FormValidationHelper
@@ -1876,7 +1879,7 @@ export class CharacterConceptsManagerController {
         `Failed to ${isEditing ? 'update' : 'create'} concept`,
         error
       );
-      
+
       // Show error at UI state level
       this.#uiStateManager.showError(
         `Failed to ${isEditing ? 'update' : 'save'} concept. Please try again.`

@@ -489,14 +489,14 @@
   /* Initial state for animation */
   opacity: 0;
   transform: scale(0.95) translateY(10px);
-  transition: 
+  transition:
     opacity 0.25s ease-in-out 0.05s,
     transform 0.25s ease-in-out 0.05s;
 }
 
 /* When modal is displayed (display: flex), animate content in */
-.modal[style*="display: flex"] .modal-content,
-.modal[style*="display:flex"] .modal-content {
+.modal[style*='display: flex'] .modal-content,
+.modal[style*='display:flex'] .modal-content {
   opacity: 1 !important;
   transform: scale(1) translateY(0) !important;
 }

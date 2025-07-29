@@ -361,16 +361,16 @@ describe('core_handle_dismiss rule integration', () => {
       actorId: 'actor1',
       actionId: 'core:dismiss',
       targets: {
-        primary: 'target1'
+        primary: 'target1',
       },
       targetId: 'target1', // Maintained for backward compatibility
-      originalInput: 'dismiss Target'
+      originalInput: 'dismiss Target',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
     expect(types).toEqual(
       expect.arrayContaining([
-        'core:perceptible_event', 
+        'core:perceptible_event',
         'core:display_successful_action_result',
         'core:turn_ended',
       ])
@@ -418,7 +418,7 @@ describe('core_handle_dismiss rule integration', () => {
     });
 
     const legacyEvents = [...testEnv.events];
-    
+
     // Test multi-target format
     testEnv.reset(setupEntities());
     ifCoLocatedHandler = createHandlers(
@@ -437,17 +437,21 @@ describe('core_handle_dismiss rule integration', () => {
       actorId: 'actor1',
       actionId: 'core:dismiss',
       targets: {
-        primary: 'target1'
+        primary: 'target1',
       },
       targetId: 'target1',
-      originalInput: 'dismiss Target'
+      originalInput: 'dismiss Target',
     });
 
     const multiTargetEvents = [...testEnv.events];
 
     // Both formats should produce the same event types
-    const legacyTypes = [...new Set(legacyEvents.map(e => e.eventType))].sort();
-    const multiTargetTypes = [...new Set(multiTargetEvents.map(e => e.eventType))].sort();
+    const legacyTypes = [
+      ...new Set(legacyEvents.map((e) => e.eventType)),
+    ].sort();
+    const multiTargetTypes = [
+      ...new Set(multiTargetEvents.map((e) => e.eventType)),
+    ].sort();
     expect(legacyTypes).toEqual(multiTargetTypes);
 
     // Both should successfully remove the following component

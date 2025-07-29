@@ -40,4 +40,27 @@ describe("Action Definition: 'intimacy:adjust_clothing'", () => {
 
     expect(isValid).toBe(true);
   });
+
+  test('should have correct multi-target structure', () => {
+    expect(actionData.targets).toBeDefined();
+    expect(actionData.targets.primary).toBeDefined();
+    expect(actionData.targets.secondary).toBeDefined();
+
+    expect(actionData.targets.primary.scope).toBe(
+      'intimacy:close_actors_facing_each_other_with_torso_clothing'
+    );
+    expect(actionData.targets.primary.placeholder).toBe('primary');
+
+    expect(actionData.targets.secondary.scope).toBe(
+      'primary.topmost_clothing.torso_upper'
+    );
+    expect(actionData.targets.secondary.placeholder).toBe('secondary');
+    expect(actionData.targets.secondary.contextFrom).toBe('primary');
+
+    expect(actionData.template).toBe("adjust {primary}'s {secondary}");
+  });
+
+  test('should not have deprecated scope property', () => {
+    expect(actionData.scope).toBeUndefined();
+  });
 });
