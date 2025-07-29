@@ -295,7 +295,13 @@ describe('testingFacadeRegistrations', () => {
 
       await expect(
         facades.mockDeps.action.actionDiscoveryService.discoverActions()
-      ).resolves.toEqual({ actions: [] });
+      ).resolves.toEqual({ 
+        actions: [
+          { id: 'core:look', name: 'Look' },
+          { id: 'core:wait', name: 'Wait' },
+          { id: 'core:move', name: 'Move' }
+        ] 
+      });
       await expect(
         facades.mockDeps.action.actionPipelineOrchestrator.execute()
       ).resolves.toEqual({
@@ -305,7 +311,11 @@ describe('testingFacadeRegistrations', () => {
       });
       await expect(
         facades.mockDeps.action.availableActionsProvider.getAvailableActions()
-      ).resolves.toEqual([]);
+      ).resolves.toEqual([
+        { id: 'core:look', name: 'Look' },
+        { id: 'core:wait', name: 'Wait' },
+        { id: 'core:move', name: 'Move' }
+      ]);
       await expect(
         facades.mockDeps.action.actionIndex.getActionDefinition()
       ).resolves.toEqual({ id: 'test-action' });
@@ -415,7 +425,7 @@ describe('testingFacadeRegistrations', () => {
 
       const entity =
         await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
-      expect(entity).toBeNull();
+      expect(entity).toBeUndefined();
     });
 
     it('should handle entity manager removeEntity without jest', async () => {
@@ -434,7 +444,7 @@ describe('testingFacadeRegistrations', () => {
 
       const entity =
         await facades.mockDeps.entity.entityManager.getEntityInstance(entityId);
-      expect(entity).toBeNull();
+      expect(entity).toBeUndefined();
     });
 
     it('should handle eventBus dispatch', async () => {

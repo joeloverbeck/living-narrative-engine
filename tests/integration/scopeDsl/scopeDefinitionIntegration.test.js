@@ -161,8 +161,14 @@ describe('Scope Definition Integration', () => {
         commandVerb: 'dismiss',
         name: 'Dismiss',
         description: 'Dismisses a follower from your service.',
-        scope: 'followers', // References scope by name
-        template: 'dismiss {target}',
+        targets: {
+          primary: {
+            scope: 'followers', // References scope by name
+            placeholder: 'follower',
+            description: 'The follower to dismiss from service'
+          }
+        },
+        template: 'dismiss {follower}',
         prerequisites: [
           {
             logic: {
@@ -173,11 +179,13 @@ describe('Scope Definition Integration', () => {
         ],
       };
 
-      // Test that scope name reference works
-      expect(actionDefinition.scope).toBe('followers');
+      // Test that scope name reference works in multi-target format
+      expect(actionDefinition.targets.primary.scope).toBe('followers');
+      expect(actionDefinition.targets.primary.placeholder).toBe('follower');
+      expect(actionDefinition.template).toBe('dismiss {follower}');
 
       // In real integration, this would be resolved to namespaced scope
-      const namespacedScope = `core:${actionDefinition.scope}`;
+      const namespacedScope = `core:${actionDefinition.targets.primary.scope}`;
       expect(namespacedScope).toBe('core:followers');
     });
 
