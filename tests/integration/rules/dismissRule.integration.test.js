@@ -275,7 +275,7 @@ describe('core_handle_dismiss rule integration', () => {
     }
   });
 
-  it('performs dismiss action successfully', async () => {
+  it('performs dismiss action successfully with legacy event format', async () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -322,5 +322,141 @@ describe('core_handle_dismiss rule integration', () => {
         'core:turn_ended',
       ])
     );
+  });
+
+  it('performs dismiss action successfully with multi-target event format', async () => {
+    testEnv.reset([
+      {
+        id: 'actor1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Actor' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [LEADING_COMPONENT_ID]: { followers: ['target1'] },
+        },
+      },
+      {
+        id: 'target1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Target' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [FOLLOWING_COMPONENT_ID]: { leaderId: 'actor1' },
+        },
+      },
+    ]);
+
+    // Re-register IF_CO_LOCATED handler after reset
+    const ifCoLocatedHandler = createHandlers(
+      testEnv.entityManager,
+      testEnv.eventBus,
+      testEnv.logger,
+      testEnv.validatedEventDispatcher,
+      testEnv.safeEventDispatcher
+    ).IF_CO_LOCATED_FACTORY(testEnv.operationInterpreter);
+    testEnv.operationRegistry.register(
+      'IF_CO_LOCATED',
+      ifCoLocatedHandler.execute.bind(ifCoLocatedHandler)
+    );
+
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'actor1',
+      actionId: 'core:dismiss',
+      targets: {
+        primary: 'target1'
+      },
+      targetId: 'target1', // Maintained for backward compatibility
+      originalInput: 'dismiss Target'
+    });
+
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event', 
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
+  });
+
+  it('verifies rule processes both event formats identically', async () => {
+    const setupEntities = () => [
+      {
+        id: 'actor1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Actor' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [LEADING_COMPONENT_ID]: { followers: ['target1'] },
+        },
+      },
+      {
+        id: 'target1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Target' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          [FOLLOWING_COMPONENT_ID]: { leaderId: 'actor1' },
+        },
+      },
+    ];
+
+    // Test legacy format
+    testEnv.reset(setupEntities());
+    let ifCoLocatedHandler = createHandlers(
+      testEnv.entityManager,
+      testEnv.eventBus,
+      testEnv.logger,
+      testEnv.validatedEventDispatcher,
+      testEnv.safeEventDispatcher
+    ).IF_CO_LOCATED_FACTORY(testEnv.operationInterpreter);
+    testEnv.operationRegistry.register(
+      'IF_CO_LOCATED',
+      ifCoLocatedHandler.execute.bind(ifCoLocatedHandler)
+    );
+
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'actor1',
+      actionId: 'core:dismiss',
+      targetId: 'target1',
+    });
+
+    const legacyEvents = [...testEnv.events];
+    
+    // Test multi-target format
+    testEnv.reset(setupEntities());
+    ifCoLocatedHandler = createHandlers(
+      testEnv.entityManager,
+      testEnv.eventBus,
+      testEnv.logger,
+      testEnv.validatedEventDispatcher,
+      testEnv.safeEventDispatcher
+    ).IF_CO_LOCATED_FACTORY(testEnv.operationInterpreter);
+    testEnv.operationRegistry.register(
+      'IF_CO_LOCATED',
+      ifCoLocatedHandler.execute.bind(ifCoLocatedHandler)
+    );
+
+    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'actor1',
+      actionId: 'core:dismiss',
+      targets: {
+        primary: 'target1'
+      },
+      targetId: 'target1',
+      originalInput: 'dismiss Target'
+    });
+
+    const multiTargetEvents = [...testEnv.events];
+
+    // Both formats should produce the same event types
+    const legacyTypes = [...new Set(legacyEvents.map(e => e.eventType))].sort();
+    const multiTargetTypes = [...new Set(multiTargetEvents.map(e => e.eventType))].sort();
+    expect(legacyTypes).toEqual(multiTargetTypes);
+
+    // Both should successfully remove the following component
+    const targetEntity = testEnv.entityManager.getEntityInstance('target1');
+    expect(targetEntity.getComponentData(FOLLOWING_COMPONENT_ID)).toBeNull();
+
+    // Both should update the leader's followers list
+    const actorEntity = testEnv.entityManager.getEntityInstance('actor1');
+    const leadingComponent = actorEntity.getComponentData(LEADING_COMPONENT_ID);
+    expect(leadingComponent.followers).not.toContain('target1');
   });
 });

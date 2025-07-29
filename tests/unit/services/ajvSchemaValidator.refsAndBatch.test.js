@@ -154,7 +154,7 @@ describe('AjvSchemaValidator reference and batch operations', () => {
     await expect(validator.addSchemas(schemas)).resolves.toBeUndefined();
     expect(addSchema).toHaveBeenCalledWith(schemas);
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Successfully added 2 schemas')
+      expect.stringContaining('Successfully added 2 new schemas in batch')
     );
   });
 

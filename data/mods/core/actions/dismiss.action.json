@@ -3,10 +3,16 @@
   "id": "core:dismiss",
   "name": "Dismiss",
   "description": "Dismisses a follower from your service.",
-  "scope": "core:followers",
+  "targets": {
+    "primary": {
+      "scope": "core:followers",
+      "placeholder": "follower",
+      "description": "The follower to dismiss from service"
+    }
+  },
   "required_components": {
     "actor": ["core:leading"]
   },
-  "template": "dismiss {target}",
+  "template": "dismiss {follower}",
   "prerequisites": []
 }
