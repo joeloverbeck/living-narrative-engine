@@ -340,7 +340,7 @@
 
 .cb-button-primary {
   background: var(--narrative-purple);
-  color: #ffffff;
+  color: #ffffff !important;
   opacity: 1 !important;
   visibility: visible !important;
   position: relative;
@@ -359,8 +359,8 @@
 }
 
 .cb-button-primary:disabled {
-  background: var(--bg-tertiary);
-  color: var(--text-disabled);
+  background: var(--bg-tertiary) !important;
+  color: var(--text-disabled) !important;
   cursor: not-allowed;
   opacity: 0.6;
   transform: none;
@@ -394,7 +394,7 @@
 
 .cb-button-secondary {
   background: transparent;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   border: 2px solid var(--border-primary);
 }
 

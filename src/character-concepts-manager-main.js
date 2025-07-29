@@ -3,8 +3,7 @@
  * Entry point for the character concepts management interface
  */
 
-import AppContainer from './dependencyInjection/appContainer.js';
-import { configureContainer } from './dependencyInjection/containerConfig.js';
+import { CommonBootstrapper } from './bootstrapper/CommonBootstrapper.js';
 import { tokens } from './dependencyInjection/tokens.js';
 import { ensureValidLogger } from './utils/loggerUtils.js';
 import { CharacterConceptsManagerController } from './domUI/characterConceptsManagerController.js';
@@ -13,30 +12,19 @@ import { CharacterConceptsManagerController } from './domUI/characterConceptsMan
 const PAGE_NAME = 'CharacterConceptsManager';
 const INIT_TIMEOUT = 10000; // 10 seconds
 
-// Create container instance
-const appContainer = new AppContainer();
+// Bootstrapper instance
+let bootstrapper;
 
 /**
  * Initialize the Character Concepts Manager application
  */
 async function initializeApp() {
   let logger;
+  let container;
 
   try {
-    // Configure the container
-    const mockUiElements = {
-      outputDiv: document.createElement('div'),
-      inputElement: document.createElement('input'),
-      titleElement: document.createElement('h1'),
-      document: document,
-    };
-    configureContainer(appContainer, mockUiElements);
-
-    // Get logger from container
-    logger = appContainer.resolve(tokens.ILogger);
-    logger = ensureValidLogger(logger);
-
-    logger.info(`Initializing ${PAGE_NAME}...`);
+    // Create bootstrapper
+    bootstrapper = new CommonBootstrapper();
 
     // Set initialization timeout
     const timeoutId = setTimeout(() => {
@@ -45,11 +33,44 @@ async function initializeApp() {
       );
     }, INIT_TIMEOUT);
 
+    // Bootstrap with minimal configuration
+    const bootstrapResult = await bootstrapper.bootstrap({
+      containerConfigType: 'minimal',
+      skipModLoading: true, // We'll load mods manually
+      includeAnatomyFormatting: false,
+      postInitHook: null,
+    });
+
+    if (!bootstrapResult.success) {
+      throw new Error(
+        `Bootstrap failed: ${bootstrapResult.error?.message || 'Unknown error'}`
+      );
+    }
+
+    // Extract services from bootstrap result
+    container = bootstrapResult.container;
+    logger = bootstrapResult.logger;
+    logger = ensureValidLogger(logger);
+
+    logger.info(`Initializing ${PAGE_NAME}...`);
+
+    // Load only the core mod to get event definitions
+    const modsLoader = container.resolve(tokens.ModsLoader);
+    if (modsLoader) {
+      logger.info('Loading core mod for event definitions...');
+      try {
+        await modsLoader.loadMods('default', ['core']);
+        logger.info('Core mod loaded successfully');
+      } catch (modError) {
+        logger.warn('Failed to load core mod, continuing without event validation', modError);
+      }
+    }
+
     // Resolve dependencies
-    const characterBuilderService = appContainer.resolve(
+    const characterBuilderService = container.resolve(
       tokens.CharacterBuilderService
     );
-    const eventBus = appContainer.resolve(tokens.ISafeEventDispatcher);
+    const eventBus = container.resolve(tokens.ISafeEventDispatcher);
 
     // Validate services
     if (!characterBuilderService) {
@@ -89,6 +110,7 @@ async function initializeApp() {
     if (logger) {
       logger.error(errorMessage, error);
     } else {
+      // eslint-disable-next-line no-console
       console.error(errorMessage, error);
     }
 
@@ -150,9 +172,9 @@ function setupGlobalErrorHandling(logger) {
     });
 
     // Prevent default error handling in production
-    if (process.env.NODE_ENV === 'production') {
-      event.preventDefault();
-    }
+    // Note: In browser environment, we can't easily check NODE_ENV
+    // so we prevent default in all cases to show user-friendly errors
+    event.preventDefault();
   });
 
   // Handle unhandled promise rejections
@@ -162,10 +184,8 @@ function setupGlobalErrorHandling(logger) {
       promise: event.promise,
     });
 
-    // Prevent default handling in production
-    if (process.env.NODE_ENV === 'production') {
-      event.preventDefault();
-    }
+    // Prevent default handling to show user-friendly errors
+    event.preventDefault();
   });
 }
 
@@ -244,6 +264,7 @@ function waitForDOM() {
 // Start initialization when DOM is ready
 waitForDOM().then(() => {
   initializeApp().catch((error) => {
+    // eslint-disable-next-line no-console
     console.error('Failed to initialize application:', error);
   });
 });

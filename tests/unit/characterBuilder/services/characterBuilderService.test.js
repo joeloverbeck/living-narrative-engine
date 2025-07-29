@@ -46,7 +46,6 @@ describe('CharacterBuilderService', () => {
       deleteCharacterConcept: jest.fn(),
       storeThematicDirections: jest.fn(),
       getThematicDirections: jest.fn(),
-      saveCharacterConcept: jest.fn(),
     };
 
     mockDirectionGenerator = {
@@ -598,7 +597,7 @@ describe('CharacterBuilderService', () => {
       const updatedConcept = { ...existingConcept, ...updates };
 
       mockStorageService.getCharacterConcept.mockResolvedValue(existingConcept);
-      mockStorageService.saveCharacterConcept.mockResolvedValue(updatedConcept);
+      mockStorageService.storeCharacterConcept.mockResolvedValue(updatedConcept);
 
       const result = await service.updateCharacterConcept(conceptId, updates);
 

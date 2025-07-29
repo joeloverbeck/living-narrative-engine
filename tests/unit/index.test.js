@@ -1,0 +1,114 @@
+/**
+ * @file Tests for main index.html page
+ * @see index.html
+ */
+
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { JSDOM } from 'jsdom';
+import fs from 'fs';
+import path from 'path';
+
+describe('Index.html - Main Menu', () => {
+  let dom;
+  let document;
+
+  beforeEach(() => {
+    // Read the actual HTML file
+    const html = fs.readFileSync(
+      path.resolve('./index.html'),
+      'utf-8'
+    );
+    
+    // Create DOM without running scripts
+    dom = new JSDOM(html);
+    document = dom.window.document;
+  });
+
+  afterEach(() => {
+    if (dom) {
+      dom.window.close();
+    }
+  });
+
+  describe('Character Concepts Manager Button', () => {
+    it('should have Character Concepts Manager button', () => {
+      const button = document.getElementById('character-concepts-button');
+      expect(button).not.toBeNull();
+      expect(button.textContent.trim()).toBe('Character Concepts Manager');
+      expect(button.classList.contains('menu-button')).toBe(true);
+    });
+
+    it('should position Character Concepts Manager button above Thematic Direction Generator', () => {
+      const buttons = document.querySelectorAll('.menu-button');
+      const buttonTexts = Array.from(buttons).map(btn => btn.textContent.trim());
+      
+      const characterConceptsIndex = buttonTexts.indexOf('Character Concepts Manager');
+      const thematicDirectionIndex = buttonTexts.indexOf('Thematic Direction Generator');
+      
+      expect(characterConceptsIndex).toBeGreaterThan(-1);
+      expect(thematicDirectionIndex).toBeGreaterThan(-1);
+      expect(characterConceptsIndex).toBeLessThan(thematicDirectionIndex);
+    });
+
+    it('should have correct event listener setup in script', () => {
+      const scriptContent = document.querySelector('script').textContent;
+      
+      // Check that the script contains the event listener for character-concepts-button
+      expect(scriptContent).toContain("getElementById('character-concepts-button')");
+      expect(scriptContent).toContain("addEventListener('click'");
+      expect(scriptContent).toContain("window.location.href = 'character-concepts-manager.html'");
+    });
+  });
+
+  describe('All Menu Buttons', () => {
+    it('should have all expected menu buttons in correct order', () => {
+      const buttons = document.querySelectorAll('.menu-button');
+      const expectedButtons = [
+        'Start New Game',
+        'Load Game',
+        'Anatomy Visualizer',
+        'Character Concepts Manager',
+        'Thematic Direction Generator',
+        'Thematic Directions Manager'
+      ];
+      
+      const actualButtons = Array.from(buttons).map(btn => btn.textContent.trim());
+      expect(actualButtons).toEqual(expectedButtons);
+    });
+
+    it('should have correct button IDs', () => {
+      const buttonConfigs = [
+        { id: 'start-button', text: 'Start New Game' },
+        { id: 'load-button', text: 'Load Game' },
+        { id: 'anatomy-button', text: 'Anatomy Visualizer' },
+        { id: 'character-concepts-button', text: 'Character Concepts Manager' },
+        { id: 'thematic-direction-button', text: 'Thematic Direction Generator' },
+        { id: 'thematic-directions-manager-button', text: 'Thematic Directions Manager' }
+      ];
+
+      buttonConfigs.forEach(({ id, text }) => {
+        const button = document.getElementById(id);
+        expect(button).not.toBeNull();
+        expect(button.textContent.trim()).toBe(text);
+      });
+    });
+
+    it('should have event listeners for all buttons in script', () => {
+      const scriptContent = document.querySelector('script').textContent;
+      
+      const buttonConfigs = [
+        { id: 'start-button', href: 'game.html' },
+        { id: 'load-button', href: 'game.html?load=true' },
+        { id: 'anatomy-button', href: 'anatomy-visualizer.html' },
+        { id: 'character-concepts-button', href: 'character-concepts-manager.html' },
+        { id: 'thematic-direction-button', href: 'thematic-direction-generator.html' },
+        { id: 'thematic-directions-manager-button', href: 'thematic-directions-manager.html' }
+      ];
+
+      buttonConfigs.forEach(({ id, href }) => {
+        expect(scriptContent).toContain(`getElementById('${id}')`);
+        expect(scriptContent).toContain(`window.location.href = '${href}'`);
+      });
+    });
+  });
+});

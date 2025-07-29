@@ -1,143 +1,68 @@
-DTPERF-002: Starting DataTable initialization process
-datatable.js:69 DTPERF-002: Table element found, validating structure
-datatable.js:76 DTPERF-002: Table structure analysis: {theadCount: 1, tbodyCount: 1, headerCells: 8, headerRowExists: true}
-datatable.js:122 DTPERF-002: Table validation passed, proceeding with DataTable configuration
-datatable.js:418 DTPERF-002: DataTable configuration ready, attempting initialization
-datatable.js:428 DTPERF-002: Calling DataTable() constructor
-datatable.js:434 DTPERF-002: DataTable initialized successfully, API available: false
-moment.min.js:6 Deprecation warning: value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged and will be removed in an upcoming major release. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.
-Arguments:
-[0] _isAMomentObject: true, _isUTC: false, _useUTC: false, _l: undefined, _i: 01/01/2022 00:00:01, _f: undefined, _strict: undefined, _locale: [object Object]
-Error
-    at a.createFromInputFallback (http://s932030regfma01/RegistroFallecidos-dev/js/moment.min.js:6:3248)
-    at gb (http://s932030regfma01/RegistroFallecidos-dev/js/moment.min.js:6:19736)
-    at rb (http://s932030regfma01/RegistroFallecidos-dev/js/moment.min.js:6:22824)
-    at qb (http://s932030regfma01/RegistroFallecidos-dev/js/moment.min.js:6:22691)
-    at pb (http://s932030regfma01/RegistroFallecidos-dev/js/moment.min.js:6:22410)
-    at sb (http://s932030regfma01/RegistroFallecidos-dev/js/moment.min.js:6:23150)
-    at tb (http://s932030regfma01/RegistroFallecidos-dev/js/moment.min.js:6:23184)
-    at a (http://s932030regfma01/RegistroFallecidos-dev/js/moment.min.js:6:202)
-    at HTMLDocument.<anonymous> (http://s932030regfma01/RegistroFallecidos-dev/js/datatable.js:528:15)
-    at c (http://s932030regfma01/RegistroFallecidos-dev/js/jquery.min.js:4:26036)
-w @ moment.min.js:6
-(anonymous) @ moment.min.js:6
-gb @ moment.min.js:6
-rb @ moment.min.js:6
-qb @ moment.min.js:6
-pb @ moment.min.js:6
-sb @ moment.min.js:6
-tb @ moment.min.js:6
-a @ moment.min.js:6
-(anonymous) @ datatable.js:528
-c @ jquery.min.js:4
-fireWith @ jquery.min.js:4
-ready @ jquery.min.js:4
-q @ jquery.min.js:4Understand this warning
-jquery-3.3.1.slim.min.js:2 [Violation] 'setTimeout' handler took 109ms
-jquery.min.js:6  GET http://s932030regfma01/RegistroFallecidos-dev/idiomas/datatables_es.json 404 (Not Found)
-send @ jquery.min.js:6
-ajax @ jquery.min.js:6
-(anonymous) @ dataTables.min.js:117
-each @ jquery.min.js:4
-each @ jquery.min.js:4
-u @ dataTables.min.js:112
-k.fn.DataTable @ dataTables.min.js:196
-(anonymous) @ datatable.js:429
-c @ jquery.min.js:4
-fireWith @ jquery.min.js:4
-ready @ jquery.min.js:4
-q @ jquery.min.js:4Understand this error
-datatable.js:403 DTPERF-002: PreDrawCallback - About to draw table
-datatable.js:408 DTPERF-002: Table structure check: {hasTable: true, hasThead: true, hasTbody: true, theadCells: 8, tbodyRows: 0}hasTable: truehasTbody: truehasThead: truetbodyRows: 0theadCells: 8[[Prototype]]: Objectconstructor: ƒ Object()hasOwnProperty: ƒ hasOwnProperty()isPrototypeOf: ƒ isPrototypeOf()propertyIsEnumerable: ƒ propertyIsEnumerable()toLocaleString: ƒ toLocaleString()toString: ƒ toString()valueOf: ƒ valueOf()__defineGetter__: ƒ __defineGetter__()__defineSetter__: ƒ __defineSetter__()__lookupGetter__: ƒ __lookupGetter__()__lookupSetter__: ƒ __lookupSetter__()__proto__: (...)get __proto__: ƒ __proto__()set __proto__: ƒ __proto__()
-jquery.min.js:6  POST http://s932030regfma01/RegistroFallecidos-dev/ws.php?action=getRegistrosPaginated 401 (Unauthorized)
-send @ jquery.min.js:6
-ajax @ jquery.min.js:6
-Ma @ dataTables.min.js:65
-Gb @ dataTables.min.js:65
-fa @ dataTables.min.js:57
-ja @ dataTables.min.js:59
-za @ dataTables.min.js:77
-error @ dataTables.min.js:117
-c @ jquery.min.js:4
-fireWith @ jquery.min.js:4
-k @ jquery.min.js:6
-r @ jquery.min.js:6
-XMLHttpRequest.send
-send @ jquery.min.js:6
-ajax @ jquery.min.js:6
-(anonymous) @ dataTables.min.js:117
-each @ jquery.min.js:4
-each @ jquery.min.js:4
-u @ dataTables.min.js:112
-k.fn.DataTable @ dataTables.min.js:196
-(anonymous) @ datatable.js:429
-c @ jquery.min.js:4
-fireWith @ jquery.min.js:4
-ready @ jquery.min.js:4
-q @ jquery.min.js:4Understand this error
-datatable.js:228 DataTable AJAX error: error Unauthorized
-error @ datatable.js:228
-c @ jquery.min.js:4
-fireWith @ jquery.min.js:4
-k @ jquery.min.js:6
-r @ jquery.min.js:6
-XMLHttpRequest.send
-send @ jquery.min.js:6
-ajax @ jquery.min.js:6
-Ma @ dataTables.min.js:65
-Gb @ dataTables.min.js:65
-fa @ dataTables.min.js:57
-ja @ dataTables.min.js:59
-za @ dataTables.min.js:77
-error @ dataTables.min.js:117
-c @ jquery.min.js:4
-fireWith @ jquery.min.js:4
-k @ jquery.min.js:6
-r @ jquery.min.js:6
-XMLHttpRequest.send
-send @ jquery.min.js:6
-ajax @ jquery.min.js:6
-(anonymous) @ dataTables.min.js:117
-each @ jquery.min.js:4
-each @ jquery.min.js:4
-u @ dataTables.min.js:112
-k.fn.DataTable @ dataTables.min.js:196
-(anonymous) @ datatable.js:429
-c @ jquery.min.js:4
-fireWith @ jquery.min.js:4
-ready @ jquery.min.js:4
-q @ jquery.min.js:4Understand this error
-datatable.js:967 DataTable Error: Error loading data. Please refresh the page.
-showErrorMessage @ datatable.js:967
-error @ datatable.js:229
-c @ jquery.min.js:4
-fireWith @ jquery.min.js:4
-k @ jquery.min.js:6
-r @ jquery.min.js:6
-XMLHttpRequest.send
-send @ jquery.min.js:6
-ajax @ jquery.min.js:6
-Ma @ dataTables.min.js:65
-Gb @ dataTables.min.js:65
-fa @ dataTables.min.js:57
-ja @ dataTables.min.js:59
-za @ dataTables.min.js:77
-error @ dataTables.min.js:117
-c @ jquery.min.js:4
-fireWith @ jquery.min.js:4
-k @ jquery.min.js:6
-r @ jquery.min.js:6
-XMLHttpRequest.send
-send @ jquery.min.js:6
-ajax @ jquery.min.js:6
-(anonymous) @ dataTables.min.js:117
-each @ jquery.min.js:4
-each @ jquery.min.js:4
-u @ dataTables.min.js:112
-k.fn.DataTable @ dataTables.min.js:196
-(anonymous) @ datatable.js:429
-c @ jquery.min.js:4
-fireWith @ jquery.min.js:4
-ready @ jquery.min.js:4
-q @ jquery.min.js:4Understand this error
-jquery.min.js:6 [Violation] 'readystatechange' handler took 1136ms
+[ConsoleLogger] Initialized. Log level set to INFO (1).
+consoleLogger.js:151 Loaders Registration: All core services, loaders, and phases registered.
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+consoleLogger.js:151 Initializing CharacterConceptsManager...
+consoleLogger.js:151 CharacterConceptsManagerController initialized
+consoleLogger.js:151 Initializing Character Concepts Manager
+consoleLogger.js:151 CharacterDatabase: Successfully opened database
+consoleLogger.js:151 CharacterStorageService: Successfully initialized
+consoleLogger.js:151 CharacterBuilderService: Successfully initialized
+consoleLogger.js:151 Loading character concepts data
+consoleLogger.js:151 Statistics updated {totalConcepts: 3, conceptsWithDirections: 3, totalDirections: 15, averageDirectionsPerConcept: '5.0', completionRate: 100, …}
+consoleLogger.js:163 VED: EventDefinition not found for 'core:statistics_updated'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+updateStatistics_fn @ characterConceptsManagerController.js:1006
+loadConceptsData_fn @ characterConceptsManagerController.js:736
+await in loadConceptsData_fn
+initialize @ characterConceptsManagerController.js:230
+await in initialize
+initializeApp @ character-concepts-manager-main.js:71
+(anonymous) @ character-concepts-manager-main.js:246
+Promise.then
+(anonymous) @ character-concepts-manager-main.js:245
+(anonymous) @ character-concepts-manager-main.js:249Understand this warning
+consoleLogger.js:151 Loaded 3 concepts
+consoleLogger.js:151 Cross-tab sync initialized {tabId: 'tab-1753808771903-fra8qhhre'}
+consoleLogger.js:151 Character Concepts Manager initialization complete
+consoleLogger.js:151 CharacterConceptsManager initialized successfully
+consoleLogger.js:151 Showing concept menu {conceptId: '9f5e16fb-3cd8-42a3-891d-22c078a24762'}
+consoleLogger.js:151 Showing concept menu {conceptId: '9f5e16fb-3cd8-42a3-891d-22c078a24762'}
+consoleLogger.js:151 Showing create concept modal
+consoleLogger.js:151 Modal display debug info: {display: 'flex', visibility: 'visible', opacity: '1', zIndex: '1000', position: 'fixed', …}
+consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_modal_opened'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+showCreateModal_fn @ characterConceptsManagerController.js:641
+(anonymous) @ characterConceptsManagerController.js:349Understand this warning
+consoleLogger.js:151 Closing concept modal
+consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_modal_closed'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+closeConceptModal_fn @ characterConceptsManagerController.js:682
+(anonymous) @ characterConceptsManagerController.js:414Understand this warning
+consoleLogger.js:151 Showing edit modal {conceptId: '650c9a82-51bc-4a2c-b6b0-236ab55889c6'}
+consoleLogger.js:151 Edit modal display debug info: {display: 'flex', visibility: 'visible', opacity: '1', zIndex: '1000', position: 'fixed', …}
+consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_modal_opened'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+showEditModal_fn @ characterConceptsManagerController.js:1511
+(anonymous) @ characterConceptsManagerController.js:877Understand this warning
+consoleLogger.js:151 Closing concept modal
+consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_modal_closed'. Cannot validate payload. Proceeding with dispatch.

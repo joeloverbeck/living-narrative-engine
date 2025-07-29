@@ -38,6 +38,7 @@ import {
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
+import { ActionIndex } from '../../../src/actions/actionIndex.js';
 
 // Import actions
 import dismissAction from '../../../data/mods/core/actions/dismiss.action.json';
@@ -57,6 +58,7 @@ describe('Scope Integration Tests', () => {
   let actionDiscoveryService;
   let gameDataRepository;
   let safeEventDispatcher;
+  let actionIndex;
 
   beforeEach(() => {
     logger = {
@@ -202,15 +204,14 @@ describe('Scope Integration Tests', () => {
       actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
 
+    // Create and build ActionIndex
+    actionIndex = new ActionIndex({ logger, entityManager });
+    const allActions = gameDataRepository.getAllActionDefinitions();
+    actionIndex.buildIndex(allActions);
+
     // Create the ActionPipelineOrchestrator
     const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
-      actionIndex: {
-        getCandidateActions: jest
-          .fn()
-          .mockImplementation(() =>
-            gameDataRepository.getAllActionDefinitions()
-          ),
-      },
+      actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,
       formatter: new ActionCommandFormatter(),
@@ -224,7 +225,7 @@ describe('Scope Integration Tests', () => {
         entityManager,
         logger,
       }),
-      targetContextBuilder: createMockTargetContextBuilder(),
+      targetContextBuilder: createMockTargetContextBuilder(entityManager),
     });
 
     // FIX: Add the new prerequisiteEvaluationService dependency to the constructor
@@ -277,10 +278,58 @@ describe('Scope Integration Tests', () => {
         { id: 'room1', components: {} },
       ];
 
-      entityManager.setEntities(entities);
+      entityManager = new SimpleEntityManager(entities);
+
+      // Need to recreate ActionIndex with new entityManager
+      actionIndex = new ActionIndex({ logger, entityManager });
+      const allActions = gameDataRepository.getAllActionDefinitions();
+      actionIndex.buildIndex(allActions);
+      
+      // Need to recreate the ActionPipelineOrchestrator with updated dependencies
+      const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+        actionIndex,
+        prerequisiteService: { evaluate: jest.fn(() => true) },
+        targetService: createTargetResolutionServiceWithMocks({
+          scopeRegistry,
+          scopeEngine,
+          entityManager,
+          logger,
+          safeEventDispatcher,
+          jsonLogicEvaluationService: jsonLogicEval,
+          dslParser: new DefaultDslParser(),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+        }),
+        formatter: new ActionCommandFormatter(),
+        entityManager,
+        safeEventDispatcher,
+        getEntityDisplayNameFn: getEntityDisplayName,
+        errorBuilder: createMockActionErrorContextBuilder(),
+        logger,
+        unifiedScopeResolver: createMockUnifiedScopeResolver({
+          scopeRegistry,
+          scopeEngine,
+          entityManager,
+          logger,
+          safeEventDispatcher,
+          jsonLogicEvaluationService: jsonLogicEval,
+          dslParser: new DefaultDslParser(),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+        }),
+        targetContextBuilder: createMockTargetContextBuilder(entityManager),
+      });
+
+      actionDiscoveryService = new ActionDiscoveryService({
+        entityManager,
+        logger,
+        actionPipelineOrchestrator,
+        traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
+      });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = { jsonLogicEval };
+      const context = { 
+        jsonLogicEval,
+        location: { id: entityManager.getEntityInstance(actorId).getComponentData(POSITION_COMPONENT_ID)?.locationId }
+      };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
         context
@@ -358,10 +407,58 @@ describe('Scope Integration Tests', () => {
         { id: room1Id, components: {} },
       ];
 
-      entityManager.setEntities(entities);
+      entityManager = new SimpleEntityManager(entities);
+
+      // Need to recreate ActionIndex with new entityManager
+      actionIndex = new ActionIndex({ logger, entityManager });
+      const allActions = gameDataRepository.getAllActionDefinitions();
+      actionIndex.buildIndex(allActions);
+      
+      // Need to recreate the ActionPipelineOrchestrator with updated dependencies
+      const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+        actionIndex,
+        prerequisiteService: { evaluate: jest.fn(() => true) },
+        targetService: createTargetResolutionServiceWithMocks({
+          scopeRegistry,
+          scopeEngine,
+          entityManager,
+          logger,
+          safeEventDispatcher,
+          jsonLogicEvaluationService: jsonLogicEval,
+          dslParser: new DefaultDslParser(),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+        }),
+        formatter: new ActionCommandFormatter(),
+        entityManager,
+        safeEventDispatcher,
+        getEntityDisplayNameFn: getEntityDisplayName,
+        errorBuilder: createMockActionErrorContextBuilder(),
+        logger,
+        unifiedScopeResolver: createMockUnifiedScopeResolver({
+          scopeRegistry,
+          scopeEngine,
+          entityManager,
+          logger,
+          safeEventDispatcher,
+          jsonLogicEvaluationService: jsonLogicEval,
+          dslParser: new DefaultDslParser(),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+        }),
+        targetContextBuilder: createMockTargetContextBuilder(entityManager),
+      });
+
+      actionDiscoveryService = new ActionDiscoveryService({
+        entityManager,
+        logger,
+        actionPipelineOrchestrator,
+        traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
+      });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = { jsonLogicEval };
+      const context = { 
+        jsonLogicEval,
+        location: { id: entityManager.getEntityInstance(actorId).getComponentData(POSITION_COMPONENT_ID)?.locationId }
+      };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
         context
@@ -417,10 +514,58 @@ describe('Scope Integration Tests', () => {
         { id: room2Id, components: {} },
       ];
 
-      entityManager.setEntities(entities);
+      entityManager = new SimpleEntityManager(entities);
+
+      // Need to recreate ActionIndex with new entityManager
+      actionIndex = new ActionIndex({ logger, entityManager });
+      const allActions = gameDataRepository.getAllActionDefinitions();
+      actionIndex.buildIndex(allActions);
+      
+      // Need to recreate the ActionPipelineOrchestrator with updated dependencies
+      const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+        actionIndex,
+        prerequisiteService: { evaluate: jest.fn(() => true) },
+        targetService: createTargetResolutionServiceWithMocks({
+          scopeRegistry,
+          scopeEngine,
+          entityManager,
+          logger,
+          safeEventDispatcher,
+          jsonLogicEvaluationService: jsonLogicEval,
+          dslParser: new DefaultDslParser(),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+        }),
+        formatter: new ActionCommandFormatter(),
+        entityManager,
+        safeEventDispatcher,
+        getEntityDisplayNameFn: getEntityDisplayName,
+        errorBuilder: createMockActionErrorContextBuilder(),
+        logger,
+        unifiedScopeResolver: createMockUnifiedScopeResolver({
+          scopeRegistry,
+          scopeEngine,
+          entityManager,
+          logger,
+          safeEventDispatcher,
+          jsonLogicEvaluationService: jsonLogicEval,
+          dslParser: new DefaultDslParser(),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+        }),
+        targetContextBuilder: createMockTargetContextBuilder(entityManager),
+      });
+
+      actionDiscoveryService = new ActionDiscoveryService({
+        entityManager,
+        logger,
+        actionPipelineOrchestrator,
+        traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
+      });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = { jsonLogicEval };
+      const context = { 
+        jsonLogicEval,
+        location: { id: entityManager.getEntityInstance(actorId).getComponentData(POSITION_COMPONENT_ID)?.locationId }
+      };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
         context
@@ -437,7 +582,7 @@ describe('Scope Integration Tests', () => {
 
     it('should discover wait action with none scope', async () => {
       const actorId = 'actor1';
-      entityManager.setEntities([
+      entityManager = new SimpleEntityManager([
         {
           id: actorId,
           components: {
@@ -466,8 +611,56 @@ describe('Scope Integration Tests', () => {
         },
       ]);
 
+      // Need to recreate ActionIndex with new entityManager
+      actionIndex = new ActionIndex({ logger, entityManager });
+      const allActions = gameDataRepository.getAllActionDefinitions();
+      actionIndex.buildIndex(allActions);
+      
+      // Need to recreate the ActionPipelineOrchestrator with updated dependencies
+      const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+        actionIndex,
+        prerequisiteService: { evaluate: jest.fn(() => true) },
+        targetService: createTargetResolutionServiceWithMocks({
+          scopeRegistry,
+          scopeEngine,
+          entityManager,
+          logger,
+          safeEventDispatcher,
+          jsonLogicEvaluationService: jsonLogicEval,
+          dslParser: new DefaultDslParser(),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+        }),
+        formatter: new ActionCommandFormatter(),
+        entityManager,
+        safeEventDispatcher,
+        getEntityDisplayNameFn: getEntityDisplayName,
+        errorBuilder: createMockActionErrorContextBuilder(),
+        logger,
+        unifiedScopeResolver: createMockUnifiedScopeResolver({
+          scopeRegistry,
+          scopeEngine,
+          entityManager,
+          logger,
+          safeEventDispatcher,
+          jsonLogicEvaluationService: jsonLogicEval,
+          dslParser: new DefaultDslParser(),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+        }),
+        targetContextBuilder: createMockTargetContextBuilder(entityManager),
+      });
+
+      actionDiscoveryService = new ActionDiscoveryService({
+        entityManager,
+        logger,
+        actionPipelineOrchestrator,
+        traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
+      });
+
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = { jsonLogicEval };
+      const context = { 
+        jsonLogicEval,
+        location: { id: entityManager.getEntityInstance(actorId).getComponentData(POSITION_COMPONENT_ID)?.locationId }
+      };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
         context
@@ -477,7 +670,6 @@ describe('Scope Integration Tests', () => {
         (action) => action.id === 'core:wait'
       );
       expect(waitActions.length).toBe(1);
-      // FIX: The refactored service now correctly returns null for the targetId of a 'none' scope action.
       expect(waitActions[0].params?.targetId).toBeNull();
     });
   });

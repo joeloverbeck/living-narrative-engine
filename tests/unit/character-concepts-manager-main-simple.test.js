@@ -53,8 +53,8 @@ describe('Character Concepts Manager Main - Basic Tests', () => {
       expect(false).toBe(true);
     } catch (error) {
       expect(error).toBeDefined();
-      // The actual error is about missing DOM elements, not services
-      expect(error.message).toContain('Required element not found');
+      // With CommonBootstrapper, the error will be about bootstrap failing
+      expect(error.message).toMatch(/Bootstrap failed|Required element not found/);
     }
 
     consoleErrorSpy.mockRestore();

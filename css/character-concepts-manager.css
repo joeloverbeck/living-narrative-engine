@@ -13,6 +13,8 @@
   grid-template-columns: 300px 1fr;
   gap: 2rem;
   padding: 2rem;
+  padding-top: 3rem;
+  margin-top: 1rem;
 }
 
 .concept-controls-panel {
@@ -34,6 +36,9 @@
   border-radius: 12px;
   padding: 2rem;
   min-height: 600px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ===== Action Buttons ===== */
@@ -276,10 +281,11 @@
 
 .concepts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
-  padding: 1rem;
-  overflow: visible;
+  padding: 0.5rem;
+  overflow: auto;
+  max-height: calc(100vh - 300px);
 }
 
 /* Ensure grid items don't stretch */
@@ -298,6 +304,8 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .concept-card:hover {
