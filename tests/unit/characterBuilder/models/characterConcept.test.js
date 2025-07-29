@@ -401,7 +401,7 @@ describe('CharacterConcept Model', () => {
 
         expect(result).toBe(true);
         expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
-          'character-concept.schema.json',
+          'schema://living-narrative-engine/character-concept.schema.json',
           expect.objectContaining({
             id: mockConcept.id,
             concept: mockConcept.concept,
@@ -425,7 +425,7 @@ describe('CharacterConcept Model', () => {
         await validateCharacterConcept(conceptWithDates, mockSchemaValidator);
 
         expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
-          'character-concept.schema.json',
+          'schema://living-narrative-engine/character-concept.schema.json',
           expect.objectContaining({
             createdAt: '2023-01-01T10:00:00.000Z',
             updatedAt: '2023-01-02T15:30:00.000Z',
@@ -447,7 +447,7 @@ describe('CharacterConcept Model', () => {
         );
 
         expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
-          'character-concept.schema.json',
+          'schema://living-narrative-engine/character-concept.schema.json',
           expect.objectContaining({
             createdAt: '2023-01-01T10:00:00Z',
             updatedAt: '2023-01-02T15:30:00Z',

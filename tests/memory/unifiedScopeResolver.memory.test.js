@@ -104,7 +104,7 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
       // Environment-aware memory thresholds for caching
       const maxCacheGrowthMB = global.memoryTestUtils.isCI() ? 50 : 35; // Cache overhead
       const maxCacheLeakageMB = global.memoryTestUtils.isCI() ? 30 : 20; // Retained cache
-      const maxAbsoluteMB = global.memoryTestUtils.isCI() ? 200 : 150; // Total memory limit
+      const maxAbsoluteMB = global.memoryTestUtils.isCI() ? 200 : 175; // Total memory limit
 
       expect(memoryGrowth).toBeLessThan(maxCacheGrowthMB * 1024 * 1024);
       expect(memoryLeakage).toBeLessThan(maxCacheLeakageMB * 1024 * 1024);

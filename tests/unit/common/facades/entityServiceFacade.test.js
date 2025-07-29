@@ -69,7 +69,7 @@ describe('EntityServiceFacade', () => {
 
     // Set up default mock implementations
     mockEntityManager.createEntity.mockResolvedValue('test-entity-id');
-    mockEntityManager.getEntityInstance.mockResolvedValue({
+    mockEntityManager.getEntityInstance.mockReturnValue({
       id: 'test-entity-id',
       components: {
         'core:name': { name: 'Test Entity' },
@@ -438,8 +438,8 @@ describe('EntityServiceFacade', () => {
   });
 
   describe('getEntity', () => {
-    test('should retrieve entity by ID', async () => {
-      const entity = await facade.getEntity('test-entity-id');
+    test('should retrieve entity by ID', () => {
+      const entity = facade.getEntity('test-entity-id');
 
       expect(entity).toEqual({
         id: 'test-entity-id',
@@ -452,19 +452,21 @@ describe('EntityServiceFacade', () => {
       );
     });
 
-    test('should throw error for missing entity', async () => {
-      mockEntityManager.getEntityInstance.mockResolvedValue(null);
+    test('should throw error for missing entity', () => {
+      mockEntityManager.getEntityInstance.mockReturnValue(null);
 
-      await expect(facade.getEntity('missing-id')).rejects.toThrow(
-        'Entity not found: missing-id'
+      expect(() => facade.getEntity('missing-id')).toThrow(
+        'Entity not found: missing-id. Available entities: []'
       );
     });
 
-    test('should handle retrieval errors', async () => {
+    test('should handle retrieval errors', () => {
       const error = new Error('Retrieval failed');
-      mockEntityManager.getEntityInstance.mockRejectedValue(error);
+      mockEntityManager.getEntityInstance.mockImplementation(() => {
+        throw error;
+      });
 
-      await expect(facade.getEntity('test-id')).rejects.toThrow(error);
+      expect(() => facade.getEntity('test-id')).toThrow(error);
     });
   });
 

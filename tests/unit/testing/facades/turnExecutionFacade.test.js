@@ -44,6 +44,7 @@ describe('TurnExecutionFacade', () => {
     createTestWorld: jest.fn(),
     getDispatchedEvents: jest.fn(),
     clearTestData: jest.fn(),
+    dispatchEvent: jest.fn().mockResolvedValue(undefined),
     dispose: jest.fn(),
   };
 
@@ -191,13 +192,14 @@ describe('TurnExecutionFacade', () => {
       mockEntityService.createTestWorld.mockResolvedValue(mockWorld);
       mockEntityService.createTestActor
         .mockResolvedValueOnce('actor-1')
-        .mockResolvedValueOnce('actor-2');
+        .mockResolvedValueOnce('actor-2')
+        .mockResolvedValueOnce('actor-3'); // For the default player actor
 
       const result = await facade.initializeTestEnvironment({
         actors: customActors,
       });
 
-      expect(mockEntityService.createTestActor).toHaveBeenCalledTimes(2);
+      expect(mockEntityService.createTestActor).toHaveBeenCalledTimes(3);
       expect(mockEntityService.createTestActor).toHaveBeenCalledWith({
         id: 'npc1',
         name: 'Guard',
@@ -210,8 +212,10 @@ describe('TurnExecutionFacade', () => {
       expect(result.actors).toEqual({
         npc1: 'actor-1',
         npc2: 'actor-2',
+        playerActorId: 'actor-3',
+        'default-player-actor': 'actor-3',
       });
-      expect(result.actorIds).toEqual(['actor-1', 'actor-2']);
+      expect(result.actorIds).toEqual(['actor-1', 'actor-2', 'actor-3']);
     });
 
     test('should handle error during initialization', async () => {
