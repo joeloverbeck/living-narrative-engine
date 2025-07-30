@@ -27,7 +27,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
 
     mockEntityManager = {
       getComponentData: jest.fn(),
-      getEntityInstance: jest.fn()
+      getEntityInstance: jest.fn(),
     };
 
     mockLogger = {

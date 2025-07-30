@@ -34,7 +34,7 @@ describe('TargetResolutionService error paths', () => {
       scopeEngine: mockScopeEngine,
       entityManager: {
         getComponentData: jest.fn(),
-        getEntityInstance: jest.fn()
+        getEntityInstance: jest.fn(),
       },
       logger: mockLogger,
       safeEventDispatcher: mockSafeDispatcher,

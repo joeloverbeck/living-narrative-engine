@@ -59,7 +59,11 @@ export function formatEntityTarget(
     );
   }
 
-  return { ok: true, value: command.replace('{target}', targetName) };
+  // Check if context has a custom placeholder
+  const placeholder = context.placeholder || 'target';
+  const placeholderPattern = `{${placeholder}}`;
+
+  return { ok: true, value: command.replace(placeholderPattern, targetName) };
 }
 
 /**

@@ -178,11 +178,13 @@ describe('MultiTargetResolutionStage', () => {
       expect(actionWithTargets.actionDef).toBe(actionDef);
       expect(actionWithTargets.targetContexts).toHaveLength(2);
       expect(actionWithTargets.targetContexts[0]).toEqual({
+        type: 'entity',
         entityId: 'item1',
         displayName: 'item1',
         placeholder: 'item',
       });
       expect(actionWithTargets.targetContexts[1]).toEqual({
+        type: 'entity',
         entityId: 'item2',
         displayName: 'item2',
         placeholder: 'item',
@@ -229,7 +231,9 @@ describe('MultiTargetResolutionStage', () => {
           return {
             id: 'npc1',
             getComponent: jest.fn(),
-            getAllComponents: jest.fn().mockReturnValue({ 'core:name': { value: 'NPC 1' } }),
+            getAllComponents: jest
+              .fn()
+              .mockReturnValue({ 'core:name': { value: 'NPC 1' } }),
           };
         }
         return {
@@ -244,8 +248,12 @@ describe('MultiTargetResolutionStage', () => {
       // The new implementation doesn't call buildDependentContext for contextFrom targets
       // Instead, it resolves secondary targets per primary target
       expect(result.data.resolvedTargets.secondary).toHaveLength(2);
-      expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe('npc1');
-      expect(result.data.resolvedTargets.secondary[1].contextFromId).toBe('npc1');
+      expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe(
+        'npc1'
+      );
+      expect(result.data.resolvedTargets.secondary[1].contextFromId).toBe(
+        'npc1'
+      );
     });
 
     it('should handle optional targets', async () => {
@@ -610,6 +618,7 @@ describe('MultiTargetResolutionStage', () => {
       const actionWithTargets = result.data.actionsWithTargets[0];
       expect(actionWithTargets.targetContexts).toBeDefined();
       expect(actionWithTargets.targetContexts).toHaveLength(2);
+      expect(actionWithTargets.targetContexts[0]).toHaveProperty('type');
       expect(actionWithTargets.targetContexts[0]).toHaveProperty('entityId');
       expect(actionWithTargets.targetContexts[0]).toHaveProperty('displayName');
       expect(actionWithTargets.targetContexts[0]).toHaveProperty('placeholder');
@@ -783,10 +792,10 @@ describe('MultiTargetResolutionStage', () => {
                 'core:inventory': { items: ['item_001', 'item_002'] },
               }),
             };
-          return { 
-            id, 
+          return {
+            id,
             getComponent: jest.fn(),
-            getAllComponents: jest.fn().mockReturnValue({})
+            getAllComponents: jest.fn().mockReturnValue({}),
           };
         });
 
@@ -807,8 +816,12 @@ describe('MultiTargetResolutionStage', () => {
         expect(result.success).toBe(true);
         // The new implementation builds specific primary context rather than using buildDependentContext
         expect(result.data.resolvedTargets.secondary).toHaveLength(2);
-        expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe('npc_001');
-        expect(result.data.resolvedTargets.secondary[1].contextFromId).toBe('npc_001');
+        expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe(
+          'npc_001'
+        );
+        expect(result.data.resolvedTargets.secondary[1].contextFromId).toBe(
+          'npc_001'
+        );
       });
 
       it('should handle missing primary target gracefully', async () => {
@@ -879,10 +892,10 @@ describe('MultiTargetResolutionStage', () => {
         mockDeps.entityManager.getEntityInstance.mockImplementation((id) => {
           switch (id) {
             case 'tool_001':
-              return { 
-                id: 'tool_001', 
+              return {
+                id: 'tool_001',
                 getComponent: jest.fn(),
-                getAllComponents: jest.fn().mockReturnValue({})
+                getAllComponents: jest.fn().mockReturnValue({}),
               };
             case 'container_001':
               return {
@@ -895,10 +908,10 @@ describe('MultiTargetResolutionStage', () => {
                 }),
               };
             default:
-              return { 
-                id, 
+              return {
+                id,
                 getComponent: jest.fn(),
-                getAllComponents: jest.fn().mockReturnValue({})
+                getAllComponents: jest.fn().mockReturnValue({}),
               };
           }
         });
@@ -915,8 +928,12 @@ describe('MultiTargetResolutionStage', () => {
         expect(result.success).toBe(true);
         expect(result.data.actionsWithTargets).toHaveLength(1);
         // The new implementation builds specific primary context for each contextFrom target
-        expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe('tool_001');
-        expect(result.data.resolvedTargets.tertiary[0].contextFromId).toBe('container_001');
+        expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe(
+          'tool_001'
+        );
+        expect(result.data.resolvedTargets.tertiary[0].contextFromId).toBe(
+          'container_001'
+        );
       });
     });
 

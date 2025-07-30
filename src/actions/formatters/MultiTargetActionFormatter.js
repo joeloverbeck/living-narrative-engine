@@ -297,36 +297,36 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
    */
   #generateContextDependentCombinations(resolvedTargets, maxCombinations) {
     const combinations = [];
-    
+
     // Find primary targets (those without contextFromId)
     const primaryKey = Object.keys(resolvedTargets).find(
       (key) => !resolvedTargets[key].some((t) => t.contextFromId)
     );
-    
+
     if (!primaryKey) {
       // No primary targets found, can't generate context-dependent combinations
       return [];
     }
-    
+
     const primaryTargets = resolvedTargets[primaryKey];
-    
+
     // For each primary target, create a combination with its dependent targets
     for (const primaryTarget of primaryTargets) {
       if (combinations.length >= maxCombinations) break;
-      
+
       const combination = {
         [primaryKey]: [primaryTarget],
       };
-      
+
       // Find all dependent targets for this primary
       for (const [key, targets] of Object.entries(resolvedTargets)) {
         if (key === primaryKey) continue;
-        
+
         // Find targets that depend on this primary
         const dependentTargets = targets.filter(
           (t) => t.contextFromId === primaryTarget.id
         );
-        
+
         if (dependentTargets.length > 0) {
           combination[key] = dependentTargets;
         } else {
@@ -342,10 +342,10 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
           combination[key] = targets;
         }
       }
-      
+
       combinations.push(combination);
     }
-    
+
     return combinations;
   }
 }

@@ -121,11 +121,11 @@ describe('Dependent Target Resolution Integration', () => {
 
       // Create the item entities that are referenced in the NPC's inventory
       const sword = await entityManager.createEntityInstance('test:sword', {
-        instanceId: 'sword',  // Use the same ID as referenced in inventory
+        instanceId: 'sword', // Use the same ID as referenced in inventory
       });
 
       const potion = await entityManager.createEntityInstance('test:potion', {
-        instanceId: 'potion',  // Use the same ID as referenced in inventory
+        instanceId: 'potion', // Use the same ID as referenced in inventory
       });
 
       // Update room with actor references
@@ -202,9 +202,18 @@ describe('Dependent Target Resolution Integration', () => {
       const result = await multiTargetResolutionStage.executeInternal(context);
 
       // Debug the result
-      console.log('MultiTargetResolutionStage result:', JSON.stringify(result, null, 2));
-      console.log('UnifiedScopeResolver call count:', unifiedScopeResolver.resolve.mock.calls.length);
-      console.log('UnifiedScopeResolver calls:', unifiedScopeResolver.resolve.mock.calls);
+      console.log(
+        'MultiTargetResolutionStage result:',
+        JSON.stringify(result, null, 2)
+      );
+      console.log(
+        'UnifiedScopeResolver call count:',
+        unifiedScopeResolver.resolve.mock.calls.length
+      );
+      console.log(
+        'UnifiedScopeResolver calls:',
+        unifiedScopeResolver.resolve.mock.calls
+      );
       console.log('Resolved targets in result:', result.data.resolvedTargets);
 
       expect(result.success).toBe(true);

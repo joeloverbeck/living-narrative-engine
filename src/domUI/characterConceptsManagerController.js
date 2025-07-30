@@ -1664,7 +1664,7 @@ export class CharacterConceptsManagerController {
 
       // Check if we need to show empty state
       if (this.#conceptsData.length === 0) {
-        this.#uiStateManager.setState('empty');
+        this.#uiStateManager.showState(UI_STATES.EMPTY);
       }
     } catch (error) {
       // Revert optimistic delete on failure
@@ -2995,7 +2995,7 @@ export class CharacterConceptsManagerController {
           this.#elements.conceptsResults?.children?.length === 0 &&
           this.#conceptsData.length === 0
         ) {
-          this.#uiStateManager?.setState('empty');
+          this.#uiStateManager?.showState(UI_STATES.EMPTY);
         }
       }, removeDelay);
     }

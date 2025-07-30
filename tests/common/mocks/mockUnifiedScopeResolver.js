@@ -37,7 +37,6 @@ export function createMockUnifiedScopeResolver(dependencies) {
       // Log that we're resolving the scope
       context?.trace?.info(`Resolving scope '${scopeName}'.`, source);
 
-
       // Validate actor entity (matching UnifiedScopeResolver behavior)
       if (!context || !context.actor) {
         const error = new Error('Resolution context is missing actor entity');
@@ -264,30 +263,42 @@ export function createMockUnifiedScopeResolver(dependencies) {
           actor: actorWithComponents,
           location: context.actorLocation,
         };
-        
+
         // If the context has a target (for dependent scopes), include it
         if (context.target) {
           runtimeCtx.target = context.target;
           console.log('Added target to runtimeCtx:', context.target.id);
           console.log('Target has components:', !!context.target.components);
-          console.log('Target clothing:equipment:', context.target.components?.['clothing:equipment']);
+          console.log(
+            'Target clothing:equipment:',
+            context.target.components?.['clothing:equipment']
+          );
         } else if (context.actionContext?.target) {
           // Also check actionContext for target
           runtimeCtx.target = context.actionContext.target;
-          console.log('Added target from actionContext to runtimeCtx:', context.actionContext.target.id);
+          console.log(
+            'Added target from actionContext to runtimeCtx:',
+            context.actionContext.target.id
+          );
         }
 
         // Resolve scope
         console.log('Calling scopeEngine.resolve with:');
         console.log('  Actor:', actorWithComponents.id);
-        console.log('  Actor components:', Object.keys(actorWithComponents.components || {}));
+        console.log(
+          '  Actor components:',
+          Object.keys(actorWithComponents.components || {})
+        );
         console.log('  Scope expression:', scopeDefinition.expr);
         console.log('  RuntimeCtx has target:', !!runtimeCtx.target);
         if (runtimeCtx.target) {
           console.log('  Target ID:', runtimeCtx.target.id);
-          console.log('  Target has clothing:equipment:', !!runtimeCtx.target.components?.['clothing:equipment']);
+          console.log(
+            '  Target has clothing:equipment:',
+            !!runtimeCtx.target.components?.['clothing:equipment']
+          );
         }
-        
+
         let resolvedIds;
         try {
           resolvedIds = scopeEngine.resolve(
@@ -296,7 +307,10 @@ export function createMockUnifiedScopeResolver(dependencies) {
             runtimeCtx,
             context.trace
           );
-          console.log('scopeEngine.resolve returned:', Array.from(resolvedIds || []));
+          console.log(
+            'scopeEngine.resolve returned:',
+            Array.from(resolvedIds || [])
+          );
         } catch (scopeError) {
           console.log('scopeEngine.resolve threw error:', scopeError.message);
           console.log('Error stack:', scopeError.stack);
@@ -372,7 +386,6 @@ function buildActorWithComponents(
   source,
   logger
 ) {
-
   if (!actorEntity) {
     return null;
   }

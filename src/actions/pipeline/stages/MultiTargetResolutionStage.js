@@ -95,6 +95,8 @@ export class MultiTargetResolutionStage extends PipelineStage {
     let lastResolvedTargets = null;
     let lastTargetDefinitions = null;
     let allTargetContexts = [];
+    let hasLegacyActions = false;
+    let hasMultiTargetActions = false;
 
     // Process each candidate action
     for (const actionDef of candidateActions) {
@@ -112,6 +114,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
         // Check if this is a legacy single-target action
         if (this.#isLegacyAction(actionDef)) {
+          hasLegacyActions = true;
           const result = await this.#resolveLegacyTarget(
             actionProcessContext,
             trace
@@ -125,6 +128,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
           }
         } else {
           // Resolve multi-target action
+          hasMultiTargetActions = true;
           const result = await this.#resolveMultiTargets(
             actionProcessContext,
             trace
@@ -172,10 +176,15 @@ export class MultiTargetResolutionStage extends PipelineStage {
     if (allTargetContexts.length > 0) {
       resultData.targetContexts = allTargetContexts;
     }
-    if (lastResolvedTargets) {
+    // Only pass resolvedTargets and targetDefinitions if ALL actions are multi-target format
+    // If we have a mix of legacy and multi-target, don't pass these fields to avoid confusion
+    if (
+      hasMultiTargetActions &&
+      !hasLegacyActions &&
+      lastResolvedTargets &&
+      lastTargetDefinitions
+    ) {
       resultData.resolvedTargets = lastResolvedTargets;
-    }
-    if (lastTargetDefinitions) {
       resultData.targetDefinitions = lastTargetDefinitions;
     }
 
@@ -393,6 +402,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
         // Add to flat list for backward compatibility
         resolvedSecondaryTargets.forEach((target) => {
           allTargetContexts.push({
+            type: 'entity',
             entityId: target.id,
             displayName: target.displayName,
             placeholder: targetDef.placeholder,
@@ -455,6 +465,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
         // Add to flat list for backward compatibility
         resolvedTargets[targetKey].forEach((target) => {
           allTargetContexts.push({
+            type: 'entity',
             entityId: target.id,
             displayName: target.displayName,
             placeholder: targetDef.placeholder,
@@ -601,10 +612,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
     // Build context with the specific primary target
     const context = { ...baseContext };
-    
+
     // Add all resolved targets
     context.targets = { ...resolvedTargets };
-    
+
     // Add the specific primary as the 'target' for scope evaluation
     if (specificPrimary) {
       // Build entity context manually since buildEntityContext is private
@@ -694,7 +705,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
       // Try common name sources
       const name =
-        entity.getComponentData('core:name')?.value ||
+        entity.getComponentData('core:name')?.text ||
         entity.getComponentData('core:description')?.name ||
         entity.getComponentData('core:actor')?.name ||
         entity.getComponentData('core:item')?.name ||

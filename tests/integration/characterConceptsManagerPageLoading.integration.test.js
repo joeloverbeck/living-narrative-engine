@@ -224,16 +224,28 @@ describe('Character Concepts Manager Page Loading Integration', () => {
       await import('../../src/character-concepts-manager-main.js');
     });
 
-    // Wait for initialization and DOM updates
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait for initialization and DOM updates with retry logic
+    const maxRetries = 10;
+    const retryDelay = 50;
+    let errorContainer = null;
+    let retryCount = 0;
 
-    // Check if error container was created
-    const errorContainer = document.getElementById('init-error-container');
+    // Retry until we find the error container or console errors, or max retries reached
+    while (retryCount < maxRetries) {
+      errorContainer = document.getElementById('init-error-container');
+      if (errorContainer || consoleErrorSpy.mock.calls.length > 0) {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      retryCount++;
+    }
+
+    // Now check the conditions - at least one should be true
     if (errorContainer) {
       expect(errorContainer.innerHTML).toContain('Initialization Error');
       expect(errorContainer.innerHTML).toContain('Character Concepts Manager');
     } else {
-      // If no error container, at least verify the module tried to initialize
+      // If no error container, verify the module tried to initialize
       // by checking for console errors
       expect(consoleErrorSpy).toHaveBeenCalled();
     }
