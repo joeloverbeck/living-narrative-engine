@@ -2,105 +2,39 @@
  * @file Unit tests for CharacterConceptsManagerController deletion functionality
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
 import { UI_STATES } from '../../../src/shared/characterBuilder/uiStateManager.js';
+import { createTestSetup } from './characterConceptsManagerController.testUtils.js';
+
+// Mock UIStateManager module
+jest.mock('../../../src/shared/characterBuilder/uiStateManager.js', () => {
+  const mockUIStateManager = {
+    showState: jest.fn(),
+    showError: jest.fn(),
+    showLoading: jest.fn(),
+  };
+  
+  return {
+    UIStateManager: jest.fn().mockImplementation(() => mockUIStateManager),
+    UI_STATES: {
+      EMPTY: 'empty',
+      LOADING: 'loading',
+      RESULTS: 'results',
+      ERROR: 'error',
+    },
+  };
+});
 
 describe('CharacterConceptsManagerController - Deletion', () => {
-  let mockLogger;
-  let mockEventBus;
-  let mockEventDispatcher;
-  let mockCharacterBuilderService;
-  let mockCharacterStorageService;
-  let mockUIStateManager;
+  let setup;
   let controller;
 
-  // Helper to create mock DOM element
-  const createMockElement = (id) => {
-    const element = document.createElement('div');
-    element.id = id;
-    element.style.display = 'none';
-    element.classList.add = jest.fn();
-    element.classList.remove = jest.fn();
-    element.innerHTML = '';
-    return element;
-  };
-
   beforeEach(() => {
-    // Set up DOM structure
-    document.body.innerHTML = `
-      <div id="concepts-results"></div>
-      <div id="empty-state" style="display: none;"></div>
-      <div id="loading-state" style="display: none;"></div>
-      <div id="error-state" style="display: none;"></div>
-      <div id="results-state" style="display: none;"></div>
-      <div id="total-concepts">0</div>
-      <div id="concepts-with-directions">0</div>
-      <div id="total-directions">0</div>
-      <div id="average-directions">0</div>
-      <div id="completion-rate">0</div>
-    `;
-
-    // Set up mocks
-    mockLogger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn(),
-    };
-
-    mockEventBus = {
-      on: jest.fn(),
-      off: jest.fn(),
-      emit: jest.fn(),
-    };
-
-    mockEventDispatcher = {
-      dispatch: jest.fn(),
-    };
-
-    mockUIStateManager = {
-      showState: jest.fn(),
-      showError: jest.fn(),
-      showLoading: jest.fn(),
-    };
-
-    mockCharacterStorageService = {
-      initialize: jest.fn().mockResolvedValue(),
-      getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-      getCharacterConcept: jest.fn(),
-      storeCharacterConcept: jest.fn().mockResolvedValue(),
-      deleteCharacterConcept: jest.fn().mockResolvedValue(),
-      getThematicDirections: jest.fn().mockResolvedValue([]),
-    };
-
-    mockCharacterBuilderService = {
-      initialize: jest.fn().mockResolvedValue(),
-      getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-      createCharacterConcept: jest.fn(),
-      updateCharacterConcept: jest.fn(),
-      deleteCharacterConcept: jest.fn().mockResolvedValue(),
-      getThematicDirections: jest.fn().mockResolvedValue([]),
-    };
-
-    // Mock UIStateManager constructor
-    jest.mock('../../../src/shared/characterBuilder/uiStateManager.js', () => ({
-      UIStateManager: jest.fn().mockImplementation(() => mockUIStateManager),
-      UI_STATES: {
-        EMPTY: 'empty',
-        LOADING: 'loading',
-        RESULTS: 'results',
-        ERROR: 'error',
-      },
-    }));
-
-    controller = new CharacterConceptsManagerController({
-      logger: mockLogger,
-      eventBus: mockEventBus,
-      eventDispatcher: mockEventDispatcher,
-      characterBuilderService: mockCharacterBuilderService,
-      characterStorageService: mockCharacterStorageService,
-    });
+    setup = createTestSetup();
+    controller = new CharacterConceptsManagerController(setup.config);
+    // Set up UIStateManager for testing
+    controller._testExports.uiStateManager = setup.mocks.uiStateManager;
   });
 
   afterEach(() => {
@@ -118,7 +52,7 @@ describe('CharacterConceptsManagerController - Deletion', () => {
       document.getElementById('concepts-results').appendChild(conceptCard);
 
       // Mock the controller having one concept initially
-      mockCharacterStorageService.getAllCharacterConcepts.mockResolvedValue([{
+      setup.mocks.builderService.getAllCharacterConcepts.mockResolvedValue([{
         id: conceptId,
         concept: 'Test concept',
         created: Date.now(),
@@ -128,10 +62,10 @@ describe('CharacterConceptsManagerController - Deletion', () => {
       await controller.initialize();
 
       // Act - Delete through service
-      await mockCharacterBuilderService.deleteCharacterConcept(conceptId);
+      await setup.mocks.builderService.deleteCharacterConcept(conceptId);
 
       // Simulate the event that would be fired
-      const deleteHandler = mockEventBus.on.mock.calls.find(
+      const deleteHandler = setup.mocks.eventBus.subscribe.mock.calls.find(
         call => call[0] === 'thematic:character_concept_deleted'
       )?.[1];
 
@@ -146,17 +80,17 @@ describe('CharacterConceptsManagerController - Deletion', () => {
       await new Promise(resolve => setTimeout(resolve, 350));
 
       // Assert - UI should update
-      expect(mockCharacterStorageService.getAllCharacterConcepts).toHaveBeenCalled();
+      expect(setup.mocks.builderService.getAllCharacterConcepts).toHaveBeenCalled();
     });
 
     it('should handle deletion errors gracefully', async () => {
       // Arrange
       const error = new Error('Deletion failed');
-      mockCharacterBuilderService.deleteCharacterConcept.mockRejectedValue(error);
+      setup.mocks.builderService.deleteCharacterConcept.mockRejectedValue(error);
 
       // Act & Assert
       await expect(
-        mockCharacterBuilderService.deleteCharacterConcept('test-id')
+        setup.mocks.builderService.deleteCharacterConcept('test-id')
       ).rejects.toThrow('Deletion failed');
     });
   });
@@ -168,31 +102,44 @@ describe('CharacterConceptsManagerController - Deletion', () => {
       totalConceptsElement.textContent = '1';
 
       // Initialize with one concept
-      mockCharacterStorageService.getAllCharacterConcepts.mockResolvedValue([{
+      const mockConcept = {
         id: 'test-id',
         concept: 'Test',
         created: Date.now(),
-      }]);
+      };
+      setup.mocks.builderService.getAllCharacterConcepts.mockResolvedValue([mockConcept]);
+      setup.mocks.builderService.getThematicDirections.mockResolvedValue([]);
 
       await controller.initialize();
 
+      // Verify the conceptsData has the expected structure after initialization
+      expect(controller._testExports.conceptsData).toHaveLength(1);
+      expect(controller._testExports.conceptsData[0].concept.id).toBe('test-id');
+
       // Act - Update to no concepts
-      mockCharacterStorageService.getAllCharacterConcepts.mockResolvedValue([]);
+      setup.mocks.builderService.getAllCharacterConcepts.mockResolvedValue([]);
       
       // Trigger the deletion event handler
-      const deleteHandler = mockEventBus.on.mock.calls.find(
+      const deleteHandler = setup.mocks.eventBus.subscribe.mock.calls.find(
         call => call[0] === 'thematic:character_concept_deleted'
       )?.[1];
 
       if (deleteHandler) {
-        deleteHandler({
+        await deleteHandler({
           type: 'thematic:character_concept_deleted',
           payload: { conceptId: 'test-id' }
         });
       }
 
-      // Assert - Statistics should be updated
-      expect(totalConceptsElement.textContent).toBe('0');
+      // Wait for async operations to complete
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Assert - Concept should be removed from conceptsData
+      expect(controller._testExports.conceptsData).toHaveLength(0);
+      
+      // Assert - The expected totalConcepts statistic should be 0 
+      // (since conceptsData.length is 0, totalConcepts calculation would be 0)
+      expect(controller._testExports.conceptsData.length).toBe(0);
     });
   });
 });

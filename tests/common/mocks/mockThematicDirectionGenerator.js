@@ -13,6 +13,10 @@ export class MockThematicDirectionGenerator {
   /**
    * Mock implementation that returns empty array by default
    * Can be configured in tests using mockReturnValue or mockImplementation
+   *
+   * @param conceptId
+   * @param characterDescription
+   * @param options
    */
   async generateDirections(conceptId, characterDescription, options = {}) {
     // Default mock implementation returns empty array

@@ -188,6 +188,14 @@ export class CharacterConceptsManagerController {
         // Modal display methods for testing
         showCreateModal: this.#showCreateModal.bind(this),
         showEditModal: this.#showEditModal.bind(this),
+
+        // CRUD operations for testing
+        createConcept: this.#createConcept.bind(this),
+        handleConceptSave: this.#handleConceptSave.bind(this),
+        removeConceptCard: this.#removeConceptCard.bind(this),
+
+        // Data loading alias for testing
+        loadData: this.#loadConceptsData.bind(this),
       };
     }
 
