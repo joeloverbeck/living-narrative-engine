@@ -439,11 +439,7 @@ describe('MultiTargetActionFormatter - Integration Tests', () => {
       );
 
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('Multi-target formatting failed');
-      expect(logger.error).toHaveBeenCalledWith(
-        'Error in multi-target formatting:',
-        expect.any(Error)
-      );
+      expect(result.error).toContain('Invalid or missing resolvedTargets');
     });
 
     it('should handle circular entity references', async () => {
@@ -534,10 +530,9 @@ describe('MultiTargetActionFormatter - Integration Tests', () => {
         { targetDefinitions }
       );
 
-      expect(result.ok).toBe(true);
-      expect(result.value).toBe(
-        'activate Test Entity and {object} with {thing}'
-      );
+      // The formatter now enforces strict validation - actions with unresolved placeholders fail
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain('unresolved placeholders');
     });
 
     it('should use correct fallback placeholders for secondary targets', async () => {
@@ -566,10 +561,9 @@ describe('MultiTargetActionFormatter - Integration Tests', () => {
         { targetDefinitions }
       );
 
-      expect(result.ok).toBe(true);
-      expect(result.value).toBe(
-        'send Message to Person at {destination} for {recipient}'
-      );
+      // The formatter now enforces strict validation - actions with unresolved placeholders fail
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain('unresolved placeholders');
     });
 
     it('should handle templates with no standard placeholders', async () => {
