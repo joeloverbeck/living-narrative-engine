@@ -80,6 +80,21 @@ describe('Dependent Target Resolution Integration', () => {
         },
       });
 
+      // Define the item entities that will be in the inventory
+      const swordDef = new EntityDefinition('test:sword', {
+        description: 'Test sword',
+        components: {
+          'core:item': { name: 'Steel Sword', type: 'weapon' },
+        },
+      });
+
+      const potionDef = new EntityDefinition('test:potion', {
+        description: 'Test potion',
+        components: {
+          'core:item': { name: 'Health Potion', type: 'consumable' },
+        },
+      });
+
       const roomDef = new EntityDefinition('test:room', {
         description: 'Test room',
         components: {
@@ -89,7 +104,7 @@ describe('Dependent Target Resolution Integration', () => {
       });
 
       // Setup definitions
-      testBed.setupDefinitions(playerDef, npcDef, roomDef);
+      testBed.setupDefinitions(playerDef, npcDef, roomDef, swordDef, potionDef);
 
       // Create entities
       const player = await entityManager.createEntityInstance('test:player', {
@@ -102,6 +117,15 @@ describe('Dependent Target Resolution Integration', () => {
 
       const room = await entityManager.createEntityInstance('test:room', {
         instanceId: 'room-001',
+      });
+
+      // Create the item entities that are referenced in the NPC's inventory
+      const sword = await entityManager.createEntityInstance('test:sword', {
+        instanceId: 'sword',  // Use the same ID as referenced in inventory
+      });
+
+      const potion = await entityManager.createEntityInstance('test:potion', {
+        instanceId: 'potion',  // Use the same ID as referenced in inventory
       });
 
       // Update room with actor references
@@ -136,19 +160,34 @@ describe('Dependent Target Resolution Integration', () => {
 
       // Mock target context builder
       targetContextBuilder.buildBaseContext.mockReturnValue({
-        actor: player,
-        location: room,
+        actor: {
+          id: player.id,
+          components: player.getAllComponents ? player.getAllComponents() : {},
+        },
+        location: {
+          id: room.id,
+          components: room.getAllComponents ? room.getAllComponents() : {},
+        },
         game: { turnNumber: 1 },
       });
 
       targetContextBuilder.buildDependentContext.mockReturnValue({
-        actor: player,
-        location: room,
+        actor: {
+          id: player.id,
+          components: player.getAllComponents ? player.getAllComponents() : {},
+        },
+        location: {
+          id: room.id,
+          components: room.getAllComponents ? room.getAllComponents() : {},
+        },
         game: { turnNumber: 1 },
         targets: {
           primary: [{ id: 'npc-001', displayName: 'Alice', entity: npc }],
         },
-        target: npc,
+        target: {
+          id: npc.id,
+          components: npc.getAllComponents ? npc.getAllComponents() : {},
+        },
       });
 
       // Create context for the stage
@@ -161,6 +200,12 @@ describe('Dependent Target Resolution Integration', () => {
 
       // Execute the stage
       const result = await multiTargetResolutionStage.executeInternal(context);
+
+      // Debug the result
+      console.log('MultiTargetResolutionStage result:', JSON.stringify(result, null, 2));
+      console.log('UnifiedScopeResolver call count:', unifiedScopeResolver.resolve.mock.calls.length);
+      console.log('UnifiedScopeResolver calls:', unifiedScopeResolver.resolve.mock.calls);
+      console.log('Resolved targets in result:', result.data.resolvedTargets);
 
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toBeDefined();

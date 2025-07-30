@@ -232,7 +232,20 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         .map((target) => ({ [key]: [target] }));
     }
 
-    // For multiple target types, create cartesian product (limited)
+    // Check if any targets have contextFromId (dependent targets)
+    const hasDependentTargets = Object.values(resolvedTargets).some((targets) =>
+      targets.some((t) => t.contextFromId)
+    );
+
+    if (hasDependentTargets) {
+      // Handle context-dependent combinations
+      return this.#generateContextDependentCombinations(
+        resolvedTargets,
+        maxCombinations
+      );
+    }
+
+    // For multiple target types without dependencies, create cartesian product (limited)
     const combinations = [];
 
     // Create arrays of valid targets for each key
@@ -271,6 +284,68 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     };
 
     generateCartesian(targetArrays);
+    return combinations;
+  }
+
+  /**
+   * Generate combinations respecting contextFromId dependencies
+   *
+   * @param {Object<string, ResolvedTarget[]>} resolvedTargets - Resolved targets by definition name
+   * @param {number} maxCombinations - Maximum number of combinations to generate
+   * @returns {Array<object>} Array of target combinations
+   * @private
+   */
+  #generateContextDependentCombinations(resolvedTargets, maxCombinations) {
+    const combinations = [];
+    
+    // Find primary targets (those without contextFromId)
+    const primaryKey = Object.keys(resolvedTargets).find(
+      (key) => !resolvedTargets[key].some((t) => t.contextFromId)
+    );
+    
+    if (!primaryKey) {
+      // No primary targets found, can't generate context-dependent combinations
+      return [];
+    }
+    
+    const primaryTargets = resolvedTargets[primaryKey];
+    
+    // For each primary target, create a combination with its dependent targets
+    for (const primaryTarget of primaryTargets) {
+      if (combinations.length >= maxCombinations) break;
+      
+      const combination = {
+        [primaryKey]: [primaryTarget],
+      };
+      
+      // Find all dependent targets for this primary
+      for (const [key, targets] of Object.entries(resolvedTargets)) {
+        if (key === primaryKey) continue;
+        
+        // Find targets that depend on this primary
+        const dependentTargets = targets.filter(
+          (t) => t.contextFromId === primaryTarget.id
+        );
+        
+        if (dependentTargets.length > 0) {
+          combination[key] = dependentTargets;
+        } else {
+          // If no dependent targets found for this key, check if it's optional
+          // For now, skip this combination if a required target is missing
+          const allHaveContextFrom = targets.every((t) => t.contextFromId);
+          if (allHaveContextFrom && targets.length > 0) {
+            // This is a dependent target type but none match this primary
+            // Skip this combination
+            continue;
+          }
+          // Otherwise, this might be an independent target, include all
+          combination[key] = targets;
+        }
+      }
+      
+      combinations.push(combination);
+    }
+    
     return combinations;
   }
 }
