@@ -63,12 +63,23 @@ async function copyDirectory(src, dest, onProgress) {
     const relativePath = path.relative(src, file);
     const destPath = path.join(dest, relativePath);
 
-    await fs.ensureDir(path.dirname(destPath));
-    await fs.copy(file, destPath, { overwrite: true });
+    try {
+      await fs.ensureDir(path.dirname(destPath));
+      await fs.copy(file, destPath, { overwrite: true });
 
-    copied++;
-    if (onProgress) {
-      onProgress(copied, files.length, file);
+      copied++;
+      if (onProgress) {
+        onProgress(copied, files.length, file);
+      }
+    } catch (error) {
+      // Check if this is a private mod (p_*) that we should skip silently
+      const pathParts = relativePath.split(path.sep);
+      if (pathParts.some(part => part.startsWith('p_'))) {
+        // Silently skip files in private mods
+        continue;
+      }
+      // Re-throw error for non-private content
+      throw error;
     }
   }
 }
@@ -91,12 +102,23 @@ async function getAllFiles(dir) {
 
     for (const item of items) {
       const fullPath = path.join(currentDir, item);
-      const stat = await fs.stat(fullPath);
+      
+      try {
+        const stat = await fs.stat(fullPath);
 
-      if (stat.isDirectory()) {
-        await traverse(fullPath);
-      } else {
-        files.push(fullPath);
+        if (stat.isDirectory()) {
+          await traverse(fullPath);
+        } else {
+          files.push(fullPath);
+        }
+      } catch (error) {
+        // Silently skip inaccessible items that start with "p_"
+        // This handles broken symlinks to private repositories
+        if (item.startsWith('p_')) {
+          continue;
+        }
+        // Re-throw error for non-private content
+        throw error;
       }
     }
   }

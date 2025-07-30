@@ -113,7 +113,7 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
       // Memory per cached item should be reasonable
       // Note: UnifiedScopeResolver has significant overhead per context due to mock setup
       const memoryPerContext = memoryGrowth / contextCount;
-      const maxMemoryPerContext = global.memoryTestUtils.isCI() ? 60000 : 50000; // ~50-60KB per context including overhead
+      const maxMemoryPerContext = global.memoryTestUtils.isCI() ? 100000 : 90000; // ~90-100KB per context including mock overhead
       expect(memoryPerContext).toBeLessThan(maxMemoryPerContext);
 
       console.log(

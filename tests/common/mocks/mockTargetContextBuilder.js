@@ -27,16 +27,34 @@ export function createMockTargetContextBuilder(entityManager) {
     buildDependentContext: jest
       .fn()
       .mockImplementation((baseContext, resolvedTargets, targetDef) => {
-        return {
+        const dependentContext = {
           ...baseContext,
           resolvedTargets,
           targetDef,
-          // Include resolved target data for dependent scopes
-          ...Object.entries(resolvedTargets).reduce((acc, [key, targets]) => {
-            acc[key] = targets;
-            return acc;
-          }, {}),
         };
+        
+        // Include resolved target data for dependent scopes
+        // For contextFrom: "primary", add the primary target as "target"
+        if (targetDef?.contextFrom === 'primary' && resolvedTargets.primary) {
+          const primaryTargets = Array.from(resolvedTargets.primary);
+          if (primaryTargets.length > 0) {
+            const primaryTarget = primaryTargets[0];
+            // Check if primaryTarget is already an entity object or just an ID
+            if (typeof primaryTarget === 'object' && primaryTarget.entity) {
+              // It's a resolved target object with entity property
+              dependentContext.target = primaryTarget.entity;
+            } else if (typeof primaryTarget === 'string') {
+              // It's just an ID, so get the entity
+              const targetEntity = entityManager?.getEntityInstance?.(primaryTarget);
+              dependentContext.target = targetEntity || { id: primaryTarget, components: {} };
+            } else if (typeof primaryTarget === 'object' && primaryTarget.id) {
+              // It's already an entity object
+              dependentContext.target = primaryTarget;
+            }
+          }
+        }
+        
+        return dependentContext;
       }),
   };
 }

@@ -22,6 +22,7 @@ describe('Follow Action Debug Test', () => {
         }
         return null;
       }),
+      getEntityInstance: jest.fn(() => null), // Return null to trigger fallback to componentTypeIds
     };
 
     const mockScopeEngine = {
