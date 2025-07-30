@@ -11,6 +11,7 @@ The Living Narrative Engine uses an event-driven architecture where actions can 
 ### Scope
 
 This specification covers:
+
 - Multi-level effect chain testing
 - Circular effect detection and prevention
 - Cross-system effect propagation validation
@@ -62,7 +63,9 @@ User Input → CommandProcessor → ATTEMPT_ACTION_ID Event
 ### 1. Multi-Level Effect Chains
 
 #### 1.1 Explosion Chain Reaction
+
 **Scenario**: Throwing an explosive triggers multiple levels of effects
+
 ```
 Action: Throw Bomb
   → Event: EXPLOSION_TRIGGERED
@@ -76,13 +79,16 @@ Action: Throw Bomb
 ```
 
 **Test Requirements**:
+
 - Track all events in sequence
 - Verify each level processes correctly
 - Validate final state matches expected cascade
 - Ensure no events are lost or duplicated
 
 #### 1.2 Status Effect Propagation
+
 **Scenario**: Poison spreads through contact
+
 ```
 Action: Apply Poison
   → Event: STATUS_EFFECT_APPLIED
@@ -95,6 +101,7 @@ Action: Apply Poison
 ```
 
 **Test Requirements**:
+
 - Verify recursive spread with proper termination
 - Validate effect strength decay over distance/time
 - Ensure no infinite loops
@@ -103,7 +110,9 @@ Action: Apply Poison
 ### 2. Circular Effect Prevention
 
 #### 2.1 Mutual Damage Reflection
+
 **Scenario**: Two entities with damage reflection attacking each other
+
 ```
 Entity A attacks Entity B
   → B reflects damage to A
@@ -112,19 +121,23 @@ Entity A attacks Entity B
 ```
 
 **Test Requirements**:
+
 - Implement cycle detection mechanism
 - Verify cycle is broken at appropriate point
 - Validate partial effects are still applied
 - Log cycle detection for debugging
 
 #### 2.2 Follow Command Cycles
+
 **Scenario**: Preventing circular follow relationships
+
 ```
 A follows B → B follows C → C attempts to follow A
   → System must reject creating cycle
 ```
 
 **Test Requirements**:
+
 - Validate cycle prevention logic
 - Ensure clear error messaging
 - Verify existing relationships remain intact
@@ -133,7 +146,9 @@ A follows B → B follows C → C attempts to follow A
 ### 3. Cross-System Effect Propagation
 
 #### 3.1 Combat to Economy Chain
+
 **Scenario**: Defeating merchant affects trade prices
+
 ```
 Action: Kill Merchant
   → Event: ENTITY_KILLED
@@ -147,13 +162,16 @@ Action: Kill Merchant
 ```
 
 **Test Requirements**:
+
 - Verify effects cross system boundaries correctly
 - Validate all dependent systems update
 - Ensure consistency across all affected entities
 - Test with multiple merchants/markets
 
 #### 3.2 Environmental Chain Reaction
+
 **Scenario**: Fire spreading through environment
+
 ```
 Action: Cast Fireball
   → Event: FIRE_DAMAGE_APPLIED
@@ -167,6 +185,7 @@ Action: Cast Fireball
 ```
 
 **Test Requirements**:
+
 - Model environmental propagation accurately
 - Validate spatial calculations
 - Ensure performance with many objects
@@ -175,7 +194,9 @@ Action: Cast Fireball
 ### 4. Performance Validation
 
 #### 4.1 Deep Effect Trees
+
 **Scenario**: Actions creating effects 10+ levels deep
+
 ```
 Initial Action
   → Level 1: 5 effects
@@ -185,6 +206,7 @@ Initial Action
 ```
 
 **Test Requirements**:
+
 - Measure execution time at each level
 - Monitor memory usage growth
 - Validate all effects execute correctly
@@ -194,7 +216,9 @@ Initial Action
   - Linear time complexity preferred
 
 #### 4.2 Broad Effect Trees
+
 **Scenario**: Single action affecting 100+ entities
+
 ```
 Action: Area spell hitting dense crowd
   → 100 simultaneous DAMAGE_APPLIED events
@@ -203,6 +227,7 @@ Action: Area spell hitting dense crowd
 ```
 
 **Test Requirements**:
+
 - Measure total execution time
 - Verify no race conditions
 - Validate consistent state updates
@@ -211,7 +236,9 @@ Action: Area spell hitting dense crowd
 ### 5. Transaction Consistency
 
 #### 5.1 All-or-Nothing Execution
+
 **Scenario**: Complex trade with multiple conditions
+
 ```
 Action: Complex Trade
   → Check all prerequisites
@@ -220,6 +247,7 @@ Action: Complex Trade
 ```
 
 **Test Requirements**:
+
 - Verify complete rollback on failure
 - Ensure no partial state changes
 - Validate rollback events are dispatched
@@ -239,10 +267,10 @@ describe('Complex Action Side Effects Propagation E2E', () => {
   beforeEach(async () => {
     facades = createMockFacades({}, jest.fn);
     turnExecutionFacade = facades.turnExecutionFacade;
-    
+
     // Initialize event tracking
     eventTracker = new CascadingEventTracker(facades.eventBus);
-    
+
     // Initialize state capture
     stateCapture = new GameStateCapture(facades.entityManager);
   });
@@ -251,19 +279,19 @@ describe('Complex Action Side Effects Propagation E2E', () => {
     test('should propagate explosion effects through multiple levels', async () => {
       // Setup test scenario
       const testEnv = await createExplosionScenario(facades);
-      
+
       // Capture initial state
       const stateBefore = await stateCapture.capture();
-      
+
       // Execute action
       const result = await turnExecutionFacade.executeAction(
         testEnv.actor,
         'throw bomb at enemy group'
       );
-      
+
       // Track cascading events
       const eventChain = eventTracker.getCascadeChain('EXPLOSION_TRIGGERED');
-      
+
       // Validate effect propagation
       expect(eventChain).toMatchEffectPattern({
         root: 'EXPLOSION_TRIGGERED',
@@ -274,13 +302,13 @@ describe('Complex Action Side Effects Propagation E2E', () => {
             children: [
               {
                 event: 'ENTITY_DAMAGED',
-                validator: (e) => e.payload.damage > 0
-              }
-            ]
-          }
-        ]
+                validator: (e) => e.payload.damage > 0,
+              },
+            ],
+          },
+        ],
       });
-      
+
       // Verify final state
       const stateAfter = await stateCapture.capture();
       validateExplosionOutcome(stateBefore, stateAfter, testEnv);
@@ -296,7 +324,7 @@ class CascadingEventTracker {
   constructor(eventBus) {
     this.events = [];
     this.eventChains = new Map();
-    
+
     // Intercept all events
     this.originalDispatch = eventBus.dispatch;
     eventBus.dispatch = async (type, payload) => {
@@ -304,17 +332,17 @@ class CascadingEventTracker {
       return this.originalDispatch.call(eventBus, type, payload);
     };
   }
-  
+
   trackEvent(event) {
     this.events.push(event);
     this.buildEventChains(event);
   }
-  
+
   buildEventChains(event) {
     // Logic to build parent-child relationships between events
     // Based on correlation IDs or temporal proximity
   }
-  
+
   getCascadeChain(rootEventType) {
     // Return tree structure of cascading events
   }
@@ -329,10 +357,10 @@ class GameStateCapture {
     return {
       entities: await this.captureAllEntities(),
       timestamp: Date.now(),
-      eventCount: this.getEventCount()
+      eventCount: this.getEventCount(),
     };
   }
-  
+
   compareStates(before, after, expectations) {
     // Deep comparison with expected changes
   }
@@ -347,26 +375,26 @@ class EffectPerformanceMonitor {
     this.metrics = {
       eventCounts: new Map(),
       executionTimes: new Map(),
-      memorySnapshots: []
+      memorySnapshots: [],
     };
   }
-  
+
   async measureEffectChain(actionFn) {
     const startMemory = process.memoryUsage();
     const startTime = performance.now();
-    
+
     const result = await actionFn();
-    
+
     const endTime = performance.now();
     const endMemory = process.memoryUsage();
-    
+
     return {
       result,
       metrics: {
         duration: endTime - startTime,
         memoryDelta: endMemory.heapUsed - startMemory.heapUsed,
-        eventCount: this.getEventCount()
-      }
+        eventCount: this.getEventCount(),
+      },
     };
   }
 }
@@ -375,24 +403,28 @@ class EffectPerformanceMonitor {
 ## Validation Requirements
 
 ### Event Chain Validation
+
 - All events in a chain must be correlated
 - Parent events must complete before children start
 - No events should be lost or duplicated
 - Circular references must be detected and logged
 
 ### State Consistency Validation
+
 - Entity states must be internally consistent
 - Cross-entity relationships must be valid
 - No partial updates should remain after completion
 - Rollbacks must restore exact previous state
 
 ### Performance Validation
+
 - Effect chains must complete within time bounds
 - Memory usage must scale linearly with effect count
 - No memory leaks from circular references
 - Performance degradation must be gradual, not cliff-like
 
 ### Error Handling Validation
+
 - Errors at any level must not break the chain
 - Partial successes must be handled gracefully
 - Error events must be dispatched for observability
@@ -410,13 +442,13 @@ The implementation will be considered complete when:
 
 ## Performance Benchmarks
 
-| Scenario | Target | Maximum |
-|----------|--------|---------|
-| 5-level effect chain | 50ms | 100ms |
-| 10-level effect chain | 200ms | 500ms |
-| 100 entity area effect | 500ms | 1000ms |
-| Circular detection | 5ms | 10ms |
-| State rollback | 20ms | 50ms |
+| Scenario               | Target | Maximum |
+| ---------------------- | ------ | ------- |
+| 5-level effect chain   | 50ms   | 100ms   |
+| 10-level effect chain  | 200ms  | 500ms   |
+| 100 entity area effect | 500ms  | 1000ms  |
+| Circular detection     | 5ms    | 10ms    |
+| State rollback         | 20ms   | 50ms    |
 
 ## Testing Best Practices
 

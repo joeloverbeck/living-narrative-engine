@@ -23,7 +23,7 @@ ActionDiscoveryService → ActionPipelineOrchestrator → Pipeline Stages → Re
                                     ↓
                         [ComponentFilteringStage]
                                     ↓
-                        [PrerequisiteEvaluationStage]  
+                        [PrerequisiteEvaluationStage]
                                     ↓
                         [MultiTargetResolutionStage] ← ScopeDSL Engine Integration
                                     ↓
@@ -55,6 +55,7 @@ ActionDiscoveryService → ActionPipelineOrchestrator → Pipeline Stages → Re
 The integration between the action pipeline and Scope DSL system is sophisticated:
 
 **Integration Flow:**
+
 ```
 MultiTargetResolutionStage → UnifiedScopeResolver → ScopeEngine → Target Results
                                     ↓
@@ -104,6 +105,7 @@ CommandProcessingWorkflow → CommandProcessor → ActionDiscoveryService
 ### 1. Action Discovery Workflow
 
 **Primary Flow:**
+
 1. `ActionDiscoveryService.getValidActions()` receives actor entity and context
 2. Context preparation with location resolution via `getActorLocation()`
 3. Pipeline orchestrator creates and executes 4-stage pipeline
@@ -111,9 +113,10 @@ CommandProcessingWorkflow → CommandProcessor → ActionDiscoveryService
 5. Final formatted actions returned with tracing information
 
 **Data Flow:**
+
 - **Input**: Actor Entity + Base Context + Options
 - **Stage 1**: Action Definitions → Filtered by Components
-- **Stage 2**: Filtered Actions → Evaluated Prerequisites  
+- **Stage 2**: Filtered Actions → Evaluated Prerequisites
 - **Stage 3**: Valid Actions → Resolved Targets
 - **Stage 4**: Actions with Targets → UI-Formatted Actions
 - **Output**: DiscoveredActionsResult with actions, errors, and trace
@@ -121,6 +124,7 @@ CommandProcessingWorkflow → CommandProcessor → ActionDiscoveryService
 ### 2. Multi-Target Resolution Process
 
 **Complex Dependency Resolution:**
+
 1. Target definitions analyzed for `contextFrom` dependencies
 2. Resolution order computed using topological sort
 3. Sequential resolution with context building:
@@ -129,13 +133,14 @@ CommandProcessingWorkflow → CommandProcessor → ActionDiscoveryService
    - Context-specific scope evaluation
 
 **Example from Tests:**
+
 ```javascript
 // unlock_container action with key dependency
 targets: {
   primary: { scope: "location.core:objects[]" },      // Container
-  secondary: { 
+  secondary: {
     scope: "target.core:container.compatible_keys[]", // Keys for this container
-    contextFrom: "primary" 
+    contextFrom: "primary"
   }
 }
 ```
@@ -143,6 +148,7 @@ targets: {
 ### 3. Caching Integration
 
 **Turn-Based Caching Strategy:**
+
 - `AvailableActionsProvider` implements turn-level caching
 - Cache key includes turn number and actor ID
 - Cache invalidation on turn changes
@@ -153,12 +159,14 @@ targets: {
 ### 1. Clean Separation of Concerns
 
 **Pipeline Pattern Benefits:**
+
 - Each stage has single responsibility
 - Easy to add/modify individual stages
 - Clear error boundaries
 - Testable in isolation
 
 **Service Layer Separation:**
+
 - Action discovery separate from target resolution
 - Scope DSL engine independent of action system
 - Command processing separate from action execution
@@ -166,19 +174,21 @@ targets: {
 ### 2. Sophisticated Multi-Target Support
 
 **Advanced Features:**
+
 - Context-dependent target resolution
 - Circular dependency detection
 - Optional target support
 - Cross-reference validation
 
 **Flexible Target Definitions:**
+
 ```javascript
 targets: {
   primary: { scope: "actor.inventory[]", required: true },
-  secondary: { 
-    scope: "target.components[]", 
+  secondary: {
+    scope: "target.components[]",
     contextFrom: "primary",
-    optional: true 
+    optional: true
   }
 }
 ```
@@ -186,6 +196,7 @@ targets: {
 ### 3. Robust Error Handling
 
 **Error Management Features:**
+
 - Pipeline-level error collection
 - Stage-specific error contexts
 - Graceful degradation (missing targets → empty results)
@@ -194,6 +205,7 @@ targets: {
 ### 4. Performance Optimization
 
 **Current Optimizations:**
+
 - Turn-based result caching
 - Lazy evaluation in scope resolution
 - Batch processing in pipeline stages
@@ -202,6 +214,7 @@ targets: {
 ### 5. Extensibility Design
 
 **Extension Points:**
+
 - Pipeline stages can be added/modified
 - Scope DSL node resolvers are pluggable
 - Action formatting is customizable
@@ -215,6 +228,7 @@ targets: {
 Pipeline stages process actions sequentially, even when stages could benefit from parallel processing or early termination.
 
 **Improvement: Parallel Processing Pipeline**
+
 ```javascript
 // Enhanced pipeline with parallel capabilities
 class OptimizedPipeline {
@@ -222,9 +236,9 @@ class OptimizedPipeline {
     // Stages 1 & 2 can run in parallel for different action sets
     const [filteredActions, prerequisites] = await Promise.all([
       this.componentStage.execute(context),
-      this.loadPrerequisites(context.candidateActions)
+      this.loadPrerequisites(context.candidateActions),
     ]);
-    
+
     // Combine results for stages 3 & 4
     return this.executeTargetAndFormat(filteredActions, prerequisites);
   }
@@ -232,6 +246,7 @@ class OptimizedPipeline {
 ```
 
 **Benefits:**
+
 - ~30-40% faster action discovery for large action sets
 - Better resource utilization
 - Maintains stage isolation
@@ -242,23 +257,24 @@ class OptimizedPipeline {
 Scope resolution is cached at the turn level, but fine-grained caching could improve performance for repeated scope evaluations within the same turn.
 
 **Improvement: Multi-Level Caching Strategy**
+
 ```javascript
 class EnhancedScopeCache {
   constructor() {
-    this.turnCache = new Map();      // Current turn-level cache
-    this.scopeCache = new Map();     // Scope expression cache
-    this.entityCache = new Map();    // Entity state cache
+    this.turnCache = new Map(); // Current turn-level cache
+    this.scopeCache = new Map(); // Scope expression cache
+    this.entityCache = new Map(); // Entity state cache
   }
 
   async resolveWithCaching(scope, context) {
     // Check entity state fingerprint for cache validity
     const stateFingerprint = this.getEntityStateFingerprint(context);
     const cacheKey = `${scope}:${stateFingerprint}`;
-    
+
     if (this.scopeCache.has(cacheKey)) {
       return this.scopeCache.get(cacheKey);
     }
-    
+
     // Resolve and cache with TTL
     const result = await this.resolveScope(scope, context);
     this.scopeCache.set(cacheKey, result);
@@ -268,6 +284,7 @@ class EnhancedScopeCache {
 ```
 
 **Benefits:**
+
 - ~50-60% faster repeated scope evaluations
 - Reduced computational overhead
 - Cache invalidation based on entity state changes
@@ -278,22 +295,23 @@ class EnhancedScopeCache {
 Errors in one pipeline stage can cause entire action discovery to fail, reducing available actions for users.
 
 **Improvement: Fault-Tolerant Pipeline**
+
 ```javascript
 class ResilientPipeline {
   async executeWithRecovery(context) {
     const results = { actions: [], errors: [], warnings: [] };
-    
+
     try {
       // Stage 1: Component filtering with fallback
       const filtered = await this.safeExecuteStage(
-        this.componentStage, 
-        context, 
+        this.componentStage,
+        context,
         this.componentFallback
       );
-      
+
       // Stage 2: Prerequisites with per-action error handling
       const evaluated = await this.evaluateWithPerActionRecovery(filtered);
-      
+
       // Continue with partial results rather than failing entirely
       return this.completeWithPartialResults(evaluated);
     } catch (criticalError) {
@@ -304,6 +322,7 @@ class ResilientPipeline {
 ```
 
 **Benefits:**
+
 - Improved user experience (partial results vs. no results)
 - Better error diagnostics
 - System resilience under failure conditions
@@ -314,15 +333,16 @@ class ResilientPipeline {
 Context building for dependent targets creates multiple entity queries and can be expensive for complex dependency chains.
 
 **Improvement: Batch Context Resolution**
+
 ```javascript
 class OptimizedContextBuilder {
   async buildBatchContext(targets, resolvedTargets) {
     // Identify all entities needed for context building
     const entityIds = this.extractAllEntityIds(targets, resolvedTargets);
-    
+
     // Single batch fetch for entities
     const entities = await this.entityManager.getEntitiesBatch(entityIds);
-    
+
     // Build contexts using cached entities
     return this.buildContextsFromCache(targets, entities);
   }
@@ -330,6 +350,7 @@ class OptimizedContextBuilder {
 ```
 
 **Benefits:**
+
 - ~40-50% faster multi-target resolution
 - Reduced database/entity manager queries
 - Better memory utilization
@@ -340,6 +361,7 @@ class OptimizedContextBuilder {
 All actions must be discovered before any can be presented to the user, causing perceived latency.
 
 **Improvement: Progressive Action Discovery**
+
 ```javascript
 class StreamingActionDiscovery {
   async *discoverActionsStream(actor, context) {
@@ -355,6 +377,7 @@ class StreamingActionDiscovery {
 ```
 
 **Benefits:**
+
 - Improved perceived performance
 - Progressive UI updates
 - Better user experience for large action sets
@@ -365,18 +388,19 @@ class StreamingActionDiscovery {
 Scope DSL evaluation creates many temporary objects and could benefit from optimization.
 
 **Improvement: Optimized AST Evaluation**
+
 ```javascript
 class OptimizedScopeEngine {
   constructor() {
-    this.resolverPool = new ResolverPool();  // Object pooling
-    this.astCache = new Map();               // Compiled AST cache
-    this.resultCache = new Map();            // Result caching
+    this.resolverPool = new ResolverPool(); // Object pooling
+    this.astCache = new Map(); // Compiled AST cache
+    this.resultCache = new Map(); // Result caching
   }
 
   resolve(ast, actor, context) {
     // Reuse resolver objects
     const resolver = this.resolverPool.acquire();
-    
+
     try {
       // Use cached compiled form if available
       const compiledAst = this.getCompiledAst(ast);
@@ -389,6 +413,7 @@ class OptimizedScopeEngine {
 ```
 
 **Benefits:**
+
 - ~25-30% faster scope resolution
 - Reduced garbage collection pressure
 - Better memory utilization
@@ -399,6 +424,7 @@ class OptimizedScopeEngine {
 Pipeline stages are hardcoded, making it difficult to customize the pipeline for different use cases.
 
 **Improvement: Configurable Pipeline System**
+
 ```javascript
 class ConfigurablePipeline {
   constructor(config) {
@@ -411,14 +437,15 @@ class ConfigurablePipeline {
         { type: 'ComponentFiltering', parallel: true },
         { type: 'PrerequisiteEvaluation', batchSize: 10 },
         { type: 'MultiTargetResolution', caching: true },
-        { type: 'ActionFormatting', streaming: true }
-      ]
+        { type: 'ActionFormatting', streaming: true },
+      ],
     });
   }
 }
 ```
 
 **Benefits:**
+
 - Customizable pipelines for different scenarios
 - A/B testing of pipeline configurations
 - Performance tuning per use case
@@ -470,21 +497,25 @@ class ConfigurablePipeline {
 ### Implementation Strategy
 
 **Phase 1 (Week 1-2): Performance Optimizations**
+
 - Implement enhanced scope resolution caching
 - Add batch context resolution
 - Measure performance improvements
 
 **Phase 2 (Week 3-4): Resilience Improvements**
+
 - Add fault-tolerant pipeline capabilities
 - Implement partial result handling
 - Add comprehensive error recovery
 
 **Phase 3 (Week 5-6): Advanced Features**
+
 - Implement parallel pipeline processing
 - Add performance monitoring and metrics
 - Optimize scope DSL evaluation
 
 **Phase 4 (Future): Architectural Enhancements**
+
 - Design and implement streaming discovery
 - Build configurable pipeline system
 - Add advanced caching strategies
@@ -496,6 +527,7 @@ The Living Narrative Engine's action pipeline architecture is well-designed with
 The recommended implementation approach prioritizes low-risk, high-impact improvements first, followed by more complex architectural enhancements. This strategy ensures continuous improvement while minimizing disruption to the existing stable system.
 
 **Key Success Metrics:**
+
 - 40-60% improvement in action discovery performance
 - 95%+ system availability under error conditions
 - Maintained or improved code maintainability

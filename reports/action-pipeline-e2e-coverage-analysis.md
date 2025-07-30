@@ -7,7 +7,9 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
 ## 1. Existing Workflows Revealed by E2E Tests
 
 ### 1.1 Complete Action Execution Pipeline
+
 **Test File**: `ActionExecutionPipeline.e2e.test.js`
+
 - **Workflow**: UI action selection → Command processing → Event dispatch → Game state updates
 - **Key Components Tested**:
   - CommandProcessor action dispatch
@@ -19,7 +21,9 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
   - Cross-system integration with rules
 
 ### 1.2 Action Discovery Workflow
+
 **Test File**: `ActionDiscoveryWorkflow.e2e.test.js`
+
 - **Workflow**: Entity components → Action filtering → Prerequisites → Target resolution → Formatting
 - **Pipeline Stages**:
   1. Action index building and initialization
@@ -31,7 +35,9 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
   7. Multi-actor discovery differences
 
 ### 1.3 Multi-Target Action Processing
+
 **Test File**: `multiTargetFullPipeline.e2e.test.js`
+
 - **Workflow**: Multi-target action definition → Target resolution → Validation → Execution
 - **Scenarios Covered**:
   - Simple multi-target actions (throw item at target)
@@ -41,7 +47,9 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
   - Pipeline stage integration
 
 ### 1.4 ScopeDsl Integration
+
 **Test File**: `ActionSystemIntegration.e2e.test.js`
+
 - **Workflow**: Scope definitions → Action target resolution → Dynamic updates
 - **Integration Points**:
   - Action target resolution through scope definitions
@@ -51,7 +59,9 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
   - Error handling and graceful degradation
 
 ### 1.5 Action Validation Edge Cases
+
 **Test File**: `ActionValidationEdgeCases.e2e.test.js`
+
 - **Workflow**: Action attempt → Validation → Error handling → Recovery
 - **Scenarios**:
   - Failed validation scenarios
@@ -61,7 +71,9 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
   - Performance under error conditions
 
 ### 1.6 Action Target Resolution
+
 **Test File**: `ActionTargetResolutionWorkflow.e2e.test.js`
+
 - **Workflow**: Scope evaluation → Target filtering → Action generation
 - **Critical Bug Prevention**:
   - Ensures follow actions only target actors
@@ -150,6 +162,7 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
 ### Priority 1: Critical Gaps (Immediate Need) 🔴
 
 #### 1.1 **Multi-Actor Concurrent Action Execution**
+
 - **File**: `MultiActorConcurrentExecution.e2e.test.js`
 - **Coverage**: Test simultaneous action execution by multiple actors
 - **Scenarios**:
@@ -159,6 +172,7 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
   - Performance impact
 
 #### 1.2 **Complex Action Side Effects Propagation**
+
 - **File**: `ComplexSideEffectsPropagation.e2e.test.js`
 - **Coverage**: Test cascading effects from actions
 - **Scenarios**:
@@ -170,6 +184,7 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
 ### Priority 2: Functional Gaps (High Priority) 🟡
 
 #### 2.1 **Action Rollback and Compensation**
+
 - **File**: `ActionRollbackCompensation.e2e.test.js`
 - **Coverage**: Test action failure recovery
 - **Scenarios**:
@@ -179,6 +194,7 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
   - Multi-stage rollback
 
 #### 2.2 **Complex Prerequisite Chains**
+
 - **File**: `ComplexPrerequisiteChains.e2e.test.js`
 - **Coverage**: Test complex prerequisite scenarios
 - **Scenarios**:
@@ -190,6 +206,7 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
 ### Priority 3: Enhancement Coverage (Medium Priority) 🟢
 
 #### 3.1 **Performance Under Load**
+
 - **File**: `ActionSystemPerformanceLoad.e2e.test.js`
 - **Coverage**: Test system under stress
 - **Scenarios**:
@@ -199,6 +216,7 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
   - Discovery time benchmarks
 
 #### 3.2 **Action Queue Management**
+
 - **File**: `ActionQueueManagement.e2e.test.js`
 - **Coverage**: Test action queuing systems
 - **Scenarios**:
@@ -210,6 +228,7 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
 ### Priority 4: Advanced Features (Lower Priority) 🔵
 
 #### 4.1 **Cross-System Integration**
+
 - **File**: `CrossSystemActionIntegration.e2e.test.js`
 - **Coverage**: Test integration with other systems
 - **Scenarios**:
@@ -219,6 +238,7 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
   - Memory system integration
 
 #### 4.2 **Mod-Specific Action Behaviors**
+
 - **File**: `ModSpecificActionBehaviors.e2e.test.js`
 - **Coverage**: Test mod-specific features
 - **Scenarios**:
@@ -230,6 +250,7 @@ This report provides a comprehensive analysis of the existing end-to-end (e2e) t
 ## 4. Implementation Recommendations
 
 ### 4.1 Test Structure Template
+
 ```javascript
 describe('[Workflow Name] E2E', () => {
   // Comprehensive setup using facades
@@ -257,6 +278,7 @@ describe('[Workflow Name] E2E', () => {
 ```
 
 ### 4.2 Key Testing Patterns to Follow
+
 1. Use the facade pattern (as seen in recent test migrations)
 2. Leverage `turnExecutionFacade` for comprehensive testing
 3. Include performance benchmarks in critical paths
@@ -264,6 +286,7 @@ describe('[Workflow Name] E2E', () => {
 5. Validate both positive and negative cases
 
 ### 4.3 Metrics for Success
+
 - All Priority 1 tests implemented within 2 weeks
 - 90%+ code coverage for action pipeline
 - Performance benchmarks established

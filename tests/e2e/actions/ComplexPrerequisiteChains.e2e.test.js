@@ -6,7 +6,7 @@
  * - Basic prerequisite evaluation with condition_ref
  * - Component-based dynamic evaluation
  * - Error handling for complex scenarios
- * 
+ *
  * NOTE: This is a simplified implementation that works with the facade pattern.
  * For comprehensive prerequisite testing, see unit tests in the prerequisite evaluation service.
  */
@@ -66,7 +66,8 @@ describe('Complex Prerequisite Chains E2E', () => {
       const playerId = testEnvironment.actors.playerActorId;
 
       // Discover available actions
-      const availableActions = await turnExecutionFacade.actionService.discoverActions(playerId);
+      const availableActions =
+        await turnExecutionFacade.actionService.discoverActions(playerId);
 
       // Should return some actions (mocked by facade)
       expect(availableActions).toBeDefined();
@@ -92,7 +93,10 @@ describe('Complex Prerequisite Chains E2E', () => {
       });
 
       // Execute a player turn to test validation
-      const result = await turnExecutionFacade.executePlayerTurn(playerId, 'wait');
+      const result = await turnExecutionFacade.executePlayerTurn(
+        playerId,
+        'wait'
+      );
 
       // Should successfully validate and execute
       expect(result.success).toBe(true);
@@ -119,7 +123,10 @@ describe('Complex Prerequisite Chains E2E', () => {
       });
 
       // Attempt to execute action that should fail
-      const result = await turnExecutionFacade.executePlayerTurn(playerId, 'attack');
+      const result = await turnExecutionFacade.executePlayerTurn(
+        playerId,
+        'attack'
+      );
 
       // Should fail validation due to prerequisites
       expect(result.success).toBe(false);
@@ -143,10 +150,14 @@ describe('Complex Prerequisite Chains E2E', () => {
       const playerId = testEnvironment.actors.playerActorId;
 
       // Add a component that could affect prerequisites
-      await turnExecutionFacade.entityService.updateComponent(playerId, 'test:status', {
-        canAct: true,
-        energy: 100
-      });
+      await turnExecutionFacade.entityService.updateComponent(
+        playerId,
+        'test:status',
+        {
+          canAct: true,
+          energy: 100,
+        }
+      );
 
       // First validation - should pass with good component state
       turnExecutionFacade.setupMocks({
@@ -158,18 +169,28 @@ describe('Complex Prerequisite Chains E2E', () => {
         },
       });
 
-      const result1 = await turnExecutionFacade.executePlayerTurn(playerId, 'special_action');
+      const result1 = await turnExecutionFacade.executePlayerTurn(
+        playerId,
+        'special_action'
+      );
       expect(result1.success).toBe(true);
 
       // Update component to bad state
-      await turnExecutionFacade.entityService.updateComponent(playerId, 'test:status', {
-        canAct: false,
-        energy: 0
-      });
+      await turnExecutionFacade.entityService.updateComponent(
+        playerId,
+        'test:status',
+        {
+          canAct: false,
+          energy: 0,
+        }
+      );
 
       // Second validation - should now pass due to facade's different mock setup behavior
       // The facade doesn't automatically fail on component changes unless specifically mocked
-      const result2 = await turnExecutionFacade.executePlayerTurn(playerId, 'special_action');
+      const result2 = await turnExecutionFacade.executePlayerTurn(
+        playerId,
+        'special_action'
+      );
       expect(result2.success).toBe(true); // Facade defaults to success unless explicitly mocked to fail
     });
 
@@ -181,21 +202,33 @@ describe('Complex Prerequisite Chains E2E', () => {
       const playerId = testEnvironment.actors.playerActorId;
 
       // Set up multiple components that could affect prerequisites
-      await turnExecutionFacade.entityService.updateComponent(playerId, 'combat:weapon', {
-        type: 'sword',
-        damage: 10,
-        equipped: true
-      });
+      await turnExecutionFacade.entityService.updateComponent(
+        playerId,
+        'combat:weapon',
+        {
+          type: 'sword',
+          damage: 10,
+          equipped: true,
+        }
+      );
 
-      await turnExecutionFacade.entityService.updateComponent(playerId, 'stats:strength', {
-        value: 15,
-        modifier: 2
-      });
+      await turnExecutionFacade.entityService.updateComponent(
+        playerId,
+        'stats:strength',
+        {
+          value: 15,
+          modifier: 2,
+        }
+      );
 
-      await turnExecutionFacade.entityService.updateComponent(playerId, 'status:combat', {
-        inCombat: false,
-        canAttack: true
-      });
+      await turnExecutionFacade.entityService.updateComponent(
+        playerId,
+        'status:combat',
+        {
+          inCombat: false,
+          canAttack: true,
+        }
+      );
 
       // Test complex action that depends on multiple components
       turnExecutionFacade.setupMocks({
@@ -207,7 +240,10 @@ describe('Complex Prerequisite Chains E2E', () => {
         },
       });
 
-      const result = await turnExecutionFacade.executePlayerTurn(playerId, 'power_attack');
+      const result = await turnExecutionFacade.executePlayerTurn(
+        playerId,
+        'power_attack'
+      );
       expect(result.success).toBe(true);
       expect(result.validation.success).toBe(true);
     });
@@ -236,8 +272,11 @@ describe('Complex Prerequisite Chains E2E', () => {
         },
       });
 
-      const result = await turnExecutionFacade.executePlayerTurn(playerId, 'nonexistent_action');
-      
+      const result = await turnExecutionFacade.executePlayerTurn(
+        playerId,
+        'nonexistent_action'
+      );
+
       expect(result.success).toBe(false);
       expect(result.error).toBe('Action validation failed');
     });
@@ -260,8 +299,11 @@ describe('Complex Prerequisite Chains E2E', () => {
         },
       });
 
-      const result = await turnExecutionFacade.executePlayerTurn(playerId, 'malformed_prereq_action');
-      
+      const result = await turnExecutionFacade.executePlayerTurn(
+        playerId,
+        'malformed_prereq_action'
+      );
+
       expect(result.success).toBe(false);
       expect(result.validation.error).toBe('Invalid prerequisite logic');
     });
@@ -284,10 +326,15 @@ describe('Complex Prerequisite Chains E2E', () => {
         },
       });
 
-      const result = await turnExecutionFacade.executePlayerTurn(playerId, 'circular_action');
-      
+      const result = await turnExecutionFacade.executePlayerTurn(
+        playerId,
+        'circular_action'
+      );
+
       expect(result.success).toBe(false);
-      expect(result.validation.error).toBe('Circular reference detected in prerequisites');
+      expect(result.validation.error).toBe(
+        'Circular reference detected in prerequisites'
+      );
     });
   });
 
@@ -304,17 +351,31 @@ describe('Complex Prerequisite Chains E2E', () => {
       const playerId = testEnvironment.actors.playerActorId;
 
       // Set up multiple complex components
-      await turnExecutionFacade.entityService.updateComponent(playerId, 'complex:data1', {
-        values: Array.from({ length: 100 }, (_, i) => ({ id: i, value: Math.random() * 100 }))
-      });
+      await turnExecutionFacade.entityService.updateComponent(
+        playerId,
+        'complex:data1',
+        {
+          values: Array.from({ length: 100 }, (_, i) => ({
+            id: i,
+            value: Math.random() * 100,
+          })),
+        }
+      );
 
-      await turnExecutionFacade.entityService.updateComponent(playerId, 'complex:data2', {
-        matrix: Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => Math.random()))
-      });
+      await turnExecutionFacade.entityService.updateComponent(
+        playerId,
+        'complex:data2',
+        {
+          matrix: Array.from({ length: 10 }, () =>
+            Array.from({ length: 10 }, () => Math.random())
+          ),
+        }
+      );
 
       // Measure performance of action discovery
       const startTime = performance.now();
-      const availableActions = await turnExecutionFacade.actionService.discoverActions(playerId);
+      const availableActions =
+        await turnExecutionFacade.actionService.discoverActions(playerId);
       const endTime = performance.now();
 
       const evaluationTime = endTime - startTime;
@@ -325,23 +386,24 @@ describe('Complex Prerequisite Chains E2E', () => {
     });
 
     /**
-     * Test: Multiple Actor Performance  
+     * Test: Multiple Actor Performance
      * Tests performance when evaluating actions for multiple actors
      */
     test('should handle multiple actors efficiently', async () => {
       const actorIds = [
         testEnvironment.actors.playerActorId,
-        ...(testEnvironment.actors.npcActorIds || [])
+        ...(testEnvironment.actors.npcActorIds || []),
       ];
 
       // If no additional actors, create at least 2 total scenarios
-      const testActorIds = actorIds.length > 1 ? actorIds : [actorIds[0], actorIds[0]];
+      const testActorIds =
+        actorIds.length > 1 ? actorIds : [actorIds[0], actorIds[0]];
 
       const startTime = performance.now();
 
       // Evaluate actions for multiple actors
       const results = await Promise.all(
-        testActorIds.map(actorId => 
+        testActorIds.map((actorId) =>
           turnExecutionFacade.actionService.discoverActions(actorId)
         )
       );
@@ -352,7 +414,7 @@ describe('Complex Prerequisite Chains E2E', () => {
       // Should handle multiple actors efficiently
       expect(totalTime).toBeLessThan(2000); // 2 seconds max for multiple actors
       expect(results).toHaveLength(testActorIds.length);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result).toBeDefined();
         expect(Array.isArray(result)).toBe(true);
       });
@@ -382,7 +444,10 @@ describe('Complex Prerequisite Chains E2E', () => {
       });
 
       // Execute complete turn
-      const result = await turnExecutionFacade.executePlayerTurn(playerId, 'look');
+      const result = await turnExecutionFacade.executePlayerTurn(
+        playerId,
+        'look'
+      );
 
       // Verify full pipeline execution
       expect(result.success).toBe(true);
@@ -391,7 +456,9 @@ describe('Complex Prerequisite Chains E2E', () => {
       expect(result.execution).toBeDefined();
       expect(result.execution.success).toBe(true);
       // Use the facade's default effects instead of expecting specific text
-      expect(result.execution.effects).toContain('Action executed successfully');
+      expect(result.execution.effects).toContain(
+        'Action executed successfully'
+      );
     });
 
     /**

@@ -52,7 +52,7 @@ describe("Action Definition: 'intimacy:adjust_clothing'", () => {
     expect(actionData.targets.primary.placeholder).toBe('primary');
 
     expect(actionData.targets.secondary.scope).toBe(
-      'intimacy:target_topmost_torso_upper_clothing'
+      'clothing:target_topmost_torso_upper_clothing'
     );
     expect(actionData.targets.secondary.placeholder).toBe('secondary');
     expect(actionData.targets.secondary.contextFrom).toBe('primary');

@@ -34,6 +34,8 @@ export class ThematicDirectionController {
   #schemaValidator;
   #currentConcept = null;
   #currentDirections = [];
+  #selectedConceptId = null;
+  #conceptsData = [];
 
   // DOM element references
   #elements = {};
@@ -60,6 +62,7 @@ export class ThematicDirectionController {
           'generateThematicDirections',
           'getAllCharacterConcepts',
           'getCharacterConcept',
+          'getThematicDirections',
         ],
       }
     );
@@ -89,14 +92,14 @@ export class ThematicDirectionController {
       // Initialize the service
       await this.#characterBuilderService.initialize();
 
+      // Load character concepts for the new selector
+      await this.#loadCharacterConcepts();
+
       // Set up event listeners
       this.#setupEventListeners();
 
       // Initialize UI state
       this.#showState(UI_STATES.EMPTY);
-
-      // Load previous concepts into dropdown
-      await this.#loadPreviousConcepts();
 
       this.#logger.info(
         'ThematicDirectionController: Successfully initialized'
@@ -120,9 +123,26 @@ export class ThematicDirectionController {
   #cacheElements() {
     // Form elements
     this.#elements.form = document.getElementById('concept-form');
-    this.#elements.textarea = document.getElementById('concept-input');
-    this.#elements.charCount = document.querySelector('.char-count');
-    this.#elements.errorMessage = document.getElementById('concept-error');
+    this.#elements.textarea = document.getElementById('concept-input'); // Legacy - may not exist
+    this.#elements.charCount = document.querySelector('.char-count'); // Legacy - may not exist
+    this.#elements.errorMessage = document.getElementById('concept-error'); // Legacy - may not exist
+
+    // New concept selector elements
+    this.#elements.conceptSelector =
+      document.getElementById('concept-selector');
+    this.#elements.selectedConceptDisplay = document.getElementById(
+      'selected-concept-display'
+    );
+    this.#elements.conceptContent = document.getElementById('concept-content');
+    this.#elements.conceptDirectionsCount = document.getElementById(
+      'concept-directions-count'
+    );
+    this.#elements.conceptCreatedDate = document.getElementById(
+      'concept-created-date'
+    );
+    this.#elements.conceptSelectorError = document.getElementById(
+      'concept-selector-error'
+    );
 
     // Buttons
     this.#elements.generateBtn = document.getElementById('generate-btn');
@@ -136,10 +156,6 @@ export class ThematicDirectionController {
     this.#elements.resultsState = document.getElementById('results-state');
     this.#elements.directionsResults =
       document.getElementById('directions-results');
-
-    // Previous concepts dropdown
-    this.#elements.previousConceptsSelect =
-      document.getElementById('previous-concepts');
 
     // Error display
     this.#elements.errorMessageText =
@@ -168,12 +184,10 @@ export class ThematicDirectionController {
       });
     }
 
-    // Previous concepts dropdown
-    if (this.#elements.previousConceptsSelect) {
-      this.#elements.previousConceptsSelect.addEventListener('change', (e) => {
-        if (e.target.value) {
-          this.#handleConceptSelection(e.target.value);
-        }
+    // New concept selector
+    if (this.#elements.conceptSelector) {
+      this.#elements.conceptSelector.addEventListener('change', () => {
+        this.#handleConceptSelection();
       });
     }
 
@@ -201,43 +215,44 @@ export class ThematicDirectionController {
    * @private
    */
   async #handleGenerate() {
-    const conceptText = this.#elements.textarea.value.trim();
+    // Use new validation method
+    if (!this.#validateForm()) {
+      return;
+    }
 
-    if (!conceptText || conceptText.length < 10) {
-      this.#showFieldError('Please enter at least 10 characters.');
+    // Get selected concept
+    const concept = this.#conceptsData.find(
+      (c) => c.id === this.#selectedConceptId
+    );
+    if (!concept) {
+      this.#showError('Selected concept not found. Please select again.');
       return;
     }
 
     this.#showState(UI_STATES.LOADING);
 
     try {
-      // Create and store concept
+      // Generate directions with the selected concept
       this.#logger.debug(
-        'ThematicDirectionController: Creating character concept'
-      );
-      const concept =
-        await this.#characterBuilderService.createCharacterConcept(conceptText);
-      this.#currentConcept = concept;
-
-      // Generate directions
-      this.#logger.debug(
-        'ThematicDirectionController: Generating thematic directions'
+        'ThematicDirectionController: Generating thematic directions for selected concept',
+        { conceptId: this.#selectedConceptId }
       );
       const directions =
         await this.#characterBuilderService.generateThematicDirections(
-          concept.id
+          this.#selectedConceptId
         );
       this.#currentDirections = directions;
+      this.#currentConcept = concept;
 
       // Update UI
       this.#showResults(directions);
 
-      // Refresh dropdown to include new concept
-      await this.#loadPreviousConcepts();
+      // Refresh direction count in the concept display
+      await this.#loadDirectionCount(this.#selectedConceptId);
 
       // Dispatch success event
       this.#eventBus.dispatch('thematic:thematic_directions_generated', {
-        conceptId: concept.id,
+        conceptId: this.#selectedConceptId,
         directionCount: directions.length,
         autoSaved: true,
       });
@@ -254,100 +269,294 @@ export class ThematicDirectionController {
   }
 
   /**
-   * Handle selection from previous concepts dropdown
+   * Handle concept selection change from new selector
    *
    * @private
-   * @param {string} conceptId - Selected concept ID
    */
-  async #handleConceptSelection(conceptId) {
+  async #handleConceptSelection() {
+    const selectedId = this.#elements.conceptSelector?.value;
+
+    if (!selectedId) {
+      // No concept selected
+      this.#selectedConceptId = null;
+      if (this.#elements.selectedConceptDisplay) {
+        this.#elements.selectedConceptDisplay.style.display = 'none';
+      }
+      this.#validateForm();
+      return;
+    }
+
+    // Find selected concept
+    const concept = this.#conceptsData.find((c) => c.id === selectedId);
+    if (!concept) {
+      this.#logger.error('Selected concept not found', { selectedId });
+      return;
+    }
+
+    this.#selectedConceptId = selectedId;
+
+    // Display concept details
+    this.#displaySelectedConcept(concept);
+
+    // Load direction count
+    await this.#loadDirectionCount(selectedId);
+
+    // Validate form
+    this.#validateForm();
+  }
+
+  /**
+   * Display the selected concept
+   *
+   * @param {object} concept - The selected concept
+   * @private
+   */
+  #displaySelectedConcept(concept) {
+    if (
+      !this.#elements.selectedConceptDisplay ||
+      !this.#elements.conceptContent
+    ) {
+      return;
+    }
+
+    // Show display area
+    this.#elements.selectedConceptDisplay.style.display = 'block';
+
+    // Set concept text
+    this.#elements.conceptContent.textContent = concept.concept;
+
+    // Set creation date
+    if (this.#elements.conceptCreatedDate && concept.createdAt) {
+      const createdDate = new Date(concept.createdAt).toLocaleDateString();
+      this.#elements.conceptCreatedDate.textContent = `Created on ${createdDate}`;
+    }
+
+    // Scroll into view
+    this.#elements.selectedConceptDisplay.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+    });
+  }
+
+  /**
+   * Load direction count for selected concept
+   *
+   * @param {string} conceptId - The concept ID
+   * @private
+   */
+  async #loadDirectionCount(conceptId) {
+    if (!this.#elements.conceptDirectionsCount) {
+      return;
+    }
+
     try {
-      const concept =
-        await this.#characterBuilderService.getCharacterConcept(conceptId);
+      const directions =
+        await this.#characterBuilderService.getThematicDirections(conceptId);
+      const count = directions.length;
 
-      if (concept) {
-        // Update textarea with concept text
-        this.#elements.textarea.value = concept.concept;
-        this.#updateCharCount();
-        this.#validateInput();
+      let text;
+      if (count === 0) {
+        text = 'No existing directions';
+      } else if (count === 1) {
+        text = '1 existing direction';
+      } else {
+        text = `${count} existing directions`;
+      }
 
-        // If concept has directions, show them
-        if (
-          concept.thematicDirections &&
-          concept.thematicDirections.length > 0
-        ) {
-          this.#currentConcept = concept;
-          this.#currentDirections = concept.thematicDirections;
-          this.#showResults(concept.thematicDirections);
-        }
+      this.#elements.conceptDirectionsCount.textContent = text;
+
+      // Add warning if many directions exist
+      if (count >= 10) {
+        this.#elements.conceptDirectionsCount.innerHTML +=
+          ' <span class="warning">(consider if more are needed)</span>';
       }
     } catch (error) {
-      this.#logger.error(
-        'ThematicDirectionController: Failed to load concept',
-        error
-      );
-      this.#showFieldError('Failed to load selected concept.');
+      this.#logger.error('Failed to load direction count', error);
+      this.#elements.conceptDirectionsCount.textContent =
+        'Unable to load directions';
     }
   }
 
   /**
-   * Load previous concepts into dropdown
+   * Load available character concepts for selection
    *
    * @private
    */
-  async #loadPreviousConcepts() {
+  async #loadCharacterConcepts() {
+    this.#logger.info('Loading character concepts for selection');
+
     try {
+      // Show loading state
+      if (this.#elements.conceptSelector) {
+        this.#elements.conceptSelector.classList.add('loading');
+        this.#elements.conceptSelector.disabled = true;
+      }
+
+      // Load concepts
       const concepts =
         await this.#characterBuilderService.getAllCharacterConcepts();
+      this.#conceptsData = concepts;
 
-      // Check if dropdown element exists before updating DOM
-      if (!this.#elements.previousConceptsSelect) {
-        this.#logger.warn(
-          'ThematicDirectionController: Previous concepts dropdown not found, skipping DOM updates but concepts loaded'
-        );
-        return;
-      }
+      // Sort by creation date (newest first)
+      concepts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-      // Clear existing options (except first)
-      this.#elements.previousConceptsSelect.innerHTML =
-        '<option value="">-- Select a saved concept --</option>';
+      // Populate dropdown
+      this.#populateConceptSelector(concepts);
 
-      // Add concepts to dropdown
-      concepts.forEach((concept) => {
-        const option = document.createElement('option');
-        option.value = concept.id;
+      // Check URL parameters for pre-selection
+      this.#checkForPreselection();
 
-        // Truncate long concepts for display
-        const displayText =
-          concept.concept.length > 60
-            ? concept.concept.substring(0, 60) + '...'
-            : concept.concept;
-
-        option.textContent = displayText;
-
-        // Select if it's the current concept
-        if (this.#currentConcept && concept.id === this.#currentConcept.id) {
-          option.selected = true;
-        }
-
-        this.#elements.previousConceptsSelect.appendChild(option);
-      });
+      this.#logger.info(`Loaded ${concepts.length} character concepts`);
     } catch (error) {
-      this.#logger.error(
-        'ThematicDirectionController: Failed to load previous concepts',
-        error
+      this.#logger.error('Failed to load character concepts', error);
+      this.#showConceptError(
+        'Failed to load character concepts. Please refresh the page.'
       );
-      // Don't show error to user - dropdown will just remain empty
+    } finally {
+      if (this.#elements.conceptSelector) {
+        this.#elements.conceptSelector.classList.remove('loading');
+        this.#elements.conceptSelector.disabled = false;
+      }
     }
   }
 
   /**
-   * Validate the input field
+   * Populate the concept selector dropdown
+   *
+   * @param {Array} concepts - Array of concept objects
+   * @private
+   */
+  #populateConceptSelector(concepts) {
+    if (!this.#elements.conceptSelector) {
+      this.#logger.warn(
+        'Concept selector element not found, skipping population'
+      );
+      return;
+    }
+
+    // Clear existing options except the first
+    while (this.#elements.conceptSelector.options.length > 1) {
+      this.#elements.conceptSelector.remove(1);
+    }
+
+    if (concepts.length === 0) {
+      // Show no concepts message
+      this.#showNoConceptsMessage();
+      return;
+    }
+
+    // Add concepts as options
+    concepts.forEach((concept) => {
+      const option = document.createElement('option');
+      option.value = concept.id;
+      option.textContent = this.#truncateText(concept.concept, 80);
+
+      // Add data attributes for quick access
+      option.dataset.fullText = concept.concept;
+      option.dataset.createdAt = concept.createdAt;
+
+      this.#elements.conceptSelector.appendChild(option);
+    });
+  }
+
+  /**
+   * Truncate text for display
+   *
+   * @param {string} text - Text to truncate
+   * @param {number} maxLength - Maximum length
+   * @returns {string} Truncated text
+   * @private
+   */
+  #truncateText(text, maxLength) {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  }
+
+  /**
+   * Show message when no concepts exist
+   *
+   * @private
+   */
+  #showNoConceptsMessage() {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'no-concepts-message';
+    messageDiv.innerHTML = `
+      <h3>No Character Concepts Available</h3>
+      <p>You need to create at least one character concept before generating thematic directions.</p>
+      <a href="character-concepts-manager.html" class="cb-button-primary">
+        Create Your First Concept
+      </a>
+    `;
+
+    // Insert after the form group
+    if (this.#elements.conceptSelector) {
+      const formGroup =
+        this.#elements.conceptSelector.closest('.cb-form-group');
+      if (formGroup) {
+        formGroup.insertAdjacentElement('afterend', messageDiv);
+      }
+
+      // Disable form submission
+      this.#elements.conceptSelector.disabled = true;
+      if (this.#elements.generateBtn) {
+        this.#elements.generateBtn.disabled = true;
+      }
+    }
+  }
+
+  /**
+   * Check URL for concept pre-selection
+   *
+   * @private
+   */
+  #checkForPreselection() {
+    if (typeof window === 'undefined') return; // Guard for testing
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const conceptId = urlParams.get('conceptId');
+
+    if (conceptId && this.#conceptsData.some((c) => c.id === conceptId)) {
+      if (this.#elements.conceptSelector) {
+        this.#elements.conceptSelector.value = conceptId;
+        this.#handleConceptSelection();
+      }
+    }
+  }
+
+  /**
+   * Validate the entire form
+   *
+   * @returns {boolean} - True if form is valid
+   * @private
+   */
+  #validateForm() {
+    let isValid = true;
+
+    // Validate concept selection
+    if (!this.#selectedConceptId) {
+      this.#showConceptError('Please select a character concept');
+      isValid = false;
+    } else {
+      this.#clearConceptError();
+    }
+
+    // Update generate button state
+    if (this.#elements.generateBtn) {
+      this.#elements.generateBtn.disabled = !isValid;
+    }
+
+    return isValid;
+  }
+
+  /**
+   * Validate the input field (legacy)
    *
    * @private
    */
   #validateInput() {
     if (!this.#elements.textarea || !this.#elements.generateBtn) {
-      return; // Skip validation if required elements are missing
+      // Use new validation if old elements don't exist
+      return this.#validateForm();
     }
 
     const value = this.#elements.textarea.value.trim();
@@ -406,6 +615,35 @@ export class ThematicDirectionController {
     }
     if (this.#elements.textarea) {
       this.#elements.textarea.setAttribute('aria-invalid', 'false');
+    }
+  }
+
+  /**
+   * Show concept selection error
+   *
+   * @param {string} message - Error message
+   * @private
+   */
+  #showConceptError(message) {
+    if (this.#elements.conceptSelectorError) {
+      this.#elements.conceptSelectorError.textContent = message;
+    }
+    if (this.#elements.conceptSelector) {
+      this.#elements.conceptSelector.classList.add('error');
+    }
+  }
+
+  /**
+   * Clear concept selection error
+   *
+   * @private
+   */
+  #clearConceptError() {
+    if (this.#elements.conceptSelectorError) {
+      this.#elements.conceptSelectorError.textContent = '';
+    }
+    if (this.#elements.conceptSelector) {
+      this.#elements.conceptSelector.classList.remove('error');
     }
   }
 

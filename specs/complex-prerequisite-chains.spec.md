@@ -11,6 +11,7 @@ The Living Narrative Engine uses JSON Logic-based prerequisites to determine whe
 ### Scope
 
 This specification covers:
+
 - Nested prerequisite condition evaluation
 - Dynamic prerequisite evaluation based on game state
 - Condition reference (`condition_ref`) resolution
@@ -72,7 +73,9 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ### 1. Nested Prerequisite Conditions
 
 #### 1.1 Multi-Level Condition References
+
 **Scenario**: Action prerequisites reference conditions that reference other conditions
+
 ```json
 // Action: complex_ritual
 "prerequisites": [{
@@ -107,19 +110,22 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ```
 
 **Test Requirements**:
+
 - Verify 3+ levels of condition resolution
 - Validate each level evaluates correctly
 - Ensure context propagates through all levels
 - Track resolution performance
 
 #### 1.2 Mixed Logic and References
+
 **Scenario**: Prerequisites combine direct logic with condition references
+
 ```json
 "prerequisites": [{
   "logic": {
     "and": [
       { "condition_ref": "core:actor-can-move" },
-      { 
+      {
         "or": [
           { "condition_ref": "combat:is_aggressive_stance" },
           { ">": [{ "var": "actor.components.stats:strength.value" }, 15] }
@@ -133,6 +139,7 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ```
 
 **Test Requirements**:
+
 - Verify mixed evaluation of references and direct logic
 - Test all logical branches
 - Validate failure messages propagate correctly
@@ -140,7 +147,9 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ### 2. Dynamic Prerequisite Evaluation
 
 #### 2.1 Component-Based Dynamic Checks
+
 **Scenario**: Prerequisites that adapt based on entity components
+
 ```json
 "prerequisites": [{
   "logic": {
@@ -154,12 +163,15 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ```
 
 **Test Requirements**:
+
 - Test with entities having different component configurations
 - Verify correct branch selection based on components
 - Validate both paths evaluate correctly
 
 #### 2.2 State-Dependent Chains
+
 **Scenario**: Prerequisites that check game state and entity relationships
+
 ```json
 "prerequisites": [{
   "logic": {
@@ -178,6 +190,7 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ```
 
 **Test Requirements**:
+
 - Test with varying reputation values
 - Verify different condition paths based on state
 - Ensure relationship checks work correctly
@@ -185,7 +198,9 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ### 3. Circular Reference Detection
 
 #### 3.1 Direct Circular Reference
+
 **Scenario**: Condition A references Condition B which references Condition A
+
 ```json
 // Condition: test:circular_a
 {
@@ -209,18 +224,22 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ```
 
 **Test Requirements**:
+
 - Verify circular reference is detected
 - Ensure helpful error message with path
 - Validate system doesn't crash or hang
 - Test recovery after circular detection
 
 #### 3.2 Indirect Circular Reference
+
 **Scenario**: A → B → C → A circular chain
+
 ```json
 // Three or more conditions creating a circular dependency
 ```
 
 **Test Requirements**:
+
 - Detect indirect circular references
 - Show complete circular path in error
 - Ensure all intermediate conditions are tracked
@@ -228,7 +247,9 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ### 4. Performance with Complex Logic
 
 #### 4.1 Deep Nesting Performance
+
 **Scenario**: Prerequisites with 10+ levels of nesting
+
 ```json
 "prerequisites": [{
   "logic": {
@@ -247,13 +268,16 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ```
 
 **Test Requirements**:
+
 - Measure evaluation time for deep nesting
 - Set performance benchmarks (<100ms for 10 levels)
 - Test with multiple actors simultaneously
 - Monitor memory usage
 
 #### 4.2 Wide Logic Trees
+
 **Scenario**: Prerequisites with many parallel conditions
+
 ```json
 "prerequisites": [{
   "logic": {
@@ -268,6 +292,7 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ```
 
 **Test Requirements**:
+
 - Verify all conditions are evaluated
 - Test short-circuit optimization
 - Monitor performance with parallel evaluation
@@ -275,7 +300,9 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ### 5. Error Handling and Recovery
 
 #### 5.1 Missing Condition References
+
 **Scenario**: Prerequisite references non-existent condition
+
 ```json
 "prerequisites": [{
   "logic": {
@@ -285,13 +312,16 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ```
 
 **Test Requirements**:
+
 - Graceful error handling
 - Clear error messages
 - Action marked as unavailable
 - System continues functioning
 
 #### 5.2 Malformed Logic
+
 **Scenario**: Invalid JSON Logic in prerequisites
+
 ```json
 "prerequisites": [{
   "logic": {
@@ -301,6 +331,7 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 ```
 
 **Test Requirements**:
+
 - Detect invalid operators
 - Provide helpful error context
 - Continue processing other actions
@@ -313,7 +344,7 @@ Action Discovery → Component Filtering → Prerequisite Evaluation
 describe('Complex Prerequisite Chains E2E', () => {
   let facades;
   let testEntities;
-  
+
   beforeEach(async () => {
     facades = await createMockFacades();
     testEntities = await setupTestEntities();
@@ -324,7 +355,7 @@ describe('Complex Prerequisite Chains E2E', () => {
     test('should resolve multi-level condition references', async () => {
       // Implementation
     });
-    
+
     test('should handle mixed logic and references', async () => {
       // Implementation
     });
@@ -334,7 +365,7 @@ describe('Complex Prerequisite Chains E2E', () => {
     test('should evaluate based on entity components', async () => {
       // Implementation
     });
-    
+
     test('should handle state-dependent chains', async () => {
       // Implementation
     });
@@ -344,7 +375,7 @@ describe('Complex Prerequisite Chains E2E', () => {
     test('should detect direct circular references', async () => {
       // Implementation
     });
-    
+
     test('should detect indirect circular references', async () => {
       // Implementation
     });
@@ -354,7 +385,7 @@ describe('Complex Prerequisite Chains E2E', () => {
     test('should handle deep nesting efficiently', async () => {
       // Implementation with performance measurements
     });
-    
+
     test('should handle wide logic trees efficiently', async () => {
       // Implementation with performance measurements
     });
@@ -364,7 +395,7 @@ describe('Complex Prerequisite Chains E2E', () => {
     test('should handle missing condition references', async () => {
       // Implementation
     });
-    
+
     test('should handle malformed logic', async () => {
       // Implementation
     });
@@ -375,27 +406,32 @@ describe('Complex Prerequisite Chains E2E', () => {
 ### Key Testing Utilities
 
 1. **Condition Setup Helper**
+
 ```javascript
 function setupTestCondition(id, logic) {
   const registry = facades.container.resolve(tokens.IDataRegistry);
   registry.store('conditions', id, {
     id,
     description: `Test condition ${id}`,
-    logic
+    logic,
   });
 }
 ```
 
 2. **Prerequisite Evaluation Helper**
+
 ```javascript
 async function evaluateActionPrerequisites(actionId, actorId) {
-  const discoveryService = facades.container.resolve(tokens.IActionDiscoveryService);
+  const discoveryService = facades.container.resolve(
+    tokens.IActionDiscoveryService
+  );
   const actions = await discoveryService.discoverAvailableActions(actorId);
-  return actions.find(a => a.id === actionId);
+  return actions.find((a) => a.id === actionId);
 }
 ```
 
 3. **Performance Measurement**
+
 ```javascript
 function measurePrerequisitePerformance(actionDef, actor, iterations = 100) {
   const start = performance.now();
@@ -417,6 +453,7 @@ function measurePrerequisitePerformance(actionDef, actor, iterations = 100) {
 ### Integration Points
 
 The test suite must integrate with:
+
 - ActionDiscoveryService for end-to-end validation
 - GameDataRepository for condition storage
 - EntityManager for component access

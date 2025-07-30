@@ -353,12 +353,6 @@ describe('Action Target Resolution Workflow E2E', () => {
     expect(discoveredActions.actions).toBeDefined();
     expect(Array.isArray(discoveredActions.actions)).toBe(true);
 
-    // Debug output
-    console.log(
-      'Discovered actions:',
-      JSON.stringify(discoveredActions.actions, null, 2)
-    );
-
     expect(discoveredActions.actions.length).toBe(3);
 
     // Group actions by type for validation

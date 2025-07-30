@@ -39,6 +39,7 @@ import { MultiTargetResolutionStage } from '../../actions/pipeline/stages/MultiT
 
 // --- Helper Function Imports ---
 import ActionCommandFormatter from '../../actions/actionFormatter.js';
+import { MultiTargetActionFormatter } from '../../actions/formatters/MultiTargetActionFormatter.js';
 import { getActorLocation } from '../../utils/actorLocationUtils.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
 
@@ -53,6 +54,17 @@ import { UnifiedErrorHandler } from '../../actions/errors/unifiedErrorHandler.js
 import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../../turns/strategies/turnDirectiveStrategyResolver.js';
+
+/**
+ * Creates a MultiTargetActionFormatter with legacy formatter as base
+ *
+ * @param {ILogger} logger - Logger instance
+ * @returns {MultiTargetActionFormatter} Configured formatter
+ */
+function createMultiTargetFormatter(logger) {
+  const baseFormatter = new ActionCommandFormatter();
+  return new MultiTargetActionFormatter(baseFormatter, logger);
+}
 
 /**
  * Registers command and action related services.
@@ -205,7 +217,7 @@ export function registerCommandAndAction(container) {
       ),
       targetResolutionService: c.resolve(tokens.ITargetResolutionService),
       entityManager: c.resolve(tokens.IEntityManager),
-      actionCommandFormatter: new ActionCommandFormatter(),
+      actionCommandFormatter: createMultiTargetFormatter(c.resolve(tokens.ILogger)),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       getEntityDisplayNameFn: getEntityDisplayName,
       logger: c.resolve(tokens.ILogger),
@@ -223,7 +235,7 @@ export function registerCommandAndAction(container) {
       actionIndex: c.resolve(tokens.ActionIndex),
       prerequisiteService: c.resolve(tokens.PrerequisiteEvaluationService),
       targetService: c.resolve(tokens.ITargetResolutionService),
-      formatter: new ActionCommandFormatter(),
+      formatter: createMultiTargetFormatter(c.resolve(tokens.ILogger)),
       entityManager: c.resolve(tokens.IEntityManager),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       getEntityDisplayNameFn: getEntityDisplayName,

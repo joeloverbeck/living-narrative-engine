@@ -1,4 +1,4 @@
 // Scope for accessing the topmost torso_upper clothing item of a target entity
 // Used by clothing adjustment actions to identify the specific garment to adjust
 // The 'target' context will be provided by the contextFrom mechanism
-intimacy:target_topmost_torso_upper_clothing := target.topmost_clothing.torso_upper
+clothing:target_topmost_torso_upper_clothing := target.topmost_clothing.torso_upper

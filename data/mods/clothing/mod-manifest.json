@@ -49,6 +49,9 @@
     ],
     "rules": ["handle_remove_clothing.rule.json"],
     "conditions": ["event-is-action-remove-clothing.condition.json"],
-    "scopes": ["topmost_clothing.scope"]
+    "scopes": [
+      "target_topmost_torso_upper_clothing.scope",
+      "topmost_clothing.scope"
+    ]
   }
 }

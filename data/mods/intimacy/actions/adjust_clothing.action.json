@@ -10,7 +10,7 @@
       "description": "Person whose clothing to adjust"
     },
     "secondary": {
-      "scope": "intimacy:target_topmost_torso_upper_clothing",
+      "scope": "clothing:target_topmost_torso_upper_clothing",
       "placeholder": "secondary",
       "description": "Specific garment to adjust",
       "contextFrom": "primary"

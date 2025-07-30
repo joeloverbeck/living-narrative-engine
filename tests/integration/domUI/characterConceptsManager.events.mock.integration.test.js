@@ -2,7 +2,14 @@
  * @file Integration tests for Character Concepts Manager event validation with mocked storage
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { CommonBootstrapper } from '../../../src/bootstrapper/CommonBootstrapper.js';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
 import { CharacterBuilderService } from '../../../src/characterBuilder/services/characterBuilderService.js';
@@ -33,7 +40,9 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
     });
 
     // Get event bus from bootstrapped container
-    const { tokens } = await import('../../../src/dependencyInjection/tokens.js');
+    const { tokens } = await import(
+      '../../../src/dependencyInjection/tokens.js'
+    );
     eventBus = bootstrapResult.container.resolve(tokens.IEventBus);
 
     // Get services from bootstrap result
@@ -50,11 +59,11 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
           properties: {
             conceptId: { type: 'string' },
             concept: { type: 'string' },
-            autoSaved: { type: 'boolean' }
+            autoSaved: { type: 'boolean' },
           },
           required: ['conceptId', 'concept'],
-          additionalProperties: true
-        }
+          additionalProperties: true,
+        },
       },
       'thematic:character_concept_deleted': {
         id: 'thematic:character_concept_deleted',
@@ -62,12 +71,12 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
         payloadSchema: {
           type: 'object',
           properties: {
-            conceptId: { type: 'string' }
+            conceptId: { type: 'string' },
           },
           required: ['conceptId'],
-          additionalProperties: true
-        }
-      }
+          additionalProperties: true,
+        },
+      },
     };
 
     const gameDataRepository = {
@@ -76,7 +85,9 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
     };
 
     // Load the schemas into the schema validator with the expected IDs
-    for (const [eventName, definition] of Object.entries(testEventDefinitions)) {
+    for (const [eventName, definition] of Object.entries(
+      testEventDefinitions
+    )) {
       if (definition.payloadSchema) {
         const schemaId = `${eventName}#payload`;
         await schemaValidator.addSchema(definition.payloadSchema, schemaId);
@@ -92,9 +103,9 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
     });
 
     // Create safe dispatcher that wraps the validated dispatcher
-    const safeDispatcher = new SafeEventDispatcher({ 
-      logger, 
-      validatedEventDispatcher: validatedDispatcher 
+    const safeDispatcher = new SafeEventDispatcher({
+      logger,
+      validatedEventDispatcher: validatedDispatcher,
     });
 
     // Create mock storage service
@@ -153,10 +164,12 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
       });
 
       // Act
-      const result = await builderService.createCharacterConcept('Test concept with enough characters');
-      
+      const result = await builderService.createCharacterConcept(
+        'Test concept with enough characters'
+      );
+
       // Wait for event propagation
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Assert
       expect(capturedEvent).toBeTruthy();
@@ -170,8 +183,10 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
 
     it('should dispatch character_concept_deleted event when deleting a concept', async () => {
       // Arrange
-      const result = await builderService.createCharacterConcept('Character concept to be deleted later');
-      
+      const result = await builderService.createCharacterConcept(
+        'Character concept to be deleted later'
+      );
+
       let capturedEvent = null;
       eventBus.subscribe('thematic:character_concept_deleted', (event) => {
         capturedEvent = event;
@@ -179,9 +194,9 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
 
       // Act
       await builderService.deleteCharacterConcept(result.id);
-      
+
       // Wait for event propagation
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Assert
       expect(capturedEvent).toBeTruthy();
@@ -200,15 +215,21 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
 
       // Act & Assert
       for (const payload of invalidPayloads) {
-        const result = await validatedDispatcher.dispatch('thematic:character_concept_created', payload);
+        const result = await validatedDispatcher.dispatch(
+          'thematic:character_concept_created',
+          payload
+        );
         expect(result).toBe(false); // Should return false for invalid payloads
       }
-      
+
       // Valid payload should return true
-      const validResult = await validatedDispatcher.dispatch('thematic:character_concept_created', {
-        conceptId: 'test-id',
-        concept: 'Valid concept text'
-      });
+      const validResult = await validatedDispatcher.dispatch(
+        'thematic:character_concept_created',
+        {
+          conceptId: 'test-id',
+          concept: 'Valid concept text',
+        }
+      );
       expect(validResult).toBe(true);
     });
 
@@ -221,13 +242,15 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
 
       // Act - Create multiple concepts concurrently
       const promises = Array.from({ length: 5 }, (_, i) =>
-        builderService.createCharacterConcept(`Concept number ${i} with enough characters`)
+        builderService.createCharacterConcept(
+          `Concept number ${i} with enough characters`
+        )
       );
-      
+
       await Promise.all(promises);
-      
+
       // Wait for all events to propagate
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Assert
       expect(events).toHaveLength(5);
@@ -255,9 +278,9 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
       const result = await builderService.createCharacterConcept(
         'Cross-service test with enough characters'
       );
-      
+
       // Wait for event propagation
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Assert - Event should be received and validated
       expect(busEvent).toBeTruthy();
@@ -265,7 +288,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
         conceptId: result.id,
         concept: 'Cross-service test with enough characters',
       });
-      
+
       // Verify dispatcher was called
       expect(dispatchSpy).toHaveBeenCalledWith(
         'thematic:character_concept_created',

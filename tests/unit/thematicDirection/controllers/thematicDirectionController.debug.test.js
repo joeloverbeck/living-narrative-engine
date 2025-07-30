@@ -41,6 +41,7 @@ describe('ThematicDirectionController - Debug', () => {
       generateThematicDirections: jest.fn(),
       getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
       getCharacterConcept: jest.fn(),
+      getThematicDirections: jest.fn(),
     };
 
     mockEventBus = {
