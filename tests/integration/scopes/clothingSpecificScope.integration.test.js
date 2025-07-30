@@ -120,20 +120,24 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     // Register the prerequisite condition for the action
     dataRegistry.store('conditions', 'intimacy:actor-is-in-closeness', {
       id: 'intimacy:actor-is-in-closeness',
-      description: 'Checks if the actor is currently in closeness with someone.',
+      description:
+        'Checks if the actor is currently in closeness with someone.',
       logic: {
         '>': [
-          { 'var': 'actor.components.intimacy:closeness.partners.length' },
-          0
-        ]
-      }
+          { var: 'actor.components.intimacy:closeness.partners.length' },
+          0,
+        ],
+      },
     });
 
     // Create a proper gameDataRepository that returns conditions from dataRegistry
     const gameDataRepository = {
       getConditionDefinition: (id) => {
         const condition = dataRegistry.get('conditions', id);
-        logger.debug(`gameDataRepository.getConditionDefinition('${id}') returning:`, condition);
+        logger.debug(
+          `gameDataRepository.getConditionDefinition('${id}') returning:`,
+          condition
+        );
         return condition;
       },
     };
@@ -226,7 +230,10 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     // Create multi-target formatter
     const baseFormatter = new ActionCommandFormatter();
-    const multiTargetFormatter = new MultiTargetActionFormatter(baseFormatter, logger);
+    const multiTargetFormatter = new MultiTargetActionFormatter(
+      baseFormatter,
+      logger
+    );
 
     // Create the ActionPipelineOrchestrator
     const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
@@ -234,7 +241,10 @@ describe('Clothing-Specific Scope Integration Tests', () => {
         getCandidateActions: jest.fn().mockImplementation((actor) => {
           console.log('getCandidateActions called with actor:', actor?.id);
           console.log('Actor has components:', !!actor?.components);
-          console.log('Actor closeness partners:', actor?.components?.['intimacy:closeness']?.partners);
+          console.log(
+            'Actor closeness partners:',
+            actor?.components?.['intimacy:closeness']?.partners
+          );
           console.log('Returning action:', adjustClothingAction.id);
           return [adjustClothingAction];
         }),
@@ -269,11 +279,28 @@ describe('Clothing-Specific Scope Integration Tests', () => {
             '  Context actor components:',
             args[1]?.actor?.components
           );
-          console.log('  Full context:', JSON.stringify({
-            ...args[1],
-            actor: args[1]?.actor ? { id: args[1].actor.id, hasComponents: !!args[1].actor.components } : undefined,
-            target: args[1]?.target ? { id: args[1].target.id, hasComponents: !!args[1].target.components } : undefined
-          }, null, 2));
+          console.log(
+            '  Full context:',
+            JSON.stringify(
+              {
+                ...args[1],
+                actor: args[1]?.actor
+                  ? {
+                      id: args[1].actor.id,
+                      hasComponents: !!args[1].actor.components,
+                    }
+                  : undefined,
+                target: args[1]?.target
+                  ? {
+                      id: args[1].target.id,
+                      hasComponents: !!args[1].target.components,
+                    }
+                  : undefined,
+              },
+              null,
+              2
+            )
+          );
           const result = originalResolve.apply(unifiedScopeResolver, args);
           console.log('UnifiedScopeResolver.resolve returning:', result);
           return result;
@@ -584,7 +611,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
         'intimacy:target_topmost_torso_upper_clothing'
       );
       console.log('Secondary scope definition:', secondaryScopeDefinition);
-      
+
       const parser = new DefaultDslParser({ logger });
       const secondaryAst = parser.parse(secondaryScopeDefinition.expr);
       console.log(
@@ -660,7 +687,12 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     it('should include actors with torso_upper clothing who are facing forward', async () => {
       // Arrange - use helper functions to create entities
       const actorId = createActorWithCloseness('actor1', 'target1', false);
-      const targetId = createTargetWithClothing('target1', 'actor1', true, true);
+      const targetId = createTargetWithClothing(
+        'target1',
+        'actor1',
+        true,
+        true
+      );
 
       // Setup mock for facing condition
       setupJsonLogicMock(true);
@@ -669,13 +701,22 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       const actorEntity = entityManager.getEntityInstance(actorId);
       console.log('Actor entity:', actorEntity);
       console.log('Actor components:', actorEntity?.components);
-      console.log('Actor closeness component:', actorEntity?.components?.['intimacy:closeness']);
-      
+      console.log(
+        'Actor closeness component:',
+        actorEntity?.components?.['intimacy:closeness']
+      );
+
       const targetEntity = entityManager.getEntityInstance(targetId);
       console.log('Target entity:', targetEntity);
       console.log('Target components:', targetEntity?.components);
-      console.log('Target closeness component:', targetEntity?.components?.['intimacy:closeness']);
-      console.log('Target equipment component:', targetEntity?.components?.['clothing:equipment']);
+      console.log(
+        'Target closeness component:',
+        targetEntity?.components?.['intimacy:closeness']
+      );
+      console.log(
+        'Target equipment component:',
+        targetEntity?.components?.['clothing:equipment']
+      );
 
       // Act
       const result = await actionDiscoveryService.getValidActions(
@@ -685,7 +726,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       console.log('getValidActions result:', result);
       console.log('Total actions returned:', result.actions.length);
-      
+
       // Assert
       const adjustClothingActions = result.actions.filter(
         (action) => action.id === 'intimacy:adjust_clothing'
@@ -693,8 +734,12 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       expect(adjustClothingActions).toHaveLength(1);
       expect(adjustClothingActions[0].params.isMultiTarget).toBe(true);
-      expect(adjustClothingActions[0].params.targetIds.primary).toEqual([targetId]);
-      expect(adjustClothingActions[0].params.targetIds.secondary).toEqual(['shirt123']);
+      expect(adjustClothingActions[0].params.targetIds.primary).toEqual([
+        targetId,
+      ]);
+      expect(adjustClothingActions[0].params.targetIds.secondary).toEqual([
+        'shirt123',
+      ]);
     });
 
     it('should exclude actors without clothing:equipment component', async () => {
@@ -860,12 +905,18 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       expect(adjustClothingActions).toHaveLength(1); // Multi-target formatter combines into single action
       expect(adjustClothingActions[0].params.isMultiTarget).toBe(true);
-      expect(adjustClothingActions[0].params.targetIds.primary).toEqual([target1Id, target2Id]);
-      
+      expect(adjustClothingActions[0].params.targetIds.primary).toEqual([
+        target1Id,
+        target2Id,
+      ]);
+
       // When contextFrom: "primary", the secondary scope should resolve for each primary target
       // The production implementation now correctly resolves per primary target
-      expect(adjustClothingActions[0].params.targetIds.secondary).toEqual(['shirt123', 'shirt456']);
-      
+      expect(adjustClothingActions[0].params.targetIds.secondary).toEqual([
+        'shirt123',
+        'shirt456',
+      ]);
+
       // The command should be an array when there are multiple primary targets
       const command = adjustClothingActions[0].command;
       expect(Array.isArray(command)).toBe(true);
@@ -907,8 +958,12 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       expect(adjustClothingActions).toHaveLength(1);
       expect(adjustClothingActions[0].params.isMultiTarget).toBe(true);
-      expect(adjustClothingActions[0].params.targetIds.primary).toEqual([targetId]);
-      expect(adjustClothingActions[0].params.targetIds.secondary).toEqual(['shirt123']); // Resolved from primary's clothing
+      expect(adjustClothingActions[0].params.targetIds.primary).toEqual([
+        targetId,
+      ]);
+      expect(adjustClothingActions[0].params.targetIds.secondary).toEqual([
+        'shirt123',
+      ]); // Resolved from primary's clothing
     });
 
     it('should handle missing clothing gracefully', async () => {
@@ -969,7 +1024,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       // Template should be formatted with specific garment name
       const action = adjustClothingActions[0];
       // For multi-target actions, command might be a string or array
-      const commandText = Array.isArray(action.command) ? action.command[0] : action.command;
+      const commandText = Array.isArray(action.command)
+        ? action.command[0]
+        : action.command;
       expect(commandText).toMatch(/adjust .+'s .+/); // Should include both primary and secondary names
       expect(commandText).not.toContain('{primary}');
       expect(commandText).not.toContain('{secondary}');

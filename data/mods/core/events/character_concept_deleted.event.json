@@ -1,5 +1,5 @@
 {
-  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "thematic:character_concept_deleted",
   "description": "Dispatched when a character concept is deleted.",
   "payloadSchema": {

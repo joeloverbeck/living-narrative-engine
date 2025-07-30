@@ -74,7 +74,7 @@ async function copyDirectory(src, dest, onProgress) {
     } catch (error) {
       // Check if this is a private mod (p_*) that we should skip silently
       const pathParts = relativePath.split(path.sep);
-      if (pathParts.some(part => part.startsWith('p_'))) {
+      if (pathParts.some((part) => part.startsWith('p_'))) {
         // Silently skip files in private mods
         continue;
       }
@@ -102,7 +102,7 @@ async function getAllFiles(dir) {
 
     for (const item of items) {
       const fullPath = path.join(currentDir, item);
-      
+
       try {
         const stat = await fs.stat(fullPath);
 

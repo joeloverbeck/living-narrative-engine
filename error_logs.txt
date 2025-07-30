@@ -1,4 +1,5 @@
-CommonBootstrapper: Initializing auxiliary services...
+CommonBootstrapper: Skipping mod loading as requested
+consoleLogger.js:151 CommonBootstrapper: Initializing auxiliary services...
 consoleLogger.js:151 Initializing auxiliary services...
 consoleLogger.js:151 AnatomyQueryCache: Initialized with maxSize=1000, ttl=300000ms
 consoleLogger.js:151 AnatomyClothingCache: AnatomyClothingCache initialized with maxSize=500, ttl=300000ms, maxMemory=100MB
@@ -17,10 +18,10 @@ initializeAuxiliaryServices @ commonInitialization.js:61
 bootstrap @ CommonBootstrapper.js:121
 await in bootstrap
 initializeApp @ character-concepts-manager-main.js:37
-(anonymous) @ character-concepts-manager-main.js:262
+(anonymous) @ character-concepts-manager-main.js:265
 Promise.then
-(anonymous) @ character-concepts-manager-main.js:261
-(anonymous) @ character-concepts-manager-main.js:266Understand this warning
+(anonymous) @ character-concepts-manager-main.js:264
+(anonymous) @ character-concepts-manager-main.js:269Understand this warning
 consoleLogger.js:151 Auxiliary services initialized successfully
 consoleLogger.js:151 CommonBootstrapper: Bootstrap process completed successfully
 consoleLogger.js:151 Initializing CharacterConceptsManager...
@@ -56,137 +57,164 @@ consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitio
 consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'violence'.
 consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'violence'.
 consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'violence'.
-consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'intimacy'.
-consoleLogger.js:151 EventLoader: Loading events definitions for mod 'intimacy'.
-consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'intimacy'.
-consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'intimacy'.
-consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'intimacy'.
-consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'intimacy'.
-consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'sex'.
-consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'sex'.
-consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'sex'.
-consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'sex'.
-consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'p_erotica'.
-consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'p_erotica'.
-consoleLogger.js:151 EntityInstanceLoader: Loading entityInstances definitions for mod 'p_erotica'.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'isekai'.
+consoleLogger.js:151 EntityInstanceLoader: Loading entityInstances definitions for mod 'isekai'.
 consoleLogger.js:151 — WorldPhase starting —
 consoleLogger.js:151 --- Starting World File Loading Phase ---
 consoleLogger.js:151 --- World File Loading Phase Complete ---
 consoleLogger.js:151 WorldLoader: Successfully processed and registered 1 worlds, containing 4 entity instances. All 4 definition references were resolved.
 consoleLogger.js:151 — SummaryPhase starting —
 consoleLogger.js:151 — ModsLoader Load Summary (World: 'default') —
-consoleLogger.js:151   • Requested Mods (raw): [core, anatomy, clothing, violence, p_erotica]
-consoleLogger.js:151   • Final Load Order     : [core, descriptors, anatomy, clothing, violence, intimacy, sex, p_erotica]
+consoleLogger.js:151   • Requested Mods (raw): [core, anatomy, clothing, violence, isekai]
+consoleLogger.js:151   • Final Load Order     : [core, descriptors, anatomy, clothing, violence, isekai]
 consoleLogger.js:151   • Content Loading Summary (Totals):
-consoleLogger.js:151      - actions             : 41 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - actions             : 8 loaded, 0 overrides, 0 errors
 consoleLogger.js:151      - anatomyBlueprintParts: 1 loaded, 0 overrides, 0 errors
 consoleLogger.js:151      - anatomyBlueprints   : 2 loaded, 0 overrides, 0 errors
 consoleLogger.js:151      - anatomyFormatting   : 1 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - anatomyRecipes      : 5 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyRecipes      : 3 loaded, 0 overrides, 0 errors
 consoleLogger.js:151      - anatomySlotLibraries: 1 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - components          : 50 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - conditions          : 57 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - entityDefinitions   : 53 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - entityInstances     : 4 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - events              : 56 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - components          : 47 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - conditions          : 16 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - entityDefinitions   : 55 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - entityInstances     : 6 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - events              : 53 loaded, 0 overrides, 0 errors
 consoleLogger.js:151      - macros              : 4 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - rules               : 47 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - scopes              : 27 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - rules               : 14 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - scopes              : 6 loaded, 0 overrides, 0 errors
 consoleLogger.js:151      - worlds              : 1 loaded, 0 overrides, 0 errors
 consoleLogger.js:151      - ----------------------------------------------
-consoleLogger.js:151      - TOTAL               : C:350, O:0, E:0
+consoleLogger.js:151      - TOTAL               : C:218, O:0, E:0
 consoleLogger.js:151 ———————————————————————————————————————————
 consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
 consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
 consoleLogger.js:151 Core mod loaded successfully
-appContainer.js:117 AppContainer: Error creating singleton instance for "ThematicDirectionGenerator": Error: AppContainer: No service registered for key "LlmJsonService". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, JsonLogicEvaluationService, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, CharacterBuilderService, IPromptOutputPort, ITurnEndPort, WorldInitializer, SystemInitializer]
-    at AppContainer.resolve (appContainer.js:96:13)
-    at characterBuilderRegistrations.js:60:25
-    at AppContainer._invokeFactory (appContainer.js:249:12)
-    at AppContainer._createInstance (appContainer.js:190:19)
-    at AppContainer.resolve (appContainer.js:109:31)
-    at characterBuilderRegistrations.js:73:29
-    at AppContainer._invokeFactory (appContainer.js:249:12)
-    at AppContainer._createInstance (appContainer.js:190:19)
-    at AppContainer.resolve (appContainer.js:109:31)
-    at initializeApp (character-concepts-manager-main.js:66:47)
-resolve @ appContainer.js:117
-(anonymous) @ characterBuilderRegistrations.js:73
-_invokeFactory @ appContainer.js:249
-_createInstance @ appContainer.js:190
-resolve @ appContainer.js:109
-initializeApp @ character-concepts-manager-main.js:66
-await in initializeApp
-(anonymous) @ character-concepts-manager-main.js:262
-Promise.then
-(anonymous) @ character-concepts-manager-main.js:261
-(anonymous) @ character-concepts-manager-main.js:266Understand this error
-appContainer.js:117 AppContainer: Error creating singleton instance for "CharacterBuilderService": Error: Failed to create instance for "ThematicDirectionGenerator" (lifecycle: singletonFactory): AppContainer: No service registered for key "LlmJsonService". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, JsonLogicEvaluationService, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, CharacterBuilderService, IPromptOutputPort, ITurnEndPort, WorldInitializer, SystemInitializer]
-    at AppContainer.resolve (appContainer.js:121:15)
-    at characterBuilderRegistrations.js:73:29
-    at AppContainer._invokeFactory (appContainer.js:249:12)
-    at AppContainer._createInstance (appContainer.js:190:19)
-    at AppContainer.resolve (appContainer.js:109:31)
-    at initializeApp (character-concepts-manager-main.js:66:47)Caused by: Error: AppContainer: No service registered for key "LlmJsonService". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, JsonLogicEvaluationService, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, CharacterBuilderService, IPromptOutputPort, ITurnEndPort, WorldInitializer, SystemInitializer]
-    at AppContainer.resolve (appContainer.js:96:13)
-    at characterBuilderRegistrations.js:60:25
-    at AppContainer._invokeFactory (appContainer.js:249:12)
-    at AppContainer._createInstance (appContainer.js:190:19)
-    at AppContainer.resolve (appContainer.js:109:31)
-    at characterBuilderRegistrations.js:73:29
-    at AppContainer._invokeFactory (appContainer.js:249:12)
-    at AppContainer._createInstance (appContainer.js:190:19)
-    at AppContainer.resolve (appContainer.js:109:31)
-    at initializeApp (character-concepts-manager-main.js:66:47)
-resolve @ appContainer.js:117
-initializeApp @ character-concepts-manager-main.js:66
-await in initializeApp
-(anonymous) @ character-concepts-manager-main.js:262
-Promise.then
-(anonymous) @ character-concepts-manager-main.js:261
-(anonymous) @ character-concepts-manager-main.js:266Understand this error
-consoleLogger.js:175 Failed to initialize CharacterConceptsManager Error: Failed to create instance for "CharacterBuilderService" (lifecycle: singletonFactory): Failed to create instance for "ThematicDirectionGenerator" (lifecycle: singletonFactory): AppContainer: No service registered for key "LlmJsonService". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, JsonLogicEvaluationService, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, CharacterBuilderService, IPromptOutputPort, ITurnEndPort, WorldInitializer, SystemInitializer]
-    at AppContainer.resolve (appContainer.js:121:15)
-    at initializeApp (character-concepts-manager-main.js:66:47)Caused by: Error: Failed to create instance for "ThematicDirectionGenerator" (lifecycle: singletonFactory): AppContainer: No service registered for key "LlmJsonService". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, JsonLogicEvaluationService, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, CharacterBuilderService, IPromptOutputPort, ITurnEndPort, WorldInitializer, SystemInitializer]
-    at AppContainer.resolve (appContainer.js:121:15)
-    at characterBuilderRegistrations.js:73:29
-    at AppContainer._invokeFactory (appContainer.js:249:12)
-    at AppContainer._createInstance (appContainer.js:190:19)
-    at AppContainer.resolve (appContainer.js:109:31)
-    at initializeApp (character-concepts-manager-main.js:66:47)Caused by: Error: AppContainer: No service registered for key "LlmJsonService". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, JsonLogicEvaluationService, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, CharacterBuilderService, IPromptOutputPort, ITurnEndPort, WorldInitializer, SystemInitializer]
-    at AppContainer.resolve (appContainer.js:96:13)
-    at characterBuilderRegistrations.js:60:25
-    at AppContainer._invokeFactory (appContainer.js:249:12)
-    at AppContainer._createInstance (appContainer.js:190:19)
-    at AppContainer.resolve (appContainer.js:109:31)
-    at characterBuilderRegistrations.js:73:29
-    at AppContainer._invokeFactory (appContainer.js:249:12)
-    at AppContainer._createInstance (appContainer.js:190:19)
-    at AppContainer.resolve (appContainer.js:109:31)
-    at initializeApp (character-concepts-manager-main.js:66:47)
+consoleLogger.js:151 CharacterConceptsManagerController initialized
+consoleLogger.js:151 Initializing Character Concepts Manager
+consoleLogger.js:151 CharacterDatabase: Database upgrade needed, creating object stores
+consoleLogger.js:151 CharacterDatabase: Successfully opened database
+consoleLogger.js:151 CharacterStorageService: Successfully initialized
+consoleLogger.js:151 CharacterBuilderService: Successfully initialized
+consoleLogger.js:151 Loading character concepts data
+consoleLogger.js:151 Statistics updated {totalConcepts: 0, conceptsWithDirections: 0, totalDirections: 0, averageDirectionsPerConcept: '0', completionRate: 0, …}
+consoleLogger.js:151 Loaded 0 concepts
+consoleLogger.js:151 Cross-tab sync initialized {tabId: 'tab-1753872002898-qlai7i4l9'}
+consoleLogger.js:151 Character Concepts Manager initialization complete
+consoleLogger.js:151 CharacterConceptsManager initialized successfully
+consoleLogger.js:151 Showing create concept modal
+consoleLogger.js:151 Modal display debug info: {display: 'flex', visibility: 'visible', opacity: '1', zIndex: '1000', position: 'fixed', …}
+consoleLogger.js:151 Closing concept modal
+consoleLogger.js:151 Showing create concept modal
+consoleLogger.js:151 Modal display debug info: {display: 'flex', visibility: 'visible', opacity: '1', zIndex: '1000', position: 'fixed', …}
+consoleLogger.js:151 Page hidden
+consoleLogger.js:151 Page visible
+consoleLogger.js:151 Creating new concept {length: 52}
+consoleLogger.js:151 CharacterBuilderService: Created character concept 475faa65-5b1a-4eb8-a91f-b78ce4c333ed {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed', concept: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa eeeeeee...', autoSave: true, attempt: 1}
+consoleLogger.js:151 CharacterStorageService: Successfully stored character concept 475faa65-5b1a-4eb8-a91f-b78ce4c333ed {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed', attempt: 1}
+consoleLogger.js:163 VED: EventDefinition not found for 'thematic:character_concept_created'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+createCharacterConcept @ characterBuilderService.js:174
+await in createCharacterConcept
+createConcept_fn @ characterConceptsManagerController.js:1830
+handleConceptSave_fn @ characterConceptsManagerController.js:1867
+(anonymous) @ characterConceptsManagerController.js:469Understand this warning
+consoleLogger.js:151 Concept created event received {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed', concept: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa eeeeeeeee', autoSaved: true}
+consoleLogger.js:151 Loading character concepts data
+consoleLogger.js:151 Concept created successfully {id: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed'}
+consoleLogger.js:151 Character concept created successfully!
+consoleLogger.js:151 Closing concept modal
+consoleLogger.js:151 Concept created successfully
+consoleLogger.js:151 CharacterStorageService: No thematic directions found {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed'}
+consoleLogger.js:151 Statistics updated {totalConcepts: 1, conceptsWithDirections: 0, totalDirections: 0, averageDirectionsPerConcept: '0.0', completionRate: 0, …}
+consoleLogger.js:151 Loaded 1 concepts
+consoleLogger.js:151 Showing edit modal {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed'}
+consoleLogger.js:151 Edit modal display debug info: {display: 'flex', visibility: 'visible', opacity: '1', zIndex: '1000', position: 'fixed', …}
+consoleLogger.js:151 Closing concept modal
+consoleLogger.js:151 Showing delete confirmation {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed', directionCount: 0}
+consoleLogger.js:151 Deleting concept {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed', directionCount: 0}
+consoleLogger.js:151 CharacterStorageService: Successfully deleted character concept {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed'}
+consoleLogger.js:151 CharacterBuilderService: Deleted character concept 475faa65-5b1a-4eb8-a91f-b78ce4c333ed
+consoleLogger.js:163 VED: EventDefinition not found for 'thematic:character_concept_deleted'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+deleteCharacterConcept @ characterBuilderService.js:491
+await in deleteCharacterConcept
+deleteConcept_fn @ characterConceptsManagerController.js:1645
+(anonymous) @ characterConceptsManagerController.js:1611Understand this warning
+consoleLogger.js:151 Concept deleted event received {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed'}
+consoleLogger.js:151 Removed concept from local cache {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed'}
+consoleLogger.js:151 Statistics updated {totalConcepts: 0, conceptsWithDirections: 0, totalDirections: 0, averageDirectionsPerConcept: '0', completionRate: 0, …}
+consoleLogger.js:151 Concept deleted successfully {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed', directionsDeleted: 0}
+consoleLogger.js:151 Character concept deleted successfully
+consoleLogger.js:151 Statistics updated {totalConcepts: 0, conceptsWithDirections: 0, totalDirections: 0, averageDirectionsPerConcept: '0', completionRate: 0, …}
+consoleLogger.js:175 Failed to delete concept TypeError: __privateGet(...).setState is not a function
+    at CharacterConceptsManagerController.deleteConcept_fn (characterConceptsManagerController.js:1667:30)
+    at async HTMLButtonElement.<anonymous> (characterConceptsManagerController.js:1611:9)
 error @ consoleLogger.js:175
-initializeApp @ character-concepts-manager-main.js:107
-await in initializeApp
-(anonymous) @ character-concepts-manager-main.js:262
-Promise.then
-(anonymous) @ character-concepts-manager-main.js:261
-(anonymous) @ character-concepts-manager-main.js:266Understand this error
-character-concepts-manager-main.js:264 Failed to initialize application: Error: Failed to create instance for "CharacterBuilderService" (lifecycle: singletonFactory): Failed to create instance for "ThematicDirectionGenerator" (lifecycle: singletonFactory): AppContainer: No service registered for key "LlmJsonService". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, JsonLogicEvaluationService, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, CharacterBuilderService, IPromptOutputPort, ITurnEndPort, WorldInitializer, SystemInitializer]
-    at AppContainer.resolve (appContainer.js:121:15)
-    at initializeApp (character-concepts-manager-main.js:66:47)Caused by: Error: Failed to create instance for "ThematicDirectionGenerator" (lifecycle: singletonFactory): AppContainer: No service registered for key "LlmJsonService". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, JsonLogicEvaluationService, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, CharacterBuilderService, IPromptOutputPort, ITurnEndPort, WorldInitializer, SystemInitializer]
-    at AppContainer.resolve (appContainer.js:121:15)
-    at characterBuilderRegistrations.js:73:29
-    at AppContainer._invokeFactory (appContainer.js:249:12)
-    at AppContainer._createInstance (appContainer.js:190:19)
-    at AppContainer.resolve (appContainer.js:109:31)
-    at initializeApp (character-concepts-manager-main.js:66:47)Caused by: Error: AppContainer: No service registered for key "LlmJsonService". Known keys: [ILogger, ProxyUrl, IConfiguration, IPathResolver, ISchemaValidator, IDataRegistry, IDataFetcher, ITextDataFetcher, RuleLoader, ComponentLoader, ConditionLoader, ActionLoader, EventLoader, MacroLoader, EntityLoader, EntityInstanceLoader, WorldLoader, GoalLoader, AnatomyRecipeLoader, AnatomyBlueprintLoader, AnatomyBlueprintPartLoader, AnatomySlotLibraryLoader, AnatomyFormattingLoader, ScopeLoader, ModManifestLoader, GameConfigLoader, PromptTextLoader, ModLoadOrderResolver, ModManifestProcessor, ContentLoadManager, WorldLoadSummaryLogger, SchemaPhase, GameConfigPhase, ManifestPhase, ContentPhase, WorldPhase, SummaryPhase, ILoadCache, ModsLoader, SchemaLoader, ServiceSetup, IPathConfiguration, ActionIndexingService, EventBus, IEventBus, ISpatialIndexManager, IGameDataRepository, IValidatedEventDispatcher, ISafeEventDispatcher, EventDispatchService, ScopeEngine, DslParser, IScopeEngine, IStorageProvider, ISaveFileRepository, ISaveLoadService, PlaytimeTracker, ComponentCleaningService, SaveMetadataBuilder, ActiveModsManifestBuilder, GameStateCaptureService, ManualSaveCoordinator, GamePersistenceService, IEntityManager, IWorldContext, JsonLogicEvaluationService, ClosenessCircleService, EntityDisplayDataProvider, SpatialIndexSynchronizer, LocationQueryService, EntityAccessService, ComponentAccessService, LocationDisplayService, GraphIntegrityValidator, AnatomyQueryCache, RecipeProcessor, PartSelectionService, SocketManager, EntityGraphBuilder, RecipeConstraintEvaluator, BodyBlueprintFactory, BodyGraphService, JsonLogicCustomOperators, AnatomyFormattingService, DescriptorFormatter, BodyPartDescriptionBuilder, BodyDescriptionComposer, PartDescriptionGenerator, DescriptionPersistenceService, BodyDescriptionOrchestrator, AnatomyDescriptionService, AnatomyGenerationService, LayerCompatibilityService, ClothingSlotValidator, EquipmentOrchestrator, LayerResolutionService, IAnatomySocketIndex, IAnatomyBlueprintRepository, AnatomyClothingCache, SlotResolver, ClothingManagementService, EquipmentDescriptionService, ClothingInstantiationService, ClothingInstantiationServiceV2, AnatomyInitializationService, IScopeRegistry, ActionIndex, IScopeCacheStrategy, IUnifiedScopeResolver, ITargetContextBuilder, IMultiTargetResolutionStage, ITargetResolutionService, TraceContextFactory, IFixSuggestionEngine, IActionErrorContextBuilder, ActionCandidateProcessor, ActionPipelineOrchestrator, IActionDiscoveryService, ActionValidationContextBuilder, PrerequisiteEvaluationService, ICommandProcessor, UnifiedErrorHandler, DirectiveStrategyResolver, CommandDispatcher, DirectiveExecutor, ResultInterpreter, ICommandOutcomeInterpreter, DispatchEventHandler, DispatchPerceptibleEventHandler, DispatchSpeechHandler, LogHandler, ModifyComponentHandler, AddComponentHandler, RemoveComponentHandler, QueryComponentHandler, QueryComponentsHandler, SetVariableHandler, EndTurnHandler, SystemMoveEntityHandler, IMoveEntityHandler, GetTimestampHandler, GetNameHandler, RebuildLeaderListCacheHandler, CheckFollowCycleHandler, EstablishFollowRelationHandler, BreakFollowRelationHandler, AddPerceptionLogEntryHandler, QueryEntitiesHandler, HasComponentHandler, ModifyArrayFieldHandler, ModifyContextArrayHandler, IfCoLocatedHandler, MathHandler, AutoMoveFollowersHandler, MergeClosenessCircleHandler, RemoveFromClosenessCircleHandler, HasBodyPartWithComponentValueHandler, UnequipClothingHandler, OperationRegistry, OperationInterpreter, SystemLogicInterpreter, CharacterDatabase, CharacterStorageService, ThematicDirectionGenerator, CharacterBuilderService, IPromptOutputPort, ITurnEndPort, WorldInitializer, SystemInitializer]
-    at AppContainer.resolve (appContainer.js:96:13)
-    at characterBuilderRegistrations.js:60:25
-    at AppContainer._invokeFactory (appContainer.js:249:12)
-    at AppContainer._createInstance (appContainer.js:190:19)
-    at AppContainer.resolve (appContainer.js:109:31)
-    at characterBuilderRegistrations.js:73:29
-    at AppContainer._invokeFactory (appContainer.js:249:12)
-    at AppContainer._createInstance (appContainer.js:190:19)
-    at AppContainer.resolve (appContainer.js:109:31)
-    at initializeApp (character-concepts-manager-main.js:66:47)
+deleteConcept_fn @ characterConceptsManagerController.js:1672
+await in deleteConcept_fn
+(anonymous) @ characterConceptsManagerController.js:1611Understand this error
+consoleLogger.js:175 Failed to delete concept TypeError: __privateGet(...).setState is not a function
+    at CharacterConceptsManagerController.deleteConcept_fn (characterConceptsManagerController.js:1667:30)
+    at async HTMLButtonElement.<anonymous> (characterConceptsManagerController.js:1611:9)
+error @ consoleLogger.js:175
+(anonymous) @ characterConceptsManagerController.js:1616Understand this error
+consoleLogger.js:175 Unhandled error {message: 'Uncaught TypeError: __privateGet(...)?.setState is not a function', filename: 'http://127.0.0.1:8080/character-concepts-manager.js', lineno: 113732, colno: 48, error: TypeError: __privateGet(...)?.setState is not a function
+    at http://127.0.0.1:8080/character-con…}
+error @ consoleLogger.js:175
+(anonymous) @ character-concepts-manager-main.js:165
+setTimeout
+removeConceptCard_fn @ characterConceptsManagerController.js:2990
+handleConceptDeleted_fn @ characterConceptsManagerController.js:2382
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+deleteCharacterConcept @ characterBuilderService.js:491
+await in deleteCharacterConcept
+deleteConcept_fn @ characterConceptsManagerController.js:1645
+(anonymous) @ characterConceptsManagerController.js:1611Understand this error
+consoleLogger.js:151 Deleting concept {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed', directionCount: 0}
+consoleLogger.js:151 CharacterStorageService: Successfully deleted character concept {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed'}
+consoleLogger.js:151 CharacterBuilderService: Deleted character concept 475faa65-5b1a-4eb8-a91f-b78ce4c333ed
+consoleLogger.js:163 VED: EventDefinition not found for 'thematic:character_concept_deleted'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+deleteCharacterConcept @ characterBuilderService.js:491
+await in deleteCharacterConcept
+deleteConcept_fn @ characterConceptsManagerController.js:1645
+(anonymous) @ characterConceptsManagerController.js:1611Understand this warning
+consoleLogger.js:151 Concept deleted event received {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed'}
+consoleLogger.js:151 Statistics updated {totalConcepts: 0, conceptsWithDirections: 0, totalDirections: 0, averageDirectionsPerConcept: '0', completionRate: 0, …}
+consoleLogger.js:151 Concept deleted successfully {conceptId: '475faa65-5b1a-4eb8-a91f-b78ce4c333ed', directionsDeleted: 0}
+consoleLogger.js:151 Character concept deleted successfully
+consoleLogger.js:151 Statistics updated {totalConcepts: 0, conceptsWithDirections: 0, totalDirections: 0, averageDirectionsPerConcept: '0', completionRate: 0, …}
+consoleLogger.js:175 Failed to delete concept TypeError: __privateGet(...).setState is not a function
+    at CharacterConceptsManagerController.deleteConcept_fn (characterConceptsManagerController.js:1667:30)
+    at async HTMLButtonElement.<anonymous> (characterConceptsManagerController.js:1611:9)
+error @ consoleLogger.js:175
+deleteConcept_fn @ characterConceptsManagerController.js:1672
+await in deleteConcept_fn
+(anonymous) @ characterConceptsManagerController.js:1611Understand this error
+consoleLogger.js:175 Failed to delete concept TypeError: __privateGet(...).setState is not a function
+    at CharacterConceptsManagerController.deleteConcept_fn (characterConceptsManagerController.js:1667:30)
+    at async HTMLButtonElement.<anonymous> (characterConceptsManagerController.js:1611:9)
+error @ consoleLogger.js:175
+(anonymous) @ characterConceptsManagerController.js:1616Understand this error
+consoleLogger.js:151 Closing delete modal

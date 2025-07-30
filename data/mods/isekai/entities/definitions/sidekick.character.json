@@ -57,10 +57,18 @@
     "core:notes": {
       "notes": [
         {
-          "text": "My intrusive thoughts, most of them about inappropriate sexual urges and violence, are getting worse. I fear I'm becoming a danger to others, not just myself."
+          "text": "My intrusive thoughts, most of them about inappropriate sexual urges and violence, are getting worse. I fear I'm becoming a danger to others, not just myself.",
+          "subject": "self",
+          "subjectType": "character",
+          "context": "Personal reflection on mental state",
+          "tags": ["mental-health", "personal", "concerns"]
         },
         {
-          "text": "My loneliness is only contributing to my sense of disconnection from the world. I wish I could be comfortable with someone else, to the point of intimacy."
+          "text": "My loneliness is only contributing to my sense of disconnection from the world. I wish I could be comfortable with someone else, to the point of intimacy.",
+          "subject": "self",
+          "subjectType": "emotion",
+          "context": "Personal reflection on emotional needs",
+          "tags": ["loneliness", "relationships", "personal"]
         }
       ]
     },

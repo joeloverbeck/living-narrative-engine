@@ -95,7 +95,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const locationDef = new EntityDefinition('test:location', {
         description: 'Test location',
         components: {
-          'core:name': { value: 'Town Square' },
+          'core:name': { text: 'Town Square' },
           'core:location': {
             description: 'A bustling town square',
             entities: [],
@@ -107,7 +107,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Test actor',
         components: {
-          'core:name': { value: 'Hero' },
+          'core:name': { text: 'Hero' },
           'core:actor': { name: 'Hero', health: 100 },
           'core:inventory': { items: [] },
           'core:position': { locationId: 'location-001' },
@@ -118,7 +118,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const weaponDef = new EntityDefinition('test:weapon', {
         description: 'Test weapon',
         components: {
-          'core:name': { value: 'Sword' },
+          'core:name': { text: 'Sword' },
           'core:item': { type: 'weapon', weight: 5 },
           'core:weapon': { damage: 10 },
         },
@@ -128,7 +128,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const enemyDef = new EntityDefinition('test:enemy', {
         description: 'Test enemy',
         components: {
-          'core:name': { value: 'Goblin' },
+          'core:name': { text: 'Goblin' },
           'core:actor': { name: 'Goblin', health: 50 },
           'core:position': { locationId: 'location-001' },
         },
@@ -203,7 +203,9 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
             ? {
                 target: {
                   id: resolvedTargets[targetDef.contextFrom][0].id,
-                  components: npc.getAllComponents ? npc.getAllComponents() : {},
+                  components: npc.getAllComponents
+                    ? npc.getAllComponents()
+                    : {},
                 },
               }
             : {}),
@@ -275,11 +277,13 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
 
       // Check resolved targets
       expect(actionWithTargets.targetContexts[0]).toEqual({
+        type: 'entity',
         entityId: 'enemy-001',
         displayName: 'Goblin',
         placeholder: 'target',
       });
       expect(actionWithTargets.targetContexts[1]).toEqual({
+        type: 'entity',
         entityId: 'weapon-001',
         displayName: 'Sword',
         placeholder: 'weapon',
@@ -359,7 +363,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:player', {
         description: 'Player',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
         },
       });
@@ -433,7 +437,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const npcDef = new EntityDefinition('test:npc', {
         description: 'NPC with inventory',
         components: {
-          'core:name': { value: 'Merchant' },
+          'core:name': { text: 'Merchant' },
           'core:actor': { name: 'Merchant' },
           'core:inventory': { items: [] },
         },
@@ -442,7 +446,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const itemDef = new EntityDefinition('test:trade_item', {
         description: 'Tradeable item',
         components: {
-          'core:name': { value: 'Gold Coin' },
+          'core:name': { text: 'Gold Coin' },
           'core:item': { type: 'currency', weight: 0.01, value: 1 },
         },
       });
@@ -469,7 +473,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const playerDef = new EntityDefinition('test:player', {
         description: 'Player',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
         },
       });
@@ -543,6 +547,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
           (tc) => tc.placeholder === 'merchant'
         )
       ).toEqual({
+        type: 'entity',
         entityId: 'merchant-001',
         displayName: 'Merchant',
         placeholder: 'merchant',
@@ -561,17 +566,21 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       // the secondary targets correctly based on the primary target's context
       expect(result.data.resolvedTargets.secondary).toBeDefined();
       expect(result.data.resolvedTargets.secondary).toHaveLength(2);
-      
+
       // Verify each secondary target has contextFromId pointing to the primary
-      expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe('merchant-001');
-      expect(result.data.resolvedTargets.secondary[1].contextFromId).toBe('merchant-001');
+      expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe(
+        'merchant-001'
+      );
+      expect(result.data.resolvedTargets.secondary[1].contextFromId).toBe(
+        'merchant-001'
+      );
     });
 
     it('should detect and handle circular dependencies', async () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
         },
       });
@@ -620,7 +629,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
         },
       });
@@ -670,6 +679,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actionWithTargets = result.data.actionsWithTargets[0];
       expect(actionWithTargets.targetContexts).toHaveLength(1);
       expect(actionWithTargets.targetContexts[0]).toEqual({
+        type: 'entity',
         entityId: 'player-001',
         displayName: 'Player',
         placeholder: 'target',
@@ -680,7 +690,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
         },
       });
@@ -736,7 +746,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
         },
       });
@@ -791,7 +801,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
           'core:inventory': { items: [] },
         },
@@ -800,7 +810,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const weaponDef = new EntityDefinition('test:weapon', {
         description: 'Weapon',
         components: {
-          'core:name': { value: 'Sword' },
+          'core:name': { text: 'Sword' },
           'core:item': { type: 'weapon' },
         },
       });
@@ -900,7 +910,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
         },
       });
@@ -950,7 +960,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
         },
       });
@@ -1013,7 +1023,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
           'core:inventory': { items: [] },
         },
@@ -1022,7 +1032,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const itemDef = new EntityDefinition('test:item', {
         description: 'Item',
         components: {
-          'core:name': { value: 'Health Potion' },
+          'core:name': { text: 'Health Potion' },
           'core:item': { type: 'consumable' },
         },
       });
@@ -1077,7 +1087,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
         },
       });
@@ -1119,7 +1129,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
         },
       });
@@ -1163,7 +1173,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
           'core:inventory': { items: [] },
         },
@@ -1230,7 +1240,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actorDef = new EntityDefinition('test:actor', {
         description: 'Actor',
         components: {
-          'core:name': { value: 'Player' },
+          'core:name': { text: 'Player' },
           'core:actor': { name: 'Player' },
         },
       });

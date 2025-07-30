@@ -32,7 +32,7 @@ export function createMockTargetContextBuilder(entityManager) {
           resolvedTargets,
           targetDef,
         };
-        
+
         // Include resolved target data for dependent scopes
         // For contextFrom: "primary", add the primary target as "target"
         if (targetDef?.contextFrom === 'primary' && resolvedTargets.primary) {
@@ -45,15 +45,19 @@ export function createMockTargetContextBuilder(entityManager) {
               dependentContext.target = primaryTarget.entity;
             } else if (typeof primaryTarget === 'string') {
               // It's just an ID, so get the entity
-              const targetEntity = entityManager?.getEntityInstance?.(primaryTarget);
-              dependentContext.target = targetEntity || { id: primaryTarget, components: {} };
+              const targetEntity =
+                entityManager?.getEntityInstance?.(primaryTarget);
+              dependentContext.target = targetEntity || {
+                id: primaryTarget,
+                components: {},
+              };
             } else if (typeof primaryTarget === 'object' && primaryTarget.id) {
               // It's already an entity object
               dependentContext.target = primaryTarget;
             }
           }
         }
-        
+
         return dependentContext;
       }),
   };

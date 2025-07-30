@@ -20,6 +20,78 @@ if (typeof global.setImmediate === 'undefined') {
   global.clearImmediate = clearTimeout;
 }
 
+// 3. IndexedDB polyfill for jsdom environment
+if (typeof window !== 'undefined' && typeof window.indexedDB === 'undefined') {
+  // Create a minimal IndexedDB mock for jsdom
+  const createMockIndexedDB = () => {
+    const databases = new Map();
+    
+    return {
+      open: (name, version) => {
+        const request = {
+          result: null,
+          error: null,
+          onsuccess: null,
+          onerror: null,
+          onupgradeneeded: null,
+        };
+        
+        setTimeout(() => {
+          // Create or get database
+          let db = databases.get(name);
+          if (!db || (version && db.version < version)) {
+            db = {
+              name,
+              version: version || 1,
+              objectStoreNames: {
+                contains: () => false,
+              },
+              createObjectStore: (storeName) => ({
+                createIndex: () => {},
+              }),
+              transaction: () => ({
+                objectStore: () => ({
+                  put: () => ({ onsuccess: null, onerror: null }),
+                  get: () => ({ onsuccess: null, onerror: null, result: null }),
+                  getAll: () => ({ onsuccess: null, onerror: null, result: [] }),
+                  delete: () => ({ onsuccess: null, onerror: null }),
+                  index: () => ({
+                    getAll: () => ({ onsuccess: null, onerror: null, result: [] }),
+                    openCursor: () => ({ onsuccess: null, onerror: null, result: null }),
+                  }),
+                }),
+                oncomplete: null,
+                onerror: null,
+              }),
+              close: () => {},
+            };
+            databases.set(name, db);
+            
+            // Call upgrade handler
+            if (request.onupgradeneeded) {
+              request.onupgradeneeded({ target: { result: db } });
+            }
+          }
+          
+          request.result = db;
+          if (request.onsuccess) {
+            request.onsuccess({ target: request });
+          }
+        }, 0);
+        
+        return request;
+      },
+    };
+  };
+  
+  window.indexedDB = createMockIndexedDB();
+  window.IDBKeyRange = {
+    only: (value) => ({ value, type: 'only' }),
+  };
+  
+  console.log('jest.setup.js: IndexedDB polyfill added for jsdom');
+}
+
 // Set reasonable default Jest test timeout - reduced from 30s to prevent hanging
 // Individual test files can override this for specific performance tests
 jest.setTimeout(15000);

@@ -23,7 +23,7 @@ describe('TargetResolutionService additional coverage', () => {
     mockScopeEngine = { resolve: jest.fn() };
     mockEntityManager = {
       getComponentData: jest.fn(),
-      getEntityInstance: jest.fn()
+      getEntityInstance: jest.fn(),
     };
     mockLogger = {
       error: jest.fn(),
