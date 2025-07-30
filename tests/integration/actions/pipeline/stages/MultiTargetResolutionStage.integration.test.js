@@ -191,7 +191,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         })
       );
 
-      // Mock buildDependentContext for secondary target resolution
+      // Mock buildDependentContext - this should return proper context structure
       targetContextBuilder.buildDependentContext.mockImplementation(
         (baseContext, resolvedTargets, targetDef) => ({
           ...baseContext,
@@ -203,7 +203,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
             ? {
                 target: {
                   id: resolvedTargets[targetDef.contextFrom][0].id,
-                  components: {},
+                  components: npc.getAllComponents ? npc.getAllComponents() : {},
                 },
               }
             : {}),
@@ -556,16 +556,15 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       expect(itemContexts[0].entityId).toBe('coin-001');
       expect(itemContexts[1].entityId).toBe('coin-002');
 
-      // Verify that dependent context was built correctly
-      expect(targetContextBuilder.buildDependentContext).toHaveBeenCalledWith(
-        baseContext,
-        expect.objectContaining({
-          primary: expect.arrayContaining([
-            expect.objectContaining({ id: 'merchant-001' }),
-          ]),
-        }),
-        actionDef.targets.secondary
-      );
+      // The new implementation uses per-primary-target context building
+      // Since this action has contextFrom: 'primary', it should have processed
+      // the secondary targets correctly based on the primary target's context
+      expect(result.data.resolvedTargets.secondary).toBeDefined();
+      expect(result.data.resolvedTargets.secondary).toHaveLength(2);
+      
+      // Verify each secondary target has contextFromId pointing to the primary
+      expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe('merchant-001');
+      expect(result.data.resolvedTargets.secondary[1].contextFromId).toBe('merchant-001');
     });
 
     it('should detect and handle circular dependencies', async () => {

@@ -223,37 +223,29 @@ describe('MultiTargetResolutionStage', () => {
           ActionResult.success(new Set(['item1', 'item2']))
         );
 
-      mockDeps.entityManager.getEntityInstance.mockReturnValue({
-        id: 'entity',
-        getComponent: jest.fn(),
+      // Mock entity instances with proper structure
+      mockDeps.entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'npc1') {
+          return {
+            id: 'npc1',
+            getComponent: jest.fn(),
+            getAllComponents: jest.fn().mockReturnValue({ 'core:name': { value: 'NPC 1' } }),
+          };
+        }
+        return {
+          id,
+          getComponent: jest.fn(),
+        };
       });
-
-      // Setup dependent context
-      const dependentContext = {
-        ...baseContext,
-        target: { id: 'npc1', components: {} },
-        targets: {
-          primary: [{ id: 'npc1', components: {} }],
-        },
-      };
-      mockDeps.targetContextBuilder.buildDependentContext.mockReturnValue(
-        dependentContext
-      );
 
       const result = await stage.executeInternal(mockContext);
 
       expect(result.success).toBe(true);
-      expect(
-        mockDeps.targetContextBuilder.buildDependentContext
-      ).toHaveBeenCalledWith(
-        baseContext,
-        expect.objectContaining({
-          primary: expect.arrayContaining([
-            expect.objectContaining({ id: 'npc1' }),
-          ]),
-        }),
-        actionDef.targets.secondary
-      );
+      // The new implementation doesn't call buildDependentContext for contextFrom targets
+      // Instead, it resolves secondary targets per primary target
+      expect(result.data.resolvedTargets.secondary).toHaveLength(2);
+      expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe('npc1');
+      expect(result.data.resolvedTargets.secondary[1].contextFromId).toBe('npc1');
     });
 
     it('should handle optional targets', async () => {
@@ -781,16 +773,21 @@ describe('MultiTargetResolutionStage', () => {
           ActionResult.success(new Set(['npc_001']))
         );
 
-        // Mock entity data
+        // Mock entity data with proper structure for the new implementation
         mockDeps.entityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'npc_001')
             return {
               id: 'npc_001',
-              components: {
+              getComponent: jest.fn(),
+              getAllComponents: jest.fn().mockReturnValue({
                 'core:inventory': { items: ['item_001', 'item_002'] },
-              },
+              }),
             };
-          return { id, components: {} };
+          return { 
+            id, 
+            getComponent: jest.fn(),
+            getAllComponents: jest.fn().mockReturnValue({})
+          };
         });
 
         // Mock context building for dependent resolution
@@ -798,19 +795,6 @@ describe('MultiTargetResolutionStage', () => {
           actor: { id: 'player' },
           location: { id: 'room' },
           game: { turnNumber: 1 },
-        });
-
-        mockDeps.targetContextBuilder.buildDependentContext.mockReturnValue({
-          actor: { id: 'player' },
-          location: { id: 'room' },
-          game: { turnNumber: 1 },
-          targets: { primary: [{ id: 'npc_001' }] },
-          target: {
-            id: 'npc_001',
-            components: {
-              'core:inventory': { items: ['item_001', 'item_002'] },
-            },
-          },
         });
 
         // Mock secondary target resolution
@@ -821,9 +805,10 @@ describe('MultiTargetResolutionStage', () => {
         const result = await stage.executeInternal(mockContext);
 
         expect(result.success).toBe(true);
-        expect(
-          mockDeps.targetContextBuilder.buildDependentContext
-        ).toHaveBeenCalled();
+        // The new implementation builds specific primary context rather than using buildDependentContext
+        expect(result.data.resolvedTargets.secondary).toHaveLength(2);
+        expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe('npc_001');
+        expect(result.data.resolvedTargets.secondary[1].contextFromId).toBe('npc_001');
       });
 
       it('should handle missing primary target gracefully', async () => {
@@ -890,22 +875,31 @@ describe('MultiTargetResolutionStage', () => {
             ActionResult.success(new Set(['treasure_001', 'treasure_002']))
           );
 
-        // Mock entity instances
+        // Mock entity instances with proper structure for the new implementation
         mockDeps.entityManager.getEntityInstance.mockImplementation((id) => {
           switch (id) {
             case 'tool_001':
-              return { id: 'tool_001', components: {} };
+              return { 
+                id: 'tool_001', 
+                getComponent: jest.fn(),
+                getAllComponents: jest.fn().mockReturnValue({})
+              };
             case 'container_001':
               return {
                 id: 'container_001',
-                components: {
+                getComponent: jest.fn(),
+                getAllComponents: jest.fn().mockReturnValue({
                   'core:container': {
                     contents: { items: ['treasure_001', 'treasure_002'] },
                   },
-                },
+                }),
               };
             default:
-              return { id, components: {} };
+              return { 
+                id, 
+                getComponent: jest.fn(),
+                getAllComponents: jest.fn().mockReturnValue({})
+              };
           }
         });
 
@@ -916,27 +910,13 @@ describe('MultiTargetResolutionStage', () => {
           game: { turnNumber: 1 },
         });
 
-        mockDeps.targetContextBuilder.buildDependentContext
-          .mockReturnValueOnce({
-            // Context for secondary resolution
-            targets: { primary: [{ id: 'tool_001' }] },
-          })
-          .mockReturnValueOnce({
-            // Context for tertiary resolution
-            targets: {
-              primary: [{ id: 'tool_001' }],
-              secondary: [{ id: 'container_001' }],
-            },
-            target: { id: 'container_001' },
-          });
-
         const result = await stage.executeInternal(mockContext);
 
         expect(result.success).toBe(true);
         expect(result.data.actionsWithTargets).toHaveLength(1);
-        expect(
-          mockDeps.targetContextBuilder.buildDependentContext
-        ).toHaveBeenCalledTimes(2);
+        // The new implementation builds specific primary context for each contextFrom target
+        expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe('tool_001');
+        expect(result.data.resolvedTargets.tertiary[0].contextFromId).toBe('container_001');
       });
     });
 
@@ -1194,23 +1174,24 @@ describe('MultiTargetResolutionStage', () => {
       mockContext.candidateActions = [actionDef];
 
       mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({});
-      mockDeps.targetContextBuilder.buildDependentContext.mockReturnValue({});
       mockDeps.unifiedScopeResolver.resolve.mockResolvedValue(
         ActionResult.success(new Set(['entity']))
       );
       mockDeps.entityManager.getEntityInstance.mockReturnValue({
         id: 'entity',
         getComponent: jest.fn(),
+        getAllComponents: jest.fn().mockReturnValue({}),
       });
 
       const result = await stage.executeInternal(mockContext);
 
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toHaveLength(1);
-      // Verify buildDependentContext was called 3 times (for b, c, d)
-      expect(
-        mockDeps.targetContextBuilder.buildDependentContext
-      ).toHaveBeenCalledTimes(3);
+      // The new implementation builds specific primary context for each contextFrom target
+      // Validate that targets have proper contextFromId relationships
+      expect(result.data.resolvedTargets.b[0].contextFromId).toBe('entity');
+      expect(result.data.resolvedTargets.c[0].contextFromId).toBe('entity');
+      expect(result.data.resolvedTargets.d[0].contextFromId).toBe('entity');
     });
   });
 });

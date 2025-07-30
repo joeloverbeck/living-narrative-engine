@@ -328,66 +328,144 @@ export class MultiTargetResolutionStage extends PipelineStage {
         'MultiTargetResolutionStage'
       );
 
-      // Build scope context
-      const scopeContext = this.#buildScopeContext(
-        actor,
-        actionContext,
-        resolvedTargets,
-        targetDef,
-        trace
-      );
+      // Check if this target depends on another target's context
+      if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
+        // Resolve this target for each instance of the contextFrom target
+        const primaryTargets = resolvedTargets[targetDef.contextFrom];
+        const resolvedSecondaryTargets = [];
 
-      // Resolve scope
-      const candidates = await this.#resolveScope(
-        targetDef.scope,
-        scopeContext,
-        trace
-      );
-
-      // Check if target is required
-      if (!targetDef.optional && candidates.length === 0) {
-        trace?.failure(
-          `No candidates found for required target '${targetKey}'`,
+        trace?.info(
+          `Resolving ${targetKey} for each ${targetDef.contextFrom} target (${primaryTargets.length} instances)`,
           'MultiTargetResolutionStage'
         );
-        return PipelineResult.success({
-          data: {
-            ...context.data,
-            actionsWithTargets: [],
-          },
-          continueProcessing: false,
+
+        for (const primaryTarget of primaryTargets) {
+          // Build context specific to this primary target
+          const specificContext = this.#buildScopeContextForSpecificPrimary(
+            actor,
+            actionContext,
+            resolvedTargets,
+            primaryTarget,
+            targetDef,
+            trace
+          );
+
+          // Resolve scope for this specific primary
+          const candidates = await this.#resolveScope(
+            targetDef.scope,
+            specificContext,
+            trace
+          );
+
+          // Store resolved targets with reference to their primary
+          candidates.forEach((entityId) => {
+            const entity = this.#entityManager.getEntityInstance(entityId);
+            if (!entity) return; // Skip missing entities
+
+            const displayName = this.#getEntityDisplayName(entityId);
+
+            resolvedSecondaryTargets.push({
+              id: entityId,
+              displayName,
+              entity,
+              contextFromId: primaryTarget.id, // Track which primary this belongs to
+            });
+          });
+        }
+
+        // Check if target is required and we found no candidates for any primary
+        if (!targetDef.optional && resolvedSecondaryTargets.length === 0) {
+          trace?.failure(
+            `No candidates found for required target '${targetKey}'`,
+            'MultiTargetResolutionStage'
+          );
+          return PipelineResult.success({
+            data: {
+              ...context.data,
+              actionsWithTargets: [],
+            },
+            continueProcessing: false,
+          });
+        }
+
+        resolvedTargets[targetKey] = resolvedSecondaryTargets;
+
+        // Add to flat list for backward compatibility
+        resolvedSecondaryTargets.forEach((target) => {
+          allTargetContexts.push({
+            entityId: target.id,
+            displayName: target.displayName,
+            placeholder: targetDef.placeholder,
+          });
         });
+
+        trace?.success(
+          `Resolved ${resolvedSecondaryTargets.length} total candidates for ${targetKey} across all ${primaryTargets.length} ${targetDef.contextFrom} targets`,
+          'MultiTargetResolutionStage'
+        );
+      } else {
+        // Original logic for targets without contextFrom
+        // Build scope context
+        const scopeContext = this.#buildScopeContext(
+          actor,
+          actionContext,
+          resolvedTargets,
+          targetDef,
+          trace
+        );
+
+        // Resolve scope
+        const candidates = await this.#resolveScope(
+          targetDef.scope,
+          scopeContext,
+          trace
+        );
+
+        // Check if target is required
+        if (!targetDef.optional && candidates.length === 0) {
+          trace?.failure(
+            `No candidates found for required target '${targetKey}'`,
+            'MultiTargetResolutionStage'
+          );
+          return PipelineResult.success({
+            data: {
+              ...context.data,
+              actionsWithTargets: [],
+            },
+            continueProcessing: false,
+          });
+        }
+
+        // Store resolved targets
+        resolvedTargets[targetKey] = candidates
+          .map((entityId) => {
+            const entity = this.#entityManager.getEntityInstance(entityId);
+            if (!entity) return null; // Filter out missing entities
+
+            const displayName = this.#getEntityDisplayName(entityId);
+
+            return {
+              id: entityId,
+              displayName,
+              entity,
+            };
+          })
+          .filter(Boolean); // Remove null entries
+
+        // Add to flat list for backward compatibility
+        resolvedTargets[targetKey].forEach((target) => {
+          allTargetContexts.push({
+            entityId: target.id,
+            displayName: target.displayName,
+            placeholder: targetDef.placeholder,
+          });
+        });
+
+        trace?.success(
+          `Resolved ${candidates.length} candidates for ${targetKey}`,
+          'MultiTargetResolutionStage'
+        );
       }
-
-      // Store resolved targets
-      resolvedTargets[targetKey] = candidates
-        .map((entityId) => {
-          const entity = this.#entityManager.getEntityInstance(entityId);
-          if (!entity) return null; // Filter out missing entities
-
-          const displayName = this.#getEntityDisplayName(entityId);
-
-          return {
-            id: entityId,
-            displayName,
-            entity,
-          };
-        })
-        .filter(Boolean); // Remove null entries
-
-      // Add to flat list for backward compatibility
-      resolvedTargets[targetKey].forEach((target) => {
-        allTargetContexts.push({
-          entityId: target.id,
-          displayName: target.displayName,
-          placeholder: targetDef.placeholder,
-        });
-      });
-
-      trace?.success(
-        `Resolved ${candidates.length} candidates for ${targetKey}`,
-        'MultiTargetResolutionStage'
-      );
     }
 
     // Check if we have at least one valid target
@@ -496,6 +574,53 @@ export class MultiTargetResolutionStage extends PipelineStage {
   }
 
   /**
+   * Build scope evaluation context for a specific primary target
+   *
+   * @param actor
+   * @param actionContext
+   * @param resolvedTargets
+   * @param specificPrimary
+   * @param targetDef
+   * @param trace
+   * @private
+   */
+  #buildScopeContextForSpecificPrimary(
+    actor,
+    actionContext,
+    resolvedTargets,
+    specificPrimary,
+    targetDef,
+    trace
+  ) {
+    // Start with base context
+    const baseContext = this.#contextBuilder.buildBaseContext(
+      actor.id,
+      actionContext.location?.id ||
+        actor.getComponentData('core:position')?.locationId
+    );
+
+    // Build context with the specific primary target
+    const context = { ...baseContext };
+    
+    // Add all resolved targets
+    context.targets = { ...resolvedTargets };
+    
+    // Add the specific primary as the 'target' for scope evaluation
+    if (specificPrimary) {
+      // Build entity context manually since buildEntityContext is private
+      const entity = this.#entityManager.getEntityInstance(specificPrimary.id);
+      if (entity) {
+        context.target = {
+          id: entity.id,
+          components: entity.getAllComponents ? entity.getAllComponents() : {},
+        };
+      }
+    }
+
+    return context;
+  }
+
+  /**
    * Resolve a scope expression to entity IDs
    *
    * @param scope
@@ -508,7 +633,9 @@ export class MultiTargetResolutionStage extends PipelineStage {
       trace?.step(`Evaluating scope '${scope}'`, 'MultiTargetResolutionStage');
 
       // Create resolution context for UnifiedScopeResolver
+      // Include all context fields, especially 'target' for dependent scopes
       const resolutionContext = {
+        ...context, // Include all fields from the scope context
         actor: context.actor,
         actorLocation: context.location?.id || 'unknown',
         actionContext: {

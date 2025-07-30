@@ -345,6 +345,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
   /**
    * Helper function to setup standard mock for jsonLogicEval
+   *
    * @param shouldFacingConditionReturnTrue - Whether the facing condition should return true
    */
   function setupJsonLogicMock(shouldFacingConditionReturnTrue = true) {
@@ -862,9 +863,8 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       expect(adjustClothingActions[0].params.targetIds.primary).toEqual([target1Id, target2Id]);
       
       // When contextFrom: "primary", the secondary scope should resolve for each primary target
-      // However, the current mock implementation only resolves once with the first target's context
-      // This is a limitation of the mock - in production, it would resolve per primary target
-      expect(adjustClothingActions[0].params.targetIds.secondary).toEqual(['shirt123']);
+      // The production implementation now correctly resolves per primary target
+      expect(adjustClothingActions[0].params.targetIds.secondary).toEqual(['shirt123', 'shirt456']);
       
       // The command should be an array when there are multiple primary targets
       const command = adjustClothingActions[0].command;
@@ -873,9 +873,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       // First command for target1 with shirt123
       expect(command[0]).toContain('target1');
       expect(command[0]).toContain('shirt123');
-      // Second command for target2 - should contain shirt456 but mock limitation means shirt123
+      // Second command for target2 with shirt456 (now correctly resolved per primary target)
       expect(command[1]).toContain('target2');
-      expect(command[1]).toContain('shirt123'); // Mock limitation - should be shirt456 in production
+      expect(command[1]).toContain('shirt456'); // Now correctly resolved per primary target
     });
   });
 
