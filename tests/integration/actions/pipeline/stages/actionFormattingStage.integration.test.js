@@ -875,7 +875,8 @@ describe('ActionFormattingStage - Integration Tests', () => {
 
       // Assert
       expect(result.success).toBe(true);
-      expect(result.actions).toHaveLength(1);
+      // When generateCombinations is true with multiple targets, we get multiple formatted actions
+      expect(result.actions.length).toBeGreaterThan(1);
 
       const formattedAction = result.actions[0];
       expect(formattedAction.id).toBe('combat:multi_throw');
@@ -967,8 +968,9 @@ describe('ActionFormattingStage - Integration Tests', () => {
 
       // Assert
       expect(result.success).toBe(true);
-      expect(result.actions).toHaveLength(1);
-      expect(result.actions[0].command).toBe('use {item}'); // Placeholder not replaced
+      // With strict validation, actions with unresolved placeholders are rejected
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
     });
 
     it('should preserve backward compatibility with legacy actions', async () => {

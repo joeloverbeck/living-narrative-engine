@@ -165,15 +165,6 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
   });
 
   describe('Complete Concept Loading Flow', () => {
-    // Legacy dropdown test - removed as this functionality has been replaced
-    it.skip('should load existing concepts into dropdown during initialization', async () => {
-      // This test was for the legacy "Load Previous Concept" dropdown which has been removed
-    });
-
-    // Legacy dropdown test - removed as this functionality has been replaced
-    it.skip('should handle empty concept list gracefully', async () => {
-      // This test was for the legacy "Load Previous Concept" dropdown which has been removed
-    });
 
     it('should create and store new concept through the complete flow', async () => {
       // Arrange
@@ -226,10 +217,6 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
       expect(retrievedConcept).toEqual(mockConcept);
     });
 
-    // Legacy dropdown test - removed as this functionality has been replaced
-    it.skip('should handle storage errors gracefully during concept loading', async () => {
-      // This test was for the legacy "Load Previous Concept" dropdown which has been removed
-    });
 
     it('should integrate with character builder service for concept retrieval', async () => {
       // Arrange
