@@ -55,7 +55,7 @@ export function createMockEventBus() {
  * @returns {object} Mock DOM element
  */
 export function createMockElement(id, additionalProps = {}) {
-  return {
+  const mockElement = {
     id,
     value: '',
     textContent: '',
@@ -91,8 +91,34 @@ export function createMockElement(id, additionalProps = {}) {
     dataset: {},
     disabled: false,
     checked: false,
+    // Additional DOM methods needed for complex operations
+    cloneNode: jest.fn(),
     ...additionalProps,
   };
+
+  // Set up cloneNode to return a copy of the element
+  mockElement.cloneNode = jest.fn(() => createMockElement(id + '-clone', additionalProps));
+  
+  // Set up parentNode to reference a mock parent
+  mockElement.parentNode = {
+    replaceChild: jest.fn(),
+    removeChild: jest.fn(),
+    appendChild: jest.fn(),
+  };
+
+  // Set up parentElement (which is the same as parentNode for testing)
+  mockElement.parentElement = {
+    insertBefore: jest.fn(),
+    removeChild: jest.fn(),
+    appendChild: jest.fn(),
+    querySelector: jest.fn(() => null),
+    querySelectorAll: jest.fn(() => []),
+  };
+
+  // Set up nextSibling
+  mockElement.nextSibling = null;
+
+  return mockElement;
 }
 
 /**
@@ -128,7 +154,7 @@ export function createMockElements() {
     // Create/Edit Modal
     'concept-modal': createMockElement('concept-modal'),
     'concept-modal-title': createMockElement('concept-modal-title'),
-    'concept-form': createMockElement('concept-form'),
+    'concept-form': createMockElement('concept-form', { reset: jest.fn() }),
     'concept-text': createMockElement('concept-text', { value: '' }),
     'char-count': createMockElement('char-count'),
     'concept-error': createMockElement('concept-error'),
@@ -215,6 +241,14 @@ export function setupDocumentMock(elements) {
     writable: true,
     value: elements['concept-text'] || document.body,
   });
+
+  // Mock window.getComputedStyle
+  window.getComputedStyle = jest.fn(() => ({
+    display: 'none',
+    visibility: 'hidden',
+    opacity: '0',
+    getPropertyValue: jest.fn(),
+  }));
 }
 
 /**
@@ -286,5 +320,122 @@ export function createMockUIStateManager() {
     showLoading: jest.fn(),
     getCurrentState: jest.fn(),
     setState: jest.fn(),
+  };
+}
+
+/**
+ * Creates a mock character storage service with all required methods
+ *
+ * @returns {object} Mock character storage service
+ */
+export function createMockCharacterStorageService() {
+  return {
+    initialize: jest.fn().mockResolvedValue(),
+    getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
+    getCharacterConcept: jest.fn(),
+    storeCharacterConcept: jest.fn().mockResolvedValue(),
+    deleteCharacterConcept: jest.fn().mockResolvedValue(),
+    getThematicDirections: jest.fn().mockResolvedValue([]),
+  };
+}
+
+/**
+ * Creates a mock event dispatcher with all required methods
+ *
+ * @returns {object} Mock event dispatcher
+ */
+export function createMockEventDispatcher() {
+  return {
+    dispatch: jest.fn(),
+    subscribe: jest.fn(),
+    unsubscribe: jest.fn(),
+  };
+}
+
+/**
+ * Populates the controller's internal elements cache for testing
+ *
+ * @param {CharacterConceptsManagerController} controller - Controller instance
+ * @param {object} elements - Mock elements object
+ */
+export function populateControllerElements(controller, elements) {
+  if (controller._testExports) {
+    controller._testExports.elements = {
+      conceptsContainer: elements['concepts-container'],
+      conceptsResults: elements['concepts-results'],
+      emptyState: elements['empty-state'],
+      loadingState: elements['loading-state'],
+      errorState: elements['error-state'],
+      resultsState: elements['results-state'],
+      errorMessageText: elements['error-message-text'],
+      createConceptBtn: elements['create-concept-btn'],
+      createFirstBtn: elements['create-first-btn'],
+      retryBtn: elements['retry-btn'],
+      backToMenuBtn: elements['back-to-menu-btn'],
+      conceptSearch: elements['concept-search'],
+      statsDisplay: elements['.stats-display'] || createMockElement('stats-display'), // Handle class selector
+      totalConcepts: elements['total-concepts'],
+      conceptsWithDirections: elements['concepts-with-directions'],
+      totalDirections: elements['total-directions'],
+      conceptModal: elements['concept-modal'],
+      conceptModalTitle: elements['concept-modal-title'],
+      conceptForm: elements['concept-form'],
+      conceptText: elements['concept-text'],
+      charCount: elements['char-count'],
+      conceptError: elements['concept-error'],
+      saveConceptBtn: elements['save-concept-btn'],
+      cancelConceptBtn: elements['cancel-concept-btn'],
+      closeConceptModal: elements['close-concept-modal'],
+      deleteModal: elements['delete-confirmation-modal'],
+      deleteModalMessage: elements['delete-modal-message'],
+      confirmDeleteBtn: elements['confirm-delete-btn'],
+      cancelDeleteBtn: elements['cancel-delete-btn'],
+      closeDeleteModal: elements['close-delete-modal'],
+    };
+  }
+}
+
+/**
+ * Creates a comprehensive test setup for CharacterConceptsManagerController tests
+ *
+ * @returns {object} Test setup containing mocks and configuration
+ */
+export function createTestSetup() {
+  // Create all required mocks
+  const mocks = {
+    logger: createMockLogger(),
+    builderService: createMockCharacterBuilderService(),
+    storageService: createMockCharacterStorageService(),
+    eventBus: createMockEventDispatcher(),
+    uiStateManager: createMockUIStateManager(),
+  };
+
+  // Create elements and set up DOM mock
+  const elements = createMockElements();
+  setupDocumentMock(elements);
+
+  // Add querySelector to the concepts-results element for deletion tests
+  elements['concepts-results'].querySelector = jest.fn().mockReturnValue(null);
+  elements['concepts-results'].children = { length: 0 };
+  elements['concepts-results'].innerHTML = '';
+  elements['concepts-results'].appendChild = jest.fn();
+  elements['concepts-results'].classList = {
+    add: jest.fn(),
+    remove: jest.fn(),
+    contains: jest.fn(),
+  };
+
+  // Create controller configuration
+  const config = {
+    logger: mocks.logger,
+    characterBuilderService: mocks.builderService,
+    eventBus: mocks.eventBus,
+  };
+
+  return {
+    mocks,
+    elements,
+    config,
+    populateControllerElements, // Helper function to populate controller elements
   };
 }
