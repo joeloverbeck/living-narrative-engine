@@ -79,11 +79,6 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
       errorState: { style: { display: 'none' } },
       resultsState: { style: { display: 'none' } },
       directionsResults: { innerHTML: '', appendChild: jest.fn() },
-      previousConceptsSelect: {
-        addEventListener: jest.fn(),
-        innerHTML: '',
-        appendChild: jest.fn(),
-      },
       errorMessageText: { textContent: '' },
     };
 
@@ -100,7 +95,6 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
         'error-state': mockElements.errorState,
         'results-state': mockElements.resultsState,
         'directions-results': mockElements.directionsResults,
-        'previous-concepts': mockElements.previousConceptsSelect,
         'concept-error': mockElements.errorMessage,
         'error-message-text': mockElements.errorMessageText,
       };
@@ -171,47 +165,14 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
   });
 
   describe('Complete Concept Loading Flow', () => {
-    it('should load existing concepts into dropdown during initialization', async () => {
-      // Arrange
-      const mockConcepts = [
-        createCharacterConcept('A brave knight who fights for justice'),
-        createCharacterConcept(
-          'A sneaky rogue with golden heart and silver tongue'
-        ),
-        createCharacterConcept(
-          'A wise wizard seeking forbidden ancient knowledge'
-        ),
-      ];
-      database.getAllCharacterConcepts.mockResolvedValue(mockConcepts);
-
-      // Act
-      await controller.initialize();
-
-      // Assert
-
-      expect(builderService.getAllCharacterConcepts).toHaveBeenCalled();
-      expect(storageService.listCharacterConcepts).toHaveBeenCalled();
-      expect(database.getAllCharacterConcepts).toHaveBeenCalled();
-      expect(mockElements.previousConceptsSelect.innerHTML).toBe(
-        '<option value="">-- Select a saved concept --</option>'
-      );
-      expect(document.createElement).toHaveBeenCalledWith('option');
-      expect(mockLogger.error).not.toHaveBeenCalled();
+    // Legacy dropdown test - removed as this functionality has been replaced
+    it.skip('should load existing concepts into dropdown during initialization', async () => {
+      // This test was for the legacy "Load Previous Concept" dropdown which has been removed
     });
 
-    it('should handle empty concept list gracefully', async () => {
-      // Arrange
-      database.getAllCharacterConcepts.mockResolvedValue([]);
-
-      // Act
-      await controller.initialize();
-
-      // Assert
-      expect(database.getAllCharacterConcepts).toHaveBeenCalled();
-      expect(mockElements.previousConceptsSelect.innerHTML).toBe(
-        '<option value="">-- Select a saved concept --</option>'
-      );
-      expect(mockLogger.error).not.toHaveBeenCalled();
+    // Legacy dropdown test - removed as this functionality has been replaced
+    it.skip('should handle empty concept list gracefully', async () => {
+      // This test was for the legacy "Load Previous Concept" dropdown which has been removed
     });
 
     it('should create and store new concept through the complete flow', async () => {
@@ -265,22 +226,9 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
       expect(retrievedConcept).toEqual(mockConcept);
     });
 
-    it('should handle storage errors gracefully during concept loading', async () => {
-      // Arrange
-      const storageError = new Error('IndexedDB is not available');
-      database.getAllCharacterConcepts.mockRejectedValue(storageError);
-
-      // Act
-      await controller.initialize();
-
-      // Assert
-      expect(database.getAllCharacterConcepts).toHaveBeenCalled();
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'ThematicDirectionController: Failed to load previous concepts',
-        expect.any(Error)
-      );
-      // Dropdown should remain empty when loading fails
-      expect(mockElements.previousConceptsSelect.innerHTML).toBe('');
+    // Legacy dropdown test - removed as this functionality has been replaced
+    it.skip('should handle storage errors gracefully during concept loading', async () => {
+      // This test was for the legacy "Load Previous Concept" dropdown which has been removed
     });
 
     it('should integrate with character builder service for concept retrieval', async () => {

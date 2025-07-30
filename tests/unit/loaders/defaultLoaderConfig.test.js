@@ -85,6 +85,7 @@ describe('defaultLoaderConfig', () => {
       anatomyBlueprintPartLoader: stubLoader,
       anatomySlotLibraryLoader: stubLoader,
       anatomyFormattingLoader: stubLoader,
+      uiAssetsLoader: stubLoader,
     };
     const config = createDefaultContentLoadersConfig(deps);
     expect(config).toEqual(

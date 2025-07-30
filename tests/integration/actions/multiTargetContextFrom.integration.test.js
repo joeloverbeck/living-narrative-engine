@@ -193,7 +193,7 @@ describe('Multi-target action with contextFrom dependency', () => {
             description: 'Person whose clothing to adjust',
           },
           secondary: {
-            scope: 'intimacy:target_topmost_torso_upper_clothing',
+            scope: 'clothing:target_topmost_torso_upper_clothing',
             placeholder: 'secondary',
             description: 'Specific garment to adjust',
             contextFrom: 'primary',
@@ -215,7 +215,7 @@ describe('Multi-target action with contextFrom dependency', () => {
         }
 
         // Secondary scope returns clothing based on context.target
-        if (scope === 'intimacy:target_topmost_torso_upper_clothing') {
+        if (scope === 'clothing:target_topmost_torso_upper_clothing') {
           console.log('Resolving secondary scope with context:', {
             hasTarget: !!context.target,
             targetId: context.target?.id,
@@ -282,7 +282,7 @@ describe('Multi-target action with contextFrom dependency', () => {
         // Check how many times unifiedScopeResolver was called
         const secondaryScopeCalls =
           unifiedScopeResolver.resolve.mock.calls.filter(
-            (call) => call[0] === 'intimacy:target_topmost_torso_upper_clothing'
+            (call) => call[0] === 'clothing:target_topmost_torso_upper_clothing'
           );
         console.log(
           'Secondary scope was called',

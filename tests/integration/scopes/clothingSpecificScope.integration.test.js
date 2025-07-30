@@ -48,7 +48,7 @@ const clothingScopeContent = fs.readFileSync(
 const secondaryScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/intimacy/scopes/target_topmost_torso_upper_clothing.scope'
+    '../../../data/mods/clothing/scopes/target_topmost_torso_upper_clothing.scope'
   ),
   'utf8'
 );
@@ -174,9 +174,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
         primaryScopeDefinitions.get(
           'intimacy:close_actors_facing_each_other_with_torso_clothing'
         ),
-      'intimacy:target_topmost_torso_upper_clothing':
+      'clothing:target_topmost_torso_upper_clothing':
         secondaryScopeDefinitions.get(
-          'intimacy:target_topmost_torso_upper_clothing'
+          'clothing:target_topmost_torso_upper_clothing'
         ),
     });
 
@@ -608,7 +608,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       // The secondary scope uses the actual scope expression from the scope file
       const secondaryScopeDefinition = scopeRegistry.getScope(
-        'intimacy:target_topmost_torso_upper_clothing'
+        'clothing:target_topmost_torso_upper_clothing'
       );
       console.log('Secondary scope definition:', secondaryScopeDefinition);
 

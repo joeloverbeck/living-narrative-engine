@@ -20,7 +20,8 @@ import {
   createMockEvent,
 } from '../../../common/testHelpers/thematicDirectionDOMSetup.js';
 
-describe('ThematicDirectionController - Concept Loading', () => {
+// Legacy dropdown tests - removed as this functionality has been replaced
+describe.skip('ThematicDirectionController - Concept Loading', () => {
   let controller;
   let mockLogger;
   let mockCharacterBuilderService;
@@ -42,6 +43,7 @@ describe('ThematicDirectionController - Concept Loading', () => {
       getCharacterConcept: jest.fn(),
       createCharacterConcept: jest.fn(),
       generateThematicDirections: jest.fn(),
+      getThematicDirections: jest.fn(),
     };
 
     mockEventBus = {

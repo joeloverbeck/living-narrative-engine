@@ -283,7 +283,9 @@ export function createMockUnifiedScopeResolver(dependencies) {
         }
 
         // Resolve scope
-        console.log('Calling scopeEngine.resolve with:');
+        console.log(
+          `[SCOPE RESOLUTION DEBUG] Calling scopeEngine.resolve for '${scopeName}':`
+        );
         console.log('  Actor:', actorWithComponents.id);
         console.log(
           '  Actor components:',
@@ -299,6 +301,40 @@ export function createMockUnifiedScopeResolver(dependencies) {
           );
         }
 
+        // Log all available entities for debugging
+        const allEntities = [];
+        try {
+          const entityIds = entityManager.getAllEntityIds
+            ? entityManager.getAllEntityIds()
+            : entityManager.entities
+              ? Array.from(entityManager.entities.keys())
+              : [];
+          for (const id of entityIds) {
+            const entity = entityManager.getEntityInstance(id);
+            if (entity) {
+              const components = entity.getAllComponents
+                ? entity.getAllComponents()
+                : {};
+              allEntities.push({
+                id,
+                hasActorComponent: !!components['core:actor'],
+                hasExitsComponent: !!components['core:exits'],
+                hasPositionComponent: !!components['core:position'],
+                componentKeys: Object.keys(components),
+              });
+            }
+          }
+          console.log(
+            `[SCOPE RESOLUTION DEBUG] Available entities:`,
+            allEntities
+          );
+        } catch (err) {
+          console.log(
+            `[SCOPE RESOLUTION DEBUG] Could not list entities:`,
+            err.message
+          );
+        }
+
         let resolvedIds;
         try {
           resolvedIds = scopeEngine.resolve(
@@ -307,10 +343,7 @@ export function createMockUnifiedScopeResolver(dependencies) {
             runtimeCtx,
             context.trace
           );
-          console.log(
-            'scopeEngine.resolve returned:',
-            Array.from(resolvedIds || [])
-          );
+          const resolvedArray = Array.from(resolvedIds || []);
         } catch (scopeError) {
           console.log('scopeEngine.resolve threw error:', scopeError.message);
           console.log('Error stack:', scopeError.stack);

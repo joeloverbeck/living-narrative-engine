@@ -154,7 +154,7 @@ describe('MultiTargetActionFormatter', () => {
       );
     });
 
-    it('should handle empty target arrays', () => {
+    it('should reject actions with empty target arrays (strict validation)', () => {
       const emptyTargets = {
         primary: [],
         secondary: [{ id: 'enemy1', displayName: 'Goblin' }],
@@ -168,8 +168,9 @@ describe('MultiTargetActionFormatter', () => {
         deps
       );
 
-      expect(result.ok).toBe(true);
-      expect(result.value).toBe('throw {item} at Goblin');
+      // With strict validation, actions with missing required targets should fail
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain('unresolved placeholders');
     });
 
     it('should use entity ID as fallback for display name', () => {

@@ -62,6 +62,23 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       const { targetDefinitions } = deps || {};
       let template = actionDef.template || actionDef.name;
 
+      // Validate inputs
+      if (!resolvedTargets || typeof resolvedTargets !== 'object') {
+        return {
+          ok: false,
+          error:
+            'Invalid or missing resolvedTargets - multi-target actions require resolved target data',
+        };
+      }
+
+      // Debug logging
+      this.#logger.debug('formatMultiTarget called:', {
+        actionId: actionDef.id,
+        template,
+        resolvedTargets: JSON.stringify(resolvedTargets, null, 2),
+        targetDefinitions,
+      });
+
       // Handle combination generation if explicitly enabled
       if (actionDef.generateCombinations === true) {
         return this.#formatCombinations(
@@ -77,8 +94,26 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         (targets) => Array.isArray(targets) && targets.length > 1
       );
 
-      if (hasMultipleEntities) {
-        // Generate combinations automatically when targets resolve to multiple entities
+      // Check if any targets have contextFromId (dependent targets)
+      // OR if any target definitions have contextFrom specified
+      const hasDependentTargets =
+        Object.values(resolvedTargets).some((targets) =>
+          targets.some((t) => t.contextFromId)
+        ) ||
+        Object.values(targetDefinitions || {}).some((def) => def.contextFrom);
+
+      // Only generate combinations if we have multiple entities AND no context dependencies
+      // For context-dependent targets, we need to use the special handler
+      if (hasDependentTargets) {
+        // Generate context-aware combinations
+        return this.#formatCombinations(
+          actionDef,
+          resolvedTargets,
+          targetDefinitions,
+          options
+        );
+      } else if (hasMultipleEntities) {
+        // Generate regular combinations for multiple independent targets
         return this.#formatCombinations(
           actionDef,
           resolvedTargets,
@@ -130,6 +165,7 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       }
     }
 
+    // Always return an array, even if empty
     return { ok: true, value: formattedCommands };
   }
 
@@ -151,12 +187,22 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
   ) {
     let formattedTemplate = template;
 
+    this.#logger.debug('formatSingleMultiTarget:', {
+      template,
+      resolvedTargetsKeys: Object.keys(resolvedTargets),
+      targetDefinitions,
+    });
+
     // Extract placeholders from template
     const placeholdersInTemplate = this.#extractPlaceholders(template);
 
     // Replace each placeholder
     for (const [targetKey, targets] of Object.entries(resolvedTargets)) {
-      if (targets.length === 0) continue;
+      if (!targets || targets.length === 0) {
+        // Skip empty target arrays - the placeholder will remain
+        this.#logger.debug(`Skipping empty target array for key: ${targetKey}`);
+        continue;
+      }
 
       const targetDef = targetDefinitions?.[targetKey];
       let placeholder = targetDef?.placeholder;
@@ -184,11 +230,51 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
       const target = targets[0]; // Use first target
 
+      if (!target) {
+        // This shouldn't happen if targets.length > 0, but be defensive
+        this.#logger.warn(
+          `No target found in non-empty array for key: ${targetKey}`
+        );
+        continue;
+      }
+
+      this.#logger.debug(
+        `Replacing placeholder {${placeholder}} for ${targetKey}:`,
+        {
+          targetKey,
+          placeholder,
+          targetId: target.id,
+          targetDisplayName: target.displayName,
+          currentTemplate: formattedTemplate,
+        }
+      );
+
       const placeholderRegex = new RegExp(`\\{${placeholder}\\}`, 'g');
       formattedTemplate = formattedTemplate.replace(
         placeholderRegex,
         target.displayName || target.id
       );
+    }
+
+    // Check for any remaining placeholders
+    const remainingPlaceholders = this.#extractPlaceholders(formattedTemplate);
+    if (remainingPlaceholders.length > 0) {
+      this.#logger.warn(
+        'Template still contains placeholders after formatting:',
+        {
+          template: formattedTemplate,
+          remainingPlaceholders,
+          resolvedTargets: Object.keys(resolvedTargets),
+          targetDefinitions,
+        }
+      );
+
+      // STRICT VALIDATION: Multi-target actions must have all placeholders resolved
+      // Do not allow partially resolved actions as per user requirements
+      return {
+        ok: false,
+        error: `Multi-target action template contains unresolved placeholders: ${remainingPlaceholders.join(', ')}. Action is not available.`,
+      };
     }
 
     return { ok: true, value: formattedTemplate };
@@ -225,17 +311,28 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     const maxCombinations = 50; // Reasonable limit
 
     if (targetKeys.length === 0) return [];
+
+    // Check if any target arrays are empty
+    const hasEmptyTargets = Object.values(resolvedTargets).some(
+      (targets) => !targets || targets.length === 0
+    );
+
+    // Check if any targets have contextFromId (dependent targets)
+    const hasDependentTargets = Object.values(resolvedTargets).some((targets) =>
+      targets.some((t) => t.contextFromId)
+    );
+
+    // If we have dependent targets but some are empty, return empty combinations
+    if (hasDependentTargets && hasEmptyTargets) {
+      return [];
+    }
+
     if (targetKeys.length === 1) {
       const key = targetKeys[0];
       return resolvedTargets[key]
         .slice(0, maxCombinations)
         .map((target) => ({ [key]: [target] }));
     }
-
-    // Check if any targets have contextFromId (dependent targets)
-    const hasDependentTargets = Object.values(resolvedTargets).some((targets) =>
-      targets.some((t) => t.contextFromId)
-    );
 
     if (hasDependentTargets) {
       // Handle context-dependent combinations
@@ -310,6 +407,15 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
     const primaryTargets = resolvedTargets[primaryKey];
 
+    this.#logger.debug('generateContextDependentCombinations:', {
+      primaryKey,
+      primaryTargets: primaryTargets.map((t) => ({
+        id: t.id,
+        displayName: t.displayName,
+      })),
+      allKeys: Object.keys(resolvedTargets),
+    });
+
     // For each primary target, create a combination with its dependent targets
     for (const primaryTarget of primaryTargets) {
       if (combinations.length >= maxCombinations) break;
@@ -318,35 +424,137 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         [primaryKey]: [primaryTarget],
       };
 
+      let hasAllRequiredTargets = true;
+
       // Find all dependent targets for this primary
       for (const [key, targets] of Object.entries(resolvedTargets)) {
         if (key === primaryKey) continue;
 
-        // Find targets that depend on this primary
-        const dependentTargets = targets.filter(
-          (t) => t.contextFromId === primaryTarget.id
-        );
+        // Check if this is a dependent target type (all targets have contextFromId)
+        const isDependent =
+          targets.length > 0 && targets.every((t) => t.contextFromId);
 
-        if (dependentTargets.length > 0) {
-          combination[key] = dependentTargets;
-        } else {
-          // If no dependent targets found for this key, check if it's optional
-          // For now, skip this combination if a required target is missing
-          const allHaveContextFrom = targets.every((t) => t.contextFromId);
-          if (allHaveContextFrom && targets.length > 0) {
-            // This is a dependent target type but none match this primary
-            // Skip this combination
-            continue;
+        if (isDependent) {
+          // Find targets that depend on this primary
+          const dependentTargets = targets.filter(
+            (t) => t.contextFromId === primaryTarget.id
+          );
+
+          if (dependentTargets.length > 0) {
+            combination[key] = dependentTargets;
+          } else {
+            // This is a required dependent target but none match this primary
+            // Skip this entire combination
+            hasAllRequiredTargets = false;
+            break;
           }
-          // Otherwise, this might be an independent target, include all
-          combination[key] = targets;
+        } else {
+          // This is an independent target type, include all targets
+          // This creates cartesian product with independent targets
+          if (targets.length > 0) {
+            combination[key] = targets;
+          }
         }
       }
 
-      combinations.push(combination);
+      // Only add combination if all required targets are present
+      // For context-dependent actions, we need all target types to have values
+      if (hasAllRequiredTargets) {
+        // Check if we have values for all expected target types
+        const expectedTargetKeys = Object.keys(resolvedTargets);
+        const hasAllTargets = expectedTargetKeys.every(
+          (key) => combination[key] && combination[key].length > 0
+        );
+
+        if (!hasAllTargets) {
+          // Skip this combination if any target type is missing
+          continue;
+        }
+        // If we have independent targets that aren't context-dependent,
+        // we need to expand combinations
+        const independentKeys = Object.keys(combination).filter(
+          (key) =>
+            key !== primaryKey &&
+            !resolvedTargets[key].every((t) => t.contextFromId)
+        );
+
+        if (independentKeys.length > 0) {
+          // Generate cartesian product for independent targets
+          this.#expandCombinationsForIndependentTargets(
+            combination,
+            independentKeys,
+            combinations,
+            maxCombinations
+          );
+        } else {
+          // No independent targets, just add the combination
+          combinations.push(combination);
+        }
+      }
     }
 
+    this.#logger.debug('Generated combinations:', {
+      count: combinations.length,
+      combinations: combinations.map((c) => {
+        const result = {};
+        for (const [key, targets] of Object.entries(c)) {
+          result[key] = targets.map((t) => ({
+            id: t.id,
+            displayName: t.displayName,
+          }));
+        }
+        return result;
+      }),
+    });
+
     return combinations;
+  }
+
+  /**
+   * Expand combinations for independent targets
+   *
+   * @param baseCombination
+   * @param independentKeys
+   * @param combinations
+   * @param maxCombinations
+   * @private
+   */
+  #expandCombinationsForIndependentTargets(
+    baseCombination,
+    independentKeys,
+    combinations,
+    maxCombinations
+  ) {
+    // Extract independent target arrays
+    const independentTargets = independentKeys.map((key) => ({
+      key,
+      targets: baseCombination[key],
+    }));
+
+    // Generate cartesian product
+    const generateProduct = (index = 0, current = {}) => {
+      if (combinations.length >= maxCombinations) return;
+
+      if (index === independentTargets.length) {
+        // Create final combination
+        const finalCombination = { ...baseCombination };
+
+        // Replace independent targets with current selection
+        for (const key of independentKeys) {
+          finalCombination[key] = [current[key]];
+        }
+
+        combinations.push(finalCombination);
+        return;
+      }
+
+      const { key, targets } = independentTargets[index];
+      for (const target of targets) {
+        generateProduct(index + 1, { ...current, [key]: target });
+      }
+    };
+
+    generateProduct();
   }
 }
 

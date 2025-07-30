@@ -41,6 +41,7 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       generateThematicDirections: jest.fn(),
       getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
       getCharacterConcept: jest.fn(),
+      getThematicDirections: jest.fn().mockResolvedValue([]),
     };
     CharacterBuilderService.mockImplementation(
       () => mockCharacterBuilderService

@@ -36,7 +36,7 @@
   border-radius: 12px;
   padding: 2rem;
   min-height: 600px;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }
@@ -285,7 +285,7 @@
   gap: 1.5rem;
   padding: 0.5rem;
   overflow: auto;
-  max-height: calc(100vh - 300px);
+  max-height: calc(100vh - 200px);
 }
 
 /* Ensure grid items don't stretch */

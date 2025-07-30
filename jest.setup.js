@@ -25,7 +25,7 @@ if (typeof window !== 'undefined' && typeof window.indexedDB === 'undefined') {
   // Create a minimal IndexedDB mock for jsdom
   const createMockIndexedDB = () => {
     const databases = new Map();
-    
+
     return {
       open: (name, version) => {
         const request = {
@@ -35,7 +35,7 @@ if (typeof window !== 'undefined' && typeof window.indexedDB === 'undefined') {
           onerror: null,
           onupgradeneeded: null,
         };
-        
+
         setTimeout(() => {
           // Create or get database
           let db = databases.get(name);
@@ -53,11 +53,23 @@ if (typeof window !== 'undefined' && typeof window.indexedDB === 'undefined') {
                 objectStore: () => ({
                   put: () => ({ onsuccess: null, onerror: null }),
                   get: () => ({ onsuccess: null, onerror: null, result: null }),
-                  getAll: () => ({ onsuccess: null, onerror: null, result: [] }),
+                  getAll: () => ({
+                    onsuccess: null,
+                    onerror: null,
+                    result: [],
+                  }),
                   delete: () => ({ onsuccess: null, onerror: null }),
                   index: () => ({
-                    getAll: () => ({ onsuccess: null, onerror: null, result: [] }),
-                    openCursor: () => ({ onsuccess: null, onerror: null, result: null }),
+                    getAll: () => ({
+                      onsuccess: null,
+                      onerror: null,
+                      result: [],
+                    }),
+                    openCursor: () => ({
+                      onsuccess: null,
+                      onerror: null,
+                      result: null,
+                    }),
                   }),
                 }),
                 oncomplete: null,
@@ -66,29 +78,29 @@ if (typeof window !== 'undefined' && typeof window.indexedDB === 'undefined') {
               close: () => {},
             };
             databases.set(name, db);
-            
+
             // Call upgrade handler
             if (request.onupgradeneeded) {
               request.onupgradeneeded({ target: { result: db } });
             }
           }
-          
+
           request.result = db;
           if (request.onsuccess) {
             request.onsuccess({ target: request });
           }
         }, 0);
-        
+
         return request;
       },
     };
   };
-  
+
   window.indexedDB = createMockIndexedDB();
   window.IDBKeyRange = {
     only: (value) => ({ value, type: 'only' }),
   };
-  
+
   console.log('jest.setup.js: IndexedDB polyfill added for jsdom');
 }
 

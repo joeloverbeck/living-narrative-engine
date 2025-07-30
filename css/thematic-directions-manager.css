@@ -137,11 +137,48 @@
   flex: 1;
   min-height: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Smooth scrolling */
 .directions-results {
   padding-bottom: 2rem; /* Ensure last item isn't cut off */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar styling for directions results */
+.directions-results::-webkit-scrollbar {
+  width: 8px;
+}
+
+.directions-results::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.directions-results::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.directions-results::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Directions container - matches the JavaScript-created container */
+.directions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ===== Editable Direction Cards ===== */

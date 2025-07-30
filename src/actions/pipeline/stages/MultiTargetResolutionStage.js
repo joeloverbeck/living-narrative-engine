@@ -176,16 +176,22 @@ export class MultiTargetResolutionStage extends PipelineStage {
     if (allTargetContexts.length > 0) {
       resultData.targetContexts = allTargetContexts;
     }
-    // Only pass resolvedTargets and targetDefinitions if ALL actions are multi-target format
-    // If we have a mix of legacy and multi-target, don't pass these fields to avoid confusion
+    // Only pass resolvedTargets and targetDefinitions if ALL actions are multi-target
+    // If we have mixed legacy and multi-target actions, don't set global resolvedTargets
+    // as this would cause legacy actions to be incorrectly processed by multi-target formatter
+    const allActionsAreMultiTarget = candidateActions.every(
+      (actionDef) => !this.#isLegacyAction(actionDef)
+    );
+
     if (
       hasMultiTargetActions &&
-      !hasLegacyActions &&
+      allActionsAreMultiTarget &&
       lastResolvedTargets &&
       lastTargetDefinitions
     ) {
       resultData.resolvedTargets = lastResolvedTargets;
       resultData.targetDefinitions = lastTargetDefinitions;
+    } else if (hasMultiTargetActions && hasLegacyActions) {
     }
 
     return PipelineResult.success({

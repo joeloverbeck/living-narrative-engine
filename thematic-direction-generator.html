@@ -28,44 +28,56 @@
         <section class="concept-input-panel">
           <h2>Character Concept</h2>
 
-          <!-- Previous Concepts Dropdown -->
-          <div class="previous-concepts-group">
-            <label for="previous-concepts"> Load Previous Concept: </label>
-            <select id="previous-concepts" class="concept-select">
-              <option value="">-- Select a saved concept --</option>
-              <!-- Populated dynamically -->
-            </select>
-          </div>
-
           <form id="concept-form" novalidate>
-            <div class="input-group">
-              <label for="concept-input">
-                Describe your character concept:
+            <!-- Character Concept Selection -->
+            <div class="cb-form-group">
+              <label for="concept-selector">
+                Select Character Concept:
                 <span class="required" aria-hidden="true">*</span>
               </label>
-              <textarea
-                id="concept-input"
-                name="characterConcept"
-                placeholder="e.g. a ditzy female adventurer who's good with a bow"
-                rows="6"
-                minlength="10"
-                maxlength="1000"
+              <select
+                id="concept-selector"
+                class="cb-select"
                 required
-                aria-describedby="concept-help concept-error"
-              ></textarea>
-              <div id="concept-help" class="input-help">
-                Describe your character in a few sentences. Focus on
-                personality, background, and key traits.
+                aria-describedby="concept-selector-help concept-selector-error"
+              >
+                <option value="">-- Choose a character concept --</option>
+                <!-- Options will be populated dynamically -->
+              </select>
+              <div id="concept-selector-help" class="input-help">
+                Choose an existing character concept to generate thematic
+                directions for.
               </div>
-              <div class="input-meta">
-                <span class="char-count">0/1000</span>
-                <div
-                  id="concept-error"
-                  class="error-message"
-                  role="alert"
-                  aria-live="polite"
-                ></div>
+              <div
+                id="concept-selector-error"
+                class="error-message"
+                role="alert"
+                aria-live="polite"
+              ></div>
+            </div>
+
+            <!-- Selected Concept Display -->
+            <div
+              id="selected-concept-display"
+              class="concept-display"
+              style="display: none"
+            >
+              <h3 class="concept-display-title">Selected Concept</h3>
+              <div id="concept-content" class="concept-content">
+                <!-- Concept text will be displayed here -->
               </div>
+              <div class="concept-meta">
+                <span id="concept-directions-count">0 existing directions</span>
+                <span id="concept-created-date">Created on --</span>
+              </div>
+            </div>
+
+            <!-- Link to Create New Concepts -->
+            <div class="concept-actions">
+              <p>Need to create a new concept?</p>
+              <a href="character-concepts-manager.html" class="cb-link">
+                Go to Character Concepts Manager →
+              </a>
             </div>
 
             <div class="action-buttons">

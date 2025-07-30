@@ -97,8 +97,10 @@ export function createMockElement(id, additionalProps = {}) {
   };
 
   // Set up cloneNode to return a copy of the element
-  mockElement.cloneNode = jest.fn(() => createMockElement(id + '-clone', additionalProps));
-  
+  mockElement.cloneNode = jest.fn(() =>
+    createMockElement(id + '-clone', additionalProps)
+  );
+
   // Set up parentNode to reference a mock parent
   mockElement.parentNode = {
     replaceChild: jest.fn(),
@@ -373,7 +375,8 @@ export function populateControllerElements(controller, elements) {
       retryBtn: elements['retry-btn'],
       backToMenuBtn: elements['back-to-menu-btn'],
       conceptSearch: elements['concept-search'],
-      statsDisplay: elements['.stats-display'] || createMockElement('stats-display'), // Handle class selector
+      statsDisplay:
+        elements['.stats-display'] || createMockElement('stats-display'), // Handle class selector
       totalConcepts: elements['total-concepts'],
       conceptsWithDirections: elements['concepts-with-directions'],
       totalDirections: elements['total-directions'],

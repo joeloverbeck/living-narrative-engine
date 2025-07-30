@@ -39,6 +39,35 @@ export function createMockElement(tag = 'div') {
     disabled: false,
     selected: false, // For option elements
 
+    // CSS classes management
+    classList: {
+      add: jest.fn((className) => {
+        const classes = element.className.split(' ').filter((c) => c);
+        if (!classes.includes(className)) {
+          classes.push(className);
+          element.className = classes.join(' ');
+        }
+      }),
+      remove: jest.fn((className) => {
+        const classes = element.className.split(' ').filter((c) => c);
+        const index = classes.indexOf(className);
+        if (index > -1) {
+          classes.splice(index, 1);
+          element.className = classes.join(' ');
+        }
+      }),
+      contains: jest.fn((className) => {
+        return element.className.split(' ').includes(className);
+      }),
+      toggle: jest.fn((className) => {
+        if (element.classList.contains(className)) {
+          element.classList.remove(className);
+        } else {
+          element.classList.add(className);
+        }
+      }),
+    },
+
     // Event handling
     addEventListener: jest.fn((eventType, handler) => {
       if (!listeners.has(eventType)) {
@@ -91,6 +120,21 @@ export function createMockElement(tag = 'div') {
       };
     },
 
+    // Options array for select elements
+    get options() {
+      return {
+        length: this._childrenArray.length,
+        ...this._childrenArray,
+      };
+    },
+
+    // Remove method for options
+    remove: jest.fn(function (index) {
+      if (index >= 0 && index < this._childrenArray.length) {
+        this._childrenArray.splice(index, 1);
+      }
+    }),
+
     // Improved appendChild that properly updates innerHTML
     appendChild: jest.fn(function (child) {
       this._childrenArray.push(child);
@@ -110,6 +154,24 @@ export function createMockElement(tag = 'div') {
 
       return child;
     }),
+
+    // DOM navigation methods
+    closest: jest.fn((selector) => {
+      // Simple implementation for testing - just return a mock element
+      if (selector === '.cb-form-group') {
+        return {
+          insertAdjacentElement: jest.fn(),
+        };
+      }
+      return null;
+    }),
+
+    insertAdjacentElement: jest.fn((position, element) => {
+      // Mock implementation for testing
+      return element;
+    }),
+
+    scrollIntoView: jest.fn(),
 
     // Mock outerHTML property for nested elements
     get outerHTML() {
@@ -159,9 +221,16 @@ export function createThematicDirectionMockElements() {
     resultsState: createMockElement('div'),
     directionsResults: createMockElement('div'),
 
-    // Dropdown and error display
-    previousConceptsSelect: createMockElement('select'),
+    // Error message
     errorMessageText: createMockElement('p'),
+
+    // New concept selector elements
+    conceptSelector: createMockElement('select'),
+    selectedConceptDisplay: createMockElement('div'),
+    conceptContent: createMockElement('div'),
+    conceptDirectionsCount: createMockElement('span'),
+    conceptCreatedDate: createMockElement('span'),
+    conceptSelectorError: createMockElement('div'),
   };
 }
 
@@ -172,24 +241,30 @@ export function createThematicDirectionMockElements() {
  * @returns {object} Mock document object
  */
 export function setupThematicDirectionDOM(mockElements) {
-  // Ensure elements have proper initial innerHTML for selects
-  if (mockElements.previousConceptsSelect) {
-    mockElements.previousConceptsSelect.innerHTML =
-      '<option value="">-- Select a saved concept --</option>';
+  // Setup new concept selector
+  if (mockElements.conceptSelector) {
+    mockElements.conceptSelector.innerHTML =
+      '<option value="">-- Choose a character concept --</option>';
     // Initialize children array with the default option
-    mockElements.previousConceptsSelect._childrenArray = [
+    mockElements.conceptSelector._childrenArray = [
       {
         tagName: 'OPTION',
         value: '',
-        textContent: '-- Select a saved concept --',
+        textContent: '-- Choose a character concept --',
         selected: false,
       },
     ];
   }
 
+  // Setup concept display as initially hidden
+  if (mockElements.selectedConceptDisplay) {
+    mockElements.selectedConceptDisplay.style.display = 'none';
+  }
+
   const mockDocument = {
     getElementById: jest.fn((id) => {
       const elementMap = {
+        // Legacy elements
         'concept-form': mockElements.form,
         'concept-input': mockElements.textarea,
         'concept-error': mockElements.errorMessage,
@@ -201,8 +276,15 @@ export function setupThematicDirectionDOM(mockElements) {
         'error-state': mockElements.errorState,
         'results-state': mockElements.resultsState,
         'directions-results': mockElements.directionsResults,
-        'previous-concepts': mockElements.previousConceptsSelect,
         'error-message-text': mockElements.errorMessageText,
+
+        // New concept selector elements
+        'concept-selector': mockElements.conceptSelector,
+        'selected-concept-display': mockElements.selectedConceptDisplay,
+        'concept-content': mockElements.conceptContent,
+        'concept-directions-count': mockElements.conceptDirectionsCount,
+        'concept-created-date': mockElements.conceptCreatedDate,
+        'concept-selector-error': mockElements.conceptSelectorError,
       };
       const element = elementMap[id];
 

@@ -4,7 +4,10 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
-import { createTestSetup, populateControllerElements } from './characterConceptsManagerController.testUtils.js';
+import {
+  createTestSetup,
+  populateControllerElements,
+} from './characterConceptsManagerController.testUtils.js';
 import { UI_STATES } from '../../../src/shared/characterBuilder/uiStateManager.js';
 
 // Create a shared mock instance
@@ -17,7 +20,9 @@ const mockUIStateManagerInstance = {
 // Mock UIStateManager module
 jest.mock('../../../src/shared/characterBuilder/uiStateManager.js', () => {
   return {
-    UIStateManager: jest.fn().mockImplementation(() => mockUIStateManagerInstance),
+    UIStateManager: jest
+      .fn()
+      .mockImplementation(() => mockUIStateManagerInstance),
     UI_STATES: {
       EMPTY: 'empty',
       LOADING: 'loading',
@@ -34,13 +39,13 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
   beforeEach(() => {
     // Clear mock calls between tests
     jest.clearAllMocks();
-    
+
     setup = createTestSetup();
     controller = new CharacterConceptsManagerController(setup.config);
-    
+
     // Populate controller's internal elements cache for testing
     populateControllerElements(controller, setup.elements);
-    
+
     // Set up the UIStateManager mock
     controller._testExports.uiStateManager = mockUIStateManagerInstance;
   });
@@ -59,7 +64,7 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       const loadPromise = controller._testExports.loadData();
 
       // Wait a tick to allow loading state to be set
-      await new Promise(resolve => setImmediate(resolve));
+      await new Promise((resolve) => setImmediate(resolve));
 
       // Assert - Check loading state is shown immediately
       expect(mockUIStateManagerInstance.showState).toHaveBeenCalledWith(
@@ -130,7 +135,7 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       setup.mocks.builderService.createCharacterConcept.mockRejectedValue(
         error
       );
-      
+
       // Set up form data - Use a valid concept (50-3000 chars)
       const validConcept = 'A'.repeat(100); // 100 characters to meet minimum requirement
       controller._testExports.elements.conceptText.value = validConcept;
@@ -176,9 +181,18 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
     it('should maintain results state after deleting one of many concepts', async () => {
       // Arrange - Use the correct data structure that matches production
       const concepts = [
-        { concept: { id: '1', text: 'Concept 1', created: Date.now() }, directionCount: 0 },
-        { concept: { id: '2', text: 'Concept 2', created: Date.now() }, directionCount: 0 },
-        { concept: { id: '3', text: 'Concept 3', created: Date.now() }, directionCount: 0 },
+        {
+          concept: { id: '1', text: 'Concept 1', created: Date.now() },
+          directionCount: 0,
+        },
+        {
+          concept: { id: '2', text: 'Concept 2', created: Date.now() },
+          directionCount: 0,
+        },
+        {
+          concept: { id: '3', text: 'Concept 3', created: Date.now() },
+          directionCount: 0,
+        },
       ];
       controller._testExports.conceptsData = concepts;
       setup.mocks.builderService.deleteCharacterConcept.mockResolvedValue();
@@ -219,7 +233,10 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
     it('should maintain UI state when opening modals', () => {
       // Arrange
       controller._testExports.conceptsData = [
-        { concept: { id: '1', text: 'Test', created: Date.now() }, directionCount: 0 },
+        {
+          concept: { id: '1', text: 'Test', created: Date.now() },
+          directionCount: 0,
+        },
       ];
 
       // Act
@@ -236,7 +253,7 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
         id: 'new-id',
         concept: 'New concept',
       });
-      
+
       // Set up form data - Use a valid concept (50-3000 chars)
       const validConcept = 'B'.repeat(100); // 100 characters to meet minimum requirement
       controller._testExports.elements.conceptText.value = validConcept;
@@ -246,7 +263,9 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
 
       // Assert - After creating a concept, we expect either no state change (handled by events)
       // or the state should be updated. Let's check if the service was called correctly.
-      expect(setup.mocks.builderService.createCharacterConcept).toHaveBeenCalledWith(validConcept);
+      expect(
+        setup.mocks.builderService.createCharacterConcept
+      ).toHaveBeenCalledWith(validConcept);
     });
   });
 
@@ -275,12 +294,14 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
 
     it('should handle state transitions during component teardown', () => {
       // Arrange
-      controller._testExports.conceptsData = [{ concept: { id: '1', text: 'Test' }, directionCount: 0 }];
+      controller._testExports.conceptsData = [
+        { concept: { id: '1', text: 'Test' }, directionCount: 0 },
+      ];
 
       // Act - Simulate rapid deletion and state change
       controller._testExports.removeConceptCard('1');
       controller._testExports.conceptsData = [];
-      
+
       // Immediately try to update state
       controller._testExports.updateStatistics();
 

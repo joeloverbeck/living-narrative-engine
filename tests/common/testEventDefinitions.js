@@ -11,20 +11,20 @@ export const testEventDefinitions = {
       properties: {
         conceptId: {
           description: 'Unique identifier of the created concept',
-          type: 'string'
+          type: 'string',
         },
         concept: {
           description: 'The character concept text',
-          type: 'string'
+          type: 'string',
         },
         autoSaved: {
           description: 'Whether the concept was automatically saved',
-          type: 'boolean'
-        }
+          type: 'boolean',
+        },
       },
       required: ['conceptId', 'concept'],
-      additionalProperties: true
-    }
+      additionalProperties: true,
+    },
   },
   'thematic:character_concept_deleted': {
     id: 'thematic:character_concept_deleted',
@@ -34,11 +34,11 @@ export const testEventDefinitions = {
       properties: {
         conceptId: {
           description: 'Unique identifier of the deleted concept',
-          type: 'string'
-        }
+          type: 'string',
+        },
       },
       required: ['conceptId'],
-      additionalProperties: true
-    }
-  }
+      additionalProperties: true,
+    },
+  },
 };

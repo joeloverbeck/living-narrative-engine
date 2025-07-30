@@ -85,6 +85,20 @@ export class ActionFormattingStage extends PipelineStage {
       return this.#formatMultiTargetActions(context, trace);
     }
 
+    // Check if any actions have multi-target definitions
+    const hasMultiTargetActions = actionsWithTargets.some(
+      ({ actionDef }) =>
+        actionDef.targets && typeof actionDef.targets === 'object'
+    );
+
+    if (hasMultiTargetActions) {
+      // Log warning about multi-target actions in legacy context
+      this.#logger.warn(
+        'Multi-target actions detected but no resolvedTargets/targetDefinitions provided. ' +
+          'This may result in incorrect formatting.'
+      );
+    }
+
     // Process legacy format actions
     return this.#formatLegacyActions(context, trace);
   }
@@ -102,6 +116,16 @@ export class ActionFormattingStage extends PipelineStage {
     const source = `${this.name}Stage.execute`;
     const formattedActions = [];
     const errors = [];
+
+    this.#logger.debug('formatMultiTargetActions called with:', {
+      actionsCount: actionsWithTargets.length,
+      resolvedTargetsKeys: resolvedTargets
+        ? Object.keys(resolvedTargets)
+        : null,
+      targetDefinitionsKeys: targetDefinitions
+        ? Object.keys(targetDefinitions)
+        : null,
+    });
 
     for (const { actionDef } of actionsWithTargets) {
       try {
@@ -123,17 +147,24 @@ export class ActionFormattingStage extends PipelineStage {
           );
 
           if (formatResult.ok) {
-            const actionInfo = {
-              id: actionDef.id,
-              name: actionDef.name,
-              command: formatResult.value,
-              description: actionDef.description || '',
-              params: {
-                targetIds: this.#extractTargetIds(resolvedTargets),
-                isMultiTarget: true,
-              },
-            };
-            formattedActions.push(actionInfo);
+            // Handle both single command and array of commands
+            const commands = Array.isArray(formatResult.value)
+              ? formatResult.value
+              : [formatResult.value];
+
+            for (const command of commands) {
+              const actionInfo = {
+                id: actionDef.id,
+                name: actionDef.name,
+                command: command,
+                description: actionDef.description || '',
+                params: {
+                  targetIds: this.#extractTargetIds(resolvedTargets),
+                  isMultiTarget: true,
+                },
+              };
+              formattedActions.push(actionInfo);
+            }
           } else {
             // Multi-target formatting failed, try fallback to legacy formatting
             const primaryTarget =
@@ -273,6 +304,124 @@ export class ActionFormattingStage extends PipelineStage {
 
     // Process each action with its targets
     for (const { actionDef, targetContexts } of actionsWithTargets) {
+      // Check if this is a multi-target action being processed through legacy path
+      const isMultiTargetAction =
+        actionDef.targets && typeof actionDef.targets === 'object';
+
+      if (isMultiTargetAction) {
+        // Handle multi-target action individually when in mixed mode
+        // Extract resolved targets from targetContexts for this specific action
+        const actionSpecificTargets = this.#extractTargetsFromContexts(
+          targetContexts,
+          actionDef
+        );
+
+        if (
+          actionSpecificTargets &&
+          Object.keys(actionSpecificTargets).length > 0
+        ) {
+          // Try to format using multi-target formatter if available
+          if (this.#commandFormatter.formatMultiTarget) {
+            const formatResult = this.#commandFormatter.formatMultiTarget(
+              actionDef,
+              actionSpecificTargets,
+              this.#entityManager,
+              formatterOptions,
+              {
+                displayNameFn: this.#getEntityDisplayNameFn,
+                targetDefinitions: actionDef.targets, // Pass the target definitions
+              }
+            );
+
+            if (formatResult.ok) {
+              const commands = Array.isArray(formatResult.value)
+                ? formatResult.value
+                : [formatResult.value];
+
+              for (const command of commands) {
+                const actionInfo = {
+                  id: actionDef.id,
+                  name: actionDef.name,
+                  command: command,
+                  description: actionDef.description || '',
+                  params: {
+                    targetIds: this.#extractTargetIds(actionSpecificTargets),
+                    isMultiTarget: true,
+                  },
+                };
+                formattedActions.push(actionInfo);
+              }
+            } else {
+              // Fallback to legacy formatting with first target
+              if (targetContexts.length > 0) {
+                const fallbackResult = this.#commandFormatter.format(
+                  actionDef,
+                  targetContexts[0],
+                  this.#entityManager,
+                  formatterOptions,
+                  { displayNameFn: this.#getEntityDisplayNameFn }
+                );
+
+                if (fallbackResult.ok) {
+                  const actionInfo = {
+                    id: actionDef.id,
+                    name: actionDef.name,
+                    command: fallbackResult.value,
+                    description: actionDef.description || '',
+                    params: { targetId: targetContexts[0].entityId },
+                  };
+                  formattedActions.push(actionInfo);
+                } else {
+                  errors.push(
+                    this.#createError(
+                      fallbackResult,
+                      actionDef,
+                      actor.id,
+                      trace,
+                      targetContexts[0].entityId
+                    )
+                  );
+                }
+              }
+            }
+          } else {
+            // Fallback to legacy formatting with first target
+            if (targetContexts.length > 0) {
+              const fallbackResult = this.#commandFormatter.format(
+                actionDef,
+                targetContexts[0],
+                this.#entityManager,
+                formatterOptions,
+                { displayNameFn: this.#getEntityDisplayNameFn }
+              );
+
+              if (fallbackResult.ok) {
+                const actionInfo = {
+                  id: actionDef.id,
+                  name: actionDef.name,
+                  command: fallbackResult.value,
+                  description: actionDef.description || '',
+                  params: { targetId: targetContexts[0].entityId },
+                };
+                formattedActions.push(actionInfo);
+              } else {
+                errors.push(
+                  this.#createError(
+                    fallbackResult,
+                    actionDef,
+                    actor.id,
+                    trace,
+                    targetContexts[0].entityId
+                  )
+                );
+              }
+            }
+          }
+        } else {
+        }
+        continue;
+      }
+
       for (const targetContext of targetContexts) {
         try {
           const formatResult = this.#commandFormatter.format(
@@ -416,6 +565,65 @@ export class ActionFormattingStage extends PipelineStage {
     }
 
     return transformedTemplate.trim().replace(/\s+/g, ' '); // Clean up extra spaces
+  }
+
+  /**
+   * Extract targets from target contexts for a specific action
+   *
+   * @param {Array} targetContexts - Array of target contexts
+   * @param {object} actionDef - Action definition
+   * @returns {object} Targets object in multi-target format
+   * @private
+   */
+  #extractTargetsFromContexts(targetContexts, actionDef) {
+    if (!targetContexts || targetContexts.length === 0) {
+      return {};
+    }
+
+    // Group target contexts by their placeholder (if available)
+    const targetsByPlaceholder = {};
+
+    // First pass: group by placeholder if available
+    for (const tc of targetContexts) {
+      const placeholder = tc.placeholder || 'primary'; // Default to primary if no placeholder
+
+      if (!targetsByPlaceholder[placeholder]) {
+        targetsByPlaceholder[placeholder] = [];
+      }
+
+      targetsByPlaceholder[placeholder].push({
+        id: tc.entityId,
+        displayName: tc.displayName || tc.entityId,
+        entity: tc.entityId
+          ? this.#entityManager.getEntityInstance(tc.entityId)
+          : null,
+        contextFromId: tc.contextFromId, // Preserve context relationship
+      });
+    }
+
+    // If we have target definitions, validate against them
+    if (actionDef.targets && typeof actionDef.targets === 'object') {
+      const expectedTargets = Object.keys(actionDef.targets);
+
+      // Check if we have all required targets
+      for (const targetKey of expectedTargets) {
+        const targetDef = actionDef.targets[targetKey];
+        const placeholder = targetDef.placeholder || targetKey;
+
+        if (
+          !targetsByPlaceholder[placeholder] ||
+          targetsByPlaceholder[placeholder].length === 0
+        ) {
+          // If we don't have this target type, this action is not available
+          this.#logger.debug(
+            `Missing required target '${targetKey}' for action '${actionDef.id}'`
+          );
+          return {};
+        }
+      }
+    }
+
+    return targetsByPlaceholder;
   }
 
   /**
