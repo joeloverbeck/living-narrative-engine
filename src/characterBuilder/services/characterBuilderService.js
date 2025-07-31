@@ -16,10 +16,10 @@ import {
  */
 const RETRY_CONFIG = {
   maxRetries: 3,
-  baseDelayMs: process.env.NODE_ENV === 'test' ? 10 : 1000,
-  maxDelayMs: process.env.NODE_ENV === 'test' ? 50 : 5000,
-  directionBaseDelayMs: process.env.NODE_ENV === 'test' ? 20 : 2000,
-  directionMaxDelayMs: process.env.NODE_ENV === 'test' ? 100 : 10000,
+  baseDelayMs: process.env.NODE_ENV === 'test' ? 1 : 1000,
+  maxDelayMs: process.env.NODE_ENV === 'test' ? 5 : 5000,
+  directionBaseDelayMs: process.env.NODE_ENV === 'test' ? 2 : 2000,
+  directionMaxDelayMs: process.env.NODE_ENV === 'test' ? 10 : 10000,
 };
 
 /**
@@ -284,7 +284,7 @@ export class CharacterBuilderService {
         const characterDescription = this.#buildCharacterDescription(concept);
 
         // Generate thematic directions with timeout
-        const generationTimeout = 60000; // 60 seconds
+        const generationTimeout = process.env.NODE_ENV === 'test' ? 5000 : 60000; // 5 seconds for tests, 60 seconds otherwise
         const thematicDirections = await Promise.race([
           this.#directionGenerator.generateDirections(
             conceptId,

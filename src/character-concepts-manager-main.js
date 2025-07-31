@@ -3,121 +3,51 @@
  * Entry point for the character concepts management interface
  */
 
-import { CommonBootstrapper } from './bootstrapper/CommonBootstrapper.js';
-import { tokens } from './dependencyInjection/tokens.js';
-import { ensureValidLogger } from './utils/loggerUtils.js';
+import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBootstrap.js';
 import { CharacterConceptsManagerController } from './domUI/characterConceptsManagerController.js';
 
 // Constants
-const PAGE_NAME = 'CharacterConceptsManager';
-const INIT_TIMEOUT = 10000; // 10 seconds
-
-// Bootstrapper instance
-let bootstrapper;
+const PAGE_NAME = 'Character Concepts Manager';
 
 /**
  * Initialize the Character Concepts Manager application
  */
 async function initializeApp() {
-  let logger;
-  let container;
-
   try {
-    // Create bootstrapper
-    bootstrapper = new CommonBootstrapper();
+    // Create bootstrap instance
+    const bootstrap = new CharacterBuilderBootstrap();
 
-    // Set initialization timeout
-    const timeoutId = setTimeout(() => {
-      throw new Error(
-        `${PAGE_NAME} initialization timed out after ${INIT_TIMEOUT}ms`
-      );
-    }, INIT_TIMEOUT);
+    // Configure bootstrap
+    const config = {
+      pageName: PAGE_NAME,
+      controllerClass: CharacterConceptsManagerController,
+      includeModLoading: true, // Load core mod for event definitions
+      errorDisplay: {
+        elementId: 'error-display',
+        displayDuration: 5000,
+        dismissible: true,
+      },
+      hooks: {
+        postInit: async (controller) => {
+          // Store controller reference for debugging
+          window.__characterConceptsManagerController = controller;
 
-    // Bootstrap with minimal configuration that includes character builder services
-    const bootstrapResult = await bootstrapper.bootstrap({
-      containerConfigType: 'minimal',
-      skipModLoading: true, // We'll load mods manually
-      includeAnatomyFormatting: false,
-      includeCharacterBuilder: true, // Required for CharacterBuilderService
-      postInitHook: null,
-    });
+          // Set up page visibility handling
+          setupPageVisibilityHandling(controller, controller.logger);
 
-    // CommonBootstrapper throws on failure, so if we reach here, bootstrap succeeded
-    // Extract services from bootstrap result
-    container = bootstrapResult.container;
-    logger = bootstrapResult.services.logger;
-    logger = ensureValidLogger(logger);
+          // Set up error handling
+          setupGlobalErrorHandling(controller.logger);
+        },
+      },
+    };
 
-    logger.info(`Initializing ${PAGE_NAME}...`);
+    // Bootstrap the application
+    const { controller, container, bootstrapTime } = await bootstrap.bootstrap(config);
 
-    // Load only the core mod to get event definitions
-    const modsLoader = container.resolve(tokens.ModsLoader);
-    if (modsLoader) {
-      logger.info('Loading core mod for event definitions...');
-      try {
-        await modsLoader.loadMods('default', ['core']);
-        logger.info('Core mod loaded successfully');
-      } catch (modError) {
-        logger.warn(
-          'Failed to load core mod, continuing without event validation',
-          modError
-        );
-      }
-    }
-
-    // Resolve dependencies
-    const characterBuilderService = container.resolve(
-      tokens.CharacterBuilderService
-    );
-    const eventBus = container.resolve(tokens.ISafeEventDispatcher);
-
-    // Validate services
-    if (!characterBuilderService) {
-      throw new Error('CharacterBuilderService not found in container');
-    }
-
-    if (!eventBus) {
-      throw new Error('SafeEventDispatcher not found in container');
-    }
-
-    // Create controller
-    const controller = new CharacterConceptsManagerController({
-      logger,
-      characterBuilderService,
-      eventBus,
-    });
-
-    // Initialize controller
-    await controller.initialize();
-
-    // Clear timeout on successful init
-    clearTimeout(timeoutId);
-
-    // Store controller reference for debugging
-    window.__characterConceptsManagerController = controller;
-
-    logger.info(`${PAGE_NAME} initialized successfully`);
-
-    // Set up page visibility handling
-    setupPageVisibilityHandling(controller, logger);
-
-    // Set up error handling
-    setupGlobalErrorHandling(logger);
+    console.log(`${PAGE_NAME} initialized successfully in ${bootstrapTime.toFixed(2)}ms`);
   } catch (error) {
-    const errorMessage = `Failed to initialize ${PAGE_NAME}`;
-
-    if (logger) {
-      logger.error(errorMessage, error);
-    } else {
-      // eslint-disable-next-line no-console
-      console.error(errorMessage, error);
-    }
-
-    // Show user-friendly error
-    showInitializationError(error.message);
-
-    // Re-throw for debugging
-    throw error;
+    console.error(`Failed to initialize ${PAGE_NAME}:`, error);
+    // Error display is handled by bootstrap
   }
 }
 
@@ -188,62 +118,6 @@ function setupGlobalErrorHandling(logger) {
   });
 }
 
-/**
- * Show initialization error to user
- *
- * @param {string} message
- */
-function showInitializationError(message) {
-  // Remove loading state if present
-  const loadingElements = document.querySelectorAll('.loading, .spinner');
-  loadingElements.forEach((el) => (el.style.display = 'none'));
-
-  // Find or create error container
-  let errorContainer = document.getElementById('init-error-container');
-  if (!errorContainer) {
-    errorContainer = document.createElement('div');
-    errorContainer.id = 'init-error-container';
-    errorContainer.className = 'init-error-container';
-
-    // Find main container or body
-    const mainContainer =
-      document.getElementById('character-concepts-manager-container') ||
-      document.body;
-    mainContainer.prepend(errorContainer);
-  }
-
-  // Create error message
-  errorContainer.innerHTML = `
-        <div class="init-error">
-            <h2>⚠️ Initialization Error</h2>
-            <p>Unable to start the Character Concepts Manager.</p>
-            <details>
-                <summary>Technical Details</summary>
-                <pre>${escapeHtml(message)}</pre>
-            </details>
-            <div class="init-error-actions">
-                <button onclick="window.location.reload()">
-                    🔄 Reload Page
-                </button>
-                <button onclick="window.location.href='index.html'">
-                    🏠 Return to Menu
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-/**
- * Escape HTML for safe display
- *
- * @param {string} text
- * @returns {string}
- */
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
 
 /**
  * Wait for DOM to be ready

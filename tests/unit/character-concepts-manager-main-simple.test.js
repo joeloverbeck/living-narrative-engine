@@ -19,7 +19,7 @@ describe('Character Concepts Manager Main - Basic Tests', () => {
     expect(module).toHaveProperty('initializeApp');
     expect(module).toHaveProperty('PAGE_NAME');
     expect(typeof module.initializeApp).toBe('function');
-    expect(module.PAGE_NAME).toBe('CharacterConceptsManager');
+    expect(module.PAGE_NAME).toBe('Character Concepts Manager');
   });
 
   it('should have proper JSDoc comments', () => {

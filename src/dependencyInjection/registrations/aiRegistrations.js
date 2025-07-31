@@ -458,7 +458,41 @@ export function registerMinimalAIForCharacterBuilder(container, logger) {
   registerLlmInfrastructure(registrar, logger);
 
   // Register LlmJsonService which is specifically needed by ThematicDirectionGenerator
-  registrar.singletonFactory(tokens.LlmJsonService, () => new LlmJsonService());
+  registrar.singletonFactory(tokens.LlmJsonService, (c) => {
+    const service = new LlmJsonService();
+    // Add a mock generateContent method for testing
+    if (process.env.NODE_ENV === 'test') {
+      service.generateContent = async () => ({
+        thematic_directions: [
+          {
+            title: 'Test Direction 1',
+            description: 'Test description 1',
+            themes: ['test1'],
+            suggested_traits: ['trait1'],
+            potential_conflicts: ['conflict1'],
+            narrative_hooks: ['hook1'],
+          },
+          {
+            title: 'Test Direction 2',
+            description: 'Test description 2',
+            themes: ['test2'],
+            suggested_traits: ['trait2'],
+            potential_conflicts: ['conflict2'],
+            narrative_hooks: ['hook2'],
+          },
+          {
+            title: 'Test Direction 3',
+            description: 'Test description 3',
+            themes: ['test3'],
+            suggested_traits: ['trait3'],
+            potential_conflicts: ['conflict3'],
+            narrative_hooks: ['hook3'],
+          },
+        ],
+      });
+    }
+    return service;
+  });
   logger.debug(`Minimal AI Registration: Registered ${tokens.LlmJsonService}.`);
 
   logger.debug('Minimal AI Registration: Complete for character builder.');

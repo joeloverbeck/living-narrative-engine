@@ -78,18 +78,18 @@ describeActionDiscoverySuite(
           name: 'Wait',
           command: 'wait',
           description: 'Wait for a moment, doing nothing.',
-          params: { targetId: null },
+          params: {},
         },
       ]);
 
       expect(bed.mocks.actionIndex.getCandidateActions).toHaveBeenCalledTimes(
         1
       );
-      // FIX: The `wait` action has no prerequisites, so evaluate should NOT be called.
+      // The `wait` action has no prerequisites, so evaluate should NOT be called.
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).not.toHaveBeenCalled();
-      // FIX: The formatter is now called for all actions, including 'none' scope
+      // The formatter is called for all valid actions that pass prerequisites
       expect(bed.mocks.actionCommandFormatter.format).toHaveBeenCalledTimes(1);
     });
 
@@ -106,7 +106,7 @@ describeActionDiscoverySuite(
 
       const result = await bed.service.getValidActions(mockActorEntity, {});
 
-      // FIX: Now that `evaluate` is called and returns false, the actions array should be empty.
+      // Since evaluate returns false for the prerequisites, the actions array should be empty.
       expect(result.actions).toEqual([]);
       expect(bed.mocks.actionCommandFormatter.format).not.toHaveBeenCalled();
       expect(
@@ -148,11 +148,12 @@ describeActionDiscoverySuite(
 
       expect(result.actions).toHaveLength(1);
       expect(result.actions[0].id).toBe('core:wait');
-      // FIX: `evaluate` is only called for the one action that HAS prerequisites.
+      // The wait action has no prerequisites, so evaluate is not called for it.
+      // The other:action has prerequisites, so evaluate is called once for it.
       expect(
         bed.mocks.prerequisiteEvaluationService.evaluate
       ).toHaveBeenCalledTimes(1);
-      // FIX: The formatter is now called for all actions, including 'none' scope
+      // The formatter is called only for the wait action (which has no prerequisites and passes)
       expect(bed.mocks.actionCommandFormatter.format).toHaveBeenCalledTimes(1);
     });
   }
