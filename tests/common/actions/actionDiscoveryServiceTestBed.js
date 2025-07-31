@@ -87,38 +87,45 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
             
             for (const actionDef of candidateActions) {
               try {
-                // Check prerequisites
-                let passesPrerequisites;
-                try {
-                  passesPrerequisites = mocks.prerequisiteEvaluationService.evaluate(
-                    actionDef.prerequisites,
-                    context
-                  );
-                } catch (prereqError) {
-                  // If prerequisite evaluation throws, add to errors
-                  errors.push({
-                    actionId: actionDef.id,
-                    targetId: null,
-                    error: prereqError,
-                    phase: ERROR_PHASES.DISCOVERY,
-                    timestamp: Date.now(),
-                    actorSnapshot: createActorSnapshot(actor.id),
-                    environmentContext: {
-                      errorName: prereqError.name,
+                // Check prerequisites - skip if action has no prerequisites (matching production behavior)
+                if (!actionDef.prerequisites || actionDef.prerequisites.length === 0) {
+                  // Action has no prerequisites, so it automatically passes
+                  // This matches the behavior in PrerequisiteEvaluationStage
+                } else {
+                  let passesPrerequisites;
+                  try {
+                    passesPrerequisites = mocks.prerequisiteEvaluationService.evaluate(
+                      context,
+                      actionDef
+                    );
+                  } catch (prereqError) {
+                    // If prerequisite evaluation throws, add to errors
+                    errors.push({
+                      actionId: actionDef.id,
+                      targetId: null,
+                      error: prereqError,
                       phase: ERROR_PHASES.DISCOVERY,
-                    },
-                    evaluationTrace: {
-                      steps: [],
-                      finalContext: {},
-                      failurePoint: 'Unknown',
-                    },
-                    suggestedFixes: [],
-                  });
-                  continue;
-                }
-                
-                if (!passesPrerequisites) {
-                  continue;
+                      timestamp: Date.now(),
+                      actorSnapshot: createActorSnapshot(actor.id),
+                      environmentContext: {
+                        errorName: prereqError.name,
+                        phase: ERROR_PHASES.DISCOVERY,
+                      },
+                      evaluationTrace: {
+                        steps: [],
+                        finalContext: {},
+                        failurePoint: 'Unknown',
+                      },
+                      suggestedFixes: [],
+                    });
+                    // Log the error as expected by test
+                    mocks.logger.error(`Error evaluating prerequisites for action '${actionDef.id}':`, prereqError);
+                    continue;
+                  }
+                  
+                  if (!passesPrerequisites) {
+                    continue;
+                  }
                 }
                 
                 // Resolve targets - match the original API signature
@@ -127,7 +134,7 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                   actor,
                   context,
                   trace,
-                  actionDef.commandVerb || actionDef.name || 'fail'
+                  actionDef.id
                 );
                 
                 if (!targetResult.success) {
@@ -146,11 +153,9 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                     if (formatResult.ok) {
                       actions.push({
                         id: actionDef.id,
-                        verb: actionDef.commandVerb,
+                        name: actionDef.name,
                         command: formatResult.value,
-                        targetId: target.entityId,
-                        target: target,
-                        actionDef,
+                        description: actionDef.description || '',
                         // Include params as expected by tests
                         params: target.entityId ? { targetId: target.entityId } : {},
                       });
@@ -179,8 +184,19 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                       actionId: actionDef.id,
                       targetId: targetId,
                       error: formatError,
-                      phase: 'formatting',
+                      phase: ERROR_PHASES.DISCOVERY,
                       timestamp: Date.now(),
+                      actorSnapshot: createActorSnapshot(actor.id),
+                      environmentContext: {
+                        errorName: formatError.name,
+                        phase: ERROR_PHASES.DISCOVERY,
+                      },
+                      evaluationTrace: {
+                        steps: [],
+                        finalContext: {},
+                        failurePoint: 'Unknown',
+                      },
+                      suggestedFixes: [],
                     });
                   }
                 }

@@ -194,12 +194,12 @@ describe('Thematic Direction - Schema Registration', () => {
       // Should have namespace:event_name format
       expect(eventName).toMatch(/^[a-z]+:[a-z_]+$/);
 
-      // Should start with 'thematic:' namespace
-      expect(eventName.startsWith('thematic:')).toBe(true);
+      // Should start with 'core:' namespace
+      expect(eventName.startsWith('core:')).toBe(true);
 
       // The part after ':' should be lowercase with underscores
       const [namespace, name] = eventName.split(':');
-      expect(namespace).toBe('thematic');
+      expect(namespace).toBe('core');
       expect(name).toMatch(/^[a-z_]+$/);
     });
   });

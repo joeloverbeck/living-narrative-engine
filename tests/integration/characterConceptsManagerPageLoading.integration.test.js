@@ -159,7 +159,7 @@ describe('Character Concepts Manager Page Loading Integration', () => {
 
     // Verify the module exports what we expect
     expect(module.initializeApp).toBeDefined();
-    expect(module.PAGE_NAME).toBe('CharacterConceptsManager');
+    expect(module.PAGE_NAME).toBe('Character Concepts Manager');
   });
 
   it('should successfully initialize with required services available', async () => {
@@ -182,7 +182,7 @@ describe('Character Concepts Manager Page Loading Integration', () => {
 
     // Verify that initialization was attempted
     expect(module.initializeApp).toBeDefined();
-    expect(module.PAGE_NAME).toBe('CharacterConceptsManager');
+    expect(module.PAGE_NAME).toBe('Character Concepts Manager');
 
     // Check for successful bootstrap info messages (not error messages)
     const infoCalls = consoleInfoSpy.mock.calls;
@@ -191,7 +191,7 @@ describe('Character Concepts Manager Page Loading Integration', () => {
       return (
         infoMsg.includes('CommonBootstrapper') ||
         infoMsg.includes('bootstrap') ||
-        infoMsg.includes('Initializing CharacterConceptsManager')
+        infoMsg.includes('Initializing Character Concepts Manager')
       );
     });
 

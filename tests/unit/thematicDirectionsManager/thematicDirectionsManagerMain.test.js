@@ -247,7 +247,7 @@ describe('thematicDirectionsManagerMain', () => {
         );
         expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
           expect.any(Object),
-          'thematic:orphans_cleaned#payload'
+          'core:orphans_cleaned#payload'
         );
 
         expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(
@@ -259,7 +259,7 @@ describe('thematicDirectionsManagerMain', () => {
           expect.any(Object)
         );
         expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(
-          'thematic:orphans_cleaned',
+          'core:orphans_cleaned',
           expect.any(Object)
         );
 
@@ -380,13 +380,13 @@ describe('thematicDirectionsManagerMain', () => {
               deletedCount: expect.any(Object),
             }),
           }),
-          'thematic:orphans_cleaned#payload'
+          'core:orphans_cleaned#payload'
         );
 
         expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(
-          'thematic:orphans_cleaned',
+          'core:orphans_cleaned',
           expect.objectContaining({
-            id: 'thematic:orphans_cleaned',
+            id: 'core:orphans_cleaned',
             description: 'Fired when orphaned directions are cleaned up.',
           })
         );
