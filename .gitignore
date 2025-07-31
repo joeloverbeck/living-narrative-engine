@@ -200,3 +200,6 @@ data/mods/p-*
 
 # Temporary coverage directories
 coverage-temp/
+
+# Build test lock file
+.build-test.lock

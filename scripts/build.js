@@ -48,11 +48,17 @@ const argv = yargs(hideBin(process.argv))
     description: 'Disable parallel building',
     type: 'boolean',
   })
+  .option('fast', {
+    description: 'Fast mode for tests (skip sourcemaps, minimal validation)',
+    type: 'boolean',
+    default: false,
+  })
   .example('$0', 'Build in development mode')
   .example('$0 --mode production', 'Build for production')
   .example('$0 --watch', 'Build and watch for changes')
   .example('$0 --validate-only', 'Validate existing build')
   .example('$0 --verbose --no-parallel', 'Debug build issues')
+  .example('$0 --fast', 'Fast build for tests')
   .help()
   .alias('help', 'h')
   .version(false).argv;
@@ -74,6 +80,10 @@ async function main() {
 
     if (argv.verbose) {
       console.log(chalk.gray(`Verbose: enabled`));
+    }
+
+    if (argv.fast) {
+      console.log(chalk.yellow(`Fast mode: enabled (optimized for tests)`));
     }
 
     console.log('');
@@ -113,6 +123,7 @@ async function runBuild() {
     mode: argv.mode,
     parallel: argv.parallel,
     verbose: argv.verbose,
+    fast: argv.fast,
   });
 
   await buildSystem.build();
