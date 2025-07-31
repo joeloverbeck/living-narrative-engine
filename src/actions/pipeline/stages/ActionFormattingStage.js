@@ -418,6 +418,11 @@ export class ActionFormattingStage extends PipelineStage {
             }
           }
         } else {
+          // Multi-target action without proper resolved targets - skip and warn
+          this.#logger.warn(
+            `Skipping multi-target action '${actionDef.id}' in legacy formatting ` +
+            `path - no resolved targets available for proper formatting`
+          );
         }
         continue;
       }

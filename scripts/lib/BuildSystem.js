@@ -26,6 +26,7 @@ class BuildSystem {
       mode: 'development',
       parallel: true,
       verbose: false,
+      fast: false,
       ...options,
     };
 
@@ -40,6 +41,14 @@ class BuildSystem {
       ...config.esbuildOptions,
       ...modeConfig,
     };
+
+    // Apply fast mode optimizations
+    if (this.options.fast) {
+      this.buildOptions.sourcemap = false;
+      this.buildOptions.minify = false;
+      this.buildOptions.treeShaking = false;
+      this.options.skipValidation = true;
+    }
   }
 
   /**
@@ -54,7 +63,12 @@ class BuildSystem {
       await this.initialize();
       await this.buildJavaScript();
       await this.copyStaticAssets();
-      await this.validate();
+      
+      // Skip validation in fast mode
+      if (!this.options.skipValidation) {
+        await this.validate();
+      }
+      
       this.reportSuccess();
     } catch (error) {
       this.reportFailure(error);
@@ -77,8 +91,10 @@ class BuildSystem {
       // Ensure required directories exist
       await this.ensureDirectories();
 
-      // Verify source files exist
-      await this.verifySourceFiles();
+      // Verify source files exist (skip in fast mode)
+      if (!this.options.fast) {
+        await this.verifySourceFiles();
+      }
 
       this.progress.complete('Build environment initialized');
     } catch (error) {

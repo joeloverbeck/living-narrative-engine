@@ -151,10 +151,6 @@ describe('ThematicDirectionController', () => {
       expect(mockElements.resultsState.style.display).toBe('none');
     });
 
-    // Legacy dropdown test - removed as this functionality has been replaced
-    it.skip('should load previous concepts on initialization', async () => {
-      // This test was for the legacy "Load Previous Concept" dropdown which has been removed
-    });
 
     it('should handle initialization errors', async () => {
       const error = new Error('Init failed');
@@ -261,33 +257,6 @@ describe('ThematicDirectionController', () => {
         // Character count is not relevant in new workflow
         expect(true).toBe(true);
       }
-    });
-  });
-
-  describe('previous concepts dropdown', () => {
-    beforeEach(async () => {
-      controller = new ThematicDirectionController({
-        logger: mockLogger,
-        characterBuilderService: mockCharacterBuilderService,
-        eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
-      });
-      await controller.initialize();
-    });
-
-    // Legacy dropdown test - removed as this functionality has been replaced
-    it.skip('should load selected concept into textarea', async () => {
-      // This test was for the legacy "Load Previous Concept" dropdown which has been removed
-    });
-
-    // Legacy dropdown test - removed as this functionality has been replaced
-    it.skip('should show existing directions when loading concept', async () => {
-      // This test was for the legacy "Load Previous Concept" dropdown which has been removed
-    });
-
-    // Legacy dropdown test - removed as this functionality has been replaced
-    it.skip('should handle concept loading errors', async () => {
-      // This test was for the legacy "Load Previous Concept" dropdown which has been removed
     });
   });
 

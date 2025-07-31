@@ -125,12 +125,11 @@ describe('Multi-Target Action Examples - Integration', () => {
         { targetDefinitions }
       );
 
-      expect(result.ok).toBe(true);
-      if (actionDef.generateCombinations) {
-        expect(result.value).toHaveLength(0);
-      } else {
-        expect(result.value).toBe('throw {item} at {target}');
-      }
+      // The formatter now enforces strict validation - empty required targets cause an error
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain("Required target");
+      expect(result.error).toContain("could not be resolved");
+      expect(result.error).toContain("action not available");
     });
   });
 

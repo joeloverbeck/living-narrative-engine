@@ -170,7 +170,7 @@ describe('MultiTargetActionFormatter', () => {
 
       // With strict validation, actions with missing required targets should fail
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('unresolved placeholders');
+      expect(result.error).toContain("Required target 'primary' could not be resolved");
     });
 
     it('should use entity ID as fallback for display name', () => {
@@ -328,9 +328,8 @@ describe('MultiTargetActionFormatter', () => {
         { targetDefinitions }
       );
 
-      expect(result.ok).toBe(true);
-      expect(Array.isArray(result.value)).toBe(true);
-      expect(result.value).toHaveLength(0);
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain('No valid target combinations could be generated for required targets');
     });
   });
 
@@ -642,10 +641,8 @@ describe('MultiTargetActionFormatter', () => {
         { targetDefinitions }
       );
 
-      expect(result.ok).toBe(true);
-      expect(Array.isArray(result.value)).toBe(true);
-      // Should not generate combinations when required targets have no candidates
-      expect(result.value.length).toBe(0);
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain("Required target 'secondary' could not be resolved");
     });
 
     it('should handle combination generation when some combinations have invalid data', () => {

@@ -236,10 +236,9 @@ describe('MultiTargetActionFormatter - contextFrom bug', () => {
         { targetDefinitions: actionDef.targets }
       );
 
-      // Should either fail gracefully or return an empty array for no valid combinations
-      expect(result.ok).toBe(true);
-      expect(Array.isArray(result.value)).toBe(true);
-      expect(result.value).toEqual([]);
+      // Should fail with error when required targets are missing
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain("Required target 'secondary' could not be resolved");
     });
 
     it('should handle contextFrom with no matching primary', () => {
@@ -272,10 +271,9 @@ describe('MultiTargetActionFormatter - contextFrom bug', () => {
         { targetDefinitions: actionDef.targets }
       );
 
-      // Should not generate any actions since secondary doesn't match primary
-      expect(result.ok).toBe(true);
-      expect(Array.isArray(result.value)).toBe(true);
-      expect(result.value).toEqual([]);
+      // Should fail with error when no valid combinations can be generated for required targets
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain('No valid target combinations could be generated for required targets');
     });
   });
 });

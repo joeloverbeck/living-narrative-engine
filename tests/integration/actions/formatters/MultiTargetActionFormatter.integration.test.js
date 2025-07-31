@@ -823,10 +823,10 @@ describe('MultiTargetActionFormatter - Integration Tests', () => {
         { targetDefinitions }
       );
 
-      expect(result.ok).toBe(true);
-      expect(Array.isArray(result.value)).toBe(true);
-      // Should not generate combinations when required targets have no candidates
-      expect(result.value.length).toBe(0);
+      // The formatter now enforces strict validation - empty required targets cause an error
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain("Required target 'secondary' could not be resolved");
+      expect(result.error).toContain('action not available');
     });
 
     it('should handle single target type combinations correctly', async () => {
