@@ -94,8 +94,8 @@ export class ActionFormattingStage extends PipelineStage {
     if (hasMultiTargetActions) {
       // Log warning about multi-target actions in legacy context
       this.#logger.warn(
-        'Multi-target actions detected but no resolvedTargets/targetDefinitions provided. ' +
-          'This may result in incorrect formatting.'
+        'Processing mixed legacy and multi-target actions through legacy formatting path. ' +
+          'Multi-target actions will be handled individually with fallback formatting.'
       );
     }
 

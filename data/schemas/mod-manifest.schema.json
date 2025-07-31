@@ -103,9 +103,6 @@
             "description": "Relative path to a .scope definition file, e.g., 'scopes/inventory_items.scope'."
           }
         },
-        "ui": {
-          "$ref": "#/definitions/contentFileList"
-        },
         "worlds": {
           "$ref": "#/definitions/contentFileList"
         },

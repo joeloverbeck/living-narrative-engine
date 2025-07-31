@@ -234,7 +234,6 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.AnatomyBlueprintPartLoader,
       tokens.AnatomySlotLibraryLoader,
       tokens.AnatomyFormattingLoader,
-      tokens.UiAssetsLoader,
       // Phase-related services and processors
       tokens.ModLoadOrderResolver,
       tokens.ModManifestProcessor,

@@ -129,7 +129,6 @@
       "turn_around.rule.json",
       "turn_around_to_face.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"],
     "scopes": [
       "actors_im_facing_away_from.scope",
       "actors_with_arms_facing_each_other.scope",

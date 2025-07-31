@@ -117,15 +117,15 @@ describe('ActionFormattingStage - multi-target action fix', () => {
 
       const result = await stage.execute(context);
 
-      // The fix ensures that multi-target actions are skipped in legacy formatting
+      // The fix ensures that multi-target actions are handled appropriately in legacy formatting
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Multi-target actions detected but no resolvedTargets/targetDefinitions provided'
+          'Processing mixed legacy and multi-target actions through legacy formatting path'
         )
       );
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          "Skipping multi-target action 'intimacy:adjust_clothing' in legacy formatting"
+          "Skipping multi-target action 'intimacy:adjust_clothing' in legacy formatting path - no resolved targets available for proper formatting"
         )
       );
 
