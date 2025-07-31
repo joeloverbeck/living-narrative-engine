@@ -17,6 +17,7 @@ import {
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 import { ActionPipelineOrchestrator } from '../../../src/actions/actionPipelineOrchestrator.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
+import { MultiTargetActionFormatter } from '../../../src/actions/formatters/MultiTargetActionFormatter.js';
 import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
 import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
@@ -272,7 +273,7 @@ describe('Core Action Target Resolution Integration', () => {
       actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,
-      formatter: new ActionCommandFormatter(),
+      formatter: new MultiTargetActionFormatter(new ActionCommandFormatter(), logger),
       entityManager,
       safeEventDispatcher,
       getEntityDisplayNameFn: getEntityDisplayName,
@@ -305,7 +306,7 @@ describe('Core Action Target Resolution Integration', () => {
         dslParser: new DefaultDslParser(),
         actionErrorContextBuilder: createMockActionErrorContextBuilder(),
       }),
-      formatter: new ActionCommandFormatter(),
+      formatter: new MultiTargetActionFormatter(new ActionCommandFormatter(), logger),
       entityManager,
       safeEventDispatcher,
       getEntityDisplayNameFn: getEntityDisplayName,

@@ -18,6 +18,7 @@ import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryServ
 import { ActionPipelineOrchestrator } from '../../../src/actions/actionPipelineOrchestrator.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
+import { MultiTargetActionFormatter } from '../../../src/actions/formatters/MultiTargetActionFormatter.js';
 import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
@@ -290,7 +291,7 @@ describe('Action Target Resolution Workflow E2E', () => {
       actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,
-      formatter: new ActionCommandFormatter(),
+      formatter: new MultiTargetActionFormatter(new ActionCommandFormatter(), logger),
       entityManager,
       safeEventDispatcher,
       getEntityDisplayNameFn: getEntityDisplayName,

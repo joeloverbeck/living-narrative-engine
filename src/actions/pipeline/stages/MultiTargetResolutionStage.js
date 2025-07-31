@@ -134,6 +134,14 @@ export class MultiTargetResolutionStage extends PipelineStage {
             trace
           );
           if (result.success && result.data.actionsWithTargets) {
+            // Attach metadata to each action instead of globally
+            result.data.actionsWithTargets.forEach(awt => {
+              if (result.data.resolvedTargets && result.data.targetDefinitions) {
+                awt.resolvedTargets = result.data.resolvedTargets;
+                awt.targetDefinitions = result.data.targetDefinitions;
+                awt.isMultiTarget = true;
+              }
+            });
             allActionsWithTargets.push(...result.data.actionsWithTargets);
             // Store the last resolved targets and contexts for top-level access
             if (result.data.resolvedTargets) {
@@ -176,22 +184,11 @@ export class MultiTargetResolutionStage extends PipelineStage {
     if (allTargetContexts.length > 0) {
       resultData.targetContexts = allTargetContexts;
     }
-    // Only pass resolvedTargets and targetDefinitions if ALL actions are multi-target
-    // If we have mixed legacy and multi-target actions, don't set global resolvedTargets
-    // as this would cause legacy actions to be incorrectly processed by multi-target formatter
-    const allActionsAreMultiTarget = candidateActions.every(
-      (actionDef) => !this.#isLegacyAction(actionDef)
-    );
-
-    if (
-      hasMultiTargetActions &&
-      allActionsAreMultiTarget &&
-      lastResolvedTargets &&
-      lastTargetDefinitions
-    ) {
+    // Keep global metadata for backward compatibility but it's no longer required
+    // Each action now has its own metadata attached
+    if (lastResolvedTargets && lastTargetDefinitions) {
       resultData.resolvedTargets = lastResolvedTargets;
       resultData.targetDefinitions = lastTargetDefinitions;
-    } else if (hasMultiTargetActions && hasLegacyActions) {
     }
 
     return PipelineResult.success({
@@ -280,6 +277,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
           {
             actionDef,
             targetContexts,
+            // Attach metadata for consistency with multi-target actions
+            resolvedTargets,
+            targetDefinitions: { primary: { scope: scope, placeholder: 'target' } },
+            isMultiTarget: false,
           },
         ],
       },
