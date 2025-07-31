@@ -149,6 +149,22 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
    * @private
    */
   #formatCombinations(actionDef, resolvedTargets, targetDefinitions, _options) {
+    // Check if any required targets are missing before generating combinations
+    for (const [targetKey, targets] of Object.entries(resolvedTargets)) {
+      if (!targets || targets.length === 0) {
+        const targetDef = targetDefinitions?.[targetKey];
+        if (targetDef && !targetDef.optional) {
+          this.#logger.debug(
+            `Required target '${targetKey}' has no resolved entities - action not available in combination generation`
+          );
+          return {
+            ok: false,
+            error: `Required target '${targetKey}' could not be resolved - action not available`,
+          };
+        }
+      }
+    }
+
     const combinations = this.#generateCombinations(resolvedTargets);
     const formattedCommands = [];
 
@@ -162,6 +178,20 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
       if (result.ok) {
         formattedCommands.push(result.value);
+      }
+    }
+
+    // If no combinations could be formatted and we have required targets, this is an error
+    if (formattedCommands.length === 0 && combinations.length === 0) {
+      const hasRequiredTargets = Object.entries(targetDefinitions || {}).some(
+        ([, def]) => !def.optional
+      );
+      
+      if (hasRequiredTargets) {
+        return {
+          ok: false,
+          error: 'No valid target combinations could be generated for required targets',
+        };
       }
     }
 
@@ -199,6 +229,18 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     // Replace each placeholder
     for (const [targetKey, targets] of Object.entries(resolvedTargets)) {
       if (!targets || targets.length === 0) {
+        // Check if this target is required (not optional)
+        const targetDef = targetDefinitions?.[targetKey];
+        if (targetDef && !targetDef.optional) {
+          this.#logger.debug(
+            `Required target '${targetKey}' has no resolved entities - action not available`
+          );
+          return {
+            ok: false,
+            error: `Required target '${targetKey}' could not be resolved - action not available`,
+          };
+        }
+        
         // Skip empty target arrays - the placeholder will remain
         this.#logger.debug(`Skipping empty target array for key: ${targetKey}`);
         continue;
