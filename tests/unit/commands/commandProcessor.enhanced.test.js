@@ -66,24 +66,27 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       );
 
       expect(result.success).toBe(true);
-      expect(
-        eventDispatchService.dispatchWithErrorHandling
-      ).toHaveBeenCalledWith(
-        ATTEMPT_ACTION_ID,
-        expect.objectContaining({
-          eventName: 'core:attempt_action',
-          actorId: 'actor_123',
-          actionId: 'combat:throw',
-          originalInput: 'throw knife at goblin',
-          targetId: 'goblin_456', // Primary target for backward compatibility
-          targets: {
-            item: 'knife_123',
-            target: 'goblin_456',
-          },
-          timestamp: expect.any(Number),
-        }),
-        'ATTEMPT_ACTION_ID dispatch for pre-resolved action combat:throw'
-      );
+      const calledPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+      
+      expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledTimes(1);
+      expect(calledPayload.eventName).toBe('core:attempt_action');
+      expect(calledPayload.actorId).toBe('actor_123');
+      expect(calledPayload.actionId).toBe('combat:throw');
+      expect(calledPayload.originalInput).toBe('throw knife at goblin');
+      
+      // Should not have traditional primary/secondary/tertiary targets
+      expect(calledPayload.primaryId).toBeNull();
+      expect(calledPayload.secondaryId).toBeNull();
+      
+      // Should have custom target placeholders
+      expect(calledPayload.targets).toBeDefined();
+      expect(calledPayload.targets.item).toBeDefined();
+      expect(calledPayload.targets.item.entityId).toBe('knife_123');
+      expect(calledPayload.targets.target).toBeDefined();
+      expect(calledPayload.targets.target.entityId).toBe('goblin_456');
+      
+      // Primary target should be 'target' not 'item' based on context
+      expect(calledPayload.targetId).toBe('goblin_456');
     });
 
     it('should create legacy payload for single-target actions', async () => {
@@ -168,13 +171,15 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       const dispatchedPayload =
         eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
-      expect(dispatchedPayload.targets).toEqual({
-        primary: 'entity_1',
-        secondary: 'entity_2',
-        item: 'item_3',
-        tool: 'tool_4',
-        location: 'location_5',
-      });
+      expect(dispatchedPayload.targets).toBeDefined();
+      expect(Object.keys(dispatchedPayload.targets)).toHaveLength(5);
+      
+      // Verify each target has the correct structure
+      expect(dispatchedPayload.targets.primary.entityId).toBe('entity_1');
+      expect(dispatchedPayload.targets.secondary.entityId).toBe('entity_2');
+      expect(dispatchedPayload.targets.item.entityId).toBe('item_3');
+      expect(dispatchedPayload.targets.tool.entityId).toBe('tool_4');
+      expect(dispatchedPayload.targets.location.entityId).toBe('location_5');
 
       expect(dispatchedPayload.targetId).toBe('entity_1'); // Primary target
       expect(Object.keys(dispatchedPayload.targets)).toHaveLength(5);
@@ -269,6 +274,9 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
 
   describe('Performance and Metrics', () => {
     it('should track payload creation metrics', async () => {
+      // Reset stats before test
+      commandProcessor.resetPayloadCreationStatistics();
+      
       const turnActions = [
         {
           actionDefinitionId: 'test:legacy',
@@ -280,7 +288,7 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
           commandString: 'multi action',
           resolvedParameters: {
             isMultiTarget: true,
-            targetIds: { item: ['item_1'], target: ['target_1'] },
+            targetIds: { primary: ['entity_1'], secondary: ['entity_2'] },
           },
         },
         {
@@ -361,28 +369,25 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       const dispatchedPayload =
         eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
-      // Verify exact legacy format
-      expect(dispatchedPayload).toEqual({
-        eventName: 'core:attempt_action',
-        actorId: 'actor_123',
-        actionId: 'core:follow',
-        targetId: 'alice_789',
-        originalInput: 'follow Alice',
-        timestamp: expect.any(Number),
-      });
-
-      // Ensure no additional fields
-      const expectedKeys = [
-        'eventName',
-        'actorId',
-        'actionId',
-        'targetId',
-        'originalInput',
-        'timestamp',
-      ];
-      expect(Object.keys(dispatchedPayload).sort()).toEqual(
-        expectedKeys.sort()
-      );
+      // Verify legacy format with flattened fields
+      expect(dispatchedPayload.eventName).toBe('core:attempt_action');
+      expect(dispatchedPayload.actorId).toBe('actor_123');
+      expect(dispatchedPayload.actionId).toBe('core:follow');
+      expect(dispatchedPayload.targetId).toBe('alice_789');
+      expect(dispatchedPayload.originalInput).toBe('follow Alice');
+      expect(dispatchedPayload.timestamp).toBeGreaterThan(0);
+      
+      // Legacy single target should also have flattened fields for consistency
+      expect(dispatchedPayload.primaryId).toBe('alice_789');
+      expect(dispatchedPayload.secondaryId).toBeNull();
+      expect(dispatchedPayload.tertiaryId).toBeNull();
+      
+      // Should have metadata
+      expect(dispatchedPayload.resolvedTargetCount).toBe(1);
+      expect(dispatchedPayload.hasContextDependencies).toBe(false);
+      
+      // Should NOT have targets object for single target
+      expect(dispatchedPayload.targets).toBeUndefined();
     });
 
     it('should handle null targetId in legacy format', async () => {
@@ -405,6 +410,11 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
 
       expect(dispatchedPayload.targetId).toBe(null);
       expect(dispatchedPayload.targets).toBeUndefined();
+      
+      // Should still have flattened fields for consistency
+      expect(dispatchedPayload.primaryId).toBe(null);
+      expect(dispatchedPayload.secondaryId).toBe(null);
+      expect(dispatchedPayload.tertiaryId).toBe(null);
     });
 
     it('should handle legacy actions with missing targetId field', async () => {
@@ -424,6 +434,11 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
 
       expect(dispatchedPayload.targetId).toBe(null);
       expect(dispatchedPayload.targets).toBeUndefined();
+      
+      // Should still have flattened fields for consistency
+      expect(dispatchedPayload.primaryId).toBe(null);
+      expect(dispatchedPayload.secondaryId).toBe(null);
+      expect(dispatchedPayload.tertiaryId).toBe(null);
     });
   });
 

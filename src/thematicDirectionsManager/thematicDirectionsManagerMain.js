@@ -9,9 +9,9 @@ import { ThematicDirectionsManagerController } from './controllers/thematicDirec
  * Character Builder Events for thematic directions manager
  */
 const MANAGER_EVENTS = {
-  DIRECTION_UPDATED: 'thematic:direction_updated',
-  DIRECTION_DELETED: 'thematic:direction_deleted',
-  ORPHANS_CLEANED: 'thematic:orphans_cleaned',
+  DIRECTION_UPDATED: 'core:direction_updated',
+  DIRECTION_DELETED: 'core:direction_deleted',
+  ORPHANS_CLEANED: 'core:orphans_cleaned',
 };
 
 class ThematicDirectionsManagerApp {

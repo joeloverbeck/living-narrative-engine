@@ -139,10 +139,10 @@ jest.mock(
   '../../../src/characterBuilder/services/characterBuilderService.js',
   () => ({
     CHARACTER_BUILDER_EVENTS: {
-      CONCEPT_CREATED: 'thematic:character_concept_created',
-      CONCEPT_UPDATED: 'thematic:character_concept_updated',
-      CONCEPT_DELETED: 'thematic:character_concept_deleted',
-      DIRECTIONS_GENERATED: 'thematic:thematic_directions_generated',
+      CONCEPT_CREATED: 'core:character_concept_created',
+      CONCEPT_UPDATED: 'core:character_concept_updated',
+      CONCEPT_DELETED: 'core:character_concept_deleted',
+      DIRECTIONS_GENERATED: 'core:thematic_directions_generated',
     },
   })
 );
@@ -636,19 +636,19 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-        'thematic:character_concept_created',
+        'core:character_concept_created',
         expect.any(Function)
       );
       expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-        'thematic:character_concept_updated',
+        'core:character_concept_updated',
         expect.any(Function)
       );
       expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-        'thematic:character_concept_deleted',
+        'core:character_concept_deleted',
         expect.any(Function)
       );
       expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-        'thematic:thematic_directions_generated',
+        'core:thematic_directions_generated',
         expect.any(Function)
       );
     });

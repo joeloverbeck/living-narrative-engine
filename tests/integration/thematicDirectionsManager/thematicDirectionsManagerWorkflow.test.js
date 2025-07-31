@@ -436,7 +436,7 @@ describe('Thematic Directions Manager Integration Tests', () => {
 
       // The event should be dispatched with the actual field-level changes
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_updated',
+        'core:direction_updated',
         {
           directionId: testDirection.id,
           field: 'title',
@@ -458,7 +458,7 @@ describe('Thematic Directions Manager Integration Tests', () => {
         testDirection.id
       );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_deleted',
+        'core:direction_deleted',
         {
           directionId: testDirection.id,
         }
@@ -537,7 +537,7 @@ describe('Thematic Directions Manager Integration Tests', () => {
 
       // Should dispatch the appropriate event with field-level changes
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_updated',
+        'core:direction_updated',
         {
           directionId: testDirection.id,
           field: 'title',

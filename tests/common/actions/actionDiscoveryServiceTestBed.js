@@ -22,6 +22,7 @@ import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 import { createServiceFactoryMixin } from '../serviceFactoryTestBedMixin.js';
 import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import FactoryTestBed from '../factoryTestBed.js';
+import { ERROR_PHASES } from '../../../src/actions/errors/actionErrorTypes.js';
 
 const ServiceFactoryMixin = createServiceFactoryMixin(
   {
@@ -41,6 +42,36 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
   },
   (mocks, overrides = {}) => {
     const traceContextFactory = () => new TraceContext();
+    
+    // Helper function to create proper actor snapshot
+    const createActorSnapshot = (actorId) => {
+      try {
+        const actorEntity = mocks.entityManager.getEntity(actorId);
+        const components = mocks.entityManager.getAllComponents(actorId);
+        const locationComponent = components['core:location'];
+        const location = locationComponent?.value || 'none';
+        
+        return {
+          id: actorId,
+          components,
+          location,
+          metadata: {
+            entityType: actorEntity.type || 'unknown',
+            capturedAt: Date.now(),
+          },
+        };
+      } catch (err) {
+        return {
+          id: actorId,
+          components: {},
+          location: 'unknown',
+          metadata: {
+            error: 'Failed to capture snapshot',
+            capturedAt: Date.now(),
+          },
+        };
+      }
+    };
 
     // Create a mock ActionPipelineOrchestrator that mimics the old behavior for test compatibility
     const actionPipelineOrchestrator =
@@ -64,8 +95,26 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                     context
                   );
                 } catch (prereqError) {
-                  // If prerequisite evaluation throws, the action doesn't pass
-                  passesPrerequisites = false;
+                  // If prerequisite evaluation throws, add to errors
+                  errors.push({
+                    actionId: actionDef.id,
+                    targetId: null,
+                    error: prereqError,
+                    phase: ERROR_PHASES.DISCOVERY,
+                    timestamp: Date.now(),
+                    actorSnapshot: createActorSnapshot(actor.id),
+                    environmentContext: {
+                      errorName: prereqError.name,
+                      phase: ERROR_PHASES.DISCOVERY,
+                    },
+                    evaluationTrace: {
+                      steps: [],
+                      finalContext: {},
+                      failurePoint: 'Unknown',
+                    },
+                    suggestedFixes: [],
+                  });
+                  continue;
                 }
                 
                 if (!passesPrerequisites) {
@@ -141,12 +190,19 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                   actionId: actionDef.id,
                   targetId: null,
                   error: actionError,
-                  phase: 'action_processing',
+                  phase: ERROR_PHASES.DISCOVERY,
                   timestamp: Date.now(),
                   // Add context properties that tests expect
-                  actorSnapshot: actor,
-                  environmentContext: context,
-                  evaluationTrace: {},
+                  actorSnapshot: createActorSnapshot(actor.id),
+                  environmentContext: {
+                    errorName: actionError.name,
+                    phase: ERROR_PHASES.DISCOVERY,
+                  },
+                  evaluationTrace: {
+                    steps: [],
+                    finalContext: {},
+                    failurePoint: 'Unknown',
+                  },
                   suggestedFixes: [],
                 });
               }
@@ -158,11 +214,18 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
               actionId: 'candidateRetrieval',
               targetId: null,
               error: candidateError,
-              phase: 'candidate_retrieval',
+              phase: ERROR_PHASES.DISCOVERY,
               timestamp: Date.now(),
-              actorSnapshot: actor,
-              environmentContext: context,
-              evaluationTrace: {},
+              actorSnapshot: createActorSnapshot(actor.id),
+              environmentContext: {
+                errorName: candidateError.name,
+                phase: ERROR_PHASES.DISCOVERY,
+              },
+              evaluationTrace: {
+                steps: [],
+                finalContext: {},
+                failurePoint: 'Unknown',
+              },
               suggestedFixes: [],
             });
           }

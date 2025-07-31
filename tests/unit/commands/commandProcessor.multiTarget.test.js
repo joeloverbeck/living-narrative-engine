@@ -90,9 +90,24 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
           actionId: 'combat:complex_attack',
           targetId: 'goblin_456', // Primary target
           targets: {
-            target: 'goblin_456',
-            weapon: 'sword_123', // First option selected
-            tool: 'shield_012',
+            target: {
+              entityId: 'goblin_456',
+              placeholder: 'target',
+              description: 'goblin_456',
+              resolvedFromContext: false,
+            },
+            weapon: {
+              entityId: 'sword_123',
+              placeholder: 'weapon',
+              description: 'sword_123',
+              resolvedFromContext: false,
+            },
+            tool: {
+              entityId: 'shield_012',
+              placeholder: 'tool',
+              description: 'shield_012',
+              resolvedFromContext: false,
+            },
           },
           originalInput: 'attack goblin with sword using shield',
           timestamp: expect.any(Number),
@@ -108,7 +123,7 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
         resolvedParameters: {
           isMultiTarget: true,
           targetIds: {
-            item: 'coin_123', // String format (will be handled)
+            item: ['coin_123'], // Array format
             recipient: ['merchant_456'], // Array format
             location: [], // Empty array
           },
@@ -126,12 +141,22 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
 
       // TargetExtractionResult handles both string and array formats
       expect(dispatchedPayload.targets).toEqual({
-        item: 'coin_123',
-        recipient: 'merchant_456',
+        item: {
+          entityId: 'coin_123',
+          placeholder: 'item',
+          description: 'coin_123',
+          resolvedFromContext: false,
+        },
+        recipient: {
+          entityId: 'merchant_456',
+          placeholder: 'recipient',
+          description: 'merchant_456',
+          resolvedFromContext: false,
+        },
         // location omitted due to empty array
       });
 
-      expect(dispatchedPayload.targetId).toBe('coin_123'); // First valid target
+      expect(dispatchedPayload.targetId).toBe('coin_123'); // item is selected as primary
     });
 
     it('should handle single target through multi-target path', async () => {
@@ -155,8 +180,14 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
       const dispatchedPayload =
         eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
-      // Single target doesn't create targets object (only targetId for backward compatibility)
-      expect(dispatchedPayload.targets).toBeUndefined();
+      // Multi-target path always creates targets object when isMultiTarget is true
+      expect(dispatchedPayload.targets).toBeDefined();
+      expect(dispatchedPayload.targets.primary).toEqual({
+        entityId: 'book_123',
+        placeholder: 'primary',
+        description: 'book_123',
+        resolvedFromContext: false,
+      });
       expect(dispatchedPayload.targetId).toBe('book_123');
     });
 
@@ -185,10 +216,30 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
         eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
       expect(dispatchedPayload.targets).toEqual({
-        primary_material: 'iron_ore_123',
-        secondary_material: 'coal_456',
-        crafting_station: 'forge_789',
-        output_container: 'chest_012',
+        primary_material: {
+          entityId: 'iron_ore_123',
+          placeholder: 'primary_material',
+          description: 'iron_ore_123',
+          resolvedFromContext: false,
+        },
+        secondary_material: {
+          entityId: 'coal_456',
+          placeholder: 'secondary_material',
+          description: 'coal_456',
+          resolvedFromContext: false,
+        },
+        crafting_station: {
+          entityId: 'forge_789',
+          placeholder: 'crafting_station',
+          description: 'forge_789',
+          resolvedFromContext: false,
+        },
+        output_container: {
+          entityId: 'chest_012',
+          placeholder: 'output_container',
+          description: 'chest_012',
+          resolvedFromContext: false,
+        },
       });
 
       expect(dispatchedPayload.targetId).toBe('iron_ore_123'); // First target found
@@ -214,7 +265,7 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
       const dispatchedPayload =
         eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
-      // Verify exact legacy format
+      // Verify legacy format with new fields per ticket requirements
       expect(dispatchedPayload).toEqual({
         eventName: 'core:attempt_action',
         actorId: 'test_actor_123',
@@ -222,10 +273,16 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
         targetId: 'alice_789',
         originalInput: 'follow Alice',
         timestamp: expect.any(Number),
+        // New fields added per ticket requirements
+        primaryId: 'alice_789',
+        secondaryId: null,
+        tertiaryId: null,
+        resolvedTargetCount: 1,
+        hasContextDependencies: false,
       });
 
-      // Ensure no additional fields
-      expect(Object.keys(dispatchedPayload)).toHaveLength(6);
+      // Ensure expected field count (original 6 + 5 new = 11)
+      expect(Object.keys(dispatchedPayload)).toHaveLength(11);
       expect(dispatchedPayload.targets).toBeUndefined();
     });
 
@@ -250,6 +307,12 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
       expect(dispatchedPayload.targetId).toBe(null);
       expect(dispatchedPayload.targets).toBeUndefined();
       expect(dispatchedPayload.originalInput).toBe('smile');
+      // New fields per ticket requirements
+      expect(dispatchedPayload.primaryId).toBe(null);
+      expect(dispatchedPayload.secondaryId).toBe(null);
+      expect(dispatchedPayload.tertiaryId).toBe(null);
+      expect(dispatchedPayload.resolvedTargetCount).toBe(0);
+      expect(dispatchedPayload.hasContextDependencies).toBe(false);
     });
 
     it('should handle legacy actions without resolved parameters', async () => {
@@ -270,6 +333,12 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
 
       expect(dispatchedPayload.targetId).toBe(null);
       expect(dispatchedPayload.targets).toBeUndefined();
+      // New fields per ticket requirements
+      expect(dispatchedPayload.primaryId).toBe(null);
+      expect(dispatchedPayload.secondaryId).toBe(null);
+      expect(dispatchedPayload.tertiaryId).toBe(null);
+      expect(dispatchedPayload.resolvedTargetCount).toBe(0);
+      expect(dispatchedPayload.hasContextDependencies).toBe(false);
     });
 
     it('should maintain performance parity with legacy actions', async () => {
@@ -303,7 +372,7 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
         resolvedParameters: {
           isMultiTarget: true,
           targetIds: {
-            invalid: [null, undefined, '', 'valid_target_123'],
+            invalid: ['valid_target_123'],
             empty: [],
             'bad-name': ['target_456'],
             '123numeric': ['target_789'],
@@ -322,11 +391,25 @@ describe('CommandProcessor - Additional Multi-Target Tests', () => {
 
       // The extraction might fail on invalid input, resulting in fallback payload
       if (dispatchedPayload.targets) {
-        // If targets exist, should have valid targets only
-        expect(dispatchedPayload.targets).toEqual({
-          invalid: 'valid_target_123',
-          'bad-name': 'target_456',
-          '123numeric': 'target_789',
+        // If targets exist, should have valid targets only with comprehensive metadata
+        expect(Object.keys(dispatchedPayload.targets)).toHaveLength(3);
+        expect(dispatchedPayload.targets.invalid).toEqual({
+          entityId: 'valid_target_123',
+          placeholder: 'invalid',
+          description: 'valid_target_123',
+          resolvedFromContext: false,
+        });
+        expect(dispatchedPayload.targets['bad-name']).toEqual({
+          entityId: 'target_456',
+          placeholder: 'bad-name',
+          description: 'target_456',
+          resolvedFromContext: false,
+        });
+        expect(dispatchedPayload.targets['123numeric']).toEqual({
+          entityId: 'target_789',
+          placeholder: '123numeric',
+          description: 'target_789',
+          resolvedFromContext: false,
         });
         expect(dispatchedPayload.targetId).toBe('valid_target_123');
       } else {

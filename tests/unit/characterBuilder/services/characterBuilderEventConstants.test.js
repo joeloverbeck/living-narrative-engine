@@ -8,33 +8,33 @@ import { CHARACTER_BUILDER_EVENTS } from '../../../../src/characterBuilder/servi
 
 describe('CHARACTER_BUILDER_EVENTS - Event Constants', () => {
   it('should use namespaced event names for all events', () => {
-    // Verify each event uses the 'thematic:' namespace
+    // Verify each event uses the 'core:' namespace
     expect(CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED).toBe(
-      'thematic:character_concept_created'
+      'core:character_concept_created'
     );
     expect(CHARACTER_BUILDER_EVENTS.CONCEPT_UPDATED).toBe(
-      'thematic:character_concept_updated'
+      'core:character_concept_updated'
     );
     expect(CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED).toBe(
-      'thematic:thematic_directions_generated'
+      'core:thematic_directions_generated'
     );
     expect(CHARACTER_BUILDER_EVENTS.CONCEPT_SAVED).toBe(
-      'thematic:character_concept_saved'
+      'core:character_concept_saved'
     );
     expect(CHARACTER_BUILDER_EVENTS.CONCEPT_DELETED).toBe(
-      'thematic:character_concept_deleted'
+      'core:character_concept_deleted'
     );
     expect(CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED).toBe(
-      'thematic:character_builder_error_occurred'
+      'core:character_builder_error_occurred'
     );
   });
 
   it('should follow the namespace:event_name pattern for all events', () => {
-    const expectedPattern = /^thematic:[a-z_]+$/;
+    const expectedPattern = /^core:[a-z_]+$/;
 
     Object.entries(CHARACTER_BUILDER_EVENTS).forEach(([key, value]) => {
       expect(value).toMatch(expectedPattern);
-      expect(value.startsWith('thematic:')).toBe(true);
+      expect(value.startsWith('core:')).toBe(true);
 
       // Ensure no uppercase letters in the event name part
       const eventNamePart = value.split(':')[1];

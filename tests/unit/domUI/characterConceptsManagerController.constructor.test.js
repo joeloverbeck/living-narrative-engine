@@ -57,10 +57,10 @@ jest.mock(
   '../../../src/characterBuilder/services/characterBuilderService.js',
   () => ({
     CHARACTER_BUILDER_EVENTS: {
-      CONCEPT_CREATED: 'thematic:character_concept_created',
-      CONCEPT_UPDATED: 'thematic:character_concept_updated',
-      CONCEPT_DELETED: 'thematic:character_concept_deleted',
-      DIRECTIONS_GENERATED: 'thematic:thematic_directions_generated',
+      CONCEPT_CREATED: 'core:character_concept_created',
+      CONCEPT_UPDATED: 'core:character_concept_updated',
+      CONCEPT_DELETED: 'core:character_concept_deleted',
+      DIRECTIONS_GENERATED: 'core:thematic_directions_generated',
     },
   })
 );

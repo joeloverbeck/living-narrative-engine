@@ -35,14 +35,14 @@ const RETRY_CONFIG = {
  * Character builder events
  */
 export const CHARACTER_BUILDER_EVENTS = {
-  CONCEPT_CREATED: 'thematic:character_concept_created',
-  CONCEPT_UPDATED: 'thematic:character_concept_updated',
-  DIRECTIONS_GENERATED: 'thematic:thematic_directions_generated',
-  CONCEPT_SAVED: 'thematic:character_concept_saved',
-  CONCEPT_DELETED: 'thematic:character_concept_deleted',
-  DIRECTION_UPDATED: 'thematic:direction_updated',
-  DIRECTION_DELETED: 'thematic:direction_deleted',
-  ERROR_OCCURRED: 'thematic:character_builder_error_occurred',
+  CONCEPT_CREATED: 'core:character_concept_created',
+  CONCEPT_UPDATED: 'core:character_concept_updated',
+  DIRECTIONS_GENERATED: 'core:thematic_directions_generated',
+  CONCEPT_SAVED: 'core:character_concept_saved',
+  CONCEPT_DELETED: 'core:character_concept_deleted',
+  DIRECTION_UPDATED: 'core:direction_updated',
+  DIRECTION_DELETED: 'core:direction_deleted',
+  ERROR_OCCURRED: 'core:character_builder_error_occurred',
 };
 
 /**

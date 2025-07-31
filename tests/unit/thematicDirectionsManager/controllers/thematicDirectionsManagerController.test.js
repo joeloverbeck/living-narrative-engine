@@ -993,12 +993,12 @@ describe('ThematicDirectionsManagerController', () => {
       await mockCharacterBuilderService.deleteThematicDirection('direction-1');
 
       // In actual implementation, event would be dispatched after successful deletion
-      mockEventBus.dispatch('thematic:direction_deleted', {
+      mockEventBus.dispatch('core:direction_deleted', {
         directionId: 'direction-1',
       });
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_deleted',
+        'core:direction_deleted',
         {
           directionId: 'direction-1',
         }
@@ -1332,7 +1332,7 @@ describe('ThematicDirectionsManagerController', () => {
       // Simulate the controller's internal deletion workflow
       // This would normally be triggered by the controller's modal confirmation handler
       await mockCharacterBuilderService.deleteThematicDirection('direction-1');
-      mockEventBus.dispatch('thematic:direction_deleted', {
+      mockEventBus.dispatch('core:direction_deleted', {
         directionId: 'direction-1',
       });
 
@@ -1340,7 +1340,7 @@ describe('ThematicDirectionsManagerController', () => {
         mockCharacterBuilderService.deleteThematicDirection
       ).toHaveBeenCalledWith('direction-1');
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_deleted',
+        'core:direction_deleted',
         {
           directionId: 'direction-1',
         }
@@ -1760,7 +1760,7 @@ describe('ThematicDirectionsManagerController', () => {
 
         // Verify event was dispatched
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          'thematic:direction_updated',
+          'core:direction_updated',
           expect.objectContaining({
             newValue: 'Updated Title',
           })
@@ -1972,7 +1972,7 @@ describe('ThematicDirectionsManagerController', () => {
         );
 
         // Dispatch deletion event
-        mockEventBus.dispatch('thematic:direction_deleted', {
+        mockEventBus.dispatch('core:direction_deleted', {
           directionId: directionToDelete.id,
         });
       });
@@ -1985,7 +1985,7 @@ describe('ThematicDirectionsManagerController', () => {
         mockCharacterBuilderService.deleteThematicDirection
       ).toHaveBeenCalledWith(directionToDelete.id);
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_deleted',
+        'core:direction_deleted',
         {
           directionId: directionToDelete.id,
         }
@@ -2316,7 +2316,7 @@ describe('ThematicDirectionsManagerController', () => {
         );
 
         // Dispatch event
-        mockEventBus.dispatch('thematic:direction_deleted', {
+        mockEventBus.dispatch('core:direction_deleted', {
           directionId: mockDirection.id,
         });
       });
@@ -2328,7 +2328,7 @@ describe('ThematicDirectionsManagerController', () => {
         mockCharacterBuilderService.deleteThematicDirection
       ).toHaveBeenCalledWith(mockDirection.id);
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_deleted',
+        'core:direction_deleted',
         {
           directionId: mockDirection.id,
         }

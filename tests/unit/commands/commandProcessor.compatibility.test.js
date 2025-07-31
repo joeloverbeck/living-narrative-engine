@@ -72,7 +72,7 @@ describe('CommandProcessor - Backward Compatibility', () => {
             eventDispatchService.dispatchWithErrorHandling.mock.calls.length - 1
           ][1];
 
-        // Verify exact legacy structure
+        // Verify legacy structure with new fields per ticket requirements
         expect(dispatchedPayload).toMatchObject({
           eventName: 'core:attempt_action',
           actorId: 'compatibility_actor',
@@ -80,9 +80,15 @@ describe('CommandProcessor - Backward Compatibility', () => {
           targetId: action.resolvedParameters.targetId,
           originalInput: action.commandString,
           timestamp: expect.any(Number),
+          // New fields added per ticket requirements
+          primaryId: action.resolvedParameters.targetId,
+          secondaryId: null,
+          tertiaryId: null,
+          resolvedTargetCount: action.resolvedParameters.targetId ? 1 : 0,
+          hasContextDependencies: false,
         });
 
-        // Verify no extra fields
+        // Verify all expected fields are present
         const expectedKeys = [
           'eventName',
           'actorId',
@@ -90,12 +96,18 @@ describe('CommandProcessor - Backward Compatibility', () => {
           'targetId',
           'originalInput',
           'timestamp',
+          // New fields per ticket
+          'primaryId',
+          'secondaryId',
+          'tertiaryId',
+          'resolvedTargetCount',
+          'hasContextDependencies',
         ];
         expect(Object.keys(dispatchedPayload).sort()).toEqual(
           expectedKeys.sort()
         );
 
-        // Verify no targets object
+        // Verify no targets object for single-target actions
         expect(dispatchedPayload.targets).toBeUndefined();
       }
     });
@@ -415,7 +427,7 @@ describe('CommandProcessor - Backward Compatibility', () => {
       const dispatchedEvent =
         eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
 
-      // Verify exact legacy event format
+      // Verify legacy event format with new fields per ticket requirements
       expect(dispatchedEvent).toEqual({
         eventName: 'core:attempt_action',
         actorId: 'compatibility_actor',
@@ -423,10 +435,16 @@ describe('CommandProcessor - Backward Compatibility', () => {
         targetId: 'target_123',
         originalInput: 'dispatch test',
         timestamp: expect.any(Number),
+        // New fields per ticket requirements
+        primaryId: 'target_123',
+        secondaryId: null,
+        tertiaryId: null,
+        resolvedTargetCount: 1,
+        hasContextDependencies: false,
       });
 
-      // Verify no additional fields
-      expect(Object.keys(dispatchedEvent)).toHaveLength(6);
+      // Verify expected number of fields (original 6 + 5 new = 11)
+      expect(Object.keys(dispatchedEvent)).toHaveLength(11);
     });
   });
 });

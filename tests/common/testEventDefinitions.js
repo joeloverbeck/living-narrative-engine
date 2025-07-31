@@ -3,8 +3,8 @@
  */
 
 export const testEventDefinitions = {
-  'thematic:character_concept_created': {
-    id: 'thematic:character_concept_created',
+  'core:character_concept_created': {
+    id: 'core:character_concept_created',
     description: 'Dispatched when a new character concept is created.',
     payloadSchema: {
       type: 'object',
@@ -26,8 +26,8 @@ export const testEventDefinitions = {
       additionalProperties: true,
     },
   },
-  'thematic:character_concept_deleted': {
-    id: 'thematic:character_concept_deleted',
+  'core:character_concept_deleted': {
+    id: 'core:character_concept_deleted',
     description: 'Dispatched when a character concept is deleted.',
     payloadSchema: {
       type: 'object',
