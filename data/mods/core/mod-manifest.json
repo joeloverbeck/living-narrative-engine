@@ -124,7 +124,6 @@
       "turn_started.rule.json",
       "wait.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"],
     "scopes": [
       "actors_in_location.scope",
       "clear_directions.scope",

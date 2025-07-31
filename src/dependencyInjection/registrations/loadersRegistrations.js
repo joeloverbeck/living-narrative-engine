@@ -72,7 +72,6 @@ import AnatomyBlueprintLoader from '../../loaders/anatomyBlueprintLoader.js';
 import AnatomyBlueprintPartLoader from '../../loaders/anatomyBlueprintPartLoader.js';
 import AnatomySlotLibraryLoader from '../../loaders/anatomySlotLibraryLoader.js';
 import AnatomyFormattingLoader from '../../loaders/anatomyFormattingLoader.js';
-import UiAssetsLoader from '../../loaders/uiAssetsLoader.js';
 import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
 
 // --- Modding Service Imports ---
@@ -220,7 +219,6 @@ export function registerLoaders(container) {
   registerLoader(tokens.AnatomyBlueprintPartLoader, AnatomyBlueprintPartLoader);
   registerLoader(tokens.AnatomySlotLibraryLoader, AnatomySlotLibraryLoader);
   registerLoader(tokens.AnatomyFormattingLoader, AnatomyFormattingLoader);
-  registerLoader(tokens.UiAssetsLoader, UiAssetsLoader);
 
   // Register ScopeLoader with TextDataFetcher instead of regular IDataFetcher
   registrar.singletonFactory(
@@ -309,7 +307,6 @@ export function registerLoaders(container) {
           anatomyBlueprintLoader: c.resolve(tokens.AnatomyBlueprintLoader),
           anatomyRecipeLoader: c.resolve(tokens.AnatomyRecipeLoader),
           anatomyFormattingLoader: c.resolve(tokens.AnatomyFormattingLoader),
-          uiAssetsLoader: c.resolve(tokens.UiAssetsLoader),
         }),
         aggregatorFactory: (counts) => new LoadResultAggregator(counts),
       })

@@ -65,8 +65,8 @@ Object mapping content categories to arrays of JSON definition files. Paths are 
 
 Mods may supply user-interface resources using a `ui` content category. Typical files include:
 
-- `icons.json` – conforms to `ui-icons.schema.json` and maps icon names to SVG markup or image paths.
-- `labels.json` – conforms to `ui-labels.schema.json` and maps label keys to display text.
+- `icons.json` – maps icon names to SVG markup or image paths (currently not used by the engine).
+- `labels.json` – maps label keys to display text (currently not used by the engine).
 
 Example snippet:
 
@@ -78,11 +78,7 @@ Example snippet:
 }
 ```
 
-The UiLoader validates these files against their schemas and merges the results across all mods. When multiple mods provide the same icon or label key, the version from the mod loaded last overrides earlier ones.
-
-### UiAssetsLoader Storage
-
-The `UiAssetsLoader` persists validated UI resources in the engine's data registry. Icon files are stored under the `ui_icons` key, while label files are stored under `ui_labels`. Files ending in `icons.json` or `labels.json` are validated against the corresponding schema. Any other filenames are ignored and a warning is logged.
+**Note**: UI asset files (`icons.json` and `labels.json`) are currently not processed by the engine but may be used in future versions. The engine currently uses hardcoded default icons and labels.
 
 ## Content Loading Order
 

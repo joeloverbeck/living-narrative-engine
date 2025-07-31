@@ -134,7 +134,6 @@ const isekaiManifestContent = {
     events: [],
     macros: [],
     rules: [],
-    ui: ['icons.json', 'labels.json'],
   },
 };
 

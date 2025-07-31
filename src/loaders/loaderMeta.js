@@ -102,12 +102,6 @@ export const meta = {
     phase: 'definitions',
     registryKey: 'anatomyFormatting',
   },
-  uiAssets: {
-    contentKey: 'ui',
-    diskFolder: 'ui',
-    phase: 'definitions',
-    registryKey: 'uiAssets',
-  },
 };
 
 export default meta;

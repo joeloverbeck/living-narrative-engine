@@ -70,7 +70,6 @@ describe('JSON-Schema – Mod Manifest', () => {
           macros: [],
           portraits: [],
           rules: [],
-          ui: [],
           worlds: [],
         },
       };
@@ -181,13 +180,13 @@ describe('JSON-Schema – Mod Manifest', () => {
         ...validIsekaiManifest,
         content: {
           ...validIsekaiManifest.content,
-          ui: ['../another_mod/data.json'], // Contains ".."
+          portraits: ['../another_mod/data.json'], // Contains ".."
         },
       };
       expect(validate(invalidManifest)).toBe(false);
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
-          instancePath: '/content/ui/0',
+          instancePath: '/content/portraits/0',
           message: 'must match pattern "^(?!/)(?!.*\\.\\.)[^\\s]+\\.json$"',
         })
       );
