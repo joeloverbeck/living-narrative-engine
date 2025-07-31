@@ -1211,4 +1211,163 @@ describe('MultiTargetResolutionStage', () => {
       expect(result.data.resolvedTargets.d[0].contextFromId).toBe('entity');
     });
   });
+
+  describe('Mixed Action Type Processing', () => {
+    it('should process multi-target actions with full capabilities when mixed with legacy actions', async () => {
+      // Create both legacy and multi-target actions
+      const legacyAction = {
+        id: 'core:follow',
+        scope: 'core:potential_leaders',
+        template: 'follow {target}',
+      };
+
+      const multiTargetAction = {
+        id: 'core:go',
+        targets: {
+          primary: {
+            scope: 'location.exits',
+            placeholder: 'destination',
+          },
+        },
+        template: 'go to {destination}',
+      };
+
+      mockContext.candidateActions = [legacyAction, multiTargetAction];
+
+      // Mock legacy action resolution
+      mockDeps.targetResolver.resolveTargets.mockResolvedValue({
+        success: true,
+        value: [
+          { entityId: 'npc_001', displayName: 'Guard Captain' },
+        ],
+      });
+
+      // Mock multi-target action resolution
+      mockDeps.unifiedScopeResolver.resolve.mockResolvedValue(
+        ActionResult.success(new Set(['room_tavern']))
+      );
+
+      // Mock entity instances
+      mockDeps.entityManager.getEntityInstance.mockImplementation((id) => {
+        switch (id) {
+          case 'npc_001':
+            return {
+              id: 'npc_001',
+              getComponentData: jest.fn().mockReturnValue({ text: 'Guard Captain' }),
+            };
+          case 'room_tavern':
+            return {
+              id: 'room_tavern',
+              getComponentData: jest.fn().mockReturnValue({ text: 'The Gilded Bean' }),
+            };
+          default:
+            return null;
+        }
+      });
+
+      // Mock context building
+      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
+
+      const result = await stage.executeInternal(mockContext);
+
+      expect(result.success).toBe(true);
+      expect(result.data.actionsWithTargets).toHaveLength(2);
+
+      // Verify legacy action has per-action metadata
+      const legacyActionResult = result.data.actionsWithTargets.find(
+        awt => awt.actionDef.id === 'core:follow'
+      );
+      expect(legacyActionResult).toBeDefined();
+      expect(legacyActionResult.isMultiTarget).toBe(false);
+      expect(legacyActionResult.resolvedTargets).toBeDefined();
+      expect(legacyActionResult.targetDefinitions).toBeDefined();
+
+      // Verify multi-target action has per-action metadata
+      const multiTargetActionResult = result.data.actionsWithTargets.find(
+        awt => awt.actionDef.id === 'core:go'
+      );
+      expect(multiTargetActionResult).toBeDefined();
+      expect(multiTargetActionResult.isMultiTarget).toBe(true);
+      expect(multiTargetActionResult.resolvedTargets).toBeDefined();
+      expect(multiTargetActionResult.resolvedTargets.primary).toHaveLength(1);
+      expect(multiTargetActionResult.resolvedTargets.primary[0].id).toBe('room_tavern');
+      expect(multiTargetActionResult.targetDefinitions).toBeDefined();
+
+      // Verify global metadata is still set for backward compatibility
+      expect(result.data.resolvedTargets).toBeDefined();
+      expect(result.data.targetDefinitions).toBeDefined();
+    });
+
+    it('should handle mixed actions without suppressing multi-target metadata', async () => {
+      // This test verifies the fix - previously, multi-target metadata would be suppressed
+      const actions = [
+        {
+          id: 'test:legacy1',
+          scope: 'test:scope1',
+          template: 'legacy {target}',
+        },
+        {
+          id: 'test:multi1',
+          targets: {
+            primary: { scope: 'test:scope2', placeholder: 'thing' },
+          },
+          template: 'multi {thing}',
+        },
+        {
+          id: 'test:legacy2',
+          targets: 'test:scope3', // Legacy using targets property
+          template: 'legacy2 {target}',
+        },
+      ];
+
+      mockContext.candidateActions = actions;
+
+      // Mock resolutions
+      mockDeps.targetResolver.resolveTargets
+        .mockResolvedValueOnce({
+          success: true,
+          value: [{ entityId: 'target1', displayName: 'Target 1' }],
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          value: [{ entityId: 'target3', displayName: 'Target 3' }],
+        });
+
+      mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
+        ActionResult.success(new Set(['target2']))
+      );
+
+      mockDeps.entityManager.getEntityInstance.mockReturnValue({
+        id: 'generic',
+        getComponentData: jest.fn().mockReturnValue({ text: 'Generic' }),
+      });
+
+      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
+
+      const result = await stage.executeInternal(mockContext);
+
+      expect(result.success).toBe(true);
+      expect(result.data.actionsWithTargets).toHaveLength(3);
+
+      // Each action should have its own metadata
+      result.data.actionsWithTargets.forEach((awt) => {
+        expect(awt.resolvedTargets).toBeDefined();
+        expect(awt.targetDefinitions).toBeDefined();
+        expect(typeof awt.isMultiTarget).toBe('boolean');
+      });
+
+      // Verify the multi-target action maintains its full metadata
+      const multiAction = result.data.actionsWithTargets.find(
+        awt => awt.actionDef.id === 'test:multi1'
+      );
+      expect(multiAction.isMultiTarget).toBe(true);
+      expect(multiAction.resolvedTargets.primary).toBeDefined();
+    });
+  });
 });

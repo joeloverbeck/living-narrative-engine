@@ -50,7 +50,7 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
     };
   });
 
-  it('should NOT pass resolvedTargets/targetDefinitions when mixed with legacy actions (by design)', async () => {
+  it('should pass resolvedTargets/targetDefinitions even when mixed with legacy actions (fixed behavior)', async () => {
     // Create a mix of legacy and multi-target actions
     const candidateActions = [
       // Legacy action
@@ -165,11 +165,10 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
     expect(result).toBeInstanceOf(PipelineResult);
     expect(result.success).toBe(true);
 
-    // When mixing legacy and multi-target actions, the production code
-    // intentionally does NOT pass resolvedTargets and targetDefinitions
-    // to ensure legacy actions continue to be processed through the legacy path
-    expect(result.data.resolvedTargets).toBeUndefined();
-    expect(result.data.targetDefinitions).toBeUndefined();
+    // With the fix, global metadata is now passed even when mixing legacy and multi-target actions
+    // This is backward compatible since each action also has its own metadata
+    expect(result.data.resolvedTargets).toBeDefined();
+    expect(result.data.targetDefinitions).toBeDefined();
 
     // However, the actionsWithTargets should still contain both action types
     expect(result.data.actionsWithTargets).toHaveLength(2);
@@ -335,9 +334,9 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
     // Verify success
     expect(result.success).toBe(true);
 
-    // No global resolvedTargets/targetDefinitions due to mixed actions
-    expect(result.data.resolvedTargets).toBeUndefined();
-    expect(result.data.targetDefinitions).toBeUndefined();
+    // With the fix, global metadata is now passed even when mixing legacy and multi-target actions
+    expect(result.data.resolvedTargets).toBeDefined();
+    expect(result.data.targetDefinitions).toBeDefined();
 
     // Both actions should be in actionsWithTargets
     expect(result.data.actionsWithTargets).toHaveLength(2);

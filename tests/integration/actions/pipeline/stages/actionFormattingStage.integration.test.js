@@ -805,6 +805,7 @@ describe('ActionFormattingStage - Integration Tests', () => {
             secondary: ['goblin-001'],
           },
           isMultiTarget: true,
+          targetId: 'sword-001', // Backward compatibility field
         },
       });
 

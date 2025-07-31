@@ -80,6 +80,17 @@ export class ActionFormattingStage extends PipelineStage {
       source
     );
 
+    // Check if we have any actions with per-action metadata (new approach)
+    const hasPerActionMetadata = actionsWithTargets.some(
+      awt => awt.resolvedTargets && awt.targetDefinitions && awt.isMultiTarget !== undefined
+    );
+
+    if (hasPerActionMetadata) {
+      // Process all actions based on their individual metadata (new approach)
+      return this.#formatActionsWithPerActionMetadata(context, trace);
+    }
+
+    // Fall back to old behavior for backward compatibility
     // Check if we have multi-target data to process
     if (resolvedTargets && targetDefinitions) {
       return this.#formatMultiTargetActions(context, trace);
@@ -101,6 +112,225 @@ export class ActionFormattingStage extends PipelineStage {
 
     // Process legacy format actions
     return this.#formatLegacyActions(context, trace);
+  }
+
+  /**
+   * Format actions based on their individual metadata
+   *
+   * @param context
+   * @param trace
+   * @private
+   */
+  async #formatActionsWithPerActionMetadata(context, trace) {
+    const { actor, actionsWithTargets = [] } = context;
+    const source = `${this.name}Stage.execute`;
+    const formattedActions = [];
+    const errors = [];
+
+    // Options are identical for all targets; compute once for reuse
+    const formatterOptions = {
+      logger: this.#logger,
+      debug: true,
+      safeEventDispatcher: this.#safeEventDispatcher,
+    };
+
+    for (const actionWithTargets of actionsWithTargets) {
+      const { actionDef, targetContexts, resolvedTargets, targetDefinitions, isMultiTarget } = actionWithTargets;
+
+      try {
+        // Check if this action has multi-target metadata
+        if (isMultiTarget && resolvedTargets && targetDefinitions) {
+          // Process as multi-target action
+          if (this.#commandFormatter.formatMultiTarget) {
+            const formatResult = this.#commandFormatter.formatMultiTarget(
+              actionDef,
+              resolvedTargets,
+              this.#entityManager,
+              formatterOptions,
+              {
+                displayNameFn: this.#getEntityDisplayNameFn,
+                targetDefinitions,
+              }
+            );
+
+            if (formatResult.ok) {
+              // Handle both single command and array of commands
+              const commands = Array.isArray(formatResult.value)
+                ? formatResult.value
+                : [formatResult.value];
+
+              for (const command of commands) {
+                const targetIds = this.#extractTargetIds(resolvedTargets);
+                const params = {
+                  targetIds,
+                  isMultiTarget: true,
+                };
+                
+                // Backward compatibility: if there's a single primary target, also set targetId
+                if (targetIds.primary && targetIds.primary.length === 1) {
+                  params.targetId = targetIds.primary[0];
+                }
+                
+                const actionInfo = {
+                  id: actionDef.id,
+                  name: actionDef.name,
+                  command: command,
+                  description: actionDef.description || '',
+                  params,
+                };
+                formattedActions.push(actionInfo);
+              }
+            } else {
+              // Multi-target formatting failed, try fallback to legacy formatting
+              const primaryTarget = this.#getPrimaryTargetContext(resolvedTargets);
+              if (primaryTarget) {
+                const fallbackResult = this.#formatLegacyAction(
+                  actionDef,
+                  primaryTarget,
+                  formatterOptions
+                );
+                if (fallbackResult.ok) {
+                  const actionInfo = {
+                    id: actionDef.id,
+                    name: actionDef.name,
+                    command: fallbackResult.value,
+                    description: actionDef.description || '',
+                    params: { targetId: primaryTarget.entityId },
+                  };
+                  formattedActions.push(actionInfo);
+                } else {
+                  errors.push(
+                    this.#createError(
+                      fallbackResult,
+                      actionDef,
+                      actor.id,
+                      trace,
+                      primaryTarget.entityId
+                    )
+                  );
+                }
+              } else {
+                errors.push(
+                  this.#createError(formatResult, actionDef, actor.id, trace)
+                );
+              }
+            }
+          } else {
+            // Fallback to legacy formatting for first target
+            const primaryTarget = this.#getPrimaryTargetContext(resolvedTargets);
+            if (primaryTarget) {
+              const formatResult = this.#formatLegacyAction(
+                actionDef,
+                primaryTarget,
+                formatterOptions
+              );
+              if (formatResult.ok) {
+                const actionInfo = {
+                  id: actionDef.id,
+                  name: actionDef.name,
+                  command: formatResult.value,
+                  description: actionDef.description || '',
+                  params: { targetId: primaryTarget.entityId },
+                };
+                formattedActions.push(actionInfo);
+              } else {
+                errors.push(
+                  this.#createError(
+                    formatResult,
+                    actionDef,
+                    actor.id,
+                    trace,
+                    primaryTarget.entityId
+                  )
+                );
+              }
+            } else {
+              // No targets available for formatting
+              errors.push(
+                this.#createError(
+                  'No targets available for action',
+                  actionDef,
+                  actor.id,
+                  trace
+                )
+              );
+            }
+          }
+        } else {
+          // Process as legacy action
+          for (const targetContext of targetContexts) {
+            try {
+              const formatResult = this.#formatLegacyAction(
+                actionDef,
+                targetContext,
+                formatterOptions
+              );
+
+              if (formatResult.ok) {
+                const actionInfo = {
+                  id: actionDef.id,
+                  name: actionDef.name,
+                  command: formatResult.value,
+                  description: actionDef.description || '',
+                  params: { targetId: targetContext.entityId },
+                };
+                formattedActions.push(actionInfo);
+              } else {
+                errors.push(
+                  this.#createError(
+                    formatResult,
+                    actionDef,
+                    actor.id,
+                    trace,
+                    targetContext.entityId
+                  )
+                );
+              }
+            } catch (error) {
+              errors.push(
+                this.#createError(
+                  error,
+                  actionDef,
+                  actor.id,
+                  trace,
+                  targetContext.entityId
+                )
+              );
+            }
+          }
+        }
+      } catch (error) {
+        errors.push(this.#createError(error, actionDef, actor.id, trace));
+      }
+    }
+
+    trace?.info(
+      `Action formatting completed: ${formattedActions.length} formatted actions, ${errors.length} errors`,
+      source
+    );
+
+    return PipelineResult.success({
+      actions: formattedActions,
+      errors,
+    });
+  }
+
+  /**
+   * Format a single legacy action
+   *
+   * @param actionDef
+   * @param targetContext
+   * @param formatterOptions
+   * @private
+   */
+  #formatLegacyAction(actionDef, targetContext, formatterOptions) {
+    return this.#commandFormatter.format(
+      actionDef,
+      targetContext,
+      this.#entityManager,
+      formatterOptions,
+      { displayNameFn: this.#getEntityDisplayNameFn }
+    );
   }
 
   /**
@@ -153,15 +383,23 @@ export class ActionFormattingStage extends PipelineStage {
               : [formatResult.value];
 
             for (const command of commands) {
+              const targetIds = this.#extractTargetIds(resolvedTargets);
+              const params = {
+                targetIds,
+                isMultiTarget: true,
+              };
+              
+              // Backward compatibility: if there's a single primary target, also set targetId
+              if (targetIds.primary && targetIds.primary.length === 1) {
+                params.targetId = targetIds.primary[0];
+              }
+              
               const actionInfo = {
                 id: actionDef.id,
                 name: actionDef.name,
                 command: command,
                 description: actionDef.description || '',
-                params: {
-                  targetIds: this.#extractTargetIds(resolvedTargets),
-                  isMultiTarget: true,
-                },
+                params,
               };
               formattedActions.push(actionInfo);
             }
@@ -339,15 +577,23 @@ export class ActionFormattingStage extends PipelineStage {
                 : [formatResult.value];
 
               for (const command of commands) {
+                const targetIds = this.#extractTargetIds(actionSpecificTargets);
+                const params = {
+                  targetIds,
+                  isMultiTarget: true,
+                };
+                
+                // Backward compatibility: if there's a single primary target, also set targetId
+                if (targetIds.primary && targetIds.primary.length === 1) {
+                  params.targetId = targetIds.primary[0];
+                }
+                
                 const actionInfo = {
                   id: actionDef.id,
                   name: actionDef.name,
                   command: command,
                   description: actionDef.description || '',
-                  params: {
-                    targetIds: this.#extractTargetIds(actionSpecificTargets),
-                    isMultiTarget: true,
-                  },
+                  params,
                 };
                 formattedActions.push(actionInfo);
               }

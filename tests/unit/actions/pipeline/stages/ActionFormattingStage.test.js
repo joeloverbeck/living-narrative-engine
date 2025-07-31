@@ -750,4 +750,141 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
       );
     });
   });
+
+  describe('Per-Action Metadata Processing', () => {
+    it('should process actions based on their individual metadata when mixed', async () => {
+      // Create both legacy and multi-target actions with per-action metadata
+      const context = {
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'core:follow',
+              name: 'Follow',
+              template: 'follow {target}',
+            },
+            targetContexts: [
+              { entityId: 'npc_001', displayName: 'Guard Captain', type: 'entity' },
+            ],
+            // Per-action metadata for legacy action
+            resolvedTargets: {
+              primary: [{
+                id: 'npc_001',
+                displayName: 'Guard Captain',
+                entity: { id: 'npc_001' },
+              }],
+            },
+            targetDefinitions: { primary: { scope: 'core:potential_leaders', placeholder: 'target' } },
+            isMultiTarget: false,
+          },
+          {
+            actionDef: {
+              id: 'core:go',
+              name: 'Go',
+              template: 'go to {destination}',
+              targets: {
+                primary: {
+                  scope: 'location.exits',
+                  placeholder: 'destination',
+                },
+              },
+            },
+            targetContexts: [
+              { entityId: 'room_tavern', displayName: 'The Gilded Bean', type: 'entity' },
+            ],
+            // Per-action metadata for multi-target action
+            resolvedTargets: {
+              primary: [{
+                id: 'room_tavern',
+                displayName: 'The Gilded Bean',
+                entity: { id: 'room_tavern' },
+              }],
+            },
+            targetDefinitions: {
+              primary: {
+                scope: 'location.exits',
+                placeholder: 'destination',
+              },
+            },
+            isMultiTarget: true,
+          },
+        ],
+      };
+
+      // Mock the formatter to support multi-target
+      mockMultiTargetFormatter.formatMultiTarget
+        .mockReturnValueOnce({
+          ok: true,
+          value: 'go to The Gilded Bean',
+        });
+
+      mockMultiTargetFormatter.format
+        .mockReturnValueOnce({
+          ok: true,
+          value: 'follow Guard Captain',
+        });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(2);
+
+      // Verify legacy action was formatted correctly
+      const followAction = result.actions.find(a => a.id === 'core:follow');
+      expect(followAction).toBeDefined();
+      expect(followAction.command).toBe('follow Guard Captain');
+      expect(followAction.params.targetId).toBe('npc_001');
+
+      // Verify multi-target action was formatted with multi-target formatter
+      const goAction = result.actions.find(a => a.id === 'core:go');
+      expect(goAction).toBeDefined();
+      expect(goAction.command).toBe('go to The Gilded Bean');
+      expect(goAction.params.isMultiTarget).toBe(true);
+      expect(goAction.params.targetIds).toEqual({ primary: ['room_tavern'] });
+
+      // Verify the multi-target formatter was called for the multi-target action
+      expect(mockMultiTargetFormatter.formatMultiTarget).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'core:go' }),
+        expect.objectContaining({ primary: expect.any(Array) }),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object)
+      );
+    });
+
+    it('should handle actions without per-action metadata gracefully', async () => {
+      // Test backward compatibility - actions without the new metadata
+      const context = {
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:old-style',
+              name: 'Old Style',
+              template: 'old {target}',
+            },
+            targetContexts: [
+              { entityId: 'target_001', displayName: 'Target 1', type: 'entity' },
+            ],
+            // No per-action metadata
+          },
+        ],
+      };
+
+      mockMultiTargetFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'old Target 1',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0].command).toBe('old Target 1');
+
+      // Should use legacy formatter
+      expect(mockMultiTargetFormatter.format).toHaveBeenCalled();
+      expect(mockMultiTargetFormatter.formatMultiTarget).not.toHaveBeenCalled();
+    });
+  });
 });
