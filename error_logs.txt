@@ -1,1 +1,80 @@
-
+CharacterBuilderService: Created character concept 18333891-3b3b-42ab-8bc0-f6baea490598 {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598', concept: 'cccccccccccccccccccccccccccccccccccccccccccccccccc...', autoSave: true, attempt: 1}
+consoleLogger.js:187 CharacterDatabase: Saved character concept 18333891-3b3b-42ab-8bc0-f6baea490598
+consoleLogger.js:151 CharacterStorageService: Successfully stored character concept 18333891-3b3b-42ab-8bc0-f6baea490598 {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598', attempt: 1}
+consoleLogger.js:163 VED: EventDefinition not found for 'thematic:character_concept_created'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+createCharacterConcept @ characterBuilderService.js:174
+await in createCharacterConcept
+createConcept_fn @ characterConceptsManagerController.js:1838
+handleConceptSave_fn @ characterConceptsManagerController.js:1875
+(anonymous) @ characterConceptsManagerController.js:477Understand this warning
+consoleLogger.js:187 VED: Dispatching event 'thematic:character_concept_created' via EventBus... {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598', concept: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', autoSaved: true}
+consoleLogger.js:151 Concept created event received {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598', concept: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', autoSaved: true}
+consoleLogger.js:151 Loading character concepts data
+consoleLogger.js:151 Concept created successfully {id: '18333891-3b3b-42ab-8bc0-f6baea490598'}
+consoleLogger.js:151 Character concept created successfully!
+consoleLogger.js:151 Closing concept modal
+consoleLogger.js:187 VED: Validating payload for event 'core:ui_modal_closed' against schema 'core:ui_modal_closed#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:ui_modal_closed'.
+consoleLogger.js:187 VED: Dispatching event 'core:ui_modal_closed' via EventBus... {modalType: 'concept'}
+consoleLogger.js:151 Concept created successfully
+consoleLogger.js:187 VED: Event 'core:ui_modal_closed' dispatch successful.
+consoleLogger.js:187 VED: Event 'thematic:character_concept_created' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:ui_modal_closed'.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'thematic:character_concept_created'.
+consoleLogger.js:187 CharacterDatabase: Retrieved 3 character concepts
+consoleLogger.js:187 CharacterStorageService: Retrieved character concepts list {conceptCount: 3}
+consoleLogger.js:187 CharacterBuilderService: Retrieved 3 character concepts
+consoleLogger.js:187 CharacterDatabase: Retrieved 0 thematic directions for concept 18333891-3b3b-42ab-8bc0-f6baea490598
+consoleLogger.js:151 CharacterStorageService: No thematic directions found {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598'}
+consoleLogger.js:187 CharacterBuilderService: Retrieved 0 thematic directions for concept 18333891-3b3b-42ab-8bc0-f6baea490598
+consoleLogger.js:187 CharacterDatabase: Retrieved 5 thematic directions for concept 9a5a71a0-6890-4d1b-89aa-c34413469888
+consoleLogger.js:187 CharacterStorageService: Retrieved thematic directions {conceptId: '9a5a71a0-6890-4d1b-89aa-c34413469888', directionCount: 5}
+consoleLogger.js:187 CharacterBuilderService: Retrieved 5 thematic directions for concept 9a5a71a0-6890-4d1b-89aa-c34413469888
+consoleLogger.js:187 CharacterDatabase: Retrieved 0 thematic directions for concept bac10b75-9950-4a1e-8f97-353388634375
+consoleLogger.js:151 CharacterStorageService: No thematic directions found {conceptId: 'bac10b75-9950-4a1e-8f97-353388634375'}
+consoleLogger.js:187 CharacterBuilderService: Retrieved 0 thematic directions for concept bac10b75-9950-4a1e-8f97-353388634375
+consoleLogger.js:151 Statistics updated {totalConcepts: 3, conceptsWithDirections: 1, totalDirections: 5, averageDirectionsPerConcept: '1.7', completionRate: 33, …}
+consoleLogger.js:187 VED: Validating payload for event 'core:statistics_updated' against schema 'core:statistics_updated#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:statistics_updated'.
+consoleLogger.js:187 VED: Dispatching event 'core:statistics_updated' via EventBus... {totalConcepts: 3, conceptsWithDirections: 1, totalDirections: 5, averageDirectionsPerConcept: '1.7', completionRate: 33, …}
+consoleLogger.js:151 Loaded 3 concepts
+consoleLogger.js:187 VED: Event 'core:statistics_updated' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:statistics_updated'.
+consoleLogger.js:151 Showing delete confirmation {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598', directionCount: 0}
+consoleLogger.js:151 Deleting concept {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598', directionCount: 0}
+consoleLogger.js:187 CharacterDatabase: Deleted character concept 18333891-3b3b-42ab-8bc0-f6baea490598 and 0 associated directions
+consoleLogger.js:151 CharacterStorageService: Successfully deleted character concept {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598'}
+consoleLogger.js:151 CharacterBuilderService: Deleted character concept 18333891-3b3b-42ab-8bc0-f6baea490598
+consoleLogger.js:163 VED: EventDefinition not found for 'thematic:character_concept_deleted'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+deleteCharacterConcept @ characterBuilderService.js:491
+await in deleteCharacterConcept
+deleteConcept_fn @ characterConceptsManagerController.js:1653
+(anonymous) @ characterConceptsManagerController.js:1619Understand this warning
+consoleLogger.js:187 VED: Dispatching event 'thematic:character_concept_deleted' via EventBus... {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598'}
+consoleLogger.js:151 Concept deleted event received {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598'}
+consoleLogger.js:151 Removed concept from local cache {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598'}
+consoleLogger.js:151 Statistics updated {totalConcepts: 2, conceptsWithDirections: 1, totalDirections: 5, averageDirectionsPerConcept: '2.5', completionRate: 50, …}
+consoleLogger.js:187 VED: Validating payload for event 'core:statistics_updated' against schema 'core:statistics_updated#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:statistics_updated'.
+consoleLogger.js:187 VED: Dispatching event 'core:statistics_updated' via EventBus... {totalConcepts: 2, conceptsWithDirections: 1, totalDirections: 5, averageDirectionsPerConcept: '2.5', completionRate: 50, …}
+consoleLogger.js:187 VED: Event 'core:statistics_updated' dispatch successful.
+consoleLogger.js:151 Concept deleted successfully {conceptId: '18333891-3b3b-42ab-8bc0-f6baea490598', directionsDeleted: 0}
+consoleLogger.js:151 Character concept deleted successfully
+consoleLogger.js:151 Statistics updated {totalConcepts: 2, conceptsWithDirections: 1, totalDirections: 5, averageDirectionsPerConcept: '2.5', completionRate: 50, …}
+consoleLogger.js:187 VED: Validating payload for event 'core:statistics_updated' against schema 'core:statistics_updated#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:statistics_updated'.
+consoleLogger.js:187 VED: Dispatching event 'core:statistics_updated' via EventBus... {totalConcepts: 2, conceptsWithDirections: 1, totalDirections: 5, averageDirectionsPerConcept: '2.5', completionRate: 50, …}
+consoleLogger.js:187 VED: Event 'core:statistics_updated' dispatch successful.
+consoleLogger.js:151 Closing delete modal

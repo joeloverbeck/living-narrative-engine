@@ -23,23 +23,23 @@ describe('Thematic Direction - Schema Registration', () => {
 
   it('should verify CHARACTER_BUILDER_EVENTS constants match expected schema IDs', () => {
     // The ValidatedEventDispatcher expects schema IDs to be {eventName}#payload
-    // So if the event name is 'thematic:character_concept_created',
-    // the schema ID should be 'thematic:character_concept_created#payload'
+    // So if the event name is 'core:character_concept_created',
+    // the schema ID should be 'core:character_concept_created#payload'
 
     expect(CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED).toBe(
-      'thematic:character_concept_created'
+      'core:character_concept_created'
     );
     expect(CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED).toBe(
-      'thematic:thematic_directions_generated'
+      'core:thematic_directions_generated'
     );
 
     // Verify the pattern works correctly
     const conceptSchemaId = `${CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED}#payload`;
-    expect(conceptSchemaId).toBe('thematic:character_concept_created#payload');
+    expect(conceptSchemaId).toBe('core:character_concept_created#payload');
 
     const directionsSchemaId = `${CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED}#payload`;
     expect(directionsSchemaId).toBe(
-      'thematic:thematic_directions_generated#payload'
+      'core:thematic_directions_generated#payload'
     );
   });
 
@@ -95,34 +95,34 @@ describe('Thematic Direction - Schema Registration', () => {
     // Register schemas with correct IDs
     await schemaValidator.addSchema(
       characterConceptCreatedSchema,
-      'thematic:character_concept_created#payload'
+      'core:character_concept_created#payload'
     );
 
     await schemaValidator.addSchema(
       thematicDirectionsGeneratedSchema,
-      'thematic:thematic_directions_generated#payload'
+      'core:thematic_directions_generated#payload'
     );
 
     // Verify schemas were registered with correct IDs
     expect(addSchemaSpy).toHaveBeenCalledWith(
       characterConceptCreatedSchema,
-      'thematic:character_concept_created#payload'
+      'core:character_concept_created#payload'
     );
 
     expect(addSchemaSpy).toHaveBeenCalledWith(
       thematicDirectionsGeneratedSchema,
-      'thematic:thematic_directions_generated#payload'
+      'core:thematic_directions_generated#payload'
     );
 
     // Verify schemas are loaded and can be validated
     expect(
       schemaValidator.isSchemaLoaded(
-        'thematic:character_concept_created#payload'
+        'core:character_concept_created#payload'
       )
     ).toBe(true);
     expect(
       schemaValidator.isSchemaLoaded(
-        'thematic:thematic_directions_generated#payload'
+        'core:thematic_directions_generated#payload'
       )
     ).toBe(true);
   });
@@ -140,7 +140,7 @@ describe('Thematic Direction - Schema Registration', () => {
         },
         additionalProperties: false,
       },
-      'thematic:character_concept_created#payload'
+      'core:character_concept_created#payload'
     );
 
     await schemaValidator.addSchema(
@@ -154,7 +154,7 @@ describe('Thematic Direction - Schema Registration', () => {
         },
         additionalProperties: false,
       },
-      'thematic:thematic_directions_generated#payload'
+      'core:thematic_directions_generated#payload'
     );
 
     // Test valid payloads
@@ -165,7 +165,7 @@ describe('Thematic Direction - Schema Registration', () => {
     };
 
     const conceptResult = schemaValidator.validate(
-      'thematic:character_concept_created#payload',
+      'core:character_concept_created#payload',
       validConceptPayload
     );
     expect(conceptResult.isValid).toBe(true);
@@ -177,7 +177,7 @@ describe('Thematic Direction - Schema Registration', () => {
     };
 
     const directionsResult = schemaValidator.validate(
-      'thematic:thematic_directions_generated#payload',
+      'core:thematic_directions_generated#payload',
       validDirectionsPayload
     );
     expect(directionsResult.isValid).toBe(true);

@@ -179,14 +179,19 @@ describe('MultiTargetEventBuilder', () => {
         expect(state.eventData.targetId).toBe('goblin_456'); // 'target' has priority
       });
 
-      it('should set single target without targets object', () => {
+      it('should set single target with targets object', () => {
         const targets = { item: 'sword_123' };
 
         builder.setTargets(targets);
 
         const state = builder.getState();
-        expect(state.eventData.targets).toBe(undefined);
+        // setTargets always creates targets object
+        expect(state.eventData.targets).toEqual(targets);
         expect(state.eventData.targetId).toBe('sword_123');
+        // Check flattened IDs - item is not a standard placeholder
+        expect(state.eventData.primaryId).toBe(null);
+        expect(state.eventData.secondaryId).toBe(null);
+        expect(state.eventData.tertiaryId).toBe(null);
       });
 
       it('should use explicit primary target', () => {
@@ -382,6 +387,10 @@ describe('MultiTargetEventBuilder', () => {
           actionId: 'core:attack',
           originalInput: 'attack goblin',
           targetId: 'goblin_456',
+          // Flattened IDs added by setLegacyTarget
+          primaryId: 'goblin_456',
+          secondaryId: null,
+          tertiaryId: null,
           timestamp: expect.any(Number),
         },
         hasRequiredFields: true,

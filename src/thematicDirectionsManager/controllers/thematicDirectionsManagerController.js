@@ -596,7 +596,7 @@ export class ThematicDirectionsManagerController {
       }
 
       // Dispatch update event
-      this.#eventBus.dispatch('thematic:direction_updated', {
+      this.#eventBus.dispatch('core:direction_updated', {
         directionId,
         field: fieldName,
         oldValue: originalValue,
@@ -721,7 +721,7 @@ export class ThematicDirectionsManagerController {
           this.#filterAndDisplayDirections();
 
           // Dispatch event
-          this.#eventBus.dispatch('thematic:direction_deleted', {
+          this.#eventBus.dispatch('core:direction_deleted', {
             directionId: direction.id,
           });
 
@@ -781,7 +781,7 @@ export class ThematicDirectionsManagerController {
           this.#filterAndDisplayDirections();
 
           // Dispatch event
-          this.#eventBus.dispatch('thematic:orphans_cleaned', {
+          this.#eventBus.dispatch('core:orphans_cleaned', {
             deletedCount: orphanedDirections.length,
           });
 

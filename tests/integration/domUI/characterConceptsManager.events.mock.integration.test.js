@@ -51,8 +51,8 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
 
     // Create a mock gameDataRepository with test event definitions
     const testEventDefinitions = {
-      'thematic:character_concept_created': {
-        id: 'thematic:character_concept_created',
+      'core:character_concept_created': {
+        id: 'core:character_concept_created',
         description: 'Dispatched when a new character concept is created.',
         payloadSchema: {
           type: 'object',
@@ -65,8 +65,8 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
           additionalProperties: true,
         },
       },
-      'thematic:character_concept_deleted': {
-        id: 'thematic:character_concept_deleted',
+      'core:character_concept_deleted': {
+        id: 'core:character_concept_deleted',
         description: 'Dispatched when a character concept is deleted.',
         payloadSchema: {
           type: 'object',
@@ -159,7 +159,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
     it('should dispatch character_concept_created event when creating a concept', async () => {
       // Arrange
       let capturedEvent = null;
-      eventBus.subscribe('thematic:character_concept_created', (event) => {
+      eventBus.subscribe('core:character_concept_created', (event) => {
         capturedEvent = event;
       });
 
@@ -173,7 +173,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
 
       // Assert
       expect(capturedEvent).toBeTruthy();
-      expect(capturedEvent.type).toBe('thematic:character_concept_created');
+      expect(capturedEvent.type).toBe('core:character_concept_created');
       expect(capturedEvent.payload).toMatchObject({
         conceptId: result.id,
         concept: 'Test concept with enough characters',
@@ -188,7 +188,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
       );
 
       let capturedEvent = null;
-      eventBus.subscribe('thematic:character_concept_deleted', (event) => {
+      eventBus.subscribe('core:character_concept_deleted', (event) => {
         capturedEvent = event;
       });
 
@@ -200,7 +200,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
 
       // Assert
       expect(capturedEvent).toBeTruthy();
-      expect(capturedEvent.type).toBe('thematic:character_concept_deleted');
+      expect(capturedEvent.type).toBe('core:character_concept_deleted');
       expect(capturedEvent.payload).toMatchObject({
         conceptId: result.id,
       });
@@ -216,7 +216,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
       // Act & Assert
       for (const payload of invalidPayloads) {
         const result = await validatedDispatcher.dispatch(
-          'thematic:character_concept_created',
+          'core:character_concept_created',
           payload
         );
         expect(result).toBe(false); // Should return false for invalid payloads
@@ -224,7 +224,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
 
       // Valid payload should return true
       const validResult = await validatedDispatcher.dispatch(
-        'thematic:character_concept_created',
+        'core:character_concept_created',
         {
           conceptId: 'test-id',
           concept: 'Valid concept text',
@@ -236,7 +236,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
     it('should handle concurrent event dispatches', async () => {
       // Arrange
       const events = [];
-      eventBus.subscribe('thematic:character_concept_created', (event) => {
+      eventBus.subscribe('core:character_concept_created', (event) => {
         events.push(event);
       });
 
@@ -267,7 +267,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
       let busEvent = null;
 
       // Listen at bus level
-      eventBus.subscribe('thematic:character_concept_created', (event) => {
+      eventBus.subscribe('core:character_concept_created', (event) => {
         busEvent = event;
       });
 
@@ -291,7 +291,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
 
       // Verify dispatcher was called
       expect(dispatchSpy).toHaveBeenCalledWith(
-        'thematic:character_concept_created',
+        'core:character_concept_created',
         expect.objectContaining({
           conceptId: result.id,
           concept: 'Cross-service test with enough characters',

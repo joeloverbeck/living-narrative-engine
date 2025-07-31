@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "thematic:character_concept_created",
+  "id": "core:character_concept_created",
   "description": "Dispatched when a new character concept is created.",
   "payloadSchema": {
     "type": "object",

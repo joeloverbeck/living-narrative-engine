@@ -181,7 +181,7 @@ async function getAllModNames() {
  * Update the manifest for a specific mod
  *
  * @param {string} modName - The name of the mod to update
- * @returns {Promise<boolean>} Resolves to true on success, false on failure
+ * @returns {Promise<{success: boolean, modName: string, error?: {type: string, message: string, path?: string}}>}
  */
 async function updateModManifest(modName) {
   console.log(`Starting manifest update for mod: "${modName}"`);
@@ -197,7 +197,15 @@ async function updateModManifest(modName) {
 
     if (!manifest.content || typeof manifest.content !== 'object') {
       console.error('Error: Manifest does not have a valid "content" object.');
-      process.exit(1);
+      return {
+        success: false,
+        modName,
+        error: {
+          type: 'INVALID_MANIFEST',
+          message: 'Manifest does not have a valid "content" object',
+          path: manifestPath
+        }
+      };
     }
 
     // --- NEW LOGIC: Auto-discover content directories ---
@@ -457,19 +465,35 @@ async function updateModManifest(modName) {
 
     console.log('\n✅ Manifest update complete!');
     console.log(`Successfully updated: ${manifestPath}`);
-    return true; // Success
+    return { success: true, modName }; // Success
   } catch (error) {
+    let errorInfo = { success: false, modName };
+    
     if (error.code === 'ENOENT') {
       console.error(`\nError: Could not find mod directory or manifest file.`);
       console.error(`Looked for manifest at: ${manifestPath}`);
+      errorInfo.error = {
+        type: 'ENOENT',
+        message: 'Could not find mod directory or manifest file',
+        path: manifestPath
+      };
     } else if (error instanceof SyntaxError) {
       console.error(`\nError: Failed to parse JSON in ${manifestPath}.`);
       console.error(error.message);
+      errorInfo.error = {
+        type: 'SYNTAX_ERROR',
+        message: `Failed to parse JSON: ${error.message}`,
+        path: manifestPath
+      };
     } else {
       console.error('\nAn unexpected error occurred:');
       console.error(error);
+      errorInfo.error = {
+        type: 'UNKNOWN',
+        message: error.message || 'An unexpected error occurred'
+      };
     }
-    return false; // Failure
+    return errorInfo; // Failure with details
   }
 }
 
@@ -481,8 +505,15 @@ async function main() {
 
   if (modName) {
     // Update single mod
-    const success = await updateModManifest(modName);
-    if (!success) {
+    const result = await updateModManifest(modName);
+    if (!result.success) {
+      console.error(`\n❌ Failed to update mod "${result.modName}"`);
+      if (result.error) {
+        console.error(`   Error: ${result.error.message}`);
+        if (result.error.path) {
+          console.error(`   Path: ${result.error.path}`);
+        }
+      }
       process.exit(1);
     }
   } else {
@@ -497,19 +528,19 @@ async function main() {
 
     console.log(`Found ${modNames.length} mod(s): ${modNames.join(', ')}\n`);
 
-    let successCount = 0;
-    let failureCount = 0;
+    const successfulMods = [];
+    const failedMods = [];
 
     for (const mod of modNames) {
       console.log(`\n${'='.repeat(50)}`);
       console.log(`Processing mod: ${mod}`);
       console.log(`${'='.repeat(50)}\n`);
 
-      const success = await updateModManifest(mod);
-      if (success) {
-        successCount++;
+      const result = await updateModManifest(mod);
+      if (result.success) {
+        successfulMods.push(result.modName);
       } else {
-        failureCount++;
+        failedMods.push(result);
       }
     }
 
@@ -517,13 +548,31 @@ async function main() {
     console.log(`\n${'='.repeat(50)}`);
     console.log('SUMMARY');
     console.log(`${'='.repeat(50)}`);
-    console.log(`✅ Successfully updated: ${successCount} mod(s)`);
-    if (failureCount > 0) {
-      console.log(`❌ Failed to update: ${failureCount} mod(s)`);
+    console.log(`Total mods processed: ${modNames.length}\n`);
+    
+    // Show successful mods
+    if (successfulMods.length > 0) {
+      console.log(`✅ Successfully updated ${successfulMods.length} mod(s):`);
+      successfulMods.forEach(mod => {
+        console.log(`   - ${mod}`);
+      });
     }
-    console.log(`Total mods processed: ${modNames.length}`);
+    
+    // Show failed mods with error details
+    if (failedMods.length > 0) {
+      console.log(`\n❌ Failed to update ${failedMods.length} mod(s):`);
+      failedMods.forEach(result => {
+        console.log(`   - ${result.modName}`);
+        if (result.error) {
+          console.log(`     Error: ${result.error.message}`);
+          if (result.error.path) {
+            console.log(`     Path: ${result.error.path}`);
+          }
+        }
+      });
+    }
 
-    if (failureCount > 0) {
+    if (failedMods.length > 0) {
       process.exit(1);
     }
   }

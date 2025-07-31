@@ -196,33 +196,20 @@ class CommandProcessor extends ICommandProcessor {
    */
   #createAttemptActionPayload(actor, turnAction) {
     const startTime = performance.now();
-    let extractionResult = null;
     let isFallback = false;
 
     try {
       // Validate inputs
       this.#validatePayloadInputs(actor, turnAction);
 
-      // Extract target data using existing TargetExtractionResult
-      extractionResult = TargetExtractionResult.fromResolvedParameters(
-        turnAction.resolvedParameters,
-        this.#logger
-      );
-
-      // Create event payload using the builder pattern
-      const eventBuilder = MultiTargetEventBuilder.fromTurnAction(
-        actor,
-        turnAction,
-        extractionResult,
-        this.#logger
-      );
-
-      const payload = eventBuilder.build();
+      // Create enhanced payload using builder
+      const payload = this.#createPayloadWithBuilder(actor, turnAction);
+      
       const duration = performance.now() - startTime;
 
       // Update metrics and log
-      this.#updatePayloadMetrics(payload, extractionResult, duration, false);
-      this.#logPayloadCreation(payload, extractionResult, duration);
+      this.#updatePayloadMetrics(payload, null, duration, false);
+      this.#logEnhancedPayloadCreation(payload, duration);
 
       return payload;
     } catch (error) {
@@ -240,12 +227,249 @@ class CommandProcessor extends ICommandProcessor {
       const fallbackPayload = this.#createFallbackPayload(actor, turnAction);
       this.#updatePayloadMetrics(
         fallbackPayload,
-        extractionResult,
+        null,
         duration,
         true
       );
 
       return fallbackPayload;
+    }
+  }
+
+  /**
+   * Creates payload using MultiTargetEventBuilder
+   * 
+   * @param {Entity} actor - Actor entity
+   * @param {ITurnAction} turnAction - Turn action with resolved parameters
+   * @returns {object} Enhanced event payload
+   * @private
+   */
+  #createPayloadWithBuilder(actor, turnAction) {
+    const { actionDefinitionId, resolvedParameters, commandString } = turnAction;
+    
+    // Create builder instance
+    const builder = new MultiTargetEventBuilder({ logger: this.#logger })
+      .setActor(actor.id)
+      .setAction(actionDefinitionId)
+      .setOriginalInput(commandString || actionDefinitionId)
+      .setTimestamp();
+    
+    // Extract resolved target information
+    const targetInfo = this.#extractResolvedTargets(resolvedParameters);
+    
+    // Handle different target scenarios
+    if (targetInfo.hasMultipleTargets && targetInfo.comprehensiveTargets) {
+      // Multi-target: set targets object which will automatically add flattened IDs
+      builder.setTargets(targetInfo.comprehensiveTargets);
+    } else if (targetInfo.primaryTarget || resolvedParameters?.targetId) {
+      // Single target: use legacy method
+      const targetId = targetInfo.primaryTarget || resolvedParameters.targetId;
+      builder.setLegacyTarget(targetId);
+    } else {
+      // No targets
+      builder.setLegacyTarget(null);
+    }
+    
+    // Add metadata
+    builder.setMetadata({
+      resolvedTargetCount: targetInfo.resolvedTargetCount,
+      hasContextDependencies: targetInfo.hasContextDependencies
+    });
+    
+    // Build and return the validated payload
+    return builder.build();
+  }
+
+  /**
+   * Extracts resolved target information from resolved parameters
+   * 
+   * @param {object} resolvedParameters - Resolved parameters from turn action
+   * @returns {object} Extracted target information
+   * @private
+   */
+  #extractResolvedTargets(resolvedParameters) {
+    const result = {
+      primaryTarget: null,
+      legacyFields: {
+        primaryId: null,
+        secondaryId: null,
+        tertiaryId: null,
+      },
+      comprehensiveTargets: {},
+      hasMultipleTargets: false,
+      resolvedTargetCount: 0,
+      hasContextDependencies: false,
+    };
+
+    if (!resolvedParameters) {
+      return result;
+    }
+
+    // Check if this is a multi-target action
+    if (resolvedParameters.isMultiTarget && resolvedParameters.targetIds) {
+      result.hasMultipleTargets = true;
+      
+      // Handle both standard and custom placeholders
+      const standardPlaceholders = ['primary', 'secondary', 'tertiary'];
+      const legacyFieldNames = ['primaryId', 'secondaryId', 'tertiaryId'];
+      
+      // Safely handle targetIds that might not be a proper object
+      if (typeof resolvedParameters.targetIds === 'object' && !Array.isArray(resolvedParameters.targetIds)) {
+        // Process all placeholders in targetIds
+        Object.entries(resolvedParameters.targetIds).forEach(([placeholder, targetList]) => {
+          if (targetList && Array.isArray(targetList) && targetList.length > 0) {
+            const targetItem = targetList[0]; // Take first target
+            
+            // Extract entity ID if it's a valid string, skip invalid targets
+            let targetId = null;
+            if (typeof targetItem === 'string' && targetItem.trim()) {
+              targetId = targetItem;
+            } else if (targetItem && typeof targetItem === 'object' && targetItem.entityId && typeof targetItem.entityId === 'string') {
+              targetId = targetItem.entityId;
+            }
+            
+            // Only process valid target IDs
+            if (targetId) {
+              // Set legacy fields only for standard placeholders
+              const standardIndex = standardPlaceholders.indexOf(placeholder);
+              if (standardIndex !== -1) {
+                result.legacyFields[legacyFieldNames[standardIndex]] = targetId;
+              }
+              
+              // Build comprehensive target info for all placeholders
+              result.comprehensiveTargets[placeholder] = {
+                entityId: targetId,
+                placeholder: placeholder,
+                description: this.#getEntityDescription(targetId),
+                resolvedFromContext: this.#isResolvedFromContext(placeholder, resolvedParameters),
+                ...(this.#getContextSource(placeholder, resolvedParameters) && {
+                  contextSource: this.#getContextSource(placeholder, resolvedParameters)
+                })
+              };
+              
+              result.resolvedTargetCount++;
+            }
+          }
+        });
+        
+        // Determine primary target for backward compatibility
+        // Priority: primary > target > first available
+        if (result.comprehensiveTargets.primary) {
+          result.primaryTarget = result.comprehensiveTargets.primary.entityId;
+        } else if (result.comprehensiveTargets.target) {
+          result.primaryTarget = result.comprehensiveTargets.target.entityId;
+        } else {
+          // Use first available target
+          const firstTarget = Object.values(result.comprehensiveTargets)[0];
+          if (firstTarget && firstTarget.entityId) {
+            result.primaryTarget = firstTarget.entityId;
+          }
+        }
+      }
+
+      // Check for context dependencies
+      result.hasContextDependencies = Object.values(result.comprehensiveTargets)
+        .some(target => target.resolvedFromContext);
+        
+    } else if (resolvedParameters.targetId) {
+      // Legacy single target
+      result.primaryTarget = resolvedParameters.targetId;
+      result.legacyFields.primaryId = resolvedParameters.targetId;
+      result.resolvedTargetCount = 1;
+    }
+
+    return result;
+  }
+
+  /**
+   * Get entity description for display
+   * 
+   * @param {string} entityId - Entity ID
+   * @returns {string} Entity description or ID if not found
+   * @private
+   */
+  #getEntityDescription(entityId) {
+    try {
+      // For now, return the entity ID
+      // In a full implementation, we would query the entity manager
+      // But we need to avoid circular dependencies
+      return entityId;
+    } catch (error) {
+      this.#logger.debug(`Failed to get description for entity ${entityId}`, error);
+      return entityId;
+    }
+  }
+
+  /**
+   * Check if target was resolved from context
+   * 
+   * @param {string} placeholder - Target placeholder (primary, secondary, etc)
+   * @param {object} resolvedParameters - Resolved parameters
+   * @returns {boolean} True if resolved from context
+   * @private
+   */
+  #isResolvedFromContext(placeholder, resolvedParameters) {
+    // Check if we have context dependency information
+    // This would be enhanced based on actual data from MultiTargetResolutionStage
+    if (placeholder === 'secondary' && resolvedParameters.targetIds?.primary) {
+      // Secondary often depends on primary context
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get context source for a target
+   * 
+   * @param {string} placeholder - Target placeholder
+   * @param {object} resolvedParameters - Resolved parameters
+   * @returns {string|null} Context source or null
+   * @private
+   */
+  #getContextSource(placeholder, resolvedParameters) {
+    // This would be enhanced with actual context dependency data
+    if (placeholder === 'secondary' && this.#isResolvedFromContext(placeholder, resolvedParameters)) {
+      return 'primary';
+    }
+    return null;
+  }
+
+  /**
+   * Logs enhanced payload creation details
+   * 
+   * @param {object} payload - Created payload
+   * @param {number} duration - Creation duration in ms
+   * @private
+   */
+  #logEnhancedPayloadCreation(payload, duration) {
+    const logData = {
+      eventName: payload.eventName,
+      actorId: payload.actorId,
+      actionId: payload.actionId,
+      hasTargets: !!payload.targets,
+      hasMultipleTargets: !!payload.targets && Object.keys(payload.targets).length > 1,
+      targetCount: payload.resolvedTargetCount || 0,
+      resolvedTargetCount: payload.resolvedTargetCount,
+      hasContextDependencies: payload.hasContextDependencies,
+      creationTime: duration.toFixed(2),
+    };
+
+    // Determine log level and message based on target type
+    if (payload.targets && Object.keys(payload.targets).length > 1) {
+      logData.targetPlaceholders = Object.keys(payload.targets);
+      this.#logger.info('Enhanced multi-target payload created', logData);
+    } else if (payload.targetId !== null && payload.targetId !== undefined) {
+      this.#logger.debug('Legacy-compatible payload created', logData);
+    } else {
+      this.#logger.debug('Standard payload created', logData);
+    }
+
+    // Performance warning - updated threshold to 10ms to match test expectations
+    if (duration > 10) {
+      this.#logger.warn('Payload creation took longer than expected', {
+        duration: duration.toFixed(2),
+        target: '< 10ms',
+      });
     }
   }
 
@@ -329,49 +553,22 @@ class CommandProcessor extends ICommandProcessor {
       targetId: resolvedParameters?.targetId || null,
       originalInput: commandString || actionDefinitionId,
       timestamp: Date.now(),
+      // Add legacy fields as null for consistency
+      primaryId: resolvedParameters?.targetId || null,
+      secondaryId: null,
+      tertiaryId: null,
+      // Add metadata fields
+      resolvedTargetCount: resolvedParameters?.targetId ? 1 : 0,
+      hasContextDependencies: false,
     };
   }
 
-  /**
-   * Logs payload creation details
-   *
-   * @param {object} payload - Created payload
-   * @param {TargetExtractionResult} extractionResult - Target extraction result
-   * @param {number} duration - Creation duration in ms
-   */
-  #logPayloadCreation(payload, extractionResult, duration) {
-    const logData = {
-      eventName: payload.eventName,
-      actorId: payload.actorId,
-      actionId: payload.actionId,
-      hasMultipleTargets: extractionResult.hasMultipleTargets(),
-      targetCount: extractionResult.getTargetCount(),
-      primaryTarget: extractionResult.getPrimaryTarget(),
-      extractionSource: extractionResult.getMetadata('source'),
-      creationTime: duration.toFixed(2),
-    };
-
-    if (extractionResult.hasMultipleTargets()) {
-      logData.targets = extractionResult.getTargets();
-      this.#logger.info('Enhanced multi-target payload created', logData);
-    } else {
-      this.#logger.debug('Legacy-compatible payload created', logData);
-    }
-
-    // Performance warning for slow payload creation
-    if (duration > 10) {
-      this.#logger.warn('Payload creation took longer than expected', {
-        duration: duration.toFixed(2),
-        target: '< 10ms',
-      });
-    }
-  }
 
   /**
    * Updates payload creation metrics
    *
    * @param {object} payload - Created payload
-   * @param {TargetExtractionResult} extractionResult - Extraction result
+   * @param {TargetExtractionResult} extractionResult - Extraction result (unused, kept for compatibility)
    * @param {number} duration - Creation duration
    * @param {boolean} isFallback - Whether this was a fallback creation
    */
@@ -388,7 +585,7 @@ class CommandProcessor extends ICommandProcessor {
 
     if (isFallback) {
       this.#fallbackPayloadCount++;
-    } else if (extractionResult && extractionResult.hasMultipleTargets()) {
+    } else if (payload.targets && Object.keys(payload.targets).length > 0) {
       this.#multiTargetPayloadCount++;
     } else {
       this.#legacyPayloadCount++;

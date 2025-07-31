@@ -130,16 +130,21 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
     });
 
     it('should fall back to legacy payload when enhanced creation fails', async () => {
-      // Create an action that will cause TargetExtractionResult to fail
-      const problematicAction = {
+      // Mock the MultiTargetEventBuilder to throw an error during build
+      const originalBuild = MultiTargetEventBuilder.prototype.build;
+      MultiTargetEventBuilder.prototype.build = jest.fn().mockImplementation(function() {
+        throw new Error('Simulated builder failure');
+      });
+
+      const validAction = {
         actionDefinitionId: 'core:test_action',
         commandString: 'test command',
-        resolvedParameters: null, // This will cause extraction to fail
+        resolvedParameters: { targetId: 'test_target' },
       };
 
       const result = await commandProcessor.dispatchAction(
         mockEntity,
-        problematicAction
+        validAction
       );
 
       expect(result.success).toBe(true);
@@ -150,9 +155,9 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
         expect.objectContaining({
           eventName: ATTEMPT_ACTION_ID,
           actorId: mockEntity.id,
-          actionId: problematicAction.actionDefinitionId,
-          targetId: null, // Fallback should set this to null
-          originalInput: problematicAction.commandString,
+          actionId: validAction.actionDefinitionId,
+          targetId: validAction.resolvedParameters.targetId,
+          originalInput: validAction.commandString,
         }),
         expect.stringContaining('ATTEMPT_ACTION_ID dispatch')
       );
@@ -162,9 +167,13 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
         expect.stringContaining('Enhanced payload creation failed'),
         expect.objectContaining({
           actorId: mockEntity.id,
-          actionId: problematicAction.actionDefinitionId,
+          actionId: validAction.actionDefinitionId,
+          error: 'Simulated builder failure',
         })
       );
+
+      // Restore original build method
+      MultiTargetEventBuilder.prototype.build = originalBuild;
     });
   });
 

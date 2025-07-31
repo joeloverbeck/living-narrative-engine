@@ -122,6 +122,8 @@ export class MultiTargetEventBuilder {
     // Set targets object if multiple targets exist
     if (extractionResult.hasMultipleTargets()) {
       this.#eventData.targets = targets;
+      // Add flattened IDs for rule convenience
+      this.#addFlattenedTargetIds(targets);
     }
 
     // Always set targetId for backward compatibility
@@ -152,24 +154,31 @@ export class MultiTargetEventBuilder {
 
     const targetKeys = Object.keys(targets);
 
-    // Set targets object if multiple targets exist
-    if (targetKeys.length > 1) {
-      this.#eventData.targets = { ...targets };
+    // Always set targets object for multi-target actions
+    this.#eventData.targets = { ...targets };
+    // Add flattened IDs for rule convenience (only for standard placeholders)
+    this.#addFlattenedTargetIds(targets);
+
+    // Determine primary target ID
+    let primaryId = primaryTarget;
+    
+    if (!primaryId) {
+      // Try to find primary target from targets object
+      // Priority: primary > target > first available
+      const primary = targets.primary || targets.target || Object.values(targets)[0];
+      
+      if (primary) {
+        // Extract entity ID if target is an object
+        primaryId = typeof primary === 'string' ? primary : primary.entityId || primary.id || primary;
+      }
     }
 
-    // Determine primary target
-    const primary =
-      primaryTarget ||
-      targets.primary ||
-      targets.target ||
-      Object.values(targets)[0];
-
-    this.#eventData.targetId = primary;
+    this.#eventData.targetId = primaryId;
 
     this.#logger.debug('Targets set manually', {
       targetCount: targetKeys.length,
       hasMultipleTargets: targetKeys.length > 1,
-      primaryTarget: primary,
+      primaryTarget: primaryId,
     });
 
     return this;
@@ -195,6 +204,11 @@ export class MultiTargetEventBuilder {
 
     // Remove targets object for pure legacy format
     delete this.#eventData.targets;
+    
+    // Also set primaryId for consistency with multi-target pattern
+    this.#eventData.primaryId = targetId;
+    this.#eventData.secondaryId = null;
+    this.#eventData.tertiaryId = null;
 
     this.#logger.debug('Legacy target set', { targetId });
     return this;
@@ -212,6 +226,26 @@ export class MultiTargetEventBuilder {
     }
 
     this.#eventData.timestamp = timestamp;
+    return this;
+  }
+
+  /**
+   * Sets metadata fields (resolvedTargetCount, hasContextDependencies)
+   *
+   * @param {object} metadata - Metadata object
+   * @param {number} metadata.resolvedTargetCount - Number of resolved targets
+   * @param {boolean} metadata.hasContextDependencies - Whether targets have context dependencies
+   * @returns {MultiTargetEventBuilder} This builder for chaining
+   */
+  setMetadata(metadata) {
+    if (metadata.resolvedTargetCount !== undefined) {
+      this.#eventData.resolvedTargetCount = metadata.resolvedTargetCount;
+    }
+    
+    if (metadata.hasContextDependencies !== undefined) {
+      this.#eventData.hasContextDependencies = metadata.hasContextDependencies;
+    }
+    
     return this;
   }
 
@@ -288,6 +322,43 @@ export class MultiTargetEventBuilder {
         'Event must have either targets object or targetId field'
       );
     }
+  }
+
+  /**
+   * Adds flattened target IDs (primaryId, secondaryId, tertiaryId) for rule convenience
+   *
+   * @param {object} targets - Targets object with structure like {primary: {...}, secondary: {...}}
+   * @private
+   */
+  #addFlattenedTargetIds(targets) {
+    const placeholderMapping = {
+      primary: 'primaryId',
+      secondary: 'secondaryId',
+      tertiary: 'tertiaryId'
+    };
+    
+    // Initialize all flattened fields to null
+    this.#eventData.primaryId = null;
+    this.#eventData.secondaryId = null;
+    this.#eventData.tertiaryId = null;
+    
+    // Set flattened IDs based on targets
+    for (const [placeholder, fieldName] of Object.entries(placeholderMapping)) {
+      if (targets[placeholder]) {
+        // Handle both direct entity ID and object with entityId property
+        if (typeof targets[placeholder] === 'string') {
+          this.#eventData[fieldName] = targets[placeholder];
+        } else if (targets[placeholder].entityId) {
+          this.#eventData[fieldName] = targets[placeholder].entityId;
+        }
+      }
+    }
+    
+    this.#logger.debug('Added flattened target IDs', {
+      primaryId: this.#eventData.primaryId,
+      secondaryId: this.#eventData.secondaryId,
+      tertiaryId: this.#eventData.tertiaryId
+    });
   }
 
   /**

@@ -75,12 +75,12 @@ describe('CharacterConceptsManagerController - Deletion', () => {
 
       // Simulate the event that would be fired
       const deleteHandler = setup.mocks.eventBus.subscribe.mock.calls.find(
-        (call) => call[0] === 'thematic:character_concept_deleted'
+        (call) => call[0] === 'core:character_concept_deleted'
       )?.[1];
 
       if (deleteHandler) {
         deleteHandler({
-          type: 'thematic:character_concept_deleted',
+          type: 'core:character_concept_deleted',
           payload: { conceptId },
         });
       }
@@ -138,12 +138,12 @@ describe('CharacterConceptsManagerController - Deletion', () => {
 
       // Trigger the deletion event handler
       const deleteHandler = setup.mocks.eventBus.subscribe.mock.calls.find(
-        (call) => call[0] === 'thematic:character_concept_deleted'
+        (call) => call[0] === 'core:character_concept_deleted'
       )?.[1];
 
       if (deleteHandler) {
         await deleteHandler({
-          type: 'thematic:character_concept_deleted',
+          type: 'core:character_concept_deleted',
           payload: { conceptId: 'test-id' },
         });
       }

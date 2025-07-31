@@ -110,7 +110,7 @@ describe('CharacterBuilderService - updateThematicDirection event dispatching', 
 
       expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
         1,
-        'thematic:direction_updated',
+        'core:direction_updated',
         {
           directionId,
           field: 'title',
@@ -121,7 +121,7 @@ describe('CharacterBuilderService - updateThematicDirection event dispatching', 
 
       expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
         2,
-        'thematic:direction_updated',
+        'core:direction_updated',
         {
           directionId,
           field: 'description',
@@ -157,7 +157,7 @@ describe('CharacterBuilderService - updateThematicDirection event dispatching', 
       // Should only dispatch one event for the changed field
       expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_updated',
+        'core:direction_updated',
         {
           directionId,
           field: 'description',
@@ -198,7 +198,7 @@ describe('CharacterBuilderService - updateThematicDirection event dispatching', 
       // Null old value should be converted to empty string
       expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
         1,
-        'thematic:direction_updated',
+        'core:direction_updated',
         {
           directionId,
           field: 'uniqueTwist',
@@ -210,7 +210,7 @@ describe('CharacterBuilderService - updateThematicDirection event dispatching', 
       // Null new value should be converted to empty string
       expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
         2,
-        'thematic:direction_updated',
+        'core:direction_updated',
         {
           directionId,
           field: 'narrativePotential',
@@ -257,7 +257,7 @@ describe('CharacterBuilderService - updateThematicDirection event dispatching', 
 
       expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_updated',
+        'core:direction_updated',
         {
           directionId,
           field: 'coreTension',

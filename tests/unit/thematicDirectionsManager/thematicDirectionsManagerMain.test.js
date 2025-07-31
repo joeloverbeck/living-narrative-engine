@@ -239,11 +239,11 @@ describe('thematicDirectionsManagerMain', () => {
         // Check that the thematic events were registered
         expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
           expect.any(Object),
-          'thematic:direction_updated#payload'
+          'core:direction_updated#payload'
         );
         expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
           expect.any(Object),
-          'thematic:direction_deleted#payload'
+          'core:direction_deleted#payload'
         );
         expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
           expect.any(Object),
@@ -251,11 +251,11 @@ describe('thematicDirectionsManagerMain', () => {
         );
 
         expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(
-          'thematic:direction_updated',
+          'core:direction_updated',
           expect.any(Object)
         );
         expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(
-          'thematic:direction_deleted',
+          'core:direction_deleted',
           expect.any(Object)
         );
         expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(
@@ -340,13 +340,13 @@ describe('thematicDirectionsManagerMain', () => {
               newValue: expect.any(Object),
             }),
           }),
-          'thematic:direction_updated#payload'
+          'core:direction_updated#payload'
         );
 
         expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(
-          'thematic:direction_updated',
+          'core:direction_updated',
           expect.objectContaining({
-            id: 'thematic:direction_updated',
+            id: 'core:direction_updated',
             description: 'Fired when a thematic direction is updated.',
           })
         );
@@ -360,13 +360,13 @@ describe('thematicDirectionsManagerMain', () => {
               directionId: expect.any(Object),
             }),
           }),
-          'thematic:direction_deleted#payload'
+          'core:direction_deleted#payload'
         );
 
         expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(
-          'thematic:direction_deleted',
+          'core:direction_deleted',
           expect.objectContaining({
-            id: 'thematic:direction_deleted',
+            id: 'core:direction_deleted',
             description: 'Fired when a thematic direction is deleted.',
           })
         );

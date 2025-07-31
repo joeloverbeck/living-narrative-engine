@@ -258,9 +258,9 @@ describe('Thematic Direction - Event Schema Validation Integration', () => {
     }
 
     // Register event schemas directly to match what the ThematicDirectionApp does
-    const conceptCreatedSchemaId = 'thematic:character_concept_created#payload';
+    const conceptCreatedSchemaId = 'core:character_concept_created#payload';
     const directionsGeneratedSchemaId =
-      'thematic:thematic_directions_generated#payload';
+      'core:thematic_directions_generated#payload';
 
     if (!schemaValidator.isSchemaLoaded(conceptCreatedSchemaId)) {
       await schemaValidator.addSchema(
@@ -471,19 +471,19 @@ describe('Thematic Direction - Event Schema Validation Integration', () => {
   it('should use namespaced event names that match the schema IDs', () => {
     // Verify that the event names use the proper namespace format
     expect(CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED).toBe(
-      'thematic:character_concept_created'
+      'core:character_concept_created'
     );
     expect(CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED).toBe(
-      'thematic:thematic_directions_generated'
+      'core:thematic_directions_generated'
     );
 
     // Verify that the schema IDs match the expected pattern
     const conceptSchemaId = `${CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED}#payload`;
     const directionsSchemaId = `${CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED}#payload`;
 
-    expect(conceptSchemaId).toBe('thematic:character_concept_created#payload');
+    expect(conceptSchemaId).toBe('core:character_concept_created#payload');
     expect(directionsSchemaId).toBe(
-      'thematic:thematic_directions_generated#payload'
+      'core:thematic_directions_generated#payload'
     );
   });
 });

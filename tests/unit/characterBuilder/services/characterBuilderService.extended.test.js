@@ -240,7 +240,7 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
         updates
       );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_updated',
+        'core:direction_updated',
         {
           directionId: 'direction-1',
           field: 'title',
@@ -301,7 +301,7 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
         'direction-1'
       );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_deleted',
+        'core:direction_deleted',
         {
           directionId: 'direction-1',
         }
@@ -357,7 +357,7 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
       await service.updateThematicDirection('direction-1', updates);
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_updated',
+        'core:direction_updated',
         {
           directionId: 'direction-1',
           field: 'title',
@@ -373,7 +373,7 @@ describe('CharacterBuilderService - Thematic Directions Manager Extensions', () 
       await service.deleteThematicDirection('direction-1');
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:direction_deleted',
+        'core:direction_deleted',
         {
           directionId: 'direction-1',
         }

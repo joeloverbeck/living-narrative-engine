@@ -185,7 +185,7 @@ class ThematicDirectionApp {
     try {
       // Define CHARACTER_CONCEPT_CREATED event
       const characterConceptCreatedEvent = {
-        id: 'thematic:character_concept_created',
+        id: 'core:character_concept_created',
         description:
           'Fired when a character concept is successfully created in the thematic direction generator.',
         payloadSchema: {
@@ -213,7 +213,7 @@ class ThematicDirectionApp {
 
       // Define THEMATIC_DIRECTIONS_GENERATED event
       const thematicDirectionsGeneratedEvent = {
-        id: 'thematic:thematic_directions_generated',
+        id: 'core:thematic_directions_generated',
         description:
           'Fired when thematic directions are successfully generated for a character concept.',
         payloadSchema: {
@@ -243,25 +243,25 @@ class ThematicDirectionApp {
       // Register payload schemas first
       await schemaValidator.addSchema(
         characterConceptCreatedEvent.payloadSchema,
-        'thematic:character_concept_created#payload'
+        'core:character_concept_created#payload'
       );
       await schemaValidator.addSchema(
         thematicDirectionsGeneratedEvent.payloadSchema,
-        'thematic:thematic_directions_generated#payload'
+        'core:thematic_directions_generated#payload'
       );
 
       // Register event definitions in the data registry
       dataRegistry.setEventDefinition(
-        'thematic:character_concept_created',
+        'core:character_concept_created',
         characterConceptCreatedEvent
       );
       dataRegistry.setEventDefinition(
-        'thematic:thematic_directions_generated',
+        'core:thematic_directions_generated',
         thematicDirectionsGeneratedEvent
       );
 
       this.#logger.info(
-        'ThematicDirectionApp: Registered event definitions for thematic:character_concept_created and thematic:thematic_directions_generated'
+        'ThematicDirectionApp: Registered event definitions for core:character_concept_created and core:thematic_directions_generated'
       );
     } catch (error) {
       this.#logger.error(

@@ -449,7 +449,7 @@ describe('ThematicDirectionController', () => {
       ).toHaveBeenCalledWith('123');
       expect(mockElements.resultsState.style.display).toBe('block');
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'thematic:thematic_directions_generated',
+        'core:thematic_directions_generated',
         {
           conceptId: '123',
           directionCount: 2,
