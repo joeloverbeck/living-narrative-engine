@@ -1,594 +1,187 @@
-Formatting command for action: intimacy:thumb_wipe_cheek, template: "wipe {target}'s cheek with your thumb", targetType: entity
-consoleLogger.js:187  -> Found entity p_erotica:amaia_castillo_instance, display name: "Amaia Castillo"
-consoleLogger.js:187  <- Final formatted command: "wipe Amaia Castillo's cheek with your thumb"
-consoleLogger.js:187 Formatting command for action: intimacy:turn_around, template: "turn {target} around", targetType: entity
-consoleLogger.js:187  -> Found entity p_erotica:amaia_castillo_instance, display name: "Amaia Castillo"
-consoleLogger.js:187  <- Final formatted command: "turn Amaia Castillo around"
-consoleLogger.js:187 Formatting command for action: sex:fondle_breasts, template: "fondle {target}'s breasts", targetType: entity
-consoleLogger.js:187  -> Found entity p_erotica:amaia_castillo_instance, display name: "Amaia Castillo"
-consoleLogger.js:187  <- Final formatted command: "fondle Amaia Castillo's breasts"
-consoleLogger.js:187 Formatting command for action: sex:rub_vagina_over_clothes, template: "rub {target}'s vagina over the clothes", targetType: entity
-consoleLogger.js:187  -> Found entity p_erotica:amaia_castillo_instance, display name: "Amaia Castillo"
-consoleLogger.js:187  <- Final formatted command: "rub Amaia Castillo's vagina over the clothes"
-consoleLogger.js:187 Action discovery pipeline completed for actor p_erotica:iker_aguirre_instance. Found 23 actions, 0 errors.
-consoleLogger.js:187 ActionDiscoveryService: Finished action discovery for actor p_erotica:iker_aguirre_instance. Found 23 actions.
-consoleLogger.js:187 [Action Discovery Trace for actor p_erotica:iker_aguirre_instance]
-consoleLogger.js:198 Action Discovery Trace for p_erotica:iker_aguirre_instance
-consoleLogger.js:219 
-(index)
-type
-message
-source
-timestamp
-data
-0	'info'	"Starting action discovery for actor 'p_erotica:iker_aguirre_instance'."	'getValidActions'	1754064927229	{…}
-1	'info'	'Starting pipeline execution with 4 stages'	'Pipeline.execute'	1754064927229	
-2	'step'	'Executing stage: ComponentFiltering'	'Pipeline.execute'	1754064927229	
-3	'step'	'Filtering actions for actor p_erotica:iker_aguirre_instance based on components'	'ComponentFilteringStage.execute'	1754064927229	
-4	'data'	"Actor 'p_erotica:iker_aguirre_instance' has components."	'ActionIndex.getCandidateActions'	1754064927229	{…}
-5	'info'	'Added 6 actions with no actor component requirements.'	'ActionIndex.getCandidateActions'	1754064927229	
-6	'info'	"Found 1 actions requiring component 'clothing:equipment'."	'ActionIndex.getCandidateActions'	1754064927229	
-7	'info'	"Found 23 actions requiring component 'intimacy:closeness'."	'ActionIndex.getCandidateActions'	1754064927229	
-8	'success'	'Final candidate list contains 30 unique actions.'	'ActionIndex.getCandidateActions'	1754064927229	{…}
-9	'success'	'Component filtering completed: 30 candidates'	'ComponentFilteringStage.execute'	1754064927229	{…}
-10	'success'	'Stage ComponentFiltering completed successfully'	'Pipeline.execute'	1754064927229	
-11	'step'	'Executing stage: PrerequisiteEvaluation'	'Pipeline.execute'	1754064927229	
-12	'step'	'Evaluating prerequisites for 30 candidate actions'	'PrerequisiteEvaluationStage.execute'	1754064927229	
-13	'step'	'Checking prerequisites'	'PrerequisiteEvaluationService.evaluate'	1754064927229	
-14	'data'	'Prerequisites to evaluate'	'PrerequisiteEvaluationService.evaluate'	1754064927229	{…}
-15	'data'	'Built prerequisite evaluation context'	'PrerequisiteEvaluationService.evaluate'	1754064927229	{…}
-16	'step'	'Evaluating 2 prerequisite rules'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927230	
-17	'step'	'Evaluating rule 1/2'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927230	
-18	'step'	'Starting prerequisite evaluation'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927230	
-19	'data'	'Prerequisite rule'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927230	{…}
-20	'step'	'Resolving condition_ref'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927230	
-21	'data'	'Condition reference resolved'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927230	{…}
-22	'step'	'Evaluating JSON Logic'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927230	
-23	'data'	'Evaluation context'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927230	{…}
-24	'failure'	'Prerequisite failed'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927230	{…}
-25	'failure'	'Rule 1 failed'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927230	{…}
-26	'failure'	'Prerequisites evaluation failed'	'PrerequisiteEvaluationService.evaluate'	1754064927230	{…}
-27	'info'	"Action 'core:follow' failed prerequisite check"	'PrerequisiteEvaluationStage.execute'	1754064927230	
-28	'step'	'Checking prerequisites'	'PrerequisiteEvaluationService.evaluate'	1754064927230	
-29	'data'	'Prerequisites to evaluate'	'PrerequisiteEvaluationService.evaluate'	1754064927230	{…}
-30	'data'	'Built prerequisite evaluation context'	'PrerequisiteEvaluationService.evaluate'	1754064927231	{…}
-31	'step'	'Evaluating 1 prerequisite rules'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927231	
-32	'step'	'Evaluating rule 1/1'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927231	
-33	'step'	'Starting prerequisite evaluation'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927231	
-34	'data'	'Prerequisite rule'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927231	{…}
-35	'step'	'Resolving condition_ref'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927231	
-36	'data'	'Condition reference resolved'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927231	{…}
-37	'step'	'Evaluating JSON Logic'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927231	
-38	'data'	'Evaluation context'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927231	{…}
-39	'failure'	'Prerequisite failed'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927231	{…}
-40	'failure'	'Rule 1 failed'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927231	{…}
-41	'failure'	'Prerequisites evaluation failed'	'PrerequisiteEvaluationService.evaluate'	1754064927231	{…}
-42	'info'	"Action 'core:go' failed prerequisite check"	'PrerequisiteEvaluationStage.execute'	1754064927231	
-43	'step'	'Checking prerequisites'	'PrerequisiteEvaluationService.evaluate'	1754064927231	
-44	'data'	'Prerequisites to evaluate'	'PrerequisiteEvaluationService.evaluate'	1754064927231	{…}
-45	'data'	'Built prerequisite evaluation context'	'PrerequisiteEvaluationService.evaluate'	1754064927232	{…}
-46	'step'	'Evaluating 1 prerequisite rules'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927232	
-47	'step'	'Evaluating rule 1/1'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927232	
-48	'step'	'Starting prerequisite evaluation'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927232	
-49	'data'	'Prerequisite rule'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927232	{…}
-50	'step'	'Resolving condition_ref'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927232	
-51	'data'	'Condition reference resolved'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927232	{…}
-52	'step'	'Evaluating JSON Logic'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927232	
-53	'data'	'Evaluation context'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927232	{…}
-54	'failure'	'Prerequisite failed'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927232	{…}
-55	'failure'	'Rule 1 failed'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927232	{…}
-56	'failure'	'Prerequisites evaluation failed'	'PrerequisiteEvaluationService.evaluate'	1754064927232	{…}
-57	'info'	"Action 'intimacy:get_close' failed prerequisite check"	'PrerequisiteEvaluationStage.execute'	1754064927232	
-58	'step'	'Checking prerequisites'	'PrerequisiteEvaluationService.evaluate'	1754064927232	
-59	'data'	'Prerequisites to evaluate'	'PrerequisiteEvaluationService.evaluate'	1754064927232	{…}
-60	'data'	'Built prerequisite evaluation context'	'PrerequisiteEvaluationService.evaluate'	1754064927233	{…}
-61	'step'	'Evaluating 1 prerequisite rules'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927233	
-62	'step'	'Evaluating rule 1/1'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927233	
-63	'step'	'Starting prerequisite evaluation'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927233	
-64	'data'	'Prerequisite rule'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927233	{…}
-65	'step'	'Resolving condition_ref'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927233	
-66	'data'	'Condition reference resolved'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927233	{…}
-67	'step'	'Evaluating JSON Logic'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927233	
-68	'data'	'Evaluation context'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927233	{…}
-69	'success'	'Prerequisite passed'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1754064927233	{…}
-70	'success'	'Rule 1 passed'	'PrerequisiteEvaluationService.#evaluateRules'	1754064927233	{…}
-71	'success'	'All prerequisites passed'	'PrerequisiteEvaluationService.evaluate'	1754064927233	{…}
-72	'success'	"Action 'intimacy:adjust_clothing' passed prerequisite check"	'PrerequisiteEvaluationStage.execute'	1754064927233	
-73	'info'	'Prerequisite evaluation completed: 27 valid actions, 0 errors'	'PrerequisiteEvaluationStage.execute'	1754064927233	
-74	'success'	'Stage PrerequisiteEvaluation completed successfully'	'Pipeline.execute'	1754064927233	
-75	'step'	'Executing stage: MultiTargetResolution'	'Pipeline.execute'	1754064927233	
-76	'step'	'Resolving targets for 27 candidate actions'	'MultiTargetResolutionStage'	1754064927233	
-77	'step'	"Resolving targets for action 'core:wait'"	'MultiTargetResolutionStage'	1754064927233	
-78	'step'	"Resolving legacy scope 'none'"	'MultiTargetResolutionStage'	1754064927233	
-79	'info'	"Delegating scope resolution for 'none' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927233	
-80	'info'	"Resolving scope 'none'."	'UnifiedScopeResolver.resolve'	1754064927233	
-81	'info'	"Resolved special scope 'none'."	'UnifiedScopeResolver.resolve'	1754064927233	{…}
-82	'info'	"Scope 'none' resolved to no targets - returning noTarget context."	'TargetResolutionService.resolveTargets'	1754064927233	
-83	'step'	"Resolving targets for action 'violence:slap'"	'MultiTargetResolutionStage'	1754064927233	
-84	'step'	"Resolving legacy scope 'core:actors_in_location'"	'MultiTargetResolutionStage'	1754064927233	
-85	'info'	"Delegating scope resolution for 'core:actors_in_location' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927233	
-86	'info'	"Resolving scope 'core:actors_in_location'."	'UnifiedScopeResolver.resolve'	1754064927233	
-87	'info'	"Using pre-parsed AST for scope 'core:actors_in_location'."	'UnifiedScopeResolver.#parseAst'	1754064927233	
-88	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927233	{…}
-89	'info'	"Resolved source 'entities'. Found 9 item(s)."	'ScopeEngine.resolveSource'	1754064927233	{…}
-90	'info'	'Resolving ArrayIterationStep node. Parent result size: 9'	'ArrayIterationResolver'	1754064927233	{…}
-91	'info'	'ArrayIterationStep node resolved. Result size: 9'	'ArrayIterationResolver'	1754064927233	{…}
-92	'info'	'Applying filter to 9 items.'	'ScopeEngine.resolveFilter'	1754064927233	{…}
-93	'debug'	'Item p_erotica:iker_aguirre_instance resolved as entity'	'createEvaluationContext'	1754064927233	
-94	'debug'	'createEvaluationContext: entity=p_erotica:iker_agu…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927233	{…}
-95	'debug'	'Evaluating filter for item p_erotica:iker_aguirre_instance'	'ScopeEngine.resolveFilter'	1754064927233	{…}
-96	'debug'	'Item p_erotica:iker_aguirre_instance failed filter'	'ScopeEngine.resolveFilter'	1754064927234	
-97	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927234	
-98	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927234	{…}
-99	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927234	{…}
-100	'debug'	'Item p_erotica:amaia_castillo_instance passed filter'	'ScopeEngine.resolveFilter'	1754064927235	
-101	'debug'	'Item eb98c6d3-95d7-486f-baac-a13f953fed14 resolved as entity'	'createEvaluationContext'	1754064927235	
-102	'debug'	'createEvaluationContext: entity=eb98c6d3-95d7-486f…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927235	{…}
-103	'debug'	'Evaluating filter for item eb98c6d3-95d7-486f-baac-a13f953fed14'	'ScopeEngine.resolveFilter'	1754064927235	{…}
-104	'debug'	'Item eb98c6d3-95d7-486f-baac-a13f953fed14 failed filter'	'ScopeEngine.resolveFilter'	1754064927236	
-105	'debug'	'Item c930c3d6-6fd3-4845-b7e9-d0689ce3080d resolved as entity'	'createEvaluationContext'	1754064927236	
-106	'debug'	'createEvaluationContext: entity=c930c3d6-6fd3-4845…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927236	{…}
-107	'debug'	'Evaluating filter for item c930c3d6-6fd3-4845-b7e9-d0689ce3080d'	'ScopeEngine.resolveFilter'	1754064927236	{…}
-108	'debug'	'Item c930c3d6-6fd3-4845-b7e9-d0689ce3080d failed filter'	'ScopeEngine.resolveFilter'	1754064927236	
-109	'debug'	'Item cd9e04be-af90-4052-8b34-ad5bb9af8509 resolved as entity'	'createEvaluationContext'	1754064927236	
-110	'debug'	'createEvaluationContext: entity=cd9e04be-af90-4052…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927236	{…}
-111	'debug'	'Evaluating filter for item cd9e04be-af90-4052-8b34-ad5bb9af8509'	'ScopeEngine.resolveFilter'	1754064927236	{…}
-112	'debug'	'Item cd9e04be-af90-4052-8b34-ad5bb9af8509 failed filter'	'ScopeEngine.resolveFilter'	1754064927237	
-113	'debug'	'Item 6da522b9-f1f1-4071-9233-5c3f1df78f87 resolved as entity'	'createEvaluationContext'	1754064927237	
-114	'debug'	'createEvaluationContext: entity=6da522b9-f1f1-4071…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927237	{…}
-115	'debug'	'Evaluating filter for item 6da522b9-f1f1-4071-9233-5c3f1df78f87'	'ScopeEngine.resolveFilter'	1754064927237	{…}
-116	'debug'	'Item 6da522b9-f1f1-4071-9233-5c3f1df78f87 failed filter'	'ScopeEngine.resolveFilter'	1754064927238	
-117	'debug'	'Item 3e4d7a8b-2915-44ed-b9ca-d99affd58425 resolved as entity'	'createEvaluationContext'	1754064927238	
-118	'debug'	'createEvaluationContext: entity=3e4d7a8b-2915-44ed…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927238	{…}
-119	'debug'	'Evaluating filter for item 3e4d7a8b-2915-44ed-b9ca-d99affd58425'	'ScopeEngine.resolveFilter'	1754064927238	{…}
-120	'debug'	'Item 3e4d7a8b-2915-44ed-b9ca-d99affd58425 failed filter'	'ScopeEngine.resolveFilter'	1754064927238	
-121	'debug'	'Item 2d90f825-458f-48a5-9e4e-29b9bc094170 resolved as entity'	'createEvaluationContext'	1754064927238	
-122	'debug'	'createEvaluationContext: entity=2d90f825-458f-48a5…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927238	{…}
-123	'debug'	'Evaluating filter for item 2d90f825-458f-48a5-9e4e-29b9bc094170'	'ScopeEngine.resolveFilter'	1754064927238	{…}
-124	'debug'	'Item 2d90f825-458f-48a5-9e4e-29b9bc094170 failed filter'	'ScopeEngine.resolveFilter'	1754064927239	
-125	'debug'	'Item 2866f597-b84e-4a41-a32b-890e9ac9b38b resolved as entity'	'createEvaluationContext'	1754064927239	
-126	'debug'	'createEvaluationContext: entity=2866f597-b84e-4a41…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927239	{…}
-127	'debug'	'Evaluating filter for item 2866f597-b84e-4a41-a32b-890e9ac9b38b'	'ScopeEngine.resolveFilter'	1754064927239	{…}
-128	'debug'	'Item 2866f597-b84e-4a41-a32b-890e9ac9b38b failed filter'	'ScopeEngine.resolveFilter'	1754064927240	
-129	'info'	'Filter application complete. 1 of 9 items passed.'	'ScopeEngine.resolveFilter'	1754064927240	
-130	'success'	'Scope resolution finished. Found 1 target(s).'	'ScopeEngine'	1754064927240	{…}
-131	'info'	"Resolved scope 'core:actors_in_location' to 1 entities."	'UnifiedScopeResolver.resolve'	1754064927240	{…}
-132	'info'	"Scope 'core:actors_in_location' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927240	{…}
-133	'step'	"Resolving targets for action 'violence:sucker_punch'"	'MultiTargetResolutionStage'	1754064927240	
-134	'step'	"Resolving legacy scope 'core:actors_in_location'"	'MultiTargetResolutionStage'	1754064927240	
-135	'info'	"Delegating scope resolution for 'core:actors_in_location' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927240	
-136	'info'	"Resolving scope 'core:actors_in_location'."	'UnifiedScopeResolver.resolve'	1754064927240	
-137	'info'	"Resolved scope 'core:actors_in_location' from cache with 1 entities."	'UnifiedScopeResolver.resolve'	1754064927240	{…}
-138	'info'	"Scope 'core:actors_in_location' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927240	{…}
-139	'step'	"Resolving targets for action 'clothing:remove_clothing'"	'MultiTargetResolutionStage'	1754064927240	
-140	'step'	"Resolving legacy scope 'clothing:topmost_clothing'"	'MultiTargetResolutionStage'	1754064927240	
-141	'info'	"Delegating scope resolution for 'clothing:topmost_clothing' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927240	
-142	'info'	"Resolving scope 'clothing:topmost_clothing'."	'UnifiedScopeResolver.resolve'	1754064927240	
-143	'info'	"Using pre-parsed AST for scope 'clothing:topmost_clothing'."	'UnifiedScopeResolver.#parseAst'	1754064927240	
-144	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927240	{…}
-145	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927240	{…}
-146	'info'	'ClothingStepResolver: Processing topmost_clothing field'	'ClothingStepResolver'	1754064927240	{…}
-147	'info'	'ClothingStepResolver: Resolution complete, found 1 items'	'ClothingStepResolver'	1754064927240	{…}
-148	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927240	{…}
-149	'info'	'ArrayIterationStep node resolved. Result size: 3'	'ArrayIterationResolver'	1754064927240	{…}
-150	'success'	'Scope resolution finished. Found 3 target(s).'	'ScopeEngine'	1754064927240	{…}
-151	'info'	"Resolved scope 'clothing:topmost_clothing' to 3 entities."	'UnifiedScopeResolver.resolve'	1754064927240	{…}
-152	'info'	"Scope 'clothing:topmost_clothing' resolved to 3 target(s)."	'TargetResolutionService.resolveTargets'	1754064927240	{…}
-153	'step'	"Resolving targets for action 'intimacy:adjust_clothing'"	'MultiTargetResolutionStage'	1754064927240	
-154	'info'	'Target resolution order: primary, secondary'	'MultiTargetResolutionStage'	1754064927240	
-155	'step'	'Resolving primary target'	'MultiTargetResolutionStage'	1754064927240	
-156	'step'	"Evaluating scope 'intimacy:close_actors_facing_each_other_with_torso_clothing'"	'MultiTargetResolutionStage'	1754064927240	
-157	'info'	"Resolving scope 'intimacy:close_actors_facing_each_other_with_torso_clothing'."	'UnifiedScopeResolver.resolve'	1754064927240	
-158	'info'	"Using pre-parsed AST for scope 'intimacy:close_actors_facing_each_other_with_torso_clothing'."	'UnifiedScopeResolver.#parseAst'	1754064927241	
-159	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927241	{…}
-160	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927241	{…}
-161	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927241	{…}
-162	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927241	{…}
-163	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927241	{…}
-164	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927241	{…}
-165	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927241	{…}
-166	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927241	{…}
-167	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927241	{…}
-168	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927241	
-169	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927241	{…}
-170	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927241	{…}
-171	'debug'	'Item p_erotica:amaia_castillo_instance failed filter'	'ScopeEngine.resolveFilter'	1754064927241	
-172	'info'	'Filter application complete. 0 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927241	
-173	'success'	'Scope resolution finished. Found 0 target(s).'	'ScopeEngine'	1754064927241	{…}
-174	'info'	"Resolved scope 'intimacy:close_actors_facing_each_other_with_torso_clothing' to 0 entities."	'UnifiedScopeResolver.resolve'	1754064927241	{…}
-175	'info'	'Scope resolved to 0 entities'	'MultiTargetResolutionStage'	1754064927241	
-176	'failure'	"No candidates found for required target 'primary'"	'MultiTargetResolutionStage'	1754064927241	
-177	'step'	"Resolving targets for action 'intimacy:brush_hand'"	'MultiTargetResolutionStage'	1754064927241	
-178	'step'	"Resolving legacy scope 'intimacy:close_actors'"	'MultiTargetResolutionStage'	1754064927241	
-179	'info'	"Delegating scope resolution for 'intimacy:close_actors' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927241	
-180	'info'	"Resolving scope 'intimacy:close_actors'."	'UnifiedScopeResolver.resolve'	1754064927241	
-181	'info'	"Using pre-parsed AST for scope 'intimacy:close_actors'."	'UnifiedScopeResolver.#parseAst'	1754064927241	
-182	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927242	{…}
-183	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927242	{…}
-184	'info'	"Resolving Step node with field 'components'. Parent result size: 1"	'StepResolver'	1754064927242	{…}
-185	'info'	"Step node resolved. Field: 'components', Result size: 1"	'StepResolver'	1754064927242	{…}
-186	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927242	{…}
-187	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927242	{…}
-188	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927242	{…}
-189	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927242	{…}
-190	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927242	{…}
-191	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927242	{…}
-192	'success'	'Scope resolution finished. Found 1 target(s).'	'ScopeEngine'	1754064927242	{…}
-193	'info'	"Resolved scope 'intimacy:close_actors' to 1 entities."	'UnifiedScopeResolver.resolve'	1754064927242	{…}
-194	'info'	"Scope 'intimacy:close_actors' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927242	{…}
-195	'step'	"Resolving targets for action 'intimacy:feel_arm_muscles'"	'MultiTargetResolutionStage'	1754064927242	
-196	'step'	"Resolving legacy scope 'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'"	'MultiTargetResolutionStage'	1754064927242	
-197	'info'	"Delegating scope resolution for 'intimacy:actors_w…_other_or_behind_target' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927242	
-198	'info'	"Resolving scope 'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'."	'UnifiedScopeResolver.resolve'	1754064927242	
-199	'info'	"Using pre-parsed AST for scope 'intimacy:actors_wi…uscular_arms_facing_each_other_or_behind_target'."	'UnifiedScopeResolver.#parseAst'	1754064927242	
-200	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927242	{…}
-201	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927242	{…}
-202	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927242	{…}
-203	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927242	{…}
-204	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927242	{…}
-205	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927242	{…}
-206	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927242	{…}
-207	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927242	{…}
-208	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927242	{…}
-209	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927242	
-210	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927242	{…}
-211	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927242	{…}
-212	'debug'	'Item p_erotica:amaia_castillo_instance failed filter'	'ScopeEngine.resolveFilter'	1754064927247	
-213	'info'	'Filter application complete. 0 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927247	
-214	'success'	'Scope resolution finished. Found 0 target(s).'	'ScopeEngine'	1754064927247	{…}
-215	'info'	"Resolved scope 'intimacy:actors_with_muscular_arms…acing_each_other_or_behind_target' to 0 entities."	'UnifiedScopeResolver.resolve'	1754064927247	{…}
-216	'info'	"Scope 'intimacy:actors_with_muscular_arms_facing_e…h_other_or_behind_target' resolved to no targets."	'TargetResolutionService.resolveTargets'	1754064927247	
-217	'info'	'No targets found for legacy action'	'MultiTargetResolutionStage'	1754064927247	
-218	'step'	"Resolving targets for action 'intimacy:fondle_ass'"	'MultiTargetResolutionStage'	1754064927247	
-219	'step'	"Resolving legacy scope 'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target'"	'MultiTargetResolutionStage'	1754064927247	
-220	'info'	"Delegating scope resolution for 'intimacy:actors_w…_other_or_behind_target' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927247	
-221	'info'	"Resolving scope 'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target'."	'UnifiedScopeResolver.resolve'	1754064927247	
-222	'info'	"Using pre-parsed AST for scope 'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target'."	'UnifiedScopeResolver.#parseAst'	1754064927247	
-223	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927247	{…}
-224	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927247	{…}
-225	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927247	{…}
-226	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927248	{…}
-227	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927248	{…}
-228	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927248	{…}
-229	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927248	{…}
-230	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927248	{…}
-231	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927248	{…}
-232	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927248	
-233	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927248	{…}
-234	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927248	{…}
-235	'debug'	'Item p_erotica:amaia_castillo_instance passed filter'	'ScopeEngine.resolveFilter'	1754064927248	
-236	'info'	'Filter application complete. 1 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927248	
-237	'success'	'Scope resolution finished. Found 1 target(s).'	'ScopeEngine'	1754064927248	{…}
-238	'info'	"Resolved scope 'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target' to 1 entities."	'UnifiedScopeResolver.resolve'	1754064927248	{…}
-239	'info'	"Scope 'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927248	{…}
-240	'step'	"Resolving targets for action 'intimacy:kiss_cheek'"	'MultiTargetResolutionStage'	1754064927248	
-241	'step'	"Resolving legacy scope 'intimacy:close_actors_facing_each_other'"	'MultiTargetResolutionStage'	1754064927248	
-242	'info'	"Delegating scope resolution for 'intimacy:close_actors_facing_each_other' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927248	
-243	'info'	"Resolving scope 'intimacy:close_actors_facing_each_other'."	'UnifiedScopeResolver.resolve'	1754064927248	
-244	'info'	"Using pre-parsed AST for scope 'intimacy:close_actors_facing_each_other'."	'UnifiedScopeResolver.#parseAst'	1754064927248	
-245	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927249	{…}
-246	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927249	{…}
-247	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927249	{…}
-248	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927249	{…}
-249	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927249	{…}
-250	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927249	{…}
-251	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927249	{…}
-252	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927249	{…}
-253	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927249	{…}
-254	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927249	
-255	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927249	{…}
-256	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927249	{…}
-257	'debug'	'Item p_erotica:amaia_castillo_instance passed filter'	'ScopeEngine.resolveFilter'	1754064927249	
-258	'info'	'Filter application complete. 1 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927249	
-259	'success'	'Scope resolution finished. Found 1 target(s).'	'ScopeEngine'	1754064927249	{…}
-260	'info'	"Resolved scope 'intimacy:close_actors_facing_each_other' to 1 entities."	'UnifiedScopeResolver.resolve'	1754064927249	{…}
-261	'info'	"Scope 'intimacy:close_actors_facing_each_other' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927249	{…}
-262	'step'	"Resolving targets for action 'intimacy:kiss_neck_sensually'"	'MultiTargetResolutionStage'	1754064927249	
-263	'step'	"Resolving legacy scope 'intimacy:actors_with_arms_facing_each_other_or_behind_target'"	'MultiTargetResolutionStage'	1754064927249	
-264	'info'	"Delegating scope resolution for 'intimacy:actors_w…_other_or_behind_target' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927249	
-265	'info'	"Resolving scope 'intimacy:actors_with_arms_facing_each_other_or_behind_target'."	'UnifiedScopeResolver.resolve'	1754064927249	
-266	'info'	"Using pre-parsed AST for scope 'intimacy:actors_with_arms_facing_each_other_or_behind_target'."	'UnifiedScopeResolver.#parseAst'	1754064927250	
-267	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927250	{…}
-268	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927250	{…}
-269	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927250	{…}
-270	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927250	{…}
-271	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927250	{…}
-272	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927250	{…}
-273	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927250	{…}
-274	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927250	{…}
-275	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927250	{…}
-276	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927250	
-277	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927250	{…}
-278	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927250	{…}
-279	'debug'	'Item p_erotica:amaia_castillo_instance passed filter'	'ScopeEngine.resolveFilter'	1754064927250	
-280	'info'	'Filter application complete. 1 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927250	
-281	'success'	'Scope resolution finished. Found 1 target(s).'	'ScopeEngine'	1754064927250	{…}
-282	'info'	"Resolved scope 'intimacy:actors_with_arms_facing_each_other_or_behind_target' to 1 entities."	'UnifiedScopeResolver.resolve'	1754064927250	{…}
-283	'info'	"Scope 'intimacy:actors_with_arms_facing_each_other_or_behind_target' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927250	{…}
-284	'step'	"Resolving targets for action 'intimacy:lean_in_for_deep_kiss'"	'MultiTargetResolutionStage'	1754064927250	
-285	'step'	"Resolving legacy scope 'intimacy:actors_with_mouth_facing_each_other'"	'MultiTargetResolutionStage'	1754064927250	
-286	'info'	"Delegating scope resolution for 'intimacy:actors_w…mouth_facing_each_other' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927250	
-287	'info'	"Resolving scope 'intimacy:actors_with_mouth_facing_each_other'."	'UnifiedScopeResolver.resolve'	1754064927250	
-288	'info'	"Using pre-parsed AST for scope 'intimacy:actors_with_mouth_facing_each_other'."	'UnifiedScopeResolver.#parseAst'	1754064927251	
-289	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927251	{…}
-290	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927251	{…}
-291	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927251	{…}
-292	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927251	{…}
-293	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927251	{…}
-294	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927251	{…}
-295	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927251	{…}
-296	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927251	{…}
-297	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927251	{…}
-298	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927251	
-299	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927251	{…}
-300	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927251	{…}
-301	'debug'	'Item p_erotica:amaia_castillo_instance passed filter'	'ScopeEngine.resolveFilter'	1754064927251	
-302	'info'	'Filter application complete. 1 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927251	
-303	'success'	'Scope resolution finished. Found 1 target(s).'	'ScopeEngine'	1754064927251	{…}
-304	'info'	"Resolved scope 'intimacy:actors_with_mouth_facing_each_other' to 1 entities."	'UnifiedScopeResolver.resolve'	1754064927251	{…}
-305	'info'	"Scope 'intimacy:actors_with_mouth_facing_each_other' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927251	{…}
-306	'step'	"Resolving targets for action 'intimacy:lick_lips'"	'MultiTargetResolutionStage'	1754064927251	
-307	'step'	"Resolving legacy scope 'intimacy:close_actors_facing_each_other'"	'MultiTargetResolutionStage'	1754064927251	
-308	'info'	"Delegating scope resolution for 'intimacy:close_actors_facing_each_other' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927251	
-309	'info'	"Resolving scope 'intimacy:close_actors_facing_each_other'."	'UnifiedScopeResolver.resolve'	1754064927251	
-310	'info'	"Resolved scope 'intimacy:close_actors_facing_each_other' from cache with 1 entities."	'UnifiedScopeResolver.resolve'	1754064927251	{…}
-311	'info'	"Scope 'intimacy:close_actors_facing_each_other' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927251	{…}
-312	'step'	"Resolving targets for action 'intimacy:massage_back'"	'MultiTargetResolutionStage'	1754064927251	
-313	'step'	"Resolving legacy scope 'intimacy:close_actors_facing_away'"	'MultiTargetResolutionStage'	1754064927251	
-314	'info'	"Delegating scope resolution for 'intimacy:close_actors_facing_away' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927251	
-315	'info'	"Resolving scope 'intimacy:close_actors_facing_away'."	'UnifiedScopeResolver.resolve'	1754064927251	
-316	'info'	"Using pre-parsed AST for scope 'intimacy:close_actors_facing_away'."	'UnifiedScopeResolver.#parseAst'	1754064927252	
-317	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927252	{…}
-318	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927252	{…}
-319	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927252	{…}
-320	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927252	{…}
-321	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927252	{…}
-322	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927252	{…}
-323	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927252	{…}
-324	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927252	{…}
-325	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927252	{…}
-326	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927252	
-327	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927252	{…}
-328	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927252	{…}
-329	'debug'	'Item p_erotica:amaia_castillo_instance failed filter'	'ScopeEngine.resolveFilter'	1754064927252	
-330	'info'	'Filter application complete. 0 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927252	
-331	'success'	'Scope resolution finished. Found 0 target(s).'	'ScopeEngine'	1754064927252	{…}
-332	'info'	"Resolved scope 'intimacy:close_actors_facing_away' to 0 entities."	'UnifiedScopeResolver.resolve'	1754064927252	{…}
-333	'info'	"Scope 'intimacy:close_actors_facing_away' resolved to no targets."	'TargetResolutionService.resolveTargets'	1754064927252	
-334	'info'	'No targets found for legacy action'	'MultiTargetResolutionStage'	1754064927252	
-335	'step'	"Resolving targets for action 'intimacy:massage_shoulders'"	'MultiTargetResolutionStage'	1754064927252	
-336	'step'	"Resolving legacy scope 'intimacy:actors_with_arms_facing_each_other_or_behind_target'"	'MultiTargetResolutionStage'	1754064927252	
-337	'info'	"Delegating scope resolution for 'intimacy:actors_w…_other_or_behind_target' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927252	
-338	'info'	"Resolving scope 'intimacy:actors_with_arms_facing_each_other_or_behind_target'."	'UnifiedScopeResolver.resolve'	1754064927252	
-339	'info'	"Resolved scope 'intimacy:actors_with_arms_facing_e…her_or_behind_target' from cache with 1 entities."	'UnifiedScopeResolver.resolve'	1754064927252	{…}
-340	'info'	"Scope 'intimacy:actors_with_arms_facing_each_other_or_behind_target' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927252	{…}
-341	'step'	"Resolving targets for action 'intimacy:nibble_earlobe_playfully'"	'MultiTargetResolutionStage'	1754064927252	
-342	'step'	"Resolving legacy scope 'intimacy:close_actors_facing_each_other_or_behind_target'"	'MultiTargetResolutionStage'	1754064927252	
-343	'info'	"Delegating scope resolution for 'intimacy:close_ac…_other_or_behind_target' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927252	
-344	'info'	"Resolving scope 'intimacy:close_actors_facing_each_other_or_behind_target'."	'UnifiedScopeResolver.resolve'	1754064927252	
-345	'info'	"Using pre-parsed AST for scope 'intimacy:close_actors_facing_each_other_or_behind_target'."	'UnifiedScopeResolver.#parseAst'	1754064927252	
-346	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927252	{…}
-347	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927252	{…}
-348	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927252	{…}
-349	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927252	{…}
-350	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927252	{…}
-351	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927252	{…}
-352	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927252	{…}
-353	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927252	{…}
-354	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927252	{…}
-355	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927252	
-356	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927252	{…}
-357	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927252	{…}
-358	'debug'	'Item p_erotica:amaia_castillo_instance passed filter'	'ScopeEngine.resolveFilter'	1754064927253	
-359	'info'	'Filter application complete. 1 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927253	
-360	'success'	'Scope resolution finished. Found 1 target(s).'	'ScopeEngine'	1754064927253	{…}
-361	'info'	"Resolved scope 'intimacy:close_actors_facing_each_other_or_behind_target' to 1 entities."	'UnifiedScopeResolver.resolve'	1754064927253	{…}
-362	'info'	"Scope 'intimacy:close_actors_facing_each_other_or_behind_target' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927253	{…}
-363	'step'	"Resolving targets for action 'intimacy:nuzzle_face_into_neck'"	'MultiTargetResolutionStage'	1754064927253	
-364	'step'	"Resolving legacy scope 'intimacy:close_actors_facing_each_other'"	'MultiTargetResolutionStage'	1754064927253	
-365	'info'	"Delegating scope resolution for 'intimacy:close_actors_facing_each_other' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927253	
-366	'info'	"Resolving scope 'intimacy:close_actors_facing_each_other'."	'UnifiedScopeResolver.resolve'	1754064927253	
-367	'info'	"Resolved scope 'intimacy:close_actors_facing_each_other' from cache with 1 entities."	'UnifiedScopeResolver.resolve'	1754064927253	{…}
-368	'info'	"Scope 'intimacy:close_actors_facing_each_other' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927253	{…}
-369	'step'	"Resolving targets for action 'intimacy:peck_on_lips'"	'MultiTargetResolutionStage'	1754064927253	
-370	'step'	"Resolving legacy scope 'intimacy:close_actors_facing_each_other'"	'MultiTargetResolutionStage'	1754064927253	
-371	'info'	"Delegating scope resolution for 'intimacy:close_actors_facing_each_other' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927253	
-372	'info'	"Resolving scope 'intimacy:close_actors_facing_each_other'."	'UnifiedScopeResolver.resolve'	1754064927253	
-373	'info'	"Resolved scope 'intimacy:close_actors_facing_each_other' from cache with 1 entities."	'UnifiedScopeResolver.resolve'	1754064927253	{…}
-374	'info'	"Scope 'intimacy:close_actors_facing_each_other' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927253	{…}
-375	'step'	"Resolving targets for action 'intimacy:place_hand_on_waist'"	'MultiTargetResolutionStage'	1754064927253	
-376	'step'	"Resolving legacy scope 'intimacy:close_actors'"	'MultiTargetResolutionStage'	1754064927253	
-377	'info'	"Delegating scope resolution for 'intimacy:close_actors' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927253	
-378	'info'	"Resolving scope 'intimacy:close_actors'."	'UnifiedScopeResolver.resolve'	1754064927253	
-379	'info'	"Resolved scope 'intimacy:close_actors' from cache with 1 entities."	'UnifiedScopeResolver.resolve'	1754064927253	{…}
-380	'info'	"Scope 'intimacy:close_actors' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927253	{…}
-381	'step'	"Resolving targets for action 'intimacy:step_back'"	'MultiTargetResolutionStage'	1754064927253	
-382	'step'	"Resolving legacy scope 'none'"	'MultiTargetResolutionStage'	1754064927253	
-383	'info'	"Delegating scope resolution for 'none' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927253	
-384	'info'	"Resolving scope 'none'."	'UnifiedScopeResolver.resolve'	1754064927253	
-385	'info'	"Resolved special scope 'none'."	'UnifiedScopeResolver.resolve'	1754064927253	{…}
-386	'info'	"Scope 'none' resolved to no targets - returning noTarget context."	'TargetResolutionService.resolveTargets'	1754064927253	
-387	'step'	"Resolving targets for action 'intimacy:suck_on_neck_to_leave_hickey'"	'MultiTargetResolutionStage'	1754064927253	
-388	'step'	"Resolving legacy scope 'intimacy:close_actors_facing_each_other_or_behind_target'"	'MultiTargetResolutionStage'	1754064927253	
-389	'info'	"Delegating scope resolution for 'intimacy:close_ac…_other_or_behind_target' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927253	
-390	'info'	"Resolving scope 'intimacy:close_actors_facing_each_other_or_behind_target'."	'UnifiedScopeResolver.resolve'	1754064927253	
-391	'info'	"Resolved scope 'intimacy:close_actors_facing_each_…her_or_behind_target' from cache with 1 entities."	'UnifiedScopeResolver.resolve'	1754064927253	{…}
-392	'info'	"Scope 'intimacy:close_actors_facing_each_other_or_behind_target' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927253	{…}
-393	'step'	"Resolving targets for action 'intimacy:thumb_wipe_cheek'"	'MultiTargetResolutionStage'	1754064927253	
-394	'step'	"Resolving legacy scope 'intimacy:close_actors_facing_each_other'"	'MultiTargetResolutionStage'	1754064927253	
-395	'info'	"Delegating scope resolution for 'intimacy:close_actors_facing_each_other' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927253	
-396	'info'	"Resolving scope 'intimacy:close_actors_facing_each_other'."	'UnifiedScopeResolver.resolve'	1754064927253	
-397	'info'	"Resolved scope 'intimacy:close_actors_facing_each_other' from cache with 1 entities."	'UnifiedScopeResolver.resolve'	1754064927253	{…}
-398	'info'	"Scope 'intimacy:close_actors_facing_each_other' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927253	{…}
-399	'step'	"Resolving targets for action 'intimacy:turn_around_to_face'"	'MultiTargetResolutionStage'	1754064927253	
-400	'step'	"Resolving legacy scope 'intimacy:actors_im_facing_away_from'"	'MultiTargetResolutionStage'	1754064927253	
-401	'info'	"Delegating scope resolution for 'intimacy:actors_im_facing_away_from' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927253	
-402	'info'	"Resolving scope 'intimacy:actors_im_facing_away_from'."	'UnifiedScopeResolver.resolve'	1754064927253	
-403	'info'	"Using pre-parsed AST for scope 'intimacy:actors_im_facing_away_from'."	'UnifiedScopeResolver.#parseAst'	1754064927253	
-404	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927253	{…}
-405	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927253	{…}
-406	'info'	"Resolving Step node with field 'intimacy:facing_away'. Parent result size: 1"	'StepResolver'	1754064927253	{…}
-407	'info'	"Step node resolved. Field: 'intimacy:facing_away', Result size: 0"	'StepResolver'	1754064927253	{…}
-408	'info'	"Resolving Step node with field 'facing_away_from'. Parent result size: 0"	'StepResolver'	1754064927253	{…}
-409	'info'	'Resolving ArrayIterationStep node. Parent result size: 0'	'ArrayIterationResolver'	1754064927253	{…}
-410	'info'	'ArrayIterationStep node resolved. Result size: 0'	'ArrayIterationResolver'	1754064927253	{…}
-411	'info'	'Applying filter to 0 items.'	'ScopeEngine.resolveFilter'	1754064927253	{…}
-412	'success'	'Scope resolution finished. Found 0 target(s).'	'ScopeEngine'	1754064927253	{…}
-413	'info'	"Resolved scope 'intimacy:actors_im_facing_away_from' to 0 entities."	'UnifiedScopeResolver.resolve'	1754064927253	{…}
-414	'info'	"Scope 'intimacy:actors_im_facing_away_from' resolved to no targets."	'TargetResolutionService.resolveTargets'	1754064927253	
-415	'info'	'No targets found for legacy action'	'MultiTargetResolutionStage'	1754064927253	
-416	'step'	"Resolving targets for action 'intimacy:turn_around'"	'MultiTargetResolutionStage'	1754064927253	
-417	'step'	"Resolving legacy scope 'intimacy:close_actors_facing_each_other_or_behind_target'"	'MultiTargetResolutionStage'	1754064927253	
-418	'info'	"Delegating scope resolution for 'intimacy:close_ac…_other_or_behind_target' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927253	
-419	'info'	"Resolving scope 'intimacy:close_actors_facing_each_other_or_behind_target'."	'UnifiedScopeResolver.resolve'	1754064927253	
-420	'info'	"Resolved scope 'intimacy:close_actors_facing_each_…her_or_behind_target' from cache with 1 entities."	'UnifiedScopeResolver.resolve'	1754064927253	{…}
-421	'info'	"Scope 'intimacy:close_actors_facing_each_other_or_behind_target' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927253	{…}
-422	'step'	"Resolving targets for action 'sex:fondle_breasts'"	'MultiTargetResolutionStage'	1754064927253	
-423	'step'	"Resolving legacy scope 'sex:actors_with_breasts_facing_each_other'"	'MultiTargetResolutionStage'	1754064927253	
-424	'info'	"Delegating scope resolution for 'sex:actors_with_breasts_facing_each_other' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927253	
-425	'info'	"Resolving scope 'sex:actors_with_breasts_facing_each_other'."	'UnifiedScopeResolver.resolve'	1754064927253	
-426	'info'	"Using pre-parsed AST for scope 'sex:actors_with_breasts_facing_each_other'."	'UnifiedScopeResolver.#parseAst'	1754064927254	
-427	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927254	{…}
-428	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927254	{…}
-429	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927254	{…}
-430	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927254	{…}
-431	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927254	{…}
-432	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927254	{…}
-433	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927254	{…}
-434	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927254	{…}
-435	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927254	{…}
-436	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927254	
-437	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927254	{…}
-438	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927254	{…}
-439	'debug'	'Item p_erotica:amaia_castillo_instance passed filter'	'ScopeEngine.resolveFilter'	1754064927255	
-440	'info'	'Filter application complete. 1 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927255	
-441	'success'	'Scope resolution finished. Found 1 target(s).'	'ScopeEngine'	1754064927255	{…}
-442	'info'	"Resolved scope 'sex:actors_with_breasts_facing_each_other' to 1 entities."	'UnifiedScopeResolver.resolve'	1754064927255	{…}
-443	'info'	"Scope 'sex:actors_with_breasts_facing_each_other' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927255	{…}
-444	'step'	"Resolving targets for action 'sex:rub_penis_over_clothes'"	'MultiTargetResolutionStage'	1754064927255	
-445	'step'	"Resolving legacy scope 'sex:actors_with_penis_facing_each_other_covered'"	'MultiTargetResolutionStage'	1754064927255	
-446	'info'	"Delegating scope resolution for 'sex:actors_with_p…cing_each_other_covered' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927255	
-447	'info'	"Resolving scope 'sex:actors_with_penis_facing_each_other_covered'."	'UnifiedScopeResolver.resolve'	1754064927255	
-448	'info'	"Using pre-parsed AST for scope 'sex:actors_with_penis_facing_each_other_covered'."	'UnifiedScopeResolver.#parseAst'	1754064927255	
-449	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927255	{…}
-450	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927255	{…}
-451	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927255	{…}
-452	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927255	{…}
-453	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927255	{…}
-454	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927255	{…}
-455	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927255	{…}
-456	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927255	{…}
-457	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927255	{…}
-458	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927255	
-459	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927255	{…}
-460	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927255	{…}
-461	'debug'	'Item p_erotica:amaia_castillo_instance failed filter'	'ScopeEngine.resolveFilter'	1754064927255	
-462	'info'	'Filter application complete. 0 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927255	
-463	'success'	'Scope resolution finished. Found 0 target(s).'	'ScopeEngine'	1754064927255	{…}
-464	'info'	"Resolved scope 'sex:actors_with_penis_facing_each_other_covered' to 0 entities."	'UnifiedScopeResolver.resolve'	1754064927255	{…}
-465	'info'	"Scope 'sex:actors_with_penis_facing_each_other_covered' resolved to no targets."	'TargetResolutionService.resolveTargets'	1754064927255	
-466	'info'	'No targets found for legacy action'	'MultiTargetResolutionStage'	1754064927255	
-467	'step'	"Resolving targets for action 'sex:rub_vagina_over_clothes'"	'MultiTargetResolutionStage'	1754064927255	
-468	'step'	"Resolving legacy scope 'sex:actors_with_vagina_facing_each_other_covered'"	'MultiTargetResolutionStage'	1754064927255	
-469	'info'	"Delegating scope resolution for 'sex:actors_with_v…cing_each_other_covered' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927255	
-470	'info'	"Resolving scope 'sex:actors_with_vagina_facing_each_other_covered'."	'UnifiedScopeResolver.resolve'	1754064927255	
-471	'info'	"Using pre-parsed AST for scope 'sex:actors_with_vagina_facing_each_other_covered'."	'UnifiedScopeResolver.#parseAst'	1754064927255	
-472	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927256	{…}
-473	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927256	{…}
-474	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927256	{…}
-475	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927256	{…}
-476	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927256	{…}
-477	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927256	{…}
-478	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927256	{…}
-479	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927256	{…}
-480	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927256	{…}
-481	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927256	
-482	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927256	{…}
-483	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927256	{…}
-484	'debug'	'Item p_erotica:amaia_castillo_instance passed filter'	'ScopeEngine.resolveFilter'	1754064927256	
-485	'info'	'Filter application complete. 1 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927256	
-486	'success'	'Scope resolution finished. Found 1 target(s).'	'ScopeEngine'	1754064927256	{…}
-487	'info'	"Resolved scope 'sex:actors_with_vagina_facing_each_other_covered' to 1 entities."	'UnifiedScopeResolver.resolve'	1754064927256	{…}
-488	'info'	"Scope 'sex:actors_with_vagina_facing_each_other_covered' resolved to 1 target(s)."	'TargetResolutionService.resolveTargets'	1754064927256	{…}
-489	'step'	"Resolving targets for action 'sex:fondle_penis'"	'MultiTargetResolutionStage'	1754064927257	
-490	'step'	"Resolving legacy scope 'sex:actors_with_penis_facing_each_other'"	'MultiTargetResolutionStage'	1754064927257	
-491	'info'	"Delegating scope resolution for 'sex:actors_with_penis_facing_each_other' to UnifiedScopeResolver."	'TargetResolutionService.resolveTargets'	1754064927257	
-492	'info'	"Resolving scope 'sex:actors_with_penis_facing_each_other'."	'UnifiedScopeResolver.resolve'	1754064927257	
-493	'info'	"Using pre-parsed AST for scope 'sex:actors_with_penis_facing_each_other'."	'UnifiedScopeResolver.#parseAst'	1754064927257	
-494	'step'	'Starting scope resolution.'	'ScopeEngine'	1754064927257	{…}
-495	'info'	"Resolved source 'actor'. Found 1 item(s)."	'ScopeEngine.resolveSource'	1754064927257	{…}
-496	'info'	"Resolving Step node with field 'intimacy:closeness'. Parent result size: 1"	'StepResolver'	1754064927257	{…}
-497	'info'	"Step node resolved. Field: 'intimacy:closeness', Result size: 1"	'StepResolver'	1754064927257	{…}
-498	'info'	"Resolving Step node with field 'partners'. Parent result size: 1"	'StepResolver'	1754064927257	{…}
-499	'info'	"Step node resolved. Field: 'partners', Result size: 1"	'StepResolver'	1754064927257	{…}
-500	'info'	'Resolving ArrayIterationStep node. Parent result size: 1'	'ArrayIterationResolver'	1754064927257	{…}
-501	'info'	'ArrayIterationStep node resolved. Result size: 1'	'ArrayIterationResolver'	1754064927257	{…}
-502	'info'	'Applying filter to 1 items.'	'ScopeEngine.resolveFilter'	1754064927257	{…}
-503	'debug'	'Item p_erotica:amaia_castillo_instance resolved as entity'	'createEvaluationContext'	1754064927257	
-504	'debug'	'createEvaluationContext: entity=p_erotica:amaia_ca…rotica:iker_aguirre_instance, has components=true'	'EntityHelpers'	1754064927257	{…}
-505	'debug'	'Evaluating filter for item p_erotica:amaia_castillo_instance'	'ScopeEngine.resolveFilter'	1754064927257	{…}
-506	'debug'	'Item p_erotica:amaia_castillo_instance failed filter'	'ScopeEngine.resolveFilter'	1754064927257	
-507	'info'	'Filter application complete. 0 of 1 items passed.'	'ScopeEngine.resolveFilter'	1754064927257	
-508	'success'	'Scope resolution finished. Found 0 target(s).'	'ScopeEngine'	1754064927257	{…}
-509	'info'	"Resolved scope 'sex:actors_with_penis_facing_each_other' to 0 entities."	'UnifiedScopeResolver.resolve'	1754064927257	{…}
-510	'info'	"Scope 'sex:actors_with_penis_facing_each_other' resolved to no targets."	'TargetResolutionService.resolveTargets'	1754064927257	
-511	'info'	'No targets found for legacy action'	'MultiTargetResolutionStage'	1754064927257	
-512	'info'	'Target resolution completed: 21 actions with targets'	'MultiTargetResolutionStage'	1754064927257	
-513	'success'	'Stage MultiTargetResolution completed successfully'	'Pipeline.execute'	1754064927257	
-514	'step'	'Executing stage: ActionFormatting'	'Pipeline.execute'	1754064927257	
-515	'step'	'Formatting 21 actions with their targets'	'ActionFormattingStage.execute'	1754064927257	
-516	'info'	'Action formatting completed: 23 formatted actions, 0 errors'	'ActionFormattingStage.execute'	1754064927259	
-517	'success'	'Stage ActionFormatting completed successfully'	'Pipeline.execute'	1754064927259	
-518	'info'	'Pipeline execution completed. Actions: 23, Errors: 0'	'Pipeline.execute'	1754064927259	
-Array(519)
-consoleLogger.js:187 ActionIndexingService: indexed 23 actions for p_erotica:iker_aguirre_instance
-consoleLogger.js:187 [ChoicePipeline] Actor p_erotica:iker_aguirre_instance: 23 choices ready
-consoleLogger.js:187 VED: Validating payload for event 'core:player_turn_prompt' against schema 'core:player_turn_prompt#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:player_turn_prompt'.
-consoleLogger.js:187 VED: Dispatching event 'core:player_turn_prompt' via EventBus... 
-{entityId: 'p_erotica:iker_aguirre_instance', availableActions: Array(23)}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:player_turn_prompt 
-{payload: {…}, timestamp: 1754064927267, isAsync: true}
-consoleLogger.js:187 SystemLogicInterpreter: Received event: core:player_turn_prompt. Found 1 potential rule(s). 
-{payload: {…}}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Processing event: core:player_turn_prompt. Found 1 potential rule(s). 
-{payload: {…}, ruleIds: Array(1)}
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:player_turn_prompt] Assembling execution context via createNestedExecutionContext... (ActorID: p_erotica:iker_aguirre_instance, TargetID: null)
-consoleLogger.js:187 SystemLogicInterpreter: 🔧 [SystemLogicInterpreter] Assembling execution context via createNestedExecutionContext... (ActorID: p_erotica:iker_aguirre_instance, TargetID: null)
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Creating JsonLogicEvaluationContext for event type [core:player_turn_prompt]. ActorID: [p_erotica:iker_aguirre_instance], TargetID: [None]
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: Found actor entity [p_erotica:iker_aguirre_instance]. Creating context entry.
-consoleLogger.js:187 SystemLogicInterpreter: createJsonLogicContext: No targetId provided, target context remains null.
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:player_turn_prompt] createNestedExecutionContext returned a valid ExecutionContext.
-consoleLogger.js:187 SystemLogicInterpreter: [Event: core:player_turn_prompt] Final ExecutionContext (nested structure) assembled successfully.
-consoleLogger.js:187 SystemLogicInterpreter: 🔧 [SystemLogicInterpreter] Final ExecutionContext (nested structure) assembled successfully.
-consoleLogger.js:187 SystemLogicInterpreter: 🚀 [SystemLogicInterpreter] Starting rule processing for event: core:player_turn_prompt (1 rules)
-consoleLogger.js:187 SystemLogicInterpreter: 📋 [SystemLogicInterpreter] Processing rule 1/1: enable_input_on_player_turn
-consoleLogger.js:187 SystemLogicInterpreter: 🔍 [SystemLogicInterpreter] Rule enable_input_on_player_turn: Starting condition evaluation
-consoleLogger.js:187 SystemLogicInterpreter: [Rule enable_input_on_player_turn] No condition defined or condition is empty. Defaulting to passed.
-consoleLogger.js:187 SystemLogicInterpreter: ✅ [SystemLogicInterpreter] Rule enable_input_on_player_turn: Condition passed, proceeding to actions
-consoleLogger.js:187 SystemLogicInterpreter: 🎬 [SystemLogicInterpreter] Rule enable_input_on_player_turn: Starting action sequence (2 actions)
-consoleLogger.js:187 SystemLogicInterpreter: 🎬 [SystemLogicInterpreter] _executeActions: Starting action sequence for Rule 'enable_input_on_player_turn' (2 actions)
-consoleLogger.js:187 SystemLogicInterpreter: 🎬 [ActionSequence] Starting sequence: Rule 'enable_input_on_player_turn' (2 actions)
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [ActionSequence] [Rule 'enable_input_on_player_turn' - Action 1/2] Starting action: DISPATCH_EVENT
-consoleLogger.js:187 SystemLogicInterpreter: ⚡ [Rule 'enable_input_on_player_turn' - Action 1/2] About to execute operation of type: DISPATCH_EVENT
-consoleLogger.js:187 SystemLogicInterpreter: 🔧 [Rule 'enable_input_on_player_turn' - Action 1/2] Using operation interpreter for DISPATCH_EVENT
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "DISPATCH_EVENT"…
-consoleLogger.js:187 DispatchEventHandler: Attempting to dispatch event "core:enable_input" with resolved payload... 
-{payload: {…}}
-consoleLogger.js:187 VED: Validating payload for event 'core:enable_input' against schema 'core:enable_input#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:enable_input'.
-consoleLogger.js:187 VED: Dispatching event 'core:enable_input' via EventBus... 
-{}
-consoleLogger.js:187 [InputStateController] Received 'core:enable_input' without valid 'placeholder' string in payload, using default placeholder: "Enter speech (optional)..." 
-{receivedEvent: {…}}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:enable_input 
-{payload: {…}, timestamp: 1754064927268, isAsync: true}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:enable_input
-consoleLogger.js:187 VED: Event 'core:enable_input' dispatch successful.
-consoleLogger.js:187 DispatchEventHandler: Event "core:enable_input" dispatched (Validated).
-consoleLogger.js:187 SystemLogicInterpreter: ✅ [Rule 'enable_input_on_player_turn' - Action 1/2] Finished executing operation of type: DISPATCH_EVENT (1ms)
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [ActionSequence] [Rule 'enable_input_on_player_turn' - Action 2/2] Starting action: DISPATCH_EVENT
-consoleLogger.js:187 SystemLogicInterpreter: ⚡ [Rule 'enable_input_on_player_turn' - Action 2/2] About to execute operation of type: DISPATCH_EVENT
-consoleLogger.js:187 SystemLogicInterpreter: 🔧 [Rule 'enable_input_on_player_turn' - Action 2/2] Using operation interpreter for DISPATCH_EVENT
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.entityId} to: p_erotica:iker_aguirre_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.availableActions} to: [{"index":1,"actionId":"core:wait","commandString":"wait","params":{"targetId":null},"description":"Wait for a moment, doing nothing."},{"index":2,"actionId":"violence:slap","commandString":"slap Amaia Castillo","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Slap someone across the face"},{"index":3,"actionId":"violence:sucker_punch","commandString":"sucker-punch Amaia Castillo","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Throw an unexpected punch at someone when they're not looking"},{"index":4,"actionId":"clothing:remove_clothing","commandString":"remove fitted boxer briefs","params":{"targetId":"0701bcb1-ff16-421f-b786-2609b76dbd19"},"description":"Remove a piece of your topmost clothing"},{"index":5,"actionId":"clothing:remove_clothing","commandString":"remove sneakers","params":{"targetId":"494e3c81-8ef8-4256-9f58-b5ed97ed63f7"},"description":"Remove a piece of your topmost clothing"},{"index":6,"actionId":"clothing:remove_clothing","commandString":"remove denim trucker jacket","params":{"targetId":"d033a7e7-4f8f-4249-a8c5-e842a713575f"},"description":"Remove a piece of your topmost clothing"},{"index":7,"actionId":"intimacy:brush_hand","commandString":"brush Amaia Castillo's hand with your own","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Brush someone's hand with your own in a gentle, intimate gesture"},{"index":8,"actionId":"intimacy:fondle_ass","commandString":"fondle Amaia Castillo's ass","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Gently fondle the target's ass."},{"index":9,"actionId":"intimacy:kiss_cheek","commandString":"kiss Amaia Castillo's cheek","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Lean in and softly kiss the target on the cheek."},{"index":10,"actionId":"intimacy:kiss_neck_sensually","commandString":"kiss Amaia Castillo's neck sensually","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Kiss the target's neck in a sensual, intimate manner."},{"index":11,"actionId":"intimacy:lean_in_for_deep_kiss","commandString":"lean in to kiss Amaia Castillo deeply","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Move in close and initiate a deep, meaningful kiss"},{"index":12,"actionId":"intimacy:lick_lips","commandString":"lick Amaia Castillo's lips","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Lean in and seductively lick the target's lips."},{"index":13,"actionId":"intimacy:massage_shoulders","commandString":"massage Amaia Castillo's shoulders","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Gently massage the target's shoulders."},{"index":14,"actionId":"intimacy:nibble_earlobe_playfully","commandString":"nibble on Amaia Castillo's earlobe playfully","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Playfully nibble on the target's earlobe in an intimate, teasing manner."},{"index":15,"actionId":"intimacy:nuzzle_face_into_neck","commandString":"nuzzle face into Amaia Castillo's neck","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Gently nuzzle your face into the target's neck in an intimate gesture."},{"index":16,"actionId":"intimacy:peck_on_lips","commandString":"give Amaia Castillo a peck on the lips","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Give someone a quick, light kiss on the lips"},{"index":17,"actionId":"intimacy:place_hand_on_waist","commandString":"place a hand on Amaia Castillo's waist","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Place a hand on someone's waist in an intimate gesture"},{"index":18,"actionId":"intimacy:step_back","commandString":"step back","params":{"targetId":null},"description":"Step back from your current intimate partner, ending the closeness."},{"index":19,"actionId":"intimacy:suck_on_neck_to_leave_hickey","commandString":"suck on Amaia Castillo's neck to leave a hickey","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Suck on the target's neck to leave a visible hickey mark, an intimate and possessive gesture."},{"index":20,"actionId":"intimacy:thumb_wipe_cheek","commandString":"wipe Amaia Castillo's cheek with your thumb","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Gently wipe the target's cheek with your thumb."},{"index":21,"actionId":"intimacy:turn_around","commandString":"turn Amaia Castillo around","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Turn the target around or have them face you again."},{"index":22,"actionId":"sex:fondle_breasts","commandString":"fondle Amaia Castillo's breasts","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Gently fondle the target's breasts."},{"index":23,"actionId":"sex:rub_vagina_over_clothes","commandString":"rub Amaia Castillo's vagina over the clothes","params":{"targetId":"p_erotica:amaia_castillo_instance"},"description":"Rub the target's vagina over their clothing."}]
+OperationInterpreter: Resolved full string placeholder {event.payload.targetId} to: p_erotica:amaia_castillo_instance
+consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "ADD_COMPONENT"…
+consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'posturing:kneeling_before' to entity 'p_erotica:iker_aguirre_instance'
+consoleLogger.js:175 addComponent posturing:kneeling_before to entity p_erotica:iker_aguirre_instance Errors:
+[
+  {
+    "instancePath": "/entityId",
+    "schemaPath": "#/properties/entityId/pattern",
+    "keyword": "pattern",
+    "params": {
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "message": "must match pattern \"^[a-zA-Z0-9_-]+$\"",
+    "schema": "^[a-zA-Z0-9_-]+$",
+    "parentSchema": {
+      "type": "string",
+      "description": "The ID of the entity that the component holder is kneeling before",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "data": "p_erotica:amaia_castillo_instance"
+  }
+]
+error @ consoleLogger.js:175
+validateAndClone @ componentValidation.js:35
+validateAndCloneBound @ createValidateAndClone.js:13
+validateComponentData_fn @ componentMutationService.js:143
+addComponentCore_fn @ componentMutationService.js:250
+__privateGet.executeMonitored.context @ componentMutationService.js:218
+timeOperation @ PerformanceMonitor.js:167
+wrappedOperation @ MonitoringCoordinator.js:143
+execute @ CircuitBreaker.js:139
+executeMonitored @ MonitoringCoordinator.js:151
+addComponent @ componentMutationService.js:215
+addComponent @ EntityMutationManager.js:93
+addComponent @ entityManager.js:426
+addComponent @ entityManagerAdapter.js:74
+execute @ addComponentHandler.js:100
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+processRule_fn @ systemLogicInterpreter.js:422
+handleEvent_fn @ systemLogicInterpreter.js:325
+await in handleEvent_fn
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:120
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Operation addComponent failed: ValidationError: addComponent posturing:kneeling_before to entity p_erotica:iker_aguirre_instance Errors:
+[
+  {
+    "instancePath": "/entityId",
+    "schemaPath": "#/properties/entityId/pattern",
+    "keyword": "pattern",
+    "params": {
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "message": "must match pattern \"^[a-zA-Z0-9_-]+$\"",
+    "schema": "^[a-zA-Z0-9_-]+$",
+    "parentSchema": {
+      "type": "string",
+      "description": "The ID of the entity that the component holder is kneeling before",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "data": "p_erotica:amaia_castillo_instance"
+  }
+]
+    at ComponentMutationService.validateComponentData_fn (componentMutationService.js:149:13)
+    at ComponentMutationService.addComponentCore_fn (componentMutationService.js:250:27)
+    at __privateGet.executeMonitored.context (componentMutationService.js:218:11)
+    at PerformanceMonitor.timeOperation (PerformanceMonitor.js:167:28)
+    at wrappedOperation (MonitoringCoordinator.js:143:45)
+    at CircuitBreaker.execute (CircuitBreaker.js:139:28)
+    at MonitoringCoordinator.executeMonitored (MonitoringCoordinator.js:151:35)
+    at ComponentMutationService.addComponent (componentMutationService.js:215:48)
+    at EntityMutationManager.addComponent (EntityMutationManager.js:93:49)
+    at EntityManager.addComponent (entityManager.js:426:40)
+error @ consoleLogger.js:175
+timeOperation @ PerformanceMonitor.js:172
+wrappedOperation @ MonitoringCoordinator.js:143
+execute @ CircuitBreaker.js:139
+executeMonitored @ MonitoringCoordinator.js:151
+addComponent @ componentMutationService.js:215
+addComponent @ EntityMutationManager.js:93
+addComponent @ entityManager.js:426
+addComponent @ entityManagerAdapter.js:74
+execute @ addComponentHandler.js:100
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+processRule_fn @ systemLogicInterpreter.js:422
+handleEvent_fn @ systemLogicInterpreter.js:325
+await in handleEvent_fn
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:120
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:187 Circuit breaker 'addComponent' - Failure recorded {state: 'CLOSED', failureCount: 1, error: 'addComponent posturing:kneeling_before to entity p…"data": "p_erotica:amaia_castillo_instance"\n  }\n]'}
+consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:system_error_occurred'.
+
+Error
+Error
+ADD_COMPONENT: Failed to add component "posturing:kneeling_before" to entity "p_erotica:iker_aguirre_instance". Error: addComponent posturing:kneeling_before to entity p_erotica:iker_aguirre_instance Errors: [ { "instancePath": "/entityId", "schemaPath": "#/properties/entityId/pattern", "keyword": "pattern", "params": { "pattern": "^[a-zA-Z0-9_-]+$" }, "message": "must match pattern \"^[a-zA-Z0-9_-]+$\"", "schema": "^[a-zA-Z0-9_-]+$", "parentSchema": { "type": "string", "description": "The ID of the entity that the component holder is kneeling before", "pattern": "^[a-zA-Z0-9_-]+$" }, "data": "p_erotica:amaia_castillo_instance" } ]
+
+Show less
+Developer details
+{
+  "raw": "addComponent posturing:kneeling_before to entity p_erotica:iker_aguirre_instance Errors:\n[\n  {\n    \"instancePath\": \"/entityId\",\n    \"schemaPath\": \"#/properties/entityId/pattern\",\n    \"keyword\": \"pattern\",\n    \"params\": {\n      \"pattern\": \"^[a-zA-Z0-9_-]+$\"\n    },\n    \"message\": \"must match pattern \\\"^[a-zA-Z0-9_-]+$\\\"\",\n    \"schema\": \"^[a-zA-Z0-9_-]+$\",\n    \"parentSchema\": {\n      \"type\": \"string\",\n      \"description\": \"The ID of the entity that the component holder is kneeling before\",\n      \"pattern\": \"^[a-zA-Z0-9_-]+$\"\n    },\n    \"data\": \"p_erotica:amaia_castillo_instance\"\n  }\n]",
+  "stack": "ValidationError: addComponent posturing:kneeling_before to entity p_erotica:iker_aguirre_instance Errors:\n[\n  {\n    \"instancePath\": \"/entityId\",\n    \"schemaPath\": \"#/properties/entityId/pattern\",\n    \"keyword\": \"pattern\",\n    \"params\": {\n      \"pattern\": \"^[a-zA-Z0-9_-]+$\"\n    },\n    \"message\": \"must match pattern \\\"^[a-zA-Z0-9_-]+$\\\"\",\n    \"schema\": \"^[a-zA-Z0-9_-]+$\",\n    \"parentSchema\": {\n      \"type\": \"string\",\n      \"description\": \"The ID of the entity that the component holder is kneeling before\",\n      \"pattern\": \"^[a-zA-Z0-9_-]+$\"\n    },\n    \"data\": \"p_erotica:amaia_castillo_instance\"\n  }\n]\n    at ComponentMutationService.validateComponentData_fn (http://127.0.0.1:8080/bundle.js:41712:13)\n    at ComponentMutationService.addComponentCore_fn (http://127.0.0.1:8080/bundle.js:41775:112)\n    at __privateGet.executeMonitored.context (http://127.0.0.1:8080/bundle.js:41610:97)\n    at PerformanceMonitor.timeOperation (http://127.0.0.1:8080/bundle.js:39987:30)\n    at wrappedOperation (http://127.0.0.1:8080/bundle.js:40705:62)\n    at CircuitBreaker.execute (http://127.0.0.1:8080/bundle.js:40335:30)\n    at MonitoringCoordinator.executeMonitored (http://127.0.0.1:8080/bundle.js:40712:37)\n    at ComponentMutationService.addComponent (http://127.0.0.1:8080/bundle.js:41608:66)\n    at EntityMutationManager.addComponent (http://127.0.0.1:8080/bundle.js:46797:67)\n    at EntityManager.addComponent (http://127.0.0.1:8080/bundle.js:47289:57)",
+  "timestamp": "2025-08-01T19:48:39.233Z"
+}
