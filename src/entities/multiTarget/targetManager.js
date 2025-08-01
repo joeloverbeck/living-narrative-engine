@@ -121,38 +121,6 @@ export class TargetManager {
     });
   }
 
-  /**
-   * Removes a target
-   *
-   * @param {TargetName} name - Target name to remove
-   * @returns {boolean} True if target was removed
-   */
-  removeTarget(name) {
-    assertNonBlankString(
-      name,
-      'name',
-      'TargetManager.removeTarget',
-      this.#logger
-    );
-
-    const entityId = this.#targets.get(name);
-    if (!entityId) {
-      return false;
-    }
-
-    this.#targets.delete(name);
-
-    // Update primary target if it was removed
-    if (this.#primaryTarget === entityId) {
-      this.#primaryTarget =
-        this.#targets.size > 0
-          ? determinePrimaryTarget(this.getTargetsObject())
-          : null;
-    }
-
-    this.#logger.debug('Target removed', { name, entityId });
-    return true;
-  }
 
   /**
    * Gets a target by name
@@ -313,50 +281,6 @@ export class TargetManager {
   }
 
   /**
-   * Creates a copy of this TargetManager
-   *
-   * @returns {TargetManager} New TargetManager instance
-   */
-  clone() {
-    return new TargetManager({
-      targets: this.getTargetsObject(),
-      primaryTarget: this.#primaryTarget,
-      logger: this.#logger,
-    });
-  }
-
-  /**
-   * Merges targets from another TargetManager
-   *
-   * @param {TargetManager} other - Other TargetManager to merge
-   * @param {object} options - Merge options
-   * @param {boolean} [options.overwrite] - Whether to overwrite existing targets
-   * @param {boolean} [options.updatePrimary] - Whether to update primary target
-   */
-  merge(other, { overwrite = false, updatePrimary = false } = {}) {
-    if (!(other instanceof TargetManager)) {
-      throw new Error('Can only merge with another TargetManager instance');
-    }
-
-    const otherTargets = other.getTargetsObject();
-
-    for (const [name, entityId] of Object.entries(otherTargets)) {
-      if (!this.hasTarget(name) || overwrite) {
-        this.#targets.set(name, entityId);
-      }
-    }
-
-    if (updatePrimary && other.getPrimaryTarget()) {
-      this.#primaryTarget = other.getPrimaryTarget();
-    }
-
-    this.#logger.debug('Targets merged', {
-      mergedCount: Object.keys(otherTargets).length,
-      totalCount: this.#targets.size,
-    });
-  }
-
-  /**
    * Converts to JSON representation
    *
    * @returns {object} JSON representation
@@ -371,19 +295,22 @@ export class TargetManager {
   }
 
   /**
-   * Creates TargetManager from JSON representation
+   * Get entity ID by placeholder name
+   * Enhanced API for ActionFormattingStage integration
    *
-   * @param {object} json - JSON representation
-   * @param {object} logger - Logger instance
-   * @returns {TargetManager} New TargetManager instance
+   * @param {TargetName} placeholderName - Placeholder name (e.g., "primary", "secondary")
+   * @returns {EntityId|null} - Entity ID or null if not found
    */
-  static fromJSON(json, logger) {
-    return new TargetManager({
-      targets: json.targets || {},
-      primaryTarget: json.primaryTarget,
-      logger,
-    });
+  getEntityIdByPlaceholder(placeholderName) {
+    assertNonBlankString(
+      placeholderName,
+      'placeholderName',
+      'TargetManager.getEntityIdByPlaceholder',
+      this.#logger
+    );
+    return this.#targets.get(placeholderName) || null;
   }
+
 }
 
 export default TargetManager;

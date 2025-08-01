@@ -197,7 +197,6 @@ describe('ActionResult - Serialization Integration', () => {
         }
       }
     });
-
   });
 
   describe('Network Transmission Scenarios', () => {

@@ -91,9 +91,13 @@ describe('entityRefUtils', () => {
         expect(result).toBeNull();
         expect(mockExecutionContext.logger.warn).toHaveBeenCalledWith(
           "Failed to resolve placeholder 'primary' - no matching target in event payload",
-          expect.objectContaining({
-            availableTargets: expect.any(Array),
-          })
+          {
+            placeholder: 'primary',
+            availableTargets: ['secondary', 'tertiary'],
+            eventType: 'core:attempt_action',
+            actionId: 'test:action',
+            suggestion: 'Available targets: secondary, tertiary',
+          }
         );
       });
 
@@ -243,13 +247,17 @@ describe('entityRefUtils', () => {
 
         expect(mockExecutionContext.logger.warn).toHaveBeenCalledWith(
           "Failed to resolve placeholder 'secondary' - no matching target in event payload",
-          {
+          expect.objectContaining({
+            placeholder: 'secondary',
             availableTargets: expect.arrayContaining([
               'primary',
               'tertiary',
               'custom',
             ]),
-          }
+            eventType: 'core:attempt_action',
+            actionId: undefined,
+            suggestion: 'Available targets: primary, tertiary, custom',
+          })
         );
       });
 

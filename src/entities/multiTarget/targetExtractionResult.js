@@ -113,6 +113,38 @@ export class TargetExtractionResult {
   }
 
   /**
+   * Get entity ID for a specific placeholder name
+   * Delegates to TargetManager for optimized O(1) lookup
+   *
+   * @param {string} placeholderName - Placeholder name to resolve
+   * @returns {EntityId|null} Entity ID or null if not found
+   */
+  getEntityIdByPlaceholder(placeholderName) {
+    return this.#targetManager.getEntityIdByPlaceholder(placeholderName);
+  }
+
+  /**
+   * Checks if a target with the given name exists
+   * Delegates to TargetManager for validation
+   *
+   * @param {string} name - Target name to check
+   * @returns {boolean} True if target exists, false otherwise
+   */
+  hasTarget(name) {
+    return this.#targetManager.hasTarget(name);
+  }
+
+  /**
+   * Checks if this is a multi-target scenario
+   * Delegates to TargetManager for consistency
+   *
+   * @returns {boolean} True if multiple targets exist
+   */
+  isMultiTarget() {
+    return this.#targetManager.isMultiTarget();
+  }
+
+  /**
    * Gets extraction metadata
    *
    * @returns {object} Extraction metadata
