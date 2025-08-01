@@ -11,7 +11,7 @@ This comprehensive analysis examines the action processing pipeline through the 
 ### Key Findings
 
 - **734-line** `MultiTargetResolutionStage` requires immediate decomposition
-- **Deprecated test infrastructure** creates migration burden and maintenance overhead  
+- **Deprecated test infrastructure** creates migration burden and maintenance overhead
 - **Mixed legacy/modern patterns** throughout target resolution system
 - **Complex coupling** between pipeline orchestrator and multiple stages
 - **Inconsistent error handling** across pipeline components
@@ -21,13 +21,15 @@ This comprehensive analysis examines the action processing pipeline through the 
 ### E2E Test Coverage Mapping
 
 **Primary Test Suites Analyzed:**
+
 - `ActionExecutionPipeline.e2e.test.js` - Complete action discovery and execution flow
 - `multiTargetFullPipeline.e2e.test.js` - Multi-target action processing scenarios
 - `ActionSystemIntegration.e2e.test.js` - Scope DSL integration with action system
 
 **Production Modules Tested:**
+
 - Action discovery and pipeline orchestration (7 modules)
-- Target resolution and scope evaluation (12 modules) 
+- Target resolution and scope evaluation (12 modules)
 - Supporting infrastructure and utilities (15+ modules)
 
 ### Quality Assessment Criteria
@@ -49,7 +51,7 @@ E2E Test Suite → Production Modules Tested
 │   ├── ActionPipelineOrchestrator (coordination)
 │   ├── Pipeline stages (4 stages)
 │   └── Supporting services (5 modules)
-├── multiTargetFullPipeline.e2e.test.js  
+├── multiTargetFullPipeline.e2e.test.js
 │   ├── MultiTargetResolutionStage (core logic)
 │   ├── MultiTargetExecutionHelper (test utilities)
 │   ├── TargetResolutionService (delegation)
@@ -63,10 +65,12 @@ E2E Test Suite → Production Modules Tested
 ### Critical Quality Issues
 
 #### **ActionExecutionTestBed** - Legacy Test Infrastructure
+
 **File:** `tests/e2e/actions/common/actionExecutionTestBed.js`  
 **Lines:** 582 | **Complexity:** High | **Status:** Deprecated
 
 **Issues:**
+
 - Explicitly marked as deprecated with migration warnings
 - 582 lines of complex test setup logic
 - Tight coupling to internal service implementations
@@ -74,16 +78,18 @@ E2E Test Suite → Production Modules Tested
 
 **Impact:** All e2e tests using this infrastructure face migration burden
 
-#### **MultiTargetResolutionStage** - Monolithic Pipeline Stage  
+#### **MultiTargetResolutionStage** - Monolithic Pipeline Stage
+
 **File:** `src/actions/pipeline/stages/MultiTargetResolutionStage.js`  
 **Lines:** 734 | **Complexity:** Very High | **Coupling:** High
 
 **Issues:**
+
 ```javascript
 export class MultiTargetResolutionStage extends PipelineStage {
   // 734 lines of tightly coupled logic
   // Multiple responsibilities:
-  // - Legacy action compatibility 
+  // - Legacy action compatibility
   // - Multi-target resolution
   // - Dependency ordering
   // - Context building
@@ -93,6 +99,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
 ```
 
 **Specific Problems:**
+
 - Single class handling 6+ distinct responsibilities
 - Complex dependency resolution algorithm (lines 531-567)
 - Mixed legacy/modern target resolution patterns
@@ -100,10 +107,12 @@ export class MultiTargetResolutionStage extends PipelineStage {
 - Inconsistent error handling strategies
 
 #### **ActionPipelineOrchestrator** - Excessive Coupling
+
 **File:** `src/actions/actionPipelineOrchestrator.js`  
 **Lines:** 163 | **Dependencies:** 11 injected services
 
 **Issues:**
+
 - Constructor requires 11 different service dependencies
 - Tight coupling to specific pipeline stage implementations
 - Limited extensibility for new pipeline stages
@@ -114,26 +123,38 @@ export class MultiTargetResolutionStage extends PipelineStage {
 ### **Priority 1: Critical (Immediate Action Required)**
 
 #### 1.1 Decompose MultiTargetResolutionStage
+
 **Effort:** 3-4 days | **Risk:** High | **Impact:** High
 
 **Recommended Approach:**
+
 ```javascript
 // Extract specialized services
 class TargetDependencyResolver {
-  getResolutionOrder(targetDefinitions) { /* lines 531-567 */ }
+  getResolutionOrder(targetDefinitions) {
+    /* lines 531-567 */
+  }
 }
 
 class LegacyTargetCompatibilityLayer {
-  resolveLegacyTarget(context, trace) { /* lines 223-293 */ }
+  resolveLegacyTarget(context, trace) {
+    /* lines 223-293 */
+  }
 }
 
 class ScopeContextBuilder {
-  buildScopeContext(actor, actionContext, resolvedTargets) { /* lines 579-597 */ }
-  buildContextForSpecificPrimary(context) { /* lines 610-644 */ }
+  buildScopeContext(actor, actionContext, resolvedTargets) {
+    /* lines 579-597 */
+  }
+  buildContextForSpecificPrimary(context) {
+    /* lines 610-644 */
+  }
 }
 
 class TargetDisplayNameResolver {
-  getEntityDisplayName(entityId) { /* lines 713-730 */ }
+  getEntityDisplayName(entityId) {
+    /* lines 713-730 */
+  }
 }
 
 // Simplified main stage
@@ -141,7 +162,7 @@ class MultiTargetResolutionStage extends PipelineStage {
   constructor(dependencyResolver, legacyLayer, contextBuilder, nameResolver) {
     // Reduced complexity through composition
   }
-  
+
   async executeInternal(context) {
     // Orchestrate specialized services
     // Clear separation of concerns
@@ -151,37 +172,43 @@ class MultiTargetResolutionStage extends PipelineStage {
 ```
 
 **Benefits:**
+
 - Reduces cyclomatic complexity by ~70%
 - Enables independent testing of components
 - Separates legacy compatibility concerns
 - Improves maintainability and extensibility
 
 #### 1.2 Migrate Test Infrastructure
+
 **Effort:** 2-3 days | **Risk:** Medium | **Impact:** High
 
 **Current State:**
+
 ```javascript
 // Deprecated approach
 export class ActionExecutionTestBed {
   constructor() {
-    console.warn('DEPRECATION WARNING: ActionExecutionTestBed is deprecated...');
+    console.warn(
+      'DEPRECATION WARNING: ActionExecutionTestBed is deprecated...'
+    );
     // 582 lines of complex setup
   }
 }
 ```
 
 **Target State:**
+
 ```javascript
 // Modern facade pattern
 import { createMockFacades } from '../facades/testingFacadeRegistrations.js';
 
 describe('Action Execution Pipeline', () => {
   let facades;
-  
+
   beforeEach(async () => {
     facades = await createMockFacades();
   });
-  
+
   it('should execute action pipeline', async () => {
     const result = await facades.turnExecution.executeAction(actionData);
     // Clean, focused test logic
@@ -190,22 +217,26 @@ describe('Action Execution Pipeline', () => {
 ```
 
 **Migration Strategy:**
+
 1. **Phase 1:** Create parallel tests using facade pattern
-2. **Phase 2:** Verify functional equivalence 
+2. **Phase 2:** Verify functional equivalence
 3. **Phase 3:** Remove deprecated test bed
 4. **Phase 4:** Update all dependent test suites
 
 ### **Priority 2: High (Next Sprint)**
 
 #### 2.1 Standardize Error Handling
+
 **Effort:** 2 days | **Risk:** Low | **Impact:** Medium-High
 
 **Current Issues:**
+
 - Inconsistent error context building across stages
-- Mixed error handling patterns (throw vs return failure)  
+- Mixed error handling patterns (throw vs return failure)
 - Unclear error propagation through pipeline
 
 **Recommended Solution:**
+
 ```javascript
 // Standardized error context
 class PipelineErrorContext {
@@ -216,7 +247,7 @@ class PipelineErrorContext {
       actionId,
       stage,
       context: this.sanitizeContext(context),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 }
@@ -228,9 +259,9 @@ class PipelineStage {
       return await this.executeInternal(context);
     } catch (error) {
       const errorContext = PipelineErrorContext.create(
-        this.name, 
-        context.actionDef?.id, 
-        error, 
+        this.name,
+        context.actionDef?.id,
+        error,
         context
       );
       return PipelineResult.failure(errorContext, context.data);
@@ -240,14 +271,20 @@ class PipelineStage {
 ```
 
 #### 2.2 Refactor ActionPipelineOrchestrator
+
 **Effort:** 2-3 days | **Risk:** Medium | **Impact:** Medium
 
 **Target Architecture:**
+
 ```javascript
 // Reduced coupling through stage registry
 class StageRegistry {
-  register(name, stageFactory) { /* ... */ }
-  createPipeline(stageNames) { /* ... */ }
+  register(name, stageFactory) {
+    /* ... */
+  }
+  createPipeline(stageNames) {
+    /* ... */
+  }
 }
 
 class ActionPipelineOrchestrator {
@@ -257,16 +294,20 @@ class ActionPipelineOrchestrator {
     this.errorBuilder = errorBuilder;
     this.logger = logger;
   }
-  
+
   async discoverActions(actor, context, options = {}) {
     const pipeline = this.stageRegistry.createPipeline([
       'ComponentFiltering',
-      'PrerequisiteEvaluation', 
+      'PrerequisiteEvaluation',
       'MultiTargetResolution',
-      'ActionFormatting'
+      'ActionFormatting',
     ]);
-    
-    return await pipeline.execute({ actor, actionContext: context, ...options });
+
+    return await pipeline.execute({
+      actor,
+      actionContext: context,
+      ...options,
+    });
   }
 }
 ```
@@ -274,14 +315,17 @@ class ActionPipelineOrchestrator {
 ### **Priority 3: Medium (Following Sprint)**
 
 #### 3.1 Optimize Scope DSL Integration
+
 **Effort:** 3-4 days | **Risk:** Medium | **Impact:** Medium
 
 **Issues Identified:**
+
 - Multiple scope resolution code paths in different modules
 - Inconsistent caching strategies across resolvers
 - Complex node resolver interdependencies
 
 **Optimization Targets:**
+
 ```javascript
 // Centralized scope resolution strategy
 class ScopeResolutionCoordinator {
@@ -290,7 +334,7 @@ class ScopeResolutionCoordinator {
     this.cache = cache;
     this.resolvers = new Map(nodeResolvers);
   }
-  
+
   async resolve(scope, context, options = {}) {
     // Unified resolution path
     // Consistent caching
@@ -300,14 +344,17 @@ class ScopeResolutionCoordinator {
 ```
 
 #### 3.2 Strengthen Type Safety
+
 **Effort:** 1-2 days | **Risk:** Low | **Impact:** Medium
 
 **Current State:**
+
 - Inconsistent JSDoc type definitions
 - Missing interface contracts for key abstractions
 - Weak type checking in critical data flows
 
 **Improvements:**
+
 ```javascript
 /** @typedef {import('./actionTypes.js').StrictActionDefinition} ActionDefinition */
 /** @typedef {import('./actionTypes.js').ResolvedTargetMap} ResolvedTargets */
@@ -327,18 +374,21 @@ interface IPipelineStage {
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (Week 1-2)
+
 - [x] **Analysis Complete** - Current assessment and priority identification
 - [ ] **MultiTargetResolutionStage Decomposition** - Break into specialized services
 - [ ] **Test Infrastructure Migration** - Implement facade pattern
 - [ ] **Error Handling Standardization** - Unified error context
 
-### Phase 2: Architecture (Week 3-4)  
+### Phase 2: Architecture (Week 3-4)
+
 - [ ] **Pipeline Orchestrator Refactoring** - Reduce coupling through registry pattern
 - [ ] **Legacy Compatibility Layer** - Clean separation of old/new patterns
 - [ ] **Integration Testing** - Verify e2e test coverage maintained
 
 ### Phase 3: Optimization (Week 5-6)
-- [ ] **Scope DSL Integration** - Centralized resolution coordination  
+
+- [ ] **Scope DSL Integration** - Centralized resolution coordination
 - [ ] **Type Safety Improvements** - Strengthen interface contracts
 - [ ] **Performance Optimization** - Caching and resolution efficiency
 - [ ] **Documentation Updates** - Architecture guides and migration docs
@@ -346,20 +396,23 @@ interface IPipelineStage {
 ## Risk Assessment
 
 ### High-Risk Changes
+
 1. **MultiTargetResolutionStage decomposition** - Core pipeline functionality
    - **Mitigation:** Incremental refactoring with comprehensive test coverage
    - **Rollback:** Maintain original implementation during transition
 
-2. **Test infrastructure migration** - All e2e tests affected  
+2. **Test infrastructure migration** - All e2e tests affected
    - **Mitigation:** Parallel implementation approach
    - **Rollback:** Deprecated test bed remains functional during migration
 
 ### Medium-Risk Changes
+
 1. **Pipeline orchestrator refactoring** - Central coordination logic
    - **Mitigation:** Registry pattern allows gradual stage migration
    - **Rollback:** Direct instantiation fallback available
 
 ### Low-Risk Changes
+
 1. **Error handling standardization** - Additive improvements
 2. **Type safety enhancements** - Development-time improvements
 3. **Performance optimizations** - Non-breaking enhancements
@@ -367,17 +420,20 @@ interface IPipelineStage {
 ## Success Metrics
 
 ### Code Quality Metrics
+
 - **Cyclomatic Complexity:** Target <10 per method, <20 per class
 - **File Size:** Target <300 lines per file
 - **Coupling:** Target <5 constructor dependencies per class
 - **Test Coverage:** Maintain >90% line coverage
 
-### Development Productivity Metrics  
+### Development Productivity Metrics
+
 - **Build Time:** Maintain current build performance
 - **Test Execution Time:** Target <30s for full e2e suite
 - **Developer Onboarding:** Reduce new developer ramp-up time
 
 ### System Reliability Metrics
+
 - **Error Rate:** Reduce action pipeline failures by >50%
 - **Error Clarity:** Improve error message actionability
 - **Debugging Time:** Reduce average issue investigation time
@@ -402,10 +458,10 @@ class TargetResolutionService {
     // Validate dependencies
     // Minimal coupling
   }
-  
+
   async resolveTargets(scope, context) {
     // Single responsibility
-    // Clear error handling  
+    // Clear error handling
     // Comprehensive logging
     // Return consistent result objects
   }
@@ -415,12 +471,12 @@ class TargetResolutionService {
 describe('TargetResolutionService', () => {
   let service;
   let mockDependencies;
-  
+
   beforeEach(() => {
     mockDependencies = createMockDependencies();
     service = new TargetResolutionService(mockDependencies);
   });
-  
+
   it('should resolve simple scope expressions', async () => {
     // Focused test cases
     // Clear assertions
@@ -446,8 +502,9 @@ The action processing pipeline represents a critical system component with signi
 **Immediate attention** should focus on the `MultiTargetResolutionStage` decomposition and test infrastructure migration, as these changes provide the foundation for subsequent improvements and reduce the highest areas of risk.
 
 **Systematic implementation** of the proposed roadmap will result in:
+
 - 70% reduction in module complexity
-- 50% improvement in test maintainability  
+- 50% improvement in test maintainability
 - Enhanced system reliability and debugging capabilities
 - Cleaner architecture supporting future feature development
 

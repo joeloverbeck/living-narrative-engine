@@ -31,7 +31,10 @@ describe('AttemptActionSchemaFixVerification', () => {
     commonSchema = JSON.parse(readFileSync(commonSchemaPath, 'utf8'));
 
     // Add common schema
-    ajv.addSchema(commonSchema, 'schema://living-narrative-engine/common.schema.json');
+    ajv.addSchema(
+      commonSchema,
+      'schema://living-narrative-engine/common.schema.json'
+    );
 
     // Compile validator for the event payload schema
     validate = ajv.compile(eventSchema.payloadSchema);
@@ -46,7 +49,7 @@ describe('AttemptActionSchemaFixVerification', () => {
         originalInput: 'adjust clothing',
         targets: {
           primary: 'p_erotica:iker_aguirre_instance',
-          secondary: 'clothing:shirt_instance'
+          secondary: 'clothing:shirt_instance',
         },
         targetId: 'p_erotica:iker_aguirre_instance',
         primaryId: 'p_erotica:iker_aguirre_instance',
@@ -54,12 +57,12 @@ describe('AttemptActionSchemaFixVerification', () => {
         tertiaryId: null,
         timestamp: Date.now(),
         resolvedTargetCount: 2,
-        hasContextDependencies: false
+        hasContextDependencies: false,
       };
 
       const valid = validate(payload);
       expect(valid).toBe(true);
-      
+
       if (!valid) {
         console.log('Validation errors:', validate.errors);
       }
@@ -68,11 +71,11 @@ describe('AttemptActionSchemaFixVerification', () => {
     it('should validate legacy single target format', () => {
       const payload = {
         eventName: 'core:attempt_action',
-        actorId: 'core:player_instance', 
+        actorId: 'core:player_instance',
         actionId: 'core:examine',
         originalInput: 'examine item',
         targetId: 'core:item_instance',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const valid = validate(payload);
@@ -86,7 +89,7 @@ describe('AttemptActionSchemaFixVerification', () => {
         eventName: 'core:attempt_action',
         actorId: 'p_erotica:amaia_castillo_instance',
         actionId: 'intimacy:adjust_clothing',
-        originalInput: 'adjust Iker Aguirre\'s denim trucker jacket',
+        originalInput: "adjust Iker Aguirre's denim trucker jacket",
         targets: {
           primary: 'p_erotica:iker_aguirre_instance',
           secondary: {
@@ -94,8 +97,8 @@ describe('AttemptActionSchemaFixVerification', () => {
             placeholder: 'secondary',
             description: 'c103dff8-bfec-49f5-adb0-2c889ec5893e',
             resolvedFromContext: true,
-            contextSource: 'primary'
-          }
+            contextSource: 'primary',
+          },
         },
         targetId: 'p_erotica:iker_aguirre_instance',
         primaryId: 'p_erotica:iker_aguirre_instance',
@@ -103,12 +106,12 @@ describe('AttemptActionSchemaFixVerification', () => {
         tertiaryId: null,
         timestamp: Date.now(),
         resolvedTargetCount: 2,
-        hasContextDependencies: true
+        hasContextDependencies: true,
       };
 
       const valid = validate(payload);
       expect(valid).toBe(true);
-      
+
       if (!valid) {
         console.log('Validation errors:', validate.errors);
       }
@@ -122,8 +125,8 @@ describe('AttemptActionSchemaFixVerification', () => {
         originalInput: 'use item',
         targets: {
           item: {
-            entityId: 'abcd-1234-uuid-5678-efgh'
-          }
+            entityId: 'abcd-1234-uuid-5678-efgh',
+          },
         },
         targetId: 'abcd-1234-uuid-5678-efgh',
         primaryId: null,
@@ -131,7 +134,7 @@ describe('AttemptActionSchemaFixVerification', () => {
         tertiaryId: null,
         timestamp: Date.now(),
         resolvedTargetCount: 1,
-        hasContextDependencies: false
+        hasContextDependencies: false,
       };
 
       const valid = validate(payload);
@@ -147,20 +150,23 @@ describe('AttemptActionSchemaFixVerification', () => {
         targets: {
           item: {
             placeholder: 'item',
-            description: 'some item'
+            description: 'some item',
             // Missing entityId
-          }
+          },
         },
         targetId: 'test',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const valid = validate(payload);
       expect(valid).toBe(false);
-      expect(validate.errors.some(err => 
-        err.instancePath.includes('/targets/item') && 
-        err.message.includes('required')
-      )).toBe(true);
+      expect(
+        validate.errors.some(
+          (err) =>
+            err.instancePath.includes('/targets/item') &&
+            err.message.includes('required')
+        )
+      ).toBe(true);
     });
 
     it('should reject object target with additional properties', () => {
@@ -172,18 +178,18 @@ describe('AttemptActionSchemaFixVerification', () => {
         targets: {
           item: {
             entityId: 'uuid-1234',
-            invalidProperty: 'this should not be allowed'
-          }
+            invalidProperty: 'this should not be allowed',
+          },
         },
         targetId: 'uuid-1234',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const valid = validate(payload);
       expect(valid).toBe(false);
-      expect(validate.errors.some(err => 
-        err.keyword === 'additionalProperties'
-      )).toBe(true);
+      expect(
+        validate.errors.some((err) => err.keyword === 'additionalProperties')
+      ).toBe(true);
     });
   });
 
@@ -200,8 +206,8 @@ describe('AttemptActionSchemaFixVerification', () => {
             entityId: 'weapon-uuid-1234-5678',
             placeholder: 'weapon',
             description: 'iron sword',
-            resolvedFromContext: false
-          } // Object target
+            resolvedFromContext: false,
+          }, // Object target
         },
         targetId: 'enemies:goblin_instance',
         primaryId: null,
@@ -209,7 +215,7 @@ describe('AttemptActionSchemaFixVerification', () => {
         tertiaryId: null,
         timestamp: Date.now(),
         resolvedTargetCount: 2,
-        hasContextDependencies: false
+        hasContextDependencies: false,
       };
 
       const valid = validate(payload);
@@ -226,14 +232,14 @@ describe('AttemptActionSchemaFixVerification', () => {
           primary: {
             entityId: 'material-uuid-1',
             placeholder: 'primary',
-            description: 'iron ore'
+            description: 'iron ore',
           },
           secondary: {
-            entityId: 'material-uuid-2', 
+            entityId: 'material-uuid-2',
             placeholder: 'secondary',
-            description: 'coal'
+            description: 'coal',
           },
-          tool: 'crafting:forge_instance' // String target mixed in
+          tool: 'crafting:forge_instance', // String target mixed in
         },
         targetId: 'material-uuid-1',
         primaryId: 'material-uuid-1',
@@ -241,7 +247,7 @@ describe('AttemptActionSchemaFixVerification', () => {
         tertiaryId: null,
         timestamp: Date.now(),
         resolvedTargetCount: 3,
-        hasContextDependencies: true
+        hasContextDependencies: true,
       };
 
       const valid = validate(payload);
@@ -258,11 +264,11 @@ describe('AttemptActionSchemaFixVerification', () => {
         originalInput: 'test',
         targets: {
           test: {
-            entityId: '' // Empty string should be rejected
-          }
+            entityId: '', // Empty string should be rejected
+          },
         },
         targetId: 'test',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const valid = validate(payload);
@@ -276,10 +282,10 @@ describe('AttemptActionSchemaFixVerification', () => {
         actionId: 'core:test',
         originalInput: 'test',
         targets: {
-          test: '' // Empty string should be rejected
+          test: '', // Empty string should be rejected
         },
         targetId: 'test',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const valid = validate(payload);
@@ -289,12 +295,12 @@ describe('AttemptActionSchemaFixVerification', () => {
     it('should validate UUID format in object targets', () => {
       const uuidFormats = [
         'c103dff8-bfec-49f5-adb0-2c889ec5893e', // Standard UUID
-        'uuid-with-custom-format-123456',        // Custom UUID format
-        'simple_uuid_123',                       // Simple format
-        'CAPS-UUID-FORMAT-456'                   // Uppercase format
+        'uuid-with-custom-format-123456', // Custom UUID format
+        'simple_uuid_123', // Simple format
+        'CAPS-UUID-FORMAT-456', // Uppercase format
       ];
 
-      uuidFormats.forEach(uuid => {
+      uuidFormats.forEach((uuid) => {
         const payload = {
           eventName: 'core:attempt_action',
           actorId: 'core:player_instance',
@@ -302,11 +308,11 @@ describe('AttemptActionSchemaFixVerification', () => {
           originalInput: 'test',
           targets: {
             test: {
-              entityId: uuid
-            }
+              entityId: uuid,
+            },
           },
           targetId: uuid,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
 
         const valid = validate(payload);
@@ -323,36 +329,38 @@ describe('AttemptActionSchemaFixVerification', () => {
         timestamp: 1754061900301,
         actorId: 'p_erotica:amaia_castillo_instance',
         actionId: 'intimacy:adjust_clothing',
-        originalInput: 'adjust Iker Aguirre\'s denim trucker jacket',
+        originalInput: "adjust Iker Aguirre's denim trucker jacket",
         targets: {
           primary: {
             entityId: 'p_erotica:iker_aguirre_instance',
             placeholder: 'primary',
             description: 'p_erotica:iker_aguirre_instance',
-            resolvedFromContext: false
+            resolvedFromContext: false,
           },
           secondary: {
             entityId: 'c103dff8-bfec-49f5-adb0-2c889ec5893e',
             placeholder: 'secondary',
             description: 'c103dff8-bfec-49f5-adb0-2c889ec5893e',
             resolvedFromContext: true,
-            contextSource: 'primary'
-          }
+            contextSource: 'primary',
+          },
         },
         primaryId: 'p_erotica:iker_aguirre_instance',
         secondaryId: 'c103dff8-bfec-49f5-adb0-2c889ec5893e',
         tertiaryId: null,
         targetId: 'p_erotica:iker_aguirre_instance',
         resolvedTargetCount: 2,
-        hasContextDependencies: true
+        hasContextDependencies: true,
       };
 
       const valid = validate(payload);
       expect(valid).toBe(true);
-      
+
       if (!valid) {
-        console.log('Validation errors for production payload:', 
-          JSON.stringify(validate.errors, null, 2));
+        console.log(
+          'Validation errors for production payload:',
+          JSON.stringify(validate.errors, null, 2)
+        );
       }
     });
   });

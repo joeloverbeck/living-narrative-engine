@@ -10,6 +10,7 @@ import { registerInterpreters } from './registrations/interpreterRegistrations.j
 import { registerEventBusAdapters } from './registrations/eventBusAdapterRegistrations.js';
 import { registerInitializers } from './registrations/initializerRegistrations.js';
 import { registerRuntime } from './registrations/runtimeRegistrations.js';
+import { registerPipelineServices } from './registrations/pipelineServiceRegistrations.js';
 import { tokens } from './tokens.js';
 
 // Game-specific registrations (conditionally imported)
@@ -61,6 +62,7 @@ export async function configureBaseContainer(container, options = {}) {
   registerWorldAndEntity(container);
   registerCommandAndAction(container);
   registerInterpreters(container);
+  registerPipelineServices(container);
 
   // --- Conditionally register game-specific services ---
   if (includeGameSystems) {

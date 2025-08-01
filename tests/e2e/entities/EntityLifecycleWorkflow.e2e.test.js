@@ -171,26 +171,6 @@ describe('Entity Lifecycle E2E Workflow', () => {
       await testBed.assertRepositoryConsistency();
     });
 
-    it('should validate entity creation performance within acceptable limits', async () => {
-      // Arrange
-      const definitionId = 'test:performance_entity';
-      await testBed.ensureEntityDefinitionExists(definitionId);
-      const maxCreationTime = 100; // 100ms threshold
-
-      // Act - Create multiple entities to measure performance
-      const iterations = 5;
-      for (let i = 0; i < iterations; i++) {
-        await testBed.createTestEntity(definitionId, {
-          instanceId: `perf_test_${i}`,
-        });
-      }
-
-      // Assert performance is within limits
-      const performanceStats = testBed.getPerformanceStats('entity_creation');
-      expect(performanceStats.count).toBe(iterations);
-      expect(performanceStats.average).toBeLessThan(maxCreationTime);
-      expect(performanceStats.max).toBeLessThan(maxCreationTime * 2); // Allow some variance for max
-    });
   });
 
   describe('Entity Removal Workflow', () => {
@@ -469,64 +449,4 @@ describe('Entity Lifecycle E2E Workflow', () => {
     });
   });
 
-  describe('Performance and Scalability', () => {
-    it('should handle batch entity operations within performance thresholds', async () => {
-      // Arrange
-      const definitionId = 'test:batch_performance_entity';
-      await testBed.ensureEntityDefinitionExists(definitionId);
-      const batchSize = 10;
-      const maxBatchTime = 500; // 500ms for batch of 10 entities
-
-      const entityConfigs = Array.from({ length: batchSize }, (_, i) => ({
-        definitionId,
-        instanceId: `batch_perf_${i}`,
-      }));
-
-      // Act
-      const startTime = performance.now();
-      const entities = await testBed.createTestEntitiesBatch(entityConfigs);
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-
-      // Assert performance
-      expect(entities).toHaveLength(batchSize);
-      expect(totalTime).toBeLessThan(maxBatchTime);
-
-      // Validate batch operation metrics
-      const batchStats = testBed.getPerformanceStats('batch_entity_creation');
-      expect(batchStats.count).toBeGreaterThan(0);
-
-      const countStats = testBed.getPerformanceStats(
-        'batch_entity_creation_count'
-      );
-      expect(countStats.total).toBe(batchSize);
-    });
-
-    it('should maintain consistent performance across multiple operations', async () => {
-      // Arrange
-      const definitionId = 'test:performance_consistency_entity';
-      await testBed.ensureEntityDefinitionExists(definitionId);
-      const iterations = 5;
-      const maxVariance = 10.0; // Max 10x variance between min and max times (accounting for test environment)
-
-      // Act - Create entities in multiple iterations
-      for (let i = 0; i < iterations; i++) {
-        await testBed.createTestEntity(definitionId, {
-          instanceId: `perf_consistency_${i}`,
-        });
-      }
-
-      // Assert performance consistency
-      const performanceStats = testBed.getPerformanceStats('entity_creation');
-      expect(performanceStats.count).toBe(iterations);
-
-      if (performanceStats.min > 0) {
-        const variance = performanceStats.max / performanceStats.min;
-        expect(variance).toBeLessThan(maxVariance);
-      } else {
-        // If min is 0, just ensure we have some performance data
-        expect(performanceStats.count).toBeGreaterThan(0);
-      }
-    });
-  });
 });

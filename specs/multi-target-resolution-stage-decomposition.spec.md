@@ -58,7 +58,7 @@ graph TD
     A --> C[LegacyTargetCompatibilityLayer]
     A --> D[ScopeContextBuilder]
     A --> E[TargetDisplayNameResolver]
-    
+
     B --> F[Dependency Analysis]
     C --> G[Legacy Action Support]
     D --> H[Context Creation]
@@ -74,6 +74,7 @@ graph TD
 **Extracted Code**: Lines 531-567 from `#getResolutionOrder(targetDefs)`
 
 **Interface**:
+
 ```javascript
 class TargetDependencyResolver {
   /**
@@ -83,7 +84,7 @@ class TargetDependencyResolver {
    * @throws {Error} If circular dependencies detected
    */
   getResolutionOrder(targetDefinitions);
-  
+
   /**
    * Validate target definitions for dependency issues
    * @param {Object.<string, TargetDefinition>} targetDefinitions
@@ -94,6 +95,7 @@ class TargetDependencyResolver {
 ```
 
 **Key Features**:
+
 - Topological sorting algorithm for dependency resolution
 - Circular dependency detection with clear error messages
 - Maximum iteration protection to prevent infinite loops
@@ -106,6 +108,7 @@ class TargetDependencyResolver {
 **Extracted Code**: Lines 223-293 from `#resolveLegacyTarget(context, trace)`
 
 **Interface**:
+
 ```javascript
 class LegacyTargetCompatibilityLayer {
   /**
@@ -115,14 +118,14 @@ class LegacyTargetCompatibilityLayer {
    * @returns {Promise<PipelineResult>}
    */
   resolveLegacyTarget(context, trace);
-  
+
   /**
    * Check if action uses legacy format
    * @param {ActionDefinition} actionDef
    * @returns {boolean}
    */
   isLegacyAction(actionDef);
-  
+
   /**
    * Convert legacy result to multi-target format
    * @param {Object} legacyResult
@@ -134,6 +137,7 @@ class LegacyTargetCompatibilityLayer {
 ```
 
 **Key Features**:
+
 - Seamless legacy action processing
 - Format conversion for consistency
 - Backward compatibility preservation
@@ -143,11 +147,13 @@ class LegacyTargetCompatibilityLayer {
 
 **Responsibility**: Build scope evaluation contexts for target resolution.
 
-**Extracted Code**: 
+**Extracted Code**:
+
 - Lines 579-597 from `#buildScopeContext(actor, actionContext, resolvedTargets, targetDef, trace)`
 - Lines 610-644 from `#buildScopeContextForSpecificPrimary(context)`
 
 **Interface**:
+
 ```javascript
 class ScopeContextBuilder {
   /**
@@ -160,14 +166,14 @@ class ScopeContextBuilder {
    * @returns {Object} Scope evaluation context
    */
   buildScopeContext(actor, actionContext, resolvedTargets, targetDef, trace);
-  
+
   /**
    * Build context for specific primary target
    * @param {Object} context - Base context
    * @returns {Object} Enhanced context with primary target
    */
   buildContextForSpecificPrimary(context);
-  
+
   /**
    * Validate context completeness
    * @param {Object} context
@@ -178,6 +184,7 @@ class ScopeContextBuilder {
 ```
 
 **Key Features**:
+
 - Context-aware scope building
 - Primary target specialization
 - Context validation and completeness checking
@@ -190,6 +197,7 @@ class ScopeContextBuilder {
 **Extracted Code**: Lines 713-730 from `#getEntityDisplayName(entityId)`
 
 **Interface**:
+
 ```javascript
 class TargetDisplayNameResolver {
   /**
@@ -198,14 +206,14 @@ class TargetDisplayNameResolver {
    * @returns {string} Display name or fallback
    */
   getEntityDisplayName(entityId);
-  
+
   /**
    * Get display names for multiple entities
    * @param {string[]} entityIds - Entity identifiers
    * @returns {Object.<string, string>} Map of ID to display name
    */
   getEntityDisplayNames(entityIds);
-  
+
   /**
    * Set fallback name for unknown entities
    * @param {string} fallbackName - Default name to use
@@ -215,6 +223,7 @@ class TargetDisplayNameResolver {
 ```
 
 **Key Features**:
+
 - Consistent display name resolution
 - Batch processing support
 - Configurable fallback handling
@@ -242,7 +251,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
     logger,
   }) {
     super('MultiTargetResolution');
-    
+
     // Validate and assign dependencies
     this.#dependencyResolver = targetDependencyResolver;
     this.#legacyLayer = legacyLayer;
@@ -254,35 +263,38 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
   async executeInternal(context) {
     const { candidateActions = [], actor, actionContext, trace } = context;
-    
+
     const allActionsWithTargets = [];
     const errors = [];
-    
+
     for (const actionDef of candidateActions) {
       try {
         let result;
-        
+
         if (this.#legacyLayer.isLegacyAction(actionDef)) {
           result = await this.#legacyLayer.resolveLegacyTarget(
-            { ...context, actionDef }, 
+            { ...context, actionDef },
             trace
           );
         } else {
           result = await this.#resolveMultiTargets(
-            { ...context, actionDef }, 
+            { ...context, actionDef },
             trace
           );
         }
-        
+
         if (result.success && result.data.actionsWithTargets) {
           allActionsWithTargets.push(...result.data.actionsWithTargets);
         }
       } catch (error) {
-        this.#logger.error(`Error resolving targets for action '${actionDef.id}':`, error);
+        this.#logger.error(
+          `Error resolving targets for action '${actionDef.id}':`,
+          error
+        );
         errors.push(this.#buildErrorContext(error, actionDef));
       }
     }
-    
+
     return PipelineResult.success({
       data: {
         ...context.data,
@@ -291,12 +303,12 @@ export class MultiTargetResolutionStage extends PipelineStage {
       errors,
     });
   }
-  
+
   async #resolveMultiTargets(context, trace) {
     // Simplified multi-target resolution using specialized services
     // Delegates complex logic to appropriate services
   }
-  
+
   #buildErrorContext(error, actionDef) {
     // Standardized error context building
   }
@@ -308,17 +320,20 @@ export class MultiTargetResolutionStage extends PipelineStage {
 ### Phase 1: Service Extraction (Days 1-2)
 
 #### Step 1.1: Create Service Interfaces
+
 - Define TypeScript-style interfaces for all 4 services
 - Create base classes with validation and error handling
 - Establish dependency injection patterns
 
 #### Step 1.2: Extract TargetDependencyResolver
+
 - Move `#getResolutionOrder` logic to new service
 - Add comprehensive unit tests for dependency resolution
 - Test circular dependency detection
 - Test complex dependency chains
 
 #### Step 1.3: Extract LegacyTargetCompatibilityLayer
+
 - Move `#resolveLegacyTarget` logic to new service
 - Add `#isLegacyAction` detection logic
 - Create format conversion methods
@@ -327,12 +342,14 @@ export class MultiTargetResolutionStage extends PipelineStage {
 ### Phase 2: Context and Display Services (Day 3)
 
 #### Step 2.1: Extract ScopeContextBuilder
+
 - Move `#buildScopeContext` logic to new service
 - Move `#buildScopeContextForSpecificPrimary` logic
 - Add context validation methods
 - Test context building scenarios
 
 #### Step 2.2: Extract TargetDisplayNameResolver
+
 - Move `#getEntityDisplayName` logic to new service
 - Add batch processing capabilities
 - Implement configurable fallback handling
@@ -341,18 +358,21 @@ export class MultiTargetResolutionStage extends PipelineStage {
 ### Phase 3: Integration and Testing (Day 4)
 
 #### Step 3.1: Refactor Main Stage
+
 - Update constructor to use new services
 - Simplify `executeInternal` method
 - Update error handling to use services
 - Maintain existing API contracts
 
 #### Step 3.2: Comprehensive Testing
+
 - Run full e2e test suite
 - Verify backward compatibility
 - Test error scenarios
 - Performance regression testing
 
 #### Step 3.3: Documentation and Cleanup
+
 - Update JSDoc comments
 - Remove dead code
 - Update architecture documentation
@@ -365,39 +385,41 @@ export class MultiTargetResolutionStage extends PipelineStage {
 Each extracted service requires comprehensive unit tests:
 
 #### TargetDependencyResolver Tests
+
 ```javascript
 describe('TargetDependencyResolver', () => {
   let resolver;
-  
+
   beforeEach(() => {
     resolver = new TargetDependencyResolver({ logger: mockLogger });
   });
-  
+
   describe('getResolutionOrder', () => {
     it('should resolve simple dependencies', () => {
       const targetDefs = {
         primary: { scope: 'actor.partners' },
-        secondary: { scope: 'primary.items', contextFrom: 'primary' }
+        secondary: { scope: 'primary.items', contextFrom: 'primary' },
       };
-      
+
       const order = resolver.getResolutionOrder(targetDefs);
       expect(order).toEqual(['primary', 'secondary']);
     });
-    
+
     it('should detect circular dependencies', () => {
       const targetDefs = {
         primary: { scope: 'secondary.items', contextFrom: 'secondary' },
-        secondary: { scope: 'primary.items', contextFrom: 'primary' }
+        secondary: { scope: 'primary.items', contextFrom: 'primary' },
       };
-      
-      expect(() => resolver.getResolutionOrder(targetDefs))
-        .toThrow('Circular dependency detected');
+
+      expect(() => resolver.getResolutionOrder(targetDefs)).toThrow(
+        'Circular dependency detected'
+      );
     });
-    
+
     it('should handle complex dependency chains', () => {
       // Test multiple levels of dependencies
     });
-    
+
     it('should handle targets with no dependencies', () => {
       // Test independent targets
     });
@@ -406,52 +428,53 @@ describe('TargetDependencyResolver', () => {
 ```
 
 #### LegacyTargetCompatibilityLayer Tests
+
 ```javascript
 describe('LegacyTargetCompatibilityLayer', () => {
   let layer;
   let mockTargetResolver;
   let mockEntityManager;
-  
+
   beforeEach(() => {
     mockTargetResolver = createMockTargetResolver();
     mockEntityManager = createMockEntityManager();
     layer = new LegacyTargetCompatibilityLayer({
       targetResolver: mockTargetResolver,
       entityManager: mockEntityManager,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
-  
+
   describe('isLegacyAction', () => {
     it('should identify string targets as legacy', () => {
       const actionDef = { targets: 'actor.partners' };
       expect(layer.isLegacyAction(actionDef)).toBe(true);
     });
-    
+
     it('should identify scope property as legacy', () => {
       const actionDef = { scope: 'actor.items' };
       expect(layer.isLegacyAction(actionDef)).toBe(true);
     });
-    
+
     it('should identify modern multi-target actions', () => {
-      const actionDef = { 
-        targets: { 
-          primary: { scope: 'actor.partners' } 
-        } 
+      const actionDef = {
+        targets: {
+          primary: { scope: 'actor.partners' },
+        },
       };
       expect(layer.isLegacyAction(actionDef)).toBe(false);
     });
   });
-  
+
   describe('resolveLegacyTarget', () => {
     it('should resolve legacy scope correctly', async () => {
       // Test legacy target resolution
     });
-    
+
     it('should handle "none" scope', async () => {
       // Test actions with no targets
     });
-    
+
     it('should convert to multi-target format', async () => {
       // Test format conversion
     });
@@ -460,28 +483,29 @@ describe('LegacyTargetCompatibilityLayer', () => {
 ```
 
 #### ScopeContextBuilder Tests
+
 ```javascript
 describe('ScopeContextBuilder', () => {
   let builder;
-  
+
   beforeEach(() => {
     builder = new ScopeContextBuilder({ logger: mockLogger });
   });
-  
+
   describe('buildScopeContext', () => {
     it('should build basic context', () => {
       // Test basic context building
     });
-    
+
     it('should include resolved targets in context', () => {
       // Test context with resolved targets
     });
-    
+
     it('should handle missing dependencies gracefully', () => {
       // Test error handling
     });
   });
-  
+
   describe('buildContextForSpecificPrimary', () => {
     it('should enhance context with primary target', () => {
       // Test primary target context enhancement
@@ -491,33 +515,34 @@ describe('ScopeContextBuilder', () => {
 ```
 
 #### TargetDisplayNameResolver Tests
+
 ```javascript
 describe('TargetDisplayNameResolver', () => {
   let resolver;
   let mockEntityManager;
-  
+
   beforeEach(() => {
     mockEntityManager = createMockEntityManager();
     resolver = new TargetDisplayNameResolver({
       entityManager: mockEntityManager,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
-  
+
   describe('getEntityDisplayName', () => {
     it('should return entity display name', () => {
       // Test normal name resolution
     });
-    
+
     it('should return fallback for unknown entities', () => {
       // Test fallback behavior
     });
-    
+
     it('should handle null/undefined entity IDs', () => {
       // Test edge cases
     });
   });
-  
+
   describe('getEntityDisplayNames', () => {
     it('should resolve multiple names efficiently', () => {
       // Test batch processing
@@ -531,49 +556,51 @@ describe('TargetDisplayNameResolver', () => {
 The refactored stage must maintain full compatibility with existing e2e tests:
 
 #### Existing Test Coverage
+
 - `ActionExecutionPipeline.e2e.test.js` - Complete pipeline testing
 - `multiTargetFullPipeline.e2e.test.js` - Multi-target specific scenarios
 - `ActionSystemIntegration.e2e.test.js` - Scope DSL integration
 
 #### Additional Integration Tests
+
 ```javascript
 describe('MultiTargetResolutionStage Integration', () => {
   let stage;
   let testBed;
-  
+
   beforeEach(async () => {
     testBed = new MultiTargetTestBed();
     await testBed.setup();
     stage = testBed.createMultiTargetResolutionStage();
   });
-  
+
   it('should process mixed legacy and modern actions', async () => {
     const context = {
       candidateActions: [
         { id: 'legacy-action', targets: 'actor.items' },
-        { 
-          id: 'modern-action', 
-          targets: { 
+        {
+          id: 'modern-action',
+          targets: {
             primary: { scope: 'actor.partners' },
-            secondary: { scope: 'primary.items', contextFrom: 'primary' }
-          }
-        }
+            secondary: { scope: 'primary.items', contextFrom: 'primary' },
+          },
+        },
       ],
       actor: testBed.createActor(),
-      actionContext: testBed.createActionContext()
+      actionContext: testBed.createActionContext(),
     };
-    
+
     const result = await stage.executeInternal(context);
-    
+
     expect(result.success).toBe(true);
     expect(result.data.actionsWithTargets).toHaveLength(2);
     // Verify both action types processed correctly
   });
-  
+
   it('should maintain backward compatibility', async () => {
     // Test that existing functionality is preserved
   });
-  
+
   it('should handle complex dependency chains', async () => {
     // Test complex scenarios that stress the new architecture
   });
@@ -592,23 +619,27 @@ describe('MultiTargetResolutionStage Integration', () => {
 ### Migration Steps
 
 #### Day 1: Foundation
+
 1. Create service interfaces and base classes
 2. Set up dependency injection structure
 3. Create comprehensive unit test suites for each service
 4. Extract and test `TargetDependencyResolver`
 
-#### Day 2: Core Services  
+#### Day 2: Core Services
+
 1. Extract and test `LegacyTargetCompatibilityLayer`
 2. Extract and test `ScopeContextBuilder`
 3. Extract and test `TargetDisplayNameResolver`
 
 #### Day 3: Integration
+
 1. Refactor main `MultiTargetResolutionStage` class
 2. Update dependency injection configuration
 3. Run integration tests and fix issues
 4. Performance regression testing
 
 #### Day 4: Validation and Cleanup
+
 1. Run complete e2e test suite
 2. Fix any compatibility issues
 3. Update documentation
@@ -629,7 +660,7 @@ If issues are discovered during migration:
 Migration is considered successful when:
 
 - [ ] All existing unit tests pass
-- [ ] All integration tests pass  
+- [ ] All integration tests pass
 - [ ] All e2e tests pass
 - [ ] Performance regression < 5%
 - [ ] Code coverage maintained or improved
@@ -641,16 +672,19 @@ Migration is considered successful when:
 ### Code Quality Improvements
 
 #### Complexity Reduction
+
 - **Current**: 734-line monolithic class
 - **Target**: 4 services averaging <150 lines each
 - **Improvement**: ~70% complexity reduction
 
 #### Cyclomatic Complexity
+
 - **Current**: High complexity due to nested conditions
 - **Target**: <10 complexity per method
 - **Measurement**: Use complexity analysis tools
 
-#### Coupling Reduction  
+#### Coupling Reduction
+
 - **Current**: Single class with multiple concerns
 - **Target**: Loosely coupled services with clear interfaces
 - **Measurement**: Dependency analysis
@@ -658,16 +692,19 @@ Migration is considered successful when:
 ### Maintainability Improvements
 
 #### Testability
+
 - **Current**: Complex setup required for testing
 - **Target**: Independent unit tests for each service
 - **Measurement**: Test setup complexity and coverage
 
 #### Extensibility
+
 - **Current**: Changes require modifying monolith
 - **Target**: New features via service composition
 - **Measurement**: Feature addition effort
 
 #### Documentation Quality
+
 - **Current**: Inline comments in complex methods
 - **Target**: Clear service interfaces and contracts
 - **Measurement**: Documentation completeness
@@ -675,16 +712,19 @@ Migration is considered successful when:
 ### Performance Metrics
 
 #### Execution Time
+
 - **Baseline**: Current pipeline execution time
 - **Target**: No regression (< 5% increase acceptable)
 - **Measurement**: Benchmark tests
 
 #### Memory Usage
+
 - **Baseline**: Current memory footprint
 - **Target**: Potential improvement through better separation
 - **Measurement**: Memory profiling
 
 #### Test Execution Time
+
 - **Improvement**: Faster unit tests due to isolated components
 - **Target**: <50% of current test execution time for unit tests
 - **Measurement**: Test suite timing
@@ -694,16 +734,19 @@ Migration is considered successful when:
 ### High-Risk Areas
 
 #### Service Boundaries
+
 - **Risk**: Incorrect separation of concerns
 - **Mitigation**: Careful analysis of current code and thorough testing
 - **Contingency**: Adjust boundaries based on testing feedback
 
 #### Dependency Management
+
 - **Risk**: Complex dependency injection setup
 - **Mitigation**: Use existing DI patterns in codebase
 - **Contingency**: Fallback to direct instantiation if needed
 
 #### Backward Compatibility
+
 - **Risk**: Breaking existing functionality
 - **Mitigation**: Comprehensive integration testing
 - **Contingency**: Maintain compatibility layers
@@ -711,11 +754,13 @@ Migration is considered successful when:
 ### Medium-Risk Areas
 
 #### Performance Impact
+
 - **Risk**: Service calls introducing overhead
 - **Mitigation**: Performance testing and optimization
 - **Contingency**: Inline critical paths if needed
 
 #### Testing Complexity
+
 - **Risk**: More complex test setup for integration
 - **Mitigation**: Create test utilities and helpers
 - **Contingency**: Simplify service interfaces if needed
@@ -723,6 +768,7 @@ Migration is considered successful when:
 ### Low-Risk Areas
 
 #### Error Handling
+
 - **Risk**: Inconsistent error handling across services
 - **Mitigation**: Standardized error handling patterns
 - **Contingency**: Centralized error handling service
@@ -732,6 +778,7 @@ Migration is considered successful when:
 ### Code Standards
 
 #### Service Structure
+
 ```javascript
 /**
  * @file ServiceName - Brief description of service responsibility
@@ -750,7 +797,7 @@ export class ServiceName {
   /**
    * @param {object} deps
    * @param {IDependency1} deps.dependency1
-   * @param {IDependency2} deps.dependency2  
+   * @param {IDependency2} deps.dependency2
    * @param {ILogger} deps.logger
    */
   constructor({ dependency1, dependency2, logger }) {
@@ -791,29 +838,41 @@ export class ServiceName {
 ```
 
 #### Dependency Injection Registration
+
 ```javascript
 // In dependency injection container
 container.register(tokens.ITargetDependencyResolver, TargetDependencyResolver);
-container.register(tokens.ILegacyTargetCompatibilityLayer, LegacyTargetCompatibilityLayer);
+container.register(
+  tokens.ILegacyTargetCompatibilityLayer,
+  LegacyTargetCompatibilityLayer
+);
 container.register(tokens.IScopeContextBuilder, ScopeContextBuilder);
-container.register(tokens.ITargetDisplayNameResolver, TargetDisplayNameResolver);
+container.register(
+  tokens.ITargetDisplayNameResolver,
+  TargetDisplayNameResolver
+);
 
 // Updated stage registration
-container.register(tokens.IMultiTargetResolutionStage, MultiTargetResolutionStage, {
-  dependencies: [
-    tokens.ITargetDependencyResolver,
-    tokens.ILegacyTargetCompatibilityLayer,
-    tokens.IScopeContextBuilder,
-    tokens.ITargetDisplayNameResolver,
-    tokens.IUnifiedScopeResolver,
-    tokens.ILogger
-  ]
-});
+container.register(
+  tokens.IMultiTargetResolutionStage,
+  MultiTargetResolutionStage,
+  {
+    dependencies: [
+      tokens.ITargetDependencyResolver,
+      tokens.ILegacyTargetCompatibilityLayer,
+      tokens.IScopeContextBuilder,
+      tokens.ITargetDisplayNameResolver,
+      tokens.IUnifiedScopeResolver,
+      tokens.ILogger,
+    ],
+  }
+);
 ```
 
 ### Testing Standards
 
 #### Test Structure
+
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ServiceTestBed } from '../../common/serviceTestBed.js';

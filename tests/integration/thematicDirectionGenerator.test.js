@@ -41,19 +41,21 @@ describe('Thematic Direction Generator - Integration', () => {
       if (url.includes('llm-configs.schema.json')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            "$schema": "http://json-schema.org/draft-07/schema#",
-            "type": "object"
-          })
+          json: () =>
+            Promise.resolve({
+              $schema: 'http://json-schema.org/draft-07/schema#',
+              type: 'object',
+            }),
         });
       }
       // Default response for other schemas
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({
-          "$schema": "http://json-schema.org/draft-07/schema#",
-          "type": "object"
-        })
+        json: () =>
+          Promise.resolve({
+            $schema: 'http://json-schema.org/draft-07/schema#',
+            type: 'object',
+          }),
       });
     });
 
@@ -69,16 +71,16 @@ describe('Thematic Direction Generator - Integration', () => {
               themes: ['test'],
               suggested_traits: ['trait'],
               potential_conflicts: ['conflict'],
-              narrative_hooks: ['hook']
-            }
-          ]
-        })
-      })
+              narrative_hooks: ['hook'],
+            },
+          ],
+        }),
+      }),
     };
 
     // Mock schema loader
     mockSchemaLoader = {
-      loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined)
+      loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
     };
   });
 
@@ -93,25 +95,31 @@ describe('Thematic Direction Generator - Integration', () => {
     // This test checks that the main module can be imported without errors
     // The actual initialization will fail due to missing DOM elements and services,
     // but it should not throw "Cannot read properties of undefined" errors
-    
+
     let error = null;
     try {
       const mainModule = await import('../../src/thematic-direction-main.js');
       // Wait for DOM ready and initialization attempt
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     } catch (e) {
       error = e;
     }
-    
+
     // The initialization may fail, but it should not be due to undefined property access
     if (error) {
-      expect(error.message).not.toContain('Cannot read properties of undefined');
+      expect(error.message).not.toContain(
+        'Cannot read properties of undefined'
+      );
     }
   });
 
   it('should complete bootstrap without fatal errors', async () => {
-    const { CharacterBuilderBootstrap } = await import('../../src/characterBuilder/CharacterBuilderBootstrap.js');
-    const { ThematicDirectionController } = await import('../../src/thematicDirection/controllers/thematicDirectionController.js');
+    const { CharacterBuilderBootstrap } = await import(
+      '../../src/characterBuilder/CharacterBuilderBootstrap.js'
+    );
+    const { ThematicDirectionController } = await import(
+      '../../src/thematicDirection/controllers/thematicDirectionController.js'
+    );
     const { tokens } = await import('../../src/dependencyInjection/tokens.js');
     const { Registrar } = await import('../../src/utils/registrarHelpers.js');
 
@@ -139,13 +147,13 @@ describe('Thematic Direction Generator - Integration', () => {
             loadConfiguration: jest.fn().mockResolvedValue(undefined),
             getActiveConfiguration: jest.fn().mockResolvedValue({
               configId: 'test-config',
-              modelIdentifier: 'test-model'
+              modelIdentifier: 'test-model',
             }),
-            setActiveConfiguration: jest.fn().mockResolvedValue(undefined)
+            setActiveConfiguration: jest.fn().mockResolvedValue(undefined),
           }));
           container.register(tokens.LlmJsonService, () => ({
             clean: jest.fn((text) => text),
-            parseAndRepair: jest.fn((text) => JSON.parse(text))
+            parseAndRepair: jest.fn((text) => JSON.parse(text)),
           }));
         },
       },
@@ -160,9 +168,11 @@ describe('Thematic Direction Generator - Integration', () => {
   }, 30000); // Increase timeout to 30 seconds
 
   it('should not log warnings about ui-state.schema.json', async () => {
-    const { CharacterBuilderBootstrap } = await import('../../src/characterBuilder/CharacterBuilderBootstrap.js');
+    const { CharacterBuilderBootstrap } = await import(
+      '../../src/characterBuilder/CharacterBuilderBootstrap.js'
+    );
     const { tokens } = await import('../../src/dependencyInjection/tokens.js');
-    
+
     const warnings = [];
     const bootstrap = new CharacterBuilderBootstrap();
 
@@ -190,7 +200,7 @@ describe('Thematic Direction Generator - Integration', () => {
             }),
           };
           container.register(tokens.ILogger, () => mockLogger);
-          
+
           // Mock other required services
           container.register(tokens.SchemaLoader, () => mockSchemaLoader);
           container.register(tokens.LLMAdapter, () => mockLlmAdapter);
@@ -199,13 +209,13 @@ describe('Thematic Direction Generator - Integration', () => {
             loadConfiguration: jest.fn().mockResolvedValue(undefined),
             getActiveConfiguration: jest.fn().mockResolvedValue({
               configId: 'test-config',
-              modelIdentifier: 'test-model'
+              modelIdentifier: 'test-model',
             }),
-            setActiveConfiguration: jest.fn().mockResolvedValue(undefined)
+            setActiveConfiguration: jest.fn().mockResolvedValue(undefined),
           }));
           container.register(tokens.LlmJsonService, () => ({
             clean: jest.fn((text) => text),
-            parseAndRepair: jest.fn((text) => JSON.parse(text))
+            parseAndRepair: jest.fn((text) => JSON.parse(text)),
           }));
         },
       },

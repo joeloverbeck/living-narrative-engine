@@ -63,7 +63,9 @@ describe('multiTargetValidationUtils', () => {
 
     it('should accept UUID formats with hyphens', () => {
       expect(isValidEntityId('entity-123')).toBe(true); // UUID-style with hyphen
-      expect(isValidEntityId('c103dff8-bfec-49f5-adb0-2c889ec5893e')).toBe(true); // Standard UUID
+      expect(isValidEntityId('c103dff8-bfec-49f5-adb0-2c889ec5893e')).toBe(
+        true
+      ); // Standard UUID
       expect(isValidEntityId('runtime-uuid-1234')).toBe(true); // Custom UUID format
     });
 

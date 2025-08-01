@@ -3,7 +3,14 @@
  * @description Tests the complete bootstrap flow with real dependencies
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { CharacterBuilderBootstrap } from '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
@@ -154,7 +161,7 @@ describe('CharacterBuilderBootstrap Integration', () => {
       // Logger should be available and used for performance logging (line 117, 260, 265)
       expect(result.container).toBeDefined();
       expect(mockFetch).toHaveBeenCalled();
-      
+
       // Verify fetch was called at least once (might be for logger config or schemas)
       expect(mockFetch.mock.calls.length).toBeGreaterThan(0);
     });
@@ -187,7 +194,8 @@ describe('CharacterBuilderBootstrap Integration', () => {
       // Mock schema validator with isSchemaLoaded method
       const mockSchemaValidator = {
         addSchema: jest.fn(),
-        isSchemaLoaded: jest.fn()
+        isSchemaLoaded: jest
+          .fn()
           .mockReturnValueOnce(false) // First call - not loaded
           .mockReturnValueOnce(true), // Second call - already loaded (line 436)
       };
@@ -233,7 +241,8 @@ describe('CharacterBuilderBootstrap Integration', () => {
       // Mock schema validator that reports schemas as already loaded
       const mockSchemaValidator = {
         addSchema: jest.fn(),
-        isSchemaLoaded: jest.fn()
+        isSchemaLoaded: jest
+          .fn()
           .mockReturnValueOnce(false) // Base schema - not loaded
           .mockReturnValueOnce(true), // Event payload schema - already loaded (lines 449-450)
       };
@@ -512,7 +521,7 @@ describe('CharacterBuilderBootstrap Integration', () => {
         className: '',
         appendChild: jest.fn(),
       };
-      
+
       mockDocument.getElementById
         .mockReturnValueOnce(null) // Element doesn't exist
         .mockReturnValue(mockErrorElement); // Return created element
@@ -541,7 +550,7 @@ describe('CharacterBuilderBootstrap Integration', () => {
 
       const result = await bootstrap.bootstrap(config);
       expect(result).toBeDefined();
-      
+
       // Since the test is successful, error display element should be configured but not necessarily created
       // The test verifies the error display system is set up properly
     });
@@ -571,7 +580,7 @@ describe('CharacterBuilderBootstrap Integration', () => {
 
       // Mock performance.now to return predictable values
       let performanceCounter = 1000;
-      global.performance.now = jest.fn(() => performanceCounter += 100);
+      global.performance.now = jest.fn(() => (performanceCounter += 100));
 
       class TestController {
         constructor(deps) {
@@ -592,7 +601,7 @@ describe('CharacterBuilderBootstrap Integration', () => {
 
       expect(result).toBeDefined();
       expect(result.bootstrapTime).toBeGreaterThan(0);
-      
+
       // Verify performance tracking was used
       expect(global.performance.now).toHaveBeenCalled();
     });

@@ -26,28 +26,28 @@ describe('SchemaOverwriteFix - Multi-Target Validation', () => {
         timestamp: 1754061900301,
         actorId: 'p_erotica:amaia_castillo_instance',
         actionId: 'intimacy:adjust_clothing',
-        originalInput: 'adjust Iker Aguirre\'s denim trucker jacket',
+        originalInput: "adjust Iker Aguirre's denim trucker jacket",
         targets: {
           primary: {
             entityId: 'p_erotica:iker_aguirre_instance',
             placeholder: 'primary',
             description: 'p_erotica:iker_aguirre_instance',
-            resolvedFromContext: false
+            resolvedFromContext: false,
           },
           secondary: {
             entityId: 'c103dff8-bfec-49f5-adb0-2c889ec5893e',
             placeholder: 'secondary',
             description: 'c103dff8-bfec-49f5-adb0-2c889ec5893e',
             resolvedFromContext: true,
-            contextSource: 'primary'
-          }
+            contextSource: 'primary',
+          },
         },
         primaryId: 'p_erotica:iker_aguirre_instance',
         secondaryId: 'c103dff8-bfec-49f5-adb0-2c889ec5893e',
         tertiaryId: null,
         targetId: 'p_erotica:iker_aguirre_instance',
         resolvedTargetCount: 2,
-        hasContextDependencies: true
+        hasContextDependencies: true,
       };
 
       // With the schema fix, this should now validate successfully
@@ -65,12 +65,13 @@ describe('SchemaOverwriteFix - Multi-Target Validation', () => {
         actionId: 'test:action',
         originalInput: 'test',
         targets: {
-          primary: 'test:string_target',  // String - should work
-          secondary: {                    // Object - would fail with old schema
-            invalidStructure: 'old schema expected only strings'
-          }
+          primary: 'test:string_target', // String - should work
+          secondary: {
+            // Object - would fail with old schema
+            invalidStructure: 'old schema expected only strings',
+          },
         },
-        targetId: 'test:string_target'
+        targetId: 'test:string_target',
       };
 
       // With the new schema, objects are allowed if they have the right structure
@@ -81,18 +82,21 @@ describe('SchemaOverwriteFix - Multi-Target Validation', () => {
         actionId: 'test:action',
         originalInput: 'test',
         targets: {
-          primary: 'test:string_target',  // String - should work
-          secondary: {                    // Object with correct structure - should work now
+          primary: 'test:string_target', // String - should work
+          secondary: {
+            // Object with correct structure - should work now
             entityId: 'uuid-123-456',
             placeholder: 'secondary',
-            description: 'test object target'
-          }
+            description: 'test object target',
+          },
         },
-        targetId: 'test:string_target'
+        targetId: 'test:string_target',
       };
 
       // The correctly structured payload should validate
-      const result = validateAttemptActionPayload(payloadWithCorrectObjectStructure);
+      const result = validateAttemptActionPayload(
+        payloadWithCorrectObjectStructure
+      );
       expect(result.isValid).toBe(true);
     });
   });
@@ -106,9 +110,9 @@ describe('SchemaOverwriteFix - Multi-Target Validation', () => {
         originalInput: 'examine target',
         targets: {
           primary: 'core:namespaced_entity',
-          secondary: 'mod:another_namespaced_entity'
+          secondary: 'mod:another_namespaced_entity',
         },
-        targetId: 'core:namespaced_entity'
+        targetId: 'core:namespaced_entity',
       };
 
       const result = validateAttemptActionPayload(payload);
@@ -125,10 +129,10 @@ describe('SchemaOverwriteFix - Multi-Target Validation', () => {
           primary: {
             entityId: 'runtime-uuid-1234-5678',
             placeholder: 'primary',
-            description: 'runtime created entity'
-          }
+            description: 'runtime created entity',
+          },
         },
-        targetId: 'runtime-uuid-1234-5678'
+        targetId: 'runtime-uuid-1234-5678',
       };
 
       const result = validateAttemptActionPayload(payload);
@@ -142,16 +146,17 @@ describe('SchemaOverwriteFix - Multi-Target Validation', () => {
         actionId: 'test:mixed_action',
         originalInput: 'test mixed targets',
         targets: {
-          person: 'core:character_instance',          // String target
-          item: {                                     // Object target
+          person: 'core:character_instance', // String target
+          item: {
+            // Object target
             entityId: 'item-uuid-abcd-efgh',
             placeholder: 'item',
             description: 'dynamically created item',
             resolvedFromContext: true,
-            contextSource: 'person'
-          }
+            contextSource: 'person',
+          },
         },
-        targetId: 'core:character_instance'
+        targetId: 'core:character_instance',
       };
 
       const result = validateAttemptActionPayload(payload);
@@ -169,11 +174,11 @@ describe('SchemaOverwriteFix - Multi-Target Validation', () => {
         targets: {
           invalid: {
             placeholder: 'invalid',
-            description: 'missing entityId'
+            description: 'missing entityId',
             // Missing required entityId
-          }
+          },
         },
-        targetId: 'test'
+        targetId: 'test',
       };
 
       const result = validateAttemptActionPayload(payload);
@@ -187,9 +192,9 @@ describe('SchemaOverwriteFix - Multi-Target Validation', () => {
         actionId: 'test:action',
         originalInput: 'test',
         targets: {
-          invalid: '' // Empty string should be rejected
+          invalid: '', // Empty string should be rejected
         },
-        targetId: 'test'
+        targetId: 'test',
       };
 
       const result = validateAttemptActionPayload(payload);
@@ -205,10 +210,10 @@ describe('SchemaOverwriteFix - Multi-Target Validation', () => {
         targets: {
           invalid: {
             entityId: '', // Empty entityId should be rejected
-            placeholder: 'invalid'
-          }
+            placeholder: 'invalid',
+          },
         },
-        targetId: 'test'
+        targetId: 'test',
       };
 
       const result = validateAttemptActionPayload(payload);

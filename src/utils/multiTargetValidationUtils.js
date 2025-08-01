@@ -72,7 +72,11 @@ export function determinePrimaryTarget(targets) {
   const firstTarget = targets[targetKeys[0]];
   if (typeof firstTarget === 'string') {
     return firstTarget;
-  } else if (firstTarget && typeof firstTarget === 'object' && firstTarget.entityId) {
+  } else if (
+    firstTarget &&
+    typeof firstTarget === 'object' &&
+    firstTarget.entityId
+  ) {
     return firstTarget.entityId;
   }
 
@@ -114,16 +118,28 @@ export function validateTargetValue(target, targetName) {
     }
 
     // Validate optional properties if present
-    if (target.placeholder !== undefined && typeof target.placeholder !== 'string') {
+    if (
+      target.placeholder !== undefined &&
+      typeof target.placeholder !== 'string'
+    ) {
       errors.push(`${targetName} target placeholder must be a string`);
     }
-    if (target.description !== undefined && typeof target.description !== 'string') {
+    if (
+      target.description !== undefined &&
+      typeof target.description !== 'string'
+    ) {
       errors.push(`${targetName} target description must be a string`);
     }
-    if (target.resolvedFromContext !== undefined && typeof target.resolvedFromContext !== 'boolean') {
+    if (
+      target.resolvedFromContext !== undefined &&
+      typeof target.resolvedFromContext !== 'boolean'
+    ) {
       errors.push(`${targetName} target resolvedFromContext must be a boolean`);
     }
-    if (target.contextSource !== undefined && typeof target.contextSource !== 'string') {
+    if (
+      target.contextSource !== undefined &&
+      typeof target.contextSource !== 'string'
+    ) {
       errors.push(`${targetName} target contextSource must be a string`);
     }
   } else {
@@ -202,7 +218,7 @@ export function validateAttemptActionPayload(payload) {
   } else if (hasTargetId) {
     targetCount = payload.targetId ? 1 : 0;
     primaryTarget = payload.targetId;
-    
+
     // Validate single targetId (null is allowed for legacy compatibility)
     if (payload.targetId !== null && !isValidEntityId(payload.targetId)) {
       errors.push('targetId has invalid entity ID format');

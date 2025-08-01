@@ -58,6 +58,10 @@ export class IsSocketCoveredOperator extends BaseEquipmentOperator {
       return false;
     }
 
+    this.logger.debug(
+      `${this.operatorName}: Checking if socket '${socketId}' is covered for entity ${entityId}`
+    );
+
     try {
       // Get equipment data first
       const equipmentData = this.getEquipmentData(entityId);

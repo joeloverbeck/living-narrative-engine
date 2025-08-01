@@ -31,26 +31,26 @@ describe('MultiTargetValidation - Integration Tests', () => {
           entityId: 'p_erotica:iker_aguirre_instance',
           placeholder: 'primary',
           description: 'p_erotica:iker_aguirre_instance',
-          resolvedFromContext: false
+          resolvedFromContext: false,
         },
         secondary: {
           entityId: 'c103dff8-bfec-49f5-adb0-2c889ec5893e',
           placeholder: 'secondary',
           description: 'c103dff8-bfec-49f5-adb0-2c889ec5893e',
           resolvedFromContext: true,
-          contextSource: 'primary'
-        }
+          contextSource: 'primary',
+        },
       };
 
       // Build the event payload using MultiTargetEventBuilder
       const payload = builder
         .setActor('p_erotica:amaia_castillo_instance')
         .setAction('intimacy:adjust_clothing')
-        .setOriginalInput('adjust Iker Aguirre\'s denim trucker jacket')
+        .setOriginalInput("adjust Iker Aguirre's denim trucker jacket")
         .setTargets(targets)
         .setMetadata({
           resolvedTargetCount: 2,
-          hasContextDependencies: true
+          hasContextDependencies: true,
         })
         .setTimestamp(1754061900301)
         .build(); // This should not throw an error
@@ -73,7 +73,7 @@ describe('MultiTargetValidation - Integration Tests', () => {
     it('should handle string-only targets for legacy compatibility', () => {
       const targets = {
         primary: 'core:character_instance',
-        secondary: 'items:weapon_instance'
+        secondary: 'items:weapon_instance',
       };
 
       const payload = builder
@@ -93,15 +93,16 @@ describe('MultiTargetValidation - Integration Tests', () => {
 
     it('should handle mixed string and object targets', () => {
       const targets = {
-        actor: 'core:player_instance',         // String target
-        target: 'npcs:merchant_instance',      // String target
-        item: {                                // Object target
+        actor: 'core:player_instance', // String target
+        target: 'npcs:merchant_instance', // String target
+        item: {
+          // Object target
           entityId: 'item-uuid-1234-5678',
           placeholder: 'item',
           description: 'traded item',
           resolvedFromContext: true,
-          contextSource: 'actor'
-        }
+          contextSource: 'actor',
+        },
       };
 
       const payload = builder
@@ -125,8 +126,8 @@ describe('MultiTargetValidation - Integration Tests', () => {
         primary: {
           // Missing entityId
           placeholder: 'primary',
-          description: 'invalid target'
-        }
+          description: 'invalid target',
+        },
       };
 
       expect(() => {
@@ -149,17 +150,19 @@ describe('MultiTargetValidation - Integration Tests', () => {
           valid_string: 'test:valid_target',
           invalid_object: {
             // Missing required entityId
-            placeholder: 'invalid'
-          }
+            placeholder: 'invalid',
+          },
         },
-        targetId: 'test:valid_target'
+        targetId: 'test:valid_target',
       };
 
       const validationResult = validateAttemptActionPayload(payload);
       expect(validationResult.isValid).toBe(false);
-      expect(validationResult.errors.some(err => 
-        err.includes('invalid_object') && err.includes('entityId')
-      )).toBe(true);
+      expect(
+        validationResult.errors.some(
+          (err) => err.includes('invalid_object') && err.includes('entityId')
+        )
+      ).toBe(true);
     });
 
     it('should detect empty string targets', () => {
@@ -169,27 +172,29 @@ describe('MultiTargetValidation - Integration Tests', () => {
         actionId: 'test:action',
         originalInput: 'test',
         targets: {
-          empty_target: '' // Empty string should fail
+          empty_target: '', // Empty string should fail
         },
-        targetId: 'test'
+        targetId: 'test',
       };
 
       const validationResult = validateAttemptActionPayload(payload);
       expect(validationResult.isValid).toBe(false);
-      expect(validationResult.errors.some(err => 
-        err.includes('empty_target') && err.includes('empty')
-      )).toBe(true);
+      expect(
+        validationResult.errors.some(
+          (err) => err.includes('empty_target') && err.includes('empty')
+        )
+      ).toBe(true);
     });
   });
 
   describe('UUID Format Support', () => {
     it('should support various UUID formats in object targets', () => {
       const uuidFormats = [
-        'c103dff8-bfec-49f5-adb0-2c889ec5893e',  // Standard UUID
-        'runtime-entity-12345',                   // Custom format with hyphens
-        'uuid_with_underscores_123',              // Underscores
-        'simple123',                              // Simple format
-        'UPPERCASE-UUID-456'                      // Mixed case
+        'c103dff8-bfec-49f5-adb0-2c889ec5893e', // Standard UUID
+        'runtime-entity-12345', // Custom format with hyphens
+        'uuid_with_underscores_123', // Underscores
+        'simple123', // Simple format
+        'UPPERCASE-UUID-456', // Mixed case
       ];
 
       uuidFormats.forEach((uuid, index) => {
@@ -197,8 +202,8 @@ describe('MultiTargetValidation - Integration Tests', () => {
           test: {
             entityId: uuid,
             placeholder: 'test',
-            description: `UUID format test ${index}`
-          }
+            description: `UUID format test ${index}`,
+          },
         };
 
         const payload = builder
@@ -218,7 +223,7 @@ describe('MultiTargetValidation - Integration Tests', () => {
 
     it('should support UUIDs in string targets', () => {
       const uuid = 'runtime-uuid-abcd-1234-efgh';
-      
+
       const payload = builder
         .setActor('test:actor')
         .setAction('test:action')

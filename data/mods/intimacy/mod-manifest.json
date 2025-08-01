@@ -10,6 +10,10 @@
     {
       "id": "anatomy",
       "version": "^1.0.0"
+    },
+    {
+      "id": "posturing",
+      "version": "^1.0.0"
     }
   ],
   "content": {

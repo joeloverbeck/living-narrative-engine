@@ -212,7 +212,9 @@ describe('SpatialIndexSynchronizer', () => {
       expect(mockSpatialIndexManager.removeEntity).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledTimes(4);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('SpatialIndexSynchronizer.onEntityRemoved: Invalid payload received'),
+        expect.stringContaining(
+          'SpatialIndexSynchronizer.onEntityRemoved: Invalid payload received'
+        ),
         null
       );
     });
@@ -342,12 +344,16 @@ describe('SpatialIndexSynchronizer', () => {
       handlers[COMPONENT_ADDED_ID](123);
 
       // Assert
-      expect(mockSpatialIndexManager.updateEntityLocation).not.toHaveBeenCalled();
+      expect(
+        mockSpatialIndexManager.updateEntityLocation
+      ).not.toHaveBeenCalled();
       expect(mockSpatialIndexManager.addEntity).not.toHaveBeenCalled();
       expect(mockSpatialIndexManager.removeEntity).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledTimes(4);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('SpatialIndexSynchronizer.onPositionChanged: Invalid payload received'),
+        expect.stringContaining(
+          'SpatialIndexSynchronizer.onPositionChanged: Invalid payload received'
+        ),
         null
       );
     });
@@ -363,7 +369,10 @@ describe('SpatialIndexSynchronizer', () => {
         { entity: { id: null }, description: 'entity with null id' },
         { entity: { id: 123 }, description: 'entity with non-string id' },
         { entity: { id: '' }, description: 'entity with empty string id' },
-        { entity: { id: '   ' }, description: 'entity with whitespace-only id' },
+        {
+          entity: { id: '   ' },
+          description: 'entity with whitespace-only id',
+        },
       ];
 
       testCases.forEach(({ entity, description }) => {
@@ -380,12 +389,16 @@ describe('SpatialIndexSynchronizer', () => {
       });
 
       // Assert
-      expect(mockSpatialIndexManager.updateEntityLocation).not.toHaveBeenCalled();
+      expect(
+        mockSpatialIndexManager.updateEntityLocation
+      ).not.toHaveBeenCalled();
       expect(mockSpatialIndexManager.addEntity).not.toHaveBeenCalled();
       expect(mockSpatialIndexManager.removeEntity).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledTimes(testCases.length);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('SpatialIndexSynchronizer.onPositionChanged: Invalid entity ID, skipping position update'),
+        expect.stringContaining(
+          'SpatialIndexSynchronizer.onPositionChanged: Invalid entity ID, skipping position update'
+        ),
         expect.objectContaining({ componentTypeId: POSITION_COMPONENT_ID })
       );
     });

@@ -44,9 +44,9 @@ describe('Schema Overwrite Fix - Verification Test', () => {
       properties: {
         conceptId: { type: 'string' },
         concept: { type: 'string' },
-        autoSaved: { type: 'boolean' }
+        autoSaved: { type: 'boolean' },
       },
-      required: ['conceptId', 'concept']
+      required: ['conceptId', 'concept'],
     };
 
     // Simulate schema already loaded from mods
@@ -81,9 +81,9 @@ describe('Schema Overwrite Fix - Verification Test', () => {
       properties: {
         conceptId: { type: 'string' },
         concept: { type: 'string' },
-        autoSaved: { type: 'boolean' }
+        autoSaved: { type: 'boolean' },
       },
-      required: ['conceptId', 'concept']
+      required: ['conceptId', 'concept'],
     };
 
     // Schema is NOT already loaded
@@ -103,8 +103,13 @@ describe('Schema Overwrite Fix - Verification Test', () => {
 
     // Assert: Verify the correct behavior
     expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith(schemaId);
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(schema, schemaId);
-    expect(mockLogger.debug).toHaveBeenCalledWith(`Registered payload schema: ${schemaId}`);
+    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
+      schema,
+      schemaId
+    );
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      `Registered payload schema: ${schemaId}`
+    );
     expect(mockLogger.warn).not.toHaveBeenCalled(); // Still no warnings
   });
 
@@ -116,9 +121,9 @@ describe('Schema Overwrite Fix - Verification Test', () => {
       properties: {
         conceptId: { type: 'string' },
         concept: { type: 'string' },
-        autoSaved: { type: 'boolean' }
+        autoSaved: { type: 'boolean' },
       },
-      required: ['conceptId', 'concept']
+      required: ['conceptId', 'concept'],
     };
 
     // Schema is already loaded (from mods)
@@ -126,7 +131,7 @@ describe('Schema Overwrite Fix - Verification Test', () => {
 
     // Act: Simulate the OLD behavior - directly call registerInlineSchema without checking
     const warnMessage = `EventLoader [core]: Payload schema ID '${schemaId}' for event 'core:character_concept_created' was already loaded. Overwriting.`;
-    
+
     await registerInlineSchema(
       mockSchemaValidator,
       schema,
@@ -138,7 +143,10 @@ describe('Schema Overwrite Fix - Verification Test', () => {
     // Assert: This would produce warnings (demonstrating why the fix was needed)
     expect(mockLogger.warn).toHaveBeenCalledWith(warnMessage);
     expect(mockSchemaValidator.removeSchema).toHaveBeenCalledWith(schemaId);
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(schema, schemaId);
+    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
+      schema,
+      schemaId
+    );
   });
 
   it('should handle the complete scenario with both problematic events', async () => {
@@ -152,9 +160,9 @@ describe('Schema Overwrite Fix - Verification Test', () => {
           properties: {
             conceptId: { type: 'string' },
             concept: { type: 'string' },
-            autoSaved: { type: 'boolean' }
-          }
-        }
+            autoSaved: { type: 'boolean' },
+          },
+        },
       },
       {
         id: 'core:character_concept_deleted#payload',
@@ -162,10 +170,10 @@ describe('Schema Overwrite Fix - Verification Test', () => {
           type: 'object',
           required: ['conceptId'],
           properties: {
-            conceptId: { type: 'string' }
-          }
-        }
-      }
+            conceptId: { type: 'string' },
+          },
+        },
+      },
     ];
 
     // Both schemas are already loaded from mods

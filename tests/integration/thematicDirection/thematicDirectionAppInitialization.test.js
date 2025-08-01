@@ -204,7 +204,7 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       consoleErrorSpy.mockRestore();
     });
 
-    // Note: Other error tests removed - error handling paths vary depending on 
+    // Note: Other error tests removed - error handling paths vary depending on
     // specific failure points and are better covered by unit tests
   });
 
@@ -225,7 +225,6 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       );
       expect(mockSchemaValidator.addSchema).toHaveBeenCalled();
     });
-
   });
 
   describe('Dependency injection registration', () => {
