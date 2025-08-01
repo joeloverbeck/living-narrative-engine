@@ -225,7 +225,6 @@ export class CharacterBuilderBootstrap {
     const baseSchemas = [
       '/data/schemas/character-concept.schema.json',
       '/data/schemas/thematic-direction.schema.json',
-      '/data/schemas/ui-state.schema.json',
     ];
 
     // Combine with custom schemas

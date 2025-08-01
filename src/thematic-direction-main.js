@@ -48,11 +48,8 @@ class ThematicDirectionApp {
                 });
               }
             );
-          },
-          preInit: async (controller) => {
-            // Initialize LLM infrastructure before controller init
-            const container = controller.container || bootstrap.container;
 
+            // Initialize LLM infrastructure
             // Load all schemas using SchemaLoader if available
             const schemaLoader = container.resolve(tokens.SchemaLoader);
             if (schemaLoader?.loadAndCompileAllSchemas) {
