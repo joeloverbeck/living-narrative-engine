@@ -55,11 +55,16 @@ describe('multiTargetValidationUtils', () => {
       expect(isValidEntityId('')).toBe(false);
       expect(isValidEntityId(null)).toBe(false);
       expect(isValidEntityId(undefined)).toBe(false);
-      expect(isValidEntityId('entity-123')).toBe(false); // Contains hyphen
       expect(isValidEntityId('entity.123')).toBe(false); // Contains dot
       expect(isValidEntityId('entity@123')).toBe(false); // Contains special char
       expect(isValidEntityId('entity 123')).toBe(false); // Contains space
       expect(isValidEntityId('entity#123')).toBe(false); // Contains hash
+    });
+
+    it('should accept UUID formats with hyphens', () => {
+      expect(isValidEntityId('entity-123')).toBe(true); // UUID-style with hyphen
+      expect(isValidEntityId('c103dff8-bfec-49f5-adb0-2c889ec5893e')).toBe(true); // Standard UUID
+      expect(isValidEntityId('runtime-uuid-1234')).toBe(true); // Custom UUID format
     });
 
     it('should handle edge cases', () => {
@@ -314,28 +319,28 @@ describe('multiTargetValidationUtils', () => {
       );
     });
 
-    it('should handle edge case with zero targetId', () => {
+    it('should reject zero targetId as invalid', () => {
       const zeroTargetPayload = {
         ...validBasePayload,
-        targetId: 0, // Falsy but valid
+        targetId: 0, // Not a valid string entity ID
       };
 
       const result = validateAttemptActionPayload(zeroTargetPayload);
 
-      expect(result.isValid).toBe(true);
-      expect(result.details.primaryTarget).toBe(0);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('targetId has invalid entity ID format');
     });
 
-    it('should handle edge case with empty string targetId', () => {
+    it('should reject empty string targetId as invalid', () => {
       const emptyStringTargetPayload = {
         ...validBasePayload,
-        targetId: '', // Falsy but defined
+        targetId: '', // Empty string is not valid
       };
 
       const result = validateAttemptActionPayload(emptyStringTargetPayload);
 
-      expect(result.isValid).toBe(true);
-      expect(result.details.primaryTarget).toBe('');
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('targetId has invalid entity ID format');
     });
 
     it('should handle complex multi-target scenario', () => {

@@ -417,13 +417,29 @@ export class CharacterBuilderBootstrap {
     // Register events
     for (const eventDef of allEvents) {
       try {
-        // Register payload schema first
-        await schemaValidator.addSchema(
-          eventDef.payloadSchema,
-          `${eventDef.id}#payload`
-        );
+        const payloadSchemaId = `${eventDef.id}#payload`;
+        
+        // Check if payload schema is already loaded (e.g., from mods)
+        // Only register if not already present to avoid overwrite warnings
+        if (!schemaValidator.isSchemaLoaded(payloadSchemaId)) {
+          // Register payload schema first
+          await schemaValidator.addSchema(
+            eventDef.payloadSchema,
+            payloadSchemaId
+          );
+          
+          if (this.#logger) {
+            this.#logger.debug(`Registered payload schema: ${payloadSchemaId}`);
+          }
+        } else {
+          if (this.#logger) {
+            this.#logger.debug(
+              `Skipping payload schema registration for ${payloadSchemaId} - already loaded from mods`
+            );
+          }
+        }
 
-        // Register event definition
+        // Register event definition (always register as data registry is separate)
         dataRegistry.setEventDefinition(eventDef.id, eventDef);
 
         if (this.#logger) {

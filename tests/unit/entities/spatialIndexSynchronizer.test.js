@@ -197,6 +197,25 @@ describe('SpatialIndexSynchronizer', () => {
       // Assert
       expect(mockSpatialIndexManager.removeEntity).not.toHaveBeenCalled();
     });
+
+    it('should handle invalid payload gracefully and log warning', () => {
+      // Arrange
+      synchronizer = initializeSynchronizer();
+
+      // Act - pass invalid payloads
+      handlers[ENTITY_REMOVED_ID](null);
+      handlers[ENTITY_REMOVED_ID](undefined);
+      handlers[ENTITY_REMOVED_ID]('invalid');
+      handlers[ENTITY_REMOVED_ID](123);
+
+      // Assert
+      expect(mockSpatialIndexManager.removeEntity).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledTimes(4);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('SpatialIndexSynchronizer.onEntityRemoved: Invalid payload received'),
+        null
+      );
+    });
   });
 
   describe('onPositionChanged (component:added/removed events)', () => {
@@ -310,6 +329,65 @@ describe('SpatialIndexSynchronizer', () => {
       ).not.toHaveBeenCalled();
       expect(mockSpatialIndexManager.addEntity).not.toHaveBeenCalled();
       expect(mockSpatialIndexManager.removeEntity).not.toHaveBeenCalled();
+    });
+
+    it('should handle invalid payload gracefully and log warning', () => {
+      // Arrange
+      synchronizer = initializeSynchronizer();
+
+      // Act - pass invalid payloads to position change handlers
+      handlers[COMPONENT_ADDED_ID](null);
+      handlers[COMPONENT_ADDED_ID](undefined);
+      handlers[COMPONENT_ADDED_ID]('invalid');
+      handlers[COMPONENT_ADDED_ID](123);
+
+      // Assert
+      expect(mockSpatialIndexManager.updateEntityLocation).not.toHaveBeenCalled();
+      expect(mockSpatialIndexManager.addEntity).not.toHaveBeenCalled();
+      expect(mockSpatialIndexManager.removeEntity).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledTimes(4);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('SpatialIndexSynchronizer.onPositionChanged: Invalid payload received'),
+        null
+      );
+    });
+
+    it('should handle invalid entity ID gracefully and log warning', () => {
+      // Arrange
+      synchronizer = initializeSynchronizer();
+
+      // Test cases for invalid entity IDs
+      const testCases = [
+        { entity: null, description: 'null entity' },
+        { entity: {}, description: 'entity without id' },
+        { entity: { id: null }, description: 'entity with null id' },
+        { entity: { id: 123 }, description: 'entity with non-string id' },
+        { entity: { id: '' }, description: 'entity with empty string id' },
+        { entity: { id: '   ' }, description: 'entity with whitespace-only id' },
+      ];
+
+      testCases.forEach(({ entity, description }) => {
+        const payload = {
+          entity,
+          componentTypeId: POSITION_COMPONENT_ID,
+          componentData: { locationId: 'new-location' },
+          oldComponentData: { locationId: 'old-location' },
+        };
+        const eventObject = { type: COMPONENT_ADDED_ID, payload };
+
+        // Act - simulate real EventBus behavior
+        handlers[COMPONENT_ADDED_ID](eventObject);
+      });
+
+      // Assert
+      expect(mockSpatialIndexManager.updateEntityLocation).not.toHaveBeenCalled();
+      expect(mockSpatialIndexManager.addEntity).not.toHaveBeenCalled();
+      expect(mockSpatialIndexManager.removeEntity).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledTimes(testCases.length);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('SpatialIndexSynchronizer.onPositionChanged: Invalid entity ID, skipping position update'),
+        expect.objectContaining({ componentTypeId: POSITION_COMPONENT_ID })
+      );
     });
   });
 });

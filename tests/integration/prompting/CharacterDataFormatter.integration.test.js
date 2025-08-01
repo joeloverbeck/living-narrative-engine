@@ -1,0 +1,481 @@
+/**
+ * @file Integration tests for CharacterDataFormatter
+ * @description Tests CharacterDataFormatter integration with AIPromptContentProvider and real-world scenarios
+ */
+
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { CharacterDataFormatter } from '../../../src/prompting/CharacterDataFormatter.js';
+import { AIPromptContentProvider } from '../../../src/prompting/AIPromptContentProvider.js';
+import { DEFAULT_FALLBACK_CHARACTER_NAME } from '../../../src/constants/textDefaults.js';
+
+describe('CharacterDataFormatter Integration Tests', () => {
+  let formatter;
+  let mockLogger;
+  let aiPromptProvider;
+
+  beforeEach(() => {
+    mockLogger = {
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+    };
+
+    formatter = new CharacterDataFormatter({ logger: mockLogger });
+
+    // Create AIPromptContentProvider for integration testing
+    aiPromptProvider = new AIPromptContentProvider({
+      logger: mockLogger,
+      promptStaticContentService: {
+        getCoreTaskDescriptionText: jest.fn().mockReturnValue('TASK'),
+        getCharacterPortrayalGuidelines: jest.fn().mockReturnValue('GUIDE'),
+        getNc21ContentPolicyText: jest.fn().mockReturnValue('POLICY'),
+        getFinalLlmInstructionText: jest.fn().mockReturnValue('FINAL'),
+      },
+      perceptionLogFormatter: { format: jest.fn().mockReturnValue([]) },
+      gameStateValidationService: {
+        validate: jest.fn().mockReturnValue({ isValid: true, errorContent: null }),
+      },
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Integration with AIPromptContentProvider', () => {
+    it('should format character persona through AIPromptContentProvider with full character data', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Isabella Martinez',
+          description: {
+            hair: 'long, dark brown, wavy',
+            eyes: 'emerald green, expressive',
+            height: 'tall and graceful',
+            wearing: 'elegant blue dress with silver jewelry',
+          },
+          personality: 'Confident and charismatic, with a sharp wit and compassionate heart. Values honesty and loyalty above all else.',
+          profile: 'A seasoned diplomat with extensive experience in international relations. Born in Madrid, educated at Oxford.',
+          likes: 'Classical music, fine wine, intellectual debates, and evening walks',
+          dislikes: 'Dishonesty, rudeness, rushed decisions, and overly crowded spaces',
+          secrets: 'Secretly writes poetry under a pseudonym',
+          fears: 'Being trapped in small spaces, losing her independence',
+          speechPatterns: ['Often uses diplomatic language', 'Speaks with measured pauses', 'Uses classical references in conversation'],
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Verify complete character persona formatting
+      expect(result).toContain('YOU ARE Isabella Martinez.');
+      expect(result).toContain('This is your identity. All thoughts, actions, and words must stem from this core truth.');
+      
+      // Physical description section
+      expect(result).toContain('## Your Description');
+      expect(result).toContain('**Hair**: long, dark brown, wavy');
+      expect(result).toContain('**Eyes**: emerald green, expressive');
+      expect(result).toContain('**Height**: tall and graceful');
+      expect(result).toContain('**Wearing**: elegant blue dress with silver jewelry');
+      
+      // Personality section
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('Confident and charismatic, with a sharp wit and compassionate heart');
+      
+      // Profile section
+      expect(result).toContain('## Your Profile');
+      expect(result).toContain('A seasoned diplomat with extensive experience');
+      
+      // Optional sections
+      expect(result).toContain('## Your Likes');
+      expect(result).toContain('Classical music, fine wine');
+      expect(result).toContain('## Your Dislikes');
+      expect(result).toContain('Dishonesty, rudeness');
+      expect(result).toContain('## Your Secrets');
+      expect(result).toContain('Secretly writes poetry');
+      expect(result).toContain('## Your Fears');
+      expect(result).toContain('Being trapped in small spaces');
+      
+      // Speech patterns
+      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('- Often uses diplomatic language');
+      expect(result).toContain('- Speaks with measured pauses');
+      expect(result).toContain('- Uses classical references in conversation');
+    });
+
+    it('should handle text-based character descriptions through AIPromptContentProvider', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Marcus Thompson',
+          description: 'Hair: short, black, curly; Eyes: brown, kind; Build: athletic; Wearing: casual jeans and t-shirt',
+          personality: 'Easygoing and friendly, always ready with a joke or helping hand.',
+          speechPatterns: 'Uses casual slang - Frequently says "no worries" - Often makes pop culture references',
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      expect(result).toContain('YOU ARE Marcus Thompson.');
+      expect(result).toContain('## Your Description');
+      expect(result).toContain('**Hair**: short, black, curly');
+      expect(result).toContain('**Eyes**: brown, kind');
+      expect(result).toContain('**Build**: athletic');
+      expect(result).toContain('**Wearing**: casual jeans and t-shirt');
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('Easygoing and friendly');
+      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('- Uses casual slang');
+      expect(result).toContain('- Frequently says "no worries"');
+      expect(result).toContain('- Often makes pop culture references');
+    });
+
+    it('should handle minimal character data with fallbacks through AIPromptContentProvider', () => {
+      const gameState = {
+        actorPromptData: {
+          name: 'Unknown Character',
+          description: 'A mysterious figure',
+        },
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      expect(result).toContain('YOU ARE Unknown Character.');
+      expect(result).toContain('## Your Description');
+      expect(result).toContain('**Description**: A mysterious figure');
+      // Should not contain empty optional sections
+      expect(result).not.toContain('## Your Personality');
+      expect(result).not.toContain('## Your Likes');
+      expect(result).not.toContain('## Your Speech Patterns');
+    });
+
+    it('should handle error scenarios gracefully through AIPromptContentProvider', () => {
+      const gameState = {
+        actorPromptData: null,
+        actorState: { components: {} },
+      };
+
+      const result = aiPromptProvider.getCharacterPersonaContent(gameState);
+
+      // Should return fallback content instead of crashing
+      expect(typeof result).toBe('string');
+      expect(result.length > 0).toBe(true);
+      expect(mockLogger.warn).toHaveBeenCalled();
+    });
+  });
+
+  describe('Complex Character Data Scenarios', () => {
+    it('should format character with all possible optional sections', () => {
+      const complexCharacterData = {
+        name: 'Aria Blackthorne',
+        description: {
+          hair: 'silver-white, flowing',
+          eyes: 'violet, otherworldly',
+          skin: 'pale, luminescent',
+          height: 'tall, ethereal',
+          build: 'slender, graceful',
+          wearing: 'flowing midnight robes with silver thread | ornate silver circlet | leather-bound grimoire at her side',
+          distinguishing: 'intricate tattoos covering her arms',
+        },
+        personality: 'Mysterious and wise, with an ancient soul. Speaks in riddles and sees beyond the veil of reality.',
+        profile: 'An enigmatic sorceress from the Shadowlands, keeper of forbidden knowledge and guardian of ancient secrets.',
+        likes: 'Starlit nights, ancient tomes, herbal teas, and meaningful conversations about the nature of existence',
+        dislikes: 'Ignorance, destruction of knowledge, loud noises, and those who abuse power',
+        secrets: 'Is actually centuries old and has been alive since the Great War of Shadows',
+        fears: 'The return of the Dark Lords, losing her memories to the curse',
+        speechPatterns: [
+          'Speaks in archaic, formal language',
+          'Often references ancient history and prophecies',
+          'Uses metaphorical language and riddles',
+          'Pauses thoughtfully before important statements',
+        ],
+      };
+
+      const result = formatter.formatCharacterPersona(complexCharacterData);
+
+      // Verify comprehensive formatting
+      expect(result).toContain('YOU ARE Aria Blackthorne.');
+      expect(result).toContain('This is your identity. All thoughts, actions, and words must stem from this core truth.');
+      
+      // All description attributes
+      expect(result).toContain('**Hair**: silver-white, flowing');
+      expect(result).toContain('**Eyes**: violet, otherworldly');
+      expect(result).toContain('**Skin**: pale, luminescent');
+      expect(result).toContain('**Height**: tall, ethereal');
+      expect(result).toContain('**Build**: slender, graceful');
+      expect(result).toContain('**Wearing**: flowing midnight robes with silver thread | ornate silver circlet | leather-bound grimoire at her side');
+      expect(result).toContain('**Distinguishing**: intricate tattoos covering her arms');
+      
+      // All optional sections
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('Mysterious and wise, with an ancient soul');
+      expect(result).toContain('## Your Profile');
+      expect(result).toContain('An enigmatic sorceress from the Shadowlands');
+      expect(result).toContain('## Your Likes');
+      expect(result).toContain('Starlit nights, ancient tomes');
+      expect(result).toContain('## Your Dislikes');
+      expect(result).toContain('Ignorance, destruction of knowledge');
+      expect(result).toContain('## Your Secrets');
+      expect(result).toContain('Is actually centuries old');
+      expect(result).toContain('## Your Fears');
+      expect(result).toContain('The return of the Dark Lords');
+      
+      // All speech patterns
+      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('- Speaks in archaic, formal language');
+      expect(result).toContain('- Often references ancient history and prophecies');
+      expect(result).toContain('- Uses metaphorical language and riddles');
+      expect(result).toContain('- Pauses thoughtfully before important statements');
+    });
+
+    it('should handle mixed data types in character descriptions', () => {
+      const mixedCharacterData = {
+        name: 'Captain Rodriguez',
+        description: 'Hair: salt-and-pepper, weathered\nEyes: steel blue; Build: muscular, scarred from battle',
+        personality: 'Gruff exterior hiding a caring heart. Fiercely loyal to his crew.',
+        profile: null, // null value
+        likes: '', // empty string
+        dislikes: 'Betrayal and cowardice',
+        secrets: undefined, // undefined value
+        fears: 'Losing his ship and crew',
+        speechPatterns: 'Uses nautical terms frequently - Has a slight accent - Commands with authority',
+      };
+
+      const result = formatter.formatCharacterPersona(mixedCharacterData);
+
+      expect(result).toContain('YOU ARE Captain Rodriguez.');
+      expect(result).toContain('## Your Description');
+      expect(result).toContain('**Hair**: salt-and-pepper, weathered');
+      expect(result).toContain('**Eyes**: steel blue');
+      expect(result).toContain('**Build**: muscular, scarred from battle');
+      
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('Gruff exterior hiding a caring heart');
+      
+      expect(result).toContain('## Your Dislikes');
+      expect(result).toContain('Betrayal and cowardice');
+      
+      expect(result).toContain('## Your Fears');
+      expect(result).toContain('Losing his ship and crew');
+      
+      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('- Uses nautical terms frequently');
+      expect(result).toContain('- Has a slight accent');
+      expect(result).toContain('- Commands with authority');
+      
+      // Should not contain empty/null sections
+      expect(result).not.toContain('## Your Profile');
+      expect(result).not.toContain('## Your Likes');
+      expect(result).not.toContain('## Your Secrets');
+    });
+
+    it('should handle complex speech pattern formats', () => {
+      const characterWithComplexSpeech = {
+        name: 'Dr. Elena Vasquez',
+        description: 'A brilliant scientist',
+        speechPatterns: [
+          'Uses precise scientific terminology',
+          'Often explains complex concepts in simple terms',
+          'Has a habit of adjusting her glasses when thinking',
+        ],
+      };
+
+      const result = formatter.formatCharacterPersona(characterWithComplexSpeech);
+
+      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('- Uses precise scientific terminology');
+      expect(result).toContain('- Often explains complex concepts in simple terms');
+      expect(result).toContain('- Has a habit of adjusting her glasses when thinking');
+    });
+  });
+
+  describe('Error Handling and Edge Cases', () => {
+    it('should handle completely empty character data', () => {
+      const result = formatter.formatCharacterPersona({});
+
+      expect(result).toContain(`YOU ARE ${DEFAULT_FALLBACK_CHARACTER_NAME}.`);
+      expect(result).toContain('This is your identity. All thoughts, actions, and words must stem from this core truth.');
+      expect(result.length > 0).toBe(true);
+      // Empty character data doesn't trigger a warning, only null data does
+      expect(mockLogger.debug).toHaveBeenCalled();
+    });
+
+    it('should handle null character data', () => {
+      const result = formatter.formatCharacterPersona(null);
+
+      expect(result).toBe('');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid character data provided to formatCharacterPersona')
+      );
+    });
+
+    it('should handle character with only name', () => {
+      const minimalCharacter = {
+        name: 'John Doe',
+      };
+
+      const result = formatter.formatCharacterPersona(minimalCharacter);
+
+      expect(result).toContain('YOU ARE John Doe.');
+      expect(result).toContain('This is your identity. All thoughts, actions, and words must stem from this core truth.');
+      // Should not contain any section headers for missing data
+      expect(result).not.toContain('## Your Description');
+      expect(result).not.toContain('## Your Personality');
+    });
+
+    it('should handle empty arrays and strings gracefully', () => {
+      const characterWithEmptyValues = {
+        name: 'Test Character',
+        description: '', // empty string
+        personality: '   ', // whitespace only
+        profile: null,
+        likes: '',
+        dislikes: undefined,
+        secrets: '',
+        fears: null,
+        speechPatterns: [], // empty array
+      };
+
+      const result = formatter.formatCharacterPersona(characterWithEmptyValues);
+
+      expect(result).toContain('YOU ARE Test Character.');
+      // Should not contain any section headers for empty data
+      expect(result).not.toContain('## Your Description');
+      expect(result).not.toContain('## Your Personality');
+      expect(result).not.toContain('## Your Profile');
+      expect(result).not.toContain('## Your Likes');
+      expect(result).not.toContain('## Your Dislikes');
+      expect(result).not.toContain('## Your Secrets');
+      expect(result).not.toContain('## Your Fears');
+      // Speech patterns with empty array still shows header (current behavior)
+      expect(result).toContain('## Your Speech Patterns');
+    });
+
+    it('should handle malformed description parsing gracefully', () => {
+      const characterWithMalformedDescription = {
+        name: 'Malformed Character',
+        description: 'This is a description without proper formatting and no colons or semicolons',
+      };
+
+      const result = formatter.formatPhysicalDescription(characterWithMalformedDescription);
+
+      expect(result).toContain('## Your Description');
+      expect(result).toContain('**Description**: This is a description without proper formatting and no colons or semicolons');
+    });
+
+    it('should handle speech patterns edge cases', () => {
+      // Test with string instead of array
+      const characterWithStringSpeech = {
+        name: 'String Speech Character',
+        speechPatterns: 'Uses simple language - Speaks slowly - Often repeats important points',
+      };
+
+      const result = formatter.formatSpeechPatterns(characterWithStringSpeech.speechPatterns);
+
+      expect(result).toContain('## Your Speech Patterns');
+      expect(result).toContain('- Uses simple language');
+      expect(result).toContain('- Speaks slowly');
+      expect(result).toContain('- Often repeats important points');
+    });
+
+    it('should log appropriate debug messages during formatting', () => {
+      const complexCharacter = {
+        name: 'Debug Test Character',
+        description: { hair: 'brown', eyes: 'blue' },
+        personality: 'Friendly and outgoing',
+        profile: 'A test character for debugging',
+        likes: 'Testing and debugging',
+        speechPatterns: ['Uses technical jargon', 'Speaks methodically'],
+      };
+
+      formatter.formatCharacterPersona(complexCharacter);
+
+      // Verify debug logging occurred
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('CharacterDataFormatter initialized')
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Formatted physical description section')
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Formatted personality section')
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Formatted profile section')
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Formatted Likes section')
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Formatted speech patterns section')
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Successfully formatted complete character persona')
+      );
+    });
+  });
+
+  describe('Real-world Integration Scenarios', () => {
+    it('should work correctly in a complete AIPromptContentProvider workflow', async () => {
+      const gameStateDto = {
+        actorName: 'Integration Test Character',
+        actorId: 'test-actor-123',
+        userInputContent: 'Look around the room',
+        currentLocation: {
+          locationId: 'test-location',
+          name: 'Test Room',
+          description: 'A simple test room with basic furnishings.',
+          exits: [
+            { direction: 'north', targetLocationName: 'North Room' },
+            { direction: 'south', targetLocationName: 'South Room' },
+          ],
+          characters: [],
+        },
+        availableActions: [
+          { index: 0, commandString: 'examine room', description: 'Look around the current room carefully.' },
+          { index: 1, commandString: 'move north', description: 'Go to the north room.' },
+        ],
+        perceptionLog: [],
+        actorPromptData: {
+          name: 'Elena Rosetti',
+          description: {
+            hair: 'dark auburn, shoulder-length',
+            eyes: 'hazel, intelligent',
+            build: 'medium height, athletic',
+            wearing: 'practical hiking clothes and sturdy boots',
+          },
+          personality: 'Curious and methodical, with a passion for discovery and learning.',
+          profile: 'A field researcher and archaeologist specializing in ancient civilizations.',
+          likes: 'Historical mysteries, field work, and good coffee',
+          speechPatterns: ['Uses academic terminology', 'Asks probing questions', 'Often references historical parallels'],
+        },
+        actorState: {
+          components: {
+            'core:short_term_memory': { thoughts: [] },
+            'core:notes': { notes: [] },
+            'core:goals': { goals: [] },
+          },
+        },
+      };
+
+      const promptData = await aiPromptProvider.getPromptData(gameStateDto, mockLogger);
+
+      // Verify that CharacterDataFormatter integration worked correctly
+      expect(promptData.characterPersonaContent).toContain('YOU ARE Elena Rosetti.');
+      expect(promptData.characterPersonaContent).toContain('## Your Description');
+      expect(promptData.characterPersonaContent).toContain('**Hair**: dark auburn, shoulder-length');
+      expect(promptData.characterPersonaContent).toContain('**Eyes**: hazel, intelligent');
+      expect(promptData.characterPersonaContent).toContain('## Your Personality');
+      expect(promptData.characterPersonaContent).toContain('Curious and methodical, with a passion for discovery');
+      expect(promptData.characterPersonaContent).toContain('## Your Profile');
+      expect(promptData.characterPersonaContent).toContain('A field researcher and archaeologist');
+      expect(promptData.characterPersonaContent).toContain('## Your Likes');
+      expect(promptData.characterPersonaContent).toContain('Historical mysteries, field work');
+      expect(promptData.characterPersonaContent).toContain('## Your Speech Patterns');
+      expect(promptData.characterPersonaContent).toContain('- Uses academic terminology');
+      expect(promptData.characterPersonaContent).toContain('- Asks probing questions');
+      expect(promptData.characterPersonaContent).toContain('- Often references historical parallels');
+    });
+  });
+});
