@@ -1,0 +1,7 @@
+{
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "id": "posturing",
+  "version": "1.0.0",
+  "name": "posturing",
+  "content": {}
+}

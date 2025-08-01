@@ -19,9 +19,11 @@ describe('Attempt Action Schema Fix - Verification Tests', () => {
     testBed = createTestBed();
     logger = testBed.mockLogger;
     builder = new MultiTargetEventBuilder({ logger });
-    
+
     // Load the updated schema file directly
-    const schemaPath = path.resolve('data/mods/core/events/attempt_action.event.json');
+    const schemaPath = path.resolve(
+      'data/mods/core/events/attempt_action.event.json'
+    );
     const schemaContent = fs.readFileSync(schemaPath, 'utf8');
     const schemaFile = JSON.parse(schemaContent);
     attemptActionSchema = schemaFile.payloadSchema;
@@ -41,7 +43,10 @@ describe('Attempt Action Schema Fix - Verification Tests', () => {
         .buildUnsafe();
 
       // The payload contains these properties that previously caused validation failures
-      expect(payload).toHaveProperty('primaryId', 'p_erotica:amaia_castillo_instance');
+      expect(payload).toHaveProperty(
+        'primaryId',
+        'p_erotica:amaia_castillo_instance'
+      );
       expect(payload).toHaveProperty('secondaryId', null);
       expect(payload).toHaveProperty('tertiaryId', null);
 
@@ -53,11 +58,17 @@ describe('Attempt Action Schema Fix - Verification Tests', () => {
 
       // Verify the property definitions are correct
       expect(schemaProperties.primaryId).toHaveProperty('$ref');
-      expect(schemaProperties.primaryId.description).toContain('Primary target entity ID');
+      expect(schemaProperties.primaryId.description).toContain(
+        'Primary target entity ID'
+      );
       expect(schemaProperties.secondaryId).toHaveProperty('$ref');
-      expect(schemaProperties.secondaryId.description).toContain('Secondary target entity ID');
+      expect(schemaProperties.secondaryId.description).toContain(
+        'Secondary target entity ID'
+      );
       expect(schemaProperties.tertiaryId).toHaveProperty('$ref');
-      expect(schemaProperties.tertiaryId.description).toContain('Tertiary target entity ID');
+      expect(schemaProperties.tertiaryId.description).toContain(
+        'Tertiary target entity ID'
+      );
     });
 
     it('should confirm that schema now includes metadata properties', () => {
@@ -87,7 +98,7 @@ describe('Attempt Action Schema Fix - Verification Tests', () => {
         description: 'Number of targets that were resolved for this action',
         minimum: 0,
       });
-      
+
       expect(schemaProperties.hasContextDependencies).toEqual({
         type: 'boolean',
         description: 'Whether the action targets have context dependencies',
@@ -124,7 +135,7 @@ describe('Attempt Action Schema Fix - Verification Tests', () => {
 
       // All properties in this payload should now be defined in the schema
       const schemaProperties = attemptActionSchema.properties;
-      Object.keys(payload).forEach(key => {
+      Object.keys(payload).forEach((key) => {
         expect(schemaProperties).toHaveProperty(key);
       });
     });
@@ -142,7 +153,7 @@ describe('Attempt Action Schema Fix - Verification Tests', () => {
 
       // All properties should be defined in schema
       const schemaProperties = attemptActionSchema.properties;
-      Object.keys(legacyPayload).forEach(key => {
+      Object.keys(legacyPayload).forEach((key) => {
         expect(schemaProperties).toHaveProperty(key);
       });
 
@@ -160,7 +171,7 @@ describe('Attempt Action Schema Fix - Verification Tests', () => {
         timestamp: Date.now(),
       };
 
-      Object.keys(multiTargetPayload).forEach(key => {
+      Object.keys(multiTargetPayload).forEach((key) => {
         expect(schemaProperties).toHaveProperty(key);
       });
     });
@@ -201,24 +212,43 @@ describe('Attempt Action Schema Fix - Verification Tests', () => {
       expect(attemptActionSchema).toHaveProperty('additionalProperties', false);
       expect(attemptActionSchema).toHaveProperty('required');
       expect(attemptActionSchema.required).toEqual([
-        'eventName', 'actorId', 'actionId', 'originalInput'
+        'eventName',
+        'actorId',
+        'actionId',
+        'originalInput',
       ]);
 
       // Verify all expected properties are present (original + new)
       const expectedProperties = [
-        'eventName', 'actorId', 'actionId', 'originalInput', 'targetId', 'targets', 'timestamp',
-        'primaryId', 'secondaryId', 'tertiaryId', 'resolvedTargetCount', 'hasContextDependencies'
+        'eventName',
+        'actorId',
+        'actionId',
+        'originalInput',
+        'targetId',
+        'targets',
+        'timestamp',
+        'primaryId',
+        'secondaryId',
+        'tertiaryId',
+        'resolvedTargetCount',
+        'hasContextDependencies',
       ];
-      
+
       const schemaProperties = attemptActionSchema.properties;
-      expectedProperties.forEach(prop => {
+      expectedProperties.forEach((prop) => {
         expect(schemaProperties).toHaveProperty(prop);
       });
 
       // Verify the new properties have proper types and references
-      expect(schemaProperties.primaryId.$ref).toBe('schema://living-narrative-engine/common.schema.json#/definitions/nullableNamespacedId');
-      expect(schemaProperties.secondaryId.$ref).toBe('schema://living-narrative-engine/common.schema.json#/definitions/nullableNamespacedId');
-      expect(schemaProperties.tertiaryId.$ref).toBe('schema://living-narrative-engine/common.schema.json#/definitions/nullableNamespacedId');
+      expect(schemaProperties.primaryId.$ref).toBe(
+        'schema://living-narrative-engine/common.schema.json#/definitions/nullableNamespacedId'
+      );
+      expect(schemaProperties.secondaryId.$ref).toBe(
+        'schema://living-narrative-engine/common.schema.json#/definitions/nullableNamespacedId'
+      );
+      expect(schemaProperties.tertiaryId.$ref).toBe(
+        'schema://living-narrative-engine/common.schema.json#/definitions/nullableNamespacedId'
+      );
       expect(schemaProperties.resolvedTargetCount.type).toBe('number');
       expect(schemaProperties.hasContextDependencies.type).toBe('boolean');
     });

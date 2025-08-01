@@ -46,7 +46,8 @@ describe('CharacterBuilderBootstrap - Schema Fix Integration Test', () => {
       resolve: jest.fn().mockImplementation((token) => {
         const tokenString = token.toString();
         if (tokenString.includes('ILogger')) return mockLogger;
-        if (tokenString.includes('ISchemaValidator')) return mockSchemaValidator;
+        if (tokenString.includes('ISchemaValidator'))
+          return mockSchemaValidator;
         if (tokenString.includes('IDataRegistry')) return mockDataRegistry;
         if (tokenString.includes('ModsLoader')) {
           return { loadMods: jest.fn().mockResolvedValue(undefined) };
@@ -70,15 +71,17 @@ describe('CharacterBuilderBootstrap - Schema Fix Integration Test', () => {
   it('should not register schemas that are already loaded from mods', async () => {
     // Arrange: Mock the problematic schemas as already loaded
     mockSchemaValidator.isSchemaLoaded.mockImplementation((schemaId) => {
-      return schemaId === 'core:character_concept_created#payload' || 
-             schemaId === 'core:character_concept_deleted#payload';
+      return (
+        schemaId === 'core:character_concept_created#payload' ||
+        schemaId === 'core:character_concept_deleted#payload'
+      );
     });
 
     // Mock the bootstrap methods to isolate the event registration logic
     jest.spyOn(bootstrap, 'bootstrap').mockImplementation(async (config) => {
       // Simulate the fixed #registerEvents method behavior
       const startTime = performance.now();
-      
+
       // Base events that would normally be hardcoded in the bootstrap
       const baseEvents = [
         {
@@ -90,9 +93,9 @@ describe('CharacterBuilderBootstrap - Schema Fix Integration Test', () => {
             properties: {
               conceptId: { type: 'string' },
               concept: { type: 'string' },
-              autoSaved: { type: 'boolean' }
-            }
-          }
+              autoSaved: { type: 'boolean' },
+            },
+          },
         },
         {
           id: 'core:character_concept_deleted',
@@ -101,19 +104,22 @@ describe('CharacterBuilderBootstrap - Schema Fix Integration Test', () => {
             type: 'object',
             required: ['conceptId'],
             properties: {
-              conceptId: { type: 'string' }
-            }
-          }
-        }
+              conceptId: { type: 'string' },
+            },
+          },
+        },
       ];
 
       // This is the FIXED logic that should now be in CharacterBuilderBootstrap
       for (const eventDef of baseEvents) {
         const payloadSchemaId = `${eventDef.id}#payload`;
-        
+
         // Check if payload schema is already loaded (e.g., from mods)
         if (!mockSchemaValidator.isSchemaLoaded(payloadSchemaId)) {
-          await mockSchemaValidator.addSchema(eventDef.payloadSchema, payloadSchemaId);
+          await mockSchemaValidator.addSchema(
+            eventDef.payloadSchema,
+            payloadSchemaId
+          );
           mockLogger.debug(`Registered payload schema: ${payloadSchemaId}`);
         } else {
           mockLogger.debug(
@@ -129,7 +135,7 @@ describe('CharacterBuilderBootstrap - Schema Fix Integration Test', () => {
       return {
         controller: { initialize: jest.fn() },
         container: mockContainer,
-        bootstrapTime: performance.now() - startTime
+        bootstrapTime: performance.now() - startTime,
       };
     });
 
@@ -146,8 +152,12 @@ describe('CharacterBuilderBootstrap - Schema Fix Integration Test', () => {
     await bootstrap.bootstrap(config);
 
     // Assert: Verify the fix worked correctly
-    expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith('core:character_concept_created#payload');
-    expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith('core:character_concept_deleted#payload');
+    expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith(
+      'core:character_concept_created#payload'
+    );
+    expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith(
+      'core:character_concept_deleted#payload'
+    );
 
     // Schemas should NOT have been registered since they were already loaded
     expect(mockSchemaValidator.addSchema).not.toHaveBeenCalled();
@@ -184,16 +194,19 @@ describe('CharacterBuilderBootstrap - Schema Fix Integration Test', () => {
           payloadSchema: {
             type: 'object',
             required: ['conceptId'],
-            properties: { conceptId: { type: 'string' } }
-          }
-        }
+            properties: { conceptId: { type: 'string' } },
+          },
+        },
       ];
 
       for (const eventDef of baseEvents) {
         const payloadSchemaId = `${eventDef.id}#payload`;
-        
+
         if (!mockSchemaValidator.isSchemaLoaded(payloadSchemaId)) {
-          await mockSchemaValidator.addSchema(eventDef.payloadSchema, payloadSchemaId);
+          await mockSchemaValidator.addSchema(
+            eventDef.payloadSchema,
+            payloadSchemaId
+          );
           mockLogger.debug(`Registered payload schema: ${payloadSchemaId}`);
         } else {
           mockLogger.debug(
@@ -207,7 +220,7 @@ describe('CharacterBuilderBootstrap - Schema Fix Integration Test', () => {
       return {
         controller: { initialize: jest.fn() },
         container: mockContainer,
-        bootstrapTime: 0
+        bootstrapTime: 0,
       };
     });
 
@@ -216,18 +229,22 @@ describe('CharacterBuilderBootstrap - Schema Fix Integration Test', () => {
       controllerClass: class TestController {
         constructor() {}
         async initialize() {}
-      }
+      },
     };
 
     // Act
     await bootstrap.bootstrap(config);
 
     // Assert: Schema should be registered when not already loaded
-    expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith('core:character_concept_created#payload');
+    expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith(
+      'core:character_concept_created#payload'
+    );
     expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'object' }),
       'core:character_concept_created#payload'
     );
-    expect(mockLogger.debug).toHaveBeenCalledWith('Registered payload schema: core:character_concept_created#payload');
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'Registered payload schema: core:character_concept_created#payload'
+    );
   });
 });

@@ -418,7 +418,7 @@ export class CharacterBuilderBootstrap {
     for (const eventDef of allEvents) {
       try {
         const payloadSchemaId = `${eventDef.id}#payload`;
-        
+
         // Check if payload schema is already loaded (e.g., from mods)
         // Only register if not already present to avoid overwrite warnings
         if (!schemaValidator.isSchemaLoaded(payloadSchemaId)) {
@@ -427,7 +427,7 @@ export class CharacterBuilderBootstrap {
             eventDef.payloadSchema,
             payloadSchemaId
           );
-          
+
           if (this.#logger) {
             this.#logger.debug(`Registered payload schema: ${payloadSchemaId}`);
           }

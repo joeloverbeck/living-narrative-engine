@@ -144,12 +144,9 @@ class BaseCharacterBuilderController {
     this._additionalServices = additionalServices;
 
     // Log initialization
-    this._logger.info(
-      `${this.constructor.name}: Created with dependencies`,
-      {
-        additionalServices: Object.keys(additionalServices),
-      }
-    );
+    this._logger.info(`${this.constructor.name}: Created with dependencies`, {
+      additionalServices: Object.keys(additionalServices),
+    });
   }
 
   /**
@@ -157,21 +154,27 @@ class BaseCharacterBuilderController {
    * @private
    */
   _validateCoreDependencies(dependencies) {
-    const { logger, characterBuilderService, eventBus, schemaValidator } = dependencies;
+    const { logger, characterBuilderService, eventBus, schemaValidator } =
+      dependencies;
 
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
     });
 
-    validateDependency(characterBuilderService, 'CharacterBuilderService', logger, {
-      requiredMethods: [
-        'initialize',
-        'getAllCharacterConcepts',
-        'createCharacterConcept',
-        'updateCharacterConcept',
-        'deleteCharacterConcept',
-      ],
-    });
+    validateDependency(
+      characterBuilderService,
+      'CharacterBuilderService',
+      logger,
+      {
+        requiredMethods: [
+          'initialize',
+          'getAllCharacterConcepts',
+          'createCharacterConcept',
+          'updateCharacterConcept',
+          'deleteCharacterConcept',
+        ],
+      }
+    );
 
     validateDependency(eventBus, 'ISafeEventDispatcher', logger, {
       requiredMethods: ['dispatch', 'subscribe', 'unsubscribe'],
@@ -224,7 +227,6 @@ class BaseCharacterBuilderController {
 
       this._isInitialized = true;
       this._logger.info(`${this.constructor.name}: Initialization completed`);
-
     } catch (error) {
       this._logger.error(
         `${this.constructor.name}: Initialization failed`,
@@ -263,7 +265,9 @@ class BaseCharacterBuilderController {
     // Initialize character builder service
     if (this._characterBuilderService) {
       await this._characterBuilderService.initialize();
-      this._logger.debug(`${this.constructor.name}: CharacterBuilderService initialized`);
+      this._logger.debug(
+        `${this.constructor.name}: CharacterBuilderService initialized`
+      );
     }
 
     // Initialize additional services
@@ -272,7 +276,7 @@ class BaseCharacterBuilderController {
 
   /**
    * Initialize additional page-specific services - override in subclasses
-   * @protected 
+   * @protected
    */
   async _initializeAdditionalServices() {
     // Default implementation - no-op
@@ -332,7 +336,7 @@ class BaseCharacterBuilderController {
    * @returns {HTMLElement|null} The cached element
    */
   _cacheElement(key, selector, required = true) {
-    const element = selector.startsWith('#') 
+    const element = selector.startsWith('#')
       ? document.getElementById(selector.slice(1))
       : document.querySelector(selector);
 
@@ -365,8 +369,9 @@ class BaseCharacterBuilderController {
     for (const [key, config] of Object.entries(elementMap)) {
       try {
         const selector = typeof config === 'string' ? config : config.selector;
-        const required = typeof config === 'string' ? true : (config.required !== false);
-        
+        const required =
+          typeof config === 'string' ? true : config.required !== false;
+
         this._cacheElement(key, selector, required);
       } catch (error) {
         if (!continueOnError) {
@@ -396,7 +401,7 @@ class BaseCharacterBuilderController {
     }
 
     element.addEventListener(event, handler, options);
-    
+
     // Track for cleanup
     this._eventListeners.push({
       element,
@@ -418,9 +423,9 @@ class BaseCharacterBuilderController {
    */
   _showState(state, data = {}) {
     const states = ['empty', 'loading', 'results', 'error'];
-    
+
     // Hide all state containers
-    states.forEach(stateName => {
+    states.forEach((stateName) => {
       const element = this._elements[`${stateName}State`];
       if (element) {
         element.style.display = 'none';
@@ -460,7 +465,7 @@ class BaseCharacterBuilderController {
    */
   _showError(error) {
     const message = typeof error === 'string' ? error : error.message;
-    
+
     const errorElement = this._elements.errorMessageText;
     if (errorElement) {
       errorElement.textContent = message;
@@ -476,9 +481,10 @@ class BaseCharacterBuilderController {
    * @param {Error} error
    */
   _handleInitializationError(error) {
-    const userMessage = 'Failed to initialize page. Please refresh and try again.';
+    const userMessage =
+      'Failed to initialize page. Please refresh and try again.';
     this._showError(userMessage);
-    
+
     // Dispatch error event for logging/monitoring
     if (this._eventBus) {
       this._eventBus.dispatch('SYSTEM_ERROR_OCCURRED', {
@@ -544,7 +550,10 @@ class BaseCharacterBuilderController {
    */
   _validateData(data, schemaId) {
     try {
-      const result = this._schemaValidator.validateAgainstSchema(data, schemaId);
+      const result = this._schemaValidator.validateAgainstSchema(
+        data,
+        schemaId
+      );
       return {
         isValid: result.isValid,
         errors: result.errors || [],
@@ -569,14 +578,11 @@ class BaseCharacterBuilderController {
    * @param {string} [userMessage] - Custom user-friendly message
    */
   _handleServiceError(error, operation, userMessage) {
-    this._logger.error(
-      `${this.constructor.name}: ${operation} failed`,
-      error
-    );
+    this._logger.error(`${this.constructor.name}: ${operation} failed`, error);
 
-    const displayMessage = userMessage || 
-      `Failed to ${operation.toLowerCase()}. Please try again.`;
-    
+    const displayMessage =
+      userMessage || `Failed to ${operation.toLowerCase()}. Please try again.`;
+
     this._showError(displayMessage);
 
     // Dispatch error event
@@ -600,7 +606,9 @@ class BaseCharacterBuilderController {
     try {
       this._logger.debug(`${this.constructor.name}: Starting ${operationName}`);
       const result = await operation();
-      this._logger.debug(`${this.constructor.name}: Completed ${operationName}`);
+      this._logger.debug(
+        `${this.constructor.name}: Completed ${operationName}`
+      );
       return result;
     } catch (error) {
       this._handleServiceError(error, operationName, userErrorMessage);
@@ -619,7 +627,7 @@ class BaseCharacterBuilderController {
 class MyController extends BaseCharacterBuilderController {
   constructor(dependencies) {
     super(dependencies);
-    
+
     // Page-specific initialization
     this._myCustomService = dependencies.myCustomService;
   }
@@ -779,9 +787,9 @@ class MyController extends BaseCharacterBuilderController {
     // 5. _loadInitialData()
     // 6. _initializeUIState()
     // 7. _postInitialize()
-    
+
     await super.initialize();
-    
+
     // Additional initialization if needed
     this._startPeriodicUpdates();
   }
@@ -811,7 +819,7 @@ class MyController {
     validateDependency(logger, 'ILogger', ...);
     validateDependency(characterBuilderService, 'CharacterBuilderService', ...);
     // ... more validation
-    
+
     this.#logger = logger;
     this.#characterBuilderService = characterBuilderService;
     this.#elements = {};
@@ -840,7 +848,7 @@ class MyController extends BaseCharacterBuilderController {
   constructor(dependencies) {
     // Base class handles dependency validation
     super(dependencies);
-    
+
     // Only page-specific dependencies need manual handling
     if (dependencies.customService) {
       this._customService = dependencies.customService;
@@ -871,8 +879,12 @@ class MyController extends BaseCharacterBuilderController {
   }
 
   // Page-specific methods remain unchanged
-  async _handleFormSubmit() { /* ... */ }
-  _processData(data) { /* ... */ }
+  async _handleFormSubmit() {
+    /* ... */
+  }
+  _processData(data) {
+    /* ... */
+  }
 }
 ```
 
@@ -882,11 +894,11 @@ class MyController extends BaseCharacterBuilderController {
 // BEFORE: Private fields with # syntax
 class MyController {
   #elements = {};
-  
+
   #cacheElements() {
     this.#elements.form = document.getElementById('my-form');
   }
-  
+
   #handleSubmit() {
     this.#elements.form.reset();
   }
@@ -897,7 +909,7 @@ class MyController extends BaseCharacterBuilderController {
   _cacheElements() {
     this._cacheElement('form', '#my-form');
   }
-  
+
   _handleSubmit() {
     this._elements.form.reset();
   }
@@ -960,13 +972,17 @@ describe('BaseCharacterBuilderController', () => {
 
   describe('constructor', () => {
     it('should validate required dependencies', () => {
-      expect(() => new TestController({})).toThrow('Missing required dependency');
+      expect(() => new TestController({})).toThrow(
+        'Missing required dependency'
+      );
     });
 
     it('should store dependencies correctly', () => {
       controller = new TestController(mockDependencies);
       expect(controller._logger).toBe(mockDependencies.logger);
-      expect(controller._characterBuilderService).toBe(mockDependencies.characterBuilderService);
+      expect(controller._characterBuilderService).toBe(
+        mockDependencies.characterBuilderService
+      );
     });
   });
 
@@ -978,7 +994,7 @@ describe('BaseCharacterBuilderController', () => {
     it('should follow proper initialization sequence', async () => {
       const spy = jest.spyOn(controller, '_cacheElements');
       await controller.initialize();
-      
+
       expect(spy).toHaveBeenCalled();
       expect(controller.isInitialized).toBe(true);
     });
@@ -987,8 +1003,10 @@ describe('BaseCharacterBuilderController', () => {
       controller._cacheElements = jest.fn(() => {
         throw new Error('Element not found');
       });
-      
-      await expect(controller.initialize()).rejects.toThrow('Element not found');
+
+      await expect(controller.initialize()).rejects.toThrow(
+        'Element not found'
+      );
       expect(controller.isInitialized).toBe(false);
     });
   });
@@ -1006,12 +1024,17 @@ describe('BaseCharacterBuilderController', () => {
     });
 
     it('should throw error for missing required elements', () => {
-      expect(() => controller._cacheElement('missing', '#missing-element'))
-        .toThrow('Required element not found');
+      expect(() =>
+        controller._cacheElement('missing', '#missing-element')
+      ).toThrow('Required element not found');
     });
 
     it('should handle missing optional elements gracefully', () => {
-      const element = controller._cacheElement('optional', '#missing-element', false);
+      const element = controller._cacheElement(
+        'optional',
+        '#missing-element',
+        false
+      );
       expect(element).toBeNull();
       expect(controller.elements.optional).toBeNull();
     });
@@ -1036,7 +1059,7 @@ describe('BaseCharacterBuilderController', () => {
 
     it('should show correct state and hide others', () => {
       controller._showState('loading');
-      
+
       expect(controller._elements.loadingState.style.display).toBe('block');
       expect(controller._elements.emptyState.style.display).toBe('none');
       expect(controller._elements.resultsState.style.display).toBe('none');
@@ -1089,7 +1112,8 @@ describe('Character Builder Controller Integration', () => {
     await controller.initialize();
 
     // Test actual service calls
-    const data = await controller._characterBuilderService.getAllCharacterConcepts();
+    const data =
+      await controller._characterBuilderService.getAllCharacterConcepts();
     expect(data).toBeDefined();
   });
 });
@@ -1158,14 +1182,14 @@ class BaseCharacterBuilderController {
 class BaseCharacterBuilderController {
   async initialize() {
     const startTime = performance.now();
-    
+
     // ... initialization logic
-    
+
     const initTime = performance.now() - startTime;
     this._logger.debug(
       `${this.constructor.name}: Initialized in ${initTime.toFixed(2)}ms`
     );
-    
+
     // Log performance metrics for monitoring
     if (initTime > 100) {
       this._logger.warn(
@@ -1205,6 +1229,7 @@ class BaseCharacterBuilderController {
 The Base Character Builder Controller provides a robust foundation that eliminates 50% of code duplication while ensuring consistent behavior across all character builder pages. The template method pattern allows for easy customization while maintaining standardized core functionality.
 
 Implementation of this base class will:
+
 - **Reduce maintenance burden** by centralizing common functionality
 - **Improve developer productivity** through reusable patterns
 - **Enhance code quality** with consistent error handling and validation

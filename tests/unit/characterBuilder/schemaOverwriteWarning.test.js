@@ -44,9 +44,9 @@ describe('Schema Overwrite Warning - Reproduction Test', () => {
       properties: {
         conceptId: { type: 'string' },
         concept: { type: 'string' },
-        autoSaved: { type: 'boolean' }
+        autoSaved: { type: 'boolean' },
       },
-      required: ['conceptId', 'concept']
+      required: ['conceptId', 'concept'],
     };
 
     // First, simulate that the schema is already loaded (returns true)
@@ -68,7 +68,10 @@ describe('Schema Overwrite Warning - Reproduction Test', () => {
 
     // Verify that the schema was removed and re-added (overwrite behavior)
     expect(mockSchemaValidator.removeSchema).toHaveBeenCalledWith(schemaId);
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(schema, schemaId);
+    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
+      schema,
+      schemaId
+    );
   });
 
   it('should demonstrate the specific warnings from the logs', async () => {
@@ -76,12 +79,14 @@ describe('Schema Overwrite Warning - Reproduction Test', () => {
     const schemas = [
       {
         id: 'core:character_concept_created#payload',
-        warnMessage: "EventLoader [core]: Payload schema ID 'core:character_concept_created#payload' for event 'core:character_concept_created' was already loaded. Overwriting."
+        warnMessage:
+          "EventLoader [core]: Payload schema ID 'core:character_concept_created#payload' for event 'core:character_concept_created' was already loaded. Overwriting.",
       },
       {
-        id: 'core:character_concept_deleted#payload', 
-        warnMessage: "EventLoader [core]: Payload schema ID 'core:character_concept_deleted#payload' for event 'core:character_concept_deleted' was already loaded. Overwriting."
-      }
+        id: 'core:character_concept_deleted#payload',
+        warnMessage:
+          "EventLoader [core]: Payload schema ID 'core:character_concept_deleted#payload' for event 'core:character_concept_deleted' was already loaded. Overwriting.",
+      },
     ];
 
     // Simulate that both schemas are already loaded
@@ -103,8 +108,12 @@ describe('Schema Overwrite Warning - Reproduction Test', () => {
     expect(mockLogger.warn).toHaveBeenCalledWith(schemas[1].warnMessage);
 
     // Verify both schemas were removed and re-added
-    expect(mockSchemaValidator.removeSchema).toHaveBeenCalledWith(schemas[0].id);
-    expect(mockSchemaValidator.removeSchema).toHaveBeenCalledWith(schemas[1].id);
+    expect(mockSchemaValidator.removeSchema).toHaveBeenCalledWith(
+      schemas[0].id
+    );
+    expect(mockSchemaValidator.removeSchema).toHaveBeenCalledWith(
+      schemas[1].id
+    );
     expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(2);
   });
 
@@ -113,7 +122,10 @@ describe('Schema Overwrite Warning - Reproduction Test', () => {
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(false);
 
     const schemaId = 'core:character_concept_created#payload';
-    const schema = { type: 'object', properties: { conceptId: { type: 'string' } } };
+    const schema = {
+      type: 'object',
+      properties: { conceptId: { type: 'string' } },
+    };
 
     // Act: Register the schema for the first time
     await registerInlineSchema(
@@ -127,6 +139,9 @@ describe('Schema Overwrite Warning - Reproduction Test', () => {
     // Assert: No warnings should be logged when schema isn't already loaded
     expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockSchemaValidator.removeSchema).not.toHaveBeenCalled();
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(schema, schemaId);
+    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
+      schema,
+      schemaId
+    );
   });
 });

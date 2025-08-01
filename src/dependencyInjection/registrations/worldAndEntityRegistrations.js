@@ -121,24 +121,8 @@ export function registerWorldAndEntity(container) {
     `World and Entity Registration: Registered ${String(tokens.IWorldContext)}.`
   );
 
-  registrar.singletonFactory(tokens.JsonLogicEvaluationService, (c) => {
-    const jsonLogicService = new JsonLogicEvaluationService({
-      logger: c.resolve(tokens.ILogger),
-      gameDataRepository: c.resolve(tokens.IGameDataRepository),
-      serviceSetup: c.resolve(tokens.ServiceSetup),
-    });
-
-    // Register custom operators
-    const customOperators = c.resolve(tokens.JsonLogicCustomOperators);
-    customOperators.registerOperators(jsonLogicService);
-
-    return jsonLogicService;
-  });
-  logger.debug(
-    `World and Entity Registration: Registered ${String(
-      tokens.JsonLogicEvaluationService
-    )}.`
-  );
+  // Note: JsonLogicEvaluationService registration moved after its dependencies
+  // to ensure JsonLogicCustomOperators is available when needed
 
   registrar.single(tokens.ClosenessCircleService, closenessCircleService, []);
   logger.debug(
@@ -377,6 +361,32 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.JsonLogicCustomOperators
+    )}.`
+  );
+
+  // Register JsonLogicEvaluationService after JsonLogicCustomOperators
+  registrar.singletonFactory(tokens.JsonLogicEvaluationService, (c) => {
+    const jsonLogicService = new JsonLogicEvaluationService({
+      logger: c.resolve(tokens.ILogger),
+      gameDataRepository: c.resolve(tokens.IGameDataRepository),
+      serviceSetup: c.resolve(tokens.ServiceSetup),
+    });
+
+    // Register custom operators
+    const customOperators = c.resolve(tokens.JsonLogicCustomOperators);
+    customOperators.registerOperators(jsonLogicService);
+
+    logger.debug(
+      `JsonLogicEvaluationService: Registered custom operators from ${String(
+        tokens.JsonLogicCustomOperators
+      )}`
+    );
+
+    return jsonLogicService;
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.JsonLogicEvaluationService
     )}.`
   );
 

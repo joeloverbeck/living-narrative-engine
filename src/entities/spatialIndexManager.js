@@ -157,20 +157,25 @@ class SpatialIndexManager extends MapManager {
       return;
     }
 
-    const effectiveOldLocationId = isValidId(
-      oldLocationId,
-      'SpatialIndexManager.updateEntityLocation',
-      this.logger
-    )
-      ? oldLocationId.trim()
-      : null;
-    const effectiveNewLocationId = isValidId(
-      newLocationId,
-      'SpatialIndexManager.updateEntityLocation',
-      this.logger
-    )
-      ? newLocationId.trim()
-      : null;
+    // Handle null/undefined location IDs gracefully - they are valid in this context
+    const effectiveOldLocationId =
+      oldLocationId &&
+      isValidId(
+        oldLocationId,
+        'SpatialIndexManager.updateEntityLocation',
+        this.logger
+      )
+        ? oldLocationId.trim()
+        : null;
+    const effectiveNewLocationId =
+      newLocationId &&
+      isValidId(
+        newLocationId,
+        'SpatialIndexManager.updateEntityLocation',
+        this.logger
+      )
+        ? newLocationId.trim()
+        : null;
 
     if (effectiveOldLocationId === effectiveNewLocationId) {
       return; // No change needed
