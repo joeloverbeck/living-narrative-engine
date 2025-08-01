@@ -13,6 +13,28 @@ Build a comprehensive error handling framework in the BaseCharacterBuilderContro
 - Ticket #1: Base Controller Class Structure (completed)
 - Ticket #5: UI State Management (completed - for error display)
 
+## Production Context
+
+**IMPORTANT**: This workflow assumes a simple controller structure, but the production BaseCharacterBuilderController is highly sophisticated with 2,400+ lines of test coverage and advanced infrastructure.
+
+### Existing Production Files
+
+- **Controller**: `src/characterBuilder/controllers/BaseCharacterBuilderController.js`
+- **Tests**: `tests/unit/characterBuilder/controllers/BaseCharacterBuilderController.test.js`
+- **Error Classes**: `src/errors/dependencyErrors.js`, `src/actions/errors/actionErrorTypes.js`
+- **Schema Validation**: `src/validation/ajvSchemaValidator.js`, `src/utils/schemaValidationUtils.js`
+- **UI State Management**: `src/shared/characterBuilder/uiStateManager.js`
+- **Test Infrastructure**: `tests/common/testbed.js`
+
+### Production Infrastructure Already Available
+
+- Advanced error handling with `ActionErrorContext` pattern
+- Comprehensive validation with `AjvSchemaValidator` and `validateAgainstSchema` utility
+- Sophisticated UI state management with state hooks and transitions
+- Event handling infrastructure with delegation, debouncing, and async operations
+- 8-phase lifecycle management with detailed error context
+- DOM element management with caching and validation
+
 ## Estimated Effort
 
 **1-2 hours**
@@ -30,9 +52,11 @@ Build a comprehensive error handling framework in the BaseCharacterBuilderContro
 
 ## Implementation Details
 
+**NOTE**: Many of these patterns already exist in the BaseCharacterBuilderController. Review existing implementation in `src/characterBuilder/controllers/BaseCharacterBuilderController.js` before adding new code.
+
 ### 1. Error Type Definitions
 
-Add to `BaseCharacterBuilderController.js`:
+The following constants may already exist or can be added to `BaseCharacterBuilderController.js`:
 
 ```javascript
 /**
@@ -232,35 +256,47 @@ _logError(errorDetails) {
 }
 
 /**
- * Show error to user
+ * Show error to user using existing UI state management infrastructure
  * @private
  */
 _showErrorToUser(errorDetails) {
-  // Use UI state management from ticket #5
+  // Use existing UIStateManager integration (already implemented in BaseCharacterBuilderController)
+  // The controller already has sophisticated error display via _showError method
   if (typeof this._showError === 'function') {
-    this._showError(errorDetails.userMessage, {
-      category: errorDetails.category,
-      severity: errorDetails.severity,
-    });
+    // Use existing _showError implementation that integrates with UIStateManager
+    this._showError(errorDetails.userMessage);
   } else {
-    // Fallback to console
-    console.error(errorDetails.userMessage);
+    // Fallback to existing error state display if _showError not available
+    // Use existing UI_STATES.ERROR from UIStateManager integration
+    if (typeof this._showState === 'function') {
+      this._showState('error', {
+        message: errorDetails.userMessage,
+        category: errorDetails.category,
+        severity: errorDetails.severity,
+      });
+    } else {
+      // Final fallback to console (should not happen in production)
+      console.error('Error display not available:', errorDetails.userMessage);
+    }
   }
 }
 
 /**
- * Dispatch error event for monitoring
+ * Dispatch error event for monitoring using existing event bus infrastructure
  * @private
  */
 _dispatchErrorEvent(errorDetails) {
-  if (this._eventBus) {
-    this._eventBus.dispatch('SYSTEM_ERROR_OCCURRED', {
+  // Use existing eventBus integration (BaseCharacterBuilderController already has this)
+  if (this.eventBus) {
+    // Follow existing SYSTEM_ERROR_OCCURRED event pattern used throughout the codebase
+    this.eventBus.dispatch('SYSTEM_ERROR_OCCURRED', {
       error: errorDetails.message,
       context: errorDetails.operation,
       category: errorDetails.category,
       severity: errorDetails.severity,
       controller: errorDetails.controller,
       timestamp: errorDetails.timestamp,
+      stack: errorDetails.stack,
       metadata: errorDetails.metadata,
     });
   }
@@ -373,35 +409,58 @@ async _executeWithErrorHandling(operation, operationName, options = {}) {
 
 ```javascript
 /**
- * Validate form data against schema
+ * Validate data against schema with error handling
+ * Uses the existing AjvSchemaValidator interface and validateAgainstSchema utility
  * @protected
  * @param {object} data - Data to validate
  * @param {string} schemaId - Schema ID for validation
+ * @param {object} [context={}] - Validation context options for enhanced error handling
  * @returns {{isValid: boolean, errors?: Array, errorMessage?: string}} Validation result
  */
-_validateData(data, schemaId) {
+_validateData(data, schemaId, context = {}) {
   try {
-    const result = this._schemaValidator.validateAgainstSchema(data, schemaId);
+    // Use the sophisticated validateAgainstSchema utility from schemaValidationUtils.js
+    // with proper context configuration for enhanced error handling
+    const validationContext = {
+      validationDebugMessage: `${this.constructor.name}: Validating data against schema '${schemaId}'`,
+      notLoadedMessage: `${this.constructor.name}: Schema '${schemaId}' not loaded`,
+      notLoadedLogLevel: 'error',
+      skipIfSchemaNotLoaded: false,
+      failureMessage: (errors) => `${this.constructor.name}: Validation failed for schema '${schemaId}' with ${errors.length} error(s)`,
+      failureContext: {
+        operation: context.operation || 'validateData',
+        controller: this.constructor.name,
+        schemaId
+      },
+      failureThrowMessage: 'Schema validation failed',
+      appendErrorDetails: true,
+      ...context
+    };
 
-    if (!result.isValid) {
-      // Format validation errors
-      const formattedErrors = this._formatValidationErrors(result.errors);
+    // The AjvSchemaValidator validateAgainstSchema method returns boolean directly
+    const isValid = this.schemaValidator.validateAgainstSchema(data, schemaId, validationContext);
 
-      return {
-        isValid: false,
-        errors: formattedErrors,
-        errorMessage: this._buildValidationErrorMessage(formattedErrors),
-      };
+    if (isValid) {
+      return { isValid: true };
     }
 
-    return { isValid: true };
+    // If validation failed, get the detailed validation result for error formatting
+    const detailedResult = this.schemaValidator.validate(schemaId, data);
+    const formattedErrors = this._formatValidationErrors(detailedResult.errors);
+
+    return {
+      isValid: false,
+      errors: formattedErrors,
+      errorMessage: this._buildValidationErrorMessage(formattedErrors),
+    };
 
   } catch (error) {
+    // Handle schema loading errors or validation system failures
     this._handleError(error, {
-      operation: 'validateData',
+      operation: context.operation || 'validateData',
       category: ERROR_CATEGORIES.SYSTEM,
       userMessage: 'Validation failed. Please check your input.',
-      metadata: { schemaId },
+      metadata: { schemaId, dataKeys: Object.keys(data || {}) },
     });
 
     return {
@@ -608,59 +667,94 @@ _handleError(error, context = {}) {
 
 ## Technical Considerations
 
-### Error Categorization
+**NOTE**: The BaseCharacterBuilderController already has sophisticated error handling infrastructure that should be considered during implementation:
 
-- Automatic categorization based on error messages
-- Override with explicit category when known
-- Use categories for appropriate user messaging
+### Existing Controller Complexity
 
-### User Experience
+The production BaseCharacterBuilderController has:
 
-- Show user-friendly messages, not technical details
-- Provide actionable guidance when possible
-- Don't overwhelm users with multiple errors
+- **2,400+ lines of comprehensive test coverage** indicating high complexity
+- **Advanced DOM Element Management** with caching, validation, and bulk operations
+- **Sophisticated UI State Management** integration with UIStateManager class
+- **Comprehensive Event Handling Infrastructure** with delegation, debouncing, and async operations
+- **8-Phase Lifecycle Management** with detailed error context at each phase
+- **Existing Error Enhancement Patterns** that add context, timing, and phase information
+
+### Integration with Existing Systems
+
+#### UI State Management Integration
+
+- Reference existing `UIStateManager` class (`src/shared/characterBuilder/uiStateManager.js`)
+- Use existing `UI_STATES` constants (EMPTY, LOADING, RESULTS, ERROR)
+- Integrate with existing state transition hooks and event bus notifications
+
+#### Event System Integration
+
+- Leverage existing event listener management with comprehensive statistics
+- Use existing `SYSTEM_ERROR_OCCURRED` event dispatching pattern
+- Integrate with existing event cleanup and lifecycle management
+
+#### Error Categorization
+
+- Build upon existing `ActionErrorContext` pattern from `src/actions/errors/actionErrorTypes.js`
+- Leverage existing domain-specific error classes (40+ specialized errors)
+- Use existing `MissingDependencyError` and `InvalidDependencyError` patterns
 
 ### Debugging Support
 
-- Preserve full error context and stack traces
-- Log all errors with appropriate detail level
-- Provide methods to access error history
+- Preserve full error context and stack traces following existing patterns
+- Use existing error enhancement utilities for phase tracking and timing
+- Integrate with existing comprehensive logging infrastructure
+- Provide methods to access error history following existing patterns
 
 ### Recovery Strategies
 
-- Automatic retry for transient failures
-- Graceful degradation for non-critical errors
-- Clear feedback during recovery attempts
+- Automatic retry for transient failures using existing service patterns
+- Graceful degradation leveraging existing UI state management
+- Clear feedback during recovery attempts via existing state hooks
 
 ## Testing Requirements
 
-### Test Cases
+**NOTE**: The BaseCharacterBuilderController already has extensive test coverage that should be extended rather than replaced.
 
-1. **Error Handling**
-   - Handles Error objects correctly
-   - Handles string errors correctly
-   - Preserves error context
-   - Generates appropriate user messages
+### Existing Test Infrastructure
 
-2. **Error Categories**
-   - Auto-categorization works correctly
-   - Each category shows appropriate message
-   - Severity levels applied correctly
+The production controller has **2,400+ lines of test coverage** in `tests/unit/characterBuilder/controllers/BaseCharacterBuilderController.test.js` that includes:
 
-3. **Service Operations**
-   - Retry logic works for transient failures
-   - Non-retryable errors fail immediately
-   - Retry delays increase appropriately
+- **Constructor Tests** - Comprehensive dependency validation patterns
+- **Lifecycle Tests** - 8-phase initialization with error context tracking
+- **DOM Element Management Tests** - Caching, validation, and bulk operation error handling
+- **UI State Management Tests** - Integration with UIStateManager and error state transitions
+- **Event Handling Tests** - Comprehensive event listener management with error scenarios
 
-4. **Validation Errors**
-   - Schema validation errors formatted well
-   - Multiple errors displayed clearly
-   - Field-specific errors identified
+### Additional Test Cases Needed
 
-5. **Recovery Mechanisms**
-   - Recoverable errors trigger recovery
-   - Non-recoverable errors don't retry
-   - Recovery attempts logged
+Building on the existing framework, add tests for:
+
+1. **Enhanced Error Handling**
+   - Integration with existing error enhancement patterns
+   - Error context preservation following existing patterns
+   - Integration with existing `SYSTEM_ERROR_OCCURRED` event dispatching
+
+2. **Error Categories Integration**
+   - Integration with existing `ActionErrorContext` patterns
+   - Compatibility with existing domain-specific error classes
+   - Proper use of existing `MissingDependencyError` and `InvalidDependencyError`
+
+3. **Service Operations with Existing Infrastructure**
+   - Retry logic integration with existing lifecycle patterns
+   - Integration with existing event bus error dispatching
+   - Compatibility with existing DOM element management error handling
+
+4. **Validation Integration**
+   - Integration with existing AjvSchemaValidator interface
+   - Use of sophisticated validateAgainstSchema utility patterns
+   - Compatibility with existing schema loading and context patterns
+
+5. **Recovery Mechanisms with UI State Management**
+   - Integration with existing UIStateManager state transitions
+   - Compatibility with existing form control management
+   - Use of existing state change hooks and event bus notifications
 
 ### Mock Error Scenarios
 
@@ -712,9 +806,28 @@ it('should format validation errors correctly', () => {
 
 ## Notes for Implementer
 
-- Keep user messages friendly and non-technical
-- Ensure all errors are logged for debugging
-- Test with real service failures
-- Consider i18n for error messages in future
-- Make recovery attempts transparent to users
-- Preserve error context for troubleshooting
+**IMPORTANT**: This implementation should integrate with and enhance existing infrastructure rather than replace it.
+
+### Production Code Integration
+
+- **Study Existing Patterns** - Review the 2,400+ lines of existing test coverage to understand patterns
+- **Leverage Existing Infrastructure** - Use `UIStateManager`, `AjvSchemaValidator`, and existing error classes
+- **Follow Project Conventions** - Use dependency injection, existing validation patterns, and event bus integration
+- **Maintain Test Coverage** - Extend existing comprehensive test suites rather than creating new ones
+
+### Implementation Guidelines
+
+- Keep user messages friendly and non-technical following existing `UIStateManager` patterns
+- Ensure all errors are logged using existing logger interfaces and event dispatching
+- Test with real service failures using existing test bed infrastructure (`tests/common/testbed.js`)
+- Consider i18n for error messages in future (project has localization considerations)
+- Make recovery attempts transparent using existing UI state transitions
+- Preserve error context following existing `ActionErrorContext` patterns
+
+### Required File References
+
+- Existing error classes: `src/errors/dependencyErrors.js`, `src/actions/errors/actionErrorTypes.js`
+- Schema validation: `src/validation/ajvSchemaValidator.js`, `src/utils/schemaValidationUtils.js`
+- UI state management: `src/shared/characterBuilder/uiStateManager.js`
+- Test infrastructure: `tests/unit/characterBuilder/controllers/BaseCharacterBuilderController.test.js`
+- Production controller: `src/characterBuilder/controllers/BaseCharacterBuilderController.js`

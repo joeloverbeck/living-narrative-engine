@@ -9,6 +9,8 @@ import { ServiceFactory } from '../../actions/pipeline/services/ServiceFactory.j
 import { ServiceRegistry } from '../../actions/pipeline/services/ServiceRegistry.js';
 import { TargetDependencyResolver } from '../../actions/pipeline/services/implementations/TargetDependencyResolver.js';
 import { LegacyTargetCompatibilityLayer } from '../../actions/pipeline/services/implementations/LegacyTargetCompatibilityLayer.js';
+import { ScopeContextBuilder } from '../../actions/pipeline/services/implementations/ScopeContextBuilder.js';
+import { TargetDisplayNameResolver } from '../../actions/pipeline/services/implementations/TargetDisplayNameResolver.js';
 
 /**
  * Register pipeline services for multi-target resolution
@@ -18,10 +20,10 @@ import { LegacyTargetCompatibilityLayer } from '../../actions/pipeline/services/
  * - Placeholder implementations for the 4 decomposed services
  *
  * The placeholder implementations will be replaced in subsequent tickets:
- * - Ticket 02: TargetDependencyResolver
- * - Ticket 03: LegacyTargetCompatibilityLayer
- * - Ticket 05: ScopeContextBuilder
- * - Ticket 06: TargetDisplayNameResolver
+ * - Ticket 02: TargetDependencyResolver (✓ Completed)
+ * - Ticket 03: LegacyTargetCompatibilityLayer (✓ Completed)
+ * - Ticket 05: ScopeContextBuilder (✓ Completed)
+ * - Ticket 06: TargetDisplayNameResolver (✓ Completed)
  *
  * @param {import('../appContainer.js').default} container - The DI container
  */
@@ -60,38 +62,29 @@ export function registerPipelineServices(container) {
     });
   });
 
-  registrar.single(
-    tokens.IScopeContextBuilder,
-    class PlaceholderScopeContextBuilder {
-      constructor() {
-        throw new Error(
-          'ScopeContextBuilder implementation pending (Ticket 05: Scope Context Builder). ' +
-            'This service will build evaluation contexts for scope DSL resolution.'
-        );
-      }
-    }
-  );
+  registrar.singletonFactory(tokens.IScopeContextBuilder, (c) => {
+    return new ScopeContextBuilder({
+      targetContextBuilder: c.resolve(tokens.ITargetContextBuilder),
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
 
-  registrar.single(
-    tokens.ITargetDisplayNameResolver,
-    class PlaceholderTargetDisplayNameResolver {
-      constructor() {
-        throw new Error(
-          'TargetDisplayNameResolver implementation pending (Ticket 06: Target Display Name Resolver). ' +
-            'This service will resolve entity display names for action formatting.'
-        );
-      }
-    }
-  );
+  registrar.singletonFactory(tokens.ITargetDisplayNameResolver, (c) => {
+    return new TargetDisplayNameResolver({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
 
   logger.debug('Pipeline Service Registration: Completed', {
     registeredServices: [
       'IPipelineServiceFactory',
       'IPipelineServiceRegistry',
       'ITargetDependencyResolver',
-      'ILegacyTargetCompatibilityLayer (placeholder)',
-      'IScopeContextBuilder (placeholder)',
-      'ITargetDisplayNameResolver (placeholder)',
+      'ILegacyTargetCompatibilityLayer',
+      'IScopeContextBuilder',
+      'ITargetDisplayNameResolver',
     ],
   });
 }

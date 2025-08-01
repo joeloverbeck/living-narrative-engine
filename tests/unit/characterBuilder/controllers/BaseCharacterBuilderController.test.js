@@ -17,6 +17,22 @@ import {
   InvalidDependencyError,
 } from '../../../../src/errors/dependencyErrors.js';
 
+// Mock UIStateManager
+jest.mock('../../../../src/shared/characterBuilder/uiStateManager.js', () => {
+  const originalModule = jest.requireActual(
+    '../../../../src/shared/characterBuilder/uiStateManager.js'
+  );
+  return {
+    ...originalModule,
+    UIStateManager: jest.fn().mockImplementation(() => ({
+      showState: jest.fn(),
+      showError: jest.fn(),
+      showLoading: jest.fn(),
+      getCurrentState: jest.fn(),
+    })),
+  };
+});
+
 // Create a test implementation for testing
 class TestController extends BaseCharacterBuilderController {
   _cacheElements() {
@@ -130,7 +146,7 @@ describe('BaseCharacterBuilderController', () => {
           schemaValidator: mockSchemaValidator,
         });
       }).toThrow(MissingDependencyError);
-      
+
       expect(() => {
         new TestController({
           characterBuilderService: mockCharacterBuilderService,
@@ -352,7 +368,9 @@ describe('BaseCharacterBuilderController', () => {
         expect.stringMatching(/TestController: Starting initialization/)
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringMatching(/TestController: Initialization completed in \d+(\.\d+)?ms/)
+        expect.stringMatching(
+          /TestController: Initialization completed in \d+(\.\d+)?ms/
+        )
       );
     });
 
@@ -397,7 +415,7 @@ describe('BaseCharacterBuilderController', () => {
       expect(controller.isInitializing).toBe(false);
 
       const initPromise = controller.initialize();
-      
+
       // During initialization
       expect(controller.isInitializing).toBe(true);
       expect(controller.isInitialized).toBe(false);
@@ -415,12 +433,16 @@ describe('BaseCharacterBuilderController', () => {
         throw testError;
       });
 
-      await expect(controller.initialize()).rejects.toThrow('element caching failed: Test initialization error');
+      await expect(controller.initialize()).rejects.toThrow(
+        'element caching failed: Test initialization error'
+      );
 
       expect(controller.isInitialized).toBe(false);
       expect(controller.isInitializing).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringMatching(/TestController: Initialization failed after \d+(\.\d+)?ms/),
+        expect.stringMatching(
+          /TestController: Initialization failed after \d+(\.\d+)?ms/
+        ),
         expect.any(Error)
       );
     });
@@ -473,7 +495,7 @@ describe('BaseCharacterBuilderController', () => {
 
     beforeEach(() => {
       executionOrder = [];
-      
+
       class LifecycleTestController extends BaseCharacterBuilderController {
         _cacheElements() {
           executionOrder.push('cacheElements');
@@ -546,13 +568,13 @@ describe('BaseCharacterBuilderController', () => {
 
     it('should handle async lifecycle methods properly', async () => {
       let asyncResolved = false;
-      
+
       class AsyncTestController extends BaseCharacterBuilderController {
         _cacheElements() {}
         _setupEventListeners() {}
 
         async _preInitialize() {
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
           asyncResolved = true;
         }
       }
@@ -616,7 +638,9 @@ describe('BaseCharacterBuilderController', () => {
       expect(minimalController.isInitialized).toBe(true);
       // Should complete successfully with default implementations
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringMatching(/MinimalController: Initialization completed in \d+(\.\d+)?ms/)
+        expect.stringMatching(
+          /MinimalController: Initialization completed in \d+(\.\d+)?ms/
+        )
       );
     });
 
@@ -641,7 +665,9 @@ describe('BaseCharacterBuilderController', () => {
         expect.stringMatching(/TestController: Starting element caching/)
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringMatching(/TestController: Completed element caching in \d+(\.\d+)?ms/)
+        expect.stringMatching(
+          /TestController: Completed element caching in \d+(\.\d+)?ms/
+        )
       );
     });
   });
@@ -667,14 +693,14 @@ describe('BaseCharacterBuilderController', () => {
 
     it('should provide access to additional services through getter', () => {
       const services = controller.additionalServices;
-      
+
       expect(services.customService).toBe(mockAdditionalService);
     });
 
     it('should return defensive copy of additional services', () => {
       const services1 = controller.additionalServices;
       const services2 = controller.additionalServices;
-      
+
       expect(services1).not.toBe(services2);
       expect(services1).toEqual(services2);
     });
@@ -735,10 +761,10 @@ describe('BaseCharacterBuilderController', () => {
 
     it('should reset state properly during re-initialization', async () => {
       await controller.initialize();
-      
+
       // Simulate some cached elements
       controller.elements; // Access the getter to verify state
-      
+
       await controller._reinitialize();
 
       expect(controller.isInitialized).toBe(true);
@@ -1010,6 +1036,1419 @@ describe('BaseCharacterBuilderController', () => {
           'Ensure the service implements all required methods'
         );
       }
+    });
+  });
+
+  describe('DOM Element Management Tests', () => {
+    let controller;
+
+    beforeEach(() => {
+      // Set up DOM structure for testing
+      document.body.innerHTML = `
+        <form id="test-form">
+          <input id="username" type="text" />
+          <button id="submit-btn">Submit</button>
+          <div class="error-message" style="display: none;"></div>
+          <span id="optional-tooltip">Help</span>
+        </form>
+        <div id="detached-parent">
+          <p id="will-be-removed">This will be removed</p>
+        </div>
+      `;
+
+      controller = new TestController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+    });
+
+    afterEach(() => {
+      document.body.innerHTML = '';
+    });
+
+    describe('_cacheElement() - Core Element Caching', () => {
+      it('should cache required element by ID successfully', () => {
+        const element = controller._cacheElement('form', '#test-form');
+
+        expect(element).toBeInstanceOf(HTMLFormElement);
+        expect(controller.elements.form).toBe(element);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining("Cached element 'form' (FORM#test-form)")
+        );
+      });
+
+      it('should cache required element by selector successfully', () => {
+        const element = controller._cacheElement('errorMsg', '.error-message');
+
+        expect(element).toBeInstanceOf(HTMLDivElement);
+        expect(controller.elements.errorMsg).toBe(element);
+      });
+
+      it('should throw error for missing required element', () => {
+        expect(() => {
+          controller._cacheElement('missing', '#not-there');
+        }).toThrow("Required element with ID 'not-there' not found in DOM");
+      });
+
+      it('should return null for missing optional element', () => {
+        const element = controller._cacheElement(
+          'missing',
+          '#not-there',
+          false
+        );
+
+        expect(element).toBeNull();
+        expect(controller.elements.missing).toBeNull();
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining("Optional element 'missing' not found")
+        );
+      });
+
+      it('should validate parameters', () => {
+        expect(() => {
+          controller._cacheElement('', '#test');
+        }).toThrow('Invalid element key provided');
+
+        expect(() => {
+          controller._cacheElement('test', '');
+        }).toThrow('Invalid selector provided');
+      });
+
+      it('should optimize ID selectors vs complex selectors', () => {
+        // Test ID selector optimization
+        const formElement = controller._cacheElement('form', '#test-form');
+        expect(formElement).toBeDefined();
+
+        // Test complex selector
+        const errorElement = controller._cacheElement(
+          'error',
+          '.error-message'
+        );
+        expect(errorElement).toBeDefined();
+      });
+    });
+
+    describe('_cacheElementsFromMap() - Bulk Element Caching', () => {
+      it('should cache all elements from simple mapping', () => {
+        const results = controller._cacheElementsFromMap({
+          form: '#test-form',
+          submitBtn: '#submit-btn',
+          tooltip: '#optional-tooltip',
+        });
+
+        expect(results.stats.total).toBe(3);
+        expect(results.stats.cached).toBe(3);
+        expect(results.stats.failed).toBe(0);
+        expect(results.cached.form).toBeInstanceOf(HTMLFormElement);
+        expect(results.cached.submitBtn).toBeInstanceOf(HTMLButtonElement);
+        expect(results.cached.tooltip).toBeInstanceOf(HTMLSpanElement);
+      });
+
+      it('should handle mix of required and optional elements', () => {
+        const results = controller._cacheElementsFromMap({
+          form: { selector: '#test-form', required: true },
+          missing: { selector: '#not-there', required: false },
+          tooltip: { selector: '#optional-tooltip', required: true },
+        });
+
+        expect(results.stats.total).toBe(3);
+        expect(results.stats.cached).toBe(2);
+        expect(results.stats.optional).toBe(1);
+        expect(results.stats.failed).toBe(0);
+      });
+
+      it('should support custom validation', () => {
+        const results = controller._cacheElementsFromMap({
+          form: {
+            selector: '#test-form',
+            required: true,
+            validate: (el) => el.tagName === 'FORM',
+          },
+        });
+
+        expect(results.stats.cached).toBe(1);
+        expect(results.cached.form).toBeInstanceOf(HTMLFormElement);
+      });
+
+      it('should fail custom validation correctly', () => {
+        const results = controller._cacheElementsFromMap(
+          {
+            form: {
+              selector: '#test-form',
+              required: true,
+              validate: (el) => el.tagName === 'DIV',
+            },
+          },
+          { continueOnError: true }
+        );
+
+        expect(results.stats.failed).toBe(1);
+        expect(results.errors).toHaveLength(1);
+        expect(results.errors[0].error).toContain('Custom validation failed');
+      });
+
+      it('should stop on first error when configured', () => {
+        expect(() => {
+          controller._cacheElementsFromMap(
+            {
+              missing1: '#not-there-1',
+              missing2: '#not-there-2',
+            },
+            { stopOnFirstError: true }
+          );
+        }).toThrow('Element caching failed');
+      });
+    });
+
+    describe('Element Query Utilities', () => {
+      beforeEach(() => {
+        // Cache some elements for testing
+        controller._cacheElement('form', '#test-form');
+        controller._cacheElement('submitBtn', '#submit-btn');
+      });
+
+      it('should get cached element by key', () => {
+        const element = controller._getElement('form');
+        expect(element).toBeInstanceOf(HTMLFormElement);
+        expect(element.id).toBe('test-form');
+      });
+
+      it('should return null for non-existent key', () => {
+        const element = controller._getElement('nonexistent');
+        expect(element).toBeNull();
+      });
+
+      it('should check if element exists and is in DOM', () => {
+        expect(controller._hasElement('form')).toBe(true);
+        expect(controller._hasElement('nonexistent')).toBe(false);
+      });
+
+      it('should get multiple elements by keys', () => {
+        const elements = controller._getElements(['form', 'submitBtn']);
+
+        expect(elements.form).toBeInstanceOf(HTMLFormElement);
+        expect(elements.submitBtn).toBeInstanceOf(HTMLButtonElement);
+      });
+
+      it('should refresh cached element', () => {
+        const originalElement = controller._getElement('form');
+        const refreshedElement = controller._refreshElement(
+          'form',
+          '#test-form'
+        );
+
+        expect(refreshedElement).toBeInstanceOf(HTMLFormElement);
+        expect(refreshedElement).toBe(originalElement); // Same element in DOM
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining("Refreshing element 'form'")
+        );
+      });
+    });
+
+    describe('Element Operations', () => {
+      beforeEach(() => {
+        controller._cacheElement('errorMsg', '.error-message');
+        controller._cacheElement('submitBtn', '#submit-btn');
+        controller._cacheElement('tooltip', '#optional-tooltip');
+      });
+
+      it('should show and hide elements', () => {
+        const result1 = controller._showElement('errorMsg');
+        expect(result1).toBe(true);
+        expect(controller._getElement('errorMsg').style.display).toBe('block');
+
+        const result2 = controller._hideElement('errorMsg');
+        expect(result2).toBe(true);
+        expect(controller._getElement('errorMsg').style.display).toBe('none');
+      });
+
+      it('should show element with custom display type', () => {
+        const result = controller._showElement('errorMsg', 'flex');
+        expect(result).toBe(true);
+        expect(controller._getElement('errorMsg').style.display).toBe('flex');
+      });
+
+      it('should toggle element visibility', () => {
+        // Initially hidden
+        controller._hideElement('errorMsg');
+
+        const visible1 = controller._toggleElement('errorMsg');
+        expect(visible1).toBe(true);
+        expect(controller._getElement('errorMsg').style.display).toBe('block');
+
+        const visible2 = controller._toggleElement('errorMsg');
+        expect(visible2).toBe(false);
+        expect(controller._getElement('errorMsg').style.display).toBe('none');
+      });
+
+      it('should force toggle visibility state', () => {
+        controller._toggleElement('errorMsg', true);
+        expect(controller._getElement('errorMsg').style.display).toBe('block');
+
+        controller._toggleElement('errorMsg', false);
+        expect(controller._getElement('errorMsg').style.display).toBe('none');
+      });
+
+      it('should enable and disable form elements', () => {
+        const result1 = controller._setElementEnabled('submitBtn', false);
+        expect(result1).toBe(true);
+        expect(controller._getElement('submitBtn').disabled).toBe(true);
+
+        const result2 = controller._setElementEnabled('submitBtn', true);
+        expect(result2).toBe(true);
+        expect(controller._getElement('submitBtn').disabled).toBe(false);
+      });
+
+      it('should set element text content', () => {
+        const result = controller._setElementText('tooltip', 'New help text');
+        expect(result).toBe(true);
+        expect(controller._getElement('tooltip').textContent).toBe(
+          'New help text'
+        );
+      });
+
+      it('should add and remove CSS classes', () => {
+        const result1 = controller._addElementClass('tooltip', 'highlight');
+        expect(result1).toBe(true);
+        expect(
+          controller._getElement('tooltip').classList.contains('highlight')
+        ).toBe(true);
+
+        const result2 = controller._removeElementClass('tooltip', 'highlight');
+        expect(result2).toBe(true);
+        expect(
+          controller._getElement('tooltip').classList.contains('highlight')
+        ).toBe(false);
+      });
+
+      it('should return false for operations on missing elements', () => {
+        expect(controller._showElement('missing')).toBe(false);
+        expect(controller._hideElement('missing')).toBe(false);
+        expect(controller._toggleElement('missing')).toBe(false);
+        expect(controller._setElementEnabled('missing')).toBe(false);
+        expect(controller._setElementText('missing', 'text')).toBe(false);
+        expect(controller._addElementClass('missing', 'class')).toBe(false);
+        expect(controller._removeElementClass('missing', 'class')).toBe(false);
+      });
+    });
+
+    describe('Cache Management', () => {
+      beforeEach(() => {
+        controller._cacheElement('form', '#test-form');
+        controller._cacheElement('submitBtn', '#submit-btn');
+      });
+
+      it('should clear element cache', () => {
+        expect(Object.keys(controller.elements)).toHaveLength(2);
+
+        controller._clearElementCache();
+
+        expect(Object.keys(controller.elements)).toHaveLength(0);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'TestController: Cleared 2 cached element references'
+        );
+      });
+
+      it('should validate element cache', () => {
+        // Remove element from DOM but keep in cache
+        const detachedElement = document.getElementById('will-be-removed');
+        controller._cacheElement('detached', '#will-be-removed');
+        detachedElement.remove();
+
+        const results = controller._validateElementCache();
+
+        expect(results.total).toBe(3); // form, submitBtn, detached
+        expect(results.valid).toHaveLength(2);
+        expect(results.invalid).toHaveLength(1);
+        expect(results.invalid).toContain('detached');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining("Cached element 'detached' no longer in DOM")
+        );
+      });
+
+      it('should integrate with _resetInitializationState', () => {
+        expect(Object.keys(controller.elements)).toHaveLength(2);
+
+        controller._resetInitializationState();
+
+        expect(Object.keys(controller.elements)).toHaveLength(0);
+        expect(controller.isInitialized).toBe(false);
+        expect(controller.isInitializing).toBe(false);
+      });
+    });
+
+    describe('Element Validation', () => {
+      it('should validate HTMLElement instances', () => {
+        const validElement = document.getElementById('test-form');
+
+        expect(() => {
+          controller._validateElement(validElement, 'form');
+        }).not.toThrow();
+      });
+
+      it('should reject non-HTMLElement instances', () => {
+        const invalidElement = { tagName: 'FAKE' };
+
+        expect(() => {
+          controller._validateElement(invalidElement, 'fake');
+        }).toThrow("Element 'fake' is not a valid HTMLElement");
+      });
+
+      it('should warn about detached elements', () => {
+        const detachedElement = document.createElement('div');
+
+        controller._validateElement(detachedElement, 'detached');
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining("Element 'detached' is not attached to DOM")
+        );
+      });
+    });
+
+    describe('Error Handling', () => {
+      it('should enhance errors with context information', () => {
+        try {
+          controller._cacheElement('missing', '#not-there', true);
+        } catch (error) {
+          expect(error.elementKey).toBe('missing');
+          expect(error.selector).toBe('#not-there');
+          expect(error.originalError).toBeDefined();
+          expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.stringContaining('Element caching failed'),
+            error
+          );
+        }
+      });
+
+      it('should normalize element configuration correctly', () => {
+        // Test string configuration
+        const stringConfig = controller._normalizeElementConfig('#test');
+        expect(stringConfig).toEqual({
+          selector: '#test',
+          required: true,
+          validate: null,
+        });
+
+        // Test object configuration
+        const objectConfig = controller._normalizeElementConfig({
+          selector: '#test',
+          required: false,
+          validate: () => true,
+        });
+        expect(objectConfig.selector).toBe('#test');
+        expect(objectConfig.required).toBe(false);
+        expect(objectConfig.validate).toBeInstanceOf(Function);
+      });
+    });
+  });
+
+  describe('UIStateManager Integration', () => {
+    let controller;
+    let mockUIStateManager;
+
+    beforeEach(async () => {
+      // Set up DOM elements that match production patterns
+      document.body.innerHTML = `
+        <div id="empty-state" style="display: flex;">
+          <p>No data available</p>
+        </div>
+        <div id="loading-state" style="display: none;">
+          <p>Loading...</p>
+        </div>
+        <div id="results-state" style="display: none;">
+          <div class="results-container"></div>
+        </div>
+        <div id="error-state" style="display: none;">
+          <div class="error-message">An error occurred</div>
+        </div>
+        <form id="test-form">
+          <button id="submit-btn">Submit</button>
+          <button id="save-btn">Save</button>
+        </form>
+      `;
+
+      controller = new TestController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      // Cache elements
+      controller._cacheElementsFromMap({
+        emptyState: '#empty-state',
+        loadingState: '#loading-state',
+        resultsState: '#results-state',
+        errorState: '#error-state',
+        form: '#test-form',
+        submitBtn: '#submit-btn',
+        saveBtn: '#save-btn',
+      });
+
+      // Get the mocked UIStateManager instance
+      const { UIStateManager } = await import(
+        '../../../../src/shared/characterBuilder/uiStateManager.js'
+      );
+      mockUIStateManager = {
+        showState: jest.fn(),
+        showError: jest.fn(),
+        showLoading: jest.fn(),
+        getCurrentState: jest.fn().mockReturnValue(null),
+      };
+      UIStateManager.mockReturnValue(mockUIStateManager);
+    });
+
+    afterEach(() => {
+      document.body.innerHTML = '';
+    });
+
+    describe('UIStateManager Initialization', () => {
+      it('should initialize UIStateManager with cached elements', async () => {
+        await controller._initializeUIStateManager();
+
+        const { UIStateManager } = await import(
+          '../../../../src/shared/characterBuilder/uiStateManager.js'
+        );
+        expect(UIStateManager).toHaveBeenCalledWith({
+          emptyState: document.getElementById('empty-state'),
+          loadingState: document.getElementById('loading-state'),
+          resultsState: document.getElementById('results-state'),
+          errorState: document.getElementById('error-state'),
+        });
+      });
+
+      it('should handle missing state elements gracefully', async () => {
+        // Create a controller with incomplete DOM setup
+        document.body.innerHTML = `
+          <div id="loading-state" style="display: none;">
+            <p>Loading...</p>
+          </div>
+          <div id="results-state" style="display: none;">
+            <div class="results-container"></div>
+          </div>
+          <div id="error-state" style="display: none;">
+            <div class="error-message">An error occurred</div>
+          </div>
+        `;
+
+        const testController = new TestController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+        });
+
+        // Cache elements - emptyState will be missing
+        testController._cacheElementsFromMap({
+          emptyState: '#empty-state', // This won't exist
+          loadingState: '#loading-state',
+          resultsState: '#results-state',
+          errorState: '#error-state',
+        });
+
+        // Clear previous mock calls
+        const { UIStateManager } = await import(
+          '../../../../src/shared/characterBuilder/uiStateManager.js'
+        );
+        UIStateManager.mockClear();
+
+        await testController._initializeUIStateManager();
+
+        expect(UIStateManager).not.toHaveBeenCalled();
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'TestController: Missing state elements: emptyState'
+        );
+      });
+
+      it('should handle UIStateManager construction errors', async () => {
+        const { UIStateManager } = await import(
+          '../../../../src/shared/characterBuilder/uiStateManager.js'
+        );
+        UIStateManager.mockImplementation(() => {
+          throw new Error('Mock construction error');
+        });
+
+        await controller._initializeUIStateManager();
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'TestController: Failed to initialize UIStateManager',
+          expect.any(Error)
+        );
+      });
+    });
+
+    describe('State Transitions', () => {
+      beforeEach(async () => {
+        await controller._initializeUIStateManager();
+        // Access the private field for testing
+        controller._testUIStateManager = mockUIStateManager;
+      });
+
+      it('should show state through UIStateManager', () => {
+        // Override the private field access for testing
+        controller._showState = function (state, options = {}) {
+          const { message, data } = options;
+
+          if (!mockUIStateManager) {
+            this.logger.warn(
+              `${this.constructor.name}: UIStateManager not initialized`
+            );
+            return;
+          }
+
+          const previousState = mockUIStateManager.getCurrentState();
+
+          try {
+            this._beforeStateChange(previousState, state, options);
+            mockUIStateManager.showState(state, message);
+            this._handleStateChange(state, { message, data, previousState });
+            this._afterStateChange(previousState, state, options);
+
+            if (this.eventBus) {
+              this.eventBus.dispatch('UI_STATE_CHANGED', {
+                controller: this.constructor.name,
+                previousState,
+                currentState: state,
+                timestamp: new Date().toISOString(),
+              });
+            }
+          } catch (error) {
+            this.logger.error(
+              `${this.constructor.name}: State transition failed`,
+              error
+            );
+          }
+        };
+
+        controller._showState('loading', { message: 'Please wait...' });
+
+        expect(mockUIStateManager.showState).toHaveBeenCalledWith(
+          'loading',
+          'Please wait...'
+        );
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith('UI_STATE_CHANGED', {
+          controller: 'TestController',
+          previousState: null,
+          currentState: 'loading',
+          timestamp: expect.any(String),
+        });
+      });
+
+      it('should handle invalid states gracefully', () => {
+        jest
+          .spyOn(controller, '_showState')
+          .mockImplementation(function (state) {
+            if (state === 'invalid') {
+              this.logger.warn(
+                `${this.constructor.name}: Invalid state 'invalid', using 'empty' instead`
+              );
+              mockUIStateManager.showState('empty');
+            }
+          });
+
+        controller._showState('invalid');
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          "TestController: Invalid state 'invalid', using 'empty' instead"
+        );
+      });
+    });
+
+    describe('Convenience Methods', () => {
+      beforeEach(async () => {
+        await controller._initializeUIStateManager();
+        // Mock the _showState method for testing
+        jest.spyOn(controller, '_showState');
+      });
+
+      it('should show error with string message', () => {
+        controller._showError('Test error message');
+
+        expect(controller._showState).toHaveBeenCalledWith('error', {
+          message: 'Test error message',
+        });
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'TestController: Showing error state',
+          { message: 'Test error message', error: 'Test error message' }
+        );
+      });
+
+      it('should show error with Error object', () => {
+        const error = new Error('Test error');
+        controller._showError(error);
+
+        expect(controller._showState).toHaveBeenCalledWith('error', {
+          message: 'Test error',
+        });
+      });
+
+      it('should show loading state', () => {
+        controller._showLoading('Custom loading message');
+
+        expect(controller._showState).toHaveBeenCalledWith('loading', {
+          message: 'Custom loading message',
+        });
+      });
+
+      it('should show loading with default message', () => {
+        controller._showLoading();
+
+        expect(controller._showState).toHaveBeenCalledWith('loading', {
+          message: 'Loading...',
+        });
+      });
+
+      it('should show results state', () => {
+        const testData = { items: [1, 2, 3] };
+        controller._showResults(testData);
+
+        expect(controller._showState).toHaveBeenCalledWith('results', {
+          data: testData,
+        });
+      });
+
+      it('should show empty state', () => {
+        controller._showEmpty();
+
+        expect(controller._showState).toHaveBeenCalledWith('empty');
+      });
+    });
+
+    describe('State Change Hooks', () => {
+      let hooksCalled;
+
+      beforeEach(async () => {
+        await controller._initializeUIStateManager();
+        hooksCalled = [];
+
+        // Override hooks to track calls
+        controller._beforeStateChange = jest.fn((from, to, options) => {
+          hooksCalled.push(`before:${from}->${to}`);
+        });
+        controller._handleStateChange = jest.fn((state, data) => {
+          hooksCalled.push(`handle:${state}`);
+        });
+        controller._afterStateChange = jest.fn((from, to, options) => {
+          hooksCalled.push(`after:${from}->${to}`);
+        });
+      });
+
+      it('should call hooks in correct order', () => {
+        // Mock the UIStateManager access for testing
+        controller._showState = function (state, options = {}) {
+          const previousState = 'empty';
+          this._beforeStateChange(previousState, state, options);
+          this._handleStateChange(state, { previousState });
+          this._afterStateChange(previousState, state, options);
+        };
+
+        controller._showState('loading');
+
+        expect(hooksCalled).toEqual([
+          'before:empty->loading',
+          'handle:loading',
+          'after:empty->loading',
+        ]);
+      });
+    });
+
+    describe('Form Control Management', () => {
+      beforeEach(async () => {
+        await controller._initializeUIStateManager();
+      });
+
+      it('should disable form controls during loading', () => {
+        controller._setFormControlsEnabled(false);
+
+        const submitBtn = document.getElementById('submit-btn');
+        const saveBtn = document.getElementById('save-btn');
+
+        expect(submitBtn.disabled).toBe(true);
+        expect(saveBtn.disabled).toBe(true);
+      });
+
+      it('should enable form controls', () => {
+        // First disable them
+        controller._setFormControlsEnabled(false);
+        // Then enable them
+        controller._setFormControlsEnabled(true);
+
+        const submitBtn = document.getElementById('submit-btn');
+        const saveBtn = document.getElementById('save-btn');
+
+        expect(submitBtn.disabled).toBe(false);
+        expect(saveBtn.disabled).toBe(false);
+      });
+    });
+
+    describe('Delegation Methods', () => {
+      beforeEach(async () => {
+        await controller._initializeUIStateManager();
+      });
+
+      it('should return current state from UIStateManager', () => {
+        mockUIStateManager.getCurrentState.mockReturnValue('loading');
+
+        // Mock the currentState getter for testing
+        Object.defineProperty(controller, 'currentState', {
+          get: () => mockUIStateManager?.getCurrentState() || null,
+          configurable: true,
+        });
+
+        expect(controller.currentState).toBe('loading');
+      });
+
+      it('should return null when UIStateManager not initialized', () => {
+        // Mock UIStateManager as null
+        Object.defineProperty(controller, 'currentState', {
+          get: () => null,
+          configurable: true,
+        });
+
+        expect(controller.currentState).toBe(null);
+      });
+
+      it('should check if in specific state', () => {
+        Object.defineProperty(controller, 'currentState', {
+          get: () => 'results',
+          configurable: true,
+        });
+
+        expect(controller._isInState('results')).toBe(true);
+        expect(controller._isInState('loading')).toBe(false);
+      });
+    });
+
+    describe('UI States Integration', () => {
+      it('should provide UI_STATES getter', () => {
+        const states = controller.UI_STATES;
+
+        expect(states).toEqual({
+          EMPTY: 'empty',
+          LOADING: 'loading',
+          RESULTS: 'results',
+          ERROR: 'error',
+        });
+      });
+    });
+
+    describe('Enhanced _initializeUIState', () => {
+      it('should initialize UIStateManager and show empty state', async () => {
+        jest.spyOn(controller, '_initializeUIStateManager');
+        jest.spyOn(controller, '_showState');
+
+        await controller._initializeUIState();
+
+        expect(controller._initializeUIStateManager).toHaveBeenCalled();
+        expect(controller._showState).toHaveBeenCalledWith('empty');
+      });
+
+      it('should handle missing UIStateManager gracefully', async () => {
+        // Mock _initializeUIStateManager to not create UIStateManager
+        jest
+          .spyOn(controller, '_initializeUIStateManager')
+          .mockImplementation(() => {
+            // Don't create UIStateManager
+          });
+
+        await controller._initializeUIState();
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'TestController: UIStateManager not available, skipping initial state'
+        );
+      });
+    });
+  });
+
+  describe('Event Handling Infrastructure', () => {
+    let controller;
+
+    beforeEach(() => {
+      // Set up DOM structure for event testing
+      document.body.innerHTML = `
+        <div id="container">
+          <form id="test-form">
+            <input id="test-input" type="text" />
+            <button id="test-button">Click me</button>
+            <button class="dynamic-btn" data-id="1">Dynamic 1</button>
+            <button class="dynamic-btn" data-id="2">Dynamic 2</button>
+          </form>
+        </div>
+      `;
+
+      controller = new TestController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      // Cache elements for testing
+      controller._cacheElementsFromMap({
+        container: '#container',
+        form: '#test-form',
+        input: '#test-input',
+        button: '#test-button',
+      });
+    });
+
+    afterEach(() => {
+      document.body.innerHTML = '';
+      jest.clearAllMocks();
+    });
+
+    describe('_addEventListener() - DOM Event Listeners', () => {
+      it('should add event listener using element key', () => {
+        const handler = jest.fn();
+
+        const listenerId = controller._addEventListener(
+          'button',
+          'click',
+          handler
+        );
+
+        expect(listenerId).toBeTruthy();
+        expect(listenerId).toMatch(/^listener-\d+$/);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Added click listener to BUTTON#test-button')
+        );
+
+        // Trigger event
+        document.getElementById('test-button').click();
+        expect(handler).toHaveBeenCalledTimes(1);
+      });
+
+      it('should add event listener using direct element reference', () => {
+        const handler = jest.fn();
+        const element = document.getElementById('test-button');
+
+        const listenerId = controller._addEventListener(
+          element,
+          'click',
+          handler
+        );
+
+        expect(listenerId).toBeTruthy();
+        element.click();
+        expect(handler).toHaveBeenCalledTimes(1);
+      });
+
+      it('should return null for missing element', () => {
+        const handler = jest.fn();
+
+        const listenerId = controller._addEventListener(
+          'missing-element',
+          'click',
+          handler
+        );
+
+        expect(listenerId).toBeNull();
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "Cannot add click listener - element 'missing-element' not found"
+          )
+        );
+      });
+
+      it('should throw error for invalid element parameter', () => {
+        const handler = jest.fn();
+
+        expect(() => {
+          controller._addEventListener({}, 'click', handler);
+        }).toThrow('Invalid element provided to _addEventListener');
+      });
+
+      it('should support custom listener options', () => {
+        const handler = jest.fn();
+
+        const listenerId = controller._addEventListener(
+          'button',
+          'click',
+          handler,
+          {
+            passive: false,
+            once: true,
+            id: 'custom-listener',
+          }
+        );
+
+        expect(listenerId).toBe('custom-listener');
+
+        // Should only fire once
+        const button = document.getElementById('test-button');
+        button.click();
+        button.click();
+        expect(handler).toHaveBeenCalledTimes(1);
+      });
+
+      it('should warn about duplicate listener IDs', () => {
+        const handler1 = jest.fn();
+        const handler2 = jest.fn();
+
+        const id1 = controller._addEventListener('button', 'click', handler1, {
+          id: 'duplicate',
+        });
+        const id2 = controller._addEventListener('button', 'click', handler2, {
+          id: 'duplicate',
+        });
+
+        expect(id1).toBe('duplicate');
+        expect(id2).toBe('duplicate');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining("Listener with ID 'duplicate' already exists")
+        );
+      });
+
+      it('should bind handler context automatically', () => {
+        let capturedThis;
+        const handler = function () {
+          capturedThis = this;
+        };
+
+        controller._addEventListener('button', 'click', handler);
+        document.getElementById('test-button').click();
+
+        expect(capturedThis).toBe(controller);
+      });
+    });
+
+    describe('_subscribeToEvent() - EventBus Integration', () => {
+      it('should subscribe to EventBus events successfully', () => {
+        const handler = jest.fn();
+        const mockUnsubscribe = jest.fn();
+        mockEventBus.subscribe.mockReturnValue(mockUnsubscribe);
+
+        const subscriptionId = controller._subscribeToEvent(
+          'TEST_EVENT',
+          handler
+        );
+
+        expect(subscriptionId).toBeTruthy();
+        expect(subscriptionId).toMatch(/^sub-\d+$/);
+        expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+          'TEST_EVENT',
+          expect.any(Function)
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining("Subscribed to event 'TEST_EVENT'")
+        );
+      });
+
+      it('should return null when EventBus subscription fails', () => {
+        const handler = jest.fn();
+        mockEventBus.subscribe.mockReturnValue(null);
+
+        const subscriptionId = controller._subscribeToEvent(
+          'TEST_EVENT',
+          handler
+        );
+
+        expect(subscriptionId).toBeNull();
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining("Failed to subscribe to event 'TEST_EVENT'")
+        );
+      });
+
+      it('should return null when EventBus is not available', () => {
+        // Create a TestController that allows null EventBus for testing
+        class NullEventBusTestController extends BaseCharacterBuilderController {
+          _cacheElements() {}
+          _setupEventListeners() {}
+
+          // Override the private field access to return null for testing
+          _subscribeToEvent(eventType, handler, options = {}) {
+            if (!null) {
+              // Simulate null eventBus
+              this.logger.warn(
+                `${this.constructor.name}: Cannot subscribe to '${eventType}' - eventBus not available`
+              );
+              return null;
+            }
+            // This won't be reached
+            return super._subscribeToEvent(eventType, handler, options);
+          }
+        }
+
+        const nullEventBusController = new NullEventBusTestController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+        });
+
+        const subscriptionId = nullEventBusController._subscribeToEvent(
+          'TEST_EVENT',
+          jest.fn()
+        );
+
+        expect(subscriptionId).toBeNull();
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "Cannot subscribe to 'TEST_EVENT' - eventBus not available"
+          )
+        );
+      });
+
+      it('should support custom subscription options', () => {
+        const handler = jest.fn();
+        const mockUnsubscribe = jest.fn();
+        mockEventBus.subscribe.mockReturnValue(mockUnsubscribe);
+
+        const subscriptionId = controller._subscribeToEvent(
+          'TEST_EVENT',
+          handler,
+          {
+            id: 'custom-subscription',
+          }
+        );
+
+        expect(subscriptionId).toBe('custom-subscription');
+      });
+    });
+
+    describe('_addDelegatedListener() - Event Delegation', () => {
+      it('should handle delegated events correctly', () => {
+        const handler = jest.fn();
+
+        controller._addDelegatedListener(
+          'container',
+          '.dynamic-btn',
+          'click',
+          handler
+        );
+
+        // Click on first dynamic button
+        document.querySelector('[data-id="1"]').click();
+        expect(handler).toHaveBeenCalledTimes(1);
+        expect(handler).toHaveBeenCalledWith(
+          expect.any(Event),
+          document.querySelector('[data-id="1"]')
+        );
+
+        // Click on second dynamic button
+        document.querySelector('[data-id="2"]').click();
+        expect(handler).toHaveBeenCalledTimes(2);
+        expect(handler).toHaveBeenCalledWith(
+          expect.any(Event),
+          document.querySelector('[data-id="2"]')
+        );
+      });
+
+      it('should not trigger for non-matching elements', () => {
+        const handler = jest.fn();
+
+        controller._addDelegatedListener(
+          'container',
+          '.dynamic-btn',
+          'click',
+          handler
+        );
+
+        // Click on non-matching element
+        document.getElementById('test-input').click();
+        expect(handler).not.toHaveBeenCalled();
+      });
+
+      it('should generate predictable listener IDs for delegation', () => {
+        const handler = jest.fn();
+
+        const listenerId = controller._addDelegatedListener(
+          'container',
+          '.btn',
+          'click',
+          handler
+        );
+
+        expect(listenerId).toMatch(/^delegated-\.btn-click$/);
+      });
+    });
+
+    describe('Debounce and Throttle Utilities', () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+      });
+
+      afterEach(() => {
+        jest.useRealTimers();
+      });
+
+      it('should debounce input events correctly', () => {
+        const handler = jest.fn();
+
+        controller._addDebouncedListener('input', 'input', handler, 300);
+
+        const input = document.getElementById('test-input');
+
+        // Rapid inputs
+        input.dispatchEvent(new Event('input'));
+        input.dispatchEvent(new Event('input'));
+        input.dispatchEvent(new Event('input'));
+
+        expect(handler).not.toHaveBeenCalled();
+
+        // Advance time
+        jest.advanceTimersByTime(300);
+        expect(handler).toHaveBeenCalledTimes(1);
+      });
+
+      it('should throttle events correctly', () => {
+        const handler = jest.fn();
+
+        controller._addThrottledListener('button', 'click', handler, 100);
+
+        const button = document.getElementById('test-button');
+
+        // Rapid clicks
+        button.click();
+        button.click();
+        button.click();
+
+        expect(handler).toHaveBeenCalledTimes(1);
+
+        // Advance time and try again
+        jest.advanceTimersByTime(100);
+        button.click();
+        expect(handler).toHaveBeenCalledTimes(2);
+      });
+
+      it('should store debounced handlers for cleanup', () => {
+        const handler = jest.fn();
+
+        controller._addDebouncedListener('input', 'input', handler, 300);
+
+        const stats = controller._getEventListenerStats();
+        expect(stats.total).toBe(1);
+      });
+    });
+
+    describe('_addAsyncClickHandler() - Async Operations', () => {
+      it('should handle async operations with loading states', async () => {
+        const asyncHandler = jest.fn().mockResolvedValue('success');
+
+        controller._addAsyncClickHandler('button', asyncHandler, {
+          loadingText: 'Loading...',
+        });
+
+        const button = document.getElementById('test-button');
+        const originalText = button.textContent;
+
+        // Click and check loading state
+        button.click();
+        expect(button.disabled).toBe(true);
+        expect(button.textContent).toBe('Loading...');
+        expect(button.classList.contains('is-loading')).toBe(true);
+
+        // Wait for async operation
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        // Check restored state
+        expect(button.disabled).toBe(false);
+        expect(button.textContent).toBe(originalText);
+        expect(button.classList.contains('is-loading')).toBe(false);
+        expect(asyncHandler).toHaveBeenCalledTimes(1);
+      });
+
+      it('should handle async errors gracefully', async () => {
+        const error = new Error('Test error');
+        const asyncHandler = jest.fn().mockRejectedValue(error);
+        const onError = jest.fn();
+
+        controller._addAsyncClickHandler('button', asyncHandler, { onError });
+
+        const button = document.getElementById('test-button');
+        button.click();
+
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Async click handler failed'),
+          error
+        );
+        expect(onError).toHaveBeenCalledWith(error);
+        expect(button.disabled).toBe(false);
+      });
+    });
+
+    describe('Event Listener Management', () => {
+      it('should remove specific event listeners by ID', () => {
+        const handler = jest.fn();
+
+        const listenerId = controller._addEventListener(
+          'button',
+          'click',
+          handler
+        );
+        expect(controller._getEventListenerStats().total).toBe(1);
+
+        const removed = controller._removeEventListener(listenerId);
+        expect(removed).toBe(true);
+        expect(controller._getEventListenerStats().total).toBe(0);
+
+        // Event should no longer fire
+        document.getElementById('test-button').click();
+        expect(handler).not.toHaveBeenCalled();
+      });
+
+      it('should return false for non-existent listener IDs', () => {
+        const removed = controller._removeEventListener('non-existent');
+
+        expect(removed).toBe(false);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining("Listener 'non-existent' not found")
+        );
+      });
+
+      it('should remove EventBus subscriptions correctly', () => {
+        const mockUnsubscribe = jest.fn();
+        mockEventBus.subscribe.mockReturnValue(mockUnsubscribe);
+
+        const subscriptionId = controller._subscribeToEvent(
+          'TEST_EVENT',
+          jest.fn()
+        );
+        const removed = controller._removeEventListener(subscriptionId);
+
+        expect(removed).toBe(true);
+        expect(mockUnsubscribe).toHaveBeenCalled();
+      });
+
+      it('should remove all event listeners', () => {
+        const mockUnsubscribe1 = jest.fn();
+        const mockUnsubscribe2 = jest.fn();
+        mockEventBus.subscribe
+          .mockReturnValueOnce(mockUnsubscribe1)
+          .mockReturnValueOnce(mockUnsubscribe2);
+
+        // Add various listeners
+        controller._addEventListener('button', 'click', jest.fn());
+        controller._subscribeToEvent('TEST_EVENT_1', jest.fn());
+        controller._subscribeToEvent('TEST_EVENT_2', jest.fn());
+
+        expect(controller._getEventListenerStats().total).toBe(3);
+
+        controller._removeAllEventListeners();
+
+        expect(controller._getEventListenerStats().total).toBe(0);
+        expect(mockUnsubscribe1).toHaveBeenCalled();
+        expect(mockUnsubscribe2).toHaveBeenCalled();
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Removed 3 event listeners')
+        );
+      });
+
+      it('should handle errors during cleanup gracefully', () => {
+        const mockUnsubscribe = jest.fn(() => {
+          throw new Error('Unsubscribe error');
+        });
+        mockEventBus.subscribe.mockReturnValue(mockUnsubscribe);
+
+        controller._subscribeToEvent('TEST_EVENT', jest.fn());
+        controller._removeAllEventListeners();
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Error removing listener'),
+          expect.any(Error)
+        );
+      });
+    });
+
+    describe('Event Listener Statistics', () => {
+      it('should provide accurate statistics', () => {
+        const mockUnsubscribe1 = jest.fn();
+        const mockUnsubscribe2 = jest.fn();
+        mockEventBus.subscribe
+          .mockReturnValueOnce(mockUnsubscribe1)
+          .mockReturnValueOnce(mockUnsubscribe2);
+
+        // Add various listeners
+        controller._addEventListener('button', 'click', jest.fn());
+        controller._addEventListener('input', 'change', jest.fn());
+        controller._subscribeToEvent('TEST_EVENT_1', jest.fn());
+        controller._subscribeToEvent('TEST_EVENT_2', jest.fn());
+
+        const stats = controller._getEventListenerStats();
+
+        expect(stats).toEqual({
+          total: 4,
+          dom: 2,
+          eventBus: 2,
+          byEvent: {
+            'dom:click': 1,
+            'dom:change': 1,
+            'eventBus:TEST_EVENT_1': 1,
+            'eventBus:TEST_EVENT_2': 1,
+          },
+        });
+      });
+    });
+
+    describe('Helper Utilities', () => {
+      it('should prevent default and stop propagation', () => {
+        const mockEvent = {
+          preventDefault: jest.fn(),
+          stopPropagation: jest.fn(),
+        };
+        const handler = jest.fn();
+
+        controller._preventDefault(mockEvent, handler);
+
+        expect(mockEvent.preventDefault).toHaveBeenCalled();
+        expect(mockEvent.stopPropagation).toHaveBeenCalled();
+        expect(handler).toHaveBeenCalledWith(mockEvent);
+      });
+
+      it('should work without handler', () => {
+        const mockEvent = {
+          preventDefault: jest.fn(),
+          stopPropagation: jest.fn(),
+        };
+
+        controller._preventDefault(mockEvent);
+
+        expect(mockEvent.preventDefault).toHaveBeenCalled();
+        expect(mockEvent.stopPropagation).toHaveBeenCalled();
+      });
+    });
+
+    describe('Integration with destroy() lifecycle', () => {
+      it('should call _removeAllEventListeners in destroy', () => {
+        jest.spyOn(controller, '_removeAllEventListeners');
+
+        expect(() => controller.destroy()).toThrow(
+          'destroy() will be implemented in ticket #8'
+        );
+        expect(controller._removeAllEventListeners).toHaveBeenCalled();
+      });
+    });
+
+    describe('Error Handling and Edge Cases', () => {
+      it('should handle missing elements gracefully in delegation', () => {
+        const handler = jest.fn();
+
+        expect(() => {
+          controller._addDelegatedListener(
+            'missing-container',
+            '.btn',
+            'click',
+            handler
+          );
+        }).not.toThrow();
+      });
+
+      it('should clear debounced and throttled handlers on cleanup', () => {
+        controller._addDebouncedListener('input', 'input', jest.fn(), 300);
+        controller._addThrottledListener('button', 'click', jest.fn(), 100);
+
+        // Verify handlers are stored
+        expect(controller._getEventListenerStats().total).toBe(2);
+
+        controller._removeAllEventListeners();
+
+        // Handlers should be cleared
+        expect(controller._getEventListenerStats().total).toBe(0);
+      });
     });
   });
 });

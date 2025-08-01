@@ -30,7 +30,7 @@ import { BaseService } from '../base/BaseService.js';
 export class LegacyTargetCompatibilityLayer extends BaseService {
   /**
    * Creates a new LegacyTargetCompatibilityLayer service instance
-   * 
+   *
    * @param {object} deps - Service dependencies
    * @param {import('../../../../interfaces/coreServices.js').ILogger} deps.logger - Logger instance for operation logging
    */
@@ -295,7 +295,7 @@ export class LegacyTargetCompatibilityLayer extends BaseService {
 
     // Generate based on target type
     const scope = this.#extractLegacyScope(actionDef);
-    
+
     // Common scope to placeholder mappings
     if (scope.includes('partner')) return 'partner';
     if (scope.includes('item')) return 'item';
@@ -312,7 +312,7 @@ export class LegacyTargetCompatibilityLayer extends BaseService {
    *
    * @private
    * @param {ActionDefinition} actionDef - Action definition containing target description
-   * @param {string} scope - Scope string to generate description for  
+   * @param {string} scope - Scope string to generate description for
    * @returns {string} Generated description text
    */
   #generateDescription(actionDef, scope) {

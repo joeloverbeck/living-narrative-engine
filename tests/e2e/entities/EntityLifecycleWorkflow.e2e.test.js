@@ -170,7 +170,6 @@ describe('Entity Lifecycle E2E Workflow', () => {
       // Validate repository consistency
       await testBed.assertRepositoryConsistency();
     });
-
   });
 
   describe('Entity Removal Workflow', () => {
@@ -448,5 +447,4 @@ describe('Entity Lifecycle E2E Workflow', () => {
       expect(removeEvents[0].entityId).toBe(entity.id);
     });
   });
-
 });

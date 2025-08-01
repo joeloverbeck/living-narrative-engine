@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "posturing:event-is-action-kneel-before",
+  "description": "Checks if the event is attempting the 'Kneel Before' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "posturing:kneel_before"]
+  }
+}
