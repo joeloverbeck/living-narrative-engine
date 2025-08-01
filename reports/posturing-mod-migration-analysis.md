@@ -2,7 +2,7 @@
 
 **Date**: January 2025  
 **Project**: Living Narrative Engine  
-**Focus**: Architecture Analysis and Migration Strategy  
+**Focus**: Architecture Analysis and Migration Strategy
 
 ## Executive Summary
 
@@ -34,6 +34,7 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
 **Proposed New ID**: `posturing:facing_away`
 
 **Component Schema**:
+
 ```json
 {
   "id": "intimacy:facing_away",
@@ -45,7 +46,9 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
       "facing_away_from": {
         "type": "array",
         "description": "Entity IDs this actor is facing away from",
-        "items": { "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId" }
+        "items": {
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+        }
       }
     }
   }
@@ -56,12 +59,12 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
 
 ### Usage Statistics
 
-| Category | Count | Examples |
-|----------|-------|----------|
-| **Direct Component References** | 25 | Rules, actions, conditions |
-| **Scope DSL Usage** | 8 | `actor.intimacy:facing_away.facing_away_from[]` |
-| **Test Cases** | 34 | Integration and unit tests |
-| **Total References** | 67 | Across entire codebase |
+| Category                        | Count | Examples                                        |
+| ------------------------------- | ----- | ----------------------------------------------- |
+| **Direct Component References** | 25    | Rules, actions, conditions                      |
+| **Scope DSL Usage**             | 8     | `actor.intimacy:facing_away.facing_away_from[]` |
+| **Test Cases**                  | 34    | Integration and unit tests                      |
+| **Total References**            | 67    | Across entire codebase                          |
 
 ---
 
@@ -79,7 +82,9 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
   "payloadSchema": {
     "properties": {
       "actor": { "description": "The ID of the actor who was turned around." },
-      "turned_by": { "description": "The ID of the actor who initiated the turn around action." }
+      "turned_by": {
+        "description": "The ID of the actor who initiated the turn around action."
+      }
     }
   }
 }
@@ -99,7 +104,9 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
   "payloadSchema": {
     "properties": {
       "actor": { "description": "The ID of the actor who turned around" },
-      "faced": { "description": "The name of the specific target the action was performed on" }
+      "faced": {
+        "description": "The name of the specific target the action was performed on"
+      }
     }
   }
 }
@@ -118,7 +125,9 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
   "description": "Dispatched when an actor faces forward toward another actor after previously facing away.",
   "payloadSchema": {
     "properties": {
-      "actor": { "description": "The ID of the actor who is now facing forward." },
+      "actor": {
+        "description": "The ID of the actor who is now facing forward."
+      },
       "facing": { "description": "The ID of the actor who is now being faced." }
     }
   }
@@ -134,23 +143,27 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
 ### Intimacy Mod Dependencies
 
 **High-Coupling Actions** (require intimacy context):
+
 - `massage_back.action.json` - Requires behind position + intimate context
 - `place_hand_on_waist.action.json` - Intimate behind-position action
 - Various kissing/intimate actions that check facing states
 
 **Generic Actions** (suitable for posturing mod):
+
 - `turn_around.action.json` - Pure positioning logic
 - `turn_around_to_face.action.json` - Generic facing change
 
 ### Violence Mod Integration Opportunities
 
 **Potential Use Cases**:
+
 - **Backstab/Sneak Attack**: Require target to be facing away
 - **Defensive Positioning**: Turn to face attackers
 - **Ambush Mechanics**: Take advantage of facing-away state
 - **Combat Positioning**: Strategic turning in combat
 
 **Example Violence Integration**:
+
 ```json
 {
   "id": "violence:backstab",
@@ -165,6 +178,7 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
 ### Core Mod Integration
 
 **Foundation Requirements**:
+
 - Basic positioning should be available without intimacy dependency
 - Core spatial relationships (facing, behind, etc.) are fundamental mechanics
 - Multiple mods benefit from shared positioning vocabulary
@@ -176,6 +190,7 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
 ### Phase 1: Foundation Setup
 
 1. **Create posturing mod structure**:
+
    ```
    data/mods/posturing/
    ├── components/
@@ -192,28 +207,33 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
 
 3. **Copy positioning events** with new IDs:
    - `posturing:actor_turned_around`
-   - `posturing:actor_faced_everyone` 
+   - `posturing:actor_faced_everyone`
    - `posturing:actor_faced_forward`
 
 ### Phase 2: Core Logic Migration
 
 **Components to Move**:
+
 - ✅ `facing_away.component.json` → `posturing:facing_away`
 
 **Events to Move**:
+
 - ✅ `actor_turned_around.event.json` → `posturing:actor_turned_around`
 - ✅ `actor_faced_everyone.event.json` → `posturing:actor_faced_everyone`
 - ✅ `actor_faced_forward.event.json` → `posturing:actor_faced_forward`
 
 **Actions to Move**:
+
 - ✅ `turn_around.action.json` → `posturing:turn_around`
 - ✅ `turn_around_to_face.action.json` → `posturing:turn_around_to_face`
 
 **Rules to Move**:
+
 - ✅ `turn_around.rule.json` → `posturing:turn_around`
 - ✅ `turn_around_to_face.rule.json` → `posturing:turn_around_to_face`
 
 **Conditions to Move**:
+
 - ✅ `both-actors-facing-each-other.condition.json` → `posturing:both-actors-facing-each-other`
 - ✅ `actor-is-behind-entity.condition.json` → `posturing:actor-is-behind-entity`
 - ✅ `entity-not-in-facing-away.condition.json` → `posturing:entity-not-in-facing-away`
@@ -221,16 +241,19 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
 - ✅ `entity-in-facing-away.condition.json` → `posturing:entity-in-facing-away`
 
 **Scopes to Move**:
+
 - ✅ `actors_im_facing_away_from.scope` → `posturing:actors_im_facing_away_from`
 - ⚠️ `close_actors_facing_away.scope` → Requires intimacy dependency analysis
 
 ### Phase 3: Intimacy Mod Refactoring
 
 **Actions to Keep in Intimacy** (require intimate context):
+
 - `massage_back.action.json` - Update to use `posturing:facing_away`
 - `place_hand_on_waist.action.json` - Update to use `posturing:facing_away`
 
 **Dependencies to Update**:
+
 - All intimacy rules referencing `intimacy:facing_away` → `posturing:facing_away`
 - All intimacy conditions using facing logic → update references
 - All intimacy scopes using facing logic → update references
@@ -238,12 +261,14 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
 ### Phase 4: Test Migration
 
 **Test Files Requiring Updates**: 34 files
+
 - `/tests/integration/rules/stepBackRule.integration.test.js`
 - `/tests/integration/rules/turnAroundToFaceRule.integration.test.js`
 - `/tests/integration/rules/turnAroundRule.integration.test.js`
 - `/tests/unit/events/intimacyEventValidation.test.js`
 
 **Update Strategy**:
+
 1. Update component references: `intimacy:facing_away` → `posturing:facing_away`
 2. Update event references: `intimacy:actor_*` → `posturing:actor_*`
 3. Ensure test isolation between mods
@@ -261,12 +286,12 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
 
 ### Migration Risks
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| **Circular Dependencies** | High | Medium | Careful dependency ordering during migration |
-| **Test Failures** | Medium | High | Comprehensive test updates with each phase |
-| **Runtime Errors** | High | Low | Gradual migration with backwards compatibility |
-| **Scope Resolution Failures** | Medium | Medium | Update scope DSL parsing for new namespaces |
+| Risk                          | Impact | Probability | Mitigation                                     |
+| ----------------------------- | ------ | ----------- | ---------------------------------------------- |
+| **Circular Dependencies**     | High   | Medium      | Careful dependency ordering during migration   |
+| **Test Failures**             | Medium | High        | Comprehensive test updates with each phase     |
+| **Runtime Errors**            | High   | Low         | Gradual migration with backwards compatibility |
+| **Scope Resolution Failures** | Medium | Medium      | Update scope DSL parsing for new namespaces    |
 
 ### Mitigation Strategies
 
@@ -289,6 +314,7 @@ This report analyzes the usage patterns of `facing_away.component.json` and rela
 ### Mod Dependencies
 
 **New Dependency Structure**:
+
 ```
 posturing (base positioning)
     ↑
@@ -299,14 +325,14 @@ violence (combat positioning behaviors)
 
 ### Component ID Mapping
 
-| Current ID | New ID | Notes |
-|------------|--------|-------|
-| `intimacy:facing_away` | `posturing:facing_away` | Core component |
-| `intimacy:actor_turned_around` | `posturing:actor_turned_around` | Generic event |
-| `intimacy:actor_faced_everyone` | `posturing:actor_faced_everyone` | Generic event |
-| `intimacy:actor_faced_forward` | `posturing:actor_faced_forward` | Generic event |
-| `intimacy:turn_around` | `posturing:turn_around` | Core action |
-| `intimacy:turn_around_to_face` | `posturing:turn_around_to_face` | Core action |
+| Current ID                      | New ID                           | Notes          |
+| ------------------------------- | -------------------------------- | -------------- |
+| `intimacy:facing_away`          | `posturing:facing_away`          | Core component |
+| `intimacy:actor_turned_around`  | `posturing:actor_turned_around`  | Generic event  |
+| `intimacy:actor_faced_everyone` | `posturing:actor_faced_everyone` | Generic event  |
+| `intimacy:actor_faced_forward`  | `posturing:actor_faced_forward`  | Generic event  |
+| `intimacy:turn_around`          | `posturing:turn_around`          | Core action    |
+| `intimacy:turn_around_to_face`  | `posturing:turn_around_to_face`  | Core action    |
 
 ### Validation Checklist
 

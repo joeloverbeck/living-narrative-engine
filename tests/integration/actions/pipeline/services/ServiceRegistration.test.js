@@ -1,9 +1,9 @@
 /**
  * @file ServiceRegistration.test.js - Integration tests for pipeline service registration
- * 
+ *
  * Tests verify that pipeline services are properly registered in the DI container:
- * - TargetDependencyResolver and LegacyTargetCompatibilityLayer are fully implemented
- * - ScopeContextBuilder and TargetDisplayNameResolver remain as placeholders (Tickets 05/06)
+ * - TargetDependencyResolver, LegacyTargetCompatibilityLayer, and ScopeContextBuilder are fully implemented
+ * - TargetDisplayNameResolver remains as placeholder (Ticket 06)
  * - ServiceFactory and ServiceRegistry provide infrastructure services
  */
 
@@ -71,30 +71,31 @@ describe('Pipeline Service Registration Integration', () => {
   describe('Implemented Service Registration', () => {
     it('should register ITargetDependencyResolver successfully', () => {
       const resolver = container.resolve(tokens.ITargetDependencyResolver);
-      
+
       expect(resolver).toBeDefined();
       expect(resolver.constructor.name).toBe('TargetDependencyResolver');
     });
 
     it('should register ILegacyTargetCompatibilityLayer successfully', () => {
       const layer = container.resolve(tokens.ILegacyTargetCompatibilityLayer);
-      
+
       expect(layer).toBeDefined();
       expect(layer.constructor.name).toBe('LegacyTargetCompatibilityLayer');
     });
+
+    it('should register IScopeContextBuilder successfully', () => {
+      const builder = container.resolve(tokens.IScopeContextBuilder);
+
+      expect(builder).toBeDefined();
+      expect(builder.constructor.name).toBe('ScopeContextBuilder');
+    });
   });
 
-  describe('Placeholder Service Registration', () => {
-    it('should have placeholder for IScopeContextBuilder', () => {
-      expect(() => container.resolve(tokens.IScopeContextBuilder)).toThrow(
-        'ScopeContextBuilder implementation pending (Ticket 05'
-      );
-    });
-
-    it('should have placeholder for ITargetDisplayNameResolver', () => {
-      expect(() =>
-        container.resolve(tokens.ITargetDisplayNameResolver)
-      ).toThrow('TargetDisplayNameResolver implementation pending (Ticket 06');
+  describe('TargetDisplayNameResolver Service Registration', () => {
+    it('should have working implementation for ITargetDisplayNameResolver', () => {
+      const resolver = container.resolve(tokens.ITargetDisplayNameResolver);
+      expect(resolver).toBeDefined();
+      expect(resolver.constructor.name).toBe('TargetDisplayNameResolver');
     });
   });
 
@@ -112,17 +113,13 @@ describe('Pipeline Service Registration Integration', () => {
 
       // Implemented services should be createable
       expect(factory.hasService(tokens.ITargetDependencyResolver)).toBe(true);
-      expect(factory.hasService(tokens.ILegacyTargetCompatibilityLayer)).toBe(true);
+      expect(factory.hasService(tokens.ILegacyTargetCompatibilityLayer)).toBe(
+        true
+      );
+      expect(factory.hasService(tokens.IScopeContextBuilder)).toBe(true);
 
-      // Only these services have placeholders that throw on instantiation
-      const placeholderServices = [
-        tokens.IScopeContextBuilder,
-        tokens.ITargetDisplayNameResolver,
-      ];
-
-      for (const token of placeholderServices) {
-        expect(() => factory.createService(token)).toThrow(/pending \(Ticket/);
-      }
+      // All services are now implemented - no placeholders remain
+      expect(factory.hasService(tokens.ITargetDisplayNameResolver)).toBe(true);
     });
 
     it('should create infrastructure services', () => {
@@ -134,30 +131,31 @@ describe('Pipeline Service Registration Integration', () => {
       const resolver = factory.createService(tokens.ITargetDependencyResolver);
       expect(resolver.constructor.name).toBe('TargetDependencyResolver');
 
-      const layer = factory.createService(tokens.ILegacyTargetCompatibilityLayer);
+      const layer = factory.createService(
+        tokens.ILegacyTargetCompatibilityLayer
+      );
       expect(layer.constructor.name).toBe('LegacyTargetCompatibilityLayer');
+
+      const builder = factory.createService(tokens.IScopeContextBuilder);
+      expect(builder.constructor.name).toBe('ScopeContextBuilder');
     });
 
-    it('should fail to create placeholder services', () => {
-      expect(() =>
-        factory.createService(tokens.IScopeContextBuilder)
-      ).toThrow();
-      
-      expect(() =>
-        factory.createService(tokens.ITargetDisplayNameResolver)
-      ).toThrow();
+    it('should successfully create TargetDisplayNameResolver service', () => {
+      const resolver = factory.createService(tokens.ITargetDisplayNameResolver);
+      expect(resolver).toBeDefined();
+      expect(resolver.constructor.name).toBe('TargetDisplayNameResolver');
     });
   });
 
   describe('Container Token Registration', () => {
     it('should have all pipeline tokens registered', () => {
       const pipelineTokens = [
-        'ITargetDependencyResolver',        // Implemented service
-        'ILegacyTargetCompatibilityLayer',  // Implemented service
-        'IScopeContextBuilder',             // Placeholder (Ticket 05)
-        'ITargetDisplayNameResolver',       // Placeholder (Ticket 06)
-        'IPipelineServiceFactory',          // Infrastructure service
-        'IPipelineServiceRegistry',         // Infrastructure service
+        'ITargetDependencyResolver', // Implemented service
+        'ILegacyTargetCompatibilityLayer', // Implemented service
+        'IScopeContextBuilder', // Implemented service
+        'ITargetDisplayNameResolver', // Implemented service
+        'IPipelineServiceFactory', // Infrastructure service
+        'IPipelineServiceRegistry', // Infrastructure service
       ];
 
       for (const token of pipelineTokens) {
@@ -184,14 +182,13 @@ describe('Pipeline Service Registration Integration', () => {
   describe('Error Handling', () => {
     it('should provide clear error messages for placeholder services', () => {
       const errorMessages = {
-        [tokens.IScopeContextBuilder]: 'Ticket 05',
         [tokens.ITargetDisplayNameResolver]: 'Ticket 06',
       };
 
       for (const [token, ticketRef] of Object.entries(errorMessages)) {
         try {
           container.resolve(token);
-          fail(`Expected error for ${token}`);
+          expect.fail(`Expected error for ${token}`);
         } catch (error) {
           expect(error.message).toContain(ticketRef);
           expect(error.message).toContain('pending');
@@ -201,8 +198,15 @@ describe('Pipeline Service Registration Integration', () => {
 
     it('should successfully resolve implemented services', () => {
       // These services should resolve without errors
-      expect(() => container.resolve(tokens.ITargetDependencyResolver)).not.toThrow();
-      expect(() => container.resolve(tokens.ILegacyTargetCompatibilityLayer)).not.toThrow();
+      expect(() =>
+        container.resolve(tokens.ITargetDependencyResolver)
+      ).not.toThrow();
+      expect(() =>
+        container.resolve(tokens.ILegacyTargetCompatibilityLayer)
+      ).not.toThrow();
+      expect(() =>
+        container.resolve(tokens.IScopeContextBuilder)
+      ).not.toThrow();
     });
   });
 

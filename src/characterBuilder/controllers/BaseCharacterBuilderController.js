@@ -9,6 +9,10 @@ import {
   MissingDependencyError,
   InvalidDependencyError,
 } from '../../errors/dependencyErrors.js';
+import {
+  UIStateManager,
+  UI_STATES,
+} from '../../shared/characterBuilder/uiStateManager.js';
 
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
@@ -47,8 +51,34 @@ export class BaseCharacterBuilderController {
   /** @private @type {boolean} */
   #isInitializing = false;
 
-  /** @private @type {Array<{element: HTMLElement, event: string, handler: Function, options?: object}>} */
+  /**
+   * Enhanced event listener tracking with comprehensive metadata
+   *
+   * @private
+   * @type {Array<{
+   *   type: 'dom'|'eventBus',
+   *   element?: HTMLElement,
+   *   event: string,
+   *   handler: Function,
+   *   originalHandler?: Function,
+   *   options?: object,
+   *   id?: string,
+   *   unsubscribe?: Function
+   * }>}
+   */
   #eventListeners = [];
+
+  /** @private @type {number} */
+  #eventListenerIdCounter = 0;
+
+  /** @private @type {Map<string, Function>} */
+  #debouncedHandlers = new Map();
+
+  /** @private @type {Map<string, Function>} */
+  #throttledHandlers = new Map();
+
+  /** @private @type {UIStateManager} */
+  #uiStateManager = null;
 
   /**
    * @param {object} dependencies
@@ -367,6 +397,16 @@ export class BaseCharacterBuilderController {
   }
 
   /**
+   * Get UI states enum (for subclasses)
+   *
+   * @protected
+   * @returns {object} UI states enum
+   */
+  get UI_STATES() {
+    return UI_STATES;
+  }
+
+  /**
    * Check if controller is currently initializing
    *
    * @protected
@@ -396,7 +436,1243 @@ export class BaseCharacterBuilderController {
   _resetInitializationState() {
     this.#isInitialized = false;
     this.#isInitializing = false;
+    this._clearElementCache();
+  }
+
+  /**
+   * Clear all cached element references (enhances existing _resetInitializationState)
+   *
+   * @protected
+   */
+  _clearElementCache() {
+    const count = Object.keys(this.#elements).length;
     this.#elements = {};
+
+    this.#logger.debug(
+      `${this.constructor.name}: Cleared ${count} cached element references`
+    );
+  }
+
+  /**
+   * Validate all cached elements still exist in DOM
+   *
+   * @protected
+   * @returns {object} Validation results
+   */
+  _validateElementCache() {
+    const results = {
+      valid: [],
+      invalid: [],
+      total: 0,
+    };
+
+    for (const [key, element] of Object.entries(this.#elements)) {
+      results.total++;
+
+      if (element && document.body.contains(element)) {
+        results.valid.push(key);
+      } else {
+        results.invalid.push(key);
+        this.#logger.warn(
+          `${this.constructor.name}: Cached element '${key}' no longer in DOM`
+        );
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Cache a single DOM element with validation (helper for subclass _cacheElements)
+   *
+   * @protected
+   * @param {string} key - Key to store element under in this.#elements
+   * @param {string} selector - CSS selector or element ID
+   * @param {boolean} [required] - Whether element is required
+   * @returns {HTMLElement|null} The cached element or null if not found
+   * @throws {Error} If required element is not found
+   * @example
+   * // In subclass _cacheElements() method:
+   * // Cache by ID (preferred for performance)
+   * this._cacheElement('submitBtn', '#submit-button');
+   *
+   * // Cache by selector
+   * this._cacheElement('errorMsg', '.error-message');
+   *
+   * // Cache optional element
+   * this._cacheElement('tooltip', '#tooltip', false);
+   */
+  _cacheElement(key, selector, required = true) {
+    if (!key || typeof key !== 'string') {
+      throw new Error(
+        `${this.constructor.name}: Invalid element key provided: ${key}`
+      );
+    }
+
+    if (!selector || typeof selector !== 'string') {
+      throw new Error(
+        `${this.constructor.name}: Invalid selector provided for key '${key}': ${selector}`
+      );
+    }
+
+    const startTime = performance.now();
+    let element = null;
+
+    try {
+      // Optimize for ID selectors
+      if (selector.startsWith('#') && !selector.includes(' ')) {
+        const id = selector.slice(1);
+        element = document.getElementById(id);
+
+        if (!element && required) {
+          throw new Error(`Required element with ID '${id}' not found in DOM`);
+        }
+      } else {
+        // Use querySelector for complex selectors
+        element = document.querySelector(selector);
+
+        if (!element && required) {
+          throw new Error(
+            `Required element matching selector '${selector}' not found in DOM`
+          );
+        }
+      }
+
+      // Validate element if found
+      if (element) {
+        this._validateElement(element, key);
+      }
+
+      // Cache the element (even if null for optional elements)
+      this.#elements[key] = element;
+
+      const cacheTime = performance.now() - startTime;
+
+      if (element) {
+        this.#logger.debug(
+          `${this.constructor.name}: Cached element '${key}' ` +
+            `(${element.tagName}${element.id ? '#' + element.id : ''}) ` +
+            `in ${cacheTime.toFixed(2)}ms`
+        );
+      } else {
+        this.#logger.debug(
+          `${this.constructor.name}: Optional element '${key}' not found ` +
+            `(selector: ${selector})`
+        );
+      }
+
+      return element;
+    } catch (error) {
+      const enhancedError = new Error(
+        `${this.constructor.name}: Failed to cache element '${key}'. ${error.message}`
+      );
+      enhancedError.originalError = error;
+      enhancedError.elementKey = key;
+      enhancedError.selector = selector;
+
+      this.#logger.error(
+        `${this.constructor.name}: Element caching failed`,
+        enhancedError
+      );
+
+      if (required) {
+        throw enhancedError;
+      }
+
+      // For optional elements, just return null
+      return null;
+    }
+  }
+
+  /**
+   * Validate a cached element
+   *
+   * @private
+   * @param {HTMLElement} element - Element to validate
+   * @param {string} key - Element key for error messages
+   * @throws {Error} If element is invalid
+   */
+  _validateElement(element, key) {
+    // Check if element is actually an HTMLElement
+    if (!(element instanceof HTMLElement)) {
+      throw new Error(`Element '${key}' is not a valid HTMLElement`);
+    }
+
+    // Check if element is attached to DOM
+    if (!document.body.contains(element)) {
+      this.#logger.warn(
+        `${this.constructor.name}: Element '${key}' is not attached to DOM`
+      );
+    }
+
+    // Additional validation can be added here
+    // e.g., check for specific attributes, element types, etc.
+  }
+
+  /**
+   * Cache multiple DOM elements from a mapping configuration
+   * Enhances the existing pattern from CharacterConceptsManagerController
+   *
+   * @protected
+   * @param {object} elementMap - Map of key -> selector or config object
+   * @param {object} [options] - Caching options
+   * @param {boolean} [options.continueOnError] - Continue if optional elements missing
+   * @param {boolean} [options.stopOnFirstError] - Stop processing on first error
+   * @returns {object} Object with cached elements and any errors
+   * @example
+   * // In subclass _cacheElements() method:
+   * // Simple mapping
+   * const results = this._cacheElementsFromMap({
+   *   form: '#my-form',
+   *   submitBtn: '#submit-btn',
+   *   cancelBtn: '#cancel-btn'
+   * });
+   *
+   * // With configuration (building on existing patterns)
+   * this._cacheElementsFromMap({
+   *   form: { selector: '#my-form', required: true },
+   *   tooltip: { selector: '.tooltip', required: false },
+   *   errorMsg: { selector: '#error', required: true, validate: (el) => el.classList.contains('error') }
+   * });
+   */
+  _cacheElementsFromMap(elementMap, options = {}) {
+    const { continueOnError = true, stopOnFirstError = false } = options;
+    const results = {
+      cached: {},
+      errors: [],
+      stats: {
+        total: 0,
+        cached: 0,
+        failed: 0,
+        optional: 0,
+      },
+    };
+
+    const startTime = performance.now();
+
+    for (const [key, config] of Object.entries(elementMap)) {
+      results.stats.total++;
+
+      try {
+        // Normalize config
+        const elementConfig = this._normalizeElementConfig(config);
+        const { selector, required, validate } = elementConfig;
+
+        // Cache the element
+        const element = this._cacheElement(key, selector, required);
+
+        if (element) {
+          // Run custom validation if provided
+          if (validate && typeof validate === 'function') {
+            if (!validate(element)) {
+              throw new Error(`Custom validation failed for element '${key}'`);
+            }
+          }
+
+          results.cached[key] = element;
+          results.stats.cached++;
+        } else if (!required) {
+          results.stats.optional++;
+        }
+      } catch (error) {
+        results.stats.failed++;
+        results.errors.push({
+          key,
+          error: error.message,
+          selector: typeof config === 'string' ? config : config.selector,
+        });
+
+        if (
+          stopOnFirstError ||
+          (!continueOnError && config.required !== false)
+        ) {
+          const batchError = new Error(
+            `Element caching failed for '${key}': ${error.message}`
+          );
+          batchError.results = results;
+          throw batchError;
+        }
+
+        this.#logger.warn(
+          `${this.constructor.name}: Failed to cache element '${key}': ${error.message}`
+        );
+      }
+    }
+
+    const cacheTime = performance.now() - startTime;
+
+    this.#logger.info(
+      `${this.constructor.name}: Cached ${results.stats.cached}/${results.stats.total} elements ` +
+        `(${results.stats.optional} optional, ${results.stats.failed} failed) ` +
+        `in ${cacheTime.toFixed(2)}ms`
+    );
+
+    if (results.errors.length > 0) {
+      this.#logger.warn(
+        `${this.constructor.name}: Element caching errors:`,
+        results.errors
+      );
+    }
+
+    return results;
+  }
+
+  /**
+   * Normalize element configuration
+   *
+   * @private
+   * @param {string|object} config - Element configuration
+   * @returns {object} Normalized configuration
+   */
+  _normalizeElementConfig(config) {
+    if (typeof config === 'string') {
+      return {
+        selector: config,
+        required: true,
+        validate: null,
+      };
+    }
+
+    return {
+      selector: config.selector,
+      required: config.required !== false,
+      validate: config.validate || null,
+    };
+  }
+
+  /**
+   * Get a cached element by key
+   *
+   * @protected
+   * @param {string} key - Element key
+   * @returns {HTMLElement|null} The cached element or null
+   */
+  _getElement(key) {
+    return this.#elements[key] || null;
+  }
+
+  /**
+   * Check if an element is cached and available
+   *
+   * @protected
+   * @param {string} key - Element key
+   * @returns {boolean} True if element exists and is in DOM
+   */
+  _hasElement(key) {
+    const element = this.#elements[key];
+    return !!(element && document.body.contains(element));
+  }
+
+  /**
+   * Get multiple cached elements by keys
+   *
+   * @protected
+   * @param {string[]} keys - Array of element keys
+   * @returns {object} Object with requested elements
+   */
+  _getElements(keys) {
+    const elements = {};
+    for (const key of keys) {
+      elements[key] = this._getElement(key);
+    }
+    return elements;
+  }
+
+  /**
+   * Refresh a cached element (re-query DOM)
+   *
+   * @protected
+   * @param {string} key - Element key
+   * @param {string} selector - CSS selector
+   * @returns {HTMLElement|null} The refreshed element
+   */
+  _refreshElement(key, selector) {
+    this.#logger.debug(`${this.constructor.name}: Refreshing element '${key}'`);
+
+    // Remove from cache
+    delete this.#elements[key];
+
+    // Re-cache
+    return this._cacheElement(key, selector, false);
+  }
+
+  /**
+   * Show an element
+   *
+   * @protected
+   * @param {string} key - Element key
+   * @param {string} [displayType] - CSS display type
+   * @returns {boolean} True if element was shown
+   */
+  _showElement(key, displayType = 'block') {
+    const element = this._getElement(key);
+    if (element) {
+      element.style.display = displayType;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Hide an element
+   *
+   * @protected
+   * @param {string} key - Element key
+   * @returns {boolean} True if element was hidden
+   */
+  _hideElement(key) {
+    const element = this._getElement(key);
+    if (element) {
+      element.style.display = 'none';
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Toggle element visibility
+   *
+   * @protected
+   * @param {string} key - Element key
+   * @param {boolean} [visible] - Force visible state
+   * @returns {boolean} New visibility state
+   */
+  _toggleElement(key, visible) {
+    const element = this._getElement(key);
+    if (!element) return false;
+
+    if (visible === undefined) {
+      visible = element.style.display === 'none';
+    }
+
+    element.style.display = visible ? 'block' : 'none';
+    return visible;
+  }
+
+  /**
+   * Enable/disable an element (for form controls)
+   *
+   * @protected
+   * @param {string} key - Element key
+   * @param {boolean} [enabled] - Whether to enable
+   * @returns {boolean} True if state was changed
+   */
+  _setElementEnabled(key, enabled = true) {
+    const element = this._getElement(key);
+    if (element && 'disabled' in element) {
+      element.disabled = !enabled;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Set text content of an element
+   *
+   * @protected
+   * @param {string} key - Element key
+   * @param {string} text - Text content
+   * @returns {boolean} True if text was set
+   */
+  _setElementText(key, text) {
+    const element = this._getElement(key);
+    if (element) {
+      element.textContent = text;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Add CSS class to element
+   *
+   * @protected
+   * @param {string} key - Element key
+   * @param {string} className - CSS class name
+   * @returns {boolean} True if class was added
+   */
+  _addElementClass(key, className) {
+    const element = this._getElement(key);
+    if (element) {
+      element.classList.add(className);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Remove CSS class from element
+   *
+   * @protected
+   * @param {string} key - Element key
+   * @param {string} className - CSS class name
+   * @returns {boolean} True if class was removed
+   */
+  _removeElementClass(key, className) {
+    const element = this._getElement(key);
+    if (element) {
+      element.classList.remove(className);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Initialize UI state manager with cached elements
+   * Called during the standard initialization sequence
+   *
+   * @protected
+   * @returns {Promise<void>}
+   */
+  async _initializeUIStateManager() {
+    try {
+      // Get required state elements
+      const stateElements = {
+        emptyState: this._getElement('emptyState'),
+        loadingState: this._getElement('loadingState'),
+        resultsState: this._getElement('resultsState'),
+        errorState: this._getElement('errorState'),
+      };
+
+      // Validate required elements exist
+      const missingElements = Object.entries(stateElements)
+        .filter(([key, element]) => !element)
+        .map(([key]) => key);
+
+      if (missingElements.length > 0) {
+        this.#logger.warn(
+          `${this.constructor.name}: Missing state elements: ${missingElements.join(', ')}`
+        );
+        return; // Skip UI state manager initialization
+      }
+
+      // Create UIStateManager instance
+      this.#uiStateManager = new UIStateManager(stateElements);
+
+      this.#logger.debug(
+        `${this.constructor.name}: UIStateManager initialized successfully`
+      );
+    } catch (error) {
+      this.#logger.error(
+        `${this.constructor.name}: Failed to initialize UIStateManager`,
+        error
+      );
+      // Don't throw - allow controller to continue without state management
+    }
+  }
+
+  /**
+   * Show UI state using integrated UIStateManager
+   *
+   * @protected
+   * @param {string} state - State to show (empty, loading, results, error)
+   * @param {object} [options] - State options
+   * @param {string} [options.message] - Message for loading/error states
+   * @param {any} [options.data] - Additional data for state
+   * @example
+   * // Show loading state
+   * this._showState('loading');
+   *
+   * // Show error with message
+   * this._showState('error', { message: 'Failed to load data' });
+   *
+   * // Show results
+   * this._showState('results');
+   */
+  _showState(state, options = {}) {
+    const { message, data } = options;
+
+    // Validate state
+    const validStates = Object.values(UI_STATES);
+    if (!validStates.includes(state)) {
+      this.#logger.warn(
+        `${this.constructor.name}: Invalid state '${state}', using 'empty' instead`
+      );
+      state = UI_STATES.EMPTY;
+    }
+
+    if (!this.#uiStateManager) {
+      this.#logger.warn(
+        `${this.constructor.name}: UIStateManager not initialized, cannot show state '${state}'`
+      );
+      return;
+    }
+
+    const previousState = this.#uiStateManager.getCurrentState();
+
+    this.#logger.debug(
+      `${this.constructor.name}: State transition: ${previousState || 'none'} → ${state}`
+    );
+
+    try {
+      // Call pre-transition hook
+      this._beforeStateChange(previousState, state, options);
+
+      // Use UIStateManager to handle state transition
+      this.#uiStateManager.showState(state, message);
+
+      // Handle state-specific logic
+      this._handleStateChange(state, { message, data, previousState });
+
+      // Call post-transition hook
+      this._afterStateChange(previousState, state, options);
+
+      // Dispatch state change event
+      if (this.#eventBus) {
+        this.#eventBus.dispatch('UI_STATE_CHANGED', {
+          controller: this.constructor.name,
+          previousState,
+          currentState: state,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } catch (error) {
+      this.#logger.error(
+        `${this.constructor.name}: State transition failed`,
+        error
+      );
+      // Try to show error state as fallback
+      if (state !== UI_STATES.ERROR && this.#uiStateManager) {
+        this.#uiStateManager.showError(
+          'An error occurred while updating the display'
+        );
+      }
+    }
+  }
+
+  /**
+   * Hook called before state change
+   *
+   * @protected
+   * @param {string} fromState - Previous state
+   * @param {string} toState - New state
+   * @param {object} options - Transition options
+   */
+  _beforeStateChange(fromState, toState, options) {
+    // Default implementation - no-op
+    // Subclasses can override for custom behavior
+  }
+
+  /**
+   * Handle state change - override in subclasses for custom behavior
+   *
+   * @protected
+   * @param {string} state - The new state
+   * @param {object} data - State data including message, data, previousState
+   * @example
+   * // In subclass:
+   * _handleStateChange(state, data) {
+   *   switch (state) {
+   *     case this.UI_STATES.LOADING:
+   *       this._setFormControlsEnabled(false);
+   *       break;
+   *     case this.UI_STATES.RESULTS:
+   *       this._setFormControlsEnabled(true);
+   *       this._displayResults(data.data);
+   *       break;
+   *     case this.UI_STATES.ERROR:
+   *       this._setFormControlsEnabled(true);
+   *       break;
+   *   }
+   * }
+   */
+  _handleStateChange(state, data) {
+    // Default implementation handles common form control states
+    switch (state) {
+      case UI_STATES.LOADING:
+        this._setFormControlsEnabled(false);
+        break;
+      case UI_STATES.RESULTS:
+      case UI_STATES.ERROR:
+      case UI_STATES.EMPTY:
+        this._setFormControlsEnabled(true);
+        break;
+    }
+
+    // Subclasses can override for additional state-specific behavior
+  }
+
+  /**
+   * Hook called after state change
+   *
+   * @protected
+   * @param {string} fromState - Previous state
+   * @param {string} toState - New state
+   * @param {object} options - Transition options
+   */
+  _afterStateChange(fromState, toState, options) {
+    // Default implementation - no-op
+    // Subclasses can override for custom behavior
+  }
+
+  /**
+   * Enable/disable form controls based on state
+   *
+   * @private
+   * @param {boolean} enabled - Whether to enable controls
+   */
+  _setFormControlsEnabled(enabled) {
+    // Common form control selectors
+    const controlKeys = [
+      'submitBtn',
+      'submitButton',
+      'saveBtn',
+      'cancelBtn',
+      'form',
+    ];
+
+    controlKeys.forEach((key) => {
+      this._setElementEnabled(key, enabled);
+    });
+
+    // Also handle any buttons in the form
+    const form = this._getElement('form');
+    if (form) {
+      const buttons = form.querySelectorAll('button, input[type="submit"]');
+      buttons.forEach((button) => {
+        button.disabled = !enabled;
+      });
+    }
+  }
+
+  /**
+   * Show error state with message
+   *
+   * @protected
+   * @param {string|Error} error - Error message or Error object
+   * @param {object} [options] - Additional options
+   */
+  _showError(error, options = {}) {
+    const message = typeof error === 'string' ? error : error.message;
+
+    this._showState(UI_STATES.ERROR, {
+      ...options,
+      message,
+    });
+
+    this.#logger.error(`${this.constructor.name}: Showing error state`, {
+      message,
+      error,
+    });
+  }
+
+  /**
+   * Show loading state with optional message
+   *
+   * @protected
+   * @param {string} [message] - Loading message
+   */
+  _showLoading(message = 'Loading...') {
+    this._showState(UI_STATES.LOADING, { message });
+  }
+
+  /**
+   * Show results state with data
+   *
+   * @protected
+   * @param {any} [data] - Results data
+   */
+  _showResults(data) {
+    this._showState(UI_STATES.RESULTS, { data });
+  }
+
+  /**
+   * Show empty state
+   *
+   * @protected
+   */
+  _showEmpty() {
+    this._showState(UI_STATES.EMPTY);
+  }
+
+  /**
+   * Get current UI state from UIStateManager
+   *
+   * @protected
+   * @returns {string|null} Current state or null if UIStateManager not initialized
+   */
+  get currentState() {
+    return this.#uiStateManager?.getCurrentState() || null;
+  }
+
+  /**
+   * Check if controller is in a specific state
+   *
+   * @protected
+   * @param {string} state - State to check
+   * @returns {boolean} True if in the specified state
+   */
+  _isInState(state) {
+    return this.currentState === state;
+  }
+
+  /**
+   * Add event listener with automatic tracking for cleanup
+   *
+   * @protected
+   * @param {HTMLElement|string} elementOrKey - Element or element key from cache
+   * @param {string} event - Event type (e.g., 'click', 'submit')
+   * @param {Function} handler - Event handler function
+   * @param {object} [options] - Event listener options
+   * @param {boolean} [options.capture] - Use capture phase
+   * @param {boolean} [options.once] - Remove after first call
+   * @param {boolean} [options.passive] - Passive listener (can't preventDefault)
+   * @param {string} [options.id] - Unique identifier for this listener
+   * @returns {string|null} Listener ID for later removal, or null if failed
+   * @example
+   * // Using cached element key
+   * this._addEventListener('submitBtn', 'click', this._handleSubmit.bind(this));
+   *
+   * // Using element directly
+   * this._addEventListener(formElement, 'submit', (e) => {
+   *   e.preventDefault();
+   *   this._handleFormSubmit();
+   * });
+   *
+   * // With options
+   * this._addEventListener('input', 'input', this._handleInput.bind(this), {
+   *   passive: true,
+   *   id: 'main-input-handler'
+   * });
+   */
+  _addEventListener(elementOrKey, event, handler, options = {}) {
+    // Resolve element
+    let element;
+    if (typeof elementOrKey === 'string') {
+      element = this._getElement(elementOrKey);
+      if (!element) {
+        this.#logger.warn(
+          `${this.constructor.name}: Cannot add ${event} listener - element '${elementOrKey}' not found`
+        );
+        return null;
+      }
+    } else if (elementOrKey instanceof HTMLElement) {
+      element = elementOrKey;
+    } else {
+      throw new Error(
+        `Invalid element provided to _addEventListener: ${elementOrKey}`
+      );
+    }
+
+    // Generate unique ID
+    const listenerId =
+      options.id || `listener-${++this.#eventListenerIdCounter}`;
+
+    // Check for duplicate
+    if (options.id && this.#eventListeners.some((l) => l.id === options.id)) {
+      this.#logger.warn(
+        `${this.constructor.name}: Listener with ID '${options.id}' already exists`
+      );
+      return listenerId;
+    }
+
+    // Bind handler to this context if needed
+    const boundHandler = handler.bind ? handler.bind(this) : handler;
+
+    // Add the event listener
+    const listenerOptions = {
+      capture: options.capture || false,
+      once: options.once || false,
+      passive: options.passive !== false, // Default to true for better performance
+    };
+
+    element.addEventListener(event, boundHandler, listenerOptions);
+
+    // Track for cleanup
+    this.#eventListeners.push({
+      type: 'dom',
+      element,
+      event,
+      handler: boundHandler,
+      originalHandler: handler,
+      options: listenerOptions,
+      id: listenerId,
+    });
+
+    this.#logger.debug(
+      `${this.constructor.name}: Added ${event} listener to ${element.tagName}#${element.id || 'no-id'} [${listenerId}]`
+    );
+
+    return listenerId;
+  }
+
+  /**
+   * Subscribe to application event with automatic cleanup
+   *
+   * @protected
+   * @param {string} eventType - Event type to subscribe to
+   * @param {Function} handler - Event handler function
+   * @param {object} [options] - Subscription options
+   * @param {string} [options.id] - Unique identifier
+   * @returns {string|null} Subscription ID, or null if failed
+   * @example
+   * // Subscribe to application event
+   * this._subscribeToEvent('USER_LOGGED_IN', this._handleUserLogin.bind(this));
+   *
+   * // With options
+   * this._subscribeToEvent('DATA_UPDATED', this._refreshDisplay.bind(this), {
+   *   id: 'main-data-refresh'
+   * });
+   */
+  _subscribeToEvent(eventType, handler, options = {}) {
+    if (!this.#eventBus) {
+      this.#logger.warn(
+        `${this.constructor.name}: Cannot subscribe to '${eventType}' - eventBus not available`
+      );
+      return null;
+    }
+
+    const subscriptionId =
+      options.id || `sub-${++this.#eventListenerIdCounter}`;
+    const boundHandler = handler.bind ? handler.bind(this) : handler;
+
+    // Subscribe to event (EventBus.subscribe only takes eventType and handler)
+    const unsubscribe = this.#eventBus.subscribe(eventType, boundHandler);
+
+    if (!unsubscribe) {
+      this.#logger.error(
+        `${this.constructor.name}: Failed to subscribe to event '${eventType}'`
+      );
+      return null;
+    }
+
+    // Track for cleanup
+    this.#eventListeners.push({
+      type: 'eventBus',
+      event: eventType,
+      handler: boundHandler,
+      originalHandler: handler,
+      unsubscribe,
+      id: subscriptionId,
+    });
+
+    this.#logger.debug(
+      `${this.constructor.name}: Subscribed to event '${eventType}' [${subscriptionId}]`
+    );
+
+    return subscriptionId;
+  }
+
+  /**
+   * Add delegated event listener for dynamic content
+   *
+   * @protected
+   * @param {HTMLElement|string} containerOrKey - Container element or key
+   * @param {string} selector - CSS selector for target elements
+   * @param {string} event - Event type
+   * @param {Function} handler - Event handler (receives event and matched element)
+   * @param {object} [options] - Listener options
+   * @returns {string} Listener ID
+   * @example
+   * // Handle clicks on dynamically added buttons
+   * this._addDelegatedListener('resultsContainer', '.delete-btn', 'click',
+   *   (event, button) => {
+   *     const itemId = button.dataset.itemId;
+   *     this._deleteItem(itemId);
+   *   }
+   * );
+   */
+  _addDelegatedListener(
+    containerOrKey,
+    selector,
+    event,
+    handler,
+    options = {}
+  ) {
+    const delegatedHandler = (e) => {
+      // Find the target element that matches the selector
+      const matchedElement = e.target.closest(selector);
+
+      if (
+        matchedElement &&
+        this._getContainer(containerOrKey).contains(matchedElement)
+      ) {
+        handler.call(this, e, matchedElement);
+      }
+    };
+
+    return this._addEventListener(containerOrKey, event, delegatedHandler, {
+      ...options,
+      id: options.id || `delegated-${selector}-${event}`,
+    });
+  }
+
+  /**
+   * Helper to get container element
+   *
+   * @param containerOrKey
+   * @private
+   */
+  _getContainer(containerOrKey) {
+    if (typeof containerOrKey === 'string') {
+      return this._getElement(containerOrKey);
+    }
+    return containerOrKey;
+  }
+
+  /**
+   * Add debounced event listener
+   *
+   * @protected
+   * @param {HTMLElement|string} elementOrKey - Element or key
+   * @param {string} event - Event type
+   * @param {Function} handler - Event handler
+   * @param {number} delay - Debounce delay in milliseconds
+   * @param {object} [options] - Additional options
+   * @returns {string} Listener ID
+   * @example
+   * // Debounce search input
+   * this._addDebouncedListener('searchInput', 'input',
+   *   this._handleSearch.bind(this),
+   *   300
+   * );
+   */
+  _addDebouncedListener(elementOrKey, event, handler, delay, options = {}) {
+    const debouncedHandler = this._debounce(handler, delay);
+    const listenerId = `debounced-${event}-${delay}`;
+
+    // Store for cleanup
+    this.#debouncedHandlers.set(listenerId, debouncedHandler);
+
+    return this._addEventListener(elementOrKey, event, debouncedHandler, {
+      ...options,
+      id: options.id || listenerId,
+    });
+  }
+
+  /**
+   * Add throttled event listener
+   *
+   * @protected
+   * @param {HTMLElement|string} elementOrKey - Element or key
+   * @param {string} event - Event type
+   * @param {Function} handler - Event handler
+   * @param {number} limit - Throttle limit in milliseconds
+   * @param {object} [options] - Additional options
+   * @returns {string} Listener ID
+   * @example
+   * // Throttle scroll handler
+   * this._addThrottledListener(window, 'scroll',
+   *   this._handleScroll.bind(this),
+   *   100
+   * );
+   */
+  _addThrottledListener(elementOrKey, event, handler, limit, options = {}) {
+    const throttledHandler = this._throttle(handler, limit);
+    const listenerId = `throttled-${event}-${limit}`;
+
+    // Store for cleanup
+    this.#throttledHandlers.set(listenerId, throttledHandler);
+
+    return this._addEventListener(elementOrKey, event, throttledHandler, {
+      ...options,
+      id: options.id || listenerId,
+    });
+  }
+
+  /**
+   * Debounce utility
+   *
+   * @param func
+   * @param wait
+   * @private
+   */
+  _debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func.apply(this, args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  /**
+   * Throttle utility
+   *
+   * @param func
+   * @param limit
+   * @private
+   */
+  _throttle(func, limit) {
+    let inThrottle;
+    return function executedFunction(...args) {
+      if (!inThrottle) {
+        func.apply(this, args);
+        inThrottle = true;
+        setTimeout(() => (inThrottle = false), limit);
+      }
+    };
+  }
+
+  /**
+   * Add click handler with loading state
+   *
+   * @protected
+   * @param {HTMLElement|string} elementOrKey - Element or key
+   * @param {Function} asyncHandler - Async handler function
+   * @param {object} [options] - Options
+   * @returns {string} Listener ID
+   */
+  _addAsyncClickHandler(elementOrKey, asyncHandler, options = {}) {
+    const handler = async (event) => {
+      const element = event.currentTarget;
+      const originalText = element.textContent;
+      const wasDisabled = element.disabled;
+
+      try {
+        // Show loading state
+        element.disabled = true;
+        if (options.loadingText) {
+          element.textContent = options.loadingText;
+        }
+        element.classList.add('is-loading');
+
+        // Execute handler
+        await asyncHandler.call(this, event);
+      } catch (error) {
+        this.#logger.error(
+          `${this.constructor.name}: Async click handler failed`,
+          error
+        );
+        if (options.onError) {
+          options.onError(error);
+        }
+      } finally {
+        // Restore state
+        element.disabled = wasDisabled;
+        element.textContent = originalText;
+        element.classList.remove('is-loading');
+      }
+    };
+
+    return this._addEventListener(elementOrKey, 'click', handler, options);
+  }
+
+  /**
+   * Remove specific event listener by ID
+   *
+   * @protected
+   * @param {string} listenerId - Listener ID returned from add methods
+   * @returns {boolean} True if listener was removed
+   */
+  _removeEventListener(listenerId) {
+    const index = this.#eventListeners.findIndex((l) => l.id === listenerId);
+
+    if (index === -1) {
+      this.#logger.warn(
+        `${this.constructor.name}: Listener '${listenerId}' not found`
+      );
+      return false;
+    }
+
+    const listener = this.#eventListeners[index];
+
+    // Remove the listener
+    if (listener.type === 'dom') {
+      listener.element.removeEventListener(
+        listener.event,
+        listener.handler,
+        listener.options
+      );
+    } else if (listener.type === 'eventBus' && listener.unsubscribe) {
+      listener.unsubscribe();
+    }
+
+    // Remove from tracking
+    this.#eventListeners.splice(index, 1);
+
+    this.#logger.debug(
+      `${this.constructor.name}: Removed listener '${listenerId}'`
+    );
+
+    return true;
+  }
+
+  /**
+   * Remove all event listeners
+   *
+   * @protected
+   */
+  _removeAllEventListeners() {
+    const count = this.#eventListeners.length;
+
+    // Remove in reverse order to handle dependencies
+    while (this.#eventListeners.length > 0) {
+      const listener = this.#eventListeners.pop();
+
+      try {
+        if (listener.type === 'dom') {
+          listener.element.removeEventListener(
+            listener.event,
+            listener.handler,
+            listener.options
+          );
+        } else if (listener.type === 'eventBus' && listener.unsubscribe) {
+          listener.unsubscribe();
+        }
+      } catch (error) {
+        this.#logger.error(
+          `${this.constructor.name}: Error removing listener`,
+          error
+        );
+      }
+    }
+
+    // Clear debounced/throttled handlers
+    this.#debouncedHandlers.clear();
+    this.#throttledHandlers.clear();
+
+    this.#logger.debug(
+      `${this.constructor.name}: Removed ${count} event listeners`
+    );
+  }
+
+  /**
+   * Get event listener statistics (for debugging)
+   *
+   * @protected
+   * @returns {object} Listener statistics
+   */
+  _getEventListenerStats() {
+    const stats = {
+      total: this.#eventListeners.length,
+      dom: 0,
+      eventBus: 0,
+      byEvent: {},
+    };
+
+    this.#eventListeners.forEach((listener) => {
+      if (listener.type === 'dom') stats.dom++;
+      if (listener.type === 'eventBus') stats.eventBus++;
+
+      const eventKey = `${listener.type}:${listener.event}`;
+      stats.byEvent[eventKey] = (stats.byEvent[eventKey] || 0) + 1;
+    });
+
+    return stats;
+  }
+
+  /**
+   * Prevent default and stop propagation helper
+   *
+   * @protected
+   * @param {Event} event - DOM event
+   * @param {Function} handler - Handler to execute
+   * @example
+   * formElement.addEventListener('submit', (e) => {
+   *   this._preventDefault(e, () => this._handleSubmit());
+   * });
+   */
+  _preventDefault(event, handler) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (handler) {
+      handler.call(this, event);
+    }
   }
 
   /**
@@ -456,25 +1732,48 @@ export class BaseCharacterBuilderController {
       this.logger.info(`${this.constructor.name}: Starting initialization`);
 
       // Pre-initialization hook
-      await this._executeLifecycleMethod('_preInitialize', 'pre-initialization');
+      await this._executeLifecycleMethod(
+        '_preInitialize',
+        'pre-initialization'
+      );
 
       // Step 1: Cache DOM elements
-      await this._executeLifecycleMethod('_cacheElements', 'element caching', true);
+      await this._executeLifecycleMethod(
+        '_cacheElements',
+        'element caching',
+        true
+      );
 
       // Step 2: Initialize services
-      await this._executeLifecycleMethod('_initializeServices', 'service initialization');
+      await this._executeLifecycleMethod(
+        '_initializeServices',
+        'service initialization'
+      );
 
       // Step 3: Set up event listeners
-      await this._executeLifecycleMethod('_setupEventListeners', 'event listener setup', true);
+      await this._executeLifecycleMethod(
+        '_setupEventListeners',
+        'event listener setup',
+        true
+      );
 
       // Step 4: Load initial data
-      await this._executeLifecycleMethod('_loadInitialData', 'initial data loading');
+      await this._executeLifecycleMethod(
+        '_loadInitialData',
+        'initial data loading'
+      );
 
       // Step 5: Initialize UI state
-      await this._executeLifecycleMethod('_initializeUIState', 'UI state initialization');
+      await this._executeLifecycleMethod(
+        '_initializeUIState',
+        'UI state initialization'
+      );
 
       // Post-initialization hook
-      await this._executeLifecycleMethod('_postInitialize', 'post-initialization');
+      await this._executeLifecycleMethod(
+        '_postInitialize',
+        'post-initialization'
+      );
 
       // Set initialized state
       this._setInitializationState(false, true);
@@ -491,7 +1790,6 @@ export class BaseCharacterBuilderController {
           initializationTime: initTime,
         });
       }
-
     } catch (error) {
       const initTime = performance.now() - startTime;
       this.logger.error(
@@ -521,9 +1819,7 @@ export class BaseCharacterBuilderController {
     const startTime = performance.now();
 
     try {
-      this.logger.debug(
-        `${this.constructor.name}: Starting ${phaseName}`
-      );
+      this.logger.debug(`${this.constructor.name}: Starting ${phaseName}`);
 
       // Check if method exists
       if (typeof this[methodName] !== 'function') {
@@ -546,7 +1842,6 @@ export class BaseCharacterBuilderController {
       this.logger.debug(
         `${this.constructor.name}: Completed ${phaseName} in ${duration.toFixed(2)}ms`
       );
-
     } catch (error) {
       const duration = performance.now() - startTime;
       this.logger.error(
@@ -555,9 +1850,7 @@ export class BaseCharacterBuilderController {
       );
 
       // Re-throw with more context
-      const enhancedError = new Error(
-        `${phaseName} failed: ${error.message}`
-      );
+      const enhancedError = new Error(`${phaseName} failed: ${error.message}`);
       enhancedError.originalError = error;
       enhancedError.phase = phaseName;
       enhancedError.methodName = methodName;
@@ -591,7 +1884,10 @@ export class BaseCharacterBuilderController {
    */
   async _initializeServices() {
     // Initialize character builder service
-    if (this.characterBuilderService && this.characterBuilderService.initialize) {
+    if (
+      this.characterBuilderService &&
+      this.characterBuilderService.initialize
+    ) {
       this.logger.debug(
         `${this.constructor.name}: Initializing CharacterBuilderService`
       );
@@ -644,13 +1940,14 @@ export class BaseCharacterBuilderController {
   }
 
   /**
-   * Initialize UI state - override in subclasses
-   * Called after data is loaded
+   * Initialize UI state - enhanced to use UIStateManager
+   * Called after data is loaded in the standard initialization sequence
    *
    * @protected
    * @example
    * // In subclass:
-   * _initializeUIState() {
+   * async _initializeUIState() {
+   *   await super._initializeUIState(); // Initialize UIStateManager first
    *   if (this._hasData()) {
    *     this._showState('results');
    *   } else {
@@ -658,10 +1955,19 @@ export class BaseCharacterBuilderController {
    *   }
    * }
    */
-  _initializeUIState() {
-    // Default implementation - show empty state if _showState exists
-    if (typeof this._showState === 'function') {
-      this._showState('empty');
+  async _initializeUIState() {
+    // Initialize UIStateManager first
+    if (typeof this._initializeUIStateManager === 'function') {
+      await this._initializeUIStateManager();
+    }
+
+    // Default implementation - show empty state if UIStateManager is available
+    if (this.#uiStateManager) {
+      this._showState(UI_STATES.EMPTY);
+    } else {
+      this.#logger.warn(
+        `${this.constructor.name}: UIStateManager not available, skipping initial state`
+      );
     }
   }
 
@@ -691,7 +1997,8 @@ export class BaseCharacterBuilderController {
    * @returns {Promise<void>}
    */
   async _handleInitializationError(error) {
-    const userMessage = 'Failed to initialize page. Please refresh and try again.';
+    const userMessage =
+      'Failed to initialize page. Please refresh and try again.';
 
     // Show error UI if available
     if (typeof this._showError === 'function') {
@@ -754,6 +2061,10 @@ export class BaseCharacterBuilderController {
    * @public
    */
   destroy() {
+    // Remove all event listeners
+    this._removeAllEventListeners();
+
+    // TODO: Other cleanup will be implemented in ticket #8
     throw new Error('destroy() will be implemented in ticket #8');
   }
 }

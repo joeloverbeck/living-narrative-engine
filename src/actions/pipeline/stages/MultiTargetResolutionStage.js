@@ -128,6 +128,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
           }
         } else {
           // Resolve multi-target action
+          console.log(`DEBUG MultiTarget: Action '${actionDef.id}' is multi-target action`);
           hasMultiTargetActions = true;
           const result = await this.#resolveMultiTargets(
             actionProcessContext,

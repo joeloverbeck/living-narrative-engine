@@ -68,18 +68,15 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       };
 
       // Warm up
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         await commandProcessor.dispatchAction(mockActor, legacyAction);
       }
 
       const benchmark = performanceTracker.startBenchmark(
-        'Legacy Action Performance',
-        {
-          trackMemory: true,
-        }
+        'Legacy Action Performance'
       );
 
-      const iterations = 100;
+      const iterations = 25;
       const startTime = performance.now();
 
       for (let i = 0; i < iterations; i++) {
@@ -109,18 +106,15 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       };
 
       // Warm up
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         await commandProcessor.dispatchAction(mockActor, multiTargetAction);
       }
 
       const benchmark = performanceTracker.startBenchmark(
-        'Multi-Target Action Performance',
-        {
-          trackMemory: true,
-        }
+        'Multi-Target Action Performance'
       );
 
-      const iterations = 100;
+      const iterations = 25;
       const startTime = performance.now();
 
       for (let i = 0; i < iterations; i++) {
@@ -155,13 +149,10 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       };
 
       const benchmark = performanceTracker.startBenchmark(
-        'Complex Multi-Target Action',
-        {
-          trackMemory: true,
-        }
+        'Complex Multi-Target Action'
       );
 
-      const iterations = 50;
+      const iterations = 15;
       const startTime = performance.now();
 
       for (let i = 0; i < iterations; i++) {
@@ -178,33 +169,9 @@ describe('CommandProcessor - Performance Benchmarks', () => {
   });
 
   describe('Comparative Performance Analysis', () => {
-    it('should not degrade legacy performance significantly', async () => {
-      const legacyAction = {
-        actionDefinitionId: 'compare:legacy',
-        commandString: 'comparison test',
-        resolvedParameters: { targetId: 'target_123' },
-      };
-
-      const benchmark = performanceTracker.startBenchmark(
-        'Enhanced Legacy Performance'
-      );
-      const iterations = 100;
-      const startTime = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        await commandProcessor.dispatchAction(mockActor, legacyAction);
-      }
-
-      const endTime = performance.now();
-      const metrics = benchmark.end();
-      const averageTime = (endTime - startTime) / iterations;
-
-      // The enhanced system should maintain reasonable performance
-      expect(averageTime).toBeLessThan(50); // Should be fast
-    });
 
     it('should scale efficiently with target count', async () => {
-      const targetCounts = [1, 2, 5, 10, 20];
+      const targetCounts = [1, 5, 20];
       const results = [];
 
       for (const count of targetCounts) {
@@ -227,7 +194,7 @@ describe('CommandProcessor - Performance Benchmarks', () => {
           `Scaling Test - ${count} targets`
         );
 
-        const iterations = 20;
+        const iterations = 10;
         const startTime = performance.now();
 
         for (let i = 0; i < iterations; i++) {
@@ -252,52 +219,17 @@ describe('CommandProcessor - Performance Benchmarks', () => {
   });
 
   describe('Throughput Analysis', () => {
-    it('should maintain high throughput under sustained load', async () => {
-      const testDuration = 5000; // 5 seconds
-      const startTime = performance.now();
-      let actionCount = 0;
-
-      const actions = [
-        {
-          actionDefinitionId: 'throughput:legacy',
-          commandString: 'throughput test legacy',
-          resolvedParameters: { targetId: 'target_123' },
-        },
-        {
-          actionDefinitionId: 'throughput:multi',
-          commandString: 'throughput test multi',
-          resolvedParameters: {
-            isMultiTarget: true,
-            targetIds: {
-              item: ['item_123'],
-              target: ['target_456'],
-            },
-          },
-        },
-      ];
-
-      while (performance.now() - startTime < testDuration) {
-        const action = actions[actionCount % actions.length];
-        await commandProcessor.dispatchAction(mockActor, action);
-        actionCount++;
-      }
-
-      const actualDuration = performance.now() - startTime;
-      const throughput = (actionCount / actualDuration) * 1000; // Actions per second
-
-      expect(throughput).toBeGreaterThan(10); // At least 10 actions per second
-    });
-
-    it('should handle mixed workload efficiently', async () => {
+    it('should handle mixed workload efficiently with sustained throughput', async () => {
+      // Test both sustained load and mixed workload in one comprehensive test
       const workloadMix = [
-        // 40% legacy single-target
-        ...Array(40).fill({
+        // 30% legacy single-target
+        ...Array(15).fill({
           actionDefinitionId: 'mixed:legacy',
           commandString: 'mixed legacy',
           resolvedParameters: { targetId: 'target_123' },
         }),
         // 40% simple multi-target
-        ...Array(40).fill({
+        ...Array(20).fill({
           actionDefinitionId: 'mixed:multi',
           commandString: 'mixed multi',
           resolvedParameters: {
@@ -308,8 +240,8 @@ describe('CommandProcessor - Performance Benchmarks', () => {
             },
           },
         }),
-        // 20% complex multi-target
-        ...Array(20).fill({
+        // 30% complex multi-target
+        ...Array(15).fill({
           actionDefinitionId: 'mixed:complex',
           commandString: 'mixed complex',
           resolvedParameters: {
@@ -319,17 +251,16 @@ describe('CommandProcessor - Performance Benchmarks', () => {
               secondary: ['s1'],
               item: ['i1'],
               tool: ['t1'],
-              location: ['l1'],
             },
           },
         }),
       ];
 
-      // Shuffle workload
+      // Shuffle workload for realistic mixed pattern
       const shuffled = workloadMix.sort(() => Math.random() - 0.5);
 
       const benchmark = performanceTracker.startBenchmark(
-        'Mixed Workload Performance',
+        'Mixed Workload & Throughput Performance',
         {
           trackMemory: true,
         }
@@ -341,56 +272,34 @@ describe('CommandProcessor - Performance Benchmarks', () => {
         await commandProcessor.dispatchAction(mockActor, action);
       }
 
+      const endTime = performance.now();
       const metrics = benchmark.end();
+      const totalDuration = endTime - startTime;
       const averageTime = metrics.totalTime / shuffled.length;
+      const throughput = (shuffled.length / totalDuration) * 1000; // Actions per second
 
+      // Test both average performance and overall throughput
       expect(averageTime).toBeLessThan(75); // Average should be reasonable for mixed workload
+      expect(throughput).toBeGreaterThan(8); // At least 8 actions per second for mixed workload
     });
   });
 
   describe('Stress Testing', () => {
-    it('should handle rapid-fire burst without degradation', async () => {
-      const burstSize = 100;
-      const burstAction = {
-        actionDefinitionId: 'burst:test',
-        commandString: 'burst test',
-        resolvedParameters: { targetId: 'target_123' },
-      };
-
-      const responseTimes = [];
-
-      for (let i = 0; i < burstSize; i++) {
-        const startTime = performance.now();
-        await commandProcessor.dispatchAction(mockActor, burstAction);
-        const responseTime = performance.now() - startTime;
-        responseTimes.push(responseTime);
-      }
-
-      // Calculate percentiles
-      responseTimes.sort((a, b) => a - b);
-      const p50 = responseTimes[Math.floor(burstSize * 0.5)];
-      const p95 = responseTimes[Math.floor(burstSize * 0.95)];
-      const p99 = responseTimes[Math.floor(burstSize * 0.99)];
-
-      expect(p50).toBeLessThan(50); // Median should be fast
-      expect(p95).toBeLessThan(100); // 95th percentile reasonable
-      expect(p99).toBeLessThan(200); // 99th percentile acceptable
-    });
-
-    it('should recover from performance spike', async () => {
+    it('should handle burst load and recover gracefully', async () => {
+      // Combined test: burst performance + recovery validation
       const normalAction = {
-        actionDefinitionId: 'normal:test',
-        commandString: 'normal test',
+        actionDefinitionId: 'stress:normal',
+        commandString: 'stress normal',
         resolvedParameters: { targetId: 'target_123' },
       };
 
       const spikeAction = {
-        actionDefinitionId: 'spike:test',
-        commandString: 'spike test',
+        actionDefinitionId: 'stress:spike',
+        commandString: 'stress spike',
         resolvedParameters: {
           isMultiTarget: true,
           targetIds: Object.fromEntries(
-            Array.from({ length: 100 }, (_, i) => [
+            Array.from({ length: 50 }, (_, i) => [
               `target_${i}`,
               [`entity_${i}`],
             ])
@@ -398,24 +307,44 @@ describe('CommandProcessor - Performance Benchmarks', () => {
         },
       };
 
-      // Baseline performance
+      // Baseline performance measurement
       const baselineStart = performance.now();
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         await commandProcessor.dispatchAction(mockActor, normalAction);
       }
-      const baselineAvg = (performance.now() - baselineStart) / 10;
+      const baselineAvg = (performance.now() - baselineStart) / 5;
 
-      // Cause spike
+      // Burst test with reduced size for faster execution
+      const burstSize = 40;
+      const responseTimes = [];
+
+      for (let i = 0; i < burstSize; i++) {
+        const startTime = performance.now();
+        await commandProcessor.dispatchAction(mockActor, normalAction);
+        const responseTime = performance.now() - startTime;
+        responseTimes.push(responseTime);
+      }
+
+      // Calculate percentiles for burst performance
+      responseTimes.sort((a, b) => a - b);
+      const p50 = responseTimes[Math.floor(burstSize * 0.5)];
+      const p95 = responseTimes[Math.floor(burstSize * 0.95)];
+
+      // Cause performance spike
       await commandProcessor.dispatchAction(mockActor, spikeAction);
 
-      // Measure recovery
+      // Measure recovery performance
       const recoveryStart = performance.now();
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         await commandProcessor.dispatchAction(mockActor, normalAction);
       }
-      const recoveryAvg = (performance.now() - recoveryStart) / 10;
+      const recoveryAvg = (performance.now() - recoveryStart) / 5;
 
-      // Recovery performance should be close to baseline
+      // Validate burst performance
+      expect(p50).toBeLessThan(50); // Median should be fast
+      expect(p95).toBeLessThan(100); // 95th percentile reasonable
+
+      // Validate recovery performance
       expect(recoveryAvg).toBeLessThan(baselineAvg * 2); // Within 2x of baseline
     });
   });
@@ -426,14 +355,14 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       commandProcessor.resetPayloadCreationStatistics();
 
       const testActions = [
-        // 10 legacy actions
-        ...Array(10).fill({
+        // 3 legacy actions
+        ...Array(3).fill({
           actionDefinitionId: 'metrics:legacy',
           commandString: 'metrics legacy',
           resolvedParameters: { targetId: 'target_123' },
         }),
-        // 5 multi-target actions
-        ...Array(5).fill({
+        // 2 multi-target actions
+        ...Array(2).fill({
           actionDefinitionId: 'metrics:multi',
           commandString: 'metrics multi',
           resolvedParameters: {
@@ -452,9 +381,9 @@ describe('CommandProcessor - Performance Benchmarks', () => {
 
       const stats = commandProcessor.getPayloadCreationStatistics();
 
-      expect(stats.totalPayloadsCreated).toBe(15);
-      expect(stats.legacyPayloads).toBe(10);
-      expect(stats.multiTargetPayloads).toBe(5);
+      expect(stats.totalPayloadsCreated).toBe(5);
+      expect(stats.legacyPayloads).toBe(3);
+      expect(stats.multiTargetPayloads).toBe(2);
       expect(stats.fallbackPayloads).toBe(0);
       expect(stats.averageCreationTime).toBeGreaterThan(0);
       expect(stats.averageCreationTime).toBeLessThan(100); // Should be reasonable

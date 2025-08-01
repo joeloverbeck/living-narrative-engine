@@ -1,7 +1,7 @@
 /**
  * @file Performance benchmarks for Entity Lifecycle Workflow operations
  * @description Tests focused on measuring and validating entity lifecycle performance
- * 
+ *
  * These tests were extracted from E2E test suite to run with dedicated performance test runner.
  * Tests entity creation, batch operations, and performance consistency across multiple operations.
  */
@@ -132,13 +132,14 @@ describe('Entity Lifecycle Workflow Performance', () => {
       }));
 
       const batchStartTime = performance.now();
-      const batchEntities = await testBed.createTestEntitiesBatch(entityConfigs);
+      const batchEntities =
+        await testBed.createTestEntitiesBatch(entityConfigs);
       const batchEndTime = performance.now();
       const batchTime = batchEndTime - batchStartTime;
 
       // Assert batch is more efficient (or at least not significantly worse)
       expect(batchEntities).toHaveLength(batchSize);
-      
+
       // Allow batch operations to be up to 20% slower due to setup overhead
       const batchEfficiencyThreshold = individualTime * 1.2;
       expect(batchTime).toBeLessThan(batchEfficiencyThreshold);
@@ -158,16 +159,20 @@ describe('Entity Lifecycle Workflow Performance', () => {
       }));
 
       // Act - Measure memory usage during bulk operations
-      const memoryBefore = performance.memory ? performance.memory.usedJSHeapSize : 0;
-      
+      const memoryBefore = performance.memory
+        ? performance.memory.usedJSHeapSize
+        : 0;
+
       const entities = await testBed.createTestEntitiesBatch(entityConfigs);
-      
-      const memoryAfter = performance.memory ? performance.memory.usedJSHeapSize : 0;
+
+      const memoryAfter = performance.memory
+        ? performance.memory.usedJSHeapSize
+        : 0;
       const memoryIncrease = memoryAfter - memoryBefore;
 
       // Assert reasonable memory usage
       expect(entities).toHaveLength(bulkSize);
-      
+
       // Memory increase should be reasonable (less than 10MB for 20 entities)
       const maxMemoryIncrease = 10 * 1024 * 1024; // 10MB
       if (performance.memory) {
@@ -194,13 +199,13 @@ describe('Entity Lifecycle Workflow Performance', () => {
         const startTime = performance.now();
         const entities = await testBed.createTestEntitiesBatch(entityConfigs);
         const endTime = performance.now();
-        
+
         const timePerEntity = (endTime - startTime) / size;
         results.push({
           size,
           totalTime: endTime - startTime,
           timePerEntity,
-          entities: entities.length
+          entities: entities.length,
         });
 
         expect(entities).toHaveLength(size);

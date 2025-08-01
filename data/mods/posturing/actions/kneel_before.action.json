@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "posturing:kneel_before",
+  "name": "Kneel Before",
+  "description": "Kneel before another actor as a sign of respect, submission, or reverence.",
+  "targets": {
+    "primary": {
+      "scope": "core:actors_in_location",
+      "placeholder": "actor",
+      "description": "The actor to kneel before"
+    }
+  },
+  "required_components": {
+    "actor": []
+  },
+  "forbidden_components": {
+    "actor": ["posturing:kneeling_before"]
+  },
+  "template": "kneel before {actor}",
+  "prerequisites": []
+}

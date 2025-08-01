@@ -110,9 +110,9 @@ describe('LegacyTargetCompatibilityLayer', () => {
         id: 'test-action',
         targets: 'actor.partners',
       };
-      
+
       layer.isLegacyAction(actionDef);
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('isLegacyAction'),
         expect.objectContaining({
@@ -180,25 +180,53 @@ describe('LegacyTargetCompatibilityLayer', () => {
 
     it('should convert all targetType mappings', () => {
       const testCases = [
-        { targetType: 'actor', expectedScope: 'actor', expectedPlaceholder: 'actor' },
-        { targetType: 'self', expectedScope: 'self', expectedPlaceholder: 'self' },
-        { targetType: 'partner', expectedScope: 'actor.partners', expectedPlaceholder: 'partner' },
-        { targetType: 'item', expectedScope: 'actor.items', expectedPlaceholder: 'item' },
-        { targetType: 'location', expectedScope: 'actor.location', expectedPlaceholder: 'location' },
-        { targetType: 'unknown', expectedScope: 'none', expectedPlaceholder: 'target' },
+        {
+          targetType: 'actor',
+          expectedScope: 'actor',
+          expectedPlaceholder: 'actor',
+        },
+        {
+          targetType: 'self',
+          expectedScope: 'self',
+          expectedPlaceholder: 'self',
+        },
+        {
+          targetType: 'partner',
+          expectedScope: 'actor.partners',
+          expectedPlaceholder: 'partner',
+        },
+        {
+          targetType: 'item',
+          expectedScope: 'actor.items',
+          expectedPlaceholder: 'item',
+        },
+        {
+          targetType: 'location',
+          expectedScope: 'actor.location',
+          expectedPlaceholder: 'location',
+        },
+        {
+          targetType: 'unknown',
+          expectedScope: 'none',
+          expectedPlaceholder: 'target',
+        },
       ];
 
-      testCases.forEach(({ targetType, expectedScope, expectedPlaceholder }) => {
-        const actionDef = {
-          id: 'test-action',
-          targetType,
-        };
+      testCases.forEach(
+        ({ targetType, expectedScope, expectedPlaceholder }) => {
+          const actionDef = {
+            id: 'test-action',
+            targetType,
+          };
 
-        const result = layer.convertLegacyFormat(actionDef, mockActor);
+          const result = layer.convertLegacyFormat(actionDef, mockActor);
 
-        expect(result.targetDefinitions.primary.scope).toBe(expectedScope);
-        expect(result.targetDefinitions.primary.placeholder).toBe(expectedPlaceholder);
-      });
+          expect(result.targetDefinitions.primary.scope).toBe(expectedScope);
+          expect(result.targetDefinitions.primary.placeholder).toBe(
+            expectedPlaceholder
+          );
+        }
+      );
     });
 
     it('should handle none scope with optional flag', () => {
@@ -255,11 +283,10 @@ describe('LegacyTargetCompatibilityLayer', () => {
       expect(() => layer.convertLegacyFormat(null, mockActor)).toThrow(
         'Missing required parameters'
       );
-      expect(() =>
-        layer.convertLegacyFormat({ id: 'test' }, null)
-      ).toThrow('Missing required parameters');
+      expect(() => layer.convertLegacyFormat({ id: 'test' }, null)).toThrow(
+        'Missing required parameters'
+      );
     });
-
 
     it('should handle scope priority correctly', () => {
       // targets (string) should take priority over scope
@@ -413,7 +440,7 @@ describe('LegacyTargetCompatibilityLayer', () => {
       };
 
       const suggestion = layer.getMigrationSuggestion(actionDef);
-      
+
       expect(() => JSON.parse(suggestion)).not.toThrow();
       expect(suggestion).toMatch(/^{[\s\S]*}$/); // Basic JSON structure check
     });
