@@ -1,68 +1,396 @@
-[ConsoleLogger] Initialized. Log level set to INFO (1).
-consoleLogger.js:151 Loaders Registration: All core services, loaders, and phases registered.
-consoleLogger.js:151 [CharacterBuilderBootstrap] Loading 4 schemas
-CharacterBuilderBootstrap.js:253  GET http://127.0.0.1:8080/data/schemas/ui-state.schema.json net::ERR_ABORTED 404 (Not Found)
-(anonymous) @ CharacterBuilderBootstrap.js:253
-loadSchemas_fn @ CharacterBuilderBootstrap.js:241
-bootstrap @ CharacterBuilderBootstrap.js:91
-await in bootstrap
-initialize @ thematic-direction-main.js:79
-initialize @ thematic-direction-main.js:111Understand this error
-consoleLogger.js:163 Failed to load schema /data/schemas/ui-state.schema.json: Failed to load schema: 404
-warn @ consoleLogger.js:163
-(anonymous) @ CharacterBuilderBootstrap.js:266
-await in (anonymous)
-loadSchemas_fn @ CharacterBuilderBootstrap.js:241
-bootstrap @ CharacterBuilderBootstrap.js:91
-await in bootstrap
-initialize @ thematic-direction-main.js:79
-initialize @ thematic-direction-main.js:111Understand this warning
-consoleLogger.js:115 [ConsoleLogger] Log level changing from INFO to DEBUG.
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'schema://living-narrative-engine/llm-configs.schema.json'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'schema://living-narrative-engine/llm-configs.schema.json' verified as retrievable.
-consoleLogger.js:187 Loaded schema: schema://living-narrative-engine/llm-configs.schema.json
-consoleLogger.js:187 [CharacterBuilderBootstrap] Schema loading completed in 82.00ms
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'core:character_concept_created#payload'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'core:character_concept_created#payload' verified as retrievable.
-consoleLogger.js:187 Registered event: core:character_concept_created
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'core:character_concept_updated#payload'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'core:character_concept_updated#payload' verified as retrievable.
-consoleLogger.js:187 Registered event: core:character_concept_updated
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'core:character_concept_deleted#payload'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'core:character_concept_deleted#payload' verified as retrievable.
-consoleLogger.js:187 Registered event: core:character_concept_deleted
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'core:thematic_directions_generated#payload'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'core:thematic_directions_generated#payload' verified as retrievable.
-consoleLogger.js:187 Registered event: core:thematic_directions_generated
-consoleLogger.js:187 AjvSchemaValidator: Successfully added schema 'core:thematic_direction_updated#payload'.
-consoleLogger.js:187 AjvSchemaValidator: Schema 'core:thematic_direction_updated#payload' verified as retrievable.
-consoleLogger.js:187 Registered event: core:thematic_direction_updated
-consoleLogger.js:187 [CharacterBuilderBootstrap] Event registration completed in 6.70ms
-consoleLogger.js:187 AI Systems Registration: Starting LLM Adapter setup...
-consoleLogger.js:187 EnvironmentContext: Client-side proxyServerUrl not provided. Using default: 'http://localhost:3001/api/llm-request'.
-consoleLogger.js:187 EnvironmentContext: Instance created. Execution environment: client.
-consoleLogger.js:187 ClientApiKeyProvider: Instance created.
-consoleLogger.js:187 RetryHttpClient: Instance created. {maxRetries: 3, baseDelayMs: 500, maxDelayMs: 10000}
-consoleLogger.js:187 LLMStrategyFactory: Instance created and dependencies stored.
-consoleLogger.js:187 LLMConfigurationManager: Instance created. Initial LLM ID: 'not set'.
-consoleLogger.js:187 LLMRequestExecutor: Instance created.
-consoleLogger.js:187 LLMErrorMapper: Instance created.
-consoleLogger.js:187 TokenEstimator: Instance created.
-consoleLogger.js:187 ConfigurableLLMAdapter: Instance created. Execution environment: client. Ready for initialization.
-consoleLogger.js:187 AI Systems Registration: ConfigurableLLMAdapter instance (token: LLMAdapter) created. Explicit initialization required.
-consoleLogger.js:175 [CharacterBuilderBootstrap] Fatal error during initialization of 'Thematic Direction Generator': Controller initialization failed: Cannot read properties of undefined (reading 'resolve') Error: Controller initialization failed: Cannot read properties of undefined (reading 'resolve')
-    at CharacterBuilderBootstrap.initializeController_fn (CharacterBuilderBootstrap.js:591:13)
-    at async CharacterBuilderBootstrap.bootstrap (CharacterBuilderBootstrap.js:108:7)
-    at async ThematicDirectionApp.initialize (thematic-direction-main.js:79:9)
-    at async HTMLDocument.initialize (thematic-direction-main.js:111:5)
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:attempt_action'. Dispatch SKIPPED. Errors: [/targets/primary]: must be string; [/targets/secondary]: must be string {payload: {…}, errors: Array(2)}
 error @ consoleLogger.js:175
-handleBootstrapError_fn @ CharacterBuilderBootstrap.js:673
-bootstrap @ CharacterBuilderBootstrap.js:129
-await in bootstrap
-initialize @ thematic-direction-main.js:79
-initialize @ thematic-direction-main.js:111Understand this error
-thematic-direction-main.js:85 Failed to initialize thematic direction generator: Error: Controller initialization failed: Cannot read properties of undefined (reading 'resolve')
-    at CharacterBuilderBootstrap.initializeController_fn (CharacterBuilderBootstrap.js:591:13)
-    at async CharacterBuilderBootstrap.bootstrap (CharacterBuilderBootstrap.js:108:7)
-    at async ThematicDirectionApp.initialize (thematic-direction-main.js:79:9)
-    at async HTMLDocument.initialize (thematic-direction-main.js:111:5)
+validatePayload_fn @ validatedEventDispatcher.js:144
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:120
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+(anonymous) @ turnManager.js:595
+setTimeout
+setTimeout @ RealScheduler.js:13
+handleTurnEndedEvent_fn @ turnManager.js:594
+(anonymous) @ turnManager.js:189
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+execute @ endTurnHandler.js:88
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+processRule_fn @ systemLogicInterpreter.js:422
+handleEvent_fn @ systemLogicInterpreter.js:325
+await in handleEvent_fn
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:120
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for p_erotica:amaia_castillo_instance, action "intimacy:adjust_clothing". Dispatcher reported failure. {payload: {…}}
+error @ consoleLogger.js:175
+handleDispatchFailure_fn @ commandProcessor.js:521
+dispatchAction @ commandProcessor.js:139
+await in dispatchAction
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+(anonymous) @ turnManager.js:595
+setTimeout
+setTimeout @ RealScheduler.js:13
+handleTurnEndedEvent_fn @ turnManager.js:594
+(anonymous) @ turnManager.js:189
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+execute @ endTurnHandler.js:88
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+processRule_fn @ systemLogicInterpreter.js:422
+handleEvent_fn @ systemLogicInterpreter.js:325
+await in handleEvent_fn
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:120
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for p_erotica:amaia_castillo_instance, action "intimacy:adjust_clothing". Dispatcher reported failure.
+consoleLogger.js:163 Event payload has warnings {warnings: Array(1), payload: {…}}
+warn @ consoleLogger.js:163
+build @ multiTargetEventBuilder.js:284
+createPayloadWithBuilder_fn @ commandProcessor.js:276
+createAttemptActionPayload_fn @ commandProcessor.js:206
+dispatchAction @ commandProcessor.js:116
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+(anonymous) @ turnManager.js:595
+setTimeout
+setTimeout @ RealScheduler.js:13
+handleTurnEndedEvent_fn @ turnManager.js:594
+(anonymous) @ turnManager.js:189
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+execute @ endTurnHandler.js:88
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+processRule_fn @ systemLogicInterpreter.js:422
+handleEvent_fn @ systemLogicInterpreter.js:325
+await in handleEvent_fn
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:120
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this warning
+consoleLogger.js:163 SafeEventDispatcher: Underlying VED failed to dispatch event 'core:attempt_action' (returned false). See VED logs for details. Payload: {"eventName":"core:attempt_action","timestamp":1754061900301,"actorId":"p_erotica:amaia_castillo_instance","actionId":"intimacy:adjust_clothing","originalInput":"adjust Iker Aguirre's denim trucker jacket","targets":{"primary":{"entityId":"p_erotica:iker_aguirre_instance","placeholder":"primary","description":"p_erotica:iker_aguirre_instance","resolvedFromContext":false},"secondary":{"entityId":"c103dff8-bfec-49f5-adb0-2c889ec5893e","placeholder":"secondary","description":"c103dff8-bfec-49f5-adb0-2c889ec5893e","resolvedFromContext":true,"contextSource":"primary"}},"primaryId":"p_erotica:iker_aguirre_instance","secondaryId":"c103dff8-bfec-49f5-adb0-2c889ec5893e","tertiaryId":null,"targetId":"p_erotica:iker_aguirre_instance","resolvedTargetCount":2,"hasContextDependencies":true}
+warn @ consoleLogger.js:163
+dispatch @ safeEventDispatcher.js:136
+await in dispatch
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:120
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+(anonymous) @ turnManager.js:595
+setTimeout
+setTimeout @ RealScheduler.js:13
+handleTurnEndedEvent_fn @ turnManager.js:594
+(anonymous) @ turnManager.js:189
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+execute @ endTurnHandler.js:88
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:464
+processRule_fn @ systemLogicInterpreter.js:422
+handleEvent_fn @ systemLogicInterpreter.js:325
+await in handleEvent_fn
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:192
+dispatch @ validatedEventDispatcher.js:222
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:114
+dispatchAction @ commandProcessor.js:120
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this warning
+consoleLogger.js:163 dispatchWithErrorHandling: SafeEventDispatcher reported failure for ATTEMPT_ACTION_ID dispatch for pre-resolved action intimacy:adjust_clothing (likely VED validation failure). Payload: {"eventName":"core:attempt_action","timestamp":1754061900301,"actorId":"p_erotica:amaia_castillo_instance","actionId":"intimacy:adjust_clothing","originalInput":"adjust Iker Aguirre's denim trucker jacket","targets":{"primary":{"entityId":"p_erotica:iker_aguirre_instance","placeholder":"primary","description":"p_erotica:iker_aguirre_instance","resolvedFromContext":false},"secondary":{"entityId":"c103dff8-bfec-49f5-adb0-2c889ec5893e","placeholder":"secondary","description":"c103dff8-bfec-49f5-adb0-2c889ec5893e","resolvedFromContext":true,"contextSource":"primary"}},"primaryId":"p_erotica:iker_aguirre_instance","secondaryId":"c103dff8-bfec-49f5-adb0-2c889ec5893e","tertiaryId":null,"targetId":"p_erotica:iker_aguirre_instance","resolvedTargetCount":2,"hasContextDependencies":true}

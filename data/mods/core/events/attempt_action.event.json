@@ -23,18 +23,58 @@
         "type": "object",
         "description": "Multi-target structure with named targets for complex actions",
         "additionalProperties": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Target entity ID"
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "description": "Direct target entity ID (for namespaced entities)"
+            },
+            {
+              "type": "object",
+              "description": "Rich target object (for runtime-created entities with metadata)",
+              "properties": {
+                "entityId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The target entity ID"
+                },
+                "placeholder": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Target placeholder name"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Human-readable target description"
+                },
+                "resolvedFromContext": {
+                  "type": "boolean",
+                  "description": "Whether this target was resolved from context"
+                },
+                "contextSource": {
+                  "type": "string",
+                  "description": "Source of context resolution if applicable"
+                }
+              },
+              "required": ["entityId"],
+              "additionalProperties": false
+            }
+          ]
         },
         "examples": [
           {
-            "primary": "entity_123",
-            "secondary": "entity_456"
+            "primary": "core:character_instance",
+            "secondary": "clothing:shirt_uuid"
           },
           {
             "person": "alice_789",
-            "clothing": "dress_012"
+            "clothing": {
+              "entityId": "c103dff8-bfec-49f5-adb0-2c889ec5893e",
+              "placeholder": "clothing",
+              "description": "denim trucker jacket",
+              "resolvedFromContext": true,
+              "contextSource": "person"
+            }
           },
           {
             "item": "knife_345",
@@ -55,6 +95,27 @@
         "type": "number",
         "description": "Event creation timestamp",
         "minimum": 0
+      },
+      "primaryId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/nullableNamespacedId",
+        "description": "Primary target entity ID for rule convenience (flattened from targets)"
+      },
+      "secondaryId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/nullableNamespacedId",
+        "description": "Secondary target entity ID for rule convenience (flattened from targets)"
+      },
+      "tertiaryId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/nullableNamespacedId",
+        "description": "Tertiary target entity ID for rule convenience (flattened from targets)"
+      },
+      "resolvedTargetCount": {
+        "type": "number",
+        "description": "Number of targets that were resolved for this action",
+        "minimum": 0
+      },
+      "hasContextDependencies": {
+        "type": "boolean",
+        "description": "Whether the action targets have context dependencies"
       }
     },
     "additionalProperties": false,

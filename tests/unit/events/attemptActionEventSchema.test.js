@@ -474,11 +474,25 @@ describe('core:attempt_action Event Schema Validation', () => {
       const targetsProperty =
         attemptActionEvent.payloadSchema.properties.targets;
       expect(targetsProperty.type).toBe('object');
-      expect(targetsProperty.additionalProperties).toEqual({
+      
+      // Verify the targets property now supports both strings and objects
+      expect(targetsProperty.additionalProperties).toHaveProperty('oneOf');
+      expect(targetsProperty.additionalProperties.oneOf).toHaveLength(2);
+      
+      // First option should be string (legacy format)
+      const stringOption = targetsProperty.additionalProperties.oneOf[0];
+      expect(stringOption).toEqual({
         type: 'string',
         minLength: 1,
-        description: 'Target entity ID',
+        description: 'Direct target entity ID (for namespaced entities)',
       });
+      
+      // Second option should be object (new runtime format)
+      const objectOption = targetsProperty.additionalProperties.oneOf[1];
+      expect(objectOption.type).toBe('object');
+      expect(objectOption).toHaveProperty('properties');
+      expect(objectOption.properties).toHaveProperty('entityId');
+      expect(objectOption.required).toContain('entityId');
     });
 
     it('should include examples for targets property', () => {
