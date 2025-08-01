@@ -48,7 +48,6 @@ describe('TargetManager', () => {
       expect(manager.getPrimaryTarget()).toBe('entity_123');
       expect(manager.getTarget('secondary')).toBe('entity_456');
     });
-
   });
 
   describe('Primary Target Management', () => {
@@ -92,7 +91,6 @@ describe('TargetManager', () => {
         manager.setPrimaryTarget('nonexistent_entity');
       }).toThrow('Entity ID "nonexistent_entity" not found in targets');
     });
-
   });
 
   describe('Target Queries', () => {
@@ -228,7 +226,6 @@ describe('TargetManager', () => {
         isMultiTarget: true,
       });
     });
-
   });
 
   describe('Error Handling', () => {
@@ -322,7 +319,9 @@ describe('TargetManager', () => {
     describe('getEntityIdByPlaceholder', () => {
       it('should return entity ID for valid placeholder', () => {
         expect(manager.getEntityIdByPlaceholder('primary')).toBe('entity_123');
-        expect(manager.getEntityIdByPlaceholder('secondary')).toBe('entity_456');
+        expect(manager.getEntityIdByPlaceholder('secondary')).toBe(
+          'entity_456'
+        );
         expect(manager.getEntityIdByPlaceholder('tertiary')).toBe('entity_789');
       });
 
@@ -348,7 +347,6 @@ describe('TargetManager', () => {
       });
     });
 
-
     describe('Integration with existing functionality', () => {
       it('should maintain backward compatibility with existing methods', () => {
         // All existing methods should continue working
@@ -361,8 +359,6 @@ describe('TargetManager', () => {
         // New methods should provide additional functionality
         expect(manager.getEntityIdByPlaceholder('primary')).toBe('entity_123');
       });
-
-
     });
   });
 });

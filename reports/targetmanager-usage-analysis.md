@@ -19,70 +19,77 @@ This analysis examines the 27 methods in the `TargetManager` class to identify u
 
 ### Complete Usage Matrix
 
-| Method | Prod Usage | Test Usage | Pipeline Integration | Status |
-|--------|------------|------------|---------------------|---------|
-| `constructor()` | ✅ | ✅ | Used in TargetExtractionResult | Active |
-| `setTargets()` | ✅ | ✅ | Via TargetExtractionResult.fromResolvedParameters | Active |
-| `addTarget()` | ✅ | ✅ | Via TargetExtractionResult factory methods | Active |
-| `removeTarget()` | ❌ | ✅ | None | **UNUSED** |
-| `getTarget()` | ✅ | ✅ | Via TargetExtractionResult delegation | Active |
-| `getPrimaryTarget()` | ✅ | ✅ | Via TargetExtractionResult delegation | Active |
-| `setPrimaryTarget()` | ✅ | ✅ | Internal usage during construction | Active |
-| `getTargetNames()` | ✅ | ✅ | Via TargetExtractionResult delegation | Active |
-| `getEntityIds()` | ✅ | ✅ | Via TargetExtractionResult delegation | Active |
-| `getTargetsObject()` | ✅ | ✅ | Heavy usage across pipeline | Active |
-| `hasTarget()` | ✅ | ✅ | Internal merge() method usage | Active |
-| `hasEntityId()` | ✅ | ✅ | Internal validation() method usage | Active |
-| `getTargetCount()` | ✅ | ✅ | Via TargetExtractionResult delegation | Active |
-| `isMultiTarget()` | ✅ | ✅ | Via TargetExtractionResult delegation | Active |
-| `validate()` | ✅ | ✅ | Via TargetExtractionResult delegation | Active |
-| `clone()` | ❌ | ✅ | None | **UNUSED** |
-| `merge()` | ❌ | ✅ | None | **UNUSED** |
-| `toJSON()` | ✅ | ✅ | Internal usage | Active |
-| `fromJSON()` | ❌ | ✅ | None | **UNUSED** |
-| `getEntityIdByPlaceholder()` | ❌ | ❌ | None | **UNUSED** |
-| `getTargetMappings()` | ❌ | ❌ | None | **UNUSED** |
-| `getTargetInfoForEventPayload()` | ❌ | ❌ | None | **UNUSED** |
+| Method                           | Prod Usage | Test Usage | Pipeline Integration                              | Status     |
+| -------------------------------- | ---------- | ---------- | ------------------------------------------------- | ---------- |
+| `constructor()`                  | ✅         | ✅         | Used in TargetExtractionResult                    | Active     |
+| `setTargets()`                   | ✅         | ✅         | Via TargetExtractionResult.fromResolvedParameters | Active     |
+| `addTarget()`                    | ✅         | ✅         | Via TargetExtractionResult factory methods        | Active     |
+| `removeTarget()`                 | ❌         | ✅         | None                                              | **UNUSED** |
+| `getTarget()`                    | ✅         | ✅         | Via TargetExtractionResult delegation             | Active     |
+| `getPrimaryTarget()`             | ✅         | ✅         | Via TargetExtractionResult delegation             | Active     |
+| `setPrimaryTarget()`             | ✅         | ✅         | Internal usage during construction                | Active     |
+| `getTargetNames()`               | ✅         | ✅         | Via TargetExtractionResult delegation             | Active     |
+| `getEntityIds()`                 | ✅         | ✅         | Via TargetExtractionResult delegation             | Active     |
+| `getTargetsObject()`             | ✅         | ✅         | Heavy usage across pipeline                       | Active     |
+| `hasTarget()`                    | ✅         | ✅         | Internal merge() method usage                     | Active     |
+| `hasEntityId()`                  | ✅         | ✅         | Internal validation() method usage                | Active     |
+| `getTargetCount()`               | ✅         | ✅         | Via TargetExtractionResult delegation             | Active     |
+| `isMultiTarget()`                | ✅         | ✅         | Via TargetExtractionResult delegation             | Active     |
+| `validate()`                     | ✅         | ✅         | Via TargetExtractionResult delegation             | Active     |
+| `clone()`                        | ❌         | ✅         | None                                              | **UNUSED** |
+| `merge()`                        | ❌         | ✅         | None                                              | **UNUSED** |
+| `toJSON()`                       | ✅         | ✅         | Internal usage                                    | Active     |
+| `fromJSON()`                     | ❌         | ✅         | None                                              | **UNUSED** |
+| `getEntityIdByPlaceholder()`     | ❌         | ❌         | None                                              | **UNUSED** |
+| `getTargetMappings()`            | ❌         | ❌         | None                                              | **UNUSED** |
+| `getTargetInfoForEventPayload()` | ❌         | ❌         | None                                              | **UNUSED** |
 
 ### Unused Methods Deep Dive
 
 #### 1. `removeTarget(name)` - **High Integration Potential**
+
 - **Purpose:** Removes a target and updates primary target automatically
 - **Complexity:** Medium (handles primary target recalculation)
 - **Current Alternative:** Manual target object manipulation in ActionFormattingStage
 - **Integration Benefit:** ⭐⭐⭐⭐ - Could improve dynamic target filtering in pipeline
 
-#### 2. `clone()` - **Medium Integration Potential**  
+#### 2. `clone()` - **Medium Integration Potential**
+
 - **Purpose:** Creates deep copy of TargetManager with same configuration
 - **Complexity:** Low (straightforward factory method)
 - **Current Alternative:** Manual reconstruction via `new TargetManager()`
 - **Integration Benefit:** ⭐⭐⭐ - Useful for action combination generation scenarios
 
 #### 3. `merge(other, options)` - **High Integration Potential**
+
 - **Purpose:** Merges targets from another TargetManager with conflict resolution
 - **Complexity:** Medium (handles overwrite and primary target update options)
 - **Current Alternative:** Manual object merging in pipeline stages
 - **Integration Benefit:** ⭐⭐⭐⭐⭐ - Critical for complex multi-stage target resolution
 
 #### 4. `fromJSON(json, logger)` - **Low Integration Potential**
+
 - **Purpose:** Static factory method for deserialization
 - **Complexity:** Low (wrapper around constructor)
 - **Current Alternative:** Direct constructor usage
 - **Integration Benefit:** ⭐⭐ - Limited benefit for current pipeline needs
 
 #### 5. `getEntityIdByPlaceholder(placeholderName)` - **Critical Integration Potential**
+
 - **Purpose:** Enhanced API method specifically designed for ActionFormattingStage integration
 - **Complexity:** Low (simple Map lookup)
 - **Current Alternative:** Manual placeholder resolution in ActionFormattingStage
 - **Integration Benefit:** ⭐⭐⭐⭐⭐ - **DESIGNED FOR PIPELINE USE BUT NEVER USED**
 
 #### 6. `getTargetMappings()` - **High Integration Potential**
+
 - **Purpose:** Enhanced API method returning complete placeholder-to-entityId mapping
 - **Complexity:** Low (alias for getTargetsObject())
 - **Current Alternative:** Manual target object construction
 - **Integration Benefit:** ⭐⭐⭐⭐ - **DESIGNED FOR PIPELINE USE BUT NEVER USED**
 
 #### 7. `getTargetInfoForEventPayload()` - **Critical Integration Potential**
+
 - **Purpose:** Enhanced API method returning formatted target data for event payloads
 - **Complexity:** Medium (handles legacy format transformation)
 - **Current Alternative:** Manual event payload construction in ActionFormattingStage
@@ -125,7 +132,7 @@ getTarget(name) {
 The formatter manually handles target resolution without leveraging TargetManager's built-in capabilities:
 
 - Manual placeholder resolution
-- Manual target validation  
+- Manual target validation
 - Manual event payload construction
 
 ## Integration Opportunities & Benefits
@@ -136,11 +143,12 @@ The formatter manually handles target resolution without leveraging TargetManage
 **Opportunity:** Replace with TargetManager enhanced API methods
 
 **Implementation:**
+
 ```javascript
 // Instead of manual #extractTargetIds()
 const targetMappings = targetManager.getTargetMappings();
 
-// Instead of manual placeholder resolution  
+// Instead of manual placeholder resolution
 const entityId = targetManager.getEntityIdByPlaceholder(placeholderName);
 
 // Instead of manual event payload construction
@@ -148,6 +156,7 @@ const eventPayload = targetManager.getTargetInfoForEventPayload();
 ```
 
 **Benefits:**
+
 - **Consistency:** Centralized target management logic
 - **Maintainability:** Reduce code duplication
 - **Performance:** Eliminate manual iterations
@@ -161,6 +170,7 @@ const eventPayload = targetManager.getTargetInfoForEventPayload();
 **Use Case:** Filter out invalid or unavailable targets during pipeline execution
 
 **Benefits:**
+
 - **Flexibility:** Dynamic target adjustment
 - **Accuracy:** Automatic primary target recalculation
 - **Error Handling:** Graceful target removal
@@ -171,11 +181,13 @@ const eventPayload = targetManager.getTargetInfoForEventPayload();
 **Opportunity:** Use `clone()` and `merge()` for state management
 
 **Use Cases:**
+
 - Action combination generation
 - Multi-stage target resolution
 - Rollback scenarios
 
 **Benefits:**
+
 - **Immutability:** Safe state manipulation
 - **Debugging:** Clear state transitions
 - **Testing:** Predictable state changes
@@ -186,6 +198,7 @@ const eventPayload = targetManager.getTargetInfoForEventPayload();
 **Opportunity:** Use `fromJSON()` for legacy migration
 
 **Benefits:**
+
 - **Migration:** Smooth legacy system integration
 - **Serialization:** Consistent data format handling
 
@@ -216,6 +229,7 @@ const eventPayload = targetManager.getTargetInfoForEventPayload();
 ## Implementation Roadmap
 
 ### Phase 1: Critical Integration (Week 1)
+
 **Target:** Enhanced API methods integration
 
 1. **`getEntityIdByPlaceholder()` Integration**
@@ -229,6 +243,7 @@ const eventPayload = targetManager.getTargetInfoForEventPayload();
    - **Impact:** High - Consistency and maintainability improvement
 
 ### Phase 2: Target Management Enhancement (Week 2)
+
 **Target:** Dynamic target operations
 
 3. **`removeTarget()` Integration**
@@ -242,6 +257,7 @@ const eventPayload = targetManager.getTargetInfoForEventPayload();
    - **Impact:** Medium - Code simplification
 
 ### Phase 3: State Management (Week 3)
+
 **Target:** Advanced target state operations
 
 5. **`clone()` Integration**
@@ -255,6 +271,7 @@ const eventPayload = targetManager.getTargetInfoForEventPayload();
    - **Impact:** Medium - Advanced pipeline capabilities
 
 ### Phase 4: Legacy Support (Week 4)
+
 **Target:** Completeness and serialization
 
 7. **`fromJSON()` Integration**
@@ -322,4 +339,4 @@ The TargetManager class contains **5 unused methods with significant integration
 
 ---
 
-*Analysis completed using comprehensive codebase examination, usage pattern mapping, and architectural impact assessment.*
+_Analysis completed using comprehensive codebase examination, usage pattern mapping, and architectural impact assessment._
