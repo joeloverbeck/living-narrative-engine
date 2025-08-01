@@ -26,9 +26,11 @@
   --narrative-purple-light: #a29bfe;
   --narrative-gold: #f39c12;
   --narrative-gold-light: #f1c40f;
-  --creative-gradient: linear-gradient(135deg,
-      var(--narrative-purple) 0%,
-      var(--narrative-gold) 100%);
+  --creative-gradient: linear-gradient(
+    135deg,
+    var(--narrative-purple) 0%,
+    var(--narrative-gold) 100%
+  );
 
   /* Enhanced backgrounds */
   --bg-highlight: rgba(108, 92, 231, 0.05);
@@ -70,7 +72,6 @@
 }
 
 @keyframes float {
-
   0%,
   100% {
     transform: translate(0, 0);
@@ -743,7 +744,6 @@
 
 /* ===== Accessibility Enhancement ===== */
 @media (prefers-reduced-motion: reduce) {
-
   *,
   *::before,
   *::after {

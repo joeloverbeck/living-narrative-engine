@@ -36,10 +36,12 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
 
     // Mock event dispatch service
     eventDispatchService = {
-      dispatchWithErrorHandling: jest.fn().mockImplementation((eventId, payload) => {
-        dispatchedEvents.push({ eventId, payload });
-        return Promise.resolve(true);
-      }),
+      dispatchWithErrorHandling: jest
+        .fn()
+        .mockImplementation((eventId, payload) => {
+          dispatchedEvents.push({ eventId, payload });
+          return Promise.resolve(true);
+        }),
       dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
       safeDispatchEvent: jest.fn().mockResolvedValue(undefined),
     };
@@ -78,14 +80,21 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
       // Verify success
       expect(result.success).toBe(true);
       expect(result.turnEnded).toBe(false);
-      expect(result.originalInput).toBe("adjust Iker Aguirre's denim trucker jacket");
-      expect(result.actionResult).toEqual({ actionId: 'intimacy:adjust_clothing' });
+      expect(result.originalInput).toBe(
+        "adjust Iker Aguirre's denim trucker jacket"
+      );
+      expect(result.actionResult).toEqual({
+        actionId: 'intimacy:adjust_clothing',
+      });
 
       // Verify event was dispatched
-      expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledTimes(1);
+      expect(
+        eventDispatchService.dispatchWithErrorHandling
+      ).toHaveBeenCalledTimes(1);
 
       // Get the dispatched event payload
-      const [eventId, payload] = eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
+      const [eventId, payload] =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
 
       expect(eventId).toBe(ATTEMPT_ACTION_ID);
 
@@ -95,13 +104,13 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
         actorId: 'amaia_castillo_instance',
         actionId: 'intimacy:adjust_clothing',
         originalInput: "adjust Iker Aguirre's denim trucker jacket",
-        
+
         // Legacy fields for backward compatibility
         targetId: 'p_erotica:iker_aguirre_instance', // Primary target
         primaryId: 'p_erotica:iker_aguirre_instance',
         secondaryId: 'fd6a1e00-36b7-47cc-bdb2-4b65473614eb',
         tertiaryId: null,
-        
+
         // Comprehensive targets object
         targets: {
           primary: {
@@ -118,7 +127,7 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
             contextSource: 'primary',
           },
         },
-        
+
         // Metadata
         resolvedTargetCount: 2,
         hasContextDependencies: true,
@@ -148,20 +157,21 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
 
       expect(result.success).toBe(true);
 
-      const [eventId, payload] = eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
+      const [eventId, payload] =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
 
       expect(payload).toMatchObject({
         eventName: ATTEMPT_ACTION_ID,
         actorId: 'test_actor',
         actionId: 'core:examine',
         originalInput: 'examine sword',
-        
+
         // Legacy fields
         targetId: 'item_sword_123',
         primaryId: 'item_sword_123',
         secondaryId: null,
         tertiaryId: null,
-        
+
         // No targets object for single-target actions
         resolvedTargetCount: 1,
         hasContextDependencies: false,
@@ -194,18 +204,19 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
 
       expect(result.success).toBe(true);
 
-      const [eventId, payload] = eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
+      const [eventId, payload] =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
 
       expect(payload).toMatchObject({
         eventName: ATTEMPT_ACTION_ID,
         actorId: 'wizard_instance',
         actionId: 'magic:complex_ritual',
-        
+
         // All three legacy fields populated
         primaryId: 'artifact_123',
         secondaryId: 'reagent_456',
         tertiaryId: 'location_789',
-        
+
         // Comprehensive targets object with all three
         targets: {
           primary: {
@@ -221,7 +232,7 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
             placeholder: 'tertiary',
           },
         },
-        
+
         resolvedTargetCount: 3,
       });
     });
@@ -242,20 +253,21 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
 
       expect(result.success).toBe(true);
 
-      const [eventId, payload] = eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
+      const [eventId, payload] =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
 
       expect(payload).toMatchObject({
         eventName: ATTEMPT_ACTION_ID,
         actorId: 'player_123',
         actionId: 'core:wait',
         originalInput: 'wait',
-        
+
         // All target fields should be null
         targetId: null,
         primaryId: null,
         secondaryId: null,
         tertiaryId: null,
-        
+
         // No targets object
         resolvedTargetCount: 0,
         hasContextDependencies: false,
@@ -287,7 +299,8 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
 
       expect(result.success).toBe(true);
 
-      const [eventId, payload] = eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
+      const [eventId, payload] =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
 
       // Verify targetId is set to primary target for backward compatibility
       expect(payload.targetId).toBe('item_sword');
@@ -321,13 +334,14 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
       // Should still succeed with fallback payload
       expect(result.success).toBe(true);
 
-      const [eventId, payload] = eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
+      const [eventId, payload] =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0];
 
       // Should have valid payload with fallback data
       expect(payload.actorId).toBe('actor_123');
       expect(payload.actionId).toBe('test:action');
       expect(payload.targetId).toBe('fallback_target');
-      
+
       // Should have metadata fields even if extraction failed
       expect(payload.resolvedTargetCount).toBeDefined();
       expect(payload.hasContextDependencies).toBeDefined();
@@ -361,7 +375,7 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
       }
 
       const stats = commandProcessor.getPayloadCreationStatistics();
-      
+
       expect(stats.totalPayloadsCreated).toBe(2);
       expect(stats.multiTargetPayloads).toBe(1);
       expect(stats.legacyPayloads).toBe(1);
@@ -398,9 +412,11 @@ describe('Multi-Target Action Event Payload Flow Integration', () => {
 
       for (const { actor, turnAction } of invalidCases) {
         const result = await commandProcessor.dispatchAction(actor, turnAction);
-        
+
         expect(result.success).toBe(false);
-        expect(result.error).toBe('Internal error: Malformed action prevented execution.');
+        expect(result.error).toBe(
+          'Internal error: Malformed action prevented execution.'
+        );
       }
     });
   });

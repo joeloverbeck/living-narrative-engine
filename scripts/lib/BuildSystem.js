@@ -63,12 +63,12 @@ class BuildSystem {
       await this.initialize();
       await this.buildJavaScript();
       await this.copyStaticAssets();
-      
+
       // Skip validation in fast mode
       if (!this.options.skipValidation) {
         await this.validate();
       }
-      
+
       this.reportSuccess();
     } catch (error) {
       this.reportFailure(error);

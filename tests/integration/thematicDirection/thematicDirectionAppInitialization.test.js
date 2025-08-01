@@ -112,9 +112,7 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       expect(fetch).toHaveBeenCalledWith(
         '/data/schemas/thematic-direction.schema.json'
       );
-      expect(fetch).toHaveBeenCalledWith(
-        '/data/schemas/ui-state.schema.json'
-      );
+      expect(fetch).toHaveBeenCalledWith('/data/schemas/ui-state.schema.json');
       expect(fetch).toHaveBeenCalledWith(
         '/data/schemas/llm-configs.schema.json'
       );
@@ -125,15 +123,17 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       // The controller should have been created and initialized
       // We can't directly verify controller.initialize() was called, but we can
       // verify that the bootstrap process completed without errors
-      
+
       // Verify at least the expected schemas were loaded
-      const fetchCalls = fetch.mock.calls.map(call => call[0]);
-      expect(fetchCalls).toEqual(expect.arrayContaining([
-        '/data/schemas/character-concept.schema.json',
-        '/data/schemas/thematic-direction.schema.json',
-        '/data/schemas/ui-state.schema.json',
-        '/data/schemas/llm-configs.schema.json'
-      ]))
+      const fetchCalls = fetch.mock.calls.map((call) => call[0]);
+      expect(fetchCalls).toEqual(
+        expect.arrayContaining([
+          '/data/schemas/character-concept.schema.json',
+          '/data/schemas/thematic-direction.schema.json',
+          '/data/schemas/ui-state.schema.json',
+          '/data/schemas/llm-configs.schema.json',
+        ])
+      );
     });
 
     test('should handle initialization with proper DI registration', async () => {
@@ -153,9 +153,9 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       // Assert - should succeed without errors and schemas should be loaded for each initialization
       // Note: CharacterBuilderBootstrap doesn't prevent multiple initializations,
       // it runs the full process each time
-      
+
       // Should have loaded schemas twice
-      expect(fetch.mock.calls.length).toBeGreaterThanOrEqual(8)
+      expect(fetch.mock.calls.length).toBeGreaterThanOrEqual(8);
     });
   });
 
@@ -163,10 +163,10 @@ describe('ThematicDirectionApp Initialization Integration', () => {
     test('should handle schema loading errors gracefully', async () => {
       // Arrange - Create fresh app instance and make fetch fail
       const failingApp = new ThematicDirectionApp();
-      
+
       // Mock console.error to verify error logging
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       // Make fetch fail for schemas
       global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
 
@@ -175,20 +175,22 @@ describe('ThematicDirectionApp Initialization Integration', () => {
 
       // Assert - verify error was logged
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to initialize thematic direction generator:'),
+        expect.stringContaining(
+          'Failed to initialize thematic direction generator:'
+        ),
         expect.any(Error)
       );
-      
+
       consoleErrorSpy.mockRestore();
     });
 
     test('should handle character schema fetch network errors', async () => {
       // Arrange - Create fresh app instance and make fetch fail for character-concept schema
       const failingApp = new ThematicDirectionApp();
-      
+
       // Mock console.error to verify error logging
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       global.fetch = jest.fn().mockImplementation((url) => {
         if (url.includes('character-concept.schema.json')) {
           return Promise.reject(new Error('Network error'));
@@ -196,7 +198,8 @@ describe('ThematicDirectionApp Initialization Integration', () => {
         // Other schemas succeed
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ $id: 'generic-schema', type: 'object' }),
+          json: () =>
+            Promise.resolve({ $id: 'generic-schema', type: 'object' }),
         });
       });
 
@@ -205,10 +208,12 @@ describe('ThematicDirectionApp Initialization Integration', () => {
 
       // Assert - verify error was logged
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to initialize thematic direction generator:'),
+        expect.stringContaining(
+          'Failed to initialize thematic direction generator:'
+        ),
         expect.any(Error)
       );
-      
+
       consoleErrorSpy.mockRestore();
     });
 
@@ -228,9 +233,7 @@ describe('ThematicDirectionApp Initialization Integration', () => {
       expect(fetch).toHaveBeenCalledWith(
         '/data/schemas/thematic-direction.schema.json'
       );
-      expect(fetch).toHaveBeenCalledWith(
-        '/data/schemas/ui-state.schema.json'
-      );
+      expect(fetch).toHaveBeenCalledWith('/data/schemas/ui-state.schema.json');
       expect(fetch).toHaveBeenCalledWith(
         '/data/schemas/llm-configs.schema.json'
       );
@@ -240,10 +243,10 @@ describe('ThematicDirectionApp Initialization Integration', () => {
     test('should handle invalid character schema JSON', async () => {
       // Arrange - Create fresh app instance and make character-concept schema JSON invalid
       const failingApp = new ThematicDirectionApp();
-      
+
       // Mock console.error to verify error logging
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       global.fetch = jest.fn().mockImplementation((url) => {
         if (url.includes('character-concept.schema.json')) {
           return Promise.resolve({
@@ -264,10 +267,12 @@ describe('ThematicDirectionApp Initialization Integration', () => {
 
       // Assert - verify error was logged
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to initialize thematic direction generator:'),
+        expect.stringContaining(
+          'Failed to initialize thematic direction generator:'
+        ),
         expect.any(Error)
       );
-      
+
       consoleErrorSpy.mockRestore();
     });
   });

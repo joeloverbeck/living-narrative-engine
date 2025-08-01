@@ -165,7 +165,6 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
   });
 
   describe('Complete Concept Loading Flow', () => {
-
     it('should create and store new concept through the complete flow', async () => {
       // Arrange
       const conceptText = 'A mysterious wanderer with ancient powers';
@@ -216,7 +215,6 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
       expect(database.getCharacterConcept).toHaveBeenCalledWith(mockConcept.id);
       expect(retrievedConcept).toEqual(mockConcept);
     });
-
 
     it('should integrate with character builder service for concept retrieval', async () => {
       // Arrange

@@ -21,12 +21,15 @@ The 'optional' parameter is defined in `action.schema.json` at lines 31-35:
 ### 2. Usage in Action Definitions
 
 #### Example Usage
+
 - **File**: `data/mods/examples/actions/optional_targets.action.json`
 - **Usage**: Defines a tertiary target with `"optional": true`
 - **Template**: Uses conditional syntax `{note:with {note}|}`
 
 #### Schema Example
+
 The schema includes an example (lines 261-292) showing optional target usage:
+
 ```json
 "tertiary": {
   "scope": "magic:focus_items",
@@ -39,6 +42,7 @@ The schema includes an example (lines 261-292) showing optional target usage:
 ### 3. Code Implementation
 
 #### Target Resolution Logic
+
 The optional parameter is actively used in the following files:
 
 1. **MultiTargetResolutionStage.js** (lines 392, 441)
@@ -54,15 +58,18 @@ The optional parameter is actively used in the following files:
    - Different context but same pattern
 
 #### Missing Implementation
+
 **Critical Gap**: The conditional template syntax `{placeholder:text|fallback}` appears to be documented but not implemented. No code was found that processes this syntax pattern.
 
 ### 4. Test Coverage
 
 Tests exist for optional targets in:
+
 - `MultiTargetResolutionStage.test.js` (lines 259, 332)
 - `schemaValidation.test.js` (line 177)
 
 These tests verify that:
+
 - Actions with optional targets can succeed when optional targets are missing
 - All-optional targets are handled correctly
 - Optional parameter is properly validated against schema
@@ -70,6 +77,7 @@ These tests verify that:
 ### 5. Documentation
 
 The feature is documented in:
+
 - `action-migration-guide.md` - Shows migration patterns for optional targets
 - `multi-target-action-development-guidelines.md` - Explains optional target patterns and template syntax
 
@@ -78,12 +86,14 @@ The feature is documented in:
 ### Components Requiring Modification
 
 #### 1. Schema Changes
+
 - **File**: `data/schemas/action.schema.json`
 - **Changes**: Remove lines 31-35 (optional property definition)
 - **Impact**: All action definitions using this property will fail validation
 
 #### 2. Action Definition Updates
-- **Files**: 
+
+- **Files**:
   - `data/mods/examples/actions/optional_targets.action.json`
   - Any other action files using `"optional": true`
 - **Changes**: Remove the optional property from target definitions
@@ -92,16 +102,19 @@ The feature is documented in:
 #### 3. Code Changes
 
 ##### a. MultiTargetResolutionStage.js
+
 - **Current Logic**: Skips validation for optional targets when no candidates found
 - **Required Change**: Remove optional checks, always validate all targets
 - **Impact**: Actions will fail if any target cannot be resolved
 
 ##### b. MultiTargetActionFormatter.js
+
 - **Current Logic**: Allows formatting when optional targets are missing
 - **Required Change**: Require all targets to have resolved entities
 - **Impact**: Stricter validation, fewer available actions
 
 ##### c. Template Processing
+
 - **Current State**: Conditional syntax `{target:text|fallback}` not implemented
 - **Required Change**: If keeping multi-target without optional, need alternative approach
 - **Options**:
@@ -110,11 +123,13 @@ The feature is documented in:
   3. Implement dynamic action generation based on available targets
 
 #### 4. Test Updates
+
 - Remove tests specifically for optional target handling
 - Update existing tests to expect failures when targets missing
 - Add tests for new patterns if alternative approaches chosen
 
 #### 5. Documentation Updates
+
 - Remove optional target sections from guides
 - Update migration guide to show alternatives
 - Document new patterns for achieving similar functionality
@@ -126,27 +141,35 @@ The feature is documented in:
 Since the conditional template syntax isn't implemented, removing the optional parameter has less impact than initially expected. However, the feature intent should be preserved through alternative means:
 
 #### Option A: Prerequisite-Based Approach
+
 Use prerequisites to check for optional target availability:
+
 ```json
 {
-  "prerequisites": [{
-    "logic": {
-      "or": [
-        {"!": {"var": "targets.tertiary"}},
-        {"exists": {"var": "targets.tertiary"}}
-      ]
+  "prerequisites": [
+    {
+      "logic": {
+        "or": [
+          { "!": { "var": "targets.tertiary" } },
+          { "exists": { "var": "targets.tertiary" } }
+        ]
+      }
     }
-  }]
+  ]
 }
 ```
 
 #### Option B: Multiple Action Definitions
+
 Create separate actions for with/without optional components:
+
 - `give_item_simple` - Just item and recipient
 - `give_item_with_note` - Item, recipient, and note
 
 #### Option C: Dynamic Scope Expression
+
 Use scope expressions that inherently handle optional cases:
+
 ```json
 "scope": "actor.inventory.items[{\"or\": [{\"type\": \"note\"}, {\"always\": true}]}]"
 ```
@@ -160,6 +183,7 @@ Use scope expressions that inherently handle optional cases:
 ### 3. Backward Compatibility
 
 Consider adding a deprecation warning before removal:
+
 1. Log warnings when optional parameter is used
 2. Provide migration guide with clear examples
 3. Remove in next major version

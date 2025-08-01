@@ -2,7 +2,14 @@
  * @file Unit tests for CharacterBuilderBootstrap
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { CharacterBuilderBootstrap } from '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
@@ -35,7 +42,7 @@ describe('CharacterBuilderBootstrap', () => {
       this.eventBus = deps.eventBus;
       this.sessionManager = deps.sessionManager;
       this.schemaValidator = deps.schemaValidator;
-      
+
       mockController = this;
       this.initialize = jest.fn().mockResolvedValue();
     }
@@ -44,7 +51,7 @@ describe('CharacterBuilderBootstrap', () => {
   beforeEach(() => {
     // Reset mocks
     jest.clearAllMocks();
-    
+
     // Create bootstrap instance
     bootstrap = new CharacterBuilderBootstrap();
 
@@ -114,7 +121,7 @@ describe('CharacterBuilderBootstrap', () => {
 
     // Mock performance.now()
     let time = 0;
-    jest.spyOn(performance, 'now').mockImplementation(() => time += 100);
+    jest.spyOn(performance, 'now').mockImplementation(() => (time += 100));
 
     // Mock ensureValidLogger
     jest.doMock('../../../src/utils/loggerUtils.js', () => ({
@@ -146,16 +153,17 @@ describe('CharacterBuilderBootstrap', () => {
     });
 
     it('should handle configuration validation errors', async () => {
-      await expect(bootstrap.bootstrap({})).rejects.toThrow(
-        'Invalid pageName'
+      await expect(bootstrap.bootstrap({})).rejects.toThrow('Invalid pageName');
+
+      await expect(bootstrap.bootstrap({ pageName: 'test' })).rejects.toThrow(
+        'Controller class is required'
       );
 
       await expect(
-        bootstrap.bootstrap({ pageName: 'test' })
-      ).rejects.toThrow('Controller class is required');
-
-      await expect(
-        bootstrap.bootstrap({ pageName: 'test', controllerClass: 'not-a-function' })
+        bootstrap.bootstrap({
+          pageName: 'test',
+          controllerClass: 'not-a-function',
+        })
       ).rejects.toThrow('Controller class must be a constructor function');
     });
 
@@ -163,7 +171,10 @@ describe('CharacterBuilderBootstrap', () => {
       const config = {
         pageName: 'test-page',
         controllerClass: MockController,
-        customSchemas: ['/data/schemas/custom1.json', '/data/schemas/custom2.json'],
+        customSchemas: [
+          '/data/schemas/custom1.json',
+          '/data/schemas/custom2.json',
+        ],
       };
 
       await bootstrap.bootstrap(config);
@@ -341,7 +352,7 @@ describe('CharacterBuilderBootstrap', () => {
 
     it('should display fatal error on bootstrap failure', async () => {
       document.body.innerHTML = '';
-      
+
       const config = {
         pageName: 'test-page',
         controllerClass: MockController,
@@ -352,12 +363,13 @@ describe('CharacterBuilderBootstrap', () => {
         throw new Error('Container error');
       });
 
-      await expect(bootstrap.bootstrap(config)).rejects.toThrow('Container error');
-      
+      await expect(bootstrap.bootstrap(config)).rejects.toThrow(
+        'Container error'
+      );
+
       // Should display error UI
       expect(document.body.innerHTML).toContain('Failed to Start');
     });
-
 
     it('should skip already loaded schemas', async () => {
       mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
@@ -425,7 +437,9 @@ describe('CharacterBuilderBootstrap', () => {
       errorHandler({ payload: { error: 'Test error' } });
 
       expect(errorElement.appendChild).toHaveBeenCalled();
-      expect(mockErrorDiv.querySelector).toHaveBeenCalledWith('.cb-error-dismiss');
+      expect(mockErrorDiv.querySelector).toHaveBeenCalledWith(
+        '.cb-error-dismiss'
+      );
     });
 
     it('should handle array validation for eventDefinitions', async () => {
@@ -480,7 +494,7 @@ describe('CharacterBuilderBootstrap', () => {
   describe('error handling', () => {
     it('should escape HTML in error messages', async () => {
       document.body.innerHTML = '';
-      
+
       const config = {
         pageName: '<script>alert("XSS")</script>',
         controllerClass: MockController,
@@ -491,7 +505,7 @@ describe('CharacterBuilderBootstrap', () => {
       });
 
       await expect(bootstrap.bootstrap(config)).rejects.toThrow();
-      
+
       // HTML should be escaped
       expect(document.body.innerHTML).not.toContain('<script>');
       expect(document.body.innerHTML).not.toContain('<img src=x');
@@ -521,7 +535,7 @@ describe('CharacterBuilderBootstrap', () => {
 
     it('should log errors without logger if not available', async () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       // Make logger resolution fail
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.ILogger) return null;
@@ -534,7 +548,7 @@ describe('CharacterBuilderBootstrap', () => {
       };
 
       await expect(bootstrap.bootstrap(config)).rejects.toThrow('Test error');
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('Fatal error'),
         expect.any(Error)

@@ -1082,26 +1082,26 @@ describe('InPlaceEditor', () => {
         isValid: false,
         error: 'Test validation error',
       });
-      
+
       editor.startEditing();
-      
+
       const input = container.querySelector('.in-place-editor-input');
       const saveBtn = container.querySelector('.in-place-save-btn');
       const errorDisplay = container.querySelector('.in-place-editor-error');
-      
+
       input.value = 'Invalid value';
-      
+
       // Remove the error display and input elements to trigger null checks
       errorDisplay.remove();
       input.classList.remove('error'); // Reset state
-      
+
       // This should trigger showValidationError with missing elements
       saveBtn.click();
-      
-      await new Promise(resolve => setTimeout(resolve, 0));
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       expect(mockOnSave).not.toHaveBeenCalled();
-      
+
       // Now test hideValidationError with missing elements
       const newInput = container.querySelector('.in-place-editor-input');
       if (newInput) {
@@ -1111,55 +1111,55 @@ describe('InPlaceEditor', () => {
 
     it('should handle setSavingState when save button is missing', async () => {
       let resolveSave;
-      const slowSave = new Promise(resolve => {
+      const slowSave = new Promise((resolve) => {
         resolveSave = resolve;
       });
-      
+
       mockOnSave.mockReturnValue(slowSave);
-      
+
       editor.startEditing();
-      
+
       const input = container.querySelector('.in-place-editor-input');
       const saveBtn = container.querySelector('.in-place-save-btn');
-      
+
       input.value = 'New Value';
-      
+
       // Remove the save button to test the null check in setSavingState
       saveBtn.remove();
-      
+
       // Try to save - this should trigger setSavingState with missing button
       const savePromise = editor.saveChanges();
-      
+
       // Complete save
       resolveSave();
       await savePromise;
-      
+
       expect(mockOnSave).toHaveBeenCalledWith('New Value');
     });
 
     it('should handle getEditorValue when editor input is null', () => {
       editor.startEditing();
-      
+
       // Remove the input element from the DOM
       const input = container.querySelector('.in-place-editor-input');
       input.remove();
-      
+
       // Now try to get current value - should fall back gracefully
       const currentValue = editor.getCurrentValue();
-      
+
       // Since input is missing, should return original value or empty string
       expect(typeof currentValue).toBe('string');
     });
 
     it('should handle outside click validation with complex DOM manipulation', async () => {
       editor.startEditing();
-      
+
       const input = container.querySelector('.in-place-editor-input');
       input.value = 'New Value';
-      
+
       // Create a complex scenario to trigger handleOutsideClick edge cases
       const editorContainer = container.querySelector('.in-place-editor');
-      
+
       // Test the contains check by temporarily removing elements
       const originalMethod = editorContainer.contains;
       editorContainer.contains = jest.fn((target) => {
@@ -1167,24 +1167,27 @@ describe('InPlaceEditor', () => {
         editorContainer.contains = originalMethod;
         return false;
       });
-      
+
       // Click outside to trigger auto-save
       document.body.click();
-      
-      await new Promise(resolve => setTimeout(resolve, 0));
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       expect(mockOnSave).toHaveBeenCalledWith('New Value');
     });
 
     it('should handle exitEditingMode cleanup when document listeners are already removed', () => {
       editor.startEditing();
-      
+
       // Manually remove event listener to test the cleanup edge case
-      const handleOutsideClickBound = editor._InPlaceEditor__handleOutsideClickBound;
+      const handleOutsideClickBound =
+        editor._InPlaceEditor__handleOutsideClickBound;
       if (handleOutsideClickBound) {
-        document.removeEventListener('click', handleOutsideClickBound, { capture: true });
+        document.removeEventListener('click', handleOutsideClickBound, {
+          capture: true,
+        });
       }
-      
+
       // Now try to exit editing mode - should handle missing listener gracefully
       expect(() => editor.cancelEditing()).not.toThrow();
     });
@@ -1195,22 +1198,22 @@ describe('InPlaceEditor', () => {
         isValid: false,
         error: 'Custom validation error',
       });
-      
+
       editor.startEditing();
-      
+
       const input = container.querySelector('.in-place-editor-input');
       const saveBtn = container.querySelector('.in-place-save-btn');
-      
+
       input.value = 'Invalid value';
-      
+
       // Click save to trigger validation
       saveBtn.click();
-      
-      await new Promise(resolve => setTimeout(resolve, 0));
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       // Should not save due to validation failure
       expect(mockOnSave).not.toHaveBeenCalled();
-      
+
       // Check that error is displayed
       const errorDisplay = container.querySelector('.in-place-editor-error');
       expect(errorDisplay.textContent).toBe('Custom validation error');
@@ -1219,21 +1222,21 @@ describe('InPlaceEditor', () => {
 
     it('should test all branches in keyboard event handling', () => {
       editor.startEditing();
-      
+
       const input = container.querySelector('.in-place-editor-input');
-      
+
       // Test non-Enter, non-Escape key
       const otherKeyEvent = new KeyboardEvent('keydown', { key: 'a' });
       input.dispatchEvent(otherKeyEvent);
-      
+
       // Should still be editing
       expect(editor.isEditing()).toBe(true);
-      
+
       // Test Escape key
       const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
       const preventDefaultSpy = jest.spyOn(escapeEvent, 'preventDefault');
       input.dispatchEvent(escapeEvent);
-      
+
       expect(preventDefaultSpy).toHaveBeenCalled();
       expect(mockOnCancel).toHaveBeenCalled();
     });

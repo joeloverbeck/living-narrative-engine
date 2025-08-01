@@ -9,6 +9,7 @@ Update JSON schemas and validation systems to support the enhanced event payload
 **Current Issue**: Existing JSON schemas don't support the enhanced event payload structure with comprehensive target information, and entity reference schemas don't recognize placeholder names as valid references.
 
 **Root Cause**: Schemas were designed for the original single-target system and need updates to accommodate:
+
 - Enhanced event payload with `targets` object and legacy fields
 - Placeholder names ("primary", "secondary", "tertiary") in entity references
 - New validation requirements for multi-target consistency
@@ -19,7 +20,7 @@ Update JSON schemas and validation systems to support the enhanced event payload
 ## Dependencies
 
 - **Ticket 1**: Enhanced event payload structure requirements
-- **Ticket 2**: Entity reference resolution enhancements  
+- **Ticket 2**: Entity reference resolution enhancements
 - **Ticket 3**: Target reference resolver service validation needs
 - Existing JSON schema validation system using AJV
 - Event system schema definitions
@@ -45,7 +46,7 @@ Update JSON schemas and validation systems to support the enhanced event payload
       "pattern": "^\\S(.*\\S)?$"
     },
     "actionId": {
-      "type": "string", 
+      "type": "string",
       "description": "ID of the action being performed",
       "minLength": 1,
       "pattern": "^[a-zA-Z0-9_]+:[a-zA-Z0-9_-]+$"
@@ -55,23 +56,23 @@ Update JSON schemas and validation systems to support the enhanced event payload
       "description": "Formatted action text with resolved target names",
       "minLength": 1
     },
-    
+
     "primaryId": {
       "type": ["string", "null"],
       "description": "Entity ID of primary target (backward compatibility)",
       "minLength": 1
     },
     "secondaryId": {
-      "type": ["string", "null"], 
+      "type": ["string", "null"],
       "description": "Entity ID of secondary target (backward compatibility)",
       "minLength": 1
     },
     "tertiaryId": {
       "type": ["string", "null"],
-      "description": "Entity ID of tertiary target (backward compatibility)", 
+      "description": "Entity ID of tertiary target (backward compatibility)",
       "minLength": 1
     },
-    
+
     "targets": {
       "type": "object",
       "description": "Comprehensive target information",
@@ -82,7 +83,7 @@ Update JSON schemas and validation systems to support the enhanced event payload
       },
       "additionalProperties": false
     },
-    
+
     "resolvedTargetCount": {
       "type": "integer",
       "description": "Number of resolved targets",
@@ -93,7 +94,7 @@ Update JSON schemas and validation systems to support the enhanced event payload
       "type": "boolean",
       "description": "Whether any targets were resolved from context"
     },
-    
+
     "resolutionMetadata": {
       "type": "object",
       "description": "Additional metadata about target resolution",
@@ -116,7 +117,7 @@ Update JSON schemas and validation systems to support the enhanced event payload
   },
   "required": ["actorId", "actionId", "actionText"],
   "additionalProperties": true,
-  
+
   "definitions": {
     "targetInfo": {
       "type": "object",
@@ -173,7 +174,7 @@ Update JSON schemas and validation systems to support the enhanced event payload
       },
       "required": ["entityId", "placeholder"],
       "additionalProperties": false,
-      
+
       "if": {
         "properties": { "resolvedFromContext": { "const": true } }
       },
@@ -187,7 +188,7 @@ Update JSON schemas and validation systems to support the enhanced event payload
         "required": ["contextSource"]
       }
     },
-    
+
     "entityId": {
       "type": "string",
       "description": "Valid entity ID format",
@@ -208,13 +209,19 @@ Update JSON schemas and validation systems to support the enhanced event payload
       ]
     }
   },
-  
+
   "anyOf": [
     {
       "description": "At least one target must be present in some form",
       "anyOf": [
-        { "properties": { "primaryId": { "type": "string" } }, "required": ["primaryId"] },
-        { "properties": { "targets": { "properties": { "primary": true } } }, "required": ["targets"] }
+        {
+          "properties": { "primaryId": { "type": "string" } },
+          "required": ["primaryId"]
+        },
+        {
+          "properties": { "targets": { "properties": { "primary": true } } },
+          "required": ["targets"]
+        }
       ]
     }
   ]
@@ -274,7 +281,7 @@ Update JSON schemas and validation systems to support the enhanced event payload
       "additionalProperties": false
     }
   ],
-  
+
   "definitions": {
     "entityId": {
       "type": "string",
@@ -328,7 +335,7 @@ Update JSON schemas and validation systems to support the enhanced event payload
   },
   "required": ["entity_ref", "result_variable"],
   "additionalProperties": false,
-  
+
   "examples": [
     {
       "entity_ref": "primary",
@@ -365,17 +372,17 @@ import addFormats from 'ajv-formats';
  */
 class MultiTargetValidationRules {
   constructor() {
-    this.ajv = new Ajv({ 
-      allErrors: true, 
+    this.ajv = new Ajv({
+      allErrors: true,
       verbose: true,
-      strict: false 
+      strict: false,
     });
     addFormats(this.ajv);
-    
+
     // Add custom keywords for multi-target validation
     this.#addCustomKeywords();
   }
-  
+
   /**
    * Add custom validation keywords
    * @private
@@ -389,44 +396,48 @@ class MultiTargetValidationRules {
       compile: (schemaValue) => {
         return function validate(data) {
           if (!schemaValue) return true; // Skip validation if disabled
-          
+
           const errors = [];
-          
+
           // Check consistency between legacy and comprehensive formats
           const legacyFields = ['primaryId', 'secondaryId', 'tertiaryId'];
           const placeholders = ['primary', 'secondary', 'tertiary'];
-          
+
           legacyFields.forEach((field, index) => {
             const placeholder = placeholders[index];
             const legacyValue = data[field];
             const comprehensiveValue = data.targets?.[placeholder]?.entityId;
-            
+
             // If both exist, they must match
-            if (legacyValue && comprehensiveValue && legacyValue !== comprehensiveValue) {
+            if (
+              legacyValue &&
+              comprehensiveValue &&
+              legacyValue !== comprehensiveValue
+            ) {
               errors.push({
                 instancePath: `/targets/${placeholder}/entityId`,
                 schemaPath: '#/targetConsistency',
                 keyword: 'targetConsistency',
-                params: { 
+                params: {
                   legacyField: field,
                   legacyValue,
-                  comprehensiveValue 
+                  comprehensiveValue,
                 },
-                message: `Target consistency error: ${field}=${legacyValue} but targets.${placeholder}.entityId=${comprehensiveValue}`
+                message: `Target consistency error: ${field}=${legacyValue} but targets.${placeholder}.entityId=${comprehensiveValue}`,
               });
             }
           });
-          
+
           if (errors.length > 0) {
             validate.errors = errors;
             return false;
           }
-          
+
           return true;
         };
-      }
+      },
     });
-    
+
     // Custom keyword: requiredTargets
     this.ajv.addKeyword({
       keyword: 'requiredTargets',
@@ -435,32 +446,32 @@ class MultiTargetValidationRules {
       compile: (requiredPlaceholders) => {
         return function validate(data) {
           const errors = [];
-          
-          requiredPlaceholders.forEach(placeholder => {
+
+          requiredPlaceholders.forEach((placeholder) => {
             const hasLegacy = data[`${placeholder}Id`];
             const hasComprehensive = data.targets?.[placeholder]?.entityId;
-            
+
             if (!hasLegacy && !hasComprehensive) {
               errors.push({
                 instancePath: `/${placeholder}Id`,
                 schemaPath: '#/requiredTargets',
                 keyword: 'requiredTargets',
                 params: { placeholder },
-                message: `Required target '${placeholder}' is missing from both legacy and comprehensive formats`
+                message: `Required target '${placeholder}' is missing from both legacy and comprehensive formats`,
               });
             }
           });
-          
+
           if (errors.length > 0) {
             validate.errors = errors;
             return false;
           }
-          
+
           return true;
         };
-      }
+      },
     });
-    
+
     // Custom keyword: validEntityId
     this.ajv.addKeyword({
       keyword: 'validEntityId',
@@ -469,37 +480,41 @@ class MultiTargetValidationRules {
       compile: (schemaValue) => {
         return function validate(entityId) {
           if (!schemaValue) return true;
-          
+
           // UUID pattern
-          const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-          
+          const uuidPattern =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
           // Namespaced pattern
           const namespacedPattern = /^[a-zA-Z0-9_]+:[a-zA-Z0-9_-]+$/;
-          
+
           // Special keywords
           const specialKeywords = ['none', 'self'];
-          
-          const isValid = uuidPattern.test(entityId) || 
-                         namespacedPattern.test(entityId) || 
-                         specialKeywords.includes(entityId);
-          
+
+          const isValid =
+            uuidPattern.test(entityId) ||
+            namespacedPattern.test(entityId) ||
+            specialKeywords.includes(entityId);
+
           if (!isValid) {
-            validate.errors = [{
-              instancePath: '',
-              schemaPath: '#/validEntityId',
-              keyword: 'validEntityId',
-              params: { entityId },
-              message: `Invalid entity ID format: ${entityId}`
-            }];
+            validate.errors = [
+              {
+                instancePath: '',
+                schemaPath: '#/validEntityId',
+                keyword: 'validEntityId',
+                params: { entityId },
+                message: `Invalid entity ID format: ${entityId}`,
+              },
+            ];
             return false;
           }
-          
+
           return true;
         };
-      }
+      },
     });
   }
-  
+
   /**
    * Validate enhanced event payload
    * @param {Object} payload - Event payload to validate
@@ -509,19 +524,19 @@ class MultiTargetValidationRules {
     const schema = {
       $ref: 'multi-target-action-event-payload.schema.json#',
       targetConsistency: true,
-      requiredTargets: this.#extractRequiredTargets(payload)
+      requiredTargets: this.#extractRequiredTargets(payload),
     };
-    
+
     const validate = this.ajv.compile(schema);
     const isValid = validate(payload);
-    
+
     return {
       valid: isValid,
       errors: validate.errors || [],
-      formattedErrors: this.#formatValidationErrors(validate.errors || [])
+      formattedErrors: this.#formatValidationErrors(validate.errors || []),
     };
   }
-  
+
   /**
    * Validate entity reference
    * @param {any} entityRef - Entity reference to validate
@@ -531,14 +546,14 @@ class MultiTargetValidationRules {
     const schema = { $ref: 'enhanced-entity-reference.schema.json#' };
     const validate = this.ajv.compile(schema);
     const isValid = validate(entityRef);
-    
+
     return {
       valid: isValid,
       errors: validate.errors || [],
-      formattedErrors: this.#formatValidationErrors(validate.errors || [])
+      formattedErrors: this.#formatValidationErrors(validate.errors || []),
     };
   }
-  
+
   /**
    * Validate operation parameters
    * @param {string} operationType - Type of operation
@@ -547,31 +562,31 @@ class MultiTargetValidationRules {
    */
   validateOperationParameters(operationType, parameters) {
     const schemaMap = {
-      'GET_NAME': 'get-name-operation.schema.json#',
-      'GET_PROPERTY': 'get-property-operation.schema.json#',
-      'CHECK_RELATIONSHIP': 'check-relationship-operation.schema.json#'
+      GET_NAME: 'get-name-operation.schema.json#',
+      GET_PROPERTY: 'get-property-operation.schema.json#',
+      CHECK_RELATIONSHIP: 'check-relationship-operation.schema.json#',
     };
-    
+
     const schemaRef = schemaMap[operationType];
     if (!schemaRef) {
       return {
         valid: false,
         errors: [{ message: `Unknown operation type: ${operationType}` }],
-        formattedErrors: [`Unknown operation type: ${operationType}`]
+        formattedErrors: [`Unknown operation type: ${operationType}`],
       };
     }
-    
+
     const schema = { $ref: schemaRef };
     const validate = this.ajv.compile(schema);
     const isValid = validate(parameters);
-    
+
     return {
       valid: isValid,
       errors: validate.errors || [],
-      formattedErrors: this.#formatValidationErrors(validate.errors || [])
+      formattedErrors: this.#formatValidationErrors(validate.errors || []),
     };
   }
-  
+
   /**
    * Extract required targets from payload context
    * @private
@@ -582,7 +597,7 @@ class MultiTargetValidationRules {
     // This could be enhanced to read from action definition
     // For now, detect from existing data
     const required = [];
-    
+
     if (payload.primaryId || payload.targets?.primary) {
       required.push('primary');
     }
@@ -592,10 +607,10 @@ class MultiTargetValidationRules {
     if (payload.tertiaryId || payload.targets?.tertiary) {
       required.push('tertiary');
     }
-    
+
     return required;
   }
-  
+
   /**
    * Format validation errors for human readability
    * @private
@@ -603,18 +618,18 @@ class MultiTargetValidationRules {
    * @returns {Array<string>} - Formatted error messages
    */
   #formatValidationErrors(errors) {
-    return errors.map(error => {
+    return errors.map((error) => {
       const path = error.instancePath || 'root';
       const message = error.message || 'Unknown validation error';
-      
+
       if (error.keyword === 'targetConsistency') {
         return `Target consistency error at ${path}: ${message}`;
       }
-      
+
       if (error.keyword === 'requiredTargets') {
         return `Required target error: ${message}`;
       }
-      
+
       return `Validation error at ${path}: ${message}`;
     });
   }
@@ -643,13 +658,13 @@ class EnhancedSchemaManager {
     this.#schemas = new Map();
     this.#loadedSchemaIds = new Set();
   }
-  
+
   #logger;
   #fileSystem;
   #validationRules;
   #schemas;
   #loadedSchemaIds;
-  
+
   /**
    * Load all multi-target related schemas
    * @returns {Promise<void>}
@@ -660,9 +675,9 @@ class EnhancedSchemaManager {
       'enhanced-entity-reference.schema.json',
       'get-name-operation.schema.json',
       'get-property-operation.schema.json',
-      'check-relationship-operation.schema.json'
+      'check-relationship-operation.schema.json',
     ];
-    
+
     for (const schemaFile of schemaFiles) {
       try {
         await this.#loadSchemaFile(schemaFile);
@@ -672,12 +687,12 @@ class EnhancedSchemaManager {
         throw new Error(`Schema loading failed: ${schemaFile}`);
       }
     }
-    
+
     this.#logger.info('All multi-target schemas loaded successfully', {
-      loadedSchemas: Array.from(this.#loadedSchemaIds)
+      loadedSchemas: Array.from(this.#loadedSchemaIds),
     });
   }
-  
+
   /**
    * Validate event payload using enhanced validation
    * @param {Object} payload - Event payload to validate
@@ -688,37 +703,42 @@ class EnhancedSchemaManager {
     try {
       // Basic schema validation
       const schemaResult = this.#validationRules.validateEventPayload(payload);
-      
+
       // Additional custom validations
-      const customValidations = await this.#performCustomValidations(payload, options);
-      
+      const customValidations = await this.#performCustomValidations(
+        payload,
+        options
+      );
+
       // Combine results
       const result = {
         valid: schemaResult.valid && customValidations.valid,
         errors: [...schemaResult.errors, ...customValidations.errors],
-        formattedErrors: [...schemaResult.formattedErrors, ...customValidations.formattedErrors],
-        warnings: customValidations.warnings || []
+        formattedErrors: [
+          ...schemaResult.formattedErrors,
+          ...customValidations.formattedErrors,
+        ],
+        warnings: customValidations.warnings || [],
       };
-      
+
       this.#logger.debug('Event payload validation completed', {
         valid: result.valid,
         errorCount: result.errors.length,
-        warningCount: result.warnings.length
+        warningCount: result.warnings.length,
       });
-      
+
       return result;
-      
     } catch (error) {
       this.#logger.error('Event payload validation failed', error);
       return {
         valid: false,
         errors: [{ message: `Validation system error: ${error.message}` }],
         formattedErrors: [`Validation system error: ${error.message}`],
-        warnings: []
+        warnings: [],
       };
     }
   }
-  
+
   /**
    * Validate entity reference
    * @param {any} entityRef - Entity reference to validate
@@ -727,7 +747,7 @@ class EnhancedSchemaManager {
   validateEntityReference(entityRef) {
     return this.#validationRules.validateEntityReference(entityRef);
   }
-  
+
   /**
    * Validate operation parameters
    * @param {string} operationType - Operation type
@@ -735,9 +755,12 @@ class EnhancedSchemaManager {
    * @returns {ValidationResult} - Validation result
    */
   validateOperationParameters(operationType, parameters) {
-    return this.#validationRules.validateOperationParameters(operationType, parameters);
+    return this.#validationRules.validateOperationParameters(
+      operationType,
+      parameters
+    );
   }
-  
+
   /**
    * Get validation statistics
    * @returns {Object} - Validation statistics
@@ -747,12 +770,12 @@ class EnhancedSchemaManager {
       loadedSchemas: this.#loadedSchemaIds.size,
       availableSchemas: Array.from(this.#loadedSchemaIds),
       validationRulesActive: true,
-      customKeywordsCount: 3 // targetConsistency, requiredTargets, validEntityId
+      customKeywordsCount: 3, // targetConsistency, requiredTargets, validEntityId
     };
   }
-  
+
   // Private helper methods
-  
+
   /**
    * Load individual schema file
    * @private
@@ -761,15 +784,15 @@ class EnhancedSchemaManager {
   async #loadSchemaFile(schemaFile) {
     const schemaPath = `data/schemas/${schemaFile}`;
     const schemaContent = await this.#fileSystem.readJson(schemaPath);
-    
+
     // Add to AJV instance
     this.#validationRules.ajv.addSchema(schemaContent, schemaContent.$id);
-    
+
     // Track loaded schemas
     this.#schemas.set(schemaContent.$id, schemaContent);
     this.#loadedSchemaIds.add(schemaContent.$id);
   }
-  
+
   /**
    * Perform custom validations beyond schema validation
    * @private
@@ -782,9 +805,9 @@ class EnhancedSchemaManager {
       valid: true,
       errors: [],
       formattedErrors: [],
-      warnings: []
+      warnings: [],
     };
-    
+
     // Validate target count consistency
     if (payload.targets && payload.resolvedTargetCount !== undefined) {
       const actualCount = Object.keys(payload.targets).length;
@@ -794,24 +817,26 @@ class EnhancedSchemaManager {
         );
       }
     }
-    
+
     // Validate context dependency consistency
     if (payload.targets && payload.hasContextDependencies !== undefined) {
-      const hasContextDeps = Object.values(payload.targets).some(t => t.resolvedFromContext);
+      const hasContextDeps = Object.values(payload.targets).some(
+        (t) => t.resolvedFromContext
+      );
       if (hasContextDeps !== payload.hasContextDependencies) {
         result.warnings.push(
           `Context dependency flag mismatch: hasContextDependencies=${payload.hasContextDependencies} but actual context dependencies=${hasContextDeps}`
         );
       }
     }
-    
+
     // Validate contextSource references
     if (payload.targets) {
       for (const [placeholder, targetInfo] of Object.entries(payload.targets)) {
         if (targetInfo.resolvedFromContext && targetInfo.contextSource) {
           if (!payload.targets[targetInfo.contextSource]) {
             result.errors.push({
-              message: `Target ${placeholder} references context source '${targetInfo.contextSource}' which is not present in targets`
+              message: `Target ${placeholder} references context source '${targetInfo.contextSource}' which is not present in targets`,
             });
             result.formattedErrors.push(
               `Invalid context source reference: ${placeholder} → ${targetInfo.contextSource}`
@@ -821,7 +846,7 @@ class EnhancedSchemaManager {
         }
       }
     }
-    
+
     return result;
   }
 }
@@ -843,11 +868,11 @@ class EnhancedAjvSchemaValidator {
     this.#schemaManager = schemaManager;
     this.#initialized = false;
   }
-  
+
   #logger;
   #schemaManager;
   #initialized;
-  
+
   /**
    * Initialize validator with multi-target schemas
    * @returns {Promise<void>}
@@ -856,23 +881,25 @@ class EnhancedAjvSchemaValidator {
     if (this.#initialized) {
       return;
     }
-    
+
     try {
       // Load existing schemas
       await this.#loadExistingSchemas();
-      
+
       // Load multi-target schemas
       await this.#schemaManager.loadMultiTargetSchemas();
-      
+
       this.#initialized = true;
       this.#logger.info('Enhanced schema validator initialized');
-      
     } catch (error) {
-      this.#logger.error('Failed to initialize enhanced schema validator', error);
+      this.#logger.error(
+        'Failed to initialize enhanced schema validator',
+        error
+      );
       throw error;
     }
   }
-  
+
   /**
    * Validate against schema with multi-target support
    * @param {any} data - Data to validate
@@ -884,16 +911,16 @@ class EnhancedAjvSchemaValidator {
     if (!this.#initialized) {
       await this.initialize();
     }
-    
+
     // Check if it's a multi-target schema
     if (this.#isMultiTargetSchema(schemaId)) {
       return await this.#validateMultiTargetData(data, schemaId, options);
     }
-    
+
     // Use existing validation for non-multi-target schemas
     return await this.#validateLegacyData(data, schemaId, options);
   }
-  
+
   /**
    * Validate event payload specifically
    * @param {Object} payload - Event payload
@@ -904,10 +931,10 @@ class EnhancedAjvSchemaValidator {
     if (!this.#initialized) {
       await this.initialize();
     }
-    
+
     return await this.#schemaManager.validateEventPayload(payload, options);
   }
-  
+
   /**
    * Validate entity reference
    * @param {any} entityRef - Entity reference
@@ -917,10 +944,10 @@ class EnhancedAjvSchemaValidator {
     if (!this.#initialized) {
       throw new Error('Schema validator not initialized');
     }
-    
+
     return this.#schemaManager.validateEntityReference(entityRef);
   }
-  
+
   /**
    * Get validation capabilities
    * @returns {Object} - Validation capabilities
@@ -931,12 +958,14 @@ class EnhancedAjvSchemaValidator {
       customValidationRules: this.#initialized,
       entityReferenceValidation: this.#initialized,
       operationParameterValidation: this.#initialized,
-      statistics: this.#initialized ? this.#schemaManager.getValidationStatistics() : null
+      statistics: this.#initialized
+        ? this.#schemaManager.getValidationStatistics()
+        : null,
     };
   }
-  
+
   // Private helper methods
-  
+
   /**
    * Check if schema ID is for multi-target functionality
    * @private
@@ -949,12 +978,12 @@ class EnhancedAjvSchemaValidator {
       'enhanced-entity-reference.schema.json',
       'get-name-operation.schema.json',
       'get-property-operation.schema.json',
-      'check-relationship-operation.schema.json'
+      'check-relationship-operation.schema.json',
     ];
-    
-    return multiTargetSchemas.some(schema => schemaId.includes(schema));
+
+    return multiTargetSchemas.some((schema) => schemaId.includes(schema));
   }
-  
+
   /**
    * Validate data using multi-target validation
    * @private
@@ -967,20 +996,23 @@ class EnhancedAjvSchemaValidator {
     if (schemaId.includes('event-payload')) {
       return await this.#schemaManager.validateEventPayload(data, options);
     }
-    
+
     if (schemaId.includes('entity-reference')) {
       return this.#schemaManager.validateEntityReference(data);
     }
-    
+
     if (schemaId.includes('operation')) {
       const operationType = this.#extractOperationType(schemaId);
-      return this.#schemaManager.validateOperationParameters(operationType, data);
+      return this.#schemaManager.validateOperationParameters(
+        operationType,
+        data
+      );
     }
-    
+
     // Fallback to basic validation
     return await this.#performBasicValidation(data, schemaId);
   }
-  
+
   /**
    * Extract operation type from schema ID
    * @private
@@ -1020,17 +1052,17 @@ class ValidationErrorReporter {
         errorCount: result.errors?.length || 0,
         warningCount: result.warnings?.length || 0,
         timestamp: new Date().toISOString(),
-        context: context.type || 'unknown'
+        context: context.type || 'unknown',
       },
       errors: this.#categorizeErrors(result.errors || []),
       warnings: result.warnings || [],
       suggestions: this.#generateSuggestions(result),
-      debugInfo: this.#extractDebugInfo(result, context)
+      debugInfo: this.#extractDebugInfo(result, context),
     };
-    
+
     return report;
   }
-  
+
   /**
    * Format validation report for console output
    * @param {Object} report - Validation report
@@ -1038,43 +1070,43 @@ class ValidationErrorReporter {
    */
   static formatForConsole(report) {
     const lines = [];
-    
+
     lines.push(`\n=== Validation Report ===`);
     lines.push(`Status: ${report.summary.valid ? '✅ VALID' : '❌ INVALID'}`);
     lines.push(`Errors: ${report.summary.errorCount}`);
     lines.push(`Warnings: ${report.summary.warningCount}`);
-    
+
     if (report.errors.schema.length > 0) {
       lines.push(`\nSchema Errors:`);
-      report.errors.schema.forEach(error => {
+      report.errors.schema.forEach((error) => {
         lines.push(`  • ${error.path}: ${error.message}`);
       });
     }
-    
+
     if (report.errors.custom.length > 0) {
       lines.push(`\nCustom Validation Errors:`);
-      report.errors.custom.forEach(error => {
+      report.errors.custom.forEach((error) => {
         lines.push(`  • ${error.message}`);
       });
     }
-    
+
     if (report.warnings.length > 0) {
       lines.push(`\nWarnings:`);
-      report.warnings.forEach(warning => {
+      report.warnings.forEach((warning) => {
         lines.push(`  ⚠️  ${warning}`);
       });
     }
-    
+
     if (report.suggestions.length > 0) {
       lines.push(`\nSuggestions:`);
-      report.suggestions.forEach(suggestion => {
+      report.suggestions.forEach((suggestion) => {
         lines.push(`  💡 ${suggestion}`);
       });
     }
-    
+
     return lines.join('\n');
   }
-  
+
   /**
    * Generate validation suggestions based on errors
    * @private
@@ -1083,38 +1115,38 @@ class ValidationErrorReporter {
    */
   static #generateSuggestions(result) {
     const suggestions = [];
-    
+
     if (!result.errors) return suggestions;
-    
-    result.errors.forEach(error => {
+
+    result.errors.forEach((error) => {
       if (error.keyword === 'targetConsistency') {
         suggestions.push(
           'Ensure that legacy target fields (primaryId, secondaryId) match corresponding values in targets object'
         );
       }
-      
+
       if (error.keyword === 'requiredTargets') {
         suggestions.push(
           'Add missing target information to both legacy fields and targets object'
         );
       }
-      
+
       if (error.keyword === 'validEntityId') {
         suggestions.push(
           'Check entity ID format - should be namespaced (mod:id), UUID, or special keyword (none, self)'
         );
       }
-      
+
       if (error.message?.includes('placeholder')) {
         suggestions.push(
           'Valid placeholders are: primary, secondary, tertiary'
         );
       }
     });
-    
+
     return [...new Set(suggestions)]; // Remove duplicates
   }
-  
+
   /**
    * Categorize errors by type
    * @private
@@ -1123,15 +1155,24 @@ class ValidationErrorReporter {
    */
   static #categorizeErrors(errors) {
     return {
-      schema: errors.filter(e => !e.keyword || ['type', 'required', 'format'].includes(e.keyword)),
-      custom: errors.filter(e => ['targetConsistency', 'requiredTargets', 'validEntityId'].includes(e.keyword)),
-      reference: errors.filter(e => e.message?.includes('entity reference')),
-      other: errors.filter(e => !['schema', 'custom', 'reference'].some(cat => 
-        this.#categorizeErrors(errors)[cat].includes(e)
-      ))
+      schema: errors.filter(
+        (e) => !e.keyword || ['type', 'required', 'format'].includes(e.keyword)
+      ),
+      custom: errors.filter((e) =>
+        ['targetConsistency', 'requiredTargets', 'validEntityId'].includes(
+          e.keyword
+        )
+      ),
+      reference: errors.filter((e) => e.message?.includes('entity reference')),
+      other: errors.filter(
+        (e) =>
+          !['schema', 'custom', 'reference'].some((cat) =>
+            this.#categorizeErrors(errors)[cat].includes(e)
+          )
+      ),
     };
   }
-  
+
   /**
    * Extract debug information
    * @private
@@ -1142,13 +1183,14 @@ class ValidationErrorReporter {
   static #extractDebugInfo(result, context) {
     return {
       validationContext: context,
-      errorDetails: result.errors?.map(e => ({
-        keyword: e.keyword,
-        schemaPath: e.schemaPath,
-        params: e.params
-      })) || [],
+      errorDetails:
+        result.errors?.map((e) => ({
+          keyword: e.keyword,
+          schemaPath: e.schemaPath,
+          params: e.params,
+        })) || [],
       dataPath: result.errors?.[0]?.instancePath || null,
-      schemaId: context.schemaId || null
+      schemaId: context.schemaId || null,
     };
   }
 }
@@ -1159,6 +1201,7 @@ export default ValidationErrorReporter;
 ## Acceptance Criteria
 
 ### Schema Definition Criteria
+
 1. ✅ **Enhanced Event Payload Schema**: Supports both legacy and comprehensive target formats
 2. ✅ **Entity Reference Schema**: Recognizes placeholder names as valid entity references
 3. ✅ **Operation Parameter Schemas**: Updated to support enhanced entity references
@@ -1166,6 +1209,7 @@ export default ValidationErrorReporter;
 5. ✅ **Backward Compatibility**: Existing schemas continue to work unchanged
 
 ### Validation Logic Criteria
+
 6. ✅ **Target Consistency Validation**: Detects mismatches between legacy and comprehensive formats
 7. ✅ **Required Target Validation**: Ensures all required targets are present
 8. ✅ **Entity ID Format Validation**: Validates entity ID formats (UUID, namespaced, keywords)
@@ -1173,6 +1217,7 @@ export default ValidationErrorReporter;
 10. ✅ **Operation Parameter Validation**: Validates parameters for enhanced operations
 
 ### Integration Criteria
+
 11. ✅ **AJV Integration**: Custom keywords work seamlessly with AJV validation
 12. ✅ **Schema Loading**: Enhanced schema manager loads all multi-target schemas
 13. ✅ **Error Reporting**: Comprehensive error reporting with categorization and suggestions
@@ -1180,6 +1225,7 @@ export default ValidationErrorReporter;
 15. ✅ **Existing System Compatibility**: Enhances existing validation without breaking changes
 
 ### Quality Criteria
+
 16. ✅ **Comprehensive Error Messages**: Clear, actionable error messages for validation failures
 17. ✅ **Warning System**: Non-critical issues reported as warnings rather than errors
 18. ✅ **Debugging Support**: Detailed debug information for troubleshooting validation issues
@@ -1189,17 +1235,24 @@ export default ValidationErrorReporter;
 ## Testing Requirements
 
 ### Unit Tests
+
 ```javascript
 describe('Multi-Target Schema Validation', () => {
   let schemaManager;
   let validator;
-  
+
   beforeEach(async () => {
-    schemaManager = new EnhancedSchemaManager({ logger: mockLogger, fileSystem: mockFileSystem });
-    validator = new EnhancedAjvSchemaValidator({ logger: mockLogger, schemaManager });
+    schemaManager = new EnhancedSchemaManager({
+      logger: mockLogger,
+      fileSystem: mockFileSystem,
+    });
+    validator = new EnhancedAjvSchemaValidator({
+      logger: mockLogger,
+      schemaManager,
+    });
     await validator.initialize();
   });
-  
+
   describe('Event Payload Validation', () => {
     it('should validate enhanced event payload structure', async () => {
       const payload = {
@@ -1211,19 +1264,19 @@ describe('Multi-Target Schema Validation', () => {
           primary: {
             entityId: 'entity_123',
             placeholder: 'primary',
-            description: 'Test Entity'
-          }
+            description: 'Test Entity',
+          },
         },
         resolvedTargetCount: 1,
-        hasContextDependencies: false
+        hasContextDependencies: false,
       };
-      
+
       const result = await validator.validateEventPayload(payload);
-      
+
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
-    
+
     it('should detect target consistency errors', async () => {
       const payload = {
         actorId: 'test_actor',
@@ -1233,85 +1286,93 @@ describe('Multi-Target Schema Validation', () => {
         targets: {
           primary: {
             entityId: 'different_entity', // Inconsistent with primaryId
-            placeholder: 'primary'
-          }
-        }
+            placeholder: 'primary',
+          },
+        },
       };
-      
+
       const result = await validator.validateEventPayload(payload);
-      
+
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.keyword === 'targetConsistency')).toBe(true);
+      expect(result.errors.some((e) => e.keyword === 'targetConsistency')).toBe(
+        true
+      );
     });
   });
-  
+
   describe('Entity Reference Validation', () => {
     it('should validate placeholder names', () => {
       const validRefs = ['primary', 'secondary', 'tertiary'];
-      
-      validRefs.forEach(ref => {
+
+      validRefs.forEach((ref) => {
         const result = validator.validateEntityReference(ref);
         expect(result.valid).toBe(true);
       });
     });
-    
+
     it('should validate traditional entity references', () => {
       const validRefs = [
         'actor',
         'target',
         'core:player',
         'fd6a1e00-36b7-47cc-bdb2-4b65473614eb',
-        { entity_id: 'test:entity' }
+        { entity_id: 'test:entity' },
       ];
-      
-      validRefs.forEach(ref => {
+
+      validRefs.forEach((ref) => {
         const result = validator.validateEntityReference(ref);
         expect(result.valid).toBe(true);
       });
     });
-    
+
     it('should reject invalid entity references', () => {
       const invalidRefs = [
         '', // Empty string
         'invalid-placeholder',
         { invalid: 'object' },
-        123 // Wrong type
+        123, // Wrong type
       ];
-      
-      invalidRefs.forEach(ref => {
+
+      invalidRefs.forEach((ref) => {
         const result = validator.validateEntityReference(ref);
         expect(result.valid).toBe(false);
       });
     });
   });
-  
+
   describe('Operation Parameter Validation', () => {
     it('should validate GET_NAME operation parameters', () => {
       const validParams = {
         entity_ref: 'primary',
         result_variable: 'primaryName',
-        fallback_value: 'Unknown'
+        fallback_value: 'Unknown',
       };
-      
-      const result = validator.validateOperationParameters('GET_NAME', validParams);
-      
+
+      const result = validator.validateOperationParameters(
+        'GET_NAME',
+        validParams
+      );
+
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
-    
+
     it('should detect missing required parameters', () => {
       const invalidParams = {
-        entity_ref: 'primary'
+        entity_ref: 'primary',
         // Missing result_variable
       };
-      
-      const result = validator.validateOperationParameters('GET_NAME', invalidParams);
-      
+
+      const result = validator.validateOperationParameters(
+        'GET_NAME',
+        invalidParams
+      );
+
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.keyword === 'required')).toBe(true);
+      expect(result.errors.some((e) => e.keyword === 'required')).toBe(true);
     });
   });
-  
+
   describe('Custom Validation Rules', () => {
     it('should validate context source references', async () => {
       const payload = {
@@ -1321,22 +1382,22 @@ describe('Multi-Target Schema Validation', () => {
         targets: {
           primary: {
             entityId: 'entity_1',
-            placeholder: 'primary'
+            placeholder: 'primary',
           },
           secondary: {
             entityId: 'entity_2',
             placeholder: 'secondary',
             resolvedFromContext: true,
-            contextSource: 'primary' // Valid reference
-          }
-        }
+            contextSource: 'primary', // Valid reference
+          },
+        },
       };
-      
+
       const result = await validator.validateEventPayload(payload);
-      
+
       expect(result.valid).toBe(true);
     });
-    
+
     it('should detect invalid context source references', async () => {
       const payload = {
         actorId: 'test_actor',
@@ -1347,15 +1408,17 @@ describe('Multi-Target Schema Validation', () => {
             entityId: 'entity_2',
             placeholder: 'secondary',
             resolvedFromContext: true,
-            contextSource: 'nonexistent' // Invalid reference
-          }
-        }
+            contextSource: 'nonexistent', // Invalid reference
+          },
+        },
       };
-      
+
       const result = await validator.validateEventPayload(payload);
-      
+
       expect(result.valid).toBe(false);
-      expect(result.formattedErrors.some(e => e.includes('context source'))).toBe(true);
+      expect(
+        result.formattedErrors.some((e) => e.includes('context source'))
+      ).toBe(true);
     });
   });
 });
@@ -1368,32 +1431,37 @@ describe('Validation Error Reporting', () => {
         {
           keyword: 'targetConsistency',
           message: 'Target consistency error',
-          instancePath: '/targets/primary/entityId'
-        }
+          instancePath: '/targets/primary/entityId',
+        },
       ],
-      warnings: ['Target count mismatch warning']
+      warnings: ['Target count mismatch warning'],
     };
-    
+
     const report = ValidationErrorReporter.generateReport(validationResult, {
-      type: 'event-payload'
+      type: 'event-payload',
     });
-    
+
     expect(report.summary.valid).toBe(false);
     expect(report.summary.errorCount).toBe(1);
     expect(report.summary.warningCount).toBe(1);
     expect(report.suggestions.length).toBeGreaterThan(0);
   });
-  
+
   it('should format reports for console output', () => {
     const report = {
       summary: { valid: false, errorCount: 1, warningCount: 1 },
-      errors: { schema: [], custom: [{ message: 'Test error' }], reference: [], other: [] },
+      errors: {
+        schema: [],
+        custom: [{ message: 'Test error' }],
+        reference: [],
+        other: [],
+      },
       warnings: ['Test warning'],
-      suggestions: ['Test suggestion']
+      suggestions: ['Test suggestion'],
     };
-    
+
     const formatted = ValidationErrorReporter.formatForConsole(report);
-    
+
     expect(formatted).toContain('❌ INVALID');
     expect(formatted).toContain('Test error');
     expect(formatted).toContain('Test warning');
@@ -1403,58 +1471,59 @@ describe('Validation Error Reporting', () => {
 ```
 
 ### Integration Tests
+
 ```javascript
 describe('Schema Validation Integration', () => {
   it('should integrate with existing event validation system', async () => {
     const testBed = new EventValidationTestBed();
     const validator = testBed.createEnhancedValidator();
-    
+
     const event = testBed.createMultiTargetEvent({
       actionId: 'intimacy:adjust_clothing',
       targets: {
         primary: { entityId: 'iker_id', placeholder: 'primary' },
-        secondary: { entityId: 'jacket_id', placeholder: 'secondary' }
-      }
+        secondary: { entityId: 'jacket_id', placeholder: 'secondary' },
+      },
     });
-    
+
     const result = await validator.validateEventPayload(event.payload);
-    
+
     expect(result.valid).toBe(true);
   });
-  
+
   it('should validate adjust_clothing action payload', async () => {
     const testBed = new ActionTestBed();
     const { amaia, iker, jacket } = await testBed.setupIntimacyScenario();
-    
+
     const payload = {
       actorId: amaia.id,
       actionId: 'intimacy:adjust_clothing',
-      actionText: 'adjust Iker Aguirre\'s denim trucker jacket',
+      actionText: "adjust Iker Aguirre's denim trucker jacket",
       primaryId: iker.id,
       secondaryId: jacket.id,
       targets: {
         primary: {
           entityId: iker.id,
           placeholder: 'primary',
-          description: 'Iker Aguirre'
+          description: 'Iker Aguirre',
         },
         secondary: {
           entityId: jacket.id,
           placeholder: 'secondary',
           description: 'denim trucker jacket',
           resolvedFromContext: true,
-          contextSource: 'primary'
-        }
+          contextSource: 'primary',
+        },
       },
       resolvedTargetCount: 2,
-      hasContextDependencies: true
+      hasContextDependencies: true,
     };
-    
+
     const validator = new EnhancedAjvSchemaValidator(testBed.dependencies);
     await validator.initialize();
-    
+
     const result = await validator.validateEventPayload(payload);
-    
+
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
@@ -1472,12 +1541,14 @@ describe('Schema Validation Integration', () => {
 ## Dependencies and Prerequisites
 
 ### System Dependencies
+
 - Existing AJV schema validation system
 - JSON schema files in `data/schemas/` directory
 - Event system for payload validation
 - Operation parameter validation system
 
 ### Testing Dependencies
+
 - Jest testing framework
 - Mock file system for schema loading
 - Test bed classes for integration testing
@@ -1485,6 +1556,7 @@ describe('Schema Validation Integration', () => {
 ## Notes and Considerations
 
 ### Implementation Order
+
 1. **Phase 1**: Core schema definitions (event payload, entity reference)
 2. **Phase 2**: Operation parameter schemas
 3. **Phase 3**: Custom validation rules and keywords
@@ -1494,12 +1566,14 @@ describe('Schema Validation Integration', () => {
 7. **Phase 7**: Comprehensive testing and validation
 
 ### Risk Mitigation
+
 - **Backward Compatibility**: All existing schemas continue to work unchanged
 - **Performance Impact**: Custom validation rules optimized for minimal overhead
 - **Error Handling**: Graceful degradation when validation fails
 - **Schema Evolution**: Versioned schemas support future enhancements
 
 ### Future Enhancements
+
 - Schema versioning and migration system
 - Real-time schema validation in development mode
 - Performance profiling and optimization tools

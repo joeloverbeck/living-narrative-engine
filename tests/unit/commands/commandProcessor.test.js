@@ -373,46 +373,51 @@ describe('CommandProcessor enhanced multi-target payload', () => {
         isMultiTarget: true,
         targetIds: {
           primary: ['p_erotica:iker_aguirre_instance'],
-          secondary: ['fd6a1e00-36b7-47cc-bdb2-4b65473614eb']
-        }
+          secondary: ['fd6a1e00-36b7-47cc-bdb2-4b65473614eb'],
+        },
       },
       commandString: "adjust Iker Aguirre's denim trucker jacket",
     };
 
     await processor.dispatchAction(actor, turnAction);
 
-    const calledPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
-    
+    const calledPayload =
+      eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+
     // Check base fields
     expect(calledPayload.eventName).toBe(ATTEMPT_ACTION_ID);
     expect(calledPayload.actorId).toBe('amaia_castillo_instance');
     expect(calledPayload.actionId).toBe('intimacy:adjust_clothing');
-    expect(calledPayload.originalInput).toBe("adjust Iker Aguirre's denim trucker jacket");
-    
+    expect(calledPayload.originalInput).toBe(
+      "adjust Iker Aguirre's denim trucker jacket"
+    );
+
     // Check legacy fields for backward compatibility
     expect(calledPayload.primaryId).toBe('p_erotica:iker_aguirre_instance');
-    expect(calledPayload.secondaryId).toBe('fd6a1e00-36b7-47cc-bdb2-4b65473614eb');
+    expect(calledPayload.secondaryId).toBe(
+      'fd6a1e00-36b7-47cc-bdb2-4b65473614eb'
+    );
     expect(calledPayload.tertiaryId).toBeNull();
-    
+
     // Check backward compatibility targetId
     expect(calledPayload.targetId).toBe('p_erotica:iker_aguirre_instance');
-    
+
     // Check comprehensive targets object
     expect(calledPayload.targets).toBeDefined();
     expect(calledPayload.targets.primary).toEqual({
       entityId: 'p_erotica:iker_aguirre_instance',
       placeholder: 'primary',
       description: 'p_erotica:iker_aguirre_instance', // Would be actual name in full implementation
-      resolvedFromContext: false
+      resolvedFromContext: false,
     });
     expect(calledPayload.targets.secondary).toEqual({
       entityId: 'fd6a1e00-36b7-47cc-bdb2-4b65473614eb',
       placeholder: 'secondary',
       description: 'fd6a1e00-36b7-47cc-bdb2-4b65473614eb', // Would be actual name in full implementation
       resolvedFromContext: true,
-      contextSource: 'primary'
+      contextSource: 'primary',
     });
-    
+
     // Check metadata
     expect(calledPayload.resolvedTargetCount).toBe(2);
     expect(calledPayload.hasContextDependencies).toBe(true);
@@ -422,25 +427,26 @@ describe('CommandProcessor enhanced multi-target payload', () => {
     const actor = { id: 'actor1' };
     const turnAction = {
       actionDefinitionId: 'core:examine',
-      resolvedParameters: { 
-        targetId: 'item_123'
+      resolvedParameters: {
+        targetId: 'item_123',
       },
       commandString: 'examine sword',
     };
 
     await processor.dispatchAction(actor, turnAction);
 
-    const calledPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
-    
+    const calledPayload =
+      eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+
     // Check legacy fields
     expect(calledPayload.targetId).toBe('item_123');
     expect(calledPayload.primaryId).toBe('item_123');
     expect(calledPayload.secondaryId).toBeNull();
     expect(calledPayload.tertiaryId).toBeNull();
-    
+
     // Should not have targets object for single target
     expect(calledPayload.targets).toBeUndefined();
-    
+
     // Check metadata
     expect(calledPayload.resolvedTargetCount).toBe(1);
     expect(calledPayload.hasContextDependencies).toBe(false);
@@ -456,17 +462,18 @@ describe('CommandProcessor enhanced multi-target payload', () => {
 
     await processor.dispatchAction(actor, turnAction);
 
-    const calledPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
-    
+    const calledPayload =
+      eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+
     // Check all target fields are null
     expect(calledPayload.targetId).toBeNull();
     expect(calledPayload.primaryId).toBeNull();
     expect(calledPayload.secondaryId).toBeNull();
     expect(calledPayload.tertiaryId).toBeNull();
-    
+
     // Should not have targets object
     expect(calledPayload.targets).toBeUndefined();
-    
+
     // Check metadata
     expect(calledPayload.resolvedTargetCount).toBe(0);
     expect(calledPayload.hasContextDependencies).toBe(false);
@@ -481,27 +488,28 @@ describe('CommandProcessor enhanced multi-target payload', () => {
         targetIds: {
           primary: ['target1'],
           secondary: ['target2'],
-          tertiary: ['target3']
-        }
+          tertiary: ['target3'],
+        },
       },
       commandString: 'cast complex spell',
     };
 
     await processor.dispatchAction(actor, turnAction);
 
-    const calledPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
-    
+    const calledPayload =
+      eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+
     // Check all legacy fields
     expect(calledPayload.primaryId).toBe('target1');
     expect(calledPayload.secondaryId).toBe('target2');
     expect(calledPayload.tertiaryId).toBe('target3');
-    
+
     // Check targets object has all three
     expect(Object.keys(calledPayload.targets)).toHaveLength(3);
     expect(calledPayload.targets.primary.entityId).toBe('target1');
     expect(calledPayload.targets.secondary.entityId).toBe('target2');
     expect(calledPayload.targets.tertiary.entityId).toBe('target3');
-    
+
     // Check metadata
     expect(calledPayload.resolvedTargetCount).toBe(3);
   });
@@ -510,11 +518,11 @@ describe('CommandProcessor enhanced multi-target payload', () => {
     const actor = { id: 'actor1' };
     const turnAction = {
       actionDefinitionId: 'test:action',
-      resolvedParameters: { 
+      resolvedParameters: {
         targetId: 'target1',
         // Invalid data that might cause error - targetIds must be object with arrays
         isMultiTarget: true,
-        targetIds: 'not-an-object' // This will cause an error in forEach
+        targetIds: 'not-an-object', // This will cause an error in forEach
       },
       commandString: 'test command',
     };
@@ -523,18 +531,19 @@ describe('CommandProcessor enhanced multi-target payload', () => {
 
     // Even with error, should still dispatch with valid payload
     expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalled();
-    
-    const calledPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
-    
+
+    const calledPayload =
+      eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+
     // Should still have all required fields
     expect(calledPayload.actorId).toBe('actor1');
     expect(calledPayload.actionId).toBe('test:action');
     expect(calledPayload.targetId).toBe('target1');
-    
+
     // Should have metadata fields
     expect(calledPayload.resolvedTargetCount).toBeDefined();
     expect(calledPayload.hasContextDependencies).toBeDefined();
-    
+
     // Should have timestamp
     expect(calledPayload.timestamp).toBeDefined();
     expect(calledPayload.timestamp).toBeGreaterThan(0);
@@ -548,8 +557,8 @@ describe('CommandProcessor enhanced multi-target payload', () => {
         isMultiTarget: true,
         targetIds: {
           primary: ['target1'],
-          secondary: ['target2']
-        }
+          secondary: ['target2'],
+        },
       },
       commandString: 'test command',
     };
@@ -560,9 +569,9 @@ describe('CommandProcessor enhanced multi-target payload', () => {
 
     // Should complete within reasonable time (allowing for test overhead)
     expect(duration).toBeLessThan(50); // 50ms is generous for tests
-    
+
     // Should not log performance warning for fast execution
-    const perfWarningCalls = logger.warn.mock.calls.filter(call => 
+    const perfWarningCalls = logger.warn.mock.calls.filter((call) =>
       call[0].includes('Payload creation exceeded target time')
     );
     expect(perfWarningCalls).toHaveLength(0);
@@ -571,14 +580,14 @@ describe('CommandProcessor enhanced multi-target payload', () => {
   it('logs metrics periodically', async () => {
     // Reset statistics
     processor.resetPayloadCreationStatistics();
-    
+
     // Create a multi-target action
     const actor = { id: 'actor1' };
     const multiTargetAction = {
       actionDefinitionId: 'test:multi',
       resolvedParameters: {
         isMultiTarget: true,
-        targetIds: { primary: ['t1'], secondary: ['t2'] }
+        targetIds: { primary: ['t1'], secondary: ['t2'] },
       },
       commandString: 'multi',
     };
@@ -589,11 +598,11 @@ describe('CommandProcessor enhanced multi-target payload', () => {
     }
 
     // Check if metrics were logged
-    const metricsLogCalls = logger.info.mock.calls.filter(call =>
-      call[0] === 'Payload creation metrics update'
+    const metricsLogCalls = logger.info.mock.calls.filter(
+      (call) => call[0] === 'Payload creation metrics update'
     );
     expect(metricsLogCalls).toHaveLength(1);
-    
+
     const stats = processor.getPayloadCreationStatistics();
     expect(stats.totalPayloadsCreated).toBe(100);
     expect(stats.multiTargetPayloads).toBe(100);

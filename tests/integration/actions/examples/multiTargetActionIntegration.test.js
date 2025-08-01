@@ -127,9 +127,9 @@ describe('Multi-Target Action Examples - Integration', () => {
 
       // The formatter now enforces strict validation - empty required targets cause an error
       expect(result.ok).toBe(false);
-      expect(result.error).toContain("Required target");
-      expect(result.error).toContain("could not be resolved");
-      expect(result.error).toContain("action not available");
+      expect(result.error).toContain('Required target');
+      expect(result.error).toContain('could not be resolved');
+      expect(result.error).toContain('action not available');
     });
   });
 

@@ -8,10 +8,10 @@
 import AppContainer from '../dependencyInjection/appContainer.js';
 import { tokens } from '../dependencyInjection/tokens.js';
 import { configureMinimalContainer } from '../dependencyInjection/minimalContainerConfig.js';
-import { 
-  validateDependency, 
-  assertPresent, 
-  assertNonBlankString 
+import {
+  validateDependency,
+  assertPresent,
+  assertNonBlankString,
 } from '../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 
@@ -140,10 +140,15 @@ export class CharacterBuilderBootstrap {
    */
   #validateConfig(config) {
     assertPresent(config, 'Bootstrap configuration is required');
-    
+
     // Use temporary logger for early validation
     const tempLogger = this.#logger || console;
-    assertNonBlankString(config.pageName, 'pageName', 'Bootstrap configuration', tempLogger);
+    assertNonBlankString(
+      config.pageName,
+      'pageName',
+      'Bootstrap configuration',
+      tempLogger
+    );
     assertPresent(config.controllerClass, 'Controller class is required');
 
     if (typeof config.controllerClass !== 'function') {
@@ -237,7 +242,7 @@ export class CharacterBuilderBootstrap {
       try {
         // Extract schema ID from path for checking if already loaded
         const schemaId = this.#getSchemaIdFromPath(schemaPath);
-        
+
         if (schemaValidator.isSchemaLoaded?.(schemaId)) {
           if (this.#logger) {
             this.#logger.debug(`Schema already loaded: ${schemaId}`);
@@ -295,8 +300,7 @@ export class CharacterBuilderBootstrap {
     const baseEvents = [
       {
         id: 'core:character_concept_created',
-        description:
-          'Fired when a character concept is successfully created',
+        description: 'Fired when a character concept is successfully created',
         payloadSchema: {
           type: 'object',
           required: ['conceptId', 'concept', 'autoSaved'],
@@ -456,7 +460,9 @@ export class CharacterBuilderBootstrap {
 
     if (!modsLoader) {
       if (this.#logger) {
-        this.#logger.warn('[CharacterBuilderBootstrap] ModsLoader not available');
+        this.#logger.warn(
+          '[CharacterBuilderBootstrap] ModsLoader not available'
+        );
       }
       return;
     }
@@ -467,7 +473,9 @@ export class CharacterBuilderBootstrap {
       }
       await modsLoader.loadMods('default', ['core']);
       if (this.#logger) {
-        this.#logger.info('[CharacterBuilderBootstrap] Core mod loaded successfully');
+        this.#logger.info(
+          '[CharacterBuilderBootstrap] Core mod loaded successfully'
+        );
       }
     } catch (error) {
       if (this.#logger) {
@@ -524,7 +532,9 @@ export class CharacterBuilderBootstrap {
     // Resolve standard dependencies
     const dependencies = {
       logger: ensureValidLogger(container.resolve(tokens.ILogger)),
-      characterBuilderService: container.resolve(tokens.CharacterBuilderService),
+      characterBuilderService: container.resolve(
+        tokens.CharacterBuilderService
+      ),
       eventBus: container.resolve(tokens.ISafeEventDispatcher),
       schemaValidator: container.resolve(tokens.ISchemaValidator),
       ...config.services, // Additional page-specific services

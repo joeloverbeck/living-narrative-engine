@@ -291,7 +291,10 @@ describe('Action Target Resolution Workflow E2E', () => {
       actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,
-      formatter: new MultiTargetActionFormatter(new ActionCommandFormatter(), logger),
+      formatter: new MultiTargetActionFormatter(
+        new ActionCommandFormatter(),
+        logger
+      ),
       entityManager,
       safeEventDispatcher,
       getEntityDisplayNameFn: getEntityDisplayName,

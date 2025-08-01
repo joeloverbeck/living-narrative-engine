@@ -38,8 +38,6 @@
     "macros": [],
     "portraits": [],
     "rules": [],
-    "worlds": [
-      "isekai.world.json"
-    ]
+    "worlds": ["isekai.world.json"]
   }
 }

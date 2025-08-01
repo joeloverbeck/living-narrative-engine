@@ -42,9 +42,12 @@ async function initializeApp() {
     };
 
     // Bootstrap the application
-    const { controller, container, bootstrapTime } = await bootstrap.bootstrap(config);
+    const { controller, container, bootstrapTime } =
+      await bootstrap.bootstrap(config);
 
-    console.log(`${PAGE_NAME} initialized successfully in ${bootstrapTime.toFixed(2)}ms`);
+    console.log(
+      `${PAGE_NAME} initialized successfully in ${bootstrapTime.toFixed(2)}ms`
+    );
   } catch (error) {
     console.error(`Failed to initialize ${PAGE_NAME}:`, error);
     // Error display is handled by bootstrap
@@ -117,7 +120,6 @@ function setupGlobalErrorHandling(logger) {
     event.preventDefault();
   });
 }
-
 
 /**
  * Wait for DOM to be ready

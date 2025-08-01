@@ -151,7 +151,6 @@ describe('ThematicDirectionController', () => {
       expect(mockElements.resultsState.style.display).toBe('none');
     });
 
-
     it('should handle initialization errors', async () => {
       const error = new Error('Init failed');
       mockCharacterBuilderService.initialize.mockRejectedValue(error);

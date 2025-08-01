@@ -11,7 +11,7 @@ describe('CharacterBuilderBootstrap Integration', () => {
 
   beforeEach(() => {
     bootstrap = new CharacterBuilderBootstrap();
-    
+
     // Mock fetch for schema loading
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
@@ -31,7 +31,7 @@ describe('CharacterBuilderBootstrap Integration', () => {
         this.characterBuilderService = deps.characterBuilderService;
         this.eventBus = deps.eventBus;
       }
-      
+
       async initialize() {
         // Mock initialization
       }
@@ -65,6 +65,8 @@ describe('CharacterBuilderBootstrap Integration', () => {
       controllerClass: FailingController,
     };
 
-    await expect(bootstrap.bootstrap(config)).rejects.toThrow('Initialization failed');
+    await expect(bootstrap.bootstrap(config)).rejects.toThrow(
+      'Initialization failed'
+    );
   });
 });

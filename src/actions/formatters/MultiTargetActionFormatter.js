@@ -186,11 +186,12 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       const hasRequiredTargets = Object.entries(targetDefinitions || {}).some(
         ([, def]) => !def.optional
       );
-      
+
       if (hasRequiredTargets) {
         return {
           ok: false,
-          error: 'No valid target combinations could be generated for required targets',
+          error:
+            'No valid target combinations could be generated for required targets',
         };
       }
     }
@@ -240,7 +241,7 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
             error: `Required target '${targetKey}' could not be resolved - action not available`,
           };
         }
-        
+
         // Skip empty target arrays - the placeholder will remain
         this.#logger.debug(`Skipping empty target array for key: ${targetKey}`);
         continue;

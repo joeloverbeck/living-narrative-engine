@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for the intimacy:adjust_clothing multi-target action
- * @description Tests the complete flow of the adjust_clothing action from 
+ * @description Tests the complete flow of the adjust_clothing action from
  * discovery through rule execution, verifying enhanced event payload with
  * resolved target IDs
  */
@@ -78,7 +78,7 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
 
   beforeEach(() => {
     capturedEvents = [];
-    
+
     // Mock the adjust_clothing rule that would process the event
     const adjustClothingRule = {
       id: 'intimacy:handle_adjust_clothing',
@@ -87,28 +87,25 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
       conditions: [
         {
           if: {
-            '==': [
-              { var: 'event.actionId' },
-              'intimacy:adjust_clothing'
-            ]
-          }
-        }
+            '==': [{ var: 'event.actionId' }, 'intimacy:adjust_clothing'],
+          },
+        },
       ],
       actions: [
         {
           type: 'GET_NAME',
           params: { entityId: { var: 'event.actorId' } },
-          assign: 'actorName'
+          assign: 'actorName',
         },
         {
           type: 'GET_NAME',
           params: { entityId: { var: 'event.primaryId' } },
-          assign: 'targetName'
+          assign: 'targetName',
         },
         {
           type: 'GET_NAME',
           params: { entityId: { var: 'event.secondaryId' } },
-          assign: 'clothingName'
+          assign: 'clothingName',
         },
         {
           type: 'DISPATCH_PERCEPTIBLE_EVENT',
@@ -118,29 +115,29 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
               message: {
                 cat: [
                   { var: 'actorName' },
-                  " adjusts ",
+                  ' adjusts ',
                   { var: 'targetName' },
                   "'s ",
                   { var: 'clothingName' },
-                  "."
-                ]
+                  '.',
+                ],
               },
               actorId: { var: 'event.actorId' },
               targetId: { var: 'event.primaryId' },
-              clothingId: { var: 'event.secondaryId' }
+              clothingId: { var: 'event.secondaryId' },
             },
             location: { var: 'actor.locationId' },
-            visibility: 'visible'
-          }
+            visibility: 'visible',
+          },
         },
         {
           type: 'END_TURN',
           params: {
             actorId: { var: 'event.actorId' },
-            success: true
-          }
-        }
-      ]
+            success: true,
+          },
+        },
+      ],
     };
 
     const dataRegistry = {
@@ -164,12 +161,14 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
 
     // Mock event dispatch service that captures events
     eventDispatchService = {
-      dispatchWithErrorHandling: jest.fn().mockImplementation((eventId, payload) => {
-        capturedEvents.push({ eventId, payload });
-        // Also dispatch to test environment's event bus
-        testEnv.eventBus.dispatch(eventId, payload);
-        return Promise.resolve(true);
-      }),
+      dispatchWithErrorHandling: jest
+        .fn()
+        .mockImplementation((eventId, payload) => {
+          capturedEvents.push({ eventId, payload });
+          // Also dispatch to test environment's event bus
+          testEnv.eventBus.dispatch(eventId, payload);
+          return Promise.resolve(true);
+        }),
     };
 
     const safeEventDispatcher = {
@@ -197,7 +196,9 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Amaia Castillo' },
           [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
-          'intimacy:closeness': { partners: ['p_erotica:iker_aguirre_instance'] },
+          'intimacy:closeness': {
+            partners: ['p_erotica:iker_aguirre_instance'],
+          },
         },
       },
       {
@@ -207,8 +208,8 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
           [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
           'intimacy:closeness': { partners: ['amaia_castillo_instance'] },
           'clothing:equipped': {
-            torso_upper: ['fd6a1e00-36b7-47cc-bdb2-4b65473614eb']
-          }
+            torso_upper: ['fd6a1e00-36b7-47cc-bdb2-4b65473614eb'],
+          },
         },
       },
       {
@@ -217,8 +218,8 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
           [NAME_COMPONENT_ID]: { text: 'denim trucker jacket' },
           'clothing:clothing': {
             slot: 'torso_upper',
-            wornBy: 'p_erotica:iker_aguirre_instance'
-          }
+            wornBy: 'p_erotica:iker_aguirre_instance',
+          },
         },
       },
     ]);
@@ -247,22 +248,22 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
     // Verify enhanced payload was dispatched
     expect(capturedEvents.length).toBe(1);
     const { eventId, payload } = capturedEvents[0];
-    
+
     expect(eventId).toBe(ATTEMPT_ACTION_ID);
-    
+
     // Verify enhanced payload structure
     expect(payload).toMatchObject({
       eventName: ATTEMPT_ACTION_ID,
       actorId: 'amaia_castillo_instance',
       actionId: 'intimacy:adjust_clothing',
       originalInput: "adjust Iker Aguirre's denim trucker jacket",
-      
+
       // Legacy fields for backward compatibility
       targetId: 'p_erotica:iker_aguirre_instance',
       primaryId: 'p_erotica:iker_aguirre_instance',
       secondaryId: 'fd6a1e00-36b7-47cc-bdb2-4b65473614eb',
       tertiaryId: null,
-      
+
       // Comprehensive targets object
       targets: {
         primary: {
@@ -273,13 +274,13 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
         },
         secondary: {
           entityId: 'fd6a1e00-36b7-47cc-bdb2-4b65473614eb',
-          placeholder: 'secondary', 
+          placeholder: 'secondary',
           description: 'fd6a1e00-36b7-47cc-bdb2-4b65473614eb',
           resolvedFromContext: true,
           contextSource: 'primary',
         },
       },
-      
+
       // Metadata
       resolvedTargetCount: 2,
       hasContextDependencies: true,
@@ -329,16 +330,16 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
     expect(result.success).toBe(true);
 
     const { payload } = capturedEvents[0];
-    
+
     // Should have primary but no secondary
     expect(payload.primaryId).toBe('target1');
     expect(payload.secondaryId).toBeNull();
-    
+
     // Should only have primary in targets
     expect(payload.targets).toBeDefined();
     expect(payload.targets.primary).toBeDefined();
     expect(payload.targets.secondary).toBeUndefined();
-    
+
     expect(payload.resolvedTargetCount).toBe(1);
     expect(payload.hasContextDependencies).toBe(false);
   });
@@ -346,7 +347,7 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
   it('maintains backward compatibility for rules expecting targetId', async () => {
     // This test verifies that the legacy targetId field is populated
     // for backward compatibility with existing rules
-    
+
     const actor = { id: 'actor1' };
     const turnAction = {
       actionDefinitionId: 'intimacy:adjust_clothing',
@@ -365,7 +366,7 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
     // Verify legacy targetId field is populated with primary target
     const { payload } = capturedEvents[0];
     expect(payload.targetId).toBe('primary_target_123');
-    
+
     // Also verify all the enhanced fields are present
     expect(payload.primaryId).toBe('primary_target_123');
     expect(payload.secondaryId).toBe('secondary_target_456');
