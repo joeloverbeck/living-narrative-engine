@@ -43,12 +43,16 @@ describe('Placeholder Resolution Integration', () => {
 
       // Act & Assert: Verify O(1) placeholder resolution
       const startTime = performance.now();
-      
-      const primaryId = targetExtractionResult.getEntityIdByPlaceholder('primary');
-      const secondaryId = targetExtractionResult.getEntityIdByPlaceholder('secondary');
-      const tertiaryId = targetExtractionResult.getEntityIdByPlaceholder('tertiary');
-      const invalidId = targetExtractionResult.getEntityIdByPlaceholder('invalid');
-      
+
+      const primaryId =
+        targetExtractionResult.getEntityIdByPlaceholder('primary');
+      const secondaryId =
+        targetExtractionResult.getEntityIdByPlaceholder('secondary');
+      const tertiaryId =
+        targetExtractionResult.getEntityIdByPlaceholder('tertiary');
+      const invalidId =
+        targetExtractionResult.getEntityIdByPlaceholder('invalid');
+
       const endTime = performance.now();
       const resolutionTime = endTime - startTime;
 
@@ -90,7 +94,9 @@ describe('Placeholder Resolution Integration', () => {
       expect(emptyResult.getTargetCount()).toBe(0);
 
       // Act & Assert: Single target
-      expect(singleResult.getEntityIdByPlaceholder('primary')).toBe('single_entity');
+      expect(singleResult.getEntityIdByPlaceholder('primary')).toBe(
+        'single_entity'
+      );
       expect(singleResult.hasTarget('primary')).toBe(true);
       expect(singleResult.isMultiTarget()).toBe(false);
       expect(singleResult.getTargetCount()).toBe(1);
@@ -145,11 +151,15 @@ describe('Placeholder Resolution Integration', () => {
 
       // Assert: New approach should be significantly faster
       expect(newTime).toBeLessThan(oldTime);
-      
+
       // Log performance improvement for visibility
       const improvementRatio = oldTime / newTime;
-      logger.info(`Performance improvement: ${improvementRatio.toFixed(2)}x faster`);
-      logger.info(`Old approach: ${oldTime.toFixed(3)}ms, New approach: ${newTime.toFixed(3)}ms`);
+      logger.info(
+        `Performance improvement: ${improvementRatio.toFixed(2)}x faster`
+      );
+      logger.info(
+        `Old approach: ${oldTime.toFixed(3)}ms, New approach: ${newTime.toFixed(3)}ms`
+      );
 
       // Should be at least 2x faster for large datasets
       expect(improvementRatio).toBeGreaterThanOrEqual(2);
@@ -178,13 +188,14 @@ describe('Placeholder Resolution Integration', () => {
       for (let i = 0; i < 100; i++) {
         resolutions.push({
           primary: targetExtractionResult.getEntityIdByPlaceholder('primary'),
-          secondary: targetExtractionResult.getEntityIdByPlaceholder('secondary'),
+          secondary:
+            targetExtractionResult.getEntityIdByPlaceholder('secondary'),
           tertiary: targetExtractionResult.getEntityIdByPlaceholder('tertiary'),
         });
       }
 
       // Assert: All resolutions should be consistent
-      resolutions.forEach(resolution => {
+      resolutions.forEach((resolution) => {
         expect(resolution.primary).toBe('mem_entity_123');
         expect(resolution.secondary).toBe('mem_entity_456');
         expect(resolution.tertiary).toBe('mem_entity_789');
@@ -213,11 +224,15 @@ describe('Placeholder Resolution Integration', () => {
 
       // Act & Assert: Valid placeholder
       expect(targetExtractionResult.hasTarget('valid_target')).toBe(true);
-      expect(targetExtractionResult.getEntityIdByPlaceholder('valid_target')).toBe('entity_123');
+      expect(
+        targetExtractionResult.getEntityIdByPlaceholder('valid_target')
+      ).toBe('entity_123');
 
       // Act & Assert: Invalid placeholder
       expect(targetExtractionResult.hasTarget('invalid_target')).toBe(false);
-      expect(targetExtractionResult.getEntityIdByPlaceholder('invalid_target')).toBeNull();
+      expect(
+        targetExtractionResult.getEntityIdByPlaceholder('invalid_target')
+      ).toBeNull();
 
       // Act & Assert: Edge cases
       expect(targetExtractionResult.hasTarget('')).toBe(false);
@@ -225,9 +240,15 @@ describe('Placeholder Resolution Integration', () => {
       expect(targetExtractionResult.hasTarget(undefined)).toBe(false);
 
       // getEntityIdByPlaceholder validates input and throws for invalid params
-      expect(() => targetExtractionResult.getEntityIdByPlaceholder('')).toThrow();
-      expect(() => targetExtractionResult.getEntityIdByPlaceholder(null)).toThrow();
-      expect(() => targetExtractionResult.getEntityIdByPlaceholder(undefined)).toThrow();
+      expect(() =>
+        targetExtractionResult.getEntityIdByPlaceholder('')
+      ).toThrow();
+      expect(() =>
+        targetExtractionResult.getEntityIdByPlaceholder(null)
+      ).toThrow();
+      expect(() =>
+        targetExtractionResult.getEntityIdByPlaceholder(undefined)
+      ).toThrow();
     });
 
     it('should handle validation errors gracefully', () => {
@@ -241,7 +262,9 @@ describe('Placeholder Resolution Integration', () => {
       // Act & Assert: Should handle empty state gracefully
       expect(emptyResult.isValid()).toBe(false);
       expect(emptyResult.getErrors()).toContain('No targets defined');
-      expect(emptyResult.getEntityIdByPlaceholder('any_placeholder')).toBeNull();
+      expect(
+        emptyResult.getEntityIdByPlaceholder('any_placeholder')
+      ).toBeNull();
       expect(emptyResult.hasTarget('any_placeholder')).toBe(false);
       expect(emptyResult.isMultiTarget()).toBe(false);
       expect(emptyResult.getTargetCount()).toBe(0);

@@ -418,13 +418,15 @@ describe('TargetExtractionResult', () => {
         },
         logger,
       });
-      result = new TargetExtractionResult({ targetManager: multiTargetManager });
+      result = new TargetExtractionResult({
+        targetManager: multiTargetManager,
+      });
     });
 
     describe('getEntityIdByPlaceholder', () => {
       it('should expose TargetManager getEntityIdByPlaceholder method', () => {
         const entityId = result.getEntityIdByPlaceholder('primary');
-        
+
         expect(entityId).toBe('entity_123');
       });
 
@@ -436,20 +438,20 @@ describe('TargetExtractionResult', () => {
 
       it('should return null for invalid placeholder names', () => {
         const entityId = result.getEntityIdByPlaceholder('invalid');
-        
+
         expect(entityId).toBeNull();
       });
 
       it('should handle case-sensitive placeholder names', () => {
         const entityId = result.getEntityIdByPlaceholder('Primary');
-        
+
         expect(entityId).toBeNull(); // Case sensitive
       });
 
       it('should work with all standard placeholder names', () => {
         const placeholders = ['primary', 'secondary', 'tertiary'];
-        
-        placeholders.forEach(placeholder => {
+
+        placeholders.forEach((placeholder) => {
           if (result.hasTarget(placeholder)) {
             const entityId = result.getEntityIdByPlaceholder(placeholder);
             expect(entityId).toBeTruthy();
@@ -533,18 +535,19 @@ describe('TargetExtractionResult', () => {
 
       it('should work consistently with getTarget', () => {
         const placeholders = ['primary', 'secondary', 'tertiary'];
-        
-        placeholders.forEach(placeholder => {
-          const entityIdFromPlaceholder = result.getEntityIdByPlaceholder(placeholder);
+
+        placeholders.forEach((placeholder) => {
+          const entityIdFromPlaceholder =
+            result.getEntityIdByPlaceholder(placeholder);
           const entityIdFromGetTarget = result.getTarget(placeholder);
-          
+
           expect(entityIdFromPlaceholder).toBe(entityIdFromGetTarget);
         });
       });
 
       it('should validate placeholder existence before resolution', () => {
         const placeholder = 'primary';
-        
+
         if (result.hasTarget(placeholder)) {
           const entityId = result.getEntityIdByPlaceholder(placeholder);
           expect(entityId).toBeTruthy();

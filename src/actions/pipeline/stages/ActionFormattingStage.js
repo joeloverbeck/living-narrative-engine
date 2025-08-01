@@ -768,12 +768,16 @@ export class ActionFormattingStage extends PipelineStage {
    */
   #extractTargetIds(resolvedTargets) {
     const targetIds = {};
-    
+
     // Use optimized approach: if we have a TargetExtractionResult, use O(1) lookups
-    if (resolvedTargets && typeof resolvedTargets.getEntityIdByPlaceholder === 'function') {
+    if (
+      resolvedTargets &&
+      typeof resolvedTargets.getEntityIdByPlaceholder === 'function'
+    ) {
       // resolvedTargets is already a TargetExtractionResult
       for (const placeholderName of resolvedTargets.getTargetNames()) {
-        const entityId = resolvedTargets.getEntityIdByPlaceholder(placeholderName);
+        const entityId =
+          resolvedTargets.getEntityIdByPlaceholder(placeholderName);
         if (entityId) {
           targetIds[placeholderName] = [entityId]; // Keep array format for backward compatibility
         }
@@ -784,7 +788,7 @@ export class ActionFormattingStage extends PipelineStage {
         targetIds[key] = targets.map((t) => t.id);
       }
     }
-    
+
     return targetIds;
   }
 

@@ -121,7 +121,6 @@ export class TargetManager {
     });
   }
 
-
   /**
    * Gets a target by name
    *
@@ -310,7 +309,6 @@ export class TargetManager {
     );
     return this.#targets.get(placeholderName) || null;
   }
-
 }
 
 export default TargetManager;

@@ -219,7 +219,7 @@ describe('GetNameHandler placeholder resolution integration', () => {
         expect.objectContaining({
           placeholder: 'primary',
           availableTargets: [],
-          suggestion: 'No targets available in event payload'
+          suggestion: 'No targets available in event payload',
         })
       );
       expect(executionContext.evaluationContext.context.targetName).toBe(
@@ -425,7 +425,7 @@ describe('GetNameHandler placeholder resolution integration', () => {
             'tertiary',
             'custom',
           ]),
-          suggestion: expect.stringContaining('Available targets:')
+          suggestion: expect.stringContaining('Available targets:'),
         })
       );
     });
