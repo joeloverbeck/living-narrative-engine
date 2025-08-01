@@ -764,17 +764,28 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
               template: 'follow {target}',
             },
             targetContexts: [
-              { entityId: 'npc_001', displayName: 'Guard Captain', type: 'entity' },
+              {
+                entityId: 'npc_001',
+                displayName: 'Guard Captain',
+                type: 'entity',
+              },
             ],
             // Per-action metadata for legacy action
             resolvedTargets: {
-              primary: [{
-                id: 'npc_001',
-                displayName: 'Guard Captain',
-                entity: { id: 'npc_001' },
-              }],
+              primary: [
+                {
+                  id: 'npc_001',
+                  displayName: 'Guard Captain',
+                  entity: { id: 'npc_001' },
+                },
+              ],
             },
-            targetDefinitions: { primary: { scope: 'core:potential_leaders', placeholder: 'target' } },
+            targetDefinitions: {
+              primary: {
+                scope: 'core:potential_leaders',
+                placeholder: 'target',
+              },
+            },
             isMultiTarget: false,
           },
           {
@@ -790,15 +801,21 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
               },
             },
             targetContexts: [
-              { entityId: 'room_tavern', displayName: 'The Gilded Bean', type: 'entity' },
+              {
+                entityId: 'room_tavern',
+                displayName: 'The Gilded Bean',
+                type: 'entity',
+              },
             ],
             // Per-action metadata for multi-target action
             resolvedTargets: {
-              primary: [{
-                id: 'room_tavern',
-                displayName: 'The Gilded Bean',
-                entity: { id: 'room_tavern' },
-              }],
+              primary: [
+                {
+                  id: 'room_tavern',
+                  displayName: 'The Gilded Bean',
+                  entity: { id: 'room_tavern' },
+                },
+              ],
             },
             targetDefinitions: {
               primary: {
@@ -812,17 +829,15 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
       };
 
       // Mock the formatter to support multi-target
-      mockMultiTargetFormatter.formatMultiTarget
-        .mockReturnValueOnce({
-          ok: true,
-          value: 'go to The Gilded Bean',
-        });
+      mockMultiTargetFormatter.formatMultiTarget.mockReturnValueOnce({
+        ok: true,
+        value: 'go to The Gilded Bean',
+      });
 
-      mockMultiTargetFormatter.format
-        .mockReturnValueOnce({
-          ok: true,
-          value: 'follow Guard Captain',
-        });
+      mockMultiTargetFormatter.format.mockReturnValueOnce({
+        ok: true,
+        value: 'follow Guard Captain',
+      });
 
       const result = await stage.executeInternal(context);
 
@@ -830,13 +845,13 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
       expect(result.actions).toHaveLength(2);
 
       // Verify legacy action was formatted correctly
-      const followAction = result.actions.find(a => a.id === 'core:follow');
+      const followAction = result.actions.find((a) => a.id === 'core:follow');
       expect(followAction).toBeDefined();
       expect(followAction.command).toBe('follow Guard Captain');
       expect(followAction.params.targetId).toBe('npc_001');
 
       // Verify multi-target action was formatted with multi-target formatter
-      const goAction = result.actions.find(a => a.id === 'core:go');
+      const goAction = result.actions.find((a) => a.id === 'core:go');
       expect(goAction).toBeDefined();
       expect(goAction.command).toBe('go to The Gilded Bean');
       expect(goAction.params.isMultiTarget).toBe(true);
@@ -864,7 +879,11 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
               template: 'old {target}',
             },
             targetContexts: [
-              { entityId: 'target_001', displayName: 'Target 1', type: 'entity' },
+              {
+                entityId: 'target_001',
+                displayName: 'Target 1',
+                type: 'entity',
+              },
             ],
             // No per-action metadata
           },

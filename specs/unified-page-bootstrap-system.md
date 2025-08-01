@@ -101,46 +101,47 @@ export class CharacterBuilderBootstrap {
 class CharacterBuilderBootstrap {
   async bootstrap(config) {
     const startTime = performance.now();
-    
+
     try {
       // Step 1: Validate configuration
       this.#validateConfig(config);
-      
+
       // Step 2: Setup container with base services
       const container = await this.#setupContainer(config);
-      
+
       // Step 3: Load schemas (including custom)
       await this.#loadSchemas(container, config);
-      
+
       // Step 4: Register event definitions
       await this.#registerEvents(container, config);
-      
+
       // Step 5: Load mods if required
       if (config.includeModLoading) {
         await this.#loadMods(container);
       }
-      
+
       // Step 6: Register page-specific services
       await this.#registerCustomServices(container, config);
-      
+
       // Step 7: Instantiate controller
       const controller = await this.#createController(container, config);
-      
+
       // Step 8: Initialize controller
       await this.#initializeController(controller, config);
-      
+
       // Step 9: Setup error display
       this.#setupErrorDisplay(container, config);
-      
+
       const bootstrapTime = performance.now() - startTime;
-      console.log(`[CharacterBuilderBootstrap] Page '${config.pageName}' bootstrapped in ${bootstrapTime.toFixed(2)}ms`);
-      
+      console.log(
+        `[CharacterBuilderBootstrap] Page '${config.pageName}' bootstrapped in ${bootstrapTime.toFixed(2)}ms`
+      );
+
       return {
         controller,
         container,
-        bootstrapTime
+        bootstrapTime,
       };
-      
     } catch (error) {
       this.#handleBootstrapError(error, config);
       throw error;
@@ -154,23 +155,23 @@ class CharacterBuilderBootstrap {
 ```javascript
 async #setupContainer(config) {
   const container = new Container();
-  
+
   // Register core services
   container.registerSingleton(tokens.ILogger, Logger);
   container.registerSingleton(tokens.IEventBus, EventBus);
   container.registerSingleton(tokens.IDataRegistry, DataRegistry);
   container.registerSingleton(tokens.ISchemaValidator, AjvSchemaValidator);
-  
+
   // Register character builder specific services
   container.registerSingleton(tokens.ICharacterBuilderService, CharacterBuilderService);
   container.registerSingleton(tokens.ISessionManager, SessionManager);
   container.registerSingleton(tokens.IErrorReporter, ErrorReporter);
-  
+
   // Execute pre-container hook if provided
   if (config.hooks?.preContainer) {
     await config.hooks.preContainer(container);
   }
-  
+
   return container;
 }
 ```
@@ -181,19 +182,19 @@ async #setupContainer(config) {
 async #loadSchemas(container, config) {
   const schemaValidator = container.resolve(tokens.ISchemaValidator);
   const logger = container.resolve(tokens.ILogger);
-  
+
   // Base schemas required by all character builder pages
   const baseSchemas = [
     '/data/schemas/character-concept.schema.json',
     '/data/schemas/thematic-direction.schema.json',
     '/data/schemas/ui-state.schema.json'
   ];
-  
+
   // Combine with custom schemas
   const allSchemas = [...baseSchemas, ...(config.customSchemas || [])];
-  
+
   logger.info(`[CharacterBuilderBootstrap] Loading ${allSchemas.length} schemas`);
-  
+
   await schemaValidator.loadSchemas(allSchemas);
 }
 ```
@@ -204,7 +205,7 @@ async #loadSchemas(container, config) {
 async #registerEvents(container, config) {
   const dataRegistry = container.resolve(tokens.IDataRegistry);
   const schemaValidator = container.resolve(tokens.ISchemaValidator);
-  
+
   // Base events used by all character builder pages
   const baseEvents = [
     CHARACTER_CONCEPT_CREATED,
@@ -213,10 +214,10 @@ async #registerEvents(container, config) {
     THEMATIC_DIRECTION_GENERATED,
     THEMATIC_DIRECTION_UPDATED
   ];
-  
+
   // Combine with custom events
   const allEvents = [...baseEvents, ...(config.eventDefinitions || [])];
-  
+
   // Register events
   for (const eventDef of allEvents) {
     await dataRegistry.registerEventDefinition(eventDef, schemaValidator);
@@ -229,7 +230,7 @@ async #registerEvents(container, config) {
 ```javascript
 async #createController(container, config) {
   const { controllerClass } = config;
-  
+
   // Resolve controller dependencies
   const dependencies = {
     logger: container.resolve(tokens.ILogger),
@@ -238,7 +239,7 @@ async #createController(container, config) {
     sessionManager: container.resolve(tokens.ISessionManager),
     ...config.services // Additional page-specific services
   };
-  
+
   // Create controller instance
   return new controllerClass(dependencies);
 }
@@ -249,15 +250,15 @@ async #initializeController(controller, config) {
     if (config.hooks?.preInit) {
       await config.hooks.preInit(controller);
     }
-    
+
     // Initialize controller
     await controller.initialize();
-    
+
     // Execute post-init hook
     if (config.hooks?.postInit) {
       await config.hooks.postInit(controller);
     }
-    
+
   } catch (error) {
     throw new Error(`Controller initialization failed: ${error.message}`);
   }
@@ -270,13 +271,13 @@ async #initializeController(controller, config) {
 #setupErrorDisplay(container, config) {
   const errorReporter = container.resolve(tokens.IErrorReporter);
   const eventBus = container.resolve(tokens.IEventBus);
-  
+
   // Configure error display element
   const errorElement = document.getElementById(config.errorDisplay?.elementId || 'error-display');
-  
+
   if (errorElement) {
     errorReporter.setDisplayElement(errorElement);
-    
+
     // Listen for error events
     eventBus.on('SYSTEM_ERROR_OCCURRED', (event) => {
       errorReporter.displayError(event.payload.error);
@@ -302,7 +303,7 @@ const config = {
   controllerClass: ThematicDirectionController,
   includeModLoading: false,
   eventDefinitions: [CUSTOM_EVENT_DEFINITION],
-  customSchemas: ['/data/schemas/custom-schema.json']
+  customSchemas: ['/data/schemas/custom-schema.json'],
 };
 
 try {
@@ -320,36 +321,36 @@ const config = {
   pageName: 'character-concepts-manager',
   controllerClass: CharacterConceptsController,
   includeModLoading: true,
-  
+
   // Custom services
   services: {
-    customAnalyzer: container.resolve(tokens.ICustomAnalyzer)
+    customAnalyzer: container.resolve(tokens.ICustomAnalyzer),
   },
-  
+
   // Lifecycle hooks
   hooks: {
     preContainer: async (container) => {
       // Register additional services before container setup
       container.registerSingleton(tokens.ICustomAnalyzer, CustomAnalyzer);
     },
-    
+
     preInit: async (controller) => {
       // Perform setup before controller initialization
       await controller.loadUserPreferences();
     },
-    
+
     postInit: async (controller) => {
       // Perform actions after controller initialization
       await controller.checkForUpdates();
-    }
+    },
   },
-  
+
   // Custom error display
   errorDisplay: {
     elementId: 'custom-error-container',
     displayDuration: 5000,
-    dismissible: true
-  }
+    dismissible: true,
+  },
 };
 ```
 
@@ -385,9 +386,9 @@ class ErrorReporter {
       <div class="cb-error-text">${this.#formatError(error)}</div>
       <button class="cb-error-dismiss">×</button>
     `;
-    
+
     this.#displayElement.appendChild(errorDiv);
-    
+
     // Auto-dismiss after timeout
     setTimeout(() => errorDiv.remove(), this.#displayDuration);
   }
@@ -407,7 +408,7 @@ class ThematicDirectionApp {
     this.container = new Container();
     // Manual setup...
   }
-  
+
   async initialize() {
     // Manual initialization...
   }
@@ -425,7 +426,7 @@ const config = {
   controllerClass: ThematicDirectionController,
   includeModLoading: false,
   eventDefinitions: extractedEventDefinitions,
-  customSchemas: extractedSchemas
+  customSchemas: extractedSchemas,
 };
 ```
 
@@ -449,7 +450,7 @@ class ThematicDirectionController {
   constructor({ logger, characterBuilderService, eventBus }) {
     // Standard constructor
   }
-  
+
   async initialize() {
     // Standard initialization
   }
@@ -473,18 +474,19 @@ describe('CharacterBuilderBootstrap', () => {
     const bootstrap = new CharacterBuilderBootstrap();
     const result = await bootstrap.bootstrap({
       pageName: 'test',
-      controllerClass: MockController
+      controllerClass: MockController,
     });
-    
+
     expect(result.controller).toBeInstanceOf(MockController);
     expect(result.bootstrapTime).toBeLessThan(500);
   });
-  
+
   it('should handle configuration errors gracefully', async () => {
     const bootstrap = new CharacterBuilderBootstrap();
-    
-    await expect(bootstrap.bootstrap({}))
-      .rejects.toThrow('Missing required configuration');
+
+    await expect(bootstrap.bootstrap({})).rejects.toThrow(
+      'Missing required configuration'
+    );
   });
 });
 ```
@@ -496,7 +498,7 @@ describe('CharacterBuilderBootstrap Integration', () => {
   it('should initialize complete page with all services', async () => {
     // Test with real services and DOM
   });
-  
+
   it('should recover from partial failures', async () => {
     // Test error scenarios
   });
@@ -535,7 +537,7 @@ const performanceMetrics = {
   eventRegistration: 0,
   modLoading: 0,
   controllerInit: 0,
-  total: 0
+  total: 0,
 };
 ```
 

@@ -85,7 +85,6 @@ describe('ConfigurableLLMAdapter - Test Methods', () => {
   });
 
   describe('getLoadedConfigs_FOR_TESTING_ONLY', () => {
-
     it('should return null if getAllConfigurations throws an error', async () => {
       // Setup configuration manager to throw an error
       mockConfigurationManager.getAllConfigurations.mockRejectedValue(
@@ -104,7 +103,9 @@ describe('ConfigurableLLMAdapter - Test Methods', () => {
         },
       };
 
-      mockConfigurationManager.getAllConfigurations.mockResolvedValue(mockConfigs);
+      mockConfigurationManager.getAllConfigurations.mockResolvedValue(
+        mockConfigs
+      );
 
       const result = await adapter.getLoadedConfigs_FOR_TESTING_ONLY();
       expect(result).toEqual(mockConfigs);
@@ -116,7 +117,7 @@ describe('ConfigurableLLMAdapter - Test Methods', () => {
       // We need to test the branch where configurationManager is falsy
       // Since we can't create an adapter without it, we'll test with a mock that simulates this
       const result = adapter.getActiveLlmId_FOR_TESTING_ONLY();
-      
+
       // The method should handle both Promise and non-Promise returns
       if (result && typeof result.then === 'function') {
         return result.then((id) => {
@@ -129,10 +130,12 @@ describe('ConfigurableLLMAdapter - Test Methods', () => {
 
     it('should handle when getActiveConfigId returns a Promise', async () => {
       // Mock getActiveConfigId to return a Promise
-      mockConfigurationManager.getActiveConfigId.mockResolvedValue('test-llm-1');
+      mockConfigurationManager.getActiveConfigId.mockResolvedValue(
+        'test-llm-1'
+      );
 
       const result = adapter.getActiveLlmId_FOR_TESTING_ONLY();
-      
+
       // The method should handle Promise returns
       expect(result).toBeInstanceOf(Promise);
       const id = await result;
@@ -146,7 +149,7 @@ describe('ConfigurableLLMAdapter - Test Methods', () => {
       );
 
       const result = adapter.getActiveLlmId_FOR_TESTING_ONLY();
-      
+
       // The method should handle Promise rejections
       expect(result).toBeInstanceOf(Promise);
       const id = await result;
@@ -253,11 +256,11 @@ describe('ConfigurableLLMAdapter - Test Methods', () => {
         getProjectRootPath_FOR_TESTING_ONLY() {
           return null; // Simulating the null check branch
         }
-        
+
         getProxyServerUrl_FOR_TESTING_ONLY() {
           return ''; // Simulating the empty string return
         }
-        
+
         getExecutionEnvironment_FOR_TESTING_ONLY() {
           return 'unknown'; // Simulating the unknown return
         }
@@ -276,23 +279,25 @@ describe('ConfigurableLLMAdapter - Test Methods', () => {
 
       expect(testAdapter.getProjectRootPath_FOR_TESTING_ONLY()).toBeNull();
       expect(testAdapter.getProxyServerUrl_FOR_TESTING_ONLY()).toBe('');
-      expect(testAdapter.getExecutionEnvironment_FOR_TESTING_ONLY()).toBe('unknown');
+      expect(testAdapter.getExecutionEnvironment_FOR_TESTING_ONLY()).toBe(
+        'unknown'
+      );
     });
 
     it('should handle initialization and operational state correctly', async () => {
       // Test initialization
       expect(adapter.isInitialized()).toBe(false);
-      
+
       const mockConfigs = {
         defaultConfigId: 'test-llm-1',
         configs: {
           'test-llm-1': sampleLlmModelConfig,
         },
       };
-      
+
       mockLlmConfigLoader.loadConfigs.mockResolvedValue(mockConfigs);
       await adapter.init({ llmConfigLoader: mockLlmConfigLoader });
-      
+
       expect(adapter.isInitialized()).toBe(true);
     });
 

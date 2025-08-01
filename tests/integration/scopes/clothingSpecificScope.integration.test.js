@@ -906,26 +906,33 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       // The multi-target formatter now generates separate combinations for context-dependent targets
       expect(adjustClothingActions.length).toBeGreaterThanOrEqual(1);
       expect(adjustClothingActions[0].params.isMultiTarget).toBe(true);
-      
+
       // Each combination represents a specific primary-secondary pair
-      const allPrimaryIds = adjustClothingActions.flatMap(action => action.params.targetIds.primary);
-      const allSecondaryIds = adjustClothingActions.flatMap(action => action.params.targetIds.secondary);
-      
+      const allPrimaryIds = adjustClothingActions.flatMap(
+        (action) => action.params.targetIds.primary
+      );
+      const allSecondaryIds = adjustClothingActions.flatMap(
+        (action) => action.params.targetIds.secondary
+      );
+
       expect(allPrimaryIds).toContain(target1Id);
       expect(allPrimaryIds).toContain(target2Id);
       expect(allSecondaryIds).toContain('shirt123');
       expect(allSecondaryIds).toContain('shirt456');
 
       // Each action now represents a single combination
-      adjustClothingActions.forEach(action => {
+      adjustClothingActions.forEach((action) => {
         expect(typeof action.command).toBe('string');
-        expect(action.command).toMatch(/adjust (target1|target2)'s (shirt123|shirt456)/);
+        expect(action.command).toMatch(
+          /adjust (target1|target2)'s (shirt123|shirt456)/
+        );
       });
-      
+
       // Verify we have the expected combinations
-      const commands = adjustClothingActions.map(action => action.command);
-      const hasExpectedCombinations = 
-        (commands.includes("adjust target1's shirt123") || commands.includes("adjust target2's shirt456")) &&
+      const commands = adjustClothingActions.map((action) => action.command);
+      const hasExpectedCombinations =
+        (commands.includes("adjust target1's shirt123") ||
+          commands.includes("adjust target2's shirt456")) &&
         commands.length >= 1;
     });
   });

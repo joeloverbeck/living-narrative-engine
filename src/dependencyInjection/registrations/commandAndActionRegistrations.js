@@ -217,7 +217,9 @@ export function registerCommandAndAction(container) {
       ),
       targetResolutionService: c.resolve(tokens.ITargetResolutionService),
       entityManager: c.resolve(tokens.IEntityManager),
-      actionCommandFormatter: createMultiTargetFormatter(c.resolve(tokens.ILogger)),
+      actionCommandFormatter: createMultiTargetFormatter(
+        c.resolve(tokens.ILogger)
+      ),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       getEntityDisplayNameFn: getEntityDisplayName,
       logger: c.resolve(tokens.ILogger),

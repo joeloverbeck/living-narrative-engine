@@ -203,8 +203,8 @@ async function updateModManifest(modName) {
         error: {
           type: 'INVALID_MANIFEST',
           message: 'Manifest does not have a valid "content" object',
-          path: manifestPath
-        }
+          path: manifestPath,
+        },
       };
     }
 
@@ -468,14 +468,14 @@ async function updateModManifest(modName) {
     return { success: true, modName }; // Success
   } catch (error) {
     let errorInfo = { success: false, modName };
-    
+
     if (error.code === 'ENOENT') {
       console.error(`\nError: Could not find mod directory or manifest file.`);
       console.error(`Looked for manifest at: ${manifestPath}`);
       errorInfo.error = {
         type: 'ENOENT',
         message: 'Could not find mod directory or manifest file',
-        path: manifestPath
+        path: manifestPath,
       };
     } else if (error instanceof SyntaxError) {
       console.error(`\nError: Failed to parse JSON in ${manifestPath}.`);
@@ -483,14 +483,14 @@ async function updateModManifest(modName) {
       errorInfo.error = {
         type: 'SYNTAX_ERROR',
         message: `Failed to parse JSON: ${error.message}`,
-        path: manifestPath
+        path: manifestPath,
       };
     } else {
       console.error('\nAn unexpected error occurred:');
       console.error(error);
       errorInfo.error = {
         type: 'UNKNOWN',
-        message: error.message || 'An unexpected error occurred'
+        message: error.message || 'An unexpected error occurred',
       };
     }
     return errorInfo; // Failure with details
@@ -549,19 +549,19 @@ async function main() {
     console.log('SUMMARY');
     console.log(`${'='.repeat(50)}`);
     console.log(`Total mods processed: ${modNames.length}\n`);
-    
+
     // Show successful mods
     if (successfulMods.length > 0) {
       console.log(`✅ Successfully updated ${successfulMods.length} mod(s):`);
-      successfulMods.forEach(mod => {
+      successfulMods.forEach((mod) => {
         console.log(`   - ${mod}`);
       });
     }
-    
+
     // Show failed mods with error details
     if (failedMods.length > 0) {
       console.log(`\n❌ Failed to update ${failedMods.length} mod(s):`);
-      failedMods.forEach(result => {
+      failedMods.forEach((result) => {
         console.log(`   - ${result.modName}`);
         if (result.error) {
           console.log(`     Error: ${result.error.message}`);

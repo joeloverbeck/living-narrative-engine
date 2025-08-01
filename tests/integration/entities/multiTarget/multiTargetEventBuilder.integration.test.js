@@ -132,9 +132,11 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
     it('should fall back to legacy payload when enhanced creation fails', async () => {
       // Mock the MultiTargetEventBuilder to throw an error during build
       const originalBuild = MultiTargetEventBuilder.prototype.build;
-      MultiTargetEventBuilder.prototype.build = jest.fn().mockImplementation(function() {
-        throw new Error('Simulated builder failure');
-      });
+      MultiTargetEventBuilder.prototype.build = jest
+        .fn()
+        .mockImplementation(function () {
+          throw new Error('Simulated builder failure');
+        });
 
       const validAction = {
         actionDefinitionId: 'core:test_action',

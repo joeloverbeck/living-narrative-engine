@@ -39,7 +39,7 @@ From `error_logs.txt`, the critical warnings are:
     },
     "secondary": {
       "scope": "clothing:target_topmost_torso_upper_clothing",
-      "placeholder": "secondary", 
+      "placeholder": "secondary",
       "description": "Specific garment to adjust",
       "contextFrom": "primary"
     }
@@ -50,7 +50,8 @@ From `error_logs.txt`, the critical warnings are:
 
 #### 2. Target Resolution (`MultiTargetResolutionStage.js`)
 
-**Working Correctly**: 
+**Working Correctly**:
+
 - Primary target resolves to `p_erotica:iker_aguirre_instance`
 - Secondary target resolves to garment with `contextFromId: 'p_erotica:iker_aguirre_instance'`
 - Target manager correctly shows: `primaryTarget: 'p_erotica:iker_aguirre_instance'`, `targetCount: 2`
@@ -58,6 +59,7 @@ From `error_logs.txt`, the critical warnings are:
 #### 3. Target Context Building
 
 **Issue Identified**: The system adds targets to the target manager using placeholder names as keys:
+
 ```javascript
 // From error logs line 12-13:
 // Target added {name: 'primary', entityId: 'p_erotica:iker_aguirre_instance', isPrimary: true}
@@ -77,7 +79,7 @@ From `error_logs.txt`, the critical warnings are:
   }
 },
 {
-  "type": "GET_NAME", 
+  "type": "GET_NAME",
   "parameters": {
     "entity_ref": "secondary", // ← This should be an actual entity ID
     "result_variable": "garmentName"
@@ -107,8 +109,9 @@ There's no proper mechanism to bridge resolved targets into the rule execution c
 ### 3. Event Payload Structure Issues
 
 From error logs line 533, the event payload lacks `primaryId`:
+
 ```javascript
-"OperationInterpreter: PlaceholderResolver: Placeholder \"{event.payload.primaryId}\" not found"
+"OperationInterpreter: PlaceholderResolver: Placeholder \"{event.payload.primaryId}\" not found";
 ```
 
 This indicates the multi-target event structure doesn't match what the rule system expects.
@@ -126,6 +129,7 @@ This indicates the multi-target event structure doesn't match what the rule syst
 **Missing**: Tests that verify the complete pipeline from action definition → target resolution → rule execution → final output.
 
 **Why Tests Didn't Catch This**:
+
 1. **Unit tests** work in isolation and don't test the rule-action interaction
 2. **Integration tests** focus on individual pipeline stages
 3. **No E2E tests** that execute the complete action workflow including rule processing
@@ -142,45 +146,51 @@ This indicates the multi-target event structure doesn't match what the rule syst
 ### Priority 1: Critical Fixes (Immediate)
 
 #### Solution A: Enhance Event Payload Structure
+
 - Modify multi-target event creation to include `primaryId`, `secondaryId`, etc. fields
 - Ensure compatibility with existing rule expectations
 
-#### Solution B: Rule Context Enhancement  
+#### Solution B: Rule Context Enhancement
+
 - Extend rule execution context to resolve placeholder names to entity IDs
 - Add target resolution capability to `GET_NAME` operation when using placeholder references
 
 ### Priority 2: Architectural Improvements (Short-term)
 
 #### Solution C: Target Reference Resolver
+
 - Create a `TargetReferenceResolver` that maps placeholder names to resolved entity IDs
 - Integrate with rule execution context to provide seamless target access
 
 #### Solution D: Enhanced Target Manager
+
 - Extend `TargetManager` to provide placeholder-to-entity-ID mapping API
 - Add methods like `getEntityIdByPlaceholder(placeholderName)`
 
 ### Priority 3: Testing and Validation (Medium-term)
 
 #### Solution E: End-to-End Test Suite
+
 - Create comprehensive E2E tests that validate complete action workflows
 - Test multi-target actions with `contextFrom` dependencies
 - Verify rule execution produces correct output text
 
 #### Solution F: Integration Test Enhancement
+
 - Add tests that verify rule-action integration
 - Test event payload structure matches rule expectations
 - Validate target resolution context is properly passed to rules
 
 ## Implementation Priority Matrix
 
-| Solution | Impact | Effort | Risk | Priority |
-|----------|--------|--------|------|----------|
-| A: Event Payload Enhancement | High | Medium | Low | 1 |
-| B: Rule Context Enhancement | High | Medium | Medium | 2 |
-| E: E2E Test Suite | Medium | High | Low | 3 |
-| C: Target Reference Resolver | Medium | High | Medium | 4 |
-| D: Enhanced Target Manager | Low | Medium | Low | 5 |
-| F: Integration Test Enhancement | Medium | Medium | Low | 6 |
+| Solution                        | Impact | Effort | Risk   | Priority |
+| ------------------------------- | ------ | ------ | ------ | -------- |
+| A: Event Payload Enhancement    | High   | Medium | Low    | 1        |
+| B: Rule Context Enhancement     | High   | Medium | Medium | 2        |
+| E: E2E Test Suite               | Medium | High   | Low    | 3        |
+| C: Target Reference Resolver    | Medium | High   | Medium | 4        |
+| D: Enhanced Target Manager      | Low    | Medium | Low    | 5        |
+| F: Integration Test Enhancement | Medium | Medium | Low    | 6        |
 
 ## Immediate Action Items
 
@@ -203,7 +213,8 @@ This issue reveals fundamental architectural debt in the multi-target system:
 
 The `adjust_clothing` action issue is symptomatic of a broader architectural mismatch between the multi-target resolution system and the rule execution system. While the immediate fix is straightforward (enhancing event payload and rule context), addressing the underlying architectural issues will prevent similar problems and improve system maintainability.
 
-**Next Steps**: 
+**Next Steps**:
+
 1. Implement Priority 1 solutions
 2. Validate fix with comprehensive testing
 3. Plan Priority 2 architectural improvements
@@ -211,4 +222,4 @@ The `adjust_clothing` action issue is symptomatic of a broader architectural mis
 
 ---
 
-*This analysis was conducted as part of the Living Narrative Engine architecture review process.*
+_This analysis was conducted as part of the Living Narrative Engine architecture review process._

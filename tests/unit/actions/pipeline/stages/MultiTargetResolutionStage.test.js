@@ -1237,9 +1237,7 @@ describe('MultiTargetResolutionStage', () => {
       // Mock legacy action resolution
       mockDeps.targetResolver.resolveTargets.mockResolvedValue({
         success: true,
-        value: [
-          { entityId: 'npc_001', displayName: 'Guard Captain' },
-        ],
+        value: [{ entityId: 'npc_001', displayName: 'Guard Captain' }],
       });
 
       // Mock multi-target action resolution
@@ -1253,12 +1251,16 @@ describe('MultiTargetResolutionStage', () => {
           case 'npc_001':
             return {
               id: 'npc_001',
-              getComponentData: jest.fn().mockReturnValue({ text: 'Guard Captain' }),
+              getComponentData: jest
+                .fn()
+                .mockReturnValue({ text: 'Guard Captain' }),
             };
           case 'room_tavern':
             return {
               id: 'room_tavern',
-              getComponentData: jest.fn().mockReturnValue({ text: 'The Gilded Bean' }),
+              getComponentData: jest
+                .fn()
+                .mockReturnValue({ text: 'The Gilded Bean' }),
             };
           default:
             return null;
@@ -1278,7 +1280,7 @@ describe('MultiTargetResolutionStage', () => {
 
       // Verify legacy action has per-action metadata
       const legacyActionResult = result.data.actionsWithTargets.find(
-        awt => awt.actionDef.id === 'core:follow'
+        (awt) => awt.actionDef.id === 'core:follow'
       );
       expect(legacyActionResult).toBeDefined();
       expect(legacyActionResult.isMultiTarget).toBe(false);
@@ -1287,13 +1289,15 @@ describe('MultiTargetResolutionStage', () => {
 
       // Verify multi-target action has per-action metadata
       const multiTargetActionResult = result.data.actionsWithTargets.find(
-        awt => awt.actionDef.id === 'core:go'
+        (awt) => awt.actionDef.id === 'core:go'
       );
       expect(multiTargetActionResult).toBeDefined();
       expect(multiTargetActionResult.isMultiTarget).toBe(true);
       expect(multiTargetActionResult.resolvedTargets).toBeDefined();
       expect(multiTargetActionResult.resolvedTargets.primary).toHaveLength(1);
-      expect(multiTargetActionResult.resolvedTargets.primary[0].id).toBe('room_tavern');
+      expect(multiTargetActionResult.resolvedTargets.primary[0].id).toBe(
+        'room_tavern'
+      );
       expect(multiTargetActionResult.targetDefinitions).toBeDefined();
 
       // Verify global metadata is still set for backward compatibility
@@ -1364,7 +1368,7 @@ describe('MultiTargetResolutionStage', () => {
 
       // Verify the multi-target action maintains its full metadata
       const multiAction = result.data.actionsWithTargets.find(
-        awt => awt.actionDef.id === 'test:multi1'
+        (awt) => awt.actionDef.id === 'test:multi1'
       );
       expect(multiAction.isMultiTarget).toBe(true);
       expect(multiAction.resolvedTargets.primary).toBeDefined();

@@ -52,7 +52,7 @@ describe('BaseLLMStrategy', () => {
       const strategy = new BaseLLMStrategy(logger);
       const tools = [
         { name: 'tool1', description: 'Test tool 1' },
-        { name: 'tool2', description: 'Test tool 2' }
+        { name: 'tool2', description: 'Test tool 2' },
       ];
       const result = strategy.buildToolSchema(tools);
       expect(result).toBeNull();

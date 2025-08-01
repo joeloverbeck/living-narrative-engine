@@ -135,8 +135,11 @@ export class MultiTargetResolutionStage extends PipelineStage {
           );
           if (result.success && result.data.actionsWithTargets) {
             // Attach metadata to each action instead of globally
-            result.data.actionsWithTargets.forEach(awt => {
-              if (result.data.resolvedTargets && result.data.targetDefinitions) {
+            result.data.actionsWithTargets.forEach((awt) => {
+              if (
+                result.data.resolvedTargets &&
+                result.data.targetDefinitions
+              ) {
                 awt.resolvedTargets = result.data.resolvedTargets;
                 awt.targetDefinitions = result.data.targetDefinitions;
                 awt.isMultiTarget = true;
@@ -279,7 +282,9 @@ export class MultiTargetResolutionStage extends PipelineStage {
             targetContexts,
             // Attach metadata for consistency with multi-target actions
             resolvedTargets,
-            targetDefinitions: { primary: { scope: scope, placeholder: 'target' } },
+            targetDefinitions: {
+              primary: { scope: scope, placeholder: 'target' },
+            },
             isMultiTarget: false,
           },
         ],

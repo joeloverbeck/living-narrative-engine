@@ -116,9 +116,7 @@ describe('Thematic Direction - Schema Registration', () => {
 
     // Verify schemas are loaded and can be validated
     expect(
-      schemaValidator.isSchemaLoaded(
-        'core:character_concept_created#payload'
-      )
+      schemaValidator.isSchemaLoaded('core:character_concept_created#payload')
     ).toBe(true);
     expect(
       schemaValidator.isSchemaLoaded(

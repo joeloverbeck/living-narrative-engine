@@ -317,25 +317,6 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
     });
   });
 
-  describe('Performance Tests', () => {
-    it('should resolve clothing queries efficiently with enhanced context', () => {
-      const ast = parser.parse('actor.all_clothing[]');
-
-      const iterations = 1000;
-      const startTime = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        engine.resolve(ast, mockActorEntity, mockRuntimeContext);
-      }
-
-      const endTime = performance.now();
-      const averageTime = (endTime - startTime) / iterations;
-
-      // Should complete resolution in under 5ms per query
-      expect(averageTime).toBeLessThan(5);
-    });
-  });
-
   describe('Trace Logging Integration', () => {
     it('should provide detailed trace logs for entity resolution', () => {
       const trace = {

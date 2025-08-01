@@ -66,25 +66,28 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       );
 
       expect(result.success).toBe(true);
-      const calledPayload = eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
-      
-      expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalledTimes(1);
+      const calledPayload =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+
+      expect(
+        eventDispatchService.dispatchWithErrorHandling
+      ).toHaveBeenCalledTimes(1);
       expect(calledPayload.eventName).toBe('core:attempt_action');
       expect(calledPayload.actorId).toBe('actor_123');
       expect(calledPayload.actionId).toBe('combat:throw');
       expect(calledPayload.originalInput).toBe('throw knife at goblin');
-      
+
       // Should not have traditional primary/secondary/tertiary targets
       expect(calledPayload.primaryId).toBeNull();
       expect(calledPayload.secondaryId).toBeNull();
-      
+
       // Should have custom target placeholders
       expect(calledPayload.targets).toBeDefined();
       expect(calledPayload.targets.item).toBeDefined();
       expect(calledPayload.targets.item.entityId).toBe('knife_123');
       expect(calledPayload.targets.target).toBeDefined();
       expect(calledPayload.targets.target.entityId).toBe('goblin_456');
-      
+
       // Primary target should be 'target' not 'item' based on context
       expect(calledPayload.targetId).toBe('goblin_456');
     });
@@ -173,7 +176,7 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
 
       expect(dispatchedPayload.targets).toBeDefined();
       expect(Object.keys(dispatchedPayload.targets)).toHaveLength(5);
-      
+
       // Verify each target has the correct structure
       expect(dispatchedPayload.targets.primary.entityId).toBe('entity_1');
       expect(dispatchedPayload.targets.secondary.entityId).toBe('entity_2');
@@ -276,7 +279,7 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
     it('should track payload creation metrics', async () => {
       // Reset stats before test
       commandProcessor.resetPayloadCreationStatistics();
-      
+
       const turnActions = [
         {
           actionDefinitionId: 'test:legacy',
@@ -376,16 +379,16 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       expect(dispatchedPayload.targetId).toBe('alice_789');
       expect(dispatchedPayload.originalInput).toBe('follow Alice');
       expect(dispatchedPayload.timestamp).toBeGreaterThan(0);
-      
+
       // Legacy single target should also have flattened fields for consistency
       expect(dispatchedPayload.primaryId).toBe('alice_789');
       expect(dispatchedPayload.secondaryId).toBeNull();
       expect(dispatchedPayload.tertiaryId).toBeNull();
-      
+
       // Should have metadata
       expect(dispatchedPayload.resolvedTargetCount).toBe(1);
       expect(dispatchedPayload.hasContextDependencies).toBe(false);
-      
+
       // Should NOT have targets object for single target
       expect(dispatchedPayload.targets).toBeUndefined();
     });
@@ -410,7 +413,7 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
 
       expect(dispatchedPayload.targetId).toBe(null);
       expect(dispatchedPayload.targets).toBeUndefined();
-      
+
       // Should still have flattened fields for consistency
       expect(dispatchedPayload.primaryId).toBe(null);
       expect(dispatchedPayload.secondaryId).toBe(null);
@@ -434,7 +437,7 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
 
       expect(dispatchedPayload.targetId).toBe(null);
       expect(dispatchedPayload.targets).toBeUndefined();
-      
+
       // Should still have flattened fields for consistency
       expect(dispatchedPayload.primaryId).toBe(null);
       expect(dispatchedPayload.secondaryId).toBe(null);

@@ -82,7 +82,10 @@ export class ActionFormattingStage extends PipelineStage {
 
     // Check if we have any actions with per-action metadata (new approach)
     const hasPerActionMetadata = actionsWithTargets.some(
-      awt => awt.resolvedTargets && awt.targetDefinitions && awt.isMultiTarget !== undefined
+      (awt) =>
+        awt.resolvedTargets &&
+        awt.targetDefinitions &&
+        awt.isMultiTarget !== undefined
     );
 
     if (hasPerActionMetadata) {
@@ -135,7 +138,13 @@ export class ActionFormattingStage extends PipelineStage {
     };
 
     for (const actionWithTargets of actionsWithTargets) {
-      const { actionDef, targetContexts, resolvedTargets, targetDefinitions, isMultiTarget } = actionWithTargets;
+      const {
+        actionDef,
+        targetContexts,
+        resolvedTargets,
+        targetDefinitions,
+        isMultiTarget,
+      } = actionWithTargets;
 
       try {
         // Check if this action has multi-target metadata
@@ -165,12 +174,12 @@ export class ActionFormattingStage extends PipelineStage {
                   targetIds,
                   isMultiTarget: true,
                 };
-                
+
                 // Backward compatibility: if there's a single primary target, also set targetId
                 if (targetIds.primary && targetIds.primary.length === 1) {
                   params.targetId = targetIds.primary[0];
                 }
-                
+
                 const actionInfo = {
                   id: actionDef.id,
                   name: actionDef.name,
@@ -182,7 +191,8 @@ export class ActionFormattingStage extends PipelineStage {
               }
             } else {
               // Multi-target formatting failed, try fallback to legacy formatting
-              const primaryTarget = this.#getPrimaryTargetContext(resolvedTargets);
+              const primaryTarget =
+                this.#getPrimaryTargetContext(resolvedTargets);
               if (primaryTarget) {
                 const fallbackResult = this.#formatLegacyAction(
                   actionDef,
@@ -217,7 +227,8 @@ export class ActionFormattingStage extends PipelineStage {
             }
           } else {
             // Fallback to legacy formatting for first target
-            const primaryTarget = this.#getPrimaryTargetContext(resolvedTargets);
+            const primaryTarget =
+              this.#getPrimaryTargetContext(resolvedTargets);
             if (primaryTarget) {
               const formatResult = this.#formatLegacyAction(
                 actionDef,
@@ -388,12 +399,12 @@ export class ActionFormattingStage extends PipelineStage {
                 targetIds,
                 isMultiTarget: true,
               };
-              
+
               // Backward compatibility: if there's a single primary target, also set targetId
               if (targetIds.primary && targetIds.primary.length === 1) {
                 params.targetId = targetIds.primary[0];
               }
-              
+
               const actionInfo = {
                 id: actionDef.id,
                 name: actionDef.name,
@@ -582,12 +593,12 @@ export class ActionFormattingStage extends PipelineStage {
                   targetIds,
                   isMultiTarget: true,
                 };
-                
+
                 // Backward compatibility: if there's a single primary target, also set targetId
                 if (targetIds.primary && targetIds.primary.length === 1) {
                   params.targetId = targetIds.primary[0];
                 }
-                
+
                 const actionInfo = {
                   id: actionDef.id,
                   name: actionDef.name,
@@ -667,7 +678,7 @@ export class ActionFormattingStage extends PipelineStage {
           // Multi-target action without proper resolved targets - skip and warn
           this.#logger.warn(
             `Skipping multi-target action '${actionDef.id}' in legacy formatting ` +
-            `path - no resolved targets available for proper formatting`
+              `path - no resolved targets available for proper formatting`
           );
         }
         continue;

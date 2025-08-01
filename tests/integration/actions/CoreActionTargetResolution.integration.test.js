@@ -273,7 +273,10 @@ describe('Core Action Target Resolution Integration', () => {
       actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,
-      formatter: new MultiTargetActionFormatter(new ActionCommandFormatter(), logger),
+      formatter: new MultiTargetActionFormatter(
+        new ActionCommandFormatter(),
+        logger
+      ),
       entityManager,
       safeEventDispatcher,
       getEntityDisplayNameFn: getEntityDisplayName,
@@ -306,7 +309,10 @@ describe('Core Action Target Resolution Integration', () => {
         dslParser: new DefaultDslParser(),
         actionErrorContextBuilder: createMockActionErrorContextBuilder(),
       }),
-      formatter: new MultiTargetActionFormatter(new ActionCommandFormatter(), logger),
+      formatter: new MultiTargetActionFormatter(
+        new ActionCommandFormatter(),
+        logger
+      ),
       entityManager,
       safeEventDispatcher,
       getEntityDisplayNameFn: getEntityDisplayName,

@@ -3,6 +3,7 @@
 ## Executive Summary
 
 This report analyzes code duplication across three character builder pages:
+
 - **thematic-directions-manager.html** - Manages and edits existing thematic directions
 - **thematic-direction-generator.html** - Generates new thematic directions from concepts
 - **character-concepts-manager.html** - Creates and manages character concepts
@@ -41,6 +42,7 @@ Three different initialization approaches are used:
 3. **thematicDirectionsManagerMain.js**: Custom `ThematicDirectionsManagerApp` class
 
 Common initialization tasks across all:
+
 - DI container setup
 - Schema loading
 - Event definition registration
@@ -59,22 +61,28 @@ class Controller {
   #characterBuilderService;
   #eventBus;
   #elements = {};
-  
+
   constructor({ logger, characterBuilderService, eventBus }) {
     // Dependency validation
     // Property assignment
   }
-  
+
   async initialize() {
     // Cache DOM elements
     // Initialize services
     // Setup event listeners
     // Load initial data
   }
-  
-  #cacheElements() { /* ... */ }
-  #setupEventListeners() { /* ... */ }
-  #showState(state) { /* ... */ }
+
+  #cacheElements() {
+    /* ... */
+  }
+  #setupEventListeners() {
+    /* ... */
+  }
+  #showState(state) {
+    /* ... */
+  }
   // ... other common methods
 }
 ```
@@ -95,6 +103,7 @@ Each page has its own CSS file with significant overlap:
 ### 5. Shared Components Usage
 
 Currently using shared components from `/src/shared/characterBuilder/`:
+
 - `UIStateManager` - Manages UI state transitions
 - `FormValidationHelper` - Form validation utilities
 - `PreviousItemsDropdown` - Reusable dropdown component
@@ -107,6 +116,7 @@ Currently using shared components from `/src/shared/characterBuilder/`:
 Create a standardized bootstrap system for all character builder pages.
 
 **Implementation**:
+
 ```javascript
 // src/characterBuilder/CharacterBuilderBootstrap.js
 export class CharacterBuilderBootstrap {
@@ -115,7 +125,7 @@ export class CharacterBuilderBootstrap {
     controllerClass,
     includeModLoading = false,
     eventDefinitions = [],
-    customSchemas = []
+    customSchemas = [],
   }) {
     // Unified initialization logic
     // Container setup with character builder services
@@ -127,6 +137,7 @@ export class CharacterBuilderBootstrap {
 ```
 
 **Benefits**:
+
 - Eliminates 60% of initialization code duplication
 - Ensures consistent error handling
 - Simplifies new page creation
@@ -139,6 +150,7 @@ export class CharacterBuilderBootstrap {
 Extract common controller functionality into a base class.
 
 **Implementation**:
+
 ```javascript
 // src/characterBuilder/controllers/BaseCharacterBuilderController.js
 export class BaseCharacterBuilderController {
@@ -146,17 +158,28 @@ export class BaseCharacterBuilderController {
     // Common dependency validation
     // Property initialization
   }
-  
+
   // Common methods
-  async initialize() { /* Template method pattern */ }
-  cacheElements(elementMap) { /* ... */ }
-  setupCommonEventListeners() { /* ... */ }
-  showState(state, data) { /* ... */ }
-  handleError(error) { /* ... */ }
+  async initialize() {
+    /* Template method pattern */
+  }
+  cacheElements(elementMap) {
+    /* ... */
+  }
+  setupCommonEventListeners() {
+    /* ... */
+  }
+  showState(state, data) {
+    /* ... */
+  }
+  handleError(error) {
+    /* ... */
+  }
 }
 ```
 
 **Benefits**:
+
 - Reduces controller code by 50%
 - Ensures consistent behavior
 - Simplifies testing
@@ -169,6 +192,7 @@ export class BaseCharacterBuilderController {
 Create a template system for consistent page structure.
 
 **Implementation**:
+
 ```javascript
 // src/characterBuilder/templates/pageTemplate.js
 export function createCharacterBuilderPage({
@@ -176,7 +200,7 @@ export function createCharacterBuilderPage({
   subtitle,
   leftPanelContent,
   rightPanelContent,
-  modals = []
+  modals = [],
 }) {
   return `
     <div class="cb-page-container">
@@ -190,6 +214,7 @@ export function createCharacterBuilderPage({
 ```
 
 **Benefits**:
+
 - Eliminates 70% HTML duplication
 - Ensures consistent structure
 - Simplifies maintenance
@@ -202,6 +227,7 @@ export function createCharacterBuilderPage({
 Consolidate CSS into a hierarchical structure.
 
 **Structure**:
+
 ```
 css/
 ├── character-builder/
@@ -216,6 +242,7 @@ css/
 ```
 
 **Benefits**:
+
 - Reduces CSS duplication by 40%
 - Improves maintainability
 - Ensures visual consistency
@@ -228,6 +255,7 @@ css/
 Expand the shared component library with commonly used patterns.
 
 **New Components**:
+
 ```javascript
 // src/shared/characterBuilder/components/
 ├── Modal.js              // Standardized modal dialogs
@@ -239,6 +267,7 @@ Expand the shared component library with commonly used patterns.
 ```
 
 **Benefits**:
+
 - Reduces code duplication by 30%
 - Ensures UI consistency
 - Improves testability
@@ -251,16 +280,23 @@ Expand the shared component library with commonly used patterns.
 Create a unified event management system for character builder events.
 
 **Implementation**:
+
 ```javascript
 // src/characterBuilder/events/CharacterBuilderEvents.js
 export class CharacterBuilderEvents {
   static definitions = {
-    CONCEPT_CREATED: { /* ... */ },
-    CONCEPT_UPDATED: { /* ... */ },
-    DIRECTION_GENERATED: { /* ... */ },
+    CONCEPT_CREATED: {
+      /* ... */
+    },
+    CONCEPT_UPDATED: {
+      /* ... */
+    },
+    DIRECTION_GENERATED: {
+      /* ... */
+    },
     // ... other events
   };
-  
+
   static async registerAll(dataRegistry, schemaValidator) {
     // Register all character builder events
   }
@@ -268,6 +304,7 @@ export class CharacterBuilderEvents {
 ```
 
 **Benefits**:
+
 - Centralizes event definitions
 - Reduces registration boilerplate
 - Ensures consistency
@@ -278,16 +315,19 @@ export class CharacterBuilderEvents {
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (Week 1)
+
 1. Create `CharacterBuilderBootstrap` class
 2. Implement `BaseCharacterBuilderController`
 3. Refactor one page as proof of concept
 
 ### Phase 2: Templates & Styling (Week 2)
+
 1. Implement HTML template system
 2. Reorganize CSS architecture
 3. Update all three pages to use new systems
 
 ### Phase 3: Components & Polish (Week 3)
+
 1. Build shared UI component library
 2. Implement event system abstraction
 3. Complete refactoring of all pages
@@ -296,17 +336,20 @@ export class CharacterBuilderEvents {
 ## Expected Outcomes
 
 ### Code Reduction
+
 - **HTML**: 70% reduction in duplication
 - **JavaScript**: 50-60% reduction in boilerplate
 - **CSS**: 40% reduction in duplication
 - **Overall**: ~55% less code to maintain
 
 ### Development Velocity
+
 - New page creation time: From 2-3 days to 4-6 hours
 - Bug fix time: Reduced by 40% (single fix point)
 - Feature addition: 50% faster (shared components)
 
 ### Quality Improvements
+
 - Consistent user experience across all pages
 - Centralized error handling and logging
 - Improved testability with shared components
@@ -315,12 +358,15 @@ export class CharacterBuilderEvents {
 ## Risks and Mitigation
 
 ### Risk 1: Breaking Existing Functionality
+
 **Mitigation**: Implement changes incrementally with comprehensive testing at each step
 
 ### Risk 2: Over-abstraction
+
 **Mitigation**: Keep abstractions simple and focused on actual duplication
 
 ### Risk 3: Performance Impact
+
 **Mitigation**: Monitor bundle sizes and loading performance throughout refactoring
 
 ## Conclusion

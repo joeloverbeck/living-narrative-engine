@@ -42,6 +42,7 @@ SystemLogicInterpreter: No system rules loaded – interpreter will remain idle.
 ```
 
 This warning occurs because:
+
 1. SystemLogicInterpreter is registered with the `INITIALIZABLE` tag
 2. CommonBootstrapper calls `initializeAuxiliaryServices()`
 3. This calls `systemInitializer.initializeAll()`
@@ -51,18 +52,20 @@ This warning occurs because:
 ## Comparison with Other Pages
 
 ### Thematic Direction Page (Better Pattern)
+
 ```javascript
 // Does NOT use CommonBootstrapper
 // Directly uses configureBaseContainer
 await configureBaseContainer(container, {
-  includeGameSystems: true,      // Only what it needs
-  includeCharacterBuilder: true,  // Only what it needs
+  includeGameSystems: true, // Only what it needs
+  includeCharacterBuilder: true, // Only what it needs
   logger: this.#logger,
 });
 // No call to initializeAuxiliaryServices
 ```
 
 ### Main Game (Different Pattern)
+
 ```javascript
 // Uses custom stages
 // initializeAuxiliaryServicesStage is UI-specific, NOT the same as initializeAuxiliaryServices
@@ -106,24 +109,27 @@ async bootstrap(options = {}) {
 ```
 
 Character-concepts-manager now uses:
+
 ```javascript
 await bootstrapper.bootstrap({
   containerConfigType: 'minimal',
   skipModLoading: true,
   includeCharacterBuilder: true,
-  skipSystemInitialization: true,  // Skip all INITIALIZABLE services
+  skipSystemInitialization: true, // Skip all INITIALIZABLE services
 });
 ```
 
 ## Impact Analysis
 
 ### Current Impact (Before Fix)
+
 - **Performance**: Unnecessary initialization overhead (~200-500ms)
 - **Memory**: Loading unused services increases memory footprint
 - **Stability**: Potential for initialization errors in services not needed
 - **Developer Experience**: Confusing warnings in console
 
 ### Benefits of Fix
+
 - **Performance**: Faster page load (no unnecessary service initialization)
 - **Memory**: Reduced footprint (only essential services loaded)
 - **Clarity**: No confusing warnings about idle services
@@ -132,7 +138,9 @@ await bootstrapper.bootstrap({
 ## Alternative Solutions Considered
 
 ### Alternative 1: Remove CommonBootstrapper Usage
+
 Follow the pattern of thematic-direction-main.js:
+
 - Use `configureBaseContainer` directly
 - Only initialize what's needed
 - More explicit but more control
@@ -141,7 +149,9 @@ Follow the pattern of thematic-direction-main.js:
 **Cons**: More boilerplate code, duplicated logic across pages
 
 ### Alternative 2: Service Tagging Granularity
+
 Introduce more specific tags:
+
 - `GAME_INITIALIZABLE` - For game-specific services
 - `TOOL_INITIALIZABLE` - For tool-specific services
 - `ALWAYS_INITIALIZABLE` - For universally needed services
@@ -150,6 +160,7 @@ Introduce more specific tags:
 **Cons**: Requires refactoring all service registrations
 
 ### Alternative 3: Lazy Initialization
+
 Make services initialize on first use rather than at bootstrap time.
 
 **Pros**: Optimal resource usage
@@ -168,6 +179,7 @@ The implemented solution (skipSystemInitialization option) is optimal because:
 ## Services Actually Needed by Character Concepts Manager
 
 The character-concepts-manager page only needs:
+
 - **CharacterBuilderService** - Core functionality for character concepts
 - **EventBus** - For UI event handling
 - **Logger** - For debugging and error reporting

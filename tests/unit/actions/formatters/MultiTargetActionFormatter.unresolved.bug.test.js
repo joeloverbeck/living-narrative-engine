@@ -1,9 +1,9 @@
 /**
  * @file Test suite to reproduce the ACTUAL unresolved placeholder bug
- * 
+ *
  * REAL BUG: Multi-target actions are being processed by the legacy ActionFormatter
  * instead of MultiTargetActionFormatter, causing {secondary} to remain unresolved.
- * 
+ *
  * Expected: "adjust Iker Aguirre's denim trucker jacket"
  * Actual: "adjust Iker Aguirre's {secondary}" (legacy formatter only handles {target})
  */
@@ -41,9 +41,9 @@ describe('MultiTargetActionFormatter - Unresolved Placeholder Bug', () => {
 
   describe('Bug reproduction: legacy formatter handling multi-target', () => {
     it('should demonstrate the ACTUAL bug - legacy formatter leaves {secondary} unresolved', () => {
-      // This test shows what happens when the legacy ActionCommandFormatter 
+      // This test shows what happens when the legacy ActionCommandFormatter
       // is used on multi-target actions instead of MultiTargetActionFormatter
-      
+
       const legacyFormatter = new ActionCommandFormatter({
         entityManager,
         logger,
@@ -56,7 +56,8 @@ describe('MultiTargetActionFormatter - Unresolved Placeholder Bug', () => {
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: {
-            scope: 'intimacy:close_actors_facing_each_other_with_torso_clothing',
+            scope:
+              'intimacy:close_actors_facing_each_other_with_torso_clothing',
             placeholder: 'primary',
           },
           secondary: {
@@ -81,10 +82,10 @@ describe('MultiTargetActionFormatter - Unresolved Placeholder Bug', () => {
         actionDef,
         singleTargetContext,
         entityManager,
-        { 
-          debug: true, 
-          logger, 
-          safeEventDispatcher: { dispatch: jest.fn() } 
+        {
+          debug: true,
+          logger,
+          safeEventDispatcher: { dispatch: jest.fn() },
         },
         {
           displayNameFn: (entity, fallback) => {
@@ -92,7 +93,7 @@ describe('MultiTargetActionFormatter - Unresolved Placeholder Bug', () => {
               return 'Iker Aguirre';
             }
             return fallback;
-          }
+          },
         }
       );
 
@@ -103,8 +104,10 @@ describe('MultiTargetActionFormatter - Unresolved Placeholder Bug', () => {
       expect(result.ok).toBe(true);
       expect(result.value).toBe("adjust Iker Aguirre's {secondary}");
       expect(result.value).toContain('{secondary}'); // Bug indicator!
-      
-      console.log('✅ REPRODUCED THE ACTUAL BUG! Legacy formatter only handles single placeholders.');
+
+      console.log(
+        '✅ REPRODUCED THE ACTUAL BUG! Legacy formatter only handles single placeholders.'
+      );
     });
   });
 
@@ -117,7 +120,8 @@ describe('MultiTargetActionFormatter - Unresolved Placeholder Bug', () => {
         template: "adjust {primary}'s {secondary}",
         targets: {
           primary: {
-            scope: 'intimacy:close_actors_facing_each_other_with_torso_clothing',
+            scope:
+              'intimacy:close_actors_facing_each_other_with_torso_clothing',
             placeholder: 'primary',
             description: 'Person whose clothing to adjust',
           },
@@ -167,13 +171,15 @@ describe('MultiTargetActionFormatter - Unresolved Placeholder Bug', () => {
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value.length).toBeGreaterThan(0);
-      
+
       // The bug manifests as the action containing unresolved placeholders
       const formattedAction = result.value[0];
-      
+
       // This is what we SHOULD get (test will fail until bug is fixed)
-      expect(formattedAction).toBe("adjust Iker Aguirre's denim trucker jacket");
-      
+      expect(formattedAction).toBe(
+        "adjust Iker Aguirre's denim trucker jacket"
+      );
+
       // These should NOT be present (bug indicators)
       expect(formattedAction).not.toContain('{primary}');
       expect(formattedAction).not.toContain('{secondary}');

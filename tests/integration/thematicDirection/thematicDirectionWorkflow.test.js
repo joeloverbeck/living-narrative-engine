@@ -487,7 +487,6 @@ describe('Thematic Direction Workflow Integration', () => {
     });
   });
 
-
   describe('End-to-end validation', () => {
     test('should validate all data according to schemas', async () => {
       // Arrange

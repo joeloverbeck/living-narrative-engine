@@ -61,7 +61,9 @@ describe('StructuredTrace - Integration Tests', () => {
       expect(structuredTrace.logs[2].type).toBe('success');
 
       // Add new logs using delegation methods
-      structuredTrace.addLog('info', 'Using delegation', 'Test', { data: 'value' });
+      structuredTrace.addLog('info', 'Using delegation', 'Test', {
+        data: 'value',
+      });
       expect(structuredTrace.logs).toHaveLength(4);
       expect(structuredTrace.logs[3]).toMatchObject({
         type: 'info',
@@ -73,7 +75,7 @@ describe('StructuredTrace - Integration Tests', () => {
 
     it('should use failure method in error recovery scenarios', async () => {
       const structuredTrace = new StructuredTrace();
-      
+
       // Simulate a pipeline with error recovery
       const stages = [
         new ComponentFilteringStage(
@@ -89,7 +91,7 @@ describe('StructuredTrace - Integration Tests', () => {
       });
 
       const pipeline = new Pipeline(stages, mockLogger);
-      
+
       const result = await pipeline.execute({
         actor: { id: 'test_actor', components: {} },
         actionContext: { actorId: 'test_actor' },
@@ -99,7 +101,7 @@ describe('StructuredTrace - Integration Tests', () => {
 
       // Pipeline handles errors internally and returns result
       expect(result.success).toBe(false);
-      
+
       // Log failure using the delegation method
       structuredTrace.failure(
         'Pipeline execution failed - attempting recovery',
@@ -107,14 +109,16 @@ describe('StructuredTrace - Integration Tests', () => {
       );
 
       // Verify failure was logged
-      const failureLogs = structuredTrace.logs.filter(log => log.type === 'failure');
+      const failureLogs = structuredTrace.logs.filter(
+        (log) => log.type === 'failure'
+      );
       expect(failureLogs).toHaveLength(1);
       expect(failureLogs[0].message).toContain('attempting recovery');
     });
 
     it('should use error and data methods in diagnostic scenarios', () => {
       const structuredTrace = new StructuredTrace();
-      
+
       // Simulate diagnostic logging scenario
       const diagnosticData = {
         memoryUsage: process.memoryUsage(),
@@ -123,11 +127,10 @@ describe('StructuredTrace - Integration Tests', () => {
       };
 
       // Log error with context
-      structuredTrace.error(
-        'Memory threshold exceeded',
-        'MemoryMonitor',
-        { threshold: '1GB', actual: '1.2GB' }
-      );
+      structuredTrace.error('Memory threshold exceeded', 'MemoryMonitor', {
+        threshold: '1GB',
+        actual: '1.2GB',
+      });
 
       // Log diagnostic data
       structuredTrace.data(
@@ -137,12 +140,16 @@ describe('StructuredTrace - Integration Tests', () => {
       );
 
       // Verify logs
-      const errorLogs = structuredTrace.logs.filter(log => log.type === 'error');
-      const dataLogs = structuredTrace.logs.filter(log => log.type === 'data');
+      const errorLogs = structuredTrace.logs.filter(
+        (log) => log.type === 'error'
+      );
+      const dataLogs = structuredTrace.logs.filter(
+        (log) => log.type === 'data'
+      );
 
       expect(errorLogs).toHaveLength(1);
       expect(errorLogs[0].data).toMatchObject({ threshold: '1GB' });
-      
+
       expect(dataLogs).toHaveLength(1);
       expect(dataLogs[0].data).toHaveProperty('memoryUsage');
       expect(dataLogs[0].data).toHaveProperty('timestamp');
@@ -157,11 +164,11 @@ describe('StructuredTrace - Integration Tests', () => {
       // Use spans for structured work
       await structuredTrace.withSpanAsync('DataProcessing', async () => {
         structuredTrace.step('Loading data', 'DataLoader');
-        
+
         await structuredTrace.withSpanAsync('Validation', async () => {
           structuredTrace.info('Validating records', 'Validator');
           // Simulate validation work
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
         });
 
         structuredTrace.success('Data processed', 'DataProcessor');
@@ -173,7 +180,7 @@ describe('StructuredTrace - Integration Tests', () => {
       // Verify both systems work together
       expect(structuredTrace.logs).toHaveLength(5);
       expect(structuredTrace.getSpans()).toHaveLength(2);
-      
+
       const hierarchicalView = structuredTrace.getHierarchicalView();
       expect(hierarchicalView.operation).toBe('DataProcessing');
       expect(hierarchicalView.children[0].operation).toBe('Validation');
@@ -183,16 +190,16 @@ describe('StructuredTrace - Integration Tests', () => {
   describe('Error Handling in Complex Scenarios', () => {
     it('should handle invalid span parameter in endSpan', () => {
       const structuredTrace = new StructuredTrace();
-      
+
       // Test null parameter
       expect(() => structuredTrace.endSpan(null)).toThrow(
         'endSpan requires a valid Span instance'
       );
 
       // Test non-Span object
-      expect(() => structuredTrace.endSpan({ id: 1, operation: 'fake' })).toThrow(
-        'endSpan requires a valid Span instance'
-      );
+      expect(() =>
+        structuredTrace.endSpan({ id: 1, operation: 'fake' })
+      ).toThrow('endSpan requires a valid Span instance');
 
       // Test undefined
       expect(() => structuredTrace.endSpan(undefined)).toThrow(
@@ -202,7 +209,7 @@ describe('StructuredTrace - Integration Tests', () => {
 
     it('should handle endSpan when wrong span is active in nested scenarios', () => {
       const structuredTrace = new StructuredTrace();
-      
+
       // Create nested spans
       const span1 = structuredTrace.startSpan('OuterOperation');
       const span2 = structuredTrace.startSpan('InnerOperation');
@@ -231,12 +238,12 @@ describe('StructuredTrace - Integration Tests', () => {
 
     it('should handle multiple span errors in complex scenarios', async () => {
       const structuredTrace = new StructuredTrace();
-      
+
       // Create nested spans where some fail
       await structuredTrace.withSpanAsync('MainOperation', async () => {
         // First operation succeeds
         await structuredTrace.withSpanAsync('Setup', async () => {
-          await new Promise(resolve => setTimeout(resolve, 5));
+          await new Promise((resolve) => setTimeout(resolve, 5));
         });
 
         // Second operation fails but is caught
@@ -250,41 +257,51 @@ describe('StructuredTrace - Integration Tests', () => {
 
         // Cleanup succeeds
         await structuredTrace.withSpanAsync('Cleanup', async () => {
-          await new Promise(resolve => setTimeout(resolve, 5));
+          await new Promise((resolve) => setTimeout(resolve, 5));
         });
       });
 
       // Verify span statuses
       const spans = structuredTrace.getSpans();
-      expect(spans.find(s => s.operation === 'MainOperation').status).toBe('success');
-      expect(spans.find(s => s.operation === 'Setup').status).toBe('success');
-      expect(spans.find(s => s.operation === 'Processing').status).toBe('error');
-      expect(spans.find(s => s.operation === 'Cleanup').status).toBe('success');
+      expect(spans.find((s) => s.operation === 'MainOperation').status).toBe(
+        'success'
+      );
+      expect(spans.find((s) => s.operation === 'Setup').status).toBe('success');
+      expect(spans.find((s) => s.operation === 'Processing').status).toBe(
+        'error'
+      );
+      expect(spans.find((s) => s.operation === 'Cleanup').status).toBe(
+        'success'
+      );
     });
   });
 
   describe('Synchronous Operations Integration', () => {
     it('should use withSpan for configuration validation', () => {
       const structuredTrace = new StructuredTrace();
-      
+
       // Configuration validation scenario
       const validateConfig = (config) => {
-        return structuredTrace.withSpan('ConfigValidation', () => {
-          // Validation sub-operations
-          structuredTrace.withSpan('SchemaValidation', () => {
-            if (!config.version) {
-              throw new Error('Missing version field');
-            }
-          });
+        return structuredTrace.withSpan(
+          'ConfigValidation',
+          () => {
+            // Validation sub-operations
+            structuredTrace.withSpan('SchemaValidation', () => {
+              if (!config.version) {
+                throw new Error('Missing version field');
+              }
+            });
 
-          structuredTrace.withSpan('DependencyCheck', () => {
-            if (!config.dependencies || config.dependencies.length === 0) {
-              throw new Error('No dependencies specified');
-            }
-          });
+            structuredTrace.withSpan('DependencyCheck', () => {
+              if (!config.dependencies || config.dependencies.length === 0) {
+                throw new Error('No dependencies specified');
+              }
+            });
 
-          return { valid: true, config };
-        }, { configFile: 'app.config.json' });
+            return { valid: true, config };
+          },
+          { configFile: 'app.config.json' }
+        );
       };
 
       // Test successful validation
@@ -300,13 +317,15 @@ describe('StructuredTrace - Integration Tests', () => {
       const spans = structuredTrace.getSpans();
       expect(spans).toHaveLength(3);
       expect(spans[0].operation).toBe('ConfigValidation');
-      expect(spans[0].attributes).toMatchObject({ configFile: 'app.config.json' });
+      expect(spans[0].attributes).toMatchObject({
+        configFile: 'app.config.json',
+      });
       expect(spans[0].status).toBe('success');
     });
 
     it('should handle errors in withSpan during synchronous operations', () => {
       const structuredTrace = new StructuredTrace();
-      
+
       // Synchronous operation that fails
       const performOperation = () => {
         return structuredTrace.withSpan('SyncOperation', () => {
@@ -323,7 +342,7 @@ describe('StructuredTrace - Integration Tests', () => {
       // Check spans captured the error
       const spans = structuredTrace.getSpans();
       expect(spans).toHaveLength(2);
-      
+
       // Both spans should have error status
       expect(spans[0].status).toBe('error');
       expect(spans[1].status).toBe('error');
@@ -332,7 +351,7 @@ describe('StructuredTrace - Integration Tests', () => {
 
     it('should support nested synchronous spans in initialization workflows', () => {
       const structuredTrace = new StructuredTrace();
-      
+
       // Initialization workflow
       const initializeSystem = () => {
         return structuredTrace.withSpan('SystemInitialization', () => {
@@ -487,7 +506,7 @@ describe('StructuredTrace - Integration Tests', () => {
       // Start with existing TraceContext
       const existingContext = new TraceContext();
       existingContext.info('Legacy system starting', 'LegacyModule');
-      
+
       // Upgrade to StructuredTrace
       const structuredTrace = new StructuredTrace(existingContext);
 
@@ -498,7 +517,7 @@ describe('StructuredTrace - Integration Tests', () => {
       // Phase 2: Start introducing spans for new features
       await structuredTrace.withSpanAsync('NewFeature', async () => {
         structuredTrace.info('New feature with spans', 'ModernModule');
-        
+
         await structuredTrace.withSpanAsync('SubFeature', async () => {
           // Still can use old logging inside spans
           structuredTrace.step('Hybrid approach', 'Migration');
@@ -534,7 +553,7 @@ describe('StructuredTrace - Integration Tests', () => {
       ];
 
       mockActionIndex.getCandidateActions.mockReturnValue([
-        { id: 'action1', name: 'Test Action', prerequisites: [] }
+        { id: 'action1', name: 'Test Action', prerequisites: [] },
       ]);
 
       const pipeline = new Pipeline(stages, mockLogger);
@@ -552,16 +571,18 @@ describe('StructuredTrace - Integration Tests', () => {
 
       // Verify mixed usage
       expect(result.success).toBe(true);
-      
+
       // Should have both logs and spans
-      const logs = structuredTrace.logs.filter(log => 
-        log.source === 'PipelineManager'
+      const logs = structuredTrace.logs.filter(
+        (log) => log.source === 'PipelineManager'
       );
       expect(logs).toHaveLength(2);
 
       const spans = structuredTrace.getSpans();
-      expect(spans.some(s => s.operation === 'Pipeline')).toBe(true);
-      expect(spans.some(s => s.operation === 'ComponentFilteringStage')).toBe(true);
+      expect(spans.some((s) => s.operation === 'Pipeline')).toBe(true);
+      expect(spans.some((s) => s.operation === 'ComponentFilteringStage')).toBe(
+        true
+      );
     });
   });
 
@@ -579,21 +600,27 @@ describe('StructuredTrace - Integration Tests', () => {
           // Parent catches but continues with other work
           await structuredTrace.withSpanAsync('RecoveryOperation', async () => {
             // Recovery succeeds
-            await new Promise(resolve => setTimeout(resolve, 10));
+            await new Promise((resolve) => setTimeout(resolve, 10));
           });
         }
       });
 
       const spans = structuredTrace.getSpans();
-      
+
       // Parent should be success (it handled the error)
-      expect(spans.find(s => s.operation === 'ParentOperation').status).toBe('success');
-      
+      expect(spans.find((s) => s.operation === 'ParentOperation').status).toBe(
+        'success'
+      );
+
       // Child should remain error
-      expect(spans.find(s => s.operation === 'ChildOperation').status).toBe('error');
-      
+      expect(spans.find((s) => s.operation === 'ChildOperation').status).toBe(
+        'error'
+      );
+
       // Recovery should be success
-      expect(spans.find(s => s.operation === 'RecoveryOperation').status).toBe('success');
+      expect(
+        spans.find((s) => s.operation === 'RecoveryOperation').status
+      ).toBe('success');
     });
 
     it('should handle errors thrown after async operations in withSpanAsync', async () => {
@@ -602,8 +629,8 @@ describe('StructuredTrace - Integration Tests', () => {
       try {
         await structuredTrace.withSpanAsync('AsyncWithSyncError', async () => {
           // Async operation succeeds
-          await new Promise(resolve => setTimeout(resolve, 10));
-          
+          await new Promise((resolve) => setTimeout(resolve, 10));
+
           // But then sync error is thrown
           throw new Error('Sync error after async');
         });

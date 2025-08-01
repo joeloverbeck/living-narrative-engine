@@ -35,19 +35,24 @@ class ThematicDirectionApp {
           preContainer: async (container) => {
             // Register thematic direction controller factory
             const registrar = new Registrar(container);
-            registrar.singletonFactory(tokens.ThematicDirectionController, (c) => {
-              return new ThematicDirectionController({
-                logger: c.resolve(tokens.ILogger),
-                characterBuilderService: c.resolve(tokens.CharacterBuilderService),
-                eventBus: c.resolve(tokens.ISafeEventDispatcher),
-                schemaValidator: c.resolve(tokens.ISchemaValidator),
-              });
-            });
+            registrar.singletonFactory(
+              tokens.ThematicDirectionController,
+              (c) => {
+                return new ThematicDirectionController({
+                  logger: c.resolve(tokens.ILogger),
+                  characterBuilderService: c.resolve(
+                    tokens.CharacterBuilderService
+                  ),
+                  eventBus: c.resolve(tokens.ISafeEventDispatcher),
+                  schemaValidator: c.resolve(tokens.ISchemaValidator),
+                });
+              }
+            );
           },
           preInit: async (controller) => {
             // Initialize LLM infrastructure before controller init
             const container = controller.container || bootstrap.container;
-            
+
             // Load all schemas using SchemaLoader if available
             const schemaLoader = container.resolve(tokens.SchemaLoader);
             if (schemaLoader?.loadAndCompileAllSchemas) {
@@ -70,15 +75,20 @@ class ThematicDirectionApp {
       };
 
       // Bootstrap the application
-      const { controller, container, bootstrapTime } = await bootstrap.bootstrap(config);
+      const { controller, container, bootstrapTime } =
+        await bootstrap.bootstrap(config);
 
-      console.log(`Thematic Direction Generator initialized successfully in ${bootstrapTime.toFixed(2)}ms`);
+      console.log(
+        `Thematic Direction Generator initialized successfully in ${bootstrapTime.toFixed(2)}ms`
+      );
     } catch (error) {
-      console.error('Failed to initialize thematic direction generator:', error);
+      console.error(
+        'Failed to initialize thematic direction generator:',
+        error
+      );
       // Error display is handled by bootstrap
     }
   }
-
 }
 
 /**

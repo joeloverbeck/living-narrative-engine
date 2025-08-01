@@ -42,7 +42,7 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
   },
   (mocks, overrides = {}) => {
     const traceContextFactory = () => new TraceContext();
-    
+
     // Helper function to create proper actor snapshot
     const createActorSnapshot = (actorId) => {
       try {
@@ -50,7 +50,7 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
         const components = mocks.entityManager.getAllComponents(actorId);
         const locationComponent = components['core:location'];
         const location = locationComponent?.value || 'none';
-        
+
         return {
           id: actorId,
           components,
@@ -74,30 +74,38 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
     };
 
     // Create a mock ActionPipelineOrchestrator that mimics the old behavior for test compatibility
-    const actionPipelineOrchestrator =
-      overrides.actionPipelineOrchestrator ?? {
-        discoverActions: jest.fn().mockImplementation(async (actor, context, options = {}) => {
+    const actionPipelineOrchestrator = overrides.actionPipelineOrchestrator ?? {
+      discoverActions: jest
+        .fn()
+        .mockImplementation(async (actor, context, options = {}) => {
           const { trace } = options;
           const actions = [];
           const errors = [];
-          
+
           try {
             // Get candidate actions from the action index
-            const candidateActions = mocks.actionIndex.getCandidateActions(actor, context);
-            
+            const candidateActions = mocks.actionIndex.getCandidateActions(
+              actor,
+              context
+            );
+
             for (const actionDef of candidateActions) {
               try {
                 // Check prerequisites - skip if action has no prerequisites (matching production behavior)
-                if (!actionDef.prerequisites || actionDef.prerequisites.length === 0) {
+                if (
+                  !actionDef.prerequisites ||
+                  actionDef.prerequisites.length === 0
+                ) {
                   // Action has no prerequisites, so it automatically passes
                   // This matches the behavior in PrerequisiteEvaluationStage
                 } else {
                   let passesPrerequisites;
                   try {
-                    passesPrerequisites = mocks.prerequisiteEvaluationService.evaluate(
-                      context,
-                      actionDef
-                    );
+                    passesPrerequisites =
+                      mocks.prerequisiteEvaluationService.evaluate(
+                        context,
+                        actionDef
+                      );
                   } catch (prereqError) {
                     // If prerequisite evaluation throws, add to errors
                     errors.push({
@@ -119,28 +127,32 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                       suggestedFixes: [],
                     });
                     // Log the error as expected by test
-                    mocks.logger.error(`Error evaluating prerequisites for action '${actionDef.id}':`, prereqError);
+                    mocks.logger.error(
+                      `Error evaluating prerequisites for action '${actionDef.id}':`,
+                      prereqError
+                    );
                     continue;
                   }
-                  
+
                   if (!passesPrerequisites) {
                     continue;
                   }
                 }
-                
+
                 // Resolve targets - match the original API signature
-                const targetResult = mocks.targetResolutionService.resolveTargets(
-                  actionDef.scope,
-                  actor,
-                  context,
-                  trace,
-                  actionDef.id
-                );
-                
+                const targetResult =
+                  mocks.targetResolutionService.resolveTargets(
+                    actionDef.scope,
+                    actor,
+                    context,
+                    trace,
+                    actionDef.id
+                  );
+
                 if (!targetResult.success) {
                   continue;
                 }
-                
+
                 // For each resolved target, try to format the command
                 for (const target of targetResult.value) {
                   try {
@@ -149,7 +161,7 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                       target,
                       context
                     );
-                    
+
                     if (formatResult.ok) {
                       actions.push({
                         id: actionDef.id,
@@ -157,7 +169,9 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                         command: formatResult.value,
                         description: actionDef.description || '',
                         // Include params as expected by tests
-                        params: target.entityId ? { targetId: target.entityId } : {},
+                        params: target.entityId
+                          ? { targetId: target.entityId }
+                          : {},
                       });
                     } else {
                       // Log formatting errors as the real pipeline would
@@ -169,7 +183,7 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                           targetContext: target,
                         }
                       );
-                      
+
                       errors.push({
                         actionId: actionDef.id,
                         targetId: target.entityId,
@@ -178,8 +192,11 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                     }
                   } catch (formatError) {
                     // Handle exceptions thrown during formatting
-                    const targetId = formatError.target?.entityId || formatError.entityId || target.entityId;
-                    
+                    const targetId =
+                      formatError.target?.entityId ||
+                      formatError.entityId ||
+                      target.entityId;
+
                     errors.push({
                       actionId: actionDef.id,
                       targetId: targetId,
@@ -201,7 +218,7 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                   }
                 }
               } catch (actionError) {
-                // Handle errors from action processing 
+                // Handle errors from action processing
                 errors.push({
                   actionId: actionDef.id,
                   targetId: null,
@@ -225,7 +242,10 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
             }
           } catch (candidateError) {
             // Handle errors from candidate retrieval
-            mocks.logger.error('Error retrieving candidate actions', candidateError);
+            mocks.logger.error(
+              'Error retrieving candidate actions',
+              candidateError
+            );
             errors.push({
               actionId: 'candidateRetrieval',
               targetId: null,
@@ -245,10 +265,10 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
               suggestedFixes: [],
             });
           }
-          
+
           return { actions, errors, trace };
         }),
-      };
+    };
 
     return new ActionDiscoveryService({
       entityManager: mocks.entityManager,

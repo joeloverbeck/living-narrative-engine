@@ -44,10 +44,10 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
   async initialize() {
     // Create container with character builder enabled
     this.#container = new AppContainer();
-    
+
     // Mock LLM services BEFORE configuring container to prevent initialization
     await this.#preConfigureMocks();
-    
+
     await configureMinimalContainer(this.#container, {
       includeCharacterBuilder: true,
     });
@@ -62,9 +62,7 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
     this.#characterBuilderService = this.#container.resolve(
       tokens.CharacterBuilderService
     );
-    this.#characterDatabase = this.#container.resolve(
-      tokens.CharacterDatabase
-    );
+    this.#characterDatabase = this.#container.resolve(tokens.CharacterDatabase);
     this.#eventBus = this.#container.resolve(tokens.ISafeEventDispatcher);
     try {
       this.#llmJsonService = this.#container.resolve(tokens.LlmJsonService);
@@ -96,7 +94,9 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
    */
   async #preConfigureMocks() {
     // Mock global fetch to prevent any network calls during setup
-    global.fetch = jest.fn().mockRejectedValue(new Error('Network calls disabled in tests'));
+    global.fetch = jest
+      .fn()
+      .mockRejectedValue(new Error('Network calls disabled in tests'));
   }
 
   /**
@@ -104,8 +104,9 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
    */
   async #setupLlmMocks() {
     // Mock the LLM configuration manager first
-    const tokens = (await import('../../../src/dependencyInjection/tokens.js')).tokens;
-    
+    const tokens = (await import('../../../src/dependencyInjection/tokens.js'))
+      .tokens;
+
     // Create a mock LLM Configuration Manager that doesn't make network calls
     const mockConfig = {
       configId: 'test-config',
@@ -117,10 +118,10 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
       apiType: 'test',
       jsonOutputStrategy: {
         method: 'tool_calling',
-        toolName: 'test_tool'
+        toolName: 'test_tool',
       },
       promptElements: [],
-      promptAssemblyOrder: []
+      promptAssemblyOrder: [],
     };
 
     const mockLlmConfigManager = {
@@ -129,20 +130,25 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
       loadConfiguration: jest.fn().mockResolvedValue(mockConfig),
       getAllConfigurations: jest.fn().mockResolvedValue({
         defaultConfigId: 'test-config',
-        configs: { 'test-config': mockConfig }
+        configs: { 'test-config': mockConfig },
       }),
-      getAvailableOptions: jest.fn().mockResolvedValue([
-        { configId: 'test-config', displayName: 'Test Config' }
-      ]),
+      getAvailableOptions: jest
+        .fn()
+        .mockResolvedValue([
+          { configId: 'test-config', displayName: 'Test Config' },
+        ]),
       getActiveConfigId: jest.fn().mockResolvedValue('test-config'),
       validateConfiguration: jest.fn().mockReturnValue([]),
       init: jest.fn().mockResolvedValue(),
       isInitialized: jest.fn().mockReturnValue(true),
-      isOperational: jest.fn().mockReturnValue(true)
+      isOperational: jest.fn().mockReturnValue(true),
     };
 
     // Replace the service in the container
-    this.#container.setOverride(tokens.ILLMConfigurationManager, mockLlmConfigManager);
+    this.#container.setOverride(
+      tokens.ILLMConfigurationManager,
+      mockLlmConfigManager
+    );
     this.#logger.debug('LLM configuration manager replaced with mock');
 
     // Mock the LLM adapter
@@ -167,7 +173,10 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
 
         // Check if we should simulate failures
         if (this.#simulateFailures.llm) {
-          if (this.#simulateFailures.failureCount < this.#simulateFailures.maxFailures) {
+          if (
+            this.#simulateFailures.failureCount <
+            this.#simulateFailures.maxFailures
+          ) {
             this.#simulateFailures.failureCount++;
             throw new Error('Simulated LLM failure for testing');
           }
@@ -193,7 +202,10 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
               description: 'A traveler seeking knowledge across lands',
               themes: ['exploration', 'wisdom', 'journey'],
               suggested_traits: ['curious', 'resilient', 'observant'],
-              potential_conflicts: ['homesickness', 'cultural misunderstandings'],
+              potential_conflicts: [
+                'homesickness',
+                'cultural misunderstandings',
+              ],
               narrative_hooks: ['ancient map discovery', 'mysterious guide'],
             },
             {
@@ -363,12 +375,13 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
   async cleanup() {
     try {
       // Clear all character concepts and directions
-      const getConceptsPromise = this.#characterBuilderService.getAllCharacterConcepts();
+      const getConceptsPromise =
+        this.#characterBuilderService.getAllCharacterConcepts();
       const concepts = await Promise.race([
         getConceptsPromise,
-        new Promise((_, reject) => 
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Timeout getting concepts')), 5000)
-        )
+        ),
       ]).catch((error) => {
         this.#logger.warn('Failed to get concepts during cleanup', error);
         return [];
@@ -376,9 +389,14 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
 
       for (const concept of concepts) {
         try {
-          await this.#characterBuilderService.deleteCharacterConcept(concept.id);
+          await this.#characterBuilderService.deleteCharacterConcept(
+            concept.id
+          );
         } catch (deleteError) {
-          this.#logger.warn('Failed to delete concept during cleanup', deleteError);
+          this.#logger.warn(
+            'Failed to delete concept during cleanup',
+            deleteError
+          );
         }
       }
 
@@ -402,7 +420,7 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
         try {
           await Promise.race([
             this.#characterDatabase.close(),
-            new Promise((resolve) => setTimeout(resolve, 2000))
+            new Promise((resolve) => setTimeout(resolve, 2000)),
           ]);
         } catch (closeError) {
           this.#logger.warn('Failed to close database', closeError);
@@ -461,7 +479,7 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
    */
   async verifyRetryTiming(operation, expectedAttempts) {
     const startTime = Date.now();
-    
+
     try {
       await operation();
     } catch (error) {
@@ -470,7 +488,7 @@ export class CharacterBuilderIntegrationTestBed extends BaseTestBed {
 
     const elapsed = Date.now() - startTime;
     const minExpectedTime = this.calculateMinRetryTime(expectedAttempts);
-    
+
     return {
       elapsed,
       minExpectedTime,

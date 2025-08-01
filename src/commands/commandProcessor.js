@@ -204,7 +204,7 @@ class CommandProcessor extends ICommandProcessor {
 
       // Create enhanced payload using builder
       const payload = this.#createPayloadWithBuilder(actor, turnAction);
-      
+
       const duration = performance.now() - startTime;
 
       // Update metrics and log
@@ -225,12 +225,7 @@ class CommandProcessor extends ICommandProcessor {
 
       // Create fallback payload
       const fallbackPayload = this.#createFallbackPayload(actor, turnAction);
-      this.#updatePayloadMetrics(
-        fallbackPayload,
-        null,
-        duration,
-        true
-      );
+      this.#updatePayloadMetrics(fallbackPayload, null, duration, true);
 
       return fallbackPayload;
     }
@@ -238,25 +233,26 @@ class CommandProcessor extends ICommandProcessor {
 
   /**
    * Creates payload using MultiTargetEventBuilder
-   * 
+   *
    * @param {Entity} actor - Actor entity
    * @param {ITurnAction} turnAction - Turn action with resolved parameters
    * @returns {object} Enhanced event payload
    * @private
    */
   #createPayloadWithBuilder(actor, turnAction) {
-    const { actionDefinitionId, resolvedParameters, commandString } = turnAction;
-    
+    const { actionDefinitionId, resolvedParameters, commandString } =
+      turnAction;
+
     // Create builder instance
     const builder = new MultiTargetEventBuilder({ logger: this.#logger })
       .setActor(actor.id)
       .setAction(actionDefinitionId)
       .setOriginalInput(commandString || actionDefinitionId)
       .setTimestamp();
-    
+
     // Extract resolved target information
     const targetInfo = this.#extractResolvedTargets(resolvedParameters);
-    
+
     // Handle different target scenarios
     if (targetInfo.hasMultipleTargets && targetInfo.comprehensiveTargets) {
       // Multi-target: set targets object which will automatically add flattened IDs
@@ -269,20 +265,20 @@ class CommandProcessor extends ICommandProcessor {
       // No targets
       builder.setLegacyTarget(null);
     }
-    
+
     // Add metadata
     builder.setMetadata({
       resolvedTargetCount: targetInfo.resolvedTargetCount,
-      hasContextDependencies: targetInfo.hasContextDependencies
+      hasContextDependencies: targetInfo.hasContextDependencies,
     });
-    
+
     // Build and return the validated payload
     return builder.build();
   }
 
   /**
    * Extracts resolved target information from resolved parameters
-   * 
+   *
    * @param {object} resolvedParameters - Resolved parameters from turn action
    * @returns {object} Extracted target information
    * @private
@@ -308,50 +304,74 @@ class CommandProcessor extends ICommandProcessor {
     // Check if this is a multi-target action
     if (resolvedParameters.isMultiTarget && resolvedParameters.targetIds) {
       result.hasMultipleTargets = true;
-      
+
       // Handle both standard and custom placeholders
       const standardPlaceholders = ['primary', 'secondary', 'tertiary'];
       const legacyFieldNames = ['primaryId', 'secondaryId', 'tertiaryId'];
-      
+
       // Safely handle targetIds that might not be a proper object
-      if (typeof resolvedParameters.targetIds === 'object' && !Array.isArray(resolvedParameters.targetIds)) {
+      if (
+        typeof resolvedParameters.targetIds === 'object' &&
+        !Array.isArray(resolvedParameters.targetIds)
+      ) {
         // Process all placeholders in targetIds
-        Object.entries(resolvedParameters.targetIds).forEach(([placeholder, targetList]) => {
-          if (targetList && Array.isArray(targetList) && targetList.length > 0) {
-            const targetItem = targetList[0]; // Take first target
-            
-            // Extract entity ID if it's a valid string, skip invalid targets
-            let targetId = null;
-            if (typeof targetItem === 'string' && targetItem.trim()) {
-              targetId = targetItem;
-            } else if (targetItem && typeof targetItem === 'object' && targetItem.entityId && typeof targetItem.entityId === 'string') {
-              targetId = targetItem.entityId;
-            }
-            
-            // Only process valid target IDs
-            if (targetId) {
-              // Set legacy fields only for standard placeholders
-              const standardIndex = standardPlaceholders.indexOf(placeholder);
-              if (standardIndex !== -1) {
-                result.legacyFields[legacyFieldNames[standardIndex]] = targetId;
+        Object.entries(resolvedParameters.targetIds).forEach(
+          ([placeholder, targetList]) => {
+            if (
+              targetList &&
+              Array.isArray(targetList) &&
+              targetList.length > 0
+            ) {
+              const targetItem = targetList[0]; // Take first target
+
+              // Extract entity ID if it's a valid string, skip invalid targets
+              let targetId = null;
+              if (typeof targetItem === 'string' && targetItem.trim()) {
+                targetId = targetItem;
+              } else if (
+                targetItem &&
+                typeof targetItem === 'object' &&
+                targetItem.entityId &&
+                typeof targetItem.entityId === 'string'
+              ) {
+                targetId = targetItem.entityId;
               }
-              
-              // Build comprehensive target info for all placeholders
-              result.comprehensiveTargets[placeholder] = {
-                entityId: targetId,
-                placeholder: placeholder,
-                description: this.#getEntityDescription(targetId),
-                resolvedFromContext: this.#isResolvedFromContext(placeholder, resolvedParameters),
-                ...(this.#getContextSource(placeholder, resolvedParameters) && {
-                  contextSource: this.#getContextSource(placeholder, resolvedParameters)
-                })
-              };
-              
-              result.resolvedTargetCount++;
+
+              // Only process valid target IDs
+              if (targetId) {
+                // Set legacy fields only for standard placeholders
+                const standardIndex = standardPlaceholders.indexOf(placeholder);
+                if (standardIndex !== -1) {
+                  result.legacyFields[legacyFieldNames[standardIndex]] =
+                    targetId;
+                }
+
+                // Build comprehensive target info for all placeholders
+                result.comprehensiveTargets[placeholder] = {
+                  entityId: targetId,
+                  placeholder: placeholder,
+                  description: this.#getEntityDescription(targetId),
+                  resolvedFromContext: this.#isResolvedFromContext(
+                    placeholder,
+                    resolvedParameters
+                  ),
+                  ...(this.#getContextSource(
+                    placeholder,
+                    resolvedParameters
+                  ) && {
+                    contextSource: this.#getContextSource(
+                      placeholder,
+                      resolvedParameters
+                    ),
+                  }),
+                };
+
+                result.resolvedTargetCount++;
+              }
             }
           }
-        });
-        
+        );
+
         // Determine primary target for backward compatibility
         // Priority: primary > target > first available
         if (result.comprehensiveTargets.primary) {
@@ -368,9 +388,9 @@ class CommandProcessor extends ICommandProcessor {
       }
 
       // Check for context dependencies
-      result.hasContextDependencies = Object.values(result.comprehensiveTargets)
-        .some(target => target.resolvedFromContext);
-        
+      result.hasContextDependencies = Object.values(
+        result.comprehensiveTargets
+      ).some((target) => target.resolvedFromContext);
     } else if (resolvedParameters.targetId) {
       // Legacy single target
       result.primaryTarget = resolvedParameters.targetId;
@@ -383,7 +403,7 @@ class CommandProcessor extends ICommandProcessor {
 
   /**
    * Get entity description for display
-   * 
+   *
    * @param {string} entityId - Entity ID
    * @returns {string} Entity description or ID if not found
    * @private
@@ -395,14 +415,17 @@ class CommandProcessor extends ICommandProcessor {
       // But we need to avoid circular dependencies
       return entityId;
     } catch (error) {
-      this.#logger.debug(`Failed to get description for entity ${entityId}`, error);
+      this.#logger.debug(
+        `Failed to get description for entity ${entityId}`,
+        error
+      );
       return entityId;
     }
   }
 
   /**
    * Check if target was resolved from context
-   * 
+   *
    * @param {string} placeholder - Target placeholder (primary, secondary, etc)
    * @param {object} resolvedParameters - Resolved parameters
    * @returns {boolean} True if resolved from context
@@ -420,7 +443,7 @@ class CommandProcessor extends ICommandProcessor {
 
   /**
    * Get context source for a target
-   * 
+   *
    * @param {string} placeholder - Target placeholder
    * @param {object} resolvedParameters - Resolved parameters
    * @returns {string|null} Context source or null
@@ -428,7 +451,10 @@ class CommandProcessor extends ICommandProcessor {
    */
   #getContextSource(placeholder, resolvedParameters) {
     // This would be enhanced with actual context dependency data
-    if (placeholder === 'secondary' && this.#isResolvedFromContext(placeholder, resolvedParameters)) {
+    if (
+      placeholder === 'secondary' &&
+      this.#isResolvedFromContext(placeholder, resolvedParameters)
+    ) {
       return 'primary';
     }
     return null;
@@ -436,7 +462,7 @@ class CommandProcessor extends ICommandProcessor {
 
   /**
    * Logs enhanced payload creation details
-   * 
+   *
    * @param {object} payload - Created payload
    * @param {number} duration - Creation duration in ms
    * @private
@@ -447,7 +473,8 @@ class CommandProcessor extends ICommandProcessor {
       actorId: payload.actorId,
       actionId: payload.actionId,
       hasTargets: !!payload.targets,
-      hasMultipleTargets: !!payload.targets && Object.keys(payload.targets).length > 1,
+      hasMultipleTargets:
+        !!payload.targets && Object.keys(payload.targets).length > 1,
       targetCount: payload.resolvedTargetCount || 0,
       resolvedTargetCount: payload.resolvedTargetCount,
       hasContextDependencies: payload.hasContextDependencies,
@@ -562,7 +589,6 @@ class CommandProcessor extends ICommandProcessor {
       hasContextDependencies: false,
     };
   }
-
 
   /**
    * Updates payload creation metrics

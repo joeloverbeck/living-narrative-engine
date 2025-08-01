@@ -3,7 +3,7 @@
 **Version**: 1.0  
 **Date**: 2025-07-31  
 **Status**: Draft  
-**Priority**: High  
+**Priority**: High
 
 ## Executive Summary
 
@@ -18,6 +18,7 @@ This specification addresses critical architectural issues in the Living Narrati
 ### Current Behavior
 
 When executing the `intimacy:adjust_clothing` action:
+
 - **Expected Output**: "Amaia Castillo smooths Iker Aguirre's denim trucker jacket with possessive care"
 - **Actual Output**: "Amaia Castillo smooths Unnamed Character's Unnamed Character with possessive care"
 
@@ -73,6 +74,7 @@ When executing the `intimacy:adjust_clothing` action:
 **Requirement**: Enhance multi-target event payload to include resolved target IDs.
 
 **Current Event Structure** (problematic):
+
 ```json
 {
   "type": "core:attempt_action",
@@ -85,6 +87,7 @@ When executing the `intimacy:adjust_clothing` action:
 ```
 
 **Enhanced Event Structure** (required):
+
 ```json
 {
   "type": "core:attempt_action",
@@ -109,6 +112,7 @@ When executing the `intimacy:adjust_clothing` action:
 ```
 
 **Implementation Requirements**:
+
 - Modify `ActionFormattingStage` to include resolved target IDs in event payload
 - Add `primaryId`, `secondaryId`, `tertiaryId` fields for backward compatibility
 - Include comprehensive `targets` object for forward compatibility
@@ -119,6 +123,7 @@ When executing the `intimacy:adjust_clothing` action:
 **Requirement**: Enhance rule execution context to resolve placeholder names to entity IDs.
 
 **Current GET_NAME Operation Usage** (problematic):
+
 ```json
 {
   "type": "GET_NAME",
@@ -137,6 +142,7 @@ When executing the `intimacy:adjust_clothing` action:
    - Fall back to existing behavior if not a recognized placeholder
 
 2. **Implementation Pattern**:
+
    ```javascript
    // In operation handler context resolution
    function resolveEntityReference(entityRef, eventPayload) {
@@ -144,17 +150,17 @@ When executing the `intimacy:adjust_clothing` action:
      if (isPlaceholderName(entityRef)) {
        return resolveTargetPlaceholder(entityRef, eventPayload);
      }
-     
+
      // Existing logic for direct entity IDs and keywords
      return resolveDirectEntityReference(entityRef);
    }
-   
+
    function resolveTargetPlaceholder(placeholder, eventPayload) {
      // Try new format first
      if (eventPayload.targets && eventPayload.targets[placeholder]) {
        return eventPayload.targets[placeholder].entityId;
      }
-     
+
      // Fall back to legacy format
      const targetIdField = `${placeholder}Id`;
      return eventPayload[targetIdField] || null;
@@ -162,6 +168,7 @@ When executing the `intimacy:adjust_clothing` action:
    ```
 
 **Placeholder Names to Support**:
+
 - `primary` → `event.payload.primaryId` or `event.payload.targets.primary.entityId`
 - `secondary` → `event.payload.secondaryId` or `event.payload.targets.secondary.entityId`
 - `tertiary` → `event.payload.tertiaryId` or `event.payload.targets.tertiary.entityId`
@@ -173,6 +180,7 @@ When executing the `intimacy:adjust_clothing` action:
 **Requirement**: Create dedicated service for mapping placeholder names to resolved entity IDs.
 
 **Service Interface**:
+
 ```javascript
 class TargetReferenceResolver {
   constructor({ logger }) {
@@ -196,12 +204,15 @@ class TargetReferenceResolver {
    * @returns {boolean} - True if all placeholders can be resolved
    */
   validatePlaceholders(placeholders, eventPayload) {
-    return placeholders.every(p => this.resolvePlaceholder(p, eventPayload) !== null);
+    return placeholders.every(
+      (p) => this.resolvePlaceholder(p, eventPayload) !== null
+    );
   }
 }
 ```
 
 **Integration Points**:
+
 - Rule execution context initialization
 - Operation handler entity reference resolution
 - Action validation and error reporting
@@ -211,6 +222,7 @@ class TargetReferenceResolver {
 **Requirement**: Extend `TargetManager` to provide placeholder-to-entity-ID mapping API.
 
 **API Extensions**:
+
 ```javascript
 class TargetManager {
   // Existing methods...
@@ -221,7 +233,7 @@ class TargetManager {
    * @returns {string|null} - Entity ID or null if not found
    */
   getEntityIdByPlaceholder(placeholderName) {
-    const target = this.targets.find(t => t.name === placeholderName);
+    const target = this.targets.find((t) => t.name === placeholderName);
     return target ? target.entityId : null;
   }
 
@@ -231,7 +243,7 @@ class TargetManager {
    */
   getTargetMappings() {
     const mappings = {};
-    this.targets.forEach(target => {
+    this.targets.forEach((target) => {
       mappings[target.name] = target.entityId;
     });
     return mappings;
@@ -243,8 +255,8 @@ class TargetManager {
    * @returns {boolean} - True if all placeholders have resolved targets
    */
   validateRequiredTargets(requiredPlaceholders) {
-    return requiredPlaceholders.every(placeholder => 
-      this.getEntityIdByPlaceholder(placeholder) !== null
+    return requiredPlaceholders.every(
+      (placeholder) => this.getEntityIdByPlaceholder(placeholder) !== null
     );
   }
 }
@@ -259,26 +271,27 @@ class TargetManager {
 **Test Scenarios**:
 
 1. **Basic Multi-Target Action Test**:
+
    ```javascript
    describe('Multi-Target Action E2E - adjust_clothing', () => {
      it('should produce correct narrative output for multi-target action', async () => {
        // Setup: Create actors with intimacy relationship and clothing
        const testBed = new E2ETestBed();
        const { amaia, iker } = await testBed.setupIntimacyScenario();
-       
+
        // Execute: Trigger adjust_clothing action
        const result = await testBed.executeAction({
          actorId: amaia.id,
          actionId: 'intimacy:adjust_clothing',
          targets: {
            primary: iker.id,
-           secondary: iker.clothing.jacket.id
-         }
+           secondary: iker.clothing.jacket.id,
+         },
        });
-       
+
        // Assert: Verify correct narrative output
        expect(result.narrativeText).toBe(
-         'Amaia Castillo smooths Iker Aguirre\'s denim trucker jacket with possessive care.'
+         "Amaia Castillo smooths Iker Aguirre's denim trucker jacket with possessive care."
        );
        expect(result.success).toBe(true);
      });
@@ -286,6 +299,7 @@ class TargetManager {
    ```
 
 2. **Placeholder Resolution Test**:
+
    ```javascript
    it('should resolve placeholder names to actual entity IDs in rules', async () => {
      // Verify that GET_NAME operations work with placeholder references
@@ -294,10 +308,10 @@ class TargetManager {
        eventPayload: {
          actorId: 'amaia_id',
          primaryId: 'iker_id',
-         secondaryId: 'jacket_id'
-       }
+         secondaryId: 'jacket_id',
+       },
      });
-     
+
      expect(ruleResult.context.primaryName).toBe('Iker Aguirre');
      expect(ruleResult.context.garmentName).toBe('denim trucker jacket');
    });
@@ -311,7 +325,7 @@ class TargetManager {
        actionId: 'intimacy:adjust_clothing',
        // Missing target information
      });
-     
+
      expect(result.success).toBe(false);
      expect(result.error).toContain('Unable to resolve target');
    });
@@ -343,6 +357,7 @@ class TargetManager {
 ### Event Payload Schema
 
 **Enhanced Multi-Target Event Payload**:
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -416,6 +431,7 @@ class TargetManager {
 ### Entity Reference Resolution Enhancement
 
 **Enhanced Entity Reference Schema**:
+
 ```json
 {
   "entityReference": {
@@ -426,7 +442,14 @@ class TargetManager {
         "description": "Keyword, placeholder name, or direct entity ID",
         "minLength": 1,
         "pattern": "^\\S(.*\\S)?$",
-        "examples": ["actor", "target", "primary", "secondary", "tertiary", "core:player"]
+        "examples": [
+          "actor",
+          "target",
+          "primary",
+          "secondary",
+          "tertiary",
+          "core:player"
+        ]
       },
       {
         "type": "object",
@@ -445,6 +468,7 @@ class TargetManager {
 ```
 
 **Placeholder Name Recognition**:
+
 - Reserved placeholder names: `primary`, `secondary`, `tertiary`
 - Case-sensitive matching required
 - No additional placeholder names allowed (for clarity and validation)
@@ -464,30 +488,37 @@ class TargetManager {
    - `INCOMPATIBLE_ACTION_TYPE`: Action type doesn't support multi-target format
 
 **Error Handling Strategy**:
+
 ```javascript
 // Graceful degradation with informative logging
 function resolveEntityReference(entityRef, context) {
   try {
     if (isPlaceholderName(entityRef)) {
-      const resolvedId = resolveTargetPlaceholder(entityRef, context.eventPayload);
+      const resolvedId = resolveTargetPlaceholder(
+        entityRef,
+        context.eventPayload
+      );
       if (!resolvedId) {
         throw new TargetResolutionError(
           `TARGET_PLACEHOLDER_NOT_FOUND`,
           `Unable to resolve placeholder '${entityRef}' to entity ID`,
-          { placeholder: entityRef, availableTargets: Object.keys(context.eventPayload.targets || {}) }
+          {
+            placeholder: entityRef,
+            availableTargets: Object.keys(context.eventPayload.targets || {}),
+          }
         );
       }
       return resolvedId;
     }
-    
+
     return resolveDirectEntityReference(entityRef);
   } catch (error) {
     context.logger.error(`Entity reference resolution failed`, {
       entityRef,
       error: error.message,
-      context: 'rule_execution'
+      context: 'rule_execution',
     });
-    
+
     // Return fallback value or re-throw based on operation requirements
     if (error.code === 'TARGET_PLACEHOLDER_NOT_FOUND') {
       return null; // Let operation handler decide how to handle
@@ -504,17 +535,20 @@ function resolveEntityReference(entityRef, context) {
 #### Phase 1: Event Payload Enhancement (Priority 1A)
 
 **Step 1.1**: Modify `ActionFormattingStage.js`
+
 - Update event creation to include resolved target IDs
 - Add `primaryId`, `secondaryId`, `tertiaryId` fields
 - Include comprehensive `targets` object
 - Maintain backward compatibility
 
 **Step 1.2**: Update Event Validation
+
 - Extend event schema validation for new payload structure
 - Add validation for target ID presence and format
 - Test payload structure with existing event consumers
 
 **Step 1.3**: Integration Testing
+
 - Test new event format with existing rules
 - Verify backward compatibility with single-target actions
 - Validate event serialization and deserialization
@@ -522,16 +556,19 @@ function resolveEntityReference(entityRef, context) {
 #### Phase 2: Rule Context Enhancement (Priority 1B)
 
 **Step 2.1**: Enhance Entity Reference Resolution
+
 - Modify core entity reference resolution logic
 - Add placeholder name recognition and resolution
 - Implement fallback mechanisms for missing targets
 
 **Step 2.2**: Update Operation Handlers
+
 - Modify `GET_NAME` operation handler to use enhanced resolution
 - Update other operation handlers that use entity references
 - Add comprehensive error handling and logging
 
 **Step 2.3**: Rule Execution Testing
+
 - Test placeholder resolution with multi-target actions
 - Verify error handling for missing or invalid placeholders
 - Validate rule execution produces correct results
@@ -539,16 +576,19 @@ function resolveEntityReference(entityRef, context) {
 #### Phase 3: Validation and Testing (Priority 3)
 
 **Step 3.1**: End-to-End Test Implementation
+
 - Create `adjust_clothing` E2E test suite
 - Implement comprehensive scenario testing
 - Add performance and error handling tests
 
 **Step 3.2**: Integration Test Enhancement
+
 - Add rule-action integration tests
 - Test event payload validation
 - Verify pipeline integration
 
 **Step 3.3**: Regression Testing
+
 - Test existing single-target actions for backward compatibility
 - Verify existing multi-target actions (if any) still work
 - Performance regression testing
@@ -556,11 +596,13 @@ function resolveEntityReference(entityRef, context) {
 ### Migration Path for Existing Actions
 
 **Current Multi-Target Actions**:
+
 - Audit existing actions for multi-target usage
 - Identify actions using placeholder references in rules
 - Test each action with enhanced system
 
 **Migration Steps**:
+
 1. **No changes required** for action definitions (backward compatible)
 2. **No changes required** for rules using placeholder references (enhanced resolution)
 3. **Test and validate** each existing multi-target action
@@ -569,24 +611,28 @@ function resolveEntityReference(entityRef, context) {
 ### Validation Checkpoints and Success Criteria
 
 **Checkpoint 1: Event Payload Enhancement**
+
 - ✅ Multi-target events include all resolved target IDs
 - ✅ Backward compatibility maintained for existing event consumers
 - ✅ Event validation accepts new payload structure
 - ✅ Serialization/deserialization works correctly
 
 **Checkpoint 2: Rule Context Enhancement**
+
 - ✅ Placeholder names resolve to actual entity IDs
 - ✅ GET_NAME operation works with placeholder references
 - ✅ Error handling provides informative messages
 - ✅ Fallback behavior prevents system crashes
 
 **Checkpoint 3: Integration Validation**
+
 - ✅ `adjust_clothing` action produces correct narrative output
 - ✅ Other multi-target actions (if any) continue working
 - ✅ Single-target actions remain unaffected
 - ✅ Performance impact is negligible (<5% overhead)
 
 **Final Success Criteria**:
+
 - ✅ Output: "Amaia Castillo smooths Iker Aguirre's denim trucker jacket with possessive care"
 - ✅ No "Unnamed Character" fallback text in multi-target actions
 - ✅ All existing functionality preserved
@@ -596,18 +642,21 @@ function resolveEntityReference(entityRef, context) {
 ### Performance Considerations
 
 **Performance Requirements**:
+
 - Event payload size increase: <50% (acceptable for enhanced functionality)
 - Rule execution overhead: <5% increase
 - Memory usage increase: <10% for target resolution caching
 - Action discovery performance: No degradation
 
 **Optimization Strategies**:
+
 - Cache placeholder resolution results within rule execution context
 - Lazy evaluation of target information when not needed
 - Efficient event payload serialization using existing msgpack compression
 - Target validation short-circuiting for performance-critical paths
 
 **Monitoring and Metrics**:
+
 - Track event payload size distribution
 - Monitor rule execution performance
 - Alert on placeholder resolution failures
@@ -648,21 +697,25 @@ function resolveEntityReference(entityRef, context) {
 ## Implementation Timeline
 
 ### Phase 1: Foundation (Week 1-2)
+
 - Event payload enhancement implementation
 - Basic placeholder resolution logic
 - Unit tests for core functionality
 
 ### Phase 2: Integration (Week 3-4)
+
 - Rule context enhancement
 - Operation handler updates
 - Integration testing and debugging
 
 ### Phase 3: Validation (Week 5-6)
+
 - End-to-end test implementation
 - Performance testing and optimization
 - Documentation updates
 
 ### Phase 4: Deployment (Week 7-8)
+
 - Production readiness validation
 - Gradual rollout with monitoring
 - Bug fixes and performance tuning
@@ -670,17 +723,20 @@ function resolveEntityReference(entityRef, context) {
 ## Dependencies and Prerequisites
 
 ### System Dependencies
+
 - Existing multi-target action infrastructure
 - Event bus system
 - Rule execution engine
 - Entity management system
 
 ### Development Dependencies
+
 - Testing framework setup for E2E tests
 - Performance monitoring and profiling tools
 - Documentation generation tools
 
 ### Knowledge Prerequisites
+
 - Understanding of ECS architecture
 - Event-driven system design principles
 - JSON schema design and validation

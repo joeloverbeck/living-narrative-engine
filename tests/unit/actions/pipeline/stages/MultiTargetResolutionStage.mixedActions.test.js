@@ -172,9 +172,11 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
 
     // However, the actionsWithTargets should still contain both action types
     expect(result.data.actionsWithTargets).toHaveLength(2);
-    
+
     // Verify both legacy and multi-target actions are included
-    const actionIds = result.data.actionsWithTargets.map(({ actionDef }) => actionDef.id);
+    const actionIds = result.data.actionsWithTargets.map(
+      ({ actionDef }) => actionDef.id
+    );
     expect(actionIds).toContain('legacy:action1');
     expect(actionIds).toContain('intimacy:adjust_clothing');
   });
@@ -348,20 +350,24 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
 
     expect(multiTargetAction).toBeDefined();
     expect(multiTargetAction.targetContexts).toBeDefined();
-    
+
     // Verify the multi-target action has properly resolved targets
     // Should have 2 target contexts (primary actor and dependent item)
     expect(multiTargetAction.targetContexts).toHaveLength(2);
-    
+
     // Verify target context details
-    const targetIds = multiTargetAction.targetContexts.map(tc => tc.entityId);
+    const targetIds = multiTargetAction.targetContexts.map((tc) => tc.entityId);
     expect(targetIds).toContain('actor2');
     expect(targetIds).toContain('item1');
 
     // Verify placeholders are set correctly
-    const actorContext = multiTargetAction.targetContexts.find(tc => tc.entityId === 'actor2');
-    const itemContext = multiTargetAction.targetContexts.find(tc => tc.entityId === 'item1');
-    
+    const actorContext = multiTargetAction.targetContexts.find(
+      (tc) => tc.entityId === 'actor2'
+    );
+    const itemContext = multiTargetAction.targetContexts.find(
+      (tc) => tc.entityId === 'item1'
+    );
+
     expect(actorContext.placeholder).toBe('actor');
     expect(itemContext.placeholder).toBe('item');
   });
