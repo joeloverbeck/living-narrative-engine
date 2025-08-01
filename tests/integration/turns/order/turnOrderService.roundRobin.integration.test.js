@@ -3,10 +3,20 @@
  * Tests the round-robin turn order strategy in a real service context
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { TurnOrderService } from '../../../../src/turns/order/turnOrderService.js';
 import { createMockLogger } from '../../../common/mockFactories/index.js';
-import { createMockActor, createMockEntity } from '../../../common/mockFactories/entities.js';
+import {
+  createMockActor,
+  createMockEntity,
+} from '../../../common/mockFactories/entities.js';
 
 describe('TurnOrderService - Round Robin Strategy Integration', () => {
   let turnOrderService;
@@ -27,7 +37,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       const entities = [
         createMockEntity('entity1'),
         createMockEntity('entity2'),
-        createMockEntity('entity3')
+        createMockEntity('entity3'),
       ];
 
       // Act
@@ -46,7 +56,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       const entities = [
         createMockActor('player1', { name: 'Player One' }),
         createMockActor('npc1', { name: 'NPC One' }),
-        createMockActor('npc2', { name: 'NPC Two' })
+        createMockActor('npc2', { name: 'NPC Two' }),
       ];
 
       // Act
@@ -67,7 +77,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       const entities = [
         createMockEntity('first'),
         createMockEntity('second'),
-        createMockEntity('third')
+        createMockEntity('third'),
       ];
       turnOrderService.startNewRound(entities, 'round-robin');
 
@@ -80,10 +90,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
 
     it('should handle multiple rounds of turns correctly', () => {
       // Arrange
-      const entities = [
-        createMockActor('player1'),
-        createMockActor('player2')
-      ];
+      const entities = [createMockActor('player1'), createMockActor('player2')];
 
       // First round
       turnOrderService.startNewRound(entities, 'round-robin');
@@ -103,7 +110,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       const entities = [
         createMockEntity('entity1'),
         createMockEntity('entity2'),
-        createMockEntity('entity3')
+        createMockEntity('entity3'),
       ];
       turnOrderService.startNewRound(entities, 'round-robin');
 
@@ -123,9 +130,9 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       // Arrange
       const entities = [
         createMockEntity('entity1'),
-        createMockEntity('entity2')
+        createMockEntity('entity2'),
       ];
-      
+
       // Initially empty
       expect(turnOrderService.isEmpty()).toBe(true);
 
@@ -146,7 +153,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       // Arrange
       const entities = [
         createMockActor('player1', { name: 'Player One' }),
-        createMockActor('player2', { name: 'Player Two' })
+        createMockActor('player2', { name: 'Player Two' }),
       ];
       turnOrderService.startNewRound(entities, 'round-robin');
 
@@ -183,7 +190,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       const entities = [
         createMockEntity('entity1'),
         createMockEntity('entity2'),
-        createMockEntity('entity3')
+        createMockEntity('entity3'),
       ];
       turnOrderService.startNewRound(entities, 'round-robin');
 
@@ -203,7 +210,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
         createMockEntity('entity1'),
         createMockEntity('entity2'),
         createMockEntity('entity3'),
-        createMockEntity('entity4')
+        createMockEntity('entity4'),
       ];
       turnOrderService.startNewRound(entities, 'round-robin');
 
@@ -236,12 +243,12 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       // Arrange
       const firstRoundEntities = [
         createMockEntity('entity1'),
-        createMockEntity('entity2')
+        createMockEntity('entity2'),
       ];
       const secondRoundEntities = [
         createMockEntity('entity3'),
         createMockEntity('entity4'),
-        createMockEntity('entity5')
+        createMockEntity('entity5'),
       ];
 
       // First round
@@ -264,7 +271,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       // Arrange
       const entities = [
         createMockEntity('entity1'),
-        createMockEntity('entity2')
+        createMockEntity('entity2'),
       ];
       turnOrderService.startNewRound(entities, 'round-robin');
 
@@ -281,11 +288,11 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       // Arrange
       const entities = [
         createMockEntity('entity1'),
-        createMockEntity('entity2')
+        createMockEntity('entity2'),
       ];
       const initiativeData = new Map([
         ['entity1', 10],
-        ['entity2', 20]
+        ['entity2', 20],
       ]);
 
       // Start with round-robin
@@ -308,7 +315,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       expect(() => {
         turnOrderService.startNewRound([], 'round-robin');
       }).toThrow('Entities array must be provided and non-empty.');
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         'TurnOrderService.startNewRound: Failed - entities array must be a non-empty array.'
       );
@@ -320,7 +327,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
         { id: 'valid' },
         { name: 'missing-id' }, // Missing id
         { id: '' }, // Empty id
-        null // Null entity
+        null, // Null entity
       ];
 
       // Act & Assert
@@ -345,7 +352,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
       expect(turnOrderService.peekNextEntity()).toBe(null);
       expect(turnOrderService.getNextEntity()).toBe(null);
       expect(turnOrderService.getCurrentOrder()).toHaveLength(0);
-      
+
       // removeEntity returns void, just verify it doesn't throw
       expect(() => turnOrderService.removeEntity('any')).not.toThrow();
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -357,7 +364,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
   describe('Complex scenarios', () => {
     it('should handle large number of entities efficiently', () => {
       // Arrange
-      const largeEntitySet = Array.from({ length: 100 }, (_, i) => 
+      const largeEntitySet = Array.from({ length: 100 }, (_, i) =>
         createMockEntity(`entity${i}`)
       );
 
@@ -366,7 +373,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
 
       // Assert
       expect(turnOrderService.getCurrentOrder()).toHaveLength(100);
-      
+
       // Verify FIFO order maintained
       for (let i = 0; i < 100; i++) {
         expect(turnOrderService.getNextEntity().id).toBe(`entity${i}`);
@@ -381,7 +388,7 @@ describe('TurnOrderService - Round Robin Strategy Integration', () => {
         isPlayer: true,
         playerType: 'human',
         health: 100,
-        inventory: ['sword', 'shield']
+        inventory: ['sword', 'shield'],
       });
       const entities = [complexEntity, createMockEntity('npc1')];
 

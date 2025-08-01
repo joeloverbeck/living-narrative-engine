@@ -406,6 +406,153 @@ describe('TargetExtractionResult', () => {
     });
   });
 
+  describe('TargetManager Delegation Methods', () => {
+    let result;
+
+    beforeEach(() => {
+      const multiTargetManager = new TargetManager({
+        targets: {
+          primary: 'entity_123',
+          secondary: 'entity_456',
+          tertiary: 'entity_789',
+        },
+        logger,
+      });
+      result = new TargetExtractionResult({ targetManager: multiTargetManager });
+    });
+
+    describe('getEntityIdByPlaceholder', () => {
+      it('should expose TargetManager getEntityIdByPlaceholder method', () => {
+        const entityId = result.getEntityIdByPlaceholder('primary');
+        
+        expect(entityId).toBe('entity_123');
+      });
+
+      it('should return entity ID for valid placeholders', () => {
+        expect(result.getEntityIdByPlaceholder('primary')).toBe('entity_123');
+        expect(result.getEntityIdByPlaceholder('secondary')).toBe('entity_456');
+        expect(result.getEntityIdByPlaceholder('tertiary')).toBe('entity_789');
+      });
+
+      it('should return null for invalid placeholder names', () => {
+        const entityId = result.getEntityIdByPlaceholder('invalid');
+        
+        expect(entityId).toBeNull();
+      });
+
+      it('should handle case-sensitive placeholder names', () => {
+        const entityId = result.getEntityIdByPlaceholder('Primary');
+        
+        expect(entityId).toBeNull(); // Case sensitive
+      });
+
+      it('should work with all standard placeholder names', () => {
+        const placeholders = ['primary', 'secondary', 'tertiary'];
+        
+        placeholders.forEach(placeholder => {
+          if (result.hasTarget(placeholder)) {
+            const entityId = result.getEntityIdByPlaceholder(placeholder);
+            expect(entityId).toBeTruthy();
+            expect(typeof entityId).toBe('string');
+          }
+        });
+      });
+
+      it('should throw error for empty placeholder name', () => {
+        expect(() => {
+          result.getEntityIdByPlaceholder('');
+        }).toThrow();
+      });
+
+      it('should throw error for null/undefined placeholder name', () => {
+        expect(() => {
+          result.getEntityIdByPlaceholder(null);
+        }).toThrow();
+
+        expect(() => {
+          result.getEntityIdByPlaceholder(undefined);
+        }).toThrow();
+      });
+    });
+
+    describe('hasTarget', () => {
+      it('should expose TargetManager hasTarget method', () => {
+        expect(result.hasTarget('primary')).toBe(true);
+        expect(result.hasTarget('secondary')).toBe(true);
+        expect(result.hasTarget('tertiary')).toBe(true);
+      });
+
+      it('should return false for invalid target names', () => {
+        expect(result.hasTarget('invalid')).toBe(false);
+        expect(result.hasTarget('nonexistent')).toBe(false);
+      });
+
+      it('should handle case-sensitive target names', () => {
+        expect(result.hasTarget('Primary')).toBe(false); // Case sensitive
+      });
+
+      it('should handle empty and null names gracefully', () => {
+        // hasTarget doesn't validate input, just checks Map.has()
+        expect(result.hasTarget('')).toBe(false);
+        expect(result.hasTarget(null)).toBe(false);
+        expect(result.hasTarget(undefined)).toBe(false);
+      });
+    });
+
+    describe('isMultiTarget', () => {
+      it('should expose TargetManager isMultiTarget method', () => {
+        expect(result.isMultiTarget()).toBe(true);
+      });
+
+      it('should return false for single target scenarios', () => {
+        const singleTargetManager = new TargetManager({
+          targets: { primary: 'entity_123' },
+          logger,
+        });
+        const singleResult = new TargetExtractionResult({
+          targetManager: singleTargetManager,
+        });
+
+        expect(singleResult.isMultiTarget()).toBe(false);
+      });
+
+      it('should return false for empty target scenarios', () => {
+        const emptyTargetManager = new TargetManager({ logger });
+        const emptyResult = new TargetExtractionResult({
+          targetManager: emptyTargetManager,
+        });
+
+        expect(emptyResult.isMultiTarget()).toBe(false);
+      });
+    });
+
+    describe('Integration with existing methods', () => {
+      it('should work consistently with hasMultipleTargets', () => {
+        expect(result.isMultiTarget()).toBe(result.hasMultipleTargets());
+      });
+
+      it('should work consistently with getTarget', () => {
+        const placeholders = ['primary', 'secondary', 'tertiary'];
+        
+        placeholders.forEach(placeholder => {
+          const entityIdFromPlaceholder = result.getEntityIdByPlaceholder(placeholder);
+          const entityIdFromGetTarget = result.getTarget(placeholder);
+          
+          expect(entityIdFromPlaceholder).toBe(entityIdFromGetTarget);
+        });
+      });
+
+      it('should validate placeholder existence before resolution', () => {
+        const placeholder = 'primary';
+        
+        if (result.hasTarget(placeholder)) {
+          const entityId = result.getEntityIdByPlaceholder(placeholder);
+          expect(entityId).toBeTruthy();
+        }
+      });
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle null primary target', () => {
       const emptyTargetManager = new TargetManager({ logger });

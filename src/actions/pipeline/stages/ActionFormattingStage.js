@@ -6,6 +6,7 @@
 import { PipelineStage } from '../PipelineStage.js';
 import { PipelineResult } from '../PipelineResult.js';
 import { ERROR_PHASES } from '../../errors/actionErrorTypes.js';
+import { TargetExtractionResult } from '../../../entities/multiTarget/targetExtractionResult.js';
 
 /** @typedef {import('../../../interfaces/IActionCommandFormatter.js').IActionCommandFormatter} IActionCommandFormatter */
 /** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
@@ -760,16 +761,58 @@ export class ActionFormattingStage extends PipelineStage {
 
   /**
    * Extract target IDs from resolved targets for params
+   * Enhanced to use TargetManager for optimized placeholder resolution
    *
    * @param resolvedTargets
    * @private
    */
   #extractTargetIds(resolvedTargets) {
     const targetIds = {};
-    for (const [key, targets] of Object.entries(resolvedTargets)) {
-      targetIds[key] = targets.map((t) => t.id);
+    
+    // Use optimized approach: if we have a TargetExtractionResult, use O(1) lookups
+    if (resolvedTargets && typeof resolvedTargets.getEntityIdByPlaceholder === 'function') {
+      // resolvedTargets is already a TargetExtractionResult
+      for (const placeholderName of resolvedTargets.getTargetNames()) {
+        const entityId = resolvedTargets.getEntityIdByPlaceholder(placeholderName);
+        if (entityId) {
+          targetIds[placeholderName] = [entityId]; // Keep array format for backward compatibility
+        }
+      }
+    } else {
+      // Legacy format: preserve all targets in each category
+      for (const [key, targets] of Object.entries(resolvedTargets)) {
+        targetIds[key] = targets.map((t) => t.id);
+      }
     }
+    
     return targetIds;
+  }
+
+  /**
+   * Create TargetExtractionResult from resolved targets format
+   * Converts from { placeholder: [{ id: 'entity_123', ... }] } to TargetManager format
+   *
+   * @param resolvedTargets - Resolved targets in current format
+   * @returns {TargetExtractionResult} Optimized target extraction result
+   * @private
+   */
+  #createTargetExtractionResult(resolvedTargets) {
+    // Convert to simple targets object format for TargetManager
+    const targets = {};
+    for (const [key, targetList] of Object.entries(resolvedTargets)) {
+      if (Array.isArray(targetList) && targetList.length > 0) {
+        targets[key] = targetList[0].id; // Take first target from each category
+      }
+    }
+
+    // Use existing factory method to create TargetExtractionResult
+    return TargetExtractionResult.fromResolvedParameters(
+      {
+        isMultiTarget: Object.keys(targets).length > 1,
+        targetIds: Object.keys(targets).length > 0 ? targets : undefined,
+      },
+      this.#logger
+    );
   }
 
   /**

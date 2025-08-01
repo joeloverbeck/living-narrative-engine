@@ -1,6 +1,6 @@
 /**
- * @file Integration tests for multi-target placeholder resolution
- * @description Tests the placeholder resolution in GET_NAME operation handler
+ * @file Integration tests for GetNameHandler placeholder resolution
+ * @description Tests the GetNameHandler's interaction with placeholder resolution system
  */
 
 import {
@@ -14,8 +14,9 @@ import {
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import { NAME_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { PlaceholderTestUtils } from '../../helpers/placeholderTestUtils.js';
 
-describe('Multi-target placeholder resolution integration', () => {
+describe('GetNameHandler placeholder resolution integration', () => {
   let handler;
   let mockEntityManager;
   let mockLogger;
@@ -216,7 +217,9 @@ describe('Multi-target placeholder resolution integration', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "Failed to resolve placeholder 'primary' - no matching target in event payload",
         expect.objectContaining({
+          placeholder: 'primary',
           availableTargets: [],
+          suggestion: 'No targets available in event payload'
         })
       );
       expect(executionContext.evaluationContext.context.targetName).toBe(
@@ -415,13 +418,15 @@ describe('Multi-target placeholder resolution integration', () => {
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "Failed to resolve placeholder 'secondary' - no matching target in event payload",
-        {
+        expect.objectContaining({
+          placeholder: 'secondary',
           availableTargets: expect.arrayContaining([
             'primary',
             'tertiary',
             'custom',
           ]),
-        }
+          suggestion: expect.stringContaining('Available targets:')
+        })
       );
     });
   });

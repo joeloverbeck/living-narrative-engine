@@ -318,6 +318,7 @@ class TargetManager {
    ```
 
 3. **Error Handling Test**:
+
    ```javascript
    it('should handle missing target IDs gracefully', async () => {
      const result = await testBed.executeAction({

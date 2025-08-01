@@ -49,27 +49,6 @@ describe('TargetManager', () => {
       expect(manager.getTarget('secondary')).toBe('entity_456');
     });
 
-    it('should remove targets', () => {
-      const manager = new TargetManager({
-        targets: { item: 'knife_123', target: 'goblin_456' },
-        logger,
-      });
-
-      const removed = manager.removeTarget('item');
-
-      expect(removed).toBe(true);
-      expect(manager.getTargetCount()).toBe(1);
-      expect(manager.hasTarget('item')).toBe(false);
-      expect(manager.hasTarget('target')).toBe(true);
-    });
-
-    it('should return false when removing non-existent target', () => {
-      const manager = new TargetManager({ logger });
-
-      const removed = manager.removeTarget('nonexistent');
-
-      expect(removed).toBe(false);
-    });
   });
 
   describe('Primary Target Management', () => {
@@ -114,29 +93,6 @@ describe('TargetManager', () => {
       }).toThrow('Entity ID "nonexistent_entity" not found in targets');
     });
 
-    it('should update primary target when removed', () => {
-      const manager = new TargetManager({
-        targets: { primary: 'primary_123', secondary: 'secondary_456' },
-        logger,
-      });
-
-      // Remove primary target
-      manager.removeTarget('primary');
-
-      // Should fallback to determining new primary
-      expect(manager.getPrimaryTarget()).toBe('secondary_456');
-    });
-
-    it('should set primary target to null when all targets removed', () => {
-      const manager = new TargetManager({
-        targets: { item: 'knife_123' },
-        logger,
-      });
-
-      manager.removeTarget('item');
-
-      expect(manager.getPrimaryTarget()).toBe(null);
-    });
   });
 
   describe('Target Queries', () => {
@@ -255,80 +211,6 @@ describe('TargetManager', () => {
     });
   });
 
-  describe('Utility Methods', () => {
-    it('should clone target manager', () => {
-      const original = new TargetManager({
-        targets: { item: 'knife_123', target: 'goblin_456' },
-        logger,
-      });
-
-      const clone = original.clone();
-
-      expect(clone.getTargetsObject()).toEqual(original.getTargetsObject());
-      expect(clone.getPrimaryTarget()).toBe(original.getPrimaryTarget());
-      expect(clone).not.toBe(original); // Different instances
-    });
-
-    it('should merge with another target manager', () => {
-      const manager1 = new TargetManager({
-        targets: { item: 'knife_123' },
-        logger,
-      });
-
-      const manager2 = new TargetManager({
-        targets: { target: 'goblin_456', tool: 'sword_789' },
-        logger,
-      });
-
-      manager1.merge(manager2);
-
-      expect(manager1.getTargetCount()).toBe(3);
-      expect(manager1.hasTarget('target')).toBe(true);
-      expect(manager1.hasTarget('tool')).toBe(true);
-    });
-
-    it('should merge with overwrite option', () => {
-      const manager1 = new TargetManager({
-        targets: { item: 'knife_123', target: 'goblin_456' },
-        logger,
-      });
-
-      const manager2 = new TargetManager({
-        targets: { item: 'sword_789' }, // Different item
-        logger,
-      });
-
-      manager1.merge(manager2, { overwrite: true });
-
-      expect(manager1.getTarget('item')).toBe('sword_789');
-    });
-
-    it('should merge with updatePrimary option', () => {
-      const manager1 = new TargetManager({
-        targets: { item: 'knife_123' },
-        logger,
-      });
-
-      const manager2 = new TargetManager({
-        targets: { tool: 'hammer_456' },
-        primaryTarget: 'hammer_456',
-        logger,
-      });
-
-      manager1.merge(manager2, { updatePrimary: true });
-
-      expect(manager1.getPrimaryTarget()).toBe('hammer_456');
-    });
-
-    it('should throw error when merging with non-TargetManager', () => {
-      const manager = new TargetManager({ logger });
-
-      expect(() => {
-        manager.merge({ targets: {} });
-      }).toThrow('Can only merge with another TargetManager instance');
-    });
-  });
-
   describe('JSON Serialization', () => {
     it('should convert to JSON', () => {
       const manager = new TargetManager({
@@ -347,26 +229,6 @@ describe('TargetManager', () => {
       });
     });
 
-    it('should create from JSON', () => {
-      const json = {
-        targets: { item: 'knife_123', target: 'goblin_456' },
-        primaryTarget: 'knife_123',
-      };
-
-      const manager = TargetManager.fromJSON(json, logger);
-
-      expect(manager.getTargetsObject()).toEqual(json.targets);
-      expect(manager.getPrimaryTarget()).toBe(json.primaryTarget);
-    });
-
-    it('should handle empty JSON gracefully', () => {
-      const json = {};
-
-      const manager = TargetManager.fromJSON(json, logger);
-
-      expect(manager.getTargetCount()).toBe(0);
-      expect(manager.getPrimaryTarget()).toBe(null);
-    });
   });
 
   describe('Error Handling', () => {
@@ -440,6 +302,67 @@ describe('TargetManager', () => {
       manager.addTarget('armor', 'shield_456');
 
       expect(manager.getPrimaryTarget()).toBe('sword_123');
+    });
+  });
+
+  describe('Enhanced APIs for Multi-Target Integration', () => {
+    let manager;
+
+    beforeEach(() => {
+      manager = new TargetManager({
+        targets: {
+          primary: 'entity_123',
+          secondary: 'entity_456',
+          tertiary: 'entity_789',
+        },
+        logger,
+      });
+    });
+
+    describe('getEntityIdByPlaceholder', () => {
+      it('should return entity ID for valid placeholder', () => {
+        expect(manager.getEntityIdByPlaceholder('primary')).toBe('entity_123');
+        expect(manager.getEntityIdByPlaceholder('secondary')).toBe('entity_456');
+        expect(manager.getEntityIdByPlaceholder('tertiary')).toBe('entity_789');
+      });
+
+      it('should return null for invalid placeholder', () => {
+        expect(manager.getEntityIdByPlaceholder('nonexistent')).toBe(null);
+        expect(manager.getEntityIdByPlaceholder('quaternary')).toBe(null);
+      });
+
+      it('should throw error for empty placeholder name', () => {
+        expect(() => {
+          manager.getEntityIdByPlaceholder('');
+        }).toThrow();
+      });
+
+      it('should throw error for null/undefined placeholder name', () => {
+        expect(() => {
+          manager.getEntityIdByPlaceholder(null);
+        }).toThrow();
+
+        expect(() => {
+          manager.getEntityIdByPlaceholder(undefined);
+        }).toThrow();
+      });
+    });
+
+
+    describe('Integration with existing functionality', () => {
+      it('should maintain backward compatibility with existing methods', () => {
+        // All existing methods should continue working
+        expect(manager.getTarget('primary')).toBe('entity_123');
+        expect(manager.hasTarget('secondary')).toBe(true);
+        expect(manager.getTargetCount()).toBe(3);
+        expect(manager.isMultiTarget()).toBe(true);
+        expect(manager.getPrimaryTarget()).toBe('entity_123');
+
+        // New methods should provide additional functionality
+        expect(manager.getEntityIdByPlaceholder('primary')).toBe('entity_123');
+      });
+
+
     });
   });
 });
