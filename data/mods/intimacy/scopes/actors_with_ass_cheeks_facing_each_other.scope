@@ -3,6 +3,6 @@
 intimacy:actors_with_ass_cheeks_facing_each_other := actor.components.positioning:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "ass_cheek"]},
-    {"condition_ref": "intimacy:both-actors-facing-each-other"}
+    {"condition_ref": "positioning:both-actors-facing-each-other"}
   ]
 }]

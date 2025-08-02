@@ -55,6 +55,7 @@
         "humanoid_arm_muscular.entity.json",
         "humanoid_ear.entity.json",
         "humanoid_head.entity.json",
+        "humanoid_head_bearded.entity.json",
         "humanoid_mouth.entity.json",
         "humanoid_nose.entity.json",
         "humanoid_teeth.entity.json"

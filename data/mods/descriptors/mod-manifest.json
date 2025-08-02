@@ -8,9 +8,12 @@
   "dependencies": [],
   "content": {
     "components": [
+      "body_composition.component.json",
+      "body_hair.component.json",
       "build.component.json",
       "color_basic.component.json",
       "color_extended.component.json",
+      "facial_hair.component.json",
       "firmness.component.json",
       "hair_style.component.json",
       "length_category.component.json",

@@ -2,7 +2,7 @@
 // Used by clothing adjustment actions that require the target to have adjustable upper body clothing
 intimacy:close_actors_facing_each_other_with_torso_clothing := actor.components.positioning:closeness.partners[][{
   "and": [
-    {"condition_ref": "intimacy:both-actors-facing-each-other"},
+    {"condition_ref": "positioning:both-actors-facing-each-other"},
     {"hasClothingInSlot": [".", "torso_upper"]}
   ]
 }]

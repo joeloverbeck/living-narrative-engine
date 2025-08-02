@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:body_hair",
+  "description": "Describes the body hair characteristics",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "density": {
+        "type": "string",
+        "description": "The density or amount of body hair",
+        "enum": [
+          "hairless",
+          "sparse",
+          "light",
+          "moderate",
+          "hairy",
+          "very-hairy"
+        ],
+        "default": "moderate"
+      }
+    },
+    "required": ["density"],
+    "additionalProperties": false
+  }
+}

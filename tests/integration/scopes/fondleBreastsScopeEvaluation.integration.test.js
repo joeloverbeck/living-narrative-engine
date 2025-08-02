@@ -58,14 +58,14 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
       fs.readFileSync(
         path.resolve(
           __dirname,
-          '../../../data/mods/intimacy/conditions/entity-not-in-facing-away.condition.json'
+          '../../../data/mods/positioning/conditions/entity-not-in-facing-away.condition.json'
         ),
         'utf8'
       )
     );
     dataRegistry.store(
       'conditions',
-      'intimacy:entity-not-in-facing-away',
+      'positioning:entity-not-in-facing-away',
       actualCondition
     );
 
@@ -119,6 +119,8 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
 
   /**
    * Helper to set up test entities
+   *
+   * @param targetClothingConfig
    */
   function setupEntities(targetClothingConfig = {}) {
     const entities = [
@@ -199,6 +201,8 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
 
   /**
    * Helper to evaluate the scope
+   *
+   * @param actorId
    */
   function evaluateScope(actorId) {
     const actorEntity = entityManager.getEntityInstance(actorId);
@@ -413,6 +417,5 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
       expect(resolvedIds.has('target1')).toBe(false);
       expect(resolvedIds.size).toBe(0);
     });
-
   });
 });

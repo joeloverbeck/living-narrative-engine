@@ -46,13 +46,8 @@
     ],
     "components": ["kissing.component.json"],
     "conditions": [
-      "actor-in-entity-facing-away.condition.json",
-      "actor-is-behind-entity.condition.json",
       "actor-is-in-closeness.condition.json",
       "actor-is-kiss-receiver.condition.json",
-      "both-actors-facing-each-other.condition.json",
-      "entity-in-facing-away.condition.json",
-      "entity-not-in-facing-away.condition.json",
       "event-is-action-accept-kiss-passively.condition.json",
       "event-is-action-adjust-clothing.condition.json",
       "event-is-action-break-kiss-gently.condition.json",
@@ -84,11 +79,7 @@
       "definitions": [],
       "instances": []
     },
-    "events": [
-      "actor_faced_everyone.event.json",
-      "actor_faced_forward.event.json",
-      "actor_turned_around.event.json"
-    ],
+    "events": [],
     "macros": [],
     "rules": [
       "accept_kiss_passively.rule.json",

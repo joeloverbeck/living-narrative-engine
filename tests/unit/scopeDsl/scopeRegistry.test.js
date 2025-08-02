@@ -84,6 +84,83 @@ describe('ScopeRegistry', () => {
       expect(scopeRegistry.hasScope('initial:scope')).toBe(false);
       expect(scopeRegistry.hasScope('new:scope')).toBe(true);
     });
+
+    it('should throw error when scope definition is not an object', () => {
+      // Test various non-object types
+      const invalidDefinitions = [
+        { 'test:scope': 'string' },
+        { 'test:scope': 123 },
+        { 'test:scope': true },
+      ];
+
+      invalidDefinitions.forEach((invalidDef) => {
+        expect(() => scopeRegistry.initialize(invalidDef)).toThrow(
+          `Invalid scope definition for 'test:scope': expected an object but got ${typeof Object.values(invalidDef)[0]}`
+        );
+      });
+
+      // Test null specifically - it passes typeof object check but fails truthy check
+      expect(() => scopeRegistry.initialize({ 'test:scope': null })).toThrow(
+        "Invalid scope definition for 'test:scope': expected an object but got object"
+      );
+    });
+
+    it('should throw error when scope definition is an array (which is object type but invalid)', () => {
+      // Arrays are typeof 'object' but don't have expr property
+      expect(() => scopeRegistry.initialize({ 'test:scope': [] })).toThrow(
+        "Invalid scope definition for 'test:scope': missing or invalid 'expr' property"
+      );
+    });
+
+    it('should throw error when scope definition has missing expr property', () => {
+      const scopeWithoutExpr = {
+        'test:scope': { description: 'A scope without expr' },
+      };
+
+      expect(() => scopeRegistry.initialize(scopeWithoutExpr)).toThrow(
+        "Invalid scope definition for 'test:scope': missing or invalid 'expr' property"
+      );
+    });
+
+    it('should throw error when scope definition has invalid expr property', () => {
+      const invalidExprTypes = [
+        { 'test:scope': { expr: null } },
+        { 'test:scope': { expr: 123 } },
+        { 'test:scope': { expr: [] } },
+        { 'test:scope': { expr: {} } },
+      ];
+
+      invalidExprTypes.forEach((invalidDef) => {
+        expect(() => scopeRegistry.initialize(invalidDef)).toThrow(
+          "Invalid scope definition for 'test:scope': missing or invalid 'expr' property"
+        );
+      });
+    });
+
+    it('should throw error when scope definition has missing ast property', () => {
+      const scopeWithoutAst = {
+        'test:scope': { expr: 'entities()' },
+      };
+
+      expect(() => scopeRegistry.initialize(scopeWithoutAst)).toThrow(
+        "Invalid scope definition for 'test:scope': missing or invalid 'ast' property. All scopes must have pre-parsed ASTs."
+      );
+    });
+
+    it('should throw error when scope definition has invalid ast property', () => {
+      const invalidAstTypes = [
+        { 'test:scope': { expr: 'entities()', ast: null } },
+        { 'test:scope': { expr: 'entities()', ast: 'string' } },
+        { 'test:scope': { expr: 'entities()', ast: 123 } },
+        { 'test:scope': { expr: 'entities()', ast: true } },
+      ];
+
+      invalidAstTypes.forEach((invalidDef) => {
+        expect(() => scopeRegistry.initialize(invalidDef)).toThrow(
+          "Invalid scope definition for 'test:scope': missing or invalid 'ast' property. All scopes must have pre-parsed ASTs."
+        );
+      });
+    });
   });
 
   describe('scope access', () => {
@@ -189,6 +266,65 @@ describe('ScopeRegistry', () => {
 
       // Assert: Returns null for non-existent namespaced names
       expect(scopeRegistry.getScope('nonexistent:scope')).toBeNull();
+    });
+
+    it('should return null for special scope names "none" and "self"', () => {
+      // These special cases are handled by target resolution service, not registry
+      expect(scopeRegistry.getScope('none')).toBeNull();
+      expect(scopeRegistry.getScope('self')).toBeNull();
+    });
+  });
+
+  describe('getScopeAst', () => {
+    beforeEach(() => {
+      scopeRegistry.initialize(addMockAstsToScopes(mockScopeDefinitions));
+    });
+
+    it('should return the AST for a valid scope name', () => {
+      // Act
+      const ast = scopeRegistry.getScopeAst('core:all_characters');
+
+      // Assert
+      expect(ast).toBeDefined();
+      expect(ast).toMatchObject({
+        type: 'Source',
+        kind: 'mock',
+        expression: mockScopeDefinitions['core:all_characters'].expr,
+        _mock: true,
+      });
+      expect(typeof ast._timestamp).toBe('number');
+    });
+
+    it('should return null for a non-existent scope name', () => {
+      // Act
+      const ast = scopeRegistry.getScopeAst('nonexistent:scope');
+
+      // Assert
+      expect(ast).toBeNull();
+    });
+
+    it('should return null for special scope names "none" and "self"', () => {
+      // Act & Assert
+      expect(scopeRegistry.getScopeAst('none')).toBeNull();
+      expect(scopeRegistry.getScopeAst('self')).toBeNull();
+    });
+
+    it('should throw error for non-namespaced scope names', () => {
+      // Assert
+      expect(() => scopeRegistry.getScopeAst('all_characters')).toThrow(
+        "Scope names must be namespaced (e.g., 'core:all_characters'), but got: 'all_characters'. Only 'none' and 'self' are allowed without namespace."
+      );
+    });
+
+    it('should return null when scope exists but has no AST', () => {
+      // Arrange: Manually add a scope without AST (bypassing normal validation)
+      scopeRegistry._scopes.set('test:no_ast', { expr: 'entities()' });
+
+      // Act
+      const ast = scopeRegistry.getScopeAst('test:no_ast');
+
+      // Assert
+      expect(ast).toBeNull();
     });
   });
 
