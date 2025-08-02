@@ -43,6 +43,7 @@ describe('JSON-Schema – core component data contracts', () => {
   /** @type {Record<string, unknown>} */
   const validPayloads = {
     'core:actor': {},
+    'core:apparent_age': { minAge: 25, maxAge: 35 },
     'core:current_actor': {},
     'core:player': {},
     'core:player_type': { type: 'human' },
@@ -76,6 +77,7 @@ describe('JSON-Schema – core component data contracts', () => {
   /** @type {Record<string, unknown>} */
   const invalidPayloads = {
     'core:actor': { extra: true },
+    'core:apparent_age': {},
     'core:current_actor': { extra: true },
     'core:player': { extra: true },
     'core:player_type': { type: 'invalid_type' },

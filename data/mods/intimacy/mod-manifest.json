@@ -26,7 +26,6 @@
       "explore_mouth_with_tongue.action.json",
       "feel_arm_muscles.action.json",
       "fondle_ass.action.json",
-      "get_close.action.json",
       "kiss_back_passionately.action.json",
       "kiss_cheek.action.json",
       "kiss_neck_sensually.action.json",
@@ -41,14 +40,13 @@
       "place_hand_on_waist.action.json",
       "pull_back_breathlessly.action.json",
       "pull_back_in_revulsion.action.json",
-      "step_back.action.json",
       "suck_on_neck_to_leave_hickey.action.json",
       "suck_on_tongue.action.json",
-      "thumb_wipe_cheek.action.json",
-      "turn_around.action.json",
-      "turn_around_to_face.action.json"
+      "thumb_wipe_cheek.action.json"
     ],
-    "components": ["kissing.component.json"],
+    "components": [
+      "kissing.component.json"
+    ],
     "conditions": [
       "actor-in-entity-facing-away.condition.json",
       "actor-is-behind-entity.condition.json",
@@ -65,7 +63,6 @@
       "event-is-action-explore-mouth-with-tongue.condition.json",
       "event-is-action-feel-arm-muscles.condition.json",
       "event-is-action-fondle-ass.condition.json",
-      "event-is-action-get-close.condition.json",
       "event-is-action-kiss-back-passionately.condition.json",
       "event-is-action-kiss-cheek.condition.json",
       "event-is-action-kiss-neck-sensually.condition.json",
@@ -80,12 +77,9 @@
       "event-is-action-place-hand-on-waist.condition.json",
       "event-is-action-pull-back-breathlessly.condition.json",
       "event-is-action-pull-back-in-revulsion.condition.json",
-      "event-is-action-step-back.condition.json",
       "event-is-action-suck-on-neck-to-leave-hickey.condition.json",
       "event-is-action-suck-on-tongue.condition.json",
       "event-is-action-thumb-wipe-cheek.condition.json",
-      "event-is-action-turn-around-to-face.condition.json",
-      "event-is-action-turn-around.condition.json",
       "target-is-kissing-partner.condition.json"
     ],
     "entities": {
@@ -105,7 +99,6 @@
       "brush_hand.rule.json",
       "cup_face_while_kissing.rule.json",
       "explore_mouth_with_tongue.rule.json",
-      "get_close.rule.json",
       "handle_feel_arm_muscles.rule.json",
       "handle_fondle_ass.rule.json",
       "handle_kiss_neck_sensually.rule.json",
@@ -123,14 +116,10 @@
       "place_hand_on_waist.rule.json",
       "pull_back_breathlessly.rule.json",
       "pull_back_in_revulsion.rule.json",
-      "step_back.rule.json",
       "suck_on_tongue.rule.json",
-      "thumb_wipe_cheek.rule.json",
-      "turn_around.rule.json",
-      "turn_around_to_face.rule.json"
+      "thumb_wipe_cheek.rule.json"
     ],
     "scopes": [
-      "actors_im_facing_away_from.scope",
       "actors_with_arms_facing_each_other.scope",
       "actors_with_arms_facing_each_other_or_behind_target.scope",
       "actors_with_arms_in_intimacy.scope",
@@ -142,7 +131,6 @@
       "close_actors.scope",
       "close_actors_facing_away.scope",
       "close_actors_facing_each_other.scope",
-      "close_actors_facing_each_other_or_behind_target.scope",
       "close_actors_facing_each_other_with_torso_clothing.scope",
       "current_kissing_partner.scope"
     ]

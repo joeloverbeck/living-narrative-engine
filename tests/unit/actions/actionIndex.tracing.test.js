@@ -12,6 +12,9 @@ import {
   TRACE_DATA,
   TRACE_INFO,
   TRACE_SUCCESS,
+  TRACE_FAILURE,
+  TRACE_STEP,
+  TRACE_ERROR,
 } from '../../../src/actions/tracing/traceContext.js';
 import { mock } from 'jest-mock-extended';
 
@@ -207,15 +210,15 @@ describe('ActionIndex', () => {
 
         expect(trace.addLog).toHaveBeenCalledWith(
           TRACE_SUCCESS,
-          `Final candidate list contains ${candidates.length} unique actions.`,
+          `Final candidate list contains ${candidates.length} unique actions after component validation.`,
           source,
           { actionIds: candidateIds }
         );
-        // Should contain action1, action2, action4
+        // Should contain action1, action2 (action4 requires componentC which actor doesn't have)
         expect(candidateIds).toEqual(
-          expect.arrayContaining(['action1', 'action2', 'action4'])
+          expect.arrayContaining(['action1', 'action2'])
         );
-        expect(candidates.length).toBe(3);
+        expect(candidates.length).toBe(2);
       });
 
       it('should perform all logging steps in the correct order', () => {
@@ -236,7 +239,7 @@ describe('ActionIndex', () => {
         expect(calls[2][1]).toContain("requiring component 'componentB'");
 
         expect(calls[3][0]).toBe(TRACE_SUCCESS); // final list
-        expect(calls[3][1]).toContain('Final candidate list');
+        expect(calls[3][1]).toContain('Final candidate list contains 2 unique actions after component validation');
       });
     });
   });

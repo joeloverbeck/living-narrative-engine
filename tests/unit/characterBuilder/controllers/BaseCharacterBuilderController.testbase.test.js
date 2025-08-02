@@ -262,7 +262,7 @@ describe('BaseCharacterBuilderController Test Infrastructure', () => {
 
       expect(concept).toMatchObject({
         id: expect.stringMatching(/^concept-\d+$/),
-        text: 'A brave knight on a quest',
+        concept: 'A brave knight on a quest',
         createdAt: expect.any(String),
         thematicDirections: [],
       });
@@ -270,11 +270,11 @@ describe('BaseCharacterBuilderController Test Infrastructure', () => {
 
     it('should build character concept with overrides', () => {
       const concept = TestDataBuilders.buildCharacterConcept({
-        text: 'Custom concept text',
+        concept: 'Custom concept text',
         thematicDirections: ['direction1', 'direction2'],
       });
 
-      expect(concept.text).toBe('Custom concept text');
+      expect(concept.concept).toBe('Custom concept text');
       expect(concept.thematicDirections).toEqual(['direction1', 'direction2']);
     });
 
@@ -428,8 +428,10 @@ describe('BaseCharacterBuilderController Test Infrastructure', () => {
       testBase.click('#test-action');
 
       // Test data builders work
-      const concept = testBase.buildCharacterConcept({ text: 'Test concept' });
-      expect(concept.text).toBe('Test concept');
+      const concept = testBase.buildCharacterConcept({
+        concept: 'Test concept',
+      });
+      expect(concept.concept).toBe('Test concept');
 
       // Test mock service interactions
       const service = testBase.mockDependencies.characterBuilderService;

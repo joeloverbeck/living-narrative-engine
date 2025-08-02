@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "intimacy_handle_step_back",
-  "comment": "Handles the 'intimacy:step_back' action. Implements algorithm §5.2 from the spec. It removes the actor from their circle, cleans up their components, and unlocks any partners who are now alone.",
+  "rule_id": "positioning_handle_step_back",
+  "comment": "Handles the 'positioning:step_back' action. Implements algorithm §5.2 from the spec. It removes the actor from their circle, cleans up their components, and unlocks any partners who are now alone.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "intimacy:event-is-action-step-back"
+    "condition_ref": "positioning:event-is-action-step-back"
   },
   "actions": [
     {
@@ -42,7 +42,7 @@
     },
     {
       "type": "GET_NAME",
-      "comment": "Step 5: Get names for UI event.",
+      "comment": "Get names for UI event.",
       "parameters": {
         "entity_ref": "actor",
         "result_variable": "actorName"

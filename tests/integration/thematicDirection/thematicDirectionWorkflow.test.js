@@ -62,13 +62,13 @@ async function waitForUIState(
   return waitForCondition(() => {
     switch (expectedState) {
       case 'results':
-        return mockElements.resultsState?.style?.display === 'block';
+        return mockElements.resultsState?.style?.display === 'flex';
       case 'error':
-        return mockElements.errorState?.style?.display === 'block';
+        return mockElements.errorState?.style?.display === 'flex';
       case 'loading':
-        return mockElements.loadingState?.style?.display === 'block';
+        return mockElements.loadingState?.style?.display === 'flex';
       case 'empty':
-        return mockElements.emptyState?.style?.display === 'block';
+        return mockElements.emptyState?.style?.display === 'flex';
       default:
         return false;
     }
@@ -100,9 +100,12 @@ describe('Thematic Direction Workflow Integration', () => {
     // Create logger
     mockLogger = createMockLogger();
 
-    // Create event bus
+    // Create event bus - must implement full ISafeEventDispatcher interface
+    const mockUnsubscribe = jest.fn();
     mockEventBus = {
       dispatch: jest.fn(),
+      subscribe: jest.fn().mockReturnValue(mockUnsubscribe),
+      unsubscribe: jest.fn(),
     };
 
     // Create schema validator mock
@@ -325,6 +328,36 @@ describe('Thematic Direction Workflow Integration', () => {
       // Act - Initialize controller (which also initializes the service and loads concepts)
       await controller.initialize();
 
+      // WORKAROUND: The controller's _cacheElements fails to find DOM elements during initialization
+      // This is due to a mismatch between the global document mock and the controller's document reference
+      // Override _getElement to return the correct mock elements
+      controller._getElement = function(key) {
+        const elementMap = {
+          'emptyState': mockElements.emptyState,
+          'loadingState': mockElements.loadingState,
+          'resultsState': mockElements.resultsState,
+          'errorState': mockElements.errorState,
+          'form': mockElements.form,
+          'conceptSelector': mockElements.conceptSelector,
+          'generateBtn': mockElements.generateBtn,
+          'selectedConceptDisplay': mockElements.selectedConceptDisplay,
+          'conceptContent': mockElements.conceptContent,
+          'conceptDirectionsCount': mockElements.conceptDirectionsCount,
+          'conceptCreatedDate': mockElements.conceptCreatedDate,
+          'conceptSelectorError': mockElements.conceptSelectorError,
+          'directionsResults': mockElements.directionsResults,
+          'directionsList': mockElements.directionsList,
+          'conceptText': mockElements.conceptText,
+          'characterCount': mockElements.characterCount,
+          'timestamp': mockElements.timestamp,
+        };
+        return elementMap[key] || null;
+      };
+
+      // Reinitialize UI state and event listeners now that elements are available
+      await controller._initializeUIStateManager();
+      controller._setupEventListeners();
+
       // Allow promises to resolve (includes loading concepts)
       await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -363,7 +396,7 @@ describe('Thematic Direction Workflow Integration', () => {
       // 4. Results are displayed in the UI
 
       // UI should show results
-      expect(mockElements.resultsState.style.display).toBe('block');
+      expect(mockElements.resultsState.style.display).toBe('flex');
 
       // Direction generator should be called - this is the key action
       expect(mockDirectionGenerator.generateDirections).toHaveBeenCalledWith(
@@ -373,7 +406,11 @@ describe('Thematic Direction Workflow Integration', () => {
       );
 
       // Results should be rendered to the DOM
-      expect(mockElements.directionsResults.appendChild).toHaveBeenCalled();
+      // The controller writes to directionsList via innerHTML, not directionsResults via appendChild
+      expect(mockElements.directionsList.innerHTML).toContain('direction-card');
+      expect(mockElements.directionsList.innerHTML).toContain('data-index="0"');
+      expect(mockElements.directionsList.innerHTML).toContain('data-index="1"');
+      expect(mockElements.directionsList.innerHTML).toContain('data-index="2"');
     });
 
     test('should handle database errors gracefully', async () => {
@@ -419,14 +456,14 @@ describe('Thematic Direction Workflow Integration', () => {
       // Wait for error state to be displayed or error event dispatch
       await waitForCondition(
         () =>
-          mockElements.errorState?.style?.display === 'block' ||
+          mockElements.errorState?.style?.display === 'flex' ||
           mockLogger.error.mock.calls.length > 0,
         100 // Increase max iterations
       );
 
       // Assert - check if error handling occurred (either UI or logging)
       const errorOccurred =
-        mockElements.errorState?.style?.display === 'block' ||
+        mockElements.errorState?.style?.display === 'flex' ||
         mockLogger.error.mock.calls.length > 0;
       expect(errorOccurred).toBe(true);
     });
@@ -474,14 +511,14 @@ describe('Thematic Direction Workflow Integration', () => {
       // Wait for error state to be displayed or error event dispatch
       await waitForCondition(
         () =>
-          mockElements.errorState?.style?.display === 'block' ||
+          mockElements.errorState?.style?.display === 'flex' ||
           mockLogger.error.mock.calls.length > 0,
         100 // Increase max iterations
       );
 
       // Assert - check if error handling occurred (either UI or logging)
       const errorOccurred =
-        mockElements.errorState?.style?.display === 'block' ||
+        mockElements.errorState?.style?.display === 'flex' ||
         mockLogger.error.mock.calls.length > 0;
       expect(errorOccurred).toBe(true);
     });
@@ -550,14 +587,14 @@ describe('Thematic Direction Workflow Integration', () => {
       // Wait for error state to be displayed or error event dispatch
       await waitForCondition(
         () =>
-          mockElements.errorState?.style?.display === 'block' ||
+          mockElements.errorState?.style?.display === 'flex' ||
           mockLogger.error.mock.calls.length > 0,
         100
       );
 
       // Assert - check if error handling occurred (either UI or logging)
       const errorOccurred =
-        mockElements.errorState?.style?.display === 'block' ||
+        mockElements.errorState?.style?.display === 'flex' ||
         mockLogger.error.mock.calls.length > 0;
       expect(errorOccurred).toBe(true);
     });

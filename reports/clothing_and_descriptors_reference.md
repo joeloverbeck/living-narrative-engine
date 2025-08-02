@@ -18,7 +18,7 @@ The descriptor system provides 14 components for describing physical attributes 
 
 Describes the surface texture of an object.
 
-- **Values**: `smooth`, `rough`, `silky`, `coarse`, `bumpy`, `velvety`
+- **Values**: `smooth`, `rough`, `silky`, `coarse`, `bumpy`, `velvety`, `rib-knit`, `rugged`
 - **Default**: `smooth`
 
 ### 2. Size Specific Component (`descriptors:size_specific`)
@@ -88,7 +88,7 @@ Describes the firmness or rigidity of an object or body part.
 
 Extended color descriptors including shades and special colors.
 
-- **Values**: `amber`, `blonde`, `brunette`, `nude`, `raven-black`, `auburn`, `silver`, `cobalt`, `hazel`, `violet`
+- **Values**: `amber`, `blonde`, `brunette`, `nude`, `raven-black`, `auburn`, `silver`, `cobalt`, `hazel`, `violet`, `navy`, `deep-navy`, `sand-beige`, `indigo`
 - **Default**: `raven-black`
 
 ### 12. Color Basic Component (`descriptors:color_basic`)
@@ -103,7 +103,8 @@ Basic color descriptors.
 Body build descriptors for physique and muscle tone.
 
 - **Values**: `skinny`, `slim`, `toned`, `athletic`, `shapely`, `thick`, `muscular`, `stocky`
-- **Default**: `average` (Note: default in schema differs from enum values)
+- **Default**: `average`
+- **Note**: The default value "average" is not included in the enum values - this may cause validation issues and should be addressed
 
 ### 14. Projection Component (`descriptors:projection`)
 
@@ -113,6 +114,59 @@ Describes the projection characteristics of a surface or object.
 - **Default**: `flat`
 
 ---
+
+## Clothing System Architecture
+
+The Living Narrative Engine's clothing system is built on a modular architecture that separates slot definitions from blueprint implementations. This allows for flexible reuse and customization while maintaining consistency.
+
+### System Components
+
+#### 1. Slot Library System
+The clothing system uses a centralized slot library (`anatomy:humanoid_slots`) that defines standard slot and clothing definitions. This library contains:
+- **slotDefinitions**: Standard anatomy slots (head, arm, leg, etc.)
+- **clothingDefinitions**: Standard clothing slots with layer restrictions
+
+#### 2. Blueprint Integration
+Blueprints (`human_female`, `human_male`) compose slots from the humanoid_core part, which references the slot library. They can also override or add specific slots and clothing mappings.
+
+#### 3. Clothing Entities
+Individual clothing items are entities with components that define:
+- **clothing:wearable**: Equipment slots, layers, and restrictions
+- **descriptors**: Color, texture, and other physical properties
+- **core components**: Name, description, material
+
+### Clothing Entity Structure
+
+Clothing entities follow this structure:
+
+```json
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:item_name",
+  "description": "Item description",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear|base|outer|armor|accessory",
+      "equipmentSlots": {
+        "primary": "slot_name"
+      },
+      "allowedLayers": ["layer1", "layer2"]
+    },
+    "core:material": {
+      "material": "material_type"
+    },
+    "core:name": {
+      "text": "Display name"
+    },
+    "core:description": {
+      "text": "Detailed description"
+    },
+    "descriptors:color_extended": {
+      "color": "color_value"
+    }
+  }
+}
+```
 
 ## Clothing Slot System
 
@@ -148,27 +202,34 @@ The system supports five clothing layers:
 
 ##### `torso_upper`
 
-- **Maps to**: Anatomy sockets on female: `left_breast`, `right_breast`, `left_chest`, `right_chest`, `chest_center`, `left_shoulder`, `right_shoulder`
-- **Maps to**: Blueprint slot on male: `torso`
+- **Maps to**: 
+  - Female: Anatomy sockets `left_breast`, `right_breast`, `left_chest`, `right_chest`, `chest_center`, `left_shoulder`, `right_shoulder`
+  - Male: Blueprint slot `torso` only
 - **Allowed layers**: `underwear`, `base`, `outer`, `armor`
 - **Usage**: Shirts, bras, chest armor, jackets
 
 ##### `left_arm_clothing`
 
 - **Maps to**: Blueprint slot `left_arm`
-- **Allowed layers**: `base`, `outer`, `armor` (humanoid_core library) or just `base`, `outer` (female/male blueprints)
+- **Allowed layers**: 
+  - Humanoid core library: `base`, `outer`, `armor`
+  - Female/male blueprints: `base`, `outer` only
 - **Usage**: Sleeves, arm guards
 
 ##### `right_arm_clothing`
 
 - **Maps to**: Blueprint slot `right_arm`
-- **Allowed layers**: `base`, `outer`, `armor` (humanoid_core library) or just `base`, `outer` (female/male blueprints)
+- **Allowed layers**: 
+  - Humanoid core library: `base`, `outer`, `armor`
+  - Female/male blueprints: `base`, `outer` only
 - **Usage**: Sleeves, arm guards
 
 ##### `hands`
 
 - **Maps to**: Blueprint slots `left_hand`, `right_hand`
-- **Allowed layers**: `base`, `armor`
+- **Allowed layers**: 
+  - Humanoid core library: `base`, `armor`
+  - Female/male blueprints: `base`, `armor`
 - **Usage**: Gloves, gauntlets
 
 ##### `back_accessory`
@@ -181,28 +242,33 @@ The system supports five clothing layers:
 
 ##### `torso_lower`
 
-- **Maps to**: Anatomy sockets on female: `left_hip`, `right_hip`, `pubic_hair`, `vagina`
-- **Maps to**: Anatomy sockets on male: `left_hip`, `right_hip`, `pubic_hair`, `penis`, `left_testicle`, `right_testicle`
+- **Maps to**: 
+  - Female: Anatomy sockets `left_hip`, `right_hip`, `pubic_hair`, `vagina`
+  - Male: Anatomy sockets `left_hip`, `right_hip`, `pubic_hair`, `penis`, `left_testicle`, `right_testicle`
 - **Allowed layers**: `underwear`, `base`, `outer`
 - **Usage**: Underwear, pants waistband, belts
 
 ##### `legs`
 
 - **Maps to**: Blueprint slots `left_leg`, `right_leg`
-- **Allowed layers**: `base`, `outer` (female/male blueprints) or `underwear`, `base`, `outer`, `armor` (humanoid_core library)
+- **Allowed layers**: 
+  - Humanoid core library: `underwear`, `base`, `outer`, `armor`
+  - Female/male blueprints: `base`, `outer` only
 - **Usage**: Pants, skirts, leg armor
 
 ##### `feet`
 
 - **Maps to**: Blueprint slots `left_foot`, `right_foot`
-- **Allowed layers**: `base`, `armor` (humanoid_core library) or just `base`, `outer` (female/male blueprints)
+- **Allowed layers**: 
+  - Humanoid core library: `base`, `armor`
+  - Female/male blueprints: `base`, `outer`
 - **Usage**: Shoes, boots, foot armor
 
 #### Full Body Slot
 
 ##### `full_body`
 
-- **Maps to**: Blueprint slots vary by gender:
+- **Maps to**: Blueprint slots (varies by gender):
   - Female: `head`, `left_arm`, `right_arm`, `left_leg`, `right_leg`, `left_breast`, `right_breast`
   - Male: `head`, `left_arm`, `right_arm`, `left_leg`, `right_leg`
 - **Allowed layers**: `outer`
@@ -279,6 +345,39 @@ Use patterns to apply the same configuration to multiple slots:
     }
   }
 ]
+```
+
+### Clothing Entity Definition Example
+
+Here's a complete example of a clothing entity definition:
+
+```json
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:underwired_plunge_bra_nude_silk",
+  "description": "Luxurious underwired plunge bra in nude silk",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "silk"
+    },
+    "core:name": {
+      "text": "underwired plunge bra"
+    },
+    "core:description": {
+      "text": "A luxurious underwired plunge bra crafted from the finest nude silk, designed to enhance and support while maintaining elegance and comfort. The plunge design creates an alluring silhouette while the underwire provides perfect support and lift."
+    },
+    "descriptors:color_extended": {
+      "color": "nude"
+    }
+  }
+}
 ```
 
 ### Adding Clothing to Characters
@@ -392,13 +491,58 @@ Here's a condensed example showing how descriptors and clothing work together:
 
 ---
 
+## Troubleshooting Common Issues
+
+### Validation Errors
+
+#### Schema Inconsistencies
+- **Problem**: Build component default "average" not in enum values
+- **Solution**: Use one of the valid enum values (`skinny`, `slim`, `toned`, `athletic`, `shapely`, `thick`, `muscular`, `stocky`) or update the schema
+
+#### Invalid Descriptor Values
+- **Problem**: Using colors like "red" in `descriptors:color_extended`
+- **Solution**: Use extended color values like `raven-black`, `blonde`, `auburn`, etc. For basic colors, use `descriptors:color_basic`
+
+### Clothing Conflicts
+
+#### Layer Conflicts
+- **Problem**: Trying to equip `armor` layer on slots that only allow `base`, `outer`
+- **Solution**: Check the blueprint-specific allowed layers. Some slots have different restrictions in humanoid_core vs. gender-specific blueprints
+
+#### Slot Mapping Issues
+- **Problem**: Clothing not appearing on correct body parts
+- **Solution**: Verify the clothing slot maps to the correct blueprint slots or anatomy sockets for the target gender
+
+### Blueprint Differences
+
+#### Female vs Male Anatomy
+- **Problem**: `torso_upper` clothing not fitting correctly
+- **Solution**: Female blueprints map to anatomy sockets (breasts, chest), while male blueprints map to blueprint slots (torso)
+
+#### Missing Slots
+- **Problem**: Trying to equip clothing to non-existent slots
+- **Solution**: Check that the target blueprint includes the required slots. Some slots may only exist in the humanoid_core library
+
+### Performance Considerations
+
+#### Large Clothing Collections
+- **Problem**: Too many clothing entities causing performance issues
+- **Solution**: Consider clothing categories and limit the number of equipped items per character
+
+#### Complex Descriptor Combinations
+- **Problem**: Too many descriptor components on single anatomy parts
+- **Solution**: Use only necessary descriptors for the intended visual representation
+
+---
+
 ## Summary
 
 This reference provides a complete overview of:
 
-- All 14 descriptor components with their possible values
-- All available clothing slots and their mappings
-- The 5-layer clothing system
-- Practical examples of how to use these systems in character recipes
+- All 14 descriptor components with their accurate enum values and defaults
+- The modular clothing system architecture and slot library pattern
+- All available clothing slots with blueprint-specific layer restrictions
+- Clothing entity structure and component system
+- Practical examples and troubleshooting guidance
 
-Use this guide when creating or modifying character recipes to ensure proper formatting and valid values for all descriptors and clothing assignments.
+Use this guide when creating or modifying character recipes to ensure proper formatting, valid values, and compatibility across the anatomy and clothing systems.

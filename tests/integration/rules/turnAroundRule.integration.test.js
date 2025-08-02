@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the intimacy:turn_around rule.
+ * @file Integration tests for the positioning:turn_around rule.
  */
 
 import {
@@ -10,8 +10,8 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import turnAroundRule from '../../../data/mods/intimacy/rules/turn_around.rule.json';
-import eventIsActionTurnAround from '../../../data/mods/intimacy/conditions/event-is-action-turn-around.condition.json';
+import turnAroundRule from '../../../data/mods/positioning/rules/turn_around.rule.json';
+import eventIsActionTurnAround from '../../../data/mods/positioning/conditions/event-is-action-turn-around.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -145,7 +145,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'actor1',
-        actionId: 'intimacy:turn_around',
+        actionId: 'positioning:turn_around',
         targetId: 'target1',
       });
 
@@ -196,7 +196,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'actor1',
-        actionId: 'intimacy:turn_around',
+        actionId: 'positioning:turn_around',
         targetId: 'target1',
       });
 
@@ -256,7 +256,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'actor1',
-        actionId: 'intimacy:turn_around',
+        actionId: 'positioning:turn_around',
         targetId: 'target1',
       });
 
@@ -304,7 +304,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'actor1',
-        actionId: 'intimacy:turn_around',
+        actionId: 'positioning:turn_around',
         targetId: 'target1',
       });
 

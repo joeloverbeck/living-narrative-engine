@@ -29,530 +29,330 @@ Add comprehensive performance monitoring to the BaseCharacterBuilderController t
 
 ## Implementation Details
 
-### 1. Performance Monitoring Class
+### 1. Performance Monitoring Integration
 
-Create `src/characterBuilder/controllers/PerformanceMonitor.js`:
+Integrate existing `src/entities/monitoring/PerformanceMonitor.js` with BaseCharacterBuilderController:
+
+**Key Integration Points:**
+- Use existing PerformanceMonitor class (comprehensive implementation already available)
+- Leverage existing timing infrastructure in BaseCharacterBuilderController  
+- Extend current performance tracking (lines 1775, 1830, 3082 in BaseCharacterBuilderController.js)
+- Integrate with existing private field patterns (`#` prefix)
+
+**Existing PerformanceMonitor Features:**
+- Timer management with `startTimer()` and `stopTimer()`
+- Operation tracking with `timeOperation()` and `timeSync()`
+- Memory monitoring with `checkMemoryUsage()`
+- Metrics collection with `getMetrics()`
+- Performance reporting with `getPerformanceReport()`
+
+### 2. BaseCharacterBuilderController Integration
+
+Add performance monitoring to the existing BaseCharacterBuilderController by injecting the PerformanceMonitor:
 
 ```javascript
-/**
- * @file Performance monitoring utilities for character builder controllers
- * @description Tracks and reports performance metrics
- */
+// Add to imports in BaseCharacterBuilderController.js
+import PerformanceMonitor from '../../entities/monitoring/PerformanceMonitor.js';
 
-/**
- * Performance monitoring class
- */
-export class PerformanceMonitor {
-  #metrics = new Map();
-  #thresholds = new Map();
-  #enabled = true;
-  #logger = null;
+// Add to private fields (around line 100)
+/** @private @type {PerformanceMonitor} */
+#performanceMonitor;
 
-  /**
-   * @param {object} options
-   * @param {ILogger} options.logger - Logger instance
-   * @param {boolean} [options.enabled=true] - Whether monitoring is enabled
-   * @param {object} [options.thresholds={}] - Performance thresholds
-   */
-  constructor({ logger, enabled = true, thresholds = {} }) {
-    this.#logger = logger;
-    this.#enabled = enabled;
-    this._setDefaultThresholds();
-    this._applyCustomThresholds(thresholds);
-  }
-
-  /**
-   * Set default performance thresholds
-   * @private
-   */
-  _setDefaultThresholds() {
-    this.#thresholds.set('initialization', 100); // 100ms
-    this.#thresholds.set('elementCaching', 50); // 50ms
-    this.#thresholds.set('eventSetup', 30); // 30ms
-    this.#thresholds.set('dataLoading', 500); // 500ms
-    this.#thresholds.set('stateTransition', 20); // 20ms
-    this.#thresholds.set('destroy', 50); // 50ms
-  }
-
-  /**
-   * Apply custom thresholds
-   * @private
-   */
-  _applyCustomThresholds(thresholds) {
-    Object.entries(thresholds).forEach(([key, value]) => {
-      this.#thresholds.set(key, value);
-    });
-  }
-
-  /**
-   * Start timing an operation
-   * @param {string} operation - Operation name
-   * @param {object} [metadata={}] - Additional metadata
-   * @returns {string} Timer ID
-   */
-  startTimer(operation, metadata = {}) {
-    if (!this.#enabled) return null;
-
-    const timerId = `${operation}-${Date.now()}-${Math.random()}`;
-    const timer = {
-      operation,
-      startTime: performance.now(),
-      metadata,
-      marks: [],
-    };
-
-    this.#metrics.set(timerId, timer);
-    return timerId;
-  }
-
-  /**
-   * Mark a point in an operation
-   * @param {string} timerId - Timer ID
-   * @param {string} label - Mark label
-   */
-  mark(timerId, label) {
-    if (!this.#enabled || !timerId) return;
-
-    const timer = this.#metrics.get(timerId);
-    if (!timer) return;
-
-    timer.marks.push({
-      label,
-      time: performance.now() - timer.startTime,
-    });
-  }
-
-  /**
-   * End timing an operation
-   * @param {string} timerId - Timer ID
-   * @returns {object} Performance data
-   */
-  endTimer(timerId) {
-    if (!this.#enabled || !timerId) return null;
-
-    const timer = this.#metrics.get(timerId);
-    if (!timer) return null;
-
-    const duration = performance.now() - timer.startTime;
-    const result = {
-      operation: timer.operation,
-      duration,
-      marks: timer.marks,
-      metadata: timer.metadata,
-      threshold: this.#thresholds.get(timer.operation),
-      exceedsThreshold: false,
-    };
-
-    if (result.threshold) {
-      result.exceedsThreshold = duration > result.threshold;
-    }
-
-    // Log if exceeds threshold
-    if (result.exceedsThreshold) {
-      this.#logger.warn(
-        `Performance: ${timer.operation} took ${duration.toFixed(2)}ms ` +
-          `(threshold: ${result.threshold}ms)`,
-        result
-      );
-    }
-
-    this.#metrics.delete(timerId);
-    return result;
-  }
-
-  /**
-   * Measure async operation
-   * @param {string} operation - Operation name
-   * @param {Function} asyncFn - Async function to measure
-   * @param {object} [metadata={}] - Additional metadata
-   * @returns {Promise<any>} Function result
-   */
-  async measureAsync(operation, asyncFn, metadata = {}) {
-    const timerId = this.startTimer(operation, metadata);
-
-    try {
-      const result = await asyncFn();
-      const perf = this.endTimer(timerId);
-
-      if (perf && !perf.exceedsThreshold) {
-        this.#logger.debug(
-          `Performance: ${operation} completed in ${perf.duration.toFixed(2)}ms`
-        );
-      }
-
-      return result;
-    } catch (error) {
-      this.endTimer(timerId);
-      throw error;
-    }
-  }
-
-  /**
-   * Measure sync operation
-   * @param {string} operation - Operation name
-   * @param {Function} fn - Function to measure
-   * @param {object} [metadata={}] - Additional metadata
-   * @returns {any} Function result
-   */
-  measureSync(operation, fn, metadata = {}) {
-    const timerId = this.startTimer(operation, metadata);
-
-    try {
-      const result = fn();
-      const perf = this.endTimer(timerId);
-
-      if (perf && !perf.exceedsThreshold) {
-        this.#logger.debug(
-          `Performance: ${operation} completed in ${perf.duration.toFixed(2)}ms`
-        );
-      }
-
-      return result;
-    } catch (error) {
-      this.endTimer(timerId);
-      throw error;
-    }
-  }
-
-  /**
-   * Get performance summary
-   * @returns {object} Summary data
-   */
-  getSummary() {
-    const activeTimers = Array.from(this.#metrics.entries()).map(
-      ([id, timer]) => ({
-        operation: timer.operation,
-        runningTime: performance.now() - timer.startTime,
-      })
-    );
-
-    return {
-      enabled: this.#enabled,
-      thresholds: Object.fromEntries(this.#thresholds),
-      activeTimers,
-    };
-  }
-
-  /**
-   * Enable/disable monitoring
-   * @param {boolean} enabled
-   */
-  setEnabled(enabled) {
-    this.#enabled = enabled;
-    this.#logger.info(
-      `Performance monitoring ${enabled ? 'enabled' : 'disabled'}`
-    );
-  }
+// Add to constructor dependency injection (around line 145) 
+// Note: Use additionalServices pattern to inject performanceMonitor
+const { performanceMonitor } = this.#additionalServices;
+if (performanceMonitor) {
+  this.#performanceMonitor = performanceMonitor;
 }
 ```
 
-### 2. Integration with BaseCharacterBuilderController
+### 3. Enhanced Initialize Method
 
-Update `BaseCharacterBuilderController.js` to include performance monitoring:
+Extend the existing initialization performance tracking (currently at lines 1775-1842):
 
 ```javascript
-// Add to imports
-import { PerformanceMonitor } from './PerformanceMonitor.js';
+// Current timing code exists at line 1775:
+// const startTime = performance.now();
 
-// Add to class fields
-/** @private @type {PerformanceMonitor} */
-_performanceMonitor;
-
-/** @private @type {string} */
-_initTimerId;
-
-// Update constructor
-constructor({
-  logger,
-  characterBuilderService,
-  eventBus,
-  schemaValidator,
-  performanceConfig,
-  ...additionalServices
-}) {
-  // ... existing validation ...
-
-  // Initialize performance monitor
-  this._performanceMonitor = new PerformanceMonitor({
-    logger: this._logger,
-    enabled: performanceConfig?.enabled !== false,
-    thresholds: performanceConfig?.thresholds || {},
-  });
-
-  // ... rest of constructor
-}
-
-// Update initialize method
+// Enhance with detailed phase tracking using PerformanceMonitor
 async initialize() {
-  if (this._isInitialized) {
-    this._logger.warn(
+  if (this.isInitialized) {
+    this.logger.warn(
       `${this.constructor.name}: Already initialized, skipping re-initialization`
     );
     return;
   }
 
-  // Start overall initialization timer
-  this._initTimerId = this._performanceMonitor.startTimer('initialization', {
-    controller: this.constructor.name,
-  });
+  if (this.isInitializing) {
+    this.logger.warn(
+      `${this.constructor.name}: Initialization already in progress, skipping concurrent initialization`
+    );
+    return;
+  }
+
+  // Use existing timing + enhanced monitoring if available
+  const startTime = performance.now();
+  let initTimerId = null;
+  
+  if (this.#performanceMonitor) {
+    initTimerId = this.#performanceMonitor.startTimer('controller_initialization', {
+      controller: this.constructor.name,
+    });
+  }
 
   try {
-    this._logger.info(`${this.constructor.name}: Starting initialization`);
+    // Set initializing state (existing logic at line 1779)
+    this._setInitializationState(true, false);
+    
+    this.logger.info(`${this.constructor.name}: Starting initialization`);
 
-    // Pre-initialization hook
-    await this._performanceMonitor.measureAsync(
-      'preInitialize',
-      () => this._executeLifecycleMethod('_preInitialize', 'pre-initialization')
-    );
-
-    // Mark after pre-init
-    this._performanceMonitor.mark(this._initTimerId, 'pre-init-complete');
-
-    // Step 1: Cache DOM elements
-    await this._performanceMonitor.measureAsync(
-      'elementCaching',
-      () => this._executeLifecycleMethod('_cacheElements', 'element caching', true)
-    );
-
-    this._performanceMonitor.mark(this._initTimerId, 'elements-cached');
-
-    // Step 2: Initialize services
-    await this._performanceMonitor.measureAsync(
-      'serviceInitialization',
-      () => this._executeLifecycleMethod('_initializeServices', 'service initialization')
-    );
-
-    this._performanceMonitor.mark(this._initTimerId, 'services-initialized');
-
-    // Step 3: Set up event listeners
-    await this._performanceMonitor.measureAsync(
-      'eventSetup',
-      () => this._executeLifecycleMethod('_setupEventListeners', 'event listener setup', true)
-    );
-
-    this._performanceMonitor.mark(this._initTimerId, 'events-setup');
-
-    // Step 4: Load initial data
-    await this._performanceMonitor.measureAsync(
-      'dataLoading',
-      () => this._executeLifecycleMethod('_loadInitialData', 'initial data loading')
-    );
-
-    this._performanceMonitor.mark(this._initTimerId, 'data-loaded');
-
-    // Step 5: Initialize UI state
-    await this._performanceMonitor.measureAsync(
-      'uiStateInit',
-      () => this._executeLifecycleMethod('_initializeUIState', 'UI state initialization')
-    );
-
-    this._performanceMonitor.mark(this._initTimerId, 'ui-initialized');
-
-    // Post-initialization hook
-    await this._performanceMonitor.measureAsync(
-      'postInitialize',
-      () => this._executeLifecycleMethod('_postInitialize', 'post-initialization')
-    );
-
-    this._isInitialized = true;
-
-    // End initialization timer
-    const perfData = this._performanceMonitor.endTimer(this._initTimerId);
-
-    if (perfData) {
-      this._logInitializationPerformance(perfData);
+    // Phase 1: Pre-initialization hook
+    if (this.#performanceMonitor) {
+      await this.#performanceMonitor.timeOperation(
+        'pre_initialization',
+        () => this._executeLifecycleMethod('_preInitialize', 'pre-initialization')
+      );
+    } else {
+      await this._executeLifecycleMethod('_preInitialize', 'pre-initialization');
     }
 
-    // Dispatch initialization complete event with performance data
-    if (this._eventBus) {
-      this._eventBus.dispatch('CONTROLLER_INITIALIZED', {
+    // Phase 2: Cache DOM elements (existing at line 1790)
+    if (this.#performanceMonitor) {
+      await this.#performanceMonitor.timeOperation(
+        'element_caching',
+        () => this._executeLifecycleMethod('_cacheElements', 'element caching', true)
+      );
+    } else {
+      await this._executeLifecycleMethod('_cacheElements', 'element caching', true);
+    }
+
+    // Continue with existing phases...
+    // (Lines 1796-1825 contain the remaining lifecycle methods)
+    
+    // Set initialized state (existing logic at line 1828)
+    this._setInitializationState(false, true);
+
+    const initTime = performance.now() - startTime;
+    
+    // Enhanced logging with performance monitor data
+    if (this.#performanceMonitor) {
+      const perfData = this.#performanceMonitor.stopTimer(initTimerId);
+      this.logger.info(
+        `${this.constructor.name}: Initialization completed in ${initTime.toFixed(2)}ms`,
+        { performanceData: perfData }
+      );
+    } else {
+      // Existing logging at line 1831
+      this.logger.info(
+        `${this.constructor.name}: Initialization completed in ${initTime.toFixed(2)}ms`
+      );
+    }
+
+    // Existing event dispatch (lines 1836-1841)
+    if (this.eventBus) {
+      this.eventBus.dispatch('CONTROLLER_INITIALIZED', {
         controllerName: this.constructor.name,
-        initializationTime: perfData?.duration || 0,
-        performanceData: perfData,
+        initializationTime: initTime,
       });
     }
-
   } catch (error) {
-    // End timer on error
-    const perfData = this._performanceMonitor.endTimer(this._initTimerId);
-
-    this._logger.error(
-      `${this.constructor.name}: Initialization failed after ${perfData?.duration.toFixed(2)}ms`,
+    // Enhanced error handling
+    const initTime = performance.now() - startTime;
+    if (this.#performanceMonitor && initTimerId) {
+      this.#performanceMonitor.stopTimer(initTimerId);
+    }
+    
+    // Existing error handling (lines 1842-1854)
+    this.logger.error(
+      `${this.constructor.name}: Initialization failed after ${initTime.toFixed(2)}ms`,
       error
     );
-
+    this._setInitializationState(false, false);
     await this._handleInitializationError(error);
     throw error;
   }
 }
 
-// Add performance logging method
-/**
- * Log initialization performance details
- * @private
- * @param {object} perfData - Performance data
- */
-_logInitializationPerformance(perfData) {
-  const phaseDurations = this._calculatePhaseDurations(perfData.marks);
-
-  this._logger.info(
-    `${this.constructor.name}: Initialization completed in ${perfData.duration.toFixed(2)}ms`,
-    {
-      totalTime: perfData.duration,
-      phases: phaseDurations,
-      marks: perfData.marks,
-    }
-  );
-
-  // Log slow phases
-  Object.entries(phaseDurations).forEach(([phase, duration]) => {
-    const threshold = this._performanceMonitor.#thresholds.get(phase) || 50;
-    if (duration > threshold) {
-      this._logger.warn(
-        `${this.constructor.name}: Slow initialization phase '${phase}' took ${duration.toFixed(2)}ms (threshold: ${threshold}ms)`
-      );
-    }
-  });
-}
-
-/**
- * Calculate phase durations from marks
- * @private
- * @param {Array} marks - Performance marks
- * @returns {object} Phase durations
- */
-_calculatePhaseDurations(marks) {
-  const durations = {};
-  let previousTime = 0;
-
-  marks.forEach((mark, index) => {
-    const duration = mark.time - previousTime;
-    const phaseName = this._getPhaseNameFromMark(mark.label);
-    durations[phaseName] = duration;
-    previousTime = mark.time;
-  });
-
-  return durations;
-}
 ```
 
-### 3. Performance Monitoring for Key Operations
+### 4. Enhanced Destroy Method
+
+Extend the existing destroy performance tracking (currently at lines 3081-3170):
 
 ```javascript
-// Update state transitions
-_showState(state, options = {}) {
-  return this._performanceMonitor.measureSync(
-    'stateTransition',
-    () => {
-      // ... existing implementation
-    },
-    { fromState: this._currentState, toState: state }
-  );
-}
+// Current timing code exists at line 3082:
+// const startTime = performance.now();
 
-// Update element caching
-_cacheElement(key, selector, required = true) {
-  return this._performanceMonitor.measureSync(
-    'elementCache',
-    () => {
-      // ... existing implementation
-    },
-    { key, selector }
-  );
-}
+// Enhanced destroy with performance monitoring
+destroy() {
+  const startTime = performance.now();
+  let destroyTimerId = null;
 
-// Update destroy method
-async destroy() {
-  if (this._isDestroyed) {
-    this._logger.warn(
-      `${this.constructor.name}: Already destroyed, skipping cleanup`
+  // Check if already destroyed (existing logic at line 3085)
+  if (this.#isDestroyed) {
+    this.#logger.warn(
+      `${this.constructor.name}: Already destroyed, skipping destruction`
     );
     return;
   }
 
-  const destroyTimerId = this._performanceMonitor.startTimer('destroy', {
-    controller: this.constructor.name,
-  });
+  if (this.#performanceMonitor) {
+    destroyTimerId = this.#performanceMonitor.startTimer('controller_destroy', {
+      controller: this.constructor.name,
+    });
+  }
 
   try {
-    // ... existing destroy implementation ...
+    // Set destroying state (existing logic at line 3100)
+    this.#isDestroying = true;
+    this.#logger.info(`${this.constructor.name}: Starting destruction`);
 
-    const perfData = this._performanceMonitor.endTimer(destroyTimerId);
+    // Execute existing destruction phases (lines 3103-3131)
+    // Enhanced with performance monitoring if available
+    this._executePhase('event listener cleanup', () => this._removeEventListeners());
+    this._executePhase('timer cleanup', () => this._clearTimers());
+    // ... continue with existing phases
 
-    if (perfData) {
-      this._logger.info(
-        `${this.constructor.name}: Cleanup completed in ${perfData.duration.toFixed(2)}ms`
+    // Mark as destroyed (existing logic at line 3137)
+    this.#isDestroyed = true;
+    this.#isDestroying = false;
+
+    const duration = performance.now() - startTime;
+    
+    // Enhanced logging
+    if (this.#performanceMonitor) {
+      const perfData = this.#performanceMonitor.stopTimer(destroyTimerId);
+      this.#logger.info(
+        `${this.constructor.name}: Destruction completed in ${duration.toFixed(2)}ms`,
+        { performanceData: perfData }
+      );
+    } else {
+      // Existing logging at line 3141
+      this.#logger.info(
+        `${this.constructor.name}: Destruction completed in ${duration.toFixed(2)}ms`
       );
     }
-
   } catch (error) {
-    this._performanceMonitor.endTimer(destroyTimerId);
+    // Enhanced error handling
+    if (this.#performanceMonitor && destroyTimerId) {
+      this.#performanceMonitor.stopTimer(destroyTimerId);
+    }
+    // Existing error handling continues...
+    this.#isDestroyed = true;
+    this.#isDestroying = false;
     throw error;
   }
 }
 ```
 
-### 4. Memory Usage Monitoring
+### 5. Performance Monitoring for Key Operations
 
-Add memory monitoring utilities:
+Optionally enhance specific operations with performance monitoring:
+
+```javascript
+// Enhanced state transitions (existing method around line 1050)
+_showState(state, options = {}) {
+  if (this.#performanceMonitor) {
+    return this.#performanceMonitor.timeSync(
+      'state_transition',
+      () => {
+        // Call existing implementation
+        const previousState = this.#uiStateManager.getCurrentState();
+        // ... existing state transition logic
+        this.#uiStateManager.showState(state, message);
+      },
+      `from_${this.#uiStateManager.getCurrentState()}_to_${state}`
+    );
+  } else {
+    // Existing implementation without monitoring
+    const previousState = this.#uiStateManager.getCurrentState();
+    // ... existing logic
+    this.#uiStateManager.showState(state, message);
+  }
+}
+
+// Enhanced element caching (existing method around line 567)
+_cacheElement(key, selector, required = true) {
+  if (this.#performanceMonitor) {
+    return this.#performanceMonitor.timeSync(
+      'element_caching',
+      () => {
+        // Call existing implementation (lines 567-596)
+        const startTime = performance.now();
+        // ... existing caching logic
+        const element = document.querySelector(selector);
+        if (element) {
+          this.#elements[key] = element;
+        }
+        // ... existing validation and logging
+        return element;
+      },
+      `cache_${key}`
+    );
+  } else {
+    // Use existing implementation as-is
+    const startTime = performance.now();
+    // ... existing caching logic
+  }
+}
+```
+
+### 6. Cross-Browser Memory Monitoring
+
+Add memory monitoring using the existing PerformanceMonitor infrastructure:
 
 ```javascript
 /**
- * Get memory usage snapshot
- * @private
- * @returns {object} Memory data
- */
-_getMemoryUsage() {
-  if (!performance.memory) {
-    return null; // Not supported in all browsers
-  }
-
-  return {
-    usedJSHeapSize: performance.memory.usedJSHeapSize,
-    totalJSHeapSize: performance.memory.totalJSHeapSize,
-    jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
-    percentUsed: (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100,
-  };
-}
-
-/**
- * Log memory usage
+ * Enhanced memory monitoring using existing PerformanceMonitor
  * @protected
  */
 _logMemoryUsage(context) {
-  const memory = this._getMemoryUsage();
-
-  if (memory) {
-    this._logger.debug(
-      `${this.constructor.name}: Memory usage at ${context}`,
+  if (this.#performanceMonitor) {
+    // Use existing PerformanceMonitor memory checking (checkMemoryUsage method)
+    this.#performanceMonitor.checkMemoryUsage();
+    
+    this.logger.debug(
+      `${this.constructor.name}: Memory check at ${context}`
+    );
+  } else {
+    // Fallback: track DOM elements and event listeners as memory indicators
+    const elementCount = Object.keys(this.elements).length;
+    const listenerCount = this.#eventListeners.length;
+    const timerCount = this.#pendingTimers.size + this.#pendingIntervals.size;
+    
+    this.logger.debug(
+      `${this.constructor.name}: Resource usage at ${context}`,
       {
-        heapUsed: `${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
-        heapTotal: `${(memory.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
-        percentUsed: `${memory.percentUsed.toFixed(1)}%`,
+        cachedElements: elementCount,
+        eventListeners: listenerCount,
+        activeTimers: timerCount,
       }
     );
-
-    if (memory.percentUsed > 90) {
-      this._logger.warn(
-        `${this.constructor.name}: High memory usage detected (${memory.percentUsed.toFixed(1)}%)`
+    
+    // Warn on high resource usage
+    if (elementCount > 100 || listenerCount > 50 || timerCount > 20) {
+      this.logger.warn(
+        `${this.constructor.name}: High resource usage detected`,
+        { elementCount, listenerCount, timerCount }
       );
     }
   }
 }
 
-// Add memory logging to key points
-async _postInitialize() {
+// Add memory logging to existing lifecycle methods
+// Note: These would be added to existing _postInitialize/_preDestroy hooks if they exist
+_logMemoryAfterInitialization() {
   this._logMemoryUsage('post-initialization');
 }
 
-async _postDestroy() {
-  this._logMemoryUsage('post-destruction');
+_logMemoryBeforeDestruction() {
+  this._logMemoryUsage('pre-destruction');
 }
 ```
 
-### 5. Performance Dashboard
+### 7. Performance Dashboard
 
-Create a simple performance dashboard method:
+Create a simple performance dashboard using existing data:
 
 ```javascript
 /**
@@ -561,21 +361,32 @@ Create a simple performance dashboard method:
  * @returns {object} Dashboard data
  */
 getPerformanceDashboard() {
-  const memory = this._getMemoryUsage();
-  const summary = this._performanceMonitor.getSummary();
-
-  return {
+  const dashboard = {
     controller: this.constructor.name,
-    initialized: this._isInitialized,
-    destroyed: this._isDestroyed,
-    memory: memory ? {
-      heapUsedMB: (memory.usedJSHeapSize / 1024 / 1024).toFixed(2),
-      percentUsed: memory.percentUsed.toFixed(1),
-    } : null,
-    performance: summary,
-    elementCount: Object.keys(this._elements).length,
-    eventListenerCount: this._eventListeners.length,
+    initialized: this.isInitialized,
+    destroyed: this.isDestroyed,
+    elementCount: Object.keys(this.elements).length,
+    eventListenerCount: this.#eventListeners.length,
+    timerCount: this.#pendingTimers.size,
+    intervalCount: this.#pendingIntervals.size,
+    cleanupTaskCount: this.#cleanupTasks.length,
   };
+
+  // Add performance monitor data if available
+  if (this.#performanceMonitor) {
+    const metrics = this.#performanceMonitor.getMetrics();
+    dashboard.performanceMetrics = {
+      totalOperations: metrics.totalOperations,
+      slowOperations: metrics.slowOperations,
+      averageTime: metrics.averageOperationTime.toFixed(2),
+      activeTimers: metrics.activeTimers,
+    };
+    
+    // Add recent performance report
+    dashboard.performanceReport = this.#performanceMonitor.getPerformanceReport();
+  }
+
+  return dashboard;
 }
 
 /**
@@ -585,234 +396,202 @@ getPerformanceDashboard() {
 logPerformanceDashboard() {
   const dashboard = this.getPerformanceDashboard();
 
+  // Basic controller status
   console.table({
     Controller: dashboard.controller,
     Status: dashboard.initialized ? 'Initialized' : 'Not initialized',
-    'Memory (MB)': dashboard.memory?.heapUsedMB || 'N/A',
-    'Memory (%)': dashboard.memory?.percentUsed || 'N/A',
-    'Elements': dashboard.elementCount,
-    'Listeners': dashboard.eventListenerCount,
+    Destroyed: dashboard.destroyed ? 'Yes' : 'No',
+    'Cached Elements': dashboard.elementCount,
+    'Event Listeners': dashboard.eventListenerCount,
+    'Active Timers': dashboard.timerCount,
+    'Active Intervals': dashboard.intervalCount,
+    'Cleanup Tasks': dashboard.cleanupTaskCount,
   });
 
-  if (dashboard.performance.activeTimers.length > 0) {
-    console.log('Active Timers:');
-    console.table(dashboard.performance.activeTimers);
+  // Performance metrics if available
+  if (dashboard.performanceMetrics) {
+    console.log('\nPerformance Metrics:');
+    console.table(dashboard.performanceMetrics);
+  }
+
+  // Full performance report if available
+  if (dashboard.performanceReport) {
+    console.log('\nDetailed Performance Report:');
+    console.log(dashboard.performanceReport);
   }
 }
 ```
 
-### 6. Performance Configuration
+### 8. Performance Configuration
 
-Add configuration options for performance monitoring:
+Configure performance monitoring through dependency injection:
 
 ```javascript
-// Example usage in subclass
+// Example usage in subclass or factory
 class MyController extends BaseCharacterBuilderController {
   constructor(dependencies) {
+    // Create PerformanceMonitor instance
+    const performanceMonitor = new PerformanceMonitor({
+      logger: dependencies.logger,
+      enabled: process.env.NODE_ENV !== 'production',
+      slowOperationThreshold: 150, // Custom threshold
+      maxHistorySize: 500,
+    });
+
     super({
       ...dependencies,
-      performanceConfig: {
-        enabled: process.env.NODE_ENV !== 'production',
-        thresholds: {
-          initialization: 150, // Custom threshold
-          dataLoading: 1000, // Allow more time for data
-        },
-      },
+      // Inject through additionalServices
+      performanceMonitor,
     });
   }
 }
-```
 
-### 7. Performance Optimization Recommendations
-
-Create `docs/characterBuilder/performance-guide.md`:
-
-````markdown
-# Character Builder Controller Performance Guide
-
-## Performance Targets
-
-| Operation        | Target | Acceptable | Action Required |
-| ---------------- | ------ | ---------- | --------------- |
-| Initialization   | < 50ms | < 100ms    | > 100ms         |
-| Element Caching  | < 20ms | < 50ms     | > 50ms          |
-| Event Setup      | < 15ms | < 30ms     | > 30ms          |
-| State Transition | < 10ms | < 20ms     | > 20ms          |
-| Destroy          | < 25ms | < 50ms     | > 50ms          |
-
-## Optimization Strategies
-
-### 1. Lazy Loading
-
-```javascript
-async _loadInitialData() {
-  // Load only critical data initially
-  const criticalData = await this._loadCriticalData();
-
-  // Load rest asynchronously
-  this._loadRemainingData().catch(error => {
-    this._logger.error('Failed to load remaining data', error);
+// Alternative: Factory pattern
+function createControllerWithPerformance(BaseController, dependencies) {
+  const performanceMonitor = new PerformanceMonitor({
+    logger: dependencies.logger,
+    enabled: dependencies.enablePerformanceMonitoring !== false,
+    slowOperationThreshold: dependencies.performanceThreshold || 100,
   });
-}
-```
-````
 
-### 2. Element Caching Optimization
-
-```javascript
-_cacheElements() {
-  // Cache only visible elements initially
-  this._cacheVisibleElements();
-
-  // Defer hidden element caching
-  requestIdleCallback(() => {
-    this._cacheHiddenElements();
+  return new BaseController({
+    ...dependencies,
+    performanceMonitor,
   });
 }
 ```
 
-### 3. Event Delegation
+### 9. Performance Optimization Recommendations
+
+Reference existing performance testing infrastructure:
+
+**Use Existing Performance Test Framework:**
+- 30+ performance test files in `/tests/performance/`
+- Performance test utilities in `/tests/common/performanceTestBed.js`
+- Performance setup helpers in `/tests/setup/performanceSetup.js`
+
+**Key Performance Targets (based on existing tests):**
+
+| Operation        | Target | Threshold from existing PerformanceMonitor |
+| ---------------- | ------ | ------------------------------------------- |
+| Initialization   | < 50ms | 100ms (slowOperationThreshold)            |
+| Element Caching  | < 20ms | 50ms (from existing timing code)          |
+| Event Setup      | < 15ms | 30ms (based on existing patterns)         |
+| State Transition | < 10ms | 20ms (UI responsiveness)                  |
+| Destroy          | < 25ms | 50ms (cleanup operations)                 |
+
+**Optimization Strategies using existing patterns:**
+
+1. **Lazy Loading**: Use existing async patterns in `_executeLifecycleMethod()`
+2. **Element Caching**: Leverage existing `_cacheElement()` timing (lines 567-596)
+3. **Event Delegation**: Use existing `_addEventListener()` with delegation patterns
+4. **Debouncing**: Use existing `_addDebouncedListener()` method (lines 1450+)
+
+**Performance Monitoring in Development:**
 
 ```javascript
-_setupEventListeners() {
-  // Use delegation for dynamic content
-  this._addDelegatedListener('container', '.item', 'click',
-    (e, item) => this._handleItemClick(item)
-  );
-}
-```
+// Use existing PerformanceMonitor
+const performanceMonitor = new PerformanceMonitor({
+  logger: dependencies.logger,
+  enabled: process.env.NODE_ENV !== 'production',
+});
 
-### 4. Debounce Expensive Operations
-
-```javascript
-_setupEventListeners() {
-  // Debounce search input
-  this._addDebouncedListener('searchInput', 'input',
-    this._performSearch.bind(this), 300
-  );
-}
-```
-
-## Performance Monitoring
-
-### Enable in Development
-
-```javascript
 const controller = new MyController({
   ...dependencies,
-  performanceConfig: {
-    enabled: true,
-    thresholds: {
-      initialization: 100,
-    },
-  },
+  performanceMonitor,
 });
-```
 
-### Check Performance Dashboard
-
-```javascript
-// In console
+// Check dashboard
 controller.logPerformanceDashboard();
+
+// Get detailed metrics
+const metrics = performanceMonitor.getMetrics();
+console.log(metrics);
 ```
 
-### Monitor Memory Usage
+**Common Performance Issues addressed by existing infrastructure:**
 
-```javascript
-// Check after operations
-controller._logMemoryUsage('after-heavy-operation');
-```
-
-## Common Performance Issues
-
-### 1. Slow Initialization
-
-- Too many synchronous operations
-- Heavy DOM queries
-- Large initial data loads
-
-### 2. Memory Leaks
-
-- Event listeners not cleaned up
-- Circular references
-- Large data retained in closures
-
-### 3. Janky UI Updates
-
-- Too many DOM manipulations
-- Missing requestAnimationFrame
-- Synchronous heavy computations
-
-````
+1. **Slow Initialization**: Already tracked at lines 1775-1842
+2. **Memory Leaks**: Prevented by existing cleanup system (lines 3081-3170)
+3. **Event Listener Leaks**: Tracked in `#eventListeners` array (line 97)
 
 ## Testing Performance
 
-### Performance Tests
-Add performance tests to verify targets:
+### Use Existing Performance Test Infrastructure
+
+Reference and integrate with existing performance testing framework:
+
+**Existing Performance Test Files:**
+- `/tests/performance/` (30+ performance test files)
+- `/tests/common/performanceTestBed.js` (performance test utilities)
+- `/tests/setup/performanceSetup.js` (setup helpers)
+- `/tests/monitoring/performanceDashboard.js` (monitoring tools)
+
+**Example Integration with Existing Framework:**
 
 ```javascript
-describe('Performance', () => {
+// Use existing performance test bed
+import { PerformanceTestBed } from '../common/performanceTestBed.js';
+import PerformanceMonitor from '../../src/entities/monitoring/PerformanceMonitor.js';
+
+describe('BaseCharacterBuilderController Performance', () => {
+  let testBed;
+  let performanceMonitor;
+
+  beforeEach(() => {
+    testBed = new PerformanceTestBed();
+    performanceMonitor = new PerformanceMonitor({
+      logger: testBed.logger,
+      enabled: true,
+      slowOperationThreshold: 100,
+    });
+  });
+
   it('should initialize within performance budget', async () => {
-    const startTime = performance.now();
-    await testBase.controller.initialize();
-    const duration = performance.now() - startTime;
+    const controller = testBed.createController({
+      performanceMonitor,
+    });
+
+    const timerId = performanceMonitor.startTimer('controller_init_test');
+    await controller.initialize();
+    const duration = performanceMonitor.stopTimer(timerId);
 
     expect(duration).toBeLessThan(100); // 100ms budget
+    
+    // Use existing metrics validation
+    const metrics = performanceMonitor.getMetrics();
+    expect(metrics.slowOperations).toBe(0);
   });
 
-  it('should cache elements efficiently', () => {
-    const controller = testBase.controller;
-    const startTime = performance.now();
-
-    // Add many elements to DOM
-    for (let i = 0; i < 50; i++) {
-      document.body.insertAdjacentHTML('beforeend',
-        `<div id="test-element-${i}"></div>`
-      );
-    }
-
-    // Cache them
-    for (let i = 0; i < 50; i++) {
-      controller._cacheElement(`elem${i}`, `#test-element-${i}`);
-    }
-
-    const duration = performance.now() - startTime;
-    expect(duration).toBeLessThan(50); // Should be fast
-  });
-
-  it('should clean up efficiently', async () => {
-    await testBase.controller.initialize();
-
-    // Add many listeners
-    for (let i = 0; i < 100; i++) {
-      testBase.controller._addEventListener('submitBtn', 'click', () => {});
-    }
-
-    const startTime = performance.now();
-    await testBase.controller.destroy();
-    const duration = performance.now() - startTime;
-
-    expect(duration).toBeLessThan(50); // 50ms budget
-  });
+  // Reference existing performance patterns from /tests/performance/
 });
-````
+```
+
+**Performance Regression Testing:**
+- Add controller performance tests to existing CI pipeline
+- Use existing performance thresholds and validation
+- Integrate with existing performance monitoring dashboard
 
 ## Definition of Done
 
-- [ ] PerformanceMonitor class implemented
-- [ ] Base controller integrated with monitoring
-- [ ] Key operations instrumented
-- [ ] Memory monitoring added
-- [ ] Performance dashboard available
-- [ ] Configuration options documented
-- [ ] Optimization guide created
-- [ ] Performance tests added
+- [ ] Existing PerformanceMonitor integrated with BaseCharacterBuilderController
+- [ ] Dependency injection pattern updated to support performanceMonitor
+- [ ] Enhanced timing added to initialize() and destroy() methods
+- [ ] Cross-browser memory monitoring implemented
+- [ ] Performance dashboard methods added to BaseCharacterBuilderController
+- [ ] Configuration examples documented for subclasses
+- [ ] Performance tests integrated with existing test framework
+- [ ] Documentation updated to reference existing infrastructure
 
 ## Notes for Implementer
 
-- Keep monitoring lightweight to avoid impacting performance
-- Make monitoring optional for production
-- Provide clear actionable insights
-- Consider browser compatibility for memory APIs
-- Add performance regression tests
-- Document findings from real-world usage
+**Critical Implementation Notes:**
+
+- **DO NOT create new PerformanceMonitor class** - Use existing implementation at `src/entities/monitoring/PerformanceMonitor.js`
+- **Use private field patterns** - BaseCharacterBuilderController uses `#` prefix, not `_`
+- **Follow dependency injection pattern** - Inject through `additionalServices`, not constructor parameters
+- **Leverage existing timing** - Performance timing already exists at key points (lines 1775, 1830, 3082)
+- **Reference existing tests** - 30+ performance test files already exist, integrate with them
+- **Cross-browser compatibility** - Avoid Chrome-specific `performance.memory` API
+- **Optional monitoring** - Make PerformanceMonitor injection optional, graceful fallback
+- **Existing infrastructure** - Extensive performance monitoring already exists, enhance rather than replace

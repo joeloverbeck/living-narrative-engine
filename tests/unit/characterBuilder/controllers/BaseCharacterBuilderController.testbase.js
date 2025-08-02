@@ -426,10 +426,10 @@ export class TestController extends BaseCharacterBuilderController {
   // Override _showState to handle UI state changes
   _showState(state, options = {}) {
     this._trackCall('_showState');
-    
+
     // Map state names to element IDs
     const states = ['empty', 'loading', 'results', 'error'];
-    
+
     states.forEach((s) => {
       const element = document.getElementById(`${s}-state`);
       if (element) {

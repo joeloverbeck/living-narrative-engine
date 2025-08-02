@@ -16,6 +16,7 @@
     ],
     "components": [
       "actor.component.json",
+      "apparent_age.component.json",
       "current_actor.component.json",
       "description.component.json",
       "dislikes.component.json",

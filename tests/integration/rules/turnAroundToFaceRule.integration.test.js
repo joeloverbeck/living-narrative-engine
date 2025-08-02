@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the intimacy:turn_around_to_face rule.
+ * @file Integration tests for the positioning:turn_around_to_face rule.
  */
 
 import {
@@ -10,8 +10,8 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import turnAroundToFaceRule from '../../../data/mods/intimacy/rules/turn_around_to_face.rule.json';
-import eventIsActionTurnAroundToFace from '../../../data/mods/intimacy/conditions/event-is-action-turn-around-to-face.condition.json';
+import turnAroundToFaceRule from '../../../data/mods/positioning/rules/turn_around_to_face.rule.json';
+import eventIsActionTurnAroundToFace from '../../../data/mods/positioning/conditions/event-is-action-turn-around-to-face.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -101,7 +101,7 @@ describe('Turn Around to Face Rule', () => {
         .fn()
         .mockReturnValue([{ ...turnAroundToFaceRule, actions: expanded }]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'intimacy:event-is-action-turn-around-to-face'
+        id === 'positioning:event-is-action-turn-around-to-face'
           ? eventIsActionTurnAroundToFace
           : undefined
       ),
@@ -149,7 +149,7 @@ describe('Turn Around to Face Rule', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'alice',
-        actionId: 'intimacy:turn_around_to_face',
+        actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
       });
 
@@ -181,15 +181,15 @@ describe('Turn Around to Face Rule', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'alice',
-        actionId: 'intimacy:turn_around_to_face',
+        actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
       });
 
       const types = testEnv.events.map((e) => e.eventType);
-      expect(types).toContain('intimacy:actor_faced_everyone');
+      expect(types).toContain('positioning:actor_faced_everyone');
 
       const facedEvent = testEnv.events.find(
-        (e) => e.eventType === 'intimacy:actor_faced_everyone'
+        (e) => e.eventType === 'positioning:actor_faced_everyone'
       );
       expect(facedEvent.payload.actor).toBe('alice');
       expect(facedEvent.payload.faced).toBe('Bob');
@@ -218,7 +218,7 @@ describe('Turn Around to Face Rule', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'alice',
-        actionId: 'intimacy:turn_around_to_face',
+        actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
       });
 
@@ -262,7 +262,7 @@ describe('Turn Around to Face Rule', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'alice',
-        actionId: 'intimacy:turn_around_to_face',
+        actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
       });
 
@@ -317,7 +317,7 @@ describe('Turn Around to Face Rule', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'alice',
-        actionId: 'intimacy:turn_around_to_face',
+        actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
       });
 
@@ -357,12 +357,12 @@ describe('Turn Around to Face Rule', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'alice',
-        actionId: 'intimacy:turn_around_to_face',
+        actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
       });
 
       const facedEvent = testEnv.events.find(
-        (e) => e.eventType === 'intimacy:actor_faced_everyone'
+        (e) => e.eventType === 'positioning:actor_faced_everyone'
       );
       expect(facedEvent.payload.faced).toBe('Bob');
       // Even though Alice faces everyone, the event includes the specific target
@@ -386,7 +386,7 @@ describe('Turn Around to Face Rule', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'alice',
-        actionId: 'intimacy:turn_around_to_face',
+        actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
       });
 
@@ -418,7 +418,7 @@ describe('Turn Around to Face Rule', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'alice',
-        actionId: 'intimacy:turn_around_to_face',
+        actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
       });
 
@@ -450,7 +450,7 @@ describe('Turn Around to Face Rule', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'alice',
-        actionId: 'intimacy:turn_around_to_face',
+        actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
       });
 
@@ -484,7 +484,7 @@ describe('Turn Around to Face Rule', () => {
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: 'alice',
-        actionId: 'intimacy:turn_around', // Different action
+        actionId: 'positioning:turn_around', // Different action
         targetId: 'bob',
       });
 
@@ -494,7 +494,7 @@ describe('Turn Around to Face Rule', () => {
 
       // Verify no actor_faced_everyone event was dispatched
       const types = testEnv.events.map((e) => e.eventType);
-      expect(types).not.toContain('intimacy:actor_faced_everyone');
+      expect(types).not.toContain('positioning:actor_faced_everyone');
     });
   });
 });

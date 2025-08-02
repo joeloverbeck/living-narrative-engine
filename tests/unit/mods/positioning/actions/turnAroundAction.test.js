@@ -1,14 +1,14 @@
 /**
- * @file Unit tests for the intimacy:turn_around action.
+ * @file Unit tests for the positioning:turn_around action.
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import turnAroundAction from '../../../../../data/mods/intimacy/actions/turn_around.action.json';
+import turnAroundAction from '../../../../../data/mods/positioning/actions/turn_around.action.json';
 
-describe('intimacy:turn_around action', () => {
+describe('positioning:turn_around action', () => {
   describe('action definition', () => {
     it('has correct id', () => {
-      expect(turnAroundAction.id).toBe('intimacy:turn_around');
+      expect(turnAroundAction.id).toBe('positioning:turn_around');
     });
 
     it('has appropriate name and description', () => {
@@ -16,9 +16,9 @@ describe('intimacy:turn_around action', () => {
       expect(turnAroundAction.description).toBeTruthy();
     });
 
-    it('uses intimacy:close_actors_facing_each_other_or_behind_target scope', () => {
+    it('uses positioning:close_actors_facing_each_other_or_behind_target scope', () => {
       expect(turnAroundAction.scope).toBe(
-        'intimacy:close_actors_facing_each_other_or_behind_target'
+        'positioning:close_actors_facing_each_other_or_behind_target'
       );
     });
 

@@ -40,15 +40,21 @@
       ],
       "instances": []
     },
-    "actions": ["remove_clothing.action.json"],
+    "actions": [
+      "remove_clothing.action.json"
+    ],
     "events": [
       "clothing_equipped.event.json",
       "clothing_instantiation_completed.event.json",
       "clothing_layer_conflict.event.json",
       "clothing_unequipped.event.json"
     ],
-    "rules": ["handle_remove_clothing.rule.json"],
-    "conditions": ["event-is-action-remove-clothing.condition.json"],
+    "rules": [
+      "handle_remove_clothing.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-remove-clothing.condition.json"
+    ],
     "scopes": [
       "target_topmost_torso_upper_clothing.scope",
       "topmost_clothing.scope"

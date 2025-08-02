@@ -97,7 +97,7 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     const intimacyActions = [
       {
-        actionId: 'intimacy:get_close',
+        actionId: 'positioning:get_close',
         name: 'Get Close',
         available: true,
       },
@@ -197,10 +197,10 @@ describe('Cross-Mod Action Integration E2E', () => {
       'test-npc-anatomical',
     ];
     for (const actorId of intimacyActors) {
-      mockValidationResults[`${actorId}:intimacy:get_close`] = {
+      mockValidationResults[`${actorId}:positioning:get_close`] = {
         success: true,
         validatedAction: {
-          actionId: 'intimacy:get_close',
+          actionId: 'positioning:get_close',
           actorId: actorId,
           targets: { target: 'test-npc-intimate' },
         },
@@ -582,7 +582,7 @@ describe('Cross-Mod Action Integration E2E', () => {
     const aiActorId = testEnvironment.actors.aiActorId;
 
     const mockAIDecision = {
-      actionId: 'intimacy:get_close',
+      actionId: 'positioning:get_close',
       targets: { target: testEnvironment.actors.playerActorId },
       reasoning: 'Moving closer to the player for interaction',
     };
@@ -595,17 +595,17 @@ describe('Cross-Mod Action Integration E2E', () => {
         [aiActorId]: [
           { actionId: 'core:wait', name: 'Wait', available: true },
           {
-            actionId: 'intimacy:get_close',
+            actionId: 'positioning:get_close',
             name: 'Get Close',
             available: true,
           },
         ],
       },
       validationResults: {
-        [`${aiActorId}:intimacy:get_close`]: {
+        [`${aiActorId}:positioning:get_close`]: {
           success: true,
           validatedAction: {
-            actionId: 'intimacy:get_close',
+            actionId: 'positioning:get_close',
             actorId: aiActorId,
             targets: { target: testEnvironment.actors.playerActorId },
           },
@@ -618,11 +618,11 @@ describe('Cross-Mod Action Integration E2E', () => {
 
     // Verify AI used cross-mod action
     expect(result.success).toBe(true);
-    expect(result.aiDecision.actionId).toBe('intimacy:get_close');
+    expect(result.aiDecision.actionId).toBe('positioning:get_close');
     expect(result.validation.success).toBe(true);
 
-    // Verify it's from intimacy mod
+    // Verify it's from positioning mod (migrated from intimacy)
     const [modNamespace] = result.aiDecision.actionId.split(':');
-    expect(modNamespace).toBe('intimacy');
+    expect(modNamespace).toBe('positioning');
   });
 });

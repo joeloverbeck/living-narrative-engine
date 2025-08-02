@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:apparent_age",
+  "description": "Stores the perceived age range of an entity, allowing for uncertainty in age perception typical of real-world scenarios.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["minAge", "maxAge"],
+    "properties": {
+      "minAge": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 200,
+        "description": "Minimum perceived age in years. The youngest the entity could reasonably appear to be."
+      },
+      "maxAge": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 200,
+        "description": "Maximum perceived age in years. The oldest the entity could reasonably appear to be."
+      },
+      "bestGuess": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 200,
+        "description": "Most likely age estimate in years. Optional field representing the most probable age within the range."
+      }
+    }
+  }
+}

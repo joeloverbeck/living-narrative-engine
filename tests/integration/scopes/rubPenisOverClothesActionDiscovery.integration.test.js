@@ -31,6 +31,8 @@ import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import { createMockMultiTargetResolutionStage } from '../../common/mocks/mockMultiTargetResolutionStage.js';
+import { PipelineStage } from '../../../src/actions/pipeline/PipelineStage.js';
+import { PipelineResult } from '../../../src/actions/pipeline/PipelineResult.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
 import fs from 'fs';
 import path from 'path';
@@ -48,6 +50,93 @@ const penisCoveredScopeContent = fs.readFileSync(
 import rubPenisOverClothesAction from '../../../data/mods/sex/actions/rub_penis_over_clothes.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
+
+/**
+ * Creates a MultiTargetResolutionStage mock that actually evaluates scopes
+ * instead of bypassing them like the standard mock
+ *
+ * @param dependencies
+ */
+function createScopeEvaluatingMock(dependencies) {
+  const { scopeRegistry, scopeEngine, entityManager, logger, jsonLogicEval } = dependencies;
+  
+  return new (class extends PipelineStage {
+    constructor() {
+      super('ScopeEvaluatingMock');
+    }
+
+    async executeInternal(context) {
+      const { candidateActions, actor, actionContext } = context;
+      const actionsWithTargets = [];
+
+      for (const actionDef of candidateActions) {
+        // Skip actions without scopes
+        if (!actionDef.scope) {
+          continue;
+        }
+
+        // Get the unified scope resolver
+        const unifiedScopeResolver = createMockUnifiedScopeResolver({
+          scopeRegistry,
+          scopeEngine,
+          entityManager,
+          logger,
+          jsonLogicEvaluationService: jsonLogicEval,
+          dslParser: new DefaultDslParser({ logger }),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+        });
+
+        // Create scope resolution context
+        const scopeContext = {
+          actor: actor,
+          actionId: actionDef.id,
+          actionContext: actionContext,
+          trace: context.trace,
+        };
+
+        // Resolve the scope
+        const scopeResult = unifiedScopeResolver.resolve(actionDef.scope, scopeContext);
+
+        if (scopeResult.success && scopeResult.value.size > 0) {
+          // Convert resolved targets to the expected format
+          const resolvedTargets = Array.from(scopeResult.value);
+          
+          actionsWithTargets.push({
+            actionDef,
+            targetContexts: resolvedTargets.map(targetId => ({
+              type: 'entity',
+              entityId: targetId,
+              displayName: `Target ${targetId}`,
+              placeholder: 'target',
+            })),
+            resolvedTargets: {
+              primary: resolvedTargets.map(targetId => ({
+                id: targetId,
+                displayName: `Target ${targetId}`,
+                entity: null,
+              })),
+            },
+            targetDefinitions: {
+              primary: {
+                scope: actionDef.scope,
+                placeholder: 'target',
+              },
+            },
+            isMultiTarget: false,
+          });
+        }
+        // If scope resolution fails or returns no targets, the action is filtered out
+      }
+
+      return PipelineResult.success({
+        data: {
+          ...context.data,
+          actionsWithTargets,
+        },
+      });
+    }
+  })();
+}
 
 describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
   let entityManager;
@@ -93,8 +182,8 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
       logic: {
         not: {
           in: [
-            { var: 'actor.id' },
-            { var: 'entity.components.positioning:closeness.facing_away_from' },
+            { var: 'entity.id' },
+            { var: 'actor.components.positioning:facing_away.facing_away_from' },
           ],
         },
       },
@@ -183,7 +272,13 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         logger,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
-      multiTargetResolutionStage: createMockMultiTargetResolutionStage(),
+      multiTargetResolutionStage: createScopeEvaluatingMock({
+        scopeRegistry,
+        scopeEngine,
+        entityManager,
+        logger,
+        jsonLogicEval,
+      }),
     });
 
     actionDiscoveryService = new ActionDiscoveryService({
@@ -211,6 +306,8 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['target1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
           },
@@ -220,6 +317,8 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['actor1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {
@@ -263,6 +362,11 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           return [];
         }
       );
+
+      // Mock buildAdjacencyCache
+      mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {
+        // No-op for tests
+      });
     }
 
     it('should discover action when penis is covered', async () => {
@@ -386,7 +490,9 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['target1'],
-              facing_away_from: [],
+            },
+            'positioning:facing_away': {
+              facing_away_from: ['target1'], // Actor is facing away from target
             },
           },
         },
@@ -395,7 +501,9 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['actor1'],
-              facing_away_from: ['actor1'], // Facing away from actor
+            },
+            'positioning:facing_away': {
+              facing_away_from: [],
             },
             'anatomy:body': {
               body: {
@@ -547,6 +655,9 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
+            'positioning:facing_away': {
+              facing_away_from: [],
+            },
             // No closeness component
           },
         },

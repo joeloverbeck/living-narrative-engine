@@ -168,7 +168,7 @@ export class ThematicDirectionController extends BaseCharacterBuilderController 
   async _initializeUIState() {
     // Initialize UIStateManager first by calling parent method
     await super._initializeUIState();
-    
+
     // Check if we have a preselected concept
     if (this.#selectedConceptId) {
       this._showState('empty');
