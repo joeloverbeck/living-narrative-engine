@@ -6,7 +6,6 @@
 import { Pipeline } from './pipeline/Pipeline.js';
 import { ComponentFilteringStage } from './pipeline/stages/ComponentFilteringStage.js';
 import { PrerequisiteEvaluationStage } from './pipeline/stages/PrerequisiteEvaluationStage.js';
-import { MultiTargetResolutionStage } from './pipeline/stages/MultiTargetResolutionStage.js';
 import { ActionFormattingStage } from './pipeline/stages/ActionFormattingStage.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -22,6 +21,7 @@ import { ActionFormattingStage } from './pipeline/stages/ActionFormattingStage.j
 /** @typedef {import('../interfaces/IActionCommandFormatter.js').IActionCommandFormatter} IActionCommandFormatter */
 /** @typedef {import('./errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('./pipeline/stages/MultiTargetResolutionStage.js').MultiTargetResolutionStage} MultiTargetResolutionStage */
 
 /**
  * @class ActionPipelineOrchestrator
@@ -39,6 +39,7 @@ export class ActionPipelineOrchestrator {
   #logger;
   #unifiedScopeResolver;
   #targetContextBuilder;
+  #multiTargetResolutionStage;
 
   /**
    * Creates an ActionPipelineOrchestrator instance
@@ -55,6 +56,7 @@ export class ActionPipelineOrchestrator {
    * @param {ILogger} deps.logger - Logger for diagnostic output
    * @param {UnifiedScopeResolver} deps.unifiedScopeResolver - Unified scope resolver
    * @param {TargetContextBuilder} deps.targetContextBuilder - Target context builder
+   * @param {MultiTargetResolutionStage} deps.multiTargetResolutionStage - Multi-target resolution stage
    */
   constructor({
     actionIndex,
@@ -68,6 +70,7 @@ export class ActionPipelineOrchestrator {
     logger,
     unifiedScopeResolver,
     targetContextBuilder,
+    multiTargetResolutionStage,
   }) {
     this.#actionIndex = actionIndex;
     this.#prerequisiteService = prerequisiteService;
@@ -80,6 +83,7 @@ export class ActionPipelineOrchestrator {
     this.#logger = logger;
     this.#unifiedScopeResolver = unifiedScopeResolver;
     this.#targetContextBuilder = targetContextBuilder;
+    this.#multiTargetResolutionStage = multiTargetResolutionStage;
   }
 
   /**
@@ -138,13 +142,7 @@ export class ActionPipelineOrchestrator {
         this.#errorBuilder,
         this.#logger
       ),
-      new MultiTargetResolutionStage({
-        unifiedScopeResolver: this.#unifiedScopeResolver,
-        entityManager: this.#entityManager,
-        targetResolver: this.#targetService,
-        targetContextBuilder: this.#targetContextBuilder,
-        logger: this.#logger,
-      }),
+      this.#multiTargetResolutionStage,
       new ActionFormattingStage({
         commandFormatter: this.#formatter,
         entityManager: this.#entityManager,

@@ -17,7 +17,7 @@
       "type": "QUERY_COMPONENT",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "intimacy:facing_away",
+        "component_type": "positioning:facing_away",
         "result_variable": "facingState",
         "missing_value": null
       }
@@ -51,7 +51,7 @@
             "comment": "Remove actor from facing_away_from array",
             "parameters": {
               "entity_ref": "target",
-              "component_type": "intimacy:facing_away",
+              "component_type": "positioning:facing_away",
               "field": "facing_away_from",
               "mode": "remove_by_value",
               "value": "{event.payload.actorId}"
@@ -62,7 +62,7 @@
             "comment": "Re-query to check if array is now empty",
             "parameters": {
               "entity_ref": "target",
-              "component_type": "intimacy:facing_away",
+              "component_type": "positioning:facing_away",
               "result_variable": "updatedFacingState"
             }
           },
@@ -83,7 +83,7 @@
                   "type": "REMOVE_COMPONENT",
                   "parameters": {
                     "entity_ref": "target",
-                    "component_type": "intimacy:facing_away"
+                    "component_type": "positioning:facing_away"
                   }
                 }
               ]
@@ -119,7 +119,7 @@
                   "comment": "Add actor to existing facing_away_from array",
                   "parameters": {
                     "entity_ref": "target",
-                    "component_type": "intimacy:facing_away",
+                    "component_type": "positioning:facing_away",
                     "field": "facing_away_from",
                     "mode": "push_unique",
                     "value": "{event.payload.actorId}"
@@ -132,7 +132,7 @@
                   "comment": "Create new facing_away component",
                   "parameters": {
                     "entity_ref": "target",
-                    "component_type": "intimacy:facing_away",
+                    "component_type": "positioning:facing_away",
                     "value": {
                       "facing_away_from": ["{event.payload.actorId}"]
                     }

@@ -111,6 +111,24 @@ export class BaseCharacterBuilderController {
   /** @private @type {object|null} */
   #lastError = null;
 
+  /** @private @type {boolean} */
+  #isDestroyed = false;
+
+  /** @private @type {boolean} */
+  #isDestroying = false;
+
+  /** @private @type {Array<{task: Function, description: string}>} */
+  #cleanupTasks = [];
+
+  /** @private @type {Set<number>} */
+  #pendingTimers = new Set();
+
+  /** @private @type {Set<number>} */
+  #pendingIntervals = new Set();
+
+  /** @private @type {Set<number>} */
+  #pendingAnimationFrames = new Set();
+
   /**
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger - Logger instance
@@ -2670,18 +2688,486 @@ export class BaseCharacterBuilderController {
     return this.#lastError || null;
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Lifecycle Hooks
+  // ─────────────────────────────────────────────────────────────────────────
+
   /**
-   * Cleanup resources - call when controller is destroyed
-   * Will be implemented in ticket #8
+   * Hook called before destruction begins
+   * Override in subclasses to perform custom pre-destruction logic
+   *
+   * @protected
+   * @abstract
+   */
+  _preDestroy() {
+    // Default implementation - no-op
+    // Subclasses can override to add custom logic
+  }
+
+  /**
+   * Hook called after destruction completes
+   * Override in subclasses to perform custom post-destruction logic
+   *
+   * @protected
+   * @abstract
+   */
+  _postDestroy() {
+    // Default implementation - no-op
+    // Subclasses can override to add custom logic
+  }
+
+  /**
+   * Hook for canceling custom operations during destruction
+   * Override in subclasses that have custom async operations
+   *
+   * @protected
+   * @abstract
+   */
+  _cancelCustomOperations() {
+    // Default implementation - no-op
+    // Subclasses can override to cancel custom operations
+  }
+
+  /**
+   * Hook for cleaning up core services
+   * Override only if core services need special cleanup
+   *
+   * @protected
+   * @abstract
+   */
+  _cleanupCoreServices() {
+    // Default implementation - no-op
+    // Core services typically don't need cleanup
+  }
+
+  /**
+   * Hook for cleaning up additional services
+   * Override in subclasses to cleanup page-specific services
+   *
+   * @protected
+   * @abstract
+   */
+  _cleanupAdditionalServices() {
+    // Default implementation - no-op
+    // Subclasses should override to cleanup their services
+  }
+
+  /**
+   * Hook for clearing cached data
+   * Override in subclasses that maintain caches
+   *
+   * @protected
+   * @abstract
+   */
+  _clearCachedData() {
+    // Default implementation - no-op
+    // Subclasses can override to clear custom caches
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Destruction Implementation
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Execute a destruction phase with error handling
+   *
+   * @private
+   * @param {string} phaseName - Name of the phase
+   * @param {Function} phaseFunction - Function to execute
+   */
+  _executePhase(phaseName, phaseFunction) {
+    try {
+      this.#logger.debug(`${this.constructor.name}: Executing ${phaseName}`);
+      phaseFunction.call(this);
+    } catch (error) {
+      this.#logger.error(
+        `${this.constructor.name}: Error in ${phaseName}`,
+        error
+      );
+      // Continue with destruction even if a phase fails
+    }
+  }
+
+  /**
+   * Cancel all pending operations (timers, intervals, animation frames)
+   *
+   * @protected
+   */
+  _cancelPendingOperations() {
+    // Cancel timers
+    const timerCount = this.#pendingTimers.size;
+    if (timerCount > 0) {
+      this.#pendingTimers.forEach((timerId) => clearTimeout(timerId));
+      this.#pendingTimers.clear();
+      this.#logger.debug(
+        `${this.constructor.name}: Cancelled ${timerCount} pending timers`
+      );
+    }
+
+    // Cancel intervals
+    const intervalCount = this.#pendingIntervals.size;
+    if (intervalCount > 0) {
+      this.#pendingIntervals.forEach((intervalId) => clearInterval(intervalId));
+      this.#pendingIntervals.clear();
+      this.#logger.debug(
+        `${this.constructor.name}: Cancelled ${intervalCount} pending intervals`
+      );
+    }
+
+    // Cancel animation frames
+    const animationCount = this.#pendingAnimationFrames.size;
+    if (animationCount > 0) {
+      this.#pendingAnimationFrames.forEach((frameId) =>
+        cancelAnimationFrame(frameId)
+      );
+      this.#pendingAnimationFrames.clear();
+      this.#logger.debug(
+        `${this.constructor.name}: Cancelled ${animationCount} pending animation frames`
+      );
+    }
+
+    // Call custom cancellation hook
+    this._cancelCustomOperations();
+  }
+
+  /**
+   * Clean up all services
+   *
+   * @protected
+   */
+  _cleanupServices() {
+    // Clean up additional services first
+    this._cleanupAdditionalServices();
+
+    // Clean up core services if needed
+    this._cleanupCoreServices();
+
+    // Clear service references
+    this.#additionalServices = {};
+  }
+
+  /**
+   * Execute all registered cleanup tasks in LIFO order
+   *
+   * @protected
+   */
+  _executeCleanupTasks() {
+    const taskCount = this.#cleanupTasks.length;
+    if (taskCount === 0) return;
+
+    this.#logger.debug(
+      `${this.constructor.name}: Executing ${taskCount} cleanup tasks`
+    );
+
+    // Execute in reverse order (LIFO)
+    while (this.#cleanupTasks.length > 0) {
+      const { task, description } = this.#cleanupTasks.pop();
+      try {
+        this.#logger.debug(
+          `${this.constructor.name}: Executing cleanup task: ${description}`
+        );
+        task();
+      } catch (error) {
+        this.#logger.error(
+          `${this.constructor.name}: Cleanup task failed: ${description}`,
+          error
+        );
+        // Continue with other tasks
+      }
+    }
+  }
+
+  /**
+   * Clear remaining references
+   *
+   * @protected
+   */
+  _clearReferences() {
+    // Clear UI state manager
+    this.#uiStateManager = null;
+
+    // Clear error tracking
+    this.#lastError = null;
+
+    // Clear debounced/throttled handlers
+    this.#debouncedHandlers.clear();
+    this.#throttledHandlers.clear();
+
+    // Clear custom cached data
+    this._clearCachedData();
+
+    this.#logger.debug(`${this.constructor.name}: Cleared all references`);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Pending Operations Management
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Set a timeout that will be automatically cleared on destruction
+   *
+   * @protected
+   * @param {Function} callback - Function to execute
+   * @param {number} delay - Delay in milliseconds
+   * @returns {number} Timer ID
+   */
+  _setTimeout(callback, delay) {
+    const timerId = setTimeout(() => {
+      this.#pendingTimers.delete(timerId);
+      callback();
+    }, delay);
+    this.#pendingTimers.add(timerId);
+    return timerId;
+  }
+
+  /**
+   * Clear a timeout set with _setTimeout
+   *
+   * @protected
+   * @param {number} timerId - Timer ID to clear
+   */
+  _clearTimeout(timerId) {
+    if (this.#pendingTimers.has(timerId)) {
+      clearTimeout(timerId);
+      this.#pendingTimers.delete(timerId);
+    }
+  }
+
+  /**
+   * Set an interval that will be automatically cleared on destruction
+   *
+   * @protected
+   * @param {Function} callback - Function to execute
+   * @param {number} delay - Delay in milliseconds
+   * @returns {number} Interval ID
+   */
+  _setInterval(callback, delay) {
+    const intervalId = setInterval(callback, delay);
+    this.#pendingIntervals.add(intervalId);
+    return intervalId;
+  }
+
+  /**
+   * Clear an interval set with _setInterval
+   *
+   * @protected
+   * @param {number} intervalId - Interval ID to clear
+   */
+  _clearInterval(intervalId) {
+    if (this.#pendingIntervals.has(intervalId)) {
+      clearInterval(intervalId);
+      this.#pendingIntervals.delete(intervalId);
+    }
+  }
+
+  /**
+   * Request an animation frame that will be automatically cancelled on destruction
+   *
+   * @protected
+   * @param {Function} callback - Function to execute
+   * @returns {number} Animation frame ID
+   */
+  _requestAnimationFrame(callback) {
+    const frameId = requestAnimationFrame((timestamp) => {
+      this.#pendingAnimationFrames.delete(frameId);
+      callback(timestamp);
+    });
+    this.#pendingAnimationFrames.add(frameId);
+    return frameId;
+  }
+
+  /**
+   * Cancel an animation frame
+   *
+   * @protected
+   * @param {number} frameId - Animation frame ID to cancel
+   */
+  _cancelAnimationFrame(frameId) {
+    if (this.#pendingAnimationFrames.has(frameId)) {
+      cancelAnimationFrame(frameId);
+      this.#pendingAnimationFrames.delete(frameId);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Cleanup Task Registration
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Register a cleanup task to be executed during destruction
+   * Tasks are executed in LIFO order (last registered, first executed)
+   *
+   * @protected
+   * @param {Function} task - Cleanup task to execute
+   * @param {string} [description] - Description for logging
+   */
+  _registerCleanupTask(task, description = 'Cleanup task') {
+    if (typeof task !== 'function') {
+      throw new TypeError('Cleanup task must be a function');
+    }
+
+    this.#cleanupTasks.push({ task, description });
+    this.#logger.debug(
+      `${this.constructor.name}: Registered cleanup task: ${description}`
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Destruction Guards
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Check if the controller has been destroyed
+   *
+   * @protected
+   * @param {string} [operation] - Operation being attempted
+   * @returns {boolean} True if destroyed
+   * @throws {Error} If operation provided and controller is destroyed
+   */
+  _checkDestroyed(operation) {
+    if (this.#isDestroyed) {
+      if (operation) {
+        throw new Error(
+          `${this.constructor.name}: Cannot ${operation} - controller is destroyed`
+        );
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get whether the controller has been destroyed
    *
    * @public
+   * @returns {boolean}
+   */
+  get isDestroyed() {
+    return this.#isDestroyed;
+  }
+
+  /**
+   * Get whether the controller is currently being destroyed
+   *
+   * @public
+   * @returns {boolean}
+   */
+  get isDestroying() {
+    return this.#isDestroying;
+  }
+
+  /**
+   * Make a method destruction-safe by wrapping it
+   *
+   * @protected
+   * @param {Function} method - Method to wrap
+   * @param {string} methodName - Name for error messages
+   * @returns {Function} Wrapped method
+   */
+  _makeDestructionSafe(method, methodName) {
+    return (...args) => {
+      this._checkDestroyed(`call ${methodName}`);
+      return method.apply(this, args);
+    };
+  }
+
+  /**
+   * Destroy the controller instance
+   * Cleans up event listeners, timers, and references
+   *
+   * @public
+   * @returns {void}
    */
   destroy() {
-    // Remove all event listeners
-    this._removeAllEventListeners();
+    const startTime = performance.now();
 
-    // TODO: Other cleanup will be implemented in ticket #8
-    throw new Error('destroy() will be implemented in ticket #8');
+    // Check if already destroyed
+    if (this.#isDestroyed) {
+      this.#logger.warn(
+        `${this.constructor.name}: Already destroyed, skipping destruction`
+      );
+      return;
+    }
+
+    // Check if destruction in progress
+    if (this.#isDestroying) {
+      this.#logger.warn(
+        `${this.constructor.name}: Destruction already in progress`
+      );
+      return;
+    }
+
+    this.#isDestroying = true;
+    this.#logger.info(`${this.constructor.name}: Starting destruction`);
+
+    try {
+      // Phase 1: Pre-destruction hook
+      this._executePhase('pre-destruction', () => this._preDestroy());
+
+      // Phase 2: Cancel pending operations
+      this._executePhase('pending operations cancellation', () =>
+        this._cancelPendingOperations()
+      );
+
+      // Phase 3: Remove all event listeners
+      this._executePhase('event listener removal', () =>
+        this._removeAllEventListeners()
+      );
+
+      // Phase 4: Cleanup services
+      this._executePhase('service cleanup', () => this._cleanupServices());
+
+      // Phase 5: Clear element caches
+      this._executePhase('element cache clearing', () =>
+        this._clearElementCache()
+      );
+
+      // Phase 6: Execute registered cleanup tasks
+      this._executePhase('cleanup task execution', () =>
+        this._executeCleanupTasks()
+      );
+
+      // Phase 7: Clear remaining references
+      this._executePhase('reference clearing', () => this._clearReferences());
+
+      // Phase 8: Post-destruction hook
+      this._executePhase('post-destruction', () => this._postDestroy());
+
+      // Mark as destroyed
+      this.#isDestroyed = true;
+      this.#isDestroying = false;
+
+      const duration = performance.now() - startTime;
+      this.#logger.info(
+        `${this.constructor.name}: Destruction completed in ${duration.toFixed(2)}ms`
+      );
+
+      // Dispatch destruction event
+      if (this.#eventBus) {
+        try {
+          this.#eventBus.dispatch('CONTROLLER_DESTROYED', {
+            controllerName: this.constructor.name,
+            destructionTime: duration,
+            timestamp: new Date().toISOString(),
+          });
+        } catch (error) {
+          // Log but don't throw - destruction should complete
+          this.#logger.error(
+            `${this.constructor.name}: Failed to dispatch destruction event`,
+            error
+          );
+        }
+      }
+    } catch (error) {
+      this.#logger.error(
+        `${this.constructor.name}: Error during destruction`,
+        error
+      );
+      // Still mark as destroyed even if there were errors
+      this.#isDestroyed = true;
+      this.#isDestroying = false;
+      throw error;
+    }
   }
 }
 

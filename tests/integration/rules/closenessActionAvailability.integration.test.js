@@ -295,7 +295,7 @@ describe('closeness action availability chain', () => {
   function prerequisitesMet(actorId, targetId) {
     const closeness = testEnv.entityManager.getComponentData(
       actorId,
-      'intimacy:closeness'
+      'positioning:closeness'
     );
     return (
       !!closeness &&
@@ -380,11 +380,11 @@ describe('closeness action availability chain', () => {
     // Verify that the closeness circle was created correctly
     const a1Closeness = testEnv.entityManager.getComponentData(
       'a1',
-      'intimacy:closeness'
+      'positioning:closeness'
     );
     const t1Closeness = testEnv.entityManager.getComponentData(
       't1',
-      'intimacy:closeness'
+      'positioning:closeness'
     );
 
     expect(a1Closeness).toEqual({ partners: ['t1'] });

@@ -26,7 +26,7 @@ describe('Namespaced Scope Requirements', () => {
               modId: 'core',
             },
             'intimacy:close_actors': {
-              expr: 'actor.components.intimacy:closeness.partners[]',
+              expr: 'actor.components.positioning:closeness.partners[]',
               modId: 'intimacy',
             },
           })
@@ -140,7 +140,7 @@ describe('Namespaced Scope Requirements', () => {
       const content = `
         core:followers := actor.core:leading.followers[]
         core:environment := entities(core:position)
-        intimacy:close_actors := actor.components.intimacy:closeness.partners[]
+        intimacy:close_actors := actor.components.positioning:closeness.partners[]
       `;
 
       const result = parseScopeDefinitions(content, 'test.scope');

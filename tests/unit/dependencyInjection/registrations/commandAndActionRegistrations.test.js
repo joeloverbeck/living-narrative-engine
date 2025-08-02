@@ -47,6 +47,12 @@ describe('registerCommandAndAction', () => {
   const mockDslParser = { parse: jest.fn() };
   const mockEventDispatchService = mockDeep();
 
+  // Mock pipeline services that are registered by registerPipelineServices
+  const mockTargetDependencyResolver = mockDeep();
+  const mockLegacyTargetCompatibilityLayer = mockDeep();
+  const mockScopeContextBuilder = mockDeep();
+  const mockTargetDisplayNameResolver = mockDeep();
+
   beforeEach(() => {
     container = new AppContainer();
 
@@ -81,6 +87,25 @@ describe('registerCommandAndAction', () => {
     container.register(
       tokens.EventDispatchService,
       () => mockEventDispatchService
+    );
+
+    // Register pipeline service dependencies that commandAndActionRegistrations expects
+    // These are normally registered by registerPipelineServices() which runs before registerCommandAndAction()
+    container.register(
+      tokens.ITargetDependencyResolver,
+      () => mockTargetDependencyResolver
+    );
+    container.register(
+      tokens.ILegacyTargetCompatibilityLayer,
+      () => mockLegacyTargetCompatibilityLayer
+    );
+    container.register(
+      tokens.IScopeContextBuilder,
+      () => mockScopeContextBuilder
+    );
+    container.register(
+      tokens.ITargetDisplayNameResolver,
+      () => mockTargetDisplayNameResolver
     );
   });
 

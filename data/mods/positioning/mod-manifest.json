@@ -2,8 +2,8 @@
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "positioning",
   "version": "1.0.0",
-  "name": "positioning",
-  "description": "Adds positioning behaviors like kneeling, bowing, and other respectful or submissive gestures.",
+  "name": "Positioning System",
+  "description": "Provides physical positioning and spatial relationship mechanics for actors, including closeness circles, facing directions, and movement actions.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [
@@ -13,7 +13,11 @@
     }
   ],
   "content": {
-    "components": ["kneeling_before.component.json"],
+    "components": [
+      "closeness.component.json",
+      "facing_away.component.json",
+      "kneeling_before.component.json"
+    ],
     "actions": ["kneel_before.action.json"],
     "conditions": ["event-is-action-kneel-before.condition.json"],
     "rules": ["kneel_before.rule.json"],

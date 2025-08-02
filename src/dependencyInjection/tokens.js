@@ -3,7 +3,7 @@
  * Using tokens instead of raw strings prevents typos and aids refactoring.
  */
 
-import { freeze } from '../utils';
+import { freeze } from '../utils/cloneUtils.js';
 import { coreTokens } from './tokens/tokens-core.js';
 import { uiTokens } from './tokens/tokens-ui.js';
 import { aiTokens } from './tokens/tokens-ai.js';

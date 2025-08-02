@@ -116,7 +116,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -124,7 +124,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       },
     ]);
@@ -157,7 +157,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Sarah' },
           [POSITION_COMPONENT_ID]: { locationId: 'garden' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -165,7 +165,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'James' },
           [POSITION_COMPONENT_ID]: { locationId: 'garden' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       },
     ]);
@@ -195,7 +195,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['target1', 'target2'] },
+          'positioning:closeness': { partners: ['target1', 'target2'] },
         },
       },
       {
@@ -203,7 +203,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor1', 'target2'] },
+          'positioning:closeness': { partners: ['actor1', 'target2'] },
         },
       },
       {
@@ -211,7 +211,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Charlie' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor1', 'target1'] },
+          'positioning:closeness': { partners: ['actor1', 'target1'] },
         },
       },
     ]);
@@ -256,7 +256,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -264,7 +264,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       },
     ]);
@@ -290,7 +290,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Elena' },
           [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -298,7 +298,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Marcus' },
           [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       },
     ]);
@@ -329,7 +329,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Diana' },
           [POSITION_COMPONENT_ID]: { locationId: 'library' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -337,7 +337,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Victor' },
           [POSITION_COMPONENT_ID]: { locationId: 'library' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       },
     ]);
@@ -374,7 +374,7 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Emma' },
           [POSITION_COMPONENT_ID]: { locationId: 'living_room' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -382,8 +382,8 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Liam' },
           [POSITION_COMPONENT_ID]: { locationId: 'living_room' },
-          'intimacy:closeness': { partners: ['actor1'] },
-          'intimacy:facing_away': { facing_away_from: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
+          'positioning:facing_away': { facing_away_from: ['actor1'] },
         },
       },
     ]);

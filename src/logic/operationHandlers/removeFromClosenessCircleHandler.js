@@ -132,7 +132,7 @@ class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
   async #removePartners(actorId) {
     const closeness = this.#entityManager.getComponentData(
       actorId,
-      'intimacy:closeness'
+      'positioning:closeness'
     );
     const partners = Array.isArray(closeness?.partners)
       ? [...closeness.partners]
@@ -142,23 +142,26 @@ class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
     for (const pid of partners) {
       const partnerData = this.#entityManager.getComponentData(
         pid,
-        'intimacy:closeness'
+        'positioning:closeness'
       );
       if (!partnerData) continue;
       const updated = partnerData.partners.filter((p) => p !== actorId);
       const repaired = this.#closenessCircleService.repair(updated);
       if (repaired.length === 0) {
-        await this.#entityManager.removeComponent(pid, 'intimacy:closeness');
+        await this.#entityManager.removeComponent(pid, 'positioning:closeness');
         toUnlock.push(pid);
       } else {
-        await this.#entityManager.addComponent(pid, 'intimacy:closeness', {
+        await this.#entityManager.addComponent(pid, 'positioning:closeness', {
           partners: repaired,
         });
       }
     }
 
     if (closeness) {
-      await this.#entityManager.removeComponent(actorId, 'intimacy:closeness');
+      await this.#entityManager.removeComponent(
+        actorId,
+        'positioning:closeness'
+      );
       toUnlock.push(actorId);
     }
 

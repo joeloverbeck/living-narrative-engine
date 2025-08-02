@@ -12,8 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import { TargetResolutionService } from '../../../../src/actions/targetResolutionService.js';
-import { MultiTargetResolutionStage } from '../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
-import TargetContextBuilder from '../../../../src/scopeDsl/utils/targetContextBuilder.js';
+import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import { ActionResult } from '../../../../src/actions/core/actionResult.js';
 import {
   NAME_COMPONENT_ID,
@@ -25,7 +24,6 @@ describe('MultiTarget vs Legacy Scope Resolution', () => {
   let mockUnifiedScopeResolver;
   let mockLogger;
   let targetResolutionService;
-  let targetContextBuilder;
   let multiTargetStage;
 
   beforeEach(() => {
@@ -47,13 +45,6 @@ describe('MultiTarget vs Legacy Scope Resolution', () => {
       getWeather: jest.fn(() => 'clear'),
     };
 
-    // Setup target context builder
-    targetContextBuilder = new TargetContextBuilder({
-      entityManager: mockEntityManager,
-      gameStateManager: mockGameStateManager,
-      logger: mockLogger,
-    });
-
     // Create simple mock
     mockUnifiedScopeResolver = {
       resolve: jest.fn(),
@@ -65,13 +56,13 @@ describe('MultiTarget vs Legacy Scope Resolution', () => {
       logger: mockLogger,
     });
 
-    // Setup multi-target stage (new path)
-    multiTargetStage = new MultiTargetResolutionStage({
-      unifiedScopeResolver: mockUnifiedScopeResolver,
+    // Setup multi-target stage (new path) using test utility
+    multiTargetStage = createMultiTargetResolutionStage({
       entityManager: mockEntityManager,
-      targetResolver: targetResolutionService,
-      targetContextBuilder,
       logger: mockLogger,
+      unifiedScopeResolver: mockUnifiedScopeResolver,
+      targetResolver: targetResolutionService,
+      gameStateManager: mockGameStateManager,
     });
   });
 

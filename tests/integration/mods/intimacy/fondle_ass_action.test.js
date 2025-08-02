@@ -112,7 +112,7 @@ describe('intimacy:fondle_ass action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['beth'] },
+          'positioning:closeness': { partners: ['beth'] },
         },
       },
       {
@@ -120,7 +120,7 @@ describe('intimacy:fondle_ass action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Beth' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['alice'] },
+          'positioning:closeness': { partners: ['alice'] },
           'anatomy:body': {
             body: {
               root: 'torso1',
@@ -222,7 +222,7 @@ describe('intimacy:fondle_ass action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: [] },
+          'positioning:closeness': { partners: [] },
         },
       },
     ]);
@@ -253,7 +253,7 @@ describe('intimacy:fondle_ass action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['beth'] },
+          'positioning:closeness': { partners: ['beth'] },
         },
       },
       {
@@ -261,7 +261,7 @@ describe('intimacy:fondle_ass action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Beth' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['alice'] },
+          'positioning:closeness': { partners: ['alice'] },
           'anatomy:body': {
             body: {
               root: 'torso1',

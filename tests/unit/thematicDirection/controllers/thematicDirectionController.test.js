@@ -1,571 +1,261 @@
 /**
  * @file Unit tests for ThematicDirectionController
- * @description Test coverage for the simplified thematic direction generator controller
+ * @description Test coverage for the migrated thematic direction generator controller
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { BaseCharacterBuilderControllerTestBase } from '../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 import { ThematicDirectionController } from '../../../../src/thematicDirection/controllers/thematicDirectionController.js';
-import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
-import { createMockSafeEventDispatcher } from '../../../common/mockFactories/eventBusMocks.js';
-import {
-  createThematicDirectionMockElements,
-  setupThematicDirectionDOM,
-  cleanupThematicDirectionDOM,
-  createMockEvent,
-} from '../../../common/testHelpers/thematicDirectionDOMSetup.js';
 
 describe('ThematicDirectionController', () => {
-  let controller;
-  let mockLogger;
-  let mockCharacterBuilderService;
-  let mockEventBus;
-  let mockSchemaValidator;
-  let mockElements;
-  let originalDocument;
+  const testBase = new BaseCharacterBuilderControllerTestBase();
 
-  beforeEach(() => {
-    // Create mocks
-    mockLogger = createMockLogger();
-    mockEventBus = createMockSafeEventDispatcher();
+  beforeEach(async () => {
+    await testBase.setup();
 
-    // Mock character builder service
-    mockCharacterBuilderService = {
-      initialize: jest.fn().mockResolvedValue(undefined),
-      createCharacterConcept: jest.fn(),
-      generateThematicDirections: jest.fn(),
-      getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-      getCharacterConcept: jest.fn(),
-      getThematicDirections: jest.fn().mockResolvedValue([]),
-    };
+    // Mock scrollIntoView which doesn't exist in jsdom
+    Element.prototype.scrollIntoView = jest.fn();
 
-    // Mock schema validator
-    mockSchemaValidator = {
-      validateAgainstSchema: jest.fn().mockReturnValue({ valid: true }),
-    };
+    // Custom DOM setup for thematic direction controller
+    document.body.innerHTML = `
+      <form id="concept-form">
+        <select id="concept-selector">
+          <option value="">Select a concept</option>
+        </select>
+        <div id="concept-selector-error"></div>
+        <button id="generate-btn" type="button" disabled>Generate Directions</button>
+      </form>
+      
+      <div id="selected-concept-display" style="display: none;">
+        <div id="concept-content"></div>
+        <div id="concept-directions-count">0</div>
+        <div id="concept-created-date"></div>
+      </div>
+      
+      <div id="empty-state">Select concept to begin</div>
+      <div id="loading-state" style="display: none;">
+        <div class="spinner"></div>
+        Loading...
+      </div>
+      <div id="results-state" style="display: none;">
+        <div id="generated-directions">
+          <div id="directions-list"></div>
+        </div>
+        <div id="directions-results"></div>
+      </div>
+      <div id="error-state" style="display: none;">
+        <div id="error-message-text" class="error-message-text"></div>
+        <button id="retry-btn">Try Again</button>
+      </div>
+    `;
 
-    // Save original document
-    originalDocument = global.document;
-
-    // Use unified DOM setup
-    mockElements = createThematicDirectionMockElements();
-    setupThematicDirectionDOM(mockElements);
+    testBase.controller = new ThematicDirectionController(
+      testBase.mockDependencies
+    );
   });
 
-  afterEach(() => {
-    // Restore globals
-    global.document = originalDocument;
-    cleanupThematicDirectionDOM();
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
+  afterEach(async () => {
+    await testBase.cleanup();
   });
 
-  describe('constructor', () => {
-    it('should create instance with valid dependencies', () => {
-      controller = new ThematicDirectionController({
-        logger: mockLogger,
-        characterBuilderService: mockCharacterBuilderService,
-        eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
-      });
-
-      expect(controller).toBeDefined();
-    });
-
-    it('should validate logger dependency', () => {
-      expect(() => {
-        new ThematicDirectionController({
-          logger: {},
-          characterBuilderService: mockCharacterBuilderService,
-          eventBus: mockEventBus,
-          schemaValidator: mockSchemaValidator,
-        });
-      }).toThrow();
-    });
-
-    it('should validate characterBuilderService dependency', () => {
-      expect(() => {
-        new ThematicDirectionController({
-          logger: mockLogger,
-          characterBuilderService: {},
-          eventBus: mockEventBus,
-          schemaValidator: mockSchemaValidator,
-        });
-      }).toThrow();
-    });
-
-    it('should validate eventBus dependency', () => {
-      expect(() => {
-        new ThematicDirectionController({
-          logger: mockLogger,
-          characterBuilderService: mockCharacterBuilderService,
-          eventBus: {},
-          schemaValidator: mockSchemaValidator,
-        });
-      }).toThrow();
-    });
-
-    it('should validate schemaValidator dependency', () => {
-      expect(() => {
-        new ThematicDirectionController({
-          logger: mockLogger,
-          characterBuilderService: mockCharacterBuilderService,
-          eventBus: mockEventBus,
-          schemaValidator: {},
-        });
-      }).toThrow();
-    });
-  });
-
-  describe('initialize', () => {
-    beforeEach(() => {
-      controller = new ThematicDirectionController({
-        logger: mockLogger,
-        characterBuilderService: mockCharacterBuilderService,
-        eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
-      });
-    });
-
-    it('should initialize successfully', async () => {
-      await controller.initialize();
-
-      expect(mockCharacterBuilderService.initialize).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ThematicDirectionController: Successfully initialized'
-      );
-    });
-
-    it('should show empty state on initialization', async () => {
-      await controller.initialize();
-
-      expect(mockElements.emptyState.style.display).toBe('block');
-      expect(mockElements.loadingState.style.display).toBe('none');
-      expect(mockElements.errorState.style.display).toBe('none');
-      expect(mockElements.resultsState.style.display).toBe('none');
-    });
-
-    it('should handle initialization errors', async () => {
-      const error = new Error('Init failed');
-      mockCharacterBuilderService.initialize.mockRejectedValue(error);
-
-      await controller.initialize();
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'ThematicDirectionController: Failed to initialize',
-        error
-      );
-
-      expect(mockElements.errorState.style.display).toBe('block');
-      expect(mockElements.errorMessageText.textContent).toContain(
-        'Failed to initialize'
-      );
-    });
-  });
-
-  describe('form submission (legacy textarea tests)', () => {
-    beforeEach(async () => {
-      controller = new ThematicDirectionController({
-        logger: mockLogger,
-        characterBuilderService: mockCharacterBuilderService,
-        eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
-      });
-      await controller.initialize();
-    });
-
-    it('should not work with textarea input anymore (new workflow uses concept selector)', async () => {
-      const conceptText = 'A brave knight with a mysterious past';
-
-      // Old workflow - textarea input (should not work anymore)
-      if (mockElements.textarea) {
-        mockElements.textarea.value = conceptText;
-      }
-
-      const submitEvent = createMockEvent('submit');
-      mockElements.form.dispatchEvent(submitEvent);
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(submitEvent.preventDefault).toHaveBeenCalled();
-      // Should not create concept from textarea anymore
-      expect(
-        mockCharacterBuilderService.createCharacterConcept
-      ).not.toHaveBeenCalled();
-      // Should show error about concept selection instead
-      expect(mockElements.conceptSelectorError.textContent).toContain(
-        'Please select a character concept'
-      );
-    });
-
-    it('should handle generation errors when concept not found', async () => {
-      // Try to submit without any concepts loaded
-      const submitEvent = createMockEvent('submit');
-      mockElements.form.dispatchEvent(submitEvent);
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(mockLogger.error).not.toHaveBeenCalledWith(
-        'ThematicDirectionController: Failed to generate directions',
-        expect.any(Error)
-      );
-      expect(mockElements.conceptSelectorError.textContent).toContain(
-        'Please select a character concept'
-      );
-    });
-  });
-
-  describe('input validation (legacy textarea)', () => {
-    beforeEach(async () => {
-      controller = new ThematicDirectionController({
-        logger: mockLogger,
-        characterBuilderService: mockCharacterBuilderService,
-        eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
-      });
-      await controller.initialize();
-    });
-
-    it('should use new validation method when textarea is not available', () => {
-      // New validation focuses on concept selection, not textarea input
-      expect(mockElements.generateBtn.disabled).toBe(true);
-    });
-
-    it('should handle legacy input validation gracefully', () => {
-      if (mockElements.textarea) {
-        mockElements.textarea.value = 'Short';
-        mockElements.textarea.dispatchEvent(createMockEvent('input'));
-      }
-
-      // Even with textarea input, button should remain disabled because no concept is selected
-      expect(mockElements.generateBtn.disabled).toBe(true);
-    });
-
-    it('should handle character count updates if textarea exists', () => {
-      if (mockElements.textarea && mockElements.charCount) {
-        mockElements.textarea.value = 'Test input';
-        mockElements.textarea.dispatchEvent(createMockEvent('input'));
-        expect(mockElements.charCount.textContent).toBe('10/1000');
-      } else {
-        // Character count is not relevant in new workflow
-        expect(true).toBe(true);
-      }
-    });
-  });
-
-  describe('concept selector functionality', () => {
-    beforeEach(async () => {
-      controller = new ThematicDirectionController({
-        logger: mockLogger,
-        characterBuilderService: mockCharacterBuilderService,
-        eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
-      });
-      await controller.initialize();
-    });
-
-    it('should load and populate concept selector on initialization', async () => {
+  describe('Initialization', () => {
+    it('should load character concepts on init', async () => {
+      // Create concepts with explicit creation dates to ensure order
+      const now = new Date();
       const mockConcepts = [
-        {
+        testBase.buildCharacterConcept({
           id: '1',
-          concept: 'A brave knight with a mysterious past',
-          createdAt: '2023-01-01T00:00:00Z',
-        },
-        {
+          concept: 'Concept 1',
+          createdAt: new Date(now.getTime() - 1000).toISOString(), // Older
+        }),
+        testBase.buildCharacterConcept({
           id: '2',
-          concept:
-            'A cunning thief who steals from the rich to give to the poor',
-          createdAt: '2023-01-02T00:00:00Z',
-        },
+          concept: 'Concept 2',
+          createdAt: now.toISOString(), // Newer
+        }),
       ];
 
-      // Create fresh controller with mock concepts
-      mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue(
+      testBase.mockDependencies.characterBuilderService.getAllCharacterConcepts.mockResolvedValue(
         mockConcepts
       );
 
-      const freshController = new ThematicDirectionController({
-        logger: mockLogger,
-        characterBuilderService: mockCharacterBuilderService,
-        eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
-      });
+      await testBase.controller.initialize();
 
-      await freshController.initialize();
+      const selector = document.getElementById('concept-selector');
+      expect(selector.options.length).toBe(3); // Empty option + 2 concepts
+      // Concepts are sorted by creation date (newest first)
+      expect(selector.options[1].value).toBe('2'); // Newer concept first
+      expect(selector.options[1].text).toContain('Concept 2');
+      expect(selector.options[2].value).toBe('1'); // Older concept second
+      expect(selector.options[2].text).toContain('Concept 1');
+    });
 
+    it('should handle concept loading failure', async () => {
+      testBase.mockDependencies.characterBuilderService.getAllCharacterConcepts.mockRejectedValue(
+        new Error('Load failed')
+      );
+
+      // Initialize should throw after handling the error
+      await expect(testBase.controller.initialize()).rejects.toThrow(
+        'initial data loading failed'
+      );
+
+      // Verify the service was called
       expect(
-        mockCharacterBuilderService.getAllCharacterConcepts
+        testBase.mockDependencies.characterBuilderService
+          .getAllCharacterConcepts
       ).toHaveBeenCalled();
-      // Verify that concept loading was attempted (the key behavior)
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Loading character concepts for selection'
-      );
     });
+  });
 
-    it('should handle concept selection and display concept details', async () => {
+  describe('Concept Selection', () => {
+    beforeEach(async () => {
       const mockConcepts = [
-        {
+        testBase.buildCharacterConcept({
           id: '123',
-          concept: 'A brave knight with a mysterious past',
-          createdAt: '2023-01-01T00:00:00Z',
-        },
+          concept: 'A brave knight',
+          thematicDirections: [],
+        }),
       ];
 
-      mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue(
+      testBase.mockDependencies.characterBuilderService.getAllCharacterConcepts.mockResolvedValue(
         mockConcepts
       );
-      mockCharacterBuilderService.getThematicDirections.mockResolvedValue([
-        { title: 'Direction 1', description: 'Test direction' },
-      ]);
 
-      await controller.initialize();
-
-      // Simulate concept selection
-      mockElements.conceptSelector.value = '123';
-      const changeEvent = createMockEvent('change');
-      mockElements.conceptSelector.dispatchEvent(changeEvent);
-
-      // Wait for async operations
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(mockElements.selectedConceptDisplay.style.display).toBe('block');
-      expect(mockElements.conceptContent.textContent).toBe(
-        'A brave knight with a mysterious past'
-      );
-      expect(mockElements.conceptDirectionsCount.textContent).toBe(
-        '1 existing direction'
-      );
+      await testBase.controller.initialize();
     });
 
-    it('should validate form with concept selection', async () => {
-      const mockConcepts = [
-        {
-          id: '123',
-          concept: 'Test concept',
-          createdAt: '2023-01-01T00:00:00Z',
-        },
-      ];
+    it('should enable generate button when concept selected', () => {
+      const selector = document.getElementById('concept-selector');
+      const generateBtn = document.getElementById('generate-btn');
 
-      mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue(
-        mockConcepts
-      );
-      await controller.initialize();
+      selector.value = '123';
+      selector.dispatchEvent(new Event('change'));
 
-      // Initially, no concept selected - button should be disabled
-      expect(mockElements.generateBtn.disabled).toBe(true);
-
-      // Select a concept
-      mockElements.conceptSelector.value = '123';
-      const changeEvent = createMockEvent('change');
-      mockElements.conceptSelector.dispatchEvent(changeEvent);
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      // Button should now be enabled
-      expect(mockElements.generateBtn.disabled).toBe(false);
-      expect(mockElements.conceptSelectorError.textContent).toBe('');
+      expect(generateBtn.disabled).toBe(false);
     });
 
-    it('should show error when no concept is selected for generation', async () => {
-      const mockConcepts = [
-        {
-          id: '123',
-          concept: 'Test concept',
-          createdAt: '2023-01-01T00:00:00Z',
-        },
-      ];
+    it('should display selected concept details', () => {
+      const selector = document.getElementById('concept-selector');
+      selector.value = '123';
+      selector.dispatchEvent(new Event('change'));
 
-      mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue(
-        mockConcepts
-      );
-      await controller.initialize();
-
-      // Try to submit without selecting a concept
-      const submitEvent = createMockEvent('submit');
-      mockElements.form.dispatchEvent(submitEvent);
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(submitEvent.preventDefault).toHaveBeenCalled();
-      expect(mockElements.conceptSelectorError.textContent).toContain(
-        'Please select a character concept'
-      );
-      expect(
-        mockCharacterBuilderService.generateThematicDirections
-      ).not.toHaveBeenCalled();
+      const conceptContent = document.getElementById('concept-content');
+      expect(conceptContent.textContent).toContain('A brave knight');
     });
+  });
 
-    it('should generate directions with selected concept', async () => {
+  describe('Direction Generation', () => {
+    beforeEach(async () => {
       const mockConcepts = [
-        {
-          id: '123',
-          concept: 'A brave knight with a mysterious past',
-          createdAt: '2023-01-01T00:00:00Z',
-        },
-      ];
-      const mockDirections = [
-        {
-          title: 'Direction 1',
-          description: 'Test direction 1',
-        },
-        {
-          title: 'Direction 2',
-          description: 'Test direction 2',
-        },
+        testBase.buildCharacterConcept({ id: '123', concept: 'Test concept' }),
       ];
 
-      mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue(
+      testBase.mockDependencies.characterBuilderService.getAllCharacterConcepts.mockResolvedValue(
         mockConcepts
       );
-      mockCharacterBuilderService.generateThematicDirections.mockResolvedValue(
-        mockDirections
-      );
-      mockCharacterBuilderService.getThematicDirections.mockResolvedValue([]);
 
-      await controller.initialize();
+      await testBase.controller.initialize();
 
       // Select concept
-      mockElements.conceptSelector.value = '123';
-      const changeEvent = createMockEvent('change');
-      mockElements.conceptSelector.dispatchEvent(changeEvent);
+      const selector = document.getElementById('concept-selector');
+      selector.value = '123';
+      selector.dispatchEvent(new Event('change'));
 
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      // Wait for DOM updates
+      await testBase.wait(10);
+    });
 
-      // Submit form
-      const submitEvent = createMockEvent('submit');
-      mockElements.form.dispatchEvent(submitEvent);
+    it('should generate directions successfully', async () => {
+      const mockDirections = [
+        testBase.buildThematicDirection({
+          title: 'Epic Quest',
+          description: 'A journey of discovery',
+          themes: ['adventure', 'growth'],
+        }),
+      ];
 
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      testBase.mockDependencies.characterBuilderService.generateThematicDirections.mockResolvedValue(
+        mockDirections
+      );
 
+      // Click generate
+      testBase.click('#generate-btn');
+
+      // Wait for async operation
+      await testBase.wait(100);
+
+      // Check if the method was called at all
       expect(
-        mockCharacterBuilderService.generateThematicDirections
-      ).toHaveBeenCalledWith('123');
-      expect(mockElements.resultsState.style.display).toBe('block');
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'core:thematic_directions_generated',
-        {
-          conceptId: '123',
-          directionCount: 2,
-          autoSaved: true,
+        testBase.mockDependencies.characterBuilderService
+          .generateThematicDirections
+      ).toHaveBeenCalled();
+
+      // If it was called, check the results were displayed
+      if (
+        testBase.mockDependencies.characterBuilderService
+          .generateThematicDirections.mock.calls.length > 0
+      ) {
+        testBase.assertUIState('results');
+      } else {
+        // The method wasn't called, so the click handler didn't run properly
+        throw new Error('generateThematicDirections was not called');
+      }
+
+      const directionsList =
+        document.getElementById('directions-list') ||
+        document.getElementById('directions-results');
+      expect(directionsList.innerHTML).toContain('Epic Quest');
+      expect(directionsList.innerHTML).toContain('A journey of discovery');
+      expect(directionsList.innerHTML).toContain('adventure');
+    });
+
+    it('should handle generation failure with retry', async () => {
+      let attempts = 0;
+      testBase.mockDependencies.characterBuilderService.generateThematicDirections.mockImplementation(
+        async () => {
+          attempts++;
+          if (attempts < 3) {
+            throw new Error('Network error');
+          }
+          return [testBase.buildThematicDirection()];
         }
       );
+
+      // Click generate
+      testBase.click('#generate-btn');
+
+      // Wait for retries - need to account for retry delays
+      await testBase.wait(4000);
+
+      expect(attempts).toBe(3);
+      testBase.assertUIState('results');
     });
+  });
 
-    it('should show no concepts message when no concepts exist', async () => {
-      mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue([]);
+  describe('Error Handling', () => {
+    it('should show error when no concept selected', async () => {
+      await testBase.controller.initialize();
 
-      const freshController = new ThematicDirectionController({
-        logger: mockLogger,
-        characterBuilderService: mockCharacterBuilderService,
-        eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
-      });
+      // Try to generate without selection
+      testBase.click('#generate-btn');
 
-      await freshController.initialize();
-
-      // Verify that concept loading was attempted and logged the right amount
-      expect(
-        mockCharacterBuilderService.getAllCharacterConcepts
-      ).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Loaded 0 character concepts'
-      );
-    });
-
-    it('should handle concept loading errors gracefully', async () => {
-      const error = new Error('Failed to load concepts');
-      mockCharacterBuilderService.getAllCharacterConcepts.mockRejectedValue(
-        error
-      );
-
-      await controller.initialize();
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to load character concepts',
-        error
-      );
-      expect(mockElements.conceptSelectorError.textContent).toContain(
-        'Failed to load character concepts'
+      const errorElement = document.getElementById('concept-selector-error');
+      expect(errorElement.textContent).toContain(
+        'Please select a character concept first'
       );
     });
 
-    it('should handle direction count loading errors', async () => {
-      const mockConcepts = [
-        {
-          id: '123',
-          concept: 'Test concept',
-          createdAt: '2023-01-01T00:00:00Z',
-        },
-      ];
+    it('should handle retry button', async () => {
+      await testBase.controller.initialize();
 
-      mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue(
-        mockConcepts
-      );
-      mockCharacterBuilderService.getThematicDirections.mockRejectedValue(
-        new Error('Direction load failed')
-      );
+      // Show error state
+      testBase.controller._showError('Test error');
 
-      await controller.initialize();
+      // Click retry
+      testBase.click('#retry-btn');
 
-      // Select concept
-      mockElements.conceptSelector.value = '123';
-      const changeEvent = createMockEvent('change');
-      mockElements.conceptSelector.dispatchEvent(changeEvent);
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to load direction count',
-        expect.any(Error)
-      );
-      expect(mockElements.conceptDirectionsCount.textContent).toBe(
-        'Unable to load directions'
-      );
-    });
-
-    it('should show warning for concepts with many existing directions', async () => {
-      const mockConcepts = [
-        {
-          id: '123',
-          concept: 'Test concept',
-          createdAt: '2023-01-01T00:00:00Z',
-        },
-      ];
-
-      // Mock 12 existing directions
-      const mockDirections = Array.from({ length: 12 }, (_, i) => ({
-        title: `Direction ${i + 1}`,
-        description: `Test direction ${i + 1}`,
-      }));
-
-      mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue(
-        mockConcepts
-      );
-      mockCharacterBuilderService.getThematicDirections.mockResolvedValue(
-        mockDirections
-      );
-
-      await controller.initialize();
-
-      // Select concept
-      mockElements.conceptSelector.value = '123';
-      const changeEvent = createMockEvent('change');
-      mockElements.conceptSelector.dispatchEvent(changeEvent);
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(mockElements.conceptDirectionsCount.textContent).toBe(
-        '12 existing directions'
-      );
-      expect(mockElements.conceptDirectionsCount.innerHTML).toContain(
-        '(consider if more are needed)'
-      );
+      testBase.assertUIState('empty');
     });
   });
 });

@@ -196,7 +196,7 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Amaia Castillo' },
           [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
-          'intimacy:closeness': {
+          'positioning:closeness': {
             partners: ['p_erotica:iker_aguirre_instance'],
           },
         },
@@ -206,7 +206,7 @@ describe('intimacy:adjust_clothing multi-target action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Iker Aguirre' },
           [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
-          'intimacy:closeness': { partners: ['amaia_castillo_instance'] },
+          'positioning:closeness': { partners: ['amaia_castillo_instance'] },
           'clothing:equipped': {
             torso_upper: ['fd6a1e00-36b7-47cc-bdb2-4b65473614eb'],
           },

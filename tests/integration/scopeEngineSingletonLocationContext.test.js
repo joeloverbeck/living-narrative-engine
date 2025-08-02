@@ -25,6 +25,7 @@ import DefaultDslParser from '../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../common/mockFactories/actions.js';
 import { createTraceContext } from '../../src/actions/tracing/traceContext.js';
 import { createMockTargetContextBuilder } from '../common/mocks/mockTargetContextBuilder.js';
+import { createMultiTargetResolutionStage } from '../common/actions/multiTargetStageTestUtilities.js';
 import {
   POSITION_COMPONENT_ID,
   NAME_COMPONENT_ID,
@@ -221,6 +222,16 @@ describe('Singleton Scope Engine Location Context', () => {
         logger,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
+      multiTargetResolutionStage: createMultiTargetResolutionStage({
+        entityManager,
+        logger,
+        unifiedScopeResolver: createMockUnifiedScopeResolver({
+          scopeRegistry,
+          entityManager,
+          logger,
+        }),
+        targetResolver: targetResolutionService,
+      }),
     });
 
     actionDiscoveryService = new ActionDiscoveryService({

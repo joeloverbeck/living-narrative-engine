@@ -376,12 +376,12 @@ describe('intimacy_handle_get_close rule integration', () => {
     });
 
     expect(
-      testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
+      testEnv.entityManager.getComponentData('a1', 'positioning:closeness')
     ).toEqual({
       partners: ['b1'],
     });
     expect(
-      testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')
+      testEnv.entityManager.getComponentData('b1', 'positioning:closeness')
     ).toEqual({
       partners: ['a1'],
     });
@@ -403,7 +403,7 @@ describe('intimacy_handle_get_close rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'A' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['b1'] },
+          'positioning:closeness': { partners: ['b1'] },
         },
       },
       {
@@ -411,7 +411,7 @@ describe('intimacy_handle_get_close rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'B' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['a1'] },
+          'positioning:closeness': { partners: ['a1'] },
         },
       },
       {
@@ -419,7 +419,7 @@ describe('intimacy_handle_get_close rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'C' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['d1'] },
+          'positioning:closeness': { partners: ['d1'] },
         },
       },
       {
@@ -427,7 +427,7 @@ describe('intimacy_handle_get_close rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'D' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['c1'] },
+          'positioning:closeness': { partners: ['c1'] },
         },
       },
     ]);
@@ -442,7 +442,7 @@ describe('intimacy_handle_get_close rule integration', () => {
     const expectedPartners = ['a1', 'b1', 'c1', 'd1'];
     for (const id of expectedPartners) {
       const partners = testEnv.entityManager
-        .getComponentData(id, 'intimacy:closeness')
+        .getComponentData(id, 'positioning:closeness')
         .partners.sort();
       expect(partners).toEqual(expectedPartners.filter((p) => p !== id).sort());
     }
@@ -489,7 +489,7 @@ describe('intimacy_handle_get_close rule integration', () => {
     const expectedPartners = ['a1', 'b1', 'c1', 'd1'];
     for (const id of expectedPartners) {
       const partners = testEnv.entityManager
-        .getComponentData(id, 'intimacy:closeness')
+        .getComponentData(id, 'positioning:closeness')
         .partners.sort();
       expect(partners).toEqual(expectedPartners.filter((p) => p !== id).sort());
     }

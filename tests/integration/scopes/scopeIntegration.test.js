@@ -38,6 +38,7 @@ import {
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
+import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
@@ -205,6 +206,21 @@ describe('Scope Integration Tests', () => {
       }),
       targetContextBuilder:
         createMockTargetContextBuilder(currentEntityManager),
+      multiTargetResolutionStage: createMultiTargetResolutionStage({
+        entityManager: currentEntityManager,
+        logger,
+        unifiedScopeResolver: createMockUnifiedScopeResolver({
+          scopeRegistry,
+          scopeEngine,
+          entityManager: currentEntityManager,
+          logger,
+          safeEventDispatcher,
+          jsonLogicEvaluationService: currentJsonLogicEval,
+          dslParser: new DefaultDslParser(),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+        }),
+        targetResolver: targetResolutionService,
+      }),
     });
 
     return new ActionDiscoveryService({

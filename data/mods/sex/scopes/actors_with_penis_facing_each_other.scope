@@ -1,6 +1,6 @@
 // Scope for actors in closeness who have an uncovered penis and are facing each other
 // Used by actions that require exposed penis anatomy and face-to-face interaction
-sex:actors_with_penis_facing_each_other := actor.intimacy:closeness.partners[][{
+sex:actors_with_penis_facing_each_other := actor.components.positioning:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "penis"]},
     {"condition_ref": "intimacy:entity-not-in-facing-away"},

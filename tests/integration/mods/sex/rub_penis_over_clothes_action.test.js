@@ -112,7 +112,7 @@ describe('sex:rub_penis_over_clothes action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['bob'] },
+          'positioning:closeness': { partners: ['bob'] },
         },
       },
       {
@@ -120,7 +120,7 @@ describe('sex:rub_penis_over_clothes action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['alice'] },
+          'positioning:closeness': { partners: ['alice'] },
           'anatomy:body': {
             body: {
               root: 'groin1',
@@ -227,7 +227,7 @@ describe('sex:rub_penis_over_clothes action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: [] },
+          'positioning:closeness': { partners: [] },
         },
       },
     ]);

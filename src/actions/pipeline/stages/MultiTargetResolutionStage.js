@@ -1,5 +1,6 @@
 /**
- * @file MultiTargetResolutionStage - Pipeline stage for resolving multi-target actions
+ * @file MultiTargetResolutionStage - Lightweight orchestrator for target resolution
+ * Refactored from 748-line class to use specialized services
  */
 
 // Type imports
@@ -11,6 +12,10 @@
 /** @typedef {import('../../tracing/traceContext.js').TraceContext} TraceContext */
 /** @typedef {import('../../../scopeDsl/utils/targetContextBuilder.js').default} TargetContextBuilder */
 /** @typedef {import('../../scopes/unifiedScopeResolver.js').UnifiedScopeResolver} UnifiedScopeResolver */
+/** @typedef {import('../services/interfaces/ITargetDependencyResolver.js').ITargetDependencyResolver} ITargetDependencyResolver */
+/** @typedef {import('../services/interfaces/ILegacyTargetCompatibilityLayer.js').ILegacyTargetCompatibilityLayer} ILegacyTargetCompatibilityLayer */
+/** @typedef {import('../services/interfaces/IScopeContextBuilder.js').IScopeContextBuilder} IScopeContextBuilder */
+/** @typedef {import('../services/interfaces/ITargetDisplayNameResolver.js').ITargetDisplayNameResolver} ITargetDisplayNameResolver */
 
 import { PipelineStage } from '../PipelineStage.js';
 import { PipelineResult } from '../PipelineResult.js';
@@ -33,18 +38,25 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  */
 
 /**
- * Pipeline stage that resolves action targets using scope DSL
- * Supports both single-target (legacy) and multi-target actions
+ * Pipeline stage that orchestrates target resolution using specialized services
+ * Refactored from 748-line class to lightweight orchestrator
  */
 export class MultiTargetResolutionStage extends PipelineStage {
+  #dependencyResolver;
+  #legacyLayer;
+  #contextBuilder;
+  #nameResolver;
   #unifiedScopeResolver;
   #entityManager;
   #targetResolver;
-  #contextBuilder;
   #logger;
 
   /**
-   * @param {object} deps
+   * @param {object} deps - Service dependencies
+   * @param {ITargetDependencyResolver} deps.targetDependencyResolver
+   * @param {ILegacyTargetCompatibilityLayer} deps.legacyTargetCompatibilityLayer
+   * @param {IScopeContextBuilder} deps.scopeContextBuilder
+   * @param {ITargetDisplayNameResolver} deps.targetDisplayNameResolver
    * @param {UnifiedScopeResolver} deps.unifiedScopeResolver
    * @param {IEntityManager} deps.entityManager
    * @param {ITargetResolutionService} deps.targetResolver
@@ -52,6 +64,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
    * @param {ILogger} deps.logger
    */
   constructor({
+    targetDependencyResolver,
+    legacyTargetCompatibilityLayer,
+    scopeContextBuilder,
+    targetDisplayNameResolver,
     unifiedScopeResolver,
     entityManager,
     targetResolver,
@@ -59,16 +75,28 @@ export class MultiTargetResolutionStage extends PipelineStage {
     logger,
   }) {
     super('MultiTargetResolution');
+
+    // Validate all service dependencies
+    validateDependency(targetDependencyResolver, 'ITargetDependencyResolver');
+    validateDependency(
+      legacyTargetCompatibilityLayer,
+      'ILegacyTargetCompatibilityLayer'
+    );
+    validateDependency(scopeContextBuilder, 'IScopeContextBuilder');
+    validateDependency(targetDisplayNameResolver, 'ITargetDisplayNameResolver');
     validateDependency(unifiedScopeResolver, 'IUnifiedScopeResolver');
     validateDependency(entityManager, 'IEntityManager');
     validateDependency(targetResolver, 'ITargetResolutionService');
-    validateDependency(targetContextBuilder, 'ITargetContextBuilder');
     validateDependency(logger, 'ILogger');
 
+    // Store service references
+    this.#dependencyResolver = targetDependencyResolver;
+    this.#legacyLayer = legacyTargetCompatibilityLayer;
+    this.#contextBuilder = scopeContextBuilder;
+    this.#nameResolver = targetDisplayNameResolver;
     this.#unifiedScopeResolver = unifiedScopeResolver;
     this.#entityManager = entityManager;
     this.#targetResolver = targetResolver;
-    this.#contextBuilder = targetContextBuilder;
     this.#logger = logger;
   }
 
@@ -113,7 +141,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
         };
 
         // Check if this is a legacy single-target action
-        if (this.#isLegacyAction(actionDef)) {
+        if (this.#legacyLayer.isLegacyAction(actionDef)) {
           hasLegacyActions = true;
           const result = await this.#resolveLegacyTarget(
             actionProcessContext,
@@ -201,19 +229,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
   }
 
   /**
-   * Check if action uses legacy single-target format
-   *
-   * @param actionDef
-   * @private
-   */
-  #isLegacyAction(actionDef) {
-    return (
-      typeof actionDef.targets === 'string' ||
-      (actionDef.scope && !actionDef.targets)
-    );
-  }
-
-  /**
    * Resolve legacy single-target action for backward compatibility
    *
    * @param context
@@ -222,7 +237,16 @@ export class MultiTargetResolutionStage extends PipelineStage {
    */
   async #resolveLegacyTarget(context, trace) {
     const { actionDef, actor, actionContext } = context;
-    const scope = actionDef.targets || actionDef.scope;
+
+    // Use legacy compatibility layer to get the scope
+    const conversionResult = this.#legacyLayer.convertLegacyFormat(
+      actionDef,
+      actor
+    );
+    const scope =
+      conversionResult.targetDefinitions?.primary?.scope ||
+      actionDef.targets ||
+      actionDef.scope;
 
     trace?.step(
       `Resolving legacy scope '${scope}'`,
@@ -264,7 +288,8 @@ export class MultiTargetResolutionStage extends PipelineStage {
     const resolvedTargets = {
       primary: targetContexts.map((tc) => ({
         id: tc.entityId,
-        displayName: tc.displayName || tc.entityId,
+        displayName:
+          this.#nameResolver.getEntityDisplayName(tc.entityId) || tc.entityId,
         entity: tc.entityId
           ? this.#entityManager.getEntityInstance(tc.entityId)
           : null,
@@ -282,7 +307,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
             targetContexts,
             // Attach metadata for consistency with multi-target actions
             resolvedTargets,
-            targetDefinitions: {
+            targetDefinitions: conversionResult.targetDefinitions || {
               primary: { scope: scope, placeholder: 'target' },
             },
             isMultiTarget: false,
@@ -319,7 +344,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
     // Get resolution order based on dependencies
     let resolutionOrder;
     try {
-      resolutionOrder = this.#getResolutionOrder(targetDefs);
+      resolutionOrder = this.#dependencyResolver.getResolutionOrder(targetDefs);
     } catch (error) {
       return PipelineResult.failure(
         {
@@ -362,14 +387,15 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
         for (const primaryTarget of primaryTargets) {
           // Build context specific to this primary target
-          const specificContext = this.#buildScopeContextForSpecificPrimary(
-            actor,
-            actionContext,
-            resolvedTargets,
-            primaryTarget,
-            targetDef,
-            trace
-          );
+          const specificContext =
+            this.#contextBuilder.buildScopeContextForSpecificPrimary(
+              actor,
+              actionContext,
+              resolvedTargets,
+              primaryTarget,
+              targetDef,
+              trace
+            );
 
           // Resolve scope for this specific primary
           const candidates = await this.#resolveScope(
@@ -384,7 +410,8 @@ export class MultiTargetResolutionStage extends PipelineStage {
             const entity = this.#entityManager.getEntityInstance(entityId);
             if (!entity) return; // Skip missing entities
 
-            const displayName = this.#getEntityDisplayName(entityId);
+            const displayName =
+              this.#nameResolver.getEntityDisplayName(entityId);
 
             resolvedSecondaryTargets.push({
               id: entityId,
@@ -429,7 +456,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
       } else {
         // Original logic for targets without contextFrom
         // Build scope context
-        const scopeContext = this.#buildScopeContext(
+        const scopeContext = this.#contextBuilder.buildScopeContext(
           actor,
           actionContext,
           resolvedTargets,
@@ -464,9 +491,12 @@ export class MultiTargetResolutionStage extends PipelineStage {
         resolvedTargets[targetKey] = candidates
           .map((entityId) => {
             const entity = this.#entityManager.getEntityInstance(entityId);
-            if (!entity) return null; // Filter out missing entities
+            if (!entity) {
+              return null; // Filter out missing entities
+            }
 
-            const displayName = this.#getEntityDisplayName(entityId);
+            const displayName =
+              this.#nameResolver.getEntityDisplayName(entityId);
 
             return {
               id: entityId,
@@ -525,135 +555,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
   }
 
   /**
-   * Determine target resolution order based on dependencies
-   *
-   * @param targetDefs
-   * @private
-   */
-  #getResolutionOrder(targetDefs) {
-    const order = [];
-    const pending = new Set(Object.keys(targetDefs));
-    const maxIterations = pending.size * 2; // Prevent infinite loops
-    let iterations = 0;
-
-    while (pending.size > 0 && iterations < maxIterations) {
-      iterations++;
-
-      // Find targets with no unresolved dependencies
-      const ready = Array.from(pending).filter((key) => {
-        const targetDef = targetDefs[key];
-
-        // No dependencies
-        if (!targetDef.contextFrom) return true;
-
-        // Dependency already resolved
-        return order.includes(targetDef.contextFrom);
-      });
-
-      if (ready.length === 0) {
-        // Circular dependency or invalid reference
-        const remaining = Array.from(pending);
-        throw new Error(
-          `Circular dependency detected in target resolution: ${remaining.join(', ')}`
-        );
-      }
-
-      // Add ready targets to order
-      ready.forEach((key) => {
-        order.push(key);
-        pending.delete(key);
-      });
-    }
-
-    return order;
-  }
-
-  /**
-   * Build scope evaluation context
-   *
-   * @param actor
-   * @param actionContext
-   * @param resolvedTargets
-   * @param targetDef
-   * @param trace
-   * @private
-   */
-  #buildScopeContext(actor, actionContext, resolvedTargets, targetDef, trace) {
-    // Start with base context
-    const baseContext = this.#contextBuilder.buildBaseContext(
-      actor.id,
-      actionContext.location?.id ||
-        actor.getComponentData('core:position')?.locationId
-    );
-
-    // Add resolved targets if this is a dependent target
-    if (targetDef.contextFrom || Object.keys(resolvedTargets).length > 0) {
-      return this.#contextBuilder.buildDependentContext(
-        baseContext,
-        resolvedTargets,
-        targetDef
-      );
-    }
-
-    return baseContext;
-  }
-
-  /**
-   * Build scope evaluation context for a specific primary target
-   *
-   * @param actor
-   * @param actionContext
-   * @param resolvedTargets
-   * @param specificPrimary
-   * @param targetDef
-   * @param trace
-   * @private
-   */
-  #buildScopeContextForSpecificPrimary(
-    actor,
-    actionContext,
-    resolvedTargets,
-    specificPrimary,
-    targetDef,
-    trace
-  ) {
-    // Start with base context - same approach as #buildScopeContext
-    const baseContext = this.#contextBuilder.buildBaseContext(
-      actor.id,
-      actionContext.location?.id ||
-        actor.getComponentData('core:position')?.locationId
-    );
-
-    // Add resolved targets
-    baseContext.targets = { ...resolvedTargets };
-
-    // Add specific primary as 'target' for dependent scope evaluation
-    if (specificPrimary) {
-      // Build entity context for the specific primary using same pattern
-      try {
-        const entity = this.#entityManager.getEntityInstance(
-          specificPrimary.id
-        );
-        if (entity) {
-          baseContext.target = {
-            id: entity.id,
-            components: entity.getAllComponents
-              ? entity.getAllComponents()
-              : {},
-          };
-        }
-      } catch (error) {
-        this.#logger.error(
-          `Failed to build target context for ${specificPrimary.id}:`,
-          error
-        );
-      }
-    }
-
-    return baseContext;
-  }
-
-  /**
    * Resolve a scope expression to entity IDs
    *
    * @param scope
@@ -667,10 +568,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
       trace?.step(`Evaluating scope '${scope}'`, 'MultiTargetResolutionStage');
 
       // Create resolution context for UnifiedScopeResolver
-      // Pass the full actor entity object to maintain consistency with legacy path
+      // Preserve the context.actor format from TargetContextBuilder
       const resolutionContext = {
         ...context, // Include all fields from the scope context
-        actor, // Pass full entity object like legacy path - this overrides context.actor
+        // Don't override context.actor - it's already in the correct format from TargetContextBuilder
         actorLocation:
           context.location ||
           context.actionContext?.currentLocation ||
@@ -694,7 +595,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
       if (!result.success) {
         this.#logger.error(
           `Failed to resolve scope '${scope}':`,
-          result.errors
+          result.errors || result.error || 'Unknown error'
         );
         return [];
       }
@@ -715,31 +616,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
         'MultiTargetResolutionStage'
       );
       return [];
-    }
-  }
-
-  /**
-   * Get display name for an entity
-   *
-   * @param entityId
-   * @private
-   */
-  #getEntityDisplayName(entityId) {
-    try {
-      const entity = this.#entityManager.getEntityInstance(entityId);
-      if (!entity) return entityId;
-
-      // Try common name sources
-      const name =
-        entity.getComponentData('core:name')?.text ||
-        entity.getComponentData('core:description')?.name ||
-        entity.getComponentData('core:actor')?.name ||
-        entity.getComponentData('core:item')?.name ||
-        entityId;
-
-      return name;
-    } catch (error) {
-      return entityId;
     }
   }
 }

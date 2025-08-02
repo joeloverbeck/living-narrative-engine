@@ -35,6 +35,7 @@ import {
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
+import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
 
 // Import actions
 import followAction from '../../../data/mods/core/actions/follow.action.json';
@@ -178,6 +179,16 @@ describe('Scope Integration Tests', () => {
         logger,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
+      multiTargetResolutionStage: createMultiTargetResolutionStage({
+        entityManager,
+        logger,
+        unifiedScopeResolver: createMockUnifiedScopeResolver({
+          scopeRegistry,
+          entityManager,
+          logger,
+        }),
+        targetResolver: targetResolutionService,
+      }),
     });
 
     // FIX: Add the missing dependency to the constructor call

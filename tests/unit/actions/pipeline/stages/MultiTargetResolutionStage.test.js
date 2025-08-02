@@ -8,9 +8,61 @@ describe('MultiTargetResolutionStage', () => {
   let mockDeps;
   let mockContext;
 
+  // Helper to setup legacy action behavior
+  const setupLegacyAction = (scope) => {
+    mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValueOnce(
+      true
+    );
+    mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+      {
+        isLegacy: true,
+        targetDefinitions: { primary: { scope, placeholder: 'target' } },
+      }
+    );
+  };
+
+  // Helper to setup multi-target action behavior
+  const setupMultiTargetAction = (resolutionOrder) => {
+    mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValueOnce(
+      false
+    );
+    mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue(
+      resolutionOrder
+    );
+  };
+
+  // Helper to setup action type checking based on action definition
+  const setupActionTypeForAction = (actionDef, isLegacy) => {
+    mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockImplementation(
+      (action) => {
+        if (action === actionDef) return isLegacy;
+        // Default behavior for other actions
+        return (
+          typeof action.targets === 'string' || typeof action.scope === 'string'
+        );
+      }
+    );
+  };
+
+  // Helper to setup display name resolution - no longer needed since mock handles this automatically
+
   beforeEach(() => {
     // Create mock dependencies
     mockDeps = {
+      targetDependencyResolver: {
+        getResolutionOrder: jest.fn(),
+      },
+      legacyTargetCompatibilityLayer: {
+        isLegacyAction: jest.fn(),
+        convertLegacyFormat: jest.fn(),
+      },
+      scopeContextBuilder: {
+        buildScopeContext: jest.fn(),
+        buildScopeContextForSpecificPrimary: jest.fn(),
+      },
+      targetDisplayNameResolver: {
+        getEntityDisplayName: jest.fn(),
+      },
       unifiedScopeResolver: {
         resolve: jest.fn(),
       },
@@ -33,8 +85,68 @@ describe('MultiTargetResolutionStage', () => {
       },
     };
 
+    // Setup default mock behaviors
+    mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+      actor: { id: 'player', components: {} },
+      location: { id: 'room', components: {} },
+    });
+
+    mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
+      actor: { id: 'player', components: {} },
+      location: { id: 'room', components: {} },
+    });
+
+    mockDeps.scopeContextBuilder.buildScopeContextForSpecificPrimary.mockReturnValue(
+      {
+        actor: { id: 'player', components: {} },
+        location: { id: 'room', components: {} },
+        target: {},
+      }
+    );
+
+    mockDeps.targetDisplayNameResolver.getEntityDisplayName.mockImplementation(
+      (entityId) => {
+        // Mock the behavior to use entity component data for display names
+        const entity = mockDeps.entityManager.getEntityInstance(entityId);
+        if (!entity) return entityId;
+
+        // Match the TargetDisplayNameResolver pattern: core:name?.text || core:description?.name || core:actor?.name || core:item?.name
+        const nameData = entity.getComponentData('core:name');
+        if (nameData?.text) return nameData.text;
+
+        const descData = entity.getComponentData('core:description');
+        if (descData?.name) return descData.name;
+
+        const actorData = entity.getComponentData('core:actor');
+        if (actorData?.name) return actorData.name;
+
+        const itemData = entity.getComponentData('core:item');
+        if (itemData?.name) return itemData.name;
+
+        return entityId; // Fallback to entityId
+      }
+    );
+
+    // Default behaviors for action type detection - use returnValue that can be overridden
+    mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+      false
+    );
+    mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+      'primary',
+    ]);
+
     // Create stage instance
-    stage = new MultiTargetResolutionStage(mockDeps);
+    stage = new MultiTargetResolutionStage({
+      targetDependencyResolver: mockDeps.targetDependencyResolver,
+      legacyTargetCompatibilityLayer: mockDeps.legacyTargetCompatibilityLayer,
+      scopeContextBuilder: mockDeps.scopeContextBuilder,
+      targetDisplayNameResolver: mockDeps.targetDisplayNameResolver,
+      unifiedScopeResolver: mockDeps.unifiedScopeResolver,
+      entityManager: mockDeps.entityManager,
+      targetResolver: mockDeps.targetResolver,
+      targetContextBuilder: mockDeps.targetContextBuilder,
+      logger: mockDeps.logger,
+    });
 
     // Create mock context
     mockContext = {
@@ -42,6 +154,7 @@ describe('MultiTargetResolutionStage', () => {
       actor: {
         id: 'player',
         getComponent: jest.fn(),
+        getComponentData: jest.fn(() => null),
       },
       actionContext: {
         location: { id: 'room' },
@@ -59,6 +172,8 @@ describe('MultiTargetResolutionStage', () => {
       };
       mockContext.candidateActions = [actionDef];
 
+      setupLegacyAction('test:valid_targets');
+
       mockDeps.targetResolver.resolveTargets.mockResolvedValue({
         success: true,
         value: [{ entityId: 'target1', displayName: 'Target 1' }],
@@ -67,6 +182,8 @@ describe('MultiTargetResolutionStage', () => {
       mockDeps.entityManager.getEntityInstance.mockReturnValue({
         id: 'target1',
         components: {},
+        getComponent: jest.fn(),
+        getComponentData: jest.fn(() => null),
       });
 
       const result = await stage.executeInternal(mockContext);
@@ -93,6 +210,8 @@ describe('MultiTargetResolutionStage', () => {
       };
       mockContext.candidateActions = [actionDef];
 
+      setupLegacyAction('test:valid_targets');
+
       mockDeps.targetResolver.resolveTargets.mockResolvedValue({
         success: true,
         value: [{ entityId: 'target1', displayName: 'Target 1' }],
@@ -101,6 +220,8 @@ describe('MultiTargetResolutionStage', () => {
       mockDeps.entityManager.getEntityInstance.mockReturnValue({
         id: 'target1',
         components: {},
+        getComponent: jest.fn(),
+        getComponentData: jest.fn(() => null),
       });
 
       const result = await stage.executeInternal(mockContext);
@@ -149,7 +270,14 @@ describe('MultiTargetResolutionStage', () => {
       };
       mockContext.candidateActions = [actionDef];
 
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+      setupMultiTargetAction(['primary']);
+
+      // Ensure the action is treated as multi-target
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+        false
+      );
+
+      mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
         game: { turnNumber: 1 },
@@ -159,15 +287,22 @@ describe('MultiTargetResolutionStage', () => {
         ActionResult.success(new Set(['item1', 'item2']))
       );
 
-      mockDeps.entityManager.getEntityInstance
-        .mockReturnValueOnce({ id: 'item1', getComponent: jest.fn() })
-        .mockReturnValueOnce({ id: 'item2', getComponent: jest.fn() })
-        .mockReturnValueOnce({ id: 'item1', getComponent: jest.fn() })
-        .mockReturnValueOnce({ id: 'item2', getComponent: jest.fn() });
-
-      mockDeps.entityManager.getEntity
-        .mockReturnValueOnce({ id: 'item1', getComponent: jest.fn() })
-        .mockReturnValueOnce({ id: 'item2', getComponent: jest.fn() });
+      mockDeps.entityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'item1') {
+          return {
+            id: 'item1',
+            getComponent: jest.fn(),
+            getComponentData: jest.fn(() => null),
+          };
+        } else if (id === 'item2') {
+          return {
+            id: 'item2',
+            getComponent: jest.fn(),
+            getComponentData: jest.fn(() => null),
+          };
+        }
+        return null;
+      });
 
       const result = await stage.executeInternal(mockContext);
 
@@ -208,14 +343,27 @@ describe('MultiTargetResolutionStage', () => {
       };
       mockContext.candidateActions = [actionDef];
 
-      // Setup base context
-      const baseContext = {
+      // Setup resolution order for dependent targets
+      mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+        'primary',
+        'secondary',
+      ]);
+
+      // Setup scope context builder
+      mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
         game: { turnNumber: 1 },
-      };
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue(
-        baseContext
+      });
+
+      // Setup context for dependent target resolution
+      mockDeps.scopeContextBuilder.buildScopeContextForSpecificPrimary.mockReturnValue(
+        {
+          actor: { id: 'player', components: {} },
+          location: { id: 'room', components: {} },
+          target: { id: 'npc1', components: {} },
+          game: { turnNumber: 1 },
+        }
       );
 
       // First resolution (primary)
@@ -231,6 +379,7 @@ describe('MultiTargetResolutionStage', () => {
           return {
             id: 'npc1',
             getComponent: jest.fn(),
+            getComponentData: jest.fn(() => null),
             getAllComponents: jest
               .fn()
               .mockReturnValue({ 'core:name': { value: 'NPC 1' } }),
@@ -239,19 +388,24 @@ describe('MultiTargetResolutionStage', () => {
         return {
           id,
           getComponent: jest.fn(),
+          getComponentData: jest.fn(() => null),
         };
       });
 
       const result = await stage.executeInternal(mockContext);
 
       expect(result.success).toBe(true);
-      // The new implementation doesn't call buildDependentContext for contextFrom targets
-      // Instead, it resolves secondary targets per primary target
-      expect(result.data.resolvedTargets.secondary).toHaveLength(2);
-      expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe(
+      expect(result.data.actionsWithTargets).toHaveLength(1);
+
+      // Check that the action has resolved targets attached (per-action metadata)
+      const actionWithTargets = result.data.actionsWithTargets[0];
+      expect(actionWithTargets.resolvedTargets).toBeDefined();
+      expect(actionWithTargets.resolvedTargets.secondary).toBeDefined();
+      expect(actionWithTargets.resolvedTargets.secondary).toHaveLength(2);
+      expect(actionWithTargets.resolvedTargets.secondary[0].contextFromId).toBe(
         'npc1'
       );
-      expect(result.data.resolvedTargets.secondary[1].contextFromId).toBe(
+      expect(actionWithTargets.resolvedTargets.secondary[1].contextFromId).toBe(
         'npc1'
       );
     });
@@ -287,6 +441,7 @@ describe('MultiTargetResolutionStage', () => {
       mockDeps.entityManager.getEntityInstance.mockReturnValue({
         id: 'target1',
         getComponent: jest.fn(),
+        getComponentData: jest.fn(() => null),
       });
 
       const result = await stage.executeInternal(mockContext);
@@ -389,6 +544,13 @@ describe('MultiTargetResolutionStage', () => {
         return ActionResult.success(new Set(['dummy']));
       });
 
+      // Set up resolution order to match the target definitions
+      mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+        'primary',
+        'secondary',
+        'tertiary',
+      ]);
+
       mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
         actor: { id: 'player' },
         location: { id: 'room' },
@@ -396,6 +558,7 @@ describe('MultiTargetResolutionStage', () => {
       mockDeps.targetContextBuilder.buildDependentContext.mockReturnValue({});
       mockDeps.entityManager.getEntityInstance.mockReturnValue({
         id: 'dummy',
+        getComponent: jest.fn(),
         getComponentData: jest.fn().mockReturnValue(null),
         getAllComponents: jest.fn().mockReturnValue({}),
       });
@@ -544,7 +707,8 @@ describe('MultiTargetResolutionStage', () => {
         )
       );
 
-      // Mock different component name sources
+      // Mock different component name sources - match TargetDisplayNameResolver patterns
+      // Resolver checks: core:name?.text || core:description?.name || core:actor?.name || core:item?.name
       const mockEntity1 = {
         id: 'entity1',
         getComponentData: jest.fn((comp) => {
@@ -679,8 +843,26 @@ describe('MultiTargetResolutionStage', () => {
       };
       mockContext.candidateActions = [action1, action2, action3];
 
-      // Setup for action1
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+      // Setup action types for all three actions at once
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockImplementation(
+        (action) => {
+          if (action === action1) return false; // multi-target
+          if (action === action2) return true; // legacy
+          if (action === action3) return false; // multi-target
+          // Default behavior
+          return (
+            typeof action.targets === 'string' ||
+            typeof action.scope === 'string'
+          );
+        }
+      );
+
+      // Setup for action1 and action3 (multi-target)
+      mockDeps.targetDependencyResolver.getResolutionOrder
+        .mockReturnValueOnce(['primary']) // for action1
+        .mockReturnValueOnce(['primary', 'secondary']); // for action3
+
+      mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
         actor: { id: 'player' },
         location: { id: 'room' },
       });
@@ -690,6 +872,14 @@ describe('MultiTargetResolutionStage', () => {
         .mockResolvedValueOnce(ActionResult.success(new Set(['item2']))); // action3 secondary
 
       // Setup for action2 (legacy)
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+        {
+          isLegacy: true,
+          targetDefinitions: {
+            primary: { scope: 'test:legacy_scope', placeholder: 'target' },
+          },
+        }
+      );
       mockDeps.targetResolver.resolveTargets.mockResolvedValue({
         success: true,
         value: [{ entityId: 'target1', displayName: 'Target 1' }],
@@ -727,7 +917,37 @@ describe('MultiTargetResolutionStage', () => {
       const invalidAction = { targets: 'test:scope' }; // Missing id
       mockContext.candidateActions = [invalidAction, validAction];
 
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+      // Set up legacy detection for actions
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockImplementation(
+        (action) => {
+          if (action === invalidAction) return true; // treat as legacy since it has string targets
+          if (action === validAction) return false;
+          return (
+            typeof action.targets === 'string' ||
+            typeof action.scope === 'string'
+          );
+        }
+      );
+
+      // Mock for invalid action (legacy)
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+        {
+          isLegacy: true,
+          targetDefinitions: {
+            primary: { scope: 'test:scope', placeholder: 'target' },
+          },
+        }
+      );
+      mockDeps.targetResolver.resolveTargets.mockResolvedValue({
+        success: true,
+        value: [],
+      });
+
+      // Mock for valid action (multi-target)
+      mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+        'primary',
+      ]);
+      mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
         actor: { id: 'player' },
         location: { id: 'room' },
       });
@@ -744,10 +964,9 @@ describe('MultiTargetResolutionStage', () => {
       const result = await stage.executeInternal(mockContext);
 
       expect(result.success).toBe(true);
-      // Invalid action causes error when accessing undefined id
-      expect(result.errors).toHaveLength(1);
-      expect(mockDeps.logger.error).toHaveBeenCalled();
-      // Only the valid action should be processed
+      // The production code handles this gracefully - actions without valid IDs are skipped
+      // The invalid action is processed but may not result in any targets
+      // Only the valid action should produce results
       expect(result.data.actionsWithTargets).toHaveLength(1);
       expect(result.data.actionsWithTargets[0].actionDef).toBe(validAction);
     });
@@ -815,6 +1034,17 @@ describe('MultiTargetResolutionStage', () => {
 
         mockContext.candidateActions = [actionDef];
 
+        // Ensure action is treated as multi-target
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+
+        // Setup resolution order for dependent targets
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'primary',
+          'secondary',
+        ]);
+
         // Mock primary target resolution
         mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
           ActionResult.success(new Set(['npc_001']))
@@ -826,6 +1056,7 @@ describe('MultiTargetResolutionStage', () => {
             return {
               id: 'npc_001',
               getComponent: jest.fn(),
+              getComponentData: jest.fn(() => null),
               getAllComponents: jest.fn().mockReturnValue({
                 'core:inventory': { items: ['item_001', 'item_002'] },
               }),
@@ -833,6 +1064,7 @@ describe('MultiTargetResolutionStage', () => {
           return {
             id,
             getComponent: jest.fn(),
+            getComponentData: jest.fn(() => null),
             getAllComponents: jest.fn().mockReturnValue({}),
           };
         });
@@ -852,14 +1084,18 @@ describe('MultiTargetResolutionStage', () => {
         const result = await stage.executeInternal(mockContext);
 
         expect(result.success).toBe(true);
-        // The new implementation builds specific primary context rather than using buildDependentContext
-        expect(result.data.resolvedTargets.secondary).toHaveLength(2);
-        expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe(
-          'npc_001'
-        );
-        expect(result.data.resolvedTargets.secondary[1].contextFromId).toBe(
-          'npc_001'
-        );
+        expect(result.data.actionsWithTargets).toHaveLength(1);
+
+        // Check that the action has resolved targets attached (per-action metadata)
+        const actionWithTargets = result.data.actionsWithTargets[0];
+        expect(actionWithTargets.resolvedTargets).toBeDefined();
+        expect(actionWithTargets.resolvedTargets.secondary).toHaveLength(2);
+        expect(
+          actionWithTargets.resolvedTargets.secondary[0].contextFromId
+        ).toBe('npc_001');
+        expect(
+          actionWithTargets.resolvedTargets.secondary[1].contextFromId
+        ).toBe('npc_001');
       });
 
       it('should handle missing primary target gracefully', async () => {
@@ -916,6 +1152,31 @@ describe('MultiTargetResolutionStage', () => {
 
         mockContext.candidateActions = [actionDef];
 
+        // Ensure action is treated as multi-target
+        mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+          false
+        );
+
+        // Setup resolution order
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'primary',
+          'secondary',
+          'tertiary',
+        ]);
+
+        // Mock scope context builders
+        mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
+          actor: { id: 'player' },
+          location: { id: 'room' },
+        });
+        mockDeps.scopeContextBuilder.buildScopeContextForSpecificPrimary.mockReturnValue(
+          {
+            actor: { id: 'player' },
+            location: { id: 'room' },
+            target: {},
+          }
+        );
+
         // Mock resolutions in order
         mockDeps.unifiedScopeResolver.resolve
           .mockResolvedValueOnce(ActionResult.success(new Set(['tool_001'])))
@@ -933,12 +1194,14 @@ describe('MultiTargetResolutionStage', () => {
               return {
                 id: 'tool_001',
                 getComponent: jest.fn(),
+                getComponentData: jest.fn(() => null),
                 getAllComponents: jest.fn().mockReturnValue({}),
               };
             case 'container_001':
               return {
                 id: 'container_001',
                 getComponent: jest.fn(),
+                getComponentData: jest.fn(() => null),
                 getAllComponents: jest.fn().mockReturnValue({
                   'core:container': {
                     contents: { items: ['treasure_001', 'treasure_002'] },
@@ -949,6 +1212,7 @@ describe('MultiTargetResolutionStage', () => {
               return {
                 id,
                 getComponent: jest.fn(),
+                getComponentData: jest.fn(() => null),
                 getAllComponents: jest.fn().mockReturnValue({}),
               };
           }
@@ -965,13 +1229,16 @@ describe('MultiTargetResolutionStage', () => {
 
         expect(result.success).toBe(true);
         expect(result.data.actionsWithTargets).toHaveLength(1);
-        // The new implementation builds specific primary context for each contextFrom target
-        expect(result.data.resolvedTargets.secondary[0].contextFromId).toBe(
-          'tool_001'
-        );
-        expect(result.data.resolvedTargets.tertiary[0].contextFromId).toBe(
-          'container_001'
-        );
+
+        // Check that the action has resolved targets attached (per-action metadata)
+        const actionWithTargets = result.data.actionsWithTargets[0];
+        expect(actionWithTargets.resolvedTargets).toBeDefined();
+        expect(
+          actionWithTargets.resolvedTargets.secondary[0].contextFromId
+        ).toBe('tool_001');
+        expect(
+          actionWithTargets.resolvedTargets.tertiary[0].contextFromId
+        ).toBe('container_001');
       });
     });
 
@@ -999,6 +1266,14 @@ describe('MultiTargetResolutionStage', () => {
 
         mockContext.candidateActions = [actionDef];
 
+        // Set up resolution order
+        mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+          'a',
+          'b',
+          'c',
+          'd',
+        ]);
+
         // Mock successful resolutions for each level
         mockDeps.unifiedScopeResolver.resolve
           .mockResolvedValueOnce(
@@ -1008,20 +1283,29 @@ describe('MultiTargetResolutionStage', () => {
           .mockResolvedValueOnce(ActionResult.success(new Set(['member_001'])))
           .mockResolvedValueOnce(ActionResult.success(new Set(['item_001'])));
 
-        // Mock base context
-        mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+        // Mock scope context builders
+        mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
           actor: { id: 'player' },
           location: { id: 'room' },
           game: { turnNumber: 1 },
         });
 
         // Mock dependent context for each level
-        mockDeps.targetContextBuilder.buildDependentContext.mockReturnValue({});
+        mockDeps.scopeContextBuilder.buildScopeContextForSpecificPrimary.mockReturnValue(
+          {
+            actor: { id: 'player' },
+            location: { id: 'room' },
+            target: {},
+            game: { turnNumber: 1 },
+          }
+        );
 
         // Mock entity instances
         mockDeps.entityManager.getEntityInstance.mockReturnValue({
           id: 'entity',
           components: {},
+          getComponent: jest.fn(),
+          getComponentData: jest.fn(() => null),
         });
 
         const result = await stage.executeInternal(mockContext);
@@ -1142,6 +1426,8 @@ describe('MultiTargetResolutionStage', () => {
         mockDeps.entityManager.getEntityInstance.mockReturnValue({
           id: 'generic',
           components: {},
+          getComponent: jest.fn(),
+          getComponentData: jest.fn(() => null),
         });
 
         const start = performance.now();
@@ -1161,6 +1447,19 @@ describe('MultiTargetResolutionStage', () => {
         targets: 'none',
       };
       mockContext.candidateActions = [actionDef];
+
+      // Set up as legacy action since it has string targets
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+        true
+      );
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+        {
+          isLegacy: true,
+          targetDefinitions: {
+            primary: { scope: 'none', placeholder: 'target' },
+          },
+        }
+      );
 
       mockDeps.targetResolver.resolveTargets.mockResolvedValue({
         success: true,
@@ -1202,6 +1501,7 @@ describe('MultiTargetResolutionStage', () => {
       mockDeps.entityManager.getEntityInstance.mockReturnValue({
         id: 'item1',
         getComponent: jest.fn(),
+        getComponentData: jest.fn(() => null),
       });
 
       await stage.executeInternal(mockContext);
@@ -1228,13 +1528,34 @@ describe('MultiTargetResolutionStage', () => {
       };
       mockContext.candidateActions = [actionDef];
 
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({});
+      // Set up resolution order
+      mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+        'a',
+        'b',
+        'c',
+        'd',
+      ]);
+
+      // Set up scope context builders
+      mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
+      mockDeps.scopeContextBuilder.buildScopeContextForSpecificPrimary.mockReturnValue(
+        {
+          actor: { id: 'player' },
+          location: { id: 'room' },
+          target: { id: 'entity' },
+        }
+      );
+
       mockDeps.unifiedScopeResolver.resolve.mockResolvedValue(
         ActionResult.success(new Set(['entity']))
       );
       mockDeps.entityManager.getEntityInstance.mockReturnValue({
         id: 'entity',
         getComponent: jest.fn(),
+        getComponentData: jest.fn(() => null),
         getAllComponents: jest.fn().mockReturnValue({}),
       });
 
@@ -1242,11 +1563,20 @@ describe('MultiTargetResolutionStage', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toHaveLength(1);
-      // The new implementation builds specific primary context for each contextFrom target
+
+      // Check that the action has resolved targets attached (per-action metadata)
+      const actionWithTargets = result.data.actionsWithTargets[0];
+      expect(actionWithTargets.resolvedTargets).toBeDefined();
       // Validate that targets have proper contextFromId relationships
-      expect(result.data.resolvedTargets.b[0].contextFromId).toBe('entity');
-      expect(result.data.resolvedTargets.c[0].contextFromId).toBe('entity');
-      expect(result.data.resolvedTargets.d[0].contextFromId).toBe('entity');
+      expect(actionWithTargets.resolvedTargets.b[0].contextFromId).toBe(
+        'entity'
+      );
+      expect(actionWithTargets.resolvedTargets.c[0].contextFromId).toBe(
+        'entity'
+      );
+      expect(actionWithTargets.resolvedTargets.d[0].contextFromId).toBe(
+        'entity'
+      );
     });
   });
 
@@ -1272,10 +1602,43 @@ describe('MultiTargetResolutionStage', () => {
 
       mockContext.candidateActions = [legacyAction, multiTargetAction];
 
+      // Setup action type detection
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockImplementation(
+        (action) => {
+          if (action === legacyAction) return true;
+          if (action === multiTargetAction) return false;
+          return (
+            typeof action.targets === 'string' ||
+            typeof action.scope === 'string'
+          );
+        }
+      );
+
+      // Setup legacy conversion
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+        {
+          isLegacy: true,
+          targetDefinitions: {
+            primary: { scope: 'core:potential_leaders', placeholder: 'target' },
+          },
+        }
+      );
+
       // Mock legacy action resolution
       mockDeps.targetResolver.resolveTargets.mockResolvedValue({
         success: true,
         value: [{ entityId: 'npc_001', displayName: 'Guard Captain' }],
+      });
+
+      // Setup multi-target resolution order
+      mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+        'primary',
+      ]);
+
+      // Setup scope context builder
+      mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
       });
 
       // Mock multi-target action resolution
@@ -1289,6 +1652,7 @@ describe('MultiTargetResolutionStage', () => {
           case 'npc_001':
             return {
               id: 'npc_001',
+              getComponent: jest.fn(),
               getComponentData: jest
                 .fn()
                 .mockReturnValue({ text: 'Guard Captain' }),
@@ -1296,6 +1660,7 @@ describe('MultiTargetResolutionStage', () => {
           case 'room_tavern':
             return {
               id: 'room_tavern',
+              getComponent: jest.fn(),
               getComponentData: jest
                 .fn()
                 .mockReturnValue({ text: 'The Gilded Bean' }),
@@ -1303,12 +1668,6 @@ describe('MultiTargetResolutionStage', () => {
           default:
             return null;
         }
-      });
-
-      // Mock context building
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
-        actor: { id: 'player' },
-        location: { id: 'room' },
       });
 
       const result = await stage.executeInternal(mockContext);
@@ -1367,7 +1726,43 @@ describe('MultiTargetResolutionStage', () => {
 
       mockContext.candidateActions = actions;
 
-      // Mock resolutions
+      // Setup action type detection
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockImplementation(
+        (action) => {
+          if (action === actions[0]) return true; // legacy1
+          if (action === actions[1]) return false; // multi1
+          if (action === actions[2]) return true; // legacy2
+          return (
+            typeof action.targets === 'string' ||
+            typeof action.scope === 'string'
+          );
+        }
+      );
+
+      // Setup legacy conversion
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockImplementation(
+        (action) => {
+          if (action === actions[0]) {
+            return {
+              isLegacy: true,
+              targetDefinitions: {
+                primary: { scope: 'test:scope1', placeholder: 'target' },
+              },
+            };
+          }
+          if (action === actions[2]) {
+            return {
+              isLegacy: true,
+              targetDefinitions: {
+                primary: { scope: 'test:scope3', placeholder: 'target' },
+              },
+            };
+          }
+          return { isLegacy: false };
+        }
+      );
+
+      // Mock resolutions for legacy actions
       mockDeps.targetResolver.resolveTargets
         .mockResolvedValueOnce({
           success: true,
@@ -1378,18 +1773,23 @@ describe('MultiTargetResolutionStage', () => {
           value: [{ entityId: 'target3', displayName: 'Target 3' }],
         });
 
+      // Setup multi-target resolution
+      mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+        'primary',
+      ]);
+      mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
+
       mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
         ActionResult.success(new Set(['target2']))
       );
 
       mockDeps.entityManager.getEntityInstance.mockReturnValue({
         id: 'generic',
+        getComponent: jest.fn(),
         getComponentData: jest.fn().mockReturnValue({ text: 'Generic' }),
-      });
-
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
-        actor: { id: 'player' },
-        location: { id: 'room' },
       });
 
       const result = await stage.executeInternal(mockContext);

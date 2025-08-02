@@ -151,6 +151,29 @@ if (typeof window !== 'undefined' && window.EventTarget) {
   };
 }
 
+// Polyfill for HTMLFormElement.prototype.requestSubmit (jsdom limitation)
+if (typeof window !== 'undefined' && window.HTMLFormElement) {
+  if (!window.HTMLFormElement.prototype.requestSubmit) {
+    window.HTMLFormElement.prototype.requestSubmit = function (submitter) {
+      // Dispatch submit event
+      const submitEvent = new Event('submit', {
+        bubbles: true,
+        cancelable: true,
+      });
+
+      // Set submitter if provided
+      if (submitter) {
+        Object.defineProperty(submitEvent, 'submitter', {
+          value: submitter,
+          configurable: true,
+        });
+      }
+
+      this.dispatchEvent(submitEvent);
+    };
+  }
+}
+
 // Note: Global cleanup hooks have been removed to prevent race conditions
 // with individual test suite cleanup. Each test file should handle its own
 // cleanup in afterEach hooks as needed.

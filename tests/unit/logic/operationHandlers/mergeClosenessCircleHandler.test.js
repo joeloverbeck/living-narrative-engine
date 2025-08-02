@@ -53,12 +53,20 @@ describe('MergeClosenessCircleHandler', () => {
 
     await handler.execute({ actor_id: 'a1', target_id: 't1' }, execCtx);
 
-    expect(em.addComponent).toHaveBeenCalledWith('a1', 'intimacy:closeness', {
-      partners: ['t1'],
-    });
-    expect(em.addComponent).toHaveBeenCalledWith('t1', 'intimacy:closeness', {
-      partners: ['a1'],
-    });
+    expect(em.addComponent).toHaveBeenCalledWith(
+      'a1',
+      'positioning:closeness',
+      {
+        partners: ['t1'],
+      }
+    );
+    expect(em.addComponent).toHaveBeenCalledWith(
+      't1',
+      'positioning:closeness',
+      {
+        partners: ['a1'],
+      }
+    );
     expect(em.addComponent).toHaveBeenCalledWith('a1', 'core:movement', {
       locked: true,
     });
@@ -70,9 +78,11 @@ describe('MergeClosenessCircleHandler', () => {
   test('forms new circle and locks movement on anatomy-based entities', async () => {
     em.getComponentData = jest.fn((id, componentId) => {
       // Actor closeness check
-      if (id === 'hero1' && componentId === 'intimacy:closeness') return null;
+      if (id === 'hero1' && componentId === 'positioning:closeness')
+        return null;
       // Target closeness check
-      if (id === 'hero2' && componentId === 'intimacy:closeness') return null;
+      if (id === 'hero2' && componentId === 'positioning:closeness')
+        return null;
       // Anatomy structure for hero1
       if (id === 'hero1' && componentId === 'anatomy:body') {
         return {
@@ -118,14 +128,14 @@ describe('MergeClosenessCircleHandler', () => {
 
     expect(em.addComponent).toHaveBeenCalledWith(
       'hero1',
-      'intimacy:closeness',
+      'positioning:closeness',
       {
         partners: ['hero2'],
       }
     );
     expect(em.addComponent).toHaveBeenCalledWith(
       'hero2',
-      'intimacy:closeness',
+      'positioning:closeness',
       {
         partners: ['hero1'],
       }
@@ -159,7 +169,7 @@ describe('MergeClosenessCircleHandler', () => {
 
   test('stores result variable when provided', async () => {
     em.getComponentData = jest.fn((id, componentId) => {
-      if (componentId === 'intimacy:closeness') return null;
+      if (componentId === 'positioning:closeness') return null;
       if (componentId === 'anatomy:body') return null;
       if (componentId === 'core:movement') return { locked: false };
       return null;
@@ -179,13 +189,14 @@ describe('MergeClosenessCircleHandler', () => {
   test('handles mixed legacy and anatomy entities', async () => {
     em.getComponentData = jest.fn((id, componentId) => {
       // Legacy entity 'a1' has no anatomy
-      if (id === 'a1' && componentId === 'intimacy:closeness') return null;
+      if (id === 'a1' && componentId === 'positioning:closeness') return null;
       if (id === 'a1' && componentId === 'anatomy:body') return null;
       if (id === 'a1' && componentId === 'core:movement') {
         return { locked: false };
       }
       // Anatomy entity 'hero1'
-      if (id === 'hero1' && componentId === 'intimacy:closeness') return null;
+      if (id === 'hero1' && componentId === 'positioning:closeness')
+        return null;
       if (id === 'hero1' && componentId === 'anatomy:body') {
         return {
           body: {
@@ -205,12 +216,16 @@ describe('MergeClosenessCircleHandler', () => {
 
     await handler.execute({ actor_id: 'a1', target_id: 'hero1' }, execCtx);
 
-    expect(em.addComponent).toHaveBeenCalledWith('a1', 'intimacy:closeness', {
-      partners: ['hero1'],
-    });
+    expect(em.addComponent).toHaveBeenCalledWith(
+      'a1',
+      'positioning:closeness',
+      {
+        partners: ['hero1'],
+      }
+    );
     expect(em.addComponent).toHaveBeenCalledWith(
       'hero1',
-      'intimacy:closeness',
+      'positioning:closeness',
       {
         partners: ['a1'],
       }

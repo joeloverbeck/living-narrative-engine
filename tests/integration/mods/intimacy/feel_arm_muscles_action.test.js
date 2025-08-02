@@ -113,7 +113,7 @@ describe('intimacy:feel_arm_muscles action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['bob'] },
+          'positioning:closeness': { partners: ['bob'] },
         },
       },
       {
@@ -121,7 +121,7 @@ describe('intimacy:feel_arm_muscles action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['alice'] },
+          'positioning:closeness': { partners: ['alice'] },
           'anatomy:body': {
             body: {
               root: 'torso1',
@@ -238,7 +238,7 @@ describe('intimacy:feel_arm_muscles action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: [] },
+          'positioning:closeness': { partners: [] },
         },
       },
     ]);
@@ -272,7 +272,7 @@ describe('intimacy:feel_arm_muscles action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['bob'] },
+          'positioning:closeness': { partners: ['bob'] },
         },
       },
       {
@@ -280,7 +280,7 @@ describe('intimacy:feel_arm_muscles action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['alice'] },
+          'positioning:closeness': { partners: ['alice'] },
           'anatomy:body': {
             body: {
               root: 'torso1',

@@ -39,6 +39,7 @@ import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
+import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
 
 // Import actions
 import dismissAction from '../../../data/mods/core/actions/dismiss.action.json';
@@ -226,6 +227,16 @@ describe('Scope Integration Tests', () => {
         logger,
       }),
       targetContextBuilder: createMockTargetContextBuilder(entityManager),
+      multiTargetResolutionStage: createMultiTargetResolutionStage({
+        entityManager,
+        logger,
+        unifiedScopeResolver: createMockUnifiedScopeResolver({
+          scopeRegistry,
+          entityManager,
+          logger,
+        }),
+        targetResolver: targetResolutionService,
+      }),
     });
 
     // FIX: Add the new prerequisiteEvaluationService dependency to the constructor
@@ -316,6 +327,30 @@ describe('Scope Integration Tests', () => {
           actionErrorContextBuilder: createMockActionErrorContextBuilder(),
         }),
         targetContextBuilder: createMockTargetContextBuilder(entityManager),
+        multiTargetResolutionStage: createMultiTargetResolutionStage({
+          entityManager,
+          logger,
+          unifiedScopeResolver: createMockUnifiedScopeResolver({
+            scopeRegistry,
+            scopeEngine,
+            entityManager,
+            logger,
+            safeEventDispatcher,
+            jsonLogicEvaluationService: jsonLogicEval,
+            dslParser: new DefaultDslParser(),
+            actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+          }),
+          targetResolver: createTargetResolutionServiceWithMocks({
+            scopeRegistry,
+            scopeEngine,
+            entityManager,
+            logger,
+            safeEventDispatcher,
+            jsonLogicEvaluationService: jsonLogicEval,
+            dslParser: new DefaultDslParser(),
+            actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+          }),
+        }),
       });
 
       actionDiscoveryService = new ActionDiscoveryService({
@@ -449,6 +484,30 @@ describe('Scope Integration Tests', () => {
           actionErrorContextBuilder: createMockActionErrorContextBuilder(),
         }),
         targetContextBuilder: createMockTargetContextBuilder(entityManager),
+        multiTargetResolutionStage: createMultiTargetResolutionStage({
+          entityManager,
+          logger,
+          unifiedScopeResolver: createMockUnifiedScopeResolver({
+            scopeRegistry,
+            scopeEngine,
+            entityManager,
+            logger,
+            safeEventDispatcher,
+            jsonLogicEvaluationService: jsonLogicEval,
+            dslParser: new DefaultDslParser(),
+            actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+          }),
+          targetResolver: createTargetResolutionServiceWithMocks({
+            scopeRegistry,
+            scopeEngine,
+            entityManager,
+            logger,
+            safeEventDispatcher,
+            jsonLogicEvaluationService: jsonLogicEval,
+            dslParser: new DefaultDslParser(),
+            actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+          }),
+        }),
       });
 
       actionDiscoveryService = new ActionDiscoveryService({
@@ -560,6 +619,30 @@ describe('Scope Integration Tests', () => {
           actionErrorContextBuilder: createMockActionErrorContextBuilder(),
         }),
         targetContextBuilder: createMockTargetContextBuilder(entityManager),
+        multiTargetResolutionStage: createMultiTargetResolutionStage({
+          entityManager,
+          logger,
+          unifiedScopeResolver: createMockUnifiedScopeResolver({
+            scopeRegistry,
+            scopeEngine,
+            entityManager,
+            logger,
+            safeEventDispatcher,
+            jsonLogicEvaluationService: jsonLogicEval,
+            dslParser: new DefaultDslParser(),
+            actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+          }),
+          targetResolver: createTargetResolutionServiceWithMocks({
+            scopeRegistry,
+            scopeEngine,
+            entityManager,
+            logger,
+            safeEventDispatcher,
+            jsonLogicEvaluationService: jsonLogicEval,
+            dslParser: new DefaultDslParser(),
+            actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+          }),
+        }),
       });
 
       actionDiscoveryService = new ActionDiscoveryService({
@@ -659,6 +742,30 @@ describe('Scope Integration Tests', () => {
           actionErrorContextBuilder: createMockActionErrorContextBuilder(),
         }),
         targetContextBuilder: createMockTargetContextBuilder(entityManager),
+        multiTargetResolutionStage: createMultiTargetResolutionStage({
+          entityManager,
+          logger,
+          unifiedScopeResolver: createMockUnifiedScopeResolver({
+            scopeRegistry,
+            scopeEngine,
+            entityManager,
+            logger,
+            safeEventDispatcher,
+            jsonLogicEvaluationService: jsonLogicEval,
+            dslParser: new DefaultDslParser(),
+            actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+          }),
+          targetResolver: createTargetResolutionServiceWithMocks({
+            scopeRegistry,
+            scopeEngine,
+            entityManager,
+            logger,
+            safeEventDispatcher,
+            jsonLogicEvaluationService: jsonLogicEval,
+            dslParser: new DefaultDslParser(),
+            actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+          }),
+        }),
       });
 
       actionDiscoveryService = new ActionDiscoveryService({

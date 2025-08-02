@@ -22,9 +22,9 @@ describe('intimacy:turn_around action', () => {
       );
     });
 
-    it('requires intimacy:closeness component for actor', () => {
+    it('requires positioning:closeness component for actor', () => {
       expect(turnAroundAction.required_components.actor).toContain(
-        'intimacy:closeness'
+        'positioning:closeness'
       );
     });
 
@@ -42,20 +42,20 @@ describe('intimacy:turn_around action', () => {
       const mockActor = {
         id: 'actor1',
         components: {
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       };
 
       const mockTarget = {
         id: 'target1',
         components: {
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       };
 
       // Action requires closeness component
-      expect(mockActor.components['intimacy:closeness']).toBeDefined();
-      expect(mockTarget.components['intimacy:closeness'].partners).toContain(
+      expect(mockActor.components['positioning:closeness']).toBeDefined();
+      expect(mockTarget.components['positioning:closeness'].partners).toContain(
         'actor1'
       );
     });
@@ -67,7 +67,7 @@ describe('intimacy:turn_around action', () => {
       };
 
       // Actor lacks required component
-      expect(mockActor.components['intimacy:closeness']).toBeUndefined();
+      expect(mockActor.components['positioning:closeness']).toBeUndefined();
     });
   });
 });

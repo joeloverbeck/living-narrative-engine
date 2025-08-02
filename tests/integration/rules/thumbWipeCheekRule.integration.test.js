@@ -103,7 +103,7 @@ describe('intimacy_handle_thumb_wipe_cheek rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Actor' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -111,7 +111,7 @@ describe('intimacy_handle_thumb_wipe_cheek rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Target' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       },
     ]);
