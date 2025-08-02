@@ -8,7 +8,7 @@
         "var": "actor.id"
       },
       {
-        "var": "entity.components.intimacy:facing_away.facing_away_from"
+        "var": "entity.components.positioning:facing_away.facing_away_from"
       }
     ]
   }

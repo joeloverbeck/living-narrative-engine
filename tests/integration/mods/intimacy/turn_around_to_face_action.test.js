@@ -18,6 +18,7 @@ import { GameDataRepository } from '../../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.js';
 import { createMockActionErrorContextBuilder } from '../../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
+import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import turnAroundToFaceAction from '../../../../data/mods/intimacy/actions/turn_around_to_face.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import {
@@ -72,11 +73,7 @@ describe('Turn Around to Face Action Discovery', () => {
     // Register scopes
     scopeRegistry.initialize(Object.fromEntries(parsedScopes));
 
-    scopeEngine = new ScopeEngine({
-      entityManager,
-      scopeRegistry,
-      logger,
-    });
+    scopeEngine = new ScopeEngine();
 
     // Set up dslParser and other dependencies
     const dslParser = new DefaultDslParser();
@@ -145,6 +142,15 @@ describe('Turn Around to Face Action Discovery', () => {
         logger,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
+      multiTargetResolutionStage: createMultiTargetResolutionStage({
+        entityManager,
+        logger,
+        unifiedScopeResolver: createMockUnifiedScopeResolver({
+          scopeRegistry,
+          entityManager,
+          logger,
+        }),
+      }),
     });
 
     // Create mock traceContextFactory as a function
@@ -215,10 +221,10 @@ describe('Turn Around to Face Action Discovery', () => {
 
     it('should not show action when actor has closeness but no facing_away', async () => {
       // Alice is in closeness with Bob but not facing away
-      entityManager.addComponent(alice, 'intimacy:closeness', {
+      entityManager.addComponent(alice, 'positioning:closeness', {
         partners: [bob],
       });
-      entityManager.addComponent(bob, 'intimacy:closeness', {
+      entityManager.addComponent(bob, 'positioning:closeness', {
         partners: [alice],
       });
 
@@ -234,21 +240,54 @@ describe('Turn Around to Face Action Discovery', () => {
 
     it('should show action when actor has both required components', async () => {
       // Set up closeness
-      entityManager.addComponent(alice, 'intimacy:closeness', {
+      entityManager.addComponent(alice, 'positioning:closeness', {
         partners: [bob],
       });
-      entityManager.addComponent(bob, 'intimacy:closeness', {
+      entityManager.addComponent(bob, 'positioning:closeness', {
         partners: [alice],
       });
 
       // Alice is facing away from Bob
-      entityManager.addComponent(alice, 'intimacy:facing_away', {
+      entityManager.addComponent(alice, 'positioning:facing_away', {
         facing_away_from: [bob],
       });
 
       const aliceEntity = entityManager.getEntityInstance(alice);
+
+      // Debug: Check components
+      console.log('Alice components:', aliceEntity.getAllComponents());
+      console.log('Bob entity exists:', !!entityManager.getEntityInstance(bob));
+
+      // Debug: Test scope resolution directly
+      const scopeDef = scopeRegistry.getScope(
+        'intimacy:actors_im_facing_away_from'
+      );
+      console.log('Scope definition:', scopeDef);
+
+      if (scopeDef && scopeDef.ast) {
+        try {
+          const runtimeCtx = { entityManager, logger, actor: aliceEntity };
+          const resolvedIds = scopeEngine.resolve(
+            scopeDef.ast,
+            aliceEntity,
+            runtimeCtx
+          );
+          console.log(
+            'Direct scope resolution result:',
+            Array.from(resolvedIds || [])
+          );
+        } catch (err) {
+          console.log('Direct scope resolution error:', err.message);
+        }
+      }
+
       const result = await actionDiscoveryService.getValidActions(aliceEntity);
       const actions = result.actions;
+
+      console.log(
+        'All discovered actions:',
+        actions.map((a) => ({ id: a.id, command: a.command }))
+      );
 
       const turnAroundToFaceAction = actions.find(
         (a) => a.id === 'intimacy:turn_around_to_face'
@@ -264,23 +303,23 @@ describe('Turn Around to Face Action Discovery', () => {
   describe('Scope Resolution', () => {
     beforeEach(() => {
       // Set up a complex closeness circle
-      entityManager.addComponent(alice, 'intimacy:closeness', {
+      entityManager.addComponent(alice, 'positioning:closeness', {
         partners: [bob, charlie, diana],
       });
-      entityManager.addComponent(bob, 'intimacy:closeness', {
+      entityManager.addComponent(bob, 'positioning:closeness', {
         partners: [alice, charlie, diana],
       });
-      entityManager.addComponent(charlie, 'intimacy:closeness', {
+      entityManager.addComponent(charlie, 'positioning:closeness', {
         partners: [alice, bob, diana],
       });
-      entityManager.addComponent(diana, 'intimacy:closeness', {
+      entityManager.addComponent(diana, 'positioning:closeness', {
         partners: [alice, bob, charlie],
       });
     });
 
     it('should only show entities that actor is facing away from', async () => {
       // Alice is facing away from Bob and Charlie, but not Diana
-      entityManager.addComponent(alice, 'intimacy:facing_away', {
+      entityManager.addComponent(alice, 'positioning:facing_away', {
         facing_away_from: [bob, charlie],
       });
 
@@ -304,7 +343,7 @@ describe('Turn Around to Face Action Discovery', () => {
 
     it('should handle empty facing_away_from array', async () => {
       // Alice has facing_away component but empty array
-      entityManager.addComponent(alice, 'intimacy:facing_away', {
+      entityManager.addComponent(alice, 'positioning:facing_away', {
         facing_away_from: [],
       });
 
@@ -331,7 +370,7 @@ describe('Turn Around to Face Action Discovery', () => {
       });
 
       // Alice is facing away from Bob and the outsider
-      entityManager.addComponent(alice, 'intimacy:facing_away', {
+      entityManager.addComponent(alice, 'positioning:facing_away', {
         facing_away_from: [bob, outsider],
       });
 
@@ -350,7 +389,7 @@ describe('Turn Around to Face Action Discovery', () => {
 
     it('should handle single target in facing_away_from', async () => {
       // Alice is only facing away from Bob
-      entityManager.addComponent(alice, 'intimacy:facing_away', {
+      entityManager.addComponent(alice, 'positioning:facing_away', {
         facing_away_from: [bob],
       });
 
@@ -370,18 +409,18 @@ describe('Turn Around to Face Action Discovery', () => {
   describe('Complex Scenarios', () => {
     it('should handle bidirectional facing away', async () => {
       // Set up closeness
-      entityManager.addComponent(alice, 'intimacy:closeness', {
+      entityManager.addComponent(alice, 'positioning:closeness', {
         partners: [bob],
       });
-      entityManager.addComponent(bob, 'intimacy:closeness', {
+      entityManager.addComponent(bob, 'positioning:closeness', {
         partners: [alice],
       });
 
       // Both are facing away from each other
-      entityManager.addComponent(alice, 'intimacy:facing_away', {
+      entityManager.addComponent(alice, 'positioning:facing_away', {
         facing_away_from: [bob],
       });
-      entityManager.addComponent(bob, 'intimacy:facing_away', {
+      entityManager.addComponent(bob, 'positioning:facing_away', {
         facing_away_from: [alice],
       });
 
@@ -409,18 +448,18 @@ describe('Turn Around to Face Action Discovery', () => {
 
     it('should handle partial facing away in group', async () => {
       // Set up closeness for all
-      entityManager.addComponent(alice, 'intimacy:closeness', {
+      entityManager.addComponent(alice, 'positioning:closeness', {
         partners: [bob, charlie],
       });
-      entityManager.addComponent(bob, 'intimacy:closeness', {
+      entityManager.addComponent(bob, 'positioning:closeness', {
         partners: [alice, charlie],
       });
-      entityManager.addComponent(charlie, 'intimacy:closeness', {
+      entityManager.addComponent(charlie, 'positioning:closeness', {
         partners: [alice, bob],
       });
 
       // Alice faces away from Bob but faces Charlie
-      entityManager.addComponent(alice, 'intimacy:facing_away', {
+      entityManager.addComponent(alice, 'positioning:facing_away', {
         facing_away_from: [bob],
       });
 

@@ -5,7 +5,7 @@
   "description": "Kiss the target's neck in a sensual, intimate manner.",
   "scope": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
   "required_components": {
-    "actor": ["intimacy:closeness"]
+    "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
     "actor": ["intimacy:kissing"]

@@ -7,8 +7,7 @@ import {
   jest,
 } from '@jest/globals';
 import { EntityManagerTestBed } from '../../common/entities/entityManagerTestBed.js';
-import { MultiTargetResolutionStage } from '../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
-import { UnifiedScopeResolver } from '../../../src/actions/scopes/unifiedScopeResolver.js';
+import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { ActionResult } from '../../../src/actions/core/actionResult.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
@@ -18,7 +17,6 @@ describe('Dependent Target Resolution Integration', () => {
   let entityManager;
   let multiTargetResolutionStage;
   let unifiedScopeResolver;
-  let targetContextBuilder;
   let logger;
 
   beforeEach(() => {
@@ -32,26 +30,19 @@ describe('Dependent Target Resolution Integration', () => {
     logger.error = jest.fn();
     logger.warn = jest.fn();
 
-    // Create dependencies
-    targetContextBuilder = {
-      buildBaseContext: jest.fn(),
-      buildDependentContext: jest.fn(),
-    };
-
     // Create unified scope resolver with minimal dependencies
     unifiedScopeResolver = {
       resolve: jest.fn(),
     };
 
-    // Create multi-target resolution stage
-    multiTargetResolutionStage = new MultiTargetResolutionStage({
-      unifiedScopeResolver,
+    // Create multi-target resolution stage using test utility
+    multiTargetResolutionStage = createMultiTargetResolutionStage({
       entityManager,
+      logger,
+      unifiedScopeResolver,
       targetResolver: {
         resolveTargets: jest.fn(),
       },
-      targetContextBuilder,
-      logger,
     });
   });
 
@@ -158,37 +149,9 @@ describe('Dependent Target Resolution Integration', () => {
           ActionResult.success(new Set(['sword', 'potion']))
         ); // Secondary resolution
 
-      // Mock target context builder
-      targetContextBuilder.buildBaseContext.mockReturnValue({
-        actor: {
-          id: player.id,
-          components: player.getAllComponents ? player.getAllComponents() : {},
-        },
-        location: {
-          id: room.id,
-          components: room.getAllComponents ? room.getAllComponents() : {},
-        },
-        game: { turnNumber: 1 },
-      });
+      // Target context builder is now handled by the test utility
 
-      targetContextBuilder.buildDependentContext.mockReturnValue({
-        actor: {
-          id: player.id,
-          components: player.getAllComponents ? player.getAllComponents() : {},
-        },
-        location: {
-          id: room.id,
-          components: room.getAllComponents ? room.getAllComponents() : {},
-        },
-        game: { turnNumber: 1 },
-        targets: {
-          primary: [{ id: 'npc-001', displayName: 'Alice', entity: npc }],
-        },
-        target: {
-          id: npc.id,
-          components: npc.getAllComponents ? npc.getAllComponents() : {},
-        },
-      });
+      // Dependent context building is now handled by the test utility
 
       // Create context for the stage
       const context = {
@@ -297,12 +260,7 @@ describe('Dependent Target Resolution Integration', () => {
         .mockResolvedValueOnce(ActionResult.success(new Set(['npc-002']))) // Primary resolution
         .mockResolvedValueOnce(ActionResult.success(new Set())); // Secondary resolution - empty
 
-      // Mock target context builder
-      targetContextBuilder.buildBaseContext.mockReturnValue({
-        actor: player,
-        location: room,
-        game: { turnNumber: 1 },
-      });
+      // Target context builder is now handled by the test utility
 
       const context = {
         candidateActions: [actionDef],

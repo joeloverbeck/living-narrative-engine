@@ -35,6 +35,7 @@ import {
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
+import { createActionPipelineOrchestrator } from '../../common/actions/multiTargetStageTestUtilities.js';
 import {
   ACTOR_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -286,8 +287,10 @@ describe('Action Target Resolution Workflow E2E', () => {
       evaluate: jest.fn(() => true), // All prerequisites pass for testing
     };
 
-    // Create the ActionPipelineOrchestrator
-    const orchestrator = new ActionPipelineOrchestrator({
+    // Create the ActionPipelineOrchestrator using test utility
+    const orchestrator = createActionPipelineOrchestrator({
+      entityManager,
+      logger,
       actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,
@@ -295,11 +298,9 @@ describe('Action Target Resolution Workflow E2E', () => {
         new ActionCommandFormatter(),
         logger
       ),
-      entityManager,
       safeEventDispatcher,
       getEntityDisplayNameFn: getEntityDisplayName,
       errorBuilder: createMockActionErrorContextBuilder(),
-      logger,
       unifiedScopeResolver: createMockUnifiedScopeResolver({
         scopeRegistry,
         scopeEngine,

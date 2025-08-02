@@ -5,7 +5,7 @@
   "description": "Rub the target's penis over their clothing.",
   "scope": "sex:actors_with_penis_facing_each_other_covered",
   "required_components": {
-    "actor": ["intimacy:closeness"]
+    "actor": ["positioning:closeness"]
   },
   "template": "rub {target}'s penis over the clothes",
   "prerequisites": []

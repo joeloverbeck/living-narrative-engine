@@ -27,7 +27,7 @@ describe('Closeness Circle Scope Resolution', () => {
           'core:name': { text: 'Actor 1' },
           'core:position': { locationId: 'room1' },
           'core:actor': {},
-          'intimacy:closeness': { partners: ['actor2', 'actor3'] },
+          'positioning:closeness': { partners: ['actor2', 'actor3'] },
         },
       },
       {
@@ -36,7 +36,7 @@ describe('Closeness Circle Scope Resolution', () => {
           'core:name': { text: 'Actor 2' },
           'core:position': { locationId: 'room1' },
           'core:actor': {},
-          'intimacy:closeness': { partners: ['actor1', 'actor3'] },
+          'positioning:closeness': { partners: ['actor1', 'actor3'] },
         },
       },
       {
@@ -45,7 +45,7 @@ describe('Closeness Circle Scope Resolution', () => {
           'core:name': { text: 'Actor 3' },
           'core:position': { locationId: 'room1' },
           'core:actor': {},
-          'intimacy:closeness': { partners: ['actor1', 'actor2'] },
+          'positioning:closeness': { partners: ['actor1', 'actor2'] },
         },
       },
       {
@@ -63,9 +63,9 @@ describe('Closeness Circle Scope Resolution', () => {
     scopeRegistry.initialize(
       addMockAstsToScopes({
         'intimacy:close_actors': {
-          expr: 'actor.components.intimacy:closeness.partners[]',
+          expr: 'actor.components.positioning:closeness.partners[]',
           definition:
-            'intimacy:close_actors := actor.components.intimacy:closeness.partners[]',
+            'intimacy:close_actors := actor.components.positioning:closeness.partners[]',
           modId: 'intimacy',
         },
       })
@@ -123,7 +123,7 @@ describe('Closeness Circle Scope Resolution', () => {
           'core:name': { text: 'Actor 5' },
           'core:position': { locationId: 'room1' },
           'core:actor': {},
-          'intimacy:closeness': { partners: [] },
+          'positioning:closeness': { partners: [] },
         },
       },
     ]);
@@ -152,7 +152,7 @@ describe('Closeness Circle Scope Resolution', () => {
           'core:name': { text: 'Actor 6' },
           'core:position': { locationId: 'room1' },
           'core:actor': {},
-          'intimacy:closeness': { partners: ['actor7'] },
+          'positioning:closeness': { partners: ['actor7'] },
         },
       },
       {
@@ -161,7 +161,7 @@ describe('Closeness Circle Scope Resolution', () => {
           'core:name': { text: 'Actor 7' },
           'core:position': { locationId: 'room1' },
           'core:actor': {},
-          'intimacy:closeness': { partners: ['actor6'] },
+          'positioning:closeness': { partners: ['actor6'] },
         },
       },
     ]);

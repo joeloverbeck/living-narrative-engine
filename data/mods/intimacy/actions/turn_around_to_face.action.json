@@ -6,7 +6,7 @@
   "description": "Turn around to face someone you are currently facing away from.",
   "scope": "intimacy:actors_im_facing_away_from",
   "required_components": {
-    "actor": ["intimacy:closeness", "intimacy:facing_away"]
+    "actor": ["positioning:closeness", "positioning:facing_away"]
   },
   "template": "turn around to face {target}"
 }

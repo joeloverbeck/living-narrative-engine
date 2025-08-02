@@ -284,7 +284,7 @@ describe('Cross-Mod Action Integration E2E', () => {
     // In our mock setup, basic NPC only has core actions
     const mockBasicNpcValidation = {
       success: false,
-      error: 'Missing required component: intimacy:closeness',
+      error: 'Missing required component: positioning:closeness',
       code: 'MISSING_COMPONENT',
     };
 
@@ -490,7 +490,7 @@ describe('Cross-Mod Action Integration E2E', () => {
     // Set up validation failure for basic NPC attempting intimacy action
     const mockValidationFailure = {
       success: false,
-      error: 'Missing required component: intimacy:closeness',
+      error: 'Missing required component: positioning:closeness',
       code: 'MISSING_COMPONENT',
     };
 

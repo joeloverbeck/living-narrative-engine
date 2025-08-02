@@ -147,7 +147,7 @@ describe('handle_brush_hand rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -155,7 +155,7 @@ describe('handle_brush_hand rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Beth' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       },
     ]);
@@ -183,7 +183,7 @@ describe('handle_brush_hand rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -191,7 +191,7 @@ describe('handle_brush_hand rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Beth' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       },
     ]);
@@ -218,7 +218,7 @@ describe('handle_brush_hand rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -226,7 +226,7 @@ describe('handle_brush_hand rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Beth' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       },
     ]);
@@ -256,7 +256,7 @@ describe('handle_brush_hand rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -264,7 +264,7 @@ describe('handle_brush_hand rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Beth' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       },
       {
@@ -299,7 +299,7 @@ describe('handle_brush_hand rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'John' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['target1'] },
+          'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
@@ -307,7 +307,7 @@ describe('handle_brush_hand rule integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Mary' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
         },
       },
     ]);

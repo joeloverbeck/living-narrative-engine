@@ -30,6 +30,7 @@ import {
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
+import { createMockMultiTargetResolutionStage } from '../../common/mocks/mockMultiTargetResolutionStage.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
 import fs from 'fs';
 import path from 'path';
@@ -58,6 +59,7 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
   let jsonLogicCustomOperators;
   let mockBodyGraphService;
   let safeEventDispatcher;
+  let mockMultiTargetResolutionStage;
 
   beforeEach(() => {
     logger = {
@@ -68,6 +70,9 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
     };
 
     entityManager = new SimpleEntityManager([]);
+
+    // Create mock MultiTargetResolutionStage
+    mockMultiTargetResolutionStage = createMockMultiTargetResolutionStage();
 
     // Mock body graph service for custom operators
     mockBodyGraphService = {
@@ -89,7 +94,7 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
         not: {
           in: [
             { var: 'actor.id' },
-            { var: 'entity.components.intimacy:closeness.facing_away_from' },
+            { var: 'entity.components.positioning:closeness.facing_away_from' },
           ],
         },
       },
@@ -176,6 +181,7 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
         logger,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
+      multiTargetResolutionStage: mockMultiTargetResolutionStage,
     });
 
     actionDiscoveryService = new ActionDiscoveryService({
@@ -200,7 +206,8 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'intimacy:closeness': {
+            'core:actor': { name: 'Actor 1' },
+            'positioning:closeness': {
               partners: ['target1'],
               facing_away_from: [],
             },
@@ -209,7 +216,8 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'intimacy:closeness': {
+            'core:actor': { name: 'Target 1' },
+            'positioning:closeness': {
               partners: ['actor1'],
               facing_away_from: [],
             },
@@ -399,7 +407,8 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'intimacy:closeness': {
+            'core:actor': { name: 'Actor 1' },
+            'positioning:closeness': {
               partners: ['target1'],
               facing_away_from: [],
             },
@@ -408,7 +417,8 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'intimacy:closeness': {
+            'core:actor': { name: 'Target 1' },
+            'positioning:closeness': {
               partners: ['actor1'],
               facing_away_from: ['actor1'], // Facing away from actor
             },

@@ -5,7 +5,7 @@
   "description": "Turn the target around or have them face you again.",
   "scope": "intimacy:close_actors_facing_each_other_or_behind_target",
   "required_components": {
-    "actor": ["intimacy:closeness"]
+    "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
     "actor": ["intimacy:kissing"]

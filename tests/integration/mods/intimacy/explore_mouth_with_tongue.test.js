@@ -120,7 +120,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['receiver1'] },
+          'positioning:closeness': { partners: ['receiver1'] },
           'intimacy:kissing': { partner: 'receiver1', initiator: true },
         },
       },
@@ -129,7 +129,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['initiator1'] },
+          'positioning:closeness': { partners: ['initiator1'] },
           'intimacy:kissing': { partner: 'initiator1', initiator: false },
         },
       },
@@ -163,7 +163,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Sarah' },
           [POSITION_COMPONENT_ID]: { locationId: 'garden' },
-          'intimacy:closeness': { partners: ['initiator1'] },
+          'positioning:closeness': { partners: ['initiator1'] },
           'intimacy:kissing': { partner: 'initiator1', initiator: false },
         },
       },
@@ -172,7 +172,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'James' },
           [POSITION_COMPONENT_ID]: { locationId: 'garden' },
-          'intimacy:closeness': { partners: ['receiver1'] },
+          'positioning:closeness': { partners: ['receiver1'] },
           'intimacy:kissing': { partner: 'receiver1', initiator: true },
         },
       },
@@ -206,7 +206,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Emma' },
           [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
-          'intimacy:closeness': { partners: ['passionate2'] },
+          'positioning:closeness': { partners: ['passionate2'] },
           'intimacy:kissing': { partner: 'passionate2', initiator: true },
         },
       },
@@ -215,7 +215,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'David' },
           [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
-          'intimacy:closeness': { partners: ['passionate1'] },
+          'positioning:closeness': { partners: ['passionate1'] },
           'intimacy:kissing': { partner: 'passionate1', initiator: false },
         },
       },
@@ -246,7 +246,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['kisser2'] },
+          'positioning:closeness': { partners: ['kisser2'] },
           'intimacy:kissing': { partner: 'kisser2', initiator: true },
         },
       },
@@ -255,7 +255,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['kisser1'] },
+          'positioning:closeness': { partners: ['kisser1'] },
           'intimacy:kissing': { partner: 'kisser1', initiator: false },
         },
       },
@@ -288,7 +288,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['partner1', 'partner2'] },
+          'positioning:closeness': { partners: ['partner1', 'partner2'] },
           'intimacy:kissing': { partner: 'partner1', initiator: true },
         },
       },
@@ -297,7 +297,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['polyamorous1', 'partner2'] },
+          'positioning:closeness': { partners: ['polyamorous1', 'partner2'] },
           'intimacy:kissing': { partner: 'polyamorous1', initiator: false },
         },
       },
@@ -306,7 +306,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Charlie' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['polyamorous1', 'partner1'] },
+          'positioning:closeness': { partners: ['polyamorous1', 'partner1'] },
         },
       },
     ]);
@@ -333,7 +333,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor2'] },
+          'positioning:closeness': { partners: ['actor2'] },
           'intimacy:kissing': { partner: 'actor2', initiator: true },
         },
       },
@@ -342,7 +342,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['actor1'] },
+          'positioning:closeness': { partners: ['actor1'] },
           'intimacy:kissing': { partner: 'actor1', initiator: false },
         },
       },
@@ -369,7 +369,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['sequencer2'] },
+          'positioning:closeness': { partners: ['sequencer2'] },
           'intimacy:kissing': { partner: 'sequencer2', initiator: true },
         },
       },
@@ -378,7 +378,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['sequencer1'] },
+          'positioning:closeness': { partners: ['sequencer1'] },
           'intimacy:kissing': { partner: 'sequencer1', initiator: false },
         },
       },
@@ -417,7 +417,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Emily' },
           [POSITION_COMPONENT_ID]: { locationId: 'moonlit_balcony' },
-          'intimacy:closeness': { partners: ['passionate_recipient'] },
+          'positioning:closeness': { partners: ['passionate_recipient'] },
           'intimacy:kissing': {
             partner: 'passionate_recipient',
             initiator: true,
@@ -429,7 +429,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Michael' },
           [POSITION_COMPONENT_ID]: { locationId: 'moonlit_balcony' },
-          'intimacy:closeness': { partners: ['romantic_explorer'] },
+          'positioning:closeness': { partners: ['romantic_explorer'] },
           'intimacy:kissing': {
             partner: 'romantic_explorer',
             initiator: false,
@@ -485,7 +485,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Alice' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: ['receiver1'] },
+            'positioning:closeness': { partners: ['receiver1'] },
             'intimacy:kissing': { partner: 'receiver1', initiator: true },
           },
         },
@@ -494,7 +494,7 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Bob' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: ['initiator1'] },
+            'positioning:closeness': { partners: ['initiator1'] },
             'intimacy:kissing': { partner: 'initiator1', initiator: false },
           },
         },

@@ -8,7 +8,9 @@
         "not": {
           "in": [
             { "var": "entity.id" },
-            { "var": "actor.components.intimacy:facing_away.facing_away_from" }
+            {
+              "var": "actor.components.positioning:facing_away.facing_away_from"
+            }
           ]
         }
       },
@@ -16,7 +18,9 @@
         "not": {
           "in": [
             { "var": "actor.id" },
-            { "var": "entity.components.intimacy:facing_away.facing_away_from" }
+            {
+              "var": "entity.components.positioning:facing_away.facing_away_from"
+            }
           ]
         }
       }

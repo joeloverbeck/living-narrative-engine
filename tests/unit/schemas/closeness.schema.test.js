@@ -1,6 +1,6 @@
 /**
- * @file Validates the intimacy:closeness component definition.
- * @see {@link ../../../../../data/mods/intimacy/components/closeness.component.json}
+ * @file Validates the positioning:closeness component definition.
+ * @see {@link ../../../../../data/mods/positioning/components/closeness.component.json}
  */
 
 import { describe, it, expect } from '@jest/globals';
@@ -10,9 +10,9 @@ import addFormats from 'ajv-formats';
 // Direct import of JSON files, as supported by Jest's transformer.
 import componentDefinitionSchema from '../../../data/schemas/component.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
-import closenessComponent from '../../../data/mods/intimacy/components/closeness.component.json';
+import closenessComponent from '../../../data/mods/positioning/components/closeness.component.json';
 
-describe('intimacy:closeness component definition', () => {
+describe('positioning:closeness component definition', () => {
   it('should be a valid component definition according to the schema', () => {
     const ajv = new Ajv({ allErrors: true });
     addFormats(ajv);

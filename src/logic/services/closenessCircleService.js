@@ -3,7 +3,7 @@
  * @description A stateless domain helper for set-math operations related to "Closeness Circles".
  * Provides utilities for merging partner lists, ensuring uniqueness, and repairing lists for consistency.
  * This service is designed to be pure, with no external dependencies or side effects.
- * @see intimacy:closeness component
+ * @see positioning:closeness component
  * @see intimacy_handle_get_close rule
  * @see intimacy_handle_step_back rule
  */

@@ -121,7 +121,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['initiator1'] },
+          'positioning:closeness': { partners: ['initiator1'] },
           'intimacy:kissing': { partner: 'initiator1', initiator: false },
         },
       },
@@ -130,7 +130,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['receiver1'] },
+          'positioning:closeness': { partners: ['receiver1'] },
           'intimacy:kissing': { partner: 'receiver1', initiator: true },
         },
       },
@@ -164,7 +164,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Sarah' },
           [POSITION_COMPONENT_ID]: { locationId: 'garden' },
-          'intimacy:closeness': { partners: ['initiator1'] },
+          'positioning:closeness': { partners: ['initiator1'] },
           'intimacy:kissing': { partner: 'initiator1', initiator: false },
         },
       },
@@ -173,7 +173,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'James' },
           [POSITION_COMPONENT_ID]: { locationId: 'garden' },
-          'intimacy:closeness': { partners: ['receiver1'] },
+          'positioning:closeness': { partners: ['receiver1'] },
           'intimacy:kissing': { partner: 'receiver1', initiator: true },
         },
       },
@@ -204,7 +204,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['initiator1'] },
+          'positioning:closeness': { partners: ['initiator1'] },
           'intimacy:kissing': { partner: 'initiator1', initiator: false },
         },
       },
@@ -213,7 +213,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['receiver1'] },
+          'positioning:closeness': { partners: ['receiver1'] },
           'intimacy:kissing': { partner: 'receiver1', initiator: true },
         },
       },
@@ -246,7 +246,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['initiator1', 'initiator2'] },
+          'positioning:closeness': { partners: ['initiator1', 'initiator2'] },
           'intimacy:kissing': { partner: 'initiator1', initiator: false },
         },
       },
@@ -255,7 +255,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['receiver1', 'initiator2'] },
+          'positioning:closeness': { partners: ['receiver1', 'initiator2'] },
           'intimacy:kissing': { partner: 'receiver1', initiator: true },
         },
       },
@@ -264,7 +264,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Charlie' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['receiver1', 'initiator1'] },
+          'positioning:closeness': { partners: ['receiver1', 'initiator1'] },
         },
       },
     ]);
@@ -291,7 +291,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['initiator1'] },
+          'positioning:closeness': { partners: ['initiator1'] },
           'intimacy:kissing': { partner: 'initiator1', initiator: false },
         },
       },
@@ -300,7 +300,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['receiver1'] },
+          'positioning:closeness': { partners: ['receiver1'] },
           'intimacy:kissing': { partner: 'receiver1', initiator: true },
         },
       },
@@ -327,7 +327,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['initiator1'] },
+          'positioning:closeness': { partners: ['initiator1'] },
           'intimacy:kissing': { partner: 'initiator1', initiator: false },
         },
       },
@@ -336,7 +336,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['receiver1'] },
+          'positioning:closeness': { partners: ['receiver1'] },
           'intimacy:kissing': { partner: 'receiver1', initiator: true },
         },
       },
@@ -375,7 +375,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Emily' },
           [POSITION_COMPONENT_ID]: { locationId: 'park_bench' },
-          'intimacy:closeness': { partners: ['passionate_initiator'] },
+          'positioning:closeness': { partners: ['passionate_initiator'] },
           'intimacy:kissing': {
             partner: 'passionate_initiator',
             initiator: false,
@@ -387,7 +387,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Michael' },
           [POSITION_COMPONENT_ID]: { locationId: 'park_bench' },
-          'intimacy:closeness': { partners: ['romantic_receiver'] },
+          'positioning:closeness': { partners: ['romantic_receiver'] },
           'intimacy:kissing': { partner: 'romantic_receiver', initiator: true },
         },
       },
@@ -423,7 +423,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Sophia' },
           [POSITION_COMPONENT_ID]: { locationId: 'balcony' },
-          'intimacy:closeness': { partners: ['initiator1'] },
+          'positioning:closeness': { partners: ['initiator1'] },
           'intimacy:kissing': { partner: 'initiator1', initiator: false },
         },
       },
@@ -432,7 +432,7 @@ describe('intimacy:kiss_back_passionately action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'David' },
           [POSITION_COMPONENT_ID]: { locationId: 'balcony' },
-          'intimacy:closeness': { partners: ['receiver1'] },
+          'positioning:closeness': { partners: ['receiver1'] },
           'intimacy:kissing': { partner: 'receiver1', initiator: true },
         },
       },

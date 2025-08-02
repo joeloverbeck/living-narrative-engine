@@ -16,6 +16,20 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
   beforeEach(() => {
     // Mock dependencies
     mockDeps = {
+      targetDependencyResolver: {
+        getResolutionOrder: jest.fn(),
+      },
+      legacyTargetCompatibilityLayer: {
+        isLegacyAction: jest.fn(),
+        convertLegacyFormat: jest.fn(),
+      },
+      scopeContextBuilder: {
+        buildScopeContext: jest.fn(),
+        buildScopeContextForSpecificPrimary: jest.fn(),
+      },
+      targetDisplayNameResolver: {
+        getEntityDisplayName: jest.fn(),
+      },
       unifiedScopeResolver: {
         resolve: jest.fn(),
       },
@@ -38,7 +52,17 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       },
     };
 
-    stage = new MultiTargetResolutionStage(mockDeps);
+    stage = new MultiTargetResolutionStage({
+      targetDependencyResolver: mockDeps.targetDependencyResolver,
+      legacyTargetCompatibilityLayer: mockDeps.legacyTargetCompatibilityLayer,
+      scopeContextBuilder: mockDeps.scopeContextBuilder,
+      targetDisplayNameResolver: mockDeps.targetDisplayNameResolver,
+      unifiedScopeResolver: mockDeps.unifiedScopeResolver,
+      entityManager: mockDeps.entityManager,
+      targetResolver: mockDeps.targetResolver,
+      targetContextBuilder: mockDeps.targetContextBuilder,
+      logger: mockDeps.logger,
+    });
 
     mockActor = {
       id: 'actor1',
@@ -89,6 +113,18 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       data: {},
     };
 
+    // Mock setup for legacy action detection and conversion
+    mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValueOnce(
+      true
+    );
+    mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValueOnce(
+      {
+        targetDefinitions: {
+          primary: { scope: 'core:actors_in_location', placeholder: 'target' },
+        },
+      }
+    );
+
     // Mock for legacy action
     mockDeps.targetResolver.resolveTargets.mockResolvedValueOnce({
       success: true,
@@ -98,20 +134,34 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       id: 'target1',
       components: {},
     });
+    mockDeps.targetDisplayNameResolver.getEntityDisplayName.mockReturnValueOnce(
+      'Target 1'
+    );
 
-    // Mock for multi-target action
-    mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+    // Mock setup for multi-target action detection and resolution order
+    mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValueOnce(
+      false
+    );
+    mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValueOnce([
+      'primary',
+      'secondary',
+    ]);
+
+    // Mock for multi-target action scope context building
+    mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
       actor: { id: 'actor1', components: {} },
       location: { id: 'room1', components: {} },
       game: { turnNumber: 1 },
     });
 
-    mockDeps.targetContextBuilder.buildDependentContext.mockReturnValue({
-      actor: { id: 'actor1', components: {} },
-      location: { id: 'room1', components: {} },
-      game: { turnNumber: 1 },
-      primary: { id: 'person1', components: {} },
-    });
+    mockDeps.scopeContextBuilder.buildScopeContextForSpecificPrimary.mockReturnValue(
+      {
+        actor: { id: 'actor1', components: {} },
+        location: { id: 'room1', components: {} },
+        game: { turnNumber: 1 },
+        primary: { id: 'person1', components: {} },
+      }
+    );
 
     // Primary target - valid target found
     mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
@@ -146,6 +196,10 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
     });
 
     // Additional mocks for getEntityDisplayName calls
+    mockDeps.targetDisplayNameResolver.getEntityDisplayName
+      .mockReturnValueOnce('Person 1')
+      .mockReturnValueOnce('Clothing 1');
+
     mockDeps.entityManager.getEntityInstance
       .mockReturnValueOnce({
         id: 'person1',
@@ -201,7 +255,15 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       data: {},
     };
 
-    mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+    // Mock setup for multi-target action
+    mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValueOnce(
+      false
+    );
+    mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValueOnce([
+      'primary',
+    ]);
+
+    mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
       actor: { id: 'actor1', components: {} },
       location: { id: 'room1', components: {} },
       game: { turnNumber: 1 },
@@ -209,6 +271,10 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
 
     mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
       ActionResult.success(new Set(['entity1']))
+    );
+
+    mockDeps.targetDisplayNameResolver.getEntityDisplayName.mockReturnValueOnce(
+      'Entity 1'
     );
 
     mockDeps.entityManager.getEntityInstance.mockReturnValueOnce({
@@ -265,14 +331,32 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       data: {},
     };
 
-    // Mock for legacy action (none scope)
+    // Mock setup for legacy action (none scope)
+    mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValueOnce(
+      true
+    );
+    mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValueOnce(
+      {
+        targetDefinitions: {
+          primary: { scope: 'none', placeholder: 'target' },
+        },
+      }
+    );
     mockDeps.targetResolver.resolveTargets.mockResolvedValueOnce({
       success: true,
       value: [],
     });
 
-    // Mock for multi-target action
-    mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+    // Mock setup for multi-target action
+    mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValueOnce(
+      false
+    );
+    mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValueOnce([
+      'primary',
+      'item',
+    ]);
+
+    mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
       actor: { id: 'actor1', components: {} },
       location: { id: 'room1', components: {} },
       game: { turnNumber: 1 },
@@ -281,6 +365,10 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
     // Primary target resolution
     mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
       ActionResult.success(new Set(['actor2']))
+    );
+
+    mockDeps.targetDisplayNameResolver.getEntityDisplayName.mockReturnValueOnce(
+      'Other Actor'
     );
 
     mockDeps.entityManager.getEntityInstance.mockReturnValueOnce({
@@ -295,16 +383,22 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
     });
 
     // Dependent context building
-    mockDeps.targetContextBuilder.buildDependentContext.mockReturnValue({
-      actor: { id: 'actor1', components: {} },
-      location: { id: 'room1', components: {} },
-      game: { turnNumber: 1 },
-      primary: { id: 'actor2', components: {} },
-    });
+    mockDeps.scopeContextBuilder.buildScopeContextForSpecificPrimary.mockReturnValue(
+      {
+        actor: { id: 'actor1', components: {} },
+        location: { id: 'room1', components: {} },
+        game: { turnNumber: 1 },
+        primary: { id: 'actor2', components: {} },
+      }
+    );
 
     // Item target resolution (dependent on primary)
     mockDeps.unifiedScopeResolver.resolve.mockResolvedValueOnce(
       ActionResult.success(new Set(['item1']))
+    );
+
+    mockDeps.targetDisplayNameResolver.getEntityDisplayName.mockReturnValueOnce(
+      'Magic Item'
     );
 
     mockDeps.entityManager.getEntityInstance.mockReturnValueOnce({
@@ -319,6 +413,10 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
     });
 
     // Additional mocks for display name lookups
+    mockDeps.targetDisplayNameResolver.getEntityDisplayName
+      .mockReturnValueOnce('Other Actor')
+      .mockReturnValueOnce('Magic Item');
+
     mockDeps.entityManager.getEntityInstance
       .mockReturnValueOnce({
         id: 'actor2',

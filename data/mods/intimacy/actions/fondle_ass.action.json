@@ -5,7 +5,7 @@
   "description": "Gently fondle the target's ass.",
   "scope": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
   "required_components": {
-    "actor": ["intimacy:closeness"]
+    "actor": ["positioning:closeness"]
   },
   "template": "fondle {target}'s ass",
   "prerequisites": []

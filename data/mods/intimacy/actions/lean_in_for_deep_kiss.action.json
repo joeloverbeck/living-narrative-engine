@@ -5,7 +5,7 @@
   "description": "Move in close and initiate a deep, meaningful kiss",
   "scope": "intimacy:actors_with_mouth_facing_each_other",
   "required_components": {
-    "actor": ["intimacy:closeness"]
+    "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
     "actor": ["intimacy:kissing"]

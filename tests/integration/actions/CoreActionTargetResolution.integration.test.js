@@ -35,6 +35,7 @@ import {
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
+import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
 import {
   ACTOR_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -251,6 +252,18 @@ describe('Core Action Target Resolution Integration', () => {
     const allActions = gameDataRepository.getAllActionDefinitions();
     actionIndex.buildIndex(allActions);
 
+    // Create unified scope resolver that will properly resolve scopes
+    const unifiedScopeResolver = createMockUnifiedScopeResolver({
+      scopeRegistry,
+      scopeEngine,
+      entityManager,
+      logger,
+      safeEventDispatcher,
+      jsonLogicEvaluationService: jsonLogicEval,
+      dslParser: new DefaultDslParser(),
+      actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+    });
+
     // Create target resolution service
     const targetResolutionService = createTargetResolutionServiceWithMocks({
       scopeRegistry,
@@ -268,8 +281,21 @@ describe('Core Action Target Resolution Integration', () => {
       evaluate: jest.fn(() => true), // All prerequisites pass for testing
     };
 
-    // Create the ActionPipelineOrchestrator
-    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    // Create real MultiTargetResolutionStage with proper dependencies
+    const multiTargetResolutionStage = createMultiTargetResolutionStage({
+      entityManager,
+      logger,
+      unifiedScopeResolver,
+      targetResolver: targetResolutionService,
+      gameStateManager: {
+        getCurrentTurn: jest.fn().mockReturnValue(1),
+        getTimeOfDay: jest.fn().mockReturnValue('morning'),
+        getWeather: jest.fn().mockReturnValue('sunny'),
+      },
+    });
+
+    // Create the ActionPipelineOrchestrator with proper dependencies
+    const orchestrator = new ActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,
@@ -282,53 +308,9 @@ describe('Core Action Target Resolution Integration', () => {
       getEntityDisplayNameFn: getEntityDisplayName,
       errorBuilder: createMockActionErrorContextBuilder(),
       logger,
-      unifiedScopeResolver: createMockUnifiedScopeResolver({
-        scopeRegistry,
-        scopeEngine,
-        entityManager,
-        logger,
-        safeEventDispatcher,
-        jsonLogicEvaluationService: jsonLogicEval,
-        dslParser: new DefaultDslParser(),
-        actionErrorContextBuilder: createMockActionErrorContextBuilder(),
-      }),
+      unifiedScopeResolver,
       targetContextBuilder: createMockTargetContextBuilder(entityManager),
-    });
-
-    // Create the ActionPipelineOrchestrator with updated dependencies
-    const orchestrator = new ActionPipelineOrchestrator({
-      actionIndex,
-      prerequisiteService: { evaluate: jest.fn(() => true) },
-      targetService: createTargetResolutionServiceWithMocks({
-        scopeRegistry,
-        scopeEngine,
-        entityManager,
-        logger,
-        safeEventDispatcher,
-        jsonLogicEvaluationService: jsonLogicEval,
-        dslParser: new DefaultDslParser(),
-        actionErrorContextBuilder: createMockActionErrorContextBuilder(),
-      }),
-      formatter: new MultiTargetActionFormatter(
-        new ActionCommandFormatter(),
-        logger
-      ),
-      entityManager,
-      safeEventDispatcher,
-      getEntityDisplayNameFn: getEntityDisplayName,
-      errorBuilder: createMockActionErrorContextBuilder(),
-      logger,
-      unifiedScopeResolver: createMockUnifiedScopeResolver({
-        scopeRegistry,
-        scopeEngine,
-        entityManager,
-        logger,
-        safeEventDispatcher,
-        jsonLogicEvaluationService: jsonLogicEval,
-        dslParser: new DefaultDslParser(),
-        actionErrorContextBuilder: createMockActionErrorContextBuilder(),
-      }),
-      targetContextBuilder: createMockTargetContextBuilder(entityManager),
+      multiTargetResolutionStage,
     });
 
     // Create action discovery service with proper trace context factory

@@ -5,7 +5,7 @@
   "description": "Gently fondle the target's penis.",
   "scope": "sex:actors_with_penis_facing_each_other",
   "required_components": {
-    "actor": ["intimacy:closeness"]
+    "actor": ["positioning:closeness"]
   },
   "template": "fondle {target}'s penis",
   "prerequisites": []

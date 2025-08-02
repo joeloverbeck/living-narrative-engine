@@ -34,6 +34,7 @@ import {
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
+import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 
 // Import the new action
@@ -157,6 +158,16 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
         logger,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
+      multiTargetResolutionStage: createMultiTargetResolutionStage({
+        entityManager,
+        logger,
+        unifiedScopeResolver: createMockUnifiedScopeResolver({
+          scopeRegistry,
+          entityManager,
+          logger,
+        }),
+        targetResolver: targetResolutionService,
+      }),
     });
 
     actionDiscoveryService = new ActionDiscoveryService({
@@ -180,14 +191,14 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [targetId] },
+            'positioning:closeness': { partners: [targetId] },
           },
         },
         {
           id: targetId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [actorId] },
+            'positioning:closeness': { partners: [actorId] },
           },
         },
         { id: 'room1', components: {} },
@@ -221,15 +232,15 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [targetId] },
+            'positioning:closeness': { partners: [targetId] },
           },
         },
         {
           id: targetId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [actorId] },
-            'intimacy:facing_away': { facing_away_from: [actorId] },
+            'positioning:closeness': { partners: [actorId] },
+            'positioning:facing_away': { facing_away_from: [actorId] },
           },
         },
         { id: 'room1', components: {} },
@@ -299,7 +310,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [targetId] },
+            'positioning:closeness': { partners: [targetId] },
             'intimacy:kissing': { partner: targetId, initiator: true },
           },
         },
@@ -307,7 +318,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: targetId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [actorId] },
+            'positioning:closeness': { partners: [actorId] },
             'intimacy:kissing': { partner: actorId, initiator: false },
           },
         },
@@ -338,21 +349,21 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [target1Id, target2Id] },
+            'positioning:closeness': { partners: [target1Id, target2Id] },
           },
         },
         {
           id: target1Id,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [actorId, target2Id] },
+            'positioning:closeness': { partners: [actorId, target2Id] },
           },
         },
         {
           id: target2Id,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [actorId, target1Id] },
+            'positioning:closeness': { partners: [actorId, target1Id] },
           },
         },
         { id: 'room1', components: {} },
@@ -388,7 +399,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': {
+            'positioning:closeness': {
               partners: [facingTargetId, behindTargetId],
             },
           },
@@ -397,7 +408,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: facingTargetId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [actorId, behindTargetId] },
+            'positioning:closeness': { partners: [actorId, behindTargetId] },
             // No facing_away component = facing each other
           },
         },
@@ -405,8 +416,8 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: behindTargetId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'intimacy:closeness': { partners: [actorId, facingTargetId] },
-            'intimacy:facing_away': { facing_away_from: [actorId] },
+            'positioning:closeness': { partners: [actorId, facingTargetId] },
+            'positioning:facing_away': { facing_away_from: [actorId] },
           },
         },
         { id: 'room1', components: {} },
@@ -445,7 +456,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
           id: actorId,
           components: {
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            // Missing intimacy:closeness
+            // Missing positioning:closeness
           },
         },
         {

@@ -60,9 +60,9 @@ export async function configureBaseContainer(container, options = {}) {
   registerInfrastructure(container);
   registerPersistence(container);
   registerWorldAndEntity(container);
+  registerPipelineServices(container);
   registerCommandAndAction(container);
   registerInterpreters(container);
-  registerPipelineServices(container);
 
   // --- Conditionally register game-specific services ---
   if (includeGameSystems) {

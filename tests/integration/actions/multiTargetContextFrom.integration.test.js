@@ -11,15 +11,13 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { MultiTargetResolutionStage } from '../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
-import TargetContextBuilder from '../../../src/scopeDsl/utils/targetContextBuilder.js';
+import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { createMockEntityManager } from '../../common/mockFactories/entities.js';
 
 describe('Multi-target action with contextFrom dependency', () => {
   let stage;
   let unifiedScopeResolver;
-  let targetContextBuilder;
   let targetResolver;
   let logger;
   let entityManager;
@@ -157,20 +155,13 @@ describe('Multi-target action with contextFrom dependency', () => {
       getWeather: jest.fn().mockReturnValue('sunny'),
     };
 
-    // Create real target context builder
-    targetContextBuilder = new TargetContextBuilder({
+    // Create the stage using the test utility
+    stage = createMultiTargetResolutionStage({
       entityManager,
-      gameStateManager,
       logger,
-    });
-
-    // Create the stage
-    stage = new MultiTargetResolutionStage({
       unifiedScopeResolver,
-      entityManager,
       targetResolver,
-      targetContextBuilder,
-      logger,
+      gameStateManager,
     });
   });
 

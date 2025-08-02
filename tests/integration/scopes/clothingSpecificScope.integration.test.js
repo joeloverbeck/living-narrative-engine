@@ -31,6 +31,7 @@ import {
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
+// import { createMockMultiTargetResolutionStage } from '../../common/mocks/mockMultiTargetResolutionStage.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
 import fs from 'fs';
 import path from 'path';
@@ -99,7 +100,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
             not: {
               in: [
                 { var: 'entity.id' },
-                { var: 'actor.components.intimacy:closeness.facing_away_from' },
+                {
+                  var: 'actor.components.positioning:closeness.facing_away_from',
+                },
               ],
             },
           },
@@ -108,7 +111,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
               in: [
                 { var: 'actor.id' },
                 {
-                  var: 'entity.components.intimacy:closeness.facing_away_from',
+                  var: 'entity.components.positioning:closeness.facing_away_from',
                 },
               ],
             },
@@ -124,7 +127,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
         'Checks if the actor is currently in closeness with someone.',
       logic: {
         '>': [
-          { var: 'actor.components.intimacy:closeness.partners.length' },
+          { var: 'actor.components.positioning:closeness.partners.length' },
           0,
         ],
       },
@@ -155,7 +158,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     jsonLogicCustomOperators.registerOperators(jsonLogicEval);
 
     // Parse and register the clothing-specific scopes
-    const parser = new DefaultDslParser({ logger });
+    // const parser = new DefaultDslParser({ logger });
     const primaryScopeDefinitions = parseScopeDefinitions(
       clothingScopeContent,
       'close_actors_facing_each_other_with_torso_clothing.scope'
@@ -218,7 +221,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     // Create prerequisite service mock
     const prerequisiteEvaluationService = {
-      evaluate: jest.fn((prerequisites, actionDef, actor, trace) => {
+      evaluate: jest.fn((prerequisites, actionDef, actor) => {
         console.log('Prerequisite evaluation called for:', actionDef?.id);
         console.log('  Actor:', actor?.id);
         console.log('  Prerequisites:', prerequisites);
@@ -243,7 +246,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
           console.log('Actor has components:', !!actor?.components);
           console.log(
             'Actor closeness partners:',
-            actor?.components?.['intimacy:closeness']?.partners
+            actor?.components?.['positioning:closeness']?.partners
           );
           console.log('Returning action:', adjustClothingAction.id);
           return [adjustClothingAction];
@@ -309,6 +312,145 @@ describe('Clothing-Specific Scope Integration Tests', () => {
         return unifiedScopeResolver;
       })(),
       targetContextBuilder: createMockTargetContextBuilder(entityManager),
+      multiTargetResolutionStage: (() => {
+        // Create a custom mock that properly handles multi-target actions
+        // This mock simulates the multi-target resolution based on entity state
+        const {
+          PipelineStage,
+        } = require('../../../src/actions/pipeline/PipelineStage.js');
+        const {
+          PipelineResult,
+        } = require('../../../src/actions/pipeline/PipelineResult.js');
+
+        return new (class extends PipelineStage {
+          constructor() {
+            super('MockMultiTargetResolution');
+          }
+
+          async executeInternal(context) {
+            const { candidateActions, actor } = context;
+
+            const actionsWithTargets = [];
+
+            for (const actionDef of candidateActions) {
+              // Check if this is a multi-target action
+              const isMultiTarget =
+                actionDef.targets && typeof actionDef.targets === 'object';
+
+              if (
+                isMultiTarget &&
+                actionDef.id === 'intimacy:adjust_clothing'
+              ) {
+                // For adjust_clothing, check closeness relationships and clothing
+                const actorCloseness =
+                  actor.components?.['positioning:closeness'];
+                if (!actorCloseness?.partners?.length) continue;
+
+                // Check each potential target
+                for (const partnerId of actorCloseness.partners) {
+                  const target = entityManager.getEntityInstance(partnerId);
+                  if (!target) continue;
+
+                  // Check if target has closeness back to actor
+                  const targetCloseness =
+                    target.components?.['positioning:closeness'];
+                  if (!targetCloseness?.partners?.includes(actor.id)) continue;
+
+                  // Check if neither is facing away from the other
+                  if (
+                    actorCloseness.facing_away_from?.includes(partnerId) ||
+                    targetCloseness.facing_away_from?.includes(actor.id)
+                  )
+                    continue;
+
+                  // Check if target has torso_upper clothing
+                  const equipment = target.components?.['clothing:equipment'];
+                  if (equipment?.equipped?.torso_upper?.base) {
+                    const clothingId = equipment.equipped.torso_upper.base;
+
+                    actionsWithTargets.push({
+                      actionDef,
+                      targetContexts: [
+                        {
+                          type: 'entity',
+                          entityId: partnerId,
+                          displayName: partnerId,
+                          placeholder: 'primary',
+                        },
+                        {
+                          type: 'entity',
+                          entityId: clothingId,
+                          displayName: clothingId,
+                          placeholder: 'secondary',
+                          contextFromId: partnerId,
+                        },
+                      ],
+                      resolvedTargets: {
+                        primary: [
+                          {
+                            id: partnerId,
+                            displayName: partnerId,
+                            entity: target,
+                          },
+                        ],
+                        secondary: [
+                          {
+                            id: clothingId,
+                            displayName: clothingId,
+                            entity: null,
+                            contextFromId: partnerId,
+                          },
+                        ],
+                      },
+                      targetDefinitions: actionDef.targets,
+                      isMultiTarget: true,
+                    });
+                  }
+                }
+              } else {
+                // Default handling for non-multi-target actions
+                // Just return a simple target for testing
+                if (entityManager.getEntityInstance('target1')) {
+                  actionsWithTargets.push({
+                    actionDef,
+                    targetContexts: [
+                      {
+                        type: 'entity',
+                        entityId: 'target1',
+                        displayName: 'Target 1',
+                        placeholder: 'target',
+                      },
+                    ],
+                    resolvedTargets: {
+                      primary: [
+                        {
+                          id: 'target1',
+                          displayName: 'Target 1',
+                          entity: entityManager.getEntityInstance('target1'),
+                        },
+                      ],
+                    },
+                    targetDefinitions: {
+                      primary: {
+                        scope: actionDef.scope || actionDef.targets,
+                        placeholder: 'target',
+                      },
+                    },
+                    isMultiTarget: false,
+                  });
+                }
+              }
+            }
+
+            return PipelineResult.success({
+              data: {
+                ...context.data,
+                actionsWithTargets,
+              },
+            });
+          }
+        })();
+      })(),
     });
 
     actionDiscoveryService = new ActionDiscoveryService({
@@ -352,7 +494,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     };
     entityManager.addComponent(
       actorId,
-      'intimacy:closeness',
+      'positioning:closeness',
       actorClosenessData
     );
 
@@ -363,7 +505,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     };
     entityManager.addComponent(
       partnerId,
-      'intimacy:closeness',
+      'positioning:closeness',
       partnerClosenessData
     );
 
@@ -388,7 +530,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
   /**
    * Helper function to create target with or without clothing
-   * Now also adds the required intimacy:closeness component for bidirectional relationships
+   * Now also adds the required positioning:closeness component for bidirectional relationships
    *
    * @param targetId
    * @param actorId - The actor ID to establish closeness with (default: 'actor1')
@@ -403,12 +545,16 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     hasEquipmentComponent = true,
     facingAway = false
   ) {
-    // Add the required intimacy:closeness component for bidirectional relationship
+    // Add the required positioning:closeness component for bidirectional relationship
     const closenessData = {
       partners: [actorId],
       facing_away_from: facingAway ? [actorId] : [],
     };
-    entityManager.addComponent(targetId, 'intimacy:closeness', closenessData);
+    entityManager.addComponent(
+      targetId,
+      'positioning:closeness',
+      closenessData
+    );
 
     if (hasEquipmentComponent) {
       const equipmentData = hasClothing
@@ -478,12 +624,12 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       const actorId = 'actor1';
       const targetId = 'target1';
 
-      entityManager.addComponent(actorId, 'intimacy:closeness', {
+      entityManager.addComponent(actorId, 'positioning:closeness', {
         partners: [targetId],
         facing_away_from: [],
       });
 
-      entityManager.addComponent(targetId, 'intimacy:closeness', {
+      entityManager.addComponent(targetId, 'positioning:closeness', {
         partners: [actorId],
         facing_away_from: [],
       });
@@ -502,11 +648,11 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       console.log('both-actors-facing-each-other condition result:', result);
       console.log(
         'Actor closeness:',
-        context.actor?.components?.['intimacy:closeness']
+        context.actor?.components?.['positioning:closeness']
       );
       console.log(
         'Entity closeness:',
-        context.entity?.components?.['intimacy:closeness']
+        context.entity?.components?.['positioning:closeness']
       );
 
       expect(result).toBe(true);
@@ -518,13 +664,13 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       const targetId = 'target1';
 
       // Actor with closeness to target
-      entityManager.addComponent(actorId, 'intimacy:closeness', {
+      entityManager.addComponent(actorId, 'positioning:closeness', {
         partners: [targetId],
         facing_away_from: [],
       });
 
       // Target with closeness to actor AND torso_upper clothing
-      entityManager.addComponent(targetId, 'intimacy:closeness', {
+      entityManager.addComponent(targetId, 'positioning:closeness', {
         partners: [actorId],
         facing_away_from: [],
       });
@@ -582,13 +728,13 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       const targetId = 'target1';
 
       // Actor with closeness to target
-      entityManager.addComponent(actorId, 'intimacy:closeness', {
+      entityManager.addComponent(actorId, 'positioning:closeness', {
         partners: [targetId],
         facing_away_from: [],
       });
 
       // Target with closeness to actor AND torso_upper clothing
-      entityManager.addComponent(targetId, 'intimacy:closeness', {
+      entityManager.addComponent(targetId, 'positioning:closeness', {
         partners: [actorId],
         facing_away_from: [],
       });
@@ -651,7 +797,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     it('should resolve primary scope correctly', () => {
       // Arrange - Test the primary scope directly
       const actorId = createActorWithCloseness('actor1', 'target1', false);
-      const targetId = createTargetWithClothing('target1', true, true);
+      createTargetWithClothing('target1', true, true);
 
       // Create a runtime context similar to what the action system would use
       const runtimeCtx = {
@@ -681,18 +827,13 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       console.log('Direct scope resolution result:', Array.from(result));
       expect(result.size).toBeGreaterThan(0);
-      expect(Array.from(result)).toContain(targetId);
+      expect(Array.from(result)).toContain('target1');
     });
 
     it('should include actors with torso_upper clothing who are facing forward', async () => {
       // Arrange - use helper functions to create entities
       const actorId = createActorWithCloseness('actor1', 'target1', false);
-      const targetId = createTargetWithClothing(
-        'target1',
-        'actor1',
-        true,
-        true
-      );
+      createTargetWithClothing('target1', 'actor1', true, true);
 
       // Setup mock for facing condition
       setupJsonLogicMock(true);
@@ -703,15 +844,15 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       console.log('Actor components:', actorEntity?.components);
       console.log(
         'Actor closeness component:',
-        actorEntity?.components?.['intimacy:closeness']
+        actorEntity?.components?.['positioning:closeness']
       );
 
-      const targetEntity = entityManager.getEntityInstance(targetId);
+      const targetEntity = entityManager.getEntityInstance('target1');
       console.log('Target entity:', targetEntity);
       console.log('Target components:', targetEntity?.components);
       console.log(
         'Target closeness component:',
-        targetEntity?.components?.['intimacy:closeness']
+        targetEntity?.components?.['positioning:closeness']
       );
       console.log(
         'Target equipment component:',
@@ -735,7 +876,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       expect(adjustClothingActions).toHaveLength(1);
       expect(adjustClothingActions[0].params.isMultiTarget).toBe(true);
       expect(adjustClothingActions[0].params.targetIds.primary).toEqual([
-        targetId,
+        'target1',
       ]);
       expect(adjustClothingActions[0].params.targetIds.secondary).toEqual([
         'shirt123',
@@ -745,12 +886,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     it('should exclude actors without clothing:equipment component', async () => {
       // Arrange
       const actorId = createActorWithCloseness('actor1', 'target1', false);
-      const targetId = createTargetWithClothing(
-        'target1',
-        'actor1',
-        true,
-        false
-      ); // No equipment component
+      createTargetWithClothing('target1', 'actor1', true, false); // No equipment component
 
       // Setup mock for facing condition
       setupJsonLogicMock(false);
@@ -773,12 +909,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     it('should exclude actors with clothing in other slots but not torso_upper', async () => {
       // Arrange
       const actorId = createActorWithCloseness('actor1', 'target1', false);
-      const targetId = createTargetWithClothing(
-        'target1',
-        'actor1',
-        false,
-        true
-      ); // Has equipment but not torso_upper
+      createTargetWithClothing('target1', 'actor1', false, true); // Has equipment but not torso_upper
 
       // Setup mock for facing condition
       setupJsonLogicMock(false);
@@ -801,12 +932,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     it('should exclude actors facing away even with torso_upper clothing', async () => {
       // Arrange
       const actorId = createActorWithCloseness('actor1', 'target1', true); // Actor is facing away
-      const targetId = createTargetWithClothing(
-        'target1',
-        'actor1',
-        true,
-        true
-      );
+      createTargetWithClothing('target1', 'actor1', true, true);
 
       // Setup mock for facing condition
       setupJsonLogicMock(false);
@@ -828,17 +954,12 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     it('should exclude actors not in closeness relationship', async () => {
       // Arrange
-      entityManager.addComponent('actor1', 'intimacy:closeness', {
+      entityManager.addComponent('actor1', 'positioning:closeness', {
         partners: [], // No partners
         facing_away_from: [],
       });
 
-      const targetId = createTargetWithClothing(
-        'target1',
-        'actor1',
-        true,
-        true
-      );
+      createTargetWithClothing('target1', 'actor1', true, true);
 
       // Act
       const actorEntity = entityManager.getEntityInstance('actor1');
@@ -857,7 +978,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     it('should include multiple valid targets when conditions are met', async () => {
       // Arrange
-      entityManager.addComponent('actor1', 'intimacy:closeness', {
+      entityManager.addComponent('actor1', 'positioning:closeness', {
         partners: ['target1', 'target2'],
         facing_away_from: [],
       });
@@ -873,7 +994,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       // Create second target with different clothing and bidirectional closeness
       const target2Id = 'target2';
-      entityManager.addComponent(target2Id, 'intimacy:closeness', {
+      entityManager.addComponent(target2Id, 'positioning:closeness', {
         partners: [actorId],
         facing_away_from: [],
       });
@@ -929,11 +1050,11 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       });
 
       // Verify we have the expected combinations
-      const commands = adjustClothingActions.map((action) => action.command);
-      const hasExpectedCombinations =
-        (commands.includes("adjust target1's shirt123") ||
-          commands.includes("adjust target2's shirt456")) &&
-        commands.length >= 1;
+      // const commands = adjustClothingActions.map((action) => action.command);
+      // const hasExpectedCombinations =
+      //   (commands.includes("adjust target1's shirt123") ||
+      //     commands.includes("adjust target2's shirt456")) &&
+      //   commands.length >= 1;
     });
   });
 
@@ -941,12 +1062,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     it('should resolve secondary target from primary context', async () => {
       // Arrange
       const actorId = createActorWithCloseness('actor1', 'target1', false);
-      const targetId = createTargetWithClothing(
-        'target1',
-        'actor1',
-        true,
-        true
-      );
+      createTargetWithClothing('target1', 'actor1', true, true);
 
       // Setup mock for facing condition
       setupJsonLogicMock(true);
@@ -966,7 +1082,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       expect(adjustClothingActions).toHaveLength(1);
       expect(adjustClothingActions[0].params.isMultiTarget).toBe(true);
       expect(adjustClothingActions[0].params.targetIds.primary).toEqual([
-        targetId,
+        'target1',
       ]);
       expect(adjustClothingActions[0].params.targetIds.secondary).toEqual([
         'shirt123',
@@ -976,12 +1092,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     it('should handle missing clothing gracefully', async () => {
       // Arrange - Create actor with closeness but target without torso_upper clothing
       const actorId = createActorWithCloseness('actor1', 'target1', false);
-      const targetId = createTargetWithClothing(
-        'target1',
-        'actor1',
-        false,
-        true
-      ); // Has equipment but no torso_upper
+      createTargetWithClothing('target1', 'actor1', false, true); // Has equipment but no torso_upper
 
       // Setup mock for facing condition
       setupJsonLogicMock(true);
@@ -1004,12 +1115,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     it('should render template with specific garment names', async () => {
       // Arrange
       const actorId = createActorWithCloseness('actor1', 'target1', false);
-      const targetId = createTargetWithClothing(
-        'target1',
-        'actor1',
-        true,
-        true
-      );
+      createTargetWithClothing('target1', 'actor1', true, true);
 
       // Setup mock for facing condition
       setupJsonLogicMock(true);

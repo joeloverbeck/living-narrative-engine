@@ -30,6 +30,7 @@ import {
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
+import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
 import fs from 'fs';
 import path from 'path';
@@ -93,7 +94,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         not: {
           in: [
             { var: 'actor.id' },
-            { var: 'entity.components.intimacy:closeness.facing_away_from' },
+            { var: 'entity.components.positioning:closeness.facing_away_from' },
           ],
         },
       },
@@ -160,6 +161,17 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         unsubscribe: jest.fn(),
       },
     });
+    const multiTargetResolutionStage = createMultiTargetResolutionStage({
+      entityManager,
+      logger,
+      unifiedScopeResolver: createMockUnifiedScopeResolver({
+        scopeRegistry,
+        entityManager,
+        logger,
+      }),
+      targetResolver: targetResolutionService,
+    });
+
     const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
@@ -182,6 +194,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         logger,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
+      multiTargetResolutionStage,
     });
 
     actionDiscoveryService = new ActionDiscoveryService({
@@ -207,7 +220,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'intimacy:closeness': {
+            'positioning:closeness': {
               partners: ['target1'],
               facing_away_from: [],
             },
@@ -216,7 +229,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'intimacy:closeness': {
+            'positioning:closeness': {
               partners: ['actor1'],
               facing_away_from: [],
             },
@@ -382,7 +395,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'intimacy:closeness': {
+            'positioning:closeness': {
               partners: ['target1'],
               facing_away_from: [],
             },
@@ -391,7 +404,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'intimacy:closeness': {
+            'positioning:closeness': {
               partners: ['actor1'],
               facing_away_from: ['actor1'], // Facing away from actor
             },
@@ -470,7 +483,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         {
           id: 'actor1',
           components: {
-            'intimacy:closeness': {
+            'positioning:closeness': {
               partners: ['target1'],
               facing_away_from: [],
             },
@@ -479,7 +492,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
-            'intimacy:closeness': {
+            'positioning:closeness': {
               partners: ['actor1'],
               facing_away_from: [],
             },

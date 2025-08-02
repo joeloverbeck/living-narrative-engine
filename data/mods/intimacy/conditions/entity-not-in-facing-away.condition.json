@@ -9,7 +9,7 @@
           "var": "entity.id"
         },
         {
-          "var": "actor.components.intimacy:facing_away.facing_away_from"
+          "var": "actor.components.positioning:facing_away.facing_away_from"
         }
       ]
     }

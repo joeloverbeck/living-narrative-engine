@@ -141,6 +141,12 @@ export function registerCommandAndAction(container) {
   // --- Multi-Target Resolution Stage ---
   registrar.singletonFactory(tokens.IMultiTargetResolutionStage, (c) => {
     return new MultiTargetResolutionStage({
+      targetDependencyResolver: c.resolve(tokens.ITargetDependencyResolver),
+      legacyTargetCompatibilityLayer: c.resolve(
+        tokens.ILegacyTargetCompatibilityLayer
+      ),
+      scopeContextBuilder: c.resolve(tokens.IScopeContextBuilder),
+      targetDisplayNameResolver: c.resolve(tokens.ITargetDisplayNameResolver),
       unifiedScopeResolver: c.resolve(tokens.IUnifiedScopeResolver),
       entityManager: c.resolve(tokens.IEntityManager),
       targetResolver: c.resolve(tokens.ITargetResolutionService),
@@ -245,6 +251,7 @@ export function registerCommandAndAction(container) {
       logger: c.resolve(tokens.ILogger),
       unifiedScopeResolver: c.resolve(tokens.IUnifiedScopeResolver),
       targetContextBuilder: c.resolve(tokens.ITargetContextBuilder),
+      multiTargetResolutionStage: c.resolve(tokens.IMultiTargetResolutionStage),
     });
   });
   logger.debug(

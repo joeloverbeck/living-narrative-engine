@@ -18,7 +18,7 @@
   },
   "template": "adjust {primary}'s {secondary}",
   "required_components": {
-    "actor": ["intimacy:closeness"]
+    "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
     "actor": ["intimacy:kissing"]

@@ -111,7 +111,7 @@ describe('intimacy:massage_shoulders action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['beth'] },
+          'positioning:closeness': { partners: ['beth'] },
         },
       },
       {
@@ -119,7 +119,7 @@ describe('intimacy:massage_shoulders action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Beth' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['alice'] },
+          'positioning:closeness': { partners: ['alice'] },
           'anatomy:body': {
             body: {
               root: 'torso1',
@@ -226,7 +226,7 @@ describe('intimacy:massage_shoulders action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: [] },
+          'positioning:closeness': { partners: [] },
         },
       },
     ]);
@@ -262,7 +262,7 @@ describe('intimacy:massage_shoulders action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['carl'] },
+          'positioning:closeness': { partners: ['carl'] },
         },
       },
       {
@@ -270,7 +270,7 @@ describe('intimacy:massage_shoulders action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Carl' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'intimacy:closeness': { partners: ['alice'] },
+          'positioning:closeness': { partners: ['alice'] },
           'anatomy:body': {
             body: {
               root: 'torso2',

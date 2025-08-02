@@ -11,7 +11,7 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import { MultiTargetResolutionStage } from '../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
+import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import { ActionResult } from '../../../../src/actions/core/actionResult.js';
 
 describe('Kneel Before Action Resolution', () => {
@@ -20,7 +20,6 @@ describe('Kneel Before Action Resolution', () => {
   let multiTargetStage;
   let mockUnifiedScopeResolver;
   let mockTargetResolver;
-  let mockTargetContextBuilder;
 
   beforeEach(() => {
     // Setup logger
@@ -37,12 +36,6 @@ describe('Kneel Before Action Resolution', () => {
       getEntity: jest.fn(),
     };
 
-    // Mock target context builder
-    mockTargetContextBuilder = {
-      buildBaseContext: jest.fn(),
-      buildDependentContext: jest.fn(),
-    };
-
     // Mock unified scope resolver
     mockUnifiedScopeResolver = {
       resolve: jest.fn(),
@@ -53,13 +46,12 @@ describe('Kneel Before Action Resolution', () => {
       resolveTargets: jest.fn(),
     };
 
-    // Create multi-target stage
-    multiTargetStage = new MultiTargetResolutionStage({
-      unifiedScopeResolver: mockUnifiedScopeResolver,
+    // Create multi-target stage using test utility
+    multiTargetStage = createMultiTargetResolutionStage({
       entityManager: mockEntityManager,
-      targetResolver: mockTargetResolver,
-      targetContextBuilder: mockTargetContextBuilder,
       logger: mockLogger,
+      unifiedScopeResolver: mockUnifiedScopeResolver,
+      targetResolver: mockTargetResolver,
     });
   });
 
@@ -105,11 +97,7 @@ describe('Kneel Before Action Resolution', () => {
       data: {},
     };
 
-    // Mock target context builder to return a proper context
-    mockTargetContextBuilder.buildBaseContext.mockReturnValue({
-      actor: { id: mockActorEntity.id, components: {} },
-      location: { id: 'p_erotica:outside_tables_coffee_shop_instance' },
-    });
+    // The target context builder is now handled by the test utility
 
     // Mock unified scope resolver to succeed now that the fix is applied
     mockUnifiedScopeResolver.resolve.mockImplementation(
@@ -124,7 +112,21 @@ describe('Kneel Before Action Resolution', () => {
     );
 
     // Mock entity manager to return target entity
+    const mockLocationEntity = {
+      id: 'p_erotica:outside_tables_coffee_shop_instance',
+      getComponentData: jest.fn(),
+      getAllComponents: jest.fn(() => ({
+        'core:location': { name: 'Outside Tables' },
+      })),
+    };
+
     mockEntityManager.getEntityInstance.mockImplementation((id) => {
+      if (id === 'p_erotica:iker_aguirre_instance') {
+        return mockActorEntity;
+      }
+      if (id === 'p_erotica:outside_tables_coffee_shop_instance') {
+        return mockLocationEntity;
+      }
       if (id === 'p_erotica:amaia_castillo_instance') {
         return {
           id: 'p_erotica:amaia_castillo_instance',
@@ -135,6 +137,12 @@ describe('Kneel Before Action Resolution', () => {
     });
 
     mockEntityManager.getEntity.mockImplementation((id) => {
+      if (id === 'p_erotica:iker_aguirre_instance') {
+        return mockActorEntity;
+      }
+      if (id === 'p_erotica:outside_tables_coffee_shop_instance') {
+        return mockLocationEntity;
+      }
       if (id === 'p_erotica:amaia_castillo_instance') {
         return {
           id: 'p_erotica:amaia_castillo_instance',

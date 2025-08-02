@@ -486,10 +486,18 @@ describe('BaseCharacterBuilderController', () => {
       );
     });
 
-    it('should throw error with ticket reference when destroy() is called', () => {
+    it('should successfully destroy uninitialized controller', () => {
       expect(() => {
         controller.destroy();
-      }).toThrow('destroy() will be implemented in ticket #8');
+      }).not.toThrow();
+
+      expect(controller.isDestroyed).toBe(true);
+      expect(controller.isDestroying).toBe(false);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /TestController: Destruction completed in \d+(\.\d+)?ms/
+        )
+      );
     });
   });
 
@@ -2420,10 +2428,10 @@ describe('BaseCharacterBuilderController', () => {
       it('should call _removeAllEventListeners in destroy', () => {
         jest.spyOn(controller, '_removeAllEventListeners');
 
-        expect(() => controller.destroy()).toThrow(
-          'destroy() will be implemented in ticket #8'
-        );
+        controller.destroy();
+
         expect(controller._removeAllEventListeners).toHaveBeenCalled();
+        expect(controller.isDestroyed).toBe(true);
       });
     });
 
@@ -2832,6 +2840,725 @@ describe('BaseCharacterBuilderController', () => {
         expect(
           controller._isRetryableError(new Error('validation error'))
         ).toBe(false);
+      });
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Resource Cleanup Lifecycle Tests (Added in ticket #8)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  describe('Resource Cleanup Lifecycle', () => {
+    let controller;
+
+    beforeEach(() => {
+      controller = new TestController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+    });
+
+    describe('Basic Destruction', () => {
+      it('should destroy uninitialized controller', () => {
+        controller.destroy();
+
+        expect(controller.isDestroyed).toBe(true);
+        expect(controller.isDestroying).toBe(false);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          'TestController: Starting destruction'
+        );
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          expect.stringMatching(
+            /TestController: Destruction completed in \d+(\.\d+)?ms/
+          )
+        );
+      });
+
+      it('should destroy initialized controller', async () => {
+        await controller.initialize();
+        controller.destroy();
+
+        expect(controller.isDestroyed).toBe(true);
+        expect(controller.isDestroying).toBe(false);
+      });
+
+      it('should handle multiple destroy calls gracefully', () => {
+        controller.destroy();
+
+        // Clear previous logs
+        mockLogger.warn.mockClear();
+
+        // Second destroy call
+        controller.destroy();
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'TestController: Already destroyed, skipping destruction'
+        );
+      });
+
+      it('should dispatch CONTROLLER_DESTROYED event', () => {
+        controller.destroy();
+
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'CONTROLLER_DESTROYED',
+          expect.objectContaining({
+            controllerName: 'TestController',
+            destructionTime: expect.any(Number),
+            timestamp: expect.any(String),
+          })
+        );
+      });
+    });
+
+    describe('Lifecycle Hooks', () => {
+      it('should call lifecycle hooks in correct order', () => {
+        const hooksCalled = [];
+
+        class HookTestController extends BaseCharacterBuilderController {
+          _cacheElements() {}
+          _setupEventListeners() {}
+
+          _preDestroy() {
+            hooksCalled.push('preDestroy');
+          }
+
+          _postDestroy() {
+            hooksCalled.push('postDestroy');
+          }
+
+          _cancelCustomOperations() {
+            hooksCalled.push('cancelCustomOperations');
+          }
+
+          _cleanupCoreServices() {
+            hooksCalled.push('cleanupCoreServices');
+          }
+
+          _cleanupAdditionalServices() {
+            hooksCalled.push('cleanupAdditionalServices');
+          }
+
+          _clearCachedData() {
+            hooksCalled.push('clearCachedData');
+          }
+        }
+
+        const hookController = new HookTestController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+        });
+
+        hookController.destroy();
+
+        // Verify hooks were called in expected order
+        expect(hooksCalled).toEqual([
+          'preDestroy',
+          'cancelCustomOperations',
+          'cleanupAdditionalServices',
+          'cleanupCoreServices',
+          'clearCachedData',
+          'postDestroy',
+        ]);
+      });
+    });
+
+    describe('Pending Operations Management', () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+      });
+
+      afterEach(() => {
+        jest.useRealTimers();
+      });
+
+      it('should track and cancel timers', () => {
+        const callback1 = jest.fn();
+        const callback2 = jest.fn();
+
+        const timer1 = controller._setTimeout(callback1, 1000);
+        const timer2 = controller._setTimeout(callback2, 2000);
+
+        expect(timer1).toBeDefined();
+        expect(timer2).toBeDefined();
+
+        controller.destroy();
+
+        // Advance time - callbacks should not be called
+        jest.advanceTimersByTime(3000);
+
+        expect(callback1).not.toHaveBeenCalled();
+        expect(callback2).not.toHaveBeenCalled();
+      });
+
+      it('should track and cancel intervals', () => {
+        const callback = jest.fn();
+
+        const intervalId = controller._setInterval(callback, 100);
+        expect(intervalId).toBeDefined();
+
+        // Advance time to trigger interval
+        jest.advanceTimersByTime(250);
+        expect(callback).toHaveBeenCalledTimes(2);
+
+        controller.destroy();
+
+        // Advance more time - callback should not be called again
+        callback.mockClear();
+        jest.advanceTimersByTime(500);
+        expect(callback).not.toHaveBeenCalled();
+      });
+
+      it('should track and cancel animation frames', () => {
+        const callback = jest.fn();
+
+        const frameId = controller._requestAnimationFrame(callback);
+        expect(frameId).toBeDefined();
+
+        controller.destroy();
+
+        // Animation frame should be cancelled
+        expect(callback).not.toHaveBeenCalled();
+      });
+
+      it('should handle manual timer clearing', () => {
+        const callback = jest.fn();
+
+        const timerId = controller._setTimeout(callback, 1000);
+        controller._clearTimeout(timerId);
+
+        jest.advanceTimersByTime(1500);
+        expect(callback).not.toHaveBeenCalled();
+
+        // Should not throw when destroying
+        expect(() => controller.destroy()).not.toThrow();
+      });
+
+      it('should handle manual interval clearing', () => {
+        const callback = jest.fn();
+
+        const intervalId = controller._setInterval(callback, 100);
+        controller._clearInterval(intervalId);
+
+        jest.advanceTimersByTime(500);
+        expect(callback).not.toHaveBeenCalled();
+
+        // Should not throw when destroying
+        expect(() => controller.destroy()).not.toThrow();
+      });
+
+      it('should handle manual animation frame cancellation', () => {
+        const callback = jest.fn();
+
+        const frameId = controller._requestAnimationFrame(callback);
+        controller._cancelAnimationFrame(frameId);
+
+        expect(callback).not.toHaveBeenCalled();
+
+        // Should not throw when destroying
+        expect(() => controller.destroy()).not.toThrow();
+      });
+    });
+
+    describe('Service Cleanup', () => {
+      it('should cleanup additional services', () => {
+        let serviceCleanedUp = false;
+
+        class ServiceTestController extends BaseCharacterBuilderController {
+          _cacheElements() {}
+          _setupEventListeners() {}
+
+          _cleanupAdditionalServices() {
+            serviceCleanedUp = true;
+          }
+        }
+
+        const serviceController = new ServiceTestController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+          customService: { method: jest.fn() },
+        });
+
+        serviceController.destroy();
+
+        expect(serviceCleanedUp).toBe(true);
+      });
+
+      it('should clear additional services references', () => {
+        const customService = { method: jest.fn() };
+
+        const serviceController = new TestController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+          customService,
+        });
+
+        expect(serviceController.additionalServices.customService).toBe(
+          customService
+        );
+
+        serviceController.destroy();
+
+        expect(Object.keys(serviceController.additionalServices)).toHaveLength(
+          0
+        );
+      });
+    });
+
+    describe('Cleanup Task Registration', () => {
+      it('should register and execute cleanup tasks', () => {
+        const task1 = jest.fn();
+        const task2 = jest.fn();
+        const task3 = jest.fn();
+
+        controller._registerCleanupTask(task1, 'Task 1');
+        controller._registerCleanupTask(task2, 'Task 2');
+        controller._registerCleanupTask(task3, 'Task 3');
+
+        controller.destroy();
+
+        // Tasks should be executed in LIFO order
+        expect(task3).toHaveBeenCalled();
+        expect(task2).toHaveBeenCalled();
+        expect(task1).toHaveBeenCalled();
+
+        // Verify order
+        const task3Order = task3.mock.invocationCallOrder[0];
+        const task2Order = task2.mock.invocationCallOrder[0];
+        const task1Order = task1.mock.invocationCallOrder[0];
+
+        expect(task3Order).toBeLessThan(task2Order);
+        expect(task2Order).toBeLessThan(task1Order);
+      });
+
+      it('should handle cleanup task errors gracefully', () => {
+        const task1 = jest.fn();
+        const task2 = jest.fn(() => {
+          throw new Error('Cleanup task error');
+        });
+        const task3 = jest.fn();
+
+        controller._registerCleanupTask(task1, 'Task 1');
+        controller._registerCleanupTask(task2, 'Task 2 (will fail)');
+        controller._registerCleanupTask(task3, 'Task 3');
+
+        controller.destroy();
+
+        // All tasks should be attempted despite error
+        expect(task1).toHaveBeenCalled();
+        expect(task2).toHaveBeenCalled();
+        expect(task3).toHaveBeenCalled();
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'TestController: Cleanup task failed: Task 2 (will fail)',
+          expect.any(Error)
+        );
+      });
+
+      it('should throw TypeError for non-function cleanup tasks', () => {
+        expect(() => {
+          controller._registerCleanupTask('not a function');
+        }).toThrow(TypeError);
+
+        expect(() => {
+          controller._registerCleanupTask('not a function');
+        }).toThrow('Cleanup task must be a function');
+      });
+    });
+
+    describe('Destruction Guards', () => {
+      it('should provide isDestroyed getter', () => {
+        expect(controller.isDestroyed).toBe(false);
+
+        controller.destroy();
+
+        expect(controller.isDestroyed).toBe(true);
+      });
+
+      it('should provide isDestroying getter', () => {
+        let duringDestruction = false;
+
+        class DestroyingTestController extends BaseCharacterBuilderController {
+          _cacheElements() {}
+          _setupEventListeners() {}
+
+          _preDestroy() {
+            duringDestruction = this.isDestroying;
+          }
+        }
+
+        const destroyingController = new DestroyingTestController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+        });
+
+        expect(destroyingController.isDestroying).toBe(false);
+
+        destroyingController.destroy();
+
+        expect(duringDestruction).toBe(true);
+        expect(destroyingController.isDestroying).toBe(false);
+      });
+
+      it('should check destroyed state without throwing', () => {
+        expect(controller._checkDestroyed()).toBe(false);
+
+        controller.destroy();
+
+        expect(controller._checkDestroyed()).toBe(true);
+      });
+
+      it('should throw when operation provided to _checkDestroyed', () => {
+        controller.destroy();
+
+        expect(() => {
+          controller._checkDestroyed('perform operation');
+        }).toThrow(
+          'TestController: Cannot perform operation - controller is destroyed'
+        );
+      });
+
+      it('should wrap methods with destruction safety', () => {
+        const originalMethod = jest.fn(() => 'result');
+        const wrappedMethod = controller._makeDestructionSafe(
+          originalMethod,
+          'testMethod'
+        );
+
+        // Should work before destruction
+        expect(wrappedMethod()).toBe('result');
+        expect(originalMethod).toHaveBeenCalledTimes(1);
+
+        controller.destroy();
+
+        // Should throw after destruction
+        expect(() => wrappedMethod()).toThrow(
+          'TestController: Cannot call testMethod - controller is destroyed'
+        );
+        expect(originalMethod).toHaveBeenCalledTimes(1); // Not called again
+      });
+    });
+
+    describe('Event Cleanup', () => {
+      beforeEach(() => {
+        document.body.innerHTML = `
+          <button id="test-button">Test</button>
+          <input id="test-input" type="text" />
+        `;
+
+        controller._cacheElement('button', '#test-button');
+        controller._cacheElement('input', '#test-input');
+      });
+
+      afterEach(() => {
+        document.body.innerHTML = '';
+      });
+
+      it('should remove all DOM event listeners', () => {
+        const handler1 = jest.fn();
+        const handler2 = jest.fn();
+
+        controller._addEventListener('button', 'click', handler1);
+        controller._addEventListener('input', 'change', handler2);
+
+        controller.destroy();
+
+        // Events should not trigger after destruction
+        document.getElementById('test-button').click();
+        document
+          .getElementById('test-input')
+          .dispatchEvent(new Event('change'));
+
+        expect(handler1).not.toHaveBeenCalled();
+        expect(handler2).not.toHaveBeenCalled();
+      });
+
+      it('should remove all EventBus subscriptions', () => {
+        const unsubscribe1 = jest.fn();
+        const unsubscribe2 = jest.fn();
+
+        mockEventBus.subscribe
+          .mockReturnValueOnce(unsubscribe1)
+          .mockReturnValueOnce(unsubscribe2);
+
+        controller._subscribeToEvent('TEST_EVENT_1', jest.fn());
+        controller._subscribeToEvent('TEST_EVENT_2', jest.fn());
+
+        controller.destroy();
+
+        expect(unsubscribe1).toHaveBeenCalled();
+        expect(unsubscribe2).toHaveBeenCalled();
+      });
+    });
+
+    describe('Memory Leak Prevention', () => {
+      it('should clear UI state manager reference', () => {
+        // Initialize UI state manager
+        controller._initializeUIState();
+
+        controller.destroy();
+
+        expect(controller.currentState).toBe(null);
+      });
+
+      it('should clear element cache', () => {
+        document.body.innerHTML = '<div id="test-element">Test</div>';
+        controller._cacheElement('testElement', '#test-element');
+
+        expect(Object.keys(controller.elements)).toHaveLength(1);
+
+        controller.destroy();
+
+        expect(Object.keys(controller.elements)).toHaveLength(0);
+      });
+
+      it('should clear debounced and throttled handlers', () => {
+        const handler1 = jest.fn();
+        const handler2 = jest.fn();
+
+        document.body.innerHTML = `
+          <button id="btn1">Button 1</button>
+          <button id="btn2">Button 2</button>
+        `;
+
+        controller._cacheElement('btn1', '#btn1');
+        controller._cacheElement('btn2', '#btn2');
+
+        controller._addDebouncedListener('btn1', 'click', handler1, 100);
+        controller._addThrottledListener('btn2', 'click', handler2, 100);
+
+        controller.destroy();
+
+        // Handlers should be cleared and not callable
+        document.body.innerHTML = '';
+      });
+
+      it('should clear last error reference', () => {
+        const error = new Error('Test error');
+        controller._handleError(error);
+
+        expect(controller.lastError).toBeDefined();
+
+        controller.destroy();
+
+        expect(controller.lastError).toBe(null);
+      });
+    });
+
+    describe('Error Handling During Destruction', () => {
+      it('should continue destruction even if phases fail', () => {
+        class ErrorTestController extends BaseCharacterBuilderController {
+          _cacheElements() {}
+          _setupEventListeners() {}
+
+          _preDestroy() {
+            throw new Error('Pre-destroy error');
+          }
+
+          _cancelPendingOperations() {
+            throw new Error('Cancel operations error');
+          }
+        }
+
+        const errorController = new ErrorTestController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+        });
+
+        expect(() => errorController.destroy()).not.toThrow();
+
+        expect(errorController.isDestroyed).toBe(true);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Error in pre-destruction'),
+          expect.any(Error)
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Error in pending operations cancellation'),
+          expect.any(Error)
+        );
+      });
+
+      it('should handle EventBus dispatch errors gracefully', () => {
+        mockEventBus.dispatch.mockImplementation(() => {
+          throw new Error('EventBus error');
+        });
+
+        controller.destroy();
+
+        expect(controller.isDestroyed).toBe(true);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'TestController: Failed to dispatch destruction event',
+          expect.any(Error)
+        );
+      });
+
+      it('should mark as destroyed even on catastrophic failure', () => {
+        class CatastrophicController extends BaseCharacterBuilderController {
+          _cacheElements() {}
+          _setupEventListeners() {}
+
+          _executePhase() {
+            throw new Error('Catastrophic error');
+          }
+        }
+
+        const catastrophicController = new CatastrophicController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+        });
+
+        expect(() => catastrophicController.destroy()).toThrow(
+          'Catastrophic error'
+        );
+
+        // Should still be marked as destroyed
+        expect(catastrophicController.isDestroyed).toBe(true);
+        expect(catastrophicController.isDestroying).toBe(false);
+      });
+    });
+
+    describe('Destruction Flow', () => {
+      it('should execute destruction phases in correct sequence', () => {
+        const executionOrder = [];
+
+        class SequenceTestController extends BaseCharacterBuilderController {
+          _cacheElements() {}
+          _setupEventListeners() {}
+
+          _preDestroy() {
+            executionOrder.push('preDestroy');
+          }
+
+          _cancelPendingOperations() {
+            executionOrder.push('cancelPendingOperations');
+            super._cancelPendingOperations();
+          }
+
+          _removeAllEventListeners() {
+            executionOrder.push('removeAllEventListeners');
+            super._removeAllEventListeners();
+          }
+
+          _cleanupServices() {
+            executionOrder.push('cleanupServices');
+            super._cleanupServices();
+          }
+
+          _clearElementCache() {
+            executionOrder.push('clearElementCache');
+            super._clearElementCache();
+          }
+
+          _executeCleanupTasks() {
+            executionOrder.push('executeCleanupTasks');
+            super._executeCleanupTasks();
+          }
+
+          _clearReferences() {
+            executionOrder.push('clearReferences');
+            super._clearReferences();
+          }
+
+          _postDestroy() {
+            executionOrder.push('postDestroy');
+          }
+        }
+
+        const sequenceController = new SequenceTestController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+        });
+
+        sequenceController.destroy();
+
+        expect(executionOrder).toEqual([
+          'preDestroy',
+          'cancelPendingOperations',
+          'removeAllEventListeners',
+          'cleanupServices',
+          'clearElementCache',
+          'executeCleanupTasks',
+          'clearReferences',
+          'postDestroy',
+        ]);
+      });
+
+      it('should log destruction timing', () => {
+        controller.destroy();
+
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          'TestController: Starting destruction'
+        );
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          expect.stringMatching(
+            /TestController: Destruction completed in \d+(\.\d+)?ms/
+          )
+        );
+      });
+    });
+
+    describe('Custom Cleanup Operations', () => {
+      it('should call _cancelCustomOperations hook', () => {
+        let customOperationsCancelled = false;
+
+        class CustomOperationsController extends BaseCharacterBuilderController {
+          _cacheElements() {}
+          _setupEventListeners() {}
+
+          _cancelCustomOperations() {
+            customOperationsCancelled = true;
+          }
+        }
+
+        const customController = new CustomOperationsController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+        });
+
+        customController.destroy();
+
+        expect(customOperationsCancelled).toBe(true);
+      });
+
+      it('should call _clearCachedData hook', () => {
+        let cachedDataCleared = false;
+
+        class CacheController extends BaseCharacterBuilderController {
+          _cacheElements() {}
+          _setupEventListeners() {}
+
+          _clearCachedData() {
+            cachedDataCleared = true;
+          }
+        }
+
+        const cacheController = new CacheController({
+          logger: mockLogger,
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus: mockEventBus,
+          schemaValidator: mockSchemaValidator,
+        });
+
+        cacheController.destroy();
+
+        expect(cachedDataCleared).toBe(true);
       });
     });
   });

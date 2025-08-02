@@ -5,7 +5,7 @@
   "description": "Gently nuzzle your face into the target's neck in an intimate gesture.",
   "scope": "intimacy:close_actors_facing_each_other",
   "required_components": {
-    "actor": ["intimacy:closeness"]
+    "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
     "actor": ["intimacy:kissing"]
