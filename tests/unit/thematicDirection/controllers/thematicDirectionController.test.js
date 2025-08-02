@@ -202,12 +202,13 @@ describe('ThematicDirectionController', () => {
         throw new Error('generateThematicDirections was not called');
       }
 
-      const directionsList =
-        document.getElementById('directions-list') ||
-        document.getElementById('directions-results');
-      expect(directionsList.innerHTML).toContain('Epic Quest');
-      expect(directionsList.innerHTML).toContain('A journey of discovery');
-      expect(directionsList.innerHTML).toContain('adventure');
+      // The controller now uses directionsResults as the container
+      const directionsResults = document.getElementById('directions-results');
+
+      expect(directionsResults).toBeTruthy();
+      expect(directionsResults.innerHTML).toContain('Epic Quest');
+      expect(directionsResults.innerHTML).toContain('A journey of discovery');
+      expect(directionsResults.innerHTML).toContain('adventure');
     });
 
     it('should handle generation failure with retry', async () => {

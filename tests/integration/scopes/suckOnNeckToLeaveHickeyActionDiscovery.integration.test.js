@@ -41,8 +41,8 @@ import { ActionIndex } from '../../../src/actions/actionIndex.js';
 import suckOnNeckToLeaveHickeyAction from '../../../data/mods/intimacy/actions/suck_on_neck_to_leave_hickey.action.json';
 
 // Import required conditions
-import bothActorsFacingEachOther from '../../../data/mods/intimacy/conditions/both-actors-facing-each-other.condition.json';
-import actorIsBehindEntity from '../../../data/mods/intimacy/conditions/actor-is-behind-entity.condition.json';
+import bothActorsFacingEachOther from '../../../data/mods/positioning/conditions/both-actors-facing-each-other.condition.json';
+import actorIsBehindEntity from '../../../data/mods/positioning/conditions/actor-is-behind-entity.condition.json';
 
 // Unmock the real singleton to ensure the test and SUT use the same instance
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');

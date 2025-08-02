@@ -2,7 +2,7 @@
  * @file Integration tests for fondle_breasts action discovery with socket coverage
  * @description Tests that the actors_with_breasts_facing_each_other scope properly filters
  * actors based on breast socket coverage, facing direction, and closeness
- * 
+ *
  * NOTE: This test uses a mock MultiTargetResolutionStage that bypasses actual scope evaluation.
  * For tests that verify the scope evaluation with custom operators actually works, see
  * fondleBreastsScopeEvaluation.integration.test.js
@@ -93,7 +93,7 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
       fs.readFileSync(
         path.resolve(
           __dirname,
-          '../../../data/mods/intimacy/conditions/entity-not-in-facing-away.condition.json'
+          '../../../data/mods/positioning/conditions/entity-not-in-facing-away.condition.json'
         ),
         'utf8'
       )
@@ -367,7 +367,6 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
       expect(fondleBreastsActions[0].params.targetId).toBe('target1');
     });
 
-
     it('should discover action when no clothing equipment component exists', async () => {
       // Arrange - no clothing equipment component
       setupEntities({});
@@ -409,6 +408,5 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
       );
       expect(fondleBreastsActions).toHaveLength(1);
     });
-
   });
 });

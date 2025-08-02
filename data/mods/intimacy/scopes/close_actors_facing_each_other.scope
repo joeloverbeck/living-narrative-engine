@@ -1,5 +1,5 @@
 // Scope for actors in closeness who are facing each other
 // Used by actions that require face-to-face interaction
 intimacy:close_actors_facing_each_other := actor.components.positioning:closeness.partners[][{
-  "condition_ref": "intimacy:both-actors-facing-each-other"
+  "condition_ref": "positioning:both-actors-facing-each-other"
 }]

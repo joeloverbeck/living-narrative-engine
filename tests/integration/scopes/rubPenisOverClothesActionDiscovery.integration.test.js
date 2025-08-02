@@ -181,14 +181,14 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
     );
 
     // Store the condition
-    dataRegistry.store('conditions', 'intimacy:entity-not-in-facing-away', {
-      id: 'intimacy:entity-not-in-facing-away',
+    dataRegistry.store('conditions', 'positioning:entity-not-in-facing-away', {
+      id: 'positioning:entity-not-in-facing-away',
       logic: {
-        not: {
+        '!': {
           in: [
-            { var: 'entity.id' },
+            { var: 'actor.id' },
             {
-              var: 'actor.components.positioning:facing_away.facing_away_from',
+              var: 'entity.components.positioning:facing_away.facing_away_from',
             },
           ],
         },
@@ -498,7 +498,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
               partners: ['target1'],
             },
             'positioning:facing_away': {
-              facing_away_from: ['target1'], // Actor is facing away from target
+              facing_away_from: [],
             },
           },
         },
@@ -509,7 +509,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
               partners: ['actor1'],
             },
             'positioning:facing_away': {
-              facing_away_from: [],
+              facing_away_from: ['actor1'], // Target is facing away from actor
             },
             'anatomy:body': {
               body: {
@@ -588,6 +588,8 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['target1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
           },
@@ -597,6 +599,8 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['actor1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {

@@ -12,7 +12,7 @@ This comprehensive reference document details all descriptor components and clot
 
 ## Descriptor Components
 
-The descriptor system provides 14 components for describing physical attributes and characteristics. Each component has predefined values to ensure consistency across the game.
+The descriptor system provides 16 components for describing physical attributes and characteristics. Each component has predefined values to ensure consistency across the game.
 
 ### 1. Texture Component (`descriptors:texture`)
 
@@ -112,6 +112,20 @@ Describes the projection characteristics of a surface or object.
 
 - **Values**: `flat`, `bubbly`, `shelf`
 - **Default**: `flat`
+
+### 15. Body Hair Component (`descriptors:body_hair`)
+
+Describes the body hair characteristics.
+
+- **Values**: `hairless`, `sparse`, `light`, `moderate`, `hairy`, `very-hairy`
+- **Default**: `moderate`
+
+### 16. Facial Hair Component (`descriptors:facial_hair`)
+
+Describes facial hair characteristics.
+
+- **Values**: `clean-shaven`, `stubble`, `mustache`, `goatee`, `bearded`, `full-beard`, `mutton-chops`, `soul-patch`, `van-dyke`
+- **Default**: `clean-shaven`
 
 ---
 
@@ -312,7 +326,12 @@ Descriptors are added to body parts through the `properties` field in slot defin
 "slots": {
   "head": {
     "partType": "head",
-    "preferId": "anatomy:humanoid_head"
+    "preferId": "anatomy:humanoid_head",
+    "properties": {
+      "descriptors:facial_hair": {
+        "style": "bearded"
+      }
+    }
   },
   "left_eye": {
     "partType": "eye",
@@ -322,6 +341,14 @@ Descriptors are added to body parts through the `properties` field in slot defin
       },
       "descriptors:shape_eye": {
         "shape": "almond"
+      }
+    }
+  },
+  "torso": {
+    "partType": "torso",
+    "properties": {
+      "descriptors:body_hair": {
+        "density": "hairy"
       }
     }
   }
@@ -552,7 +579,7 @@ Here's a condensed example showing how descriptors and clothing work together:
 
 This reference provides a complete overview of:
 
-- All 14 descriptor components with their accurate enum values and defaults
+- All 16 descriptor components with their accurate enum values and defaults
 - The modular clothing system architecture and slot library pattern
 - All available clothing slots with blueprint-specific layer restrictions
 - Clothing entity structure and component system

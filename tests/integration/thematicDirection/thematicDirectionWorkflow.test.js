@@ -406,11 +406,19 @@ describe('Thematic Direction Workflow Integration', () => {
       );
 
       // Results should be rendered to the DOM
-      // The controller writes to directionsList via innerHTML, not directionsResults via appendChild
-      expect(mockElements.directionsList.innerHTML).toContain('direction-card');
-      expect(mockElements.directionsList.innerHTML).toContain('data-index="0"');
-      expect(mockElements.directionsList.innerHTML).toContain('data-index="1"');
-      expect(mockElements.directionsList.innerHTML).toContain('data-index="2"');
+      // The controller now writes to directionsResults via innerHTML
+      expect(mockElements.directionsResults.innerHTML).toContain(
+        'direction-card'
+      );
+      expect(mockElements.directionsResults.innerHTML).toContain(
+        'data-index="0"'
+      );
+      expect(mockElements.directionsResults.innerHTML).toContain(
+        'data-index="1"'
+      );
+      expect(mockElements.directionsResults.innerHTML).toContain(
+        'data-index="2"'
+      );
     });
 
     test('should handle database errors gracefully', async () => {

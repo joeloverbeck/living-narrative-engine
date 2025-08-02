@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:facial_hair",
+  "description": "Describes facial hair characteristics",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "style": {
+        "type": "string",
+        "description": "The facial hair style",
+        "enum": [
+          "clean-shaven",
+          "stubble",
+          "mustache",
+          "goatee",
+          "bearded",
+          "full-beard",
+          "mutton-chops",
+          "soul-patch",
+          "van-dyke"
+        ],
+        "default": "clean-shaven"
+      }
+    },
+    "required": ["style"],
+    "additionalProperties": false
+  }
+}

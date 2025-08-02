@@ -13,7 +13,6 @@ import {
 import { CharacterBuilderBootstrap } from '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { jest as jestGlobals } from '@jest/globals';
 
 // Mock dependencies
 jest.mock('../../../src/dependencyInjection/appContainer.js');
@@ -123,9 +122,9 @@ describe('CharacterBuilderBootstrap', () => {
     let time = 0;
     jest.spyOn(performance, 'now').mockImplementation(() => (time += 100));
 
-    // Mock ensureValidLogger
+    // Mock ensureValidLogger to return our test logger
     jest.doMock('../../../src/utils/loggerUtils.js', () => ({
-      ensureValidLogger: (logger) => logger,
+      ensureValidLogger: () => mockLogger,
     }));
   });
 
@@ -206,6 +205,65 @@ describe('CharacterBuilderBootstrap', () => {
       );
     });
 
+    it('should skip payload schema registration when already loaded from mods', async () => {
+      mockSchemaValidator.isSchemaLoaded.mockImplementation((schemaId) => {
+        return schemaId.includes('#payload');
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      await bootstrap.bootstrap(config);
+
+      // Should not call addSchema for payload schemas that are already loaded
+      const addSchemaCalls = mockSchemaValidator.addSchema.mock.calls;
+      const payloadSchemaCalls = addSchemaCalls.filter(call => 
+        call[1] && call[1].includes('#payload')
+      );
+      expect(payloadSchemaCalls).toHaveLength(0);
+    });
+
+    it('should successfully register events when payload schemas not pre-loaded', async () => {
+      mockSchemaValidator.isSchemaLoaded.mockReturnValue(false);
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      await bootstrap.bootstrap(config);
+
+      // Should register payload schemas and events successfully
+      expect(mockSchemaValidator.addSchema).toHaveBeenCalled();
+      expect(mockDataRegistry.setEventDefinition).toHaveBeenCalled();
+      
+      // Verify payload schemas were registered
+      const addSchemaCalls = mockSchemaValidator.addSchema.mock.calls;
+      const payloadSchemaCalls = addSchemaCalls.filter(call => 
+        call[1] && call[1].includes('#payload')
+      );
+      expect(payloadSchemaCalls.length).toBeGreaterThan(0);
+    });
+
+    it('should handle event registration errors gracefully', async () => {
+      mockSchemaValidator.addSchema.mockRejectedValueOnce(
+        new Error('Schema registration failed')
+      );
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      // Should not throw despite schema registration error
+      await expect(bootstrap.bootstrap(config)).resolves.toBeTruthy();
+
+      // Should still complete bootstrap successfully
+      expect(mockDataRegistry.setEventDefinition).toHaveBeenCalled();
+    });
+
     it('should execute lifecycle hooks', async () => {
       const hooks = {
         preContainer: jest.fn().mockResolvedValue(),
@@ -254,6 +312,90 @@ describe('CharacterBuilderBootstrap', () => {
       expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', ['core']);
     });
 
+    it('should handle missing ModsLoader gracefully', async () => {
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.ModsLoader) return null;
+        const services = {
+          [tokens.ILogger]: mockLogger,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        includeModLoading: true,
+      };
+
+      // Should not throw when ModsLoader is not available
+      await expect(bootstrap.bootstrap(config)).resolves.toBeTruthy();
+
+      // Verify it completed successfully despite missing ModsLoader
+      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ModsLoader);
+    });
+
+    it('should handle mod loading errors gracefully', async () => {
+      const mockModsLoader = {
+        loadMods: jest.fn().mockRejectedValue(new Error('Failed to load mods')),
+      };
+
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.ModsLoader) return mockModsLoader;
+        const services = {
+          [tokens.ILogger]: mockLogger,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        includeModLoading: true,
+      };
+
+      // Should not throw despite mod loading failure
+      await expect(bootstrap.bootstrap(config)).resolves.toBeTruthy();
+
+      // Verify it attempted to load mods
+      expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', ['core']);
+    });
+
+    it('should successfully load mods when ModsLoader is available', async () => {
+      const mockModsLoader = {
+        loadMods: jest.fn().mockResolvedValue(),
+      };
+
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.ModsLoader) return mockModsLoader;
+        const services = {
+          [tokens.ILogger]: mockLogger,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        includeModLoading: true,
+      };
+
+      await bootstrap.bootstrap(config);
+
+      expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', ['core']);
+    });
+
     it('should register custom services', async () => {
       const customService = { doSomething: jest.fn() };
       const config = {
@@ -270,6 +412,81 @@ describe('CharacterBuilderBootstrap', () => {
         'customService',
         customService
       );
+    });
+
+    it('should register multiple custom services successfully', async () => {
+      const customService1 = { method: jest.fn() };
+      const customService2 = { otherMethod: jest.fn() };
+      
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        services: {
+          customService1,
+          customService2,
+        },
+      };
+
+      await bootstrap.bootstrap(config);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        'customService1',
+        customService1
+      );
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        'customService2',
+        customService2
+      );
+    });
+
+    it('should handle service registration failures gracefully', async () => {
+      mockContainer.register.mockImplementation((token) => {
+        if (token === 'failingService') {
+          throw new Error('Service registration failed');
+        }
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        services: {
+          failingService: { method: jest.fn() },
+          workingService: { method: jest.fn() },
+        },
+      };
+
+      // Should not throw despite service registration failure
+      await expect(bootstrap.bootstrap(config)).resolves.toBeTruthy();
+
+      // Should have attempted to register both services
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        'failingService',
+        expect.any(Object)
+      );
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        'workingService',
+        expect.any(Object)
+      );
+    });
+
+    it('should skip service registration when no services provided', async () => {
+      const registerSpy = jest.spyOn(mockContainer, 'register');
+      registerSpy.mockClear(); // Clear any previous calls
+      
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        services: undefined, // Explicitly no services
+      };
+
+      await bootstrap.bootstrap(config);
+
+      // Should not call register for custom services section
+      // (Only calls would be from container setup, not from custom services)
+      const customServiceCalls = registerSpy.mock.calls.filter(call => 
+        typeof call[0] === 'string' && !call[0].toString().startsWith('Symbol')
+      );
+      expect(customServiceCalls).toHaveLength(0);
     });
 
     it('should setup error display', async () => {
@@ -385,6 +602,45 @@ describe('CharacterBuilderBootstrap', () => {
       expect(global.fetch).not.toHaveBeenCalled();
     });
 
+    it('should load custom schemas successfully', async () => {
+      mockSchemaValidator.isSchemaLoaded.mockReturnValue(false);
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        customSchemas: ['/data/schemas/custom.json'],
+      };
+
+      await bootstrap.bootstrap(config);
+
+      // Should successfully load schemas
+      expect(global.fetch).toHaveBeenCalledWith('/data/schemas/character-concept.schema.json');
+      expect(global.fetch).toHaveBeenCalledWith('/data/schemas/thematic-direction.schema.json');
+      expect(global.fetch).toHaveBeenCalledWith('/data/schemas/custom.json');
+      expect(mockSchemaValidator.addSchema).toHaveBeenCalled();
+    });
+
+    it('should handle mixed schema loading states', async () => {
+      // Mock different schemas having different loaded states
+      mockSchemaValidator.isSchemaLoaded.mockImplementation((schemaId) => {
+        return schemaId === 'schema://living-narrative-engine/character-concept.schema.json';
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        customSchemas: ['/data/schemas/custom.json'],
+      };
+
+      await bootstrap.bootstrap(config);
+
+      // Should fetch schemas that aren't already loaded
+      expect(global.fetch).toHaveBeenCalledWith('/data/schemas/thematic-direction.schema.json');
+      expect(global.fetch).toHaveBeenCalledWith('/data/schemas/custom.json');
+      // Should not fetch the already loaded schema
+      expect(global.fetch).not.toHaveBeenCalledWith('/data/schemas/character-concept.schema.json');
+    });
+
     it('should create error display element if not found', async () => {
       document.getElementById.mockReturnValue(null);
       const mockElement = {
@@ -487,6 +743,50 @@ describe('CharacterBuilderBootstrap', () => {
 
       await expect(bootstrap.bootstrap(config)).rejects.toThrow(
         'Hooks must be an object'
+      );
+    });
+
+    it('should return performance metrics during successful bootstrap', async () => {
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      const result = await bootstrap.bootstrap(config);
+
+      // Should return valid performance metrics
+      expect(result.bootstrapTime).toBeGreaterThan(0);
+      expect(result.controller).toBeInstanceOf(MockController);
+      expect(result.container).toBe(mockContainer);
+    });
+
+    it('should initialize controller successfully', async () => {
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      const result = await bootstrap.bootstrap(config);
+
+      // Should have called controller.initialize
+      expect(result.controller.initialize).toHaveBeenCalled();
+    });
+
+    it('should setup error display with custom configuration', async () => {
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        errorDisplay: {
+          elementId: 'custom-error-display',
+        },
+      };
+
+      await bootstrap.bootstrap(config);
+
+      // Should subscribe to error events
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        'SYSTEM_ERROR_OCCURRED',
+        expect.any(Function)
       );
     });
   });

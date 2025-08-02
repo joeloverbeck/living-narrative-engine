@@ -90,28 +90,28 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     const dataRegistry = new InMemoryDataRegistry({ logger });
 
     // Register the conditions used by the scope and action
-    dataRegistry.store('conditions', 'intimacy:both-actors-facing-each-other', {
-      id: 'intimacy:both-actors-facing-each-other',
+    dataRegistry.store('conditions', 'positioning:both-actors-facing-each-other', {
+      id: 'positioning:both-actors-facing-each-other',
       description:
         'Checks if both actors are facing each other (neither is facing away from the other).',
       logic: {
         and: [
           {
-            not: {
+            '!': {
               in: [
                 { var: 'entity.id' },
                 {
-                  var: 'actor.components.positioning:closeness.facing_away_from',
+                  var: 'actor.components.positioning:facing_away.facing_away_from',
                 },
               ],
             },
           },
           {
-            not: {
+            '!': {
               in: [
                 { var: 'actor.id' },
                 {
-                  var: 'entity.components.positioning:closeness.facing_away_from',
+                  var: 'entity.components.positioning:facing_away.facing_away_from',
                 },
               ],
             },
@@ -357,9 +357,11 @@ describe('Clothing-Specific Scope Integration Tests', () => {
                   if (!targetCloseness?.partners?.includes(actor.id)) continue;
 
                   // Check if neither is facing away from the other
+                  const actorFacingAway = actor.components?.['positioning:facing_away'];
+                  const targetFacingAway = target.components?.['positioning:facing_away'];
                   if (
-                    actorCloseness.facing_away_from?.includes(partnerId) ||
-                    targetCloseness.facing_away_from?.includes(actor.id)
+                    actorFacingAway?.facing_away_from?.includes(partnerId) ||
+                    targetFacingAway?.facing_away_from?.includes(actor.id)
                   )
                     continue;
 
@@ -490,7 +492,6 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     // Set up actor's closeness data
     const actorClosenessData = {
       partners: [partnerId],
-      facing_away_from: facingAway ? [partnerId] : [],
     };
     entityManager.addComponent(
       actorId,
@@ -498,16 +499,33 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       actorClosenessData
     );
 
+    // Set up actor's facing_away data if applicable
+    if (facingAway) {
+      entityManager.addComponent(
+        actorId,
+        'positioning:facing_away',
+        { facing_away_from: [partnerId] }
+      );
+    }
+
     // Set up partner's closeness data for bidirectional relationship
     const partnerClosenessData = {
       partners: [actorId],
-      facing_away_from: partnerFacingAway ? [actorId] : [],
     };
     entityManager.addComponent(
       partnerId,
       'positioning:closeness',
       partnerClosenessData
     );
+
+    // Set up partner's facing_away data if applicable
+    if (partnerFacingAway) {
+      entityManager.addComponent(
+        partnerId,
+        'positioning:facing_away',
+        { facing_away_from: [actorId] }
+      );
+    }
 
     return actorId;
   }
@@ -520,7 +538,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
   function setupJsonLogicMock(shouldFacingConditionReturnTrue = true) {
     const originalEvaluate = jsonLogicEval.evaluate.bind(jsonLogicEval);
     jsonLogicEval.evaluate = jest.fn((logic, context) => {
-      if (logic?.condition_ref === 'intimacy:both-actors-facing-each-other') {
+      if (logic?.condition_ref === 'positioning:both-actors-facing-each-other') {
         return shouldFacingConditionReturnTrue;
       }
       // For all other operators, use the original evaluator
@@ -548,13 +566,21 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     // Add the required positioning:closeness component for bidirectional relationship
     const closenessData = {
       partners: [actorId],
-      facing_away_from: facingAway ? [actorId] : [],
     };
     entityManager.addComponent(
       targetId,
       'positioning:closeness',
       closenessData
     );
+
+    // Add facing_away component if applicable
+    if (facingAway) {
+      entityManager.addComponent(
+        targetId,
+        'positioning:facing_away',
+        { facing_away_from: [actorId] }
+      );
+    }
 
     if (hasEquipmentComponent) {
       const equipmentData = hasClothing
@@ -626,12 +652,10 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
       entityManager.addComponent(actorId, 'positioning:closeness', {
         partners: [targetId],
-        facing_away_from: [],
       });
 
       entityManager.addComponent(targetId, 'positioning:closeness', {
         partners: [actorId],
-        facing_away_from: [],
       });
 
       // Test the condition directly
@@ -641,7 +665,7 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       };
 
       const result = jsonLogicEval.evaluate(
-        { condition_ref: 'intimacy:both-actors-facing-each-other' },
+        { condition_ref: 'positioning:both-actors-facing-each-other' },
         context
       );
 
@@ -666,13 +690,11 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       // Actor with closeness to target
       entityManager.addComponent(actorId, 'positioning:closeness', {
         partners: [targetId],
-        facing_away_from: [],
       });
 
       // Target with closeness to actor AND torso_upper clothing
       entityManager.addComponent(targetId, 'positioning:closeness', {
         partners: [actorId],
-        facing_away_from: [],
       });
 
       entityManager.addComponent(targetId, 'clothing:equipment', {
@@ -730,13 +752,11 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       // Actor with closeness to target
       entityManager.addComponent(actorId, 'positioning:closeness', {
         partners: [targetId],
-        facing_away_from: [],
       });
 
       // Target with closeness to actor AND torso_upper clothing
       entityManager.addComponent(targetId, 'positioning:closeness', {
         partners: [actorId],
-        facing_away_from: [],
       });
 
       entityManager.addComponent(targetId, 'clothing:equipment', {
@@ -956,7 +976,6 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       // Arrange
       entityManager.addComponent('actor1', 'positioning:closeness', {
         partners: [], // No partners
-        facing_away_from: [],
       });
 
       createTargetWithClothing('target1', 'actor1', true, true);
@@ -980,7 +999,6 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       // Arrange
       entityManager.addComponent('actor1', 'positioning:closeness', {
         partners: ['target1', 'target2'],
-        facing_away_from: [],
       });
       const actorId = 'actor1';
 
@@ -996,7 +1014,6 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       const target2Id = 'target2';
       entityManager.addComponent(target2Id, 'positioning:closeness', {
         partners: [actorId],
-        facing_away_from: [],
       });
       entityManager.addComponent(target2Id, 'clothing:equipment', {
         equipped: {

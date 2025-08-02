@@ -88,13 +88,15 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
     );
 
     // Store the condition
-    dataRegistry.store('conditions', 'intimacy:entity-not-in-facing-away', {
-      id: 'intimacy:entity-not-in-facing-away',
+    dataRegistry.store('conditions', 'positioning:entity-not-in-facing-away', {
+      id: 'positioning:entity-not-in-facing-away',
       logic: {
         not: {
           in: [
             { var: 'actor.id' },
-            { var: 'entity.components.positioning:closeness.facing_away_from' },
+            {
+              var: 'entity.components.positioning:facing_away.facing_away_from',
+            },
           ],
         },
       },
@@ -222,6 +224,8 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['target1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
           },
@@ -231,6 +235,8 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['actor1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {
@@ -397,6 +403,8 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['target1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
           },
@@ -406,6 +414,8 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['actor1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: ['actor1'], // Facing away from actor
             },
             'anatomy:body': {
@@ -485,6 +495,8 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['target1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
           },
@@ -494,6 +506,8 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           components: {
             'positioning:closeness': {
               partners: ['actor1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {
@@ -564,6 +578,9 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         {
           id: 'target1',
           components: {
+            'positioning:facing_away': {
+              facing_away_from: [],
+            },
             'anatomy:body': {
               body: {
                 root: 'groin1',

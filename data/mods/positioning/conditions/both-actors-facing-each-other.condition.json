@@ -5,7 +5,7 @@
   "logic": {
     "and": [
       {
-        "not": {
+        "!": {
           "in": [
             { "var": "entity.id" },
             {
@@ -15,7 +15,7 @@
         }
       },
       {
-        "not": {
+        "!": {
           "in": [
             { "var": "actor.id" },
             {

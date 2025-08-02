@@ -61,7 +61,7 @@ export class ThematicDirectionController extends BaseCharacterBuilderController 
       // Buttons
       generateBtn: '#generate-btn',
       retryBtn: '#retry-btn',
-      backBtn: '#back-to-menu-btn',
+      backBtn: { selector: '#back-to-menu-btn', required: false }, // Optional - may not exist in all contexts
 
       // State containers
       emptyState: '#empty-state',
@@ -70,14 +70,17 @@ export class ThematicDirectionController extends BaseCharacterBuilderController 
       errorState: '#error-state',
       errorMessageText: '#error-message-text',
 
-      // Results elements
-      directionsContainer: '#generated-directions',
-      directionsList: '#directions-list',
+      // Results elements - These are optional as they may not exist in the current HTML structure
+      directionsContainer: {
+        selector: '#generated-directions',
+        required: false,
+      },
+      directionsList: { selector: '#directions-list', required: false },
       directionsResults: '#directions-results',
-      generatedConcept: '#generated-concept',
-      conceptText: '#concept-text',
-      characterCount: '#character-count',
-      timestamp: '#timestamp',
+      generatedConcept: { selector: '#generated-concept', required: false },
+      conceptText: { selector: '#concept-text', required: false },
+      characterCount: { selector: '#character-count', required: false },
+      timestamp: { selector: '#timestamp', required: false },
     });
   }
 
@@ -592,35 +595,23 @@ export class ThematicDirectionController extends BaseCharacterBuilderController 
    * @param {Array} directions
    */
   _displayResults(concept, directions) {
-    // Update concept display in results
-    if (this._getElement('conceptText')) {
-      this._setElementText('conceptText', concept.concept);
-    }
-
-    if (this._getElement('characterCount')) {
-      this._setElementText(
-        'characterCount',
-        `${concept.concept.length} characters`
-      );
-    }
-
-    if (this._getElement('timestamp')) {
-      this._setElementText('timestamp', new Date().toLocaleString());
-    }
-
-    // Display directions
+    // Display directions - this is the main content that needs to be shown
     this._displayDirections(directions);
 
-    // Update concept directions count
+    // Update concept directions count if element exists
     const totalDirections =
       (concept.thematicDirections?.length || 0) + directions.length;
     if (this._getElement('conceptDirectionsCount')) {
-      this._setElementText(
-        'conceptDirectionsCount',
-        totalDirections.toString()
-      );
+      let text;
+      if (totalDirections === 1) {
+        text = '1 existing direction';
+      } else {
+        text = `${totalDirections} existing directions`;
+      }
+      this._setElementText('conceptDirectionsCount', text);
     }
 
+    // Show the results state
     this._showResults();
   }
 
@@ -631,10 +622,12 @@ export class ThematicDirectionController extends BaseCharacterBuilderController 
    * @param {Array} directions
    */
   _displayDirections(directions) {
-    const container =
-      this._getElement('directionsList') ||
-      this._getElement('directionsResults');
-    if (!container) return;
+    // Use directionsResults as the primary container (matches the HTML)
+    const container = this._getElement('directionsResults');
+    if (!container) {
+      this.logger.warn('No directions container found');
+      return;
+    }
 
     if (!directions || directions.length === 0) {
       container.innerHTML =

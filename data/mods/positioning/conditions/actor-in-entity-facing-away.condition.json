@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "intimacy:actor-is-behind-entity",
-  "description": "Checks if the actor is behind the entity (actor's id is in the entity's facing_away_from array).",
+  "id": "positioning:actor-in-entity-facing-away",
+  "description": "Checks if the actor is in the entity's facing_away_from array (i.e., the entity is facing away from the actor).",
   "logic": {
     "in": [
       {

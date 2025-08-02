@@ -32,11 +32,13 @@ Migrate positioning-related events from the intimacy mod to the positioning mod.
 
 ### Step 1: Identify Events to Migrate
 
-The following events are positioning-related:
+The following events are positioning-related and currently exist in the intimacy mod:
 
-- `actor_turned_around.event.json`
-- `actor_faced_forward.event.json`
-- `actor_faced_everyone.event.json`
+- `actor_turned_around.event.json` - Uses `actor` and `turned_by` properties
+- `actor_faced_forward.event.json` - Uses `actor` and `facing` properties
+- `actor_faced_everyone.event.json` - Uses `actor` and `faced` properties
+
+**Note**: These events use `payloadSchema` (not `payload`) and reference schema definitions.
 
 ### Step 2: Copy Event Files
 
@@ -68,23 +70,25 @@ Update `data/mods/positioning/events/actor_turned_around.event.json`:
 
 ```json
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "id": "positioning:actor_turned_around",
-  "name": "Actor Turned Around",
-  "description": "Event fired when an actor turns around (faces away from someone)",
-  "payload": {
+  "description": "Dispatched when an actor turns another actor around so they are facing away.",
+  "payloadSchema": {
+    "title": "Positioning: Actor Turned Around Payload",
+    "description": "Payload for the positioning:actor_turned_around event.",
     "type": "object",
     "properties": {
       "actor": {
-        "type": "string",
-        "description": "The actor who turned around"
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who was turned around."
       },
-      "turnedAwayFrom": {
-        "type": "string",
-        "description": "The actor they turned away from"
+      "turned_by": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who initiated the turn around action."
       }
     },
-    "required": ["actor", "turnedAwayFrom"]
+    "required": ["actor", "turned_by"],
+    "additionalProperties": false
   }
 }
 ```
@@ -93,23 +97,25 @@ Update `data/mods/positioning/events/actor_faced_forward.event.json`:
 
 ```json
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "id": "positioning:actor_faced_forward",
-  "name": "Actor Faced Forward",
-  "description": "Event fired when an actor faces forward (stops facing away)",
-  "payload": {
+  "description": "Dispatched when an actor faces forward toward another actor after previously facing away.",
+  "payloadSchema": {
+    "title": "Positioning: Actor Faced Forward Payload",
+    "description": "Payload for the positioning:actor_faced_forward event.",
     "type": "object",
     "properties": {
       "actor": {
-        "type": "string",
-        "description": "The actor who faced forward"
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who is now facing forward."
       },
-      "facedActor": {
-        "type": "string",
-        "description": "The actor they are now facing"
+      "facing": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor who is now being faced."
       }
     },
-    "required": ["actor", "facedActor"]
+    "required": ["actor", "facing"],
+    "additionalProperties": false
   }
 }
 ```
@@ -118,66 +124,40 @@ Update `data/mods/positioning/events/actor_faced_everyone.event.json`:
 
 ```json
 {
-  "$schema": "http://example.com/schemas/event.schema.json",
+  "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "positioning:actor_faced_everyone",
-  "name": "Actor Faced Everyone",
-  "description": "Event fired when an actor faces everyone (clears facing_away list)",
-  "payload": {
+  "description": "Dispatched when an actor turns around to face everyone they were facing away from.",
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "actor": {
         "type": "string",
-        "description": "The actor who faced everyone"
+        "description": "The ID of the actor who turned around"
+      },
+      "faced": {
+        "type": "string",
+        "description": "The name of the specific target the action was performed on"
       }
     },
-    "required": ["actor"]
+    "required": ["actor", "faced"]
   }
 }
 ```
 
-### Step 4: Update Rule References
+### Step 4: Verify Rule References
 
-Update rules that dispatch these events to use the new event types:
+**Note**: The positioning rules already correctly reference the positioning-namespaced events. No changes are needed to the rules.
 
-In `data/mods/positioning/rules/turn_around.rule.json`:
+The rules already dispatch events with the correct event types:
 
-```json
-{
-  // ... existing content ...
-  "operations": [
-    {
-      "type": "conditional",
-      // ... condition logic ...
-      "then": [
-        // ... other operations ...
-        {
-          "type": "dispatch_event",
-          "event": {
-            "type": "ACTOR_FACED_FORWARD", // Keep this constant
-            "payload": {
-              "actor": { "var": "event.payload.entity" },
-              "facedActor": { "var": "event.payload.actor" }
-            }
-          }
-        }
-      ],
-      "else": [
-        // ... other operations ...
-        {
-          "type": "dispatch_event",
-          "event": {
-            "type": "ACTOR_TURNED_AROUND", // Keep this constant
-            "payload": {
-              "actor": { "var": "event.payload.entity" },
-              "turnedAwayFrom": { "var": "event.payload.actor" }
-            }
-          }
-        }
-      ]
-    }
-  ]
-}
-```
+- `turn_around.rule.json` dispatches `positioning:actor_faced_forward` and `positioning:actor_turned_around`
+- `turn_around_to_face.rule.json` dispatches `positioning:actor_faced_everyone`
+
+The payload structures in the rules match the expected event schemas:
+
+- `actor_turned_around`: Uses `actor` and `turned_by` properties
+- `actor_faced_forward`: Uses `actor` and `facing` properties
+- `actor_faced_everyone`: Uses `actor` and `faced` properties
 
 ### Step 5: Update Positioning Mod Manifest
 
@@ -258,9 +238,9 @@ async function validateMigration() {
         errors.push(`${eventName} has wrong ID: ${event.id}`);
       }
 
-      // Check payload structure
-      if (!event.payload || !event.payload.properties) {
-        errors.push(`${eventName} missing payload structure`);
+      // Check payloadSchema structure (not payload)
+      if (!event.payloadSchema || !event.payloadSchema.properties) {
+        errors.push(`${eventName} missing payloadSchema structure`);
       }
 
       console.log(`✅ ${eventName} migrated correctly`);
@@ -382,21 +362,25 @@ npm run test:ci
 
 ### Issue 1: Event Type Constants
 
-**Problem**: Rules use event type constants that may not match event IDs.
+**Problem**: Rules use event type strings that must match event IDs.
 
-**Solution**: Keep event type constants separate from event definition IDs.
+**Solution**: Ensure the eventType in rules matches the event id exactly (e.g., `positioning:actor_turned_around`).
 
 ### Issue 2: Payload Validation
 
-**Problem**: Event payloads don't match expected structure.
+**Problem**: Event payloads must match the expected schema structure.
 
-**Solution**: Verify payload schemas match rule dispatch logic.
+**Solution**: Ensure the rule dispatch payloads match the event payloadSchema properties exactly:
 
-### Issue 3: Missing Event Listeners
+- `actor_turned_around`: `actor` and `turned_by`
+- `actor_faced_forward`: `actor` and `facing`
+- `actor_faced_everyone`: `actor` and `faced`
 
-**Problem**: Other systems listening for events can't find them.
+### Issue 3: Schema Format
 
-**Solution**: Update event listener registrations to use new event types.
+**Problem**: Events use `payloadSchema` property, not `payload`.
+
+**Solution**: Always use `payloadSchema` when defining event structures.
 
 ## Rollback Plan
 

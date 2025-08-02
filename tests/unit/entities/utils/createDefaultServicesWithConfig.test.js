@@ -460,7 +460,9 @@ describe('createDefaultServicesWithConfig', () => {
         return true;
       });
 
-      expect(() => validateBatchOperationConfiguration(mockConfig)).not.toThrow();
+      expect(() =>
+        validateBatchOperationConfiguration(mockConfig)
+      ).not.toThrow();
     });
 
     it('throws error when batch operation configuration path is missing', () => {

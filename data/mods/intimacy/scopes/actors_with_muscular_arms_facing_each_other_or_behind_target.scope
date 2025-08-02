@@ -5,8 +5,8 @@ intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target := actor.c
     {"hasPartOfTypeWithComponentValue": [".", "arm", "descriptors:build", "build", "muscular"]},
     {
       "or": [
-        {"condition_ref": "intimacy:both-actors-facing-each-other"},
-        {"condition_ref": "intimacy:actor-is-behind-entity"}
+        {"condition_ref": "positioning:both-actors-facing-each-other"},
+        {"condition_ref": "positioning:actor-is-behind-entity"}
       ]
     }
   ]
