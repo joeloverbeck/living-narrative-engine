@@ -1,9 +1,9 @@
 {
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
-  "id": "posturing",
+  "id": "positioning",
   "version": "1.0.0",
-  "name": "Posturing",
-  "description": "Adds posturing behaviors like kneeling, bowing, and other respectful or submissive gestures.",
+  "name": "positioning",
+  "description": "Adds positioning behaviors like kneeling, bowing, and other respectful or submissive gestures.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [

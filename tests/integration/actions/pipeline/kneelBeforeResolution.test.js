@@ -3,7 +3,14 @@
  * @description Tests that multi-target actions like kneel_before can resolve their scopes correctly
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import { ActionResult } from '../../../../src/actions/core/actionResult.js';
 
@@ -14,7 +21,7 @@ describe('Kneel Before Action Resolution', () => {
   let mockUnifiedScopeResolver;
   let mockTargetResolver;
   let mockTargetContextBuilder;
-  
+
   beforeEach(() => {
     // Setup logger
     mockLogger = {
@@ -64,29 +71,31 @@ describe('Kneel Before Action Resolution', () => {
     // Setup mock actor entity
     const mockActorEntity = {
       id: 'p_erotica:iker_aguirre_instance',
-      getComponentData: jest.fn(() => ({ 
-        locationId: 'p_erotica:outside_tables_coffee_shop_instance' 
+      getComponentData: jest.fn(() => ({
+        locationId: 'p_erotica:outside_tables_coffee_shop_instance',
       })),
       getAllComponents: jest.fn(() => ({
         'core:actor': {},
-        'core:position': { locationId: 'p_erotica:outside_tables_coffee_shop_instance' },
+        'core:position': {
+          locationId: 'p_erotica:outside_tables_coffee_shop_instance',
+        },
       })),
     };
-    
+
     // Setup kneel_before action
     const kneelBeforeAction = {
-      id: 'posturing:kneel_before',
+      id: 'positioning:kneel_before',
       name: 'Kneel Before',
       targets: {
         primary: {
           scope: 'core:actors_in_location',
           placeholder: 'actor',
-          description: 'The actor to kneel before'
-        }
+          description: 'The actor to kneel before',
+        },
       },
       template: 'kneel before {actor}',
     };
-    
+
     const context = {
       candidateActions: [kneelBeforeAction],
       actor: mockActorEntity,
@@ -95,21 +104,25 @@ describe('Kneel Before Action Resolution', () => {
       },
       data: {},
     };
-    
+
     // Mock target context builder to return a proper context
     mockTargetContextBuilder.buildBaseContext.mockReturnValue({
       actor: { id: mockActorEntity.id, components: {} },
       location: { id: 'p_erotica:outside_tables_coffee_shop_instance' },
     });
-    
+
     // Mock unified scope resolver to succeed now that the fix is applied
-    mockUnifiedScopeResolver.resolve.mockImplementation((scope, context, options) => {
-      // After the fix, context should have actor property properly set
-      expect(context.actor).toBeDefined();
-      expect(context.actor.id).toBe('p_erotica:iker_aguirre_instance');
-      return ActionResult.success(new Set(['p_erotica:amaia_castillo_instance']));
-    });
-    
+    mockUnifiedScopeResolver.resolve.mockImplementation(
+      (scope, context, options) => {
+        // After the fix, context should have actor property properly set
+        expect(context.actor).toBeDefined();
+        expect(context.actor.id).toBe('p_erotica:iker_aguirre_instance');
+        return ActionResult.success(
+          new Set(['p_erotica:amaia_castillo_instance'])
+        );
+      }
+    );
+
     // Mock entity manager to return target entity
     mockEntityManager.getEntityInstance.mockImplementation((id) => {
       if (id === 'p_erotica:amaia_castillo_instance') {
@@ -120,7 +133,7 @@ describe('Kneel Before Action Resolution', () => {
       }
       return null;
     });
-    
+
     mockEntityManager.getEntity.mockImplementation((id) => {
       if (id === 'p_erotica:amaia_castillo_instance') {
         return {
@@ -130,14 +143,14 @@ describe('Kneel Before Action Resolution', () => {
       }
       return null;
     });
-    
+
     // Execute the multi-target resolution
     const result = await multiTargetStage.executeInternal(context);
-    
+
     // Now the resolution should succeed with the fix
     expect(result.success).toBe(true);
     expect(result.data.actionsWithTargets).toHaveLength(1);
-    
+
     // Verify the action has the correct target
     const actionWithTargets = result.data.actionsWithTargets[0];
     expect(actionWithTargets.actionDef).toBe(kneelBeforeAction);
@@ -148,7 +161,7 @@ describe('Kneel Before Action Resolution', () => {
       displayName: 'p_erotica:amaia_castillo_instance',
       placeholder: 'actor',
     });
-    
+
     // Verify that resolve was called correctly
     expect(mockUnifiedScopeResolver.resolve).toHaveBeenCalledTimes(1);
     const resolveCall = mockUnifiedScopeResolver.resolve.mock.calls[0];

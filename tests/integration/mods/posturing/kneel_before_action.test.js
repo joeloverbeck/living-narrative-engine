@@ -1,13 +1,13 @@
 /**
- * @file Integration tests for the posturing:kneel_before action and rule.
+ * @file Integration tests for the positioning:kneel_before action and rule.
  * @description Tests the rule execution after the kneel_before action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly.
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import kneelBeforeRule from '../../../../data/mods/posturing/rules/kneel_before.rule.json';
-import eventIsActionKneelBefore from '../../../../data/mods/posturing/conditions/event-is-action-kneel-before.condition.json';
+import kneelBeforeRule from '../../../../data/mods/positioning/rules/kneel_before.rule.json';
+import eventIsActionKneelBefore from '../../../../data/mods/positioning/conditions/event-is-action-kneel-before.condition.json';
 import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -71,7 +71,7 @@ function createHandlers(entityManager, eventBus, logger) {
   };
 }
 
-describe('posturing:kneel_before action integration', () => {
+describe('positioning:kneel_before action integration', () => {
   let testEnv;
 
   beforeEach(() => {
@@ -85,7 +85,7 @@ describe('posturing:kneel_before action integration', () => {
         .fn()
         .mockReturnValue([{ ...kneelBeforeRule, actions: expanded }]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'posturing:event-is-action-kneel-before'
+        id === 'positioning:event-is-action-kneel-before'
           ? eventIsActionKneelBefore
           : undefined
       ),
@@ -125,14 +125,14 @@ describe('posturing:kneel_before action integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'test:actor1',
-      actionId: 'posturing:kneel_before',
+      actionId: 'positioning:kneel_before',
       targetId: 'test:target1',
     });
 
     // Check that kneeling component was added
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['posturing:kneeling_before']).toBeDefined();
-    expect(actor.components['posturing:kneeling_before'].entityId).toBe(
+    expect(actor.components['positioning:kneeling_before']).toBeDefined();
+    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
       'test:target1'
     );
 
@@ -171,7 +171,7 @@ describe('posturing:kneel_before action integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'test:actor1',
-      actionId: 'posturing:kneel_before',
+      actionId: 'positioning:kneel_before',
       targetId: 'test:target1',
     });
 
@@ -214,13 +214,13 @@ describe('posturing:kneel_before action integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'test:actor1',
-      actionId: 'posturing:kneel_before',
+      actionId: 'positioning:kneel_before',
       targetId: 'test:target1',
     });
 
     // Component should be added correctly
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['posturing:kneeling_before'].entityId).toBe(
+    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
       'test:target1'
     );
 
@@ -238,7 +238,7 @@ describe('posturing:kneel_before action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'posturing:kneeling_before': { entityId: 'test:existing_target' },
+          'positioning:kneeling_before': { entityId: 'test:existing_target' },
         },
       },
       {
@@ -255,13 +255,13 @@ describe('posturing:kneel_before action integration', () => {
     // The rule should still execute but this demonstrates the logic
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'test:actor1',
-      actionId: 'posturing:kneel_before',
+      actionId: 'positioning:kneel_before',
       targetId: 'test:target1',
     });
 
     // The ADD_COMPONENT operation would replace existing component
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['posturing:kneeling_before'].entityId).toBe(
+    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
       'test:target1'
     );
   });
@@ -299,7 +299,7 @@ describe('posturing:kneel_before action integration', () => {
 
     // Should not have added the component
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['posturing:kneeling_before']).toBeUndefined();
+    expect(actor.components['positioning:kneeling_before']).toBeUndefined();
   });
 
   it('reproduces production error with realistic entity IDs', async () => {
@@ -323,14 +323,16 @@ describe('posturing:kneel_before action integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'p_erotica:iker_aguirre_instance',
-      actionId: 'posturing:kneel_before',
+      actionId: 'positioning:kneel_before',
       targetId: 'p_erotica:amaia_castillo_instance',
     });
 
     // This should work with the schema fix - component should store the namespaced target ID
-    const actor = testEnv.entityManager.getEntityInstance('p_erotica:iker_aguirre_instance');
-    expect(actor.components['posturing:kneeling_before']).toBeDefined();
-    expect(actor.components['posturing:kneeling_before'].entityId).toBe(
+    const actor = testEnv.entityManager.getEntityInstance(
+      'p_erotica:iker_aguirre_instance'
+    );
+    expect(actor.components['positioning:kneeling_before']).toBeDefined();
+    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
       'p_erotica:amaia_castillo_instance'
     );
 
@@ -345,18 +347,23 @@ describe('posturing:kneel_before action integration', () => {
   it('validates component schema supports namespaced entity IDs', async () => {
     // This test verifies that the component schema accepts namespaced IDs
     // Note: This test bypasses the integration test framework that doesn't use schema validation
-    const kneelComponent = await import('../../../../data/mods/posturing/components/kneeling_before.component.json', { with: { type: 'json' } });
-    
+    const kneelComponent = await import(
+      '../../../../data/mods/positioning/components/kneeling_before.component.json',
+      { with: { type: 'json' } }
+    );
+
     // Test data that should pass with the fixed schema
     const validData = { entityId: 'test:target_entity' };
     const validData2 = { entityId: 'p_erotica:amaia_castillo_instance' };
-    
+
     // Test data that should fail with the fixed schema (non-namespaced)
     const invalidData = { entityId: 'simple_entity_id' };
-    
+
     // Manual validation using JSON schema pattern
-    const pattern = new RegExp(kneelComponent.default.dataSchema.properties.entityId.pattern);
-    
+    const pattern = new RegExp(
+      kneelComponent.default.dataSchema.properties.entityId.pattern
+    );
+
     expect(pattern.test(validData.entityId)).toBe(true);
     expect(pattern.test(validData2.entityId)).toBe(true);
     expect(pattern.test(invalidData.entityId)).toBe(false);

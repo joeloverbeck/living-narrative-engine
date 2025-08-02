@@ -323,7 +323,7 @@ describe('action_decided event - notes validation with subjectType', () => {
             'Young, athletic build visible even through casual clothing. The quiet contemplation... interesting. Not performing for anyone, genuinely absorbed. This bears closer examination. The isolated positioning suggests either shyness or confidence - need to determine which. My opening gambit should test his receptiveness to sophisticated conversation while maintaining plausible deniability.',
           notes: [
             {
-              text: 'Young man, athletic build, contemplating bay view alone - appears genuinely absorbed rather than posturing',
+              text: 'Young man, athletic build, contemplating bay view alone - appears genuinely absorbed rather than positioning',
               subject: 'Iker Aguirre',
               subjectType: 'character',
               context: 'The Gilded Bean terrace observation',

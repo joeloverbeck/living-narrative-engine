@@ -1,27 +1,27 @@
-# Posturing Mod - Kneeling System Specification
+# positioning Mod - Kneeling System Specification
 
 **Generated**: 2025-01-23  
-**Purpose**: Complete technical specification for implementing kneeling behavior in the posturing mod  
+**Purpose**: Complete technical specification for implementing kneeling behavior in the positioning mod  
 **Architecture**: Living Narrative Engine ECS with multi-target actions
 
 ---
 
 ## Overview
 
-The posturing mod introduces a kneeling system that allows entities to kneel before other entities, tracking this positional relationship through components and providing appropriate actions and rules. The design follows established patterns from the intimacy mod architecture while introducing new posturing behaviors.
+The positioning mod introduces a kneeling system that allows entities to kneel before other entities, tracking this positional relationship through components and providing appropriate actions and rules. The design follows established patterns from the intimacy mod architecture while introducing new positioning behaviors.
 
 ---
 
 ## 1. Component Specification
 
-### `posturing:kneeling_before`
+### `positioning:kneeling_before`
 
-**File**: `data/mods/posturing/components/kneeling_before.component.json`
+**File**: `data/mods/positioning/components/kneeling_before.component.json`
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "posturing:kneeling_before",
+  "id": "positioning:kneeling_before",
   "description": "Tracks which entity the component holder is currently kneeling before. Represents a positional state where the actor has assumed a kneeling position directed toward another entity.",
   "dataSchema": {
     "type": "object",
@@ -49,14 +49,14 @@ The posturing mod introduces a kneeling system that allows entities to kneel bef
 
 ## 2. Action Specification
 
-### `posturing:kneel_before`
+### `positioning:kneel_before`
 
-**File**: `data/mods/posturing/actions/kneel_before.action.json`
+**File**: `data/mods/positioning/actions/kneel_before.action.json`
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "posturing:kneel_before",
+  "id": "positioning:kneel_before",
   "name": "Kneel Before",
   "description": "Kneel before another actor as a sign of respect, submission, or reverence.",
   "targets": {
@@ -70,7 +70,7 @@ The posturing mod introduces a kneeling system that allows entities to kneel bef
     "actor": []
   },
   "forbidden_components": {
-    "actor": ["posturing:kneeling_before"]
+    "actor": ["positioning:kneeling_before"]
   },
   "template": "kneel before {actor}",
   "prerequisites": []
@@ -90,17 +90,17 @@ The posturing mod introduces a kneeling system that allows entities to kneel bef
 
 ## 3. Condition Specification
 
-### `posturing:event-is-action-kneel-before`
+### `positioning:event-is-action-kneel-before`
 
-**File**: `data/mods/posturing/conditions/event-is-action-kneel-before.condition.json`
+**File**: `data/mods/positioning/conditions/event-is-action-kneel-before.condition.json`
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "posturing:event-is-action-kneel-before",
+  "id": "positioning:event-is-action-kneel-before",
   "description": "Checks if the event is attempting the 'Kneel Before' action.",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "posturing:kneel_before"]
+    "==": [{ "var": "event.payload.actionId" }, "positioning:kneel_before"]
   }
 }
 ```
@@ -115,17 +115,17 @@ The posturing mod introduces a kneeling system that allows entities to kneel bef
 
 ## 4. Rule Specification
 
-### `posturing:handle_kneel_before`
+### `positioning:handle_kneel_before`
 
-**File**: `data/mods/posturing/rules/kneel_before.rule.json`
+**File**: `data/mods/positioning/rules/kneel_before.rule.json`
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_kneel_before",
-  "comment": "Handles the 'posturing:kneel_before' action. Adds kneeling component, dispatches descriptive text and ends the turn.",
+  "comment": "Handles the 'positioning:kneel_before' action. Adds kneeling component, dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "posturing:event-is-action-kneel-before" },
+  "condition": { "condition_ref": "positioning:event-is-action-kneel-before" },
   "actions": [
     {
       "type": "GET_NAME",
@@ -147,7 +147,7 @@ The posturing mod introduces a kneeling system that allows entities to kneel bef
       "type": "ADD_COMPONENT",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "posturing:kneeling_before",
+        "component_type": "positioning:kneeling_before",
         "component_data": {
           "entityId": "{event.payload.targetId}"
         }
@@ -190,7 +190,7 @@ The posturing mod introduces a kneeling system that allows entities to kneel bef
 
 - **Complex state management pattern**: Adds component before standard logging sequence
 - **Standard 8-step base**: Follows intimacy mod patterns for logging and turn management
-- **Component addition**: Creates `posturing:kneeling_before` component with target entity ID
+- **Component addition**: Creates `positioning:kneeling_before` component with target entity ID
 - **Messages**:
   - Success message: `{context.actorName} kneels before {context.targetName}` (matches user specification)
   - Perceptible event: `{context.actorName} has knelt before {context.targetName}` (matches user specification)
@@ -200,17 +200,17 @@ The posturing mod introduces a kneeling system that allows entities to kneel bef
 
 ## 5. Mod Manifest Specification
 
-### `posturing` mod manifest
+### `positioning` mod manifest
 
-**File**: `data/mods/posturing/mod-manifest.json`
+**File**: `data/mods/positioning/mod-manifest.json`
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
-  "id": "posturing",
+  "id": "positioning",
   "version": "1.0.0",
-  "name": "Posturing",
-  "description": "Adds posturing behaviors like kneeling, bowing, and other respectful or submissive gestures.",
+  "name": "positioning",
+  "description": "Adds positioning behaviors like kneeling, bowing, and other respectful or submissive gestures.",
   "author": "Living Narrative Engine",
   "gameVersion": ">=0.0.1",
   "dependencies": [
@@ -250,19 +250,19 @@ The posturing mod introduces a kneeling system that allows entities to kneel bef
 
 ### Integration Test: `kneel_before_action.test.js`
 
-**File**: `tests/integration/mods/posturing/kneel_before_action.test.js`
+**File**: `tests/integration/mods/positioning/kneel_before_action.test.js`
 
 ```javascript
 /**
- * @file Integration tests for the posturing:kneel_before action and rule.
+ * @file Integration tests for the positioning:kneel_before action and rule.
  * @description Tests the rule execution after the kneel_before action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly.
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import kneelBeforeRule from '../../../../data/mods/posturing/rules/kneel_before.rule.json';
-import eventIsActionKneelBefore from '../../../../data/mods/posturing/conditions/event-is-action-kneel-before.condition.json';
+import kneelBeforeRule from '../../../../data/mods/positioning/rules/kneel_before.rule.json';
+import eventIsActionKneelBefore from '../../../../data/mods/positioning/conditions/event-is-action-kneel-before.condition.json';
 import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -322,7 +322,7 @@ function createHandlers(entityManager, eventBus, logger) {
   };
 }
 
-describe('posturing:kneel_before action integration', () => {
+describe('positioning:kneel_before action integration', () => {
   let testEnv;
 
   beforeEach(() => {
@@ -336,7 +336,7 @@ describe('posturing:kneel_before action integration', () => {
         .fn()
         .mockReturnValue([{ ...kneelBeforeRule, actions: expanded }]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'posturing:event-is-action-kneel-before'
+        id === 'positioning:event-is-action-kneel-before'
           ? eventIsActionKneelBefore
           : undefined
       ),
@@ -376,14 +376,14 @@ describe('posturing:kneel_before action integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
-      actionId: 'posturing:kneel_before',
+      actionId: 'positioning:kneel_before',
       targetId: 'target1',
     });
 
     // Check that kneeling component was added
     const actor = testEnv.entityManager.getEntity('actor1');
-    expect(actor.components['posturing:kneeling_before']).toBeDefined();
-    expect(actor.components['posturing:kneeling_before'].entityId).toBe(
+    expect(actor.components['positioning:kneeling_before']).toBeDefined();
+    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
       'target1'
     );
 
@@ -422,7 +422,7 @@ describe('posturing:kneel_before action integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
-      actionId: 'posturing:kneel_before',
+      actionId: 'positioning:kneel_before',
       targetId: 'target1',
     });
 
@@ -465,13 +465,13 @@ describe('posturing:kneel_before action integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
-      actionId: 'posturing:kneel_before',
+      actionId: 'positioning:kneel_before',
       targetId: 'target1',
     });
 
     // Component should be added correctly
     const actor = testEnv.entityManager.getEntity('actor1');
-    expect(actor.components['posturing:kneeling_before'].entityId).toBe(
+    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
       'target1'
     );
 
@@ -489,7 +489,7 @@ describe('posturing:kneel_before action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'posturing:kneeling_before': { entityId: 'existing_target' },
+          'positioning:kneeling_before': { entityId: 'existing_target' },
         },
       },
       {
@@ -506,13 +506,13 @@ describe('posturing:kneel_before action integration', () => {
     // The rule should still execute but this demonstrates the logic
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
-      actionId: 'posturing:kneel_before',
+      actionId: 'positioning:kneel_before',
       targetId: 'target1',
     });
 
     // The ADD_COMPONENT operation would replace existing component
     const actor = testEnv.entityManager.getEntity('actor1');
-    expect(actor.components['posturing:kneeling_before'].entityId).toBe(
+    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
       'target1'
     );
   });
@@ -550,7 +550,7 @@ describe('posturing:kneel_before action integration', () => {
 
     // Should not have added the component
     const actor = testEnv.entityManager.getEntity('actor1');
-    expect(actor.components['posturing:kneeling_before']).toBeUndefined();
+    expect(actor.components['positioning:kneeling_before']).toBeUndefined();
   });
 });
 ```
@@ -569,7 +569,7 @@ describe('posturing:kneel_before action integration', () => {
 ## 7. Directory Structure
 
 ```
-data/mods/posturing/
+data/mods/positioning/
 ├── mod-manifest.json
 ├── components/
 │   └── kneeling_before.component.json
@@ -580,7 +580,7 @@ data/mods/posturing/
 └── rules/
     └── kneel_before.rule.json
 
-tests/integration/mods/posturing/
+tests/integration/mods/positioning/
 └── kneel_before_action.test.js
 ```
 
@@ -594,29 +594,29 @@ Add to `data/game.json`:
 
 ```json
 {
-  "mods": ["core", "posturing"]
+  "mods": ["core", "positioning"]
 }
 ```
 
-**Note**: The posturing mod will be automatically loaded based on its manifest dependencies on core.
+**Note**: The positioning mod will be automatically loaded based on its manifest dependencies on core.
 
 ### Expected Behavior Flow
 
 1. **Action Discovery**: Player in same location as other actors sees "kneel before [actor]" options
 2. **Action Execution**: Selecting action dispatches `core:attempt_action` event
-3. **Rule Processing**: `posturing:handle_kneel_before` rule fires
-4. **Component Addition**: `posturing:kneeling_before` component added to actor
+3. **Rule Processing**: `positioning:handle_kneel_before` rule fires
+4. **Component Addition**: `positioning:kneeling_before` component added to actor
 5. **Event Generation**: Success and perceptible events generated with specified messages
 6. **Turn Management**: Turn ends successfully via core macro
 
 ### Future Extensions
 
-The posturing mod architecture supports easy addition of:
+The positioning mod architecture supports easy addition of:
 
 - **Stand up action**: Remove kneeling component
 - **Bow action**: Similar pattern with different component/messaging
 - **Prostrate action**: More extreme version of kneeling
-- **Posturing scopes**: For actions that require kneeling state
+- **positioning scopes**: For actions that require kneeling state
 
 ---
 

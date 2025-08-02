@@ -394,10 +394,10 @@ describe('MultiTargetResolutionStage', () => {
         location: { id: 'room' },
       });
       mockDeps.targetContextBuilder.buildDependentContext.mockReturnValue({});
-      mockDeps.entityManager.getEntityInstance.mockReturnValue({ 
+      mockDeps.entityManager.getEntityInstance.mockReturnValue({
         id: 'dummy',
         getComponentData: jest.fn().mockReturnValue(null),
-        getAllComponents: jest.fn().mockReturnValue({})
+        getAllComponents: jest.fn().mockReturnValue({}),
       });
 
       await stage.executeInternal(mockContext);
@@ -488,11 +488,11 @@ describe('MultiTargetResolutionStage', () => {
       // Mock getEntityInstance to return entity for valid_id but null for missing_id
       mockDeps.entityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'valid_id')
-          return { 
-            id: 'valid_id', 
+          return {
+            id: 'valid_id',
             getComponent: jest.fn(),
             getComponentData: jest.fn().mockReturnValue(null),
-            getAllComponents: jest.fn().mockReturnValue({})
+            getAllComponents: jest.fn().mockReturnValue({}),
           };
         if (id === 'missing_id') return null;
         return null;
@@ -631,7 +631,7 @@ describe('MultiTargetResolutionStage', () => {
         id: id,
         getComponent: jest.fn(),
         getComponentData: jest.fn().mockReturnValue(null),
-        getAllComponents: jest.fn().mockReturnValue({})
+        getAllComponents: jest.fn().mockReturnValue({}),
       }));
 
       const result = await stage.executeInternal(mockContext);
@@ -699,7 +699,7 @@ describe('MultiTargetResolutionStage', () => {
         id: id,
         getComponent: jest.fn(),
         getComponentData: jest.fn().mockReturnValue(null),
-        getAllComponents: jest.fn().mockReturnValue({})
+        getAllComponents: jest.fn().mockReturnValue({}),
       }));
 
       const result = await stage.executeInternal(mockContext);
@@ -738,7 +738,7 @@ describe('MultiTargetResolutionStage', () => {
         id: id,
         getComponent: jest.fn(),
         getComponentData: jest.fn().mockReturnValue(null),
-        getAllComponents: jest.fn().mockReturnValue({})
+        getAllComponents: jest.fn().mockReturnValue({}),
       }));
 
       const result = await stage.executeInternal(mockContext);
@@ -779,7 +779,7 @@ describe('MultiTargetResolutionStage', () => {
         id: id,
         getComponent: jest.fn(),
         getComponentData: jest.fn().mockReturnValue(null),
-        getAllComponents: jest.fn().mockReturnValue({})
+        getAllComponents: jest.fn().mockReturnValue({}),
       }));
 
       const result = await stage.executeInternal(mockContext);

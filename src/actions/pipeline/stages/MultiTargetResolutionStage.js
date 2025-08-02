@@ -631,11 +631,15 @@ export class MultiTargetResolutionStage extends PipelineStage {
     if (specificPrimary) {
       // Build entity context for the specific primary using same pattern
       try {
-        const entity = this.#entityManager.getEntityInstance(specificPrimary.id);
+        const entity = this.#entityManager.getEntityInstance(
+          specificPrimary.id
+        );
         if (entity) {
           baseContext.target = {
             id: entity.id,
-            components: entity.getAllComponents ? entity.getAllComponents() : {},
+            components: entity.getAllComponents
+              ? entity.getAllComponents()
+              : {},
           };
         }
       } catch (error) {
@@ -667,7 +671,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
       const resolutionContext = {
         ...context, // Include all fields from the scope context
         actor, // Pass full entity object like legacy path - this overrides context.actor
-        actorLocation: context.location?.id || 'unknown',
+        actorLocation:
+          context.location ||
+          context.actionContext?.currentLocation ||
+          context.actionContext?.location,
         actionContext: {
           ...context,
           location: context.location,

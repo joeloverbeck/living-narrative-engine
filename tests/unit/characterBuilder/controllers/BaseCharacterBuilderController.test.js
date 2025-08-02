@@ -11,7 +11,11 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { BaseCharacterBuilderController } from '../../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
+import {
+  BaseCharacterBuilderController,
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
 import {
   MissingDependencyError,
   InvalidDependencyError,
@@ -2448,6 +2452,386 @@ describe('BaseCharacterBuilderController', () => {
 
         // Handlers should be cleared
         expect(controller._getEventListenerStats().total).toBe(0);
+      });
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Error Handling Framework Tests (Added in ticket #7)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  describe('Error Handling Framework', () => {
+    let controller;
+
+    beforeEach(() => {
+      controller = new TestController({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+    });
+
+    describe('_handleError', () => {
+      it('should handle errors with consistent logging and user feedback', () => {
+        const error = new Error('Test error');
+        const context = {
+          operation: 'testOperation',
+          category: 'network',
+          userMessage: 'Test failed',
+        };
+
+        const result = controller._handleError(error, context);
+
+        expect(result).toMatchObject({
+          message: 'Test error',
+          operation: 'testOperation',
+          category: 'network',
+          userMessage: 'Test failed',
+        });
+
+        expect(mockLogger.error).toHaveBeenCalled();
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'SYSTEM_ERROR_OCCURRED',
+          expect.objectContaining({
+            error: 'Test error',
+            context: 'testOperation',
+            category: 'network',
+          })
+        );
+      });
+
+      it('should handle string errors', () => {
+        const result = controller._handleError('String error', {
+          operation: 'test',
+        });
+
+        expect(result.message).toBe('String error');
+        expect(result.name).toBe('Error');
+      });
+
+      it('should not show error to user when showToUser is false', () => {
+        const mockShowError = jest.spyOn(controller, '_showError');
+
+        controller._handleError(new Error('Test'), {
+          showToUser: false,
+        });
+
+        expect(mockShowError).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('Error Categorization', () => {
+      it('should categorize validation errors', () => {
+        const error = new Error('validation failed');
+        const result = controller._handleError(error);
+        expect(result.category).toBe('validation');
+      });
+
+      it('should categorize network errors', () => {
+        const error = new Error('network timeout');
+        const result = controller._handleError(error);
+        expect(result.category).toBe('network');
+      });
+
+      it('should categorize permission errors', () => {
+        const error = new Error('unauthorized access');
+        const result = controller._handleError(error);
+        expect(result.category).toBe('permission');
+      });
+
+      it('should categorize not found errors', () => {
+        const error = new Error('404 not found');
+        const result = controller._handleError(error);
+        expect(result.category).toBe('not_found');
+      });
+
+      it('should default to system category', () => {
+        const error = new Error('unknown error');
+        const result = controller._handleError(error);
+        expect(result.category).toBe('system');
+      });
+    });
+
+    describe('User Message Generation', () => {
+      it('should use custom user message when provided', () => {
+        const result = controller._handleError(new Error('Test'), {
+          userMessage: 'Custom message',
+        });
+        expect(result.userMessage).toBe('Custom message');
+      });
+
+      it('should generate appropriate message for validation errors', () => {
+        const error = new Error('validation error');
+        const result = controller._handleError(error);
+        expect(result.userMessage).toBe(
+          'Please check your input and try again.'
+        );
+      });
+
+      it('should generate appropriate message for network errors', () => {
+        const error = new Error('network error');
+        const result = controller._handleError(error);
+        expect(result.userMessage).toBe(
+          'Connection error. Please check your internet and try again.'
+        );
+      });
+    });
+
+    describe('Service Error Handling', () => {
+      it('should handle service errors and re-throw', () => {
+        const error = new Error('Service failed');
+
+        expect(() => {
+          controller._handleServiceError(error, 'loadData', 'Failed to load');
+        }).toThrow('Service failed');
+
+        expect(mockLogger.error).toHaveBeenCalled();
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'SYSTEM_ERROR_OCCURRED',
+          expect.objectContaining({
+            error: 'Service failed',
+            context: 'loadData',
+          })
+        );
+      });
+    });
+
+    describe('Execute With Error Handling', () => {
+      it('should execute operation successfully', async () => {
+        const operation = jest.fn().mockResolvedValue('success');
+
+        const result = await controller._executeWithErrorHandling(
+          operation,
+          'testOp'
+        );
+
+        expect(result).toBe('success');
+        expect(operation).toHaveBeenCalledTimes(1);
+      });
+
+      it('should retry on failure', async () => {
+        let attempts = 0;
+        const operation = jest.fn().mockImplementation(async () => {
+          attempts++;
+          if (attempts < 3) {
+            throw new Error('network timeout');
+          }
+          return 'success';
+        });
+
+        const result = await controller._executeWithErrorHandling(
+          operation,
+          'testOp',
+          { retries: 3, retryDelay: 10 }
+        );
+
+        expect(result).toBe('success');
+        expect(attempts).toBe(3);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          expect.stringContaining('succeeded after 2 retries')
+        );
+      });
+
+      it('should throw after all retries fail', async () => {
+        const operation = jest
+          .fn()
+          .mockRejectedValue(new Error('network error'));
+
+        await expect(
+          controller._executeWithErrorHandling(operation, 'testOp', {
+            retries: 2,
+            retryDelay: 10,
+          })
+        ).rejects.toThrow('network error');
+
+        expect(operation).toHaveBeenCalledTimes(3); // initial + 2 retries
+      });
+    });
+
+    describe('Validation Error Handling', () => {
+      beforeEach(() => {
+        mockSchemaValidator.validate = jest.fn();
+      });
+
+      it('should return valid result when validation passes', () => {
+        mockSchemaValidator.validate.mockReturnValue({ isValid: true });
+
+        const result = controller._validateData({}, 'testSchema');
+
+        expect(result).toEqual({ isValid: true });
+      });
+
+      it('should format validation errors correctly', () => {
+        mockSchemaValidator.validate.mockReturnValue({
+          isValid: false,
+          errors: [
+            { instancePath: '/name', message: 'must be string' },
+            { instancePath: '/age', message: 'must be number' },
+          ],
+        });
+
+        const result = controller._validateData({ name: 123 }, 'testSchema');
+
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toEqual([
+          'name: must be string',
+          'age: must be number',
+        ]);
+        expect(result.errorMessage).toContain(
+          'Please fix the following errors'
+        );
+      });
+
+      it('should handle validation system failures', () => {
+        mockSchemaValidator.validate.mockImplementation(() => {
+          throw new Error('Schema not loaded');
+        });
+
+        const result = controller._validateData({}, 'testSchema');
+
+        expect(result.isValid).toBe(false);
+        expect(result.errorMessage).toBe(
+          'Unable to validate data. Please try again.'
+        );
+        expect(mockLogger.error).toHaveBeenCalled();
+      });
+    });
+
+    describe('Error Recovery', () => {
+      it('should determine network errors as recoverable', () => {
+        const error = new Error('network issue');
+        const result = controller._handleError(error, {
+          category: 'network',
+        });
+
+        expect(result.isRecoverable).toBe(true);
+      });
+
+      it('should determine validation errors as non-recoverable', () => {
+        const error = new Error('validation failed');
+        const result = controller._handleError(error, {
+          category: 'validation',
+        });
+
+        expect(result.isRecoverable).toBe(false);
+      });
+
+      it('should attempt recovery for network errors', () => {
+        jest.useFakeTimers();
+        const retryLastOperationSpy = jest.spyOn(
+          controller,
+          '_retryLastOperation'
+        );
+
+        const errorDetails = {
+          category: 'network',
+          isRecoverable: true,
+          severity: 'error',
+        };
+
+        controller._attemptErrorRecovery(errorDetails);
+
+        jest.advanceTimersByTime(5000);
+
+        expect(retryLastOperationSpy).toHaveBeenCalled();
+        jest.useRealTimers();
+      });
+    });
+
+    describe('Error Utilities', () => {
+      it('should create standardized error', () => {
+        const error = controller._createError('Test message', 'validation', {
+          field: 'name',
+        });
+
+        expect(error).toBeInstanceOf(Error);
+        expect(error.message).toBe('Test message');
+        expect(error.category).toBe('validation');
+        expect(error.metadata).toEqual({ field: 'name' });
+        expect(error.controller).toBe('TestController');
+      });
+
+      it('should wrap error with context', () => {
+        const originalError = new Error('Original message');
+        const wrapped = controller._wrapError(
+          originalError,
+          'Additional context'
+        );
+
+        expect(wrapped.message).toBe('Additional context: Original message');
+        expect(wrapped.originalError).toBe(originalError);
+        expect(wrapped.stack).toBe(originalError.stack);
+      });
+
+      it('should provide access to last error', () => {
+        const error = new Error('Test error');
+        controller._handleError(error);
+
+        const lastError = controller.lastError;
+        expect(lastError).toBeDefined();
+        expect(lastError.message).toBe('Test error');
+      });
+    });
+
+    describe('Error Severity Handling', () => {
+      it('should log info level errors appropriately', () => {
+        controller._handleError('Info message', {
+          severity: 'info',
+          operation: 'test',
+        });
+
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          'TestController: test info',
+          expect.any(Object)
+        );
+      });
+
+      it('should log warning level errors appropriately', () => {
+        controller._handleError('Warning message', {
+          severity: 'warning',
+          operation: 'test',
+        });
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'TestController: test warning',
+          expect.any(Object)
+        );
+      });
+
+      it('should log critical errors with full details', () => {
+        controller._handleError('Critical error', {
+          severity: 'critical',
+          operation: 'test',
+        });
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'TestController: CRITICAL ERROR in test',
+          expect.objectContaining({
+            message: 'Critical error',
+            severity: 'critical',
+          })
+        );
+      });
+    });
+
+    describe('Retry Logic', () => {
+      it('should identify retryable errors', () => {
+        expect(controller._isRetryableError(new Error('network timeout'))).toBe(
+          true
+        );
+        expect(controller._isRetryableError(new Error('fetch failed'))).toBe(
+          true
+        );
+        expect(controller._isRetryableError(new Error('temporary issue'))).toBe(
+          true
+        );
+        expect(
+          controller._isRetryableError(new Error('resource unavailable'))
+        ).toBe(true);
+        expect(
+          controller._isRetryableError(new Error('validation error'))
+        ).toBe(false);
       });
     });
   });
