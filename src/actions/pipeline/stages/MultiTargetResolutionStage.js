@@ -128,7 +128,6 @@ export class MultiTargetResolutionStage extends PipelineStage {
           }
         } else {
           // Resolve multi-target action
-          console.log(`DEBUG MultiTarget: Action '${actionDef.id}' is multi-target action`);
           hasMultiTargetActions = true;
           const result = await this.#resolveMultiTargets(
             actionProcessContext,
@@ -376,6 +375,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
           const candidates = await this.#resolveScope(
             targetDef.scope,
             specificContext,
+            actor,
             trace
           );
 
@@ -441,6 +441,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
         const candidates = await this.#resolveScope(
           targetDef.scope,
           scopeContext,
+          actor,
           trace
         );
 
@@ -616,32 +617,36 @@ export class MultiTargetResolutionStage extends PipelineStage {
     targetDef,
     trace
   ) {
-    // Start with base context
+    // Start with base context - same approach as #buildScopeContext
     const baseContext = this.#contextBuilder.buildBaseContext(
       actor.id,
       actionContext.location?.id ||
         actor.getComponentData('core:position')?.locationId
     );
 
-    // Build context with the specific primary target
-    const context = { ...baseContext };
+    // Add resolved targets
+    baseContext.targets = { ...resolvedTargets };
 
-    // Add all resolved targets
-    context.targets = { ...resolvedTargets };
-
-    // Add the specific primary as the 'target' for scope evaluation
+    // Add specific primary as 'target' for dependent scope evaluation
     if (specificPrimary) {
-      // Build entity context manually since buildEntityContext is private
-      const entity = this.#entityManager.getEntityInstance(specificPrimary.id);
-      if (entity) {
-        context.target = {
-          id: entity.id,
-          components: entity.getAllComponents ? entity.getAllComponents() : {},
-        };
+      // Build entity context for the specific primary using same pattern
+      try {
+        const entity = this.#entityManager.getEntityInstance(specificPrimary.id);
+        if (entity) {
+          baseContext.target = {
+            id: entity.id,
+            components: entity.getAllComponents ? entity.getAllComponents() : {},
+          };
+        }
+      } catch (error) {
+        this.#logger.error(
+          `Failed to build target context for ${specificPrimary.id}:`,
+          error
+        );
       }
     }
 
-    return context;
+    return baseContext;
   }
 
   /**
@@ -649,18 +654,19 @@ export class MultiTargetResolutionStage extends PipelineStage {
    *
    * @param scope
    * @param context
+   * @param actor
    * @param trace
    * @private
    */
-  async #resolveScope(scope, context, trace) {
+  async #resolveScope(scope, context, actor, trace) {
     try {
       trace?.step(`Evaluating scope '${scope}'`, 'MultiTargetResolutionStage');
 
       // Create resolution context for UnifiedScopeResolver
-      // Include all context fields, especially 'target' for dependent scopes
+      // Pass the full actor entity object to maintain consistency with legacy path
       const resolutionContext = {
         ...context, // Include all fields from the scope context
-        actor: context.actor,
+        actor, // Pass full entity object like legacy path - this overrides context.actor
         actorLocation: context.location?.id || 'unknown',
         actionContext: {
           ...context,

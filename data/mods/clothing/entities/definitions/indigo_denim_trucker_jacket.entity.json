@@ -7,15 +7,22 @@
       "layer": "outer",
       "equipmentSlots": {
         "primary": "torso_upper",
-        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
       },
-      "allowedLayers": ["underwear", "base", "outer"]
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
     },
     "core:material": {
       "material": "denim"
     },
     "core:name": {
-      "text": "denim trucker jacket"
+      "text": "trucker jacket"
     },
     "core:description": {
       "text": "Classic indigo denim trucker jacket with a rugged texture. This timeless piece features traditional styling with chest pockets, side pockets, and adjustable button tabs at the waist. The sturdy denim construction and deep indigo wash create a versatile outerwear option that improves with age."

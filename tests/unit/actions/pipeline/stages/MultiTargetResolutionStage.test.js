@@ -389,9 +389,16 @@ describe('MultiTargetResolutionStage', () => {
         return ActionResult.success(new Set(['dummy']));
       });
 
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({});
+      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
       mockDeps.targetContextBuilder.buildDependentContext.mockReturnValue({});
-      mockDeps.entityManager.getEntityInstance.mockReturnValue({ id: 'dummy' });
+      mockDeps.entityManager.getEntityInstance.mockReturnValue({ 
+        id: 'dummy',
+        getComponentData: jest.fn().mockReturnValue(null),
+        getAllComponents: jest.fn().mockReturnValue({})
+      });
 
       await stage.executeInternal(mockContext);
 
@@ -470,7 +477,10 @@ describe('MultiTargetResolutionStage', () => {
       };
       mockContext.candidateActions = [actionDef];
 
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({});
+      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
       mockDeps.unifiedScopeResolver.resolve.mockResolvedValue(
         ActionResult.success(new Set(['valid_id', 'missing_id']))
       );
@@ -478,7 +488,12 @@ describe('MultiTargetResolutionStage', () => {
       // Mock getEntityInstance to return entity for valid_id but null for missing_id
       mockDeps.entityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'valid_id')
-          return { id: 'valid_id', getComponent: jest.fn() };
+          return { 
+            id: 'valid_id', 
+            getComponent: jest.fn(),
+            getComponentData: jest.fn().mockReturnValue(null),
+            getAllComponents: jest.fn().mockReturnValue({})
+          };
         if (id === 'missing_id') return null;
         return null;
       });
@@ -519,7 +534,10 @@ describe('MultiTargetResolutionStage', () => {
       };
       mockContext.candidateActions = [actionDef];
 
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({});
+      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
       mockDeps.unifiedScopeResolver.resolve.mockResolvedValue(
         ActionResult.success(
           new Set(['entity1', 'entity2', 'entity3', 'entity4'])
@@ -601,15 +619,20 @@ describe('MultiTargetResolutionStage', () => {
       };
       mockContext.candidateActions = [actionDef];
 
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({});
+      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
       mockDeps.unifiedScopeResolver.resolve.mockResolvedValue(
         ActionResult.success(new Set(['entity1', 'entity2']))
       );
 
-      mockDeps.entityManager.getEntityInstance.mockReturnValue({
-        id: 'entity',
+      mockDeps.entityManager.getEntityInstance.mockImplementation((id) => ({
+        id: id,
         getComponent: jest.fn(),
-      });
+        getComponentData: jest.fn().mockReturnValue(null),
+        getAllComponents: jest.fn().mockReturnValue({})
+      }));
 
       const result = await stage.executeInternal(mockContext);
 
@@ -657,7 +680,10 @@ describe('MultiTargetResolutionStage', () => {
       mockContext.candidateActions = [action1, action2, action3];
 
       // Setup for action1
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({});
+      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
       mockDeps.unifiedScopeResolver.resolve
         .mockResolvedValueOnce(ActionResult.success(new Set(['item1']))) // action1
         .mockResolvedValueOnce(ActionResult.success(new Set(['npc1']))) // action3 primary
@@ -669,10 +695,12 @@ describe('MultiTargetResolutionStage', () => {
         value: [{ entityId: 'target1', displayName: 'Target 1' }],
       });
 
-      mockDeps.entityManager.getEntityInstance.mockReturnValue({
-        id: 'entity',
+      mockDeps.entityManager.getEntityInstance.mockImplementation((id) => ({
+        id: id,
         getComponent: jest.fn(),
-      });
+        getComponentData: jest.fn().mockReturnValue(null),
+        getAllComponents: jest.fn().mockReturnValue({})
+      }));
 
       const result = await stage.executeInternal(mockContext);
 
@@ -699,14 +727,19 @@ describe('MultiTargetResolutionStage', () => {
       const invalidAction = { targets: 'test:scope' }; // Missing id
       mockContext.candidateActions = [invalidAction, validAction];
 
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({});
+      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
       mockDeps.unifiedScopeResolver.resolve.mockResolvedValue(
         ActionResult.success(new Set(['item1']))
       );
-      mockDeps.entityManager.getEntityInstance.mockReturnValue({
-        id: 'item1',
+      mockDeps.entityManager.getEntityInstance.mockImplementation((id) => ({
+        id: id,
         getComponent: jest.fn(),
-      });
+        getComponentData: jest.fn().mockReturnValue(null),
+        getAllComponents: jest.fn().mockReturnValue({})
+      }));
 
       const result = await stage.executeInternal(mockContext);
 
@@ -735,14 +768,19 @@ describe('MultiTargetResolutionStage', () => {
       };
       mockContext.candidateActions = [action1, action2];
 
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({});
+      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+        actor: { id: 'player' },
+        location: { id: 'room' },
+      });
       mockDeps.unifiedScopeResolver.resolve.mockResolvedValue(
         ActionResult.success(new Set(['item1']))
       );
-      mockDeps.entityManager.getEntityInstance.mockReturnValue({
-        id: 'item1',
+      mockDeps.entityManager.getEntityInstance.mockImplementation((id) => ({
+        id: id,
         getComponent: jest.fn(),
-      });
+        getComponentData: jest.fn().mockReturnValue(null),
+        getAllComponents: jest.fn().mockReturnValue({})
+      }));
 
       const result = await stage.executeInternal(mockContext);
 
