@@ -331,25 +331,25 @@ describe('Thematic Direction Workflow Integration', () => {
       // WORKAROUND: The controller's _cacheElements fails to find DOM elements during initialization
       // This is due to a mismatch between the global document mock and the controller's document reference
       // Override _getElement to return the correct mock elements
-      controller._getElement = function(key) {
+      controller._getElement = function (key) {
         const elementMap = {
-          'emptyState': mockElements.emptyState,
-          'loadingState': mockElements.loadingState,
-          'resultsState': mockElements.resultsState,
-          'errorState': mockElements.errorState,
-          'form': mockElements.form,
-          'conceptSelector': mockElements.conceptSelector,
-          'generateBtn': mockElements.generateBtn,
-          'selectedConceptDisplay': mockElements.selectedConceptDisplay,
-          'conceptContent': mockElements.conceptContent,
-          'conceptDirectionsCount': mockElements.conceptDirectionsCount,
-          'conceptCreatedDate': mockElements.conceptCreatedDate,
-          'conceptSelectorError': mockElements.conceptSelectorError,
-          'directionsResults': mockElements.directionsResults,
-          'directionsList': mockElements.directionsList,
-          'conceptText': mockElements.conceptText,
-          'characterCount': mockElements.characterCount,
-          'timestamp': mockElements.timestamp,
+          emptyState: mockElements.emptyState,
+          loadingState: mockElements.loadingState,
+          resultsState: mockElements.resultsState,
+          errorState: mockElements.errorState,
+          form: mockElements.form,
+          conceptSelector: mockElements.conceptSelector,
+          generateBtn: mockElements.generateBtn,
+          selectedConceptDisplay: mockElements.selectedConceptDisplay,
+          conceptContent: mockElements.conceptContent,
+          conceptDirectionsCount: mockElements.conceptDirectionsCount,
+          conceptCreatedDate: mockElements.conceptCreatedDate,
+          conceptSelectorError: mockElements.conceptSelectorError,
+          directionsResults: mockElements.directionsResults,
+          directionsList: mockElements.directionsList,
+          conceptText: mockElements.conceptText,
+          characterCount: mockElements.characterCount,
+          timestamp: mockElements.timestamp,
         };
         return elementMap[key] || null;
       };

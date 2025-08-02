@@ -11,6 +11,7 @@ import {
   DISLIKES_COMPONENT_ID,
   SECRETS_COMPONENT_ID,
   SPEECH_PATTERNS_COMPONENT_ID,
+  APPARENT_AGE_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 
@@ -352,6 +353,100 @@ describe('ActorDataExtractor', () => {
       };
       result = extractor.extractPromptData(actorState);
       expect(result.speechPatterns).toBeUndefined();
+    });
+
+    describe('apparent age extraction', () => {
+      test('should extract apparent age when all fields are present', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Elena Rodriguez' },
+          [DESCRIPTION_COMPONENT_ID]: { text: 'A woman with sharp features' },
+          [APPARENT_AGE_COMPONENT_ID]: {
+            minAge: 30,
+            maxAge: 35,
+            bestGuess: 33,
+          },
+        };
+        const result = extractor.extractPromptData(actorState);
+        expect(result.apparentAge).toEqual({
+          minAge: 30,
+          maxAge: 35,
+          bestGuess: 33,
+        });
+      });
+
+      test('should extract apparent age without bestGuess', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Test Character' },
+          [APPARENT_AGE_COMPONENT_ID]: {
+            minAge: 25,
+            maxAge: 30,
+          },
+        };
+        const result = extractor.extractPromptData(actorState);
+        expect(result.apparentAge).toEqual({
+          minAge: 25,
+          maxAge: 30,
+        });
+      });
+
+      test('should not include apparent age if component is missing', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Test Character' },
+          [DESCRIPTION_COMPONENT_ID]: { text: 'A test description' },
+        };
+        const result = extractor.extractPromptData(actorState);
+        expect(result.apparentAge).toBeUndefined();
+      });
+
+      test('should not include apparent age if minAge is missing', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Test Character' },
+          [APPARENT_AGE_COMPONENT_ID]: {
+            maxAge: 30,
+            bestGuess: 28,
+          },
+        };
+        const result = extractor.extractPromptData(actorState);
+        expect(result.apparentAge).toBeUndefined();
+      });
+
+      test('should not include apparent age if maxAge is missing', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Test Character' },
+          [APPARENT_AGE_COMPONENT_ID]: {
+            minAge: 25,
+            bestGuess: 28,
+          },
+        };
+        const result = extractor.extractPromptData(actorState);
+        expect(result.apparentAge).toBeUndefined();
+      });
+
+      test('should include apparent age even if bestGuess is 0', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Baby Character' },
+          [APPARENT_AGE_COMPONENT_ID]: {
+            minAge: 0,
+            maxAge: 1,
+            bestGuess: 0,
+          },
+        };
+        const result = extractor.extractPromptData(actorState);
+        expect(result.apparentAge).toEqual({
+          minAge: 0,
+          maxAge: 1,
+          bestGuess: 0,
+        });
+      });
+
+      test('should not include apparent age if data is null', () => {
+        const actorState = {
+          [NAME_COMPONENT_ID]: { text: 'Test Character' },
+          [APPARENT_AGE_COMPONENT_ID]: null,
+        };
+        const result = extractor.extractPromptData(actorState);
+        expect(result.apparentAge).toBeUndefined();
+      });
     });
 
     test('throws TypeError when actorState is null', () => {

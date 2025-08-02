@@ -10,6 +10,10 @@
  * @property {string} id - The entity's unique instance ID.
  * @property {string} name - The entity's display name, with a fallback.
  * @property {string} description - The entity's description, with a fallback.
+ * @property {object} [apparentAge] - Optional apparent age data.
+ * @property {number} [apparentAge.minAge] - Minimum perceived age.
+ * @property {number} [apparentAge.maxAge] - Maximum perceived age.
+ * @property {number} [apparentAge.bestGuess] - Most likely age estimate.
  */
 
 /**

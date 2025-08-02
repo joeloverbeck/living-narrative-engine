@@ -88,7 +88,7 @@ function createHandlers(entityManager, eventBus, logger) {
   };
 }
 
-describe('intimacy_handle_turn_around rule integration', () => {
+describe('positioning_handle_turn_around rule integration', () => {
   let testEnv;
 
   beforeEach(() => {
@@ -102,7 +102,7 @@ describe('intimacy_handle_turn_around rule integration', () => {
         .fn()
         .mockReturnValue([{ ...turnAroundRule, actions: expanded }]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'intimacy:event-is-action-turn-around'
+        id === 'positioning:event-is-action-turn-around'
           ? eventIsActionTurnAround
           : undefined
       ),
@@ -161,9 +161,9 @@ describe('intimacy_handle_turn_around rule integration', () => {
       ).toContain('actor1');
 
       // Only check for events that should exist if rule worked
-      expect(types).toContain('intimacy:actor_turned_around');
+      expect(types).toContain('positioning:actor_turned_around');
       const turnedAroundEvent = testEnv.events.find(
-        (e) => e.eventType === 'intimacy:actor_turned_around'
+        (e) => e.eventType === 'positioning:actor_turned_around'
       );
       expect(turnedAroundEvent.payload).toEqual({
         actor: 'target1',
@@ -206,14 +206,14 @@ describe('intimacy_handle_turn_around rule integration', () => {
 
       // Check events
       const types = testEnv.events.map((e) => e.eventType);
-      expect(types).toContain('intimacy:actor_faced_forward');
+      expect(types).toContain('positioning:actor_faced_forward');
       expect(types).toContain('core:perceptible_event');
       expect(types).toContain('core:display_successful_action_result');
       expect(types).toContain('core:turn_ended');
 
       // Check actor_faced_forward event payload
       const facedForwardEvent = testEnv.events.find(
-        (e) => e.eventType === 'intimacy:actor_faced_forward'
+        (e) => e.eventType === 'positioning:actor_faced_forward'
       );
       expect(facedForwardEvent.payload).toEqual({
         actor: 'target1',

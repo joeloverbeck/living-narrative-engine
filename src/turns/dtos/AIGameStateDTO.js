@@ -26,6 +26,10 @@
  * @property {string} name - The name of the character.
  * @property {string} description - A brief description of the character.
  * @property {string} [attitude] - Optional. e.g., "friendly", "hostile". (Future consideration)
+ * @property {object} [apparentAge] - Optional apparent age data.
+ * @property {number} [apparentAge.minAge] - Minimum perceived age.
+ * @property {number} [apparentAge.maxAge] - Maximum perceived age.
+ * @property {number} [apparentAge.bestGuess] - Most likely age estimate.
  */
 
 /**
@@ -106,6 +110,10 @@
  * @property {string} [secrets] - Optional. Secrets the character might have.
  * @property {string} [fears] - Optional. Things the character fears.
  * @property {string[]} [speechPatterns] - Optional. An array of trimmed, valid speech patterns. An empty array or undefined if no valid patterns exist.
+ * @property {object} [apparentAge] - Optional apparent age data.
+ * @property {number} [apparentAge.minAge] - Minimum perceived age.
+ * @property {number} [apparentAge.maxAge] - Maximum perceived age.
+ * @property {number} [apparentAge.bestGuess] - Most likely age estimate.
  */
 
 // To make this file a module and allow JSDoc types to be potentially imported

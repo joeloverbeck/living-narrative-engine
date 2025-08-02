@@ -146,6 +146,86 @@ describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
       expect(result).toContain('- **Height**: tall');
     });
 
+    test('should handle apparent age formatting for characters', () => {
+      const mockGameState = {
+        currentLocation: {
+          name: 'Test Location',
+          description: 'A test location.',
+          exits: [],
+          characters: [
+            {
+              name: 'Elena Rodriguez',
+              description: 'A woman with sharp features and intense dark eyes.',
+              apparentAge: {
+                minAge: 30,
+                maxAge: 35,
+                bestGuess: 33,
+              },
+            },
+            {
+              name: 'Young Character',
+              description: 'Hair: blonde; Eyes: green',
+              apparentAge: {
+                minAge: 18,
+                maxAge: 18,
+              },
+            },
+            {
+              name: 'Older Character',
+              description: 'A wise looking individual.',
+              apparentAge: {
+                minAge: 60,
+                maxAge: 70,
+              },
+            },
+          ],
+        },
+      };
+
+      const result = provider.getWorldContextContent(mockGameState);
+
+      // Check Elena with bestGuess
+      expect(result).toContain('### Elena Rodriguez');
+      expect(result).toContain('- **Apparent age**: around 33 years old');
+      expect(result).toContain(
+        '- **Description**: A woman with sharp features and intense dark eyes.'
+      );
+
+      // Check Young Character with exact age
+      expect(result).toContain('### Young Character');
+      expect(result).toContain('- **Apparent age**: 18 years old');
+      expect(result).toContain('- **Description**: Hair: blonde; Eyes: green.');
+
+      // Check Older Character with range
+      expect(result).toContain('### Older Character');
+      expect(result).toContain(
+        '- **Apparent age**: between 60 and 70 years old'
+      );
+      expect(result).toContain('- **Description**: A wise looking individual.');
+    });
+
+    test('should handle characters without apparent age', () => {
+      const mockGameState = {
+        currentLocation: {
+          name: 'Test Location',
+          description: 'A test location.',
+          exits: [],
+          characters: [
+            {
+              name: 'Character Without Age',
+              description: 'A mysterious figure.',
+            },
+          ],
+        },
+      };
+
+      const result = provider.getWorldContextContent(mockGameState);
+
+      expect(result).toContain('### Character Without Age');
+      expect(result).toContain('- **Description**: A mysterious figure.');
+      expect(result).not.toContain('**Apparent age**');
+    });
+
     test('should handle simple character descriptions as single bullet point', () => {
       const mockGameState = {
         currentLocation: {

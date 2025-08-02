@@ -80,6 +80,98 @@ describe('CharacterDataFormatter', () => {
       expect(result).toContain('**Eyes**: blue');
       expect(result).toContain('**Height**: tall');
     });
+
+    describe('apparent age formatting', () => {
+      it('should display apparent age first when present with bestGuess', () => {
+        const characterData = {
+          description: 'Hair: blonde; Eyes: blue',
+          apparentAge: {
+            minAge: 25,
+            maxAge: 30,
+            bestGuess: 28,
+          },
+        };
+
+        const result = formatter.formatPhysicalDescription(characterData);
+
+        expect(result).toBe(
+          '## Your Description\n' +
+            '**Apparent age**: around 28 years old\n\n' +
+            '**Hair**: blonde\n' +
+            '**Eyes**: blue\n'
+        );
+      });
+
+      it('should display apparent age with range when no bestGuess', () => {
+        const characterData = {
+          description: 'A tall person with distinctive features',
+          apparentAge: {
+            minAge: 30,
+            maxAge: 35,
+          },
+        };
+
+        const result = formatter.formatPhysicalDescription(characterData);
+
+        expect(result).toContain(
+          '**Apparent age**: between 30 and 35 years old'
+        );
+        expect(result).toContain(
+          '**Description**: A tall person with distinctive features'
+        );
+      });
+
+      it('should display exact age when minAge equals maxAge', () => {
+        const characterData = {
+          description: { hair: 'gray', eyes: 'brown' },
+          apparentAge: {
+            minAge: 65,
+            maxAge: 65,
+          },
+        };
+
+        const result = formatter.formatPhysicalDescription(characterData);
+
+        expect(result).toContain('**Apparent age**: 65 years old');
+        expect(result).toContain('**Hair**: gray');
+        expect(result).toContain('**Eyes**: brown');
+      });
+
+      it('should not display apparent age when not present', () => {
+        const characterData = {
+          description: 'Hair: black; Eyes: green',
+        };
+
+        const result = formatter.formatPhysicalDescription(characterData);
+
+        expect(result).not.toContain('**Apparent age**');
+        expect(result).toContain('**Hair**: black');
+        expect(result).toContain('**Eyes**: green');
+      });
+
+      it('should handle apparent age with object description', () => {
+        const characterData = {
+          description: {
+            build: 'athletic',
+            skin: 'sun-kissed bronze',
+          },
+          apparentAge: {
+            minAge: 20,
+            maxAge: 25,
+            bestGuess: 23,
+          },
+        };
+
+        const result = formatter.formatPhysicalDescription(characterData);
+
+        expect(result).toBe(
+          '## Your Description\n' +
+            '**Apparent age**: around 23 years old\n\n' +
+            '**Build**: athletic\n' +
+            '**Skin**: sun-kissed bronze\n'
+        );
+      });
+    });
   });
 
   describe('formatPersonalitySection', () => {

@@ -79,32 +79,43 @@ describe('Turn Around to Face Action Discovery', () => {
 
     // Set up action discovery dependencies
     const dataRegistry = new InMemoryDataRegistry();
-    
+
     // Store the action definition in the data registry
-    dataRegistry.store('actions', turnAroundToFaceAction.id, turnAroundToFaceAction);
-    
+    dataRegistry.store(
+      'actions',
+      turnAroundToFaceAction.id,
+      turnAroundToFaceAction
+    );
+
     // Store the condition definition in the data registry
     const entityNotInFacingAwayCondition = {
       id: 'positioning:entity-not-in-facing-away',
-      description: 'Checks if the entity is not in the actor\'s facing_away_from array',
+      description:
+        "Checks if the entity is not in the actor's facing_away_from array",
       logic: {
         not: {
           in: [
             { var: 'entity.id' },
-            { var: 'actor.components.positioning:facing_away.facing_away_from' }
-          ]
-        }
-      }
+            {
+              var: 'actor.components.positioning:facing_away.facing_away_from',
+            },
+          ],
+        },
+      },
     };
-    dataRegistry.store('conditions', entityNotInFacingAwayCondition.id, entityNotInFacingAwayCondition);
-    
+    dataRegistry.store(
+      'conditions',
+      entityNotInFacingAwayCondition.id,
+      entityNotInFacingAwayCondition
+    );
+
     gameDataRepository = new GameDataRepository(dataRegistry, logger);
 
     // Set up dslParser and other dependencies
     const dslParser = new DefaultDslParser();
-    const jsonLogicService = new JsonLogicEvaluationService({ 
+    const jsonLogicService = new JsonLogicEvaluationService({
       logger,
-      gameDataRepository 
+      gameDataRepository,
     });
     const actionErrorContextBuilder = createMockActionErrorContextBuilder();
 
@@ -271,13 +282,13 @@ describe('Turn Around to Face Action Discovery', () => {
 
     it('should show action when actor has both required components', async () => {
       // Mock the resolveTargets method to return expected results
-      const { ActionTargetContext } = await import('../../../../src/models/actionTargetContext.js');
+      const { ActionTargetContext } = await import(
+        '../../../../src/models/actionTargetContext.js'
+      );
       targetResolutionService.resolveTargets = jest.fn().mockResolvedValue({
         success: true,
-        value: [
-          new ActionTargetContext('entity', { entityId: bob })
-        ],
-        errors: []
+        value: [new ActionTargetContext('entity', { entityId: bob })],
+        errors: [],
       });
 
       // Set up closeness

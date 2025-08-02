@@ -30,6 +30,7 @@ import {
 } from '../constants/textDefaults.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
 import { validateDependencies } from '../utils/dependencyUtils.js';
+import { AgeUtils } from '../utils/ageUtils.js';
 
 /**
  * @class AIPromptContentProvider
@@ -596,6 +597,15 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         descriptionText = ensureTerminalPunctuation(descriptionText);
 
         segments.push(`### ${namePart}`);
+
+        // Add apparent age if available
+        if (char.apparentAge) {
+          const ageDescription = AgeUtils.formatAgeDescription(
+            char.apparentAge
+          );
+          segments.push(`- **Apparent age**: ${ageDescription}`);
+        }
+
         // Format character description as bullet points if it contains attribute-like information
         if (descriptionText.includes(':') && descriptionText.includes(',')) {
           // Parse structured character description into bullet points

@@ -13,7 +13,7 @@ describe('Apparent Age Component Integration', () => {
 
   beforeEach(async () => {
     testBed = createTestBed();
-    
+
     // Mock entity manager for component operations
     entityManager = {
       addComponent: jest.fn(),
@@ -22,7 +22,7 @@ describe('Apparent Age Component Integration', () => {
       removeComponent: jest.fn(),
       createEntityInstance: jest.fn(),
     };
-    
+
     // Mock component definition loader
     componentDefinitionLoader = {
       loadComponent: jest.fn(),
@@ -38,7 +38,8 @@ describe('Apparent Age Component Integration', () => {
     it('should load apparent_age component definition successfully', async () => {
       const mockComponentDef = {
         id: 'core:apparent_age',
-        description: 'Stores the perceived age range of an entity, allowing for uncertainty in age perception typical of real-world scenarios.',
+        description:
+          'Stores the perceived age range of an entity, allowing for uncertainty in age perception typical of real-world scenarios.',
         dataSchema: {
           type: 'object',
           additionalProperties: false,
@@ -46,15 +47,18 @@ describe('Apparent Age Component Integration', () => {
           properties: {
             minAge: { type: 'number', minimum: 0, maximum: 200 },
             maxAge: { type: 'number', minimum: 0, maximum: 200 },
-            bestGuess: { type: 'number', minimum: 0, maximum: 200 }
-          }
-        }
+            bestGuess: { type: 'number', minimum: 0, maximum: 200 },
+          },
+        },
       };
 
-      componentDefinitionLoader.getComponentDefinition.mockReturnValue(mockComponentDef);
+      componentDefinitionLoader.getComponentDefinition.mockReturnValue(
+        mockComponentDef
+      );
 
-      const result = componentDefinitionLoader.getComponentDefinition('core:apparent_age');
-      
+      const result =
+        componentDefinitionLoader.getComponentDefinition('core:apparent_age');
+
       expect(result).toBeDefined();
       expect(result.id).toBe('core:apparent_age');
       expect(result.dataSchema.required).toContain('minAge');
@@ -79,12 +83,18 @@ describe('Apparent Age Component Integration', () => {
         'core:apparent_age',
         ageData
       );
-      
+
       // Verify component can be retrieved
-      const hasComponent = entityManager.hasComponent(entityId, 'core:apparent_age');
+      const hasComponent = entityManager.hasComponent(
+        entityId,
+        'core:apparent_age'
+      );
       expect(hasComponent).toBe(true);
-      
-      const retrievedData = entityManager.getComponentData(entityId, 'core:apparent_age');
+
+      const retrievedData = entityManager.getComponentData(
+        entityId,
+        'core:apparent_age'
+      );
       expect(retrievedData).toEqual(ageData);
     });
 
@@ -96,7 +106,10 @@ describe('Apparent Age Component Integration', () => {
       entityManager.getComponentData.mockReturnValue(ageData);
 
       await entityManager.addComponent(entityId, 'core:apparent_age', ageData);
-      const retrievedData = entityManager.getComponentData(entityId, 'core:apparent_age');
+      const retrievedData = entityManager.getComponentData(
+        entityId,
+        'core:apparent_age'
+      );
 
       expect(retrievedData.minAge).toBe(20);
       expect(retrievedData.maxAge).toBe(30);
@@ -111,7 +124,10 @@ describe('Apparent Age Component Integration', () => {
       entityManager.getComponentData.mockReturnValue(ageData);
 
       await entityManager.addComponent(entityId, 'core:apparent_age', ageData);
-      const retrievedData = entityManager.getComponentData(entityId, 'core:apparent_age');
+      const retrievedData = entityManager.getComponentData(
+        entityId,
+        'core:apparent_age'
+      );
 
       expect(retrievedData.minAge).toBe(25);
       expect(retrievedData.maxAge).toBe(25);
@@ -129,8 +145,11 @@ describe('Apparent Age Component Integration', () => {
         entityId,
         'core:apparent_age'
       );
-      
-      const hasComponent = entityManager.hasComponent(entityId, 'core:apparent_age');
+
+      const hasComponent = entityManager.hasComponent(
+        entityId,
+        'core:apparent_age'
+      );
       expect(hasComponent).toBe(false);
     });
   });
@@ -140,14 +159,19 @@ describe('Apparent Age Component Integration', () => {
       const ageData = { minAge: 25, maxAge: 35, bestGuess: 30 };
 
       entityManager.getComponentData.mockReturnValue(ageData);
-      const retrievedData = entityManager.getComponentData('test-entity', 'core:apparent_age');
+      const retrievedData = entityManager.getComponentData(
+        'test-entity',
+        'core:apparent_age'
+      );
 
       // Test all AgeUtils functions with component data
       expect(AgeUtils.getAverageAge(retrievedData)).toBe(30);
       expect(AgeUtils.getAgeUncertainty(retrievedData)).toBe(10);
       expect(AgeUtils.isAgeInRange(retrievedData, 28)).toBe(true);
       expect(AgeUtils.isAgeInRange(retrievedData, 40)).toBe(false);
-      expect(AgeUtils.formatAgeDescription(retrievedData)).toBe('around 30 years old');
+      expect(AgeUtils.formatAgeDescription(retrievedData)).toBe(
+        'around 30 years old'
+      );
       expect(AgeUtils.validateAgeComponent(retrievedData)).toBe(true);
     });
 
@@ -155,11 +179,16 @@ describe('Apparent Age Component Integration', () => {
       const ageData = { minAge: 20, maxAge: 30 };
 
       entityManager.getComponentData.mockReturnValue(ageData);
-      const retrievedData = entityManager.getComponentData('test-entity', 'core:apparent_age');
+      const retrievedData = entityManager.getComponentData(
+        'test-entity',
+        'core:apparent_age'
+      );
 
       expect(AgeUtils.getAverageAge(retrievedData)).toBe(25);
       expect(AgeUtils.getAgeUncertainty(retrievedData)).toBe(10);
-      expect(AgeUtils.formatAgeDescription(retrievedData)).toBe('between 20 and 30 years old');
+      expect(AgeUtils.formatAgeDescription(retrievedData)).toBe(
+        'between 20 and 30 years old'
+      );
     });
   });
 
@@ -172,8 +201,14 @@ describe('Apparent Age Component Integration', () => {
         .mockReturnValueOnce(ageData) // for apparent_age
         .mockReturnValueOnce(nameData); // for name
 
-      const retrievedAgeData = entityManager.getComponentData('test-entity', 'core:apparent_age');
-      const retrievedNameData = entityManager.getComponentData('test-entity', 'core:name');
+      const retrievedAgeData = entityManager.getComponentData(
+        'test-entity',
+        'core:apparent_age'
+      );
+      const retrievedNameData = entityManager.getComponentData(
+        'test-entity',
+        'core:name'
+      );
 
       const ageDescription = AgeUtils.formatAgeDescription(retrievedAgeData);
       const fullDescription = `${retrievedNameData.text} ${ageDescription}`;
@@ -188,7 +223,10 @@ describe('Apparent Age Component Integration', () => {
       const minimumAge = 21;
 
       entityManager.getComponentData.mockReturnValue(ageData);
-      const retrievedData = entityManager.getComponentData('test-entity', 'core:apparent_age');
+      const retrievedData = entityManager.getComponentData(
+        'test-entity',
+        'core:apparent_age'
+      );
 
       // Conservative check: use minAge (must definitely meet requirement)
       const meetsRequirement = retrievedData.minAge >= minimumAge;
@@ -200,7 +238,10 @@ describe('Apparent Age Component Integration', () => {
       const minimumAge = 21;
 
       entityManager.getComponentData.mockReturnValue(ageData);
-      const retrievedData = entityManager.getComponentData('test-entity', 'core:apparent_age');
+      const retrievedData = entityManager.getComponentData(
+        'test-entity',
+        'core:apparent_age'
+      );
 
       // Liberal check: use maxAge (possibly meets requirement)
       const possiblyMeetsRequirement = retrievedData.maxAge >= minimumAge;
@@ -216,7 +257,10 @@ describe('Apparent Age Component Integration', () => {
       const minimumAge = 21;
 
       entityManager.getComponentData.mockReturnValue(ageData);
-      const retrievedData = entityManager.getComponentData('test-entity', 'core:apparent_age');
+      const retrievedData = entityManager.getComponentData(
+        'test-entity',
+        'core:apparent_age'
+      );
 
       // Average check: use calculated average
       const averageAge = AgeUtils.getAverageAge(retrievedData);
@@ -231,33 +275,48 @@ describe('Apparent Age Component Integration', () => {
       const ageData = { minAge: 0, maxAge: 5 };
 
       entityManager.getComponentData.mockReturnValue(ageData);
-      const retrievedData = entityManager.getComponentData('test-entity', 'core:apparent_age');
+      const retrievedData = entityManager.getComponentData(
+        'test-entity',
+        'core:apparent_age'
+      );
 
       expect(AgeUtils.validateAgeComponent(retrievedData)).toBe(true);
       expect(AgeUtils.getAverageAge(retrievedData)).toBe(2.5);
-      expect(AgeUtils.formatAgeDescription(retrievedData)).toBe('between 0 and 5 years old');
+      expect(AgeUtils.formatAgeDescription(retrievedData)).toBe(
+        'between 0 and 5 years old'
+      );
     });
 
     it('should handle maximum boundary values', () => {
       const ageData = { minAge: 195, maxAge: 200 };
 
       entityManager.getComponentData.mockReturnValue(ageData);
-      const retrievedData = entityManager.getComponentData('test-entity', 'core:apparent_age');
+      const retrievedData = entityManager.getComponentData(
+        'test-entity',
+        'core:apparent_age'
+      );
 
       expect(AgeUtils.validateAgeComponent(retrievedData)).toBe(true);
       expect(AgeUtils.getAverageAge(retrievedData)).toBe(197.5);
-      expect(AgeUtils.formatAgeDescription(retrievedData)).toBe('between 195 and 200 years old');
+      expect(AgeUtils.formatAgeDescription(retrievedData)).toBe(
+        'between 195 and 200 years old'
+      );
     });
 
     it('should handle bestGuess at boundaries', () => {
       const ageData = { minAge: 20, maxAge: 30, bestGuess: 20 };
 
       entityManager.getComponentData.mockReturnValue(ageData);
-      const retrievedData = entityManager.getComponentData('test-entity', 'core:apparent_age');
+      const retrievedData = entityManager.getComponentData(
+        'test-entity',
+        'core:apparent_age'
+      );
 
       expect(AgeUtils.validateAgeComponent(retrievedData)).toBe(true);
       expect(AgeUtils.getAverageAge(retrievedData)).toBe(20);
-      expect(AgeUtils.formatAgeDescription(retrievedData)).toBe('around 20 years old');
+      expect(AgeUtils.formatAgeDescription(retrievedData)).toBe(
+        'around 20 years old'
+      );
     });
   });
 
@@ -266,10 +325,16 @@ describe('Apparent Age Component Integration', () => {
       entityManager.hasComponent.mockReturnValue(false);
       entityManager.getComponentData.mockReturnValue(null);
 
-      const hasComponent = entityManager.hasComponent('test-entity', 'core:apparent_age');
+      const hasComponent = entityManager.hasComponent(
+        'test-entity',
+        'core:apparent_age'
+      );
       expect(hasComponent).toBe(false);
 
-      const componentData = entityManager.getComponentData('test-entity', 'core:apparent_age');
+      const componentData = entityManager.getComponentData(
+        'test-entity',
+        'core:apparent_age'
+      );
       expect(componentData).toBeNull();
     });
 
@@ -277,10 +342,17 @@ describe('Apparent Age Component Integration', () => {
       const entityId = 'test-character';
       const invalidAgeData = { minAge: 30, maxAge: 20 }; // Invalid: max < min
 
-      entityManager.addComponent.mockRejectedValue(new Error('Validation failed'));
+      entityManager.addComponent.mockRejectedValue(
+        new Error('Validation failed')
+      );
 
-      await expect(entityManager.addComponent(entityId, 'core:apparent_age', invalidAgeData))
-        .rejects.toThrow('Validation failed');
+      await expect(
+        entityManager.addComponent(
+          entityId,
+          'core:apparent_age',
+          invalidAgeData
+        )
+      ).rejects.toThrow('Validation failed');
     });
   });
 });

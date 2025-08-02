@@ -27,18 +27,23 @@ export class AgeUtils {
     assertPresent(ageComponent, 'Age component is required');
     assertPresent(ageComponent.minAge, 'Age component must have minAge');
     assertPresent(ageComponent.maxAge, 'Age component must have maxAge');
-    
-    if (typeof ageComponent.minAge !== 'number' || typeof ageComponent.maxAge !== 'number') {
+
+    if (
+      typeof ageComponent.minAge !== 'number' ||
+      typeof ageComponent.maxAge !== 'number'
+    ) {
       throw new Error('Age values must be numbers');
     }
-    
+
     if (ageComponent.maxAge < ageComponent.minAge) {
       throw new Error('maxAge must be greater than or equal to minAge');
     }
-    
-    return ageComponent.bestGuess || (ageComponent.minAge + ageComponent.maxAge) / 2;
+
+    return (
+      ageComponent.bestGuess || (ageComponent.minAge + ageComponent.maxAge) / 2
+    );
   }
-  
+
   /**
    * Calculates the uncertainty range of an age component
    *
@@ -50,18 +55,21 @@ export class AgeUtils {
     assertPresent(ageComponent, 'Age component is required');
     assertPresent(ageComponent.minAge, 'Age component must have minAge');
     assertPresent(ageComponent.maxAge, 'Age component must have maxAge');
-    
-    if (typeof ageComponent.minAge !== 'number' || typeof ageComponent.maxAge !== 'number') {
+
+    if (
+      typeof ageComponent.minAge !== 'number' ||
+      typeof ageComponent.maxAge !== 'number'
+    ) {
       throw new Error('Age values must be numbers');
     }
-    
+
     if (ageComponent.maxAge < ageComponent.minAge) {
       throw new Error('maxAge must be greater than or equal to minAge');
     }
-    
+
     return ageComponent.maxAge - ageComponent.minAge;
   }
-  
+
   /**
    * Checks if a target age falls within the age range
    *
@@ -75,22 +83,25 @@ export class AgeUtils {
     assertPresent(ageComponent.minAge, 'Age component must have minAge');
     assertPresent(ageComponent.maxAge, 'Age component must have maxAge');
     assertPresent(targetAge, 'Target age is required');
-    
-    if (typeof ageComponent.minAge !== 'number' || typeof ageComponent.maxAge !== 'number') {
+
+    if (
+      typeof ageComponent.minAge !== 'number' ||
+      typeof ageComponent.maxAge !== 'number'
+    ) {
       throw new Error('Age values must be numbers');
     }
-    
+
     if (typeof targetAge !== 'number') {
       throw new Error('Target age must be a number');
     }
-    
+
     if (ageComponent.maxAge < ageComponent.minAge) {
       throw new Error('maxAge must be greater than or equal to minAge');
     }
-    
+
     return targetAge >= ageComponent.minAge && targetAge <= ageComponent.maxAge;
   }
-  
+
   /**
    * Formats an age component into a human-readable description
    *
@@ -102,34 +113,40 @@ export class AgeUtils {
     assertPresent(ageComponent, 'Age component is required');
     assertPresent(ageComponent.minAge, 'Age component must have minAge');
     assertPresent(ageComponent.maxAge, 'Age component must have maxAge');
-    
-    if (typeof ageComponent.minAge !== 'number' || typeof ageComponent.maxAge !== 'number') {
+
+    if (
+      typeof ageComponent.minAge !== 'number' ||
+      typeof ageComponent.maxAge !== 'number'
+    ) {
       throw new Error('Age values must be numbers');
     }
-    
+
     if (ageComponent.maxAge < ageComponent.minAge) {
       throw new Error('maxAge must be greater than or equal to minAge');
     }
-    
+
     if (ageComponent.bestGuess) {
       if (typeof ageComponent.bestGuess !== 'number') {
         throw new Error('bestGuess must be a number');
       }
-      
-      if (ageComponent.bestGuess < ageComponent.minAge || ageComponent.bestGuess > ageComponent.maxAge) {
+
+      if (
+        ageComponent.bestGuess < ageComponent.minAge ||
+        ageComponent.bestGuess > ageComponent.maxAge
+      ) {
         throw new Error('bestGuess must be between minAge and maxAge');
       }
-      
+
       return `around ${ageComponent.bestGuess} years old`;
     }
-    
+
     if (ageComponent.minAge === ageComponent.maxAge) {
       return `${ageComponent.minAge} years old`;
     }
-    
+
     return `between ${ageComponent.minAge} and ${ageComponent.maxAge} years old`;
   }
-  
+
   /**
    * Validates that an age component has valid business logic constraints
    *
@@ -141,37 +158,43 @@ export class AgeUtils {
     assertPresent(ageComponent, 'Age component is required');
     assertPresent(ageComponent.minAge, 'Age component must have minAge');
     assertPresent(ageComponent.maxAge, 'Age component must have maxAge');
-    
-    if (typeof ageComponent.minAge !== 'number' || typeof ageComponent.maxAge !== 'number') {
+
+    if (
+      typeof ageComponent.minAge !== 'number' ||
+      typeof ageComponent.maxAge !== 'number'
+    ) {
       throw new Error('Age values must be numbers');
     }
-    
+
     if (ageComponent.minAge < 0 || ageComponent.maxAge < 0) {
       throw new Error('Age values must be non-negative');
     }
-    
+
     if (ageComponent.minAge > 200 || ageComponent.maxAge > 200) {
       throw new Error('Age values must not exceed 200');
     }
-    
+
     if (ageComponent.maxAge < ageComponent.minAge) {
       throw new Error('maxAge must be greater than or equal to minAge');
     }
-    
+
     if (ageComponent.bestGuess !== undefined) {
       if (typeof ageComponent.bestGuess !== 'number') {
         throw new Error('bestGuess must be a number');
       }
-      
+
       if (ageComponent.bestGuess < 0 || ageComponent.bestGuess > 200) {
         throw new Error('bestGuess must be between 0 and 200');
       }
-      
-      if (ageComponent.bestGuess < ageComponent.minAge || ageComponent.bestGuess > ageComponent.maxAge) {
+
+      if (
+        ageComponent.bestGuess < ageComponent.minAge ||
+        ageComponent.bestGuess > ageComponent.maxAge
+      ) {
         throw new Error('bestGuess must be between minAge and maxAge');
       }
     }
-    
+
     return true;
   }
 }

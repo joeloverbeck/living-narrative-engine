@@ -122,15 +122,20 @@ The Living Narrative Engine's clothing system is built on a modular architecture
 ### System Components
 
 #### 1. Slot Library System
+
 The clothing system uses a centralized slot library (`anatomy:humanoid_slots`) that defines standard slot and clothing definitions. This library contains:
+
 - **slotDefinitions**: Standard anatomy slots (head, arm, leg, etc.)
 - **clothingDefinitions**: Standard clothing slots with layer restrictions
 
 #### 2. Blueprint Integration
+
 Blueprints (`human_female`, `human_male`) compose slots from the humanoid_core part, which references the slot library. They can also override or add specific slots and clothing mappings.
 
 #### 3. Clothing Entities
+
 Individual clothing items are entities with components that define:
+
 - **clothing:wearable**: Equipment slots, layers, and restrictions
 - **descriptors**: Color, texture, and other physical properties
 - **core components**: Name, description, material
@@ -202,7 +207,7 @@ The system supports five clothing layers:
 
 ##### `torso_upper`
 
-- **Maps to**: 
+- **Maps to**:
   - Female: Anatomy sockets `left_breast`, `right_breast`, `left_chest`, `right_chest`, `chest_center`, `left_shoulder`, `right_shoulder`
   - Male: Blueprint slot `torso` only
 - **Allowed layers**: `underwear`, `base`, `outer`, `armor`
@@ -211,7 +216,7 @@ The system supports five clothing layers:
 ##### `left_arm_clothing`
 
 - **Maps to**: Blueprint slot `left_arm`
-- **Allowed layers**: 
+- **Allowed layers**:
   - Humanoid core library: `base`, `outer`, `armor`
   - Female/male blueprints: `base`, `outer` only
 - **Usage**: Sleeves, arm guards
@@ -219,7 +224,7 @@ The system supports five clothing layers:
 ##### `right_arm_clothing`
 
 - **Maps to**: Blueprint slot `right_arm`
-- **Allowed layers**: 
+- **Allowed layers**:
   - Humanoid core library: `base`, `outer`, `armor`
   - Female/male blueprints: `base`, `outer` only
 - **Usage**: Sleeves, arm guards
@@ -227,7 +232,7 @@ The system supports five clothing layers:
 ##### `hands`
 
 - **Maps to**: Blueprint slots `left_hand`, `right_hand`
-- **Allowed layers**: 
+- **Allowed layers**:
   - Humanoid core library: `base`, `armor`
   - Female/male blueprints: `base`, `armor`
 - **Usage**: Gloves, gauntlets
@@ -242,7 +247,7 @@ The system supports five clothing layers:
 
 ##### `torso_lower`
 
-- **Maps to**: 
+- **Maps to**:
   - Female: Anatomy sockets `left_hip`, `right_hip`, `pubic_hair`, `vagina`
   - Male: Anatomy sockets `left_hip`, `right_hip`, `pubic_hair`, `penis`, `left_testicle`, `right_testicle`
 - **Allowed layers**: `underwear`, `base`, `outer`
@@ -251,7 +256,7 @@ The system supports five clothing layers:
 ##### `legs`
 
 - **Maps to**: Blueprint slots `left_leg`, `right_leg`
-- **Allowed layers**: 
+- **Allowed layers**:
   - Humanoid core library: `underwear`, `base`, `outer`, `armor`
   - Female/male blueprints: `base`, `outer` only
 - **Usage**: Pants, skirts, leg armor
@@ -259,7 +264,7 @@ The system supports five clothing layers:
 ##### `feet`
 
 - **Maps to**: Blueprint slots `left_foot`, `right_foot`
-- **Allowed layers**: 
+- **Allowed layers**:
   - Humanoid core library: `base`, `armor`
   - Female/male blueprints: `base`, `outer`
 - **Usage**: Shoes, boots, foot armor
@@ -496,40 +501,48 @@ Here's a condensed example showing how descriptors and clothing work together:
 ### Validation Errors
 
 #### Schema Inconsistencies
+
 - **Problem**: Build component default "average" not in enum values
 - **Solution**: Use one of the valid enum values (`skinny`, `slim`, `toned`, `athletic`, `shapely`, `thick`, `muscular`, `stocky`) or update the schema
 
 #### Invalid Descriptor Values
+
 - **Problem**: Using colors like "red" in `descriptors:color_extended`
 - **Solution**: Use extended color values like `raven-black`, `blonde`, `auburn`, etc. For basic colors, use `descriptors:color_basic`
 
 ### Clothing Conflicts
 
 #### Layer Conflicts
+
 - **Problem**: Trying to equip `armor` layer on slots that only allow `base`, `outer`
 - **Solution**: Check the blueprint-specific allowed layers. Some slots have different restrictions in humanoid_core vs. gender-specific blueprints
 
 #### Slot Mapping Issues
+
 - **Problem**: Clothing not appearing on correct body parts
 - **Solution**: Verify the clothing slot maps to the correct blueprint slots or anatomy sockets for the target gender
 
 ### Blueprint Differences
 
 #### Female vs Male Anatomy
+
 - **Problem**: `torso_upper` clothing not fitting correctly
 - **Solution**: Female blueprints map to anatomy sockets (breasts, chest), while male blueprints map to blueprint slots (torso)
 
 #### Missing Slots
+
 - **Problem**: Trying to equip clothing to non-existent slots
 - **Solution**: Check that the target blueprint includes the required slots. Some slots may only exist in the humanoid_core library
 
 ### Performance Considerations
 
 #### Large Clothing Collections
+
 - **Problem**: Too many clothing entities causing performance issues
 - **Solution**: Consider clothing categories and limit the number of equipped items per character
 
 #### Complex Descriptor Combinations
+
 - **Problem**: Too many descriptor components on single anatomy parts
 - **Solution**: Use only necessary descriptors for the intended visual representation
 
