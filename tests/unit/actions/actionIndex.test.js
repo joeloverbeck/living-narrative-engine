@@ -352,7 +352,7 @@ describe('ActionIndex', () => {
       ).not.toHaveBeenCalled();
     });
 
-    it('should handle partial component matches', () => {
+    it('should exclude actions when actor lacks some required components', () => {
       const actorEntity = { id: 'partial1' };
       entityManager.getAllComponentTypesForEntity.mockReturnValue([
         'core:combat',
@@ -360,12 +360,13 @@ describe('ActionIndex', () => {
 
       const candidates = actionIndex.getCandidateActions(actorEntity);
 
-      // dual-req is included because actor has core:combat (even though it also needs core:inventory)
-      // ActionIndex is for pre-filtering - actual validation happens later
-      expect(candidates).toHaveLength(4); // wait, sleep, attack, dual-req
+      // dual-req is excluded because actor only has core:combat but also needs core:inventory
+      // ActionIndex validates that ALL required components are present
+      expect(candidates).toHaveLength(3); // wait, sleep, attack
       expect(candidates.map((a) => a.id)).toEqual(
-        expect.arrayContaining(['wait', 'sleep', 'attack', 'dual-req'])
+        expect.arrayContaining(['wait', 'sleep', 'attack'])
       );
+      expect(candidates.map((a) => a.id)).not.toContain('dual-req');
       expect(candidates.map((a) => a.id)).not.toContain('take');
       expect(candidates.map((a) => a.id)).not.toContain('move');
     });

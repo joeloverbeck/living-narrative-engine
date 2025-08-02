@@ -194,9 +194,41 @@ export class ActionIndex {
       );
     }
 
-    const candidates = Array.from(candidateSet);
+    // Filter candidates to ensure actor has ALL required components
+    const candidates = Array.from(candidateSet).filter((actionDef) => {
+      const requiredComponents = actionDef.required_components?.actor;
+
+      // If no required components, include the action
+      if (!requiredComponents || requiredComponents.length === 0) {
+        return true;
+      }
+
+      // Check if actor has ALL required components
+      const hasAllRequired = requiredComponents.every((componentId) =>
+        actorComponentTypes.includes(componentId)
+      );
+
+      if (!hasAllRequired) {
+        trace?.info(
+          `Filtered out action '${actionDef.id}' - actor missing required components`,
+          source,
+          {
+            required: requiredComponents,
+            actorHas: actorComponentTypes.filter((c) =>
+              requiredComponents.includes(c)
+            ),
+            missing: requiredComponents.filter(
+              (c) => !actorComponentTypes.includes(c)
+            ),
+          }
+        );
+      }
+
+      return hasAllRequired;
+    });
+
     trace?.success(
-      `Final candidate list contains ${candidates.length} unique actions.`,
+      `Final candidate list contains ${candidates.length} unique actions after component validation.`,
       source,
       { actionIds: candidates.map((a) => a.id) }
     );

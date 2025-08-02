@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "positioning:actor-is-in-closeness",
+  "description": "Checks if the actor is in a state of 'closeness' with another entity.",
+  "logic": {
+    "!!": {
+      "var": "actor.components.positioning:closeness"
+    }
+  }
+}

@@ -87,18 +87,15 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
     // Store the action
     dataRegistry.store('actions', fondleBreastsAction.id, fondleBreastsAction);
 
-    // Store the condition
-    dataRegistry.store('conditions', 'intimacy:entity-not-in-facing-away', {
-      id: 'intimacy:entity-not-in-facing-away',
-      logic: {
-        not: {
-          in: [
-            { var: 'actor.id' },
-            { var: 'entity.components.positioning:closeness.facing_away_from' },
-          ],
-        },
-      },
-    });
+    // Store the actual condition from the file system
+    const actualCondition = JSON.parse(fs.readFileSync(
+      path.resolve(
+        __dirname,
+        '../../../data/mods/intimacy/conditions/entity-not-in-facing-away.condition.json'
+      ),
+      'utf8'
+    ));
+    dataRegistry.store('conditions', 'intimacy:entity-not-in-facing-away', actualCondition);
 
     // Initialize JSON Logic with custom operators
     jsonLogicEval = new JsonLogicEvaluationService({
@@ -209,6 +206,8 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
             'core:actor': { name: 'Actor 1' },
             'positioning:closeness': {
               partners: ['target1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
           },
@@ -219,6 +218,8 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
             'core:actor': { name: 'Target 1' },
             'positioning:closeness': {
               partners: ['actor1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {
@@ -410,6 +411,8 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
             'core:actor': { name: 'Actor 1' },
             'positioning:closeness': {
               partners: ['target1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: [],
             },
           },
@@ -420,6 +423,8 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
             'core:actor': { name: 'Target 1' },
             'positioning:closeness': {
               partners: ['actor1'],
+            },
+            'positioning:facing_away': {
               facing_away_from: ['actor1'], // Facing away from actor
             },
             'anatomy:body': {

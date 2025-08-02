@@ -104,7 +104,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       // For now, let's test through public interface
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'intimacy:get_close', 'get close'),
+        createTestComposite(2, 'positioning:get_close', 'get close'),
         createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
       ];
 
@@ -144,7 +144,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'core:go', 'go north'),
-        createTestComposite(3, 'intimacy:get_close', 'get close'),
+        createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'intimacy:kiss_cheek', 'kiss cheek'),
         createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
@@ -186,7 +186,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should not group when below minimum actions threshold', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'intimacy:get_close', 'get close'),
+        createTestComposite(2, 'positioning:get_close', 'get close'),
       ];
 
       renderer.updateGroupingConfig({
@@ -232,7 +232,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'core:go', 'go north'),
-        createTestComposite(3, 'intimacy:get_close', 'get close'),
+        createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'intimacy:kiss_cheek', 'kiss cheek'),
         createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
@@ -295,7 +295,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should re-render when configuration changes if actions are available', () => {
       renderer.availableActions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'intimacy:get_close', 'get close'),
+        createTestComposite(2, 'positioning:get_close', 'get close'),
       ];
 
       const refreshSpy = jest
@@ -329,7 +329,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'core:go', 'go north'),
-        createTestComposite(3, 'intimacy:get_close', 'get close'),
+        createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'intimacy:kiss_cheek', 'kiss cheek'),
         createTestComposite(5, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
@@ -353,7 +353,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should create action groups with proper accessibility attributes', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'intimacy:get_close', 'get close'),
+        createTestComposite(2, 'positioning:get_close', 'get close'),
         createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(4, 'core:go', 'go north'),
         createTestComposite(5, 'intimacy:kiss_cheek', 'kiss cheek'),
@@ -378,7 +378,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
             : 'unknown';
         })
       );
-      expect(namespaces.size).toBe(3); // core, intimacy, sex
+      expect(namespaces.size).toBe(4); // core, positioning, intimacy, sex
     });
   });
 
@@ -396,7 +396,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       const actions = [
         createTestComposite(1, 'wait', 'wait'), // No colon = unknown namespace
         createTestComposite(2, 'core:go', 'go north'),
-        createTestComposite(3, 'intimacy:get_close', 'get close'),
+        createTestComposite(3, 'positioning:get_close', 'get close'),
         createTestComposite(4, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(5, 'core:follow', 'follow'),
         createTestComposite(6, 'intimacy:kiss_cheek', 'kiss cheek'),
@@ -419,7 +419,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should fall back to ungrouped rendering when grouping is disabled', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'intimacy:get_close', 'get close'),
+        createTestComposite(2, 'positioning:get_close', 'get close'),
         createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(4, 'core:go', 'go north'),
         createTestComposite(5, 'intimacy:kiss_cheek', 'kiss cheek'),
@@ -441,7 +441,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     it('should maintain selection behavior with grouped actions', () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'intimacy:get_close', 'get close'),
+        createTestComposite(2, 'positioning:get_close', 'get close'),
         createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
         createTestComposite(4, 'core:go', 'go north'),
         createTestComposite(5, 'intimacy:kiss_cheek', 'kiss cheek'),

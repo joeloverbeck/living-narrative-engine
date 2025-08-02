@@ -1,0 +1,187 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_turn_around",
+  "comment": "Handles the 'positioning:turn_around' action. Toggles the facing_away state between actors in closeness.",
+  "event_type": "core:attempt_action",
+  "condition": { "condition_ref": "positioning:event-is-action-turn-around" },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "positioning:facing_away",
+        "result_variable": "facingState",
+        "missing_value": null
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Check if target is already facing away from actor",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.facingState" },
+            {
+              "in": [
+                { "var": "event.payload.actorId" },
+                { "var": "context.facingState.facing_away_from" }
+              ]
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Remove actor from facing_away_from array",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:facing_away",
+              "field": "facing_away_from",
+              "mode": "remove_by_value",
+              "value": "{event.payload.actorId}"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Re-query to check if array is now empty",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:facing_away",
+              "result_variable": "updatedFacingState"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Remove component if array is empty",
+            "parameters": {
+              "condition": {
+                "==": [
+                  {
+                    "var": "context.updatedFacingState.facing_away_from.length"
+                  },
+                  0
+                ]
+              },
+              "then_actions": [
+                {
+                  "type": "REMOVE_COMPONENT",
+                  "parameters": {
+                    "entity_ref": "target",
+                    "component_type": "positioning:facing_away"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.targetName} turns to face {context.actorName}."
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "parameters": {
+              "eventType": "positioning:actor_faced_forward",
+              "payload": {
+                "actor": "{event.payload.targetId}",
+                "facing": "{event.payload.actorId}"
+              }
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "IF",
+            "comment": "Check if component exists",
+            "parameters": {
+              "condition": { "var": "context.facingState" },
+              "then_actions": [
+                {
+                  "type": "MODIFY_ARRAY_FIELD",
+                  "comment": "Add actor to existing facing_away_from array",
+                  "parameters": {
+                    "entity_ref": "target",
+                    "component_type": "positioning:facing_away",
+                    "field": "facing_away_from",
+                    "mode": "push_unique",
+                    "value": "{event.payload.actorId}"
+                  }
+                }
+              ],
+              "else_actions": [
+                {
+                  "type": "ADD_COMPONENT",
+                  "comment": "Create new facing_away component",
+                  "parameters": {
+                    "entity_ref": "target",
+                    "component_type": "positioning:facing_away",
+                    "value": {
+                      "facing_away_from": ["{event.payload.actorId}"]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} turns {context.targetName} around."
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "parameters": {
+              "eventType": "positioning:actor_turned_around",
+              "payload": {
+                "actor": "{event.payload.targetId}",
+                "turned_by": "{event.payload.actorId}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    { "macro": "core:logSuccessAndEndTurn" }
+  ]
+}

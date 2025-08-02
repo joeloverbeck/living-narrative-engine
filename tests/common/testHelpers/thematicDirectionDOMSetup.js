@@ -173,6 +173,21 @@ export function createMockElement(tag = 'div') {
 
     scrollIntoView: jest.fn(),
 
+    // DOM query methods
+    querySelector: jest.fn((selector) => {
+      // Simple mock implementation for common cases
+      if (selector === 'p' || selector === '.error-message, p') {
+        return {
+          textContent: '',
+          get textContent() { return this._textContent || ''; },
+          set textContent(value) { this._textContent = value; },
+        };
+      }
+      return null;
+    }),
+
+    querySelectorAll: jest.fn(() => []),
+
     // Mock outerHTML property for nested elements
     get outerHTML() {
       const attrs = [];
@@ -219,7 +234,15 @@ export function createThematicDirectionMockElements() {
     loadingState: createMockElement('div'),
     errorState: createMockElement('div'),
     resultsState: createMockElement('div'),
+
+    // Results elements
+    directionsContainer: createMockElement('div'),
+    directionsList: createMockElement('div'),
     directionsResults: createMockElement('div'),
+    generatedConcept: createMockElement('div'),
+    conceptText: createMockElement('div'),
+    characterCount: createMockElement('span'),
+    timestamp: createMockElement('span'),
 
     // Error message
     errorMessageText: createMockElement('p'),
@@ -275,8 +298,16 @@ export function setupThematicDirectionDOM(mockElements) {
         'loading-state': mockElements.loadingState,
         'error-state': mockElements.errorState,
         'results-state': mockElements.resultsState,
-        'directions-results': mockElements.directionsResults,
         'error-message-text': mockElements.errorMessageText,
+
+        // Results elements
+        'generated-directions': mockElements.directionsContainer,
+        'directions-list': mockElements.directionsList,
+        'directions-results': mockElements.directionsResults,
+        'generated-concept': mockElements.generatedConcept,
+        'concept-text': mockElements.conceptText,
+        'character-count': mockElements.characterCount,
+        'timestamp': mockElements.timestamp,
 
         // New concept selector elements
         'concept-selector': mockElements.conceptSelector,

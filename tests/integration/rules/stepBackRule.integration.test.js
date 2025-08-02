@@ -10,8 +10,8 @@ import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
 import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
-import eventIsActionStepBack from '../../../data/mods/intimacy/conditions/event-is-action-step-back.condition.json';
-import stepBackRule from '../../../data/mods/intimacy/rules/step_back.rule.json';
+import eventIsActionStepBack from '../../../data/mods/positioning/conditions/event-is-action-step-back.condition.json';
+import stepBackRule from '../../../data/mods/positioning/rules/step_back.rule.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -120,7 +120,7 @@ function createHandlers(
   };
 }
 
-describe('intimacy_handle_step_back rule integration', () => {
+describe('positioning_handle_step_back rule integration', () => {
   let testEnv;
   let customEntityManager;
 
@@ -140,7 +140,7 @@ describe('intimacy_handle_step_back rule integration', () => {
         .fn()
         .mockReturnValue([{ ...stepBackRule, actions: expanded }]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'intimacy:event-is-action-step-back'
+        id === 'positioning:event-is-action-step-back'
           ? eventIsActionStepBack
           : undefined
       ),
@@ -522,7 +522,7 @@ describe('intimacy_handle_step_back rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
-      actionId: 'intimacy:step_back',
+      actionId: 'positioning:step_back',
     });
 
     expect(
@@ -662,7 +662,7 @@ describe('intimacy_handle_step_back rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
-      actionId: 'intimacy:step_back',
+      actionId: 'positioning:step_back',
     });
 
     expect(
@@ -755,7 +755,7 @@ describe('intimacy_handle_step_back rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
-      actionId: 'intimacy:step_back',
+      actionId: 'positioning:step_back',
     });
 
     expect(
@@ -890,7 +890,7 @@ describe('intimacy_handle_step_back rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
-      actionId: 'intimacy:step_back',
+      actionId: 'positioning:step_back',
     });
 
     // Verify both closeness and facing_away components are removed
@@ -1060,7 +1060,7 @@ describe('intimacy_handle_step_back rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
-      actionId: 'intimacy:step_back',
+      actionId: 'positioning:step_back',
     });
 
     // Verify actor a1's components are completely cleaned
@@ -1197,7 +1197,7 @@ describe('intimacy_handle_step_back rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
-      actionId: 'intimacy:step_back',
+      actionId: 'positioning:step_back',
     });
 
     // Verify normal step back behavior works (regression test)
@@ -1406,7 +1406,7 @@ describe('intimacy_handle_step_back rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
-      actionId: 'intimacy:step_back',
+      actionId: 'positioning:step_back',
     });
 
     // Verify a1 is completely removed from the intimate context

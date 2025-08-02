@@ -87,6 +87,8 @@ describe('ActionIndex Integration Tests', () => {
 
   describe('Real EntityManager Integration', () => {
     it('should work with real entity creation and component management', () => {
+      // NOTE: ActionIndex requires entities to have ALL required components for an action,
+      // not just ANY of the required components. This is the correct behavior for action validation.
       // Create real entities with components
       const player = entityManager.createEntity('player-1');
       entityManager.addComponent(player.id, 'core:position', {
@@ -145,21 +147,22 @@ describe('ActionIndex Integration Tests', () => {
 
       // Test NPC actions
       const npcCandidates = actionIndex.getCandidateActions(npc);
-      expect(npcCandidates).toHaveLength(3); // universal, walk (has position), interact (has position)
+      expect(npcCandidates).toHaveLength(2); // universal (no requirements), interact (has position)
       expect(npcCandidates.map((a) => a.id)).toEqual(
         expect.arrayContaining(['core:interact', 'core:universal'])
       );
+      // walk is NOT included because NPC lacks core:movement (requires ALL components)
 
       // Test component removal impact
       entityManager.removeComponent(player.id, 'core:movement');
       const playerCandidatesAfterRemoval =
         actionIndex.getCandidateActions(player);
-      expect(playerCandidatesAfterRemoval).toHaveLength(4); // Walk still available because player has position (ActionIndex includes if ANY component matches)
-      // But we can verify walk is included only because of position requirement, not movement
+      expect(playerCandidatesAfterRemoval).toHaveLength(3); // Walk NOT available because player lacks core:movement (requires ALL components)
+      // Verify walk is NOT included because movement component was removed
       const walkAction = playerCandidatesAfterRemoval.find(
         (a) => a.id === 'core:walk'
       );
-      expect(walkAction).toBeDefined(); // Walk is still a candidate (actual validation happens later in pipeline)
+      expect(walkAction).toBeUndefined(); // Walk is NOT a candidate (requires ALL components: position AND movement)
     });
 
     it('should handle entity lifecycle changes correctly', () => {
@@ -312,12 +315,12 @@ describe('ActionIndex Integration Tests', () => {
       entityManager.addComponent(civilian.id, 'core:dialogue', { charisma: 4 });
 
       const civilianCandidates = actionIndex.getCandidateActions(civilian);
-      // ActionIndex includes actions if actor has ANY required component, then filters by forbidden
+      // ActionIndex requires ALL required components for each action
       // Civilian has: core:position, core:dialogue
-      // So gets: walk (requires position+movement, has position), run (position+movement+stamina, has position),
-      // attack (position+combat, has position), talk (dialogue, has it), trade (inventory+dialogue, has dialogue)
-      // Plus 2 universal actions = 7 total
-      expect(civilianCandidates).toHaveLength(7);
+      // Gets: talk (requires dialogue - has it), wait (no requirements), observe (no requirements)
+      // Does NOT get: walk (requires position+movement), run (requires position+movement+stamina), 
+      // attack (requires position+combat), defend (requires combat), trade (requires inventory+dialogue)
+      expect(civilianCandidates).toHaveLength(3);
       expect(civilianCandidates.map((a) => a.id)).toEqual(
         expect.arrayContaining([
           'social:talk',

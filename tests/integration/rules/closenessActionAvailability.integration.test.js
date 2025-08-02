@@ -3,8 +3,8 @@
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import getCloseRule from '../../../data/mods/intimacy/rules/get_close.rule.json';
-import eventIsActionGetClose from '../../../data/mods/intimacy/conditions/event-is-action-get-close.condition.json';
+import getCloseRule from '../../../data/mods/positioning/rules/get_close.rule.json';
+import eventIsActionGetClose from '../../../data/mods/positioning/conditions/event-is-action-get-close.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
@@ -114,7 +114,7 @@ describe('closeness action availability chain', () => {
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'intimacy:event-is-action-get-close'
+        id === 'positioning:event-is-action-get-close'
           ? eventIsActionGetClose
           : undefined
       ),
@@ -370,7 +370,7 @@ describe('closeness action availability chain', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
-      actionId: 'intimacy:get_close',
+      actionId: 'positioning:get_close',
       targetId: 't1',
     });
 

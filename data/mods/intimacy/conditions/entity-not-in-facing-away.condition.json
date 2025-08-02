@@ -1,15 +1,15 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "intimacy:entity-not-in-facing-away",
-  "description": "Checks if the entity is not in the actor's facing_away_from array (i.e., the actor is not facing away from this entity).",
+  "description": "Checks if the actor is not in the entity's facing_away_from array (i.e., the entity is not facing away from the actor).",
   "logic": {
     "not": {
       "in": [
         {
-          "var": "entity.id"
+          "var": "actor.id"
         },
         {
-          "var": "actor.components.positioning:facing_away.facing_away_from"
+          "var": "entity.components.positioning:facing_away.facing_away_from"
         }
       ]
     }

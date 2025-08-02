@@ -10,8 +10,8 @@ import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
 import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
-import getCloseRule from '../../../data/mods/intimacy/rules/get_close.rule.json';
-import eventIsActionGetClose from '../../../data/mods/intimacy/conditions/event-is-action-get-close.condition.json';
+import getCloseRule from '../../../data/mods/positioning/rules/get_close.rule.json';
+import eventIsActionGetClose from '../../../data/mods/positioning/conditions/event-is-action-get-close.condition.json';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
@@ -96,7 +96,7 @@ function createHandlers(
   };
 }
 
-describe('intimacy_handle_get_close rule integration', () => {
+describe('positioning_handle_get_close rule integration', () => {
   let testEnv;
   let customEntityManager;
 
@@ -116,7 +116,7 @@ describe('intimacy_handle_get_close rule integration', () => {
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'intimacy:event-is-action-get-close'
+        id === 'positioning:event-is-action-get-close'
           ? eventIsActionGetClose
           : undefined
       ),
@@ -371,7 +371,7 @@ describe('intimacy_handle_get_close rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
-      actionId: 'intimacy:get_close',
+      actionId: 'positioning:get_close',
       targetId: 'b1',
     });
 
@@ -434,7 +434,7 @@ describe('intimacy_handle_get_close rule integration', () => {
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
-      actionId: 'intimacy:get_close',
+      actionId: 'positioning:get_close',
       targetId: 'c1',
     });
 
@@ -469,19 +469,19 @@ describe('intimacy_handle_get_close rule integration', () => {
     // Create a complex poly relationship
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'a1',
-      actionId: 'intimacy:get_close',
+      actionId: 'positioning:get_close',
       targetId: 'b1',
     });
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'b1',
-      actionId: 'intimacy:get_close',
+      actionId: 'positioning:get_close',
       targetId: 'c1',
     });
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'c1',
-      actionId: 'intimacy:get_close',
+      actionId: 'positioning:get_close',
       targetId: 'd1',
     });
 

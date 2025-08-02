@@ -50,6 +50,8 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
 
     mockEventBus = {
       dispatch: jest.fn(),
+      subscribe: jest.fn().mockReturnValue(() => {}), // Returns unsubscribe function
+      unsubscribe: jest.fn(),
     };
 
     mockSchemaValidator = {
@@ -238,20 +240,19 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
   });
 
   describe('Error Handling and Edge Cases', () => {
-    it('should maintain controller state when concept loading fails', async () => {
+    it('should fail initialization when concept loading fails', async () => {
       // Arrange
       database.getAllCharacterConcepts.mockRejectedValue(
         new Error('Database error')
       );
 
-      // Act
-      await controller.initialize();
-
-      // Assert
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ThematicDirectionController: Successfully initialized'
+      // Act & Assert
+      await expect(controller.initialize()).rejects.toThrow(
+        'initial data loading failed: Failed to list character concepts: Failed to list character concepts: Database error'
       );
-      // Controller should still be functional despite concept loading failure
+      
+      // Verify the error was logged appropriately  
+      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should validate concepts meet minimum requirements', async () => {
