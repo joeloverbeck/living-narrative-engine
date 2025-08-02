@@ -1,71 +1,45 @@
-OperationInterpreter: Resolved full string placeholder {event.payload.targetId} to: p_erotica:amaia_castillo_instance
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "ADD_COMPONENT"…
-consoleLogger.js:187 EntityMutationManager.addComponent: Adding component 'posturing:kneeling_before' to entity 'p_erotica:iker_aguirre_instance'
-consoleLogger.js:175 addComponent posturing:kneeling_before to entity p_erotica:iker_aguirre_instance Errors:
-[
-  {
-    "instancePath": "/entityId",
-    "schemaPath": "#/properties/entityId/pattern",
-    "keyword": "pattern",
-    "params": {
-      "pattern": "^[a-zA-Z0-9_-]+$"
-    },
-    "message": "must match pattern \"^[a-zA-Z0-9_-]+$\"",
-    "schema": "^[a-zA-Z0-9_-]+$",
-    "parentSchema": {
-      "type": "string",
-      "description": "The ID of the entity that the component holder is kneeling before",
-      "pattern": "^[a-zA-Z0-9_-]+$"
-    },
-    "data": "p_erotica:amaia_castillo_instance"
-  }
-]
+JsonLogicEvaluationService:     Actor: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 5/5: {"not":{"in":[{"var":"entity.id"},{"var":"actor.components.core:leading.followers"}]}} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 Cached value {key: 'core:potential_leaders:p_erotica:iker_aguirre_inst…name, core:description, core:portrait, core:exits', ttl: 5000}
+consoleLogger.js:175 EntityManager.getEntityInstance: Invalid ID 'undefined'. Expected non-blank string. {receivedId: undefined, receivedType: 'undefined', context: 'EntityManager.getEntityInstance'}
 error @ consoleLogger.js:175
-validateAndClone @ componentValidation.js:35
-validateAndCloneBound @ createValidateAndClone.js:13
-validateComponentData_fn @ componentMutationService.js:143
-addComponentCore_fn @ componentMutationService.js:250
-__privateGet.executeMonitored.context @ componentMutationService.js:218
-timeOperation @ PerformanceMonitor.js:167
-wrappedOperation @ MonitoringCoordinator.js:143
-execute @ CircuitBreaker.js:139
-executeMonitored @ MonitoringCoordinator.js:151
-addComponent @ componentMutationService.js:215
-addComponent @ EntityMutationManager.js:93
-addComponent @ entityManager.js:426
-addComponent @ entityManagerAdapter.js:74
-execute @ addComponentHandler.js:100
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:114
-await in executeActionSequence
-_executeActions @ systemLogicInterpreter.js:464
-processRule_fn @ systemLogicInterpreter.js:422
-handleEvent_fn @ systemLogicInterpreter.js:325
-await in handleEvent_fn
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-emitEvent_fn @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
-executeSafely_fn @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchWithErrorHandling @ eventDispatchService.js:114
-dispatchAction @ commandProcessor.js:120
-_dispatchAction @ commandProcessingWorkflow.js:204
-processCommand @ commandProcessingWorkflow.js:480
-_processCommandInternal @ processingCommandState.js:333
-_executeAction @ processingWorkflow.js:261
-await in _executeAction
-run @ processingWorkflow.js:87
-await in run
-enterState @ processingCommandState.js:290
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestProcessingCommandStateTransition @ baseTurnHandler.js:677
-requestProcessingCommandStateTransition @ turnContext.js:253
-run @ actionDecisionWorkflow.js:62
-await in run
+assertValidId @ dependencyUtils.js:89
+validateGetEntityInstanceParams @ parameterValidators.js:134
+getEntityInstance @ EntityQueryManager.js:92
+getEntityInstance @ entityManager.js:471
+getEntityInstance @ entityManagerAdapter.js:33
+createActorSnapshot_fn @ actionErrorContextBuilder.js:132
+buildErrorContext @ actionErrorContextBuilder.js:79
+buildEnhancedError_fn @ unifiedScopeResolver.js:665
+validateContext_fn @ unifiedScopeResolver.js:304
+resolveInternal_fn @ unifiedScopeResolver.js:167
+resolve @ unifiedScopeResolver.js:145
+resolveScope_fn @ MultiTargetResolutionStage.js:677
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:440
+executeInternal @ MultiTargetResolutionStage.js:132
+await in executeInternal
+execute @ PipelineStage.js:45
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:109
+getValidActionsInternal_fn @ actionDiscoveryService.js:183
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:117
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:114
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
 _handleActionDecision @ awaitingActorDecisionState.js:102
 enterState @ awaitingActorDecisionState.js:119
 await in enterState
@@ -83,76 +57,139 @@ advanceTurn @ turnManager.js:338
 await in advanceTurn
 start @ turnManager.js:203
 finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Operation addComponent failed: ValidationError: addComponent posturing:kneeling_before to entity p_erotica:iker_aguirre_instance Errors:
-[
-  {
-    "instancePath": "/entityId",
-    "schemaPath": "#/properties/entityId/pattern",
-    "keyword": "pattern",
-    "params": {
-      "pattern": "^[a-zA-Z0-9_-]+$"
-    },
-    "message": "must match pattern \"^[a-zA-Z0-9_-]+$\"",
-    "schema": "^[a-zA-Z0-9_-]+$",
-    "parentSchema": {
-      "type": "string",
-      "description": "The ID of the entity that the component holder is kneeling before",
-      "pattern": "^[a-zA-Z0-9_-]+$"
-    },
-    "data": "p_erotica:amaia_castillo_instance"
-  }
-]
-    at ComponentMutationService.validateComponentData_fn (componentMutationService.js:149:13)
-    at ComponentMutationService.addComponentCore_fn (componentMutationService.js:250:27)
-    at __privateGet.executeMonitored.context (componentMutationService.js:218:11)
-    at PerformanceMonitor.timeOperation (PerformanceMonitor.js:167:28)
-    at wrappedOperation (MonitoringCoordinator.js:143:45)
-    at CircuitBreaker.execute (CircuitBreaker.js:139:28)
-    at MonitoringCoordinator.executeMonitored (MonitoringCoordinator.js:151:35)
-    at ComponentMutationService.addComponent (componentMutationService.js:215:48)
-    at EntityMutationManager.addComponent (EntityMutationManager.js:93:49)
-    at EntityManager.addComponent (entityManager.js:426:40)
-error @ consoleLogger.js:175
-timeOperation @ PerformanceMonitor.js:172
-wrappedOperation @ MonitoringCoordinator.js:143
-execute @ CircuitBreaker.js:139
-executeMonitored @ MonitoringCoordinator.js:151
-addComponent @ componentMutationService.js:215
-addComponent @ EntityMutationManager.js:93
-addComponent @ entityManager.js:426
-addComponent @ entityManagerAdapter.js:74
-execute @ addComponentHandler.js:100
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:114
-await in executeActionSequence
-_executeActions @ systemLogicInterpreter.js:464
-processRule_fn @ systemLogicInterpreter.js:422
-handleEvent_fn @ systemLogicInterpreter.js:325
-await in handleEvent_fn
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-emitEvent_fn @ validatedEventDispatcher.js:192
-dispatch @ validatedEventDispatcher.js:222
-__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
-executeSafely_fn @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchWithErrorHandling @ eventDispatchService.js:114
-dispatchAction @ commandProcessor.js:120
-_dispatchAction @ commandProcessingWorkflow.js:204
-processCommand @ commandProcessingWorkflow.js:480
-_processCommandInternal @ processingCommandState.js:333
-_executeAction @ processingWorkflow.js:261
-await in _executeAction
-run @ processingWorkflow.js:87
-await in run
-enterState @ processingCommandState.js:290
+consoleLogger.js:163 EntityManager.getEntityInstance: Invalid instanceId 'undefined'
+warn @ consoleLogger.js:163
+validateGetEntityInstanceParams @ parameterValidators.js:136
+getEntityInstance @ EntityQueryManager.js:92
+getEntityInstance @ entityManager.js:471
+getEntityInstance @ entityManagerAdapter.js:33
+createActorSnapshot_fn @ actionErrorContextBuilder.js:132
+buildErrorContext @ actionErrorContextBuilder.js:79
+buildEnhancedError_fn @ unifiedScopeResolver.js:665
+validateContext_fn @ unifiedScopeResolver.js:304
+resolveInternal_fn @ unifiedScopeResolver.js:167
+resolve @ unifiedScopeResolver.js:145
+resolveScope_fn @ MultiTargetResolutionStage.js:677
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:440
+executeInternal @ MultiTargetResolutionStage.js:132
+await in executeInternal
+execute @ PipelineStage.js:45
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:109
+getValidActionsInternal_fn @ actionDiscoveryService.js:183
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:117
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:114
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
 _transitionToState @ baseTurnHandler.js:260
 await in _transitionToState
-requestProcessingCommandStateTransition @ baseTurnHandler.js:677
-requestProcessingCommandStateTransition @ turnContext.js:253
-run @ actionDecisionWorkflow.js:62
-await in run
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this warning
+consoleLogger.js:163 ActionErrorContextBuilder: Failed to create complete actor snapshot for undefined: InvalidArgumentError: EntityManager.getEntityInstance: Invalid instanceId 'undefined'
+    at validateGetEntityInstanceParams (parameterValidators.js:139:11)
+    at EntityQueryManager.getEntityInstance (EntityQueryManager.js:92:5)
+    at EntityManager.getEntityInstance (entityManager.js:471:31)
+    at EntityManagerAdapter.getEntityInstance (entityManagerAdapter.js:33:32)
+    at ActionErrorContextBuilder.createActorSnapshot_fn (actionErrorContextBuilder.js:132:47)
+    at ActionErrorContextBuilder.buildErrorContext (actionErrorContextBuilder.js:79:27)
+    at UnifiedScopeResolver.buildEnhancedError_fn (unifiedScopeResolver.js:665:58)
+    at UnifiedScopeResolver.validateContext_fn (unifiedScopeResolver.js:304:29)
+    at UnifiedScopeResolver.resolveInternal_fn (unifiedScopeResolver.js:167:31)
+    at UnifiedScopeResolver.resolve (unifiedScopeResolver.js:145:12)
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+createActorSnapshot_fn @ actionErrorContextBuilder.js:158
+buildErrorContext @ actionErrorContextBuilder.js:79
+buildEnhancedError_fn @ unifiedScopeResolver.js:665
+validateContext_fn @ unifiedScopeResolver.js:304
+resolveInternal_fn @ unifiedScopeResolver.js:167
+resolve @ unifiedScopeResolver.js:145
+resolveScope_fn @ MultiTargetResolutionStage.js:677
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:440
+executeInternal @ MultiTargetResolutionStage.js:132
+await in executeInternal
+execute @ PipelineStage.js:45
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:109
+getValidActionsInternal_fn @ actionDiscoveryService.js:183
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:117
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:114
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this warning
+consoleLogger.js:187 FixSuggestionEngine: Analyzing error for fixes: Invalid actor entity ID: undefined
+consoleLogger.js:175 Failed to resolve scope 'core:clear_directions': [InvalidActorIdError: Invalid actor entity ID: undefined
+    at UnifiedScopeResolver.validateContext…]
+error @ consoleLogger.js:175
+resolveScope_fn @ MultiTargetResolutionStage.js:686
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:440
+executeInternal @ MultiTargetResolutionStage.js:132
+await in executeInternal
+execute @ PipelineStage.js:45
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:109
+getValidActionsInternal_fn @ actionDiscoveryService.js:183
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:117
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:114
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
 _handleActionDecision @ awaitingActorDecisionState.js:102
 enterState @ awaitingActorDecisionState.js:119
 await in enterState
@@ -170,18 +207,271 @@ advanceTurn @ turnManager.js:338
 await in advanceTurn
 start @ turnManager.js:203
 finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:187 Circuit breaker 'addComponent' - Failure recorded {state: 'CLOSED', failureCount: 1, error: 'addComponent posturing:kneeling_before to entity p…"data": "p_erotica:amaia_castillo_instance"\n  }\n]'}
-consoleLogger.js:187 VED: Validating payload for event 'core:system_error_occurred' against schema 'core:system_error_occurred#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:system_error_occurred'.
-
-Error
-Error
-ADD_COMPONENT: Failed to add component "posturing:kneeling_before" to entity "p_erotica:iker_aguirre_instance". Error: addComponent posturing:kneeling_before to entity p_erotica:iker_aguirre_instance Errors: [ { "instancePath": "/entityId", "schemaPath": "#/properties/entityId/pattern", "keyword": "pattern", "params": { "pattern": "^[a-zA-Z0-9_-]+$" }, "message": "must match pattern \"^[a-zA-Z0-9_-]+$\"", "schema": "^[a-zA-Z0-9_-]+$", "parentSchema": { "type": "string", "description": "The ID of the entity that the component holder is kneeling before", "pattern": "^[a-zA-Z0-9_-]+$" }, "data": "p_erotica:amaia_castillo_instance" } ]
-
-Show less
-Developer details
-{
-  "raw": "addComponent posturing:kneeling_before to entity p_erotica:iker_aguirre_instance Errors:\n[\n  {\n    \"instancePath\": \"/entityId\",\n    \"schemaPath\": \"#/properties/entityId/pattern\",\n    \"keyword\": \"pattern\",\n    \"params\": {\n      \"pattern\": \"^[a-zA-Z0-9_-]+$\"\n    },\n    \"message\": \"must match pattern \\\"^[a-zA-Z0-9_-]+$\\\"\",\n    \"schema\": \"^[a-zA-Z0-9_-]+$\",\n    \"parentSchema\": {\n      \"type\": \"string\",\n      \"description\": \"The ID of the entity that the component holder is kneeling before\",\n      \"pattern\": \"^[a-zA-Z0-9_-]+$\"\n    },\n    \"data\": \"p_erotica:amaia_castillo_instance\"\n  }\n]",
-  "stack": "ValidationError: addComponent posturing:kneeling_before to entity p_erotica:iker_aguirre_instance Errors:\n[\n  {\n    \"instancePath\": \"/entityId\",\n    \"schemaPath\": \"#/properties/entityId/pattern\",\n    \"keyword\": \"pattern\",\n    \"params\": {\n      \"pattern\": \"^[a-zA-Z0-9_-]+$\"\n    },\n    \"message\": \"must match pattern \\\"^[a-zA-Z0-9_-]+$\\\"\",\n    \"schema\": \"^[a-zA-Z0-9_-]+$\",\n    \"parentSchema\": {\n      \"type\": \"string\",\n      \"description\": \"The ID of the entity that the component holder is kneeling before\",\n      \"pattern\": \"^[a-zA-Z0-9_-]+$\"\n    },\n    \"data\": \"p_erotica:amaia_castillo_instance\"\n  }\n]\n    at ComponentMutationService.validateComponentData_fn (http://127.0.0.1:8080/bundle.js:41712:13)\n    at ComponentMutationService.addComponentCore_fn (http://127.0.0.1:8080/bundle.js:41775:112)\n    at __privateGet.executeMonitored.context (http://127.0.0.1:8080/bundle.js:41610:97)\n    at PerformanceMonitor.timeOperation (http://127.0.0.1:8080/bundle.js:39987:30)\n    at wrappedOperation (http://127.0.0.1:8080/bundle.js:40705:62)\n    at CircuitBreaker.execute (http://127.0.0.1:8080/bundle.js:40335:30)\n    at MonitoringCoordinator.executeMonitored (http://127.0.0.1:8080/bundle.js:40712:37)\n    at ComponentMutationService.addComponent (http://127.0.0.1:8080/bundle.js:41608:66)\n    at EntityMutationManager.addComponent (http://127.0.0.1:8080/bundle.js:46797:67)\n    at EntityManager.addComponent (http://127.0.0.1:8080/bundle.js:47289:57)",
-  "timestamp": "2025-08-01T19:48:39.233Z"
-}
+consoleLogger.js:187 Cache miss {key: 'core:actors_in_location:p_erotica:iker_aguirre_ins…name, core:description, core:portrait, core:exits'}
+consoleLogger.js:187 EntityQueryManager.getEntitiesWithComponent found 2 entities with component 'core:position' using index
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-at-location'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-not-current-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-has-actor-component'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"and":[{"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]},{"!=":[{"var":"entity.id"},{"var":"actor.id"}]},{"!!":{"va.... Context keys: entity, actor, location, components, id
+consoleLogger.js:187 JsonLogicEvaluationService: Detailed evaluation of AND operation with 3 conditions:
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 1/3: {"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 2/3: {"!=":[{"var":"entity.id"},{"var":"actor.id"}]} => false
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   AND operation short-circuited at condition 2 (false result)
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-at-location'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-is-not-current-actor'...
+consoleLogger.js:187 JsonLogicEvaluationService: Resolving condition_ref 'core:entity-has-actor-component'...
+consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"and":[{"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]},{"!=":[{"var":"entity.id"},{"var":"actor.id"}]},{"!!":{"va.... Context keys: entity, actor, location, components, id
+consoleLogger.js:187 JsonLogicEvaluationService: Detailed evaluation of AND operation with 3 conditions:
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 1/3: {"==":[{"var":"entity.components.core:position.locationId"},{"var":"location.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 2/3: {"!=":[{"var":"entity.id"},{"var":"actor.id"}]} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:   Condition 3/3: {"!!":{"var":"entity.components.core:actor"}} => true
+consoleLogger.js:187 JsonLogicEvaluationService:     Entity: p_erotica:amaia_castillo_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Actor: p_erotica:iker_aguirre_instance, Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService:     Location: p_erotica:outside_tables_coffee_shop_instance
+consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
+consoleLogger.js:187 Cached value {key: 'core:actors_in_location:p_erotica:iker_aguirre_ins…name, core:description, core:portrait, core:exits', ttl: 5000}
+consoleLogger.js:187 Cache hit {key: 'core:actors_in_location:p_erotica:iker_aguirre_ins…name, core:description, core:portrait, core:exits', age: 0}
+consoleLogger.js:175 EntityManager.getEntityInstance: Invalid ID 'undefined'. Expected non-blank string. {receivedId: undefined, receivedType: 'undefined', context: 'EntityManager.getEntityInstance'}
+error @ consoleLogger.js:175
+assertValidId @ dependencyUtils.js:89
+validateGetEntityInstanceParams @ parameterValidators.js:134
+getEntityInstance @ EntityQueryManager.js:92
+getEntityInstance @ entityManager.js:471
+getEntityInstance @ entityManagerAdapter.js:33
+createActorSnapshot_fn @ actionErrorContextBuilder.js:132
+buildErrorContext @ actionErrorContextBuilder.js:79
+buildEnhancedError_fn @ unifiedScopeResolver.js:665
+validateContext_fn @ unifiedScopeResolver.js:304
+resolveInternal_fn @ unifiedScopeResolver.js:167
+resolve @ unifiedScopeResolver.js:145
+resolveScope_fn @ MultiTargetResolutionStage.js:677
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:440
+executeInternal @ MultiTargetResolutionStage.js:132
+await in executeInternal
+execute @ PipelineStage.js:45
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:109
+getValidActionsInternal_fn @ actionDiscoveryService.js:183
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:117
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:114
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:163 EntityManager.getEntityInstance: Invalid instanceId 'undefined'
+warn @ consoleLogger.js:163
+validateGetEntityInstanceParams @ parameterValidators.js:136
+getEntityInstance @ EntityQueryManager.js:92
+getEntityInstance @ entityManager.js:471
+getEntityInstance @ entityManagerAdapter.js:33
+createActorSnapshot_fn @ actionErrorContextBuilder.js:132
+buildErrorContext @ actionErrorContextBuilder.js:79
+buildEnhancedError_fn @ unifiedScopeResolver.js:665
+validateContext_fn @ unifiedScopeResolver.js:304
+resolveInternal_fn @ unifiedScopeResolver.js:167
+resolve @ unifiedScopeResolver.js:145
+resolveScope_fn @ MultiTargetResolutionStage.js:677
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:440
+executeInternal @ MultiTargetResolutionStage.js:132
+await in executeInternal
+execute @ PipelineStage.js:45
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:109
+getValidActionsInternal_fn @ actionDiscoveryService.js:183
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:117
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:114
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this warning
+consoleLogger.js:163 ActionErrorContextBuilder: Failed to create complete actor snapshot for undefined: InvalidArgumentError: EntityManager.getEntityInstance: Invalid instanceId 'undefined'
+    at validateGetEntityInstanceParams (parameterValidators.js:139:11)
+    at EntityQueryManager.getEntityInstance (EntityQueryManager.js:92:5)
+    at EntityManager.getEntityInstance (entityManager.js:471:31)
+    at EntityManagerAdapter.getEntityInstance (entityManagerAdapter.js:33:32)
+    at ActionErrorContextBuilder.createActorSnapshot_fn (actionErrorContextBuilder.js:132:47)
+    at ActionErrorContextBuilder.buildErrorContext (actionErrorContextBuilder.js:79:27)
+    at UnifiedScopeResolver.buildEnhancedError_fn (unifiedScopeResolver.js:665:58)
+    at UnifiedScopeResolver.validateContext_fn (unifiedScopeResolver.js:304:29)
+    at UnifiedScopeResolver.resolveInternal_fn (unifiedScopeResolver.js:167:31)
+    at UnifiedScopeResolver.resolve (unifiedScopeResolver.js:145:12)
+warn @ consoleLogger.js:163
+warn @ loggerUtils.js:95
+createActorSnapshot_fn @ actionErrorContextBuilder.js:158
+buildErrorContext @ actionErrorContextBuilder.js:79
+buildEnhancedError_fn @ unifiedScopeResolver.js:665
+validateContext_fn @ unifiedScopeResolver.js:304
+resolveInternal_fn @ unifiedScopeResolver.js:167
+resolve @ unifiedScopeResolver.js:145
+resolveScope_fn @ MultiTargetResolutionStage.js:677
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:440
+executeInternal @ MultiTargetResolutionStage.js:132
+await in executeInternal
+execute @ PipelineStage.js:45
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:109
+getValidActionsInternal_fn @ actionDiscoveryService.js:183
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:117
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:114
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this warning
+consoleLogger.js:187 FixSuggestionEngine: Analyzing error for fixes: Invalid actor entity ID: undefined
+consoleLogger.js:175 Failed to resolve scope 'core:actors_in_location': [InvalidActorIdError: Invalid actor entity ID: undefined
+    at UnifiedScopeResolver.validateContext…]
+error @ consoleLogger.js:175
+resolveScope_fn @ MultiTargetResolutionStage.js:686
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:440
+executeInternal @ MultiTargetResolutionStage.js:132
+await in executeInternal
+execute @ PipelineStage.js:45
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:109
+getValidActionsInternal_fn @ actionDiscoveryService.js:183
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:117
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:114
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:187 Cache hit {key: 'core:actors_in_location:p_erotica:iker_aguirre_ins…name, core:description, core:portrait, core:exits', age: 1}
+consoleLogger.js:187 Cache miss {key: 'clothing:topmost_clothing:p_erotica:iker_aguirre_i…name, core:description, core:portrait, core:exits'}
+consoleLogger.js:187 Cached value {key: 'clothing:topmost_clothing:p_erotica:iker_aguirre_i…name, core:description, core:portrait, core:exits', ttl: 5000}
+consoleLogger.js:187 Executing pipeline stage: ActionFormatting
+consoleLogger.js:187 Formatting command for action: core:follow, template: "follow {target}", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:amaia_castillo_instance, display name: "Amaia Castillo"
+consoleLogger.js:187  <- Final formatted command: "follow Amaia Castillo"
+consoleLogger.js:187 Formatting command for action: core:wait, template: "wait", targetType: none
+consoleLogger.js:187  -> No target type, using template as is.
+consoleLogger.js:187  <- Final formatted command: "wait"
+consoleLogger.js:187 Formatting command for action: violence:slap, template: "slap {target}", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:amaia_castillo_instance, display name: "Amaia Castillo"
+consoleLogger.js:187  <- Final formatted command: "slap Amaia Castillo"
+consoleLogger.js:187 Formatting command for action: violence:sucker_punch, template: "sucker-punch {target}", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:amaia_castillo_instance, display name: "Amaia Castillo"
+consoleLogger.js:187  <- Final formatted command: "sucker-punch Amaia Castillo"
+consoleLogger.js:187 Formatting command for action: intimacy:get_close, template: "get close to {target}", targetType: entity
+consoleLogger.js:187  -> Found entity p_erotica:amaia_castillo_instance, display name: "Amaia Castillo"
+consoleLogger.js:187  <- Final formatted command: "get close to Amaia Castillo"
+consoleLogger.js:187 Formatting command for action: clothing:remove_clothing, template: "remove {target}", targetType: entity
+consoleLogger.js:187  -> Found entity 98a0b151-c264-4667-9947-ecea54ccaf3b, display name: "fitted boxer briefs"
+consoleLogger.js:187  <- Final formatted command: "remove fitted boxer briefs"
+consoleLogger.js:187 Formatting command for action: clothing:remove_clothing, template: "remove {target}", targetType: entity
+consoleLogger.js:187  -> Found entity 00a4569e-fa65-451a-879d-ca99107fa6c3, display name: "sneakers"
+consoleLogger.js:187  <- Final formatted command: "remove sneakers"
+consoleLogger.js:187 Formatting command for action: clothing:remove_clothing, template: "remove {target}", targetType: entity
+consoleLogger.js:187  -> Found entity 466dd2b4-5bfd-4b4e-b425-777ffb04a34a, display name: "trucker jacket"
+consoleLogger.js:187  <- Final formatted command: "remove trucker jacket"
+consoleLogger.js:187 Formatting command for action: clothing:remove_clothing, template: "remove {target}", targetType: entity
+consoleLogger.js:187  -> Found entity 4449c317-3025-4a5b-bc2d-41fe4e8059a5, display name: "slim-tapered chinos"
