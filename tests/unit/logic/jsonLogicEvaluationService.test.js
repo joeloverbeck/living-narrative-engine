@@ -14,7 +14,9 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js'; // Adjust path as needed
+import JsonLogicEvaluationService, {
+  evaluateConditionWithLogging,
+} from '../../../src/logic/jsonLogicEvaluationService.js'; // Adjust path as needed
 // --- Task 1: Import necessary modules (Ticket 2.6.3) ---
 import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js'; // Adjust path
 import Entity from '../../../src/entities/entity.js'; // Adjust path
@@ -701,6 +703,827 @@ describe('JsonLogicEvaluationService', () => {
         ),
         expect.anything()
       );
+    });
+
+    test('should detect dangerous properties using getOwnPropertyNames', () => {
+      // Test detection of __proto__ using Object.defineProperty
+      const protoRule = {};
+      Object.defineProperty(protoRule, '__proto__', {
+        value: {},
+        enumerable: false,
+        configurable: true,
+      });
+
+      const context = { actor: { id: 'test' } };
+      const result = service.evaluate(protoRule, context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'JsonLogicEvaluationService: JSON Logic validation failed:',
+        expect.objectContaining({
+          message: expect.stringContaining("Disallowed property '__proto__'"),
+        })
+      );
+    });
+
+    test('should detect constructor property using getOwnPropertyNames', () => {
+      // Test detection of constructor using Object.defineProperty
+      const constructorRule = {};
+      Object.defineProperty(constructorRule, 'constructor', {
+        value: {},
+        enumerable: false,
+        configurable: true,
+      });
+
+      const context = { actor: { id: 'test' } };
+      const result = service.evaluate(constructorRule, context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'JsonLogicEvaluationService: JSON Logic validation failed:',
+        expect.objectContaining({
+          message: expect.stringContaining("Disallowed property 'constructor'"),
+        })
+      );
+    });
+  });
+
+  describe('Logical Group Evaluation with Error Handling', () => {
+    let service;
+    let originalJest;
+    let originalNodeEnv;
+
+    beforeEach(() => {
+      mockLogger.error.mockClear();
+      mockLogger.debug.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+      };
+
+      service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+
+      // Save original values
+      originalJest = globalThis.jest;
+      originalNodeEnv = globalThis.process?.env?.NODE_ENV;
+
+      // Simulate non-test environment to trigger logical group evaluation
+      delete globalThis.jest;
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = 'production';
+      }
+    });
+
+    afterEach(() => {
+      // Restore original values
+      if (originalJest !== undefined) {
+        globalThis.jest = originalJest;
+      } else {
+        delete globalThis.jest;
+      }
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = originalNodeEnv;
+      }
+    });
+
+    test('should log error when entity position component has error', () => {
+      const rule = {
+        and: [
+          { '==': [{ var: 'actor.id' }, 'test'] },
+          { '==': [{ var: 'value' }, 1] },
+        ],
+      };
+
+      const context = {
+        actor: { id: 'test' },
+        value: 1,
+        entity: {
+          id: 'entity123',
+          components: {
+            'core:position': {
+              error: new Error('Failed to load position'),
+            },
+          },
+        },
+      };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'JsonLogicEvaluationService: Error retrieving entity position',
+        expect.any(Error)
+      );
+    });
+
+    test('should log error when actor position component has error', () => {
+      const rule = {
+        and: [
+          { '==': [{ var: 'actor.id' }, 'test'] },
+          { '==': [{ var: 'value' }, 1] },
+        ],
+      };
+
+      const context = {
+        actor: {
+          id: 'test',
+          components: {
+            'core:position': {
+              error: new Error('Failed to load actor position'),
+            },
+          },
+        },
+        value: 1,
+      };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'JsonLogicEvaluationService: Error retrieving actor position',
+        expect.any(Error)
+      );
+    });
+
+    test('should log critical error when actor exists but actor.id is undefined', () => {
+      const rule = {
+        and: [
+          { '==': [{ var: 'value' }, 1] },
+          { '==': [{ var: 'test' }, true] },
+        ],
+      };
+
+      const context = {
+        actor: {
+          // id is missing/undefined
+          components: {
+            'core:position': { locationId: 'loc123' },
+          },
+        },
+        value: 1,
+        test: true,
+      };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'JsonLogicEvaluationService: [CRITICAL] Actor exists but actor.id is undefined!',
+        expect.objectContaining({
+          actorKeys: expect.arrayContaining(['components']),
+          hasComponents: true,
+        })
+      );
+    });
+
+    test('should log when actor is completely missing from context', () => {
+      const rule = {
+        or: [
+          { '==': [{ var: 'value' }, 1] },
+          { '==': [{ var: 'test' }, false] },
+        ],
+      };
+
+      const context = {
+        // No actor property
+        value: 1,
+        test: false,
+        entity: { id: 'entity123' },
+      };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Actor: undefined (missing from context)')
+      );
+    });
+
+    test('should log OR operation short-circuit at specific condition', () => {
+      const rule = {
+        or: [
+          { '==': [{ var: 'value' }, 1] },
+          { '==': [{ var: 'test' }, false] },
+          { '==': [{ var: 'never_evaluated' }, true] },
+        ],
+      };
+
+      const context = {
+        value: 1,
+        test: false,
+        never_evaluated: false,
+      };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'OR operation short-circuited at condition 1 (true result)'
+        )
+      );
+    });
+  });
+
+  describe('Empty Array Special Cases', () => {
+    let service;
+
+    beforeEach(() => {
+      mockLogger.debug.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+      };
+
+      service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+    });
+
+    test('should return true for {and: []} (vacuous truth)', () => {
+      const rule = { and: [] };
+      const context = { actor: { id: 'test' } };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'JsonLogicEvaluationService: Special-case {and: []} ⇒ true (vacuous truth)'
+      );
+    });
+
+    test('should return false for {or: []} (vacuous falsity)', () => {
+      const rule = { or: [] };
+      const context = { actor: { id: 'test' } };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'JsonLogicEvaluationService: Special-case {or: []} ⇒ false (vacuous falsity)'
+      );
+    });
+  });
+
+  describe('Non-Test Environment Behavior', () => {
+    let service;
+    let originalJest;
+    let originalNodeEnv;
+
+    beforeEach(() => {
+      mockLogger.debug.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+      };
+
+      service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+
+      // Save original values
+      originalJest = globalThis.jest;
+      originalNodeEnv = globalThis.process?.env?.NODE_ENV;
+    });
+
+    afterEach(() => {
+      // Restore original values
+      if (originalJest !== undefined) {
+        globalThis.jest = originalJest;
+      } else {
+        delete globalThis.jest;
+      }
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = originalNodeEnv;
+      }
+    });
+
+    test('should use evaluateLogicalGroup in non-test environment', () => {
+      // Simulate non-test environment
+      delete globalThis.jest;
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = 'production';
+      }
+
+      const rule = {
+        and: [
+          { '==': [{ var: 'value' }, 1] },
+          { '==': [{ var: 'test' }, true] },
+        ],
+      };
+
+      const context = {
+        value: 1,
+        test: true,
+        actor: { id: 'test-actor' },
+      };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(true);
+      // Should see detailed evaluation logs from evaluateLogicalGroup
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Detailed evaluation of AND operation with 2 conditions'
+        )
+      );
+    });
+  });
+
+  describe('evaluateConditionWithLogging Function', () => {
+    let service;
+    let mockLoggerForUtil;
+
+    beforeEach(() => {
+      mockLoggerForUtil = {
+        debug: jest.fn(),
+        error: jest.fn(),
+      };
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+      };
+
+      service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+    });
+
+    test('should evaluate condition successfully and log results', () => {
+      const condition = { '==': [{ var: 'value' }, 42] };
+      const context = { value: 42 };
+      const label = '[Test]';
+
+      const result = evaluateConditionWithLogging(
+        service,
+        condition,
+        context,
+        mockLoggerForUtil,
+        label
+      );
+
+      expect(result).toEqual({
+        result: true,
+        errored: false,
+        error: undefined,
+      });
+
+      expect(mockLoggerForUtil.debug).toHaveBeenCalledWith(
+        '[Test] Condition evaluation raw result: true'
+      );
+      expect(mockLoggerForUtil.debug).toHaveBeenCalledWith(
+        '[Test] Condition evaluation final boolean result: true'
+      );
+      expect(mockLoggerForUtil.error).not.toHaveBeenCalled();
+    });
+
+    test('should handle evaluation errors and return false', () => {
+      // Create a condition that will cause an error
+      const condition = {
+        customInvalidOp: ['will cause error'],
+      };
+      const context = { value: 42 };
+      const label = '[ErrorTest]';
+
+      // Mock service.evaluate to throw an error
+      const evaluateSpy = jest.spyOn(service, 'evaluate');
+      evaluateSpy.mockImplementation(() => {
+        throw new Error('Evaluation failed');
+      });
+
+      const result = evaluateConditionWithLogging(
+        service,
+        condition,
+        context,
+        mockLoggerForUtil,
+        label
+      );
+
+      expect(result).toEqual({
+        result: false,
+        errored: true,
+        error: expect.any(Error),
+      });
+
+      expect(mockLoggerForUtil.error).toHaveBeenCalledWith(
+        '[ErrorTest] Error during condition evaluation. Treating condition as FALSE.',
+        expect.any(Error)
+      );
+
+      evaluateSpy.mockRestore();
+    });
+
+    test('should convert falsy results to false', () => {
+      const condition = { '==': [{ var: 'value' }, 0] };
+      const context = { value: 42 }; // Will evaluate to false
+      const label = '[FalsyTest]';
+
+      const result = evaluateConditionWithLogging(
+        service,
+        condition,
+        context,
+        mockLoggerForUtil,
+        label
+      );
+
+      expect(result).toEqual({
+        result: false,
+        errored: false,
+        error: undefined,
+      });
+
+      expect(mockLoggerForUtil.debug).toHaveBeenCalledWith(
+        '[FalsyTest] Condition evaluation raw result: false'
+      );
+      expect(mockLoggerForUtil.debug).toHaveBeenCalledWith(
+        '[FalsyTest] Condition evaluation final boolean result: false'
+      );
+    });
+  });
+
+  describe('Constructor warnings', () => {
+    test('should warn when no gameDataRepository is provided', () => {
+      mockLogger.warn.mockClear();
+
+      const service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        // No gameDataRepository provided
+      });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'JsonLogicEvaluationService: No gameDataRepository provided; condition_ref resolution disabled.'
+      );
+
+      // Verify fallback repository is set
+      const rule = { condition_ref: 'test_condition' };
+      const context = { value: 1 };
+      const result = service.evaluate(rule, context);
+
+      // Should return false as condition_ref can't be resolved
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('Empty object handling in validation', () => {
+    let service;
+
+    beforeEach(() => {
+      mockLogger.debug.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+      };
+
+      service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+    });
+
+    test('should handle empty objects in rules', () => {
+      const rule = { and: [{ '==': [1, 1] }, {}] }; // Empty object in array
+      const context = { value: 1 };
+
+      const result = service.evaluate(rule, context);
+
+      // Empty objects are truthy in JavaScript, so AND with true and {} is true
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('Condition ref error handling', () => {
+    let service;
+
+    beforeEach(() => {
+      mockLogger.error.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockImplementation((id) => {
+          if (id === 'circular_ref') {
+            throw new Error('Circular condition_ref detected: circular_ref');
+          }
+          return null;
+        }),
+      };
+
+      service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+    });
+
+    test('should handle circular condition_ref errors', () => {
+      const rule = { condition_ref: 'circular_ref' };
+      const context = { value: 1 };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'JsonLogicEvaluationService: Circular condition_ref detected: circular_ref'
+      );
+    });
+  });
+
+  describe('Location logging in logical groups', () => {
+    let service;
+    let originalJest;
+    let originalNodeEnv;
+
+    beforeEach(() => {
+      mockLogger.debug.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+      };
+
+      service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+
+      // Save and modify environment
+      originalJest = globalThis.jest;
+      originalNodeEnv = globalThis.process?.env?.NODE_ENV;
+      delete globalThis.jest;
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = 'production';
+      }
+    });
+
+    afterEach(() => {
+      // Restore original values
+      if (originalJest !== undefined) {
+        globalThis.jest = originalJest;
+      }
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = originalNodeEnv;
+      }
+    });
+
+    test('should log location information when available', () => {
+      const rule = {
+        and: [{ '==': [{ var: 'value' }, 1] }],
+      };
+
+      const context = {
+        value: 1,
+        location: { id: 'test-location-123' },
+      };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Location: test-location-123')
+      );
+    });
+  });
+
+  describe('AND operation short-circuit', () => {
+    let service;
+    let originalJest;
+    let originalNodeEnv;
+
+    beforeEach(() => {
+      mockLogger.debug.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+      };
+
+      service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+
+      // Save and modify environment
+      originalJest = globalThis.jest;
+      originalNodeEnv = globalThis.process?.env?.NODE_ENV;
+      delete globalThis.jest;
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = 'production';
+      }
+    });
+
+    afterEach(() => {
+      // Restore original values
+      if (originalJest !== undefined) {
+        globalThis.jest = originalJest;
+      }
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = originalNodeEnv;
+      }
+    });
+
+    test('should short-circuit AND operation on false condition', () => {
+      const rule = {
+        and: [
+          { '==': [{ var: 'value' }, 2] }, // This will be false
+          { '==': [{ var: 'test' }, true] },
+          { '==': [{ var: 'never_evaluated' }, true] },
+        ],
+      };
+
+      const context = {
+        value: 1, // Not equal to 2, so first condition is false
+        test: true,
+        never_evaluated: true,
+      };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'AND operation short-circuited at condition 1 (false result)'
+        )
+      );
+    });
+
+    test('should return final result when no short-circuit occurs', () => {
+      const rule = {
+        and: [
+          { '==': [{ var: 'value' }, 1] },
+          { '==': [{ var: 'test' }, true] },
+        ],
+      };
+
+      const context = {
+        value: 1,
+        test: true,
+      };
+
+      const result = service.evaluate(rule, context);
+
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('addOperation error handling', () => {
+    let service;
+
+    beforeEach(() => {
+      mockLogger.error.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+      };
+
+      service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+    });
+
+    test('should handle errors when adding custom operations', () => {
+      // Mock jsonLogic.add_operation to throw an error
+      const originalAddOperation = jsonLogic.add_operation;
+      jsonLogic.add_operation = jest.fn().mockImplementation(() => {
+        throw new Error('Failed to add operation');
+      });
+
+      service.addOperation('test_op', () => true);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'JsonLogicEvaluationService: Failed to add custom JSON Logic operation "test_op":',
+        expect.any(Error)
+      );
+
+      // Restore original function
+      jsonLogic.add_operation = originalAddOperation;
+    });
+  });
+
+  describe('Additional edge cases for full coverage', () => {
+    let service;
+
+    beforeEach(() => {
+      mockLogger.error.mockClear();
+
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockReturnValue(null),
+      };
+
+      service = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+    });
+
+    test('should throw for prototype property detected via getOwnPropertyNames', () => {
+      // Create an object with prototype property that would be detected by getOwnPropertyNames
+      const prototypeRule = Object.create(null);
+      Object.defineProperty(prototypeRule, 'prototype', {
+        value: {},
+        enumerable: false,
+        configurable: true,
+      });
+
+      const context = { actor: { id: 'test' } };
+      const result = service.evaluate(prototypeRule, context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'JsonLogicEvaluationService: JSON Logic validation failed:',
+        expect.objectContaining({
+          message: expect.stringContaining("Disallowed property 'prototype'"),
+        })
+      );
+    });
+
+    test('should handle unexpected error types in resolveRule', () => {
+      const mockGameDataRepository = {
+        getConditionDefinition: jest.fn().mockImplementation(() => {
+          // Throw a non-standard error that doesn't match expected messages
+          throw new Error('Unexpected database error');
+        }),
+      };
+
+      const serviceWithErrorRepo = new JsonLogicEvaluationService({
+        logger: mockLogger,
+        gameDataRepository: mockGameDataRepository,
+      });
+
+      const rule = { condition_ref: 'some_condition' };
+      const context = { value: 1 };
+
+      // This should cause the general throw in resolveRule to execute
+      expect(() => {
+        serviceWithErrorRepo.evaluate(rule, context);
+      }).toThrow('Unexpected database error');
+    });
+
+    test('should reach final return in evaluateLogicalGroup for empty OR', () => {
+      // Set up non-test environment
+      const originalJest = globalThis.jest;
+      const originalNodeEnv = globalThis.process?.env?.NODE_ENV;
+      delete globalThis.jest;
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = 'production';
+      }
+
+      const rule = {
+        or: [], // Empty OR array - no conditions to evaluate
+      };
+
+      const context = {
+        value: 1,
+      };
+
+      const result = service.evaluate(rule, context);
+
+      // Empty OR should return false (handled by special case before evaluateLogicalGroup)
+      expect(result).toBe(false);
+
+      // Restore environment
+      if (originalJest !== undefined) {
+        globalThis.jest = originalJest;
+      }
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = originalNodeEnv;
+      }
+    });
+
+    test('should reach final return for OR with all false conditions', () => {
+      // Set up non-test environment
+      const originalJest = globalThis.jest;
+      const originalNodeEnv = globalThis.process?.env?.NODE_ENV;
+      delete globalThis.jest;
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = 'production';
+      }
+
+      const rule = {
+        or: [
+          { '==': [{ var: 'value' }, 2] }, // false
+          { '==': [{ var: 'test' }, false] }, // false
+        ],
+      };
+
+      const context = {
+        value: 1,
+        test: true,
+      };
+
+      const result = service.evaluate(rule, context);
+
+      // All conditions are false, so OR returns false via final return
+      expect(result).toBe(false);
+
+      // Restore environment
+      if (originalJest !== undefined) {
+        globalThis.jest = originalJest;
+      }
+      if (globalThis.process?.env) {
+        globalThis.process.env.NODE_ENV = originalNodeEnv;
+      }
     });
   });
 });

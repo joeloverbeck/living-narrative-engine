@@ -3,7 +3,14 @@
  * @description Proves that multi-target actions fail to resolve scopes that work for legacy actions
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { TargetResolutionService } from '../../../../src/actions/targetResolutionService.js';
 import { MultiTargetResolutionStage } from '../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import TargetContextBuilder from '../../../../src/scopeDsl/utils/targetContextBuilder.js';
@@ -20,7 +27,7 @@ describe('MultiTarget vs Legacy Scope Resolution', () => {
   let targetResolutionService;
   let targetContextBuilder;
   let multiTargetStage;
-  
+
   beforeEach(() => {
     // Setup mocks
     mockLogger = {
@@ -33,31 +40,31 @@ describe('MultiTarget vs Legacy Scope Resolution', () => {
     mockEntityManager = {
       getEntityInstance: jest.fn(),
     };
-    
+
     const mockGameStateManager = {
       getCurrentTurn: jest.fn(() => 1),
       getTimeOfDay: jest.fn(() => 'morning'),
       getWeather: jest.fn(() => 'clear'),
     };
-    
+
     // Setup target context builder
     targetContextBuilder = new TargetContextBuilder({
       entityManager: mockEntityManager,
       gameStateManager: mockGameStateManager,
       logger: mockLogger,
     });
-    
+
     // Create simple mock
     mockUnifiedScopeResolver = {
       resolve: jest.fn(),
     };
-    
+
     // Setup target resolution service (legacy path)
     targetResolutionService = new TargetResolutionService({
       unifiedScopeResolver: mockUnifiedScopeResolver,
       logger: mockLogger,
     });
-    
+
     // Setup multi-target stage (new path)
     multiTargetStage = new MultiTargetResolutionStage({
       unifiedScopeResolver: mockUnifiedScopeResolver,
@@ -86,23 +93,25 @@ describe('MultiTarget vs Legacy Scope Resolution', () => {
         'core:actor': {},
       })),
     };
-    
+
     mockEntityManager.getEntityInstance.mockReturnValue(mockActorEntity);
-    
+
     const actionContext = {
       currentLocation: 'coffee_shop',
       location: { id: 'coffee_shop' },
     };
-    
+
     // Capture context calls to UnifiedScopeResolver
     const capturedContexts = [];
     mockUnifiedScopeResolver.resolve.mockImplementation((scope, context) => {
       // Capture the actual actor object passed (before JSON serialization strips methods)
-      capturedContexts.push({ 
-        scope, 
+      capturedContexts.push({
+        scope,
         actorId: context.actor?.id,
-        actorHasMethods: !!(context.actor?.getComponentData && context.actor?.getAllComponents),
-        actorKeys: context.actor ? Object.keys(context.actor).sort() : []
+        actorHasMethods: !!(
+          context.actor?.getComponentData && context.actor?.getAllComponents
+        ),
+        actorKeys: context.actor ? Object.keys(context.actor).sort() : [],
       });
       return ActionResult.success(new Set(['test:amaia']));
     });
@@ -126,36 +135,35 @@ describe('MultiTarget vs Legacy Scope Resolution', () => {
         },
       },
     };
-    
+
     const multiTargetContext = {
       candidateActions: [multiTargetActionDef],
       actor: mockActorEntity, // Full entity object
       actionContext,
       data: {},
     };
-    
+
     await multiTargetStage.executeInternal(multiTargetContext);
 
     // Both paths should have been called
     expect(capturedContexts).toHaveLength(2);
-    
+
     const legacyCapture = capturedContexts[0];
     const multiTargetCapture = capturedContexts[1];
-    
+
     // Both should have the same actor ID
     expect(legacyCapture.actorId).toBe('test:iker');
     expect(multiTargetCapture.actorId).toBe('test:iker');
-    
-    
+
     // Both should now pass the full entity object with methods
     expect(legacyCapture.actorHasMethods).toBe(true);
     expect(multiTargetCapture.actorHasMethods).toBe(true);
-    
+
     // Both should have the same actor object structure
     expect(legacyCapture.actorKeys).toContain('id');
     expect(legacyCapture.actorKeys).toContain('getComponentData');
     expect(legacyCapture.actorKeys).toContain('getAllComponents');
-    
+
     expect(multiTargetCapture.actorKeys).toContain('id');
     expect(multiTargetCapture.actorKeys).toContain('getComponentData');
     expect(multiTargetCapture.actorKeys).toContain('getAllComponents');
@@ -169,15 +177,15 @@ describe('MultiTarget vs Legacy Scope Resolution', () => {
     mockUnifiedScopeResolver.resolve
       .mockReturnValueOnce(ActionResult.success(new Set(['test:amaia']))) // Legacy call - succeeds
       .mockReturnValueOnce(ActionResult.success(new Set([]))); // Multi-target call - fails due to context
-    
+
     const mockActorEntity = {
       id: 'test:iker',
       getComponentData: jest.fn(() => ({ locationId: 'coffee_shop' })),
       getAllComponents: jest.fn(() => ({ 'core:actor': {} })),
     };
-    
+
     mockEntityManager.getEntityInstance.mockReturnValue(mockActorEntity);
-    
+
     const actionContext = {
       currentLocation: 'coffee_shop',
       location: { id: 'coffee_shop' },
@@ -213,7 +221,7 @@ describe('MultiTarget vs Legacy Scope Resolution', () => {
     // Legacy finds targets, multi-target doesn't
     expect(legacyResult.success).toBe(true);
     expect(legacyResult.value).toHaveLength(1);
-    
+
     expect(multiTargetResult.success).toBe(true);
     expect(multiTargetResult.data.actionsWithTargets).toHaveLength(0); // Bug: no actions found
   });

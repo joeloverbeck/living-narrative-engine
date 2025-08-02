@@ -169,7 +169,6 @@ describe('CommandProcessor - Performance Benchmarks', () => {
   });
 
   describe('Comparative Performance Analysis', () => {
-
     it('should scale efficiently with target count', async () => {
       const targetCounts = [1, 5, 20];
       const results = [];
