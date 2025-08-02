@@ -179,8 +179,12 @@ export function createMockElement(tag = 'div') {
       if (selector === 'p' || selector === '.error-message, p') {
         return {
           textContent: '',
-          get textContent() { return this._textContent || ''; },
-          set textContent(value) { this._textContent = value; },
+          get textContent() {
+            return this._textContent || '';
+          },
+          set textContent(value) {
+            this._textContent = value;
+          },
         };
       }
       return null;
@@ -307,7 +311,7 @@ export function setupThematicDirectionDOM(mockElements) {
         'generated-concept': mockElements.generatedConcept,
         'concept-text': mockElements.conceptText,
         'character-count': mockElements.characterCount,
-        'timestamp': mockElements.timestamp,
+        timestamp: mockElements.timestamp,
 
         // New concept selector elements
         'concept-selector': mockElements.conceptSelector,

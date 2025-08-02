@@ -29,7 +29,7 @@ describe('ThematicDirectionController - Debug', () => {
       querySelector: jest.fn(),
       createElement: jest.fn(),
     };
-    
+
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -65,7 +65,7 @@ describe('ThematicDirectionController - Debug', () => {
       'concept-form',
       'concept-input',
       'concept-error',
-      
+
       // Concept selector elements
       'concept-selector',
       'selected-concept-display',
@@ -73,19 +73,19 @@ describe('ThematicDirectionController - Debug', () => {
       'concept-directions-count',
       'concept-created-date',
       'concept-selector-error',
-      
+
       // Buttons
       'generate-btn',
       'retry-btn',
       'back-to-menu-btn',
-      
+
       // State containers
       'empty-state',
       'loading-state',
       'results-state',
       'error-state',
       'error-message-text',
-      
+
       // Results elements
       'generated-directions',
       'directions-list',
@@ -139,7 +139,6 @@ describe('ThematicDirectionController - Debug', () => {
         id: '',
       };
     });
-
   });
 
   afterEach(() => {
@@ -149,7 +148,7 @@ describe('ThematicDirectionController - Debug', () => {
   test('should complete initialization without errors', async () => {
     // Set global document right before creating controller
     global.document = mockDocument;
-    
+
     // Create controller after all mocks are set up
     controller = new ThematicDirectionController({
       logger: mockLogger,
@@ -161,20 +160,21 @@ describe('ThematicDirectionController - Debug', () => {
     // Act
     await controller.initialize();
 
-
     // Assert
     expect(mockCharacterBuilderService.initialize).toHaveBeenCalled();
     expect(
       mockCharacterBuilderService.getAllCharacterConcepts
     ).toHaveBeenCalled();
-    
+
     // The controller will log errors for missing elements, but still initialize successfully
     // This is expected behavior - it continues despite missing optional elements
     expect(mockLogger.error).toHaveBeenCalled();
-    
+
     // But it should still complete initialization
     expect(mockLogger.info).toHaveBeenCalledWith(
-      expect.stringMatching(/ThematicDirectionController: Initialization completed in \d+\.\d+ms/)
+      expect.stringMatching(
+        /ThematicDirectionController: Initialization completed in \d+\.\d+ms/
+      )
     );
   });
 });

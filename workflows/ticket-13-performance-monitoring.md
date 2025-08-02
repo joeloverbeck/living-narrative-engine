@@ -34,12 +34,14 @@ Add comprehensive performance monitoring to the BaseCharacterBuilderController t
 Integrate existing `src/entities/monitoring/PerformanceMonitor.js` with BaseCharacterBuilderController:
 
 **Key Integration Points:**
+
 - Use existing PerformanceMonitor class (comprehensive implementation already available)
-- Leverage existing timing infrastructure in BaseCharacterBuilderController  
+- Leverage existing timing infrastructure in BaseCharacterBuilderController
 - Extend current performance tracking (lines 1775, 1830, 3082 in BaseCharacterBuilderController.js)
 - Integrate with existing private field patterns (`#` prefix)
 
 **Existing PerformanceMonitor Features:**
+
 - Timer management with `startTimer()` and `stopTimer()`
 - Operation tracking with `timeOperation()` and `timeSync()`
 - Memory monitoring with `checkMemoryUsage()`
@@ -58,7 +60,7 @@ import PerformanceMonitor from '../../entities/monitoring/PerformanceMonitor.js'
 /** @private @type {PerformanceMonitor} */
 #performanceMonitor;
 
-// Add to constructor dependency injection (around line 145) 
+// Add to constructor dependency injection (around line 145)
 // Note: Use additionalServices pattern to inject performanceMonitor
 const { performanceMonitor } = this.#additionalServices;
 if (performanceMonitor) {
@@ -93,7 +95,7 @@ async initialize() {
   // Use existing timing + enhanced monitoring if available
   const startTime = performance.now();
   let initTimerId = null;
-  
+
   if (this.#performanceMonitor) {
     initTimerId = this.#performanceMonitor.startTimer('controller_initialization', {
       controller: this.constructor.name,
@@ -103,7 +105,7 @@ async initialize() {
   try {
     // Set initializing state (existing logic at line 1779)
     this._setInitializationState(true, false);
-    
+
     this.logger.info(`${this.constructor.name}: Starting initialization`);
 
     // Phase 1: Pre-initialization hook
@@ -128,12 +130,12 @@ async initialize() {
 
     // Continue with existing phases...
     // (Lines 1796-1825 contain the remaining lifecycle methods)
-    
+
     // Set initialized state (existing logic at line 1828)
     this._setInitializationState(false, true);
 
     const initTime = performance.now() - startTime;
-    
+
     // Enhanced logging with performance monitor data
     if (this.#performanceMonitor) {
       const perfData = this.#performanceMonitor.stopTimer(initTimerId);
@@ -161,7 +163,7 @@ async initialize() {
     if (this.#performanceMonitor && initTimerId) {
       this.#performanceMonitor.stopTimer(initTimerId);
     }
-    
+
     // Existing error handling (lines 1842-1854)
     this.logger.error(
       `${this.constructor.name}: Initialization failed after ${initTime.toFixed(2)}ms`,
@@ -218,7 +220,7 @@ destroy() {
     this.#isDestroying = false;
 
     const duration = performance.now() - startTime;
-    
+
     // Enhanced logging
     if (this.#performanceMonitor) {
       const perfData = this.#performanceMonitor.stopTimer(destroyTimerId);
@@ -310,7 +312,7 @@ _logMemoryUsage(context) {
   if (this.#performanceMonitor) {
     // Use existing PerformanceMonitor memory checking (checkMemoryUsage method)
     this.#performanceMonitor.checkMemoryUsage();
-    
+
     this.logger.debug(
       `${this.constructor.name}: Memory check at ${context}`
     );
@@ -319,7 +321,7 @@ _logMemoryUsage(context) {
     const elementCount = Object.keys(this.elements).length;
     const listenerCount = this.#eventListeners.length;
     const timerCount = this.#pendingTimers.size + this.#pendingIntervals.size;
-    
+
     this.logger.debug(
       `${this.constructor.name}: Resource usage at ${context}`,
       {
@@ -328,7 +330,7 @@ _logMemoryUsage(context) {
         activeTimers: timerCount,
       }
     );
-    
+
     // Warn on high resource usage
     if (elementCount > 100 || listenerCount > 50 || timerCount > 20) {
       this.logger.warn(
@@ -381,7 +383,7 @@ getPerformanceDashboard() {
       averageTime: metrics.averageOperationTime.toFixed(2),
       activeTimers: metrics.activeTimers,
     };
-    
+
     // Add recent performance report
     dashboard.performanceReport = this.#performanceMonitor.getPerformanceReport();
   }
@@ -466,6 +468,7 @@ function createControllerWithPerformance(BaseController, dependencies) {
 Reference existing performance testing infrastructure:
 
 **Use Existing Performance Test Framework:**
+
 - 30+ performance test files in `/tests/performance/`
 - Performance test utilities in `/tests/common/performanceTestBed.js`
 - Performance setup helpers in `/tests/setup/performanceSetup.js`
@@ -473,12 +476,12 @@ Reference existing performance testing infrastructure:
 **Key Performance Targets (based on existing tests):**
 
 | Operation        | Target | Threshold from existing PerformanceMonitor |
-| ---------------- | ------ | ------------------------------------------- |
-| Initialization   | < 50ms | 100ms (slowOperationThreshold)            |
-| Element Caching  | < 20ms | 50ms (from existing timing code)          |
-| Event Setup      | < 15ms | 30ms (based on existing patterns)         |
-| State Transition | < 10ms | 20ms (UI responsiveness)                  |
-| Destroy          | < 25ms | 50ms (cleanup operations)                 |
+| ---------------- | ------ | ------------------------------------------ |
+| Initialization   | < 50ms | 100ms (slowOperationThreshold)             |
+| Element Caching  | < 20ms | 50ms (from existing timing code)           |
+| Event Setup      | < 15ms | 30ms (based on existing patterns)          |
+| State Transition | < 10ms | 20ms (UI responsiveness)                   |
+| Destroy          | < 25ms | 50ms (cleanup operations)                  |
 
 **Optimization Strategies using existing patterns:**
 
@@ -522,6 +525,7 @@ console.log(metrics);
 Reference and integrate with existing performance testing framework:
 
 **Existing Performance Test Files:**
+
 - `/tests/performance/` (30+ performance test files)
 - `/tests/common/performanceTestBed.js` (performance test utilities)
 - `/tests/setup/performanceSetup.js` (setup helpers)
@@ -557,7 +561,7 @@ describe('BaseCharacterBuilderController Performance', () => {
     const duration = performanceMonitor.stopTimer(timerId);
 
     expect(duration).toBeLessThan(100); // 100ms budget
-    
+
     // Use existing metrics validation
     const metrics = performanceMonitor.getMetrics();
     expect(metrics.slowOperations).toBe(0);
@@ -568,6 +572,7 @@ describe('BaseCharacterBuilderController Performance', () => {
 ```
 
 **Performance Regression Testing:**
+
 - Add controller performance tests to existing CI pipeline
 - Use existing performance thresholds and validation
 - Integrate with existing performance monitoring dashboard

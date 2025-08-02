@@ -7,6 +7,7 @@
 
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { DEFAULT_FALLBACK_CHARACTER_NAME } from '../constants/textDefaults.js';
+import { AgeUtils } from '../utils/ageUtils.js';
 
 /**
  * @class CharacterDataFormatter
@@ -113,6 +114,14 @@ export class CharacterDataFormatter {
 
     const description = characterData.description;
     let result = '## Your Description\n';
+
+    // Add apparent age first if available
+    if (characterData.apparentAge) {
+      const ageDescription = AgeUtils.formatAgeDescription(
+        characterData.apparentAge
+      );
+      result += `**Apparent age**: ${ageDescription}\n\n`;
+    }
 
     // Handle both structured object and text descriptions
     if (typeof description === 'object') {

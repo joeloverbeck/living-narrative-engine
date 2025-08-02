@@ -7,6 +7,7 @@ import { IEntitySummaryProvider } from '../../interfaces/IEntitySummaryProvider.
 import {
   NAME_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,
+  APPARENT_AGE_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import {
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
@@ -52,10 +53,14 @@ export class EntitySummaryProvider extends IEntitySummaryProvider {
       DEFAULT_FALLBACK_DESCRIPTION_RAW
     );
 
+    // Extract apparent age if present
+    const apparentAgeData = entity.getComponentData(APPARENT_AGE_COMPONENT_ID);
+
     return {
       id: entity.id,
       name,
       description,
+      ...(apparentAgeData && { apparentAge: apparentAgeData }),
     };
   }
 }

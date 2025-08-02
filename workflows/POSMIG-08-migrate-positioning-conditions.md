@@ -2,25 +2,28 @@
 
 ## Overview
 
-Migrate remaining positioning-related conditions from the intimacy mod to the positioning mod. This includes conditions that check entity relationships, facing directions, and positioning states. 
+Migrate remaining positioning-related conditions from the intimacy mod to the positioning mod. This includes conditions that check entity relationships, facing directions, and positioning states.
 
 **IMPORTANT NOTE**: Many of these conditions already exist in the positioning mod or use correct component references. The main migration work involves namespace changes and updating cross-mod references rather than fixing component paths.
 
 ## Current State Analysis (As of Analysis Date)
 
 ### ✅ Already Correctly Implemented
+
 - All intimacy mod conditions already use correct `positioning:facing_away.facing_away_from` component references
 - `actor-is-behind-entity` and `both-actors-facing-each-other` already exist in positioning mod
 - Component data model is consistent (`facing_away_from` array property)
 
-### ⚠️ Needs Attention  
+### ⚠️ Needs Attention
+
 - Namespace changes: conditions still have `intimacy:` IDs, need `positioning:` IDs
 - Cross-mod references: intimacy scopes, sex mod scopes reference old `intimacy:` condition IDs
 - Manifest coordination: some conditions exist in both mods causing potential conflicts
 
 ### 🔧 Migration Focus
+
 - **Primary**: Namespace changes and reference updates
-- **Secondary**: Manifest cleanup and coordination  
+- **Secondary**: Manifest cleanup and coordination
 - **Not Needed**: Component path fixes (already correct)
 
 ## Priority
@@ -68,7 +71,7 @@ The following conditions need to be migrated (some may have been partially migra
 **To Be Migrated** (namespace change from intimacy: to positioning:):
 
 - `entity-in-facing-away.condition.json` ⚠️ Currently uses correct component references
-- `entity-not-in-facing-away.condition.json` ⚠️ Currently uses correct component references  
+- `entity-not-in-facing-away.condition.json` ⚠️ Currently uses correct component references
 - `actor-in-entity-facing-away.condition.json` ⚠️ Currently uses correct component references
 - `actor-is-behind-entity.condition.json` ✅ Already exists in positioning mod
 - `both-actors-facing-each-other.condition.json` ⚠️ Exists in BOTH mods - need reference coordination
@@ -190,7 +193,9 @@ Update `data/mods/positioning/conditions/actor-in-entity-facing-away.condition.j
         "not": {
           "in": [
             { "var": "entity.id" },
-            { "var": "actor.components.positioning:facing_away.facing_away_from" }
+            {
+              "var": "actor.components.positioning:facing_away.facing_away_from"
+            }
           ]
         }
       },
@@ -198,7 +203,9 @@ Update `data/mods/positioning/conditions/actor-in-entity-facing-away.condition.j
         "not": {
           "in": [
             { "var": "actor.id" },
-            { "var": "entity.components.positioning:facing_away.facing_away_from" }
+            {
+              "var": "entity.components.positioning:facing_away.facing_away_from"
+            }
           ]
         }
       }
@@ -239,10 +246,11 @@ Update `data/mods/positioning/mod-manifest.json`:
 **CRITICAL**: Multiple mods reference these conditions. Update ALL references:
 
 #### 5.1 Intimacy Mod Scope References
+
 Update references in these files from `intimacy:` to `positioning:`:
 
 - `data/mods/intimacy/scopes/close_actors_facing_away.scope`
-- `data/mods/intimacy/scopes/close_actors_facing_each_other.scope` 
+- `data/mods/intimacy/scopes/close_actors_facing_each_other.scope`
 - `data/mods/intimacy/scopes/actors_with_arms_facing_each_other_or_behind_target.scope`
 - `data/mods/intimacy/scopes/close_actors_facing_each_other_with_torso_clothing.scope`
 - `data/mods/intimacy/scopes/actors_with_arms_facing_each_other.scope`
@@ -252,6 +260,7 @@ Update references in these files from `intimacy:` to `positioning:`:
 - `data/mods/intimacy/scopes/actors_with_ass_cheeks_facing_each_other_or_behind_target.scope`
 
 #### 5.2 Sex Mod References
+
 Update these sex mod scopes from `intimacy:entity-not-in-facing-away` to `positioning:entity-not-in-facing-away`:
 
 - `data/mods/sex/scopes/actors_with_breasts_facing_each_other.scope`
@@ -260,6 +269,7 @@ Update these sex mod scopes from `intimacy:entity-not-in-facing-away` to `positi
 - `data/mods/sex/scopes/actors_with_penis_facing_each_other.scope`
 
 #### 5.3 Search Command
+
 ```bash
 # Search for all condition references across mods
 grep -r "intimacy:entity-in-facing-away\|intimacy:entity-not-in-facing-away\|intimacy:actor-in-entity-facing-away\|intimacy:both-actors-facing-each-other" data/mods/
@@ -275,11 +285,11 @@ Remove migrated conditions from `data/mods/intimacy/mod-manifest.json`:
     "conditions": [
       // REMOVE these migrated conditions:
       // "actor-in-entity-facing-away.condition.json",
-      // "actor-is-behind-entity.condition.json", 
+      // "actor-is-behind-entity.condition.json",
       // "both-actors-facing-each-other.condition.json",
       // "entity-in-facing-away.condition.json",
       // "entity-not-in-facing-away.condition.json",
-      
+
       // KEEP intimacy-specific conditions:
       "actor-is-kiss-receiver.condition.json",
       "event-is-action-accept-kiss-passively.condition.json",
@@ -388,7 +398,9 @@ async function validateMigration() {
   for (const file of sexScopeFiles) {
     const content = await fs.readFile(file, 'utf8');
     if (content.includes('intimacy:entity-not-in-facing-away')) {
-      errors.push(`${file} still references intimacy:entity-not-in-facing-away`);
+      errors.push(
+        `${file} still references intimacy:entity-not-in-facing-away`
+      );
     }
   }
 

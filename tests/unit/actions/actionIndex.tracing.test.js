@@ -239,7 +239,9 @@ describe('ActionIndex', () => {
         expect(calls[2][1]).toContain("requiring component 'componentB'");
 
         expect(calls[3][0]).toBe(TRACE_SUCCESS); // final list
-        expect(calls[3][1]).toContain('Final candidate list contains 2 unique actions after component validation');
+        expect(calls[3][1]).toContain(
+          'Final candidate list contains 2 unique actions after component validation'
+        );
       });
     });
   });

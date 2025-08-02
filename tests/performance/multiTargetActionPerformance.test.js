@@ -362,29 +362,39 @@ describe('Multi-Target Action Performance Tests', () => {
 
       // Enhanced schema should not be more than 100% slower
       // Note: Increased threshold from 1.1x to 2.0x to account for JavaScript timing variance
-      // in test environments. The original test simulates minimal operations which are 
+      // in test environments. The original test simulates minimal operations which are
       // subject to V8 optimization timing, system load, and measurement precision issues.
       const performanceRatio = enhancedMeanTime / legacyMeanTime;
-      
+
       // Add diagnostic information for performance analysis
       const legacyTotalMs = legacyResult.totalTime;
       const enhancedTotalMs = enhancedResult.totalTime;
       const absoluteDifferenceMs = enhancedTotalMs - legacyTotalMs;
-      
+
+      console.log(`Performance Analysis (Mock-based test):`);
       console.log(
-        `Performance Analysis (Mock-based test):`
+        `Legacy total: ${legacyTotalMs.toFixed(2)}ms for ${iterations} iterations`
       );
-      console.log(`Legacy total: ${legacyTotalMs.toFixed(2)}ms for ${iterations} iterations`);
-      console.log(`Enhanced total: ${enhancedTotalMs.toFixed(2)}ms for ${iterations} iterations`);
+      console.log(
+        `Enhanced total: ${enhancedTotalMs.toFixed(2)}ms for ${iterations} iterations`
+      );
       console.log(`Legacy mean: ${legacyMeanTime.toFixed(4)}ms per operation`);
-      console.log(`Enhanced mean: ${enhancedMeanTime.toFixed(4)}ms per operation`);
-      console.log(`Absolute difference: ${absoluteDifferenceMs.toFixed(2)}ms total`);
-      console.log(`Performance ratio: ${performanceRatio.toFixed(3)} (enhanced/legacy)`);
+      console.log(
+        `Enhanced mean: ${enhancedMeanTime.toFixed(4)}ms per operation`
+      );
+      console.log(
+        `Absolute difference: ${absoluteDifferenceMs.toFixed(2)}ms total`
+      );
+      console.log(
+        `Performance ratio: ${performanceRatio.toFixed(3)} (enhanced/legacy)`
+      );
       console.log(`Threshold: 2.0x (adjusted for measurement variance)`);
-      
+
       // Warn if the difference is very small (measurement noise)
       if (absoluteDifferenceMs < 1.0) {
-        console.log(`WARNING: Very small absolute difference (${absoluteDifferenceMs.toFixed(3)}ms) may indicate measurement noise`);
+        console.log(
+          `WARNING: Very small absolute difference (${absoluteDifferenceMs.toFixed(3)}ms) may indicate measurement noise`
+        );
       }
 
       expect(performanceRatio).toBeLessThan(2.0);
@@ -392,14 +402,14 @@ describe('Multi-Target Action Performance Tests', () => {
 
     it('should demonstrate real validation performance characteristics', () => {
       // Test with real validator instead of mocks
-      const validator = new MultiTargetEventValidator({ 
-        logger: testBed.mockLogger 
+      const validator = new MultiTargetEventValidator({
+        logger: testBed.mockLogger,
       });
 
       const legacyEvent = createValidLegacyEvent();
       const multiTargetEvent = createValidMultiTargetEvent({
         primary: 'test_target_123',
-        secondary: 'test_target_456'
+        secondary: 'test_target_456',
       });
 
       const iterations = 500; // Fewer iterations since we're doing real work
@@ -438,24 +448,36 @@ describe('Multi-Target Action Performance Tests', () => {
       // Real validation performance assertions
       expect(legacyMeanTime).toBeLessThan(5); // Should be under 5ms per validation
       expect(multiTargetMeanTime).toBeLessThan(10); // Multi-target should be under 10ms
-      
+
       const performanceRatio = multiTargetMeanTime / legacyMeanTime;
       expect(performanceRatio).toBeLessThan(3.0); // Multi-target should not be more than 3x slower
 
       // Performance metrics from the validator
       const validatorMetrics = validator.getPerformanceMetrics();
-      
+
+      console.log(`Real Validation Performance Analysis:`);
       console.log(
-        `Real Validation Performance Analysis:`
+        `Legacy total: ${legacyResult.totalTime.toFixed(2)}ms for ${iterations} iterations`
       );
-      console.log(`Legacy total: ${legacyResult.totalTime.toFixed(2)}ms for ${iterations} iterations`);
-      console.log(`Multi-target total: ${multiTargetResult.totalTime.toFixed(2)}ms for ${iterations} iterations`);
+      console.log(
+        `Multi-target total: ${multiTargetResult.totalTime.toFixed(2)}ms for ${iterations} iterations`
+      );
       console.log(`Legacy mean: ${legacyMeanTime.toFixed(4)}ms per operation`);
-      console.log(`Multi-target mean: ${multiTargetMeanTime.toFixed(4)}ms per operation`);
-      console.log(`Performance ratio: ${performanceRatio.toFixed(3)} (multi-target/legacy)`);
-      console.log(`Validator metrics - Total validations: ${validatorMetrics.validationCount}`);
-      console.log(`Validator metrics - Average time: ${validatorMetrics.averageTime.toFixed(4)}ms`);
-      console.log(`Validator metrics - Error rate: ${(validatorMetrics.errorRate * 100).toFixed(2)}%`);
+      console.log(
+        `Multi-target mean: ${multiTargetMeanTime.toFixed(4)}ms per operation`
+      );
+      console.log(
+        `Performance ratio: ${performanceRatio.toFixed(3)} (multi-target/legacy)`
+      );
+      console.log(
+        `Validator metrics - Total validations: ${validatorMetrics.validationCount}`
+      );
+      console.log(
+        `Validator metrics - Average time: ${validatorMetrics.averageTime.toFixed(4)}ms`
+      );
+      console.log(
+        `Validator metrics - Error rate: ${(validatorMetrics.errorRate * 100).toFixed(2)}%`
+      );
     });
 
     it('should show reasonable performance scaling with target count', () => {

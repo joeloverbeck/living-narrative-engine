@@ -9,15 +9,9 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { glob } from 'glob';
 
-const OLD_REFS = [
-  'intimacy:turn_around',
-  'intimacy:turn_around_to_face',
-];
+const OLD_REFS = ['intimacy:turn_around', 'intimacy:turn_around_to_face'];
 
-const NEW_REFS = [
-  'positioning:turn_around',
-  'positioning:turn_around_to_face',
-];
+const NEW_REFS = ['positioning:turn_around', 'positioning:turn_around_to_face'];
 
 /**
  *
@@ -44,7 +38,7 @@ async function validateMigration() {
   for (const file of newFiles) {
     try {
       const content = await fs.readFile(file, 'utf8');
-      
+
       // Parse JSON files, skip scope files (DSL format)
       let data = null;
       if (file.endsWith('.json')) {
@@ -60,7 +54,10 @@ async function validateMigration() {
 
       // Specific validations for JSON files
       if (data) {
-        if (file.includes('turn_around.action.json') && !file.includes('to_face')) {
+        if (
+          file.includes('turn_around.action.json') &&
+          !file.includes('to_face')
+        ) {
           if (data.id !== 'positioning:turn_around') {
             errors.push(`Turn around action has wrong ID: ${data.id}`);
           }
@@ -76,10 +73,16 @@ async function validateMigration() {
           if (data.id !== 'positioning:turn_around_to_face') {
             errors.push(`Turn around to face action has wrong ID: ${data.id}`);
           }
-          if (!data.required_components?.actor?.includes('positioning:closeness')) {
+          if (
+            !data.required_components?.actor?.includes('positioning:closeness')
+          ) {
             errors.push('Turn around to face missing closeness requirement');
           }
-          if (!data.required_components?.actor?.includes('positioning:facing_away')) {
+          if (
+            !data.required_components?.actor?.includes(
+              'positioning:facing_away'
+            )
+          ) {
             errors.push('Turn around to face missing facing_away requirement');
           }
         }
@@ -98,7 +101,9 @@ async function validateMigration() {
 
         if (file.includes('.condition.json')) {
           if (!data.id || !data.id.startsWith('positioning:')) {
-            errors.push(`Condition ${path.basename(file)} missing correct positioning namespace`);
+            errors.push(
+              `Condition ${path.basename(file)} missing correct positioning namespace`
+            );
           }
         }
       }
@@ -106,7 +111,9 @@ async function validateMigration() {
       // Scope file validation
       if (file.endsWith('.scope')) {
         if (!content.includes('positioning:')) {
-          errors.push(`Scope ${path.basename(file)} missing positioning namespace`);
+          errors.push(
+            `Scope ${path.basename(file)} missing positioning namespace`
+          );
         }
       }
 
@@ -128,17 +135,24 @@ async function validateMigration() {
     if (!turnAroundRule.actions || !Array.isArray(turnAroundRule.actions)) {
       errors.push('Turn around rule missing actions array');
     } else {
-      const hasProperOperations = turnAroundRule.actions.some(action => 
-        ['GET_NAME', 'QUERY_COMPONENT', 'IF', 'MODIFY_ARRAY_FIELD'].includes(action.type)
+      const hasProperOperations = turnAroundRule.actions.some((action) =>
+        ['GET_NAME', 'QUERY_COMPONENT', 'IF', 'MODIFY_ARRAY_FIELD'].includes(
+          action.type
+        )
       );
       if (!hasProperOperations) {
         errors.push('Turn around rule missing proper operation handlers');
       }
 
       // Check for correct event dispatching namespace
-      const dispatchEvents = turnAroundRule.actions.filter(action => action.type === 'DISPATCH_EVENT');
+      const dispatchEvents = turnAroundRule.actions.filter(
+        (action) => action.type === 'DISPATCH_EVENT'
+      );
       for (const event of dispatchEvents) {
-        if (event.parameters?.eventType && event.parameters.eventType.includes('intimacy:')) {
+        if (
+          event.parameters?.eventType &&
+          event.parameters.eventType.includes('intimacy:')
+        ) {
           errors.push('Turn around rule still dispatches intimacy events');
         }
       }
@@ -154,17 +168,22 @@ async function validateMigration() {
     if (!turnToFaceRule.actions || !Array.isArray(turnToFaceRule.actions)) {
       errors.push('Turn to face rule missing actions array');
     } else {
-      const hasRemoveComponent = turnToFaceRule.actions.some(action => 
-        action.type === 'REMOVE_COMPONENT'
+      const hasRemoveComponent = turnToFaceRule.actions.some(
+        (action) => action.type === 'REMOVE_COMPONENT'
       );
       if (!hasRemoveComponent) {
         errors.push('Turn to face rule missing REMOVE_COMPONENT operation');
       }
 
       // Check for correct event dispatching namespace
-      const dispatchEvents = turnToFaceRule.actions.filter(action => action.type === 'DISPATCH_EVENT');
+      const dispatchEvents = turnToFaceRule.actions.filter(
+        (action) => action.type === 'DISPATCH_EVENT'
+      );
       for (const event of dispatchEvents) {
-        if (event.parameters?.eventType && event.parameters.eventType.includes('intimacy:')) {
+        if (
+          event.parameters?.eventType &&
+          event.parameters.eventType.includes('intimacy:')
+        ) {
           errors.push('Turn to face rule still dispatches intimacy events');
         }
       }
@@ -181,17 +200,23 @@ async function validateMigration() {
       await fs.readFile('data/mods/positioning/mod-manifest.json', 'utf8')
     );
 
-    const expectedActions = ['turn_around.action.json', 'turn_around_to_face.action.json'];
-    const expectedRules = ['turn_around.rule.json', 'turn_around_to_face.rule.json'];
+    const expectedActions = [
+      'turn_around.action.json',
+      'turn_around_to_face.action.json',
+    ];
+    const expectedRules = [
+      'turn_around.rule.json',
+      'turn_around_to_face.rule.json',
+    ];
     const expectedConditions = [
       'event-is-action-turn-around.condition.json',
       'event-is-action-turn-around-to-face.condition.json',
       'both-actors-facing-each-other.condition.json',
-      'actor-is-behind-entity.condition.json'
+      'actor-is-behind-entity.condition.json',
     ];
     const expectedScopes = [
       'close_actors_facing_each_other_or_behind_target.scope',
-      'actors_im_facing_away_from.scope'
+      'actors_im_facing_away_from.scope',
     ];
 
     for (const action of expectedActions) {
@@ -242,17 +267,20 @@ async function validateMigration() {
           if (content.includes(oldRef)) {
             // Skip backup files
             if (file.includes('.backup')) continue;
-            
+
             // Skip intimacy mod files (we'll remove these later)
-            if (file.includes('data/mods/intimacy/') && (
-                file.includes('turn_around.action.json') ||
+            if (
+              file.includes('data/mods/intimacy/') &&
+              (file.includes('turn_around.action.json') ||
                 file.includes('turn_around_to_face.action.json') ||
                 file.includes('turn_around.rule.json') ||
                 file.includes('turn_around_to_face.rule.json') ||
                 file.includes('event-is-action-turn-around') ||
-                file.includes('close_actors_facing_each_other_or_behind_target.scope') ||
-                file.includes('actors_im_facing_away_from.scope')
-              )) {
+                file.includes(
+                  'close_actors_facing_each_other_or_behind_target.scope'
+                ) ||
+                file.includes('actors_im_facing_away_from.scope'))
+            ) {
               continue;
             }
 
@@ -267,13 +295,14 @@ async function validateMigration() {
 
   // Check test files have been updated
   try {
-    const testPath = 'tests/integration/mods/positioning/turn_around_to_face_action.test.js';
+    const testPath =
+      'tests/integration/mods/positioning/turn_around_to_face_action.test.js';
     const testContent = await fs.readFile(testPath, 'utf8');
-    
+
     if (testContent.includes('intimacy:turn_around_to_face')) {
       errors.push('Test file still references intimacy namespace');
     }
-    
+
     if (!testContent.includes('positioning:turn_around_to_face')) {
       errors.push('Test file missing positioning namespace reference');
     }

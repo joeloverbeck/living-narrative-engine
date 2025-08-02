@@ -58,8 +58,9 @@ jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
  * @param dependencies
  */
 function createScopeEvaluatingMock(dependencies) {
-  const { scopeRegistry, scopeEngine, entityManager, logger, jsonLogicEval } = dependencies;
-  
+  const { scopeRegistry, scopeEngine, entityManager, logger, jsonLogicEval } =
+    dependencies;
+
   return new (class extends PipelineStage {
     constructor() {
       super('ScopeEvaluatingMock');
@@ -95,22 +96,25 @@ function createScopeEvaluatingMock(dependencies) {
         };
 
         // Resolve the scope
-        const scopeResult = unifiedScopeResolver.resolve(actionDef.scope, scopeContext);
+        const scopeResult = unifiedScopeResolver.resolve(
+          actionDef.scope,
+          scopeContext
+        );
 
         if (scopeResult.success && scopeResult.value.size > 0) {
           // Convert resolved targets to the expected format
           const resolvedTargets = Array.from(scopeResult.value);
-          
+
           actionsWithTargets.push({
             actionDef,
-            targetContexts: resolvedTargets.map(targetId => ({
+            targetContexts: resolvedTargets.map((targetId) => ({
               type: 'entity',
               entityId: targetId,
               displayName: `Target ${targetId}`,
               placeholder: 'target',
             })),
             resolvedTargets: {
-              primary: resolvedTargets.map(targetId => ({
+              primary: resolvedTargets.map((targetId) => ({
                 id: targetId,
                 displayName: `Target ${targetId}`,
                 entity: null,
@@ -183,7 +187,9 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         not: {
           in: [
             { var: 'entity.id' },
-            { var: 'actor.components.positioning:facing_away.facing_away_from' },
+            {
+              var: 'actor.components.positioning:facing_away.facing_away_from',
+            },
           ],
         },
       },

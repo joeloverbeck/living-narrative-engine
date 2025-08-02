@@ -318,7 +318,7 @@ describe('ActionIndex Integration Tests', () => {
       // ActionIndex requires ALL required components for each action
       // Civilian has: core:position, core:dialogue
       // Gets: talk (requires dialogue - has it), wait (no requirements), observe (no requirements)
-      // Does NOT get: walk (requires position+movement), run (requires position+movement+stamina), 
+      // Does NOT get: walk (requires position+movement), run (requires position+movement+stamina),
       // attack (requires position+combat), defend (requires combat), trade (requires inventory+dialogue)
       expect(civilianCandidates).toHaveLength(3);
       expect(civilianCandidates.map((a) => a.id)).toEqual(

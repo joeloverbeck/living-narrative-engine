@@ -250,8 +250,8 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
       await expect(controller.initialize()).rejects.toThrow(
         'initial data loading failed: Failed to list character concepts: Failed to list character concepts: Database error'
       );
-      
-      // Verify the error was logged appropriately  
+
+      // Verify the error was logged appropriately
       expect(mockLogger.error).toHaveBeenCalled();
     });
 

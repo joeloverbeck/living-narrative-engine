@@ -30,16 +30,16 @@ describe('ActionIndex - ALL Required Components', () => {
       id: 'test:action_both',
       name: 'Action Requiring Both',
       required_components: {
-        actor: ['component:a', 'component:b']
-      }
+        actor: ['component:a', 'component:b'],
+      },
     };
 
     const actionRequiringOne = {
       id: 'test:action_one',
       name: 'Action Requiring One',
       required_components: {
-        actor: ['component:a']
-      }
+        actor: ['component:a'],
+      },
     };
 
     const actionRequiringNone = {
@@ -49,16 +49,20 @@ describe('ActionIndex - ALL Required Components', () => {
     };
 
     // Build index
-    actionIndex.buildIndex([actionRequiringBoth, actionRequiringOne, actionRequiringNone]);
+    actionIndex.buildIndex([
+      actionRequiringBoth,
+      actionRequiringOne,
+      actionRequiringNone,
+    ]);
 
     // Test case 1: Actor has only component:a
     const actor1 = 'actor1';
     entityManager.addComponent(actor1, 'component:a', {});
     const actor1Entity = entityManager.getEntityInstance(actor1);
-    
+
     const candidates1 = actionIndex.getCandidateActions(actor1Entity);
-    const candidateIds1 = candidates1.map(a => a.id);
-    
+    const candidateIds1 = candidates1.map((a) => a.id);
+
     expect(candidateIds1).toContain('test:action_one'); // Has the required component
     expect(candidateIds1).toContain('test:action_none'); // No requirements
     expect(candidateIds1).not.toContain('test:action_both'); // Missing component:b
@@ -68,10 +72,10 @@ describe('ActionIndex - ALL Required Components', () => {
     entityManager.addComponent(actor2, 'component:a', {});
     entityManager.addComponent(actor2, 'component:b', {});
     const actor2Entity = entityManager.getEntityInstance(actor2);
-    
+
     const candidates2 = actionIndex.getCandidateActions(actor2Entity);
-    const candidateIds2 = candidates2.map(a => a.id);
-    
+    const candidateIds2 = candidates2.map((a) => a.id);
+
     expect(candidateIds2).toContain('test:action_one'); // Has component:a
     expect(candidateIds2).toContain('test:action_none'); // No requirements
     expect(candidateIds2).toContain('test:action_both'); // Has both components
@@ -82,12 +86,12 @@ describe('ActionIndex - ALL Required Components', () => {
     entityManager.addComponent(actor3, 'core:name', { name: 'Actor3' });
     // Then remove it to have an entity with no components we care about
     entityManager.removeComponent(actor3, 'core:name');
-    
+
     const actor3Entity = entityManager.getEntityInstance(actor3);
-    
+
     const candidates3 = actionIndex.getCandidateActions(actor3Entity);
-    const candidateIds3 = candidates3.map(a => a.id);
-    
+    const candidateIds3 = candidates3.map((a) => a.id);
+
     expect(candidateIds3).not.toContain('test:action_one'); // Missing component:a
     expect(candidateIds3).toContain('test:action_none'); // No requirements
     expect(candidateIds3).not.toContain('test:action_both'); // Missing both components
@@ -99,35 +103,49 @@ describe('ActionIndex - ALL Required Components', () => {
       id: 'positioning:turn_around_to_face',
       name: 'Turn Around to Face',
       required_components: {
-        actor: ['positioning:closeness', 'positioning:facing_away']
-      }
+        actor: ['positioning:closeness', 'positioning:facing_away'],
+      },
     };
 
     actionIndex.buildIndex([turnAroundAction]);
 
     // Actor with only closeness
     const actor1 = 'actor1';
-    entityManager.addComponent(actor1, 'positioning:closeness', { partners: ['someone'] });
+    entityManager.addComponent(actor1, 'positioning:closeness', {
+      partners: ['someone'],
+    });
     const actor1Entity = entityManager.getEntityInstance(actor1);
-    
+
     const candidates1 = actionIndex.getCandidateActions(actor1Entity);
-    expect(candidates1.map(a => a.id)).not.toContain('positioning:turn_around_to_face');
+    expect(candidates1.map((a) => a.id)).not.toContain(
+      'positioning:turn_around_to_face'
+    );
 
     // Actor with only facing_away
     const actor2 = 'actor2';
-    entityManager.addComponent(actor2, 'positioning:facing_away', { facing_away_from: ['someone'] });
+    entityManager.addComponent(actor2, 'positioning:facing_away', {
+      facing_away_from: ['someone'],
+    });
     const actor2Entity = entityManager.getEntityInstance(actor2);
-    
+
     const candidates2 = actionIndex.getCandidateActions(actor2Entity);
-    expect(candidates2.map(a => a.id)).not.toContain('positioning:turn_around_to_face');
+    expect(candidates2.map((a) => a.id)).not.toContain(
+      'positioning:turn_around_to_face'
+    );
 
     // Actor with both components
     const actor3 = 'actor3';
-    entityManager.addComponent(actor3, 'positioning:closeness', { partners: ['someone'] });
-    entityManager.addComponent(actor3, 'positioning:facing_away', { facing_away_from: ['someone'] });
+    entityManager.addComponent(actor3, 'positioning:closeness', {
+      partners: ['someone'],
+    });
+    entityManager.addComponent(actor3, 'positioning:facing_away', {
+      facing_away_from: ['someone'],
+    });
     const actor3Entity = entityManager.getEntityInstance(actor3);
-    
+
     const candidates3 = actionIndex.getCandidateActions(actor3Entity);
-    expect(candidates3.map(a => a.id)).toContain('positioning:turn_around_to_face');
+    expect(candidates3.map((a) => a.id)).toContain(
+      'positioning:turn_around_to_face'
+    );
   });
 });

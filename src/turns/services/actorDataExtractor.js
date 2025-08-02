@@ -12,6 +12,7 @@ import {
   FEARS_COMPONENT_ID, // <<< Added import
   SPEECH_PATTERNS_COMPONENT_ID,
   ANATOMY_BODY_COMPONENT_ID,
+  APPARENT_AGE_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { ensureTerminalPunctuation } from '../../utils/textUtils.js';
 // --- TICKET AIPF-REFACTOR-009 START: Import and Use Standardized Fallback Strings ---
@@ -165,6 +166,16 @@ class ActorDataExtractor extends IActorDataExtractor {
       if (validPatterns.length > 0) {
         promptData.speechPatterns = validPatterns;
       }
+    }
+
+    // Apparent Age
+    const apparentAgeData = actorState[APPARENT_AGE_COMPONENT_ID];
+    if (
+      apparentAgeData &&
+      typeof apparentAgeData.minAge === 'number' &&
+      typeof apparentAgeData.maxAge === 'number'
+    ) {
+      promptData.apparentAge = apparentAgeData;
     }
 
     return /** @type {ActorPromptDataDTO} */ (promptData);

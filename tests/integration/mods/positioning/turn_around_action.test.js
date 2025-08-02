@@ -79,17 +79,17 @@ describe('Turn Around Action Discovery', () => {
 
     // Set up action discovery dependencies
     const dataRegistry = new InMemoryDataRegistry();
-    
+
     // Store the action definition in the data registry
     dataRegistry.store('actions', turnAroundAction.id, turnAroundAction);
-    
+
     gameDataRepository = new GameDataRepository(dataRegistry, logger);
 
     // Set up dslParser and other dependencies
     const dslParser = new DefaultDslParser();
-    const jsonLogicService = new JsonLogicEvaluationService({ 
+    const jsonLogicService = new JsonLogicEvaluationService({
       logger,
-      gameDataRepository 
+      gameDataRepository,
     });
     const actionErrorContextBuilder = createMockActionErrorContextBuilder();
 
@@ -237,13 +237,13 @@ describe('Turn Around Action Discovery', () => {
 
     it('should show action when actor has closeness', async () => {
       // Mock the resolveTargets method to return expected results
-      const { ActionTargetContext } = await import('../../../../src/models/actionTargetContext.js');
+      const { ActionTargetContext } = await import(
+        '../../../../src/models/actionTargetContext.js'
+      );
       targetResolutionService.resolveTargets = jest.fn().mockResolvedValue({
         success: true,
-        value: [
-          new ActionTargetContext('entity', { entityId: bob })
-        ],
-        errors: []
+        value: [new ActionTargetContext('entity', { entityId: bob })],
+        errors: [],
       });
 
       // Set up closeness
@@ -262,9 +262,7 @@ describe('Turn Around Action Discovery', () => {
         (a) => a.id === 'positioning:turn_around'
       );
       expect(turnAroundAction).toBeDefined();
-      expect(turnAroundAction.command).toBe(
-        'turn bob-entity around'
-      );
+      expect(turnAroundAction.command).toBe('turn bob-entity around');
       expect(turnAroundAction.params.targetId).toBe(bob);
     });
 
@@ -312,15 +310,17 @@ describe('Turn Around Action Discovery', () => {
 
     it('should show action for actors facing each other', async () => {
       // Mock the resolveTargets method to return expected results for facing each other scenario
-      const { ActionTargetContext } = await import('../../../../src/models/actionTargetContext.js');
+      const { ActionTargetContext } = await import(
+        '../../../../src/models/actionTargetContext.js'
+      );
       targetResolutionService.resolveTargets = jest.fn().mockResolvedValue({
         success: true,
         value: [
           new ActionTargetContext('entity', { entityId: bob }),
           new ActionTargetContext('entity', { entityId: charlie }),
-          new ActionTargetContext('entity', { entityId: diana })
+          new ActionTargetContext('entity', { entityId: diana }),
         ],
-        errors: []
+        errors: [],
       });
 
       // Alice and Bob are facing each other (no facing_away components)
@@ -338,13 +338,13 @@ describe('Turn Around Action Discovery', () => {
 
     it('should show action when actor is behind target', async () => {
       // Mock the resolveTargets method to return Bob as a target when Alice is behind him
-      const { ActionTargetContext } = await import('../../../../src/models/actionTargetContext.js');
+      const { ActionTargetContext } = await import(
+        '../../../../src/models/actionTargetContext.js'
+      );
       targetResolutionService.resolveTargets = jest.fn().mockResolvedValue({
         success: true,
-        value: [
-          new ActionTargetContext('entity', { entityId: bob })
-        ],
-        errors: []
+        value: [new ActionTargetContext('entity', { entityId: bob })],
+        errors: [],
       });
 
       // Bob is facing away from Alice (Alice is behind Bob)
