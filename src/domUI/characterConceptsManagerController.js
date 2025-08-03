@@ -203,6 +203,15 @@ export class CharacterConceptsManagerController {
   }
 
   /**
+   * Get the logger instance
+   *
+   * @returns {ILogger} The logger instance
+   */
+  get logger() {
+    return this.#logger;
+  }
+
+  /**
    * Initialize the controller and set up the page
    *
    * @returns {Promise<void>}

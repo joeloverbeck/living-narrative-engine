@@ -219,6 +219,22 @@ describe('JSON-Schema – Anatomy Formatting', () => {
       const ok = validate(validConfig);
       expect(ok).toBe(true);
     });
+
+    test('should validate new descriptor patterns for body composition and projection', () => {
+      const validConfig = {
+        id: 'test',
+        descriptorOrder: [
+          'descriptors:body_composition',
+          'descriptors:body_hair',
+          'descriptors:facial_hair',
+          'descriptors:projection',
+        ],
+        descriptorValueKeys: ['composition', 'density', 'style', 'projection'],
+      };
+
+      const ok = validate(validConfig);
+      expect(ok).toBe(true);
+    });
   });
 
   describe('Equipment Integration Validations', () => {
@@ -422,6 +438,8 @@ describe('JSON-Schema – Anatomy Formatting', () => {
         id: 'default',
         descriptionOrder: [
           'build',
+          'body_composition',
+          'body_hair',
           'hair',
           'eye',
           'face',
@@ -434,6 +452,7 @@ describe('JSON-Schema – Anatomy Formatting', () => {
           'arm',
           'hand',
           'leg',
+          'ass_cheek',
           'foot',
           'pubic_hair',
           'vagina',
@@ -453,10 +472,12 @@ describe('JSON-Schema – Anatomy Formatting', () => {
           'breast',
           'wing',
           'testicle',
+          'ass_cheek',
         ],
         irregularPlurals: {
           foot: 'feet',
           tooth: 'teeth',
+          ass_cheek: 'ass',
         },
         descriptorOrder: [
           'descriptors:length_category',
@@ -464,6 +485,9 @@ describe('JSON-Schema – Anatomy Formatting', () => {
           'descriptors:size_category',
           'descriptors:size_specific',
           'descriptors:weight_feel',
+          'descriptors:body_composition',
+          'descriptors:body_hair',
+          'descriptors:facial_hair',
           'descriptors:color_basic',
           'descriptors:color_extended',
           'descriptors:shape_general',
@@ -471,6 +495,7 @@ describe('JSON-Schema – Anatomy Formatting', () => {
           'descriptors:hair_style',
           'descriptors:texture',
           'descriptors:firmness',
+          'descriptors:projection',
           'descriptors:build',
         ],
         descriptorValueKeys: [
@@ -484,6 +509,9 @@ describe('JSON-Schema – Anatomy Formatting', () => {
           'firmness',
           'build',
           'weight',
+          'composition',
+          'density',
+          'projection',
         ],
         equipmentIntegration: {
           enabled: true,

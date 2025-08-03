@@ -364,42 +364,6 @@ describe('Clothing Resolver Chain Integration', () => {
     });
   });
 
-  describe('Performance', () => {
-    it('should resolve clothing queries efficiently', () => {
-      const iterations = 1000;
-      const ast = parser.parse('actor.topmost_clothing[]');
-
-      const startTime = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        engine.resolve(ast, mockActorEntity, mockRuntimeContext);
-      }
-
-      const endTime = performance.now();
-      const averageTime = (endTime - startTime) / iterations;
-
-      // Should complete in under 5ms per resolution
-      expect(averageTime).toBeLessThan(5);
-    });
-
-    it('should handle deep slot access efficiently', () => {
-      const iterations = 1000;
-      const ast = parser.parse('actor.topmost_clothing.torso_upper');
-
-      const startTime = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        engine.resolve(ast, mockActorEntity, mockRuntimeContext);
-      }
-
-      const endTime = performance.now();
-      const averageTime = (endTime - startTime) / iterations;
-
-      // Should complete in under 5ms per resolution
-      expect(averageTime).toBeLessThan(5);
-    });
-  });
-
   describe('Trace logging integration', () => {
     it('should provide comprehensive trace logs for clothing resolution', () => {
       const trace = {

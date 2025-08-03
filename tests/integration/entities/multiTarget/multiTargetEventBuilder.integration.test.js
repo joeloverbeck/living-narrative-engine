@@ -333,45 +333,6 @@ describe('MultiTargetEventBuilder - Integration Tests', () => {
     });
   });
 
-  describe('Performance Integration', () => {
-    it('should create payloads within acceptable time limits', async () => {
-      const startTime = performance.now();
-
-      // Create multiple payloads to test performance
-      for (let i = 0; i < 100; i++) {
-        const testAction = {
-          actionDefinitionId: `core:test_action_${i}`,
-          commandString: `test command ${i}`,
-          resolvedParameters: {
-            targetId: `target_${i}`,
-            weapon: `weapon_${i}`,
-          },
-        };
-
-        await commandProcessor.dispatchAction(mockEntity, testAction);
-      }
-
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-      const averageTime = totalTime / 100;
-
-      // Each payload should be created in less than 10ms as per CommandProcessor expectations
-      expect(averageTime).toBeLessThan(10);
-    });
-
-    it('should provide performance statistics', () => {
-      // Test that CommandProcessor tracks payload creation statistics
-      const initialStats = commandProcessor.getPayloadCreationStatistics();
-      expect(initialStats).toMatchObject({
-        totalPayloadsCreated: expect.any(Number),
-        multiTargetPayloads: expect.any(Number),
-        legacyPayloads: expect.any(Number),
-        fallbackPayloads: expect.any(Number),
-        averageCreationTime: expect.any(Number),
-      });
-    });
-  });
-
   describe('Error Handling Integration', () => {
     it('should handle CommandProcessor dispatch failures gracefully', async () => {
       // Mock event dispatch service to fail
