@@ -52,7 +52,9 @@ describe('Body Composition Integration', () => {
 
     const result = composer.extractBodyCompositionDescription(mockEntity);
     expect(result).toBe('average');
-    expect(mockEntity.getComponentData).toHaveBeenCalledWith('descriptors:body_composition');
+    expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+      'descriptors:body_composition'
+    );
   });
 
   it('should work with realistic entity data structure', () => {
@@ -60,7 +62,11 @@ describe('Body Composition Integration', () => {
     const mockEntity = {
       id: 'test-entity-123',
       hasComponent: jest.fn().mockImplementation((componentId) => {
-        const components = ['descriptors:body_composition', 'descriptors:build', 'anatomy:body'];
+        const components = [
+          'descriptors:body_composition',
+          'descriptors:build',
+          'anatomy:body',
+        ];
         return components.includes(componentId);
       }),
       getComponentData: jest.fn().mockImplementation((componentId) => {
@@ -75,7 +81,9 @@ describe('Body Composition Integration', () => {
 
     const result = composer.extractBodyCompositionDescription(mockEntity);
     expect(result).toBe('lean');
-    expect(mockEntity.getComponentData).toHaveBeenCalledWith('descriptors:body_composition');
+    expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+      'descriptors:body_composition'
+    );
     expect(mockEntity.hasComponent).not.toHaveBeenCalled(); // Method shouldn't call hasComponent
   });
 
@@ -110,12 +118,17 @@ describe('Body Composition Integration', () => {
     };
 
     // Test both methods work independently
-    const compositionResult = composer.extractBodyCompositionDescription(mockEntity);
+    const compositionResult =
+      composer.extractBodyCompositionDescription(mockEntity);
     const buildResult = composer.extractBuildDescription(mockEntity);
 
     expect(compositionResult).toBe('chubby');
     expect(buildResult).toBe('stocky');
-    expect(mockEntity.getComponentData).toHaveBeenCalledWith('descriptors:body_composition');
-    expect(mockEntity.getComponentData).toHaveBeenCalledWith('descriptors:build');
+    expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+      'descriptors:body_composition'
+    );
+    expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+      'descriptors:build'
+    );
   });
 });

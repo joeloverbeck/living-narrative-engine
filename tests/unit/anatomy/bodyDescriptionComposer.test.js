@@ -39,6 +39,8 @@ describe('BodyDescriptionComposer', () => {
 
     mockPartDescriptionGenerator = {
       generatePartDescription: jest.fn(),
+      generateDescription: jest.fn(),
+      generateSimpleDescription: jest.fn(),
     };
 
     // Create composer instance
@@ -441,6 +443,267 @@ describe('BodyDescriptionComposer', () => {
 
       const result = composer.extractBuildDescription(entity);
       expect(result).toBe('');
+    });
+  });
+
+  describe('Body-Level Descriptor Integration', () => {
+    const createEntityWithAllDescriptors = () => ({
+      hasComponent: jest.fn().mockReturnValue(true),
+      getComponentData: jest.fn().mockImplementation((componentId) => {
+        if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+          return { body: { root: 'torso-1' } };
+        }
+        if (componentId === 'descriptors:build') {
+          return { build: 'athletic' };
+        }
+        if (componentId === 'descriptors:body_composition') {
+          return { composition: 'lean' };
+        }
+        if (componentId === 'descriptors:body_hair') {
+          return { density: 'moderate' };
+        }
+        return null;
+      }),
+    });
+
+    beforeEach(() => {
+      // Need at least one part for composeDescription to proceed past the empty check
+      mockBodyGraphService.getAllParts.mockReturnValue(['dummy-part-1']);
+      mockAnatomyFormattingService.getGroupedParts.mockReturnValue(new Set());
+      
+      // Mock the dummy part entity
+      mockEntityFinder.getEntityInstance.mockImplementation((id) => {
+        if (id === 'dummy-part-1') {
+          return {
+            hasComponent: jest.fn().mockReturnValue(true),
+            getComponentData: jest.fn().mockReturnValue({ subType: 'dummy' }),
+          };
+        }
+        return null;
+      });
+    });
+
+    describe('All Three Body-Level Descriptors', () => {
+      it('should integrate build, body_composition, and body_hair in configured order', async () => {
+        mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
+          'build',
+          'body_composition',
+          'body_hair',
+        ]);
+
+        const entity = createEntityWithAllDescriptors();
+        const result = await composer.composeDescription(entity);
+        const lines = result.split('\n');
+
+        expect(lines).toHaveLength(3);
+        expect(lines[0]).toBe('Build: athletic');
+        expect(lines[1]).toBe('Body composition: lean');
+        expect(lines[2]).toBe('Body hair: moderate');
+      });
+
+      it('should handle reverse order', async () => {
+        mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
+          'body_hair',
+          'body_composition',
+          'build',
+        ]);
+
+        const entity = createEntityWithAllDescriptors();
+        const result = await composer.composeDescription(entity);
+        const lines = result.split('\n');
+
+        expect(lines).toHaveLength(3);
+        expect(lines[0]).toBe('Body hair: moderate');
+        expect(lines[1]).toBe('Body composition: lean');
+        expect(lines[2]).toBe('Build: athletic');
+      });
+
+      it('should skip missing descriptors without creating empty lines', async () => {
+        mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
+          'build',
+          'body_composition',
+          'body_hair',
+        ]);
+
+        const entity = {
+          hasComponent: jest.fn().mockReturnValue(true),
+          getComponentData: jest.fn().mockImplementation((componentId) => {
+            if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+              return { body: { root: 'torso-1' } };
+            }
+            if (componentId === 'descriptors:build') {
+              return { build: 'athletic' };
+            }
+            if (componentId === 'descriptors:body_hair') {
+              return { density: 'light' };
+            }
+            // Missing body_composition
+            return null;
+          }),
+        };
+
+        const result = await composer.composeDescription(entity);
+        const lines = result.split('\n').filter((line) => line.trim());
+
+        expect(lines).toHaveLength(2);
+        expect(lines).toEqual(['Build: athletic', 'Body hair: light']);
+        expect(result).not.toContain('Body composition:');
+      });
+    });
+
+    describe('Duplicate Prevention', () => {
+      it('should prevent duplicate descriptors when listed multiple times', async () => {
+        mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
+          'build',
+          'body_composition',
+          'body_composition', // Duplicate
+          'body_hair',
+          'build', // Duplicate
+        ]);
+
+        const entity = createEntityWithAllDescriptors();
+        const result = await composer.composeDescription(entity);
+
+        // Count occurrences
+        const buildMatches = (result.match(/Build:/g) || []).length;
+        const compositionMatches = (result.match(/Body composition:/g) || []).length;
+        const hairMatches = (result.match(/Body hair:/g) || []).length;
+
+        expect(buildMatches).toBe(1);
+        expect(compositionMatches).toBe(1);
+        expect(hairMatches).toBe(1);
+      });
+    });
+
+    describe('Equipment Integration', () => {
+      it('should integrate equipment description when equipmentDescriptionService is provided', async () => {
+        const mockEquipmentService = {
+          generateEquipmentDescription: jest.fn().mockResolvedValue('Wearing leather armor'),
+        };
+
+        composer = new BodyDescriptionComposer({
+          bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
+          bodyGraphService: mockBodyGraphService,
+          entityFinder: mockEntityFinder,
+          anatomyFormattingService: mockAnatomyFormattingService,
+          partDescriptionGenerator: mockPartDescriptionGenerator,
+          equipmentDescriptionService: mockEquipmentService,
+        });
+
+        mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
+          'build',
+          'equipment',
+          'body_composition',
+        ]);
+
+        const entity = Object.assign(createEntityWithAllDescriptors(), { id: 'test-entity-id' });
+        const result = await composer.composeDescription(entity);
+        const lines = result.split('\n');
+
+        expect(lines).toHaveLength(3);
+        expect(lines[0]).toBe('Build: athletic');
+        expect(lines[1]).toBe('Wearing leather armor');
+        expect(lines[2]).toBe('Body composition: lean');
+        expect(mockEquipmentService.generateEquipmentDescription).toHaveBeenCalledWith('test-entity-id');
+      });
+
+      it('should skip equipment when equipmentDescriptionService returns empty description', async () => {
+        const mockEquipmentService = {
+          generateEquipmentDescription: jest.fn().mockResolvedValue(''),
+        };
+
+        composer = new BodyDescriptionComposer({
+          bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
+          bodyGraphService: mockBodyGraphService,
+          entityFinder: mockEntityFinder,
+          anatomyFormattingService: mockAnatomyFormattingService,
+          partDescriptionGenerator: mockPartDescriptionGenerator,
+          equipmentDescriptionService: mockEquipmentService,
+        });
+
+        mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
+          'build',
+          'equipment',
+          'body_composition',
+        ]);
+
+        const entity = Object.assign(createEntityWithAllDescriptors(), { id: 'test-entity-id' });
+        const result = await composer.composeDescription(entity);
+        const lines = result.split('\n');
+
+        expect(lines).toHaveLength(2);
+        expect(lines[0]).toBe('Build: athletic');
+        expect(lines[1]).toBe('Body composition: lean');
+        expect(result).not.toContain('equipment');
+      });
+
+      it('should handle equipment without equipmentDescriptionService', async () => {
+        mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
+          'build',
+          'equipment',
+          'body_composition',
+        ]);
+
+        const entity = createEntityWithAllDescriptors();
+        const result = await composer.composeDescription(entity);
+        const lines = result.split('\n');
+
+        // Should skip equipment when service not provided
+        expect(lines).toHaveLength(2);
+        expect(lines[0]).toBe('Build: athletic');
+        expect(lines[1]).toBe('Body composition: lean');
+        expect(result).not.toContain('equipment');
+      });
+    });
+
+    describe('Edge Case Validation', () => {
+      it('should handle entities with invalid getComponentData method', () => {
+        const invalidEntity = {
+          getComponentData: 'not a function', // Invalid type
+        };
+
+        const buildResult = composer.extractBuildDescription(invalidEntity);
+        const compositionResult = composer.extractBodyCompositionDescription(invalidEntity);
+        const hairResult = composer.extractBodyHairDescription(invalidEntity);
+
+        expect(buildResult).toBe('');
+        expect(compositionResult).toBe('');
+        expect(hairResult).toBe('');
+      });
+
+      it('should handle entities without hasComponent method in groupPartsByType', () => {
+        const partIds = ['invalid-entity-1'];
+
+        mockEntityFinder.getEntityInstance.mockImplementation((id) => {
+          if (id === 'invalid-entity-1') {
+            return {
+              // Missing hasComponent method
+              getComponentData: jest.fn(),
+            };
+          }
+          return null;
+        });
+
+        const result = composer.groupPartsByType(partIds);
+        expect(result.size).toBe(0);
+      });
+
+      it('should handle entities without getComponentData method in groupPartsByType', () => {
+        const partIds = ['invalid-entity-2'];
+
+        mockEntityFinder.getEntityInstance.mockImplementation((id) => {
+          if (id === 'invalid-entity-2') {
+            return {
+              hasComponent: jest.fn().mockReturnValue(true),
+              // Missing getComponentData method
+            };
+          }
+          return null;
+        });
+
+        const result = composer.groupPartsByType(partIds);
+        expect(result.size).toBe(0);
+      });
     });
   });
 });

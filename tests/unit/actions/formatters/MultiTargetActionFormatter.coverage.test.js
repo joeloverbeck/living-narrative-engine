@@ -1,7 +1,7 @@
 /**
  * @file Unit tests for MultiTargetActionFormatter - Coverage improvements
  * @see src/actions/formatters/MultiTargetActionFormatter.js
- * 
+ *
  * This test file specifically targets uncovered lines to improve test coverage:
  * Lines 246-247, 278-281, 305-317, 370, 398, 448, 514
  */
@@ -193,7 +193,9 @@ describe('MultiTargetActionFormatter - Coverage improvements', () => {
       );
 
       expect(result.ok).toBe(false);
-      expect(result.error).toContain("Required target 'secondary' could not be resolved");
+      expect(result.error).toContain(
+        "Required target 'secondary' could not be resolved"
+      );
     });
 
     it('should fail when required targets are missing in cartesian product (line 398)', () => {
@@ -222,7 +224,9 @@ describe('MultiTargetActionFormatter - Coverage improvements', () => {
       );
 
       expect(result.ok).toBe(false);
-      expect(result.error).toContain("Required target 'secondary' could not be resolved");
+      expect(result.error).toContain(
+        "Required target 'secondary' could not be resolved"
+      );
     });
 
     it('should return empty array when no primary targets found in context-dependent combinations (line 448)', () => {
@@ -234,8 +238,12 @@ describe('MultiTargetActionFormatter - Coverage improvements', () => {
 
       // All targets have contextFromId, so no primary targets
       const resolvedTargets = {
-        primary: [{ id: 'item1', displayName: 'Item', contextFromId: 'container1' }],
-        secondary: [{ id: 'item2', displayName: 'Item 2', contextFromId: 'container2' }],
+        primary: [
+          { id: 'item1', displayName: 'Item', contextFromId: 'container1' },
+        ],
+        secondary: [
+          { id: 'item2', displayName: 'Item 2', contextFromId: 'container2' },
+        ],
       };
 
       const targetDefinitions = {
@@ -253,7 +261,9 @@ describe('MultiTargetActionFormatter - Coverage improvements', () => {
 
       // Since all targets have contextFromId, this fails to find primary targets
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('No valid target combinations could be generated for required targets');
+      expect(result.error).toContain(
+        'No valid target combinations could be generated for required targets'
+      );
     });
   });
 
@@ -341,13 +351,14 @@ describe('MultiTargetActionFormatter - Coverage improvements', () => {
     it('should handle complex scenario with all problematic conditions', () => {
       const actionDef = {
         id: 'test:complex_scenario',
-        template: 'transfer {item} from {source} to {destination} using {method}',
+        template:
+          'transfer {item} from {source} to {destination} using {method}',
         generateCombinations: true,
       };
 
       const resolvedTargets = {
         primary: [
-          null, // This should trigger defensive warning or error 
+          null, // This should trigger defensive warning or error
           { id: 'source1', displayName: 'Alice' },
         ],
         secondary: [
@@ -416,7 +427,9 @@ describe('MultiTargetActionFormatter - Coverage improvements', () => {
       // Context-dependent targets with empty dependent target
       const resolvedTargets = {
         primary: [], // Empty primary
-        secondary: [{ id: 'item1', displayName: 'Item', contextFromId: 'person1' }],
+        secondary: [
+          { id: 'item1', displayName: 'Item', contextFromId: 'person1' },
+        ],
       };
 
       const result = formatter.formatMultiTarget(
@@ -439,7 +452,7 @@ describe('MultiTargetActionFormatter - Coverage improvements', () => {
         generateCombinations: true,
       };
 
-      // Independent targets but one is empty  
+      // Independent targets but one is empty
       const resolvedTargets = {
         primary: [{ id: 'item1', displayName: 'Item 1' }],
         secondary: [], // Empty - will cause line 398
@@ -472,7 +485,9 @@ describe('MultiTargetActionFormatter - Coverage improvements', () => {
 
       const resolvedTargets = {
         primary: [{ id: 'source1', displayName: 'Alice' }], // Primary (no contextFromId)
-        secondary: [{ id: 'item1', displayName: 'Book', contextFromId: 'source1' }],
+        secondary: [
+          { id: 'item1', displayName: 'Book', contextFromId: 'source1' },
+        ],
         // Missing tertiary for {dest} - should trigger continue on line 514
       };
 
@@ -544,7 +559,9 @@ describe('MultiTargetActionFormatter - Coverage improvements', () => {
 
       const resolvedTargets = {
         primary: [{ id: 'source1', displayName: 'Source' }], // Primary without contextFromId
-        secondary: [{ id: 'item1', displayName: 'Item', contextFromId: 'source1' }],
+        secondary: [
+          { id: 'item1', displayName: 'Item', contextFromId: 'source1' },
+        ],
         // No tertiary targets for {dest} - triggers continue on line 514
       };
 

@@ -79,6 +79,27 @@ export class BodyDescriptionComposer {
         continue;
       }
 
+      // Handle body composition
+      if (partType === 'body_composition') {
+        const compositionDescription =
+          this.extractBodyCompositionDescription(bodyEntity);
+        if (compositionDescription) {
+          lines.push(`Body composition: ${compositionDescription}`);
+        }
+        processedTypes.add(partType);
+        continue;
+      }
+
+      // Handle body hair
+      if (partType === 'body_hair') {
+        const bodyHairDescription = this.extractBodyHairDescription(bodyEntity);
+        if (bodyHairDescription) {
+          lines.push(`Body hair: ${bodyHairDescription}`);
+        }
+        processedTypes.add(partType);
+        continue;
+      }
+
       // Handle equipment descriptions
       if (partType === 'equipment' && this.equipmentDescriptionService) {
         const equipmentDescription =
@@ -192,5 +213,26 @@ export class BodyDescriptionComposer {
     }
 
     return compositionComponent.composition;
+  }
+
+  /**
+   * Extract body hair description from body entity
+   *
+   * @param {object} bodyEntity - The body entity
+   * @returns {string} Body hair description
+   */
+  extractBodyHairDescription(bodyEntity) {
+    if (!bodyEntity || typeof bodyEntity.getComponentData !== 'function') {
+      return '';
+    }
+
+    const bodyHairComponent = bodyEntity.getComponentData(
+      'descriptors:body_hair'
+    );
+    if (!bodyHairComponent || !bodyHairComponent.density) {
+      return '';
+    }
+
+    return bodyHairComponent.density;
   }
 }

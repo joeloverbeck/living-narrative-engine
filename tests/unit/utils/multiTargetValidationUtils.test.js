@@ -232,14 +232,14 @@ describe('multiTargetValidationUtils', () => {
     describe('null/undefined targets', () => {
       it('should reject null target', () => {
         const result = validateTargetValue(null, 'primary');
-        
+
         expect(result.isValid).toBe(false);
         expect(result.errors).toContain('primary target is required');
       });
 
       it('should reject undefined target', () => {
         const result = validateTargetValue(undefined, 'weapon');
-        
+
         expect(result.isValid).toBe(false);
         expect(result.errors).toContain('weapon target is required');
       });
@@ -254,23 +254,25 @@ describe('multiTargetValidationUtils', () => {
     describe('string target validation', () => {
       it('should accept valid string targets', () => {
         const result = validateTargetValue('goblin_123', 'target');
-        
+
         expect(result.isValid).toBe(true);
         expect(result.errors).toHaveLength(0);
       });
 
       it('should reject empty string targets', () => {
         const result = validateTargetValue('   ', 'target');
-        
+
         expect(result.isValid).toBe(false);
         expect(result.errors).toContain('target target cannot be empty string');
       });
 
       it('should reject string targets with invalid entity ID format', () => {
         const result = validateTargetValue('invalid@entity', 'weapon');
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContain('weapon target has invalid entity ID format');
+        expect(result.errors).toContain(
+          'weapon target has invalid entity ID format'
+        );
       });
     });
 
@@ -278,7 +280,7 @@ describe('multiTargetValidationUtils', () => {
       it('should accept valid object targets', () => {
         const target = { entityId: 'sword_123' };
         const result = validateTargetValue(target, 'weapon');
-        
+
         expect(result.isValid).toBe(true);
         expect(result.errors).toHaveLength(0);
       });
@@ -286,33 +288,41 @@ describe('multiTargetValidationUtils', () => {
       it('should reject object without entityId', () => {
         const target = { description: 'Missing entityId' };
         const result = validateTargetValue(target, 'item');
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContain('item target object must have entityId property');
+        expect(result.errors).toContain(
+          'item target object must have entityId property'
+        );
       });
 
       it('should reject object with non-string entityId', () => {
         const target = { entityId: 123 };
         const result = validateTargetValue(target, 'target');
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContain('target target entityId must be a string');
+        expect(result.errors).toContain(
+          'target target entityId must be a string'
+        );
       });
 
       it('should reject object with empty entityId', () => {
         const target = { entityId: '   ' };
         const result = validateTargetValue(target, 'primary');
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContain('primary target entityId cannot be empty');
+        expect(result.errors).toContain(
+          'primary target entityId cannot be empty'
+        );
       });
 
       it('should reject object with invalid entityId format', () => {
         const target = { entityId: 'invalid@entity' };
         const result = validateTargetValue(target, 'weapon');
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContain('weapon target entityId has invalid format');
+        expect(result.errors).toContain(
+          'weapon target entityId has invalid format'
+        );
       });
 
       describe('optional property validation', () => {
@@ -325,7 +335,7 @@ describe('multiTargetValidationUtils', () => {
             contextSource: 'inventory',
           };
           const result = validateTargetValue(target, 'weapon');
-          
+
           expect(result.isValid).toBe(true);
           expect(result.errors).toHaveLength(0);
         });
@@ -333,33 +343,41 @@ describe('multiTargetValidationUtils', () => {
         it('should reject non-string placeholder', () => {
           const target = { entityId: 'sword_123', placeholder: 123 };
           const result = validateTargetValue(target, 'weapon');
-          
+
           expect(result.isValid).toBe(false);
-          expect(result.errors).toContain('weapon target placeholder must be a string');
+          expect(result.errors).toContain(
+            'weapon target placeholder must be a string'
+          );
         });
 
         it('should reject non-string description', () => {
           const target = { entityId: 'sword_123', description: true };
           const result = validateTargetValue(target, 'item');
-          
+
           expect(result.isValid).toBe(false);
-          expect(result.errors).toContain('item target description must be a string');
+          expect(result.errors).toContain(
+            'item target description must be a string'
+          );
         });
 
         it('should reject non-boolean resolvedFromContext', () => {
           const target = { entityId: 'sword_123', resolvedFromContext: 'true' };
           const result = validateTargetValue(target, 'target');
-          
+
           expect(result.isValid).toBe(false);
-          expect(result.errors).toContain('target target resolvedFromContext must be a boolean');
+          expect(result.errors).toContain(
+            'target target resolvedFromContext must be a boolean'
+          );
         });
 
         it('should reject non-string contextSource', () => {
           const target = { entityId: 'sword_123', contextSource: 456 };
           const result = validateTargetValue(target, 'primary');
-          
+
           expect(result.isValid).toBe(false);
-          expect(result.errors).toContain('primary target contextSource must be a string');
+          expect(result.errors).toContain(
+            'primary target contextSource must be a string'
+          );
         });
 
         it('should accept undefined optional properties', () => {
@@ -371,7 +389,7 @@ describe('multiTargetValidationUtils', () => {
             contextSource: undefined,
           };
           const result = validateTargetValue(target, 'weapon');
-          
+
           expect(result.isValid).toBe(true);
           expect(result.errors).toHaveLength(0);
         });
@@ -381,23 +399,29 @@ describe('multiTargetValidationUtils', () => {
     describe('invalid target types', () => {
       it('should reject numeric targets', () => {
         const result = validateTargetValue(123, 'target');
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContain('target target must be a string or object');
+        expect(result.errors).toContain(
+          'target target must be a string or object'
+        );
       });
 
       it('should reject array targets', () => {
         const result = validateTargetValue(['entity_123'], 'item');
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContain('item target object must have entityId property');
+        expect(result.errors).toContain(
+          'item target object must have entityId property'
+        );
       });
 
       it('should reject function targets', () => {
         const result = validateTargetValue(() => 'entity', 'weapon');
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.errors).toContain('weapon target must be a string or object');
+        expect(result.errors).toContain(
+          'weapon target must be a string or object'
+        );
       });
     });
 
@@ -411,14 +435,24 @@ describe('multiTargetValidationUtils', () => {
           contextSource: {}, // Wrong type
         };
         const result = validateTargetValue(target, 'complex');
-        
+
         expect(result.isValid).toBe(false);
         expect(result.errors).toHaveLength(5);
-        expect(result.errors).toContain('complex target entityId must be a string');
-        expect(result.errors).toContain('complex target placeholder must be a string');
-        expect(result.errors).toContain('complex target description must be a string');
-        expect(result.errors).toContain('complex target resolvedFromContext must be a boolean');
-        expect(result.errors).toContain('complex target contextSource must be a string');
+        expect(result.errors).toContain(
+          'complex target entityId must be a string'
+        );
+        expect(result.errors).toContain(
+          'complex target placeholder must be a string'
+        );
+        expect(result.errors).toContain(
+          'complex target description must be a string'
+        );
+        expect(result.errors).toContain(
+          'complex target resolvedFromContext must be a boolean'
+        );
+        expect(result.errors).toContain(
+          'complex target contextSource must be a string'
+        );
       });
     });
   });
@@ -633,9 +667,13 @@ describe('multiTargetValidationUtils', () => {
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('weapon target cannot be empty string');
-      expect(result.errors).toContain('target target object must have entityId property');
+      expect(result.errors).toContain(
+        'target target object must have entityId property'
+      );
       expect(result.errors).toContain('item target must be a string or object');
-      expect(result.errors).toContain('defense target entityId has invalid format');
+      expect(result.errors).toContain(
+        'defense target entityId has invalid format'
+      );
     });
 
     it('should validate targets with complex object validation errors', () => {
@@ -653,12 +691,20 @@ describe('multiTargetValidationUtils', () => {
         },
       };
 
-      const result = validateAttemptActionPayload(payloadWithComplexInvalidTargets);
+      const result = validateAttemptActionPayload(
+        payloadWithComplexInvalidTargets
+      );
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('primary target entityId must be a string');
-      expect(result.errors).toContain('primary target placeholder must be a string');
-      expect(result.errors).toContain('primary target description must be a string');
+      expect(result.errors).toContain(
+        'primary target entityId must be a string'
+      );
+      expect(result.errors).toContain(
+        'primary target placeholder must be a string'
+      );
+      expect(result.errors).toContain(
+        'primary target description must be a string'
+      );
       expect(result.errors).toContain('weapon target is required');
     });
   });

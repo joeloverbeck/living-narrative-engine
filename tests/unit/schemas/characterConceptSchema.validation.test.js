@@ -20,7 +20,7 @@ describe('Character Concept Schema Validation - Character Limit Issue', () => {
 
   beforeEach(async () => {
     testBed = new BaseTestBed();
-    
+
     // Create mock logger
     mockLogger = {
       info: jest.fn(),
@@ -28,16 +28,26 @@ describe('Character Concept Schema Validation - Character Limit Issue', () => {
       warn: jest.fn(),
       debug: jest.fn(),
     };
-    
+
     schemaValidator = new AjvSchemaValidator({ logger: mockLogger });
-    
+
     // Load required schemas (character concept depends on thematic direction)
-    const thematicSchemaPath = path.join(process.cwd(), 'data/schemas/thematic-direction.schema.json');
-    const thematicSchemaData = JSON.parse(fs.readFileSync(thematicSchemaPath, 'utf8'));
+    const thematicSchemaPath = path.join(
+      process.cwd(),
+      'data/schemas/thematic-direction.schema.json'
+    );
+    const thematicSchemaData = JSON.parse(
+      fs.readFileSync(thematicSchemaPath, 'utf8')
+    );
     await schemaValidator.addSchema(thematicSchemaData, thematicSchemaData.$id);
-    
-    const conceptSchemaPath = path.join(process.cwd(), 'data/schemas/character-concept.schema.json');
-    const conceptSchemaData = JSON.parse(fs.readFileSync(conceptSchemaPath, 'utf8'));
+
+    const conceptSchemaPath = path.join(
+      process.cwd(),
+      'data/schemas/character-concept.schema.json'
+    );
+    const conceptSchemaData = JSON.parse(
+      fs.readFileSync(conceptSchemaPath, 'utf8')
+    );
     await schemaValidator.addSchema(conceptSchemaData, conceptSchemaData.$id);
   });
 
@@ -99,8 +109,8 @@ describe('Character Concept Schema Validation - Character Limit Issue', () => {
 
     it('should accept the exact concept from error logs (1190 characters)', () => {
       // This is the exact concept from the error logs that was failing
-      const errorLogConcept = 
-        'a 20-year-old young woman with a shapely, athletic figure and a gorgeous ass. She lives in Donostia, in the north of Spain. She is studying business in college, but she thinks she\'ll have a great career as an Instagram model, where she has about a hundred thousand subscribers. The young woman goes to the gym five days a week to maintain her figure, and particularly to shape her gorgeous, bubbly ass further. She was blessed with an ass that makes every man turn their heads, and that makes her Instagram followers drool online. Her ass is her main pride. The young woman has many suitors, but she doesn\'t want to settle down given her many options. She\'s attracted to older men, in their late thirties or forties, who are manly and tough. She loves to be manhandled in bed by such older, strong men whom she can call daddy. She loves to tease men with her gorgeous ass; she gets a kick of knowing that men want to fuck her. The young woman can be a bit of a brat at times, but she does it almost as a test to see what man is tough enough to check her. She usually wears tight clothing, like yoga pants, that highlight her crotch and her sexy ass, as well as the rest of her toned figure.';
+      const errorLogConcept =
+        "a 20-year-old young woman with a shapely, athletic figure and a gorgeous ass. She lives in Donostia, in the north of Spain. She is studying business in college, but she thinks she'll have a great career as an Instagram model, where she has about a hundred thousand subscribers. The young woman goes to the gym five days a week to maintain her figure, and particularly to shape her gorgeous, bubbly ass further. She was blessed with an ass that makes every man turn their heads, and that makes her Instagram followers drool online. Her ass is her main pride. The young woman has many suitors, but she doesn't want to settle down given her many options. She's attracted to older men, in their late thirties or forties, who are manly and tough. She loves to be manhandled in bed by such older, strong men whom she can call daddy. She loves to tease men with her gorgeous ass; she gets a kick of knowing that men want to fuck her. The young woman can be a bit of a brat at times, but she does it almost as a test to see what man is tough enough to check her. She usually wears tight clothing, like yoga pants, that highlight her crotch and her sexy ass, as well as the rest of her toned figure.";
 
       expect(errorLogConcept.length).toBe(1190); // Verify exact length from logs
 
@@ -141,7 +151,7 @@ describe('Character Concept Schema Validation - Character Limit Issue', () => {
     it('should provide clear error message for over-limit concepts', () => {
       // This test verifies error messages are clear when validation fails
       const overLimitConcept = 'a'.repeat(3001);
-      
+
       // Model validation should catch this first
       expect(() => {
         createCharacterConcept(overLimitConcept);
