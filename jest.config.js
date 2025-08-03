@@ -42,6 +42,7 @@ module.exports = {
     '!**/dist/**',
     '!**/coverage/**',
     '!src/interfaces/**',
+    '!src/entities/interfaces/**',
     '!src/commands/interfaces/**',
     '!src/turns/interfaces/**',
     '!src/prompting/interfaces/**',

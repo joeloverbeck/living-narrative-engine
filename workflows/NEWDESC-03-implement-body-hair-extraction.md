@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implement the `extractBodyHairDescription()` method in the `BodyDescriptionComposer` class to extract body hair descriptors from entities. This method follows the existing pattern established by `extractBuildDescription()` and will enable the display of body hair density (hairless, sparse, light, moderate, hairy, very-hairy) in entity descriptions.
+Implement the `extractBodyHairDescription()` method in the `BodyDescriptionComposer` class to extract body hair descriptors from entities. This method follows the existing pattern established by `extractBuildDescription()` and `extractBodyCompositionDescription()` and will enable the display of body hair density (hairless, sparse, light, moderate, hairy, very-hairy) in entity descriptions.
 
 ## Priority
 
@@ -30,27 +30,35 @@ Implement the `extractBodyHairDescription()` method in the `BodyDescriptionCompo
 
 ## Implementation Steps
 
-### Step 1: Analyze Component Schema
+### Step 1: Verify Component Structure
 
-First, verify the expected component structure:
+The `descriptors:body_hair` component already exists. Verify its structure:
 
 ```bash
-# Check the body_hair component schema
-cat data/schemas/components/descriptors/body_hair.schema.json
+# Check the body_hair component definition
+cat data/mods/descriptors/components/body_hair.component.json
 ```
 
-Expected schema structure:
+Expected component structure:
 
 ```json
 {
-  "type": "object",
-  "properties": {
-    "density": {
-      "type": "string",
-      "enum": ["hairless", "sparse", "light", "moderate", "hairy", "very-hairy"]
-    }
-  },
-  "required": ["density"]
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:body_hair",
+  "description": "Describes the body hair characteristics",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "density": {
+        "type": "string",
+        "description": "The density or amount of body hair",
+        "enum": ["hairless", "sparse", "light", "moderate", "hairy", "very-hairy"],
+        "default": "moderate"
+      }
+    },
+    "required": ["density"],
+    "additionalProperties": false
+  }
 }
 ```
 
@@ -88,9 +96,9 @@ extractBodyHairDescription(bodyEntity) {
 }
 ```
 
-### Step 4: Add Method with Full Error Handling
+### Step 4: Final Method Implementation
 
-For production-ready code with optional logging:
+The production-ready method follows the same pattern as existing extraction methods:
 
 ```javascript
 /**
@@ -99,32 +107,20 @@ For production-ready code with optional logging:
  * @returns {string} Body hair description
  */
 extractBodyHairDescription(bodyEntity) {
-  if (!bodyEntity) {
-    this.#logger?.debug('extractBodyHairDescription: bodyEntity is null/undefined');
-    return '';
-  }
-
-  if (typeof bodyEntity.getComponentData !== 'function') {
-    this.#logger?.debug('extractBodyHairDescription: bodyEntity lacks getComponentData method');
+  if (!bodyEntity || typeof bodyEntity.getComponentData !== 'function') {
     return '';
   }
 
   const bodyHairComponent = bodyEntity.getComponentData('descriptors:body_hair');
-  if (!bodyHairComponent) {
-    this.#logger?.debug('extractBodyHairDescription: no body_hair component found');
-    return '';
-  }
-
-  if (!bodyHairComponent.density) {
-    this.#logger?.warn('extractBodyHairDescription: body_hair component lacks density property', {
-      component: bodyHairComponent
-    });
+  if (!bodyHairComponent || !bodyHairComponent.density) {
     return '';
   }
 
   return bodyHairComponent.density;
 }
 ```
+
+Note: This follows the exact pattern of `extractBuildDescription()` and `extractBodyCompositionDescription()` methods.
 
 ### Step 5: Position in Class Structure
 
@@ -169,25 +165,49 @@ Create a unit test file:
 ```javascript
 // tests/unit/anatomy/bodyDescriptionComposer.bodyHair.test.js
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 
 describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
   let composer;
-  let mockLogger;
+  let mockBodyPartDescriptionBuilder;
+  let mockBodyGraphService;
+  let mockEntityFinder;
+  let mockAnatomyFormattingService;
+  let mockPartDescriptionGenerator;
 
   beforeEach(() => {
-    mockLogger = {
-      debug: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
+    // Create mocks following existing pattern
+    mockBodyPartDescriptionBuilder = {
+      buildDescription: jest.fn(),
+      buildMultipleDescription: jest.fn(),
+      getPlural: jest.fn(),
     };
 
+    mockBodyGraphService = {
+      getAllParts: jest.fn(),
+    };
+
+    mockEntityFinder = {
+      getEntityInstance: jest.fn(),
+    };
+
+    mockAnatomyFormattingService = {
+      getDescriptionOrder: jest.fn(),
+      getGroupedParts: jest.fn(),
+    };
+
+    mockPartDescriptionGenerator = {
+      generatePartDescription: jest.fn(),
+    };
+
+    // Create composer instance with actual constructor signature
     composer = new BodyDescriptionComposer({
-      logger: mockLogger,
-      descriptorFormatter: null,
-      templateDescription: null,
-      equipmentDescriptionService: null,
+      bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
+      bodyGraphService: mockBodyGraphService,
+      entityFinder: mockEntityFinder,
+      anatomyFormattingService: mockAnatomyFormattingService,
+      partDescriptionGenerator: mockPartDescriptionGenerator,
     });
   });
 
@@ -335,31 +355,33 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
     });
   });
 
-  describe('Logging Behavior', () => {
-    it('should log debug message when entity is null', () => {
-      composer.extractBodyHairDescription(null);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'extractBodyHairDescription: bodyEntity is null/undefined'
-      );
-    });
-
-    it('should log debug message when entity lacks getComponentData', () => {
-      composer.extractBodyHairDescription({ noMethod: true });
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'extractBodyHairDescription: bodyEntity lacks getComponentData method'
-      );
-    });
-
-    it('should log warning when component lacks density property', () => {
+  describe('Consistent Behavior', () => {
+    it('should work consistently with multiple calls', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ wrongProperty: 'value' })),
+        getComponentData: jest.fn(() => ({ density: 'hairy' })),
       };
 
-      composer.extractBodyHairDescription(mockEntity);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'extractBodyHairDescription: body_hair component lacks density property',
-        expect.any(Object)
-      );
+      const result1 = composer.extractBodyHairDescription(mockEntity);
+      const result2 = composer.extractBodyHairDescription(mockEntity);
+      const result3 = composer.extractBodyHairDescription(mockEntity);
+
+      expect(result1).toBe('hairy');
+      expect(result2).toBe('hairy');
+      expect(result3).toBe('hairy');
+      expect(mockEntity.getComponentData).toHaveBeenCalledTimes(3);
+    });
+
+    it('should not modify the input entity', () => {
+      const originalEntity = {
+        getComponentData: jest.fn(() => ({ density: 'sparse' })),
+        otherProperty: 'should not change',
+      };
+
+      const result = composer.extractBodyHairDescription(originalEntity);
+
+      expect(result).toBe('sparse');
+      expect(originalEntity.otherProperty).toBe('should not change');
+      expect(typeof originalEntity.getComponentData).toBe('function');
     });
   });
 });
@@ -372,55 +394,100 @@ Create an integration test to verify real-world usage:
 ```javascript
 // tests/integration/anatomy/bodyHairIntegration.test.js
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { TestEntity } from '../../common/testEntity.js';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 
 describe('Body Hair Integration', () => {
   let composer;
 
   beforeEach(() => {
+    // Create mocks for required dependencies
+    const mockBodyPartDescriptionBuilder = {
+      buildDescription: jest.fn(),
+      buildMultipleDescription: jest.fn(),
+      getPlural: jest.fn(),
+    };
+
+    const mockBodyGraphService = {
+      getAllParts: jest.fn(),
+    };
+
+    const mockEntityFinder = {
+      getEntityInstance: jest.fn(),
+    };
+
+    const mockAnatomyFormattingService = {
+      getDescriptionOrder: jest.fn(),
+      getGroupedParts: jest.fn(),
+    };
+
+    const mockPartDescriptionGenerator = {
+      generatePartDescription: jest.fn(),
+    };
+
     composer = new BodyDescriptionComposer({
-      logger: console,
-      descriptorFormatter: null,
-      templateDescription: null,
-      equipmentDescriptionService: null,
+      bodyPartDescriptionBuilder: mockBodyPartDescriptionBuilder,
+      bodyGraphService: mockBodyGraphService,
+      entityFinder: mockEntityFinder,
+      anatomyFormattingService: mockAnatomyFormattingService,
+      partDescriptionGenerator: mockPartDescriptionGenerator,
     });
   });
 
   it('should extract body hair from a complete entity', () => {
-    const entity = new TestEntity('test-entity');
-    entity.addComponent('descriptors:body_hair', {
-      density: 'moderate',
-    });
+    // Create a mock entity that matches the expected interface
+    const mockEntity = {
+      hasComponent: jest.fn().mockReturnValue(true),
+      getComponentData: jest.fn().mockImplementation((componentId) => {
+        if (componentId === 'descriptors:body_hair') {
+          return { density: 'moderate' };
+        }
+        return null;
+      }),
+    };
 
-    const result = composer.extractBodyHairDescription(entity);
+    const result = composer.extractBodyHairDescription(mockEntity);
     expect(result).toBe('moderate');
+    expect(mockEntity.getComponentData).toHaveBeenCalledWith('descriptors:body_hair');
   });
 
   it('should handle entity without body hair component', () => {
-    const entity = new TestEntity('test-entity');
-    // No body_hair component added
+    const mockEntity = {
+      hasComponent: jest.fn().mockReturnValue(false),
+      getComponentData: jest.fn().mockReturnValue(null),
+    };
 
-    const result = composer.extractBodyHairDescription(entity);
+    const result = composer.extractBodyHairDescription(mockEntity);
     expect(result).toBe('');
   });
 
   it('should work alongside other descriptors', () => {
-    const entity = new TestEntity('test-entity');
-    entity.addComponent('descriptors:build', { build: 'athletic' });
-    entity.addComponent('descriptors:body_composition', {
-      composition: 'lean',
-    });
-    entity.addComponent('descriptors:body_hair', { density: 'light' });
+    const mockEntity = {
+      hasComponent: jest.fn().mockReturnValue(true),
+      getComponentData: jest.fn().mockImplementation((componentId) => {
+        if (componentId === 'descriptors:build') {
+          return { build: 'athletic' };
+        }
+        if (componentId === 'descriptors:body_composition') {
+          return { composition: 'lean' };
+        }
+        if (componentId === 'descriptors:body_hair') {
+          return { density: 'light' };
+        }
+        return null;
+      }),
+    };
 
     // Each extraction should work independently
-    const hairResult = composer.extractBodyHairDescription(entity);
+    const hairResult = composer.extractBodyHairDescription(mockEntity);
     expect(hairResult).toBe('light');
 
     // Other extractors should still work
-    const buildResult = composer.extractBuildDescription(entity);
+    const buildResult = composer.extractBuildDescription(mockEntity);
     expect(buildResult).toBe('athletic');
+
+    const compositionResult = composer.extractBodyCompositionDescription(mockEntity);
+    expect(compositionResult).toBe('lean');
   });
 });
 ```
@@ -431,16 +498,16 @@ Execute all tests:
 
 ```bash
 # Run the specific test file
-npm test tests/unit/anatomy/bodyDescriptionComposer.bodyHair.test.js
+npm run test:unit -- tests/unit/anatomy/bodyDescriptionComposer.bodyHair.test.js
 
 # Run integration test
-npm test tests/integration/anatomy/bodyHairIntegration.test.js
+npm run test:integration -- tests/integration/anatomy/bodyHairIntegration.test.js
 
 # Run with coverage
-npm test -- --coverage tests/unit/anatomy/bodyDescriptionComposer.bodyHair.test.js
+npm run test:unit -- --coverage tests/unit/anatomy/bodyDescriptionComposer.bodyHair.test.js
 
 # Run all anatomy tests to check for regressions
-npm test tests/unit/anatomy/
+npm run test:unit -- tests/unit/anatomy/
 ```
 
 ### Step 9: Validate Code Quality
@@ -458,13 +525,13 @@ npm run typecheck
 
 ## Validation Steps
 
-### 1. Schema Compliance
+### 1. Component Structure Compliance
 
-Verify the implementation matches the schema:
+Verify the implementation matches the component structure:
 
 ```bash
 # Check that "density" is the correct property name
-grep -n "density" data/schemas/components/descriptors/body_hair.schema.json
+grep -n "density" data/mods/descriptors/components/body_hair.component.json
 ```
 
 ### 2. Method Signature Consistency
@@ -497,7 +564,7 @@ The method should:
 ### Issue 1: Property Name Confusion
 
 **Problem:** Using "value" or "hair" instead of "density".
-**Solution:** The property name must be "density" as defined in the schema.
+**Solution:** The property name must be "density" as defined in the component definition.
 
 ### Issue 2: Hyphenated Values
 
@@ -507,7 +574,7 @@ The method should:
 ### Issue 3: Component ID Typo
 
 **Problem:** Using 'descriptors:body-hair' (with hyphen) instead of underscore.
-**Solution:** The component ID is 'descriptors:body_hair' with underscore.
+**Solution:** The component ID is 'descriptors:body_hair' with underscore, as defined in the existing component file.
 
 ### Issue 4: Missing Null Checks
 
@@ -526,15 +593,15 @@ If issues arise:
 
 ## Completion Checklist
 
-- [ ] Method implemented following existing pattern
+- [ ] Method implemented following existing pattern (extractBuildDescription, extractBodyCompositionDescription)
 - [ ] JSDoc documentation added
 - [ ] Defensive programming with null checks
-- [ ] Property name "density" used correctly
+- [ ] Property name "density" used correctly (verified in existing component)
 - [ ] Unit tests created and passing
-- [ ] Integration test created and passing
-- [ ] Code linting passing
-- [ ] Code formatting applied
-- [ ] Type checking passing
+- [ ] Integration test created and passing  
+- [ ] Code linting passing (npm run lint)
+- [ ] Code formatting applied (npm run format)
+- [ ] Type checking passing (npm run typecheck)
 - [ ] Test coverage maintained/improved
 - [ ] No regression in existing tests
 - [ ] Method ready for integration in NEWDESC-04
@@ -551,9 +618,10 @@ After completing this method:
 
 - The property name is "density", not "value" or "hair"
 - This is a body-level descriptor attached to the main entity
-- Follow the exact pattern of extractBuildDescription() for consistency
+- Follow the exact pattern of extractBuildDescription() and extractBodyCompositionDescription() for consistency
 - Empty string is the standard "no value" return
-- The logger is optional - use optional chaining (?.)
+- No logging is used - follow the existing pattern of simple validation and return
 - Test all enum values including the hyphenated "very-hairy"
 - This method should be pure with no side effects
 - Consider performance - this may be called frequently
+- The component already exists at data/mods/descriptors/components/body_hair.component.json

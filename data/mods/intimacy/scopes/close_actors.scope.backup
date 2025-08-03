@@ -1,1 +1,0 @@
-intimacy:close_actors := actor.components.positioning:closeness.partners[]
