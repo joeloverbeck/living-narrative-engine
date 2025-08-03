@@ -25,7 +25,7 @@ describe('Character Concept Save Workflow - Integration Test', () => {
 
   beforeEach(async () => {
     testBed = new BaseTestBed();
-    
+
     // Create mock logger
     mockLogger = {
       info: jest.fn(),
@@ -71,12 +71,22 @@ describe('Character Concept Save Workflow - Integration Test', () => {
     schemaValidator = new AjvSchemaValidator({ logger: mockLogger });
 
     // Load required schemas
-    const thematicSchemaPath = path.join(process.cwd(), 'data/schemas/thematic-direction.schema.json');
-    const thematicSchemaData = JSON.parse(fs.readFileSync(thematicSchemaPath, 'utf8'));
+    const thematicSchemaPath = path.join(
+      process.cwd(),
+      'data/schemas/thematic-direction.schema.json'
+    );
+    const thematicSchemaData = JSON.parse(
+      fs.readFileSync(thematicSchemaPath, 'utf8')
+    );
     await schemaValidator.addSchema(thematicSchemaData, thematicSchemaData.$id);
-    
-    const conceptSchemaPath = path.join(process.cwd(), 'data/schemas/character-concept.schema.json');
-    const conceptSchemaData = JSON.parse(fs.readFileSync(conceptSchemaPath, 'utf8'));
+
+    const conceptSchemaPath = path.join(
+      process.cwd(),
+      'data/schemas/character-concept.schema.json'
+    );
+    const conceptSchemaData = JSON.parse(
+      fs.readFileSync(conceptSchemaPath, 'utf8')
+    );
     await schemaValidator.addSchema(conceptSchemaData, conceptSchemaData.$id);
 
     // Create storage service
@@ -151,7 +161,9 @@ describe('Character Concept Save Workflow - Integration Test', () => {
       const conceptText = 'a'.repeat(3001); // Over new maximum limit
 
       await expect(
-        characterBuilderService.createCharacterConcept(conceptText, { autoSave: true })
+        characterBuilderService.createCharacterConcept(conceptText, {
+          autoSave: true,
+        })
       ).rejects.toThrow('concept must be no more than 3000 characters long');
 
       expect(mockDatabase.saveCharacterConcept).not.toHaveBeenCalled();
@@ -159,8 +171,8 @@ describe('Character Concept Save Workflow - Integration Test', () => {
 
     it('should save the exact failing concept from error logs', async () => {
       // This is the exact concept that was failing in the error logs
-      const errorLogConcept = 
-        'a 20-year-old young woman with a shapely, athletic figure and a gorgeous ass. She lives in Donostia, in the north of Spain. She is studying business in college, but she thinks she\'ll have a great career as an Instagram model, where she has about a hundred thousand subscribers. The young woman goes to the gym five days a week to maintain her figure, and particularly to shape her gorgeous, bubbly ass further. She was blessed with an ass that makes every man turn their heads, and that makes her Instagram followers drool online. Her ass is her main pride. The young woman has many suitors, but she doesn\'t want to settle down given her many options. She\'s attracted to older men, in their late thirties or forties, who are manly and tough. She loves to be manhandled in bed by such older, strong men whom she can call daddy. She loves to tease men with her gorgeous ass; she gets a kick of knowing that men want to fuck her. The young woman can be a bit of a brat at times, but she does it almost as a test to see what man is tough enough to check her. She usually wears tight clothing, like yoga pants, that highlight her crotch and her sexy ass, as well as the rest of her toned figure.';
+      const errorLogConcept =
+        "a 20-year-old young woman with a shapely, athletic figure and a gorgeous ass. She lives in Donostia, in the north of Spain. She is studying business in college, but she thinks she'll have a great career as an Instagram model, where she has about a hundred thousand subscribers. The young woman goes to the gym five days a week to maintain her figure, and particularly to shape her gorgeous, bubbly ass further. She was blessed with an ass that makes every man turn their heads, and that makes her Instagram followers drool online. Her ass is her main pride. The young woman has many suitors, but she doesn't want to settle down given her many options. She's attracted to older men, in their late thirties or forties, who are manly and tough. She loves to be manhandled in bed by such older, strong men whom she can call daddy. She loves to tease men with her gorgeous ass; she gets a kick of knowing that men want to fuck her. The young woman can be a bit of a brat at times, but she does it almost as a test to see what man is tough enough to check her. She usually wears tight clothing, like yoga pants, that highlight her crotch and her sexy ass, as well as the rest of her toned figure.";
 
       expect(errorLogConcept.length).toBe(1190); // Verify length from logs
 
@@ -224,7 +236,9 @@ describe('Character Concept Save Workflow - Integration Test', () => {
       const conceptText = 'a'.repeat(3100);
 
       await expect(
-        characterBuilderService.createCharacterConcept(conceptText, { autoSave: true })
+        characterBuilderService.createCharacterConcept(conceptText, {
+          autoSave: true,
+        })
       ).rejects.toThrow(/concept must be no more than 3000 characters long/);
     });
 
@@ -232,7 +246,9 @@ describe('Character Concept Save Workflow - Integration Test', () => {
       const conceptText = 'short'; // Only 5 characters
 
       await expect(
-        characterBuilderService.createCharacterConcept(conceptText, { autoSave: true })
+        characterBuilderService.createCharacterConcept(conceptText, {
+          autoSave: true,
+        })
       ).rejects.toThrow(/concept must be at least 10 characters long/);
     });
   });

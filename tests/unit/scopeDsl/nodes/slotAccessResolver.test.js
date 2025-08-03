@@ -567,7 +567,9 @@ describe('SlotAccessResolver', () => {
       const result = resolver.resolve(node, mockContext);
 
       // Should process both clothing objects and return their slot values
-      expect(result).toEqual(new Set(['jacket_from_array', 'shirt_from_array']));
+      expect(result).toEqual(
+        new Set(['jacket_from_array', 'shirt_from_array'])
+      );
     });
   });
 

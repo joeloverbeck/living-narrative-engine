@@ -613,6 +613,17 @@ export class ThematicDirectionController extends BaseCharacterBuilderController 
 
     // Show the results state
     this._showResults();
+
+    // Ensure the container scrolls to the top to show all cards
+    // Wait for DOM update before scrolling
+    setTimeout(() => {
+      const directionsContainer = document.getElementById(
+        'directions-container'
+      );
+      if (directionsContainer) {
+        directionsContainer.scrollTop = 0;
+      }
+    }, 100);
   }
 
   /**

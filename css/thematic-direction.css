@@ -310,28 +310,36 @@
   min-height: 600px;
 }
 
-/* CRITICAL FIX: Make the directions container scrollable */
+/* CRITICAL FIX: Make the directions container properly accommodate all cards */
 #directions-container {
   flex: 1;
-  height: calc(100vh - 280px); /* Proper spacing for header/footer/padding */
   min-height: 400px;
-  max-height: 800px;
+  max-height: calc(
+    100vh - 280px
+  ); /* Allow flexible height up to viewport limit */
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Ensure results state fills container */
+/* Ensure results state fills available space without forcing height */
 #results-state {
-  height: 100%;
+  flex: 1;
   overflow-y: auto;
   padding-right: 8px; /* Space for scrollbar */
+  display: flex;
+  flex-direction: column;
 }
 
-/* Smooth scrolling */
+/* Ensure proper spacing and visibility for all direction cards */
 .directions-results {
-  padding-bottom: 2rem; /* Ensure last item isn't cut off */
+  padding: 1rem 0 2rem 0; /* Add top padding to prevent first card from being cut off */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Consistent spacing between cards */
 }
 
 /* Custom scrollbar styling */
@@ -431,11 +439,11 @@
   border: 1px solid var(--border-primary);
   border-radius: 16px;
   padding: 2rem;
-  margin-bottom: 1.5rem;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
   animation: slideIn 0.4s ease backwards;
+  flex-shrink: 0; /* Prevent cards from shrinking */
 }
 
 .direction-card::before {

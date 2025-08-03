@@ -385,20 +385,36 @@ describe('Multi-Target Action Performance Tests', () => {
 
       // Comprehensive diagnostic output
       console.log(`Performance Analysis (Mock-based test):`);
-      console.log(`Legacy timings (3 runs): [${legacyTimings.map(t => t.toFixed(4)).join(', ')}]ms per operation`);
-      console.log(`Enhanced timings (3 runs): [${enhancedTimings.map(t => t.toFixed(4)).join(', ')}]ms per operation`);
-      console.log(`Legacy median: ${legacyMeanTime.toFixed(4)}ms per operation`);
-      console.log(`Enhanced median: ${enhancedMeanTime.toFixed(4)}ms per operation`);
-      console.log(`Performance ratio: ${performanceRatio.toFixed(3)} (enhanced/legacy)`);
-      console.log(`Absolute difference: ${absoluteDifferenceMs.toFixed(2)}ms total`);
-      console.log(`Significant difference: ${isSignificantDifference ? 'YES' : 'NO'} (threshold: 2ms total)`);
+      console.log(
+        `Legacy timings (3 runs): [${legacyTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
+      );
+      console.log(
+        `Enhanced timings (3 runs): [${enhancedTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
+      );
+      console.log(
+        `Legacy median: ${legacyMeanTime.toFixed(4)}ms per operation`
+      );
+      console.log(
+        `Enhanced median: ${enhancedMeanTime.toFixed(4)}ms per operation`
+      );
+      console.log(
+        `Performance ratio: ${performanceRatio.toFixed(3)} (enhanced/legacy)`
+      );
+      console.log(
+        `Absolute difference: ${absoluteDifferenceMs.toFixed(2)}ms total`
+      );
+      console.log(
+        `Significant difference: ${isSignificantDifference ? 'YES' : 'NO'} (threshold: 2ms total)`
+      );
 
       // Only apply ratio test if there's a significant absolute difference
       // This prevents failures due to measurement noise on very fast operations
       if (isSignificantDifference) {
         expect(performanceRatio).toBeLessThan(4.0); // Increased from 2.0x to 4.0x for more realistic mock-based threshold
       } else {
-        console.log(`Skipping ratio assertion due to insignificant absolute difference (${absoluteDifferenceMs.toFixed(2)}ms < 2ms)`);
+        console.log(
+          `Skipping ratio assertion due to insignificant absolute difference (${absoluteDifferenceMs.toFixed(2)}ms < 2ms)`
+        );
       }
     });
 
@@ -472,7 +488,8 @@ describe('Multi-Target Action Performance Tests', () => {
 
       // Adjusted threshold to account for JavaScript timing variance and system load
       // Only fail if there's a significant absolute difference AND ratio is high
-      const absoluteDifferenceMs = (multiTargetMeanTime - legacyMeanTime) * iterations;
+      const absoluteDifferenceMs =
+        (multiTargetMeanTime - legacyMeanTime) * iterations;
       const isSignificantDifference = absoluteDifferenceMs > 5.0; // 5ms total difference threshold
 
       // Performance metrics from the validator
@@ -480,22 +497,44 @@ describe('Multi-Target Action Performance Tests', () => {
 
       // Comprehensive diagnostic output for failure analysis
       console.log(`Real Validation Performance Analysis:`);
-      console.log(`Legacy timings (3 runs): [${legacyTimings.map(t => t.toFixed(4)).join(', ')}]ms per operation`);
-      console.log(`Multi-target timings (3 runs): [${multiTargetTimings.map(t => t.toFixed(4)).join(', ')}]ms per operation`);
-      console.log(`Legacy median: ${legacyMeanTime.toFixed(4)}ms per operation`);
-      console.log(`Multi-target median: ${multiTargetMeanTime.toFixed(4)}ms per operation`);
-      console.log(`Performance ratio: ${performanceRatio.toFixed(3)} (multi-target/legacy)`);
-      console.log(`Absolute difference: ${absoluteDifferenceMs.toFixed(2)}ms total (${(multiTargetMeanTime - legacyMeanTime).toFixed(4)}ms per operation)`);
-      console.log(`Significant difference: ${isSignificantDifference ? 'YES' : 'NO'} (threshold: 5ms total)`);
-      console.log(`Validator metrics - Total validations: ${validatorMetrics.validationCount}`);
-      console.log(`Validator metrics - Average time: ${validatorMetrics.averageTime.toFixed(4)}ms`);
-      console.log(`Validator metrics - Error rate: ${(validatorMetrics.errorRate * 100).toFixed(2)}%`);
+      console.log(
+        `Legacy timings (3 runs): [${legacyTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
+      );
+      console.log(
+        `Multi-target timings (3 runs): [${multiTargetTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
+      );
+      console.log(
+        `Legacy median: ${legacyMeanTime.toFixed(4)}ms per operation`
+      );
+      console.log(
+        `Multi-target median: ${multiTargetMeanTime.toFixed(4)}ms per operation`
+      );
+      console.log(
+        `Performance ratio: ${performanceRatio.toFixed(3)} (multi-target/legacy)`
+      );
+      console.log(
+        `Absolute difference: ${absoluteDifferenceMs.toFixed(2)}ms total (${(multiTargetMeanTime - legacyMeanTime).toFixed(4)}ms per operation)`
+      );
+      console.log(
+        `Significant difference: ${isSignificantDifference ? 'YES' : 'NO'} (threshold: 5ms total)`
+      );
+      console.log(
+        `Validator metrics - Total validations: ${validatorMetrics.validationCount}`
+      );
+      console.log(
+        `Validator metrics - Average time: ${validatorMetrics.averageTime.toFixed(4)}ms`
+      );
+      console.log(
+        `Validator metrics - Error rate: ${(validatorMetrics.errorRate * 100).toFixed(2)}%`
+      );
 
       // Only fail if both conditions are met: significant absolute difference AND high ratio
       if (isSignificantDifference) {
         expect(performanceRatio).toBeLessThan(5.0); // Increased from 3.0x to 5.0x for more realistic threshold
       } else {
-        console.log(`Skipping ratio assertion due to insignificant absolute difference (${absoluteDifferenceMs.toFixed(2)}ms < 5ms)`);
+        console.log(
+          `Skipping ratio assertion due to insignificant absolute difference (${absoluteDifferenceMs.toFixed(2)}ms < 5ms)`
+        );
       }
     });
 
@@ -522,7 +561,8 @@ describe('Multi-Target Action Performance Tests', () => {
             `${targetCount} targets run ${run + 1}`
           );
 
-          for (let i = 0; i < 1000; i++) { // Increased iterations for stability
+          for (let i = 0; i < 1000; i++) {
+            // Increased iterations for stability
             mockValidator.validate(schemaId, event);
           }
 
@@ -535,13 +575,15 @@ describe('Multi-Target Action Performance Tests', () => {
         const avgTime = timings[1]; // Middle value of 3 runs
         results.push({ targetCount, avgTime, timings });
 
-        console.log(`${targetCount} targets: ${avgTime.toFixed(4)}ms median (${timings.map(t => t.toFixed(4)).join(', ')})`);
+        console.log(
+          `${targetCount} targets: ${avgTime.toFixed(4)}ms median (${timings.map((t) => t.toFixed(4)).join(', ')})`
+        );
       }
 
       // Performance should scale reasonably (not exponentially)
       // Only test scaling if there's a meaningful absolute difference
       const baseTime = results[0].avgTime;
-      
+
       for (let i = 1; i < results.length; i++) {
         const ratio = results[i].avgTime / baseTime;
         const absoluteDifference = (results[i].avgTime - baseTime) * 1000; // Convert to total ms for 1000 iterations
@@ -549,14 +591,20 @@ describe('Multi-Target Action Performance Tests', () => {
 
         console.log(`Scaling analysis for ${results[i].targetCount} targets:`);
         console.log(`  Ratio: ${ratio.toFixed(3)}x vs single target`);
-        console.log(`  Absolute difference: ${absoluteDifference.toFixed(2)}ms total`);
-        console.log(`  Significant: ${isSignificantDifference ? 'YES' : 'NO'} (threshold: 1ms)`);
+        console.log(
+          `  Absolute difference: ${absoluteDifference.toFixed(2)}ms total`
+        );
+        console.log(
+          `  Significant: ${isSignificantDifference ? 'YES' : 'NO'} (threshold: 1ms)`
+        );
 
         // Only apply ratio test if there's a significant absolute difference
         if (isSignificantDifference) {
           expect(ratio).toBeLessThan(5); // Increased from 3x to 5x for mock-based testing
         } else {
-          console.log(`  Skipping ratio assertion due to insignificant difference`);
+          console.log(
+            `  Skipping ratio assertion due to insignificant difference`
+          );
         }
       }
     });

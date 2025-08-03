@@ -69,6 +69,26 @@ describe('RecipeProcessor', () => {
         "Recipe 'invalid:recipe' not found in registry"
       );
     });
+
+    it('should handle recipe with undefined slots property', () => {
+      const mockRecipe = {
+        recipeId: 'test:recipe',
+        // No slots property defined
+      };
+
+      mockDataRegistry.get.mockReturnValue(mockRecipe);
+
+      const result = processor.loadRecipe('test:recipe');
+
+      expect(result).toBe(mockRecipe);
+      expect(mockDataRegistry.get).toHaveBeenCalledWith(
+        'anatomyRecipes',
+        'test:recipe'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "RecipeProcessor: Loaded recipe 'test:recipe' with 0 slots"
+      );
+    });
   });
 
   describe('processRecipe', () => {
@@ -158,6 +178,40 @@ describe('RecipeProcessor', () => {
       expect(result).toEqual(blueprintReqs);
     });
 
+    it('should handle undefined blueprint requirements', () => {
+      const result = processor.mergeSlotRequirements(undefined, null);
+
+      expect(result).toEqual({});
+    });
+
+    it('should handle null blueprint requirements with recipe slot', () => {
+      const recipeSlot = {
+        tags: ['tag1'],
+        properties: { prop1: 'value1' },
+      };
+
+      const result = processor.mergeSlotRequirements(null, recipeSlot);
+
+      expect(result).toEqual({
+        components: ['tag1'],
+        properties: { prop1: 'value1' },
+      });
+    });
+
+    it('should handle empty blueprint requirements with recipe slot', () => {
+      const recipeSlot = {
+        tags: ['tag1'],
+        properties: { prop1: 'value1' },
+      };
+
+      const result = processor.mergeSlotRequirements({}, recipeSlot);
+
+      expect(result).toEqual({
+        components: ['tag1'],
+        properties: { prop1: 'value1' },
+      });
+    });
+
     it('should merge recipe tags with blueprint components', () => {
       const blueprintReqs = {
         components: ['comp1'],
@@ -170,6 +224,23 @@ describe('RecipeProcessor', () => {
 
       expect(result).toEqual({
         components: ['comp1', 'tag1', 'tag2'],
+      });
+    });
+
+    it('should handle blueprint without components when adding recipe tags', () => {
+      const blueprintReqs = {
+        // No components property
+        properties: { prop1: 'value1' },
+      };
+      const recipeSlot = {
+        tags: ['tag1', 'tag2'],
+      };
+
+      const result = processor.mergeSlotRequirements(blueprintReqs, recipeSlot);
+
+      expect(result).toEqual({
+        properties: { prop1: 'value1' },
+        components: ['tag1', 'tag2'],
       });
     });
 
@@ -188,6 +259,23 @@ describe('RecipeProcessor', () => {
           prop1: 'value1',
           prop2: 'value2',
         },
+      });
+    });
+
+    it('should handle blueprint without properties when adding recipe properties', () => {
+      const blueprintReqs = {
+        components: ['comp1'],
+        // No properties property
+      };
+      const recipeSlot = {
+        properties: { prop1: 'value1' },
+      };
+
+      const result = processor.mergeSlotRequirements(blueprintReqs, recipeSlot);
+
+      expect(result).toEqual({
+        components: ['comp1'],
+        properties: { prop1: 'value1' },
       });
     });
   });

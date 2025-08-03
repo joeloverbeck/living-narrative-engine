@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 
-describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
+describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
   let composer;
   let mockBodyPartDescriptionBuilder;
   let mockBodyGraphService;
@@ -45,65 +45,73 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
   });
 
   describe('Valid Input Cases', () => {
-    it('should extract body composition when component exists', () => {
+    it('should extract body hair density when component exists', () => {
       const mockEntity = {
         getComponentData: jest.fn((componentId) => {
-          if (componentId === 'descriptors:body_composition') {
-            return { composition: 'average' };
+          if (componentId === 'descriptors:body_hair') {
+            return { density: 'moderate' };
           }
           return null;
         }),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
-      expect(result).toBe('average');
+      const result = composer.extractBodyHairDescription(mockEntity);
+      expect(result).toBe('moderate');
       expect(mockEntity.getComponentData).toHaveBeenCalledWith(
-        'descriptors:body_composition'
+        'descriptors:body_hair'
       );
     });
 
-    it('should handle all valid composition values', () => {
+    it('should handle all valid density values', () => {
       const validValues = [
-        'underweight',
-        'lean',
-        'average',
-        'soft',
-        'chubby',
-        'overweight',
-        'obese',
+        'hairless',
+        'sparse',
+        'light',
+        'moderate',
+        'hairy',
+        'very-hairy',
       ];
 
       validValues.forEach((value) => {
         const mockEntity = {
-          getComponentData: jest.fn(() => ({ composition: value })),
+          getComponentData: jest.fn(() => ({ density: value })),
         };
 
-        const result = composer.extractBodyCompositionDescription(mockEntity);
+        const result = composer.extractBodyHairDescription(mockEntity);
         expect(result).toBe(value);
       });
+    });
+
+    it('should handle hyphenated value "very-hairy"', () => {
+      const mockEntity = {
+        getComponentData: jest.fn(() => ({ density: 'very-hairy' })),
+      };
+
+      const result = composer.extractBodyHairDescription(mockEntity);
+      expect(result).toBe('very-hairy');
     });
   });
 
   describe('Invalid Input Cases', () => {
     it('should return empty string when bodyEntity is null', () => {
-      const result = composer.extractBodyCompositionDescription(null);
+      const result = composer.extractBodyHairDescription(null);
       expect(result).toBe('');
     });
 
     it('should return empty string when bodyEntity is undefined', () => {
-      const result = composer.extractBodyCompositionDescription(undefined);
+      const result = composer.extractBodyHairDescription(undefined);
       expect(result).toBe('');
     });
 
     it('should return empty string when bodyEntity lacks getComponentData', () => {
       const mockEntity = { someOtherMethod: jest.fn() };
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
     });
 
     it('should return empty string when getComponentData is not a function', () => {
       const mockEntity = { getComponentData: 'not a function' };
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
     });
 
@@ -112,10 +120,10 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
         getComponentData: jest.fn(() => null),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
       expect(mockEntity.getComponentData).toHaveBeenCalledWith(
-        'descriptors:body_composition'
+        'descriptors:body_hair'
       );
     });
 
@@ -124,43 +132,46 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
         getComponentData: jest.fn(() => undefined),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
     });
 
-    it('should return empty string when component lacks composition property', () => {
+    it('should return empty string when component lacks density property', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ someOtherProperty: 'value' })),
+        getComponentData: jest.fn(() => ({
+          value: 'moderate', // Wrong property name
+          hair: 'moderate', // Wrong property name
+        })),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
     });
 
-    it('should return empty string when composition is null', () => {
+    it('should return empty string when density is null', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: null })),
+        getComponentData: jest.fn(() => ({ density: null })),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
     });
 
-    it('should return empty string when composition is undefined', () => {
+    it('should return empty string when density is undefined', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: undefined })),
+        getComponentData: jest.fn(() => ({ density: undefined })),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
     });
 
-    it('should return empty string when composition is empty string', () => {
+    it('should return empty string when density is empty string', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: '' })),
+        getComponentData: jest.fn(() => ({ density: '' })),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
     });
   });
@@ -174,35 +185,35 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
       };
 
       expect(() => {
-        composer.extractBodyCompositionDescription(mockEntity);
+        composer.extractBodyHairDescription(mockEntity);
       }).toThrow('Component system error');
     });
 
-    it('should handle composition with unexpected type - number', () => {
+    it('should handle density with unexpected type - number', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: 123 })),
+        getComponentData: jest.fn(() => ({ density: 123 })),
       };
 
       // Should return the value as-is (coerced to string by the template)
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe(123);
     });
 
-    it('should handle composition with unexpected type - boolean', () => {
+    it('should handle density with unexpected type - boolean', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: true })),
+        getComponentData: jest.fn(() => ({ density: true })),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe(true);
     });
 
-    it('should handle composition with unexpected type - object', () => {
+    it('should handle density with unexpected type - object', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: { nested: 'value' } })),
+        getComponentData: jest.fn(() => ({ density: { nested: 'value' } })),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toEqual({ nested: 'value' });
     });
   });
@@ -213,7 +224,7 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
       const invalidInputs = [123, 'string', true, false, [], Symbol('test')];
 
       invalidInputs.forEach((input) => {
-        const result = composer.extractBodyCompositionDescription(input);
+        const result = composer.extractBodyHairDescription(input);
         expect(result).toBe('');
       });
     });
@@ -224,8 +235,7 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
         someOtherProp: 'value',
       };
 
-      const result =
-        composer.extractBodyCompositionDescription(objectWithoutMethod);
+      const result = composer.extractBodyHairDescription(objectWithoutMethod);
       expect(result).toBe('');
     });
   });
@@ -235,59 +245,72 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
       const mockEntity = {
         getComponentData: jest.fn(() => ({
           build: 'muscular', // Wrong property name
-          value: 'average', // Wrong property name
-          type: 'lean', // Wrong property name
+          value: 'moderate', // Wrong property name
+          type: 'hairy', // Wrong property name
         })),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
     });
 
-    it('should handle component with composition property set to false', () => {
+    it('should handle component with density property set to false', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: false })),
+        getComponentData: jest.fn(() => ({ density: false })),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
     });
 
-    it('should handle component with composition property set to 0', () => {
+    it('should handle component with density property set to 0', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: 0 })),
+        getComponentData: jest.fn(() => ({ density: 0 })),
       };
 
-      const result = composer.extractBodyCompositionDescription(mockEntity);
+      const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
+    });
+
+    it('should handle component with additional properties', () => {
+      const mockEntity = {
+        getComponentData: jest.fn(() => ({
+          density: 'moderate',
+          color: 'brown', // Additional property
+          texture: 'coarse', // Additional property
+        })),
+      };
+
+      const result = composer.extractBodyHairDescription(mockEntity);
+      expect(result).toBe('moderate');
     });
   });
 
   describe('Method Integration', () => {
     it('should work consistently with multiple calls', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: 'lean' })),
+        getComponentData: jest.fn(() => ({ density: 'hairy' })),
       };
 
-      const result1 = composer.extractBodyCompositionDescription(mockEntity);
-      const result2 = composer.extractBodyCompositionDescription(mockEntity);
-      const result3 = composer.extractBodyCompositionDescription(mockEntity);
+      const result1 = composer.extractBodyHairDescription(mockEntity);
+      const result2 = composer.extractBodyHairDescription(mockEntity);
+      const result3 = composer.extractBodyHairDescription(mockEntity);
 
-      expect(result1).toBe('lean');
-      expect(result2).toBe('lean');
-      expect(result3).toBe('lean');
+      expect(result1).toBe('hairy');
+      expect(result2).toBe('hairy');
+      expect(result3).toBe('hairy');
       expect(mockEntity.getComponentData).toHaveBeenCalledTimes(3);
     });
 
     it('should not modify the input entity', () => {
       const originalEntity = {
-        getComponentData: jest.fn(() => ({ composition: 'soft' })),
+        getComponentData: jest.fn(() => ({ density: 'sparse' })),
         otherProperty: 'should not change',
       };
 
-      const result = composer.extractBodyCompositionDescription(originalEntity);
+      const result = composer.extractBodyHairDescription(originalEntity);
 
-      expect(result).toBe('soft');
+      expect(result).toBe('sparse');
       expect(originalEntity.otherProperty).toBe('should not change');
       expect(typeof originalEntity.getComponentData).toBe('function');
     });
