@@ -18,11 +18,11 @@ export const createCompleteHumanoidEntity = () => {
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
       const componentData = {
-        [ANATOMY_BODY_COMPONENT_ID]: { 
-          body: { 
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          body: {
             root: 'torso',
             // Parts would be managed by bodyGraphService.getAllParts()
-          }
+          },
         },
         'descriptors:build': { build: 'athletic' },
         'descriptors:body_composition': { composition: 'lean' },
@@ -51,10 +51,10 @@ export const createPartialHumanoidEntity = () => {
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
       const componentData = {
-        [ANATOMY_BODY_COMPONENT_ID]: { 
-          body: { 
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          body: {
             root: 'torso',
-          }
+          },
         },
         'descriptors:build': { build: 'average' },
         // Missing body_composition
@@ -78,16 +78,16 @@ export const createMinimalHumanoidEntity = () => {
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
       if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-        return { 
-          body: { 
+        return {
+          body: {
             root: 'torso',
-          }
+          },
         };
       }
       return null;
     }),
   };
-  
+
   return entity;
 };
 
@@ -98,7 +98,13 @@ export const createMinimalHumanoidEntity = () => {
  */
 export const createMockBodyParts = () => {
   // Mock part IDs that would be returned by bodyGraphService.getAllParts()
-  return ['head-part-id', 'hair-part-id', 'eyes-part-id', 'arms-part-id', 'chest-part-id'];
+  return [
+    'head-part-id',
+    'hair-part-id',
+    'eyes-part-id',
+    'arms-part-id',
+    'chest-part-id',
+  ];
 };
 
 /**
@@ -118,10 +124,10 @@ export const createEdgeCaseEntity = () => {
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
       const componentData = {
-        [ANATOMY_BODY_COMPONENT_ID]: { 
-          body: { 
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          body: {
             root: 'torso',
-          }
+          },
         },
         'descriptors:build': { build: '' }, // Empty string
         'descriptors:body_composition': { composition: null }, // Null value
@@ -167,18 +173,15 @@ export const createBodyHairVariantsEntity = (densityValue) => {
   const entity = {
     id: `test-body-hair-${densityValue}`,
     hasComponent: jest.fn().mockImplementation((componentId) => {
-      const components = [
-        ANATOMY_BODY_COMPONENT_ID,
-        'descriptors:body_hair',
-      ];
+      const components = [ANATOMY_BODY_COMPONENT_ID, 'descriptors:body_hair'];
       return components.includes(componentId);
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
       const componentData = {
-        [ANATOMY_BODY_COMPONENT_ID]: { 
-          body: { 
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          body: {
             root: 'torso',
-          }
+          },
         },
         'descriptors:body_hair': { density: densityValue },
       };
@@ -206,10 +209,10 @@ export const createBodyCompositionVariantsEntity = (compositionValue) => {
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
       const componentData = {
-        [ANATOMY_BODY_COMPONENT_ID]: { 
-          body: { 
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          body: {
             root: 'torso',
-          }
+          },
         },
         'descriptors:body_composition': { composition: compositionValue },
       };

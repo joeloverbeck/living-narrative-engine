@@ -33,9 +33,7 @@ describe('Performance Integration Tests', () => {
       console.log(
         `Generated ${iterations} descriptions in ${metrics.total.toFixed(2)}ms`
       );
-      console.log(
-        `Average: ${metrics.average.toFixed(3)}ms per description`
-      );
+      console.log(`Average: ${metrics.average.toFixed(3)}ms per description`);
       console.log(
         `Min: ${metrics.min.toFixed(3)}ms, Max: ${metrics.max.toFixed(3)}ms`
       );
@@ -44,7 +42,9 @@ describe('Performance Integration Tests', () => {
       expect(metrics.total).toBeLessThan(2000);
 
       // Average should be under threshold
-      expect(metrics.average).toBeLessThan(performanceExpectations.singleDescription.maxTime);
+      expect(metrics.average).toBeLessThan(
+        performanceExpectations.singleDescription.maxTime
+      );
     });
 
     it('should handle multiple entities efficiently', async () => {
@@ -71,12 +71,16 @@ describe('Performance Integration Tests', () => {
       );
 
       // Should complete in reasonable time
-      expect(duration).toBeLessThan(performanceExpectations.bulkDescriptions.maxTotalTime);
-      expect(duration / entities.length).toBeLessThan(performanceExpectations.bulkDescriptions.maxTimePerEntity);
-      
+      expect(duration).toBeLessThan(
+        performanceExpectations.bulkDescriptions.maxTotalTime
+      );
+      expect(duration / entities.length).toBeLessThan(
+        performanceExpectations.bulkDescriptions.maxTimePerEntity
+      );
+
       // All descriptions should be generated
       expect(result).toHaveLength(entities.length);
-      result.forEach(description => {
+      result.forEach((description) => {
         expect(description).toBeTruthy();
       });
     });
@@ -134,21 +138,21 @@ describe('Performance Integration Tests', () => {
       console.log('Performance by entity type:');
       results.forEach((metrics, index) => {
         const entityType = ['minimal', 'partial', 'complete'][index];
-        console.log(
-          `${entityType}: ${metrics.average.toFixed(3)}ms average`
-        );
+        console.log(`${entityType}: ${metrics.average.toFixed(3)}ms average`);
       });
 
       // All should be within reasonable bounds
-      results.forEach(metrics => {
-        expect(metrics.average).toBeLessThan(performanceExpectations.singleDescription.maxTime);
+      results.forEach((metrics) => {
+        expect(metrics.average).toBeLessThan(
+          performanceExpectations.singleDescription.maxTime
+        );
       });
 
       // Performance should not vary dramatically based on descriptor count
-      const minAverage = Math.min(...results.map(r => r.average));
-      const maxAverage = Math.max(...results.map(r => r.average));
+      const minAverage = Math.min(...results.map((r) => r.average));
+      const maxAverage = Math.max(...results.map((r) => r.average));
       const performanceVariation = maxAverage / minAverage;
-      
+
       expect(performanceVariation).toBeLessThan(8); // Should not vary by more than 8x
     });
   });
@@ -173,7 +177,9 @@ describe('Performance Integration Tests', () => {
       );
 
       // Memory growth should be minimal
-      expect(memoryMetrics.memoryGrowth).toBeLessThan(performanceExpectations.memoryUsage.maxGrowth);
+      expect(memoryMetrics.memoryGrowth).toBeLessThan(
+        performanceExpectations.memoryUsage.maxGrowth
+      );
     });
 
     it('should handle memory pressure gracefully', async () => {
@@ -187,8 +193,8 @@ describe('Performance Integration Tests', () => {
           largeArrays.push(new Array(10000).fill('test'));
         }
 
-        const { result, duration } = await measureExecutionTime(
-          () => composer.composeDescription(entity)
+        const { result, duration } = await measureExecutionTime(() =>
+          composer.composeDescription(entity)
         );
 
         expect(result).toBeTruthy();
@@ -212,7 +218,7 @@ describe('Performance Integration Tests', () => {
       for (let i = 0; i < 100; i++) {
         const entity = entities[i % entities.length];
         await composer.composeDescription(entity);
-        
+
         // Occasionally check memory
         if (i % 25 === 0 && global.gc) {
           global.gc();
@@ -256,26 +262,30 @@ describe('Performance Integration Tests', () => {
 
       // All results should be identical
       const firstResult = result[0];
-      result.forEach(description => {
+      result.forEach((description) => {
         expect(description).toBe(firstResult);
       });
     });
 
     it('should maintain performance under concurrent load', async () => {
-      const entities = Array.from({ length: 20 }, () => createCompleteHumanoidEntity());
+      const entities = Array.from({ length: 20 }, () =>
+        createCompleteHumanoidEntity()
+      );
 
       const { result, duration } = await measureExecutionTime(async () => {
         // Process in batches of 5 concurrent requests
         const batchSize = 5;
         const results = [];
-        
+
         for (let i = 0; i < entities.length; i += batchSize) {
           const batch = entities.slice(i, i + batchSize);
-          const batchPromises = batch.map(entity => composer.composeDescription(entity));
+          const batchPromises = batch.map((entity) =>
+            composer.composeDescription(entity)
+          );
           const batchResults = await Promise.all(batchPromises);
           results.push(...batchResults);
         }
-        
+
         return results;
       });
 
@@ -287,7 +297,9 @@ describe('Performance Integration Tests', () => {
       );
 
       expect(result).toHaveLength(entities.length);
-      expect(duration / entities.length).toBeLessThan(performanceExpectations.bulkDescriptions.maxTimePerEntity);
+      expect(duration / entities.length).toBeLessThan(
+        performanceExpectations.bulkDescriptions.maxTimePerEntity
+      );
     });
   });
 
@@ -297,13 +309,11 @@ describe('Performance Integration Tests', () => {
       const slowComposer = createFullComposer(slowMocks);
       const entity = createCompleteHumanoidEntity();
 
-      const { result, duration } = await measureExecutionTime(
-        () => slowComposer.composeDescription(entity)
+      const { result, duration } = await measureExecutionTime(() =>
+        slowComposer.composeDescription(entity)
       );
 
-      console.log(
-        `Description with slow services: ${duration.toFixed(2)}ms`
-      );
+      console.log(`Description with slow services: ${duration.toFixed(2)}ms`);
 
       expect(result).toBeTruthy();
       // Should complete even with slow services, just takes longer
@@ -314,13 +324,13 @@ describe('Performance Integration Tests', () => {
       const entity = createCompleteHumanoidEntity();
 
       // First call - cold
-      const { duration: coldDuration } = await measureExecutionTime(
-        () => composer.composeDescription(entity)
+      const { duration: coldDuration } = await measureExecutionTime(() =>
+        composer.composeDescription(entity)
       );
 
       // Second call - should benefit from any caching
-      const { duration: warmDuration } = await measureExecutionTime(
-        () => composer.composeDescription(entity)
+      const { duration: warmDuration } = await measureExecutionTime(() =>
+        composer.composeDescription(entity)
       );
 
       console.log(
@@ -335,18 +345,16 @@ describe('Performance Integration Tests', () => {
   describe('Large Scale Performance', () => {
     it('should handle entities with many body parts efficiently', async () => {
       const entity = createCompleteHumanoidEntity();
-      
+
       // Mock entity with many parts
       const manyPartIds = Array.from({ length: 100 }, (_, i) => `part-${i}`);
       composer.bodyGraphService.getAllParts.mockReturnValue(manyPartIds);
 
-      const { result, duration } = await measureExecutionTime(
-        () => composer.composeDescription(entity)
+      const { result, duration } = await measureExecutionTime(() =>
+        composer.composeDescription(entity)
       );
 
-      console.log(
-        `Entity with 100 parts: ${duration.toFixed(2)}ms`
-      );
+      console.log(`Entity with 100 parts: ${duration.toFixed(2)}ms`);
 
       expect(result).toBeTruthy();
       expect(duration).toBeLessThan(200); // Should handle many parts reasonably
@@ -371,8 +379,8 @@ describe('Performance Integration Tests', () => {
         };
       });
 
-      const { result, duration } = await measureExecutionTime(
-        () => composer.composeDescription(entity)
+      const { result, duration } = await measureExecutionTime(() =>
+        composer.composeDescription(entity)
       );
 
       console.log(
@@ -399,7 +407,7 @@ describe('Performance Integration Tests', () => {
           () => composer.composeDescription(test.entity),
           50
         );
-        
+
         baselines[test.name] = {
           average: metrics.average,
           max: metrics.max,
@@ -408,7 +416,7 @@ describe('Performance Integration Tests', () => {
 
         console.log(
           `${test.name} baseline: avg=${metrics.average.toFixed(3)}ms, ` +
-          `max=${metrics.max.toFixed(3)}ms, min=${metrics.min.toFixed(3)}ms`
+            `max=${metrics.max.toFixed(3)}ms, min=${metrics.min.toFixed(3)}ms`
         );
       }
 
@@ -420,7 +428,7 @@ describe('Performance Integration Tests', () => {
 
     it('should detect performance degradation patterns', async () => {
       const entity = createCompleteHumanoidEntity();
-      
+
       // Collect multiple samples
       const samples = [];
       for (let i = 0; i < 5; i++) {
@@ -432,18 +440,23 @@ describe('Performance Integration Tests', () => {
       }
 
       console.log(
-        `Performance samples: ${samples.map(s => s.toFixed(3)).join(', ')}ms`
+        `Performance samples: ${samples.map((s) => s.toFixed(3)).join(', ')}ms`
       );
 
       // Check for consistency
-      const sampleMean = samples.reduce((sum, sample) => sum + sample, 0) / samples.length;
-      const variance = samples.reduce((sum, sample) => sum + Math.pow(sample - sampleMean, 2), 0) / samples.length;
+      const sampleMean =
+        samples.reduce((sum, sample) => sum + sample, 0) / samples.length;
+      const variance =
+        samples.reduce(
+          (sum, sample) => sum + Math.pow(sample - sampleMean, 2),
+          0
+        ) / samples.length;
       const standardDeviation = Math.sqrt(variance);
       const coefficientOfVariation = standardDeviation / sampleMean;
 
       console.log(
         `Performance consistency: mean=${sampleMean.toFixed(3)}ms, ` +
-        `stddev=${standardDeviation.toFixed(3)}ms, cv=${(coefficientOfVariation * 100).toFixed(1)}%`
+          `stddev=${standardDeviation.toFixed(3)}ms, cv=${(coefficientOfVariation * 100).toFixed(1)}%`
       );
 
       // Performance should be consistent (CV < 90%)

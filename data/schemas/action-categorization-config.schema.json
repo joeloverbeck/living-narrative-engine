@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/action-categorization-config.schema.json",
+  "title": "Action Categorization Configuration",
+  "description": "Configuration schema for action categorization behavior across UI and LLM components",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether categorization is active globally",
+      "default": true
+    },
+    "minActionsForGrouping": {
+      "type": "integer",
+      "description": "Minimum number of actions required to trigger categorization",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 6
+    },
+    "minNamespacesForGrouping": {
+      "type": "integer",
+      "description": "Minimum number of unique namespaces required for categorization",
+      "minimum": 1,
+      "maximum": 20,
+      "default": 2
+    },
+    "namespaceOrder": {
+      "type": "array",
+      "description": "Priority order for namespace sorting (higher priority namespaces appear first)",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*[a-z0-9]$|^[a-z]$",
+        "description": "Namespace identifier (lowercase, alphanumeric with underscores)"
+      },
+      "uniqueItems": true,
+      "minItems": 0,
+      "maxItems": 50,
+      "default": ["core", "intimacy", "sex", "anatomy", "clothing"]
+    },
+    "showCounts": {
+      "type": "boolean",
+      "description": "Whether to display action counts in UI (LLM formatting ignores this)",
+      "default": false
+    },
+    "performance": {
+      "type": "object",
+      "description": "Performance-related configuration options",
+      "properties": {
+        "enableCaching": {
+          "type": "boolean",
+          "description": "Enable caching for namespace extraction and grouping operations",
+          "default": true
+        },
+        "cacheMaxSize": {
+          "type": "integer",
+          "description": "Maximum number of items to cache",
+          "minimum": 10,
+          "maximum": 10000,
+          "default": 1000
+        },
+        "performanceLogging": {
+          "type": "boolean",
+          "description": "Enable logging of performance metrics",
+          "default": false
+        },
+        "slowOperationThresholdMs": {
+          "type": "number",
+          "description": "Threshold in milliseconds to log slow operations",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 10
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "errorHandling": {
+      "type": "object",
+      "description": "Error handling configuration",
+      "properties": {
+        "logLevel": {
+          "type": "string",
+          "enum": ["debug", "info", "warn", "error"],
+          "description": "Minimum log level for categorization operations",
+          "default": "warn"
+        },
+        "fallbackBehavior": {
+          "type": "string",
+          "enum": ["disable", "flatten", "unknown_namespace"],
+          "description": "Behavior when categorization encounters errors",
+          "default": "flatten"
+        },
+        "maxRetries": {
+          "type": "integer",
+          "description": "Maximum number of retries for failed operations",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 1
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    }
+  },
+  "required": [
+    "enabled",
+    "minActionsForGrouping",
+    "minNamespacesForGrouping",
+    "namespaceOrder"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "enabled": true,
+      "minActionsForGrouping": 6,
+      "minNamespacesForGrouping": 2,
+      "namespaceOrder": ["core", "intimacy", "sex", "anatomy", "clothing"],
+      "showCounts": false,
+      "performance": {
+        "enableCaching": true,
+        "cacheMaxSize": 500,
+        "performanceLogging": true,
+        "slowOperationThresholdMs": 5
+      },
+      "errorHandling": {
+        "logLevel": "warn",
+        "fallbackBehavior": "flatten",
+        "maxRetries": 2
+      }
+    },
+    {
+      "enabled": false,
+      "minActionsForGrouping": 10,
+      "minNamespacesForGrouping": 3,
+      "namespaceOrder": ["core"],
+      "showCounts": true
+    }
+  ]
+}

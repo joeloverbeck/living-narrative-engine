@@ -280,6 +280,18 @@ class VisualizationComposer {
         );
         node.description = descriptionComponent?.text || 'No description';
 
+        // Collect descriptor components
+        const descriptorComponents = [];
+        const allComponents = entity.getAllComponents();
+        for (const [componentId] of Object.entries(allComponents)) {
+          if (componentId.startsWith('descriptors:')) {
+            // Extract the component name after the namespace
+            const componentName = componentId.split(':')[1];
+            descriptorComponents.push(componentName);
+          }
+        }
+        node.descriptorComponents = descriptorComponents;
+
         this.#nodes.set(id, node);
 
         // Create edge if has parent
@@ -498,10 +510,16 @@ class VisualizationComposer {
       // Mouse enter
       nodeEl.addEventListener('mouseenter', (e) => {
         const descriptionHtml = DomUtils.textToHtml(node.description);
+        const descriptorsText =
+          node.descriptorComponents.length > 0
+            ? node.descriptorComponents.join(', ')
+            : 'none';
+
         const content = `
           <div class="tooltip-header">${DomUtils.escapeHtml(node.name)}</div>
           <div class="tooltip-type">Type: ${DomUtils.escapeHtml(node.type)}</div>
           <div class="tooltip-description">${descriptionHtml}</div>
+          <div class="tooltip-descriptors">Descriptors: ${DomUtils.escapeHtml(descriptorsText)}</div>
         `;
 
         // Calculate position

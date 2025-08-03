@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_ass_cheek_flat",
+  "description": "A flat ass cheek with firm projection",
+  "components": {
+    "anatomy:part": {
+      "subType": "ass_cheek"
+    },
+    "descriptors:shape_general": {
+      "shape": "tight"
+    },
+    "descriptors:projection": {
+      "projection": "flat"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
+    },
+    "core:name": {
+      "text": "ass cheek"
+    }
+  }
+}

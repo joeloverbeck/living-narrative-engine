@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import {
-  createCompleteHumanoidEntity,
-} from './fixtures/testEntities.js';
+import { createCompleteHumanoidEntity } from './fixtures/testEntities.js';
 import {
   expectedCompleteDescription,
   expectedDescriptorOrder,
@@ -44,9 +42,12 @@ describe('Complete Anatomy Descriptions Integration', () => {
       expect(result).toContain('Build: athletic');
       expect(result).toContain('Body composition: lean');
       expect(result).toContain('Body hair: moderate');
-      
+
       // Validate ordering
-      const orderCheck = validateDescriptorOrder(result, expectedDescriptorOrder);
+      const orderCheck = validateDescriptorOrder(
+        result,
+        expectedDescriptorOrder
+      );
       expect(orderCheck.matches).toBe(true);
     });
 
@@ -57,7 +58,7 @@ describe('Complete Anatomy Descriptions Integration', () => {
 
       // Entity-level body descriptors
       expect(result).toContain('Body hair: moderate');
-      
+
       // Generated part descriptions
       expect(result).toContain('Head: Generated description for head-part-id');
       expect(result).toContain('Hair: Generated description for hair-part-id');
@@ -93,7 +94,7 @@ describe('Complete Anatomy Descriptions Integration', () => {
       // Test with predefined combinations
       for (const combination of testDataCombinations) {
         const entity = createCompleteHumanoidEntity();
-        
+
         // Mock the entity to return specific values
         entity.getComponentData.mockImplementation((componentId) => {
           if (componentId === 'anatomy:body') {
@@ -102,10 +103,16 @@ describe('Complete Anatomy Descriptions Integration', () => {
           if (componentId === 'descriptors:build' && combination.config.build) {
             return { build: combination.config.build };
           }
-          if (componentId === 'descriptors:body_composition' && combination.config.bodyComposition) {
+          if (
+            componentId === 'descriptors:body_composition' &&
+            combination.config.bodyComposition
+          ) {
             return { composition: combination.config.bodyComposition };
           }
-          if (componentId === 'descriptors:body_hair' && combination.config.bodyHair) {
+          if (
+            componentId === 'descriptors:body_hair' &&
+            combination.config.bodyHair
+          ) {
             return { density: combination.config.bodyHair };
           }
           return null;
@@ -113,8 +120,10 @@ describe('Complete Anatomy Descriptions Integration', () => {
 
         const result = await composer.composeDescription(entity);
         const descriptorLines = extractDescriptorLines(result);
-        const expectedLines = combination.expected.split('\n').filter(line => line.includes(':'));
-        
+        const expectedLines = combination.expected
+          .split('\n')
+          .filter((line) => line.includes(':'));
+
         expect(descriptorLines).toEqual(expect.arrayContaining(expectedLines));
       }
     });
@@ -173,7 +182,9 @@ describe('Complete Anatomy Descriptions Integration', () => {
 
       // Verify all services were called appropriately
       expect(composer.bodyGraphService.getAllParts).toHaveBeenCalled();
-      expect(composer.anatomyFormattingService.getDescriptionOrder).toHaveBeenCalled();
+      expect(
+        composer.anatomyFormattingService.getDescriptionOrder
+      ).toHaveBeenCalled();
       expect(composer.entityFinder.getEntityInstance).toHaveBeenCalled();
     });
 
@@ -219,7 +230,7 @@ describe('Complete Anatomy Descriptions Integration', () => {
         const validComponents = [
           'anatomy:body',
           'descriptors:build',
-          'descriptors:body_composition', 
+          'descriptors:body_composition',
           'descriptors:body_hair',
           'core:transform',
           'core:metadata',
@@ -228,7 +239,7 @@ describe('Complete Anatomy Descriptions Integration', () => {
       });
 
       const result = await composer.composeDescription(entity);
-      
+
       expect(result).toBeTruthy();
       expect(result).toMatch(/Build: athletic/);
       expect(result).toMatch(/Body composition: lean/);
@@ -239,7 +250,7 @@ describe('Complete Anatomy Descriptions Integration', () => {
   describe('Error Recovery', () => {
     it('should gracefully handle missing part entities', async () => {
       const entity = createCompleteHumanoidEntity();
-      
+
       // Mock entityFinder to return null for some parts
       composer.entityFinder.getEntityInstance.mockImplementation((partId) => {
         if (partId === 'head-part-id') {
@@ -258,17 +269,21 @@ describe('Complete Anatomy Descriptions Integration', () => {
       });
 
       const result = await composer.composeDescription(entity);
-      
+
       // Should still work with remaining parts
       expect(result).toContain('Build: athletic');
-      expect(result).not.toContain('Head: Generated description for head-part-id');
+      expect(result).not.toContain(
+        'Head: Generated description for head-part-id'
+      );
     });
 
     it('should handle malformed anatomy formatting service responses', async () => {
       const entity = createCompleteHumanoidEntity();
-      
+
       // Mock service to return unexpected data
-      composer.anatomyFormattingService.getDescriptionOrder.mockReturnValue(null);
+      composer.anatomyFormattingService.getDescriptionOrder.mockReturnValue(
+        null
+      );
 
       // Should not throw
       await expect(composer.composeDescription(entity)).resolves.toBeTruthy();

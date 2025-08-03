@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { createEdgeCaseEntity, createMalformedEntity } from './fixtures/testEntities.js';
+import {
+  createEdgeCaseEntity,
+  createMalformedEntity,
+} from './fixtures/testEntities.js';
 import { expectedEdgeCaseDescription } from './fixtures/expectedOutputs.js';
 import { createErrorServiceMocks } from './fixtures/serviceMocks.js';
 import { createFullComposer } from './helpers/anatomyTestHelpers.js';
@@ -150,7 +153,7 @@ describe('Edge Cases Integration', () => {
             return { body: { root: 'torso' } };
           }
           if (componentId === 'descriptors:build') {
-            return { 
+            return {
               build: 'athletic',
               extraProperty: 'should be ignored',
               anotherExtra: 123,
@@ -175,11 +178,11 @@ describe('Edge Cases Integration', () => {
             return { body: { root: 'torso' } };
           }
           if (componentId === 'descriptors:build') {
-            return { 
+            return {
               build: {
                 value: 'athletic', // Nested instead of direct value
-                metadata: { source: 'generator' }
-              }
+                metadata: { source: 'generator' },
+              },
             };
           }
           return null;
@@ -215,7 +218,9 @@ describe('Edge Cases Integration', () => {
       };
 
       // Current implementation doesn't catch hasComponent errors
-      await expect(composer.composeDescription(entity)).rejects.toThrow('hasComponent error');
+      await expect(composer.composeDescription(entity)).rejects.toThrow(
+        'hasComponent error'
+      );
     });
 
     it('should handle getComponentData that throws for specific components', async () => {
@@ -234,42 +239,52 @@ describe('Edge Cases Integration', () => {
       };
 
       // Current implementation doesn't catch getComponentData errors
-      await expect(composer.composeDescription(entity)).rejects.toThrow('Component access error');
+      await expect(composer.composeDescription(entity)).rejects.toThrow(
+        'Component access error'
+      );
     });
   });
 
   describe('Service Error Handling', () => {
     it('should handle body graph service errors', async () => {
       const entity = createEdgeCaseEntity();
-      
+
       composer.bodyGraphService.getAllParts.mockImplementation(() => {
         throw new Error('Body graph error');
       });
 
       // Current implementation doesn't catch service errors
-      await expect(composer.composeDescription(entity)).rejects.toThrow('Body graph error');
+      await expect(composer.composeDescription(entity)).rejects.toThrow(
+        'Body graph error'
+      );
     });
 
     it('should handle anatomy formatting service errors', async () => {
       const entity = createEdgeCaseEntity();
-      
-      composer.anatomyFormattingService.getDescriptionOrder.mockImplementation(() => {
-        throw new Error('Formatting service error');
-      });
+
+      composer.anatomyFormattingService.getDescriptionOrder.mockImplementation(
+        () => {
+          throw new Error('Formatting service error');
+        }
+      );
 
       // Current implementation doesn't catch service errors
-      await expect(composer.composeDescription(entity)).rejects.toThrow('Formatting service error');
+      await expect(composer.composeDescription(entity)).rejects.toThrow(
+        'Formatting service error'
+      );
     });
 
     it('should handle entity finder errors', async () => {
       const entity = createEdgeCaseEntity();
-      
+
       composer.entityFinder.getEntityInstance.mockImplementation(() => {
         throw new Error('Entity finder error');
       });
 
       // Current implementation doesn't catch entity finder errors
-      await expect(composer.composeDescription(entity)).rejects.toThrow('Entity finder error');
+      await expect(composer.composeDescription(entity)).rejects.toThrow(
+        'Entity finder error'
+      );
     });
 
     it('should handle multiple service errors simultaneously', async () => {
@@ -278,7 +293,9 @@ describe('Edge Cases Integration', () => {
       const entity = createEdgeCaseEntity();
 
       // Should handle gracefully even with multiple service errors
-      await expect(errorComposer.composeDescription(entity)).resolves.toBeTruthy();
+      await expect(
+        errorComposer.composeDescription(entity)
+      ).resolves.toBeTruthy();
     });
   });
 
@@ -310,7 +327,9 @@ describe('Edge Cases Integration', () => {
       const largeData = {
         build: 'athletic',
         // Add many properties to simulate large data
-        ...Object.fromEntries(Array.from({ length: 1000 }, (_, i) => [`prop${i}`, `value${i}`]))
+        ...Object.fromEntries(
+          Array.from({ length: 1000 }, (_, i) => [`prop${i}`, `value${i}`])
+        ),
       };
 
       const entity = {
@@ -380,7 +399,7 @@ describe('Edge Cases Integration', () => {
     it('should handle simultaneous description generation', async () => {
       const entity = createEdgeCaseEntity();
 
-      const promises = Array.from({ length: 10 }, () => 
+      const promises = Array.from({ length: 10 }, () =>
         composer.composeDescription(entity)
       );
 
@@ -388,7 +407,7 @@ describe('Edge Cases Integration', () => {
 
       // All results should be consistent
       const firstResult = results[0];
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result).toBe(firstResult);
       });
     });
@@ -424,7 +443,7 @@ describe('Edge Cases Integration', () => {
 
       // Simulate memory pressure by creating large objects
       const largeArray = new Array(100000).fill('test');
-      
+
       try {
         const result = await composer.composeDescription(entity);
         expect(result).toBeTruthy();

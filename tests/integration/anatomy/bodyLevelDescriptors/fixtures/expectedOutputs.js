@@ -78,27 +78,28 @@ export const expectedPartDescriptionPatterns = {
  */
 export const generateExpectedOutput = (config) => {
   const lines = [];
-  
+
   if (config.build) {
     lines.push(`Build: ${config.build}`);
   }
-  
+
   if (config.bodyComposition) {
     lines.push(`Body composition: ${config.bodyComposition}`);
   }
-  
+
   if (config.bodyHair) {
     lines.push(`Body hair: ${config.bodyHair}`);
   }
-  
+
   if (config.includeParts) {
-    config.parts?.forEach(partId => {
+    config.parts?.forEach((partId) => {
       const partType = partId.replace('-part-id', '');
-      const capitalizedType = partType.charAt(0).toUpperCase() + partType.slice(1);
+      const capitalizedType =
+        partType.charAt(0).toUpperCase() + partType.slice(1);
       lines.push(`${capitalizedType}: Generated description for ${partId}`);
     });
   }
-  
+
   return lines.join('\n');
 };
 
@@ -125,22 +126,30 @@ export const performanceExpectations = {
 export const testDataCombinations = [
   {
     name: 'Athletic lean moderate',
-    config: { build: 'athletic', bodyComposition: 'lean', bodyHair: 'moderate' },
-    expected: 'Build: athletic\nBody composition: lean\nBody hair: moderate\nHead: Generated description for head-part-id\nHair: Generated description for hair-part-id\nEyes: Generated description for eyes-part-id',
+    config: {
+      build: 'athletic',
+      bodyComposition: 'lean',
+      bodyHair: 'moderate',
+    },
+    expected:
+      'Build: athletic\nBody composition: lean\nBody hair: moderate\nHead: Generated description for head-part-id\nHair: Generated description for hair-part-id\nEyes: Generated description for eyes-part-id',
   },
   {
     name: 'Average sparse',
     config: { build: 'average', bodyHair: 'sparse' },
-    expected: 'Build: average\nBody hair: sparse\nHead: Generated description for head-part-id\nHair: Generated description for hair-part-id\nEyes: Generated description for eyes-part-id',
+    expected:
+      'Build: average\nBody hair: sparse\nHead: Generated description for head-part-id\nHair: Generated description for hair-part-id\nEyes: Generated description for eyes-part-id',
   },
   {
     name: 'Stocky chubby hairy',
     config: { build: 'stocky', bodyComposition: 'chubby', bodyHair: 'hairy' },
-    expected: 'Build: stocky\nBody composition: chubby\nBody hair: hairy\nHead: Generated description for head-part-id\nHair: Generated description for hair-part-id\nEyes: Generated description for eyes-part-id',
+    expected:
+      'Build: stocky\nBody composition: chubby\nBody hair: hairy\nHead: Generated description for head-part-id\nHair: Generated description for hair-part-id\nEyes: Generated description for eyes-part-id',
   },
   {
     name: 'Slim hairless',
     config: { build: 'slim', bodyHair: 'hairless' },
-    expected: 'Build: slim\nBody hair: hairless\nHead: Generated description for head-part-id\nHair: Generated description for hair-part-id\nEyes: Generated description for eyes-part-id',
+    expected:
+      'Build: slim\nBody hair: hairless\nHead: Generated description for head-part-id\nHair: Generated description for hair-part-id\nEyes: Generated description for eyes-part-id',
   },
 ];

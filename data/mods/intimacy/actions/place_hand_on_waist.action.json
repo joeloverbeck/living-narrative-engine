@@ -2,7 +2,7 @@
   "id": "intimacy:place_hand_on_waist",
   "name": "Place hand on waist",
   "description": "Place a hand on someone's waist in an intimate gesture",
-  "scope": "intimacy:close_actors",
+  "scope": "positioning:close_actors",
   "required_components": {
     "actor": ["positioning:closeness"]
   },

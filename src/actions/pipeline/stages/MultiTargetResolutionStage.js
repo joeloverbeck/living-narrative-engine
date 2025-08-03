@@ -187,15 +187,20 @@ export class MultiTargetResolutionStage extends PipelineStage {
           }
         }
       } catch (error) {
+        const errorMessage = error.scopeName
+          ? `Scope resolution failed for '${error.scopeName}': ${error.message}`
+          : error.message;
+
         this.#logger.error(
           `Error resolving targets for action '${actionDef.id}':`,
           error
         );
         errors.push({
-          error: error.message,
+          error: errorMessage,
           phase: 'target_resolution',
           actionId: actionDef.id,
           stage: 'MultiTargetResolutionStage',
+          scopeName: error.scopeName,
         });
       }
     }
@@ -593,11 +598,22 @@ export class MultiTargetResolutionStage extends PipelineStage {
       );
 
       if (!result.success) {
-        this.#logger.error(
-          `Failed to resolve scope '${scope}':`,
-          result.errors || result.error || 'Unknown error'
-        );
-        return [];
+        const errorDetails = result.errors || result.error || 'Unknown error';
+        const errorMessage =
+          Array.isArray(errorDetails) && errorDetails.length > 0
+            ? errorDetails[0].message
+            : typeof errorDetails === 'string'
+              ? errorDetails
+              : 'Unknown error';
+
+        this.#logger.error(`Failed to resolve scope '${scope}':`, errorDetails);
+
+        // Throw error to be caught by calling method
+        const error = new Error(errorMessage);
+        error.name = 'ScopeResolutionError';
+        error.scopeName = scope;
+        error.originalErrors = errorDetails;
+        throw error;
       }
 
       // Convert Set to array of entity IDs
