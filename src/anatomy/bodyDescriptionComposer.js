@@ -172,4 +172,25 @@ export class BodyDescriptionComposer {
 
     return buildComponent.build;
   }
+
+  /**
+   * Extract body composition description from body entity
+   *
+   * @param {object} bodyEntity - The body entity
+   * @returns {string} Body composition description
+   */
+  extractBodyCompositionDescription(bodyEntity) {
+    if (!bodyEntity || typeof bodyEntity.getComponentData !== 'function') {
+      return '';
+    }
+
+    const compositionComponent = bodyEntity.getComponentData(
+      'descriptors:body_composition'
+    );
+    if (!compositionComponent || !compositionComponent.composition) {
+      return '';
+    }
+
+    return compositionComponent.composition;
+  }
 }

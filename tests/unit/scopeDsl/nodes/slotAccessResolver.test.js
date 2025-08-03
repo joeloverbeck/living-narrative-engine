@@ -414,6 +414,163 @@ describe('SlotAccessResolver', () => {
     });
   });
 
+  describe('resolve - array handling for clothing objects', () => {
+    it('should handle arrays containing clothing access objects', () => {
+      const arrayWithClothingAccess = [
+        mockClothingAccessObject,
+        {
+          __clothingSlotAccess: true,
+          equipped: {
+            torso_upper: {
+              base: 'shirt_2',
+            },
+          },
+          mode: 'base',
+        },
+      ];
+
+      mockContext.dispatcher.resolve.mockReturnValue(
+        new Set([arrayWithClothingAccess])
+      );
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+
+      // Should process both clothing access objects in the array
+      expect(result).toEqual(new Set(['jacket_1', 'shirt_2']));
+    });
+
+    it('should handle arrays with mixed valid and invalid items', () => {
+      const mixedArray = [
+        mockClothingAccessObject,
+        null,
+        'regular_string',
+        {
+          // Object without __clothingSlotAccess property
+          equipped: { torso_upper: { outer: 'invalid_item' } },
+        },
+        {
+          __clothingSlotAccess: true,
+          equipped: {
+            torso_upper: {
+              outer: 'valid_item',
+            },
+          },
+          mode: 'outer',
+        },
+      ];
+
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([mixedArray]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+
+      // Should only process valid clothing access objects
+      expect(result).toEqual(new Set(['jacket_1', 'valid_item']));
+    });
+
+    it('should handle arrays with non-clothing objects', () => {
+      const arrayWithNonClothingObjects = [
+        { someProperty: 'value' },
+        { equipped: 'not_a_clothing_object' },
+        null,
+        undefined,
+      ];
+
+      mockContext.dispatcher.resolve.mockReturnValue(
+        new Set([arrayWithNonClothingObjects])
+      );
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+
+      // Should return empty set when no valid clothing objects found
+      expect(result).toEqual(new Set());
+    });
+
+    it('should handle arrays with clothing objects that have no items in requested slot', () => {
+      const clothingObjectWithEmptySlot = {
+        __clothingSlotAccess: true,
+        equipped: {
+          legs: {
+            base: 'pants_item',
+          },
+          // No torso_upper data
+        },
+        mode: 'topmost',
+      };
+
+      const arrayWithEmptySlot = [clothingObjectWithEmptySlot];
+
+      mockContext.dispatcher.resolve.mockReturnValue(
+        new Set([arrayWithEmptySlot])
+      );
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+
+      // Should return empty set when slot has no data
+      expect(result).toEqual(new Set());
+    });
+
+    it('should handle nested arrays with different slot configurations', () => {
+      const clothingObject1 = {
+        __clothingSlotAccess: true,
+        equipped: {
+          torso_upper: {
+            outer: 'jacket_from_array',
+          },
+        },
+        mode: 'outer',
+      };
+
+      const clothingObject2 = {
+        __clothingSlotAccess: true,
+        equipped: {
+          torso_upper: {
+            base: 'shirt_from_array',
+          },
+        },
+        mode: 'base',
+      };
+
+      const nestedArray = [clothingObject1, clothingObject2];
+
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([nestedArray]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+
+      // Should process both clothing objects and return their slot values
+      expect(result).toEqual(new Set(['jacket_from_array', 'shirt_from_array']));
+    });
+  });
+
   describe('trace logging', () => {
     it('should log resolution steps when trace is provided', () => {
       const node = {
@@ -490,6 +647,37 @@ describe('SlotAccessResolver', () => {
 
       // Should not throw
       expect(() => resolver.resolve(node, mockContext)).not.toThrow();
+    });
+
+    it('should work without trace context when no data found for slot', () => {
+      mockContext.trace = null;
+
+      const node = {
+        type: 'Step',
+        field: 'left_arm_clothing',
+        parent: { type: 'Step' },
+      };
+
+      // Should not throw when processing missing slot without trace
+      expect(() => resolver.resolve(node, mockContext)).not.toThrow();
+    });
+  });
+
+  describe('addToResultSet edge cases', () => {
+    it('should handle object values correctly', () => {
+      mockContext.dispatcher.resolve.mockReturnValue(new Set(['entity_1']));
+      const complexObject = { id: 'complex_object', type: 'test' };
+      mockEntitiesGateway.getComponentData.mockReturnValue(complexObject);
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+
+      expect(result).toEqual(new Set([complexObject]));
     });
   });
 });
