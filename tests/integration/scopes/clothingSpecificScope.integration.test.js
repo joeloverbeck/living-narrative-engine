@@ -90,35 +90,39 @@ describe('Clothing-Specific Scope Integration Tests', () => {
     const dataRegistry = new InMemoryDataRegistry({ logger });
 
     // Register the conditions used by the scope and action
-    dataRegistry.store('conditions', 'positioning:both-actors-facing-each-other', {
-      id: 'positioning:both-actors-facing-each-other',
-      description:
-        'Checks if both actors are facing each other (neither is facing away from the other).',
-      logic: {
-        and: [
-          {
-            '!': {
-              in: [
-                { var: 'entity.id' },
-                {
-                  var: 'actor.components.positioning:facing_away.facing_away_from',
-                },
-              ],
+    dataRegistry.store(
+      'conditions',
+      'positioning:both-actors-facing-each-other',
+      {
+        id: 'positioning:both-actors-facing-each-other',
+        description:
+          'Checks if both actors are facing each other (neither is facing away from the other).',
+        logic: {
+          and: [
+            {
+              '!': {
+                in: [
+                  { var: 'entity.id' },
+                  {
+                    var: 'actor.components.positioning:facing_away.facing_away_from',
+                  },
+                ],
+              },
             },
-          },
-          {
-            '!': {
-              in: [
-                { var: 'actor.id' },
-                {
-                  var: 'entity.components.positioning:facing_away.facing_away_from',
-                },
-              ],
+            {
+              '!': {
+                in: [
+                  { var: 'actor.id' },
+                  {
+                    var: 'entity.components.positioning:facing_away.facing_away_from',
+                  },
+                ],
+              },
             },
-          },
-        ],
-      },
-    });
+          ],
+        },
+      }
+    );
 
     // Register the prerequisite condition for the action
     dataRegistry.store('conditions', 'intimacy:actor-is-in-closeness', {
@@ -357,8 +361,10 @@ describe('Clothing-Specific Scope Integration Tests', () => {
                   if (!targetCloseness?.partners?.includes(actor.id)) continue;
 
                   // Check if neither is facing away from the other
-                  const actorFacingAway = actor.components?.['positioning:facing_away'];
-                  const targetFacingAway = target.components?.['positioning:facing_away'];
+                  const actorFacingAway =
+                    actor.components?.['positioning:facing_away'];
+                  const targetFacingAway =
+                    target.components?.['positioning:facing_away'];
                   if (
                     actorFacingAway?.facing_away_from?.includes(partnerId) ||
                     targetFacingAway?.facing_away_from?.includes(actor.id)
@@ -501,11 +507,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     // Set up actor's facing_away data if applicable
     if (facingAway) {
-      entityManager.addComponent(
-        actorId,
-        'positioning:facing_away',
-        { facing_away_from: [partnerId] }
-      );
+      entityManager.addComponent(actorId, 'positioning:facing_away', {
+        facing_away_from: [partnerId],
+      });
     }
 
     // Set up partner's closeness data for bidirectional relationship
@@ -520,11 +524,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     // Set up partner's facing_away data if applicable
     if (partnerFacingAway) {
-      entityManager.addComponent(
-        partnerId,
-        'positioning:facing_away',
-        { facing_away_from: [actorId] }
-      );
+      entityManager.addComponent(partnerId, 'positioning:facing_away', {
+        facing_away_from: [actorId],
+      });
     }
 
     return actorId;
@@ -538,7 +540,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
   function setupJsonLogicMock(shouldFacingConditionReturnTrue = true) {
     const originalEvaluate = jsonLogicEval.evaluate.bind(jsonLogicEval);
     jsonLogicEval.evaluate = jest.fn((logic, context) => {
-      if (logic?.condition_ref === 'positioning:both-actors-facing-each-other') {
+      if (
+        logic?.condition_ref === 'positioning:both-actors-facing-each-other'
+      ) {
         return shouldFacingConditionReturnTrue;
       }
       // For all other operators, use the original evaluator
@@ -575,11 +579,9 @@ describe('Clothing-Specific Scope Integration Tests', () => {
 
     // Add facing_away component if applicable
     if (facingAway) {
-      entityManager.addComponent(
-        targetId,
-        'positioning:facing_away',
-        { facing_away_from: [actorId] }
-      );
+      entityManager.addComponent(targetId, 'positioning:facing_away', {
+        facing_away_from: [actorId],
+      });
     }
 
     if (hasEquipmentComponent) {

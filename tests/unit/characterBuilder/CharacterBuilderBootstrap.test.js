@@ -219,8 +219,8 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should not call addSchema for payload schemas that are already loaded
       const addSchemaCalls = mockSchemaValidator.addSchema.mock.calls;
-      const payloadSchemaCalls = addSchemaCalls.filter(call => 
-        call[1] && call[1].includes('#payload')
+      const payloadSchemaCalls = addSchemaCalls.filter(
+        (call) => call[1] && call[1].includes('#payload')
       );
       expect(payloadSchemaCalls).toHaveLength(0);
     });
@@ -238,11 +238,11 @@ describe('CharacterBuilderBootstrap', () => {
       // Should register payload schemas and events successfully
       expect(mockSchemaValidator.addSchema).toHaveBeenCalled();
       expect(mockDataRegistry.setEventDefinition).toHaveBeenCalled();
-      
+
       // Verify payload schemas were registered
       const addSchemaCalls = mockSchemaValidator.addSchema.mock.calls;
-      const payloadSchemaCalls = addSchemaCalls.filter(call => 
-        call[1] && call[1].includes('#payload')
+      const payloadSchemaCalls = addSchemaCalls.filter(
+        (call) => call[1] && call[1].includes('#payload')
       );
       expect(payloadSchemaCalls.length).toBeGreaterThan(0);
     });
@@ -417,7 +417,7 @@ describe('CharacterBuilderBootstrap', () => {
     it('should register multiple custom services successfully', async () => {
       const customService1 = { method: jest.fn() };
       const customService2 = { otherMethod: jest.fn() };
-      
+
       const config = {
         pageName: 'test-page',
         controllerClass: MockController,
@@ -472,7 +472,7 @@ describe('CharacterBuilderBootstrap', () => {
     it('should skip service registration when no services provided', async () => {
       const registerSpy = jest.spyOn(mockContainer, 'register');
       registerSpy.mockClear(); // Clear any previous calls
-      
+
       const config = {
         pageName: 'test-page',
         controllerClass: MockController,
@@ -483,8 +483,10 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should not call register for custom services section
       // (Only calls would be from container setup, not from custom services)
-      const customServiceCalls = registerSpy.mock.calls.filter(call => 
-        typeof call[0] === 'string' && !call[0].toString().startsWith('Symbol')
+      const customServiceCalls = registerSpy.mock.calls.filter(
+        (call) =>
+          typeof call[0] === 'string' &&
+          !call[0].toString().startsWith('Symbol')
       );
       expect(customServiceCalls).toHaveLength(0);
     });
@@ -614,8 +616,12 @@ describe('CharacterBuilderBootstrap', () => {
       await bootstrap.bootstrap(config);
 
       // Should successfully load schemas
-      expect(global.fetch).toHaveBeenCalledWith('/data/schemas/character-concept.schema.json');
-      expect(global.fetch).toHaveBeenCalledWith('/data/schemas/thematic-direction.schema.json');
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/data/schemas/character-concept.schema.json'
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/data/schemas/thematic-direction.schema.json'
+      );
       expect(global.fetch).toHaveBeenCalledWith('/data/schemas/custom.json');
       expect(mockSchemaValidator.addSchema).toHaveBeenCalled();
     });
@@ -623,7 +629,10 @@ describe('CharacterBuilderBootstrap', () => {
     it('should handle mixed schema loading states', async () => {
       // Mock different schemas having different loaded states
       mockSchemaValidator.isSchemaLoaded.mockImplementation((schemaId) => {
-        return schemaId === 'schema://living-narrative-engine/character-concept.schema.json';
+        return (
+          schemaId ===
+          'schema://living-narrative-engine/character-concept.schema.json'
+        );
       });
 
       const config = {
@@ -635,10 +644,14 @@ describe('CharacterBuilderBootstrap', () => {
       await bootstrap.bootstrap(config);
 
       // Should fetch schemas that aren't already loaded
-      expect(global.fetch).toHaveBeenCalledWith('/data/schemas/thematic-direction.schema.json');
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/data/schemas/thematic-direction.schema.json'
+      );
       expect(global.fetch).toHaveBeenCalledWith('/data/schemas/custom.json');
       // Should not fetch the already loaded schema
-      expect(global.fetch).not.toHaveBeenCalledWith('/data/schemas/character-concept.schema.json');
+      expect(global.fetch).not.toHaveBeenCalledWith(
+        '/data/schemas/character-concept.schema.json'
+      );
     });
 
     it('should create error display element if not found', async () => {

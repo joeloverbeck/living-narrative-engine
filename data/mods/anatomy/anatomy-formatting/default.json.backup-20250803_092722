@@ -3,8 +3,6 @@
   "id": "default",
   "descriptionOrder": [
     "build",
-    "body_composition",
-    "body_hair",
     "hair",
     "eye",
     "face",
@@ -50,9 +48,6 @@
     "descriptors:size_category",
     "descriptors:size_specific",
     "descriptors:weight_feel",
-    "descriptors:body_composition",
-    "descriptors:body_hair",
-    "descriptors:facial_hair",
     "descriptors:color_basic",
     "descriptors:color_extended",
     "descriptors:shape_general",
@@ -60,7 +55,6 @@
     "descriptors:hair_style",
     "descriptors:texture",
     "descriptors:firmness",
-    "descriptors:projection",
     "descriptors:build"
   ],
   "descriptorValueKeys": [
@@ -73,10 +67,7 @@
     "texture",
     "firmness",
     "build",
-    "weight",
-    "composition",
-    "density",
-    "projection"
+    "weight"
   ],
   "equipmentIntegration": {
     "enabled": true,

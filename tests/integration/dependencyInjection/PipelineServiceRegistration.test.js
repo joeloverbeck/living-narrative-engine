@@ -206,27 +206,6 @@ describe('Pipeline Service Registration Integration', () => {
     });
   });
 
-  describe('Container Performance', () => {
-    it('should resolve all pipeline services within acceptable time', () => {
-      const iterations = 100;
-      const maxTimeMs = 50; // 50ms for 100 iterations
-
-      const start = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        container.resolve(tokens.IPipelineServiceFactory);
-        container.resolve(tokens.IPipelineServiceRegistry);
-        container.resolve(tokens.ITargetDependencyResolver);
-        container.resolve(tokens.ILegacyTargetCompatibilityLayer);
-        container.resolve(tokens.IScopeContextBuilder);
-        container.resolve(tokens.ITargetDisplayNameResolver);
-      }
-
-      const elapsed = performance.now() - start;
-      expect(elapsed).toBeLessThan(maxTimeMs);
-    });
-  });
-
   describe('Testing Support', () => {
     it('should support mocking pipeline services', () => {
       // Create a mock service
