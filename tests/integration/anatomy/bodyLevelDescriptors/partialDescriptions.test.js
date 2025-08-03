@@ -65,8 +65,12 @@ describe('Partial Anatomy Descriptions Integration', () => {
       const descriptorLines = extractDescriptorLines(result);
 
       // Build should come before body hair
-      const buildIndex = descriptorLines.findIndex(line => line.includes('Build:'));
-      const hairIndex = descriptorLines.findIndex(line => line.includes('Body hair:'));
+      const buildIndex = descriptorLines.findIndex((line) =>
+        line.includes('Build:')
+      );
+      const hairIndex = descriptorLines.findIndex((line) =>
+        line.includes('Body hair:')
+      );
 
       expect(buildIndex).toBeLessThan(hairIndex);
     });
@@ -75,12 +79,14 @@ describe('Partial Anatomy Descriptions Integration', () => {
   describe('Single Descriptor Scenarios', () => {
     it('should handle only build descriptor', async () => {
       const entity = createMinimalHumanoidEntity();
-      
+
       // Add only build descriptor
       entity.hasComponent.mockImplementation((componentId) => {
-        return componentId === 'anatomy:body' || componentId === 'descriptors:build';
+        return (
+          componentId === 'anatomy:body' || componentId === 'descriptors:build'
+        );
       });
-      
+
       entity.getComponentData.mockImplementation((componentId) => {
         if (componentId === 'anatomy:body') {
           return { body: { root: 'torso' } };
@@ -122,7 +128,7 @@ describe('Partial Anatomy Descriptions Integration', () => {
   describe('Missing Component Data', () => {
     it('should handle component with null data', async () => {
       const entity = createPartialHumanoidEntity();
-      
+
       entity.getComponentData.mockImplementation((componentId) => {
         if (componentId === 'anatomy:body') {
           return { body: { root: 'torso' } };
@@ -144,7 +150,7 @@ describe('Partial Anatomy Descriptions Integration', () => {
 
     it('should handle component with empty object', async () => {
       const entity = createPartialHumanoidEntity();
-      
+
       entity.getComponentData.mockImplementation((componentId) => {
         if (componentId === 'anatomy:body') {
           return { body: { root: 'torso' } };
@@ -166,7 +172,7 @@ describe('Partial Anatomy Descriptions Integration', () => {
 
     it('should handle component with wrong property names', async () => {
       const entity = createPartialHumanoidEntity();
-      
+
       entity.getComponentData.mockImplementation((componentId) => {
         if (componentId === 'anatomy:body') {
           return { body: { root: 'torso' } };
@@ -191,7 +197,7 @@ describe('Partial Anatomy Descriptions Integration', () => {
     it('should handle all valid body hair density values', async () => {
       const validValues = [
         'hairless',
-        'sparse', 
+        'sparse',
         'light',
         'moderate',
         'hairy',
@@ -201,7 +207,7 @@ describe('Partial Anatomy Descriptions Integration', () => {
       for (const densityValue of validValues) {
         const entity = createBodyHairVariantsEntity(densityValue);
         const result = await composer.composeDescription(entity);
-        
+
         expect(result).toContain(`Body hair: ${densityValue}`);
         expect(result).toBe(expectedDescriptorValues.bodyHair[densityValue]);
       }
@@ -213,9 +219,11 @@ describe('Partial Anatomy Descriptions Integration', () => {
       for (const compositionValue of validValues) {
         const entity = createBodyCompositionVariantsEntity(compositionValue);
         const result = await composer.composeDescription(entity);
-        
+
         expect(result).toContain(`Body composition: ${compositionValue}`);
-        expect(result).toBe(expectedDescriptorValues.bodyComposition[compositionValue]);
+        expect(result).toBe(
+          expectedDescriptorValues.bodyComposition[compositionValue]
+        );
       }
     });
 
@@ -224,11 +232,14 @@ describe('Partial Anatomy Descriptions Integration', () => {
 
       for (const buildValue of validBuilds) {
         const entity = createMinimalHumanoidEntity();
-        
+
         entity.hasComponent.mockImplementation((componentId) => {
-          return componentId === 'anatomy:body' || componentId === 'descriptors:build';
+          return (
+            componentId === 'anatomy:body' ||
+            componentId === 'descriptors:build'
+          );
         });
-        
+
         entity.getComponentData.mockImplementation((componentId) => {
           if (componentId === 'anatomy:body') {
             return { body: { root: 'torso' } };
@@ -240,7 +251,7 @@ describe('Partial Anatomy Descriptions Integration', () => {
         });
 
         const result = await composer.composeDescription(entity);
-        
+
         expect(result).toContain(`Build: ${buildValue}`);
         expect(result).toBe(expectedDescriptorValues.build[buildValue]);
       }
@@ -276,15 +287,20 @@ describe('Partial Anatomy Descriptions Integration', () => {
       const entity = createPartialHumanoidEntity();
 
       const result = await composer.composeDescription(entity);
-      const lines = result.split('\n').filter(line => line.trim());
+      const lines = result.split('\n').filter((line) => line.trim());
 
       // Descriptors should come before part descriptions
-      const descriptorLines = lines.filter(line => line.includes(':') && 
-        (line.includes('Build:') || line.includes('Body hair:')));
-      const partLines = lines.filter(line => !line.includes(':'));
+      const descriptorLines = lines.filter(
+        (line) =>
+          line.includes(':') &&
+          (line.includes('Build:') || line.includes('Body hair:'))
+      );
+      const partLines = lines.filter((line) => !line.includes(':'));
 
       if (descriptorLines.length > 0 && partLines.length > 0) {
-        const lastDescriptorIndex = lines.lastIndexOf(descriptorLines[descriptorLines.length - 1]);
+        const lastDescriptorIndex = lines.lastIndexOf(
+          descriptorLines[descriptorLines.length - 1]
+        );
         const firstPartIndex = lines.indexOf(partLines[0]);
         expect(lastDescriptorIndex).toBeLessThan(firstPartIndex);
       }

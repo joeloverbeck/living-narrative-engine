@@ -220,6 +220,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'torso' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       const mockHeadEntity = {
@@ -230,6 +231,7 @@ describe('VisualizationComposer', () => {
             return { parentId: 'root-entity', socketId: 'neck' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance
@@ -398,6 +400,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'torso' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       const mockHeadEntity = {
@@ -408,6 +411,7 @@ describe('VisualizationComposer', () => {
             return { parentId: 'root-entity', socketId: 'neck' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance
@@ -443,6 +447,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'torso' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       const mockHeadEntity = {
@@ -453,6 +458,7 @@ describe('VisualizationComposer', () => {
             return { parentId: 'root-entity', socketId: 'neck' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance
@@ -481,6 +487,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'torso' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance
@@ -527,6 +534,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'torso' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       const mockUnconnectedEntity = {
@@ -535,6 +543,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'limb' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance
@@ -781,6 +790,7 @@ describe('VisualizationComposer', () => {
           if (type === 'core:description') return { text: 'Test description' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
@@ -815,6 +825,7 @@ describe('VisualizationComposer', () => {
           if (type === 'core:description') return { text: 'Test description' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
@@ -849,6 +860,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'test-type' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
@@ -880,6 +892,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'test-type' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
@@ -942,6 +955,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'test-type' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
@@ -977,6 +991,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'test-type' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
@@ -1011,6 +1026,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'torso' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance
@@ -1042,6 +1058,7 @@ describe('VisualizationComposer', () => {
           if (type === 'anatomy:part') return { subType: 'torso' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance
@@ -1054,6 +1071,89 @@ describe('VisualizationComposer', () => {
         'Failed to check entity child-entity:',
         expect.any(Error)
       );
+    });
+
+    it('should collect descriptor components from entities', async () => {
+      visualizationComposer.initialize(mockContainer);
+
+      const bodyData = {
+        root: 'root-entity',
+        parts: {
+          head: 'head-entity',
+        },
+      };
+
+      const mockRootEntity = {
+        getComponentData: jest.fn((type) => {
+          if (type === 'core:name') return { text: 'Root Entity' };
+          if (type === 'anatomy:part') return { subType: 'torso' };
+          return null;
+        }),
+        getAllComponents: jest.fn().mockReturnValue({
+          'core:name': { text: 'Root Entity' },
+          'anatomy:part': { subType: 'torso' },
+          'descriptors:size_category': { value: 'medium' },
+          'descriptors:weight_feel': { value: 'heavy' },
+        }),
+      };
+
+      const mockHeadEntity = {
+        getComponentData: jest.fn((type) => {
+          if (type === 'core:name') return { text: 'Head' };
+          if (type === 'anatomy:part') return { subType: 'head' };
+          if (type === 'anatomy:joint')
+            return { parentId: 'root-entity', socketId: 'neck' };
+          return null;
+        }),
+        getAllComponents: jest.fn().mockReturnValue({
+          'core:name': { text: 'Head' },
+          'anatomy:part': { subType: 'head' },
+          'anatomy:joint': { parentId: 'root-entity', socketId: 'neck' },
+          'descriptors:size_specific': { value: 'small' },
+          'descriptors:texture': { value: 'smooth' },
+          'descriptors:firmness': { value: 'soft' },
+        }),
+      };
+
+      mockEntityManager.getEntityInstance
+        .mockResolvedValueOnce(mockRootEntity)
+        .mockResolvedValueOnce(mockHeadEntity)
+        .mockResolvedValueOnce(mockHeadEntity);
+
+      await visualizationComposer.buildGraphData(bodyData);
+
+      // Get the nodes from the composer (they're private, so we need to test indirectly)
+      // We'll verify this works by rendering and checking the tooltip content
+      expect(mockRootEntity.getAllComponents).toHaveBeenCalled();
+      expect(mockHeadEntity.getAllComponents).toHaveBeenCalled();
+    });
+
+    it('should handle entities without descriptor components', async () => {
+      visualizationComposer.initialize(mockContainer);
+
+      const bodyData = {
+        root: 'root-entity',
+        parts: {},
+      };
+
+      const mockRootEntity = {
+        getComponentData: jest.fn((type) => {
+          if (type === 'core:name') return { text: 'Root Entity' };
+          if (type === 'anatomy:part') return { subType: 'torso' };
+          return null;
+        }),
+        getAllComponents: jest.fn().mockReturnValue({
+          'core:name': { text: 'Root Entity' },
+          'anatomy:part': { subType: 'torso' },
+          // No descriptor components
+        }),
+      };
+
+      mockEntityManager.getEntityInstance.mockResolvedValueOnce(mockRootEntity);
+
+      await visualizationComposer.buildGraphData(bodyData);
+
+      expect(mockRootEntity.getAllComponents).toHaveBeenCalled();
     });
   });
 });

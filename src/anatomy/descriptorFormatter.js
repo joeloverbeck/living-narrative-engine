@@ -19,6 +19,7 @@ export class DescriptorFormatter {
       'descriptors:hair_style',
       'descriptors:texture',
       'descriptors:firmness',
+      'descriptors:projection',
       'descriptors:build',
     ];
 
@@ -33,6 +34,7 @@ export class DescriptorFormatter {
       'firmness',
       'build',
       'weight',
+      'projection',
     ];
   }
 

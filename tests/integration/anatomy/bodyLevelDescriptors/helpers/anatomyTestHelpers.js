@@ -1,5 +1,8 @@
 import { BodyDescriptionComposer } from '../../../../../src/anatomy/bodyDescriptionComposer.js';
-import { createServiceMocks, createRealisticServiceMocks } from '../fixtures/serviceMocks.js';
+import {
+  createServiceMocks,
+  createRealisticServiceMocks,
+} from '../fixtures/serviceMocks.js';
 
 /**
  * Create a fully configured BodyDescriptionComposer with mocked dependencies
@@ -8,15 +11,21 @@ import { createServiceMocks, createRealisticServiceMocks } from '../fixtures/ser
  */
 export const createFullComposer = (overrides = {}) => {
   const mocks = createServiceMocks();
-  
+
   // Allow override of any mock
   const dependencies = {
-    bodyPartDescriptionBuilder: overrides.bodyPartDescriptionBuilder || mocks.mockBodyPartDescriptionBuilder,
+    bodyPartDescriptionBuilder:
+      overrides.bodyPartDescriptionBuilder ||
+      mocks.mockBodyPartDescriptionBuilder,
     bodyGraphService: overrides.bodyGraphService || mocks.mockBodyGraphService,
     entityFinder: overrides.entityFinder || mocks.mockEntityFinder,
-    anatomyFormattingService: overrides.anatomyFormattingService || mocks.mockAnatomyFormattingService,
-    partDescriptionGenerator: overrides.partDescriptionGenerator || mocks.mockPartDescriptionGenerator,
-    equipmentDescriptionService: overrides.equipmentDescriptionService || mocks.mockEquipmentDescriptionService,
+    anatomyFormattingService:
+      overrides.anatomyFormattingService || mocks.mockAnatomyFormattingService,
+    partDescriptionGenerator:
+      overrides.partDescriptionGenerator || mocks.mockPartDescriptionGenerator,
+    equipmentDescriptionService:
+      overrides.equipmentDescriptionService ||
+      mocks.mockEquipmentDescriptionService,
   };
 
   return new BodyDescriptionComposer(dependencies);
@@ -29,14 +38,20 @@ export const createFullComposer = (overrides = {}) => {
  */
 export const createRealisticComposer = (overrides = {}) => {
   const mocks = createRealisticServiceMocks();
-  
+
   const dependencies = {
-    bodyPartDescriptionBuilder: overrides.bodyPartDescriptionBuilder || mocks.mockBodyPartDescriptionBuilder,
+    bodyPartDescriptionBuilder:
+      overrides.bodyPartDescriptionBuilder ||
+      mocks.mockBodyPartDescriptionBuilder,
     bodyGraphService: overrides.bodyGraphService || mocks.mockBodyGraphService,
     entityFinder: overrides.entityFinder || mocks.mockEntityFinder,
-    anatomyFormattingService: overrides.anatomyFormattingService || mocks.mockAnatomyFormattingService,
-    partDescriptionGenerator: overrides.partDescriptionGenerator || mocks.mockPartDescriptionGenerator,
-    equipmentDescriptionService: overrides.equipmentDescriptionService || mocks.mockEquipmentDescriptionService,
+    anatomyFormattingService:
+      overrides.anatomyFormattingService || mocks.mockAnatomyFormattingService,
+    partDescriptionGenerator:
+      overrides.partDescriptionGenerator || mocks.mockPartDescriptionGenerator,
+    equipmentDescriptionService:
+      overrides.equipmentDescriptionService ||
+      mocks.mockEquipmentDescriptionService,
   };
 
   return new BodyDescriptionComposer(dependencies);
@@ -104,11 +119,11 @@ export const validateDescriptorOrder = (description, expectedOrder) => {
  */
 export const validateDescriptorPatterns = (description, patterns) => {
   const results = {};
-  
+
   Object.entries(patterns).forEach(([key, pattern]) => {
     results[key] = pattern.test(description);
   });
-  
+
   return results;
 };
 
@@ -118,8 +133,8 @@ export const validateDescriptorPatterns = (description, patterns) => {
  * @param description
  */
 export const countDescriptors = (description) => {
-  const lines = description.split('\n').filter(line => line.trim());
-  return lines.filter(line => line.includes(':')).length;
+  const lines = description.split('\n').filter((line) => line.trim());
+  return lines.filter((line) => line.includes(':')).length;
 };
 
 /**
@@ -130,8 +145,8 @@ export const countDescriptors = (description) => {
 export const extractDescriptorLines = (description) => {
   return description
     .split('\n')
-    .filter(line => line.trim() && line.includes(':'))
-    .map(line => line.trim());
+    .filter((line) => line.trim() && line.includes(':'))
+    .map((line) => line.trim());
 };
 
 /**
@@ -142,11 +157,15 @@ export const extractDescriptorLines = (description) => {
 export const extractPartDescriptionLines = (description) => {
   return description
     .split('\n')
-    .filter(line => line.trim() && line.includes(':') && 
-      !line.includes('Build:') && 
-      !line.includes('Body composition:') && 
-      !line.includes('Body hair:'))
-    .map(line => line.trim());
+    .filter(
+      (line) =>
+        line.trim() &&
+        line.includes(':') &&
+        !line.includes('Build:') &&
+        !line.includes('Body composition:') &&
+        !line.includes('Body hair:')
+    )
+    .map((line) => line.trim());
 };
 
 /**
@@ -154,14 +173,14 @@ export const extractPartDescriptionLines = (description) => {
  */
 export const descriptorMatcher = {
   toHaveValidDescriptorFormat(received) {
-    const lines = received.split('\n').filter(line => line.trim());
-    const descriptorLines = lines.filter(line => line.includes(':'));
-    
-    const invalidLines = descriptorLines.filter(line => {
+    const lines = received.split('\n').filter((line) => line.trim());
+    const descriptorLines = lines.filter((line) => line.includes(':'));
+
+    const invalidLines = descriptorLines.filter((line) => {
       const match = line.match(/^(.+?):\s+(.+)$/);
       return !match || !match[1].trim() || !match[2].trim();
     });
-    
+
     if (invalidLines.length === 0) {
       return {
         message: () => `Expected description to have invalid descriptor format`,
@@ -169,7 +188,8 @@ export const descriptorMatcher = {
       };
     } else {
       return {
-        message: () => `Expected description to have valid descriptor format, but found invalid lines: ${invalidLines.join(', ')}`,
+        message: () =>
+          `Expected description to have valid descriptor format, but found invalid lines: ${invalidLines.join(', ')}`,
         pass: false,
       };
     }
@@ -185,7 +205,7 @@ export const measureExecutionTime = async (fn) => {
   const start = performance.now();
   const result = await fn();
   const duration = performance.now() - start;
-  
+
   return {
     result,
     duration,
@@ -200,17 +220,17 @@ export const measureExecutionTime = async (fn) => {
  */
 export const collectPerformanceMetrics = async (fn, iterations = 100) => {
   const results = [];
-  
+
   for (let i = 0; i < iterations; i++) {
     const { duration } = await measureExecutionTime(fn);
     results.push(duration);
   }
-  
+
   const total = results.reduce((sum, time) => sum + time, 0);
   const average = total / iterations;
   const min = Math.min(...results);
   const max = Math.max(...results);
-  
+
   return {
     total,
     average,
@@ -229,25 +249,25 @@ export const collectPerformanceMetrics = async (fn, iterations = 100) => {
  */
 export const simulateMemoryPressure = async (fn, iterations = 100) => {
   const initialMemory = process.memoryUsage().heapUsed;
-  
+
   // Force garbage collection if available
   if (global.gc) {
     global.gc();
   }
-  
+
   const startMemory = process.memoryUsage().heapUsed;
-  
+
   for (let i = 0; i < iterations; i++) {
     await fn();
   }
-  
+
   if (global.gc) {
     global.gc();
   }
-  
+
   const endMemory = process.memoryUsage().heapUsed;
   const memoryGrowth = endMemory - startMemory;
-  
+
   return {
     initialMemory,
     startMemory,
@@ -264,7 +284,7 @@ export const simulateMemoryPressure = async (fn, iterations = 100) => {
  * @param variations
  */
 export const createTestSuite = (baseEntity, variations) => {
-  return variations.map(variation => ({
+  return variations.map((variation) => ({
     name: variation.name,
     entity: {
       ...baseEntity,
@@ -293,34 +313,43 @@ export const validateAcceptanceCriteria = (description, entity, composer) => {
     includesPartDescriptions: false,
     gracefulErrorHandling: false,
   };
-  
+
   // Check for body-level descriptors
   const descriptorLines = extractDescriptorLines(description);
-  criteria.hasBodyLevelDescriptors = descriptorLines.some(line => 
-    line.includes('Build:') || line.includes('Body composition:') || line.includes('Body hair:')
+  criteria.hasBodyLevelDescriptors = descriptorLines.some(
+    (line) =>
+      line.includes('Build:') ||
+      line.includes('Body composition:') ||
+      line.includes('Body hair:')
   );
-  
+
   // Check ordering - should validate that present descriptors are in correct relative order
-  const bodyDescriptors = descriptorLines.filter(line => 
-    line.includes('Build:') || line.includes('Body composition:') || line.includes('Body hair:')
+  const bodyDescriptors = descriptorLines.filter(
+    (line) =>
+      line.includes('Build:') ||
+      line.includes('Body composition:') ||
+      line.includes('Body hair:')
   );
   const expectedBodyOrder = ['Build', 'Body composition', 'Body hair'];
-  const actualBodyOrder = bodyDescriptors.map(line => line.split(':')[0]);
-  
+  const actualBodyOrder = bodyDescriptors.map((line) => line.split(':')[0]);
+
   // Check if the body descriptors that are present are in the right relative order
-  criteria.hasCorrectOrdering = bodyDescriptors.length <= 1 || 
+  criteria.hasCorrectOrdering =
+    bodyDescriptors.length <= 1 ||
     actualBodyOrder.every((descriptor, index) => {
       const expectedIndex = expectedBodyOrder.indexOf(descriptor);
-      const nextExpectedIndex = index + 1 < actualBodyOrder.length ? 
-        expectedBodyOrder.indexOf(actualBodyOrder[index + 1]) : Infinity;
+      const nextExpectedIndex =
+        index + 1 < actualBodyOrder.length
+          ? expectedBodyOrder.indexOf(actualBodyOrder[index + 1])
+          : Infinity;
       return expectedIndex < nextExpectedIndex;
     });
-  
+
   // Check for part descriptions
   const partLines = extractPartDescriptionLines(description);
   criteria.includesPartDescriptions = partLines.length > 0;
-  
+
   // Additional validation would require more context about the specific entity and expected behavior
-  
+
   return criteria;
 };

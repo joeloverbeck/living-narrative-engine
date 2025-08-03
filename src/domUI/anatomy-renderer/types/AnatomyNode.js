@@ -40,6 +40,9 @@ class AnatomyNode {
     // Additional metadata
     this.description = '';
     this.metadata = {};
+
+    // Descriptor components attached to this anatomy part
+    this.descriptorComponents = [];
   }
 
   /**
@@ -126,6 +129,7 @@ class AnatomyNode {
     clone.leafCount = this.leafCount;
     clone.description = this.description;
     clone.metadata = { ...this.metadata };
+    clone.descriptorComponents = [...this.descriptorComponents];
     return clone;
   }
 }

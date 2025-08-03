@@ -41,7 +41,9 @@ describe('batchOperationUtils', () => {
           onProgress: mockProgressCallback,
         };
 
-        expect(() => validateBatchProcessingOptions(validOptions)).not.toThrow();
+        expect(() =>
+          validateBatchProcessingOptions(validOptions)
+        ).not.toThrow();
       });
 
       it('should accept empty options object', () => {
@@ -165,9 +167,7 @@ describe('batchOperationUtils', () => {
     describe('Successful processing', () => {
       it('should process items in parallel with default concurrency', async () => {
         const items = [1, 2, 3];
-        mockProcessor.mockImplementation((item) =>
-          Promise.resolve(item * 2)
-        );
+        mockProcessor.mockImplementation((item) => Promise.resolve(item * 2));
 
         const result = await processParallelBatch(items, mockProcessor);
 
@@ -181,13 +181,13 @@ describe('batchOperationUtils', () => {
 
       it('should process items with custom concurrency', async () => {
         const items = [1, 2, 3, 4, 5];
-        mockProcessor.mockImplementation((item) =>
-          Promise.resolve(item * 2)
-        );
+        mockProcessor.mockImplementation((item) => Promise.resolve(item * 2));
 
         const result = await processParallelBatch(items, mockProcessor, 2);
 
-        expect(result.successes).toEqual(expect.arrayContaining([2, 4, 6, 8, 10]));
+        expect(result.successes).toEqual(
+          expect.arrayContaining([2, 4, 6, 8, 10])
+        );
         expect(result.totalProcessed).toBe(5);
         expect(result.successCount).toBe(5);
         expect(result.failureCount).toBe(0);
@@ -230,30 +230,32 @@ describe('batchOperationUtils', () => {
     describe('Concurrency control', () => {
       it('should process items with concurrency limit', async () => {
         const items = [1, 2, 3, 4, 5];
-        
+
         mockProcessor.mockImplementation(async (item) => {
           // Add small delay to test concurrency
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
           return item * 2;
         });
 
         const result = await processWithConcurrency(items, mockProcessor, 2);
 
         expect(result).toHaveLength(5);
-        
+
         // All should succeed
-        const successes = result.filter(r => r.success);
+        const successes = result.filter((r) => r.success);
         expect(successes).toHaveLength(5);
-        
+
         // Verify results are correct
-        const resultValues = successes.map(s => s.result).sort((a, b) => a - b);
+        const resultValues = successes
+          .map((s) => s.result)
+          .sort((a, b) => a - b);
         expect(resultValues).toEqual([2, 4, 6, 8, 10]);
       });
 
       it('should handle failures in concurrent processing', async () => {
         const items = [1, 2, 3];
         const error = new Error('Processing failed');
-        
+
         mockProcessor
           .mockResolvedValueOnce(2)
           .mockRejectedValueOnce(error)
@@ -262,10 +264,10 @@ describe('batchOperationUtils', () => {
         const result = await processWithConcurrency(items, mockProcessor, 2);
 
         expect(result).toHaveLength(3);
-        
-        const successes = result.filter(r => r.success);
-        const failures = result.filter(r => !r.success);
-        
+
+        const successes = result.filter((r) => r.success);
+        const failures = result.filter((r) => !r.success);
+
         expect(successes).toHaveLength(2);
         expect(failures).toHaveLength(1);
         expect(failures[0].error).toBe(error);
@@ -360,7 +362,7 @@ describe('batchOperationUtils', () => {
         });
 
         expect(mockProgressCallback).toHaveBeenCalledTimes(3); // 3 batches
-        
+
         // Check first progress call
         expect(mockProgressCallback).toHaveBeenNthCalledWith(1, {
           batchIndex: 0,
@@ -427,7 +429,7 @@ describe('batchOperationUtils', () => {
         const items = [1, 2, 3, 4];
         // Mock the internal batch processing to throw
         const originalError = new Error('Batch processing failed');
-        
+
         mockProcessor.mockImplementation(() => {
           throw originalError;
         });
@@ -440,7 +442,6 @@ describe('batchOperationUtils', () => {
         expect(result.failures.length).toBeGreaterThan(0);
         expect(result.failureCount).toBeGreaterThan(0);
       });
-
     });
 
     describe('Edge cases', () => {
@@ -498,7 +499,7 @@ describe('batchOperationUtils', () => {
     describe('Options validation integration', () => {
       it('should validate options before processing', async () => {
         const items = [1, 2, 3];
-        
+
         await expect(
           processBatch(items, mockProcessor, {
             maxConcurrency: -1,

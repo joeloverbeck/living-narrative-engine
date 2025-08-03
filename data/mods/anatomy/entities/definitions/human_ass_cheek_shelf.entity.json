@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_ass_cheek_shelf",
+  "description": "An ass cheek with shelf projection",
+  "components": {
+    "anatomy:part": {
+      "subType": "ass_cheek"
+    },
+    "descriptors:shape_general": {
+      "shape": "wide"
+    },
+    "descriptors:projection": {
+      "projection": "shelf"
+    },
+    "descriptors:firmness": {
+      "firmness": "jiggly"
+    },
+    "core:name": {
+      "text": "ass cheek"
+    }
+  }
+}

@@ -470,7 +470,7 @@ describe('BodyDescriptionComposer', () => {
       // Need at least one part for composeDescription to proceed past the empty check
       mockBodyGraphService.getAllParts.mockReturnValue(['dummy-part-1']);
       mockAnatomyFormattingService.getGroupedParts.mockReturnValue(new Set());
-      
+
       // Mock the dummy part entity
       mockEntityFinder.getEntityInstance.mockImplementation((id) => {
         if (id === 'dummy-part-1') {
@@ -566,7 +566,8 @@ describe('BodyDescriptionComposer', () => {
 
         // Count occurrences
         const buildMatches = (result.match(/Build:/g) || []).length;
-        const compositionMatches = (result.match(/Body composition:/g) || []).length;
+        const compositionMatches = (result.match(/Body composition:/g) || [])
+          .length;
         const hairMatches = (result.match(/Body hair:/g) || []).length;
 
         expect(buildMatches).toBe(1);
@@ -578,7 +579,9 @@ describe('BodyDescriptionComposer', () => {
     describe('Equipment Integration', () => {
       it('should integrate equipment description when equipmentDescriptionService is provided', async () => {
         const mockEquipmentService = {
-          generateEquipmentDescription: jest.fn().mockResolvedValue('Wearing leather armor'),
+          generateEquipmentDescription: jest
+            .fn()
+            .mockResolvedValue('Wearing leather armor'),
         };
 
         composer = new BodyDescriptionComposer({
@@ -596,7 +599,9 @@ describe('BodyDescriptionComposer', () => {
           'body_composition',
         ]);
 
-        const entity = Object.assign(createEntityWithAllDescriptors(), { id: 'test-entity-id' });
+        const entity = Object.assign(createEntityWithAllDescriptors(), {
+          id: 'test-entity-id',
+        });
         const result = await composer.composeDescription(entity);
         const lines = result.split('\n');
 
@@ -604,7 +609,9 @@ describe('BodyDescriptionComposer', () => {
         expect(lines[0]).toBe('Build: athletic');
         expect(lines[1]).toBe('Wearing leather armor');
         expect(lines[2]).toBe('Body composition: lean');
-        expect(mockEquipmentService.generateEquipmentDescription).toHaveBeenCalledWith('test-entity-id');
+        expect(
+          mockEquipmentService.generateEquipmentDescription
+        ).toHaveBeenCalledWith('test-entity-id');
       });
 
       it('should skip equipment when equipmentDescriptionService returns empty description', async () => {
@@ -627,7 +634,9 @@ describe('BodyDescriptionComposer', () => {
           'body_composition',
         ]);
 
-        const entity = Object.assign(createEntityWithAllDescriptors(), { id: 'test-entity-id' });
+        const entity = Object.assign(createEntityWithAllDescriptors(), {
+          id: 'test-entity-id',
+        });
         const result = await composer.composeDescription(entity);
         const lines = result.split('\n');
 
@@ -663,7 +672,8 @@ describe('BodyDescriptionComposer', () => {
         };
 
         const buildResult = composer.extractBuildDescription(invalidEntity);
-        const compositionResult = composer.extractBodyCompositionDescription(invalidEntity);
+        const compositionResult =
+          composer.extractBodyCompositionDescription(invalidEntity);
         const hairResult = composer.extractBodyHairDescription(invalidEntity);
 
         expect(buildResult).toBe('');

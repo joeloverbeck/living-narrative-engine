@@ -44,6 +44,11 @@ describe('AnatomyNode', () => {
       expect(anatomyNode.metadata).toEqual({});
     });
 
+    it('should initialize empty descriptorComponents array', () => {
+      expect(anatomyNode.descriptorComponents).toEqual([]);
+      expect(Array.isArray(anatomyNode.descriptorComponents)).toBe(true);
+    });
+
     it('should handle different node types', () => {
       const headNode = new AnatomyNode('head-id', 'Head', 'head', 0);
       const armNode = new AnatomyNode('arm-id', 'Left Arm', 'arm', 2);
@@ -448,6 +453,38 @@ describe('AnatomyNode', () => {
 
       expect(anatomyNode.metadata.color).toBe('red');
       expect(clone.metadata.color).toBe('blue');
+    });
+
+    it('should create independent descriptorComponents copy', () => {
+      anatomyNode.descriptorComponents = [
+        'size_category',
+        'weight_feel',
+        'firmness',
+      ];
+
+      const clone = anatomyNode.clone();
+
+      expect(clone.descriptorComponents).toEqual(
+        anatomyNode.descriptorComponents
+      );
+      expect(clone.descriptorComponents).not.toBe(
+        anatomyNode.descriptorComponents
+      );
+
+      // Modify the clone's descriptorComponents
+      clone.descriptorComponents.push('texture');
+
+      expect(anatomyNode.descriptorComponents).toEqual([
+        'size_category',
+        'weight_feel',
+        'firmness',
+      ]);
+      expect(clone.descriptorComponents).toEqual([
+        'size_category',
+        'weight_feel',
+        'firmness',
+        'texture',
+      ]);
     });
 
     it('should handle empty metadata', () => {

@@ -2,7 +2,14 @@
  * @file Unit tests for configurationStages.js
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { initializeGlobalConfigStage } from '../../../../src/bootstrapper/stages/configurationStages.js';
 
 // Mock the dependencies
@@ -10,7 +17,10 @@ jest.mock('../../../../src/entities/utils/configUtils.js');
 jest.mock('../../../../src/utils/bootstrapperHelpers.js');
 
 import { initializeGlobalConfig } from '../../../../src/entities/utils/configUtils.js';
-import { stageSuccess, stageFailure } from '../../../../src/utils/bootstrapperHelpers.js';
+import {
+  stageSuccess,
+  stageFailure,
+} from '../../../../src/utils/bootstrapperHelpers.js';
 
 describe('configurationStages - initializeGlobalConfigStage', () => {
   let mockLogger;
@@ -58,16 +68,19 @@ describe('configurationStages - initializeGlobalConfigStage', () => {
 
     it('should successfully initialize global configuration with user config', async () => {
       // Arrange
-      const userConfig = { 
+      const userConfig = {
         customSetting: 'testValue',
-        anotherSetting: 123
+        anotherSetting: 123,
       };
 
       // Act
       const result = await initializeGlobalConfigStage(mockLogger, userConfig);
 
       // Assert
-      expect(initializeGlobalConfig).toHaveBeenCalledWith(mockLogger, userConfig);
+      expect(initializeGlobalConfig).toHaveBeenCalledWith(
+        mockLogger,
+        userConfig
+      );
       expect(stageSuccess).toHaveBeenCalled();
       expect(result.success).toBe(true);
     });
@@ -99,9 +112,9 @@ describe('configurationStages - initializeGlobalConfigStage', () => {
 
     it('should log configuration summary with user config details', async () => {
       // Arrange
-      const userConfig = { 
+      const userConfig = {
         setting1: 'value1',
-        setting2: 'value2'
+        setting2: 'value2',
       };
 
       // Act
@@ -192,7 +205,10 @@ describe('configurationStages - initializeGlobalConfigStage', () => {
       const result = await initializeGlobalConfigStage(mockLogger, userConfig);
 
       // Assert
-      expect(initializeGlobalConfig).toHaveBeenCalledWith(mockLogger, userConfig);
+      expect(initializeGlobalConfig).toHaveBeenCalledWith(
+        mockLogger,
+        userConfig
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Configuration Stage: Fatal error during global configuration initialization.',
         configError

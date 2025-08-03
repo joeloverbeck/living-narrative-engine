@@ -34,7 +34,9 @@ describe('BodyDescriptionComposer - Performance Tests', () => {
     // Create mocks for required dependencies
     mockBodyPartDescriptionBuilder = {
       buildDescription: jest.fn().mockReturnValue('test description'),
-      buildMultipleDescription: jest.fn().mockReturnValue('test multiple description'),
+      buildMultipleDescription: jest
+        .fn()
+        .mockReturnValue('test multiple description'),
       getPlural: jest.fn().mockReturnValue('tests'),
     };
 
@@ -47,7 +49,9 @@ describe('BodyDescriptionComposer - Performance Tests', () => {
     };
 
     mockAnatomyFormattingService = {
-      getDescriptionOrder: jest.fn().mockReturnValue(['build', 'body_composition', 'body_hair']),
+      getDescriptionOrder: jest
+        .fn()
+        .mockReturnValue(['build', 'body_composition', 'body_hair']),
       getGroupedParts: jest.fn().mockReturnValue(new Set()),
     };
 
@@ -137,7 +141,7 @@ describe('BodyDescriptionComposer - Performance Tests', () => {
   describe('composeDescription Performance', () => {
     it('should compose descriptions efficiently with body-level descriptors', async () => {
       const entity = createEntityWithAllDescriptors();
-      
+
       // Note: Performance tests should be realistic with async operations
       const iterations = 100; // Reduced for async operations
 
@@ -267,13 +271,13 @@ describe('BodyDescriptionComposer - Performance Tests', () => {
       // Measure performance over multiple batches to detect degradation
       for (let batch = 0; batch < 10; batch++) {
         const batchStart = performance.now();
-        
+
         for (let i = 0; i < 100; i++) {
           composer.extractBodyCompositionDescription(entity);
           composer.extractBodyHairDescription(entity);
           composer.extractBuildDescription(entity);
         }
-        
+
         const batchTime = performance.now() - batchStart;
         times.push(batchTime);
       }

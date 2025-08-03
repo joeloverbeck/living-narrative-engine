@@ -243,7 +243,7 @@ describe('IfCoLocatedHandler', () => {
 
     test('should handle failed entity resolution', async () => {
       const params = {
-        entity_ref_a: '   ',  // Empty string that will fail resolution
+        entity_ref_a: '   ', // Empty string that will fail resolution
         entity_ref_b: 'entity-2',
         then_actions: [],
       };
@@ -581,7 +581,7 @@ describe('IfCoLocatedHandler', () => {
       };
 
       const params = {
-        entity_ref_a: '   ',  // Empty string that will fail resolution
+        entity_ref_a: '   ', // Empty string that will fail resolution
         entity_ref_b: 'entity-2',
       };
 
