@@ -75,7 +75,7 @@ describe('CORS Port Fallback Integration Tests', () => {
         Promise.resolve({
           success: true,
           data: { choices: [{ message: { content: 'test response' } }] },
-          status: 200,
+          statusCode: 200,
         })
       ),
     };

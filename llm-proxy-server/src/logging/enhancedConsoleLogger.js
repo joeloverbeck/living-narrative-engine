@@ -3,14 +3,8 @@
  * @description Drop-in replacement for ConsoleLogger with visual enhancements
  */
 
-// Try to import chalk, fallback gracefully if not available
-let chalk;
-try {
-  chalk = await import('chalk').then((m) => m.default);
-} catch (_error) {
-  // Chalk import failed, will use fallback
-  chalk = null;
-}
+// Chalk will be loaded lazily in the initializeChalk method
+let chalk = null;
 
 import { getLoggerConfiguration } from './loggerConfiguration.js';
 import { getLogFormatter } from './logFormatter.js';
@@ -47,28 +41,78 @@ class EnhancedConsoleLogger {
   constructor() {
     this.#config = getLoggerConfiguration();
     this.#formatter = getLogFormatter();
-    this.#chalkAvailable = this.#initializeChalk();
+    this.#chalkAvailable = false; // Will be set when chalk is first accessed
     this.#initializeColorFunctions();
   }
 
   /**
-   * Initialize chalk and test availability
+   * Initialize chalk and test availability (lazy loading)
    * @returns {boolean} Whether chalk is available
    * @private
    */
   #initializeChalk() {
+    // If we've already tried to initialize chalk, return the cached result
+    if (chalk !== null) {
+      return this.#chalkAvailable;
+    }
+
     try {
+      // Try to use chalk - handle both sync require and async import cases
+      let chalkModule = null;
+      
+      try {
+        // Check global scope first
+        if (typeof globalThis !== 'undefined' && globalThis.chalk) {
+          chalkModule = globalThis.chalk;
+        } else if (typeof global !== 'undefined' && global.chalk) {
+          chalkModule = global.chalk;
+        } else {
+          // Try synchronous require for compatibility
+          try {
+            chalkModule = require('chalk');
+            // Handle both default and named exports
+            if (chalkModule && chalkModule.default) {
+              chalkModule = chalkModule.default;
+            }
+          } catch (requireError) {
+            // If require fails, chalk is not available
+            chalkModule = null;
+          }
+        }
+      } catch (_) {
+        // Ignore access errors and fall through
+      }
+
       // Test if chalk is available and working
-      if (!chalk) {
+      if (!chalkModule || typeof chalkModule.blue !== 'function') {
+        chalk = false;
+        this.#chalkAvailable = false;
         // eslint-disable-next-line no-console
         console.warn(
           'EnhancedConsoleLogger: Chalk not available, falling back to plain text'
         );
         return false;
       }
-      chalk.blue('test');
-      return true;
+
+      // Test chalk functionality
+      try {
+        chalkModule.blue('test');
+        chalk = chalkModule;
+        this.#chalkAvailable = true;
+        return true;
+      } catch (testError) {
+        // Chalk test failed
+        chalk = false;
+        this.#chalkAvailable = false;
+        // eslint-disable-next-line no-console
+        console.warn(
+          'EnhancedConsoleLogger: Chalk not available, falling back to plain text'
+        );
+        return false;
+      }
     } catch (_error) {
+      chalk = false;
+      this.#chalkAvailable = false;
       // eslint-disable-next-line no-console
       console.warn(
         'EnhancedConsoleLogger: Chalk not available, falling back to plain text'
@@ -82,8 +126,11 @@ class EnhancedConsoleLogger {
    * @private
    */
   #initializeColorFunctions() {
-    if (!this.#chalkAvailable || !this.#config.isColorsEnabled()) {
-      // Fallback to identity functions if colors disabled
+    // Check if chalk is available when we need it
+    const chalkReady = this.#initializeChalk();
+    
+    if (!chalkReady || !this.#config.isColorsEnabled()) {
+      // Fallback to identity functions if colors disabled or chalk unavailable
       this.#colorFunctions = new Map([
         ['debug', (str) => str],
         ['info', (str) => str],
@@ -96,6 +143,7 @@ class EnhancedConsoleLogger {
       return;
     }
 
+    // Use chalk color functions if available
     this.#colorFunctions = new Map([
       ['debug', chalk.cyan],
       ['info', chalk.green],
