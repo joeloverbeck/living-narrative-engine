@@ -296,6 +296,7 @@ export function registerWorldAndEntity(container) {
       entityManager: c.resolve(tokens.IEntityManager),
       dataRegistry: c.resolve(tokens.IDataRegistry),
       logger: c.resolve(tokens.ILogger),
+      partSelectionService: c.resolve(tokens.PartSelectionService),
     });
   });
   logger.debug(

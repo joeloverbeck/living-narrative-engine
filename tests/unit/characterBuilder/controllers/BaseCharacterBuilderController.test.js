@@ -382,7 +382,7 @@ describe('BaseCharacterBuilderController', () => {
       await controller.initialize();
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'CONTROLLER_INITIALIZED',
+        'core:controller_initialized',
         expect.objectContaining({
           controllerName: 'TestController',
           initializationTime: expect.any(Number),

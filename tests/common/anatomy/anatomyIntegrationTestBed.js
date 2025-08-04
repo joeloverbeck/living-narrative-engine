@@ -93,6 +93,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       entityManager: this.entityManager,
       dataRegistry: mocks.registry,
       logger: mocks.logger,
+      partSelectionService: this.partSelectionService,
     });
 
     this.constraintEvaluator = new RecipeConstraintEvaluator({
@@ -2033,6 +2034,69 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     });
 
     return actor;
+  }
+
+  /**
+   * Validates an entity definition through basic structural checks
+   * 
+   * @param {string} entityId - The entity definition ID to validate
+   * @returns {Promise<object>} Validation result with isValid and errors properties
+   */
+  async validateEntityDefinition(entityId) {
+    const entityDef = this.getEntityDefinition(entityId);
+    
+    if (!entityDef) {
+      return {
+        isValid: false,
+        errors: [`Entity definition '${entityId}' not found in registry`]
+      };
+    }
+
+    // Basic structural validation
+    const errors = [];
+    
+    if (!entityDef.id) {
+      errors.push('Entity definition missing id property');
+    }
+    
+    if (!entityDef.description) {
+      errors.push('Entity definition missing description property');
+    }
+    
+    if (!entityDef.components || typeof entityDef.components !== 'object') {
+      errors.push('Entity definition missing or invalid components property');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors: errors
+    };
+  }
+
+  /**
+   * Creates a character from a recipe using the anatomy generation system
+   * 
+   * @param {string} recipeId - The recipe ID to use for character creation
+   * @returns {Promise<string>} The created character entity ID
+   */
+  async createCharacterFromRecipe(recipeId) {
+    // Create the actor entity with the recipe
+    const actor = await this.createActor({ recipeId });
+    
+    // Generate anatomy for the actor
+    await this.anatomyGenerationService.generateAnatomyIfNeeded(actor.id);
+    
+    return actor.id;
+  }
+
+  /**
+   * Gets the equipment data for a character
+   * 
+   * @param {string} characterId - The character entity ID
+   * @returns {object|null} The character's equipment component data or null if not found
+   */
+  getCharacterEquipment(characterId) {
+    return this.entityManager.getComponentData(characterId, 'clothing:equipment');
   }
 
   /**

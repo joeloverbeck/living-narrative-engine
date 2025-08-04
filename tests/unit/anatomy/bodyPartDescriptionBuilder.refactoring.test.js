@@ -31,13 +31,17 @@ describe('BodyPartDescriptionBuilder refactoring tests', () => {
     it('should have all expected component types', () => {
       const expectedTypes = [
         'anatomy:part',
+        'descriptors:body_composition',
+        'descriptors:body_hair',
         'descriptors:build',
         'descriptors:color_basic',
         'descriptors:color_extended',
+        'descriptors:facial_hair',
         'descriptors:firmness',
         'descriptors:hair_style',
         'descriptors:length_category',
         'descriptors:length_hair',
+        'descriptors:projection',
         'descriptors:shape_eye',
         'descriptors:shape_general',
         'descriptors:size_category',

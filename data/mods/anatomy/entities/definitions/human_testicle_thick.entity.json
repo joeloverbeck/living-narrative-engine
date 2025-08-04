@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_testicle_thick",
+  "description": "A thick human male reproductive gland",
+  "components": {
+    "anatomy:part": {
+      "subType": "testicle"
+    },
+    "descriptors:build": {
+      "build": "thick"
+    },
+    "core:name": {
+      "text": "thick testicle"
+    }
+  }
+}

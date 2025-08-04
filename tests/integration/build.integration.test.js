@@ -162,7 +162,7 @@ describe('Build System Integration', () => {
       'src/thematicDirectionsManager/thematicDirectionsManagerMain.js',
       { type: 'file', size: 1024 }
     );
-    mockFiles.set('src/character-concepts-manager-main.js', {
+    mockFiles.set('src/character-concepts-manager-entry.js', {
       type: 'file',
       size: 1024,
     });
@@ -498,7 +498,7 @@ describe('Build System Integration', () => {
         'src/anatomy-visualizer.js',
         'src/thematic-direction-main.js',
         'src/thematicDirectionsManager/thematicDirectionsManagerMain.js',
-        'src/character-concepts-manager-main.js',
+        'src/character-concepts-manager-entry.js',
       ];
 
       const expectedHtmlFiles = [

@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:controller_initialized",
+  "description": "Signals when a character builder controller has completed its initialization process. Includes performance metrics for monitoring initialization time.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "controllerName": {
+        "description": "The name of the controller that completed initialization",
+        "type": "string",
+        "minLength": 1
+      },
+      "initializationTime": {
+        "description": "Time taken to initialize the controller in milliseconds",
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "required": ["controllerName", "initializationTime"],
+    "additionalProperties": false
+  }
+}

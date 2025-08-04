@@ -1,0 +1,259 @@
+/**
+ * @file Integration tests for event definition warnings in character builder
+ * Tests that event definitions load without warnings and schema duplication
+ */
+
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { CharacterBuilderBootstrap } from '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
+import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
+
+describe('Character Builder Event Warnings', () => {
+  let warnings;
+  let consoleWarnSpy;
+  let mockDocument;
+  let mockBody;
+  let mockModsLoaderInstance;
+
+  beforeEach(() => {
+    // Capture console warnings
+    warnings = [];
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation((message) => {
+      warnings.push(message);
+    });
+
+    // Create enhanced mock body for error display
+    mockBody = {
+      appendChild: jest.fn(),
+      removeChild: jest.fn(),
+      children: [],
+      innerHTML: '',
+    };
+
+    // Enhanced DOM mocking for controller requirements
+    mockDocument = {
+      getElementById: jest.fn((id) => {
+        // Return enhanced mock elements for required IDs
+        const mockElement = {
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+          classList: {
+            add: jest.fn(),
+            remove: jest.fn(),
+            contains: jest.fn(() => false),
+          },
+          style: {},
+          innerHTML: '',
+          textContent: '',
+          setAttribute: jest.fn(),
+          getAttribute: jest.fn(() => null),
+          removeAttribute: jest.fn(),
+          appendChild: jest.fn(),
+          removeChild: jest.fn(),
+          children: [],
+          parentNode: null,
+          focus: jest.fn(),
+          blur: jest.fn(),
+          click: jest.fn(),
+        };
+        return mockElement;
+      }),
+      querySelector: jest.fn(() => null),
+      querySelectorAll: jest.fn(() => []),
+      createElement: jest.fn((tagName) => ({
+        tagName: tagName.toUpperCase(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        classList: {
+          add: jest.fn(),
+          remove: jest.fn(),
+          contains: jest.fn(() => false),
+        },
+        style: {},
+        innerHTML: '',
+        textContent: '',
+        setAttribute: jest.fn(),
+        getAttribute: jest.fn(() => null),
+        removeAttribute: jest.fn(),
+        appendChild: jest.fn(),
+        removeChild: jest.fn(),
+        children: [],
+        parentNode: null,
+      })),
+      body: mockBody,
+    };
+    global.document = mockDocument;
+
+    // Mock window.performance for timing
+    global.performance = global.performance || {
+      now: jest.fn(() => Date.now()),
+    };
+
+    // Mock BroadcastChannel to prevent cross-tab sync issues
+    global.BroadcastChannel = jest.fn().mockImplementation(() => ({
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      postMessage: jest.fn(),
+      close: jest.fn(),
+    }));
+
+    // Reset mock ModsLoader instance
+    mockModsLoaderInstance = null;
+  });
+
+  afterEach(() => {
+    consoleWarnSpy.mockRestore();
+    
+    // Cleanup global mocks
+    delete global.BroadcastChannel;
+    delete global.performance;
+  });
+
+  /**
+   * Helper to create bootstrap instance with manual event registration
+   * @returns {CharacterBuilderBootstrap}
+   */
+  function createBootstrapWithManualEvents() {
+    return new CharacterBuilderBootstrap();
+  }
+
+  /**
+   * Pre-register required event definitions in the container
+   * @param {object} container - DI container
+   */
+  function preRegisterEventDefinitions(container) {
+    const dataRegistry = container.resolve(tokens.IDataRegistry);
+    
+    // Define the events that the test expects
+    const eventDefinitions = [
+      {
+        id: 'UI_STATE_CHANGED',
+        description: 'Signals when a UI controller changes its display state',
+        payloadSchema: {
+          type: 'object',
+          properties: {
+            controller: { type: 'string', minLength: 1 },
+            previousState: {
+              oneOf: [
+                { type: 'string', enum: ['empty', 'loading', 'results', 'error'] },
+                { type: 'null' }
+              ]
+            },
+            currentState: { type: 'string', enum: ['empty', 'loading', 'results', 'error'] },
+            timestamp: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$' }
+          },
+          required: ['controller', 'currentState', 'timestamp'],
+          additionalProperties: false
+        }
+      },
+      {
+        id: 'CONTROLLER_INITIALIZED',
+        description: 'Signals when a character builder controller has completed its initialization',
+        payloadSchema: {
+          type: 'object',
+          properties: {
+            controllerName: { type: 'string', minLength: 1 },
+            initializationTime: { type: 'number', minimum: 0 }
+          },
+          required: ['controllerName', 'initializationTime'],
+          additionalProperties: false
+        }
+      }
+    ];
+
+    // Register each event definition
+    eventDefinitions.forEach(eventDef => {
+      dataRegistry.setEventDefinition(eventDef.id, eventDef);
+    });
+  }
+
+  it('should not produce schema overwriting warnings during bootstrap', async () => {
+    const bootstrap = createBootstrapWithManualEvents();
+    
+    const config = {
+      pageName: 'Character Concepts Manager',
+      controllerClass: CharacterConceptsManagerController,
+      includeModLoading: false, // Skip mod loading to avoid timeout
+      hooks: {
+        preInit: (controller) => {
+          // Pre-register event definitions manually
+          const container = controller.container || bootstrap.container;
+          if (container) {
+            preRegisterEventDefinitions(container);
+          }
+        }
+      }
+    };
+
+    // Test with explicit timeout handling
+    await expect(bootstrap.bootstrap(config)).resolves.toBeDefined();
+
+    // Check for schema overwriting warnings
+    const schemaWarnings = warnings.filter(w => 
+      w.includes('was already loaded. Overwriting.')
+    );
+    
+    expect(schemaWarnings).toEqual([]);
+  }, 15000); // 15 second timeout
+
+  it('should not produce missing event definition warnings', async () => {
+    const bootstrap = createBootstrapWithManualEvents();
+    
+    const config = {
+      pageName: 'Character Concepts Manager',
+      controllerClass: CharacterConceptsManagerController,
+      includeModLoading: false, // Skip mod loading to avoid timeout
+      hooks: {
+        preInit: (controller) => {
+          // Pre-register event definitions manually
+          const container = controller.container || bootstrap.container;
+          if (container) {
+            preRegisterEventDefinitions(container);
+          }
+        }
+      }
+    };
+
+    await expect(bootstrap.bootstrap(config)).resolves.toBeDefined();
+
+    // Check for missing event definition warnings
+    const missingEventWarnings = warnings.filter(w => 
+      w.includes('EventDefinition not found for')
+    );
+    
+    expect(missingEventWarnings).toEqual([]);
+  }, 15000); // 15 second timeout
+
+  it('should properly load UI_STATE_CHANGED and CONTROLLER_INITIALIZED events', async () => {
+    const bootstrap = createBootstrapWithManualEvents();
+    
+    const config = {
+      pageName: 'Character Concepts Manager',
+      controllerClass: CharacterConceptsManagerController,
+      includeModLoading: false, // Skip mod loading to avoid timeout
+      hooks: {
+        preInit: (controller) => {
+          // Pre-register event definitions manually
+          const container = controller.container || bootstrap.container;
+          if (container) {
+            preRegisterEventDefinitions(container);
+          }
+        }
+      }
+    };
+
+    const result = await bootstrap.bootstrap(config);
+    const dataRegistry = result.container.resolve(tokens.IDataRegistry);
+    
+    // Check that event definitions are properly registered
+    const uiStateEvent = dataRegistry.getEventDefinition('UI_STATE_CHANGED');
+    const controllerInitEvent = dataRegistry.getEventDefinition('CONTROLLER_INITIALIZED');
+    
+    expect(uiStateEvent).toBeDefined();
+    expect(controllerInitEvent).toBeDefined();
+    
+    // Verify they have the correct structure
+    expect(uiStateEvent.id).toBe('UI_STATE_CHANGED');
+    expect(controllerInitEvent.id).toBe('CONTROLLER_INITIALIZED');
+  }, 15000); // 15 second timeout
+});

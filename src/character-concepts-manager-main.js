@@ -6,6 +6,8 @@
 import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBootstrap.js';
 import { CharacterConceptsManagerController } from './domUI/characterConceptsManagerController.js';
 
+/** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
+
 // Constants
 const PAGE_NAME = 'Character Concepts Manager';
 
@@ -42,13 +44,14 @@ async function initializeApp() {
     };
 
     // Bootstrap the application
-    const { controller, container, bootstrapTime } =
-      await bootstrap.bootstrap(config);
+    const { bootstrapTime } = await bootstrap.bootstrap(config);
 
+    // eslint-disable-next-line no-console
     console.log(
       `${PAGE_NAME} initialized successfully in ${bootstrapTime.toFixed(2)}ms`
     );
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error(`Failed to initialize ${PAGE_NAME}:`, error);
     // Error display is handled by bootstrap
   }
@@ -57,8 +60,8 @@ async function initializeApp() {
 /**
  * Set up page visibility handling
  *
- * @param {CharacterConceptsManagerController} controller
- * @param {ILogger} logger
+ * @param {CharacterConceptsManagerController} controller - The controller instance
+ * @param {ILogger} logger - The logger instance
  */
 function setupPageVisibilityHandling(controller, logger) {
   // Handle page visibility changes
@@ -90,7 +93,7 @@ function setupPageVisibilityHandling(controller, logger) {
 /**
  * Set up global error handling
  *
- * @param {ILogger} logger
+ * @param {ILogger} logger - The logger instance
  */
 function setupGlobalErrorHandling(logger) {
   // Handle unhandled errors
@@ -121,28 +124,5 @@ function setupGlobalErrorHandling(logger) {
   });
 }
 
-/**
- * Wait for DOM to be ready
- *
- * @returns {Promise<void>}
- */
-function waitForDOM() {
-  return new Promise((resolve) => {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', resolve);
-    } else {
-      resolve();
-    }
-  });
-}
-
-// Start initialization when DOM is ready
-waitForDOM().then(() => {
-  initializeApp().catch((error) => {
-    // eslint-disable-next-line no-console
-    console.error('Failed to initialize application:', error);
-  });
-});
-
-// Export for testing
+// Export for testing and entry point
 export { initializeApp, PAGE_NAME };

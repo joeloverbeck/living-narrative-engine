@@ -29,6 +29,9 @@ const createMocks = () => {
       warn: jest.fn(),
       error: jest.fn(),
     },
+    partSelectionService: {
+      selectPart: jest.fn(),
+    },
   };
 };
 
@@ -44,6 +47,7 @@ describe('EntityGraphBuilder', () => {
       entityManager: mocks.entityManager,
       dataRegistry: mocks.dataRegistry,
       logger: mocks.logger,
+      partSelectionService: mocks.partSelectionService,
     });
   });
 
@@ -53,6 +57,7 @@ describe('EntityGraphBuilder', () => {
         new EntityGraphBuilder({
           dataRegistry: mocks.dataRegistry,
           logger: mocks.logger,
+          partSelectionService: mocks.partSelectionService,
         })
     ).toThrow(InvalidArgumentError);
     expect(
@@ -60,6 +65,7 @@ describe('EntityGraphBuilder', () => {
         new EntityGraphBuilder({
           entityManager: mocks.entityManager,
           logger: mocks.logger,
+          partSelectionService: mocks.partSelectionService,
         })
     ).toThrow(InvalidArgumentError);
     expect(
@@ -67,6 +73,15 @@ describe('EntityGraphBuilder', () => {
         new EntityGraphBuilder({
           entityManager: mocks.entityManager,
           dataRegistry: mocks.dataRegistry,
+          partSelectionService: mocks.partSelectionService,
+        })
+    ).toThrow(InvalidArgumentError);
+    expect(
+      () =>
+        new EntityGraphBuilder({
+          entityManager: mocks.entityManager,
+          dataRegistry: mocks.dataRegistry,
+          logger: mocks.logger,
         })
     ).toThrow(InvalidArgumentError);
   });
@@ -103,6 +118,138 @@ describe('EntityGraphBuilder', () => {
         'base'
       );
       expect(id).toBe('base');
+    });
+
+    it('uses PartSelectionService when recipe has torso properties but no preferId', async () => {
+      // Mock PartSelectionService to return a specific torso
+      mocks.partSelectionService.selectPart.mockResolvedValue(
+        'anatomy:selected_torso'
+      );
+      mocks.entityManager.createEntityInstance.mockResolvedValue({
+        id: 'selected-entity-123',
+      });
+
+      const recipe = {
+        slots: {
+          torso: {
+            partType: 'torso',
+            properties: {
+              'descriptors:build': { build: 'thick' },
+              'descriptors:body_hair': { density: 'hairy' },
+            },
+          },
+        },
+      };
+
+      const id = await builder.createRootEntity(
+        'anatomy:default_torso',
+        recipe
+      );
+
+      // Should have called PartSelectionService with correct parameters
+      expect(mocks.partSelectionService.selectPart).toHaveBeenCalledWith(
+        {
+          partType: 'torso',
+          components: ['anatomy:part'],
+        },
+        ['torso'],
+        recipe.slots.torso,
+        expect.any(Function)
+      );
+
+      // Should have created entity with the selected torso
+      expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
+        'anatomy:selected_torso'
+      );
+      expect(id).toBe('selected-entity-123');
+
+      // Should log the property-based selection
+      expect(mocks.logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'No preferId specified for torso, attempting property-based selection'
+        )
+      );
+      expect(mocks.logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Selected torso 'anatomy:selected_torso' based on recipe properties"
+        )
+      );
+    });
+
+    it('falls back to blueprint default when PartSelectionService fails', async () => {
+      // Mock PartSelectionService to throw an error
+      mocks.partSelectionService.selectPart.mockRejectedValue(
+        new Error('No matching torso found')
+      );
+      mocks.entityManager.createEntityInstance.mockResolvedValue({
+        id: 'default-entity-123',
+      });
+
+      const recipe = {
+        slots: {
+          torso: {
+            partType: 'torso',
+            properties: {
+              'descriptors:build': { build: 'nonexistent' },
+            },
+          },
+        },
+      };
+
+      const id = await builder.createRootEntity(
+        'anatomy:default_torso',
+        recipe
+      );
+
+      // Should have attempted PartSelectionService
+      expect(mocks.partSelectionService.selectPart).toHaveBeenCalled();
+
+      // Should fall back to blueprint default
+      expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
+        'anatomy:default_torso'
+      );
+      expect(id).toBe('default-entity-123');
+
+      // Should log the fallback
+      expect(mocks.logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Property-based torso selection failed')
+      );
+    });
+
+    it('prefers preferId over properties when both are specified', async () => {
+      // Mock valid preferId
+      mocks.dataRegistry.get.mockReturnValue({
+        components: { 'anatomy:part': { subType: 'torso' } },
+      });
+      mocks.entityManager.createEntityInstance.mockResolvedValue({
+        id: 'preferred-entity-123',
+      });
+
+      const recipe = {
+        slots: {
+          torso: {
+            partType: 'torso',
+            preferId: 'anatomy:preferred_torso',
+            properties: {
+              'descriptors:build': { build: 'thick' }, // This should be ignored
+            },
+          },
+        },
+      };
+
+      const id = await builder.createRootEntity(
+        'anatomy:default_torso',
+        recipe
+      );
+
+      // Should NOT have called PartSelectionService
+      expect(mocks.partSelectionService.selectPart).not.toHaveBeenCalled();
+
+      // Should use the preferId
+      expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
+        'anatomy:preferred_torso'
+      );
+      expect(id).toBe('preferred-entity-123');
     });
   });
 

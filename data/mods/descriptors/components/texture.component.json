@@ -16,7 +16,8 @@
           "bumpy",
           "velvety",
           "rib-knit",
-          "rugged"
+          "rugged",
+          "scarred"
         ],
         "default": "smooth"
       }

@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_hair_short_brown_wavy",
+  "description": "Generic human hair",
+  "components": {
+    "anatomy:part": {
+      "subType": "hair"
+    },
+    "descriptors:color_basic": {
+      "color": "brown"
+    },
+    "descriptors:length_hair": {
+      "length": "short"
+    },
+    "descriptors:hair_style": {
+      "style": "wavy"
+    },
+    "core:name": {
+      "text": "hair"
+    }
+  }
+}
