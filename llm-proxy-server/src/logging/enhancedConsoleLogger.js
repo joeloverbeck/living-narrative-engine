@@ -59,7 +59,7 @@ class EnhancedConsoleLogger {
     try {
       // Try to use chalk - handle both sync require and async import cases
       let chalkModule = null;
-      
+
       try {
         // Check global scope first
         if (typeof globalThis !== 'undefined' && globalThis.chalk) {
@@ -128,7 +128,7 @@ class EnhancedConsoleLogger {
   #initializeColorFunctions() {
     // Check if chalk is available when we need it
     const chalkReady = this.#initializeChalk();
-    
+
     if (!chalkReady || !this.#config.isColorsEnabled()) {
       // Fallback to identity functions if colors disabled or chalk unavailable
       this.#colorFunctions = new Map([

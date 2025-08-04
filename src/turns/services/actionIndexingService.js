@@ -6,23 +6,42 @@ import { ActionIndexingError } from './errors/actionIndexingError.js';
  *
  * @description Deduplicate discovered actions by id and params.
  * @param {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} discovered - Array of actions discovered for an actor.
- * @returns {{ uniqueArr: { actionId: string, commandString: string, params: any, description: string }[], duplicatesSuppressed: number }} Object containing the unique actions and the number of suppressed duplicates.
+ * @returns {{ uniqueArr: { actionId: string, commandString: string, params: any, description: string }[], duplicatesSuppressed: number, duplicateDetails: Array<{ actionId: string, commandString: string, params: any, count: number }> }} Object containing the unique actions, the number of suppressed duplicates, and details about the duplicates.
  */
 function deduplicateActions(discovered) {
   const unique = new Map();
+  const duplicateCounts = new Map();
+
   for (const raw of discovered) {
     const actionId = raw.id;
     const commandString = raw.command;
     const params = raw.params ?? {};
     const description = raw.description ?? '';
     const key = `${actionId}:${JSON.stringify(params)}`;
+
     if (!unique.has(key)) {
       unique.set(key, { actionId, commandString, params, description });
+      duplicateCounts.set(key, { actionId, commandString, params, count: 1 });
+    } else {
+      const existing = duplicateCounts.get(key);
+      existing.count += 1;
     }
   }
+
+  // Extract details about duplicates (where count > 1)
+  const duplicateDetails = Array.from(duplicateCounts.values())
+    .filter((item) => item.count > 1)
+    .map(({ actionId, commandString, params, count }) => ({
+      actionId,
+      commandString,
+      params,
+      count,
+    }));
+
   return {
     uniqueArr: Array.from(unique.values()),
     duplicatesSuppressed: discovered.length - unique.size,
+    duplicateDetails,
   };
 }
 
@@ -133,10 +152,21 @@ export class ActionIndexingService {
     }
 
     /* ── deduplicate by (id + params) ─────────────────────────────────── */
-    const { uniqueArr, duplicatesSuppressed } = deduplicateActions(discovered);
+    const { uniqueArr, duplicatesSuppressed, duplicateDetails } =
+      deduplicateActions(discovered);
     if (duplicatesSuppressed > 0) {
+      const duplicateInfo = duplicateDetails
+        .map((dup) => {
+          const paramsStr =
+            Object.keys(dup.params).length > 0
+              ? `, params: ${JSON.stringify(dup.params)}`
+              : '';
+          return `${dup.actionId} (${dup.commandString}${paramsStr}) x${dup.count}`;
+        })
+        .join(', ');
+
       this.#log.info(
-        `ActionIndexingService: actor "${actorId}" suppressed ${duplicatesSuppressed} duplicate actions`
+        `ActionIndexingService: actor "${actorId}" suppressed ${duplicatesSuppressed} duplicate actions: ${duplicateInfo}`
       );
     }
 

@@ -157,7 +157,7 @@ describe('ActionIndexingService', () => {
     expect(result.map((r) => r.actionId)).toEqual(['a', 'b']);
     expect(logger.info).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      'ActionIndexingService: actor "actor1" suppressed 1 duplicate actions'
+      'ActionIndexingService: actor "actor1" suppressed 1 duplicate actions: a (cmd1, params: {"x":1}) x2'
     );
   });
 
@@ -305,7 +305,7 @@ describe('ActionIndexingService', () => {
       { id: 'a', params: {}, command: 'c', description: 'dup' },
     ]);
     expect(logger.info).toHaveBeenCalledWith(
-      'ActionIndexingService: actor "actorA" suppressed 1 duplicate actions'
+      'ActionIndexingService: actor "actorA" suppressed 1 duplicate actions: a (c) x2'
     );
 
     service.indexActions('actorB', [
@@ -313,7 +313,7 @@ describe('ActionIndexingService', () => {
       { id: 'a', params: {}, command: 'c', description: 'dup' },
     ]);
     expect(logger.info).toHaveBeenCalledWith(
-      'ActionIndexingService: actor "actorB" suppressed 1 duplicate actions'
+      'ActionIndexingService: actor "actorB" suppressed 1 duplicate actions: a (c) x2'
     );
   });
 
