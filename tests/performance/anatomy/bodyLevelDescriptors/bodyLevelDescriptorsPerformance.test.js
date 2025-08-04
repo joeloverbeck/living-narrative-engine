@@ -445,15 +445,22 @@ describe('Performance Integration Tests', () => {
       }
 
       console.log(
-        `Performance samples (first 10): ${samples.slice(0, 10).map((s) => s.toFixed(3)).join(', ')}ms`
+        `Performance samples (first 10): ${samples
+          .slice(0, 10)
+          .map((s) => s.toFixed(3))
+          .join(', ')}ms`
       );
 
       // Remove outliers (values > 3 standard deviations from median)
       const sorted = [...samples].sort((a, b) => a - b);
       const median = sorted[Math.floor(sorted.length / 2)];
-      const medianDeviation = samples.map(s => Math.abs(s - median));
-      const mad = medianDeviation.sort((a, b) => a - b)[Math.floor(medianDeviation.length / 2)];
-      const filteredSamples = samples.filter(s => Math.abs(s - median) <= 3 * mad);
+      const medianDeviation = samples.map((s) => Math.abs(s - median));
+      const mad = medianDeviation.sort((a, b) => a - b)[
+        Math.floor(medianDeviation.length / 2)
+      ];
+      const filteredSamples = samples.filter(
+        (s) => Math.abs(s - median) <= 3 * mad
+      );
 
       console.log(
         `Filtered ${samples.length - filteredSamples.length} outliers, kept ${filteredSamples.length} samples`
@@ -461,7 +468,8 @@ describe('Performance Integration Tests', () => {
 
       // Check for consistency using filtered samples
       const sampleMean =
-        filteredSamples.reduce((sum, sample) => sum + sample, 0) / filteredSamples.length;
+        filteredSamples.reduce((sum, sample) => sum + sample, 0) /
+        filteredSamples.length;
       const variance =
         filteredSamples.reduce(
           (sum, sample) => sum + Math.pow(sample - sampleMean, 2),

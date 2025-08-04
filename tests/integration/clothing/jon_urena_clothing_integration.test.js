@@ -1,19 +1,13 @@
 /**
  * @file Integration tests for Jon Ureña clothing implementation
  * Tests the complete clothing system including entity definitions, character recipe loading, and clothing equipment
- * 
+ *
  * Note: This test suite currently contains stub tests for the Jon Ureña clothing implementation.
  * The full integration tests require additional methods in the AnatomyIntegrationTestBed
  * that need to be implemented to properly test clothing system integration.
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -41,12 +35,16 @@ describe('Jon Ureña Clothing Integration', () => {
     ];
 
     it.each(clothingItems)('should have valid JSON file %s', (filename) => {
-      const filePath = join(process.cwd(), 'data/mods/clothing/entities/definitions', filename);
-      
+      const filePath = join(
+        process.cwd(),
+        'data/mods/clothing/entities/definitions',
+        filename
+      );
+
       expect(() => {
         const fileContent = readFileSync(filePath, 'utf8');
         const entity = JSON.parse(fileContent);
-        
+
         // Basic structure validation
         expect(entity.id).toBeDefined();
         expect(entity.id).toMatch(/^clothing:/);
@@ -60,8 +58,11 @@ describe('Jon Ureña Clothing Integration', () => {
     });
 
     it('should have all required clothing items created', () => {
-      const clothingPath = join(process.cwd(), 'data/mods/clothing/entities/definitions');
-      
+      const clothingPath = join(
+        process.cwd(),
+        'data/mods/clothing/entities/definitions'
+      );
+
       for (const filename of clothingItems) {
         const filePath = join(clothingPath, filename);
         expect(() => readFileSync(filePath, 'utf8')).not.toThrow();
@@ -70,19 +71,35 @@ describe('Jon Ureña Clothing Integration', () => {
 
     it('should verify clothing items have appropriate layers and slots', () => {
       const expectedLayerMapping = {
-        'dark_olive_cotton_twill_chore_jacket.entity.json': { layer: 'outer', slot: 'torso_upper' },
-        'forest_green_cotton_linen_button_down.entity.json': { layer: 'base', slot: 'torso_upper' },
-        'charcoal_wool_tshirt.entity.json': { layer: 'base', slot: 'torso_upper' },
+        'dark_olive_cotton_twill_chore_jacket.entity.json': {
+          layer: 'outer',
+          slot: 'torso_upper',
+        },
+        'forest_green_cotton_linen_button_down.entity.json': {
+          layer: 'base',
+          slot: 'torso_upper',
+        },
+        'charcoal_wool_tshirt.entity.json': {
+          layer: 'base',
+          slot: 'torso_upper',
+        },
         'dark_indigo_denim_jeans.entity.json': { layer: 'base', slot: 'legs' },
         'sand_suede_chukka_boots.entity.json': { layer: 'base', slot: 'feet' },
-        'dark_brown_leather_belt.entity.json': { layer: 'accessories', slot: 'torso_lower' },
+        'dark_brown_leather_belt.entity.json': {
+          layer: 'accessories',
+          slot: 'torso_lower',
+        },
       };
 
       for (const [filename, expected] of Object.entries(expectedLayerMapping)) {
-        const filePath = join(process.cwd(), 'data/mods/clothing/entities/definitions', filename);
+        const filePath = join(
+          process.cwd(),
+          'data/mods/clothing/entities/definitions',
+          filename
+        );
         const fileContent = readFileSync(filePath, 'utf8');
         const entity = JSON.parse(fileContent);
-        
+
         const wearable = entity.components['clothing:wearable'];
         expect(wearable.layer).toBe(expected.layer);
         expect(wearable.equipmentSlots.primary).toBe(expected.slot);
@@ -92,10 +109,13 @@ describe('Jon Ureña Clothing Integration', () => {
 
   describe('Character Recipe File Validation', () => {
     it('should have updated Jon Ureña recipe with clothing entities', () => {
-      const recipePath = join(process.cwd(), '.private/data/mods/p_erotica/recipes/jon_urena.recipe.json');
+      const recipePath = join(
+        process.cwd(),
+        '.private/data/mods/p_erotica/recipes/jon_urena.recipe.json'
+      );
       const recipeContent = readFileSync(recipePath, 'utf8');
       const recipe = JSON.parse(recipeContent);
-      
+
       expect(recipe.clothingEntities).toBeDefined();
       expect(Array.isArray(recipe.clothingEntities)).toBe(true);
       expect(recipe.clothingEntities).toHaveLength(6);
@@ -108,37 +128,45 @@ describe('Jon Ureña Clothing Integration', () => {
     });
 
     it('should verify recipe contains all expected clothing items', () => {
-      const recipePath = join(process.cwd(), '.private/data/mods/p_erotica/recipes/jon_urena.recipe.json');
+      const recipePath = join(
+        process.cwd(),
+        '.private/data/mods/p_erotica/recipes/jon_urena.recipe.json'
+      );
       const recipeContent = readFileSync(recipePath, 'utf8');
       const recipe = JSON.parse(recipeContent);
-      
+
       const expectedClothingIds = [
         'clothing:charcoal_wool_tshirt',
         'clothing:forest_green_cotton_linen_button_down',
         'clothing:dark_olive_cotton_twill_chore_jacket',
-        'clothing:dark_indigo_denim_jeans', 
+        'clothing:dark_indigo_denim_jeans',
         'clothing:sand_suede_chukka_boots',
         'clothing:dark_brown_leather_belt',
       ];
 
-      const actualEntityIds = recipe.clothingEntities.map(entity => entity.entityId);
-      
+      const actualEntityIds = recipe.clothingEntities.map(
+        (entity) => entity.entityId
+      );
+
       for (const expectedId of expectedClothingIds) {
         expect(actualEntityIds).toContain(expectedId);
       }
     });
 
     it('should preserve existing anatomy data in recipe', () => {
-      const recipePath = join(process.cwd(), '.private/data/mods/p_erotica/recipes/jon_urena.recipe.json');
+      const recipePath = join(
+        process.cwd(),
+        '.private/data/mods/p_erotica/recipes/jon_urena.recipe.json'
+      );
       const recipeContent = readFileSync(recipePath, 'utf8');
       const recipe = JSON.parse(recipeContent);
-      
+
       // Verify core recipe structure is preserved
       expect(recipe.recipeId).toBe('p_erotica:jon_urena_recipe');
       expect(recipe.blueprintId).toBe('anatomy:human_male');
       expect(recipe.slots).toBeDefined();
       expect(recipe.patterns).toBeDefined();
-      
+
       // Verify key anatomy slots are preserved
       expect(recipe.slots.torso).toBeDefined();
       expect(recipe.slots.head).toBeDefined();
@@ -151,7 +179,7 @@ describe('Jon Ureña Clothing Integration', () => {
     it('should have test bed with clothing management service', () => {
       expect(testBed.getClothingManagementService).toBeDefined();
       expect(testBed.getClothingInstantiationService).toBeDefined();
-      
+
       const clothingService = testBed.getClothingManagementService();
       expect(clothingService).toBeDefined();
     });
@@ -159,7 +187,7 @@ describe('Jon Ureña Clothing Integration', () => {
     it('should be able to load entity definitions', () => {
       // Test that entity definitions can be loaded from the test bed
       expect(testBed.getEntityDefinition).toBeDefined();
-      
+
       // This tests that the method exists, full integration requires the entities to be loaded into test bed
       const testEntity = testBed.getEntityDefinition('test:blank');
       expect(testEntity).toBeUndefined(); // Expected since we haven't loaded the Jon Ureña entities yet
@@ -167,7 +195,7 @@ describe('Jon Ureña Clothing Integration', () => {
 
     it('should have anatomy system available', () => {
       expect(testBed.getBlueprint).toBeDefined();
-      
+
       // Test the human_male blueprint exists in the test bed
       const maleBlueprint = testBed.getBlueprint('anatomy:human_male');
       expect(maleBlueprint).toBeDefined();
@@ -181,16 +209,21 @@ describe('Jon Ureña Clothing Integration', () => {
 
     it('should validate clothing entity definitions through test bed', async () => {
       // Load the clothing entity definition from the file system
-      const filePath = join(process.cwd(), 'data/mods/clothing/entities/definitions/charcoal_wool_tshirt.entity.json');
+      const filePath = join(
+        process.cwd(),
+        'data/mods/clothing/entities/definitions/charcoal_wool_tshirt.entity.json'
+      );
       const fileContent = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(fileContent);
-      
+
       // Load it into the test bed registry
       testBed.loadEntityDefinitions({
-        'clothing:charcoal_wool_tshirt': entityData
+        'clothing:charcoal_wool_tshirt': entityData,
       });
-      
-      const result = await testBed.validateEntityDefinition('clothing:charcoal_wool_tshirt');
+
+      const result = await testBed.validateEntityDefinition(
+        'clothing:charcoal_wool_tshirt'
+      );
       expect(result.isValid).toBe(true);
     });
 
@@ -205,21 +238,23 @@ describe('Jon Ureña Clothing Integration', () => {
             partType: 'torso',
             properties: {
               'descriptors:build': {
-                build: 'thick'
-              }
-            }
-          }
+                build: 'thick',
+              },
+            },
+          },
         },
         patterns: [],
-        clothingEntities: []
+        clothingEntities: [],
       };
-      
+
       // Load the simplified recipe into the test bed registry
       testBed.loadRecipes({
-        'p_erotica:jon_urena_recipe': simplifiedRecipe
+        'p_erotica:jon_urena_recipe': simplifiedRecipe,
       });
-      
-      const characterId = await testBed.createCharacterFromRecipe('p_erotica:jon_urena_recipe');
+
+      const characterId = await testBed.createCharacterFromRecipe(
+        'p_erotica:jon_urena_recipe'
+      );
       expect(characterId).toBeDefined();
     });
 
@@ -233,23 +268,25 @@ describe('Jon Ureña Clothing Integration', () => {
             partType: 'torso',
             properties: {
               'descriptors:build': {
-                build: 'thick'
-              }
-            }
-          }
+                build: 'thick',
+              },
+            },
+          },
         },
         patterns: [],
-        clothingEntities: []
+        clothingEntities: [],
       };
-      
+
       // Load the simplified recipe into the test bed registry
       testBed.loadRecipes({
-        'p_erotica:jon_urena_recipe': simplifiedRecipe
+        'p_erotica:jon_urena_recipe': simplifiedRecipe,
       });
-      
-      const characterId = await testBed.createCharacterFromRecipe('p_erotica:jon_urena_recipe');
+
+      const characterId = await testBed.createCharacterFromRecipe(
+        'p_erotica:jon_urena_recipe'
+      );
       const equipment = testBed.getCharacterEquipment(characterId);
-      
+
       // The equipment component may not exist yet, which is fine for this test
       // We're just testing that the method works and doesn't throw an error
       expect(characterId).toBeDefined();
