@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_leg_muscular_hairy",
+  "description": "A muscular, hairy human leg",
+  "components": {
+    "anatomy:part": {
+      "subType": "leg"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "ankle",
+          "allowedTypes": ["foot"],
+          "nameTpl": "{{effective_orientation}} {{type}}"
+        }
+      ]
+    },
+    "descriptors:build": {
+      "build": "muscular"
+    },
+    "descriptors:body_hair": {
+      "density": "hairy"
+    },
+    "core:name": {
+      "text": "muscular, hairy leg"
+    },
+    "core:movement": {
+      "locked": false,
+      "forcedOverride": false
+    }
+  }
+}

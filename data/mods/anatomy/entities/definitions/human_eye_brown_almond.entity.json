@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_eye_brown_almond",
+  "description": "A human eye with brown iris and almond shape",
+  "components": {
+    "anatomy:part": {
+      "subType": "eye"
+    },
+    "descriptors:color_basic": {
+      "color": "brown"
+    },
+    "descriptors:shape_eye": {
+      "shape": "almond"
+    },
+    "core:name": {
+      "text": "eye"
+    }
+  }
+}

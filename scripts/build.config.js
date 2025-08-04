@@ -33,7 +33,7 @@ module.exports = {
     },
     {
       name: 'character-concepts-manager',
-      entry: 'src/character-concepts-manager-main.js',
+      entry: 'src/character-concepts-manager-entry.js',
       output: 'character-concepts-manager.js',
     },
   ],

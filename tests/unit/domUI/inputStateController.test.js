@@ -8,7 +8,7 @@ import {
   jest,
 } from '@jest/globals';
 import { JSDOM } from 'jsdom';
-import { InputStateController } from '../../../src/domUI'; // Assuming index exports it
+import { InputStateController } from '../../../src/domUI/inputStateController.js';
 import DocumentContext from '../../../src/domUI/documentContext.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
@@ -617,6 +617,182 @@ describe('InputStateController', () => {
       );
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Keyboard Event Handling', () => {
+    it('should prevent default and stop immediate propagation when Enter key is pressed', () => {
+      const controller = createController();
+      const keydownEvent = new dom.window.KeyboardEvent('keydown', {
+        key: 'Enter',
+        bubbles: true,
+        cancelable: true,
+      });
+
+      // Mock the event methods
+      keydownEvent.preventDefault = jest.fn();
+      keydownEvent.stopImmediatePropagation = jest.fn();
+
+      jest.clearAllMocks();
+
+      // Dispatch the event on the input element
+      inputElement.dispatchEvent(keydownEvent);
+
+      expect(keydownEvent.preventDefault).toHaveBeenCalledTimes(1);
+      expect(keydownEvent.stopImmediatePropagation).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "'Enter' key pressed in input field. Preventing default action and stopping immediate propagation."
+        )
+      );
+    });
+
+    it('should not intercept non-Enter keys', () => {
+      const controller = createController();
+      const keydownEvent = new dom.window.KeyboardEvent('keydown', {
+        key: 'a',
+        bubbles: true,
+        cancelable: true,
+      });
+
+      // Mock the event methods
+      keydownEvent.preventDefault = jest.fn();
+      keydownEvent.stopImmediatePropagation = jest.fn();
+
+      jest.clearAllMocks();
+
+      // Dispatch the event on the input element
+      inputElement.dispatchEvent(keydownEvent);
+
+      expect(keydownEvent.preventDefault).not.toHaveBeenCalled();
+      expect(keydownEvent.stopImmediatePropagation).not.toHaveBeenCalled();
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
+        expect.stringContaining("'Enter' key pressed")
+      );
+    });
+
+    it('should handle multiple Enter key presses', () => {
+      const controller = createController();
+      jest.clearAllMocks();
+
+      // Press Enter multiple times
+      for (let i = 0; i < 3; i++) {
+        const keydownEvent = new dom.window.KeyboardEvent('keydown', {
+          key: 'Enter',
+          bubbles: true,
+          cancelable: true,
+        });
+        keydownEvent.preventDefault = jest.fn();
+        keydownEvent.stopImmediatePropagation = jest.fn();
+
+        inputElement.dispatchEvent(keydownEvent);
+
+        expect(keydownEvent.preventDefault).toHaveBeenCalledTimes(1);
+        expect(keydownEvent.stopImmediatePropagation).toHaveBeenCalledTimes(1);
+      }
+
+      expect(mockLogger.debug).toHaveBeenCalledTimes(3);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "'Enter' key pressed in input field. Preventing default action and stopping immediate propagation."
+        )
+      );
+    });
+  });
+
+  describe('Focus/Blur Event Handling', () => {
+    it('should dispatch core:speech_input_gained_focus event when input gains focus', () => {
+      const controller = createController();
+      jest.clearAllMocks();
+
+      // Mock Date.now() to have a predictable timestamp
+      const mockTimestamp = 1234567890;
+      const originalDateNow = Date.now;
+      Date.now = jest.fn(() => mockTimestamp);
+
+      // Trigger focus event
+      const focusEvent = new dom.window.FocusEvent('focus', {
+        bubbles: true,
+        cancelable: true,
+      });
+      inputElement.dispatchEvent(focusEvent);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Input element gained focus, dispatching event.'
+        )
+      );
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:speech_input_gained_focus',
+        { timestamp: mockTimestamp }
+      );
+
+      // Restore Date.now
+      Date.now = originalDateNow;
+    });
+
+    it('should dispatch core:speech_input_lost_focus event when input loses focus', () => {
+      const controller = createController();
+      jest.clearAllMocks();
+
+      // Mock Date.now() to have a predictable timestamp
+      const mockTimestamp = 9876543210;
+      const originalDateNow = Date.now;
+      Date.now = jest.fn(() => mockTimestamp);
+
+      // Trigger blur event
+      const blurEvent = new dom.window.FocusEvent('blur', {
+        bubbles: true,
+        cancelable: true,
+      });
+      inputElement.dispatchEvent(blurEvent);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Input element lost focus, dispatching event.')
+      );
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:speech_input_lost_focus',
+        { timestamp: mockTimestamp }
+      );
+
+      // Restore Date.now
+      Date.now = originalDateNow;
+    });
+
+    it('should handle multiple focus/blur cycles', () => {
+      const controller = createController();
+      jest.clearAllMocks();
+
+      // Focus -> Blur -> Focus -> Blur
+      const focusEvent = new dom.window.FocusEvent('focus', { bubbles: true });
+      const blurEvent = new dom.window.FocusEvent('blur', { bubbles: true });
+
+      inputElement.dispatchEvent(focusEvent);
+      inputElement.dispatchEvent(blurEvent);
+      inputElement.dispatchEvent(focusEvent);
+      inputElement.dispatchEvent(blurEvent);
+
+      expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(4);
+      expect(mockDispatcher.dispatch).toHaveBeenNthCalledWith(
+        1,
+        'core:speech_input_gained_focus',
+        expect.objectContaining({ timestamp: expect.any(Number) })
+      );
+      expect(mockDispatcher.dispatch).toHaveBeenNthCalledWith(
+        2,
+        'core:speech_input_lost_focus',
+        expect.objectContaining({ timestamp: expect.any(Number) })
+      );
+      expect(mockDispatcher.dispatch).toHaveBeenNthCalledWith(
+        3,
+        'core:speech_input_gained_focus',
+        expect.objectContaining({ timestamp: expect.any(Number) })
+      );
+      expect(mockDispatcher.dispatch).toHaveBeenNthCalledWith(
+        4,
+        'core:speech_input_lost_focus',
+        expect.objectContaining({ timestamp: expect.any(Number) })
+      );
     });
   });
 

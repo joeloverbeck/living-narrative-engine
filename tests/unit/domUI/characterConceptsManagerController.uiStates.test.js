@@ -68,10 +68,10 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       // Spy on base class methods
       jest.spyOn(controller, '_showState');
 
-      // Act - Call loadData directly
-      await controller._testExports.loadData();
+      // Act - Initialize the controller fully to trigger proper state management
+      await controller.initialize();
 
-      // Assert - Should call base class _showState with 'results'
+      // Assert - Should call base class _showState with 'results' after UIStateManager is ready
       expect(controller._showState).toHaveBeenCalledWith('results');
     });
 

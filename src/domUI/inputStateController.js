@@ -190,15 +190,6 @@ export class InputStateController extends RendererBase {
    * @param {string} [placeholderText] - The placeholder text to display in the input field. Defaults to empty string.
    */
   setEnabled(enabled, placeholderText = '') {
-    if (!this.#inputElement) {
-      const errMsg = `${this._logPrefix} Cannot set input state, internal #inputElement reference is missing.`;
-      this.validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: errMsg,
-        details: { element: this.#inputElement },
-      });
-      return;
-    }
-
     const isDisabled = !enabled;
     const placeholder = String(placeholderText);
 

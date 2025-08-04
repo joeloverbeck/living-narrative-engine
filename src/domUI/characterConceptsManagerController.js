@@ -28,6 +28,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   #editingConceptId = null;
   #isInitialized = false;
   #previousFocus = null;
+  #pendingUIState = null;
 
   // Enhanced search state
   #searchStateRestored = false;
@@ -62,18 +63,30 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    */
   constructor({ logger, characterBuilderService, eventBus, schemaValidator }) {
     // Add backward compatibility for tests - provide missing methods
-    const effectiveCharacterBuilderService = characterBuilderService
-      ? {
-          ...characterBuilderService,
-          // Add missing methods expected by base class if not present
-          getCharacterConcept:
-            characterBuilderService.getCharacterConcept ||
-            (() => Promise.resolve(null)),
-          generateThematicDirections:
-            characterBuilderService.generateThematicDirections ||
-            (() => Promise.resolve([])),
+    // IMPORTANT: Don't use object spread as it destroys prototype methods
+    let effectiveCharacterBuilderService = characterBuilderService;
+
+    if (characterBuilderService) {
+      // Only add missing methods if they don't exist, preserve original service
+      if (!characterBuilderService.getCharacterConcept) {
+        // Create a wrapper that preserves prototype methods
+        effectiveCharacterBuilderService = Object.create(
+          characterBuilderService
+        );
+        effectiveCharacterBuilderService.getCharacterConcept = () =>
+          Promise.resolve(null);
+      }
+      if (!characterBuilderService.generateThematicDirections) {
+        // If we haven't created a wrapper yet, create one now
+        if (effectiveCharacterBuilderService === characterBuilderService) {
+          effectiveCharacterBuilderService = Object.create(
+            characterBuilderService
+          );
         }
-      : characterBuilderService;
+        effectiveCharacterBuilderService.generateThematicDirections = () =>
+          Promise.resolve([]);
+      }
+    }
 
     // Provide fallback schemaValidator for backward compatibility
     const effectiveSchemaValidator = schemaValidator || {
@@ -236,8 +249,14 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   async _initializeUIState() {
     await super._initializeUIState();
 
-    // Set initial UI state
-    this._showEmpty();
+    // Check if we have a pending UI state from initial data loading
+    if (this.#pendingUIState) {
+      this._showState(this.#pendingUIState);
+      this.#pendingUIState = null;
+    } else {
+      // Set initial UI state
+      this._showEmpty();
+    }
   }
 
   /**
@@ -720,8 +739,15 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       return;
     }
 
-    // Show results state
-    this._showState('results');
+    // Show results state - but only if UIStateManager is initialized
+    // This prevents warnings during initial data loading before UI state initialization
+    // The UIStateManager is initialized in _initializeUIState which runs after _loadInitialData
+    if (this.currentState !== null) {
+      this._showState('results');
+    } else {
+      // Store the fact that we need to show results state later
+      this.#pendingUIState = 'results';
+    }
 
     // Create document fragment for performance
     const fragment = document.createDocumentFragment();
@@ -1443,32 +1469,23 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       // Validate form (should be valid since it's existing content)
       this._validateConceptForm();
 
-      // Show modal
-      this._getElement('conceptModal').style.display = 'flex';
+      // Store previous focus
+      this.#previousFocus = document.activeElement;
 
-      // Debug logging for modal visibility
-      const computedStyle = window.getComputedStyle(
-        this._getElement('conceptModal')
-      );
-      this.logger.info('Edit modal display debug info:', {
-        display: computedStyle.display,
-        visibility: computedStyle.visibility,
-        opacity: computedStyle.opacity,
-        zIndex: computedStyle.zIndex,
-        position: computedStyle.position,
-        modalExists: !!this._getElement('conceptModal'),
-        modalParent: this._getElement('conceptModal')?.parentElement?.tagName,
-        conceptId: conceptId,
-      });
+      // Show modal with proper animation
+      this._animateModalEntrance(this._getElement('conceptModal'));
 
-      // Focus and select text
+      // Focus and select text after animation starts
       setTimeout(() => {
-        this._getElement('conceptText').focus();
-        this._getElement('conceptText').setSelectionRange(
-          this._getElement('conceptText').value.length,
-          this._getElement('conceptText').value.length
-        );
-      }, 100);
+        const textArea = this._getElement('conceptText');
+        if (textArea) {
+          textArea.focus();
+          textArea.setSelectionRange(
+            textArea.value.length,
+            textArea.value.length
+          );
+        }
+      }, 150); // Slightly longer delay to ensure animation has started
 
       // Track modal open
       this.eventBus.dispatch('core:ui_modal_opened', {
@@ -1531,8 +1548,11 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       this._getElement('confirmDeleteBtn').classList.remove('severe-action');
     }
 
-    // Show modal
-    this._getElement('deleteModal').style.display = 'flex';
+    // Store previous focus
+    this.#previousFocus = document.activeElement;
+
+    // Show modal with proper animation
+    this._animateModalEntrance(this._getElement('deleteModal'));
 
     // Focus on cancel button (safer default)
     setTimeout(() => {

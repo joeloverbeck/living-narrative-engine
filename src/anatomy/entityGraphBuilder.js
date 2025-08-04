@@ -9,6 +9,7 @@ import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('./partSelectionService.js').PartSelectionService} PartSelectionService */
 
 /**
  * Service that handles entity creation and graph assembly for anatomy
@@ -20,14 +21,17 @@ export class EntityGraphBuilder {
   #dataRegistry;
   /** @type {ILogger} */
   #logger;
+  /** @type {PartSelectionService} */
+  #partSelectionService;
 
   /**
    * @param {object} deps
    * @param {IEntityManager} deps.entityManager
    * @param {IDataRegistry} deps.dataRegistry
    * @param {ILogger} deps.logger
+   * @param {PartSelectionService} deps.partSelectionService
    */
-  constructor({ entityManager, dataRegistry, logger }) {
+  constructor({ entityManager, dataRegistry, logger, partSelectionService }) {
     if (!entityManager) {
       throw new InvalidArgumentError('entityManager is required');
     }
@@ -37,10 +41,14 @@ export class EntityGraphBuilder {
     if (!logger) {
       throw new InvalidArgumentError('logger is required');
     }
+    if (!partSelectionService) {
+      throw new InvalidArgumentError('partSelectionService is required');
+    }
 
     this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
+    this.#partSelectionService = partSelectionService;
   }
 
   /**
@@ -55,28 +63,70 @@ export class EntityGraphBuilder {
     // Check if recipe has a torso override
     let actualRootDefinitionId = rootDefinitionId;
 
-    if (recipe.slots?.torso?.preferId) {
-      const overrideDef = this.#dataRegistry.get(
-        'entityDefinitions',
-        recipe.slots.torso.preferId
-      );
+    if (recipe.slots?.torso) {
+      const torsoSlot = recipe.slots.torso;
 
-      if (overrideDef) {
-        const anatomyPart = overrideDef.components?.['anatomy:part'];
-        if (anatomyPart && anatomyPart.subType === 'torso') {
-          actualRootDefinitionId = recipe.slots.torso.preferId;
-          this.#logger.debug(
-            `EntityGraphBuilder: Using recipe torso override '${actualRootDefinitionId}' instead of blueprint default '${rootDefinitionId}'`
-          );
+      // First check for explicit preferId (existing behavior)
+      if (torsoSlot.preferId) {
+        const overrideDef = this.#dataRegistry.get(
+          'entityDefinitions',
+          torsoSlot.preferId
+        );
+
+        if (overrideDef) {
+          const anatomyPart = overrideDef.components?.['anatomy:part'];
+          if (anatomyPart && anatomyPart.subType === 'torso') {
+            actualRootDefinitionId = torsoSlot.preferId;
+            this.#logger.debug(
+              `EntityGraphBuilder: Using recipe torso override '${actualRootDefinitionId}' instead of blueprint default '${rootDefinitionId}'`
+            );
+          } else {
+            this.#logger.warn(
+              `EntityGraphBuilder: Recipe torso override '${torsoSlot.preferId}' is not a valid torso part, using blueprint default`
+            );
+          }
         } else {
           this.#logger.warn(
-            `EntityGraphBuilder: Recipe torso override '${recipe.slots.torso.preferId}' is not a valid torso part, using blueprint default`
+            `EntityGraphBuilder: Recipe torso override '${torsoSlot.preferId}' not found in registry, using blueprint default`
           );
         }
-      } else {
-        this.#logger.warn(
-          `EntityGraphBuilder: Recipe torso override '${recipe.slots.torso.preferId}' not found in registry, using blueprint default`
-        );
+      }
+      // NEW: If no preferId but properties are specified, use PartSelectionService
+      else if (
+        torsoSlot.properties &&
+        Object.keys(torsoSlot.properties).length > 0
+      ) {
+        try {
+          this.#logger.debug(
+            `EntityGraphBuilder: No preferId specified for torso, attempting property-based selection`
+          );
+
+          // Use PartSelectionService to find torso based on properties
+          const selectedTorsoId = await this.#partSelectionService.selectPart(
+            {
+              partType: 'torso',
+              components: ['anatomy:part'],
+            },
+            ['torso'], // allowedTypes
+            torsoSlot, // recipeSlot with properties
+            Math.random // RNG function
+          );
+
+          if (selectedTorsoId) {
+            actualRootDefinitionId = selectedTorsoId;
+            this.#logger.debug(
+              `EntityGraphBuilder: Selected torso '${actualRootDefinitionId}' based on recipe properties instead of blueprint default '${rootDefinitionId}'`
+            );
+          } else {
+            this.#logger.warn(
+              `EntityGraphBuilder: No torso found matching recipe properties, using blueprint default '${rootDefinitionId}'`
+            );
+          }
+        } catch (error) {
+          this.#logger.warn(
+            `EntityGraphBuilder: Property-based torso selection failed: ${error.message}, using blueprint default '${rootDefinitionId}'`
+          );
+        }
       }
     }
 

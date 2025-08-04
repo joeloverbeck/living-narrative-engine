@@ -1068,7 +1068,7 @@ export class BaseCharacterBuilderController {
 
       // Dispatch state change event
       if (this.#eventBus) {
-        this.#eventBus.dispatch('UI_STATE_CHANGED', {
+        this.#eventBus.dispatch('core:ui_state_changed', {
           controller: this.constructor.name,
           previousState,
           currentState: state,
@@ -1834,7 +1834,7 @@ export class BaseCharacterBuilderController {
 
       // Dispatch initialization complete event
       if (this.eventBus) {
-        this.eventBus.dispatch('CONTROLLER_INITIALIZED', {
+        this.eventBus.dispatch('core:controller_initialized', {
           controllerName: this.constructor.name,
           initializationTime: initTime,
         });

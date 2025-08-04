@@ -1,272 +1,214 @@
-VED: Validating payload for event 'core:ui_modal_opened' against schema 'core:ui_modal_opened#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:ui_modal_opened'.
-consoleLogger.js:187 VED: Dispatching event 'core:ui_modal_opened' via EventBus... {modalType: 'create-concept'}
-consoleLogger.js:187 VED: Event 'core:ui_modal_opened' dispatch successful.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:ui_modal_opened'.
-consoleLogger.js:151 Creating new concept {length: 1190}
-consoleLogger.js:151 CharacterBuilderService: Created character concept 1f68cb5f-323c-44f9-960a-7c2780536c1d {conceptId: '1f68cb5f-323c-44f9-960a-7c2780536c1d', concept: 'a 20-year-old young woman with a shapely, athletic...', autoSave: true, attempt: 1}
-consoleLogger.js:175 AjvSchemaValidator: validateAgainstSchema failed for schema 'schema://living-narrative-engine/character-concept.schema.json': Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/concept",
-    "schemaPath": "#/properties/concept/maxLength",
-    "keyword": "maxLength",
-    "params": {
-      "limit": 1000
-    },
-    "message": "must NOT have more than 1000 characters",
-    "schema": 1000,
-    "parentSchema": {
-      "type": "string",
-      "minLength": 10,
-      "maxLength": 1000,
-      "description": "User-provided character concept text"
-    },
-    "data": "a 20-year-old young woman with a shapely, athletic figure and a gorgeous ass. She lives in Donostia, in the north of Spain. She is studying business in college, but she thinks she'll have a great career as an Instagram model, where she has about a hundred thousand subscribers. The young woman goes to the gym five days a week to maintain her figure, and particularly to shape her gorgeous, bubbly ass further. She was blessed with an ass that makes every man turn their heads, and that makes her Instagram followers drool online. Her ass is her main pride. The young woman has many suitors, but she doesn't want to settle down given her many options. She's attracted to older men, in their late thirties or forties, who are manly and tough. She loves to be manhandled in bed by such older, strong men whom she can call daddy. She loves to tease men with her gorgeous ass; she gets a kick of knowing that men want to fuck her. The young woman can be a bit of a brat at times, but she does it almost as a test to see what man is tough enough to check her. She usually wears tight clothing, like yoga pants, that highlight her crotch and her sexy ass, as well as the rest of her toned figure."
-  }
-] {schemaId: 'schema://living-narrative-engine/character-concept.schema.json', error: Error: Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/concept",
-    "schemaPath": "…}
-error @ consoleLogger.js:175
-validateAgainstSchema @ ajvSchemaValidator.js:643
-storeCharacterConcept @ characterStorageService.js:147
-createCharacterConcept @ characterBuilderService.js:170
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:175 CharacterStorageService: Schema validation failed for concept 1f68cb5f-323c-44f9-960a-7c2780536c1d {conceptId: '1f68cb5f-323c-44f9-960a-7c2780536c1d', validationErrors: 'No specific error details provided.', originalData: {…}, serializedData: {…}, schemaId: 'schema://living-narrative-engine/character-concept.schema.json'}
-error @ consoleLogger.js:175
-storeCharacterConcept @ characterStorageService.js:156
-createCharacterConcept @ characterBuilderService.js:170
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:163 CharacterStorageService: Attempt 1 failed for concept storage: Character concept validation failed: No specific error details provided. {conceptId: '1f68cb5f-323c-44f9-960a-7c2780536c1d', attempt: 1, error: CharacterStorageError: Character concept validation failed: No specific error details provided.
-   …}
+EventLoader: Loading events definitions for mod 'core'.
+consoleLogger.js:163 EventLoader [core]: Payload schema ID 'core:character_concept_created#payload' for event 'core:character_concept_created' was already loaded. Overwriting.
 warn @ consoleLogger.js:163
-storeCharacterConcept @ characterStorageService.js:186
-createCharacterConcept @ characterBuilderService.js:170
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this warning
-consoleLogger.js:175 Failed to store character concept 1f68cb5f-323c-44f9-960a-7c2780536c1d after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:167:17)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:170:40)
-    at CharacterConceptsManagerController.createConcept_fn (characterConceptsManagerController.js:1847:45)
-    at CharacterConceptsManagerController.handleConceptSave_fn (characterConceptsManagerController.js:1884:15)
-    at HTMLFormElement.<anonymous> (characterConceptsManagerController.js:486:7)
-error @ consoleLogger.js:175
-storeCharacterConcept @ characterStorageService.js:209
-createCharacterConcept @ characterBuilderService.js:170
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:163 CharacterBuilderService: Attempt 1 failed for concept creation: Failed to store character concept 1f68cb5f-323c-44f9-960a-7c2780536c1d after 3 attempts: Character concept validation failed: No specific error details provided. {attempt: 1, error: CharacterStorageError: Failed to store character concept 1f68cb5f-323c-44f9-960a-7c2780536c1d after…}
+registerSchema @ schemaUtils.js:28
+registerInlineSchema @ schemaUtils.js:69
+_registerItemSchema @ baseInlineSchemaLoader.js:32
+_processFetchedItem @ eventLoader.js:83
+runSubclassProcessing @ baseManifestItemLoader.js:441
+_processFileWrapper @ baseManifestItemLoader.js:321
+await in _processFileWrapper
+(anonymous) @ baseManifestItemLoader.js:506
+_loadItemsInternal @ baseManifestItemLoader.js:505
+loadItemsForMod @ baseManifestItemLoader.js:640
+runLoadersForMod_fn @ ModProcessor.js:164
+await in runLoadersForMod_fn
+processMod @ ModProcessor.js:80
+await in processMod
+executeModProcessing_fn @ ContentLoadManager.js:222
+processMod @ ContentLoadManager.js:212
+loadContentForPhase @ ContentLoadManager.js:174
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+loadMods_fn2 @ CharacterBuilderBootstrap.js:489
+bootstrap @ CharacterBuilderBootstrap.js:98
+await in bootstrap
+initializeApp @ character-concepts-manager-main.js:47
+(anonymous) @ character-concepts-manager-entry.js:25
+Promise.then
+(anonymous) @ character-concepts-manager-entry.js:24
+(anonymous) @ character-concepts-manager-entry.js:29Understand this warning
+consoleLogger.js:163 EventLoader [core]: Payload schema ID 'core:character_concept_deleted#payload' for event 'core:character_concept_deleted' was already loaded. Overwriting.
 warn @ consoleLogger.js:163
-createCharacterConcept @ characterBuilderService.js:186
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this warning
-consoleLogger.js:151 CharacterBuilderService: Created character concept f1468a83-e6fd-4a91-b909-b0943ebb444e {conceptId: 'f1468a83-e6fd-4a91-b909-b0943ebb444e', concept: 'a 20-year-old young woman with a shapely, athletic...', autoSave: true, attempt: 2}
-consoleLogger.js:175 AjvSchemaValidator: validateAgainstSchema failed for schema 'schema://living-narrative-engine/character-concept.schema.json': Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/concept",
-    "schemaPath": "#/properties/concept/maxLength",
-    "keyword": "maxLength",
-    "params": {
-      "limit": 1000
-    },
-    "message": "must NOT have more than 1000 characters",
-    "schema": 1000,
-    "parentSchema": {
-      "type": "string",
-      "minLength": 10,
-      "maxLength": 1000,
-      "description": "User-provided character concept text"
-    },
-    "data": "a 20-year-old young woman with a shapely, athletic figure and a gorgeous ass. She lives in Donostia, in the north of Spain. She is studying business in college, but she thinks she'll have a great career as an Instagram model, where she has about a hundred thousand subscribers. The young woman goes to the gym five days a week to maintain her figure, and particularly to shape her gorgeous, bubbly ass further. She was blessed with an ass that makes every man turn their heads, and that makes her Instagram followers drool online. Her ass is her main pride. The young woman has many suitors, but she doesn't want to settle down given her many options. She's attracted to older men, in their late thirties or forties, who are manly and tough. She loves to be manhandled in bed by such older, strong men whom she can call daddy. She loves to tease men with her gorgeous ass; she gets a kick of knowing that men want to fuck her. The young woman can be a bit of a brat at times, but she does it almost as a test to see what man is tough enough to check her. She usually wears tight clothing, like yoga pants, that highlight her crotch and her sexy ass, as well as the rest of her toned figure."
-  }
-] {schemaId: 'schema://living-narrative-engine/character-concept.schema.json', error: Error: Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/concept",
-    "schemaPath": "…}
-error @ consoleLogger.js:175
-validateAgainstSchema @ ajvSchemaValidator.js:643
-storeCharacterConcept @ characterStorageService.js:147
-createCharacterConcept @ characterBuilderService.js:170
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:175 CharacterStorageService: Schema validation failed for concept f1468a83-e6fd-4a91-b909-b0943ebb444e {conceptId: 'f1468a83-e6fd-4a91-b909-b0943ebb444e', validationErrors: 'No specific error details provided.', originalData: {…}, serializedData: {…}, schemaId: 'schema://living-narrative-engine/character-concept.schema.json'}
-error @ consoleLogger.js:175
-storeCharacterConcept @ characterStorageService.js:156
-createCharacterConcept @ characterBuilderService.js:170
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:163 CharacterStorageService: Attempt 1 failed for concept storage: Character concept validation failed: No specific error details provided. {conceptId: 'f1468a83-e6fd-4a91-b909-b0943ebb444e', attempt: 1, error: CharacterStorageError: Character concept validation failed: No specific error details provided.
-   …}
+registerSchema @ schemaUtils.js:28
+registerInlineSchema @ schemaUtils.js:69
+_registerItemSchema @ baseInlineSchemaLoader.js:32
+_processFetchedItem @ eventLoader.js:83
+runSubclassProcessing @ baseManifestItemLoader.js:441
+_processFileWrapper @ baseManifestItemLoader.js:321
+await in _processFileWrapper
+(anonymous) @ baseManifestItemLoader.js:506
+_loadItemsInternal @ baseManifestItemLoader.js:505
+loadItemsForMod @ baseManifestItemLoader.js:640
+runLoadersForMod_fn @ ModProcessor.js:164
+await in runLoadersForMod_fn
+processMod @ ModProcessor.js:80
+await in processMod
+executeModProcessing_fn @ ContentLoadManager.js:222
+processMod @ ContentLoadManager.js:212
+loadContentForPhase @ ContentLoadManager.js:174
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+loadMods_fn2 @ CharacterBuilderBootstrap.js:489
+bootstrap @ CharacterBuilderBootstrap.js:98
+await in bootstrap
+initializeApp @ character-concepts-manager-main.js:47
+(anonymous) @ character-concepts-manager-entry.js:25
+Promise.then
+(anonymous) @ character-concepts-manager-entry.js:24
+(anonymous) @ character-concepts-manager-entry.js:29Understand this warning
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'core'.
+consoleLogger.js:151 MacroLoader: Loading macros definitions for mod 'core'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'core'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'core'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'core'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'positioning'.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'positioning'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'positioning'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'positioning'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'positioning'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'positioning'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'descriptors'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'anatomy'.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'anatomy'.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomySlotLibraryLoader: Loading anatomySlotLibraries definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyBlueprintPartLoader: Loading anatomyBlueprintParts definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyBlueprintLoader: Loading anatomyBlueprints definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyFormattingLoader: Loading anatomyFormatting definitions for mod 'anatomy'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'clothing'.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'clothing'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'clothing'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'clothing'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'clothing'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'clothing'.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'clothing'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'violence'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'violence'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'violence'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'intimacy'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'intimacy'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'intimacy'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'intimacy'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'intimacy'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'sex'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'sex'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'sex'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'sex'.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'p_erotica'.
+consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'p_erotica'.
+consoleLogger.js:151 EntityInstanceLoader: Loading entityInstances definitions for mod 'p_erotica'.
+consoleLogger.js:151 — WorldPhase starting —
+consoleLogger.js:151 --- Starting World File Loading Phase ---
+consoleLogger.js:151 --- World File Loading Phase Complete ---
+consoleLogger.js:151 WorldLoader: Successfully processed and registered 1 worlds, containing 4 entity instances. All 4 definition references were resolved.
+consoleLogger.js:151 — SummaryPhase starting —
+consoleLogger.js:151 — ModsLoader Load Summary (World: 'default') —
+consoleLogger.js:151   • Requested Mods (raw): [core, positioning, anatomy, clothing, violence, p_erotica]
+consoleLogger.js:151   • Final Load Order     : [core, positioning, descriptors, anatomy, clothing, violence, intimacy, sex, p_erotica]
+consoleLogger.js:151   • Content Loading Summary (Totals):
+consoleLogger.js:151      - actions             : 42 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyBlueprintParts: 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyBlueprints   : 2 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyFormatting   : 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyRecipes      : 6 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomySlotLibraries: 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - components          : 55 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - conditions          : 59 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - entityDefinitions   : 56 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - entityInstances     : 5 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - events              : 58 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - macros              : 4 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - rules               : 48 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - scopes              : 29 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - worlds              : 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - ----------------------------------------------
+consoleLogger.js:151      - TOTAL               : C:368, O:0, E:0
+consoleLogger.js:151 ———————————————————————————————————————————
+consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
+consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
+consoleLogger.js:151 [CharacterBuilderBootstrap] Core mod loaded successfully
+consoleLogger.js:151 CharacterConceptsManagerController: Successfully created with dependencies {coreServices: Array(4), additionalServices: Array(0)}
+consoleLogger.js:151 CharacterConceptsManagerController initialized
+consoleLogger.js:151 CharacterConceptsManagerController: Starting initialization
+consoleLogger.js:151 CharacterConceptsManagerController: Cached 32/32 elements (0 optional, 0 failed) in 12.50ms
+consoleLogger.js:151 CharacterDatabase: Successfully opened database
+consoleLogger.js:151 CharacterStorageService: Successfully initialized
+2consoleLogger.js:151 CharacterBuilderService: Successfully initialized
+consoleLogger.js:151 Loading character concepts data
+consoleLogger.js:151 CharacterStorageService: No thematic directions found {conceptId: '383eeff7-13cf-4b7f-9f22-f351af333177'}
+consoleLogger.js:151 CharacterStorageService: No thematic directions found {conceptId: '4fa66144-0dca-4d7c-b117-7a7db9a67811'}
+consoleLogger.js:151 CharacterStorageService: No thematic directions found {conceptId: 'a7abe335-1041-4cdb-924f-f4de5e502c13'}
+consoleLogger.js:151 CharacterStorageService: No thematic directions found {conceptId: 'bfcdca5f-b9bc-4e0c-9186-00b4d2a659ef'}
+consoleLogger.js:151 Statistics updated {totalConcepts: 4, conceptsWithDirections: 0, totalDirections: 0, averageDirectionsPerConcept: '0.0', completionRate: 0, …}
+consoleLogger.js:151 Loaded 4 concepts
+consoleLogger.js:163 VED: EventDefinition not found for 'UI_STATE_CHANGED'. Cannot validate payload. Proceeding with dispatch.
 warn @ consoleLogger.js:163
-storeCharacterConcept @ characterStorageService.js:186
-createCharacterConcept @ characterBuilderService.js:170
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this warning
-consoleLogger.js:175 Failed to store character concept f1468a83-e6fd-4a91-b909-b0943ebb444e after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:167:17)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:170:40)
-    at async CharacterConceptsManagerController.createConcept_fn (characterConceptsManagerController.js:1847:9)
-    at async CharacterConceptsManagerController.handleConceptSave_fn (characterConceptsManagerController.js:1884:9)
-error @ consoleLogger.js:175
-storeCharacterConcept @ characterStorageService.js:209
-createCharacterConcept @ characterBuilderService.js:170
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:163 CharacterBuilderService: Attempt 2 failed for concept creation: Failed to store character concept f1468a83-e6fd-4a91-b909-b0943ebb444e after 3 attempts: Character concept validation failed: No specific error details provided. {attempt: 2, error: CharacterStorageError: Failed to store character concept f1468a83-e6fd-4a91-b909-b0943ebb444e after…}
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+_showState @ BaseCharacterBuilderController.js:1071
+_initializeUIState @ BaseCharacterBuilderController.js:2015
+await in _initializeUIState
+_initializeUIState @ characterConceptsManagerController.js:250
+_executeLifecycleMethod @ BaseCharacterBuilderController.js:1888
+initialize @ BaseCharacterBuilderController.js:1816
+await in initialize
+initializeController_fn @ CharacterBuilderBootstrap.js:592
+bootstrap @ CharacterBuilderBootstrap.js:108
+await in bootstrap
+initializeApp @ character-concepts-manager-main.js:47
+(anonymous) @ character-concepts-manager-entry.js:25
+Promise.then
+(anonymous) @ character-concepts-manager-entry.js:24
+(anonymous) @ character-concepts-manager-entry.js:29Understand this warning
+consoleLogger.js:163 VED: EventDefinition not found for 'UI_STATE_CHANGED'. Cannot validate payload. Proceeding with dispatch.
 warn @ consoleLogger.js:163
-createCharacterConcept @ characterBuilderService.js:186
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this warning
-consoleLogger.js:151 CharacterBuilderService: Created character concept c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33 {conceptId: 'c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33', concept: 'a 20-year-old young woman with a shapely, athletic...', autoSave: true, attempt: 3}
-consoleLogger.js:175 AjvSchemaValidator: validateAgainstSchema failed for schema 'schema://living-narrative-engine/character-concept.schema.json': Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/concept",
-    "schemaPath": "#/properties/concept/maxLength",
-    "keyword": "maxLength",
-    "params": {
-      "limit": 1000
-    },
-    "message": "must NOT have more than 1000 characters",
-    "schema": 1000,
-    "parentSchema": {
-      "type": "string",
-      "minLength": 10,
-      "maxLength": 1000,
-      "description": "User-provided character concept text"
-    },
-    "data": "a 20-year-old young woman with a shapely, athletic figure and a gorgeous ass. She lives in Donostia, in the north of Spain. She is studying business in college, but she thinks she'll have a great career as an Instagram model, where she has about a hundred thousand subscribers. The young woman goes to the gym five days a week to maintain her figure, and particularly to shape her gorgeous, bubbly ass further. She was blessed with an ass that makes every man turn their heads, and that makes her Instagram followers drool online. Her ass is her main pride. The young woman has many suitors, but she doesn't want to settle down given her many options. She's attracted to older men, in their late thirties or forties, who are manly and tough. She loves to be manhandled in bed by such older, strong men whom she can call daddy. She loves to tease men with her gorgeous ass; she gets a kick of knowing that men want to fuck her. The young woman can be a bit of a brat at times, but she does it almost as a test to see what man is tough enough to check her. She usually wears tight clothing, like yoga pants, that highlight her crotch and her sexy ass, as well as the rest of her toned figure."
-  }
-] {schemaId: 'schema://living-narrative-engine/character-concept.schema.json', error: Error: Schema validation failed.
-Details:
-[
-  {
-    "instancePath": "/concept",
-    "schemaPath": "…}
-error @ consoleLogger.js:175
-validateAgainstSchema @ ajvSchemaValidator.js:643
-storeCharacterConcept @ characterStorageService.js:147
-createCharacterConcept @ characterBuilderService.js:170
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:175 CharacterStorageService: Schema validation failed for concept c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33 {conceptId: 'c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33', validationErrors: 'No specific error details provided.', originalData: {…}, serializedData: {…}, schemaId: 'schema://living-narrative-engine/character-concept.schema.json'}
-error @ consoleLogger.js:175
-storeCharacterConcept @ characterStorageService.js:156
-createCharacterConcept @ characterBuilderService.js:170
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:163 CharacterStorageService: Attempt 1 failed for concept storage: Character concept validation failed: No specific error details provided. {conceptId: 'c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33', attempt: 1, error: CharacterStorageError: Character concept validation failed: No specific error details provided.
-   …}
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+_showState @ BaseCharacterBuilderController.js:1071
+_initializeUIState @ characterConceptsManagerController.js:254
+await in _initializeUIState
+_executeLifecycleMethod @ BaseCharacterBuilderController.js:1888
+initialize @ BaseCharacterBuilderController.js:1816
+await in initialize
+initializeController_fn @ CharacterBuilderBootstrap.js:592
+bootstrap @ CharacterBuilderBootstrap.js:108
+await in bootstrap
+initializeApp @ character-concepts-manager-main.js:47
+(anonymous) @ character-concepts-manager-entry.js:25
+Promise.then
+(anonymous) @ character-concepts-manager-entry.js:24
+(anonymous) @ character-concepts-manager-entry.js:29Understand this warning
+consoleLogger.js:151 Cross-tab sync initialized {tabId: 'tab-1754323871027-9pyumskqg'}
+consoleLogger.js:151 CharacterConceptsManagerController: Initialization completed in 74.20ms
+consoleLogger.js:163 VED: EventDefinition not found for 'CONTROLLER_INITIALIZED'. Cannot validate payload. Proceeding with dispatch.
 warn @ consoleLogger.js:163
-storeCharacterConcept @ characterStorageService.js:186
-createCharacterConcept @ characterBuilderService.js:170
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this warning
-consoleLogger.js:175 Failed to store character concept c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33 after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:167:17)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:170:40)
-    at async CharacterConceptsManagerController.createConcept_fn (characterConceptsManagerController.js:1847:9)
-    at async CharacterConceptsManagerController.handleConceptSave_fn (characterConceptsManagerController.js:1884:9)
-error @ consoleLogger.js:175
-storeCharacterConcept @ characterStorageService.js:209
-createCharacterConcept @ characterBuilderService.js:170
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:163 CharacterBuilderService: Attempt 3 failed for concept creation: Failed to store character concept c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33 after 3 attempts: Character concept validation failed: No specific error details provided. {attempt: 3, error: CharacterStorageError: Failed to store character concept c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33 after…}
-warn @ consoleLogger.js:163
-createCharacterConcept @ characterBuilderService.js:186
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this warning
-consoleLogger.js:175 Failed to create character concept after 3 attempts: Failed to store character concept c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33 after 3 attempts: Character concept validation failed: No specific error details provided. CharacterStorageError: Failed to store character concept c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33 after 3 attempts: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:210:11)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:170:40)
-    at async CharacterConceptsManagerController.createConcept_fn (characterConceptsManagerController.js:1847:9)
-    at async CharacterConceptsManagerController.handleConceptSave_fn (characterConceptsManagerController.js:1884:9)Caused by: CharacterStorageError: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:167:17)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:170:40)
-    at async CharacterConceptsManagerController.createConcept_fn (characterConceptsManagerController.js:1847:9)
-    at async CharacterConceptsManagerController.handleConceptSave_fn (characterConceptsManagerController.js:1884:9)
-error @ consoleLogger.js:175
-createCharacterConcept @ characterBuilderService.js:210
-await in createCharacterConcept
-createConcept_fn @ characterConceptsManagerController.js:1847
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:187 VED: Validating payload for event 'core:character_builder_error_occurred' against schema 'core:character_builder_error_occurred#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:character_builder_error_occurred'.
-consoleLogger.js:187 VED: Dispatching event 'core:character_builder_error_occurred' via EventBus... {error: 'Failed to create character concept after 3 attempt…ation failed: No specific error details provided.', operation: 'createCharacterConcept', concept: 'a 20-year-old young woman with a shapely, athletic…ure and a gorgeous ass. She lives in Donostia,...', attempts: 3, finalError: 'Failed to store character concept c3d8f34f-2a7c-4d…ation failed: No specific error details provided.'}
-consoleLogger.js:187 VED: Event 'core:character_builder_error_occurred' dispatch successful.
-consoleLogger.js:175 Failed to create concept CharacterBuilderError: Failed to create character concept after 3 attempts: Failed to store character concept c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33 after 3 attempts: Character concept validation failed: No specific error details provided.
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:220:11)
-    at async CharacterConceptsManagerController.createConcept_fn (characterConceptsManagerController.js:1847:9)
-    at async CharacterConceptsManagerController.handleConceptSave_fn (characterConceptsManagerController.js:1884:9)Caused by: CharacterStorageError: Failed to store character concept c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33 after 3 attempts: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:210:11)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:170:40)
-    at async CharacterConceptsManagerController.createConcept_fn (characterConceptsManagerController.js:1847:9)
-    at async CharacterConceptsManagerController.handleConceptSave_fn (characterConceptsManagerController.js:1884:9)Caused by: CharacterStorageError: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:167:17)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:170:40)
-    at async CharacterConceptsManagerController.createConcept_fn (characterConceptsManagerController.js:1847:9)
-    at async CharacterConceptsManagerController.handleConceptSave_fn (characterConceptsManagerController.js:1884:9)
-error @ consoleLogger.js:175
-createConcept_fn @ characterConceptsManagerController.js:1856
-await in createConcept_fn
-handleConceptSave_fn @ characterConceptsManagerController.js:1884
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:175 Failed to create concept CharacterBuilderError: Failed to create character concept after 3 attempts: Failed to store character concept c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33 after 3 attempts: Character concept validation failed: No specific error details provided.
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:220:11)
-    at async CharacterConceptsManagerController.createConcept_fn (characterConceptsManagerController.js:1847:9)
-    at async CharacterConceptsManagerController.handleConceptSave_fn (characterConceptsManagerController.js:1884:9)Caused by: CharacterStorageError: Failed to store character concept c3d8f34f-2a7c-4d15-9301-5a8ed4d6ae33 after 3 attempts: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:210:11)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:170:40)
-    at async CharacterConceptsManagerController.createConcept_fn (characterConceptsManagerController.js:1847:9)
-    at async CharacterConceptsManagerController.handleConceptSave_fn (characterConceptsManagerController.js:1884:9)Caused by: CharacterStorageError: Character concept validation failed: No specific error details provided.
-    at CharacterStorageService.storeCharacterConcept (characterStorageService.js:167:17)
-    at CharacterBuilderService.createCharacterConcept (characterBuilderService.js:170:40)
-    at async CharacterConceptsManagerController.createConcept_fn (characterConceptsManagerController.js:1847:9)
-    at async CharacterConceptsManagerController.handleConceptSave_fn (characterConceptsManagerController.js:1884:9)
-error @ consoleLogger.js:175
-handleConceptSave_fn @ characterConceptsManagerController.js:1895
-await in handleConceptSave_fn
-(anonymous) @ characterConceptsManagerController.js:486Understand this error
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:character_builder_error_occurred'.
-consoleLogger.js:151 Closing concept modal
-consoleLogger.js:187 VED: Validating payload for event 'core:ui_modal_closed' against schema 'core:ui_modal_closed#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for 
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+initialize @ BaseCharacterBuilderController.js:1837
+await in initialize
+initializeController_fn @ CharacterBuilderBootstrap.js:592
+bootstrap @ CharacterBuilderBootstrap.js:108
+await in bootstrap
+initializeApp @ character-concepts-manager-main.js:47
+(anonymous) @ character-concepts-manager-entry.js:25
+Promise.then
+(anonymous) @ character-concepts-manager-entry.js:24
+(anonymous) @ character-concepts-manager-entry.js:29Understand this warning
+consoleLogger.js:151 [CharacterBuilderBootstrap] Page 'Character Concepts Manager' bootstrapped in 2857.10ms {metrics: {…}}

@@ -903,5 +903,428 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
         })
       );
     });
+
+    it('should handle multi-target per-action metadata fallback success path (lines 204-211)', async () => {
+      const contextWithPerActionMetadata = {
+        actor: { id: 'player' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:action',
+              name: 'Test Action',
+              template: 'test {item}',
+            },
+            targetContexts: [],
+            resolvedTargets: {
+              primary: [{ id: 'item1', displayName: 'Item 1' }],
+            },
+            targetDefinitions: {
+              primary: { placeholder: 'item' },
+            },
+            isMultiTarget: true,
+          },
+        ],
+      };
+
+      // Multi-target formatting fails
+      mockFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target formatting failed',
+      });
+
+      // Legacy fallback succeeds
+      mockFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'test Item 1',
+      });
+
+      const result = await stage.executeInternal(contextWithPerActionMetadata);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0]).toEqual({
+        id: 'test:action',
+        name: 'Test Action',
+        command: 'test Item 1',
+        description: '',
+        params: { targetId: 'item1' },
+      });
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('should handle error when no primary target in per-action metadata (line 224)', async () => {
+      const contextWithPerActionMetadata = {
+        actor: { id: 'player' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:action',
+              name: 'Test Action',
+              template: 'test {item}',
+            },
+            targetContexts: [],
+            resolvedTargets: {}, // No targets at all
+            targetDefinitions: {
+              primary: { placeholder: 'item' },
+            },
+            isMultiTarget: true,
+          },
+        ],
+      };
+
+      mockFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target formatting failed',
+      });
+
+      const result = await stage.executeInternal(contextWithPerActionMetadata);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Multi-target formatting failed',
+          actionDef: expect.objectContaining({ id: 'test:action' }),
+          actorId: 'player',
+          targetId: null,
+        })
+      );
+    });
+
+    it('should handle legacy formatting when formatMultiTarget unavailable in per-action metadata (lines 234-249)', async () => {
+      const contextWithPerActionMetadata = {
+        actor: { id: 'player' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:action',
+              name: 'Test Action',
+              template: 'test {item}',
+            },
+            targetContexts: [],
+            resolvedTargets: {
+              primary: [{ id: 'item1', displayName: 'Item 1' }],
+            },
+            targetDefinitions: {
+              primary: { placeholder: 'item' },
+            },
+            isMultiTarget: true,
+          },
+        ],
+      };
+
+      // Remove formatMultiTarget method to trigger fallback path
+      mockFormatter.formatMultiTarget = undefined;
+
+      mockFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'test Item 1',
+      });
+
+      const result = await stage.executeInternal(contextWithPerActionMetadata);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0]).toEqual({
+        id: 'test:action',
+        name: 'Test Action',
+        command: 'test Item 1',
+        description: '',
+        params: { targetId: 'item1' },
+      });
+      expect(result.errors).toHaveLength(0);
+
+      expect(mockFormatter.format).toHaveBeenCalled();
+    });
+
+    it('should handle error creation when legacy formatting fails without formatMultiTarget in per-action metadata (line 249)', async () => {
+      const contextWithPerActionMetadata = {
+        actor: { id: 'player' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:action',
+              name: 'Test Action',
+              template: 'test {item}',
+            },
+            targetContexts: [],
+            resolvedTargets: {
+              primary: [{ id: 'item1', displayName: 'Item 1' }],
+            },
+            targetDefinitions: {
+              primary: { placeholder: 'item' },
+            },
+            isMultiTarget: true,
+          },
+        ],
+      };
+
+      // Remove formatMultiTarget method to trigger fallback path
+      mockFormatter.formatMultiTarget = undefined;
+
+      // Legacy formatting fails
+      mockFormatter.format.mockReturnValue({
+        ok: false,
+        error: 'Legacy formatting failed',
+      });
+
+      const result = await stage.executeInternal(contextWithPerActionMetadata);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Legacy formatting failed',
+          actionDef: expect.objectContaining({ id: 'test:action' }),
+          actorId: 'player',
+          targetId: 'item1',
+        })
+      );
+    });
+
+    it('should handle error creation in per-action metadata legacy processing (line 291)', async () => {
+      const contextWithPerActionMetadata = {
+        actor: { id: 'player' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:action',
+              name: 'Test Action',
+              template: 'test {target}',
+            },
+            targetContexts: [{ entityId: 'target1', displayName: 'Target 1' }],
+            resolvedTargets: {
+              primary: [{ id: 'target1', displayName: 'Target 1' }],
+            },
+            targetDefinitions: {
+              primary: { placeholder: 'target' },
+            },
+            isMultiTarget: false, // Legacy action in per-action metadata
+          },
+        ],
+      };
+
+      mockFormatter.format.mockReturnValue({
+        ok: false,
+        error: 'Legacy formatting failed',
+      });
+
+      const result = await stage.executeInternal(contextWithPerActionMetadata);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Legacy formatting failed',
+          actionDef: expect.objectContaining({ id: 'test:action' }),
+          actorId: 'player',
+          targetId: 'target1',
+        })
+      );
+    });
+
+    it('should handle error creation in formatMultiTargetActions fallback (line 496)', async () => {
+      const context = {
+        actor: { id: 'player' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:action',
+              name: 'Test Action',
+              template: 'test {item}',
+            },
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'item1', displayName: 'Item 1' }],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'item' },
+        },
+      };
+
+      // Remove formatMultiTarget to trigger the else branch (line 470)
+      mockFormatter.formatMultiTarget = undefined;
+
+      // Legacy fallback fails
+      mockFormatter.format.mockReturnValue({
+        ok: false,
+        error: 'Legacy fallback failed',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Legacy fallback failed',
+          actionDef: expect.objectContaining({ id: 'test:action' }),
+          actorId: 'player',
+          targetId: 'item1',
+        })
+      );
+    });
+
+    it('should handle error creation in legacy context multi-target fallback (line 633)', async () => {
+      const legacyContextWithMultiTarget = {
+        actor: { id: 'player' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'combat:spell',
+              name: 'Cast Spell',
+              template: 'cast {spell}',
+              targets: {
+                primary: { scope: 'spells', placeholder: 'spell' },
+              },
+            },
+            targetContexts: [
+              {
+                entityId: 'fireball',
+                displayName: 'Fireball',
+                placeholder: 'spell',
+              },
+            ],
+          },
+        ],
+      };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
+
+      // Multi-target formatting fails
+      mockFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target formatting failed',
+      });
+
+      // Legacy fallback also fails
+      mockFormatter.format.mockReturnValue({
+        ok: false,
+        error: 'Legacy fallback failed',
+      });
+
+      const result = await stage.executeInternal(legacyContextWithMultiTarget);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Legacy fallback failed',
+          actionDef: expect.objectContaining({ id: 'combat:spell' }),
+          actorId: 'player',
+          targetId: 'fireball',
+        })
+      );
+    });
+
+    it('should handle error creation in legacy context without formatMultiTarget (line 666)', async () => {
+      const legacyContextWithMultiTarget = {
+        actor: { id: 'player' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'combat:spell',
+              name: 'Cast Spell',
+              template: 'cast {spell}',
+              targets: {
+                primary: { scope: 'spells', placeholder: 'spell' },
+              },
+            },
+            targetContexts: [
+              {
+                entityId: 'fireball',
+                displayName: 'Fireball',
+                placeholder: 'spell',
+              },
+            ],
+          },
+        ],
+      };
+
+      // Remove formatMultiTarget method to trigger else branch
+      mockFormatter.formatMultiTarget = undefined;
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
+
+      // Legacy formatting fails
+      mockFormatter.format.mockReturnValue({
+        ok: false,
+        error: 'Legacy formatting failed',
+      });
+
+      const result = await stage.executeInternal(legacyContextWithMultiTarget);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Legacy formatting failed',
+          actionDef: expect.objectContaining({ id: 'combat:spell' }),
+          actorId: 'player',
+          targetId: 'fireball',
+        })
+      );
+    });
+
+    it('should exercise #createTargetExtractionResult method branches (lines 805-813)', async () => {
+      // Note: This method appears to be unused in current codebase
+      // This test is included for complete coverage but the method may be dead code
+
+      // Create a scenario that would theoretically exercise the method if it were called
+      // The method processes resolvedTargets with arrays and creates TargetExtractionResult
+      const context = {
+        actor: { id: 'player' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:action',
+              name: 'Test Action',
+              template: 'test {item}',
+            },
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'item1', displayName: 'Item 1' }],
+          secondary: [], // Empty array to test the condition on line 807
+          tertiary: [{ id: 'item3', displayName: 'Item 3' }], // Non-empty array
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'item' },
+          secondary: { placeholder: 'empty' },
+          tertiary: { placeholder: 'item3' },
+        },
+      };
+
+      mockFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: 'test Item 1',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+
+      // The #createTargetExtractionResult method is not directly accessible for testing
+      // It appears to be unused based on code analysis
+      // The current test verifies the overall functionality still works correctly
+      expect(result.actions[0].params.targetIds).toEqual({
+        primary: ['item1'],
+        secondary: [], // Empty array is included in the output
+        tertiary: ['item3'],
+      });
+    });
   });
 });

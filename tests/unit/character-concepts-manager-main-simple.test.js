@@ -5,11 +5,24 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
+// Mock CharacterBuilderBootstrap to prevent hanging
+jest.mock('../../src/characterBuilder/CharacterBuilderBootstrap.js', () => {
+  return {
+    CharacterBuilderBootstrap: jest.fn().mockImplementation(() => ({
+      bootstrap: jest.fn().mockRejectedValue(new Error('Bootstrap failed')),
+    })),
+  };
+});
+
 describe('Character Concepts Manager Main - Basic Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Clear module cache to ensure fresh imports
     jest.resetModules();
+    // Clear any DOM event listeners
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('DOMContentLoaded', jest.fn());
+    }
   });
 
   it('should export the expected functions', async () => {
@@ -47,16 +60,19 @@ describe('Character Concepts Manager Main - Basic Tests', () => {
 
     const module = await import('../../src/character-concepts-manager-main.js');
 
-    try {
-      await module.initializeApp();
-      // Should not reach here since bootstrap will fail
-      expect(false).toBe(true);
-    } catch (error) {
-      expect(error).toBeDefined();
-      // The actual error depends on what part of bootstrap fails first
-      // Could be container configuration, service resolution, etc.
-      expect(error.message).toBeDefined();
-    }
+    // initializeApp catches errors and doesn't throw/reject - it logs them instead
+    const result = await module.initializeApp();
+
+    // Verify the function returned normally (undefined)
+    expect(result).toBeUndefined();
+
+    // Verify that console.error was called with the bootstrap failure
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Failed to initialize Character Concepts Manager:',
+      expect.objectContaining({
+        message: 'Bootstrap failed',
+      })
+    );
 
     consoleErrorSpy.mockRestore();
   });
