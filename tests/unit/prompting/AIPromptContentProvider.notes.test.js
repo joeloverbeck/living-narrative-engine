@@ -29,6 +29,14 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
     validate: (dto) => ({ isValid: true, errorContent: null }),
   };
 
+  const stubActionCategorizationService = {
+    extractNamespace: jest.fn(),
+    shouldUseGrouping: jest.fn(() => false),
+    groupActionsByNamespace: jest.fn(() => new Map()),
+    getSortedNamespaces: jest.fn(() => []),
+    formatNamespaceDisplayName: jest.fn((namespace) => namespace),
+  };
+
   let provider;
   let logger;
 
@@ -39,6 +47,7 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
       promptStaticContentService: stubPromptStaticContentService,
       perceptionLogFormatter: stubPerceptionLogFormatter,
       gameStateValidationService: stubGameStateValidationService,
+      actionCategorizationService: stubActionCategorizationService,
     });
   });
 

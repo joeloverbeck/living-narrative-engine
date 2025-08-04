@@ -2,7 +2,14 @@
  * @file Action Categorization Dependency Injection Integration Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AppContainer from '../../src/dependencyInjection/appContainer.js';
 import { configureBaseContainer } from '../../src/dependencyInjection/baseContainerConfig.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
@@ -16,18 +23,18 @@ describe('Action Categorization Dependency Injection Integration', () => {
   beforeEach(() => {
     container = new AppContainer();
     const registrar = new Registrar(container);
-    
+
     // Register logger first (required by action categorization service)
     const appLogger = new ConsoleLogger(LogLevel.ERROR); // Use ERROR level to reduce noise
     registrar.instance(tokens.ILogger, appLogger);
-    
+
     // Register required dependencies for base container
     container.register(
       tokens.ISafeEventDispatcher,
       { dispatch: jest.fn() },
       { lifecycle: 'singleton' }
     );
-    
+
     container.register(
       tokens.IValidatedEventDispatcher,
       { dispatch: jest.fn() },
@@ -51,7 +58,9 @@ describe('Action Categorization Dependency Injection Integration', () => {
 
   describe('Service Registration', () => {
     it('should register ActionCategorizationService', () => {
-      expect(container.isRegistered(tokens.IActionCategorizationService)).toBe(true);
+      expect(container.isRegistered(tokens.IActionCategorizationService)).toBe(
+        true
+      );
     });
 
     it('should resolve ActionCategorizationService successfully', () => {
@@ -89,9 +98,10 @@ describe('Action Categorization Dependency Injection Integration', () => {
       expect(() => {
         emptyContainer.register(
           tokens.IActionCategorizationService,
-          () => new ActionCategorizationService({
-            logger: emptyContainer.resolve(tokens.ILogger), // This should fail
-          }),
+          () =>
+            new ActionCategorizationService({
+              logger: emptyContainer.resolve(tokens.ILogger), // This should fail
+            }),
           { lifecycle: 'singleton' }
         );
         emptyContainer.resolve(tokens.IActionCategorizationService);
@@ -230,7 +240,12 @@ describe('Action Categorization Dependency Injection Integration', () => {
 
       // Test behavior with minimal actions (below default threshold)
       const minimalActions = [
-        { index: 1, actionId: 'core:wait', commandString: 'wait', description: 'Wait' }
+        {
+          index: 1,
+          actionId: 'core:wait',
+          commandString: 'wait',
+          description: 'Wait',
+        },
       ];
 
       // Should not use grouping with minimal actions

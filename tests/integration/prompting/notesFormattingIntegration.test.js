@@ -35,6 +35,17 @@ describe('Notes Formatting Integration', () => {
     gameStateValidationService: {
       validate: () => ({ isValid: true, errorContent: null }),
     },
+    actionCategorizationService: {
+      extractNamespace: jest.fn(
+        (actionId) => actionId.split(':')[0] || 'unknown'
+      ),
+      shouldUseGrouping: jest.fn(() => false), // Default to flat formatting
+      groupActionsByNamespace: jest.fn(() => new Map()),
+      getSortedNamespaces: jest.fn(() => []),
+      formatNamespaceDisplayName: jest.fn((namespace) =>
+        namespace.toUpperCase()
+      ),
+    },
   });
 
   beforeEach(() => {

@@ -16,11 +16,8 @@ export function registerActionCategorization(container) {
   const registrar = new Registrar(container);
 
   // Register ActionCategorizationService as singleton
-  registrar.singletonFactory(
-    tokens.IActionCategorizationService,
-    (c) => {
-      const logger = c.resolve(tokens.ILogger);
-      return new ActionCategorizationService({ logger });
-    }
-  );
+  registrar.singletonFactory(tokens.IActionCategorizationService, (c) => {
+    const logger = c.resolve(tokens.ILogger);
+    return new ActionCategorizationService({ logger });
+  });
 }

@@ -240,12 +240,13 @@ describe('MultiTargetEventValidator - Performance Tests', () => {
         const startTime = performance.now();
         const result = validator.validateEvent(simpleEvent);
         const endTime = performance.now();
-        
+
         timings.push(endTime - startTime);
         expect(result.isValid).toBe(true);
       }
 
-      const averageTime = timings.reduce((sum, time) => sum + time, 0) / iterationCount;
+      const averageTime =
+        timings.reduce((sum, time) => sum + time, 0) / iterationCount;
       const maxTime = Math.max(...timings);
       const minTime = Math.min(...timings);
 
@@ -255,7 +256,11 @@ describe('MultiTargetEventValidator - Performance Tests', () => {
       expect(minTime).toBeGreaterThan(0); // Should always take some time
 
       // Consistency check - standard deviation should be reasonable
-      const variance = timings.reduce((sum, time) => sum + Math.pow(time - averageTime, 2), 0) / iterationCount;
+      const variance =
+        timings.reduce(
+          (sum, time) => sum + Math.pow(time - averageTime, 2),
+          0
+        ) / iterationCount;
       const stdDev = Math.sqrt(variance);
       expect(stdDev).toBeLessThan(averageTime * 5); // Standard deviation should be reasonable (allowing for timing variability)
     });

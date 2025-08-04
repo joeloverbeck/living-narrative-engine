@@ -53,6 +53,17 @@ describe('Prompt Assembly with template-based system', () => {
           .fn()
           .mockReturnValue({ isValid: true, errorContent: null }),
       },
+      actionCategorizationService: {
+        extractNamespace: jest.fn(
+          (actionId) => actionId.split(':')[0] || 'unknown'
+        ),
+        shouldUseGrouping: jest.fn(() => false),
+        groupActionsByNamespace: jest.fn(() => new Map()),
+        getSortedNamespaces: jest.fn(() => []),
+        formatNamespaceDisplayName: jest.fn((namespace) =>
+          namespace.toUpperCase()
+        ),
+      },
     });
 
     llmConfigService = {
