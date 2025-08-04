@@ -79,7 +79,6 @@ describe('ActionDefinitionBuilder', () => {
       expect(state1).not.toBe(state2);
       expect(state2).not.toBe(state3);
     });
-
   });
 
   describe('fromDefinition edge cases', () => {
