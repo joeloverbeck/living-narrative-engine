@@ -12,6 +12,7 @@ let mockDomElementFactory;
 let mockContainer;
 let mockSendButton;
 let mockSpeechInput;
+let mockActionCategorizationService;
 
 // Helper to create test action composite objects
 const createValidActionComposite = (
@@ -268,6 +269,25 @@ beforeEach(() => {
     this.value = '';
   };
 
+  mockActionCategorizationService = {
+    extractNamespace: jest.fn((actionId) => {
+      const colonIndex = actionId.indexOf(':');
+      return colonIndex !== -1 ? actionId.substring(0, colonIndex) : 'default';
+    }),
+    shouldUseGrouping: jest.fn(() => false), // Default to no grouping for tests
+    groupActionsByNamespace: jest.fn((actions) => {
+      const grouped = new Map();
+      grouped.set('core', actions);
+      return grouped;
+    }),
+    getSortedNamespaces: jest.fn((groupedActions) =>
+      Array.from(groupedActions.keys())
+    ),
+    formatNamespaceDisplayName: jest.fn(
+      (namespace) => namespace.charAt(0).toUpperCase() + namespace.slice(1)
+    ),
+  };
+
   mockContainer._reset();
   mockSendButton._reset();
   mockSpeechInput._reset();
@@ -289,6 +309,7 @@ describe('ActionButtonsRenderer', () => {
     sendButtonSelector = '#test-send-button-selector',
     speechInputSelector = '#test-speech-input-selector',
     autoRefresh = false,
+    actionCategorizationService = mockActionCategorizationService,
   } = {}) => {
     const currentTestDocContext = {
       query: jest.fn((selector) => {
@@ -319,6 +340,7 @@ describe('ActionButtonsRenderer', () => {
       sendButtonSelector: sendButtonSelector,
       speechInputSelector: speechInputSelector,
       autoRefresh,
+      actionCategorizationService,
     });
   };
 
@@ -339,6 +361,7 @@ describe('ActionButtonsRenderer', () => {
           validatedEventDispatcher: mockValidatedEventDispatcher,
           domElementFactory: mockDomElementFactory,
           actionButtonsContainerSelector: '#valid-selector',
+          actionCategorizationService: mockActionCategorizationService,
         })
     ).toThrow(/Logger dependency is missing or invalid/);
   });
@@ -360,6 +383,7 @@ describe('ActionButtonsRenderer', () => {
           validatedEventDispatcher: mockValidatedEventDispatcher,
           domElementFactory: null,
           actionButtonsContainerSelector: '#valid-selector',
+          actionCategorizationService: mockActionCategorizationService,
         })
     ).not.toThrow();
   });
@@ -372,6 +396,7 @@ describe('ActionButtonsRenderer', () => {
       documentContext: { query: jest.fn(), create: jest.fn() },
       validatedEventDispatcher: mockValidatedEventDispatcher,
       domElementFactory: mockDomElementFactory,
+      actionCategorizationService: mockActionCategorizationService,
     };
     expect(
       () =>

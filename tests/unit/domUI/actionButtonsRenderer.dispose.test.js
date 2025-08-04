@@ -32,6 +32,19 @@ describe('ActionButtonsRenderer', () => {
 
   const CLASS_PREFIX = '[ActionButtonsRenderer]';
 
+  // Mock ActionCategorizationService
+  const mockActionCategorizationService = {
+    extractNamespace: jest.fn().mockImplementation((actionId) => {
+      return actionId.split(':')[0] || 'core';
+    }),
+    shouldUseGrouping: jest.fn().mockReturnValue(false),
+    groupActionsByNamespace: jest.fn().mockReturnValue(new Map()),
+    getSortedNamespaces: jest.fn().mockReturnValue([]),
+    formatNamespaceDisplayName: jest.fn().mockImplementation((namespace) => {
+      return namespace.toUpperCase();
+    }),
+  };
+
   // createMockElement remains the same as provided in the failing test
   const createMockElement = (
     sourceDoc,
@@ -275,6 +288,7 @@ describe('ActionButtonsRenderer', () => {
       actionButtonsContainerSelector: actionButtonsContainerSelector,
       sendButtonSelector: sendButtonSelector,
       speechInputSelector: speechInputSelector,
+      actionCategorizationService: mockActionCategorizationService,
     });
   };
 
@@ -339,13 +353,18 @@ describe('ActionButtonsRenderer', () => {
     // Other tests (should call base class dispose, should handle multiple dispose calls, should clear container)
     // remain the same as they were passing or their logic was addressed by changes to ActionButtonsRenderer.js
     it('should call base class dispose (logs message from base and specific dispose)', () => {
-      const basePrototype = Object.getPrototypeOf(
+      // ActionButtonsRenderer → SelectableListDisplayComponent → BaseListDisplayComponent → BoundDomRendererBase → RendererBase
+      const selectableListPrototype = Object.getPrototypeOf(
         ActionButtonsRenderer.prototype
       );
-      const grandBasePrototype = Object.getPrototypeOf(basePrototype);
-      const greatGrandBasePrototype = Object.getPrototypeOf(grandBasePrototype);
+      const baseListPrototype = Object.getPrototypeOf(selectableListPrototype);
+      const boundDomRendererPrototype =
+        Object.getPrototypeOf(baseListPrototype);
+      const rendererBasePrototype = Object.getPrototypeOf(
+        boundDomRendererPrototype
+      );
 
-      const baseDisposeSpy = jest.spyOn(greatGrandBasePrototype, 'dispose');
+      const baseDisposeSpy = jest.spyOn(rendererBasePrototype, 'dispose');
 
       rendererForDispose.dispose();
 

@@ -16,6 +16,8 @@ import DomElementFactory from '../../../src/domUI/domElementFactory.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../../../src/constants/eventIds';
+import ActionCategorizationService from '../../../src/entities/utils/ActionCategorizationService.js';
+import { UI_CATEGORIZATION_CONFIG } from '../../../src/entities/utils/actionCategorizationConfig.js';
 import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 // Mock dependencies
@@ -30,6 +32,7 @@ describe('ActionButtonsRenderer', () => {
   let mockLogger;
   let mockVed;
   let mockDomElementFactoryInstance;
+  let mockActionCategorizationService;
   let actionButtonsContainerElement; // Element for reference
   let mockSendButton; // mockSendButton holds the reference to the button in the DOM
   let commandInputElement;
@@ -184,6 +187,11 @@ describe('ActionButtonsRenderer', () => {
     mockLogger = new ConsoleLogger();
     mockVed = new ValidatedEventDispatcher({});
 
+    mockActionCategorizationService = new ActionCategorizationService({
+      logger: mockLogger,
+      config: UI_CATEGORIZATION_CONFIG,
+    });
+
     mockDomElementFactoryInstance = new DomElementFactory(docContext);
     mockDomElementFactoryInstance.button.mockImplementation((text, cls) =>
       createMockElement(
@@ -227,6 +235,7 @@ describe('ActionButtonsRenderer', () => {
       actionButtonsContainerSelector: ACTION_BUTTONS_CONTAINER_SELECTOR,
       sendButtonSelector: SEND_BUTTON_SELECTOR,
       speechInputSelector: SPEECH_INPUT_SELECTOR,
+      actionCategorizationService: mockActionCategorizationService,
     };
     return new ActionButtonsRenderer({ ...defaults, ...config });
   };

@@ -11,21 +11,18 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
+import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
+import { CharacterConceptsManagerTestBase } from './characterConceptsManagerController.testUtils.enhanced.js';
 
 describe('CharacterConceptsManagerController - Event Dispatch Patterns Fix', () => {
-  let mockEventBus;
+  const testBase = new CharacterConceptsManagerTestBase();
 
-  beforeEach(() => {
-    // Mock event bus to test dispatch patterns
-    mockEventBus = {
-      dispatch: jest.fn().mockResolvedValue(true),
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-    };
+  beforeEach(async () => {
+    await testBase.setup();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  afterEach(async () => {
+    await testBase.cleanup();
   });
 
   describe('Event Dispatch Code Pattern Analysis', () => {

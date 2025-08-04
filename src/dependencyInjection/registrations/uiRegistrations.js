@@ -211,6 +211,9 @@ export function registerRenderers(registrar, logger) {
         domElementFactory: c.resolve(tokens.DomElementFactory),
         actionButtonsContainerSelector: '#action-buttons',
         sendButtonSelector: '#player-confirm-turn-button',
+        actionCategorizationService: c.resolve(
+          tokens.IActionCategorizationService
+        ),
       }),
     { lifecycle: 'singletonFactory' },
     logger

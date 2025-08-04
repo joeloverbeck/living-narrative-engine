@@ -118,6 +118,19 @@ describe('ActionButtonsRenderer', () => {
     return element;
   };
 
+  // Mock ActionCategorizationService
+  const mockActionCategorizationService = {
+    extractNamespace: jest.fn().mockImplementation((actionId) => {
+      return actionId.split(':')[0] || 'core';
+    }),
+    shouldUseGrouping: jest.fn().mockReturnValue(false),
+    groupActionsByNamespace: jest.fn().mockReturnValue(new Map()),
+    getSortedNamespaces: jest.fn().mockReturnValue([]),
+    formatNamespaceDisplayName: jest.fn().mockImplementation((namespace) => {
+      return namespace.toUpperCase();
+    }),
+  };
+
   const createRendererUnderTest = (rendererConfig = {}) => {
     const defaults = {
       logger: mockLogger,
@@ -127,6 +140,7 @@ describe('ActionButtonsRenderer', () => {
       actionButtonsContainerSelector: '#action-buttons',
       sendButtonSelector: '#player-confirm-turn-button',
       speechInputSelector: '#speech-input',
+      actionCategorizationService: mockActionCategorizationService,
     };
     return new ActionButtonsRenderer({ ...defaults, ...rendererConfig });
   };
