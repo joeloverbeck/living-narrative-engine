@@ -236,11 +236,15 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
     characterBuilderService.getThematicDirections = jest
       .fn()
       .mockResolvedValue([]);
-    
+
     // Add missing required methods
     characterBuilderService.initialize = jest.fn().mockResolvedValue(undefined);
-    characterBuilderService.getCharacterConcept = jest.fn().mockResolvedValue(null);
-    characterBuilderService.generateThematicDirections = jest.fn().mockResolvedValue([]);
+    characterBuilderService.getCharacterConcept = jest
+      .fn()
+      .mockResolvedValue(null);
+    characterBuilderService.generateThematicDirections = jest
+      .fn()
+      .mockResolvedValue([]);
 
     // Create controller
     controller = new CharacterConceptsManagerController({

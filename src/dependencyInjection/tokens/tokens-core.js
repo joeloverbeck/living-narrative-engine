@@ -11,6 +11,7 @@ import { freeze } from '../../utils';
  * @type {Readonly<Record<string, DiToken>>}
  */
 export const coreTokens = freeze({
+  IActionCategorizationService: 'IActionCategorizationService',
   ILogger: 'ILogger',
   ServiceSetup: 'ServiceSetup',
   EventBus: 'EventBus',

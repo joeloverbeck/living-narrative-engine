@@ -43,7 +43,7 @@ First, let me examine the current implementation to understand the existing stru
 
 ```javascript
 // Add import
-import { IActionCategorizationService } from '../dependencyInjection/tokens.js';
+import { tokens } from '../dependencyInjection/tokens.js';
 
 // Update constructor to include the service
 constructor({
@@ -56,38 +56,41 @@ constructor({
   super();
 
   // Existing validation
-  validateDependencies([
-    {
-      dependency: logger,
-      name: 'AIPromptContentProvider: logger',
-      methods: ['info', 'warn', 'error', 'debug'],
-    },
-    {
-      dependency: promptStaticContentService,
-      name: 'AIPromptContentProvider: promptStaticContentService',
-      methods: [
-        'getCoreTaskDescriptionText',
-        'getCharacterPortrayalGuidelines',
-        'getNc21ContentPolicyText',
-        'getFinalLlmInstructionText',
-      ],
-    },
-    {
-      dependency: perceptionLogFormatter,
-      name: 'AIPromptContentProvider: perceptionLogFormatter',
-      methods: ['format'],
-    },
-    {
-      dependency: gameStateValidationService,
-      name: 'AIPromptContentProvider: gameStateValidationService',
-      methods: ['validate'],
-    },
-    {
-      dependency: actionCategorizationService,
-      name: 'AIPromptContentProvider: actionCategorizationService',
-      methods: ['extractNamespace', 'shouldUseGrouping', 'groupActionsByNamespace', 'getSortedNamespaces', 'formatNamespaceDisplayName'],
-    }
-  ], logger);
+  validateDependencies(
+    [
+      {
+        dependency: logger,
+        name: 'AIPromptContentProvider: logger',
+        methods: ['info', 'warn', 'error', 'debug'],
+      },
+      {
+        dependency: promptStaticContentService,
+        name: 'AIPromptContentProvider: promptStaticContentService',
+        methods: [
+          'getCoreTaskDescriptionText',
+          'getCharacterPortrayalGuidelines',
+          'getNc21ContentPolicyText',
+          'getFinalLlmInstructionText',
+        ],
+      },
+      {
+        dependency: perceptionLogFormatter,
+        name: 'AIPromptContentProvider: perceptionLogFormatter',
+        methods: ['format'],
+      },
+      {
+        dependency: gameStateValidationService,
+        name: 'AIPromptContentProvider: gameStateValidationService',
+        methods: ['validate'],
+      },
+      {
+        dependency: actionCategorizationService,
+        name: 'AIPromptContentProvider: actionCategorizationService',
+        methods: ['extractNamespace', 'shouldUseGrouping', 'groupActionsByNamespace', 'getSortedNamespaces', 'formatNamespaceDisplayName'],
+      },
+    ],
+    logger
+  );
 
   this.#logger = logger;
   this.#promptStaticContentService = promptStaticContentService;
@@ -97,38 +100,13 @@ constructor({
 }
 ```
 
-### Step 3: Add Configuration Method
+### Step 3: Update Main Method
 
-**File**: `src/prompting/AIPromptContentProvider.js` (add private method)
+**File**: `src/prompting/AIPromptContentProvider.js` (modify existing method)
 
-```javascript
-/**
- * Get categorization configuration for LLM prompts
- * @private
- * @returns {CategorizationConfig} Configuration optimized for LLM use
- */
-_getCategorizationConfig() {
-  return {
-    enabled: true,
-    minActionsForGrouping: 6,
-    minNamespacesForGrouping: 2,
-    namespaceOrder: ['core', 'intimacy', 'sex', 'anatomy', 'clothing'],
-    showCounts: false, // LLM doesn't need counts
-    performance: {
-      enableCaching: true,
-      performanceLogging: false,
-      slowOperationThresholdMs: 10
-    },
-    errorHandling: {
-      logLevel: 'warn',
-      fallbackBehavior: 'flatten',
-      maxRetries: 1
-    }
-  };
-}
-```
+**Note**: The ActionCategorizationService uses internal configuration, so no external config method is needed.
 
-### Step 4: Implement Categorized Formatting Method
+### Step 3: Implement Categorized Formatting Method
 
 **File**: `src/prompting/AIPromptContentProvider.js` (add private method)
 
@@ -142,17 +120,12 @@ _getCategorizationConfig() {
 _formatCategorizedActions(actions) {
   try {
     const startTime = performance.now();
-    const config = this._getCategorizationConfig();
 
     this.#logger.debug('AIPromptContentProvider: Formatting categorized actions', {
-      actionCount: actions.length,
-      config: {
-        minActionsForGrouping: config.minActionsForGrouping,
-        minNamespacesForGrouping: config.minNamespacesForGrouping
-      }
+      actionCount: actions.length
     });
 
-    const grouped = this.#actionCategorizationService.groupActionsByNamespace(actions, config);
+    const grouped = this.#actionCategorizationService.groupActionsByNamespace(actions);
 
     if (grouped.size === 0) {
       this.#logger.warn('AIPromptContentProvider: Grouping returned empty result, falling back to flat format');
@@ -193,7 +166,7 @@ _formatCategorizedActions(actions) {
 }
 ```
 
-### Step 5: Implement Flat Formatting Method
+### Step 4: Implement Flat Formatting Method
 
 **File**: `src/prompting/AIPromptContentProvider.js` (add private method)
 
@@ -218,7 +191,7 @@ _formatFlatActions(actions) {
 }
 ```
 
-### Step 6: Implement Single Action Formatting
+### Step 5: Implement Single Action Formatting
 
 **File**: `src/prompting/AIPromptContentProvider.js` (add private method)
 
@@ -245,7 +218,7 @@ _formatSingleAction(action) {
 }
 ```
 
-### Step 7: Update Main Method
+### Step 6: Update Main Method
 
 **File**: `src/prompting/AIPromptContentProvider.js` (modify existing method)
 
@@ -268,21 +241,16 @@ getAvailableActionsInfoContent(gameState) {
   }
 
   try {
-    const config = this._getCategorizationConfig();
-
     // Check if we should use categorization
-    if (this.#actionCategorizationService.shouldUseGrouping(actions, config)) {
+    if (this.#actionCategorizationService.shouldUseGrouping(actions)) {
       this.#logger.debug('AIPromptContentProvider: Using categorized formatting', {
-        actionCount: actions.length,
-        threshold: config.minActionsForGrouping
+        actionCount: actions.length
       });
 
       return this._formatCategorizedActions(actions);
     } else {
       this.#logger.debug('AIPromptContentProvider: Using flat formatting (thresholds not met)', {
-        actionCount: actions.length,
-        minActions: config.minActionsForGrouping,
-        minNamespaces: config.minNamespacesForGrouping
+        actionCount: actions.length
       });
 
       return this._formatFlatActions(actions);
@@ -309,41 +277,47 @@ getAvailableActionsInfoContent(gameState) {
 }
 ```
 
-### Step 8: Update DI Registration
+### Step 7: Update DI Registration
 
-**File**: `src/dependencyInjection/promptingRegistrations.js` (modify existing)
+**Note**: Action Categorization Service is already integrated into the base container configuration at `src/dependencyInjection/baseContainerConfig.js:103`. 
+
+The AIPromptContentProvider registration will need to be updated in the appropriate registration file (likely within the AI registrations) to include the new dependency:
 
 ```javascript
 // Update the AIPromptContentProvider registration to include the new dependency
 container.register({
-  token: IAIPromptContentProvider,
+  token: tokens.IAIPromptContentProvider,
   factory: (c) =>
     new AIPromptContentProvider({
-      logger: c.resolve(ILogger),
-      promptStaticContentService: c.resolve(IPromptStaticContentService),
-      perceptionLogFormatter: c.resolve(IPerceptionLogFormatter),
+      logger: c.resolve(tokens.ILogger),
+      promptStaticContentService: c.resolve(tokens.IPromptStaticContentService),
+      perceptionLogFormatter: c.resolve(tokens.IPerceptionLogFormatter),
       gameStateValidationService: c.resolve(
-        IGameStateValidationServiceForPrompting
+        tokens.IGameStateValidationServiceForPrompting
       ),
-      actionCategorizationService: c.resolve(IActionCategorizationService), // Add this line
+      actionCategorizationService: c.resolve(tokens.IActionCategorizationService), // Add this line
     }),
   lifetime: 'singleton',
 });
 ```
 
-### Step 9: Create Integration Tests
+### Step 8: Create Integration Tests
 
-**File**: `tests/integration/prompting/aiPromptContentProviderCategorization.test.js`
+**File**: `tests/integration/aiPromptContentProviderCategorization.test.js`
 
 ```javascript
 /**
  * @file AIPromptContentProvider Categorization Integration Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createTestContainerWithActionCategorization } from '../../../src/dependencyInjection/actionCategorizationRegistrations.js';
-import { IAIPromptContentProvider } from '../../../src/dependencyInjection/tokens.js';
-import AIPromptContentProvider from '../../../src/prompting/AIPromptContentProvider.js';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import AppContainer from '../../src/dependencyInjection/appContainer.js';
+import { configureBaseContainer } from '../../src/dependencyInjection/baseContainerConfig.js';
+import { tokens } from '../../src/dependencyInjection/tokens.js';
+import { Registrar } from '../../src/utils/registrarHelpers.js';
+import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
+import ConsoleLogger, { LogLevel } from '../../src/logging/consoleLogger.js';
+import { PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE } from '../../src/constants/textDefaults.js';
 
 describe('AIPromptContentProvider Categorization Integration', () => {
   let container;
@@ -351,6 +325,9 @@ describe('AIPromptContentProvider Categorization Integration', () => {
   let mockLogger;
 
   beforeEach(() => {
+    container = new AppContainer();
+    const registrar = new Registrar(container);
+    
     mockLogger = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -358,8 +335,28 @@ describe('AIPromptContentProvider Categorization Integration', () => {
       debug: jest.fn(),
     };
 
-    container = createTestContainerWithActionCategorization({
-      logger: mockLogger,
+    // Register logger first (required by services)
+    const appLogger = new ConsoleLogger(LogLevel.ERROR); // Use ERROR level to reduce noise
+    registrar.instance(tokens.ILogger, appLogger);
+    
+    // Register required dependencies for base container
+    container.register(
+      tokens.ISafeEventDispatcher,
+      { dispatch: jest.fn() },
+      { lifecycle: 'singleton' }
+    );
+    
+    container.register(
+      tokens.IValidatedEventDispatcher,
+      { dispatch: jest.fn() },
+      { lifecycle: 'singleton' }
+    );
+
+    // Configure base container which includes action categorization
+    configureBaseContainer(container, {
+      includeGameSystems: false, // Minimal setup for testing
+      includeUI: false,
+      includeCharacterBuilder: false,
     });
 
     // Create provider with all dependencies
@@ -378,15 +375,16 @@ describe('AIPromptContentProvider Categorization Integration', () => {
         validate: jest.fn(() => ({ isValid: true })),
       },
       actionCategorizationService: container.resolve(
-        'IActionCategorizationService'
+        tokens.IActionCategorizationService
       ),
     });
   });
 
   afterEach(() => {
-    if (container && container.dispose) {
-      container.dispose();
+    if (container && typeof container.reset === 'function') {
+      container.reset();
     }
+    container = null;
     jest.clearAllMocks();
   });
 
@@ -907,12 +905,12 @@ describe('AIPromptContentProvider Categorization Integration', () => {
 
 ## Files Created
 
-- [ ] `tests/integration/prompting/aiPromptContentProviderCategorization.test.js`
+- [ ] `tests/integration/aiPromptContentProviderCategorization.test.js`
 
 ## Files Modified
 
 - [ ] `src/prompting/AIPromptContentProvider.js`
-- [ ] `src/dependencyInjection/promptingRegistrations.js`
+- [ ] Appropriate AI service registration file (location TBD - likely within AI registrations)
 
 ## Dependencies
 

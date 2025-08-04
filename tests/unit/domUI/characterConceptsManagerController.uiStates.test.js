@@ -45,7 +45,7 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
 
     // Populate controller's internal elements cache for testing
     populateControllerElements(controller, setup.elements);
-    
+
     // Call _cacheElements to properly initialize the controller's element cache
     controller._cacheElements();
 
@@ -167,7 +167,7 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       };
       controller._testExports.conceptsData = [mockConceptData];
       setup.mocks.builderService.deleteCharacterConcept.mockResolvedValue();
-      
+
       // Mock the card element that will be deleted
       const mockCard = document.createElement('div');
       mockCard.setAttribute('data-concept-id', 'test-id');
@@ -206,7 +206,7 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       ];
       controller._testExports.conceptsData = concepts;
       setup.mocks.builderService.deleteCharacterConcept.mockResolvedValue();
-      
+
       // Mock the card element that will be deleted
       const mockCard = document.createElement('div');
       mockCard.setAttribute('data-concept-id', '1');

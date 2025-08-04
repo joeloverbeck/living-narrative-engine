@@ -40,13 +40,13 @@ describe('CharacterConceptsManagerController - Event Dispatch Patterns Fix', () 
       const sourceCode = fs.readFileSync(controllerPath, 'utf8');
 
       // Verify the old pattern is NOT present
-      const oldPattern = /this\.#eventBus\.dispatch\(\s*\{\s*type:/g;
+      const oldPattern = /this\.eventBus\.dispatch\(\s*\{\s*type:/g;
       const oldMatches = sourceCode.match(oldPattern);
 
       expect(oldMatches).toBeNull();
 
       // Verify the new pattern IS present
-      const newPattern = /this\.#eventBus\.dispatch\(['"]\w+:[^"']+['"],\s*\{/g;
+      const newPattern = /this\.eventBus\.dispatch\(['"]\w+:[^"']+['"],\s*\{/g;
       const newMatches = sourceCode.match(newPattern);
 
       expect(newMatches).not.toBeNull();
@@ -79,7 +79,7 @@ describe('CharacterConceptsManagerController - Event Dispatch Patterns Fix', () 
       const sourceCode = fs.readFileSync(controllerPath, 'utf8');
 
       // Extract all event names from dispatch calls
-      const dispatchPattern = /this\.#eventBus\.dispatch\(['"]([\w:-]+)['"]/g;
+      const dispatchPattern = /this\.eventBus\.dispatch\(['"]([\w:-]+)['"]/g;
       const matches = [...sourceCode.matchAll(dispatchPattern)];
 
       expect(matches.length).toBeGreaterThan(0);
@@ -110,7 +110,7 @@ describe('CharacterConceptsManagerController - Event Dispatch Patterns Fix', () 
 
       expectedEvents.forEach((eventName) => {
         const eventPattern = new RegExp(
-          `this\\.#eventBus\\.dispatch\\(['"']${eventName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"']`,
+          `this\\.eventBus\\.dispatch\\(['"']${eventName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"']`,
           'g'
         );
         const matches = sourceCode.match(eventPattern);
@@ -131,7 +131,7 @@ describe('CharacterConceptsManagerController - Event Dispatch Patterns Fix', () 
 
       // Check for dispatch calls with two parameters: string eventName, object payload
       const correctPattern =
-        /this\.#eventBus\.dispatch\(['"]\w+:[^"']+['"],\s*[{[][\s\S]*?[}\]]\s*\);/g;
+        /this\.eventBus\.dispatch\(['"]\w+:[^"']+['"],\s*[{[][\s\S]*?[}\]]\s*\);/g;
       const correctMatches = sourceCode.match(correctPattern);
 
       expect(correctMatches).not.toBeNull();
