@@ -2,7 +2,9 @@
 
 ## Overview
 
-Integrate the controller's state management with the BaseCharacterBuilderController's standardized state management infrastructure. This migration replaces manual state transitions and error handling with base class methods, enabling consistent UI state patterns and enhanced error handling with retry logic.
+Integrate the controller's state management with the BaseCharacterBuilderController's standardized state management infrastructure. This migration replaces direct UIStateManager calls with base class methods and implements missing retry logic, enabling consistent UI state patterns and enhanced error handling.
+
+**⚠️ IMPORTANT**: This workflow has been corrected to reflect the actual state of the production code. The original assumptions about "manual state methods" were incorrect - the controller already uses base class integration patterns but needs cleanup of direct UIStateManager usage.
 
 ## Priority
 
@@ -34,235 +36,223 @@ Integrate the controller's state management with the BaseCharacterBuilderControl
 
 ## Current State Management Analysis
 
-### Manual State Management (To Be Replaced)
+### Current State Management (To Be Migrated)
 
 ```javascript
-// Current manual state transitions
-#showLoading(message = 'Loading...') {
-  this.#uiStateManager.showState(UI_STATES.LOADING);
-  if (message && this.#elements.loadingMessage) {
-    this.#elements.loadingMessage.textContent = message;
+// Current state management patterns using #uiStateManager directly
+_showError(message) {
+  if (this.#uiStateManager) {
+    this.#uiStateManager.showError(message);
+  } else {
+    this.logger.error(`Error state: ${message}`);
   }
 }
 
-#showError(message, showRetryButton = true) {
-  this.#uiStateManager.showState(UI_STATES.ERROR);
-  if (this.#elements.errorMessageText) {
-    this.#elements.errorMessageText.textContent = message;
-  }
-  if (this.#elements.retryBtn && showRetryButton) {
-    this.#elements.retryBtn.style.display = 'block';
-  }
-}
-
-#showResults() {
-  this.#uiStateManager.showState(UI_STATES.RESULTS);
-}
-
-#showEmpty() {
+_showEmptyState() {
+  // Uses #uiStateManager directly
   this.#uiStateManager.showState(UI_STATES.EMPTY);
 }
+
+// Direct UIStateManager usage throughout controller
+this.#uiStateManager.showState(UI_STATES.LOADING);
+this.#uiStateManager.showState(UI_STATES.RESULTS);
+this.#uiStateManager.showError('Error message');
 ```
 
-### Manual Error Handling (To Be Enhanced)
+### Current Error Handling (To Be Enhanced)
 
 ```javascript
-// Current inconsistent error handling patterns
+// Current error handling patterns (NO manual retry logic exists)
 try {
-  const concepts = await this.#characterBuilderService.getAllCharacterConcepts();
+  const concepts = await this.characterBuilderService.getAllCharacterConcepts();
   this.#conceptsData = concepts;
-  this.#showResults();
+  this.#uiStateManager.showState(UI_STATES.RESULTS);
 } catch (error) {
-  this.#logger.error('Failed to load concepts', error);
-  this.#showError('Failed to load character concepts. Please try again.');
+  this.logger.error('Failed to load concepts', error);
+  this._showError('Failed to load character concepts. Please try again.');
 }
 
-// Manual retry logic
-#retryLastOperation() {
-  if (this.#lastFailedOperation) {
-    this.#lastFailedOperation();
-  }
-}
+// NOTE: No manual retry logic currently exists in the controller
+// This needs to be implemented using base class _executeWithErrorHandling
 ```
 
-### Manual Loading State Management
+### Current Loading State Management
 
 ```javascript
-// Current manual loading state handling
-async #loadConceptsData() {
-  this.#showLoading('Loading character concepts...');
+// Current loading state handling using #uiStateManager directly
+async _loadConceptsData() {
   try {
-    // ... operation
+    // Show loading state directly via UIStateManager
+    this.#uiStateManager.showState(UI_STATES.LOADING);
+    
+    const concepts = await this.characterBuilderService.getAllCharacterConcepts();
+    // ... process concepts
+    
+    this.#uiStateManager.showState(UI_STATES.RESULTS);
   } catch (error) {
-    this.#showError('Failed to load concepts');
-  } finally {
-    // Manual cleanup
+    this.logger.error('Failed to load concepts', error);
+    this._showError('Failed to load character concepts. Please try again.');
   }
 }
 ```
 
 ## Implementation Steps
 
-### Step 1: Replace Manual State Management Methods
+### Step 1: Migrate UIStateManager Usage to Base Class Methods
 
 **Duration:** 2 hours
 
-**Current Manual Methods (80+ lines):**
+**Current Direct UIStateManager Usage (40+ references):**
 
 ```javascript
-#showLoading(message = 'Loading...') {
-  this.#uiStateManager.showState(UI_STATES.LOADING);
-  if (message && this.#elements.loadingMessage) {
-    this.#elements.loadingMessage.textContent = message;
+// Direct UIStateManager calls to be replaced
+this.#uiStateManager.showState(UI_STATES.LOADING); // Line 532
+this.#uiStateManager.showState(UI_STATES.RESULTS); // Line 611
+this.#uiStateManager.showState(UI_STATES.EMPTY);   // Line 1266
+this.#uiStateManager.showError('Error message');   // Lines 1363, 1724, 2044
+
+// Some methods already use base class patterns but inconsistently
+_showError(message) {
+  if (this.#uiStateManager) {
+    this.#uiStateManager.showError(message); // Direct usage
+  } else {
+    this.logger.error(`Error state: ${message}`);
   }
-  this.#logger.debug(`Showing loading state: ${message}`);
 }
 
-#showError(message, showRetryButton = true) {
-  this.#uiStateManager.showState(UI_STATES.ERROR);
-  if (this.#elements.errorMessageText) {
-    this.#elements.errorMessageText.textContent = message;
-  }
-  if (this.#elements.retryBtn && showRetryButton) {
-    this.#elements.retryBtn.style.display = 'block';
-  } else if (this.#elements.retryBtn) {
-    this.#elements.retryBtn.style.display = 'none';
-  }
-  this.#logger.error(`Showing error state: ${message}`);
-}
-
-#showResults() {
-  this.#uiStateManager.showState(UI_STATES.RESULTS);
-  this.#updateStatistics();
-  this.#logger.debug('Showing results state');
-}
-
-#showEmpty() {
+_showEmptyState() {
+  // Direct UIStateManager usage
   this.#uiStateManager.showState(UI_STATES.EMPTY);
-  this.#logger.debug('Showing empty state');
 }
 ```
 
 **Target Base Class Integration:**
 
 ```javascript
-// Remove all manual state management methods
+// Replace direct UIStateManager calls with base class methods
 // Base class provides these methods automatically:
-// this._showLoading(message)
-// this._showError(message)
-// this._showState(stateName)
-// this._showResults()
+this._showLoading('Loading message');  // Instead of #uiStateManager.showState(UI_STATES.LOADING)
+this._showError('Error message');      // Instead of #uiStateManager.showError()
+this._showState('results');            // Instead of #uiStateManager.showState(UI_STATES.RESULTS)
+this._showState('empty');              // Instead of #uiStateManager.showState(UI_STATES.EMPTY)
 ```
 
 **Implementation Steps:**
 
-1. **Remove Manual State Methods**
+1. **Replace Direct UIStateManager Calls**
 
    ```javascript
-   // Delete these entire methods from the controller
-   #showLoading()
-   #showError()
-   #showResults()
-   #showEmpty()
+   // Replace these direct calls throughout the controller:
+   // this.#uiStateManager.showState(UI_STATES.LOADING) → this._showLoading(message)
+   // this.#uiStateManager.showState(UI_STATES.RESULTS) → this._showState('results')
+   // this.#uiStateManager.showState(UI_STATES.EMPTY) → this._showState('empty')
+   // this.#uiStateManager.showError(message) → this._showError(message)
    ```
 
-2. **Update State Transition Calls**
+2. **Update Direct UIStateManager Calls**
 
    ```javascript
-   // Replace manual method calls with base class methods
+   // Replace direct UIStateManager calls with base class methods
 
    // Loading states
-   // this.#showLoading('Loading concepts...')
+   // this.#uiStateManager.showState(UI_STATES.LOADING) → 
    this._showLoading('Loading concepts...');
 
-   // Error states
-   // this.#showError('Failed to load concepts')
+   // Error states  
+   // this.#uiStateManager.showError('Failed to load concepts') → 
    this._showError('Failed to load concepts');
 
    // Results state
-   // this.#showResults()
+   // this.#uiStateManager.showState(UI_STATES.RESULTS) → 
    this._showState('results');
 
    // Empty state
-   // this.#showEmpty()
+   // this.#uiStateManager.showState(UI_STATES.EMPTY) → 
    this._showState('empty');
    ```
 
-3. **Remove UIStateManager References**
+3. **Update _showError Method to Use Base Class**
 
    ```javascript
-   // Remove these from constructor (already done in CHARCONMIG-04)
-   // this.#uiStateManager = null;
-
-   // Remove manual UIStateManager initialization (already done in CHARCONMIG-03)
-   // this.#initializeUIStateManager()
+   // Current implementation uses direct UIStateManager
+   _showError(message) {
+     if (this.#uiStateManager) {
+       this.#uiStateManager.showError(message);
+     } else {
+       this.logger.error(`Error state: ${message}`);
+     }
+   }
+   
+   // Target: Use base class _showError directly
+   // Method can be removed as base class provides it
    ```
 
 **Validation:**
 
-- No manual state management methods remain
-- All state transitions use base class methods
-- No direct UIStateManager references remain
+- All direct UIStateManager calls replaced with base class methods
+- _showError method updated to use base class implementation
 - State transitions work identically to before
+- UIStateManager field can be removed after base class handles state management
 
 ### Step 2: Implement Enhanced Error Handling with Retry Logic
 
 **Duration:** 2 hours
 
-**Current Error Handling Patterns (100+ lines):**
+**Current Error Handling Patterns (Basic try-catch, no retry):**
 
 ```javascript
-// Inconsistent error handling throughout controller
-async #loadConceptsData() {
+// Current error handling throughout controller (no retry logic)
+async _loadConceptsData() {
   try {
-    this.#showLoading('Loading character concepts...');
-    const concepts = await this.#characterBuilderService.getAllCharacterConcepts();
+    this.#uiStateManager.showState(UI_STATES.LOADING);
+    const concepts = await this.characterBuilderService.getAllCharacterConcepts();
 
     if (!Array.isArray(concepts)) {
       throw new Error('Invalid concepts data received');
     }
 
     this.#conceptsData = concepts;
-    this.#updateStatistics();
-    this.#renderConcepts();
+    this._updateStatistics();
+    this._renderConcepts();
 
     if (concepts.length > 0) {
-      this.#showResults();
+      this.#uiStateManager.showState(UI_STATES.RESULTS);
     } else {
-      this.#showEmpty();
+      this._showEmptyState();
     }
 
   } catch (error) {
-    this.#logger.error('Failed to load concepts data', error);
-    this.#showError('Failed to load character concepts. Please try again.');
+    this.logger.error('Failed to load concepts data', error);
+    this._showError('Failed to load character concepts. Please try again.');
     throw error;
   }
 }
 
-async #handleConceptSave() {
+async _handleConceptSave() {
   try {
-    this.#showLoading('Saving concept...');
+    // Current implementation shows loading via UIStateManager directly
+    this.#uiStateManager.showState(UI_STATES.LOADING);
 
     const conceptData = {
-      concept: this.#elements.conceptText.value.trim(),
+      concept: this._getElement('conceptText').value.trim(),
       // ... other data
     };
 
     if (this.#editingConceptId) {
-      await this.#characterBuilderService.updateCharacterConcept(
+      await this.characterBuilderService.updateCharacterConcept(
         this.#editingConceptId,
         conceptData
       );
     } else {
-      await this.#characterBuilderService.createCharacterConcept(conceptData);
+      await this.characterBuilderService.createCharacterConcept(conceptData);
     }
 
-    await this.#loadConceptsData();
-    this.#closeConceptModal();
+    await this._loadConceptsData();
+    this._closeConceptModal();
 
   } catch (error) {
-    this.#logger.error('Failed to save concept', error);
-    this.#showError('Failed to save concept. Please try again.');
+    this.logger.error('Failed to save concept', error);
+    this.#uiStateManager.showError('Failed to save concept. Please try again.');
   }
 }
 ```
@@ -388,12 +378,11 @@ async _handleConceptSave() {
    };
    ```
 
-3. **Remove Manual Retry Logic**
+3. **Implement Missing Retry Logic**
    ```javascript
-   // Remove these manual retry implementations
-   #retryLastOperation()
-   #lastFailedOperation
-   // Base class handles retry automatically
+   // No manual retry logic currently exists in controller
+   // Need to implement using base class _executeWithErrorHandling
+   // Base class handles retry automatically when configured
    ```
 
 **Validation:**
@@ -403,76 +392,72 @@ async _handleConceptSave() {
 - Loading states managed automatically
 - Error messages displayed consistently
 
-### Step 3: Standardize State Transition Patterns
+### Step 3: Remove UIStateManager Field and Update _showError Method
 
 **Duration:** 1 hour
 
-**Current Inconsistent Patterns:**
+**Current Patterns to Update:**
 
 ```javascript
-// Different patterns used throughout the controller
-this.#showLoading('Loading...');
-this.#uiStateManager.showState(UI_STATES.LOADING);
-this.#elements.loadingState.style.display = 'block';
+// _showError method currently uses direct UIStateManager
+_showError(message) {
+  if (this.#uiStateManager) {
+    this.#uiStateManager.showError(message);
+  } else {
+    this.logger.error(`Error state: ${message}`);
+  }
+}
 
-this.#showError('Error message');
-this.#elements.errorState.style.display = 'block';
-this.#elements.errorMessageText.textContent = message;
+// UIStateManager field and initialization to remove
+#uiStateManager;
+this.#uiStateManager = new UIStateManager({...});
 ```
 
 **Target Consistent Patterns:**
 
 ```javascript
-// Standardized state management through base class
+// Remove _showError override - use base class implementation
+// Remove #uiStateManager field - base class handles state management
+// All state transitions already use base class methods consistently
 this._showLoading('Loading...'); // For operations with loading
-this._showError('Error message'); // For error states
+this._showError('Error message'); // For error states (base class method)
 this._showState('results'); // For data display
 this._showState('empty'); // For no data state
 ```
 
 **Implementation:**
 
-1. **Search and Replace State Patterns**
-
-   ```bash
-   # Find all state transition patterns
-   grep -n "showState\|style\.display\|showLoading\|showError" src/domUI/characterConceptsManagerController.js
-
-   # Replace with base class methods
-   # this.#showLoading → this._showLoading
-   # this.#showError → this._showError
-   # this.#showResults → this._showState('results')
-   # this.#showEmpty → this._showState('empty')
-   ```
-
-2. **Update Conditional State Logic**
+1. **Remove _showError Method Override**
 
    ```javascript
-   // Current conditional patterns
-   if (this.#conceptsData.length > 0) {
-     this.#showResults();
-   } else {
-     this.#showEmpty();
-   }
-
-   // Updated patterns
-   if (this.#conceptsData.length > 0) {
-     this._showState('results');
-   } else {
-     this._showState('empty');
+   // Remove this method - base class provides _showError
+   _showError(message) {
+     if (this.#uiStateManager) {
+       this.#uiStateManager.showError(message);
+     } else {
+       this.logger.error(`Error state: ${message}`);
+     }
    }
    ```
 
-3. **Remove Manual Style Manipulation**
+2. **Remove UIStateManager Field and Initialization**
 
    ```javascript
-   // Remove direct style manipulation
-   // this.#elements.loadingState.style.display = 'block';
-   // this.#elements.errorState.style.display = 'none';
+   // Remove field declaration
+   // #uiStateManager;
+   
+   // Remove initialization code in constructor/initialize methods
+   // this.#uiStateManager = new UIStateManager({...});
+   
+   // Base class handles UIStateManager automatically
+   ```
 
-   // Use base class state management instead
-   this._showLoading('Loading...');
-   this._showState('results');
+3. **Verify Base Class State Management Works**
+
+   ```javascript
+   // Ensure all state transitions continue to work with base class
+   // Test that UIStateManager is properly initialized by base class
+   // Verify error display and loading states function correctly
    ```
 
 **Validation:**
@@ -511,19 +496,15 @@ this._showState('empty'); // For no data state
 
 // ❌ Inconsistent error handling without retry
 try {
-  await this.#characterBuilderService.getAllCharacterConcepts();
+  await this.characterBuilderService.getAllCharacterConcepts();
 } catch (error) {
-  this.#logger.error('Error', error);
-  this.#showError('Something went wrong');
+  this.logger.error('Error', error);
+  this._showError('Something went wrong');
   // No retry logic
 }
 
-// ❌ Manual retry implementation
-#retryLastOperation() {
-  if (this.#lastFailedOperation) {
-    this.#lastFailedOperation();
-  }
-}
+// ❌ No retry implementation exists
+// Manual retry logic needs to be implemented using base class
 ```
 
 **After Migration:**
@@ -785,9 +766,9 @@ describe('State Management Performance', () => {
 # Ensure previous tickets are complete
 npm run test:unit -- tests/unit/domUI/characterConceptsManagerController.test.js
 
-# Check current state management patterns
-grep -n "#showLoading\|#showError\|#showResults\|#showEmpty" src/domUI/characterConceptsManagerController.js
-grep -n "uiStateManager\|UI_STATES" src/domUI/characterConceptsManagerController.js
+# Check current direct UIStateManager usage
+grep -n "#uiStateManager\.showState\|#uiStateManager\.showError" src/domUI/characterConceptsManagerController.js
+grep -n "UI_STATES" src/domUI/characterConceptsManagerController.js
 ```
 
 ### 2. Implementation Verification
@@ -811,8 +792,8 @@ npm run test:unit -- tests/unit/domUI/characterConceptsManagerController.test.js
 **Code Quality Checks:**
 
 ```bash
-# Verify no manual state methods remain
-grep -r "#showLoading\|#showError\|#showResults\|#showEmpty" src/domUI/characterConceptsManagerController.js
+# Verify no direct UIStateManager calls remain
+grep -r "#uiStateManager\." src/domUI/characterConceptsManagerController.js
 
 # Verify base class usage
 grep -r "_showLoading\|_showError\|_showState" src/domUI/characterConceptsManagerController.js
@@ -927,10 +908,10 @@ _validateStateTransition(fromState, toState) {
 
 ### Technical Requirements ✅
 
-1. **Code Reduction**: 205+ lines removed (80% reduction in state management code)
+1. **Code Reduction**: 70 lines removed (smaller reduction due to corrected assumptions)
 2. **Base Class Integration**: Full utilization of base class state management infrastructure
 3. **Error Patterns**: Consistent error handling patterns throughout controller
-4. **Retry Logic**: Configurable retry logic for different operation types
+4. **Retry Logic**: Configurable retry logic for different operation types (NEW - not currently implemented)
 5. **Performance**: No performance degradation from base class method usage
 
 ### Quality Requirements ✅
@@ -976,4 +957,4 @@ Upon successful completion of CHARCONMIG-05:
 **Symptoms**: State transitions feel slow or laggy
 **Solution**: Profile state transition performance and optimize base class method calls
 
-**Completion Time Estimate**: 5 hours with comprehensive testing and validation
+**Completion Time Estimate**: 6 hours with comprehensive testing and validation (revised upward due to additional retry logic implementation needed)

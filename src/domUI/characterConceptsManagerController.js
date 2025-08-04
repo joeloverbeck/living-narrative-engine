@@ -22,9 +22,6 @@ import { UI_STATES } from '../shared/characterBuilder/uiStateManager.js';
  * Extends BaseCharacterBuilderController for consistent architecture
  */
 export class CharacterConceptsManagerController extends BaseCharacterBuilderController {
-  #logger;
-  #characterBuilderService;
-  #eventBus;
   #uiStateManager;
 
   // Internal state
@@ -57,9 +54,6 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   #tabId = `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   #remoteChangeTimeout = null;
 
-  // DOM element references
-  #elements = {};
-
   /**
    * @param {object} deps
    * @param {ILogger} deps.logger
@@ -68,17 +62,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {ISchemaValidator} [deps.schemaValidator] - Optional for backward compatibility
    */
   constructor({ logger, characterBuilderService, eventBus, schemaValidator }) {
-    // For backward compatibility with existing tests, provide a minimal schemaValidator if not provided
-    const effectiveSchemaValidator = schemaValidator || {
-      validate: () => ({ isValid: true, errors: [] }),
-      validateAgainstSchema: () => ({ isValid: true, errors: [] }),
-      addSchema: () => {},
-      removeSchema: () => {},
-      listSchemas: () => [],
-      getSchema: () => null,
-    };
-
-    // Temporarily add missing methods if characterBuilderService exists for backward compatibility
+    // Add backward compatibility for tests - provide missing methods
     const effectiveCharacterBuilderService = characterBuilderService
       ? {
           ...characterBuilderService,
@@ -92,7 +76,17 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         }
       : characterBuilderService;
 
-    // Call base class constructor first with error mapping for backward compatibility
+    // Provide fallback schemaValidator for backward compatibility
+    const effectiveSchemaValidator = schemaValidator || {
+      validate: () => ({ isValid: true, errors: [] }),
+      validateAgainstSchema: () => ({ isValid: true, errors: [] }),
+      addSchema: () => {},
+      removeSchema: () => {},
+      listSchemas: () => [],
+      getSchema: () => null,
+    };
+
+    // Call base class constructor with error mapping for test compatibility
     try {
       super({
         logger,
@@ -115,35 +109,9 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       ) {
         throw new Error('Missing required dependency: ISafeEventDispatcher');
       } else {
-        // Re-throw other errors as-is
         throw error;
       }
     }
-    // Validate dependencies
-    validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['debug', 'info', 'warn', 'error'],
-    });
-    validateDependency(
-      characterBuilderService,
-      'CharacterBuilderService',
-      logger,
-      {
-        requiredMethods: [
-          'getAllCharacterConcepts',
-          'createCharacterConcept',
-          'updateCharacterConcept',
-          'deleteCharacterConcept',
-          'getThematicDirections',
-        ],
-      }
-    );
-    validateDependency(eventBus, 'ISafeEventDispatcher', logger, {
-      requiredMethods: ['dispatch', 'subscribe', 'unsubscribe'],
-    });
-
-    this.#logger = logger;
-    this.#characterBuilderService = characterBuilderService;
-    this.#eventBus = eventBus;
 
     // Expose internal state and methods for testing (only in non-production environments)
     if (process.env.NODE_ENV !== 'production') {
@@ -199,41 +167,34 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
           self.#searchStateRestored = value;
         },
 
-        get elements() {
-          return self.#elements;
-        },
-        set elements(value) {
-          self.#elements = value;
-        },
-
         // Methods (bound to maintain correct 'this' context)
-        showDeleteConfirmation: this.#showDeleteConfirmation.bind(this),
-        setupDeleteHandler: this.#setupDeleteHandler.bind(this),
-        deleteConcept: this.#deleteConcept.bind(this),
+        showDeleteConfirmation: this._showDeleteConfirmation.bind(this),
+        setupDeleteHandler: this._setupDeleteHandler.bind(this),
+        deleteConcept: this._deleteConcept.bind(this),
         closeDeleteModal: this._closeDeleteModal.bind(this),
-        setDeleteModalEnabled: this.#setDeleteModalEnabled.bind(this),
-        showDeleteError: this.#showDeleteError.bind(this),
-        applyOptimisticDelete: this.#applyOptimisticDelete.bind(this),
-        revertOptimisticDelete: this.#revertOptimisticDelete.bind(this),
+        setDeleteModalEnabled: this._setDeleteModalEnabled.bind(this),
+        showDeleteError: this._showDeleteError.bind(this),
+        applyOptimisticDelete: this._applyOptimisticDelete.bind(this),
+        revertOptimisticDelete: this._revertOptimisticDelete.bind(this),
         handleConceptDeleted: this._handleConceptDeleted.bind(this),
-        updateStatistics: this.#updateStatistics.bind(this),
+        updateStatistics: this._updateStatistics.bind(this),
 
         // Enhanced search methods
-        filterConcepts: this.#filterConcepts.bind(this),
-        fuzzyMatch: this.#fuzzyMatch.bind(this),
-        highlightSearchTerms: this.#highlightSearchTerms.bind(this),
-        escapeRegex: this.#escapeRegex.bind(this),
-        displayFilteredConcepts: this.#displayFilteredConcepts.bind(this),
-        showNoSearchResults: this.#showNoSearchResults.bind(this),
-        updateSearchState: this.#updateSearchState.bind(this),
-        updateSearchStatus: this.#updateSearchStatus.bind(this),
+        filterConcepts: this._filterConcepts.bind(this),
+        fuzzyMatch: this._fuzzyMatch.bind(this),
+        highlightSearchTerms: this._highlightSearchTerms.bind(this),
+        escapeRegex: this._escapeRegex.bind(this),
+        displayFilteredConcepts: this._displayFilteredConcepts.bind(this),
+        showNoSearchResults: this._showNoSearchResults.bind(this),
+        updateSearchState: this._updateSearchState.bind(this),
+        updateSearchStatus: this._updateSearchStatus.bind(this),
         clearSearch: this._clearSearch.bind(this),
-        updateClearButton: this.#updateClearButton.bind(this),
-        saveSearchState: this.#saveSearchState.bind(this),
-        restoreSearchState: this.#restoreSearchState.bind(this),
-        trackSearchAnalytics: this.#trackSearchAnalytics.bind(this),
-        calculateAverageResults: this.#calculateAverageResults.bind(this),
-        getDisplayText: this.#getDisplayText.bind(this),
+        updateClearButton: this._updateClearButton.bind(this),
+        saveSearchState: this._saveSearchState.bind(this),
+        restoreSearchState: this._restoreSearchState.bind(this),
+        trackSearchAnalytics: this._trackSearchAnalytics.bind(this),
+        calculateAverageResults: this._calculateAverageResults.bind(this),
+        getDisplayText: this._getDisplayText.bind(this),
         handleSearch: this._handleSearch.bind(this),
         // Testing utility to set UIStateManager without full initialization
         set uiStateManager(value) {
@@ -245,25 +206,16 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         showEditModal: this._showEditModal.bind(this),
 
         // CRUD operations for testing
-        createConcept: this.#createConcept.bind(this),
+        createConcept: this._createConcept.bind(this),
         handleConceptSave: this._handleConceptSave.bind(this),
-        removeConceptCard: this.#removeConceptCard.bind(this),
+        removeConceptCard: this._removeConceptCard.bind(this),
 
         // Data loading alias for testing
         loadData: this._loadConceptsData.bind(this),
       };
     }
 
-    this.#logger.info('CharacterConceptsManagerController initialized');
-  }
-
-  /**
-   * Get the logger instance
-   *
-   * @returns {ILogger} The logger instance
-   */
-  get logger() {
-    return this.#logger;
+    this.logger.info('CharacterConceptsManagerController initialized');
   }
 
   /**
@@ -276,7 +228,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     await super._initializeServices();
 
     // Initialize character builder service
-    await this.#initializeService();
+    await this._initializeService();
   }
 
   /**
@@ -289,7 +241,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     await super._initializeUIState();
 
     // Initialize UI state manager
-    await this.#initializeUIStateManager();
+    await this._initializeUIStateManager();
 
     // Set initial UI state
     this._showEmpty();
@@ -305,7 +257,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     await super._loadInitialData();
 
     // Restore search state from session
-    this.#restoreSearchState();
+    this._restoreSearchState();
 
     // Load concepts data
     await this._loadConceptsData();
@@ -321,15 +273,15 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     await super._postInitialize();
 
     // Set up keyboard shortcuts
-    this.#setupKeyboardShortcuts();
+    this._setupKeyboardShortcuts();
 
     // Initialize cross-tab sync
-    this.#initializeCrossTabSync();
+    this._initializeCrossTabSync();
 
     // Note: window-level beforeunload handler will need to be added separately
     // as base class doesn't support window-level listeners yet
     // this._addEventListener(window, 'beforeunload', () => {
-    //   this.#cleanup();
+    //   this._cleanup();
     // });
 
     this.#isInitialized = true;
@@ -340,7 +292,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Initialize the UI state manager
    */
-  async #initializeUIStateManager() {
+  async _initializeUIStateManager() {
     const { UIStateManager } = await import(
       '../shared/characterBuilder/uiStateManager.js'
     );
@@ -356,11 +308,11 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Initialize the character builder service
    */
-  async #initializeService() {
+  async _initializeService() {
     try {
-      await this.#characterBuilderService.initialize();
+      await this.characterBuilderService.initialize();
     } catch (error) {
-      this.#logger.error(
+      this.logger.error(
         'Failed to initialize character builder service',
         error
       );
@@ -390,11 +342,11 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} message
    */
-  #showError(message) {
+  _showError(message) {
     if (this.#uiStateManager) {
       this.#uiStateManager.showError(message);
     } else {
-      this.#logger.error(`Error state: ${message}`);
+      this.logger.error(`Error state: ${message}`);
     }
   }
 
@@ -415,7 +367,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Set up real-time validation for the concept form
    */
-  #setupConceptFormValidation() {
+  _setupConceptFormValidation() {
     // Remove any existing listeners to prevent duplicates
     const conceptText = this._getElement('conceptText');
     const newTextarea = conceptText.cloneNode(true);
@@ -452,7 +404,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Reset the concept form to initial state
    */
-  #resetConceptForm() {
+  _resetConceptForm() {
     // Clear form
     const conceptForm = this._getElement('conceptForm');
     if (conceptForm) conceptForm.reset();
@@ -481,14 +433,14 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @protected
    */
   _showCreateModal() {
-    this.#logger.info('Showing create concept modal');
+    this.logger.info('Showing create concept modal');
 
     // Reset form for new concept
     this.#editingConceptId = null;
-    this.#resetConceptForm();
+    this._resetConceptForm();
 
     // Set up real-time validation for create modal
-    this.#setupConceptFormValidation();
+    this._setupConceptFormValidation();
 
     // Update modal title
     this._getElement('conceptModalTitle').textContent =
@@ -505,7 +457,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     const computedStyle = window.getComputedStyle(
       this._getElement('conceptModal')
     );
-    this.#logger.info('Modal display debug info:', {
+    this.logger.info('Modal display debug info:', {
       display: computedStyle.display,
       visibility: computedStyle.visibility,
       opacity: computedStyle.opacity,
@@ -521,7 +473,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     }, 100);
 
     // Track modal open for analytics
-    this.#eventBus.dispatch('core:ui_modal_opened', {
+    this.eventBus.dispatch('core:ui_modal_opened', {
       modalType: 'create-concept',
     });
   }
@@ -532,7 +484,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @protected
    */
   _closeConceptModal() {
-    this.#logger.info('Closing concept modal');
+    this.logger.info('Closing concept modal');
 
     // Check for unsaved changes
     if (this.#hasUnsavedChanges && this.#editingConceptId) {
@@ -549,7 +501,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     this._getElement('conceptModal').style.display = 'none';
 
     // Reset form
-    this.#resetConceptForm();
+    this._resetConceptForm();
 
     // Clear editing state
     this.#editingConceptId = null;
@@ -564,7 +516,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     }
 
     // Dispatch modal closed event
-    this.#eventBus.dispatch('core:ui_modal_closed', { modalType: 'concept' });
+    this.eventBus.dispatch('core:ui_modal_closed', { modalType: 'concept' });
   }
 
   /**
@@ -573,7 +525,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @protected
    */
   async _loadConceptsData() {
-    this.#logger.info('Loading character concepts data');
+    this.logger.info('Loading character concepts data');
 
     try {
       // Show loading state
@@ -581,14 +533,14 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 
       // Get all concepts
       const concepts =
-        await this.#characterBuilderService.getAllCharacterConcepts();
+        await this.characterBuilderService.getAllCharacterConcepts();
 
       // Get direction counts for each concept
       const conceptsWithCounts = await Promise.all(
         concepts.map(async (concept) => {
           try {
             const directions =
-              await this.#characterBuilderService.getThematicDirections(
+              await this.characterBuilderService.getThematicDirections(
                 concept.id
               );
 
@@ -597,7 +549,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
               directionCount: directions.length,
             };
           } catch (error) {
-            this.#logger.error(
+            this.logger.error(
               `Failed to get directions for concept ${concept.id}`,
               error
             );
@@ -614,29 +566,29 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       this.#conceptsData = conceptsWithCounts;
 
       // Apply current filter if any
-      const filteredConcepts = this.#filterConcepts(conceptsWithCounts);
+      const filteredConcepts = this._filterConcepts(conceptsWithCounts);
 
       // Display concepts
-      this.#displayConcepts(filteredConcepts);
+      this._displayConcepts(filteredConcepts);
 
       // Update statistics
-      this.#updateStatistics();
+      this._updateStatistics();
 
       // Check if we need to restore search state
       if (this.#searchStateRestored) {
-        const filteredConcepts = this.#filterConcepts(this.#conceptsData);
-        this.#displayConcepts(filteredConcepts); // uses existing display method
-        this.#updateSearchState(
+        const filteredConcepts = this._filterConcepts(this.#conceptsData);
+        this._displayConcepts(filteredConcepts); // uses existing display method
+        this._updateSearchState(
           this._getElement('conceptSearch').value,
           filteredConcepts.length
         );
         this.#searchStateRestored = false;
       }
 
-      this.#logger.info(`Loaded ${concepts.length} concepts`);
+      this.logger.info(`Loaded ${concepts.length} concepts`);
     } catch (error) {
-      this.#logger.error('Failed to load concepts', error);
-      this.#showError('Failed to load character concepts. Please try again.');
+      this.logger.error('Failed to load concepts', error);
+      this._showError('Failed to load character concepts. Please try again.');
     }
   }
 
@@ -645,13 +597,13 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {Array<{concept: object, directionCount: number}>} conceptsWithCounts
    */
-  #displayConcepts(conceptsWithCounts) {
+  _displayConcepts(conceptsWithCounts) {
     // Clear existing content
     this._getElement('conceptsResults').innerHTML = '';
 
     if (conceptsWithCounts.length === 0) {
       // Show empty state
-      this.#showEmptyState();
+      this._showEmptyState();
       return;
     }
 
@@ -663,7 +615,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 
     // Create cards for each concept
     conceptsWithCounts.forEach(({ concept, directionCount }, index) => {
-      const card = this.#createConceptCard(concept, directionCount, index);
+      const card = this._createConceptCard(concept, directionCount, index);
       fragment.appendChild(card);
     });
 
@@ -684,7 +636,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {number} index - Card index for animation delay
    * @returns {HTMLElement}
    */
-  #createConceptCard(concept, directionCount, index) {
+  _createConceptCard(concept, directionCount, index) {
     const card = document.createElement('div');
     card.className = 'concept-card';
     card.dataset.conceptId = concept.id;
@@ -704,13 +656,13 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
             </button>
         </div>
         <div class="concept-card-content">
-            <p class="concept-text">${this.#getDisplayText(concept, 150)}</p>
+            <p class="concept-text">${this._getDisplayText(concept, 150)}</p>
             <div class="concept-meta">
                 <span class="direction-count">
                     <strong>${directionCount}</strong> thematic ${directionCount === 1 ? 'direction' : 'directions'}
                 </span>
-                <span class="concept-date" title="${this.#formatFullDate(concept.createdAt)}">
-                    Created ${this.#formatRelativeDate(concept.createdAt)}
+                <span class="concept-date" title="${this._formatFullDate(concept.createdAt)}">
+                    Created ${this._formatRelativeDate(concept.createdAt)}
                 </span>
             </div>
         </div>
@@ -730,7 +682,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     `;
 
     // Add click handlers
-    this.#attachCardEventHandlers(card, concept, directionCount);
+    this._attachCardEventHandlers(card, concept, directionCount);
 
     return card;
   }
@@ -742,14 +694,14 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {object} concept
    * @param {number} directionCount
    */
-  #attachCardEventHandlers(card, concept, directionCount) {
+  _attachCardEventHandlers(card, concept, directionCount) {
     // Card click (excluding buttons)
     card.addEventListener('click', (e) => {
       // Don't trigger if clicking on buttons
       if (e.target.closest('button')) return;
 
       // View concept details (could open edit modal in read-only mode)
-      this.#viewConceptDetails(concept);
+      this._viewConceptDetails(concept);
     });
 
     // Button click handlers
@@ -764,10 +716,10 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
             this._showEditModal(concept.id);
             break;
           case 'delete':
-            this.#showDeleteConfirmation(concept, directionCount);
+            this._showDeleteConfirmation(concept, directionCount);
             break;
           case 'view-directions':
-            this.#viewThematicDirections(concept.id);
+            this._viewThematicDirections(concept.id);
             break;
         }
       });
@@ -777,7 +729,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     const menuBtn = card.querySelector('.concept-menu-btn');
     menuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      this.#showConceptMenu(concept, e.currentTarget);
+      this._showConceptMenu(concept, e.currentTarget);
     });
   }
 
@@ -788,7 +740,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {Array<{concept: object, directionCount: number}>} concepts
    * @returns {Array<{concept: object, directionCount: number}>}
    */
-  #filterConcepts(concepts) {
+  _filterConcepts(concepts) {
     if (!this.#searchFilter || this.#searchFilter.length === 0) {
       return concepts;
     }
@@ -817,7 +769,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         }
 
         // Enhanced fuzzy match for typos
-        if (this.#fuzzyMatch(conceptTextLower, term)) {
+        if (this._fuzzyMatch(conceptTextLower, term)) {
           return true;
         }
 
@@ -831,7 +783,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @returns {object} Statistics object
    */
-  #calculateStatistics() {
+  _calculateStatistics() {
     const totalConcepts = this.#conceptsData.length;
     const conceptsWithDirections = this.#conceptsData.filter(
       ({ directionCount }) => directionCount > 0
@@ -869,31 +821,31 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Update statistics display with animations
    */
-  #updateStatistics() {
-    const stats = this.#calculateStatistics();
+  _updateStatistics() {
+    const stats = this._calculateStatistics();
 
     // Animate number changes
-    this.#animateStatValue(
+    this._animateStatValue(
       this._getElement('totalConcepts'),
       stats.totalConcepts
     );
-    this.#animateStatValue(
+    this._animateStatValue(
       this._getElement('conceptsWithDirections'),
       stats.conceptsWithDirections
     );
-    this.#animateStatValue(
+    this._animateStatValue(
       this._getElement('totalDirections'),
       stats.totalDirections
     );
 
     // Update additional statistics
-    this.#updateAdvancedStatistics(stats);
+    this._updateAdvancedStatistics(stats);
 
     // Log statistics
-    this.#logger.info('Statistics updated', stats);
+    this.logger.info('Statistics updated', stats);
 
     // Dispatch statistics event for other components
-    this.#eventBus.dispatch('core:statistics_updated', stats);
+    this.eventBus.dispatch('core:statistics_updated', stats);
   }
 
   /**
@@ -902,7 +854,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {HTMLElement} element - The element to update
    * @param {number} newValue - The target value
    */
-  #animateStatValue(element, newValue) {
+  _animateStatValue(element, newValue) {
     if (!element) return;
 
     const currentValue = parseInt(element.textContent) || 0;
@@ -945,13 +897,13 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {object} stats - Statistics object
    */
-  #updateAdvancedStatistics(stats) {
+  _updateAdvancedStatistics(stats) {
     // Check if advanced stats container exists
     let advancedStats = document.querySelector('.advanced-stats');
 
     if (!advancedStats) {
       // Create advanced stats section
-      advancedStats = this.#createAdvancedStatsSection();
+      advancedStats = this._createAdvancedStatsSection();
       const statsDisplay = this._getElement('statsDisplay');
       if (statsDisplay) {
         statsDisplay.appendChild(advancedStats);
@@ -959,18 +911,18 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     }
 
     // Update values
-    this.#updateAdvancedStatValue(
+    this._updateAdvancedStatValue(
       'avg-directions',
       stats.averageDirectionsPerConcept
     );
-    this.#updateAdvancedStatValue(
+    this._updateAdvancedStatValue(
       'completion-rate',
       `${stats.completionRate}%`
     );
-    this.#updateAdvancedStatValue('max-directions', stats.maxDirections);
+    this._updateAdvancedStatValue('max-directions', stats.maxDirections);
 
     // Update progress bar
-    this.#updateCompletionProgress(stats.completionRate);
+    this._updateCompletionProgress(stats.completionRate);
   }
 
   /**
@@ -978,7 +930,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @returns {HTMLElement}
    */
-  #createAdvancedStatsSection() {
+  _createAdvancedStatsSection() {
     const section = document.createElement('div');
     section.className = 'advanced-stats';
     section.innerHTML = `
@@ -1011,7 +963,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 
     // Add export button handler
     const exportBtn = section.querySelector('.export-stats-btn');
-    exportBtn.addEventListener('click', () => this.#exportStatistics('json'));
+    exportBtn.addEventListener('click', () => this._exportStatistics('json'));
 
     return section;
   }
@@ -1022,7 +974,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} id - Element ID
    * @param {string|number} value - New value
    */
-  #updateAdvancedStatValue(id, value) {
+  _updateAdvancedStatValue(id, value) {
     const element = document.getElementById(id);
     if (element && element.textContent !== String(value)) {
       element.textContent = value;
@@ -1038,7 +990,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {number} percentage - Completion percentage
    */
-  #updateCompletionProgress(percentage) {
+  _updateCompletionProgress(percentage) {
     const progressFill = document.querySelector('.progress-fill');
     const conceptsComplete = document.querySelector('.concepts-complete');
     const conceptsTotal = document.querySelector('.concepts-total');
@@ -1062,7 +1014,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 
     // Update labels
     if (conceptsComplete && conceptsTotal) {
-      const stats = this.#calculateStatistics();
+      const stats = this._calculateStatistics();
       conceptsComplete.textContent = stats.conceptsWithDirections;
       conceptsTotal.textContent = stats.totalConcepts;
     }
@@ -1071,16 +1023,16 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Celebrate creation milestones
    */
-  #celebrateCreation() {
-    const stats = this.#calculateStatistics();
+  _celebrateCreation() {
+    const stats = this._calculateStatistics();
 
     // Check for milestones
     if (stats.totalConcepts === 1) {
-      this.#showMilestone('🎉 First Concept Created!');
+      this._showMilestone('🎉 First Concept Created!');
     } else if (stats.totalConcepts % 10 === 0) {
-      this.#showMilestone(`🎊 ${stats.totalConcepts} Concepts Created!`);
+      this._showMilestone(`🎊 ${stats.totalConcepts} Concepts Created!`);
     } else if (stats.completionRate === 100 && stats.totalConcepts > 1) {
-      this.#showMilestone('⭐ All Concepts Have Directions!');
+      this._showMilestone('⭐ All Concepts Have Directions!');
     }
   }
 
@@ -1089,7 +1041,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} message
    */
-  #showMilestone(message) {
+  _showMilestone(message) {
     const milestone = document.createElement('div');
     milestone.className = 'milestone-notification';
     milestone.textContent = message;
@@ -1115,8 +1067,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} format - 'json' or 'csv'
    */
-  #exportStatistics(format = 'json') {
-    const stats = this.#calculateStatistics();
+  _exportStatistics(format = 'json') {
+    const stats = this._calculateStatistics();
     const timestamp = new Date().toISOString();
 
     const data = {
@@ -1134,7 +1086,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     let content, filename, mimeType;
 
     if (format === 'csv') {
-      content = this.#convertToCSV(data);
+      content = this._convertToCSV(data);
       filename = `character-concepts-stats-${Date.now()}.csv`;
       mimeType = 'text/csv';
     } else {
@@ -1152,7 +1104,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     a.click();
     URL.revokeObjectURL(url);
 
-    this.#logger.info('Statistics exported', { format, filename });
+    this.logger.info('Statistics exported', { format, filename });
   }
 
   /**
@@ -1161,7 +1113,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {object} data
    * @returns {string}
    */
-  #convertToCSV(data) {
+  _convertToCSV(data) {
     const headers = ['Metric', 'Value'];
     const rows = [
       ['Export Date', data.exportDate],
@@ -1190,7 +1142,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} text
    * @returns {string}
    */
-  #escapeHtml(text) {
+  _escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
@@ -1203,7 +1155,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {number} maxLength
    * @returns {string}
    */
-  #truncateText(text, maxLength) {
+  _truncateText(text, maxLength) {
     if (text.length <= maxLength) return text;
 
     // Try to break at word boundary
@@ -1223,7 +1175,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {Date|string} date
    * @returns {string}
    */
-  #formatRelativeDate(date) {
+  _formatRelativeDate(date) {
     const dateObj = new Date(date);
     const now = new Date();
     const diffMs = now - dateObj;
@@ -1249,7 +1201,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {Date|string} date
    * @returns {string}
    */
-  #formatFullDate(date) {
+  _formatFullDate(date) {
     return new Date(date).toLocaleString();
   }
 
@@ -1258,7 +1210,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {boolean} maintainScroll - Whether to maintain scroll position
    */
-  async #refreshConceptsDisplay(maintainScroll = true) {
+  async _refreshConceptsDisplay(maintainScroll = true) {
     // Save scroll position
     const scrollTop = maintainScroll
       ? this._getElement('conceptsResults').scrollTop
@@ -1276,7 +1228,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Show appropriate empty state based on context
    */
-  #showEmptyState() {
+  _showEmptyState() {
     const hasSearchFilter = this.#searchFilter && this.#searchFilter.length > 0;
 
     if (hasSearchFilter) {
@@ -1294,7 +1246,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       clearBtn?.addEventListener('click', () => {
         this._getElement('conceptSearch').value = '';
         this.#searchFilter = '';
-        this.#displayConcepts(this.#conceptsData);
+        this._displayConcepts(this.#conceptsData);
       });
     } else {
       // No concepts at all
@@ -1319,8 +1271,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {object} concept
    */
-  #viewConceptDetails(concept) {
-    this.#logger.info('Viewing concept details', { id: concept.id });
+  _viewConceptDetails(concept) {
+    this.logger.info('Viewing concept details', { id: concept.id });
     // Could show read-only modal or expand card
     // For now, just show edit modal in read-only mode
     this._showEditModal(concept.id);
@@ -1332,7 +1284,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} conceptId
    */
   async _showEditModal(conceptId) {
-    this.#logger.info('Showing edit modal', { conceptId });
+    this.logger.info('Showing edit modal', { conceptId });
 
     try {
       // Find concept in cached data
@@ -1365,7 +1317,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       this._getElement('conceptText').addEventListener(
         'input',
         () => {
-          this.#trackFormChanges();
+          this._trackFormChanges();
         },
         { once: false }
       );
@@ -1380,7 +1332,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       const computedStyle = window.getComputedStyle(
         this._getElement('conceptModal')
       );
-      this.#logger.info('Edit modal display debug info:', {
+      this.logger.info('Edit modal display debug info:', {
         display: computedStyle.display,
         visibility: computedStyle.visibility,
         opacity: computedStyle.opacity,
@@ -1401,12 +1353,12 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       }, 100);
 
       // Track modal open
-      this.#eventBus.dispatch('core:ui_modal_opened', {
+      this.eventBus.dispatch('core:ui_modal_opened', {
         modalType: 'edit-concept',
         conceptId,
       });
     } catch (error) {
-      this.#logger.error('Failed to show edit modal', error);
+      this.logger.error('Failed to show edit modal', error);
       // Use existing UI state manager for error display
       this.#uiStateManager.showError(
         'Failed to load concept for editing. Please try again.'
@@ -1420,8 +1372,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {object} concept - The concept to delete
    * @param {number} directionCount - Number of associated directions
    */
-  #showDeleteConfirmation(concept, directionCount) {
-    this.#logger.info('Showing delete confirmation', {
+  _showDeleteConfirmation(concept, directionCount) {
+    this.logger.info('Showing delete confirmation', {
       conceptId: concept.id,
       directionCount,
     });
@@ -1433,11 +1385,11 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     let message = `Are you sure you want to delete this character concept?`;
 
     // Add concept preview
-    const truncatedText = this.#truncateText(
+    const truncatedText = this._truncateText(
       concept.text || concept.concept,
       100
     );
-    message += `\n\n"${this.#escapeHtml(truncatedText)}"`;
+    message += `\n\n"${this._escapeHtml(truncatedText)}"`;
 
     // Add warning about thematic directions
     if (directionCount > 0) {
@@ -1472,13 +1424,13 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     }, 100);
 
     // Set up delete handler
-    this.#setupDeleteHandler();
+    this._setupDeleteHandler();
   }
 
   /**
    * Set up delete confirmation handler
    */
-  #setupDeleteHandler() {
+  _setupDeleteHandler() {
     // Note: Base class handles event cleanup automatically
 
     // Create new handler
@@ -1489,20 +1441,20 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 
       try {
         // Disable buttons during deletion
-        this.#setDeleteModalEnabled(false);
+        this._setDeleteModalEnabled(false);
         this._getElement('confirmDeleteBtn').textContent = 'Deleting...';
 
         // Perform deletion
-        await this.#deleteConcept(concept.id, directionCount);
+        await this._deleteConcept(concept.id, directionCount);
 
         // Close modal on success
         this._closeDeleteModal();
       } catch (error) {
-        this.#logger.error('Failed to delete concept', error);
-        this.#showDeleteError('Failed to delete concept. Please try again.');
+        this.logger.error('Failed to delete concept', error);
+        this._showDeleteError('Failed to delete concept. Please try again.');
       } finally {
         // Re-enable buttons
-        this.#setDeleteModalEnabled(true);
+        this._setDeleteModalEnabled(true);
       }
     };
 
@@ -1519,17 +1471,17 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} conceptId - The concept ID to delete
    * @param {number} directionCount - Number of directions (for logging)
    */
-  async #deleteConcept(conceptId, directionCount) {
-    this.#logger.info('Deleting concept', { conceptId, directionCount });
+  async _deleteConcept(conceptId, directionCount) {
+    this.logger.info('Deleting concept', { conceptId, directionCount });
 
     try {
       // Apply optimistic UI update
-      this.#applyOptimisticDelete(conceptId);
+      this._applyOptimisticDelete(conceptId);
 
       // Delete via service (handles cascade deletion)
-      await this.#characterBuilderService.deleteCharacterConcept(conceptId);
+      await this.characterBuilderService.deleteCharacterConcept(conceptId);
 
-      this.#logger.info('Concept deleted successfully', {
+      this.logger.info('Concept deleted successfully', {
         conceptId,
         directionsDeleted: directionCount,
       });
@@ -1539,13 +1491,13 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         directionCount > 0
           ? `Character concept deleted successfully (${directionCount} direction${directionCount === 1 ? '' : 's'} also deleted)`
           : 'Character concept deleted successfully';
-      this.#logger.info(successMessage);
+      this.logger.info(successMessage);
 
       // Remove from local cache
-      this.#removeFromLocalCache(conceptId);
+      this._removeFromLocalCache(conceptId);
 
       // Update statistics
-      this.#updateStatistics();
+      this._updateStatistics();
 
       // Check if we need to show empty state
       if (this.#conceptsData.length === 0) {
@@ -1553,8 +1505,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       }
     } catch (error) {
       // Revert optimistic delete on failure
-      this.#revertOptimisticDelete();
-      this.#logger.error('Failed to delete concept', error);
+      this._revertOptimisticDelete();
+      this.logger.error('Failed to delete concept', error);
       throw error;
     }
   }
@@ -1564,8 +1516,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} conceptId
    */
-  #viewThematicDirections(conceptId) {
-    this.#logger.info('Viewing thematic directions', { conceptId });
+  _viewThematicDirections(conceptId) {
+    this.logger.info('Viewing thematic directions', { conceptId });
     // Navigate to thematic directions manager with filter
     window.location.href = `thematic-directions-manager.html?conceptId=${conceptId}`;
   }
@@ -1576,8 +1528,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {object} concept
    * @param {HTMLElement} button
    */
-  #showConceptMenu(concept, button) {
-    this.#logger.info('Showing concept menu', { conceptId: concept.id });
+  _showConceptMenu(concept, button) {
+    this.logger.info('Showing concept menu', { conceptId: concept.id });
     // Future: show dropdown menu with additional options
   }
 
@@ -1587,7 +1539,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @protected
    */
   _closeDeleteModal() {
-    this.#logger.info('Closing delete modal');
+    this.logger.info('Closing delete modal');
 
     // Hide modal
     this._getElement('deleteModal').style.display = 'none';
@@ -1603,7 +1555,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     this._getElement('confirmDeleteBtn').classList.remove('severe-action');
 
     // Dispatch modal closed event
-    this.#eventBus.dispatch('core:ui_modal_closed', {
+    this.eventBus.dispatch('core:ui_modal_closed', {
       modalType: 'delete-confirmation',
     });
   }
@@ -1613,7 +1565,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {boolean} enabled
    */
-  #setDeleteModalEnabled(enabled) {
+  _setDeleteModalEnabled(enabled) {
     this._getElement('confirmDeleteBtn').disabled = !enabled;
     this._getElement('cancelDeleteBtn').disabled = !enabled;
     this._getElement('closeDeleteModal').disabled = !enabled;
@@ -1624,7 +1576,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} message
    */
-  #showDeleteError(message) {
+  _showDeleteError(message) {
     // Create or update error element
     let errorElement =
       this._getElement('deleteModal').querySelector('.delete-error');
@@ -1652,7 +1604,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {boolean} enabled
    */
-  #setFormEnabled(enabled) {
+  _setFormEnabled(enabled) {
     this._getElement('conceptText').disabled = !enabled;
     this._getElement('saveConceptBtn').disabled = !enabled;
     this._getElement('cancelConceptBtn').disabled = !enabled;
@@ -1668,7 +1620,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {boolean} isLoading
    */
-  #setSaveButtonLoading(isLoading) {
+  _setSaveButtonLoading(isLoading) {
     if (isLoading) {
       this._getElement('saveConceptBtn').disabled = true;
       this._getElement('saveConceptBtn').textContent = 'Saving...';
@@ -1686,7 +1638,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} message
    */
-  #showFormError(message) {
+  _showFormError(message) {
     FormValidationHelper.showFieldError(
       this._getElement('conceptText'),
       message
@@ -1698,9 +1650,9 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} message
    */
-  #showSuccessNotification(message) {
+  _showSuccessNotification(message) {
     // Log success - UI updates happen via event listeners
-    this.#logger.info(message);
+    this.logger.info(message);
   }
 
   /**
@@ -1708,21 +1660,21 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} conceptText - The concept text
    */
-  async #createConcept(conceptText) {
-    this.#logger.info('Creating new concept', { length: conceptText.length });
+  async _createConcept(conceptText) {
+    this.logger.info('Creating new concept', { length: conceptText.length });
 
     try {
       const concept =
-        await this.#characterBuilderService.createCharacterConcept(conceptText);
+        await this.characterBuilderService.createCharacterConcept(conceptText);
 
-      this.#logger.info('Concept created successfully', { id: concept.id });
+      this.logger.info('Concept created successfully', { id: concept.id });
 
       // Show success message
-      this.#showSuccessNotification('Character concept created successfully!');
+      this._showSuccessNotification('Character concept created successfully!');
 
       // The UI will be updated via service event (CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED)
     } catch (error) {
-      this.#logger.error('Failed to create concept', error);
+      this.logger.error('Failed to create concept', error);
       throw error;
     }
   }
@@ -1735,7 +1687,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   async _handleConceptSave() {
     // Validate form
     if (!this._validateConceptForm()) {
-      this.#logger.warn('Form validation failed');
+      this.logger.warn('Form validation failed');
       return;
     }
 
@@ -1744,26 +1696,26 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 
     try {
       // Disable form during save
-      this.#setFormEnabled(false);
-      this.#setSaveButtonLoading(true);
+      this._setFormEnabled(false);
+      this._setSaveButtonLoading(true);
 
       if (isEditing) {
         // Update existing concept
-        await this.#updateConcept(this.#editingConceptId, conceptText);
+        await this._updateConcept(this.#editingConceptId, conceptText);
       } else {
         // Create new concept
-        await this.#createConcept(conceptText);
+        await this._createConcept(conceptText);
       }
 
       // Close modal on success
       this._closeConceptModal();
 
       // Log success
-      this.#logger.info(
+      this.logger.info(
         `Concept ${isEditing ? 'updated' : 'created'} successfully`
       );
     } catch (error) {
-      this.#logger.error(
+      this.logger.error(
         `Failed to ${isEditing ? 'update' : 'create'} concept`,
         error
       );
@@ -1774,8 +1726,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       );
     } finally {
       // Re-enable form
-      this.#setFormEnabled(true);
-      this.#setSaveButtonLoading(false);
+      this._setFormEnabled(true);
+      this._setSaveButtonLoading(false);
     }
   }
 
@@ -1785,8 +1737,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} conceptId - The concept ID
    * @param {string} conceptText - The updated concept text
    */
-  async #updateConcept(conceptId, conceptText) {
-    this.#logger.info('Updating concept', {
+  async _updateConcept(conceptId, conceptText) {
+    this.logger.info('Updating concept', {
       conceptId,
       length: conceptText.length,
     });
@@ -1798,7 +1750,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       )?.concept;
 
       if (currentConcept && currentConcept.concept === conceptText) {
-        this.#logger.info('No changes detected, skipping update');
+        this.logger.info('No changes detected, skipping update');
         return;
       }
 
@@ -1813,15 +1765,15 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       }
 
       // Apply optimistic update
-      this.#applyOptimisticUpdate(conceptId, conceptText);
+      this._applyOptimisticUpdate(conceptId, conceptText);
 
       // Update via service (service expects updates object, not plain text)
       const updatedConcept =
-        await this.#characterBuilderService.updateCharacterConcept(conceptId, {
+        await this.characterBuilderService.updateCharacterConcept(conceptId, {
           concept: conceptText,
         });
 
-      this.#logger.info('Concept updated successfully', {
+      this.logger.info('Concept updated successfully', {
         id: updatedConcept.id,
       });
 
@@ -1829,7 +1781,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       this.#uiStateManager.showState(UI_STATES.RESULTS);
 
       // Update local cache immediately for better UX
-      this.#updateLocalConceptCache(updatedConcept);
+      this._updateLocalConceptCache(updatedConcept);
 
       // Remove updating class on success
       const card = this._getElement('conceptsResults').querySelector(
@@ -1843,9 +1795,9 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         }, 1000);
       }
     } catch (error) {
-      this.#logger.error('Failed to update concept', error);
+      this.logger.error('Failed to update concept', error);
       // Revert optimistic update on failure
-      this.#revertOptimisticUpdate(conceptId);
+      this._revertOptimisticUpdate(conceptId);
       throw error;
     }
   }
@@ -1855,7 +1807,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {object} updatedConcept
    */
-  #updateLocalConceptCache(updatedConcept) {
+  _updateLocalConceptCache(updatedConcept) {
     // Find and update in local data
     const index = this.#conceptsData.findIndex(
       ({ concept }) => concept.id === updatedConcept.id
@@ -1872,7 +1824,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       };
 
       // Update UI immediately
-      this.#updateConceptCard(updatedConcept, directionCount);
+      this._updateConceptCard(updatedConcept, directionCount);
     }
   }
 
@@ -1882,7 +1834,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {object} concept
    * @param {number} directionCount
    */
-  #updateConceptCard(concept, directionCount) {
+  _updateConceptCard(concept, directionCount) {
     // Find the card element
     const card = this._getElement('conceptsResults').querySelector(
       `[data-concept-id="${concept.id}"]`
@@ -1893,14 +1845,14 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     // Update card content
     const conceptTextElement = card.querySelector('.concept-text');
     if (conceptTextElement) {
-      conceptTextElement.innerHTML = this.#getDisplayText(concept, 150);
+      conceptTextElement.innerHTML = this._getDisplayText(concept, 150);
     }
 
     // Update date if it changed
     const dateElement = card.querySelector('.concept-date');
     if (dateElement && concept.updatedAt) {
-      dateElement.textContent = `Updated ${this.#formatRelativeDate(concept.updatedAt)}`;
-      dateElement.title = this.#formatFullDate(concept.updatedAt);
+      dateElement.textContent = `Updated ${this._formatRelativeDate(concept.updatedAt)}`;
+      dateElement.title = this._formatFullDate(concept.updatedAt);
     }
 
     // Add update animation
@@ -1916,7 +1868,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} conceptId
    * @param {string} newText
    */
-  #applyOptimisticUpdate(conceptId, newText) {
+  _applyOptimisticUpdate(conceptId, newText) {
     // Update card immediately
     const card = this._getElement('conceptsResults').querySelector(
       `[data-concept-id="${conceptId}"]`
@@ -1925,7 +1877,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     if (card) {
       const textElement = card.querySelector('.concept-text');
       if (textElement) {
-        textElement.textContent = this.#truncateText(newText, 150);
+        textElement.textContent = this._truncateText(newText, 150);
         card.classList.add('concept-updating');
       }
     }
@@ -1936,14 +1888,14 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} conceptId
    */
-  #revertOptimisticUpdate(conceptId) {
+  _revertOptimisticUpdate(conceptId) {
     // Find original concept
     const originalData = this.#conceptsData.find(
       ({ concept }) => concept.id === conceptId
     );
 
     if (originalData) {
-      this.#updateConceptCard(
+      this._updateConceptCard(
         originalData.concept,
         originalData.directionCount
       );
@@ -1965,7 +1917,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Track changes to form
    */
-  #trackFormChanges() {
+  _trackFormChanges() {
     const currentText = this._getElement('conceptText').value.trim();
     this.#hasUnsavedChanges = currentText !== this.#originalConceptText;
 
@@ -1981,7 +1933,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * Add keyboard shortcuts for edit functionality
    * This method should be called during initialization
    */
-  #setupKeyboardShortcuts() {
+  _setupKeyboardShortcuts() {
     // Add global keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       // Ctrl/Cmd + F to focus search
@@ -2003,7 +1955,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         !e.target.closest('input, textarea')
       ) {
         e.preventDefault();
-        this.#undoLastEdit();
+        this._undoLastEdit();
         return;
       }
 
@@ -2039,7 +1991,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
               ({ concept }) => concept.id === conceptId
             );
             if (conceptData) {
-              this.#viewConceptDetails(conceptData.concept);
+              this._viewConceptDetails(conceptData.concept);
             }
           }
           break;
@@ -2058,7 +2010,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
               ({ concept }) => concept.id === conceptId
             );
             if (conceptData) {
-              this.#showDeleteConfirmation(
+              this._showDeleteConfirmation(
                 conceptData.concept,
                 conceptData.directionCount
               );
@@ -2072,15 +2024,15 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Undo last edit if available
    */
-  async #undoLastEdit() {
+  async _undoLastEdit() {
     if (!this.#lastEdit || Date.now() - this.#lastEdit.timestamp > 30000) {
       // No recent edit to undo (30 second window)
-      this.#logger.info('No recent edit to undo');
+      this.logger.info('No recent edit to undo');
       return;
     }
 
     try {
-      await this.#updateConcept(
+      await this._updateConcept(
         this.#lastEdit.conceptId,
         this.#lastEdit.previousText
       );
@@ -2088,7 +2040,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       this.#uiStateManager.showState(UI_STATES.RESULTS);
       this.#lastEdit = null;
     } catch (error) {
-      this.#logger.error('Failed to undo edit', error);
+      this.logger.error('Failed to undo edit', error);
       this.#uiStateManager.showError('Failed to undo edit');
     }
   }
@@ -2098,7 +2050,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} conceptId
    */
-  #applyOptimisticDelete(conceptId) {
+  _applyOptimisticDelete(conceptId) {
     const card = this._getElement('conceptsResults').querySelector(
       `[data-concept-id="${conceptId}"]`
     );
@@ -2126,7 +2078,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Revert optimistic delete on failure
    */
-  #revertOptimisticDelete() {
+  _revertOptimisticDelete() {
     if (this.#deletedCard) {
       const { element, nextSibling, parent } = this.#deletedCard;
 
@@ -2157,14 +2109,14 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} conceptId
    */
-  #removeFromLocalCache(conceptId) {
+  _removeFromLocalCache(conceptId) {
     const index = this.#conceptsData.findIndex(
       ({ concept }) => concept.id === conceptId
     );
 
     if (index !== -1) {
       this.#conceptsData.splice(index, 1);
-      this.#logger.info('Removed concept from local cache', { conceptId });
+      this.logger.info('Removed concept from local cache', { conceptId });
     }
   }
 
@@ -2176,7 +2128,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} searchTerm
    */
   _handleSearch(searchTerm) {
-    this.#logger.info('Enhanced search handling', {
+    this.logger.info('Enhanced search handling', {
       searchTerm,
       length: searchTerm.length,
     });
@@ -2185,23 +2137,23 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     this.#searchFilter = searchTerm.trim();
 
     // Filter concepts with enhanced logic
-    const filteredConcepts = this.#filterConcepts(this.#conceptsData);
+    const filteredConcepts = this._filterConcepts(this.#conceptsData);
 
     // Update display with highlighting
-    this.#displayFilteredConcepts(filteredConcepts);
+    this._displayFilteredConcepts(filteredConcepts);
 
     // Update search state UI with enhanced feedback
-    this.#updateSearchState(searchTerm, filteredConcepts.length);
+    this._updateSearchState(searchTerm, filteredConcepts.length);
 
     // Save search state for session persistence
-    this.#saveSearchState();
+    this._saveSearchState();
 
     // Enhanced analytics tracking
-    this.#trackSearchAnalytics(searchTerm, filteredConcepts.length);
+    this._trackSearchAnalytics(searchTerm, filteredConcepts.length);
 
     // Dispatch enhanced search event
     if (searchTerm.length > 0) {
-      this.#eventBus.dispatch('core:ui_search_performed', {
+      this.eventBus.dispatch('core:ui_search_performed', {
         searchTerm,
         resultCount: filteredConcepts.length,
         totalConcepts: this.#conceptsData.length,
@@ -2217,16 +2169,16 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {object} event - The event object
    */
   _handleConceptCreated(event) {
-    this.#logger.info('Concept created event received', event.payload);
+    this.logger.info('Concept created event received', event.payload);
 
     // Refresh data and statistics
     this._loadConceptsData().then(() => {
       // Add creation celebration
-      this.#celebrateCreation();
+      this._celebrateCreation();
 
       // Show feedback for the new concept
       if (event.payload && event.payload.concept) {
-        this.#showConceptCreatedFeedback(event.payload.concept);
+        this._showConceptCreatedFeedback(event.payload.concept);
       }
     });
   }
@@ -2238,7 +2190,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {CustomEvent} event
    */
   _handleConceptUpdated(event) {
-    this.#logger.info('Concept updated event received', event.payload);
+    this.logger.info('Concept updated event received', event.payload);
 
     const { concept: updatedConcept } = event.payload;
 
@@ -2248,7 +2200,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     );
 
     if (index === -1) {
-      this.#logger.warn('Updated concept not found in cache', {
+      this.logger.warn('Updated concept not found in cache', {
         conceptId: updatedConcept.id,
       });
       // Reload data to sync
@@ -2266,15 +2218,15 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     };
 
     // Update specific card if visible
-    if (this.#isConceptVisible(updatedConcept.id)) {
-      this.#updateConceptCard(updatedConcept, directionCount);
+    if (this._isConceptVisible(updatedConcept.id)) {
+      this._updateConceptCard(updatedConcept, directionCount);
     }
 
     // Update statistics in case text length affected categories
-    this.#updateStatistics();
+    this._updateStatistics();
 
     // Broadcast change to other tabs
-    this.#broadcastDataChange('concept-updated', { concept: updatedConcept });
+    this._broadcastDataChange('concept-updated', { concept: updatedConcept });
   }
 
   /**
@@ -2284,23 +2236,23 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {CustomEvent} event
    */
   _handleConceptDeleted(event) {
-    this.#logger.info('Concept deleted event received', event.payload);
+    this.logger.info('Concept deleted event received', event.payload);
 
     const { conceptId } = event.payload;
 
     // Remove from local cache if not already removed
-    this.#removeFromLocalCache(conceptId);
+    this._removeFromLocalCache(conceptId);
 
     // Remove card from UI with animation
-    this.#removeConceptCard(conceptId);
+    this._removeConceptCard(conceptId);
 
     // Update statistics
-    this.#updateStatistics();
+    this._updateStatistics();
 
     // Show deletion feedback (skip in test environment to avoid DOM issues)
     if (process.env.NODE_ENV !== 'test') {
       const cascadedDirections = event.payload.cascadedDirections || 0;
-      this.#showConceptDeletedFeedback(cascadedDirections);
+      this._showConceptDeletedFeedback(cascadedDirections);
     }
   }
 
@@ -2311,7 +2263,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {CustomEvent} event
    */
   _handleDirectionsGenerated(event) {
-    this.#logger.info('Directions generated event received', event.payload);
+    this.logger.info('Directions generated event received', event.payload);
 
     const { conceptId, directions, count } = event.payload;
 
@@ -2321,7 +2273,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     );
 
     if (!conceptData) {
-      this.#logger.warn('Concept not found for directions update', {
+      this.logger.warn('Concept not found for directions update', {
         conceptId,
       });
       return;
@@ -2332,11 +2284,11 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     conceptData.directionCount = count || directions?.length || 0;
 
     // Update card if visible
-    if (this.#isConceptVisible(conceptId)) {
-      this.#updateConceptCard(conceptData.concept, conceptData.directionCount);
+    if (this._isConceptVisible(conceptId)) {
+      this._updateConceptCard(conceptData.concept, conceptData.directionCount);
 
       // Add generation animation
-      this.#animateDirectionsGenerated(
+      this._animateDirectionsGenerated(
         conceptId,
         oldCount,
         conceptData.directionCount
@@ -2344,21 +2296,21 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     }
 
     // Update statistics
-    this.#updateStatistics();
+    this._updateStatistics();
 
     // Check for completion milestone
     if (oldCount === 0 && conceptData.directionCount > 0) {
-      this.#checkMilestones('directions-added');
+      this._checkMilestones('directions-added');
     }
 
     // Show notification
-    this.#showNotification(
+    this._showNotification(
       `✨ ${conceptData.directionCount} thematic direction${conceptData.directionCount === 1 ? '' : 's'} generated`,
       'success'
     );
 
     // Broadcast change to other tabs
-    this.#broadcastDataChange('directions-generated', {
+    this._broadcastDataChange('directions-generated', {
       conceptId,
       directionCount: conceptData.directionCount,
     });
@@ -2371,7 +2323,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} searchTerm
    * @returns {boolean}
    */
-  #fuzzyMatch(text, searchTerm) {
+  _fuzzyMatch(text, searchTerm) {
     // Only apply fuzzy matching for terms longer than 3 characters
     if (searchTerm.length <= 3) {
       return false;
@@ -2394,13 +2346,13 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {Array<{concept: object, directionCount: number}>} filteredConcepts
    */
-  #displayFilteredConcepts(filteredConcepts) {
+  _displayFilteredConcepts(filteredConcepts) {
     if (filteredConcepts.length === 0 && this.#searchFilter) {
       // Use enhanced no search results state
-      this.#showNoSearchResults();
+      this._showNoSearchResults();
     } else {
       // Use existing display logic with highlighting enhancements
-      this.#displayConcepts(filteredConcepts);
+      this._displayConcepts(filteredConcepts);
     }
   }
 
@@ -2408,7 +2360,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * Enhanced no search results state
    * Builds upon existing #showEmptyState architecture
    */
-  #showNoSearchResults() {
+  _showNoSearchResults() {
     // Use existing empty state infrastructure but with search-specific content
     const hasSearchFilter = this.#searchFilter && this.#searchFilter.length > 0;
 
@@ -2423,7 +2375,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         <div class="no-results-icon">🔍</div>
         <p class="no-results-title">No concepts match your search</p>
         <p class="no-results-message">
-          No concepts found for "<strong>${this.#escapeHtml(this.#searchFilter)}</strong>"
+          No concepts found for "<strong>${this._escapeHtml(this.#searchFilter)}</strong>"
         </p>
         <div class="search-suggestions">
           <p>Try:</p>
@@ -2449,7 +2401,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       this._getElement('conceptsResults').appendChild(noResultsDiv);
     } else {
       // Fall back to existing empty state logic
-      this.#showEmptyState();
+      this._showEmptyState();
     }
   }
 
@@ -2459,7 +2411,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} searchTerm
    * @param {number} resultCount
    */
-  #updateSearchState(searchTerm, resultCount) {
+  _updateSearchState(searchTerm, resultCount) {
     const hasSearch = searchTerm.length > 0;
 
     // Add search active class to container
@@ -2470,10 +2422,10 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     }
 
     // Update or create search status element
-    this.#updateSearchStatus(searchTerm, resultCount);
+    this._updateSearchStatus(searchTerm, resultCount);
 
     // Update clear button visibility
-    this.#updateClearButton(hasSearch);
+    this._updateClearButton(hasSearch);
   }
 
   /**
@@ -2482,7 +2434,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} searchTerm
    * @param {number} resultCount
    */
-  #updateSearchStatus(searchTerm, resultCount) {
+  _updateSearchStatus(searchTerm, resultCount) {
     if (!searchTerm) {
       // Remove status if no search
       const existingStatus = document.querySelector('.search-status');
@@ -2512,7 +2464,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     statusElement.innerHTML = `
       <span class="search-status-text">
         Showing <strong>${resultCount}</strong> of <strong>${totalCount}</strong> concepts
-        matching "<strong>${this.#escapeHtml(searchTerm)}</strong>"
+        matching "<strong>${this._escapeHtml(searchTerm)}</strong>"
       </span>
       <button type="button" class="clear-search-inline" aria-label="Clear search">
         ✕
@@ -2531,26 +2483,26 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @protected
    */
   _clearSearch() {
-    this.#logger.info('Clearing enhanced search');
+    this.logger.info('Clearing enhanced search');
 
     // Clear input (existing logic)
     this._getElement('conceptSearch').value = '';
     this.#searchFilter = '';
 
     // Display all concepts using existing method
-    this.#displayConcepts(this.#conceptsData);
+    this._displayConcepts(this.#conceptsData);
 
     // Enhanced UI state updates
-    this.#updateSearchState('', this.#conceptsData.length);
+    this._updateSearchState('', this.#conceptsData.length);
 
     // Clear search persistence
-    this.#saveSearchState();
+    this._saveSearchState();
 
     // Focus back to search input (accessibility)
     this._getElement('conceptSearch').focus();
 
     // Dispatch clear event
-    this.#eventBus.dispatch('core:ui_search_cleared', {
+    this.eventBus.dispatch('core:ui_search_cleared', {
       totalConcepts: this.#conceptsData.length,
     });
   }
@@ -2560,7 +2512,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {boolean} visible
    */
-  #updateClearButton(visible) {
+  _updateClearButton(visible) {
     // Find or create clear button
     let clearButton =
       this._getElement('conceptSearch').parentElement.querySelector(
@@ -2595,19 +2547,19 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} searchTerm
    * @returns {string} HTML with highlighted terms
    */
-  #highlightSearchTerms(text, searchTerm) {
+  _highlightSearchTerms(text, searchTerm) {
     if (!searchTerm || searchTerm.length === 0) {
-      return this.#escapeHtml(text);
+      return this._escapeHtml(text);
     }
 
     const searchTerms = searchTerm
       .split(/\s+/)
       .filter((term) => term.length > 0);
-    let highlightedText = this.#escapeHtml(text);
+    let highlightedText = this._escapeHtml(text);
 
     // Highlight each search term
     searchTerms.forEach((term) => {
-      const regex = new RegExp(`(${this.#escapeRegex(term)})`, 'gi');
+      const regex = new RegExp(`(${this._escapeRegex(term)})`, 'gi');
       highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
     });
 
@@ -2620,14 +2572,14 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} string
    * @returns {string}
    */
-  #escapeRegex(string) {
+  _escapeRegex(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   /**
    * Save search state to session storage
    */
-  #saveSearchState() {
+  _saveSearchState() {
     if (this.#searchFilter) {
       sessionStorage.setItem('conceptsManagerSearch', this.#searchFilter);
     } else {
@@ -2638,7 +2590,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Restore search state from session storage
    */
-  #restoreSearchState() {
+  _restoreSearchState() {
     const savedSearch = sessionStorage.getItem('conceptsManagerSearch');
     if (savedSearch && this._getElement('conceptSearch')) {
       this._getElement('conceptSearch').value = savedSearch;
@@ -2655,7 +2607,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} searchTerm
    * @param {number} resultCount
    */
-  #trackSearchAnalytics(searchTerm, resultCount) {
+  _trackSearchAnalytics(searchTerm, resultCount) {
     if (!searchTerm) return;
 
     const searchData = {
@@ -2677,10 +2629,10 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 
     // Log analytics periodically
     if (this.#searchAnalytics.searches.length % 10 === 0) {
-      this.#logger.info('Search analytics', {
+      this.logger.info('Search analytics', {
         totalSearches: this.#searchAnalytics.searches.length,
         noResultSearches: this.#searchAnalytics.noResultSearches.length,
-        averageResults: this.#calculateAverageResults(),
+        averageResults: this._calculateAverageResults(),
       });
     }
   }
@@ -2690,7 +2642,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @returns {number}
    */
-  #calculateAverageResults() {
+  _calculateAverageResults() {
     const searches = this.#searchAnalytics.searches;
     if (searches.length === 0) return 0;
 
@@ -2705,19 +2657,19 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {number} maxLength
    * @returns {string}
    */
-  #getDisplayText(concept, maxLength) {
+  _getDisplayText(concept, maxLength) {
     const conceptText = concept.concept || concept.text;
-    const truncatedText = this.#truncateText(conceptText, maxLength);
+    const truncatedText = this._truncateText(conceptText, maxLength);
 
     return this.#searchFilter
-      ? this.#highlightSearchTerms(truncatedText, this.#searchFilter)
-      : this.#escapeHtml(truncatedText);
+      ? this._highlightSearchTerms(truncatedText, this.#searchFilter)
+      : this._escapeHtml(truncatedText);
   }
 
   /**
    * Initialize cross-tab communication
    */
-  #initializeCrossTabSync() {
+  _initializeCrossTabSync() {
     try {
       // Create broadcast channel
       this.#broadcastChannel = new BroadcastChannel(
@@ -2726,23 +2678,23 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 
       // Listen for messages from other tabs
       this.#broadcastChannel.addEventListener('message', (event) => {
-        this.#handleCrossTabMessage(event.data);
+        this._handleCrossTabMessage(event.data);
       });
 
       // Announce this tab
-      this.#broadcastMessage({
+      this._broadcastMessage({
         type: 'tab-opened',
         tabId: this.#tabId,
         timestamp: Date.now(),
       });
 
       // Set up leader election
-      this.#performLeaderElection();
+      this._performLeaderElection();
 
-      this.#logger.info('Cross-tab sync initialized', { tabId: this.#tabId });
+      this.logger.info('Cross-tab sync initialized', { tabId: this.#tabId });
     } catch (error) {
       // BroadcastChannel not supported
-      this.#logger.warn(
+      this.logger.warn(
         'BroadcastChannel not supported, cross-tab sync disabled'
       );
     }
@@ -2753,26 +2705,26 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {object} message
    */
-  #handleCrossTabMessage(message) {
-    this.#logger.debug('Cross-tab message received', message);
+  _handleCrossTabMessage(message) {
+    this.logger.debug('Cross-tab message received', message);
 
     switch (message.type) {
       case 'tab-opened':
         // Another tab opened, re-elect leader
-        this.#performLeaderElection();
+        this._performLeaderElection();
         break;
 
       case 'tab-closed':
         // A tab closed, might need new leader
         if (message.wasLeader) {
-          this.#performLeaderElection();
+          this._performLeaderElection();
         }
         break;
 
       case 'data-changed':
         // Data changed in another tab
         if (message.tabId !== this.#tabId) {
-          this.#handleRemoteDataChange(message.changeType, message.data);
+          this._handleRemoteDataChange(message.changeType, message.data);
         }
         break;
 
@@ -2788,7 +2740,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {object} message
    */
-  #broadcastMessage(message) {
+  _broadcastMessage(message) {
     if (this.#broadcastChannel) {
       try {
         this.#broadcastChannel.postMessage({
@@ -2797,7 +2749,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
           timestamp: Date.now(),
         });
       } catch (error) {
-        this.#logger.error('Failed to broadcast message', error);
+        this.logger.error('Failed to broadcast message', error);
       }
     }
   }
@@ -2808,8 +2760,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} changeType
    * @param {object} data
    */
-  #broadcastDataChange(changeType, data) {
-    this.#broadcastMessage({
+  _broadcastDataChange(changeType, data) {
+    this._broadcastMessage({
       type: 'data-changed',
       changeType,
       data,
@@ -2822,8 +2774,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} changeType
    * @param {object} data
    */
-  #handleRemoteDataChange(changeType, data) {
-    this.#logger.info('Remote data change detected', { changeType });
+  _handleRemoteDataChange(changeType, data) {
+    this.logger.info('Remote data change detected', { changeType });
 
     // Debounce rapid changes
     if (this.#remoteChangeTimeout) {
@@ -2839,9 +2791,9 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Perform leader election for cross-tab coordination
    */
-  #performLeaderElection() {
+  _performLeaderElection() {
     // Simple leader election: lowest tab ID wins
-    this.#broadcastMessage({
+    this._broadcastMessage({
       type: 'leader-election',
       tabId: this.#tabId,
     });
@@ -2850,7 +2802,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     setTimeout(() => {
       // If no other tabs claimed leadership, this tab is leader
       this.#isLeaderTab = true;
-      this.#broadcastMessage({
+      this._broadcastMessage({
         type: 'leader-elected',
         tabId: this.#tabId,
       });
@@ -2860,10 +2812,10 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Cleanup before page unload
    */
-  #cleanup() {
+  _cleanup() {
     // Notify other tabs
     if (this.#broadcastChannel) {
-      this.#broadcastMessage({
+      this._broadcastMessage({
         type: 'tab-closed',
         wasLeader: this.#isLeaderTab,
       });
@@ -2872,7 +2824,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     }
 
     // Clean up animations
-    this.#cleanupAnimations();
+    this._cleanupAnimations();
   }
 
   /**
@@ -2881,7 +2833,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} conceptId
    * @returns {boolean}
    */
-  #isConceptVisible(conceptId) {
+  _isConceptVisible(conceptId) {
     const card = this._getElement('conceptsResults').querySelector(
       `[data-concept-id="${conceptId}"]`
     );
@@ -2893,7 +2845,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} conceptId
    */
-  #removeConceptCard(conceptId) {
+  _removeConceptCard(conceptId) {
     const card = this._getElement('conceptsResults').querySelector(
       `[data-concept-id="${conceptId}"]`
     );
@@ -2925,7 +2877,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {number} oldCount
    * @param {number} newCount
    */
-  #animateDirectionsGenerated(conceptId, oldCount, newCount) {
+  _animateDirectionsGenerated(conceptId, oldCount, newCount) {
     const card = this._getElement('conceptsResults').querySelector(
       `[data-concept-id="${conceptId}"]`
     );
@@ -2939,7 +2891,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     const countElement = card.querySelector('.direction-count strong');
     if (countElement) {
       // Animate number change
-      this.#animateNumberChange(countElement, oldCount, newCount);
+      this._animateNumberChange(countElement, oldCount, newCount);
     }
 
     // Update status if first directions
@@ -2964,7 +2916,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {string} message
    * @param {string} type - 'success', 'info', 'warning', 'error'
    */
-  #showNotification(message, type = 'info') {
+  _showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
@@ -2983,7 +2935,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         document.body.appendChild(container);
       } else {
         // In test environment, just return without showing notification
-        this.#logger.info('Notification:', message);
+        this.logger.info('Notification:', message);
         return;
       }
     }
@@ -3016,23 +2968,23 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} action - 'created', 'deleted', 'directions-added'
    */
-  #checkMilestones(action) {
-    const stats = this.#calculateStatistics();
+  _checkMilestones(action) {
+    const stats = this._calculateStatistics();
 
     switch (action) {
       case 'created':
         if (stats.totalConcepts === 1) {
-          this.#showMilestone('🎉 First Concept Created!');
+          this._showMilestone('🎉 First Concept Created!');
         } else if (stats.totalConcepts % 10 === 0) {
-          this.#showMilestone(`🎊 ${stats.totalConcepts} Concepts Created!`);
+          this._showMilestone(`🎊 ${stats.totalConcepts} Concepts Created!`);
         }
         break;
 
       case 'directions-added':
         if (stats.completionRate === 100 && stats.totalConcepts > 1) {
-          this.#showMilestone('⭐ All Concepts Have Directions!');
+          this._showMilestone('⭐ All Concepts Have Directions!');
         } else if (stats.conceptsWithDirections === 1) {
-          this.#showMilestone('🌟 First Concept Completed!');
+          this._showMilestone('🌟 First Concept Completed!');
         }
         break;
     }
@@ -3045,7 +2997,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {number} from
    * @param {number} to
    */
-  #animateNumberChange(element, from, to) {
+  _animateNumberChange(element, from, to) {
     const duration = 500;
     const steps = 20;
     const increment = (to - from) / steps;
@@ -3070,7 +3022,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   /**
    * Clean up animations
    */
-  #cleanupAnimations() {
+  _cleanupAnimations() {
     // Clear any running animations
     const elements = document.querySelectorAll('[data-animation]');
     elements.forEach((el) => {
@@ -3085,7 +3037,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {object} concept
    */
-  #showConceptCreatedFeedback(concept) {
+  _showConceptCreatedFeedback(concept) {
     // Flash the new card
     setTimeout(() => {
       const card = this._getElement('conceptsResults').querySelector(
@@ -3102,7 +3054,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     }, 100);
 
     // Show notification
-    this.#showNotification(
+    this._showNotification(
       '✅ Character concept created successfully',
       'success'
     );
@@ -3113,38 +3065,38 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {number} cascadedDirections
    */
-  #showConceptDeletedFeedback(cascadedDirections) {
+  _showConceptDeletedFeedback(cascadedDirections) {
     let message = '🗑️ Character concept deleted';
     if (cascadedDirections > 0) {
       message += ` (${cascadedDirections} direction${cascadedDirections === 1 ? '' : 's'} also removed)`;
     }
 
-    this.#showNotification(message, 'info');
+    this._showNotification(message, 'info');
   }
 
   /**
    * Cleanup method for component destruction
    */
   destroy() {
-    this.#logger.info('Destroying CharacterConceptsManagerController');
+    this.logger.info('Destroying CharacterConceptsManagerController');
 
     // Remove event listeners
-    if (this.#eventBus) {
+    if (this.eventBus) {
       import('../characterBuilder/services/characterBuilderService.js').then(
         ({ CHARACTER_BUILDER_EVENTS }) => {
-          this.#eventBus.unsubscribe(
+          this.eventBus.unsubscribe(
             CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED,
             this._handleConceptCreated.bind(this)
           );
-          this.#eventBus.unsubscribe(
+          this.eventBus.unsubscribe(
             CHARACTER_BUILDER_EVENTS.CONCEPT_UPDATED,
             this._handleConceptUpdated.bind(this)
           );
-          this.#eventBus.unsubscribe(
+          this.eventBus.unsubscribe(
             CHARACTER_BUILDER_EVENTS.CONCEPT_DELETED,
             this._handleConceptDeleted.bind(this)
           );
-          this.#eventBus.unsubscribe(
+          this.eventBus.unsubscribe(
             CHARACTER_BUILDER_EVENTS.DIRECTIONS_GENERATED,
             this._handleDirectionsGenerated.bind(this)
           );
@@ -3158,7 +3110,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     }
 
     // Clean up animations
-    this.#cleanupAnimations();
+    this._cleanupAnimations();
 
     // Clear timeouts
     if (this.#remoteChangeTimeout) {

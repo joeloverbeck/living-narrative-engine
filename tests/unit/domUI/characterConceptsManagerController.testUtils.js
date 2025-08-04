@@ -58,44 +58,44 @@ export function createMockElement(id, additionalProps = {}) {
   // Create a real DOM element using jsdom
   const tagName = additionalProps.tagName || 'div';
   const element = document.createElement(tagName);
-  
+
   // Set the ID
   element.id = id;
-  
+
   // Add common properties with defaults
   if (additionalProps.value !== undefined) {
     element.value = additionalProps.value;
   }
-  
+
   // Spy on important methods while keeping original functionality
   const originalAddEventListener = element.addEventListener;
   element.addEventListener = jest.fn((event, handler, options) => {
     originalAddEventListener.call(element, event, handler, options);
   });
-  
+
   const originalRemoveEventListener = element.removeEventListener;
   element.removeEventListener = jest.fn((event, handler, options) => {
     originalRemoveEventListener.call(element, event, handler, options);
   });
-  
+
   // Add spies for other commonly tested methods
   element.focus = jest.fn(element.focus.bind(element));
   element.blur = jest.fn(element.blur.bind(element));
   element.click = jest.fn(element.click.bind(element));
-  
+
   // Add any additional properties (but don't override existing ones)
-  Object.keys(additionalProps).forEach(key => {
+  Object.keys(additionalProps).forEach((key) => {
     if (key !== 'tagName' && key !== 'value' && !(key in element)) {
       element[key] = additionalProps[key];
     }
   });
-  
+
   // Add to document body so contains() checks work
   if (!document.body) {
     document.body = document.createElement('body');
   }
   document.body.appendChild(element);
-  
+
   return element;
 }
 
@@ -118,57 +118,106 @@ export function createMockElements() {
     'error-message-text': createMockElement('error-message-text'),
 
     // Controls
-    'create-concept-btn': createMockElement('create-concept-btn', { tagName: 'button' }),
-    'create-first-btn': createMockElement('create-first-btn', { tagName: 'button' }),
+    'create-concept-btn': createMockElement('create-concept-btn', {
+      tagName: 'button',
+    }),
+    'create-first-btn': createMockElement('create-first-btn', {
+      tagName: 'button',
+    }),
     'retry-btn': createMockElement('retry-btn', { tagName: 'button' }),
-    'back-to-menu-btn': createMockElement('back-to-menu-btn', { tagName: 'button' }),
-    'concept-search': createMockElement('concept-search', { tagName: 'input', value: '' }),
+    'back-to-menu-btn': createMockElement('back-to-menu-btn', {
+      tagName: 'button',
+    }),
+    'concept-search': createMockElement('concept-search', {
+      tagName: 'input',
+      value: '',
+    }),
 
     // Statistics
     'total-concepts': createMockElement('total-concepts', { tagName: 'span' }),
-    'concepts-with-directions': createMockElement('concepts-with-directions', { tagName: 'span' }),
-    'total-directions': createMockElement('total-directions', { tagName: 'span' }),
+    'concepts-with-directions': createMockElement('concepts-with-directions', {
+      tagName: 'span',
+    }),
+    'total-directions': createMockElement('total-directions', {
+      tagName: 'span',
+    }),
 
     // Create/Edit Modal
     'concept-modal': createMockElement('concept-modal'),
     'concept-modal-title': createMockElement('concept-modal-title'),
     'concept-form': createMockElement('concept-form', { tagName: 'form' }),
-    'concept-text': createMockElement('concept-text', { tagName: 'textarea', value: '' }),
+    'concept-text': createMockElement('concept-text', {
+      tagName: 'textarea',
+      value: '',
+    }),
     'char-count': createMockElement('char-count', { tagName: 'span' }),
     'concept-error': createMockElement('concept-error'),
     'concept-help': createMockElement('concept-help'),
-    'save-concept-btn': createMockElement('save-concept-btn', { tagName: 'button' }),
-    'cancel-concept-btn': createMockElement('cancel-concept-btn', { tagName: 'button' }),
-    'close-concept-modal': createMockElement('close-concept-modal', { tagName: 'button' }),
+    'save-concept-btn': createMockElement('save-concept-btn', {
+      tagName: 'button',
+    }),
+    'cancel-concept-btn': createMockElement('cancel-concept-btn', {
+      tagName: 'button',
+    }),
+    'close-concept-modal': createMockElement('close-concept-modal', {
+      tagName: 'button',
+    }),
 
     // Delete Modal
     'delete-confirmation-modal': createMockElement('delete-confirmation-modal'),
     'delete-modal-message': createMockElement('delete-modal-message'),
     'delete-modal-title': createMockElement('delete-modal-title'),
-    'confirm-delete-btn': createMockElement('confirm-delete-btn', { tagName: 'button' }),
-    'cancel-delete-btn': createMockElement('cancel-delete-btn', { tagName: 'button' }),
-    'close-delete-modal': createMockElement('close-delete-modal', { tagName: 'button' }),
+    'confirm-delete-btn': createMockElement('confirm-delete-btn', {
+      tagName: 'button',
+    }),
+    'cancel-delete-btn': createMockElement('cancel-delete-btn', {
+      tagName: 'button',
+    }),
+    'close-delete-modal': createMockElement('close-delete-modal', {
+      tagName: 'button',
+    }),
 
     // Search elements
-    'search-concepts': createMockElement('search-concepts', { tagName: 'input', value: '' }),
-    'clear-search-btn': createMockElement('clear-search-btn', { tagName: 'button' }),
+    'search-concepts': createMockElement('search-concepts', {
+      tagName: 'input',
+      value: '',
+    }),
+    'clear-search-btn': createMockElement('clear-search-btn', {
+      tagName: 'button',
+    }),
     'search-status': createMockElement('search-status'),
 
     // Create modal elements (avoid duplicates)
     'create-modal': createMockElement('create-modal'),
     'create-modal-overlay': createMockElement('create-modal-overlay'),
-    'close-create-modal': createMockElement('close-create-modal', { tagName: 'button' }),
-    'create-concept-text': createMockElement('create-concept-text', { tagName: 'textarea', value: '' }),
-    'create-char-count': createMockElement('create-char-count', { tagName: 'span' }),
+    'close-create-modal': createMockElement('close-create-modal', {
+      tagName: 'button',
+    }),
+    'create-concept-text': createMockElement('create-concept-text', {
+      tagName: 'textarea',
+      value: '',
+    }),
+    'create-char-count': createMockElement('create-char-count', {
+      tagName: 'span',
+    }),
     'create-error': createMockElement('create-error'),
-    'save-create-btn': createMockElement('save-create-btn', { tagName: 'button' }),
+    'save-create-btn': createMockElement('save-create-btn', {
+      tagName: 'button',
+    }),
 
     // Edit modal elements
     'edit-modal': createMockElement('edit-modal'),
     'edit-modal-overlay': createMockElement('edit-modal-overlay'),
-    'close-edit-modal': createMockElement('close-edit-modal', { tagName: 'button' }),
-    'edit-concept-text': createMockElement('edit-concept-text', { tagName: 'textarea', value: '' }),
-    'edit-char-count': createMockElement('edit-char-count', { tagName: 'span' }),
+    'close-edit-modal': createMockElement('close-edit-modal', {
+      tagName: 'button',
+    }),
+    'edit-concept-text': createMockElement('edit-concept-text', {
+      tagName: 'textarea',
+      value: '',
+    }),
+    'edit-char-count': createMockElement('edit-char-count', {
+      tagName: 'span',
+    }),
     'edit-error': createMockElement('edit-error'),
     'save-edit-btn': createMockElement('save-edit-btn', { tagName: 'button' }),
 
@@ -178,7 +227,7 @@ export function createMockElements() {
     'delete-message': createMockElement('delete-message'),
     'delete-error': createMockElement('delete-error'),
   };
-  
+
   // Add form reset method
   elements['concept-form'].reset = jest.fn();
 

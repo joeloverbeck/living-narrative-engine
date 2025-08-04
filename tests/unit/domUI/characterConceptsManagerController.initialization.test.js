@@ -136,12 +136,13 @@ describe('CharacterConceptsManagerController - Initialization', () => {
 
       // Should not throw but log a warning
       await controller.initialize();
-      
+
       // Verify that warn was called for the missing element
       const warnCalls = mockLogger.warn.mock.calls;
-      const hasWarningForMissingElement = warnCalls.some(call => 
-        call[0].includes('Failed to cache element') && 
-        call[0].includes('conceptsContainer')
+      const hasWarningForMissingElement = warnCalls.some(
+        (call) =>
+          call[0].includes('Failed to cache element') &&
+          call[0].includes('conceptsContainer')
       );
       expect(hasWarningForMissingElement).toBe(true);
     });
@@ -152,18 +153,19 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       await controller.initialize();
 
       // Verify UIStateManager was created
-      const UIStateManager = require('../../../src/shared/characterBuilder/uiStateManager.js').UIStateManager;
+      const UIStateManager =
+        require('../../../src/shared/characterBuilder/uiStateManager.js').UIStateManager;
       expect(UIStateManager).toHaveBeenCalled();
-      
+
       // Get the call arguments
       const callArgs = UIStateManager.mock.calls[0][0];
-      
+
       // Verify the correct element properties were passed
       expect(callArgs).toHaveProperty('emptyState');
       expect(callArgs).toHaveProperty('loadingState');
       expect(callArgs).toHaveProperty('errorState');
       expect(callArgs).toHaveProperty('resultsState');
-      
+
       // Verify the structure was passed
       expect(callArgs).toHaveProperty('emptyState');
       expect(callArgs).toHaveProperty('loadingState');
@@ -183,13 +185,15 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       const error = new Error('Service initialization failed');
       mockCharacterBuilderService.initialize.mockRejectedValue(error);
 
-      await expect(controller.initialize()).rejects.toThrow('service initialization failed');
+      await expect(controller.initialize()).rejects.toThrow(
+        'service initialization failed'
+      );
 
       // The error is logged differently by the base class
       const errorCalls = mockLogger.error.mock.calls;
-      const hasServiceError = errorCalls.some(call => 
-        call[0].includes('Failed service initialization') && 
-        call[1] === error
+      const hasServiceError = errorCalls.some(
+        (call) =>
+          call[0].includes('Failed service initialization') && call[1] === error
       );
       expect(hasServiceError).toBe(true);
     });
@@ -245,8 +249,10 @@ describe('CharacterConceptsManagerController - Initialization', () => {
         require('../../../src/shared/characterBuilder/formValidationHelper.js').FormValidationHelper;
 
       // FormValidationHelper should not be called during initialization
-      expect(FormValidationHelper.setupRealTimeValidation).not.toHaveBeenCalled();
-      
+      expect(
+        FormValidationHelper.setupRealTimeValidation
+      ).not.toHaveBeenCalled();
+
       // It will be called when the modal is shown (tested in modal display tests)
     });
   });
@@ -257,7 +263,7 @@ describe('CharacterConceptsManagerController - Initialization', () => {
 
       // Check that initialization completed by looking at the info calls
       const infoCalls = mockLogger.info.mock.calls;
-      const completionCall = infoCalls.find(call => 
+      const completionCall = infoCalls.find((call) =>
         call[0].includes('Initialization completed')
       );
       expect(completionCall).toBeTruthy();
@@ -276,7 +282,9 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       const error = new Error('Initialization failed');
       mockCharacterBuilderService.initialize.mockRejectedValue(error);
 
-      await expect(controller.initialize()).rejects.toThrow('service initialization failed');
+      await expect(controller.initialize()).rejects.toThrow(
+        'service initialization failed'
+      );
     });
   });
 
@@ -287,18 +295,18 @@ describe('CharacterConceptsManagerController - Initialization', () => {
 
     it('should handle back button click without errors', () => {
       const backBtn = mockElements['back-to-menu-btn'];
-      
+
       // Verify the button has addEventListener called
       expect(backBtn.addEventListener).toHaveBeenCalled();
-      
+
       // Find the click handler call
       const clickCalls = backBtn.addEventListener.mock.calls.filter(
         (call) => call[0] === 'click'
       );
-      
+
       // Should have at least one click handler
       expect(clickCalls.length).toBeGreaterThan(0);
-      
+
       if (clickCalls.length > 0) {
         const clickHandler = clickCalls[0][1];
         // Should not throw when called
@@ -306,7 +314,6 @@ describe('CharacterConceptsManagerController - Initialization', () => {
       }
     });
   });
-
 
   describe('Error State Display', () => {
     beforeEach(async () => {

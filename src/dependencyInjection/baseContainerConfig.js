@@ -7,6 +7,7 @@ import { registerPersistence } from './registrations/persistenceRegistrations.js
 import { registerWorldAndEntity } from './registrations/worldAndEntityRegistrations.js';
 import { registerCommandAndAction } from './registrations/commandAndActionRegistrations.js';
 import { registerInterpreters } from './registrations/interpreterRegistrations.js';
+import { registerActionCategorization } from './registrations/actionCategorizationRegistrations.js';
 import { registerEventBusAdapters } from './registrations/eventBusAdapterRegistrations.js';
 import { registerInitializers } from './registrations/initializerRegistrations.js';
 import { registerRuntime } from './registrations/runtimeRegistrations.js';
@@ -97,6 +98,9 @@ export async function configureBaseContainer(container, options = {}) {
 
   // Continue with core registrations
   registerEventBusAdapters(container);
+
+  // Register action categorization services
+  registerActionCategorization(container);
 
   // --- Conditionally register UI ---
   if (includeUI && uiElements) {

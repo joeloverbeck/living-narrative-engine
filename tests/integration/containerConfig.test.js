@@ -105,4 +105,19 @@ describe('Dependency Injection Container Configuration', () => {
     // Assert that a TurnManager instance was found
     expect(turnManagerInstance).toBeInstanceOf(TurnManager);
   });
+
+  // Test 5: Verify ActionCategorizationService can be resolved
+  describe('Container Configuration - Action Categorization', () => {
+    it('should register action categorization services', () => {
+      expect(container.isRegistered(tokens.IActionCategorizationService)).toBe(
+        true
+      );
+    });
+
+    it('should resolve action categorization services', () => {
+      expect(() =>
+        container.resolve(tokens.IActionCategorizationService)
+      ).not.toThrow();
+    });
+  });
 });
