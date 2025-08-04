@@ -50,6 +50,7 @@ describe('ActionButtonsRenderer', () => {
   let mockLogger;
   let mockVed;
   let mockDomElementFactoryInstance;
+  let mockActionCategorizationService;
   let actionButtonsContainer;
   let mockSendButton;
   const CLASS_PREFIX = '[ActionButtonsRenderer]';
@@ -120,6 +121,27 @@ describe('ActionButtonsRenderer', () => {
     mockLogger = new ConsoleLogger();
     mockVed = new ValidatedEventDispatcher({});
     mockDomElementFactoryInstance = new DomElementFactory(docContext);
+
+    // Create mock ActionCategorizationService
+    mockActionCategorizationService = {
+      extractNamespace: jest.fn((actionId) => {
+        if (!actionId || typeof actionId !== 'string') return 'unknown';
+        const colonIndex = actionId.indexOf(':');
+        return colonIndex === -1
+          ? 'unknown'
+          : actionId.substring(0, colonIndex);
+      }),
+      shouldUseGrouping: jest.fn(() => false), // Default to no grouping for simpler tests
+      groupActionsByNamespace: jest.fn((actions) => {
+        const map = new Map();
+        map.set('test', actions || []);
+        return map;
+      }),
+      getSortedNamespaces: jest.fn((namespaces) => [...namespaces].sort()),
+      formatNamespaceDisplayName: jest.fn(
+        (namespace) => namespace?.toUpperCase() || 'UNKNOWN'
+      ),
+    };
 
     jest
       .spyOn(mockDomElementFactoryInstance, 'button')
@@ -196,6 +218,7 @@ describe('ActionButtonsRenderer', () => {
       containerSelectorParam = ACTION_BUTTONS_CONTAINER_SELECTOR,
       factoryOverrideParam = mockDomElementFactoryInstance,
       sendButtonSelectorParam = SEND_BUTTON_SELECTOR,
+      actionCategorizationServiceParam = mockActionCategorizationService,
     } = options;
 
     const testDocContext = new DocumentContext(document);
@@ -206,6 +229,7 @@ describe('ActionButtonsRenderer', () => {
       domElementFactory: factoryOverrideParam,
       actionButtonsContainerSelector: containerSelectorParam,
       sendButtonSelector: sendButtonSelectorParam,
+      actionCategorizationService: actionCategorizationServiceParam,
     });
     // Allow microtasks from constructor's refreshList() to settle
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -403,11 +427,15 @@ describe('ActionButtonsRenderer', () => {
       expect(mockDomElementFactoryInstance.button).toHaveBeenCalledTimes(
         expectedRenderedCount
       );
-      // In grouped mode, there's only 1 appendChild call for the fragment
-      expect(actionButtonsContainer.appendChild).toHaveBeenCalledTimes(1);
-      // In grouped mode: 1 header + 1 container for "test" namespace,
-      // plus 1 header + 1 container for "unknown" namespace = 4 total
-      expect(actionButtonsContainer.children.length).toBeGreaterThanOrEqual(2);
+      // Since we're using no grouping by default (shouldUseGrouping returns false),
+      // there should be individual appendChild calls for each valid button
+      expect(actionButtonsContainer.appendChild).toHaveBeenCalledTimes(
+        expectedRenderedCount
+      );
+      // In non-grouped mode, each valid action becomes a direct button child
+      expect(actionButtonsContainer.children.length).toBe(
+        expectedRenderedCount
+      );
 
       // CORRECTED: Check for the new, single warning message format.
       expect(mockLogger.warn).toHaveBeenCalledTimes(expectedWarningCount);

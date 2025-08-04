@@ -7,6 +7,7 @@
 import { SelectableListDisplayComponent } from './selectableListDisplayComponent.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
 import { DATASET_ACTION_INDEX } from '../constants/datasetKeys.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 
 /**
  * Dataset key storing the index for rendered action buttons.
@@ -81,15 +82,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   availableActions = [];
   #currentActorId = null;
   #isDisposed = false;
-
-  /** @type {object} Configuration for grouping behavior */
-  #groupingConfig = {
-    enabled: true,
-    showCounts: false,
-    minActionsForGrouping: 6,
-    minNamespacesForGrouping: 2,
-    namespaceOrder: ['core', 'intimacy', 'sex', 'anatomy', 'clothing'],
-  };
+  #actionCategorizationService = null;
 
   /** @type {Map<string, ActionComposite[]>} Grouped actions by namespace */
   #groupedActions = new Map();
@@ -105,6 +98,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    * @param {string} params.actionButtonsContainerSelector - CSS selector for the action buttons container. This is mandatory.
    * @param {string} [params.sendButtonSelector] - CSS selector for the send button.
    * @param {string} [params.speechInputSelector] - CSS selector for the speech input.
+   * @param {object} params.actionCategorizationService - Service for action categorization logic.
    */
   constructor({
     logger,
@@ -114,6 +108,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     actionButtonsContainerSelector,
     sendButtonSelector = '#player-confirm-turn-button',
     speechInputSelector = '#speech-input',
+    actionCategorizationService,
   }) {
     // domElementFactory is optional but recommended for creating button elements.
 
@@ -154,6 +149,23 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       domElementFactory, // Pass the now-validated domElementFactory to super
     });
 
+    // Validate the action categorization service
+    validateDependency(
+      actionCategorizationService,
+      'IActionCategorizationService',
+      null,
+      {
+        requiredMethods: [
+          'extractNamespace',
+          'shouldUseGrouping',
+          'groupActionsByNamespace',
+          'getSortedNamespaces',
+          'formatNamespaceDisplayName',
+        ],
+      }
+    );
+
+    this.#actionCategorizationService = actionCategorizationService;
     this.selectedAction = null;
     this.availableActions = [];
     this.#currentActorId = null;
@@ -360,7 +372,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     }
 
     // Check if we should use grouping
-    if (!this.#shouldUseGrouping(itemsData)) {
+    if (!this.#actionCategorizationService.shouldUseGrouping(itemsData)) {
       // Use standard rendering without grouping
       itemsData.forEach((item) => {
         const element = this._renderListItem(item);
@@ -370,109 +382,14 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       });
     } else {
       // Use grouped rendering
-      this.#groupedActions = this.#groupActionsByNamespace(itemsData);
+      this.#groupedActions =
+        this.#actionCategorizationService.groupActionsByNamespace(itemsData);
       const fragment = this.#renderGroupedActions();
       container.appendChild(fragment);
     }
 
     // Call the post-render hook
     this._onListRendered(itemsData, container);
-  }
-
-  /**
-   * Determines if grouping should be applied based on action count and diversity
-   *
-   * @private
-   * @param {ActionComposite[]} actions
-   * @returns {boolean}
-   */
-  #shouldUseGrouping(actions) {
-    const namespaces = new Set(
-      actions
-        .filter((action) => action && action.actionId)
-        .map((action) => this.#extractNamespace(action.actionId))
-    );
-    return (
-      actions.length >= this.#groupingConfig.minActionsForGrouping &&
-      namespaces.size >= this.#groupingConfig.minNamespacesForGrouping &&
-      this.#groupingConfig.enabled
-    );
-  }
-
-  /**
-   * Extracts namespace from action ID (e.g., "core:wait" → "core")
-   *
-   * @private
-   * @param {string} actionId
-   * @returns {string}
-   */
-  #extractNamespace(actionId) {
-    if (!actionId || typeof actionId !== 'string') {
-      return 'unknown';
-    }
-    const colonIndex = actionId.indexOf(':');
-    return colonIndex !== -1 ? actionId.substring(0, colonIndex) : 'unknown';
-  }
-
-  /**
-   * Groups actions by namespace with ordering priority
-   *
-   * @private
-   * @param {ActionComposite[]} actions
-   * @returns {Map<string, ActionComposite[]>}
-   */
-  #groupActionsByNamespace(actions) {
-    const grouped = new Map();
-
-    // Group actions
-    for (const action of actions) {
-      // Include all actions, even null ones, so _renderListItem can handle validation
-      const namespace = this.#extractNamespace(action?.actionId);
-      if (!grouped.has(namespace)) {
-        grouped.set(namespace, []);
-      }
-      grouped.get(namespace).push(action);
-    }
-
-    // Sort namespaces by priority order
-    const sortedGroups = new Map();
-    const orderedNamespaces = this.#getSortedNamespaces(
-      Array.from(grouped.keys())
-    );
-
-    for (const namespace of orderedNamespaces) {
-      sortedGroups.set(namespace, grouped.get(namespace));
-    }
-
-    return sortedGroups;
-  }
-
-  /**
-   * Sorts namespaces according to priority configuration
-   *
-   * @private
-   * @param {string[]} namespaces
-   * @returns {string[]}
-   */
-  #getSortedNamespaces(namespaces) {
-    const { namespaceOrder } = this.#groupingConfig;
-
-    return namespaces.sort((a, b) => {
-      const aIndex = namespaceOrder.indexOf(a);
-      const bIndex = namespaceOrder.indexOf(b);
-
-      // If both are in priority list, sort by priority order
-      if (aIndex !== -1 && bIndex !== -1) {
-        return aIndex - bIndex;
-      }
-
-      // If only one is in priority list, prioritize it
-      if (aIndex !== -1) return -1;
-      if (bIndex !== -1) return 1;
-
-      // If neither is in priority list, sort alphabetically
-      return a.localeCompare(b);
-    });
   }
 
   /**
@@ -523,10 +440,10 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     header.setAttribute('role', 'heading');
     header.setAttribute('aria-level', '3');
 
-    const displayName = this.#formatNamespaceDisplayName(namespace);
-    header.textContent = this.#groupingConfig.showCounts
-      ? `${displayName} (${actionCount})`
-      : displayName;
+    const displayName =
+      this.#actionCategorizationService.formatNamespaceDisplayName(namespace);
+    // Note: UI_CATEGORIZATION_CONFIG has showCounts: true by default
+    header.textContent = `${displayName} (${actionCount})`;
 
     return header;
   }
@@ -545,55 +462,10 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     container.setAttribute('role', 'group');
     container.setAttribute(
       'aria-label',
-      `${this.#formatNamespaceDisplayName(namespace)} actions`
+      `${this.#actionCategorizationService.formatNamespaceDisplayName(namespace)} actions`
     );
 
     return container;
-  }
-
-  /**
-   * Formats namespace for display (e.g., "core" → "CORE")
-   *
-   * @private
-   * @param {string} namespace
-   * @returns {string}
-   */
-  #formatNamespaceDisplayName(namespace) {
-    // Handle special cases
-    const specialCases = {
-      unknown: 'OTHER',
-    };
-
-    if (specialCases[namespace]) {
-      return specialCases[namespace];
-    }
-
-    return namespace.toUpperCase();
-  }
-
-  /**
-   * Updates grouping configuration
-   *
-   * @public
-   * @param {object} config
-   */
-  updateGroupingConfig(config) {
-    this.#groupingConfig = { ...this.#groupingConfig, ...config };
-
-    // Re-render if we have current actions
-    if (this.availableActions.length > 0) {
-      this.refreshList();
-    }
-  }
-
-  /**
-   * Gets current grouping configuration
-   *
-   * @public
-   * @returns {object}
-   */
-  getGroupingConfig() {
-    return { ...this.#groupingConfig };
   }
 
   /**

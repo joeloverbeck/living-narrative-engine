@@ -227,6 +227,19 @@ describe('ActionButtonsRenderer', () => {
     delete global.HTMLInputElement;
   });
 
+  // Mock ActionCategorizationService
+  const mockActionCategorizationService = {
+    extractNamespace: jest.fn().mockImplementation((actionId) => {
+      return actionId.split(':')[0] || 'core';
+    }),
+    shouldUseGrouping: jest.fn().mockReturnValue(false),
+    groupActionsByNamespace: jest.fn().mockReturnValue(new Map()),
+    getSortedNamespaces: jest.fn().mockReturnValue([]),
+    formatNamespaceDisplayName: jest.fn().mockImplementation((namespace) => {
+      return namespace.toUpperCase();
+    }),
+  };
+
   const createRenderer = (config = {}) => {
     const defaults = {
       logger: mockLogger,
@@ -236,6 +249,7 @@ describe('ActionButtonsRenderer', () => {
       actionButtonsContainerSelector: ACTION_BUTTONS_CONTAINER_SELECTOR,
       sendButtonSelector: SEND_BUTTON_SELECTOR,
       speechInputSelector: SPEECH_INPUT_SELECTOR,
+      actionCategorizationService: mockActionCategorizationService,
     };
     return new ActionButtonsRenderer({ ...defaults, ...config });
   };
@@ -570,12 +584,64 @@ describe('ActionButtonsRenderer', () => {
         return document.createElement(tagName);
       });
 
+      // Configure mock service for grouping
+      const mockGroupedActions = new Map([
+        [
+          'core',
+          [
+            createTestComposite(1, 'core:wait', 'Wait', 'Pass time'),
+            createTestComposite(2, 'core:go_n', 'Go North', 'Move north'),
+            createTestComposite(3, 'core:go_s', 'Go South', 'Move south'),
+            createTestComposite(4, 'core:examine', 'Examine', 'Look closely'),
+            createTestComposite(5, 'core:talk', 'Talk', 'Start conversation'),
+          ],
+        ],
+        [
+          'intimacy',
+          [
+            createTestComposite(6, 'intimacy:hug', 'Hug', 'Give a hug'),
+            createTestComposite(7, 'intimacy:kiss', 'Kiss', 'Give a kiss'),
+            createTestComposite(
+              8,
+              'intimacy:hold_hand',
+              'Hold hand',
+              'Hold hands'
+            ),
+            createTestComposite(
+              9,
+              'intimacy:cuddle',
+              'Cuddle',
+              'Cuddle together'
+            ),
+          ],
+        ],
+        [
+          'sex',
+          [
+            createTestComposite(10, 'sex:flirt', 'Flirt', 'Flirt playfully'),
+            createTestComposite(
+              11,
+              'sex:seduce',
+              'Seduce',
+              'Attempt seduction'
+            ),
+            createTestComposite(12, 'sex:tease', 'Tease', 'Tease playfully'),
+          ],
+        ],
+      ]);
+
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(true);
+      mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(
+        mockGroupedActions
+      );
+
       const renderer = new ActionButtonsRenderer({
         logger: mockLogger,
         documentContext: docContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactoryInstance,
         actionButtonsContainerSelector: ACTION_BUTTONS_CONTAINER_SELECTOR,
+        actionCategorizationService: mockActionCategorizationService,
       });
 
       // Create 12 actions across 3 mods to test grouping
@@ -619,10 +685,10 @@ describe('ActionButtonsRenderer', () => {
       expect(sectionHeaders.length).toBe(3);
       expect(actionGroups.length).toBe(3);
 
-      // Check header text
-      expect(sectionHeaders[0].textContent).toBe('CORE');
-      expect(sectionHeaders[1].textContent).toBe('INTIMACY');
-      expect(sectionHeaders[2].textContent).toBe('SEX');
+      // Check header text includes both namespace and count
+      expect(sectionHeaders[0].textContent).toBe('CORE (5)');
+      expect(sectionHeaders[1].textContent).toBe('INTIMACY (4)');
+      expect(sectionHeaders[2].textContent).toBe('SEX (3)');
 
       // Check that each group has the right number of buttons
       const coreButtons = actionGroups[0].querySelectorAll(
@@ -651,12 +717,16 @@ describe('ActionButtonsRenderer', () => {
         return document.createElement(tagName);
       });
 
+      // Configure mock service to not use grouping
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(false);
+
       const renderer = new ActionButtonsRenderer({
         logger: mockLogger,
         documentContext: docContext,
         validatedEventDispatcher: mockVed,
         domElementFactory: mockDomElementFactoryInstance,
         actionButtonsContainerSelector: ACTION_BUTTONS_CONTAINER_SELECTOR,
+        actionCategorizationService: mockActionCategorizationService,
       });
 
       // Create only 5 actions from 1 mod (below grouping thresholds)

@@ -11,107 +11,25 @@ import {
   jest,
 } from '@jest/globals';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
-
-// Mock the UIStateManager
-jest.mock('../../../src/shared/characterBuilder/uiStateManager.js', () => ({
-  UIStateManager: jest.fn().mockImplementation(() => ({
-    showState: jest.fn(),
-    showError: jest.fn(),
-    showLoading: jest.fn(),
-    getCurrentState: jest.fn(),
-    setState: jest.fn(),
-  })),
-  UI_STATES: {
-    EMPTY: 'empty',
-    LOADING: 'loading',
-    RESULTS: 'results',
-    ERROR: 'error',
-  },
-}));
-
-// Mock FormValidationHelper
-jest.mock(
-  '../../../src/shared/characterBuilder/formValidationHelper.js',
-  () => ({
-    FormValidationHelper: {
-      setupRealTimeValidation: jest.fn(),
-      validateField: jest.fn().mockReturnValue(true),
-      showFieldError: jest.fn(),
-      clearFieldError: jest.fn(),
-      validateTextInput: jest.fn().mockReturnValue({ isValid: true }),
-      updateCharacterCount: jest.fn(),
-      validateRequiredField: jest.fn().mockReturnValue(true),
-    },
-    ValidationPatterns: {
-      concept: jest.fn().mockReturnValue({ isValid: true }),
-      title: jest.fn().mockReturnValue({ isValid: true }),
-      description: jest.fn().mockReturnValue({ isValid: true }),
-      shortText: jest.fn().mockReturnValue({ isValid: true }),
-      longText: jest.fn().mockReturnValue({ isValid: true }),
-    },
-  })
-);
-
-// Mock the CharacterBuilderService events import
-jest.mock(
-  '../../../src/characterBuilder/services/characterBuilderService.js',
-  () => ({
-    CHARACTER_BUILDER_EVENTS: {
-      CONCEPT_CREATED: 'core:character_concept_created',
-      CONCEPT_UPDATED: 'core:character_concept_updated',
-      CONCEPT_DELETED: 'core:character_concept_deleted',
-      DIRECTIONS_GENERATED: 'core:thematic_directions_generated',
-    },
-  })
-);
+import { CharacterConceptsManagerTestBase } from './characterConceptsManagerController.testUtils.enhanced.js';
 
 describe('CharacterConceptsManagerController - Constructor and Dependencies', () => {
-  let mockLogger;
-  let mockCharacterBuilderService;
-  let mockEventBus;
+  const testBase = new CharacterConceptsManagerTestBase();
 
-  beforeEach(() => {
-    // Reset all mocks
-    jest.clearAllMocks();
-
-    // Create mock dependencies
-    mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    mockCharacterBuilderService = {
-      initialize: jest.fn().mockResolvedValue(),
-      getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-      createCharacterConcept: jest.fn(),
-      updateCharacterConcept: jest.fn(),
-      deleteCharacterConcept: jest.fn(),
-      getThematicDirections: jest.fn().mockResolvedValue([]),
-    };
-
-    mockEventBus = {
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn(),
-    };
+  beforeEach(async () => {
+    await testBase.setup();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  afterEach(async () => {
+    await testBase.cleanup();
   });
 
   describe('Constructor Validation', () => {
     it('should create controller with valid dependencies', () => {
-      const controller = new CharacterConceptsManagerController({
-        logger: mockLogger,
-        characterBuilderService: mockCharacterBuilderService,
-        eventBus: mockEventBus,
-      });
+      const controller = testBase.createController();
 
       expect(controller).toBeInstanceOf(CharacterConceptsManagerController);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(testBase.mocks.logger.info).toHaveBeenCalledWith(
         'CharacterConceptsManagerController initialized'
       );
     });
@@ -120,8 +38,8 @@ describe('CharacterConceptsManagerController - Constructor and Dependencies', ()
       expect(() => {
         new CharacterConceptsManagerController({
           logger: null,
-          characterBuilderService: mockCharacterBuilderService,
-          eventBus: mockEventBus,
+          characterBuilderService: testBase.mocks.characterBuilderService,
+          eventBus: testBase.mocks.eventBus,
         });
       }).toThrow('Missing required dependency: ILogger');
     });
@@ -132,8 +50,8 @@ describe('CharacterConceptsManagerController - Constructor and Dependencies', ()
       expect(() => {
         new CharacterConceptsManagerController({
           logger: invalidLogger,
-          characterBuilderService: mockCharacterBuilderService,
-          eventBus: mockEventBus,
+          characterBuilderService: testBase.mocks.characterBuilderService,
+          eventBus: testBase.mocks.eventBus,
         });
       }).toThrow('Invalid or missing method');
     });
@@ -141,9 +59,9 @@ describe('CharacterConceptsManagerController - Constructor and Dependencies', ()
     it('should throw error when characterBuilderService is missing', () => {
       expect(() => {
         new CharacterConceptsManagerController({
-          logger: mockLogger,
+          logger: testBase.mocks.logger,
           characterBuilderService: null,
-          eventBus: mockEventBus,
+          eventBus: testBase.mocks.eventBus,
         });
       }).toThrow('Missing required dependency: CharacterBuilderService');
     });
@@ -153,9 +71,9 @@ describe('CharacterConceptsManagerController - Constructor and Dependencies', ()
 
       expect(() => {
         new CharacterConceptsManagerController({
-          logger: mockLogger,
+          logger: testBase.mocks.logger,
           characterBuilderService: invalidService,
-          eventBus: mockEventBus,
+          eventBus: testBase.mocks.eventBus,
         });
       }).toThrow('Invalid or missing method');
     });
@@ -163,8 +81,8 @@ describe('CharacterConceptsManagerController - Constructor and Dependencies', ()
     it('should throw error when eventBus is missing', () => {
       expect(() => {
         new CharacterConceptsManagerController({
-          logger: mockLogger,
-          characterBuilderService: mockCharacterBuilderService,
+          logger: testBase.mocks.logger,
+          characterBuilderService: testBase.mocks.characterBuilderService,
           eventBus: null,
         });
       }).toThrow('Missing required dependency: ISafeEventDispatcher');
@@ -175,11 +93,39 @@ describe('CharacterConceptsManagerController - Constructor and Dependencies', ()
 
       expect(() => {
         new CharacterConceptsManagerController({
-          logger: mockLogger,
-          characterBuilderService: mockCharacterBuilderService,
+          logger: testBase.mocks.logger,
+          characterBuilderService: testBase.mocks.characterBuilderService,
           eventBus: invalidEventBus,
         });
       }).toThrow('Invalid or missing method');
+    });
+  });
+
+  describe('Base Class Integration', () => {
+    it('should properly extend BaseCharacterBuilderController', () => {
+      const controller = testBase.createController();
+
+      // Verify inheritance chain
+      expect(controller).toBeInstanceOf(CharacterConceptsManagerController);
+      expect(controller.logger).toBe(testBase.mocks.logger);
+
+      // The characterBuilderService is wrapped for backward compatibility
+      expect(controller.characterBuilderService).toEqual(
+        expect.objectContaining({
+          initialize: testBase.mocks.characterBuilderService.initialize,
+          getAllCharacterConcepts:
+            testBase.mocks.characterBuilderService.getAllCharacterConcepts,
+        })
+      );
+
+      expect(controller.eventBus).toBe(testBase.mocks.eventBus);
+    });
+
+    it('should have required abstract methods implemented', () => {
+      const controller = testBase.createController();
+
+      expect(typeof controller._cacheElements).toBe('function');
+      expect(typeof controller._setupEventListeners).toBe('function');
     });
   });
 });

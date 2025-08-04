@@ -3642,7 +3642,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       clearTimeout(this.#remoteChangeTimeout);
     }
 
-    // Note: Base class handles event cleanup automatically
+    // Call base class destroy method
+    super.destroy();
   }
 
   /**

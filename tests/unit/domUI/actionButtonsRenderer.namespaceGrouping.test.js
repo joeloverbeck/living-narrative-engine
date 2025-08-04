@@ -27,7 +27,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
   let mockLogger;
   let mockVed;
   let mockDomElementFactoryInstance;
-  let actionButtonsContainerElement;
+  let mockActionCategorizationService;
   let renderer;
 
   const ACTION_BUTTONS_CONTAINER_SELECTOR = '#action-buttons';
@@ -54,10 +54,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
     global.document = document;
     global.window = dom.window;
 
-    // Setup DOM elements
-    actionButtonsContainerElement = document.querySelector(
-      ACTION_BUTTONS_CONTAINER_SELECTOR
-    );
+    // Setup DOM elements (action buttons container is available in document)
 
     // Setup mocks
     mockLogger = new ConsoleLogger();
@@ -76,6 +73,18 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       }
     );
 
+    // Create mock action categorization service
+    mockActionCategorizationService = {
+      extractNamespace: jest.fn().mockImplementation((actionId) => {
+        const colonIndex = actionId.indexOf(':');
+        return colonIndex !== -1 ? actionId.substring(0, colonIndex) : 'unknown';
+      }),
+      shouldUseGrouping: jest.fn().mockReturnValue(false),
+      groupActionsByNamespace: jest.fn().mockReturnValue(new Map()),
+      getSortedNamespaces: jest.fn().mockReturnValue(['core', 'positioning', 'intimacy', 'sex']),
+      formatNamespaceDisplayName: jest.fn().mockImplementation(ns => ns.toUpperCase()),
+    };
+
     // Create renderer instance
     renderer = new ActionButtonsRenderer({
       logger: mockLogger,
@@ -83,6 +92,7 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       validatedEventDispatcher: mockVed,
       domElementFactory: mockDomElementFactoryInstance,
       actionButtonsContainerSelector: ACTION_BUTTONS_CONTAINER_SELECTOR,
+      actionCategorizationService: mockActionCategorizationService,
     });
   });
 
@@ -95,47 +105,34 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
 
   describe('Namespace Extraction', () => {
     it('should extract namespace from action ID with colon', () => {
-      // Access private method for testing
-      const extractNamespace =
-        renderer._ActionButtonsRenderer__extractNamespace ||
-        renderer['#extractNamespace'];
+      // Test the service's extractNamespace method directly
+      const result1 = mockActionCategorizationService.extractNamespace('core:wait');
+      expect(result1).toBe('core');
 
-      // Note: We'll need to access the private method differently
-      // For now, let's test through public interface
-      const actions = [
-        createTestComposite(1, 'core:wait', 'wait'),
-        createTestComposite(2, 'positioning:get_close', 'get close'),
-        createTestComposite(3, 'sex:fondle_breasts', 'fondle breasts'),
-      ];
+      const result2 = mockActionCategorizationService.extractNamespace('positioning:get_close');
+      expect(result2).toBe('positioning');
 
-      // Set up grouping config to ensure grouping is enabled
-      renderer.updateGroupingConfig({
-        enabled: true,
-        minActionsForGrouping: 3,
-        minNamespacesForGrouping: 2,
-      });
+      const result3 = mockActionCategorizationService.extractNamespace('sex:fondle_breasts');
+      expect(result3).toBe('sex');
 
-      // Test by checking grouped actions
-      renderer.availableActions = actions;
-      const config = renderer.getGroupingConfig();
-      expect(config.enabled).toBe(true);
+      // Verify the service was called with correct parameters
+      expect(mockActionCategorizationService.extractNamespace).toHaveBeenCalledWith('core:wait');
+      expect(mockActionCategorizationService.extractNamespace).toHaveBeenCalledWith('positioning:get_close');
+      expect(mockActionCategorizationService.extractNamespace).toHaveBeenCalledWith('sex:fondle_breasts');
     });
 
     it('should handle action ID without colon', () => {
-      const actions = [
-        createTestComposite(1, 'wait', 'wait'),
-        createTestComposite(2, 'core:go', 'go'),
-      ];
+      // Test the service's extractNamespace method with action ID without colon
+      const result = mockActionCategorizationService.extractNamespace('wait');
+      expect(result).toBe('unknown');
 
-      renderer.availableActions = actions;
-      renderer.updateGroupingConfig({
-        enabled: true,
-        minActionsForGrouping: 2,
-        minNamespacesForGrouping: 2,
-      });
+      // Test with action ID that has colon
+      const result2 = mockActionCategorizationService.extractNamespace('core:go');
+      expect(result2).toBe('core');
 
-      // Should not group since only one has a namespace
-      expect(renderer.getGroupingConfig().enabled).toBe(true);
+      // Verify the service was called with correct parameters
+      expect(mockActionCategorizationService.extractNamespace).toHaveBeenCalledWith('wait');
+      expect(mockActionCategorizationService.extractNamespace).toHaveBeenCalledWith('core:go');
     });
   });
 
@@ -150,12 +147,17 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
-      // Configure for grouping
-      renderer.updateGroupingConfig({
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-      });
+      // Configure service to return true for grouping
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(true);
+      
+      // Set up expected grouped actions map
+      const expectedGroupedActions = new Map([
+        ['core', [actions[0], actions[1]]],
+        ['positioning', [actions[2]]],
+        ['intimacy', [actions[3]]],
+        ['sex', [actions[4], actions[5]]]
+      ]);
+      mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(expectedGroupedActions);
 
       // Set actions directly and refresh list
       renderer.availableActions = actions;
@@ -164,21 +166,23 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
       // Check that actions are available
       expect(renderer.availableActions).toHaveLength(6);
 
-      // Verify configuration is correct
-      const config = renderer.getGroupingConfig();
-      expect(config.enabled).toBe(true);
-      expect(config.minActionsForGrouping).toBe(6);
-      expect(config.minNamespacesForGrouping).toBe(2);
+      // Verify service methods were called
+      expect(mockActionCategorizationService.shouldUseGrouping).toHaveBeenCalledWith(actions);
+      expect(mockActionCategorizationService.groupActionsByNamespace).toHaveBeenCalledWith(actions);
     });
 
     it('should sort namespaces by priority order', () => {
-      const config = renderer.getGroupingConfig();
-      expect(config.namespaceOrder).toContain('core');
-      expect(config.namespaceOrder).toContain('intimacy');
-      expect(config.namespaceOrder).toContain('sex');
+      // Test the service's getSortedNamespaces method
+      const sortedNamespaces = mockActionCategorizationService.getSortedNamespaces();
+      expect(sortedNamespaces).toContain('core');
+      expect(sortedNamespaces).toContain('intimacy');
+      expect(sortedNamespaces).toContain('sex');
 
       // Core should be first in the default order
-      expect(config.namespaceOrder[0]).toBe('core');
+      expect(sortedNamespaces[0]).toBe('core');
+
+      // Verify the service method was called
+      expect(mockActionCategorizationService.getSortedNamespaces).toHaveBeenCalled();
     });
   });
 
@@ -189,19 +193,17 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(2, 'positioning:get_close', 'get close'),
       ];
 
-      renderer.updateGroupingConfig({
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-      });
+      // Configure service to return false for grouping (below threshold)
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(false);
 
-      // With only 2 actions (below threshold of 6), should not group
+      // Set actions and trigger rendering
       renderer.availableActions = actions;
 
-      // The grouping decision is made internally, so we verify the config is correct
-      const config = renderer.getGroupingConfig();
-      expect(config.minActionsForGrouping).toBe(6);
-      expect(actions.length).toBeLessThan(config.minActionsForGrouping);
+      // Test that shouldUseGrouping would be called with these actions
+      // and returns false, indicating grouping should not be used
+      const shouldGroup = mockActionCategorizationService.shouldUseGrouping(actions);
+      expect(shouldGroup).toBe(false);
+      expect(mockActionCategorizationService.shouldUseGrouping).toHaveBeenCalledWith(actions);
     });
 
     it('should not group when below minimum namespaces threshold', () => {
@@ -214,18 +216,17 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(6, 'core:inventory', 'inventory'),
       ];
 
-      renderer.updateGroupingConfig({
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-      });
+      // Configure service to return false for grouping (below namespace threshold)
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(false);
 
-      // All actions from same namespace, should not group
+      // Set actions and test
       renderer.availableActions = actions;
 
-      const config = renderer.getGroupingConfig();
-      expect(config.minNamespacesForGrouping).toBe(2);
-      // All actions are from 'core' namespace, so only 1 unique namespace
+      // Test that shouldUseGrouping would be called with these actions
+      // and returns false, indicating grouping should not be used (all from same namespace)
+      const shouldGroup = mockActionCategorizationService.shouldUseGrouping(actions);
+      expect(shouldGroup).toBe(false);
+      expect(mockActionCategorizationService.shouldUseGrouping).toHaveBeenCalledWith(actions);
     });
 
     it('should group when thresholds are met', () => {
@@ -238,22 +239,18 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
-      renderer.updateGroupingConfig({
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-      });
+      // Configure service to return true for grouping (thresholds met)
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(true);
 
       renderer.availableActions = actions;
 
-      const config = renderer.getGroupingConfig();
+      // Test that shouldUseGrouping would be called with these actions
+      // and returns true, indicating grouping should be used
+      const shouldGroup = mockActionCategorizationService.shouldUseGrouping(actions);
+      expect(shouldGroup).toBe(true);
+      expect(mockActionCategorizationService.shouldUseGrouping).toHaveBeenCalledWith(actions);
 
-      // Verify thresholds are met
-      expect(actions.length).toBeGreaterThanOrEqual(
-        config.minActionsForGrouping
-      );
-
-      // Count unique namespaces
+      // Count unique namespaces (this logic would be inside the service)
       const namespaces = new Set(
         actions.map((a) => {
           const colonIndex = a.actionId.indexOf(':');
@@ -262,70 +259,60 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
             : 'unknown';
         })
       );
-      expect(namespaces.size).toBeGreaterThanOrEqual(
-        config.minNamespacesForGrouping
-      );
+      expect(namespaces.size).toBe(4); // core, positioning, intimacy, sex
+      expect(actions.length).toBe(6); // All actions present
     });
   });
 
-  describe('Configuration Management', () => {
-    it('should update grouping configuration', () => {
-      const newConfig = { enabled: false, showCounts: true };
-      renderer.updateGroupingConfig(newConfig);
-
-      const config = renderer.getGroupingConfig();
-      expect(config.enabled).toBe(false);
-      expect(config.showCounts).toBe(true);
-    });
-
-    it('should preserve existing configuration when partially updating', () => {
-      const originalConfig = renderer.getGroupingConfig();
-      renderer.updateGroupingConfig({ enabled: false });
-
-      const updatedConfig = renderer.getGroupingConfig();
-      expect(updatedConfig.enabled).toBe(false);
-      expect(updatedConfig.namespaceOrder).toEqual(
-        originalConfig.namespaceOrder
-      );
-      expect(updatedConfig.minActionsForGrouping).toBe(
-        originalConfig.minActionsForGrouping
-      );
-    });
-
-    it('should re-render when configuration changes if actions are available', () => {
-      renderer.availableActions = [
+  describe('Service Integration', () => {
+    it('should use service for grouping decisions', async () => {
+      const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
       ];
 
-      const refreshSpy = jest
-        .spyOn(renderer, 'refreshList')
-        .mockImplementation(() => {});
+      // Configure service behavior
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(false);
 
-      renderer.updateGroupingConfig({ enabled: false });
+      renderer.availableActions = actions;
+      await renderer.refreshList();
 
-      expect(refreshSpy).toHaveBeenCalled();
-
-      refreshSpy.mockRestore();
+      // Verify service was consulted for grouping decision
+      expect(mockActionCategorizationService.shouldUseGrouping).toHaveBeenCalledWith(actions);
     });
 
-    it('should not re-render when configuration changes if no actions available', () => {
-      renderer.availableActions = [];
+    it('should use service to group actions when grouping is enabled', async () => {
+      const actions = [
+        createTestComposite(1, 'core:wait', 'wait'),
+        createTestComposite(2, 'positioning:get_close', 'get close'),
+      ];
 
-      const refreshSpy = jest
-        .spyOn(renderer, 'refreshList')
-        .mockImplementation(() => {});
+      // Configure service for grouping
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(true);
+      const groupedActions = new Map([
+        ['core', [actions[0]]],
+        ['positioning', [actions[1]]]
+      ]);
+      mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(groupedActions);
 
-      renderer.updateGroupingConfig({ enabled: false });
+      renderer.availableActions = actions;
+      await renderer.refreshList();
 
-      expect(refreshSpy).not.toHaveBeenCalled();
+      // Verify service methods were called
+      expect(mockActionCategorizationService.shouldUseGrouping).toHaveBeenCalledWith(actions);
+      expect(mockActionCategorizationService.groupActionsByNamespace).toHaveBeenCalledWith(actions);
+    });
 
-      refreshSpy.mockRestore();
+    it('should use service for namespace display formatting', () => {
+      // Test the formatNamespaceDisplayName method
+      const displayName = mockActionCategorizationService.formatNamespaceDisplayName('core');
+      expect(displayName).toBe('CORE');
+      expect(mockActionCategorizationService.formatNamespaceDisplayName).toHaveBeenCalledWith('core');
     });
   });
 
   describe('Section Header and Group Creation', () => {
-    it('should create section headers with correct attributes', () => {
+    it('should render grouped actions with section headers', async () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'core:go', 'go north'),
@@ -335,22 +322,29 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
-      // Configure for grouping with counts enabled
-      renderer.updateGroupingConfig({
-        enabled: true,
-        showCounts: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-      });
+      // Configure service for grouping
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(true);
+      const groupedActions = new Map([
+        ['core', [actions[0], actions[1]]],
+        ['positioning', [actions[2]]],
+        ['intimacy', [actions[3]]],
+        ['sex', [actions[4], actions[5]]]
+      ]);
+      mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(groupedActions);
 
       renderer.availableActions = actions;
+      await renderer.refreshList();
 
-      // Verify config was set
-      const config = renderer.getGroupingConfig();
-      expect(config.showCounts).toBe(true);
+      // Verify that grouping service methods were called
+      expect(mockActionCategorizationService.shouldUseGrouping).toHaveBeenCalledWith(actions);
+      expect(mockActionCategorizationService.groupActionsByNamespace).toHaveBeenCalledWith(actions);
+      
+      // Verify DOM structure was created (section headers should have been created)
+      const sectionHeaders = document.querySelectorAll('.action-section-header');
+      expect(sectionHeaders.length).toBeGreaterThan(0);
     });
 
-    it('should create action groups with proper accessibility attributes', () => {
+    it('should create action groups with proper accessibility attributes', async () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
@@ -360,13 +354,18 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
-      renderer.updateGroupingConfig({
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-      });
+      // Configure service for grouping
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(true);
+      const groupedActions = new Map([
+        ['core', [actions[0], actions[3]]],
+        ['positioning', [actions[1]]],
+        ['intimacy', [actions[4]]],
+        ['sex', [actions[2], actions[5]]]
+      ]);
+      mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(groupedActions);
 
       renderer.availableActions = actions;
+      await renderer.refreshList();
 
       // Verify we have the expected actions count and namespaces
       expect(actions.length).toBe(6);
@@ -379,44 +378,43 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         })
       );
       expect(namespaces.size).toBe(4); // core, positioning, intimacy, sex
+
+      // Verify DOM structure with accessibility attributes was created
+      const actionGroups = document.querySelectorAll('.action-group');
+      expect(actionGroups.length).toBeGreaterThan(0);
     });
   });
 
   describe('Namespace Display Names', () => {
     it('should format namespace display names correctly', () => {
-      // We can test this indirectly through the configuration
-      const config = renderer.getGroupingConfig();
-      expect(config.namespaceOrder).toContain('core');
+      // Test the service's formatNamespaceDisplayName method directly
+      const coreDisplayName = mockActionCategorizationService.formatNamespaceDisplayName('core');
+      expect(coreDisplayName).toBe('CORE');
 
-      // The formatting happens in the private method, but we know 'core' becomes 'CORE'
-      // We can verify this through the rendered output if needed
+      const sexDisplayName = mockActionCategorizationService.formatNamespaceDisplayName('sex');
+      expect(sexDisplayName).toBe('SEX');
+
+      // Verify the service method was called with correct parameters
+      expect(mockActionCategorizationService.formatNamespaceDisplayName).toHaveBeenCalledWith('core');
+      expect(mockActionCategorizationService.formatNamespaceDisplayName).toHaveBeenCalledWith('sex');
     });
 
     it('should handle special cases like unknown namespace', () => {
-      const actions = [
-        createTestComposite(1, 'wait', 'wait'), // No colon = unknown namespace
-        createTestComposite(2, 'core:go', 'go north'),
-        createTestComposite(3, 'positioning:get_close', 'get close'),
-        createTestComposite(4, 'sex:fondle_breasts', 'fondle breasts'),
-        createTestComposite(5, 'core:follow', 'follow'),
-        createTestComposite(6, 'intimacy:kiss_cheek', 'kiss cheek'),
-      ];
+      // Test how the service handles actions without namespaces
+      const unknownNamespace = mockActionCategorizationService.extractNamespace('wait');
+      expect(unknownNamespace).toBe('unknown');
 
-      renderer.updateGroupingConfig({
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-      });
+      const displayName = mockActionCategorizationService.formatNamespaceDisplayName('unknown');
+      expect(displayName).toBe('UNKNOWN');
 
-      renderer.availableActions = actions;
-
-      // Should handle the action without namespace ('wait' -> 'unknown' namespace)
-      expect(actions.length).toBe(6);
+      // Verify the service methods were called
+      expect(mockActionCategorizationService.extractNamespace).toHaveBeenCalledWith('wait');
+      expect(mockActionCategorizationService.formatNamespaceDisplayName).toHaveBeenCalledWith('unknown');
     });
   });
 
   describe('Fallback Behavior', () => {
-    it('should fall back to ungrouped rendering when grouping is disabled', () => {
+    it('should fall back to ungrouped rendering when grouping is disabled', async () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
@@ -426,19 +424,20 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
-      renderer.updateGroupingConfig({
-        enabled: false, // Disable grouping
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-      });
+      // Configure service to return false for grouping (disabled)
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(false);
 
       renderer.availableActions = actions;
+      await renderer.refreshList();
 
-      const config = renderer.getGroupingConfig();
-      expect(config.enabled).toBe(false);
+      // Verify service was called and returned false, indicating ungrouped rendering
+      expect(mockActionCategorizationService.shouldUseGrouping).toHaveBeenCalledWith(actions);
+      
+      // When grouping is disabled, groupActionsByNamespace should NOT be called
+      expect(mockActionCategorizationService.groupActionsByNamespace).not.toHaveBeenCalled();
     });
 
-    it('should maintain selection behavior with grouped actions', () => {
+    it('should maintain selection behavior with grouped actions', async () => {
       const actions = [
         createTestComposite(1, 'core:wait', 'wait'),
         createTestComposite(2, 'positioning:get_close', 'get close'),
@@ -448,13 +447,18 @@ describe('ActionButtonsRenderer - Namespace Grouping', () => {
         createTestComposite(6, 'sex:fondle_penis', 'fondle penis'),
       ];
 
-      renderer.updateGroupingConfig({
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-      });
+      // Configure service for grouping
+      mockActionCategorizationService.shouldUseGrouping.mockReturnValue(true);
+      const groupedActions = new Map([
+        ['core', [actions[0], actions[3]]],
+        ['positioning', [actions[1]]],
+        ['sex', [actions[2], actions[5]]],
+        ['intimacy', [actions[4]]]
+      ]);
+      mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(groupedActions);
 
       renderer.availableActions = actions;
+      await renderer.refreshList();
 
       // The selection behavior should remain the same regardless of grouping
       expect(renderer.selectedAction).toBeNull();

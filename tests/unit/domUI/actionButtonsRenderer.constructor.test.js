@@ -28,6 +28,7 @@ describe('ActionButtonsRenderer', () => {
   let mockLogger;
   let mockVed;
   let mockDomElementFactoryInstance; // To hold instance used in most tests
+  let mockActionCategorizationService; // Mock service for action categorization
   let actionButtonsContainer; // The specific container element for this renderer
   const ACTION_BUTTONS_CONTAINER_SELECTOR = '#action-buttons';
 
@@ -142,6 +143,17 @@ describe('ActionButtonsRenderer', () => {
     jest.spyOn(mockVed, 'dispatch').mockResolvedValue(true);
     jest.spyOn(mockVed, 'unsubscribe');
 
+    // Create mock action categorization service
+    mockActionCategorizationService = {
+      extractNamespace: jest.fn().mockReturnValue('core'),
+      shouldUseGrouping: jest.fn().mockReturnValue(false),
+      groupActionsByNamespace: jest.fn().mockReturnValue(new Map()),
+      getSortedNamespaces: jest.fn().mockReturnValue([]),
+      formatNamespaceDisplayName: jest
+        .fn()
+        .mockImplementation((ns) => ns.charAt(0).toUpperCase() + ns.slice(1)),
+    };
+
     // Spy on container's methods
     jest.spyOn(actionButtonsContainer, 'appendChild');
     jest.spyOn(actionButtonsContainer, 'removeChild');
@@ -169,6 +181,7 @@ describe('ActionButtonsRenderer', () => {
       actionButtonsContainerSelector: ACTION_BUTTONS_CONTAINER_SELECTOR,
       sendButtonSelector: '#player-confirm-turn-button',
       speechInputSelector: '#speech-input',
+      actionCategorizationService: mockActionCategorizationService,
     };
     return new ActionButtonsRenderer({ ...defaultParams, ...options });
   };
@@ -209,6 +222,29 @@ describe('ActionButtonsRenderer', () => {
       ).not.toThrow();
       // Test with invalid domElementFactory object - should handle gracefully
       expect(() => createRenderer({ domElementFactory: {} })).not.toThrow();
+    });
+
+    it('should throw if actionCategorizationService is missing', () => {
+      const expectedErrorMsg =
+        'Missing required dependency: IActionCategorizationService.';
+
+      // Mock console.error since validateDependency uses console when no logger is provided
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      expect(() =>
+        createRenderer({ actionCategorizationService: null })
+      ).toThrow(expectedErrorMsg);
+      expect(consoleSpy).toHaveBeenCalledWith(expectedErrorMsg);
+      consoleSpy.mockClear();
+
+      expect(() =>
+        createRenderer({ actionCategorizationService: undefined })
+      ).toThrow(expectedErrorMsg);
+      expect(consoleSpy).toHaveBeenCalledWith(expectedErrorMsg);
+
+      consoleSpy.mockRestore();
     });
 
     it('should subscribe to VED event core:update_available_actions', () => {
