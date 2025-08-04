@@ -242,7 +242,6 @@ describe('MultiTargetEventValidator - Integration Tests', () => {
     });
   });
 
-
   describe('Error Handling and Recovery', () => {
     it('should handle null/undefined events gracefully', () => {
       const nullResult = validator.validateEvent(null);
@@ -413,5 +412,4 @@ describe('MultiTargetEventValidator - Integration Tests', () => {
       expect(validationResult.errors).toHaveLength(0);
     });
   });
-
 });

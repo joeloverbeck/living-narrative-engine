@@ -1,316 +1,15 @@
-# ACTCAT-005: LLM Prompt Enhancement with Categorization
-
-## Overview
-
-Enhance the `AIPromptContentProvider.js` to use the new `ActionCategorizationService` for formatting available actions in LLM prompts. This includes implementing categorized markdown output when thresholds are met, while maintaining backward compatibility with existing flat formatting.
-
-## Priority
-
-**HIGH** - Core LLM enhancement for action categorization
-
-## Dependencies
-
-- **Blocks**: ACTCAT-001 (ActionCategorizationService)
-- **Blocks**: ACTCAT-004 (Dependency injection integration)
-- **Enables**: ACTCAT-008 (Integration testing)
-
-## Acceptance Criteria
-
-- [ ] Uses ActionCategorizationService through dependency injection
-- [ ] Implements categorized markdown formatting when thresholds met
-- [ ] Preserves action indexes exactly as before
-- [ ] Falls back to flat formatting when appropriate
-- [ ] Maintains backward compatibility with existing behavior
-- [ ] Markdown structure is LLM-friendly and readable
-- [ ] Error handling with graceful fallback to existing format
-- [ ] Performance impact <5ms for typical action sets
-
-## Implementation Steps
-
-### Step 1: Analyze Current Implementation
-
-**File to examine**: `src/prompting/AIPromptContentProvider.js`
-
-First, let me examine the current implementation to understand the existing structure:
-
-- Current method: `getAvailableActionsInfoContent(gameState)`
-- Current formatting: Uses `_formatListSegment()` helper
-- Current output format: Flat list with indexes
-
-### Step 2: Add Service Dependency
-
-**File**: `src/prompting/AIPromptContentProvider.js` (modify constructor)
-
-```javascript
-// Add import
-import { tokens } from '../dependencyInjection/tokens.js';
-
-// Update constructor to include the service
-constructor({
-  logger,
-  promptStaticContentService,
-  perceptionLogFormatter,
-  gameStateValidationService,
-  actionCategorizationService
-}) {
-  super();
-
-  // Existing validation
-  validateDependencies(
-    [
-      {
-        dependency: logger,
-        name: 'AIPromptContentProvider: logger',
-        methods: ['info', 'warn', 'error', 'debug'],
-      },
-      {
-        dependency: promptStaticContentService,
-        name: 'AIPromptContentProvider: promptStaticContentService',
-        methods: [
-          'getCoreTaskDescriptionText',
-          'getCharacterPortrayalGuidelines',
-          'getNc21ContentPolicyText',
-          'getFinalLlmInstructionText',
-        ],
-      },
-      {
-        dependency: perceptionLogFormatter,
-        name: 'AIPromptContentProvider: perceptionLogFormatter',
-        methods: ['format'],
-      },
-      {
-        dependency: gameStateValidationService,
-        name: 'AIPromptContentProvider: gameStateValidationService',
-        methods: ['validate'],
-      },
-      {
-        dependency: actionCategorizationService,
-        name: 'AIPromptContentProvider: actionCategorizationService',
-        methods: ['extractNamespace', 'shouldUseGrouping', 'groupActionsByNamespace', 'getSortedNamespaces', 'formatNamespaceDisplayName'],
-      },
-    ],
-    logger
-  );
-
-  this.#logger = logger;
-  this.#promptStaticContentService = promptStaticContentService;
-  this.#perceptionLogFormatter = perceptionLogFormatter;
-  this.#gameStateValidationService = gameStateValidationService;
-  this.#actionCategorizationService = actionCategorizationService;
-}
-```
-
-### Step 3: Update Main Method
-
-**File**: `src/prompting/AIPromptContentProvider.js` (modify existing method)
-
-**Note**: The ActionCategorizationService uses internal configuration, so no external config method is needed.
-
-### Step 3: Implement Categorized Formatting Method
-
-**File**: `src/prompting/AIPromptContentProvider.js` (add private method)
-
-```javascript
-/**
- * Format actions with categorization when appropriate
- * @private
- * @param {ActionComposite[]} actions - Array of actions to format
- * @returns {string} Formatted markdown content with categorized actions
- */
-_formatCategorizedActions(actions) {
-  try {
-    const startTime = performance.now();
-
-    this.#logger.debug('AIPromptContentProvider: Formatting categorized actions', {
-      actionCount: actions.length
-    });
-
-    const grouped = this.#actionCategorizationService.groupActionsByNamespace(actions);
-
-    if (grouped.size === 0) {
-      this.#logger.warn('AIPromptContentProvider: Grouping returned empty result, falling back to flat format');
-      return this._formatFlatActions(actions);
-    }
-
-    const segments = ['## Available Actions', ''];
-
-    for (const [namespace, namespaceActions] of grouped) {
-      const displayName = this.#actionCategorizationService.formatNamespaceDisplayName(namespace);
-      segments.push(`### ${displayName} Actions`);
-
-      for (const action of namespaceActions) {
-        segments.push(this._formatSingleAction(action));
-      }
-
-      segments.push(''); // Empty line between sections
-    }
-
-    const duration = performance.now() - startTime;
-    this.#logger.debug('AIPromptContentProvider: Categorized formatting completed', {
-      duration: `${duration.toFixed(2)}ms`,
-      namespaceCount: grouped.size,
-      totalActions: actions.length
-    });
-
-    return segments.join('\n').trim();
-
-  } catch (error) {
-    this.#logger.error('AIPromptContentProvider: Error in categorized formatting, falling back to flat format', {
-      error: error.message,
-      actionCount: actions.length
-    });
-
-    // Graceful fallback to flat formatting
-    return this._formatFlatActions(actions);
-  }
-}
-```
-
-### Step 4: Implement Flat Formatting Method
-
-**File**: `src/prompting/AIPromptContentProvider.js` (add private method)
-
-```javascript
-/**
- * Format actions in flat (non-categorized) format
- * @private
- * @param {ActionComposite[]} actions - Array of actions to format
- * @returns {string} Formatted flat list content
- */
-_formatFlatActions(actions) {
-  this.#logger.debug('AIPromptContentProvider: Using flat action formatting', {
-    actionCount: actions.length
-  });
-
-  return this._formatListSegment(
-    'Choose one of the following available actions by its index',
-    actions,
-    this._formatSingleAction.bind(this),
-    PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE
-  );
-}
-```
-
-### Step 5: Implement Single Action Formatting
-
-**File**: `src/prompting/AIPromptContentProvider.js` (add private method)
-
-```javascript
-/**
- * Format individual action entry consistently
- * @private
- * @param {ActionComposite} action - Single action object to format
- * @returns {string} Formatted action line
- */
-_formatSingleAction(action) {
-  if (!action) {
-    this.#logger.warn('AIPromptContentProvider: Attempted to format null/undefined action');
-    return '';
-  }
-
-  const commandStr = action.commandString || DEFAULT_FALLBACK_ACTION_COMMAND;
-  let description = action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW;
-
-  // Ensure description ends with punctuation for LLM readability
-  description = ensureTerminalPunctuation(description);
-
-  return `[Index: ${action.index}] Command: "${commandStr}". Description: ${description}`;
-}
-```
-
-### Step 6: Update Main Method
-
-**File**: `src/prompting/AIPromptContentProvider.js` (modify existing method)
-
-```javascript
-/**
- * Format available actions info content with optional categorization
- * @param {Object} gameState - Current game state
- * @returns {string} Formatted actions content for LLM prompt
- */
-getAvailableActionsInfoContent(gameState) {
-  this.#logger.debug('AIPromptContentProvider: Formatting available actions info content.');
-
-  const actions = gameState.availableActions || [];
-  const noActionsMessage = PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE;
-
-  // Handle empty or invalid actions
-  if (!Array.isArray(actions) || actions.length === 0) {
-    this.#logger.warn('AIPromptContentProvider: No available actions provided. Using fallback message.');
-    return noActionsMessage;
-  }
-
-  try {
-    // Check if we should use categorization
-    if (this.#actionCategorizationService.shouldUseGrouping(actions)) {
-      this.#logger.debug('AIPromptContentProvider: Using categorized formatting', {
-        actionCount: actions.length
-      });
-
-      return this._formatCategorizedActions(actions);
-    } else {
-      this.#logger.debug('AIPromptContentProvider: Using flat formatting (thresholds not met)', {
-        actionCount: actions.length
-      });
-
-      return this._formatFlatActions(actions);
-    }
-
-  } catch (error) {
-    this.#logger.error('AIPromptContentProvider: Critical error in action formatting, using fallback', {
-      error: error.message,
-      actionCount: actions.length
-    });
-
-    // Ultimate fallback to original behavior
-    return this._formatListSegment(
-      'Choose one of the following available actions by its index',
-      actions,
-      (action) => {
-        const commandStr = action.commandString || DEFAULT_FALLBACK_ACTION_COMMAND;
-        const description = action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW;
-        return `[Index: ${action.index}] Command: "${commandStr}". Description: ${ensureTerminalPunctuation(description)}`;
-      },
-      noActionsMessage
-    );
-  }
-}
-```
-
-### Step 7: Update DI Registration
-
-**Note**: Action Categorization Service is already integrated into the base container configuration at `src/dependencyInjection/baseContainerConfig.js:103`. 
-
-The AIPromptContentProvider registration will need to be updated in the appropriate registration file (likely within the AI registrations) to include the new dependency:
-
-```javascript
-// Update the AIPromptContentProvider registration to include the new dependency
-container.register({
-  token: tokens.IAIPromptContentProvider,
-  factory: (c) =>
-    new AIPromptContentProvider({
-      logger: c.resolve(tokens.ILogger),
-      promptStaticContentService: c.resolve(tokens.IPromptStaticContentService),
-      perceptionLogFormatter: c.resolve(tokens.IPerceptionLogFormatter),
-      gameStateValidationService: c.resolve(
-        tokens.IGameStateValidationServiceForPrompting
-      ),
-      actionCategorizationService: c.resolve(tokens.IActionCategorizationService), // Add this line
-    }),
-  lifetime: 'singleton',
-});
-```
-
-### Step 8: Create Integration Tests
-
-**File**: `tests/integration/aiPromptContentProviderCategorization.test.js`
-
-```javascript
 /**
  * @file AIPromptContentProvider Categorization Integration Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AppContainer from '../../src/dependencyInjection/appContainer.js';
 import { configureBaseContainer } from '../../src/dependencyInjection/baseContainerConfig.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
@@ -327,7 +26,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
   beforeEach(() => {
     container = new AppContainer();
     const registrar = new Registrar(container);
-    
+
     mockLogger = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -338,14 +37,14 @@ describe('AIPromptContentProvider Categorization Integration', () => {
     // Register logger first (required by services)
     const appLogger = new ConsoleLogger(LogLevel.ERROR); // Use ERROR level to reduce noise
     registrar.instance(tokens.ILogger, appLogger);
-    
+
     // Register required dependencies for base container
     container.register(
       tokens.ISafeEventDispatcher,
       { dispatch: jest.fn() },
       { lifecycle: 'singleton' }
     );
-    
+
     container.register(
       tokens.IValidatedEventDispatcher,
       { dispatch: jest.fn() },
@@ -803,9 +502,15 @@ describe('AIPromptContentProvider Categorization Integration', () => {
       expect(result).toMatch(/^## Available Actions\s*$/m);
       expect(result).toMatch(/^### [A-Z]+ Actions$/m);
 
-      // Check action format
-      expect(result).toMatch(
-        /^\[Index: \d+\] Command: ".+" Description: .+\.$/m
+      // Check action format exists in the result
+      expect(result).toContain(
+        '[Index: 1] Command: "wait". Description: Wait for a moment.'
+      );
+      expect(result).toContain(
+        '[Index: 2] Command: "kiss". Description: Kiss tenderly.'
+      );
+      expect(result).toContain(
+        '[Index: 4] Command: "remove". Description: Remove clothing.'
       );
 
       // Should not have trailing/leading whitespace
@@ -870,60 +575,3 @@ describe('AIPromptContentProvider Categorization Integration', () => {
     });
   });
 });
-```
-
-## Quality Gates
-
-### Functionality
-
-- [ ] Categorized output when thresholds met
-- [ ] Flat output when thresholds not met
-- [ ] Action indexes preserved exactly
-- [ ] Markdown structure valid and readable
-- [ ] Graceful error handling with fallbacks
-
-### Performance
-
-- [ ] <5ms overhead for categorization decision
-- [ ] <10ms total for typical action sets (5-20 actions)
-- [ ] Performance logging for slow operations
-- [ ] No memory leaks in repeated calls
-
-### Compatibility
-
-- [ ] All existing tests pass
-- [ ] Backward compatibility maintained
-- [ ] No breaking changes to public API
-- [ ] Error fallback to existing behavior
-
-### Quality
-
-- [ ] Comprehensive error handling
-- [ ] Appropriate logging levels
-- [ ] Input validation and sanitization
-- [ ] Code follows project patterns
-
-## Files Created
-
-- [ ] `tests/integration/aiPromptContentProviderCategorization.test.js`
-
-## Files Modified
-
-- [ ] `src/prompting/AIPromptContentProvider.js`
-- [ ] Appropriate AI service registration file (location TBD - likely within AI registrations)
-
-## Dependencies
-
-- **Completes**: ACTCAT-001, ACTCAT-004
-- **Enables**: ACTCAT-008
-
-## Definition of Done
-
-- [ ] All acceptance criteria met
-- [ ] Service integration working correctly
-- [ ] Categorized output format implemented
-- [ ] Fallback behavior working
-- [ ] Performance targets achieved
-- [ ] Integration tests pass
-- [ ] No regression in existing functionality
-- [ ] Code review approved

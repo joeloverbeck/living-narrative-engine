@@ -325,6 +325,9 @@ export function registerAITurnPipeline(registrar, logger) {
       gameStateValidationService: c.resolve(
         tokens.IGameStateValidationServiceForPrompting
       ),
+      actionCategorizationService: c.resolve(
+        tokens.IActionCategorizationService
+      ),
     });
   });
   registrar.singletonFactory(tokens.LlmJsonService, () => new LlmJsonService());

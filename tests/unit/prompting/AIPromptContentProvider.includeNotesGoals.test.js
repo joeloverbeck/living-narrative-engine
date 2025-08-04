@@ -8,6 +8,7 @@ describe('AIPromptContentProvider.getPromptData', () => {
   let dummyPromptStaticContentService;
   let dummyPerceptionLogFormatter;
   let dummyGameStateValidationService;
+  let dummyActionCategorizationService;
   let provider;
 
   beforeEach(() => {
@@ -34,11 +35,20 @@ describe('AIPromptContentProvider.getPromptData', () => {
       validate: (dto) => ({ isValid: true, errorContent: null }),
     };
 
+    dummyActionCategorizationService = {
+      extractNamespace: jest.fn(),
+      shouldUseGrouping: jest.fn(() => false),
+      groupActionsByNamespace: jest.fn(() => new Map()),
+      getSortedNamespaces: jest.fn(() => []),
+      formatNamespaceDisplayName: jest.fn((namespace) => namespace),
+    };
+
     provider = new AIPromptContentProvider({
       logger: dummyLogger,
       promptStaticContentService: dummyPromptStaticContentService,
       perceptionLogFormatter: dummyPerceptionLogFormatter,
       gameStateValidationService: dummyGameStateValidationService,
+      actionCategorizationService: dummyActionCategorizationService,
     });
   });
 

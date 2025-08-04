@@ -35,6 +35,14 @@ const makeDummyGameStateValidationService = () => ({
   validate: () => ({ isValid: true, errorContent: null }),
 });
 
+const makeDummyActionCategorizationService = () => ({
+  extractNamespace: jest.fn(),
+  shouldUseGrouping: jest.fn(() => false),
+  groupActionsByNamespace: jest.fn(() => new Map()),
+  getSortedNamespaces: jest.fn(() => []),
+  formatNamespaceDisplayName: jest.fn((namespace) => namespace),
+});
+
 // ---- Test Suite ---- //
 describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => {
   let provider;
@@ -47,6 +55,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
       promptStaticContentService: makeDummyPromptStaticContentService(),
       perceptionLogFormatter: makeDummyPerceptionLogFormatter(),
       gameStateValidationService: makeDummyGameStateValidationService(),
+      actionCategorizationService: makeDummyActionCategorizationService(),
     });
   });
 
@@ -170,7 +179,7 @@ describe('AIPromptContentProvider.getPromptData → goalsArray behavior', () => 
 
     const promptData = await provider.getPromptData(gameStateDto, logger);
     expect(Array.isArray(promptData.goalsArray)).toBe(true);
-    // Goals with empty text should be filtered out, but empty timestamp is now OK
+    // Goals with empty text should be filtered out, but empty timestamp is preserved
     expect(promptData.goalsArray).toHaveLength(3);
     expect(promptData.goalsArray).toEqual([
       { text: 'Save the queen', timestamp: '2025-06-01T13:00:00Z' },

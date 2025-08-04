@@ -27,12 +27,20 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
     const gameStateValidationService = {
       validate: () => ({ isValid: true, errorContent: null }),
     };
+    const actionCategorizationService = {
+      extractNamespace: jest.fn(),
+      shouldUseGrouping: jest.fn(() => false),
+      groupActionsByNamespace: jest.fn(() => new Map()),
+      getSortedNamespaces: jest.fn(() => []),
+      formatNamespaceDisplayName: jest.fn((namespace) => namespace),
+    };
 
     provider = new AIPromptContentProvider({
       logger,
       promptStaticContentService,
       perceptionLogFormatter,
       gameStateValidationService,
+      actionCategorizationService,
     });
   });
 

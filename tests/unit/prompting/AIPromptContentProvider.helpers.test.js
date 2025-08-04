@@ -23,6 +23,14 @@ const makeDummyGameStateValidationService = () => ({
   validate: () => ({ isValid: true, errorContent: null }),
 });
 
+const makeDummyActionCategorizationService = () => ({
+  extractNamespace: jest.fn(),
+  shouldUseGrouping: jest.fn(() => false),
+  groupActionsByNamespace: jest.fn(() => new Map()),
+  getSortedNamespaces: jest.fn(() => []),
+  formatNamespaceDisplayName: jest.fn((namespace) => namespace),
+});
+
 describe('AIPromptContentProvider helper methods', () => {
   let provider;
   let logger;
@@ -34,6 +42,7 @@ describe('AIPromptContentProvider helper methods', () => {
       promptStaticContentService: makeDummyPromptStaticContentService(),
       perceptionLogFormatter: makeDummyPerceptionLogFormatter(),
       gameStateValidationService: makeDummyGameStateValidationService(),
+      actionCategorizationService: makeDummyActionCategorizationService(),
     });
   });
 

@@ -145,6 +145,15 @@ describe('AI registration helpers', () => {
     // Register IPathConfiguration for tests that need it
     const testPathConfig = new TestPathConfiguration(os.tmpdir());
     container.register(tokens.IPathConfiguration, testPathConfig);
+
+    // Register IActionCategorizationService mock
+    container.register(tokens.IActionCategorizationService, {
+      extractNamespace: jest.fn(),
+      shouldUseGrouping: jest.fn(),
+      groupActionsByNamespace: jest.fn(),
+      getSortedNamespaces: jest.fn(),
+      formatNamespaceDisplayName: jest.fn(),
+    });
   });
 
   it('should log start and end messages', () => {

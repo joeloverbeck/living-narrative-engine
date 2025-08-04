@@ -9,6 +9,7 @@
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
 /** @typedef {import('../types/perceptionLogTypes.js').RawPerceptionLogEntry} RawPerceptionLogEntry */
+/** @typedef {import('../interfaces/IActionCategorizationService.js').IActionCategorizationService} IActionCategorizationService */
 
 import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
 import { ensureTerminalPunctuation } from '../utils/textUtils.js';
@@ -31,6 +32,7 @@ import {
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
 import { validateDependencies } from '../utils/dependencyUtils.js';
 import { AgeUtils } from '../utils/ageUtils.js';
+import { tokens } from '../dependencyInjection/tokens.js';
 
 /**
  * @class AIPromptContentProvider
@@ -48,6 +50,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   #gameStateValidationService;
   /** @type {CharacterDataFormatter} */
   #characterDataFormatter;
+  /** @type {IActionCategorizationService} */
+  #actionCategorizationService;
 
   /**
    * @param {object} dependencies - Object containing required services.
@@ -55,6 +59,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @param {IPromptStaticContentService} dependencies.promptStaticContentService - Service for static prompt content.
    * @param {IPerceptionLogFormatter} dependencies.perceptionLogFormatter - Service to format perception logs.
    * @param {IGameStateValidationServiceForPrompting} dependencies.gameStateValidationService - Service to validate game state for prompting.
+   * @param {IActionCategorizationService} dependencies.actionCategorizationService - Service for action categorization.
    * @returns {void}
    */
   constructor({
@@ -62,6 +67,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     promptStaticContentService,
     perceptionLogFormatter,
     gameStateValidationService,
+    actionCategorizationService,
   }) {
     super();
     validateDependencies(
@@ -91,6 +97,17 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
           name: 'AIPromptContentProvider: gameStateValidationService',
           methods: ['validate'],
         },
+        {
+          dependency: actionCategorizationService,
+          name: 'AIPromptContentProvider: actionCategorizationService',
+          methods: [
+            'extractNamespace',
+            'shouldUseGrouping',
+            'groupActionsByNamespace',
+            'getSortedNamespaces',
+            'formatNamespaceDisplayName',
+          ],
+        },
       ],
       logger
     );
@@ -99,6 +116,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     this.#promptStaticContentService = promptStaticContentService;
     this.#perceptionLogFormatter = perceptionLogFormatter;
     this.#gameStateValidationService = gameStateValidationService;
+    this.#actionCategorizationService = actionCategorizationService;
     this.#characterDataFormatter = new CharacterDataFormatter({ logger });
     this.#logger.debug(
       'AIPromptContentProvider initialized with new services.'
@@ -631,41 +649,188 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   }
 
   /**
-   * @param {AIGameStateDTO} gameState - The game state DTO.
-   * @returns {string} Formatted available actions content.
+   * Format actions with categorization when appropriate
+   *
+   * @private
+   * @param {ActionComposite[]} actions - Array of actions to format
+   * @returns {string} Formatted markdown content with categorized actions
+   */
+  _formatCategorizedActions(actions) {
+    try {
+      const startTime = performance.now();
+
+      this.#logger.debug(
+        'AIPromptContentProvider: Formatting categorized actions',
+        {
+          actionCount: actions.length,
+        }
+      );
+
+      const grouped =
+        this.#actionCategorizationService.groupActionsByNamespace(actions);
+
+      if (grouped.size === 0) {
+        this.#logger.warn(
+          'AIPromptContentProvider: Grouping returned empty result, falling back to flat format'
+        );
+        return this._formatFlatActions(actions);
+      }
+
+      const segments = ['## Available Actions', ''];
+
+      for (const [namespace, namespaceActions] of grouped) {
+        const displayName =
+          this.#actionCategorizationService.formatNamespaceDisplayName(
+            namespace
+          );
+        segments.push(`### ${displayName} Actions`);
+
+        for (const action of namespaceActions) {
+          segments.push(this._formatSingleAction(action));
+        }
+
+        segments.push(''); // Empty line between sections
+      }
+
+      const duration = performance.now() - startTime;
+      this.#logger.debug(
+        'AIPromptContentProvider: Categorized formatting completed',
+        {
+          duration: `${duration.toFixed(2)}ms`,
+          namespaceCount: grouped.size,
+          totalActions: actions.length,
+        }
+      );
+
+      return segments.join('\n').trim();
+    } catch (error) {
+      this.#logger.error(
+        'AIPromptContentProvider: Error in categorized formatting, falling back to flat format',
+        {
+          error: error.message,
+          actionCount: actions.length,
+        }
+      );
+
+      // Graceful fallback to flat formatting
+      return this._formatFlatActions(actions);
+    }
+  }
+
+  /**
+   * Format actions in flat (non-categorized) format
+   *
+   * @private
+   * @param {ActionComposite[]} actions - Array of actions to format
+   * @returns {string} Formatted flat list content
+   */
+  _formatFlatActions(actions) {
+    this.#logger.debug(
+      'AIPromptContentProvider: Using flat action formatting',
+      {
+        actionCount: actions.length,
+      }
+    );
+
+    return this._formatListSegment(
+      'Choose one of the following available actions by its index',
+      actions,
+      this._formatSingleAction.bind(this),
+      PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE
+    );
+  }
+
+  /**
+   * Format individual action entry consistently
+   *
+   * @private
+   * @param {ActionComposite} action - Single action object to format
+   * @returns {string} Formatted action line
+   */
+  _formatSingleAction(action) {
+    if (!action) {
+      this.#logger.warn(
+        'AIPromptContentProvider: Attempted to format null/undefined action'
+      );
+      return '';
+    }
+
+    const commandStr = action.commandString || DEFAULT_FALLBACK_ACTION_COMMAND;
+    let description =
+      action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW;
+
+    // Ensure description ends with punctuation for LLM readability
+    description = ensureTerminalPunctuation(description);
+
+    return `[Index: ${action.index}] Command: "${commandStr}". Description: ${description}`;
+  }
+
+  /**
+   * Format available actions info content with optional categorization
+   *
+   * @param {AIGameStateDTO} gameState - Current game state
+   * @returns {string} Formatted actions content for LLM prompt
    */
   getAvailableActionsInfoContent(gameState) {
     this.#logger.debug(
       'AIPromptContentProvider: Formatting available actions info content.'
     );
+
+    const actions = gameState.availableActions || [];
     const noActionsMessage = PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE;
 
-    if (
-      !gameState.availableActions ||
-      !Array.isArray(gameState.availableActions) ||
-      gameState.availableActions.length === 0
-    ) {
+    // Handle empty or invalid actions
+    if (!Array.isArray(actions) || actions.length === 0) {
       this.#logger.warn(
-        'AIPromptContentProvider: No available actions provided. Using fallback message for list segment.'
+        'AIPromptContentProvider: No available actions provided. Using fallback message.'
       );
+      return noActionsMessage;
     }
 
-    return this._formatListSegment(
-      'Choose one of the following available actions by its index',
-      gameState.availableActions,
-      (action) => {
-        // action is an ActionComposite, with index, commandString, description, etc.
-        const commandStr =
-          action.commandString || DEFAULT_FALLBACK_ACTION_COMMAND;
-        let description =
-          action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW;
-        description = ensureTerminalPunctuation(description);
+    try {
+      // Check if we should use categorization
+      if (this.#actionCategorizationService.shouldUseGrouping(actions)) {
+        this.#logger.debug(
+          'AIPromptContentProvider: Using categorized formatting',
+          {
+            actionCount: actions.length,
+          }
+        );
 
-        // The critical change: Add the index clearly at the start of the line.
-        return `[Index: ${action.index}] Command: "${commandStr}". Description: ${description}`;
-      },
-      noActionsMessage
-    );
+        return this._formatCategorizedActions(actions);
+      } else {
+        this.#logger.debug(
+          'AIPromptContentProvider: Using flat formatting (thresholds not met)',
+          {
+            actionCount: actions.length,
+          }
+        );
+
+        return this._formatFlatActions(actions);
+      }
+    } catch (error) {
+      this.#logger.error(
+        'AIPromptContentProvider: Critical error in action formatting, using fallback',
+        {
+          error: error.message,
+          actionCount: actions.length,
+        }
+      );
+
+      // Ultimate fallback to original behavior
+      return this._formatListSegment(
+        'Choose one of the following available actions by its index',
+        actions,
+        (action) => {
+          const commandStr =
+            action.commandString || DEFAULT_FALLBACK_ACTION_COMMAND;
+          const description =
+            action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW;
+          return `[Index: ${action.index}] Command: "${commandStr}". Description: ${ensureTerminalPunctuation(description)}`;
+        },
+        noActionsMessage
+      );
+    }
   }
 
   /**

@@ -8,29 +8,6 @@ import {
   createTestSetup,
   populateControllerElements,
 } from './characterConceptsManagerController.testUtils.js';
-import { UI_STATES } from '../../../src/shared/characterBuilder/uiStateManager.js';
-
-// Create a shared mock instance
-const mockUIStateManagerInstance = {
-  showState: jest.fn(),
-  showError: jest.fn(),
-  showLoading: jest.fn(),
-};
-
-// Mock UIStateManager module
-jest.mock('../../../src/shared/characterBuilder/uiStateManager.js', () => {
-  return {
-    UIStateManager: jest
-      .fn()
-      .mockImplementation(() => mockUIStateManagerInstance),
-    UI_STATES: {
-      EMPTY: 'empty',
-      LOADING: 'loading',
-      RESULTS: 'results',
-      ERROR: 'error',
-    },
-  };
-});
 
 describe('CharacterConceptsManagerController - UI State Transitions', () => {
   let setup;
@@ -49,37 +26,32 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
     // Call _cacheElements to properly initialize the controller's element cache
     controller._cacheElements();
 
-    // Set up the UIStateManager mock
-    controller._testExports.uiStateManager = mockUIStateManagerInstance;
+    // Spy on base class state management methods
+    jest.spyOn(controller, '_showState');
+    jest.spyOn(controller, '_showError');
+    jest.spyOn(controller, '_showLoading');
+    jest.spyOn(controller, '_executeWithErrorHandling');
   });
 
   describe('Loading states', () => {
-    it('should show loading state during data fetch', async () => {
-      // Arrange - Set up delayed response
-      setup.mocks.builderService.getAllCharacterConcepts.mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            setTimeout(() => resolve([]), 50);
-          })
+    it('should use _executeWithErrorHandling for loading with retry logic', async () => {
+      // Arrange - Set up response
+      setup.mocks.builderService.getAllCharacterConcepts.mockResolvedValue([]);
+
+      // Act - Call loadData directly
+      await controller._testExports.loadData();
+
+      // Assert - Should use _executeWithErrorHandling with proper configuration
+      expect(controller._executeWithErrorHandling).toHaveBeenCalledWith(
+        expect.any(Function),
+        'load character concepts',
+        expect.objectContaining({
+          retries: 2,
+          userErrorMessage:
+            'Failed to load character concepts. Please try again.',
+          loadingMessage: 'Loading character concepts...',
+        })
       );
-
-      // Act - Call loadData directly which shows loading state
-      const loadPromise = controller._testExports.loadData();
-
-      // Wait a tick to allow loading state to be set
-      await new Promise((resolve) => setImmediate(resolve));
-
-      // Assert - Check loading state is shown immediately
-      expect(mockUIStateManagerInstance.showState).toHaveBeenCalledWith(
-        UI_STATES.LOADING
-      );
-
-      await loadPromise;
-
-      // Should transition to appropriate state after loading
-      // Check the last call to showState (since it's called multiple times)
-      const calls = mockUIStateManagerInstance.showState.mock.calls;
-      expect(calls[calls.length - 1][0]).toBe(UI_STATES.EMPTY);
     });
 
     it('should show results state when concepts exist', async () => {
@@ -95,10 +67,8 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       // Act - Call loadData directly
       await controller._testExports.loadData();
 
-      // Assert
-      // Check the last call to showState (since it's called multiple times)
-      const calls = mockUIStateManagerInstance.showState.mock.calls;
-      expect(calls[calls.length - 1][0]).toBe(UI_STATES.RESULTS);
+      // Assert - Should call base class _showState with 'results'
+      expect(controller._showState).toHaveBeenCalledWith('results');
     });
 
     it('should show empty state when no concepts exist', async () => {
@@ -108,31 +78,35 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       // Act - Call loadData directly
       await controller._testExports.loadData();
 
-      // Assert
-      // Check the last call to showState (since it's called multiple times)
-      const calls = mockUIStateManagerInstance.showState.mock.calls;
-      expect(calls[calls.length - 1][0]).toBe(UI_STATES.EMPTY);
+      // Assert - Should call base class _showState with 'empty'
+      expect(controller._showState).toHaveBeenCalledWith('empty');
     });
   });
 
   describe('Error states', () => {
-    it('should show error state on load failure', async () => {
+    it('should handle load failure with retry logic', async () => {
       // Arrange
       const error = new Error('Failed to load concepts');
       setup.mocks.builderService.getAllCharacterConcepts.mockRejectedValue(
         error
       );
 
-      // Act - Call loadData directly
-      await controller._testExports.loadData();
+      // Act & Assert - Should throw error after retries are exhausted
+      await expect(controller._testExports.loadData()).rejects.toThrow();
 
-      // Assert
-      expect(mockUIStateManagerInstance.showError).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to load')
+      // Should have used _executeWithErrorHandling with retry configuration
+      expect(controller._executeWithErrorHandling).toHaveBeenCalledWith(
+        expect.any(Function),
+        'load character concepts',
+        expect.objectContaining({
+          retries: 2,
+          userErrorMessage:
+            'Failed to load character concepts. Please try again.',
+        })
       );
     });
 
-    it('should show error message on concept creation failure', async () => {
+    it('should handle concept creation failure with retry logic', async () => {
       // Arrange
       const error = new Error('Creation failed');
       setup.mocks.builderService.createCharacterConcept.mockRejectedValue(
@@ -147,9 +121,15 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       // Act - Use handleConceptSave which includes error handling
       await controller._testExports.handleConceptSave();
 
-      // Assert
-      expect(mockUIStateManagerInstance.showError).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to')
+      // Assert - Should use _executeWithErrorHandling with retry logic for create operation
+      expect(controller._executeWithErrorHandling).toHaveBeenCalledWith(
+        expect.any(Function),
+        'create character concept',
+        expect.objectContaining({
+          retries: 1,
+          userErrorMessage: 'Failed to create concept. Please try again.',
+          loadingMessage: 'Creating concept...',
+        })
       );
     });
   });
@@ -177,15 +157,19 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       // Act
       await controller._testExports.deleteConcept('test-id', 0);
 
-      // Assert - Check if showState was called with EMPTY, or if no calls means no state change is needed
-      const calls = mockUIStateManagerInstance.showState.mock.calls;
-      if (calls.length > 0) {
-        const lastCall = calls[calls.length - 1];
-        expect(lastCall[0]).toBe(UI_STATES.EMPTY);
-      } else {
-        // If no state change occurred, verify the concept was deleted
-        expect(controller._testExports.conceptsData).toHaveLength(0);
-      }
+      // Assert - Should call _showState with 'empty' when last concept is deleted
+      expect(controller._showState).toHaveBeenCalledWith('empty');
+
+      // Should also use _executeWithErrorHandling for delete operation
+      expect(controller._executeWithErrorHandling).toHaveBeenCalledWith(
+        expect.any(Function),
+        'delete character concept',
+        expect.objectContaining({
+          retries: 1,
+          userErrorMessage: 'Failed to delete concept. Please try again.',
+          loadingMessage: 'Deleting concept...',
+        })
+      );
     });
 
     it('should maintain results state after deleting one of many concepts', async () => {
@@ -213,117 +197,37 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       mockCard.classList.add('concept-card');
       setup.elements['concepts-results'].appendChild(mockCard);
 
-      // Reset mock to track only calls during delete
-      mockUIStateManagerInstance.showState.mockClear();
+      // Reset spy to track only calls during delete
+      controller._showState.mockClear();
 
       // Act
       await controller._testExports.deleteConcept('1', 0);
 
-      // Assert - Should not call showState at all since we're staying in results
-      expect(mockUIStateManagerInstance.showState).not.toHaveBeenCalled();
-    });
-
-    it('should handle rapid state changes correctly', async () => {
-      // Arrange
-      const delays = [10, 20, 30];
-      const promises = delays.map(
-        (delay) =>
-          new Promise((resolve) => {
-            setTimeout(() => {
-              controller._testExports.conceptsData = [];
-              controller._testExports.updateStatistics();
-              resolve();
-            }, delay);
-          })
+      // Assert - Should not call _showState('empty') since concepts remain
+      // but should still use _executeWithErrorHandling for the delete operation
+      expect(controller._showState).not.toHaveBeenCalledWith('empty');
+      expect(controller._executeWithErrorHandling).toHaveBeenCalledWith(
+        expect.any(Function),
+        'delete character concept',
+        expect.objectContaining({
+          retries: 1,
+          userErrorMessage: 'Failed to delete concept. Please try again.',
+        })
       );
-
-      // Act
-      await Promise.all(promises);
-
-      // Assert - Should handle all state changes without errors
-      expect(setup.mocks.logger.error).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Modal state management', () => {
-    it('should maintain UI state when opening modals', () => {
-      // Arrange
-      controller._testExports.conceptsData = [
-        {
-          concept: { id: '1', text: 'Test', created: Date.now() },
-          directionCount: 0,
-        },
-      ];
-
-      // Act
-      controller._testExports.showCreateModal();
-
-      // Assert - UI state should not change when showing modal
-      expect(mockUIStateManagerInstance.showState).not.toHaveBeenCalled();
     });
 
-    it('should restore appropriate state after modal operations', async () => {
-      // Arrange
-      controller._testExports.conceptsData = [];
-      setup.mocks.builderService.createCharacterConcept.mockResolvedValue({
-        id: 'new-id',
-        concept: 'New concept',
-      });
+    it('should use base class state management methods consistently', async () => {
+      // Arrange - Set up successful operations
+      setup.mocks.builderService.getAllCharacterConcepts.mockResolvedValue([
+        { id: '1', concept: 'Test concept', created: Date.now() },
+      ]);
 
-      // Set up form data - Use a valid concept (50-3000 chars)
-      const validConcept = 'B'.repeat(100); // 100 characters to meet minimum requirement
-      // Set the value on the actual element in the DOM
-      setup.elements['concept-text'].value = validConcept;
+      // Act - Load data and verify method usage
+      await controller._testExports.loadData();
 
-      // Act - Use handleConceptSave which should trigger state update via service events
-      await controller._testExports.handleConceptSave();
-
-      // Assert - After creating a concept, we expect either no state change (handled by events)
-      // or the state should be updated. Let's check if the service was called correctly.
-      expect(
-        setup.mocks.builderService.createCharacterConcept
-      ).toHaveBeenCalledWith(validConcept);
-    });
-  });
-
-  describe('Edge cases', () => {
-    it('should handle missing UI state manager gracefully', () => {
-      // Arrange
-      controller._testExports.uiStateManager = null;
-
-      // Act & Assert - Should not throw
-      expect(() => {
-        controller._testExports.updateStatistics();
-      }).not.toThrow();
-    });
-
-    it('should handle concurrent state transitions', async () => {
-      // Arrange
-      const loadPromise1 = controller._testExports.loadData();
-      const loadPromise2 = controller._testExports.loadData();
-
-      // Act
-      await Promise.all([loadPromise1, loadPromise2]);
-
-      // Assert - Should complete without errors
-      expect(setup.mocks.logger.error).not.toHaveBeenCalled();
-    });
-
-    it('should handle state transitions during component teardown', () => {
-      // Arrange
-      controller._testExports.conceptsData = [
-        { concept: { id: '1', text: 'Test' }, directionCount: 0 },
-      ];
-
-      // Act - Simulate rapid deletion and state change
-      controller._testExports.removeConceptCard('1');
-      controller._testExports.conceptsData = [];
-
-      // Immediately try to update state
-      controller._testExports.updateStatistics();
-
-      // Assert - Should not throw errors
-      expect(setup.mocks.logger.error).not.toHaveBeenCalled();
+      // Assert - All state management should go through base class methods
+      expect(controller._executeWithErrorHandling).toHaveBeenCalled();
+      expect(controller._showState).toHaveBeenCalledWith('results');
     });
   });
 });

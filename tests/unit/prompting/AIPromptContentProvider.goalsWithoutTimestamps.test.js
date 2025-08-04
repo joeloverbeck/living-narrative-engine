@@ -37,6 +37,14 @@ const makeDummyGameStateValidationService = () => ({
   validate: () => ({ isValid: true, errorContent: null }),
 });
 
+const makeDummyActionCategorizationService = () => ({
+  extractNamespace: jest.fn(),
+  shouldUseGrouping: jest.fn(() => false),
+  groupActionsByNamespace: jest.fn(() => new Map()),
+  getSortedNamespaces: jest.fn(() => []),
+  formatNamespaceDisplayName: jest.fn((namespace) => namespace),
+});
+
 // ---- Test Suite ---- //
 describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug fix', () => {
   let provider;
@@ -49,6 +57,7 @@ describe('AIPromptContentProvider.getPromptData → Goals without timestamps bug
       promptStaticContentService: makeDummyPromptStaticContentService(),
       perceptionLogFormatter: makeDummyPerceptionLogFormatter(),
       gameStateValidationService: makeDummyGameStateValidationService(),
+      actionCategorizationService: makeDummyActionCategorizationService(),
     });
   });
 

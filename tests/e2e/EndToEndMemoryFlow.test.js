@@ -105,6 +105,13 @@ describe('End-to-End Short-Term Memory Flow', () => {
           .fn()
           .mockReturnValue({ isValid: true, errorContent: null }),
       },
+      actionCategorizationService: {
+        extractNamespace: jest.fn(),
+        shouldUseGrouping: jest.fn().mockReturnValue(false),
+        groupActionsByNamespace: jest.fn(),
+        getSortedNamespaces: jest.fn(),
+        formatNamespaceDisplayName: jest.fn(),
+      },
     });
 
     const llmConfigService = {

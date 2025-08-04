@@ -56,6 +56,8 @@ describe('AIPromptContentProvider', () => {
   let mockPerceptionLogFormatterInstance;
   /** @type {jest.Mocked<IGameStateValidationServiceForPrompting>} */
   let mockGameStateValidationServiceInstance;
+  /** @type {jest.Mocked<any>} */
+  let mockActionCategorizationService;
 
   // Spies for instance methods called by getPromptData or other methods
   /** @type {jest.SpyInstance} */
@@ -105,12 +107,25 @@ describe('AIPromptContentProvider', () => {
         .mockReturnValue({ isValid: true, errorContent: null }),
     };
 
+    mockActionCategorizationService = {
+      extractNamespace: jest.fn(
+        (actionId) => actionId.split(':')[0] || 'unknown'
+      ),
+      shouldUseGrouping: jest.fn(() => false), // Default to flat formatting for existing tests
+      groupActionsByNamespace: jest.fn(() => new Map()),
+      getSortedNamespaces: jest.fn(() => []),
+      formatNamespaceDisplayName: jest.fn((namespace) =>
+        namespace.toUpperCase()
+      ),
+    };
+
     // Instantiate with all mocks
     provider = new AIPromptContentProvider({
       logger: mockLoggerInstance,
       promptStaticContentService: mockPromptStaticContentService,
       perceptionLogFormatter: mockPerceptionLogFormatterInstance,
       gameStateValidationService: mockGameStateValidationServiceInstance,
+      actionCategorizationService: mockActionCategorizationService,
     });
 
     // Spy on the provider's own methods that are either delegating or complex internal logic
@@ -893,34 +908,17 @@ describe('AIPromptContentProvider', () => {
       test('should return PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE if no actions are available', () => {
         const dtoNull = { ...minimalGameStateDto, availableActions: null };
         let result = provider.getAvailableActionsInfoContent(dtoNull);
-        expect(result).toContain(
-          'Choose one of the following available actions by its index:'
-        );
-        expect(result).toContain(PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE);
+        expect(result).toBe(PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE);
         expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
-          'AIPromptContentProvider: No available actions provided. Using fallback message for list segment.'
-        );
-        expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'Section "Choose one of the following available actions by its index" is empty, using empty message.'
-          )
+          'AIPromptContentProvider: No available actions provided. Using fallback message.'
         );
 
         mockLoggerInstance.warn.mockClear();
-        mockLoggerInstance.debug.mockClear();
         const dtoEmpty = { ...minimalGameStateDto, availableActions: [] };
         result = provider.getAvailableActionsInfoContent(dtoEmpty);
-        expect(result).toContain(
-          'Choose one of the following available actions by its index:'
-        );
-        expect(result).toContain(PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE);
+        expect(result).toBe(PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE);
         expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
-          'AIPromptContentProvider: No available actions provided. Using fallback message for list segment.'
-        );
-        expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'Section "Choose one of the following available actions by its index" is empty, using empty message.'
-          )
+          'AIPromptContentProvider: No available actions provided. Using fallback message.'
         );
       });
 

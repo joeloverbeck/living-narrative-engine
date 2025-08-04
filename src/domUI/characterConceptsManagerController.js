@@ -22,8 +22,6 @@ import { UI_STATES } from '../shared/characterBuilder/uiStateManager.js';
  * Extends BaseCharacterBuilderController for consistent architecture
  */
 export class CharacterConceptsManagerController extends BaseCharacterBuilderController {
-  #uiStateManager;
-
   // Internal state
   #searchFilter = '';
   #conceptsData = [];
@@ -197,9 +195,6 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         getDisplayText: this._getDisplayText.bind(this),
         handleSearch: this._handleSearch.bind(this),
         // Testing utility to set UIStateManager without full initialization
-        set uiStateManager(value) {
-          self.#uiStateManager = value;
-        },
 
         // Modal display methods for testing
         showCreateModal: this._showCreateModal.bind(this),
@@ -239,9 +234,6 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    */
   async _initializeUIState() {
     await super._initializeUIState();
-
-    // Initialize UI state manager
-    await this._initializeUIStateManager();
 
     // Set initial UI state
     this._showEmpty();
@@ -290,34 +282,20 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   // NOTE: Old #cacheElements() method removed - functionality moved to _cacheElements()
 
   /**
-   * Initialize the UI state manager
-   */
-  async _initializeUIStateManager() {
-    const { UIStateManager } = await import(
-      '../shared/characterBuilder/uiStateManager.js'
-    );
-
-    this.#uiStateManager = new UIStateManager({
-      emptyState: this._getElement('emptyState'),
-      loadingState: this._getElement('loadingState'),
-      errorState: this._getElement('errorState'),
-      resultsState: this._getElement('resultsState'),
-    });
-  }
-
-  /**
    * Initialize the character builder service
    */
   async _initializeService() {
-    try {
-      await this.characterBuilderService.initialize();
-    } catch (error) {
-      this.logger.error(
-        'Failed to initialize character builder service',
-        error
-      );
-      throw error;
-    }
+    // Initialize service with retry logic
+    await this._executeWithErrorHandling(
+      () => this.characterBuilderService.initialize(),
+      'initialize character builder service',
+      {
+        retries: 2,
+        userErrorMessage:
+          'Failed to initialize character builder service. Please refresh the page.',
+        loadingMessage: 'Initializing character builder...',
+      }
+    );
   }
 
   // NOTE: Old #setupEventListeners() method removed - functionality moved to _setupEventListeners()
@@ -335,19 +313,6 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    */
   _navigateToMenu() {
     window.location.href = 'index.html';
-  }
-
-  /**
-   * Show error state
-   *
-   * @param {string} message
-   */
-  _showError(message) {
-    if (this.#uiStateManager) {
-      this.#uiStateManager.showError(message);
-    } else {
-      this.logger.error(`Error state: ${message}`);
-    }
   }
 
   /**
@@ -527,69 +492,69 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   async _loadConceptsData() {
     this.logger.info('Loading character concepts data');
 
-    try {
-      // Show loading state
-      this.#uiStateManager.showState(UI_STATES.LOADING);
-
-      // Get all concepts
-      const concepts =
-        await this.characterBuilderService.getAllCharacterConcepts();
-
-      // Get direction counts for each concept
-      const conceptsWithCounts = await Promise.all(
-        concepts.map(async (concept) => {
-          try {
-            const directions =
-              await this.characterBuilderService.getThematicDirections(
-                concept.id
-              );
-
-            return {
-              concept,
-              directionCount: directions.length,
-            };
-          } catch (error) {
-            this.logger.error(
-              `Failed to get directions for concept ${concept.id}`,
-              error
-            );
-            // Return concept with 0 directions on error
-            return {
-              concept,
-              directionCount: 0,
-            };
-          }
-        })
-      );
-
-      // Store data
-      this.#conceptsData = conceptsWithCounts;
-
-      // Apply current filter if any
-      const filteredConcepts = this._filterConcepts(conceptsWithCounts);
-
-      // Display concepts
-      this._displayConcepts(filteredConcepts);
-
-      // Update statistics
-      this._updateStatistics();
-
-      // Check if we need to restore search state
-      if (this.#searchStateRestored) {
-        const filteredConcepts = this._filterConcepts(this.#conceptsData);
-        this._displayConcepts(filteredConcepts); // uses existing display method
-        this._updateSearchState(
-          this._getElement('conceptSearch').value,
-          filteredConcepts.length
-        );
-        this.#searchStateRestored = false;
+    // Use base class error handling with automatic retry and loading states
+    const concepts = await this._executeWithErrorHandling(
+      () => this.characterBuilderService.getAllCharacterConcepts(),
+      'load character concepts',
+      {
+        retries: 2,
+        userErrorMessage:
+          'Failed to load character concepts. Please try again.',
+        loadingMessage: 'Loading character concepts...',
       }
+    );
 
-      this.logger.info(`Loaded ${concepts.length} concepts`);
-    } catch (error) {
-      this.logger.error('Failed to load concepts', error);
-      this._showError('Failed to load character concepts. Please try again.');
+    // Get direction counts for each concept
+    const conceptsWithCounts = await Promise.all(
+      concepts.map(async (concept) => {
+        try {
+          const directions =
+            await this.characterBuilderService.getThematicDirections(
+              concept.id
+            );
+
+          return {
+            concept,
+            directionCount: directions.length,
+          };
+        } catch (error) {
+          this.logger.error(
+            `Failed to get directions for concept ${concept.id}`,
+            error
+          );
+          // Return concept with 0 directions on error
+          return {
+            concept,
+            directionCount: 0,
+          };
+        }
+      })
+    );
+
+    // Store data
+    this.#conceptsData = conceptsWithCounts;
+
+    // Apply current filter if any
+    const filteredConcepts = this._filterConcepts(conceptsWithCounts);
+
+    // Display concepts
+    this._displayConcepts(filteredConcepts);
+
+    // Update statistics
+    this._updateStatistics();
+
+    // Check if we need to restore search state
+    if (this.#searchStateRestored) {
+      const filteredConcepts = this._filterConcepts(this.#conceptsData);
+      this._displayConcepts(filteredConcepts); // uses existing display method
+      this._updateSearchState(
+        this._getElement('conceptSearch').value,
+        filteredConcepts.length
+      );
+      this.#searchStateRestored = false;
     }
+
+    this.logger.info(`Loaded ${concepts.length} concepts`);
   }
 
   /**
@@ -608,7 +573,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     }
 
     // Show results state
-    this.#uiStateManager.showState(UI_STATES.RESULTS);
+    this._showState('results');
 
     // Create document fragment for performance
     const fragment = document.createDocumentFragment();
@@ -1263,7 +1228,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       createBtn?.addEventListener('click', () => this._showCreateModal());
     }
 
-    this.#uiStateManager.showState(UI_STATES.EMPTY);
+    this._showState('empty');
   }
 
   /**
@@ -1359,10 +1324,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       });
     } catch (error) {
       this.logger.error('Failed to show edit modal', error);
-      // Use existing UI state manager for error display
-      this.#uiStateManager.showError(
-        'Failed to load concept for editing. Please try again.'
-      );
+      // Use base class error display
+      this._showError('Failed to load concept for editing. Please try again.');
     }
   }
 
@@ -1474,12 +1437,20 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
   async _deleteConcept(conceptId, directionCount) {
     this.logger.info('Deleting concept', { conceptId, directionCount });
 
-    try {
-      // Apply optimistic UI update
-      this._applyOptimisticDelete(conceptId);
+    // Apply optimistic UI update
+    this._applyOptimisticDelete(conceptId);
 
-      // Delete via service (handles cascade deletion)
-      await this.characterBuilderService.deleteCharacterConcept(conceptId);
+    try {
+      // Delete via service with retry logic
+      await this._executeWithErrorHandling(
+        () => this.characterBuilderService.deleteCharacterConcept(conceptId),
+        'delete character concept',
+        {
+          retries: 1,
+          userErrorMessage: 'Failed to delete concept. Please try again.',
+          loadingMessage: 'Deleting concept...',
+        }
+      );
 
       this.logger.info('Concept deleted successfully', {
         conceptId,
@@ -1501,7 +1472,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 
       // Check if we need to show empty state
       if (this.#conceptsData.length === 0) {
-        this.#uiStateManager.showState(UI_STATES.EMPTY);
+        this._showState('empty');
       }
     } catch (error) {
       // Revert optimistic delete on failure
@@ -1700,11 +1671,27 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       this._setSaveButtonLoading(true);
 
       if (isEditing) {
-        // Update existing concept
-        await this._updateConcept(this.#editingConceptId, conceptText);
+        // Update existing concept with retry logic
+        await this._executeWithErrorHandling(
+          () => this._updateConcept(this.#editingConceptId, conceptText),
+          'update character concept',
+          {
+            retries: 1,
+            userErrorMessage: 'Failed to update concept. Please try again.',
+            loadingMessage: 'Updating concept...',
+          }
+        );
       } else {
-        // Create new concept
-        await this._createConcept(conceptText);
+        // Create new concept with retry logic
+        await this._executeWithErrorHandling(
+          () => this._createConcept(conceptText),
+          'create character concept',
+          {
+            retries: 1,
+            userErrorMessage: 'Failed to create concept. Please try again.',
+            loadingMessage: 'Creating concept...',
+          }
+        );
       }
 
       // Close modal on success
@@ -1715,15 +1702,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         `Concept ${isEditing ? 'updated' : 'created'} successfully`
       );
     } catch (error) {
-      this.logger.error(
-        `Failed to ${isEditing ? 'update' : 'create'} concept`,
-        error
-      );
-
-      // Show error at UI state level
-      this.#uiStateManager.showError(
-        `Failed to ${isEditing ? 'update' : 'save'} concept. Please try again.`
-      );
+      // Base class error handling will have already displayed error
+      this.logger.error('Concept save operation failed', error);
     } finally {
       // Re-enable form
       this._setFormEnabled(true);
@@ -1778,7 +1758,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       });
 
       // Show success notification (using existing UI patterns)
-      this.#uiStateManager.showState(UI_STATES.RESULTS);
+      this._showState('results');
 
       // Update local cache immediately for better UX
       this._updateLocalConceptCache(updatedConcept);
@@ -2037,11 +2017,11 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         this.#lastEdit.previousText
       );
 
-      this.#uiStateManager.showState(UI_STATES.RESULTS);
+      this._showState('results');
       this.#lastEdit = null;
     } catch (error) {
       this.logger.error('Failed to undo edit', error);
-      this.#uiStateManager.showError('Failed to undo edit');
+      this._showError('Failed to undo edit');
     }
   }
 
@@ -2397,7 +2377,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       });
 
       // Use existing UI state management
-      this.#uiStateManager.showState('results');
+      this._showState('results');
       this._getElement('conceptsResults').appendChild(noResultsDiv);
     } else {
       // Fall back to existing empty state logic
@@ -2864,7 +2844,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
           this._getElement('conceptsResults')?.children?.length === 0 &&
           this.#conceptsData.length === 0
         ) {
-          this.#uiStateManager?.showState(UI_STATES.EMPTY);
+          this._showState('empty');
         }
       }, removeDelay);
     }

@@ -48,6 +48,17 @@ const mockGameStateValidationServiceFn = () => ({
   validate: jest.fn(),
 });
 
+/**
+ * @returns {jest.Mocked<IActionCategorizationService>}
+ */
+const mockActionCategorizationServiceFn = () => ({
+  extractNamespace: jest.fn(),
+  shouldUseGrouping: jest.fn(() => false),
+  groupActionsByNamespace: jest.fn(() => new Map()),
+  getSortedNamespaces: jest.fn(() => []),
+  formatNamespaceDisplayName: jest.fn((namespace) => namespace),
+});
+
 describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
   /** @type {AIPromptContentProvider} */
   let provider;
@@ -71,6 +82,7 @@ describe('AIPromptContentProvider - Markdown World Context Enhancement', () => {
       promptStaticContentService: mockPromptStaticContentService,
       perceptionLogFormatter: mockPerceptionLogFormatter,
       gameStateValidationService: mockGameStateValidationService,
+      actionCategorizationService: mockActionCategorizationServiceFn(),
     });
   });
 
