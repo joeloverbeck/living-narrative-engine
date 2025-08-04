@@ -45,6 +45,9 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
 
     // Populate controller's internal elements cache for testing
     populateControllerElements(controller, setup.elements);
+    
+    // Call _cacheElements to properly initialize the controller's element cache
+    controller._cacheElements();
 
     // Set up the UIStateManager mock
     controller._testExports.uiStateManager = mockUIStateManagerInstance;
@@ -74,9 +77,9 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       await loadPromise;
 
       // Should transition to appropriate state after loading
-      expect(mockUIStateManagerInstance.showState).toHaveBeenCalledWith(
-        UI_STATES.EMPTY
-      );
+      // Check the last call to showState (since it's called multiple times)
+      const calls = mockUIStateManagerInstance.showState.mock.calls;
+      expect(calls[calls.length - 1][0]).toBe(UI_STATES.EMPTY);
     });
 
     it('should show results state when concepts exist', async () => {
@@ -93,9 +96,9 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       await controller._testExports.loadData();
 
       // Assert
-      expect(mockUIStateManagerInstance.showState).toHaveBeenCalledWith(
-        UI_STATES.RESULTS
-      );
+      // Check the last call to showState (since it's called multiple times)
+      const calls = mockUIStateManagerInstance.showState.mock.calls;
+      expect(calls[calls.length - 1][0]).toBe(UI_STATES.RESULTS);
     });
 
     it('should show empty state when no concepts exist', async () => {
@@ -106,9 +109,9 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       await controller._testExports.loadData();
 
       // Assert
-      expect(mockUIStateManagerInstance.showState).toHaveBeenCalledWith(
-        UI_STATES.EMPTY
-      );
+      // Check the last call to showState (since it's called multiple times)
+      const calls = mockUIStateManagerInstance.showState.mock.calls;
+      expect(calls[calls.length - 1][0]).toBe(UI_STATES.EMPTY);
     });
   });
 
@@ -138,7 +141,8 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
 
       // Set up form data - Use a valid concept (50-3000 chars)
       const validConcept = 'A'.repeat(100); // 100 characters to meet minimum requirement
-      controller._testExports.elements.conceptText.value = validConcept;
+      // Set the value on the actual element in the DOM
+      setup.elements['concept-text'].value = validConcept;
 
       // Act - Use handleConceptSave which includes error handling
       await controller._testExports.handleConceptSave();
@@ -163,6 +167,12 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       };
       controller._testExports.conceptsData = [mockConceptData];
       setup.mocks.builderService.deleteCharacterConcept.mockResolvedValue();
+      
+      // Mock the card element that will be deleted
+      const mockCard = document.createElement('div');
+      mockCard.setAttribute('data-concept-id', 'test-id');
+      mockCard.classList.add('concept-card');
+      setup.elements['concepts-results'].appendChild(mockCard);
 
       // Act
       await controller._testExports.deleteConcept('test-id', 0);
@@ -196,6 +206,12 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       ];
       controller._testExports.conceptsData = concepts;
       setup.mocks.builderService.deleteCharacterConcept.mockResolvedValue();
+      
+      // Mock the card element that will be deleted
+      const mockCard = document.createElement('div');
+      mockCard.setAttribute('data-concept-id', '1');
+      mockCard.classList.add('concept-card');
+      setup.elements['concepts-results'].appendChild(mockCard);
 
       // Reset mock to track only calls during delete
       mockUIStateManagerInstance.showState.mockClear();
@@ -256,7 +272,8 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
 
       // Set up form data - Use a valid concept (50-3000 chars)
       const validConcept = 'B'.repeat(100); // 100 characters to meet minimum requirement
-      controller._testExports.elements.conceptText.value = validConcept;
+      // Set the value on the actual element in the DOM
+      setup.elements['concept-text'].value = validConcept;
 
       // Act - Use handleConceptSave which should trigger state update via service events
       await controller._testExports.handleConceptSave();

@@ -143,6 +143,7 @@ describe('Visualization Entity Not Found Scenarios', () => {
             return { parentId: rootEntityId, socketId: 'socket-1' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       const mockEntity2 = {
@@ -156,6 +157,7 @@ describe('Visualization Entity Not Found Scenarios', () => {
             return { parentId: rootEntityId, socketId: 'socket-2' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -205,6 +207,7 @@ describe('Visualization Entity Not Found Scenarios', () => {
           if (componentId === 'anatomy:joint') return null;
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       const mockEntity1 = {
@@ -218,6 +221,7 @@ describe('Visualization Entity Not Found Scenarios', () => {
             return { parentId: rootEntityId, socketId: 'socket-1' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       const mockEntity3 = {
@@ -231,6 +235,7 @@ describe('Visualization Entity Not Found Scenarios', () => {
             return { parentId: rootEntityId, socketId: 'socket-3' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -276,6 +281,7 @@ describe('Visualization Entity Not Found Scenarios', () => {
           if (componentId === 'anatomy:joint') return null;
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -355,6 +361,21 @@ describe('Visualization Entity Not Found Scenarios', () => {
           if (componentId === 'anatomy:joint') return null;
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
+      };
+
+      const mockEntity2 = {
+        id: 'entity-2',
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === 'core:name') return { text: 'Entity 2' };
+          if (componentId === 'core:description')
+            return { text: 'Description 2' };
+          if (componentId === 'anatomy:part') return { subType: 'leg' };
+          if (componentId === 'anatomy:joint')
+            return { parentId: rootEntityId, socketId: 'socket-2' };
+          return null;
+        }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -362,18 +383,16 @@ describe('Visualization Entity Not Found Scenarios', () => {
         if (id === 'entity-1') {
           throw new Error('Failed to retrieve entity-1');
         }
-        return {
-          id,
-          getComponentData: jest.fn().mockReturnValue({ text: `Entity ${id}` }),
-        };
+        if (id === 'entity-2') return mockEntity2;
+        return null;
       });
 
       // Act
       await visualizationComposer.renderGraph(rootEntityId, bodyData);
 
-      // Assert
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to check entity entity-1'),
+      // Assert - entity-1 will be treated as unvisited and throw error in handleUnconnectedParts
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to add unvisited part entity-1'),
         expect.any(Error)
       );
       expect(mockLayoutEngine.calculateLayout).toHaveBeenCalled();
@@ -400,6 +419,7 @@ describe('Visualization Entity Not Found Scenarios', () => {
           if (componentId === 'anatomy:joint') return null;
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -479,6 +499,7 @@ describe('Visualization Entity Not Found Scenarios', () => {
           if (componentId === 'anatomy:joint') return null;
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       const mockEntity4 = {
@@ -492,6 +513,7 @@ describe('Visualization Entity Not Found Scenarios', () => {
             return { parentId: rootEntityId, socketId: 'socket-4' };
           return null;
         }),
+        getAllComponents: jest.fn().mockReturnValue({}),
       };
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {

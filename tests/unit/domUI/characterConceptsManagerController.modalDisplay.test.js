@@ -191,10 +191,28 @@ describe('CharacterConceptsManagerController - Modal Display Tests', () => {
       mockCharacterBuilderService.getThematicDirections.mockResolvedValue([]);
 
       await controller.initialize();
+      
+      // Force data load through test exports
+      if (controller._testExports) {
+        controller._testExports.conceptsData = [
+          {
+            concept: {
+              id: 'test-concept-1',
+              concept: 'Test concept text',
+              created: Date.now(),
+              updated: Date.now(),
+            },
+            directionCount: 0,
+          },
+        ];
+      }
     });
 
     it('should display edit modal when edit is triggered', async () => {
       const conceptModal = document.getElementById('concept-modal');
+
+      // Ensure data is loaded by waiting for initialization to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Use test exports to trigger edit modal
       if (controller._testExports && controller._testExports.showEditModal) {
@@ -205,6 +223,9 @@ describe('CharacterConceptsManagerController - Modal Display Tests', () => {
     });
 
     it('should log debug info for edit modal with concept ID', async () => {
+      // Ensure data is loaded by waiting for initialization to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       if (controller._testExports && controller._testExports.showEditModal) {
         await controller._testExports.showEditModal('test-concept-1');
       }

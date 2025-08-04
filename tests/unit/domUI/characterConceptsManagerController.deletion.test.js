@@ -20,6 +20,7 @@ jest.mock('../../../src/shared/characterBuilder/uiStateManager.js', () => {
     showState: jest.fn(),
     showError: jest.fn(),
     showLoading: jest.fn(),
+    getCurrentState: jest.fn(),
   };
 
   return {

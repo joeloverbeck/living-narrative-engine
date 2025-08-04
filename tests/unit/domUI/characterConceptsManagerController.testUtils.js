@@ -55,72 +55,48 @@ export function createMockEventBus() {
  * @returns {object} Mock DOM element
  */
 export function createMockElement(id, additionalProps = {}) {
-  const mockElement = {
-    id,
-    value: '',
-    textContent: '',
-    innerHTML: '',
-    classList: {
-      add: jest.fn(),
-      remove: jest.fn(),
-      contains: jest.fn(),
-      toggle: jest.fn(),
-    },
-    style: {
-      display: 'none',
-    },
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    querySelector: jest.fn(),
-    querySelectorAll: jest.fn(() => []),
-    focus: jest.fn(),
-    blur: jest.fn(),
-    click: jest.fn(),
-    dispatchEvent: jest.fn(),
-    remove: jest.fn(),
-    appendChild: jest.fn(),
-    removeChild: jest.fn(),
-    insertBefore: jest.fn(),
-    replaceChild: jest.fn(),
-    contains: jest.fn(),
-    closest: jest.fn(),
-    getAttribute: jest.fn(),
-    setAttribute: jest.fn(),
-    removeAttribute: jest.fn(),
-    hasAttribute: jest.fn(),
-    dataset: {},
-    disabled: false,
-    checked: false,
-    // Additional DOM methods needed for complex operations
-    cloneNode: jest.fn(),
-    ...additionalProps,
-  };
-
-  // Set up cloneNode to return a copy of the element
-  mockElement.cloneNode = jest.fn(() =>
-    createMockElement(id + '-clone', additionalProps)
-  );
-
-  // Set up parentNode to reference a mock parent
-  mockElement.parentNode = {
-    replaceChild: jest.fn(),
-    removeChild: jest.fn(),
-    appendChild: jest.fn(),
-  };
-
-  // Set up parentElement (which is the same as parentNode for testing)
-  mockElement.parentElement = {
-    insertBefore: jest.fn(),
-    removeChild: jest.fn(),
-    appendChild: jest.fn(),
-    querySelector: jest.fn(() => null),
-    querySelectorAll: jest.fn(() => []),
-  };
-
-  // Set up nextSibling
-  mockElement.nextSibling = null;
-
-  return mockElement;
+  // Create a real DOM element using jsdom
+  const tagName = additionalProps.tagName || 'div';
+  const element = document.createElement(tagName);
+  
+  // Set the ID
+  element.id = id;
+  
+  // Add common properties with defaults
+  if (additionalProps.value !== undefined) {
+    element.value = additionalProps.value;
+  }
+  
+  // Spy on important methods while keeping original functionality
+  const originalAddEventListener = element.addEventListener;
+  element.addEventListener = jest.fn((event, handler, options) => {
+    originalAddEventListener.call(element, event, handler, options);
+  });
+  
+  const originalRemoveEventListener = element.removeEventListener;
+  element.removeEventListener = jest.fn((event, handler, options) => {
+    originalRemoveEventListener.call(element, event, handler, options);
+  });
+  
+  // Add spies for other commonly tested methods
+  element.focus = jest.fn(element.focus.bind(element));
+  element.blur = jest.fn(element.blur.bind(element));
+  element.click = jest.fn(element.click.bind(element));
+  
+  // Add any additional properties (but don't override existing ones)
+  Object.keys(additionalProps).forEach(key => {
+    if (key !== 'tagName' && key !== 'value' && !(key in element)) {
+      element[key] = additionalProps[key];
+    }
+  });
+  
+  // Add to document body so contains() checks work
+  if (!document.body) {
+    document.body = document.createElement('body');
+  }
+  document.body.appendChild(element);
+  
+  return element;
 }
 
 /**
@@ -142,74 +118,69 @@ export function createMockElements() {
     'error-message-text': createMockElement('error-message-text'),
 
     // Controls
-    'create-concept-btn': createMockElement('create-concept-btn'),
-    'create-first-btn': createMockElement('create-first-btn'),
-    'retry-btn': createMockElement('retry-btn'),
-    'back-to-menu-btn': createMockElement('back-to-menu-btn'),
-    'concept-search': createMockElement('concept-search', { value: '' }),
+    'create-concept-btn': createMockElement('create-concept-btn', { tagName: 'button' }),
+    'create-first-btn': createMockElement('create-first-btn', { tagName: 'button' }),
+    'retry-btn': createMockElement('retry-btn', { tagName: 'button' }),
+    'back-to-menu-btn': createMockElement('back-to-menu-btn', { tagName: 'button' }),
+    'concept-search': createMockElement('concept-search', { tagName: 'input', value: '' }),
 
     // Statistics
-    'total-concepts': createMockElement('total-concepts'),
-    'concepts-with-directions': createMockElement('concepts-with-directions'),
-    'total-directions': createMockElement('total-directions'),
+    'total-concepts': createMockElement('total-concepts', { tagName: 'span' }),
+    'concepts-with-directions': createMockElement('concepts-with-directions', { tagName: 'span' }),
+    'total-directions': createMockElement('total-directions', { tagName: 'span' }),
 
     // Create/Edit Modal
     'concept-modal': createMockElement('concept-modal'),
     'concept-modal-title': createMockElement('concept-modal-title'),
-    'concept-form': createMockElement('concept-form', { reset: jest.fn() }),
-    'concept-text': createMockElement('concept-text', { value: '' }),
-    'char-count': createMockElement('char-count'),
+    'concept-form': createMockElement('concept-form', { tagName: 'form' }),
+    'concept-text': createMockElement('concept-text', { tagName: 'textarea', value: '' }),
+    'char-count': createMockElement('char-count', { tagName: 'span' }),
     'concept-error': createMockElement('concept-error'),
-    'save-concept-btn': createMockElement('save-concept-btn'),
-    'cancel-concept-btn': createMockElement('cancel-concept-btn'),
-    'close-concept-modal': createMockElement('close-concept-modal'),
+    'concept-help': createMockElement('concept-help'),
+    'save-concept-btn': createMockElement('save-concept-btn', { tagName: 'button' }),
+    'cancel-concept-btn': createMockElement('cancel-concept-btn', { tagName: 'button' }),
+    'close-concept-modal': createMockElement('close-concept-modal', { tagName: 'button' }),
 
     // Delete Modal
     'delete-confirmation-modal': createMockElement('delete-confirmation-modal'),
     'delete-modal-message': createMockElement('delete-modal-message'),
-    'confirm-delete-btn': createMockElement('confirm-delete-btn'),
-    'cancel-delete-btn': createMockElement('cancel-delete-btn'),
-    'close-delete-modal': createMockElement('close-delete-modal'),
+    'delete-modal-title': createMockElement('delete-modal-title'),
+    'confirm-delete-btn': createMockElement('confirm-delete-btn', { tagName: 'button' }),
+    'cancel-delete-btn': createMockElement('cancel-delete-btn', { tagName: 'button' }),
+    'close-delete-modal': createMockElement('close-delete-modal', { tagName: 'button' }),
 
     // Search elements
-    'search-concepts': createMockElement('search-concepts', {
-      value: '',
-    }),
-    'clear-search-btn': createMockElement('clear-search-btn'),
+    'search-concepts': createMockElement('search-concepts', { tagName: 'input', value: '' }),
+    'clear-search-btn': createMockElement('clear-search-btn', { tagName: 'button' }),
     'search-status': createMockElement('search-status'),
 
-    // Create modal elements
-    'create-concept-btn': createMockElement('create-concept-btn'),
+    // Create modal elements (avoid duplicates)
     'create-modal': createMockElement('create-modal'),
     'create-modal-overlay': createMockElement('create-modal-overlay'),
-    'close-create-modal': createMockElement('close-create-modal'),
-    'create-concept-text': createMockElement('create-concept-text', {
-      value: '',
-    }),
-    'create-char-count': createMockElement('create-char-count'),
+    'close-create-modal': createMockElement('close-create-modal', { tagName: 'button' }),
+    'create-concept-text': createMockElement('create-concept-text', { tagName: 'textarea', value: '' }),
+    'create-char-count': createMockElement('create-char-count', { tagName: 'span' }),
     'create-error': createMockElement('create-error'),
-    'save-create-btn': createMockElement('save-create-btn'),
+    'save-create-btn': createMockElement('save-create-btn', { tagName: 'button' }),
 
     // Edit modal elements
     'edit-modal': createMockElement('edit-modal'),
     'edit-modal-overlay': createMockElement('edit-modal-overlay'),
-    'close-edit-modal': createMockElement('close-edit-modal'),
-    'edit-concept-text': createMockElement('edit-concept-text', {
-      value: '',
-    }),
-    'edit-char-count': createMockElement('edit-char-count'),
+    'close-edit-modal': createMockElement('close-edit-modal', { tagName: 'button' }),
+    'edit-concept-text': createMockElement('edit-concept-text', { tagName: 'textarea', value: '' }),
+    'edit-char-count': createMockElement('edit-char-count', { tagName: 'span' }),
     'edit-error': createMockElement('edit-error'),
-    'save-edit-btn': createMockElement('save-edit-btn'),
+    'save-edit-btn': createMockElement('save-edit-btn', { tagName: 'button' }),
 
     // Delete modal elements
     'delete-modal': createMockElement('delete-modal'),
     'delete-modal-overlay': createMockElement('delete-modal-overlay'),
-    'close-delete-modal': createMockElement('close-delete-modal'),
     'delete-message': createMockElement('delete-message'),
     'delete-error': createMockElement('delete-error'),
-    'cancel-delete-btn': createMockElement('cancel-delete-btn'),
-    'confirm-delete-btn': createMockElement('confirm-delete-btn'),
   };
+  
+  // Add form reset method
+  elements['concept-form'].reset = jest.fn();
 
   return elements;
 }
@@ -419,7 +390,7 @@ export function createTestSetup() {
 
   // Add querySelector to the concepts-results element for deletion tests
   elements['concepts-results'].querySelector = jest.fn().mockReturnValue(null);
-  elements['concepts-results'].children = { length: 0 };
+  // Note: children is a read-only property on real DOM elements, no need to override
   elements['concepts-results'].innerHTML = '';
   elements['concepts-results'].appendChild = jest.fn();
   elements['concepts-results'].classList = {

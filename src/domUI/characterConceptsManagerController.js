@@ -242,7 +242,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 
         // Modal display methods for testing
         showCreateModal: this._showCreateModal.bind(this),
-        showEditModal: this.#showEditModal.bind(this),
+        showEditModal: this._showEditModal.bind(this),
 
         // CRUD operations for testing
         createConcept: this.#createConcept.bind(this),
@@ -761,7 +761,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 
         switch (action) {
           case 'edit':
-            this.#showEditModal(concept.id);
+            this._showEditModal(concept.id);
             break;
           case 'delete':
             this.#showDeleteConfirmation(concept, directionCount);
@@ -1323,7 +1323,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     this.#logger.info('Viewing concept details', { id: concept.id });
     // Could show read-only modal or expand card
     // For now, just show edit modal in read-only mode
-    this.#showEditModal(concept.id);
+    this._showEditModal(concept.id);
   }
 
   /**
@@ -1331,7 +1331,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    *
    * @param {string} conceptId
    */
-  async #showEditModal(conceptId) {
+  async _showEditModal(conceptId) {
     this.#logger.info('Showing edit modal', { conceptId });
 
     try {
@@ -2007,6 +2007,22 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         return;
       }
 
+      // ESC key to close modals
+      if (e.key === 'Escape') {
+        // Check if concept modal is open
+        if (this._getElement('conceptModal').style.display === 'flex') {
+          e.preventDefault();
+          this._closeConceptModal();
+          return;
+        }
+        // Check if delete modal is open
+        if (this._getElement('deleteModal').style.display === 'flex') {
+          e.preventDefault();
+          this._closeDeleteModal();
+          return;
+        }
+      }
+
       // Handle shortcuts for focused concept cards
       const focusedCard = document.activeElement.closest('[data-concept-id]');
       if (!focusedCard) return;
@@ -2031,7 +2047,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         case 'E':
           if (!e.target.closest('input, textarea')) {
             e.preventDefault();
-            this.#showEditModal(conceptId);
+            this._showEditModal(conceptId);
           }
           break;
         case 'Delete':

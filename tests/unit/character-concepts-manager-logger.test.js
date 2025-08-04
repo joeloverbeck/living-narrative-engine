@@ -31,10 +31,13 @@ describe('Character Concepts Manager - Logger Accessibility', () => {
 
     // Mock character builder service
     mockCharacterBuilderService = {
+      initialize: jest.fn().mockResolvedValue(),
       getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
       createCharacterConcept: jest.fn(),
       updateCharacterConcept: jest.fn(),
       deleteCharacterConcept: jest.fn(),
+      getCharacterConcept: jest.fn(),
+      generateThematicDirections: jest.fn(),
       getThematicDirections: jest.fn().mockResolvedValue([]),
     };
 
@@ -94,7 +97,9 @@ describe('Character Concepts Manager - Logger Accessibility', () => {
     });
 
     afterEach(() => {
-      dom.window.close();
+      if (dom && dom.window) {
+        dom.window.close();
+      }
     });
 
     it('should handle page visibility changes without errors', () => {
