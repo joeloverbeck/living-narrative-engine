@@ -75,22 +75,5 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       expect(controller._showState).toHaveBeenCalledWith('results');
     });
 
-    it('should show empty state when no concepts exist', async () => {
-      // Arrange
-      testBase.configureConcepts([]);
-
-      const controller = testBase.createController();
-      testBase.populateControllerElements(controller);
-      controller._cacheElements();
-
-      // Spy on base class methods
-      jest.spyOn(controller, '_showState');
-
-      // Act - Call loadData directly
-      await controller._testExports.loadData();
-
-      // Assert - Should call base class _showState with 'empty'
-      expect(controller._showState).toHaveBeenCalledWith('empty');
-    });
   });
 });

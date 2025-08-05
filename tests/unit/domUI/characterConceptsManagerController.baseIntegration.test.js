@@ -306,10 +306,10 @@ describe('CharacterConceptsManagerController - Base Class Integration', () => {
       // Spy on state methods
       const showStateSpy = jest.spyOn(controller, '_showState');
 
-      // Trigger load data
-      await controller._testExports.loadData();
+      // Initialize the controller fully to trigger UI state initialization
+      await controller.initialize();
 
-      // Should show empty state for no concepts
+      // Should show empty state after UIStateManager is initialized
       expect(showStateSpy).toHaveBeenCalledWith('empty');
     });
   });

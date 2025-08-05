@@ -1,5 +1,7 @@
 # BaseCharacterBuilderController Quick Reference
 
+**Note**: The BaseCharacterBuilderController is located at `src/characterBuilder/controllers/BaseCharacterBuilderController.js` in the project structure.
+
 ## Essential Methods to Implement
 
 ```javascript
@@ -110,7 +112,9 @@ this.logger; // Logger instance
 this.eventBus; // Event bus
 this.characterBuilderService; // Character service
 this.schemaValidator; // Schema validator
-this._elements; // Cached DOM elements
+
+// Note: Cached DOM elements (_elements) are private and not accessible directly
+// Use _getElement('key') to access cached elements
 
 // Additional services are passed in constructor and stored privately
 // Access them through constructor dependency injection
@@ -156,7 +160,7 @@ this._showState('loading'); // 'loading', 'results', 'empty', 'error'
 
 ```javascript
 // HTML escaping for security (import utility)
-import { DomUtils } from '../../utils/domUtils.js';
+import { DomUtils } from '../../../utils/domUtils.js';
 const escaped = DomUtils.escapeHtml(userInput);
 // Also available: DomUtils.textToHtml(text) - converts newlines to <br>
 
@@ -186,8 +190,8 @@ const data = await this._executeWithErrorHandling(
 ## Testing Integration
 
 ```javascript
-// Use the test base class
-import { BaseCharacterBuilderControllerTestBase } from '../BaseCharacterBuilderController.testbase.js';
+// Use the test base class (adjust path based on your test file location)
+import { BaseCharacterBuilderControllerTestBase } from '../../../tests/unit/characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 
 describe('MyController', () => {
   const testBase = new BaseCharacterBuilderControllerTestBase();
@@ -298,7 +302,7 @@ _validateForm() {
 }
 
 // Display results (with import at top of file)
-// import { DomUtils } from '../utils/domUtils.js';
+// import { DomUtils } from '../../../utils/domUtils.js';
 
 _displayResults(data) {
   const container = this._getElement('resultsContainer');
