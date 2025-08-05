@@ -20,14 +20,101 @@ jest.mock(
       .fn()
       .mockImplementation(function (dependencies) {
         // Extract core dependencies and additional services (spread operator pattern)
-        const { logger, characterBuilderService, eventBus, schemaValidator, ...additionalServices } = dependencies;
-        
+        const {
+          logger,
+          characterBuilderService,
+          eventBus,
+          schemaValidator,
+          ...additionalServices
+        } = dependencies;
+
         // Store dependencies to make them accessible via getters
         this._logger = logger;
         this._characterBuilderService = characterBuilderService;
         this._eventBus = eventBus;
         this._schemaValidator = schemaValidator;
         this._additionalServices = additionalServices;
+
+        // Private storage for cached elements
+        this._cachedElements = {};
+
+        // Mock base class methods
+        this._cacheElementsFromMap = jest
+          .fn()
+          .mockImplementation((elementMap) => {
+            // Cache elements based on the test's mock setup
+            const doc =
+              typeof global !== 'undefined' && global.document
+                ? global.document
+                : { querySelector: () => null, getElementById: () => null };
+            Object.keys(elementMap).forEach((key) => {
+              const config =
+                typeof elementMap[key] === 'string'
+                  ? { selector: elementMap[key] }
+                  : elementMap[key];
+              // Try to get element using getElementById if selector starts with #
+              let element = null;
+              if (config.selector && config.selector.startsWith('#')) {
+                const id = config.selector.substring(1);
+                element = doc.getElementById ? doc.getElementById(id) : null;
+              } else {
+                element = doc.querySelector
+                  ? doc.querySelector(config.selector)
+                  : null;
+              }
+              if (element) {
+                this._cachedElements[key] = element;
+              }
+            });
+            return { cached: this._cachedElements, errors: [], stats: {} };
+          });
+
+        this._getElement = jest.fn((key) => {
+          return this._cachedElements[key] || null;
+        });
+
+        this._setElementText = jest.fn((key, text) => {
+          const element = this._cachedElements[key];
+          if (element) {
+            element.textContent = text;
+            return true;
+          }
+          return false;
+        });
+
+        this._showElement = jest.fn((key, displayType = 'block') => {
+          const element = this._cachedElements[key];
+          if (element) {
+            element.style.display = displayType;
+            return true;
+          }
+          return false;
+        });
+
+        this._hideElement = jest.fn((key) => {
+          const element = this._cachedElements[key];
+          if (element) {
+            element.style.display = 'none';
+            return true;
+          }
+          return false;
+        });
+
+        // Mock _addEventListener method
+        this._addEventListener = jest.fn(
+          (elementOrKey, event, handler, options = {}) => {
+            let element;
+            if (typeof elementOrKey === 'string') {
+              element = this._cachedElements[elementOrKey];
+            } else {
+              element = elementOrKey;
+            }
+
+            if (element && element.addEventListener) {
+              element.addEventListener(event, handler, options);
+            }
+          }
+        );
 
         // Mock getter methods
         Object.defineProperty(this, 'logger', {

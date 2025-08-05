@@ -4,9 +4,11 @@
 
 Migrate the existing initialization and lifecycle methods to use the BaseCharacterBuilderController's lifecycle hooks. This includes implementing methods like `_loadInitialData()`, `_initializeUIState()`, `_initializeAdditionalServices()`, and `_postInitialize()` to replace the current custom initialization flow.
 
+**IMPORTANT**: This workflow addresses a critical missing dependency issue - UIStateManager is not currently being passed to the controller but is expected by the base class.
+
 ## Priority
 
-**HIGH** - Core functionality migration
+**HIGH** - Core functionality migration with dependency fix
 
 ## Dependencies
 
@@ -16,7 +18,8 @@ Migrate the existing initialization and lifecycle methods to use the BaseCharact
 
 ## Acceptance Criteria
 
-- [ ] Current initialize() method logic distributed to appropriate hooks
+- [ ] UIStateManager dependency properly registered and passed to controller
+- [ ] Current initialize() method removed (not overridden)
 - [ ] Data loading moved to \_loadInitialData()
 - [ ] UI state initialization in \_initializeUIState()
 - [ ] Additional services setup in \_initializeAdditionalServices()
@@ -24,45 +27,89 @@ Migrate the existing initialization and lifecycle methods to use the BaseCharact
 - [ ] No duplicate initialization
 - [ ] Error handling maintained
 - [ ] Loading states shown at appropriate times
+- [ ] Base class initialize() method used
 
 ## Implementation Steps
 
-### Step 1: Analyze Current Initialization Flow
+### Key Implementation Notes
 
-Review the existing initialize() method:
+1. **DO NOT override initialize()** - The base class provides the correct implementation
+2. **UIStateManager must be passed** - It's currently missing from the DI registration
+3. **Preserve existing logic** - Move code from current initialize() to appropriate hooks
+4. **Use base class utilities** - The base class provides error handling, state management, etc.
 
-```bash
-# Find current initialization
-grep -n "initialize" src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js
-grep -A 30 "async initialize" src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js
+### Step 1: Fix Missing UIStateManager Dependency
+
+**Critical Issue**: UIStateManager is expected by the controller but not provided in thematicDirectionsManagerMain.js
+
+Add UIStateManager to the DI container registration:
+
+```javascript
+// In thematicDirectionsManagerMain.js
+#registerController(container) {
+  const registrar = new Registrar(container);
+  
+  // First create UIStateManager instance
+  registrar.singletonFactory(
+    Symbol('UIStateManager'), // or add to tokens.js
+    (c) => {
+      // UIStateManager will be initialized by the base controller
+      // using _initializeUIStateManager() method
+      return new UIStateManager();
+    }
+  );
+  
+  registrar.singletonFactory(
+    tokens.ThematicDirectionsManagerController,
+    (c) => {
+      return new ThematicDirectionsManagerController({
+        logger: c.resolve(tokens.ILogger),
+        characterBuilderService: c.resolve(tokens.CharacterBuilderService),
+        eventBus: c.resolve(tokens.ISafeEventDispatcher),
+        schemaValidator: c.resolve(tokens.ISchemaValidator),
+        uiStateManager: c.resolve(Symbol('UIStateManager')), // ADD THIS LINE
+      });
+    }
+  );
+}
 ```
 
-Typical flow:
+### Step 2: Analyze Current Initialization Flow
 
-1. Cache DOM elements
-2. Setup event listeners
-3. Initialize UI components
-4. Load initial data
-5. Set initial UI state
-6. Log completion
+The current initialize() method in the controller:
 
-### Step 2: Map to Base Controller Lifecycle
+1. Caches DOM elements (via `_cacheElements()`)
+2. Initializes concept dropdown 
+3. Initializes characterBuilderService
+4. Sets up event listeners (via `_setupEventListeners()`)
+5. Loads directions data
+6. Handles errors
 
-Base controller lifecycle order:
+**Note**: The current method completely overrides the base class initialize(), which prevents lifecycle hooks from running.
+
+### Step 3: Map to Base Controller Lifecycle
+
+Base controller lifecycle order (from BaseCharacterBuilderController):
 
 1. `constructor()` - Basic field initialization
 2. `initialize()` - Base class method (calls hooks in order):
    - `_preInitialize()` - Pre-initialization setup
-   - `_cacheElements()` - Cache DOM elements (already done)
-   - `_setupEventListeners()` - Setup events (already done)
+   - `_cacheElements()` - Cache DOM elements (already implemented)
+   - `_setupEventListeners()` - Setup events (already implemented)
    - `_initializeAdditionalServices()` - Initialize services/components
    - `_loadInitialData()` - Load page data
-   - `_initializeUIState()` - Setup UI state
+   - `_initializeUIState()` - Setup UI state (calls `_initializeUIStateManager()`)
    - `_postInitialize()` - Final setup
 
-### Step 3: Implement \_preInitialize()
+**Current vs Target Mapping**:
+- Concept dropdown init → `_initializeAdditionalServices()`
+- characterBuilderService.initialize() → `_initializeAdditionalServices()`
+- loadDirectionsData() → `_loadInitialData()`
+- UI state setup → `_initializeUIState()`
 
-Optional hook for early setup:
+### Step 4: Implement \_preInitialize() (Optional)
+
+This hook is optional for early setup before DOM caching:
 
 ```javascript
 /**
@@ -74,15 +121,18 @@ Optional hook for early setup:
 async _preInitialize() {
   await super._preInitialize();
 
-  // Initialize any early state or utilities
-  this.#filterManager = this._createFilterManager();
-  this.#getFilteredData = this._createFilteredDataGetter();
+  // Initialize any early state that doesn't depend on DOM
+  this.#currentFilter = '';
+  this.#currentConcept = null;
+  this.#directionsData = [];
 
   this.logger.debug('ThematicDirectionsManager: Pre-initialization complete');
 }
 ```
 
-### Step 4: Implement \_initializeAdditionalServices()
+**Note**: Most initialization is already handled in the constructor.
+
+### Step 5: Implement \_initializeAdditionalServices()
 
 Initialize components that aren't core dependencies:
 
@@ -96,28 +146,25 @@ Initialize components that aren't core dependencies:
 async _initializeAdditionalServices() {
   await super._initializeAdditionalServices();
 
-  // Initialize concept dropdown
+  // Initialize concept dropdown (moved from initialize())
   this.#conceptDropdown = new PreviousItemsDropdown({
-    element: this._getElement('conceptFilter'),
-    onSelectionChange: this._handleConceptSelection.bind(this),
-    placeholder: 'Filter by concept...',
-    allowClear: true,
-    storageKey: 'thematic-directions-concept-filter'
+    element: this._getElement('conceptSelector'), // Note: actual element ID
+    onSelectionChange: this.#handleConceptSelection.bind(this),
+    labelText: 'Choose Concept:',
   });
 
-  // Initialize modal manager if using custom modal system
-  this.#modalManager = new ModalManager(this);
-
-  // Load concepts for dropdown
-  await this._loadConceptsForDropdown();
+  // Initialize characterBuilderService (moved from initialize())
+  await this.characterBuilderService.initialize();
 
   this.logger.debug('Additional services initialized');
 }
 ```
 
-### Step 5: Implement \_loadInitialData()
+**Note**: The concept dropdown initialization is moved here from the current `initialize()` method.
 
-Move data loading logic here:
+### Step 6: Implement \_loadInitialData()
+
+Move the data loading logic from `#loadDirectionsData()`:
 
 ```javascript
 /**
@@ -127,43 +174,51 @@ Move data loading logic here:
  * @returns {Promise<void>}
  */
 async _loadInitialData() {
-  try {
-    // Show loading state while fetching
-    this._showLoading('Loading thematic directions...');
+  // Delegate to existing method for now (to minimize changes)
+  await this.#loadDirectionsData();
+}
 
-    // Fetch all required data in parallel
-    const [directions, concepts, orphanedCount] = await this._executeWithErrorHandling(
-      () => Promise.all([
-        this.characterBuilderService.getAllThematicDirectionsWithConcepts(),
-        this.characterBuilderService.getAllCharacterConcepts(),
-        this.characterBuilderService.getOrphanedThematicDirections()
-      ]),
-      'load initial data',
-      {
-        retries: 2,
-        userErrorMessage: 'Failed to load thematic directions. Please try again.'
-      }
+// OR implement inline (moving code from #loadDirectionsData):
+async _loadInitialData() {
+  this.#uiStateManager.showState(UI_STATES.LOADING);
+
+  try {
+    // Load all directions with their concepts
+    const directionsWithConcepts =
+      await this.characterBuilderService.getAllThematicDirectionsWithConcepts();
+
+    // Extract unique concepts that have associated directions
+    const conceptsWithDirections = this.#extractConceptsWithDirections(
+      directionsWithConcepts
     );
 
-    // Store the data
-    this.#directionsData = directions || [];
-    this.#conceptsData = concepts || [];
-    this.#orphanedCount = orphanedCount?.length || 0;
+    // Update dropdown with filtered concepts
+    await this.#conceptDropdown.loadItems(conceptsWithDirections);
 
-    // Process data if needed
-    this._processDirectionsData();
+    // Store data
+    this.#directionsData = directionsWithConcepts;
 
-    this.logger.info(`Loaded ${this.#directionsData.length} directions, ${this.#orphanedCount} orphaned`);
+    // Update stats
+    this.#updateStats();
 
+    this.logger.info(
+      'ThematicDirectionsManagerController: Loaded directions data',
+      {
+        directionCount: this.#directionsData.length,
+        conceptsWithDirections: conceptsWithDirections.length,
+      }
+    );
   } catch (error) {
-    // Error already handled by _executeWithErrorHandling
-    this.logger.error('Failed to load initial data', error);
-    // Don't rethrow - let _initializeUIState handle empty/error state
+    this.logger.error(
+      'ThematicDirectionsManagerController: Failed to load directions',
+      error
+    );
+    // Don't throw - let _initializeUIState handle error display
   }
 }
 ```
 
-### Step 6: Implement \_initializeUIState()
+### Step 7: Implement \_initializeUIState()
 
 Set up the initial UI state based on loaded data:
 
@@ -177,30 +232,20 @@ Set up the initial UI state based on loaded data:
 async _initializeUIState() {
   await super._initializeUIState(); // Initializes UIStateManager
 
-  // Update stats displays
-  this._updateStats();
-
-  // Determine and show appropriate state
-  if (this.#directionsData.length > 0) {
-    // Display the directions
-    this._displayDirections();
-    this._showState(UI_STATES.RESULTS);
-
-    // Restore previous filters if any
-    this._restoreFilterState();
-  } else {
-    // Show empty state
-    this._showState(UI_STATES.EMPTY);
-    this._updateEmptyStateMessage();
-  }
-
-  // Initialize any UI-specific features
-  this._initializeTooltips();
-  this._initializeSortOptions();
+  // Display directions and determine appropriate state
+  // (moved from #loadDirectionsData)
+  this.#filterAndDisplayDirections();
+  
+  // Note: #filterAndDisplayDirections already handles:
+  // - Showing EMPTY state if no data
+  // - Showing RESULTS state if data exists
+  // - Displaying the directions
 }
 ```
 
-### Step 7: Implement \_postInitialize()
+**Note**: The base class `_initializeUIState()` will call `_initializeUIStateManager()` which properly sets up the UIStateManager with DOM elements.
+
+### Step 8: Implement \_postInitialize()
 
 Final initialization tasks:
 
@@ -214,112 +259,139 @@ Final initialization tasks:
 async _postInitialize() {
   await super._postInitialize();
 
-  // Set up keyboard shortcuts
-  this._initializeKeyboardShortcuts();
-
-  // Start any background processes
-  this._startAutoSave();
-
-  // Focus initial element
-  const filterInput = this._getElement('directionFilter');
-  if (filterInput && !this._hasActiveModal()) {
-    filterInput.focus();
-  }
-
-  // Log successful initialization
-  this.logger.info('ThematicDirectionsManagerController initialized successfully', {
-    directionsCount: this.#directionsData.length,
-    conceptsCount: this.#conceptsData.length,
-    orphanedCount: this.#orphanedCount
-  });
-
-  // Dispatch initialization complete event
-  this.eventBus.dispatch({
-    type: 'THEMATIC_DIRECTIONS_MANAGER_INITIALIZED',
-    payload: {
-      directionsCount: this.#directionsData.length
-    }
-  });
+  // Log successful initialization (moved from initialize())
+  this.logger.info(
+    'ThematicDirectionsManagerController: Successfully initialized'
+  );
+  
+  // Any other post-initialization tasks can be added here
+  // For example: focus management, analytics tracking, etc.
 }
 ```
 
-### Step 8: Remove Old Initialize Method
+**Note**: Keep this simple for now. Additional functionality can be added as needed.
 
-After implementing all lifecycle hooks, remove the old method:
+### Step 9: Remove Old Initialize Method
+
+After implementing all lifecycle hooks, remove the old method entirely:
 
 ```javascript
-// DELETE this entire method:
+// DELETE this entire method from thematicDirectionsManagerController.js:
 async initialize() {
   try {
-    // Cache DOM elements
-    this.#cacheElements();
+    // Cache DOM elements using base class method
+    this._cacheElements();
 
-    // Setup event listeners
-    this.#setupEventListeners();
+    // Initialize concept dropdown
+    this.#conceptDropdown = new PreviousItemsDropdown({
+      element: this._getElement('conceptSelector'),
+      onSelectionChange: this.#handleConceptSelection.bind(this),
+      labelText: 'Choose Concept:',
+    });
 
-    // ... rest of old initialization
+    // Initialize service
+    await this.characterBuilderService.initialize();
+
+    // Set up event listeners using the base class helper method
+    this._setupEventListeners();
+
+    // Load initial data
+    await this.#loadDirectionsData();
+
+    this.logger.info(
+      'ThematicDirectionsManagerController: Successfully initialized'
+    );
   } catch (error) {
-    this.#logger.error('Failed to initialize', error);
-    throw error;
+    this.logger.error(
+      'ThematicDirectionsManagerController: Failed to initialize',
+      error
+    );
+    if (this.#uiStateManager) {
+      this.#uiStateManager.showError(
+        'Failed to initialize directions manager. Please refresh the page.'
+      );
+    }
   }
 }
 ```
 
-### Step 9: Update Entry Point
+**IMPORTANT**: Do NOT override initialize(). Let the base class handle it.
 
-Update how the controller is initialized:
+### Step 10: Update Entry Point
 
-**Before**:
-
-```javascript
-// In thematicDirectionsManagerMain.js
-const controller = new ThematicDirectionsManagerController(dependencies);
-await controller.initialize();
-```
-
-**After**:
+The entry point stays the same, but ensure UIStateManager is passed:
 
 ```javascript
 // In thematicDirectionsManagerMain.js
-const controller = new ThematicDirectionsManagerController(dependencies);
-await controller.initialize(); // Now calls base class initialize()
+#registerController(container) {
+  const registrar = new Registrar(container);
+  
+  // Register UIStateManager (NEW)
+  registrar.singletonFactory(
+    Symbol('UIStateManager'), // TODO: Add to tokens.js
+    () => new UIStateManager()
+  );
+  
+  registrar.singletonFactory(
+    tokens.ThematicDirectionsManagerController,
+    (c) => {
+      return new ThematicDirectionsManagerController({
+        logger: c.resolve(tokens.ILogger),
+        characterBuilderService: c.resolve(tokens.CharacterBuilderService),
+        eventBus: c.resolve(tokens.ISafeEventDispatcher),
+        schemaValidator: c.resolve(tokens.ISchemaValidator),
+        uiStateManager: c.resolve(Symbol('UIStateManager')), // ADD THIS
+      });
+    }
+  );
+}
+
+// Controller initialization remains the same:
+await this.#controller.initialize(); // Now calls base class initialize()
 ```
 
 ## Error Handling Patterns
 
-### Use \_executeWithErrorHandling
+### Current Error Handling
 
-```javascript
-async _loadInitialData() {
-  const data = await this._executeWithErrorHandling(
-    async () => {
-      // Operation that might fail
-      return await this.characterBuilderService.getAllThematicDirections();
-    },
-    'load thematic directions', // Context for logging
-    {
-      retries: 2,                // Number of retries
-      retryDelay: 1000,          // Delay between retries
-      userErrorMessage: 'Unable to load directions. Please refresh the page.',
-      fallbackValue: []          // Return empty array on failure
-    }
-  );
-
-  this.#directionsData = data;
-}
-```
-
-### State-Based Error Display
+The existing error handling in `#loadDirectionsData()` should be preserved:
 
 ```javascript
 async _loadInitialData() {
   try {
     // ... loading logic
   } catch (error) {
-    // Don't throw - let UI state handle it
-    this.#directionsData = [];
-    this._setErrorMessage('Failed to load directions. Please try again.');
-    // _initializeUIState will show error state
+    this.logger.error(
+      'ThematicDirectionsManagerController: Failed to load directions',
+      error
+    );
+    this.#uiStateManager.showError(
+      'Failed to load thematic directions. Please try again.'
+    );
+  }
+}
+```
+
+### Using Base Class Error Methods
+
+The base class provides `_executeWithErrorHandling()` for more sophisticated error handling:
+
+```javascript
+async _loadInitialData() {
+  const data = await this._executeWithErrorHandling(
+    async () => {
+      return await this.characterBuilderService.getAllThematicDirectionsWithConcepts();
+    },
+    'load thematic directions',
+    {
+      retries: 2,
+      userErrorMessage: 'Failed to load thematic directions. Please try again.'
+    }
+  );
+  
+  if (data) {
+    this.#directionsData = data;
+    // ... rest of processing
   }
 }
 ```
@@ -398,14 +470,15 @@ describe('Lifecycle Methods', () => {
 
 ## Migration Checklist
 
-- [ ] Current initialize() analyzed
+- [ ] UIStateManager dependency added to thematicDirectionsManagerMain.js
+- [ ] Current initialize() method analyzed
 - [ ] \_preInitialize() implemented (if needed)
 - [ ] \_initializeAdditionalServices() implemented
 - [ ] \_loadInitialData() implemented
 - [ ] \_initializeUIState() implemented
 - [ ] \_postInitialize() implemented
-- [ ] Old initialize() method removed
-- [ ] Entry point updated (if needed)
+- [ ] Old initialize() method removed (not overridden)
+- [ ] Entry point updated to pass UIStateManager
 - [ ] Error handling preserved
 - [ ] Loading states working
 - [ ] All initialization logic migrated
@@ -414,16 +487,53 @@ describe('Lifecycle Methods', () => {
 ## Files Modified
 
 - [ ] `src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js`
-- [ ] `src/thematicDirectionsManager/thematicDirectionsManagerMain.js` (potentially)
+- [ ] `src/thematicDirectionsManager/thematicDirectionsManagerMain.js` (REQUIRED for UIStateManager)
 
 ## Files Created
 
 - None
 
+## Troubleshooting Common Issues
+
+### Issue 1: "Cannot read property 'showState' of undefined"
+
+**Cause**: UIStateManager is not being passed to the controller constructor.
+
+**Solution**: 
+1. Add UIStateManager registration in thematicDirectionsManagerMain.js
+2. Pass it in the controller constructor dependencies
+3. Ensure the base class `_initializeUIState()` is called
+
+### Issue 2: "#uiStateManager is private" errors
+
+**Cause**: Trying to access private field from base class.
+
+**Solution**: Use the getter `this.#uiStateManager` in the controller (already implemented) or use the base class methods like `_showState()`.
+
+### Issue 3: Initialization happens twice
+
+**Cause**: Both the controller and base class have initialize() methods.
+
+**Solution**: Remove the initialize() override completely. Let the base class handle it.
+
+### Issue 4: DOM elements not cached
+
+**Cause**: _cacheElements() is called at the wrong time.
+
+**Solution**: The base class calls it automatically. Ensure you're not overriding initialize().
+
+### Issue 5: Event listeners not working
+
+**Cause**: _setupEventListeners() called before DOM caching.
+
+**Solution**: The base class handles the correct order. Don't override initialize().
+
 ## Definition of Done
 
+- [ ] UIStateManager dependency properly registered and passed
 - [ ] All lifecycle hooks implemented
-- [ ] Old initialize() method removed
+- [ ] Old initialize() method removed completely
+- [ ] Base class initialize() method used
 - [ ] Initialization order preserved
 - [ ] Error handling maintained
 - [ ] Loading states shown correctly

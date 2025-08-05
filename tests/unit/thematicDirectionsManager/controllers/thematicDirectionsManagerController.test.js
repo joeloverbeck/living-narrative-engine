@@ -20,16 +20,28 @@ jest.mock(
       .fn()
       .mockImplementation(function (dependencies) {
         // Mock base class validation - throw errors for invalid dependencies
-        if (!dependencies.logger || !dependencies.logger.debug || !dependencies.logger.info || !dependencies.logger.warn || !dependencies.logger.error) {
+        if (
+          !dependencies.logger ||
+          !dependencies.logger.debug ||
+          !dependencies.logger.info ||
+          !dependencies.logger.warn ||
+          !dependencies.logger.error
+        ) {
           throw new Error('Invalid logger dependency');
         }
-        if (!dependencies.characterBuilderService || typeof dependencies.characterBuilderService !== 'object') {
+        if (
+          !dependencies.characterBuilderService ||
+          typeof dependencies.characterBuilderService !== 'object'
+        ) {
           throw new Error('Invalid characterBuilderService dependency');
         }
         if (!dependencies.eventBus || !dependencies.eventBus.dispatch) {
           throw new Error('Invalid eventBus dependency');
         }
-        if (!dependencies.schemaValidator || !dependencies.schemaValidator.validateAgainstSchema) {
+        if (
+          !dependencies.schemaValidator ||
+          !dependencies.schemaValidator.validateAgainstSchema
+        ) {
           throw new Error('Invalid schemaValidator dependency');
         }
 
@@ -38,10 +50,97 @@ jest.mock(
         this._characterBuilderService = dependencies.characterBuilderService;
         this._eventBus = dependencies.eventBus;
         this._schemaValidator = dependencies.schemaValidator;
-        
+
         // Store additional services (everything not in core dependencies)
-        const { logger, characterBuilderService, eventBus, schemaValidator, ...additionalServices } = dependencies;
+        const {
+          logger,
+          characterBuilderService,
+          eventBus,
+          schemaValidator,
+          ...additionalServices
+        } = dependencies;
         this._additionalServices = additionalServices;
+
+        // Private storage for cached elements
+        this._cachedElements = {};
+
+        // Mock base class methods
+        this._cacheElementsFromMap = jest
+          .fn()
+          .mockImplementation((elementMap) => {
+            // Cache elements based on the test's mock setup
+            const doc =
+              typeof global !== 'undefined' && global.document
+                ? global.document
+                : { querySelector: () => null, getElementById: () => null };
+            Object.keys(elementMap).forEach((key) => {
+              const config =
+                typeof elementMap[key] === 'string'
+                  ? { selector: elementMap[key] }
+                  : elementMap[key];
+              // Try to get element using getElementById if selector starts with #
+              let element = null;
+              if (config.selector && config.selector.startsWith('#')) {
+                const id = config.selector.substring(1);
+                element = doc.getElementById ? doc.getElementById(id) : null;
+              } else {
+                element = doc.querySelector
+                  ? doc.querySelector(config.selector)
+                  : null;
+              }
+              if (element) {
+                this._cachedElements[key] = element;
+              }
+            });
+            return { cached: this._cachedElements, errors: [], stats: {} };
+          });
+
+        this._getElement = jest.fn((key) => {
+          return this._cachedElements[key] || null;
+        });
+
+        this._setElementText = jest.fn((key, text) => {
+          const element = this._cachedElements[key];
+          if (element) {
+            element.textContent = text;
+            return true;
+          }
+          return false;
+        });
+
+        this._showElement = jest.fn((key, displayType = 'block') => {
+          const element = this._cachedElements[key];
+          if (element) {
+            element.style.display = displayType;
+            return true;
+          }
+          return false;
+        });
+
+        this._hideElement = jest.fn((key) => {
+          const element = this._cachedElements[key];
+          if (element) {
+            element.style.display = 'none';
+            return true;
+          }
+          return false;
+        });
+
+        // Mock _addEventListener method
+        this._addEventListener = jest.fn(
+          (elementOrKey, event, handler, options = {}) => {
+            let element;
+            if (typeof elementOrKey === 'string') {
+              element = this._cachedElements[elementOrKey];
+            } else {
+              element = elementOrKey;
+            }
+
+            if (element && element.addEventListener) {
+              element.addEventListener(event, handler, options);
+            }
+          }
+        );
 
         // Mock getter methods
         Object.defineProperty(this, 'logger', {
@@ -547,7 +646,6 @@ describe('ThematicDirectionsManagerController', () => {
         });
       }).toThrow();
     });
-
   });
 
   describe('initialize', () => {
@@ -1978,6 +2076,7 @@ describe('ThematicDirectionsManagerController', () => {
       // Click on backdrop (modal itself)
       triggerEvent(mockElements.confirmationModal, 'click', {
         target: mockElements.confirmationModal,
+        currentTarget: mockElements.confirmationModal,
       });
 
       expect(mockElements.confirmationModal.style.display).toBe('none');
@@ -2198,7 +2297,8 @@ describe('ThematicDirectionsManagerController', () => {
       // Verify the back button event listener was set up correctly
       expect(mockElements.backBtn.addEventListener).toHaveBeenCalledWith(
         'click',
-        expect.any(Function)
+        expect.any(Function),
+        {}
       );
 
       // Find the click handler and verify it works
@@ -2271,7 +2371,7 @@ describe('ThematicDirectionsManagerController', () => {
       // We verify the event was set up correctly
       expect(
         mockElements.directionFilter.addEventListener
-      ).toHaveBeenCalledWith('input', expect.any(Function));
+      ).toHaveBeenCalledWith('input', expect.any(Function), {});
     });
   });
 

@@ -34,9 +34,6 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
   #directionsData = [];
   #inPlaceEditors = new Map(); // Track InPlaceEditor instances
 
-  // DOM element references
-  #elements = {};
-
   /**
    * Creates a new ThematicDirectionsManagerController instance
    *
@@ -47,8 +44,20 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @param {ISchemaValidator} dependencies.schemaValidator - Schema validator (validated by base class)
    * @param {UIStateManager} dependencies.uiStateManager - UI state management (validated here)
    */
-  constructor({ logger, characterBuilderService, eventBus, schemaValidator, uiStateManager }) {
-    super({ logger, characterBuilderService, eventBus, schemaValidator, uiStateManager });
+  constructor({
+    logger,
+    characterBuilderService,
+    eventBus,
+    schemaValidator,
+    uiStateManager,
+  }) {
+    super({
+      logger,
+      characterBuilderService,
+      eventBus,
+      schemaValidator,
+      uiStateManager,
+    });
 
     // Initialize page-specific fields
     this.#currentFilter = '';
@@ -67,8 +76,8 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
   #getAdditionalServiceValidationRules() {
     return {
       uiStateManager: {
-        requiredMethods: ['showState', 'showError']
-      }
+        requiredMethods: ['showState', 'showError'],
+      },
     };
   }
 
@@ -89,12 +98,12 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    */
   async initialize() {
     try {
-      // Cache DOM elements
-      this.#cacheElements();
+      // Cache DOM elements using base class method
+      this._cacheElements();
 
       // Initialize concept dropdown
       this.#conceptDropdown = new PreviousItemsDropdown({
-        element: this.#elements.conceptSelector,
+        element: this._getElement('conceptSelector'),
         onSelectionChange: this.#handleConceptSelection.bind(this),
         labelText: 'Choose Concept:',
       });
@@ -102,8 +111,8 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
       // Initialize service
       await this.characterBuilderService.initialize();
 
-      // Set up event listeners
-      this.#setupEventListeners();
+      // Set up event listeners using the base class helper method
+      this._setupEventListeners();
 
       // Load initial data
       await this.#loadDirectionsData();
@@ -121,120 +130,6 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
           'Failed to initialize directions manager. Please refresh the page.'
         );
       }
-    }
-  }
-
-  /**
-   * Cache DOM element references
-   *
-   * @private
-   */
-  #cacheElements() {
-    // Main containers
-    this.#elements.conceptSelector =
-      document.getElementById('concept-selector');
-    this.#elements.directionFilter =
-      document.getElementById('direction-filter');
-    this.#elements.directionsResults =
-      document.getElementById('directions-results');
-
-    // Concept display elements
-    this.#elements.conceptDisplayContainer = document.getElementById(
-      'concept-display-container'
-    );
-    this.#elements.conceptDisplayContent = document.getElementById(
-      'concept-display-content'
-    );
-
-    // State containers
-    this.#elements.emptyState = document.getElementById('empty-state');
-    this.#elements.loadingState = document.getElementById('loading-state');
-    this.#elements.errorState = document.getElementById('error-state');
-    this.#elements.resultsState = document.getElementById('results-state');
-
-    // Action buttons
-    this.#elements.refreshBtn = document.getElementById('refresh-btn');
-    this.#elements.cleanupOrphansBtn = document.getElementById(
-      'cleanup-orphans-btn'
-    );
-    this.#elements.backBtn = document.getElementById('back-to-menu-btn');
-    this.#elements.retryBtn = document.getElementById('retry-btn');
-
-    // Stats display
-    this.#elements.totalDirections =
-      document.getElementById('total-directions');
-    this.#elements.orphanedCount = document.getElementById('orphaned-count');
-
-    // Modal elements
-    this.#elements.confirmationModal =
-      document.getElementById('confirmation-modal');
-    this.#elements.modalTitle = document.getElementById('modal-title');
-    this.#elements.modalMessage = document.getElementById('modal-message');
-    this.#elements.modalConfirmBtn =
-      document.getElementById('modal-confirm-btn');
-    this.#elements.modalCancelBtn = document.getElementById('modal-cancel-btn');
-    this.#elements.closeModalBtn = document.getElementById('close-modal-btn');
-  }
-
-  /**
-   * Set up event listeners
-   *
-   * @private
-   */
-  #setupEventListeners() {
-    // Filter input
-    if (this.#elements.directionFilter) {
-      this.#elements.directionFilter.addEventListener('input', (e) => {
-        this.#currentFilter = e.target.value.toLowerCase();
-        this.#filterAndDisplayDirections();
-      });
-    }
-
-    // Action buttons
-    if (this.#elements.refreshBtn) {
-      this.#elements.refreshBtn.addEventListener('click', () => {
-        this.#loadDirectionsData();
-      });
-    }
-
-    if (this.#elements.cleanupOrphansBtn) {
-      this.#elements.cleanupOrphansBtn.addEventListener('click', () => {
-        this.#handleCleanupOrphans();
-      });
-    }
-
-    if (this.#elements.backBtn) {
-      this.#elements.backBtn.addEventListener('click', () => {
-        window.location.href = 'index.html';
-      });
-    }
-
-    if (this.#elements.retryBtn) {
-      this.#elements.retryBtn.addEventListener('click', () => {
-        this.#loadDirectionsData();
-      });
-    }
-
-    // Modal events
-    if (this.#elements.modalCancelBtn) {
-      this.#elements.modalCancelBtn.addEventListener('click', () => {
-        this.#hideModal();
-      });
-    }
-
-    if (this.#elements.closeModalBtn) {
-      this.#elements.closeModalBtn.addEventListener('click', () => {
-        this.#hideModal();
-      });
-    }
-
-    // Close modal on backdrop click
-    if (this.#elements.confirmationModal) {
-      this.#elements.confirmationModal.addEventListener('click', (e) => {
-        if (e.target === this.#elements.confirmationModal) {
-          this.#hideModal();
-        }
-      });
     }
   }
 
@@ -297,17 +192,20 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
       (item) => !item.concept
     ).length;
 
-    if (this.#elements.totalDirections) {
-      this.#elements.totalDirections.textContent = totalCount;
+    const totalDirectionsElement = this._getElement('totalDirections');
+    if (totalDirectionsElement) {
+      totalDirectionsElement.textContent = totalCount;
     }
 
-    if (this.#elements.orphanedCount) {
-      this.#elements.orphanedCount.textContent = orphanedCount;
+    const orphanedCountElement = this._getElement('orphanedCount');
+    if (orphanedCountElement) {
+      orphanedCountElement.textContent = orphanedCount;
     }
 
     // Update cleanup button state
-    if (this.#elements.cleanupOrphansBtn) {
-      this.#elements.cleanupOrphansBtn.disabled = orphanedCount === 0;
+    const cleanupBtn = this._getElement('cleanupOrphansBtn');
+    if (cleanupBtn) {
+      cleanupBtn.disabled = orphanedCount === 0;
     }
   }
 
@@ -364,7 +262,8 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     this.#cleanupInPlaceEditors();
 
     // Clear previous results
-    this.#elements.directionsResults.innerHTML = '';
+    const directionsResults = this._getElement('directionsResults');
+    directionsResults.innerHTML = '';
 
     // Create directions container
     const container = document.createElement('div');
@@ -380,7 +279,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     });
 
     // Append to results
-    this.#elements.directionsResults.appendChild(container);
+    directionsResults.appendChild(container);
   }
 
   /**
@@ -670,14 +569,20 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
           error
         );
         // Hide the concept display on error
-        if (this.#elements.conceptDisplayContainer) {
-          this.#elements.conceptDisplayContainer.style.display = 'none';
+        const conceptDisplayContainer = this._getElement(
+          'conceptDisplayContainer'
+        );
+        if (conceptDisplayContainer) {
+          conceptDisplayContainer.style.display = 'none';
         }
       }
     } else {
       // Hide concept display for "All Concepts" or "Orphaned Directions"
-      if (this.#elements.conceptDisplayContainer) {
-        this.#elements.conceptDisplayContainer.style.display = 'none';
+      const conceptDisplayContainer = this._getElement(
+        'conceptDisplayContainer'
+      );
+      if (conceptDisplayContainer) {
+        conceptDisplayContainer.style.display = 'none';
       }
     }
 
@@ -802,10 +707,11 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @param {Function} onConfirm - Confirmation callback
    */
   #showModal(title, message, onConfirm) {
-    if (!this.#elements.confirmationModal) return;
+    const confirmationModal = this._getElement('confirmationModal');
+    if (!confirmationModal) return;
 
-    this.#elements.modalTitle.textContent = title;
-    this.#elements.modalMessage.textContent = message;
+    this._setElementText('modalTitle', title);
+    this._setElementText('modalMessage', message);
 
     // Set up confirm handler
     const confirmHandler = async () => {
@@ -814,18 +720,15 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     };
 
     // Remove existing listeners
-    const newConfirmBtn = this.#elements.modalConfirmBtn.cloneNode(true);
-    this.#elements.modalConfirmBtn.parentNode.replaceChild(
-      newConfirmBtn,
-      this.#elements.modalConfirmBtn
-    );
-    this.#elements.modalConfirmBtn = newConfirmBtn;
+    const modalConfirmBtn = this._getElement('modalConfirmBtn');
+    const newConfirmBtn = modalConfirmBtn.cloneNode(true);
+    modalConfirmBtn.parentNode.replaceChild(newConfirmBtn, modalConfirmBtn);
 
     // Add new listener
-    this.#elements.modalConfirmBtn.addEventListener('click', confirmHandler);
+    newConfirmBtn.addEventListener('click', confirmHandler);
 
     // Show modal
-    this.#elements.confirmationModal.style.display = 'flex';
+    this._showElement('confirmationModal', 'flex');
   }
 
   /**
@@ -834,9 +737,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @private
    */
   #hideModal() {
-    if (this.#elements.confirmationModal) {
-      this.#elements.confirmationModal.style.display = 'none';
-    }
+    this._hideElement('confirmationModal');
   }
 
   /**
@@ -877,15 +778,15 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @param {CharacterConcept} concept - Character concept to display
    */
   #displayCharacterConcept(concept) {
-    if (
-      !this.#elements.conceptDisplayContainer ||
-      !this.#elements.conceptDisplayContent
-    ) {
+    const conceptDisplayContainer = this._getElement('conceptDisplayContainer');
+    const conceptDisplayContent = this._getElement('conceptDisplayContent');
+
+    if (!conceptDisplayContainer || !conceptDisplayContent) {
       return;
     }
 
     // Clear existing content
-    this.#elements.conceptDisplayContent.innerHTML = '';
+    conceptDisplayContent.innerHTML = '';
 
     // Create concept display structure
     const conceptWrapper = document.createElement('div');
@@ -926,13 +827,13 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     conceptWrapper.appendChild(metadataSection);
 
     // Add to container
-    this.#elements.conceptDisplayContent.appendChild(conceptWrapper);
+    conceptDisplayContent.appendChild(conceptWrapper);
 
     // Show the container with animation
-    this.#elements.conceptDisplayContainer.style.display = 'block';
+    conceptDisplayContainer.style.display = 'block';
     // Force reflow for animation
-    this.#elements.conceptDisplayContainer.offsetHeight;
-    this.#elements.conceptDisplayContainer.classList.add('visible');
+    conceptDisplayContainer.offsetHeight;
+    conceptDisplayContainer.classList.add('visible');
   }
 
   /**
@@ -942,8 +843,47 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @override
    */
   _cacheElements() {
-    // TODO: Implement in THEDIRMIG-004
-    throw new Error('_cacheElements() must be implemented');
+    this._cacheElementsFromMap({
+      // Main containers
+      conceptSelector: '#concept-selector',
+      directionFilter: '#direction-filter',
+      directionsResults: '#directions-results',
+
+      // Concept display elements
+      conceptDisplayContainer: '#concept-display-container',
+      conceptDisplayContent: '#concept-display-content',
+
+      // UIStateManager required elements (preserve existing functionality)
+      emptyState: '#empty-state',
+      loadingState: '#loading-state',
+      errorState: '#error-state',
+      resultsState: '#results-state',
+      errorMessageText: '#error-message-text',
+
+      // Action buttons
+      refreshBtn: '#refresh-btn',
+      cleanupOrphansBtn: '#cleanup-orphans-btn',
+      backBtn: '#back-to-menu-btn',
+      retryBtn: '#retry-btn',
+
+      // Stats displays
+      totalDirections: '#total-directions',
+      orphanedCount: '#orphaned-count',
+
+      // Modal elements
+      confirmationModal: '#confirmation-modal',
+      modalTitle: '#modal-title',
+      modalMessage: '#modal-message',
+      modalConfirmBtn: '#modal-confirm-btn',
+      modalCancelBtn: '#modal-cancel-btn',
+      closeModalBtn: '#close-modal-btn',
+
+      // Optional elements that might not exist in all contexts
+      directionsContainer: {
+        selector: '#directions-container',
+        required: false,
+      },
+    });
   }
 
   /**
@@ -953,8 +893,40 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @override
    */
   _setupEventListeners() {
-    // TODO: Implement in THEDIRMIG-005
-    throw new Error('_setupEventListeners() must be implemented');
+    // === Action Button Handlers ===
+    this._addEventListener('refreshBtn', 'click', () =>
+      this.#loadDirectionsData()
+    );
+    this._addEventListener('retryBtn', 'click', () =>
+      this.#loadDirectionsData()
+    );
+    this._addEventListener('cleanupOrphansBtn', 'click', () =>
+      this.#handleCleanupOrphans()
+    );
+    this._addEventListener('backBtn', 'click', () => {
+      window.location.href = 'index.html';
+    });
+
+    // === Filter Handlers ===
+    // Text input for search (not debounced currently)
+    this._addEventListener('directionFilter', 'input', (e) => {
+      this.#currentFilter = e.target.value.toLowerCase();
+      this.#filterAndDisplayDirections();
+    });
+
+    // === Modal Event Handlers ===
+    this._addEventListener('modalCancelBtn', 'click', () => this.#hideModal());
+    this._addEventListener('closeModalBtn', 'click', () => this.#hideModal());
+
+    // Click outside modal to close (backdrop click)
+    this._addEventListener('confirmationModal', 'click', (e) => {
+      if (e.target === e.currentTarget) {
+        this.#hideModal();
+      }
+    });
+
+    // Note: Delete buttons are handled within #createEditableDirectionElement
+    // Note: Modal confirm button uses a special clone/replace pattern in #showModal
   }
 }
 

@@ -3,7 +3,14 @@
  * Comprehensive performance testing and validation
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AppContainer from '../../src/dependencyInjection/appContainer.js';
 import { configureBaseContainer } from '../../src/dependencyInjection/baseContainerConfig.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
@@ -87,10 +94,10 @@ describe('Action Categorization Performance Benchmarks', () => {
     uiRenderer = new ActionButtonsRenderer({
       logger: appLogger,
       documentContext: documentContext,
-      validatedEventDispatcher: { 
-        dispatch: jest.fn(), 
+      validatedEventDispatcher: {
+        dispatch: jest.fn(),
         subscribe: jest.fn().mockReturnValue(() => {}),
-        unsubscribe: jest.fn()
+        unsubscribe: jest.fn(),
       },
       domElementFactory: domElementFactory,
       actionButtonsContainerSelector: '#actions-container',
@@ -602,9 +609,7 @@ describe('Action Categorization Performance Benchmarks', () => {
       // Create concurrent operations
       for (let i = 0; i < concurrentOperations; i++) {
         operations.push(
-          Promise.resolve().then(() =>
-            service.shouldUseGrouping(actions)
-          ),
+          Promise.resolve().then(() => service.shouldUseGrouping(actions)),
           Promise.resolve().then(() =>
             service.groupActionsByNamespace(actions)
           ),

@@ -3,7 +3,14 @@
  * Tests performance under realistic integration scenarios
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AppContainer from '../../src/dependencyInjection/appContainer.js';
 import { configureBaseContainer } from '../../src/dependencyInjection/baseContainerConfig.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';

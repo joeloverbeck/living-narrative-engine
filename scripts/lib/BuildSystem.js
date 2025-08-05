@@ -6,7 +6,7 @@
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs-extra');
-const chalk = require('chalk');
+const { default: chalk } = require('chalk');
 const BuildProgress = require('./BuildProgress');
 const BuildValidator = require('./BuildValidator');
 const BuildError = require('./BuildError');

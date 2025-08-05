@@ -3,6 +3,8 @@
  * @description Tests that validate the critical behavior where a single target scope
  * that resolves to multiple entities should generate multiple actions, even without
  * generateCombinations flag. This tests the suspected bug in the multi-target system.
+ *
+ * Enhanced with real action tests that use the actual discovery pipeline instead of mocks.
  */
 
 import {
@@ -15,6 +17,11 @@ import {
 } from '@jest/globals';
 import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
 import { EntityManagerTestBed } from '../../common/entities/entityManagerTestBed.js';
+import AppContainer from '../../../src/dependencyInjection/appContainer.js';
+import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
+import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 
 describe('Single Target Multiple Entities E2E', () => {
   let facades;

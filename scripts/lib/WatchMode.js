@@ -5,7 +5,7 @@
 
 const chokidar = require('chokidar');
 const path = require('path');
-const chalk = require('chalk');
+const { default: chalk } = require('chalk');
 const fs = require('fs-extra');
 
 class WatchMode {

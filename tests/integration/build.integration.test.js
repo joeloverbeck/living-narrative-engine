@@ -41,20 +41,26 @@ let mockFiles;
 
 // Mock chalk to avoid potential ES module issues
 jest.mock('chalk', () => {
-  const mockColor = jest.fn((text) => text);
-  mockColor.bold = jest.fn((text) => text);
-
-  return {
-    green: mockColor,
-    red: mockColor,
-    blue: mockColor,
-    gray: mockColor,
-    yellow: mockColor,
-    cyan: mockColor,
-    magenta: mockColor,
-    white: mockColor,
-    black: mockColor,
+  const createMockColor = () => {
+    const mockColor = jest.fn((text) => text);
+    mockColor.bold = jest.fn((text) => text);
+    return mockColor;
   };
+
+  const chalk = {
+    green: createMockColor(),
+    red: createMockColor(),
+    blue: createMockColor(),
+    gray: createMockColor(),
+    yellow: createMockColor(),
+    cyan: createMockColor(),
+    magenta: createMockColor(),
+    white: createMockColor(),
+    black: createMockColor(),
+  };
+
+  // Return with default export to match chalk v5 CommonJS structure
+  return { default: chalk };
 });
 
 describe('Build System Integration', () => {
