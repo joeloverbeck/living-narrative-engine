@@ -374,20 +374,20 @@ describe('Health Check Middleware', () => {
     });
 
     it('should validate cache service functionality with test operations', async () => {
-      const testTimestamp = Date.now();
-      const testData = { timestamp: testTimestamp };
-
       mockLlmConfigService.isOperational.mockReturnValue(true);
       mockLlmConfigService.getLlmConfigs.mockReturnValue({ llms: {} });
 
-      mockCacheService.set.mockReturnValue(undefined);
-      mockCacheService.get.mockImplementation((key) => {
-        if (key === '__health_check_test__') {
-          return testData;
-        }
-        return null;
+      // Mock cache to properly simulate round-trip behavior
+      let cacheStorage = new Map();
+      mockCacheService.set.mockImplementation((key, value, _ttl) => {
+        cacheStorage.set(key, value);
       });
-      mockCacheService.delete.mockReturnValue(true);
+      mockCacheService.get.mockImplementation((key) => {
+        return cacheStorage.get(key) || null;
+      });
+      mockCacheService.delete.mockImplementation((key) => {
+        return cacheStorage.delete(key);
+      });
       mockCacheService.size.mockReturnValue(10);
 
       const readinessCheck = createReadinessCheck({
