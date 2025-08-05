@@ -169,6 +169,8 @@ describe('Thematic Directions Manager Integration Tests', () => {
 
     mockEventBus = {
       dispatch: jest.fn(),
+      subscribe: jest.fn(() => jest.fn()), // Returns unsubscribe function
+      unsubscribe: jest.fn(),
     };
 
     mockSchemaValidator = {
@@ -322,7 +324,12 @@ describe('Thematic Directions Manager Integration Tests', () => {
         initialize: jest.fn().mockRejectedValue(error),
         getAllThematicDirectionsWithConcepts: jest.fn(),
         getAllCharacterConcepts: jest.fn(),
+        createCharacterConcept: jest.fn(),
+        updateCharacterConcept: jest.fn(),
+        deleteCharacterConcept: jest.fn(),
         getCharacterConcept: jest.fn(),
+        generateThematicDirections: jest.fn(),
+        getThematicDirections: jest.fn(),
         getOrphanedThematicDirections: jest.fn(),
         updateThematicDirection: jest.fn(),
         deleteThematicDirection: jest.fn(),

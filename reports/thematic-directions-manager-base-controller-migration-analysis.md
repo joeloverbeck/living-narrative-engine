@@ -11,6 +11,7 @@
 The migration of `ThematicDirectionsManagerController` to extend `BaseCharacterBuilderController` is **highly recommended** and will provide significant long-term benefits. While there are notable integration challenges, particularly around complex UI components and modal management, these are manageable with a structured approach.
 
 **Key Benefits**:
+
 - 35-45% code reduction (from ~950 to ~520-630 lines)
 - Standardized error handling and state management
 - Automatic cleanup and memory management (especially valuable as current controller lacks destroy())
@@ -31,7 +32,7 @@ The `ThematicDirectionsManagerController` is currently a standalone controller m
 
 - **Size**: 950 lines of code
 - **Complexity**: High - manages multiple UI states, in-place editing, and complex filtering
-- **Dependencies**: 
+- **Dependencies**:
   - CharacterBuilderService
   - UIStateManager (already compatible)
   - PreviousItemsDropdown (custom component)
@@ -69,6 +70,7 @@ The `ThematicDirectionsManagerController` is currently a standalone controller m
 ### 1. Code Reduction & Standardization
 
 **Before Migration**:
+
 ```javascript
 // Manual dependency validation (~25 lines)
 validateDependency(logger, 'ILogger', logger, {...});
@@ -85,6 +87,7 @@ validateDependency(characterBuilderService, 'CharacterBuilderService', logger, {
 ```
 
 **After Migration**:
+
 ```javascript
 // BaseController handles all validation automatically
 constructor(dependencies) {
@@ -108,6 +111,7 @@ _setupEventListeners() {
 ### 3. Lifecycle Management
 
 The base controller provides clear lifecycle hooks that will simplify the initialization flow:
+
 - `_preInitialize()` - Early setup
 - `_initializeAdditionalServices()` - Service initialization
 - `_loadInitialData()` - Data loading
@@ -131,6 +135,7 @@ The base controller provides clear lifecycle hooks that will simplify the initia
 **Challenge**: The controller uses two custom UI components that need special handling:
 
 #### InPlaceEditor Integration
+
 - **Current**: Manually creates and tracks ~25-30 InPlaceEditor instances
 - **Migration Challenge**: Need to integrate with base controller's lifecycle
 - **Solution**: Create a dedicated method `_initializeInPlaceEditors()` called from `_postInitialize()`
@@ -150,6 +155,7 @@ _cleanupInPlaceEditors() {
 ```
 
 #### PreviousItemsDropdown Integration
+
 - **Current**: Initialized during setup with custom callback
 - **Migration Challenge**: Needs to work with base controller's element caching
 - **Solution**: Initialize in `_initializeAdditionalServices()` after elements are cached
@@ -159,6 +165,7 @@ _cleanupInPlaceEditors() {
 **Challenge**: The controller defines its own UI_STATES constant instead of importing from shared UIStateManager
 
 **Current Implementation**:
+
 ```javascript
 const UI_STATES = {
   EMPTY: 'empty',
@@ -169,6 +176,7 @@ const UI_STATES = {
 ```
 
 **Migration Requirement**:
+
 - Remove local UI_STATES definition
 - Import from shared UIStateManager module
 - Ensure compatibility with base controller's UIStateManager expectations
@@ -178,11 +186,13 @@ const UI_STATES = {
 **Challenge**: Custom modal system with dynamic event handlers
 
 **Current Implementation**:
+
 - Modal elements cached manually
 - Event handlers dynamically attached/removed
 - Complex show/hide logic
 
 **Migration Strategy**:
+
 ```javascript
 // Use base controller's element caching
 _cacheElements() {
@@ -198,7 +208,7 @@ _cacheElements() {
 
 // Use delegated event handling for dynamic content
 _setupEventListeners() {
-  this._addDelegatedListener('confirmationModal', '.modal-actions button', 
+  this._addDelegatedListener('confirmationModal', '.modal-actions button',
     'click', this._handleModalAction.bind(this));
 }
 ```
@@ -208,12 +218,14 @@ _setupEventListeners() {
 **Challenge**: Complex filtering and display logic with multiple state variables
 
 **Current State Variables**:
+
 - `#currentFilter` - Search filter
 - `#currentConcept` - Selected concept
 - `#directionsData` - All directions data
 - `#inPlaceEditors` - Editor instances map
 
 **Migration Approach**:
+
 - Keep state variables as private fields in the extended class
 - Use base controller's state management helpers
 - Leverage `_showState()` for UI state transitions
@@ -223,11 +235,13 @@ _setupEventListeners() {
 **Challenge**: Extensive DOM manipulation for direction cards
 
 **Issues**:
+
 - Creates complex HTML structures dynamically
 - Attaches event listeners to dynamic content
 - Manages InPlaceEditor instances per field
 
 **Solution**:
+
 - Use base controller's `_addDelegatedListener()` for dynamic content
 - Implement proper cleanup in lifecycle hooks
 - Consider template-based approach for consistency
@@ -237,11 +251,13 @@ _setupEventListeners() {
 **Challenge**: Existing tests need updating to work with base controller
 
 **Current Tests**:
+
 - Mock UIStateManager and other components
 - Direct instantiation of controller
 - Manual setup/teardown
 
 **Migration Requirements**:
+
 - Use `BaseCharacterBuilderController.testbase.js` test utilities
 - Update mocking strategy
 - Ensure backward compatibility during migration
@@ -251,10 +267,12 @@ _setupEventListeners() {
 **New Testing Pattern**: The characterConceptsManager migration introduced warning-specific test files
 
 **Observed Pattern**:
+
 - `characterConceptsManagerController.warnings.test.js` (unit tests)
 - `characterConceptsManagerWarnings.test.js` (integration tests)
 
 **Consideration for Migration**:
+
 - These test patterns focus on edge cases and warning scenarios
 - May need similar warning test files for thematicDirectionsManager
 - Consider consolidating warning tests or maintaining separate files based on complexity
@@ -264,6 +282,7 @@ _setupEventListeners() {
 ## Migration Strategy
 
 ### Phase 1: Preparation (2-4 hours)
+
 1. Create feature branch for migration
 2. Ensure all existing tests pass
 3. Document current behavior
@@ -272,6 +291,7 @@ _setupEventListeners() {
 ### Phase 2: Core Migration (8-12 hours)
 
 #### Step 1: Extend BaseCharacterBuilderController
+
 ```javascript
 import { BaseCharacterBuilderController } from '../characterBuilder/controllers/BaseCharacterBuilderController.js';
 
@@ -286,36 +306,38 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
 ```
 
 #### Step 2: Implement Required Methods
+
 ```javascript
 _cacheElements() {
   this._cacheElementsFromMap({
     // Form elements
     conceptSelector: '#concept-selector',
     directionFilter: '#direction-filter',
-    
+
     // State containers (required for UIStateManager)
     emptyState: '#empty-state',
     loadingState: '#loading-state',
     errorState: '#error-state',
     resultsState: '#results-state',
-    
+
     // ... all other elements
   });
 }
 
 _setupEventListeners() {
   // Use base controller helper methods
-  this._addDebouncedListener('directionFilter', 'input', 
+  this._addDebouncedListener('directionFilter', 'input',
     this._handleFilterChange.bind(this), 300);
-  
-  this._addEventListener('refreshBtn', 'click', 
+
+  this._addEventListener('refreshBtn', 'click',
     () => this._loadDirectionsData());
-  
+
   // ... other listeners
 }
 ```
 
 #### Step 3: Migrate Lifecycle Methods
+
 ```javascript
 async _initializeAdditionalServices() {
   // Initialize dropdown after elements are cached
@@ -365,13 +387,13 @@ async _postInitialize() {
 
 ### Technical Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| InPlaceEditor integration issues | Medium | High | Careful lifecycle management, thorough testing |
-| Modal system regression | Low | Medium | Incremental migration, extensive testing |
-| Test suite failures | High | Low | Update tests incrementally during migration |
-| Performance degradation | Low | Medium | Profile before/after, optimize if needed |
-| Memory leaks | Low | High | Use base controller's cleanup, test thoroughly |
+| Risk                             | Likelihood | Impact | Mitigation                                     |
+| -------------------------------- | ---------- | ------ | ---------------------------------------------- |
+| InPlaceEditor integration issues | Medium     | High   | Careful lifecycle management, thorough testing |
+| Modal system regression          | Low        | Medium | Incremental migration, extensive testing       |
+| Test suite failures              | High       | Low    | Update tests incrementally during migration    |
+| Performance degradation          | Low        | Medium | Profile before/after, optimize if needed       |
+| Memory leaks                     | Low        | High   | Use base controller's cleanup, test thoroughly |
 
 ### Business Risks
 
@@ -385,14 +407,14 @@ async _postInitialize() {
 
 ### Development Time
 
-| Task | Estimated Hours | Complexity |
-|------|----------------|------------|
-| Preparation & Planning | 2-4 | Low |
-| Core Controller Migration | 6-8 | Medium |
-| InPlaceEditor Integration | 3-4 | High |
-| Modal System Migration | 2-3 | Medium |
-| Testing & Debugging | 3-5 | Medium |
-| **Total** | **16-24 hours** | **Medium-High** |
+| Task                      | Estimated Hours | Complexity      |
+| ------------------------- | --------------- | --------------- |
+| Preparation & Planning    | 2-4             | Low             |
+| Core Controller Migration | 6-8             | Medium          |
+| InPlaceEditor Integration | 3-4             | High            |
+| Modal System Migration    | 2-3             | Medium          |
+| Testing & Debugging       | 3-5             | Medium          |
+| **Total**                 | **16-24 hours** | **Medium-High** |
 
 ### Resource Requirements
 
@@ -407,6 +429,7 @@ async _postInitialize() {
 ### 1. **Proceed with Migration**
 
 The benefits significantly outweigh the challenges. The migration will:
+
 - Reduce maintenance burden by 40-50%
 - Improve consistency across the application
 - Enable easier feature additions
@@ -422,6 +445,7 @@ The benefits significantly outweigh the challenges. The migration will:
 ### 3. **Priority Considerations**
 
 Given that two controllers have already been migrated successfully, completing the migration of ThematicDirectionsManagerController will:
+
 - Complete the character builder subsystem standardization
 - Enable shared improvements across all three controllers
 - Reduce cognitive load for developers
@@ -429,6 +453,7 @@ Given that two controllers have already been migrated successfully, completing t
 ### 4. **Future Enhancements**
 
 Post-migration opportunities:
+
 - Implement shared UI components across all controllers
 - Add advanced features leveraging base controller capabilities
 - Improve performance with base controller optimizations
@@ -441,6 +466,7 @@ Post-migration opportunities:
 The migration of `ThematicDirectionsManagerController` to extend `BaseCharacterBuilderController` is a valuable investment that will pay dividends in maintainability, consistency, and developer productivity. While the integration of custom UI components presents challenges, the structured approach outlined in this document provides a clear path forward.
 
 The 16-24 hour investment will result in:
+
 - ~320-430 lines of code removed
 - Standardized patterns across all character builder pages
 - Reduced maintenance burden
@@ -459,8 +485,8 @@ The 16-24 hour investment will result in:
 - [ ] Document current functionality
 - [ ] Extend BaseCharacterBuilderController
 - [ ] Remove local UI_STATES and import from shared UIStateManager
-- [ ] Implement _cacheElements()
-- [ ] Implement _setupEventListeners()
+- [ ] Implement \_cacheElements()
+- [ ] Implement \_setupEventListeners()
 - [ ] Migrate initialization logic to lifecycle hooks
 - [ ] Integrate InPlaceEditor with lifecycle
 - [ ] Migrate modal system

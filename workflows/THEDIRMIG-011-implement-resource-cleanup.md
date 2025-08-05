@@ -28,7 +28,7 @@ Implement comprehensive resource cleanup in the `_preDestroy()` and `_postDestro
 
 ## Implementation Steps
 
-### Step 1: Implement _preDestroy() Hook
+### Step 1: Implement \_preDestroy() Hook
 
 The `_preDestroy()` hook is called BEFORE the base class cleanup and must be SYNCHRONOUS:
 
@@ -42,37 +42,37 @@ The `_preDestroy()` hook is called BEFORE the base class cleanup and must be SYN
  */
 _preDestroy() {
   this.logger.info('ThematicDirectionsManagerController: Starting cleanup');
-  
+
   try {
     // 1. Cancel any pending operations
     this._cancelPendingOperations();
-    
+
     // 2. Clean up InPlaceEditor instances
     this._cleanupInPlaceEditors();
-    
+
     // 3. Close any open modals
     this._cleanupModals();
-    
+
     // 4. Clear any running timers/intervals specific to this controller
     this._clearTimers();
-    
+
     // 5. Remove any manual event listeners
     this._removeManualEventListeners();
-    
+
     // 6. Clear data references
     this._clearDataReferences();
-    
+
   } catch (error) {
     // Log but don't throw - cleanup must complete
     this.logger.error('Error during pre-destroy cleanup:', error);
   }
-  
+
   // Call parent implementation last
   super._preDestroy();
 }
 ```
 
-### Step 2: Implement _postDestroy() Hook
+### Step 2: Implement \_postDestroy() Hook
 
 The `_postDestroy()` hook is called AFTER base class cleanup:
 
@@ -88,20 +88,20 @@ _postDestroy() {
   try {
     // 1. Clean up PreviousItemsDropdown (no destroy method)
     this._cleanupPreviousItemsDropdown();
-    
+
     // 2. Null out remaining references
     this._nullifyReferences();
-    
+
     // 3. Clear any module-level state
     this._clearModuleState();
-    
+
   } catch (error) {
     this.logger.error('Error during post-destroy cleanup:', error);
   }
-  
+
   // Call parent implementation last
   super._postDestroy();
-  
+
   this.logger.info('ThematicDirectionsManagerController: Cleanup complete');
 }
 ```
@@ -121,19 +121,19 @@ _cancelPendingOperations() {
     this.logger.debug('Cancelling pending modal action');
     this.#pendingModalAction = null;
   }
-  
+
   // Cancel pending retry actions
   if (this.#pendingRetryAction) {
     this.logger.debug('Cancelling pending retry action');
     this.#pendingRetryAction = null;
   }
-  
+
   // Cancel any pending saves
   if (this.#pendingSaveOperations) {
     this.logger.debug(`Cancelling ${this.#pendingSaveOperations.size} pending saves`);
     this.#pendingSaveOperations.clear();
   }
-  
+
   // Abort any active fetch requests
   if (this.#abortController) {
     this.logger.debug('Aborting active requests');
@@ -154,12 +154,12 @@ _cleanupInPlaceEditors() {
   if (!this.#inPlaceEditors || this.#inPlaceEditors.size === 0) {
     return;
   }
-  
+
   this.logger.debug(`Cleaning up ${this.#inPlaceEditors.size} InPlaceEditor instances`);
-  
+
   let cleanedCount = 0;
   let errorCount = 0;
-  
+
   this.#inPlaceEditors.forEach((editor, elementId) => {
     try {
       if (editor && typeof editor.destroy === 'function') {
@@ -171,9 +171,9 @@ _cleanupInPlaceEditors() {
       this.logger.error(`Failed to destroy InPlaceEditor for ${elementId}:`, error);
     }
   });
-  
+
   this.#inPlaceEditors.clear();
-  
+
   this.logger.debug(`InPlaceEditors cleaned: ${cleanedCount}, errors: ${errorCount}`);
 }
 ```
@@ -189,25 +189,25 @@ _cleanupModals() {
   // Close any open modal without animations
   if (this.#activeModal) {
     this.logger.debug('Closing active modal');
-    
+
     // Hide immediately without animation
     this._hideElement('confirmationModal');
     this._hideElement('modalOverlay');
-    
+
     // Remove body class
     document.body.classList.remove('modal-open');
-    
+
     // Clear state
     this.#activeModal = null;
     this.#pendingModalAction = null;
   }
-  
+
   // Clear modal stack
   if (this.#modalStack && this.#modalStack.length > 0) {
     this.logger.debug(`Clearing modal stack (${this.#modalStack.length} modals)`);
     this.#modalStack = [];
   }
-  
+
   // Remove modal keyboard handler
   if (this.#modalKeyHandler) {
     document.removeEventListener('keydown', this.#modalKeyHandler, true);
@@ -228,14 +228,14 @@ _cleanupPreviousItemsDropdown() {
   if (!this.#conceptDropdown) {
     return;
   }
-  
+
   this.logger.debug('Cleaning up PreviousItemsDropdown');
-  
+
   try {
     // Get the element before cleanup
-    const element = this.#conceptDropdown._element || 
+    const element = this.#conceptDropdown._element ||
                    this._getElement('conceptFilter');
-    
+
     if (element) {
       // Clone and replace to remove all event listeners
       const newElement = element.cloneNode(true);
@@ -243,22 +243,22 @@ _cleanupPreviousItemsDropdown() {
         element.parentNode.replaceChild(newElement, element);
       }
     }
-    
+
     // Clear internal state
     const propsToClean = [
       '_element', '_items', '_selectedItems', '_previousItems',
       '_onSelectionChange', '_options', '_storageKey'
     ];
-    
+
     propsToClean.forEach(prop => {
       if (this.#conceptDropdown[prop] !== undefined) {
         this.#conceptDropdown[prop] = null;
       }
     });
-    
+
     // Clear the reference
     this.#conceptDropdown = null;
-    
+
   } catch (error) {
     this.logger.error('Error cleaning up PreviousItemsDropdown:', error);
   }
@@ -278,13 +278,13 @@ _clearTimers() {
     clearTimeout(this.#notificationTimeout);
     this.#notificationTimeout = null;
   }
-  
+
   // Clear auto-save interval
   if (this.#autoSaveInterval) {
     clearInterval(this.#autoSaveInterval);
     this.#autoSaveInterval = null;
   }
-  
+
   // Clear debounce timers
   if (this.#filterDebounceTimer) {
     clearTimeout(this.#filterDebounceTimer);
@@ -306,13 +306,13 @@ _removeManualEventListeners() {
     window.removeEventListener('resize', this.#resizeHandler);
     this.#resizeHandler = null;
   }
-  
+
   // Remove beforeunload listener if added
   if (this.#beforeUnloadHandler) {
     window.removeEventListener('beforeunload', this.#beforeUnloadHandler);
     this.#beforeUnloadHandler = null;
   }
-  
+
   // Remove any document-level listeners
   if (this.#documentClickHandler) {
     document.removeEventListener('click', this.#documentClickHandler);
@@ -332,14 +332,14 @@ _clearDataReferences() {
   // Clear large data arrays
   this.#directionsData = [];
   this.#conceptsData = [];
-  
+
   // Clear filter state
   this.#currentFilter = '';
   this.#currentConcept = null;
-  
+
   // Clear cached functions
   this.#getFilteredData = null;
-  
+
   // Clear any cached DOM references
   this.#cachedElements = null;
 }
@@ -361,7 +361,7 @@ _nullifyReferences() {
     '#previousFocus',
     '#abortController'
   ];
-  
+
   privateFields.forEach(field => {
     try {
       if (this[field] !== undefined) {
@@ -396,11 +396,11 @@ _preDestroy() {
     this.logger.warn('Destroy already called, skipping cleanup');
     return;
   }
-  
+
   this.#isDestroyed = true;
-  
+
   // ... rest of cleanup
-  
+
   super._preDestroy();
 }
 ```
@@ -416,25 +416,25 @@ Add debugging helpers for development:
  */
 _checkForLeaks() {
   if (process.env.NODE_ENV !== 'development') return;
-  
+
   const leaks = [];
-  
+
   // Check InPlaceEditors
   if (this.#inPlaceEditors && this.#inPlaceEditors.size > 0) {
     leaks.push(`${this.#inPlaceEditors.size} InPlaceEditor instances`);
   }
-  
+
   // Check event listeners
   const listeners = this._getEventListenerCount();
   if (listeners > 0) {
     leaks.push(`${listeners} event listeners`);
   }
-  
+
   // Check timers
   if (this.#notificationTimeout || this.#autoSaveInterval) {
     leaks.push('Active timers');
   }
-  
+
   if (leaks.length > 0) {
     console.warn('Potential memory leaks detected:', leaks);
   }
@@ -443,11 +443,11 @@ _checkForLeaks() {
 // Call in _postDestroy during development
 _postDestroy() {
   // ... cleanup
-  
+
   if (process.env.NODE_ENV === 'development') {
     this._checkForLeaks();
   }
-  
+
   super._postDestroy();
 }
 ```
@@ -483,43 +483,43 @@ describe('Resource Cleanup', () => {
     // Create some editors
     controller._createInPlaceEditor('test-1', 'dir1', 'name', {});
     controller._createInPlaceEditor('test-2', 'dir1', 'desc', {});
-    
+
     expect(controller.#inPlaceEditors.size).toBe(2);
-    
+
     // Destroy controller
     controller.destroy();
-    
+
     expect(controller.#inPlaceEditors.size).toBe(0);
   });
-  
+
   it('should handle destroy being called multiple times', () => {
     expect(() => {
       controller.destroy();
       controller.destroy();
     }).not.toThrow();
   });
-  
+
   it('should cancel pending operations', () => {
     controller.#pendingModalAction = jest.fn();
     controller.#pendingRetryAction = jest.fn();
-    
+
     controller.destroy();
-    
+
     expect(controller.#pendingModalAction).toBe(null);
     expect(controller.#pendingRetryAction).toBe(null);
   });
-  
+
   it('should close open modals', () => {
     controller._showConfirmationModal({
       title: 'Test',
       message: 'Test',
-      onConfirm: jest.fn()
+      onConfirm: jest.fn(),
     });
-    
+
     expect(controller.#activeModal).toBeTruthy();
-    
+
     controller.destroy();
-    
+
     expect(controller.#activeModal).toBe(null);
   });
 });
@@ -566,8 +566,8 @@ console.log(window.__DEBUG_CONTROLLER__); // Should be null
 
 ## Definition of Done
 
-- [ ] _preDestroy() implemented with all cleanup
-- [ ] _postDestroy() implemented for remaining cleanup
+- [ ] \_preDestroy() implemented with all cleanup
+- [ ] \_postDestroy() implemented for remaining cleanup
 - [ ] All InPlaceEditors destroyed
 - [ ] PreviousItemsDropdown cleaned up
 - [ ] Modal state cleared

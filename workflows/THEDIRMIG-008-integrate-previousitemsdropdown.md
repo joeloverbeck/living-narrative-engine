@@ -16,7 +16,7 @@ Integrate the PreviousItemsDropdown component for concept filtering in the thema
 
 ## Acceptance Criteria
 
-- [ ] PreviousItemsDropdown initialized in _initializeAdditionalServices()
+- [ ] PreviousItemsDropdown initialized in \_initializeAdditionalServices()
 - [ ] Dropdown populated with available concepts
 - [ ] Selection changes trigger filtering
 - [ ] Clear functionality works
@@ -40,14 +40,15 @@ grep -A 20 "class PreviousItemsDropdown" src/shared/components/PreviousItemsDrop
 ```
 
 Expected API:
+
 ```javascript
 new PreviousItemsDropdown({
-  element: HTMLElement,           // The select/input element
-  onSelectionChange: Function,    // Callback when selection changes
-  placeholder: String,            // Placeholder text
-  allowClear: Boolean,           // Show clear button
-  storageKey: String,            // Local storage key for persistence
-  maxItems: Number               // Max items to remember
+  element: HTMLElement, // The select/input element
+  onSelectionChange: Function, // Callback when selection changes
+  placeholder: String, // Placeholder text
+  allowClear: Boolean, // Show clear button
+  storageKey: String, // Local storage key for persistence
+  maxItems: Number, // Max items to remember
 });
 ```
 
@@ -56,19 +57,19 @@ new PreviousItemsDropdown({
 ```javascript
 export class ThematicDirectionsManagerController extends BaseCharacterBuilderController {
   // Existing fields...
-  
+
   /**
    * Concept filter dropdown instance
    * @type {PreviousItemsDropdown|null}
    */
   #conceptDropdown = null;
-  
+
   /**
    * Storage key for concept filter persistence
    * @type {string}
    */
   #conceptFilterStorageKey = 'thematic-directions-concept-filter';
-  
+
   /**
    * Currently selected concept ID
    * @type {string|null}
@@ -77,7 +78,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
 }
 ```
 
-### Step 3: Initialize in _initializeAdditionalServices()
+### Step 3: Initialize in \_initializeAdditionalServices()
 
 ```javascript
 /**
@@ -88,19 +89,19 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
  */
 async _initializeAdditionalServices() {
   await super._initializeAdditionalServices();
-  
+
   try {
     // Initialize concept dropdown
     this._initializeConceptDropdown();
-    
+
     // Load concepts for the dropdown
     await this._loadConceptsForDropdown();
-    
+
     // Restore previous selection if any
     this._restoreConceptSelection();
-    
+
     this.logger.debug('PreviousItemsDropdown initialized successfully');
-    
+
   } catch (error) {
     this.logger.error('Failed to initialize concept dropdown:', error);
     // Continue without dropdown - graceful degradation
@@ -118,7 +119,7 @@ _initializeConceptDropdown() {
     this.logger.warn('Concept filter element not found');
     return;
   }
-  
+
   // Create dropdown instance
   this.#conceptDropdown = new PreviousItemsDropdown({
     element: conceptFilterElement,
@@ -131,7 +132,7 @@ _initializeConceptDropdown() {
     clearText: 'All concepts',
     noResultsText: 'No matching concepts'
   });
-  
+
   // Store reference to element for manual cleanup
   this.#conceptDropdown._element = conceptFilterElement;
 }
@@ -147,13 +148,13 @@ _initializeConceptDropdown() {
  */
 async _loadConceptsForDropdown() {
   if (!this.#conceptDropdown) return;
-  
+
   try {
     // Get concepts from service or use cached data
-    const concepts = this.#conceptsData.length > 0 
-      ? this.#conceptsData 
+    const concepts = this.#conceptsData.length > 0
+      ? this.#conceptsData
       : await this._fetchConcepts();
-    
+
     // Transform concepts to dropdown format
     const dropdownItems = concepts.map(concept => ({
       value: concept.id,
@@ -161,10 +162,10 @@ async _loadConceptsForDropdown() {
       description: concept.description,
       count: this._getDirectionCountForConcept(concept.id)
     }));
-    
+
     // Sort by name
     dropdownItems.sort((a, b) => a.label.localeCompare(b.label));
-    
+
     // Add "All" option at the beginning
     dropdownItems.unshift({
       value: '',
@@ -172,10 +173,10 @@ async _loadConceptsForDropdown() {
       description: 'Show all thematic directions',
       count: this.#directionsData.length
     });
-    
+
     // Populate dropdown
     this._populateDropdown(dropdownItems);
-    
+
   } catch (error) {
     this.logger.error('Failed to load concepts for dropdown:', error);
     this._disableConceptFilter();
@@ -189,24 +190,24 @@ async _loadConceptsForDropdown() {
  */
 _populateDropdown(items) {
   if (!this.#conceptDropdown?._element) return;
-  
+
   const selectElement = this.#conceptDropdown._element;
-  
+
   // Clear existing options
   selectElement.innerHTML = '';
-  
+
   // Add options
   items.forEach(item => {
     const option = document.createElement('option');
     option.value = item.value;
-    option.textContent = item.count !== undefined 
+    option.textContent = item.count !== undefined
       ? `${item.label} (${item.count})`
       : item.label;
     option.title = item.description || '';
-    
+
     selectElement.appendChild(option);
   });
-  
+
   // Trigger dropdown's internal update
   if (typeof this.#conceptDropdown.refresh === 'function') {
     this.#conceptDropdown.refresh();
@@ -224,20 +225,20 @@ _populateDropdown(items) {
  */
 _handleConceptSelection(conceptId) {
   this.logger.debug(`Concept filter changed to: ${conceptId || 'All'}`);
-  
+
   // Update current concept
   this.#currentConcept = conceptId || null;
-  
+
   // Store selection
   this._storeConceptSelection(conceptId);
-  
+
   // Apply filters
   this._applyFilters();
-  
+
   // Update UI
   this._updateFilterDisplay();
   this._updateStats();
-  
+
   // Track analytics if needed
   this.eventBus.dispatch({
     type: 'ANALYTICS_TRACK',
@@ -258,7 +259,7 @@ _handleConceptSelection(conceptId) {
  * @returns {number} Direction count
  */
 _getDirectionCountForConcept(conceptId) {
-  return this.#directionsData.filter(direction => 
+  return this.#directionsData.filter(direction =>
     direction.concepts?.some(c => c.id === conceptId)
   ).length;
 }
@@ -279,7 +280,7 @@ _postDestroy() {
   if (this.#conceptDropdown) {
     this._cleanupConceptDropdown();
   }
-  
+
   super._postDestroy();
 }
 
@@ -289,32 +290,32 @@ _postDestroy() {
  */
 _cleanupConceptDropdown() {
   if (!this.#conceptDropdown) return;
-  
+
   try {
     // Remove event listeners if we know about them
     if (this.#conceptDropdown._element) {
       // Remove change listener
       const element = this.#conceptDropdown._element;
-      
+
       // Clone and replace to remove all event listeners
       const newElement = element.cloneNode(true);
       element.parentNode.replaceChild(newElement, element);
     }
-    
+
     // Clear any internal references
     if (this.#conceptDropdown._items) {
       this.#conceptDropdown._items = null;
     }
-    
+
     if (this.#conceptDropdown._selectedItems) {
       this.#conceptDropdown._selectedItems = null;
     }
-    
+
     // Remove dropdown reference
     this.#conceptDropdown = null;
-    
+
     this.logger.debug('Concept dropdown cleaned up');
-    
+
   } catch (error) {
     this.logger.error('Error cleaning up concept dropdown:', error);
   }
@@ -334,7 +335,7 @@ Update dropdown when concepts change:
 _handleConceptUpdated(data) {
   const { concept } = data;
   if (!concept) return;
-  
+
   // Update local concepts data
   const index = this.#conceptsData.findIndex(c => c.id === concept.id);
   if (index !== -1) {
@@ -342,10 +343,10 @@ _handleConceptUpdated(data) {
   } else {
     this.#conceptsData.push(concept);
   }
-  
+
   // Refresh dropdown
   this._loadConceptsForDropdown();
-  
+
   // If the updated concept is currently selected, reapply filters
   if (this.#currentConcept === concept.id) {
     this._applyFilters();
@@ -360,16 +361,16 @@ _handleConceptUpdated(data) {
 _handleConceptDeleted(data) {
   const { conceptId } = data;
   if (!conceptId) return;
-  
+
   // Remove from local data
   this.#conceptsData = this.#conceptsData.filter(c => c.id !== conceptId);
-  
+
   // If deleted concept was selected, clear filter
   if (this.#currentConcept === conceptId) {
     this.#currentConcept = null;
     this._clearConceptFilter();
   }
-  
+
   // Refresh dropdown
   this._loadConceptsForDropdown();
 }
@@ -384,19 +385,19 @@ _handleConceptDeleted(data) {
  */
 _restoreConceptSelection() {
   if (!this.#conceptDropdown) return;
-  
+
   try {
     const stored = localStorage.getItem(this.#conceptFilterStorageKey);
     if (stored) {
       const data = JSON.parse(stored);
       if (data.selectedConcept && this._isValidConcept(data.selectedConcept)) {
         this.#currentConcept = data.selectedConcept;
-        
+
         // Set dropdown value
         if (this.#conceptDropdown._element) {
           this.#conceptDropdown._element.value = data.selectedConcept;
         }
-        
+
         // Apply filter
         this._applyFilters();
       }
@@ -437,7 +438,7 @@ _disableConceptFilter() {
     conceptFilterElement.disabled = true;
     conceptFilterElement.title = 'Concept filtering is currently unavailable';
   }
-  
+
   // Hide related UI elements
   const filterContainer = conceptFilterElement?.closest('.filter-container');
   if (filterContainer) {
@@ -451,11 +452,11 @@ _disableConceptFilter() {
  */
 _clearConceptFilter() {
   this.#currentConcept = null;
-  
+
   if (this.#conceptDropdown?._element) {
     this.#conceptDropdown._element.value = '';
   }
-  
+
   this._storeConceptSelection('');
   this._applyFilters();
 }
@@ -489,45 +490,46 @@ _clearConceptFilter() {
 ```javascript
 describe('PreviousItemsDropdown Integration', () => {
   let mockPreviousItemsDropdown;
-  
+
   beforeEach(() => {
     mockPreviousItemsDropdown = {
       _element: document.createElement('select'),
-      refresh: jest.fn()
+      refresh: jest.fn(),
     };
-    
-    jest.spyOn(window, 'PreviousItemsDropdown')
+
+    jest
+      .spyOn(window, 'PreviousItemsDropdown')
       .mockImplementation(() => mockPreviousItemsDropdown);
   });
-  
+
   it('should initialize dropdown in additional services', async () => {
     await controller._initializeAdditionalServices();
-    
+
     expect(PreviousItemsDropdown).toHaveBeenCalledWith({
       element: expect.any(HTMLElement),
       onSelectionChange: expect.any(Function),
       placeholder: 'Filter by concept...',
       allowClear: true,
-      storageKey: 'thematic-directions-concept-filter'
+      storageKey: 'thematic-directions-concept-filter',
     });
   });
-  
+
   it('should handle concept selection', () => {
     controller.#conceptDropdown = mockPreviousItemsDropdown;
     const applyFiltersSpy = jest.spyOn(controller, '_applyFilters');
-    
+
     controller._handleConceptSelection('concept-123');
-    
+
     expect(controller.#currentConcept).toBe('concept-123');
     expect(applyFiltersSpy).toHaveBeenCalled();
   });
-  
+
   it('should clean up dropdown on destroy', () => {
     controller.#conceptDropdown = mockPreviousItemsDropdown;
     const element = mockPreviousItemsDropdown._element;
-    
+
     controller._postDestroy();
-    
+
     expect(controller.#conceptDropdown).toBe(null);
   });
 });
@@ -538,6 +540,7 @@ describe('PreviousItemsDropdown Integration', () => {
 ### Why Manual Cleanup?
 
 PreviousItemsDropdown doesn't implement a destroy() method, which means:
+
 1. Event listeners aren't automatically removed
 2. Internal references may persist
 3. Memory leaks are possible
@@ -558,7 +561,7 @@ destroy() {
   // Remove event listeners
   this._element?.removeEventListener('change', this._handleChange);
   this._element?.removeEventListener('input', this._handleInput);
-  
+
   // Clear references
   this._items = null;
   this._selectedItems = null;

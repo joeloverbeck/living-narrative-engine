@@ -32,19 +32,19 @@ Migrate the modal management system to use base controller patterns. This includ
 ```javascript
 export class ThematicDirectionsManagerController extends BaseCharacterBuilderController {
   // Existing fields...
-  
+
   /**
    * Current modal state
    * @type {Object|null}
    */
   #activeModal = null;
-  
+
   /**
    * Pending modal action callback
    * @type {Function|null}
    */
   #pendingModalAction = null;
-  
+
   /**
    * Modal stack for nested modals
    * @type {Array<Object>}
@@ -78,17 +78,17 @@ _showConfirmationModal(options) {
     cancelText = 'Cancel',
     type = 'confirm'
   } = options;
-  
+
   // Store modal state
   this.#activeModal = {
     type: 'confirmation',
     options: options
   };
-  
+
   // Store callbacks
   this.#pendingModalAction = onConfirm;
   this.#activeModal.onCancel = onCancel;
-  
+
   // Update modal content
   this._updateModalContent({
     title,
@@ -97,10 +97,10 @@ _showConfirmationModal(options) {
     cancelText,
     type
   });
-  
+
   // Show modal using base controller helpers
   this._showModal();
-  
+
   // Focus confirm button for accessibility
   const confirmBtn = this._getElement('modalConfirmBtn');
   if (confirmBtn) {
@@ -115,19 +115,19 @@ _showConfirmationModal(options) {
  */
 _updateModalContent(content) {
   const { title, message, confirmText, cancelText, type } = content;
-  
+
   // Update text content
   this._setElementText('modalTitle', title);
   this._setElementText('modalMessage', message);
   this._setElementText('modalConfirmBtn', confirmText);
   this._setElementText('modalCancelBtn', cancelText);
-  
+
   // Update modal styling based on type
   const modal = this._getElement('confirmationModal');
   if (modal) {
     modal.className = `modal modal-${type}`;
   }
-  
+
   // Show/hide buttons based on type
   if (type === 'alert') {
     this._hideElement('modalCancelBtn');
@@ -144,7 +144,7 @@ _showModal() {
   // Show overlay and modal
   this._showElement('modalOverlay');
   this._showElement('confirmationModal');
-  
+
   // Add active class for animations
   const modal = this._getElement('confirmationModal');
   if (modal) {
@@ -152,10 +152,10 @@ _showModal() {
     modal.offsetHeight;
     modal.classList.add('modal-active');
   }
-  
+
   // Prevent body scroll
   document.body.classList.add('modal-open');
-  
+
   // Setup ESC key handler
   this._setupModalKeyHandling();
 }
@@ -167,7 +167,7 @@ _showModal() {
  */
 _closeModal(cancelled = false) {
   if (!this.#activeModal) return;
-  
+
   // Call cancel callback if cancelled
   if (cancelled && this.#activeModal.onCancel) {
     try {
@@ -176,28 +176,28 @@ _closeModal(cancelled = false) {
       this.logger.error('Error in modal cancel callback:', error);
     }
   }
-  
+
   // Remove active class for animation
   const modal = this._getElement('confirmationModal');
   if (modal) {
     modal.classList.remove('modal-active');
   }
-  
+
   // Hide modal after animation
   setTimeout(() => {
     this._hideElement('confirmationModal');
     this._hideElement('modalOverlay');
-    
+
     // Restore body scroll
     document.body.classList.remove('modal-open');
-    
+
     // Clear modal state
     this.#activeModal = null;
     this.#pendingModalAction = null;
-    
+
     // Remove ESC handler
     this._removeModalKeyHandling();
-    
+
     // Restore focus to previous element
     this._restoreFocus();
   }, 200); // Match CSS transition duration
@@ -216,11 +216,11 @@ _handleModalConfirm() {
     this.logger.warn('No pending modal action to confirm');
     return;
   }
-  
+
   // Execute the pending action
   try {
     const result = this.#pendingModalAction();
-    
+
     // Handle promise results
     if (result && typeof result.then === 'function') {
       result
@@ -261,7 +261,7 @@ _setupModalKeyHandling() {
       this._closeModal(true);
     }
   };
-  
+
   // Use capture phase to handle before other handlers
   document.addEventListener('keydown', this.#modalKeyHandler, true);
 }
@@ -293,7 +293,7 @@ this._showConfirmationModal({
   onConfirm: () => this._deleteDirection(directionId),
   confirmText: 'Delete',
   cancelText: 'Cancel',
-  type: 'confirm'
+  type: 'confirm',
 });
 ```
 
@@ -310,7 +310,7 @@ Common modal scenarios to update:
 _confirmDeleteDirection(directionId) {
   const direction = this.#directionsData.find(d => d.id === directionId);
   if (!direction) return;
-  
+
   this._showConfirmationModal({
     title: 'Delete Thematic Direction',
     message: `Are you sure you want to delete "${direction.name}"? This action cannot be undone.`,
@@ -340,7 +340,7 @@ _handleCleanupOrphans() {
     });
     return;
   }
-  
+
   this._showConfirmationModal({
     title: 'Clean Up Orphaned Directions',
     message: `This will remove ${this.#orphanedCount} orphaned thematic direction(s) that are not linked to any character concepts. Continue?`,
@@ -388,7 +388,7 @@ _pushModal(modalOptions) {
       action: this.#pendingModalAction
     });
   }
-  
+
   // Show new modal
   this._showConfirmationModal(modalOptions);
 }
@@ -402,12 +402,12 @@ _popModal() {
     this._closeModal();
     return;
   }
-  
+
   // Restore previous modal
   const previous = this.#modalStack.pop();
   this.#activeModal = previous.modal;
   this.#pendingModalAction = previous.action;
-  
+
   // Update content
   this._updateModalContent(previous.modal.options);
 }
@@ -459,16 +459,16 @@ _preDestroy() {
   if (this.#activeModal) {
     this._closeModal();
   }
-  
+
   // Clear modal stack
   this.#modalStack = [];
-  
+
   // Clear pending actions
   this.#pendingModalAction = null;
-  
+
   // Remove any lingering handlers
   this._removeModalKeyHandling();
-  
+
   super._preDestroy();
 }
 ```
@@ -495,9 +495,15 @@ body.modal-open {
 }
 
 /* Modal types */
-.modal.modal-confirm { /* default */ }
-.modal.modal-alert .modal-cancel-btn { display: none; }
-.modal.modal-error .modal-header { background-color: var(--error-color); }
+.modal.modal-confirm {
+  /* default */
+}
+.modal.modal-alert .modal-cancel-btn {
+  display: none;
+}
+.modal.modal-error .modal-header {
+  background-color: var(--error-color);
+}
 ```
 
 ## Testing Strategy
@@ -537,39 +543,41 @@ describe('Modal Management', () => {
       message: 'Test Message',
       onConfirm: jest.fn(),
       confirmText: 'Yes',
-      cancelText: 'No'
+      cancelText: 'No',
     });
-    
+
     expect(controller._getElement('modalTitle').textContent).toBe('Test Title');
-    expect(controller._getElement('modalMessage').textContent).toBe('Test Message');
+    expect(controller._getElement('modalMessage').textContent).toBe(
+      'Test Message'
+    );
     expect(controller._getElement('modalConfirmBtn').textContent).toBe('Yes');
     expect(controller._getElement('modalCancelBtn').textContent).toBe('No');
   });
-  
+
   it('should execute confirm callback', () => {
     const confirmSpy = jest.fn();
-    
+
     controller._showConfirmationModal({
       title: 'Test',
       message: 'Test',
-      onConfirm: confirmSpy
+      onConfirm: confirmSpy,
     });
-    
+
     controller._handleModalConfirm();
-    
+
     expect(confirmSpy).toHaveBeenCalled();
   });
-  
+
   it('should handle ESC key to close modal', () => {
     controller._showConfirmationModal({
       title: 'Test',
       message: 'Test',
-      onConfirm: jest.fn()
+      onConfirm: jest.fn(),
     });
-    
+
     const escEvent = new KeyboardEvent('keydown', { key: 'Escape' });
     document.dispatchEvent(escEvent);
-    
+
     expect(controller.#activeModal).toBe(null);
   });
 });
@@ -592,7 +600,7 @@ _showConfirmationModal({
       this._showError('Failed to save changes');
       throw error; // Re-throw to prevent modal close
     }
-  }
+  },
 });
 ```
 

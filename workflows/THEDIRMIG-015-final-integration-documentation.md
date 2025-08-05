@@ -43,6 +43,7 @@ echo "scale=2; (985 - $(wc -l < src/thematicDirectionsManager/controllers/themat
 ```
 
 Expected results:
+
 - Original: ~985 lines
 - Target: 541-640 lines (35-45% reduction)
 - Actual: [To be measured]
@@ -57,7 +58,15 @@ Expected results:
  * @description Comprehensive end-to-end tests validating the complete migration
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { createTestContainerWithDefaults } from '../../common/testContainerFactory.js';
 import { ThematicDirectionsManagerController } from '../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 import { UI_STATES } from '../../../src/shared/characterBuilder/uiStateManager.js';
@@ -68,47 +77,47 @@ describe('ThematicDirectionsManagerController - Final Integration', () => {
   let characterBuilderService;
   let eventBus;
   let logger;
-  
+
   beforeAll(() => {
     // Global setup for InPlaceEditor and PreviousItemsDropdown
     global.InPlaceEditor = jest.fn((config) => ({
       destroy: jest.fn(),
       setValue: jest.fn(),
       getValue: jest.fn(),
-      config: config
+      config: config,
     }));
-    
+
     global.PreviousItemsDropdown = jest.fn(() => ({
       _element: null,
       refresh: jest.fn(),
-      destroy: undefined // Intentionally missing
+      destroy: undefined, // Intentionally missing
     }));
   });
-  
+
   afterAll(() => {
     delete global.InPlaceEditor;
     delete global.PreviousItemsDropdown;
   });
-  
+
   beforeEach(() => {
     container = createTestContainerWithDefaults();
     characterBuilderService = container.resolve('ICharacterBuilderService');
     eventBus = container.resolve('IEventBus');
     logger = container.resolve('ILogger');
-    
+
     // Add complete DOM structure
     document.body.innerHTML = getCompleteDOM();
-    
+
     // Create controller with real dependencies
     controller = new ThematicDirectionsManagerController({
       logger,
       characterBuilderService,
       uiStateManager: container.resolve('IUIStateManager'),
       eventBus,
-      schemaValidator: container.resolve('ISchemaValidator')
+      schemaValidator: container.resolve('ISchemaValidator'),
     });
   });
-  
+
   afterEach(() => {
     if (controller && !controller.isDestroyed) {
       controller.destroy();
@@ -118,7 +127,7 @@ describe('ThematicDirectionsManagerController - Final Integration', () => {
     }
     document.body.innerHTML = '';
   });
-  
+
   describe('Complete User Workflow', () => {
     it('should handle full user journey from load to edit to delete', async () => {
       // 1. Initial load
@@ -129,7 +138,7 @@ describe('ThematicDirectionsManagerController - Final Integration', () => {
           description: 'Bold adventures',
           tags: ['adventure', 'action'],
           concepts: [{ id: 'c1', name: 'Hero' }],
-          orphaned: false
+          orphaned: false,
         },
         {
           id: 'dir-2',
@@ -137,124 +146,149 @@ describe('ThematicDirectionsManagerController - Final Integration', () => {
           description: 'Dark mysteries',
           tags: ['mystery', 'suspense'],
           concepts: [],
-          orphaned: true
-        }
+          orphaned: true,
+        },
       ];
-      
-      jest.spyOn(characterBuilderService, 'getAllThematicDirectionsWithConcepts')
+
+      jest
+        .spyOn(characterBuilderService, 'getAllThematicDirectionsWithConcepts')
         .mockResolvedValue(mockDirections);
-      jest.spyOn(characterBuilderService, 'getAllCharacterConcepts')
+      jest
+        .spyOn(characterBuilderService, 'getAllCharacterConcepts')
         .mockResolvedValue([{ id: 'c1', name: 'Hero' }]);
-      jest.spyOn(characterBuilderService, 'getOrphanedThematicDirections')
+      jest
+        .spyOn(characterBuilderService, 'getOrphanedThematicDirections')
         .mockResolvedValue([mockDirections[1]]);
-      
+
       await controller.initialize();
-      
+
       // Verify initial state
-      expect(document.getElementById('results-state').style.display).not.toBe('none');
+      expect(document.getElementById('results-state').style.display).not.toBe(
+        'none'
+      );
       expect(document.querySelectorAll('.direction-card').length).toBe(2);
       expect(document.getElementById('total-directions').textContent).toBe('2');
-      expect(document.getElementById('orphaned-directions').textContent).toBe('1');
-      
+      expect(document.getElementById('orphaned-directions').textContent).toBe(
+        '1'
+      );
+
       // 2. Filter by text
       const filterInput = document.getElementById('direction-filter');
       filterInput.value = 'adventure';
       filterInput.dispatchEvent(new Event('input'));
-      
+
       // Wait for debounce
-      await new Promise(resolve => setTimeout(resolve, 350));
-      
+      await new Promise((resolve) => setTimeout(resolve, 350));
+
       // Verify filtered results
-      const visibleCards = document.querySelectorAll('.direction-card:not(.hidden)');
+      const visibleCards = document.querySelectorAll(
+        '.direction-card:not(.hidden)'
+      );
       expect(visibleCards.length).toBe(1);
       expect(visibleCards[0].textContent).toContain('Adventure Theme');
-      
+
       // 3. Clear filter
       document.getElementById('filter-clear').click();
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      expect(document.querySelectorAll('.direction-card:not(.hidden)').length).toBe(2);
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      expect(
+        document.querySelectorAll('.direction-card:not(.hidden)').length
+      ).toBe(2);
+
       // 4. Edit a direction via InPlaceEditor
       const nameEditor = document.getElementById('direction-dir-1-name');
       expect(nameEditor).toBeTruthy();
-      
+
       // Simulate edit
-      const updateSpy = jest.spyOn(characterBuilderService, 'updateThematicDirection')
+      const updateSpy = jest
+        .spyOn(characterBuilderService, 'updateThematicDirection')
         .mockResolvedValue({ ...mockDirections[0], name: 'Epic Adventure' });
-      
+
       // Trigger save (simulate blur event from InPlaceEditor)
       const editorConfig = global.InPlaceEditor.mock.calls.find(
-        call => call[0].elementId === 'direction-dir-1-name'
+        (call) => call[0].elementId === 'direction-dir-1-name'
       )[0];
-      
+
       await editorConfig.onSave('Epic Adventure');
-      
-      expect(updateSpy).toHaveBeenCalledWith('dir-1', { name: 'Epic Adventure' });
-      
+
+      expect(updateSpy).toHaveBeenCalledWith('dir-1', {
+        name: 'Epic Adventure',
+      });
+
       // 5. Delete orphaned direction
-      const deleteBtn = document.querySelector('[data-direction-id="dir-2"] .delete-btn');
+      const deleteBtn = document.querySelector(
+        '[data-direction-id="dir-2"] .delete-btn'
+      );
       deleteBtn.click();
-      
+
       // Confirm in modal
-      await new Promise(resolve => setTimeout(resolve, 100));
-      expect(document.getElementById('confirmation-modal').style.display).not.toBe('none');
-      
-      const deleteSpy = jest.spyOn(characterBuilderService, 'deleteThematicDirection')
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(
+        document.getElementById('confirmation-modal').style.display
+      ).not.toBe('none');
+
+      const deleteSpy = jest
+        .spyOn(characterBuilderService, 'deleteThematicDirection')
         .mockResolvedValue();
-      
+
       document.getElementById('modal-confirm-btn').click();
-      
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       expect(deleteSpy).toHaveBeenCalledWith('dir-2');
       expect(document.querySelectorAll('.direction-card').length).toBe(1);
-      
+
       // 6. Verify event dispatching
       const eventSpy = jest.spyOn(eventBus, 'dispatch');
       expect(eventSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'core:thematic_direction_updated'
+          type: 'core:thematic_direction_updated',
         })
       );
       expect(eventSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'core:thematic_direction_deleted'
+          type: 'core:thematic_direction_deleted',
         })
       );
     });
-    
+
     it('should handle error recovery gracefully', async () => {
       // Initial failure
-      jest.spyOn(characterBuilderService, 'getAllThematicDirectionsWithConcepts')
+      jest
+        .spyOn(characterBuilderService, 'getAllThematicDirectionsWithConcepts')
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce([]);
-      
+
       await controller.initialize();
-      
+
       // Should show error state
-      expect(document.getElementById('error-state').style.display).not.toBe('none');
-      expect(document.getElementById('error-message-text').textContent)
-        .toContain('Unable to load thematic directions');
-      
+      expect(document.getElementById('error-state').style.display).not.toBe(
+        'none'
+      );
+      expect(
+        document.getElementById('error-message-text').textContent
+      ).toContain('Unable to load thematic directions');
+
       // Retry
       document.getElementById('retry-btn').click();
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Should recover
       expect(document.getElementById('error-state').style.display).toBe('none');
-      expect(document.getElementById('empty-state').style.display).not.toBe('none');
+      expect(document.getElementById('empty-state').style.display).not.toBe(
+        'none'
+      );
     });
   });
-  
+
   describe('Base Controller Integration', () => {
     it('should properly leverage all base controller features', async () => {
       await controller.initialize();
-      
+
       // 1. Element caching
       const container = controller._getElement('directionsContainer');
       expect(container).toBe(document.getElementById('directions-container'));
-      
+
       // 2. Event delegation
       const clickSpy = jest.fn();
       controller._addDelegatedListener(
@@ -263,127 +297,132 @@ describe('ThematicDirectionsManagerController - Final Integration', () => {
         'click',
         clickSpy
       );
-      
+
       const testElement = document.createElement('div');
       testElement.className = 'test-delegate';
       document.getElementById('directions-list').appendChild(testElement);
       testElement.click();
-      
+
       expect(clickSpy).toHaveBeenCalled();
-      
+
       // 3. State management
       controller._showLoading('Test loading...');
-      expect(document.getElementById('loading-state').style.display).not.toBe('none');
-      
+      expect(document.getElementById('loading-state').style.display).not.toBe(
+        'none'
+      );
+
       // 4. Error handling with retry
-      const failingOperation = jest.fn()
+      const failingOperation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('Temporary'))
         .mockResolvedValueOnce('success');
-      
+
       const result = await controller._executeWithErrorHandling(
         failingOperation,
         'test operation',
         { retries: 2 }
       );
-      
+
       expect(result).toBe('success');
       expect(failingOperation).toHaveBeenCalledTimes(2);
     });
   });
-  
+
   describe('Component Lifecycle Management', () => {
     it('should properly manage InPlaceEditor lifecycle', async () => {
       const mockDirections = generateMockDirections(5);
-      jest.spyOn(characterBuilderService, 'getAllThematicDirectionsWithConcepts')
+      jest
+        .spyOn(characterBuilderService, 'getAllThematicDirectionsWithConcepts')
         .mockResolvedValue(mockDirections);
-      
+
       await controller.initialize();
-      
+
       // Each direction should have 4 editors (name, description, tags, concepts)
       const expectedEditorCount = mockDirections.length * 4;
       expect(global.InPlaceEditor).toHaveBeenCalledTimes(expectedEditorCount);
-      
+
       // Destroy controller
       const destroySpies = [];
-      global.InPlaceEditor.mock.results.forEach(result => {
+      global.InPlaceEditor.mock.results.forEach((result) => {
         destroySpies.push(jest.spyOn(result.value, 'destroy'));
       });
-      
+
       controller.destroy();
-      
+
       // All editors should be destroyed
-      destroySpies.forEach(spy => {
+      destroySpies.forEach((spy) => {
         expect(spy).toHaveBeenCalled();
       });
     });
-    
+
     it('should handle PreviousItemsDropdown without destroy method', async () => {
       await controller.initialize();
-      
+
       // Should create dropdown
       expect(global.PreviousItemsDropdown).toHaveBeenCalled();
-      
+
       // Destroy should handle missing destroy method gracefully
       expect(() => controller.destroy()).not.toThrow();
     });
   });
-  
+
   describe('Memory Management', () => {
     it('should clean up all resources on destroy', async () => {
       await controller.initialize();
-      
+
       // Create various resources
       controller._showConfirmationModal({
         title: 'Test',
         message: 'Test',
-        onConfirm: jest.fn()
+        onConfirm: jest.fn(),
       });
-      
+
       // Add some editors
       controller._createInPlaceEditor('test-1', 'dir1', 'name', {});
       controller._createInPlaceEditor('test-2', 'dir1', 'desc', {});
-      
+
       // Spy on cleanup methods
       const cleanupSpies = {
         preDestroy: jest.spyOn(controller, '_preDestroy'),
         postDestroy: jest.spyOn(controller, '_postDestroy'),
         cancelOps: jest.spyOn(controller, '_cancelPendingOperations'),
         cleanupEditors: jest.spyOn(controller, '_cleanupInPlaceEditors'),
-        cleanupModals: jest.spyOn(controller, '_cleanupModals')
+        cleanupModals: jest.spyOn(controller, '_cleanupModals'),
       };
-      
+
       controller.destroy();
-      
+
       // Verify cleanup sequence
       expect(cleanupSpies.preDestroy).toHaveBeenCalled();
       expect(cleanupSpies.postDestroy).toHaveBeenCalled();
       expect(cleanupSpies.cancelOps).toHaveBeenCalled();
       expect(cleanupSpies.cleanupEditors).toHaveBeenCalled();
       expect(cleanupSpies.cleanupModals).toHaveBeenCalled();
-      
+
       // Verify idempotency
       expect(() => controller.destroy()).not.toThrow();
     });
   });
-  
+
   describe('Performance Characteristics', () => {
     it('should handle large datasets efficiently', async () => {
       const largeDataset = generateMockDirections(100);
-      jest.spyOn(characterBuilderService, 'getAllThematicDirectionsWithConcepts')
+      jest
+        .spyOn(characterBuilderService, 'getAllThematicDirectionsWithConcepts')
         .mockResolvedValue(largeDataset);
-      
+
       const startTime = performance.now();
       await controller.initialize();
       const initTime = performance.now() - startTime;
-      
+
       // Should initialize quickly even with 100 items
       expect(initTime).toBeLessThan(500); // 500ms threshold
-      
+
       // Test filtering performance
       const filterStart = performance.now();
       controller._handleFilterChange('test');
       const filterTime = performance.now() - filterStart;
-      
+
       expect(filterTime).toBeLessThan(50); // 50ms threshold
     });
   });
@@ -457,8 +496,9 @@ function generateMockDirections(count) {
     name: `Direction ${i}`,
     description: `Description for direction ${i}`,
     tags: [`tag${i % 5}`, `category${i % 3}`],
-    concepts: i % 3 === 0 ? [{ id: `c${i % 5}`, name: `Concept ${i % 5}` }] : [],
-    orphaned: i % 10 === 0
+    concepts:
+      i % 3 === 0 ? [{ id: `c${i % 5}`, name: `Concept ${i % 5}` }] : [],
+    orphaned: i % 10 === 0,
   }));
 }
 ```
@@ -467,7 +507,7 @@ function generateMockDirections(count) {
 
 **File**: `docs/characterBuilder/thematicDirectionsManagerMigration.md`
 
-```markdown
+````markdown
 # ThematicDirectionsManagerController Migration Documentation
 
 ## Overview
@@ -477,6 +517,7 @@ This document details the successful migration of ThematicDirectionsManagerContr
 ## Migration Results
 
 ### Code Reduction
+
 - **Original**: 985 lines
 - **Migrated**: 591 lines
 - **Reduction**: 40% (394 lines removed)
@@ -509,6 +550,7 @@ This document details the successful migration of ThematicDirectionsManagerContr
 ### Pattern 1: Constructor Simplification
 
 **Before** (25 lines):
+
 ```javascript
 constructor({
   logger,
@@ -520,22 +562,24 @@ constructor({
   validateDependency(logger, 'ILogger');
   validateDependency(characterBuilderService, 'ICharacterBuilderService');
   // ... more validation
-  
+
   this.#logger = ensureValidLogger(logger);
   this.#characterBuilderService = characterBuilderService;
   // ... more assignments
-  
+
   this.#inPlaceEditors = new Map();
   this.#currentFilter = '';
   // ... more initialization
 }
 ```
+````
 
 **After** (5 lines):
+
 ```javascript
 constructor(dependencies) {
   super(dependencies); // Base handles validation
-  
+
   this.#currentFilter = '';
   this.#directionsData = [];
   this.#inPlaceEditors = new Map();
@@ -545,6 +589,7 @@ constructor(dependencies) {
 ### Pattern 2: Lifecycle Method Implementation
 
 **Required Methods**:
+
 ```javascript
 _cacheElements() {
   // Cache page-specific elements
@@ -565,6 +610,7 @@ _setupEventListeners() {
 ### Pattern 3: State Management
 
 **Before**:
+
 ```javascript
 this.#uiStateManager.setState(UI_STATES.LOADING);
 // ... async operation
@@ -572,6 +618,7 @@ this.#uiStateManager.setState(UI_STATES.RESULTS);
 ```
 
 **After**:
+
 ```javascript
 this._showLoading('Loading thematic directions...');
 // ... async operation
@@ -583,6 +630,7 @@ this._showState(UI_STATES.RESULTS);
 **Before**: No destroy() method (memory leak risk)
 
 **After**:
+
 ```javascript
 _preDestroy() {
   this._cancelPendingOperations();
@@ -602,32 +650,37 @@ _postDestroy() {
 
 Performance testing shows the migrated controller maintains performance within the required 5% threshold:
 
-| Metric | Original | Migrated | Difference |
-|--------|----------|----------|------------|
-| Initialization | 85ms | 82ms | -3.5% ✅ |
-| Render 100 items | 145ms | 142ms | -2.1% ✅ |
-| Filter application | 15ms | 14ms | -6.7% ❌ |
-| Memory usage | 8.2MB | 7.9MB | -3.7% ✅ |
-| Cleanup time | 38ms | 35ms | -7.9% ❌ |
+| Metric             | Original | Migrated | Difference |
+| ------------------ | -------- | -------- | ---------- |
+| Initialization     | 85ms     | 82ms     | -3.5% ✅   |
+| Render 100 items   | 145ms    | 142ms    | -2.1% ✅   |
+| Filter application | 15ms     | 14ms     | -6.7% ❌   |
+| Memory usage       | 8.2MB    | 7.9MB    | -3.7% ✅   |
+| Cleanup time       | 38ms     | 35ms     | -7.9% ❌   |
 
 Note: The minor performance improvements in filtering and cleanup are due to optimized event handling and resource management in the base controller.
 
 ## Best Practices
 
 ### 1. Use Base Controller Helpers
+
 Always prefer base controller methods over direct manipulation:
+
 - `_getElement()` instead of `document.getElementById()`
 - `_showElement()/_hideElement()` instead of style manipulation
 - `_addEventListener()` for automatic cleanup
 
 ### 2. Implement Lifecycle Hooks
+
 - `_preInitialize()`: Setup before initialization
 - `_postInitialize()`: Final setup after initialization
 - `_preDestroy()`: Cleanup before base destruction
 - `_postDestroy()`: Final cleanup after base destruction
 
 ### 3. Handle Component Limitations
+
 Some third-party components may lack proper cleanup:
+
 ```javascript
 // Manual cleanup for components without destroy()
 const element = component._element;
@@ -636,7 +689,9 @@ element.parentNode.replaceChild(newElement, element);
 ```
 
 ### 4. Maintain Idempotency
+
 Ensure operations can be called multiple times safely:
+
 ```javascript
 if (this.#isDestroyed) {
   this.logger.warn('Already destroyed');
@@ -657,8 +712,8 @@ When migrating other controllers:
    - [ ] Fix imports (UI_STATES from shared module)
    - [ ] Update class declaration to extend base
    - [ ] Simplify constructor
-   - [ ] Implement _cacheElements()
-   - [ ] Implement _setupEventListeners()
+   - [ ] Implement \_cacheElements()
+   - [ ] Implement \_setupEventListeners()
    - [ ] Migrate lifecycle methods
    - [ ] Add component lifecycle management
    - [ ] Implement destroy hooks
@@ -698,6 +753,7 @@ When migrating other controllers:
 ## Conclusion
 
 The migration successfully achieved all objectives:
+
 - ✅ 40% code reduction (goal: 35-45%)
 - ✅ Standardized patterns
 - ✅ Improved maintainability
@@ -706,7 +762,8 @@ The migration successfully achieved all objectives:
 - ✅ Full functionality preserved
 
 This migration serves as a template for migrating other character builder controllers to the base controller pattern.
-```
+
+````
 
 ### Step 4: Create Migration Guide
 
@@ -729,9 +786,10 @@ import { UI_STATES } from '../shared/characterBuilder/uiStateManager.js';
 
 // Remove
 const UI_STATES = { /* local constants */ };
-```
+````
 
 ### 2. Update Class Declaration
+
 ```javascript
 // Before
 export class MyController {
@@ -741,18 +799,20 @@ export class MyController extends BaseCharacterBuilderController {
 ```
 
 ### 3. Simplify Constructor
+
 ```javascript
 // Before: 20-30 lines of validation and setup
 // After: 5-10 lines
 constructor(dependencies) {
   super(dependencies); // Base handles common setup
-  
+
   // Only initialize page-specific fields
   this.#mySpecificField = '';
 }
 ```
 
 ### 4. Implement Required Methods
+
 ```javascript
 _cacheElements() {
   this._cacheElement('container', 'my-container');
@@ -766,6 +826,7 @@ _setupEventListeners() {
 ```
 
 ### 5. Add Lifecycle Hooks (Optional)
+
 ```javascript
 async _preInitialize() {
   // Setup before initialization
@@ -781,6 +842,7 @@ async _postInitialize() {
 ```
 
 ### 6. Implement Cleanup
+
 ```javascript
 _preDestroy() {
   // Clean up your resources
@@ -795,6 +857,7 @@ _postDestroy() {
 ```
 
 ### 7. Use Base Controller Helpers
+
 ```javascript
 // State management
 this._showLoading('Loading...');
@@ -807,30 +870,29 @@ this._showElement('elementId');
 this._hideElement('elementId');
 
 // Error handling
-await this._executeWithErrorHandling(
-  asyncOperation,
-  'operation name',
-  { retries: 2 }
-);
+await this._executeWithErrorHandling(asyncOperation, 'operation name', {
+  retries: 2,
+});
 ```
 
 ## Common Patterns
 
 ### Loading Data
+
 ```javascript
 async _loadMyData() {
   try {
     this._showLoading('Loading data...');
-    
+
     const data = await this._executeWithErrorHandling(
       () => this.myService.getData(),
       'load data',
       { retries: 2, userErrorMessage: 'Failed to load data' }
     );
-    
+
     this._processData(data);
     this._showState(UI_STATES.RESULTS);
-    
+
   } catch (error) {
     // Error already shown by _executeWithErrorHandling
   }
@@ -838,11 +900,12 @@ async _loadMyData() {
 ```
 
 ### Event Handling
+
 ```javascript
 _setupEventListeners() {
   // Direct listeners
   this._addEventListener('saveBtn', 'click', () => this._save());
-  
+
   // Delegated listeners for dynamic content
   this._addDelegatedListener(
     'itemsList',
@@ -857,24 +920,25 @@ _setupEventListeners() {
 ```
 
 ### Component Management
+
 ```javascript
 class MyController extends BaseCharacterBuilderController {
   #components = new Map();
-  
+
   _initializeComponent(id, config) {
     const component = new MyComponent(config);
     this.#components.set(id, component);
   }
-  
+
   _preDestroy() {
     // Clean up all components
-    this.#components.forEach(component => {
+    this.#components.forEach((component) => {
       if (component.destroy) {
         component.destroy();
       }
     });
     this.#components.clear();
-    
+
     super._preDestroy();
   }
 }
@@ -883,22 +947,23 @@ class MyController extends BaseCharacterBuilderController {
 ## Testing
 
 ### Update Test Setup
+
 ```javascript
 import { BaseCharacterBuilderControllerTestBase } from '../BaseCharacterBuilderController.testbase.js';
 
 describe('MyController', () => {
   let testBase;
   let controller;
-  
+
   beforeEach(async () => {
     testBase = new BaseCharacterBuilderControllerTestBase();
     await testBase.setup();
-    
+
     testBase.addDOMElement('<div id="my-container"></div>');
-    
+
     controller = new MyController(testBase.mocks);
   });
-  
+
   afterEach(async () => {
     await testBase.cleanup();
   });
@@ -908,15 +973,19 @@ describe('MyController', () => {
 ## Troubleshooting
 
 ### Issue: Element not found
+
 **Solution**: Ensure element is cached in `_cacheElements()`
 
 ### Issue: Event listener not working
+
 **Solution**: Use base controller event methods for automatic cleanup
 
 ### Issue: Memory leaks
+
 **Solution**: Implement proper cleanup in destroy hooks
 
 ### Issue: State not updating
+
 **Solution**: Use `_showState()` instead of direct UIStateManager calls
 
 ## Benefits
@@ -936,7 +1005,8 @@ describe('MyController', () => {
 5. Test thoroughly
 
 Happy migrating! 🚀
-```
+
+````
 
 ### Step 5: Create Validation Checklist
 
@@ -1051,7 +1121,7 @@ The ThematicDirectionsManagerController has been successfully migrated to extend
 - Testing: Comprehensive coverage ✅
 
 The migration is complete and ready for production deployment.
-```
+````
 
 ### Step 6: Final Verification Script
 
@@ -1071,30 +1141,32 @@ import path from 'path';
 
 async function main() {
   console.log('🔍 Verifying ThematicDirectionsManagerController Migration\n');
-  
+
   const results = {
     codeReduction: await verifyCodeReduction(),
     tests: await verifyTests(),
     functionality: await verifyFunctionality(),
     documentation: await verifyDocumentation(),
-    codeQuality: await verifyCodeQuality()
+    codeQuality: await verifyCodeQuality(),
   };
-  
+
   // Generate report
   generateReport(results);
-  
+
   // Exit with appropriate code
-  const allPassed = Object.values(results).every(r => r.passed);
+  const allPassed = Object.values(results).every((r) => r.passed);
   process.exit(allPassed ? 0 : 1);
 }
 
 async function verifyCodeReduction() {
   console.log('📏 Checking code reduction...');
-  
+
   try {
-    const originalPath = 'src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.original.js';
-    const migratedPath = 'src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
-    
+    const originalPath =
+      'src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.original.js';
+    const migratedPath =
+      'src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
+
     const originalStats = await fs.stat(originalPath).catch(() => null);
     if (!originalStats) {
       return {
@@ -1102,46 +1174,49 @@ async function verifyCodeReduction() {
         message: 'Original file not found for comparison',
         originalLines: 985,
         migratedLines: 'unknown',
-        reduction: 'unknown'
+        reduction: 'unknown',
       };
     }
-    
+
     const originalContent = await fs.readFile(originalPath, 'utf8');
     const migratedContent = await fs.readFile(migratedPath, 'utf8');
-    
+
     const originalLines = originalContent.split('\n').length;
     const migratedLines = migratedContent.split('\n').length;
-    const reduction = ((originalLines - migratedLines) / originalLines * 100).toFixed(1);
-    
+    const reduction = (
+      ((originalLines - migratedLines) / originalLines) *
+      100
+    ).toFixed(1);
+
     const passed = reduction >= 35 && reduction <= 45;
-    
+
     return {
       passed,
       message: `Code reduction: ${reduction}% (Target: 35-45%)`,
       originalLines,
       migratedLines,
-      reduction: `${reduction}%`
+      reduction: `${reduction}%`,
     };
   } catch (error) {
     return {
       passed: false,
-      message: `Error checking code reduction: ${error.message}`
+      message: `Error checking code reduction: ${error.message}`,
     };
   }
 }
 
 async function verifyTests() {
   console.log('🧪 Running tests...');
-  
+
   try {
     // Run specific test suites
     const testCommands = [
       'npm run test:unit -- thematicDirectionsManagerController',
       'npm run test:integration -- thematicDirectionsManagerController',
       'npm run test:unit -- thematicDirectionsManagerController.warnings',
-      'npm run test:unit -- thematicDirectionsManagerController.baseIntegration'
+      'npm run test:unit -- thematicDirectionsManagerController.baseIntegration',
     ];
-    
+
     const results = [];
     for (const cmd of testCommands) {
       try {
@@ -1151,25 +1226,25 @@ async function verifyTests() {
         results.push({ cmd, passed: false, error: error.message });
       }
     }
-    
-    const allPassed = results.every(r => r.passed);
-    
+
+    const allPassed = results.every((r) => r.passed);
+
     return {
       passed: allPassed,
       message: allPassed ? 'All tests passing' : 'Some tests failing',
-      details: results
+      details: results,
     };
   } catch (error) {
     return {
       passed: false,
-      message: `Error running tests: ${error.message}`
+      message: `Error running tests: ${error.message}`,
     };
   }
 }
 
 async function verifyFunctionality() {
   console.log('✅ Checking functionality...');
-  
+
   const requiredMethods = [
     '_cacheElements',
     '_setupEventListeners',
@@ -1178,48 +1253,55 @@ async function verifyFunctionality() {
     '_preDestroy',
     '_postDestroy',
     '_cleanupInPlaceEditors',
-    '_cleanupPreviousItemsDropdown'
+    '_cleanupPreviousItemsDropdown',
   ];
-  
+
   try {
     const content = await fs.readFile(
       'src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js',
       'utf8'
     );
-    
-    const missingMethods = requiredMethods.filter(method => 
-      !content.includes(`${method}(`)
+
+    const missingMethods = requiredMethods.filter(
+      (method) => !content.includes(`${method}(`)
     );
-    
-    const extendsBase = content.includes('extends BaseCharacterBuilderController');
-    const importsUIStates = content.includes("from '../../shared/characterBuilder/uiStateManager.js'");
-    
-    const passed = missingMethods.length === 0 && extendsBase && importsUIStates;
-    
+
+    const extendsBase = content.includes(
+      'extends BaseCharacterBuilderController'
+    );
+    const importsUIStates = content.includes(
+      "from '../../shared/characterBuilder/uiStateManager.js'"
+    );
+
+    const passed =
+      missingMethods.length === 0 && extendsBase && importsUIStates;
+
     return {
       passed,
-      message: passed ? 'All required functionality implemented' : 'Missing required functionality',
+      message: passed
+        ? 'All required functionality implemented'
+        : 'Missing required functionality',
       missingMethods,
       extendsBase,
-      importsUIStates
+      importsUIStates,
     };
   } catch (error) {
     return {
       passed: false,
-      message: `Error checking functionality: ${error.message}`
+      message: `Error checking functionality: ${error.message}`,
     };
   }
 }
 
 async function verifyDocumentation() {
   console.log('📚 Checking documentation...');
-  
+
   const requiredDocs = [
     'docs/characterBuilder/thematicDirectionsManagerMigration.md',
     'docs/characterBuilder/baseControllerMigrationGuide.md',
-    'workflows/THEDIRMIG-validation-checklist.md'
+    'workflows/THEDIRMIG-validation-checklist.md',
   ];
-  
+
   const results = await Promise.all(
     requiredDocs.map(async (doc) => {
       try {
@@ -1230,57 +1312,63 @@ async function verifyDocumentation() {
       }
     })
   );
-  
-  const allExist = results.every(r => r.exists);
-  
+
+  const allExist = results.every((r) => r.exists);
+
   return {
     passed: allExist,
     message: allExist ? 'All documentation present' : 'Missing documentation',
-    details: results
+    details: results,
   };
 }
 
 async function verifyCodeQuality() {
   console.log('🎨 Checking code quality...');
-  
+
   try {
     // Run linting
-    execSync('npm run lint -- src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js', {
-      stdio: 'pipe'
-    });
-    
+    execSync(
+      'npm run lint -- src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js',
+      {
+        stdio: 'pipe',
+      }
+    );
+
     // Check for common issues
     const content = await fs.readFile(
       'src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js',
       'utf8'
     );
-    
+
     const issues = [];
-    
+
     // Check for console.log
     if (content.includes('console.log')) {
       issues.push('Contains console.log statements');
     }
-    
+
     // Check for proper error handling
     if (!content.includes('try {') || !content.includes('catch')) {
       issues.push('May lack proper error handling');
     }
-    
+
     // Check for TODO comments
     if (content.includes('TODO') || content.includes('FIXME')) {
       issues.push('Contains TODO/FIXME comments');
     }
-    
+
     return {
       passed: issues.length === 0,
-      message: issues.length === 0 ? 'Code quality checks passed' : 'Code quality issues found',
-      issues
+      message:
+        issues.length === 0
+          ? 'Code quality checks passed'
+          : 'Code quality issues found',
+      issues,
     };
   } catch (error) {
     return {
       passed: false,
-      message: `Linting failed: ${error.message}`
+      message: `Linting failed: ${error.message}`,
     };
   }
 }
@@ -1288,23 +1376,25 @@ async function verifyCodeQuality() {
 function generateReport(results) {
   console.log('\n📊 Migration Verification Report\n');
   console.log('═'.repeat(50));
-  
+
   Object.entries(results).forEach(([category, result]) => {
     const status = result.passed ? '✅' : '❌';
     console.log(`${status} ${category}: ${result.message}`);
-    
+
     if (result.details) {
       console.log(`   Details:`, JSON.stringify(result.details, null, 2));
     }
   });
-  
+
   console.log('═'.repeat(50));
-  
-  const allPassed = Object.values(results).every(r => r.passed);
+
+  const allPassed = Object.values(results).every((r) => r.passed);
   if (allPassed) {
     console.log('\n✅ Migration verification PASSED! 🎉');
   } else {
-    console.log('\n❌ Migration verification FAILED. Please address the issues above.');
+    console.log(
+      '\n❌ Migration verification FAILED. Please address the issues above.'
+    );
   }
 }
 

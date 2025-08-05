@@ -2,7 +2,7 @@
 
 ## Overview
 
-Simplify the ThematicDirectionsManagerController constructor by removing manual dependency validation code and leveraging the base class validation. This will reduce the constructor from ~25 lines to 5-10 lines while maintaining the same validation guarantees.
+Simplify the ThematicDirectionsManagerController constructor by leveraging base class validation for core dependencies while properly handling UIStateManager as an additional service. This will reduce the constructor from 31 lines to 10-15 lines (~50% reduction) while maintaining the same validation guarantees.
 
 ## Priority
 
@@ -16,148 +16,141 @@ Simplify the ThematicDirectionsManagerController constructor by removing manual 
 
 ## Acceptance Criteria
 
-- [ ] Constructor reduced to 5-10 lines
-- [ ] All manual validation code removed
-- [ ] Base class handles dependency validation
-- [ ] Page-specific field initialization retained
-- [ ] No loss of validation coverage
+- [ ] Constructor reduced to 10-15 lines (from 31 lines)
+- [ ] Core dependency validation delegated to base class
+- [ ] UIStateManager validation properly handled as additional service
+- [ ] Page-specific field initialization retained and streamlined
+- [ ] No loss of validation coverage (all required dependencies still validated)
 - [ ] Constructor remains functionally equivalent
+- [ ] UIStateManager dependency properly exposed in constructor signature
 
 ## Implementation Steps
 
 ### Step 1: Analyze Current Constructor
 
-**Current Constructor Structure** (~25 lines):
+**Current Constructor Structure** (~31 lines, validation is 28 lines):
+
 ```javascript
-constructor({ logger, characterBuilderService, uiStateManager, eventBus, schemaValidator }) {
+constructor({ logger, characterBuilderService, eventBus, schemaValidator }) {
+  super({ logger, characterBuilderService, eventBus, schemaValidator });
+
+  // Keep existing validation for now (to be cleaned up in THEDIRMIG-003)
   validateDependency(logger, 'ILogger', logger, {
     requiredMethods: ['debug', 'info', 'warn', 'error'],
   });
-  validateDependency(characterBuilderService, 'CharacterBuilderService', logger, {
-    requiredMethods: [
-      'getAllThematicDirectionsWithConcepts',
-      'getAllCharacterConcepts',
-      'updateThematicDirection',
-      'deleteThematicDirection',
-      'getOrphanedThematicDirections',
-    ],
+  validateDependency(
+    characterBuilderService,
+    'CharacterBuilderService',
+    logger,
+    {
+      requiredMethods: [
+        'initialize',
+        'getAllCharacterConcepts',
+        'getCharacterConcept',
+        'getAllThematicDirectionsWithConcepts',
+        'getOrphanedThematicDirections',
+        'updateThematicDirection',
+        'deleteThematicDirection',
+      ],
+    }
+  );
+  validateDependency(eventBus, 'ISafeEventDispatcher', logger, {
+    requiredMethods: ['dispatch'],
   });
-  validateDependency(uiStateManager, 'UIStateManager', logger, {
-    requiredMethods: ['setState', 'showElement', 'hideElement'],
-  });
-  validateDependency(eventBus, 'IEventBus', logger, {
-    requiredMethods: ['dispatch', 'subscribe', 'unsubscribe'],
-  });
-  validateDependency(schemaValidator, 'SchemaValidator', logger, {
+  validateDependency(schemaValidator, 'ISchemaValidator', logger, {
     requiredMethods: ['validateAgainstSchema'],
   });
 
-  this.#logger = logger;
-  this.#characterBuilderService = characterBuilderService;
-  this.#uiStateManager = uiStateManager;
-  this.#eventBus = eventBus;
-  this.#schemaValidator = schemaValidator;
-
-  // Initialize other fields...
+  // Dependencies are now handled by super() - assignments removed
 }
 ```
 
 ### Step 2: Remove Manual Validation Code
 
-The base class already validates these dependencies. Remove all validateDependency calls.
+**IMPORTANT**: The base class does NOT validate UIStateManager, which is needed by this controller. We must keep UIStateManager validation or add it as an additional service.
+
+The base class validates core dependencies but with different method requirements. Some current validations need to be kept or moved to additional services pattern.
 
 ### Step 3: Simplify Constructor
 
-**New Constructor** (5-10 lines):
+**New Constructor** (10-15 lines with additional service validation):
+
 ```javascript
-constructor(dependencies) {
-  super(dependencies); // Base class handles validation
-  
-  // Initialize page-specific fields
+constructor({ logger, characterBuilderService, eventBus, schemaValidator, uiStateManager }) {
+  super({ logger, characterBuilderService, eventBus, schemaValidator });
+
+  // Validate additional service not handled by base class
+  validateDependency(uiStateManager, 'UIStateManager', logger, {
+    requiredMethods: ['showState', 'showError']
+  });
+
+  this.#uiStateManager = uiStateManager;
+
+  // Initialize page-specific fields only
   this.#currentFilter = '';
   this.#currentConcept = null;
   this.#directionsData = [];
-  this.#conceptsData = [];
   this.#inPlaceEditors = new Map();
-  this.#conceptDropdown = null;
-  this.#pendingModalAction = null;
-  this.#orphanedCount = 0;
 }
 ```
 
 ### Step 4: Verify Base Class Validation Coverage
 
-Check BaseCharacterBuilderController to ensure it validates all required dependencies:
+**Base class actually validates:**
 
-```bash
-# Check base class validation
-grep -A 20 "constructor" src/characterBuilder/controllers/BaseCharacterBuilderController.js
-```
+- ILogger with methods: ['debug', 'info', 'warn', 'error'] ✓
+- CharacterBuilderService with methods: ['initialize', 'getAllCharacterConcepts', 'createCharacterConcept', 'updateCharacterConcept', 'deleteCharacterConcept', 'getCharacterConcept', 'generateThematicDirections', 'getThematicDirections'] ✓
+- ISafeEventDispatcher with methods: ['dispatch', 'subscribe', 'unsubscribe'] ✓
+- ISchemaValidator with methods: ['validateAgainstSchema'] ✓
 
-Expected validations in base class:
-- ILogger with required methods
-- CharacterBuilderService with required methods
-- UIStateManager with required methods
-- IEventBus with required methods
-- SchemaValidator with required methods
+**Missing validations that our controller needs:**
 
-### Step 5: Remove Redundant Field Assignments
+- UIStateManager - NOT validated by base class, must handle separately
+- Additional CharacterBuilderService methods: ['getAllThematicDirectionsWithConcepts', 'getOrphanedThematicDirections', 'updateThematicDirection', 'deleteThematicDirection'] - these are specific to this controller
 
-Since we're now using inherited properties (from THEDIRMIG-002), remove:
-```javascript
-// DELETE THESE LINES:
-this.#logger = logger;
-this.#characterBuilderService = characterBuilderService;
-this.#uiStateManager = uiStateManager;
-this.#eventBus = eventBus;
-this.#schemaValidator = schemaValidator;
-```
+**Resolution:** Use base class for core validation, add UIStateManager as additional service validation.
 
-### Step 6: Initialize Complex Objects
+### Step 5: Update Constructor Implementation
 
-If there are any complex initialization patterns, move them to lifecycle hooks:
-```javascript
-constructor(dependencies) {
-  super(dependencies);
-  
-  // Simple field initialization only
-  this.#currentFilter = '';
-  this.#currentConcept = null;
-  this.#directionsData = [];
-  this.#conceptsData = [];
-  this.#inPlaceEditors = new Map();
-  this.#conceptDropdown = null;
-  this.#pendingModalAction = null;
-  this.#orphanedCount = 0;
-  
-  // Complex initialization moved to _initializeAdditionalServices()
-}
-```
+**Note:** Core dependency assignments have already been removed (see line 78 comment in current code). Only UIStateManager assignment is needed since it's not handled by base class.
 
-### Step 7: Add JSDoc Documentation
+### Step 6: Final Constructor Structure
+
+The final constructor should focus on:
+
+1. Base class validation via super()
+2. Additional service validation (UIStateManager)
+3. Simple field initialization only
+
+Complex initialization (UIStateManager creation, dropdown setup, etc.) is already properly handled in the `initialize()` method.
+
+### Step 7: Updated JSDoc Documentation
 
 ```javascript
 /**
  * Creates an instance of ThematicDirectionsManagerController
  * @param {Object} dependencies - Injected dependencies
- * @param {ILogger} dependencies.logger - Logger instance
- * @param {CharacterBuilderService} dependencies.characterBuilderService - Service for character builder operations
- * @param {UIStateManager} dependencies.uiStateManager - UI state management
- * @param {IEventBus} dependencies.eventBus - Event bus for communication
- * @param {SchemaValidator} dependencies.schemaValidator - Schema validation service
+ * @param {ILogger} dependencies.logger - Logger instance (validated by base class)
+ * @param {CharacterBuilderService} dependencies.characterBuilderService - Service for character builder operations (validated by base class)
+ * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher (validated by base class)
+ * @param {ISchemaValidator} dependencies.schemaValidator - Schema validation service (validated by base class)
+ * @param {UIStateManager} dependencies.uiStateManager - UI state management (validated here)
  */
-constructor(dependencies) {
-  super(dependencies);
-  
-  // Initialize page-specific state
+constructor({ logger, characterBuilderService, eventBus, schemaValidator, uiStateManager }) {
+  super({ logger, characterBuilderService, eventBus, schemaValidator });
+
+  // Validate additional service not handled by base class
+  validateDependency(uiStateManager, 'UIStateManager', logger, {
+    requiredMethods: ['showState', 'showError']
+  });
+
+  this.#uiStateManager = uiStateManager;
+
+  // Initialize page-specific fields
   this.#currentFilter = '';
   this.#currentConcept = null;
   this.#directionsData = [];
-  this.#conceptsData = [];
   this.#inPlaceEditors = new Map();
-  this.#conceptDropdown = null;
-  this.#pendingModalAction = null;
-  this.#orphanedCount = 0;
 }
 ```
 
@@ -166,6 +159,7 @@ constructor(dependencies) {
 ### Step 1: Unit Test Verification
 
 Run existing constructor tests:
+
 ```bash
 npm test -- tests/unit/domUI/thematicDirectionsManagerController.test.js --grep "constructor"
 ```
@@ -173,14 +167,24 @@ npm test -- tests/unit/domUI/thematicDirectionsManagerController.test.js --grep 
 ### Step 2: Validation Error Testing
 
 Test that validation still works by passing invalid dependencies:
+
 ```javascript
-// This should throw an error (base class validation)
+// This should throw an error (base class validation for core dependencies)
 const controller = new ThematicDirectionsManagerController({
-  logger: null, // Invalid
+  logger: null, // Invalid - base class will catch this
   characterBuilderService: mockService,
-  uiStateManager: mockUIStateManager,
   eventBus: mockEventBus,
-  schemaValidator: mockValidator
+  schemaValidator: mockValidator,
+  uiStateManager: mockUIStateManager,
+});
+
+// This should throw an error (our additional validation)
+const controller2 = new ThematicDirectionsManagerController({
+  logger: mockLogger,
+  characterBuilderService: mockService,
+  eventBus: mockEventBus,
+  schemaValidator: mockValidator,
+  uiStateManager: null, // Invalid - our validation will catch this
 });
 ```
 
@@ -190,48 +194,50 @@ Ensure the controller initializes properly in the full application context.
 
 ## Code Comparison
 
-### Before (25+ lines):
+### Current (31 lines total, 28 lines of validation):
+
 ```javascript
-constructor({ logger, characterBuilderService, uiStateManager, eventBus, schemaValidator }) {
-  // 15-20 lines of validation
+constructor({ logger, characterBuilderService, eventBus, schemaValidator }) {
+  super({ logger, characterBuilderService, eventBus, schemaValidator });
+
+  // Keep existing validation for now (to be cleaned up in THEDIRMIG-003) - 25 lines
   validateDependency(logger, 'ILogger', logger, { ... });
   validateDependency(characterBuilderService, 'CharacterBuilderService', logger, { ... });
-  // ... more validation
-  
-  // 5-10 lines of assignment
-  this.#logger = logger;
-  this.#characterBuilderService = characterBuilderService;
-  // ... more assignments
-  
-  // Field initialization
-  this.#currentFilter = '';
-  // ... more fields
+  validateDependency(eventBus, 'ISafeEventDispatcher', logger, { ... });
+  validateDependency(schemaValidator, 'ISchemaValidator', logger, { ... });
+
+  // Dependencies are now handled by super() - assignments removed
 }
 ```
 
-### After (5-10 lines):
+### After (10-15 lines):
+
 ```javascript
-constructor(dependencies) {
-  super(dependencies); // All validation handled by base class
-  
-  // Page-specific field initialization only
+constructor({ logger, characterBuilderService, eventBus, schemaValidator, uiStateManager }) {
+  super({ logger, characterBuilderService, eventBus, schemaValidator }); // Base class handles core validation
+
+  // Validate additional service not handled by base class
+  validateDependency(uiStateManager, 'UIStateManager', logger, {
+    requiredMethods: ['showState', 'showError']
+  });
+
+  this.#uiStateManager = uiStateManager;
+
+  // Initialize page-specific fields only
   this.#currentFilter = '';
   this.#currentConcept = null;
   this.#directionsData = [];
-  this.#conceptsData = [];
   this.#inPlaceEditors = new Map();
-  this.#conceptDropdown = null;
-  this.#pendingModalAction = null;
-  this.#orphanedCount = 0;
 }
 ```
 
 ## Benefits Achieved
 
-1. **Code Reduction**: ~60-70% reduction in constructor size
-2. **Standardization**: Consistent validation across all character builder controllers
-3. **Maintainability**: Single source of truth for dependency validation
-4. **Clarity**: Constructor focused only on page-specific initialization
+1. **Code Reduction**: ~50% reduction in constructor size (31 → 15 lines)
+2. **Standardization**: Consistent core validation across all character builder controllers
+3. **Maintainability**: Reduced duplication by leveraging base class validation
+4. **Clarity**: Constructor focused on additional services and page-specific initialization
+5. **Correctness**: Proper handling of UIStateManager which was missing from base class
 
 ## Files Modified
 
@@ -243,12 +249,12 @@ constructor(dependencies) {
 
 ## Definition of Done
 
-- [ ] Constructor reduced to 5-10 lines
-- [ ] All manual validation removed
-- [ ] super() call added
-- [ ] Page-specific fields initialized
+- [ ] Constructor reduced to 10-15 lines (50% reduction)
+- [ ] Core dependency validation delegated to base class via super()
+- [ ] UIStateManager validation added as additional service
+- [ ] Page-specific fields initialized efficiently
 - [ ] No validation coverage lost
 - [ ] All existing tests pass
 - [ ] No runtime errors during initialization
-- [ ] JSDoc updated
+- [ ] JSDoc updated with correct dependency signature
 - [ ] Code committed with descriptive message

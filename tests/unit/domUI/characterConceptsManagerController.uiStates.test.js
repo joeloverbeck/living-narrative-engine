@@ -74,6 +74,5 @@ describe('CharacterConceptsManagerController - UI State Transitions', () => {
       // Assert - Should call base class _showState with 'results' after UIStateManager is ready
       expect(controller._showState).toHaveBeenCalledWith('results');
     });
-
   });
 });

@@ -3,8 +3,12 @@
  * @description Manages UI for viewing, editing, and organizing thematic directions
  */
 
+import { BaseCharacterBuilderController } from '../../characterBuilder/controllers/BaseCharacterBuilderController.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { UIStateManager } from '../../shared/characterBuilder/uiStateManager.js';
+import {
+  UIStateManager,
+  UI_STATES,
+} from '../../shared/characterBuilder/uiStateManager.js';
 import { PreviousItemsDropdown } from '../../shared/characterBuilder/previousItemsDropdown.js';
 import { InPlaceEditor } from '../../shared/characterBuilder/inPlaceEditor.js';
 
@@ -18,22 +22,12 @@ import { InPlaceEditor } from '../../shared/characterBuilder/inPlaceEditor.js';
  */
 
 /**
- * UI states for the thematic directions manager
- */
-const UI_STATES = {
-  EMPTY: 'empty',
-  LOADING: 'loading',
-  RESULTS: 'results',
-  ERROR: 'error',
-};
-
-/**
  * Controller for thematic directions manager interface
+ *
+ * @augments BaseCharacterBuilderController
  */
-export class ThematicDirectionsManagerController {
-  #logger;
-  #characterBuilderService;
-  #eventBus;
+export class ThematicDirectionsManagerController extends BaseCharacterBuilderController {
+  // Page-specific private fields only (base class provides logger, characterBuilderService, eventBus via getters)
   #uiStateManager;
   #conceptDropdown;
   #currentFilter = '';
@@ -54,6 +48,9 @@ export class ThematicDirectionsManagerController {
    * @param {ISchemaValidator} dependencies.schemaValidator - Schema validator
    */
   constructor({ logger, characterBuilderService, eventBus, schemaValidator }) {
+    super({ logger, characterBuilderService, eventBus, schemaValidator });
+
+    // Keep existing validation for now (to be cleaned up in THEDIRMIG-003)
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
     });
@@ -80,9 +77,7 @@ export class ThematicDirectionsManagerController {
       requiredMethods: ['validateAgainstSchema'],
     });
 
-    this.#logger = logger;
-    this.#characterBuilderService = characterBuilderService;
-    this.#eventBus = eventBus;
+    // Dependencies are now handled by super() - assignments removed
   }
 
   /**
@@ -111,7 +106,7 @@ export class ThematicDirectionsManagerController {
       });
 
       // Initialize service
-      await this.#characterBuilderService.initialize();
+      await this.characterBuilderService.initialize();
 
       // Set up event listeners
       this.#setupEventListeners();
@@ -119,11 +114,11 @@ export class ThematicDirectionsManagerController {
       // Load initial data
       await this.#loadDirectionsData();
 
-      this.#logger.info(
+      this.logger.info(
         'ThematicDirectionsManagerController: Successfully initialized'
       );
     } catch (error) {
-      this.#logger.error(
+      this.logger.error(
         'ThematicDirectionsManagerController: Failed to initialize',
         error
       );
@@ -260,7 +255,7 @@ export class ThematicDirectionsManagerController {
     try {
       // Load all directions with their concepts
       const directionsWithConcepts =
-        await this.#characterBuilderService.getAllThematicDirectionsWithConcepts();
+        await this.characterBuilderService.getAllThematicDirectionsWithConcepts();
 
       // Extract unique concepts that have associated directions
       const conceptsWithDirections = this.#extractConceptsWithDirections(
@@ -279,7 +274,7 @@ export class ThematicDirectionsManagerController {
       // Display directions
       this.#filterAndDisplayDirections();
 
-      this.#logger.info(
+      this.logger.info(
         'ThematicDirectionsManagerController: Loaded directions data',
         {
           directionCount: this.#directionsData.length,
@@ -287,7 +282,7 @@ export class ThematicDirectionsManagerController {
         }
       );
     } catch (error) {
-      this.#logger.error(
+      this.logger.error(
         'ThematicDirectionsManagerController: Failed to load directions',
         error
       );
@@ -582,7 +577,7 @@ export class ThematicDirectionsManagerController {
     try {
       // Update the direction
       const updates = { [fieldName]: newValue.trim() };
-      await this.#characterBuilderService.updateThematicDirection(
+      await this.characterBuilderService.updateThematicDirection(
         directionId,
         updates
       );
@@ -596,19 +591,19 @@ export class ThematicDirectionsManagerController {
       }
 
       // Dispatch update event
-      this.#eventBus.dispatch('core:direction_updated', {
+      this.eventBus.dispatch('core:direction_updated', {
         directionId,
         field: fieldName,
         oldValue: originalValue,
         newValue: newValue.trim(),
       });
 
-      this.#logger.info(
+      this.logger.info(
         'ThematicDirectionsManagerController: Updated direction field',
         { directionId, fieldName }
       );
     } catch (error) {
-      this.#logger.error(
+      this.logger.error(
         'ThematicDirectionsManagerController: Failed to update direction',
         error
       );
@@ -671,12 +666,12 @@ export class ThematicDirectionsManagerController {
       try {
         // Fetch the full character concept
         const concept =
-          await this.#characterBuilderService.getCharacterConcept(conceptId);
+          await this.characterBuilderService.getCharacterConcept(conceptId);
         if (concept) {
           this.#displayCharacterConcept(concept);
         }
       } catch (error) {
-        this.#logger.error(
+        this.logger.error(
           'ThematicDirectionsManagerController: Failed to load character concept',
           error
         );
@@ -707,7 +702,7 @@ export class ThematicDirectionsManagerController {
       `Are you sure you want to delete "${direction.title}"? This action cannot be undone.`,
       async () => {
         try {
-          await this.#characterBuilderService.deleteThematicDirection(
+          await this.characterBuilderService.deleteThematicDirection(
             direction.id
           );
 
@@ -721,16 +716,16 @@ export class ThematicDirectionsManagerController {
           this.#filterAndDisplayDirections();
 
           // Dispatch event
-          this.#eventBus.dispatch('core:direction_deleted', {
+          this.eventBus.dispatch('core:direction_deleted', {
             directionId: direction.id,
           });
 
-          this.#logger.info(
+          this.logger.info(
             'ThematicDirectionsManagerController: Deleted direction',
             { directionId: direction.id }
           );
         } catch (error) {
-          this.#logger.error(
+          this.logger.error(
             'ThematicDirectionsManagerController: Failed to delete direction',
             error
           );
@@ -766,7 +761,7 @@ export class ThematicDirectionsManagerController {
 
           // Delete each orphaned direction
           for (const direction of orphanedDirections) {
-            await this.#characterBuilderService.deleteThematicDirection(
+            await this.characterBuilderService.deleteThematicDirection(
               direction.id
             );
           }
@@ -781,11 +776,11 @@ export class ThematicDirectionsManagerController {
           this.#filterAndDisplayDirections();
 
           // Dispatch event
-          this.#eventBus.dispatch('core:orphans_cleaned', {
+          this.eventBus.dispatch('core:orphans_cleaned', {
             deletedCount: orphanedDirections.length,
           });
 
-          this.#logger.info(
+          this.logger.info(
             'ThematicDirectionsManagerController: Cleaned orphaned directions',
             { deletedCount: orphanedDirections.length }
           );
@@ -794,7 +789,7 @@ export class ThematicDirectionsManagerController {
             `Successfully deleted ${orphanedDirections.length} orphaned direction(s).`
           );
         } catch (error) {
-          this.#logger.error(
+          this.logger.error(
             'ThematicDirectionsManagerController: Failed to cleanup orphans',
             error
           );
@@ -944,6 +939,28 @@ export class ThematicDirectionsManagerController {
     // Force reflow for animation
     this.#elements.conceptDisplayContainer.offsetHeight;
     this.#elements.conceptDisplayContainer.classList.add('visible');
+  }
+
+  /**
+   * Cache DOM elements needed by the controller
+   *
+   * @protected
+   * @override
+   */
+  _cacheElements() {
+    // TODO: Implement in THEDIRMIG-004
+    throw new Error('_cacheElements() must be implemented');
+  }
+
+  /**
+   * Set up event listeners using base class helpers
+   *
+   * @protected
+   * @override
+   */
+  _setupEventListeners() {
+    // TODO: Implement in THEDIRMIG-005
+    throw new Error('_setupEventListeners() must be implemented');
   }
 }
 

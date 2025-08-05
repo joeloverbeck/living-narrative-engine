@@ -116,6 +116,7 @@ _postDestroy()                     // After cleanup (SYNC!)
 #### 1.1 Fix UIStateManager Import Issue
 
 **Current Issue**: The controller defines its own UI_STATES constant:
+
 ```javascript
 const UI_STATES = {
   EMPTY: 'empty',
@@ -126,6 +127,7 @@ const UI_STATES = {
 ```
 
 **Solution**: Import from shared UIStateManager:
+
 ```javascript
 import { UI_STATES } from '../shared/uiStateManager.js';
 ```
@@ -177,7 +179,7 @@ constructor({ logger, characterBuilderService, uiStateManager, eventBus, schemaV
 // AFTER (5-10 lines)
 constructor(dependencies) {
   super(dependencies); // Base class handles validation
-  
+
   // Initialize page-specific fields
   this.#currentFilter = '';
   this.#currentConcept = null;
@@ -186,7 +188,7 @@ constructor(dependencies) {
 }
 ```
 
-#### 2.2 Implement _cacheElements()
+#### 2.2 Implement \_cacheElements()
 
 ```javascript
 _cacheElements() {
@@ -194,42 +196,42 @@ _cacheElements() {
     // Container elements
     directionsContainer: '#directions-container',
     directionsList: '#directions-list',
-    
+
     // State containers (required for UIStateManager)
     emptyState: '#empty-state',
     loadingState: '#loading-state',
     errorState: '#error-state',
     resultsState: '#results-state',
     errorMessageText: '#error-message-text',
-    
+
     // Filter controls
     conceptFilter: '#concept-filter',
     directionFilter: '#direction-filter',
     filterClear: '#filter-clear',
-    
+
     // Action buttons
     refreshBtn: '#refresh-btn',
     retryBtn: '#retry-btn',
     cleanupOrphansBtn: '#cleanup-orphans-btn',
-    
+
     // Stats display
     totalDirections: '#total-directions',
     orphanedDirections: '#orphaned-directions',
-    
+
     // Modal elements
     confirmationModal: '#confirmation-modal',
     modalTitle: '#modal-title',
     modalMessage: '#modal-message',
     modalConfirmBtn: '#modal-confirm-btn',
     modalCancelBtn: '#modal-cancel-btn',
-    
+
     // Optional elements
     loadingSpinner: { selector: '.loading-spinner', required: false },
   });
 }
 ```
 
-#### 2.3 Implement _setupEventListeners()
+#### 2.3 Implement \_setupEventListeners()
 
 ```javascript
 _setupEventListeners() {
@@ -237,28 +239,28 @@ _setupEventListeners() {
   this._addEventListener('refreshBtn', 'click', () => this._loadDirectionsData());
   this._addEventListener('retryBtn', 'click', () => this._loadDirectionsData());
   this._addEventListener('cleanupOrphansBtn', 'click', () => this._handleCleanupOrphans());
-  
+
   // Filter handlers with debouncing
-  this._addDebouncedListener('directionFilter', 'input', 
+  this._addDebouncedListener('directionFilter', 'input',
     (e) => this._handleFilterChange(e.target.value), 300);
-  
+
   this._addEventListener('filterClear', 'click', () => this._clearFilters());
-  
+
   // Delegated event handlers for dynamic content
-  this._addDelegatedListener('directionsList', '.direction-card', 'click', 
+  this._addDelegatedListener('directionsList', '.direction-card', 'click',
     (e) => this._handleDirectionClick(e));
-  
-  this._addDelegatedListener('directionsList', '.delete-btn', 'click', 
+
+  this._addDelegatedListener('directionsList', '.delete-btn', 'click',
     (e) => this._handleDeleteClick(e));
-  
+
   // Modal handlers
   this._addEventListener('modalConfirmBtn', 'click', () => this._handleModalConfirm());
   this._addEventListener('modalCancelBtn', 'click', () => this._closeModal());
-  
+
   // Application events
-  this._subscribeToEvent('core:thematic_direction_updated', 
+  this._subscribeToEvent('core:thematic_direction_updated',
     (data) => this._handleDirectionUpdated(data));
-  this._subscribeToEvent('core:character_concept_updated', 
+  this._subscribeToEvent('core:character_concept_updated',
     (data) => this._handleConceptUpdated(data));
 }
 ```
@@ -289,7 +291,7 @@ _createInPlaceEditor(fieldId, config) {
     onCancel: config.onCancel,
     validation: config.validation,
   });
-  
+
   this.#inPlaceEditors.set(fieldId, editor);
   return editor;
 }
@@ -319,7 +321,7 @@ async _initializeAdditionalServices() {
     placeholder: 'Filter by concept...',
     allowClear: true,
   });
-  
+
   // Load concepts for dropdown
   await this._loadConceptsForDropdown();
 }
@@ -343,13 +345,13 @@ _showConfirmationModal(title, message, onConfirm) {
   // Update modal content
   this._setElementText('modalTitle', title);
   this._setElementText('modalMessage', message);
-  
+
   // Store callback for confirmation
   this.#pendingModalAction = onConfirm;
-  
+
   // Show modal
   this._showElement('confirmationModal');
-  
+
   // Focus on confirm button for accessibility
   this._getElement('modalConfirmBtn')?.focus();
 }
@@ -379,7 +381,7 @@ async _loadInitialData() {
 
 async _initializeUIState() {
   await super._initializeUIState(); // Initialize UIStateManager
-  
+
   // Set initial state based on data
   if (this.#directionsData.length > 0) {
     this._displayDirections();
@@ -393,24 +395,24 @@ async _initializeUIState() {
 async _loadDirectionsData() {
   try {
     this._showLoading('Loading thematic directions...');
-    
+
     const [directions, concepts] = await this._executeWithErrorHandling(
       () => Promise.all([
         this.characterBuilderService.getAllThematicDirectionsWithConcepts(),
         this.characterBuilderService.getAllCharacterConcepts()
       ]),
       'load directions data',
-      { 
-        retries: 2, 
-        userErrorMessage: 'Failed to load thematic directions. Please try again.' 
+      {
+        retries: 2,
+        userErrorMessage: 'Failed to load thematic directions. Please try again.'
       }
     );
-    
+
     this.#directionsData = directions;
     this.#conceptsData = concepts;
-    
+
     this._processAndDisplayData();
-    
+
   } catch (error) {
     // Error already handled by _executeWithErrorHandling
     this.logger.error('Failed to load directions data', error);
@@ -425,53 +427,56 @@ async _loadDirectionsData() {
 **Challenge**: ~25-30 InPlaceEditor instances need proper initialization and cleanup
 
 **Solution**:
+
 ```javascript
 class ThematicDirectionsManagerController extends BaseCharacterBuilderController {
   #inPlaceEditors = new Map();
-  
+
   _displayDirections() {
     // Clear existing editors before creating new ones
     this._cleanupInPlaceEditors();
-    
+
     // Create direction cards with editors
-    const html = this.#directionsData.map(direction => 
-      this._createDirectionCard(direction)
-    ).join('');
-    
+    const html = this.#directionsData
+      .map((direction) => this._createDirectionCard(direction))
+      .join('');
+
     this._getElement('directionsList').innerHTML = html;
-    
+
     // Initialize editors for displayed directions
-    this.#directionsData.forEach(direction => {
+    this.#directionsData.forEach((direction) => {
       this._initializeDirectionEditors(direction.id);
     });
   }
-  
+
   _initializeDirectionEditors(directionId) {
     const editorConfigs = [
       { field: 'name', maxLength: 100 },
       { field: 'description', maxLength: 500 },
       { field: 'tags', maxLength: 200, parser: this._parseTags },
     ];
-    
-    editorConfigs.forEach(config => {
+
+    editorConfigs.forEach((config) => {
       const elementId = `${directionId}-${config.field}`;
       const element = document.getElementById(elementId);
-      
+
       if (element) {
         this._createInPlaceEditor(elementId, {
-          onSave: (value) => this._updateDirection(directionId, config.field, value),
-          validation: (value) => this._validateField(config.field, value, config.maxLength),
+          onSave: (value) =>
+            this._updateDirection(directionId, config.field, value),
+          validation: (value) =>
+            this._validateField(config.field, value, config.maxLength),
           parser: config.parser,
         });
       }
     });
   }
-  
+
   _cleanupInPlaceEditors() {
-    this.#inPlaceEditors.forEach(editor => editor.destroy());
+    this.#inPlaceEditors.forEach((editor) => editor.destroy());
     this.#inPlaceEditors.clear();
   }
-  
+
   _preDestroy() {
     this._cleanupInPlaceEditors();
   }
@@ -483,6 +488,7 @@ class ThematicDirectionsManagerController extends BaseCharacterBuilderController
 **Challenge**: Dynamic event handlers and state management for modals
 
 **Solution**:
+
 ```javascript
 // Centralized modal management
 class ModalManager {
@@ -491,27 +497,27 @@ class ModalManager {
     this.activeModal = null;
     this.modalStack = [];
   }
-  
+
   show(modalId, config) {
     if (this.activeModal) {
       this.modalStack.push(this.activeModal);
     }
-    
+
     this.activeModal = { modalId, config };
     this.controller._showElement(modalId);
-    
+
     // Handle ESC key
     this.escHandler = (e) => {
       if (e.key === 'Escape') this.close();
     };
     document.addEventListener('keydown', this.escHandler);
   }
-  
+
   close() {
     if (this.activeModal) {
       this.controller._hideElement(this.activeModal.modalId);
       document.removeEventListener('keydown', this.escHandler);
-      
+
       this.activeModal = this.modalStack.pop() || null;
       if (this.activeModal) {
         this.controller._showElement(this.activeModal.modalId);
@@ -531,6 +537,7 @@ _initializeAdditionalServices() {
 **Challenge**: Current controller lacks proper cleanup, risking memory leaks
 
 **Solution**: Base controller provides comprehensive cleanup
+
 ```javascript
 // Base controller automatically handles:
 // - Event listener removal
@@ -541,12 +548,12 @@ _initializeAdditionalServices() {
 _preDestroy() {
   // Clean up InPlaceEditors
   this._cleanupInPlaceEditors();
-  
+
   // Clean up PreviousItemsDropdown
   if (this.#conceptDropdown) {
     this.#conceptDropdown.destroy();
   }
-  
+
   // Clean up any pending operations
   if (this.#pendingModalAction) {
     this.#pendingModalAction = null;
@@ -559,29 +566,30 @@ _preDestroy() {
 **Challenge**: Multi-criteria filtering with performance considerations
 
 **Solution**:
+
 ```javascript
 // Optimize with memoization and efficient filtering
 _createFilteredDataGetter() {
   let cachedFilter = null;
   let cachedConcept = null;
   let cachedResults = null;
-  
+
   return () => {
-    if (cachedFilter === this.#currentFilter && 
-        cachedConcept === this.#currentConcept && 
+    if (cachedFilter === this.#currentFilter &&
+        cachedConcept === this.#currentConcept &&
         cachedResults !== null) {
       return cachedResults;
     }
-    
+
     cachedFilter = this.#currentFilter;
     cachedConcept = this.#currentConcept;
-    
+
     cachedResults = this.#directionsData.filter(direction => {
       // Filter by concept
       if (this.#currentConcept && direction.conceptId !== this.#currentConcept) {
         return false;
       }
-      
+
       // Filter by search term
       if (this.#currentFilter) {
         const searchLower = this.#currentFilter.toLowerCase();
@@ -589,10 +597,10 @@ _createFilteredDataGetter() {
                direction.description.toLowerCase().includes(searchLower) ||
                direction.tags.some(tag => tag.toLowerCase().includes(searchLower));
       }
-      
+
       return true;
     });
-    
+
     return cachedResults;
   };
 }
@@ -602,13 +610,13 @@ _createFilteredDataGetter() {
 
 ### Risk Matrix
 
-| Risk | Likelihood | Impact | Mitigation Strategy |
-|------|------------|--------|-------------------|
-| InPlaceEditor integration issues | Medium | High | Phased migration with thorough testing of editor lifecycle |
-| Modal system regression | Low | Medium | Maintain existing modal logic, wrap with base controller helpers |
-| Performance degradation | Low | Medium | Profile before/after, optimize critical paths |
-| Test suite failures | High | Low | Update tests incrementally during migration |
-| Memory leaks | Low | High | Leverage base controller cleanup, add custom cleanup hooks |
+| Risk                             | Likelihood | Impact | Mitigation Strategy                                              |
+| -------------------------------- | ---------- | ------ | ---------------------------------------------------------------- |
+| InPlaceEditor integration issues | Medium     | High   | Phased migration with thorough testing of editor lifecycle       |
+| Modal system regression          | Low        | Medium | Maintain existing modal logic, wrap with base controller helpers |
+| Performance degradation          | Low        | Medium | Profile before/after, optimize critical paths                    |
+| Test suite failures              | High       | Low    | Update tests incrementally during migration                      |
+| Memory leaks                     | Low        | High   | Leverage base controller cleanup, add custom cleanup hooks       |
 
 ### Mitigation Strategies
 
@@ -623,12 +631,12 @@ class ThematicDirectionsManagerController extends BaseCharacterBuilderController
     await super.initialize();
     // Additional initialization if needed
   }
-  
+
   // Implement required methods that delegate to existing
   _cacheElements() {
     this.#cacheElements(); // Call existing method
   }
-  
+
   _setupEventListeners() {
     this.#setupEventListeners(); // Call existing method
   }
@@ -647,19 +655,19 @@ class InPlaceEditorWrapper {
     this.controller = baseController;
     this.editors = new Map();
   }
-  
+
   create(id, config) {
     const editor = new InPlaceEditor(config);
     this.editors.set(id, editor);
-    
+
     // Track for automatic cleanup
     this.controller._trackResource(editor);
-    
+
     return editor;
   }
-  
+
   destroyAll() {
-    this.editors.forEach(editor => editor.destroy());
+    this.editors.forEach((editor) => editor.destroy());
     this.editors.clear();
   }
 }
@@ -673,15 +681,15 @@ describe('ThematicDirectionsManagerController Migration', () => {
   it('should maintain InPlaceEditor functionality after migration', async () => {
     // Test editor creation, updates, and cleanup
   });
-  
+
   it('should preserve modal behavior', async () => {
     // Test modal show, confirm, cancel flows
   });
-  
+
   it('should handle complex filtering correctly', async () => {
     // Test multi-criteria filtering
   });
-  
+
   it('should clean up all resources on destroy', async () => {
     // Verify no memory leaks
   });
@@ -700,7 +708,7 @@ import { ThematicDirectionsManagerController } from '../thematicDirectionsManage
 describe('ThematicDirectionsManagerController', () => {
   let controller;
   let mockDependencies;
-  
+
   beforeEach(() => {
     mockDependencies = createMockDependencies();
     controller = new ThematicDirectionsManagerController(mockDependencies);
@@ -713,17 +721,17 @@ import { ThematicDirectionsManagerController } from '../thematicDirectionsManage
 
 describe('ThematicDirectionsManagerController', () => {
   const testBase = new BaseCharacterBuilderControllerTestBase();
-  
+
   beforeEach(async () => {
     await testBase.setup();
     testBase.addDOMElement(/* thematic directions specific DOM */);
   });
-  
+
   afterEach(async () => {
     await testBase.cleanup();
   });
-  
-  testBase.createController = function() {
+
+  testBase.createController = function () {
     return new ThematicDirectionsManagerController(this.mocks);
   };
 });
@@ -739,11 +747,11 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
   it('should handle missing InPlaceEditor gracefully', async () => {
     // Test behavior when InPlaceEditor fails to initialize
   });
-  
+
   it('should warn when concept dropdown data is unavailable', async () => {
     // Test graceful degradation
   });
-  
+
   it('should handle orphaned directions edge cases', async () => {
     // Test edge cases in cleanup operations
   });
@@ -753,25 +761,29 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
 ## Implementation Timeline
 
 ### Week 1: Foundation (Days 1-5)
+
 - [ ] Create feature branch
 - [ ] Fix UIStateManager import issue
 - [ ] Extend BaseCharacterBuilderController
-- [ ] Implement _cacheElements() and _setupEventListeners()
+- [ ] Implement \_cacheElements() and \_setupEventListeners()
 - [ ] Verify basic functionality
 
 ### Week 2: Core Migration (Days 6-10)
+
 - [ ] Migrate initialization to lifecycle hooks
 - [ ] Update field access patterns
 - [ ] Integrate UIStateManager properly
 - [ ] Implement error handling patterns
 
 ### Week 3: Component Integration (Days 11-15)
+
 - [ ] Implement InPlaceEditor lifecycle management
 - [ ] Integrate PreviousItemsDropdown
 - [ ] Migrate modal system
 - [ ] Add proper cleanup in destroy hooks
 
 ### Week 4: Testing and Polish (Days 16-20)
+
 - [ ] Update all test files
 - [ ] Add warning test scenarios
 - [ ] Performance validation
@@ -781,6 +793,7 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
 ## Success Criteria
 
 ### Functional Requirements
+
 1. ✅ All existing features work identically
 2. ✅ InPlaceEditor functionality preserved
 3. ✅ Modal workflows operate correctly
@@ -788,6 +801,7 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
 5. ✅ Cross-concept relationships maintained
 
 ### Technical Requirements
+
 1. ✅ Code reduction of 35-45% achieved
 2. ✅ All tests pass (updated for new structure)
 3. ✅ No memory leaks (proper cleanup)
@@ -795,6 +809,7 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
 5. ✅ Follows base controller patterns
 
 ### Quality Requirements
+
 1. ✅ Improved maintainability score
 2. ✅ Consistent error handling
 3. ✅ Proper resource cleanup
@@ -804,30 +819,35 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
 ## Validation Checklist
 
 ### Pre-Migration
+
 - [ ] All existing tests pass
 - [ ] Performance baseline recorded
 - [ ] Feature checklist created
 - [ ] Backup of current implementation
 
 ### Post-Migration Phase 1
+
 - [ ] Controller extends BaseCharacterBuilderController
 - [ ] Required methods implemented
 - [ ] Basic initialization works
 - [ ] Existing tests still pass
 
 ### Post-Migration Phase 2
+
 - [ ] Lifecycle hooks properly utilized
 - [ ] State management integrated
 - [ ] Error handling standardized
 - [ ] InPlaceEditors working correctly
 
 ### Post-Migration Phase 3
+
 - [ ] All components integrated
 - [ ] Modal system functional
 - [ ] Filtering/search operational
 - [ ] Proper cleanup on destroy
 
 ### Final Validation
+
 - [ ] All tests pass (including new ones)
 - [ ] Performance acceptable
 - [ ] No memory leaks detected
@@ -857,7 +877,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
 
   constructor(dependencies) {
     super(dependencies);
-    
+
     // Initialize filter optimization
     this.#getFilteredData = this._createFilteredDataGetter();
   }
@@ -868,14 +888,14 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
       // Containers
       directionsContainer: '#directions-container',
       directionsList: '#directions-list',
-      
+
       // UIStateManager elements
       emptyState: '#empty-state',
       loadingState: '#loading-state',
       errorState: '#error-state',
       resultsState: '#results-state',
       errorMessageText: '#error-message-text',
-      
+
       // Controls
       conceptFilter: '#concept-filter',
       directionFilter: '#direction-filter',
@@ -883,11 +903,11 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
       refreshBtn: '#refresh-btn',
       retryBtn: '#retry-btn',
       cleanupOrphansBtn: '#cleanup-orphans-btn',
-      
+
       // Stats
       totalDirections: '#total-directions',
       orphanedDirections: '#orphaned-directions',
-      
+
       // Modal
       confirmationModal: '#confirmation-modal',
       modalTitle: '#modal-title',
@@ -899,28 +919,46 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
 
   _setupEventListeners() {
     // Action buttons
-    this._addEventListener('refreshBtn', 'click', () => this._loadDirectionsData());
-    this._addEventListener('retryBtn', 'click', () => this._loadDirectionsData());
-    this._addEventListener('cleanupOrphansBtn', 'click', () => this._handleCleanupOrphans());
-    
+    this._addEventListener('refreshBtn', 'click', () =>
+      this._loadDirectionsData()
+    );
+    this._addEventListener('retryBtn', 'click', () =>
+      this._loadDirectionsData()
+    );
+    this._addEventListener('cleanupOrphansBtn', 'click', () =>
+      this._handleCleanupOrphans()
+    );
+
     // Filters
-    this._addDebouncedListener('directionFilter', 'input', 
-      (e) => this._handleFilterChange(e.target.value), 300);
+    this._addDebouncedListener(
+      'directionFilter',
+      'input',
+      (e) => this._handleFilterChange(e.target.value),
+      300
+    );
     this._addEventListener('filterClear', 'click', () => this._clearFilters());
-    
+
     // Dynamic content delegation
-    this._addDelegatedListener('directionsList', '.direction-card', 'click', 
-      (e) => this._handleDirectionClick(e));
-    this._addDelegatedListener('directionsList', '.delete-btn', 'click', 
-      (e) => this._handleDeleteClick(e));
-    
+    this._addDelegatedListener(
+      'directionsList',
+      '.direction-card',
+      'click',
+      (e) => this._handleDirectionClick(e)
+    );
+    this._addDelegatedListener('directionsList', '.delete-btn', 'click', (e) =>
+      this._handleDeleteClick(e)
+    );
+
     // Modal
-    this._addEventListener('modalConfirmBtn', 'click', () => this._handleModalConfirm());
+    this._addEventListener('modalConfirmBtn', 'click', () =>
+      this._handleModalConfirm()
+    );
     this._addEventListener('modalCancelBtn', 'click', () => this._closeModal());
-    
+
     // App events
-    this._subscribeToEvent('core:thematic_direction_updated', 
-      (data) => this._handleDirectionUpdated(data));
+    this._subscribeToEvent('core:thematic_direction_updated', (data) =>
+      this._handleDirectionUpdated(data)
+    );
   }
 
   // Lifecycle implementations
@@ -932,7 +970,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
       placeholder: 'Filter by concept...',
       allowClear: true,
     });
-    
+
     await this._loadConceptsForDropdown();
   }
 
@@ -942,7 +980,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
 
   async _initializeUIState() {
     await super._initializeUIState();
-    
+
     if (this.#directionsData.length > 0) {
       this._displayDirections();
       this._showState('results');

@@ -17,9 +17,9 @@ Migrate the existing initialization and lifecycle methods to use the BaseCharact
 ## Acceptance Criteria
 
 - [ ] Current initialize() method logic distributed to appropriate hooks
-- [ ] Data loading moved to _loadInitialData()
-- [ ] UI state initialization in _initializeUIState()
-- [ ] Additional services setup in _initializeAdditionalServices()
+- [ ] Data loading moved to \_loadInitialData()
+- [ ] UI state initialization in \_initializeUIState()
+- [ ] Additional services setup in \_initializeAdditionalServices()
 - [ ] Initialization order preserved
 - [ ] No duplicate initialization
 - [ ] Error handling maintained
@@ -38,6 +38,7 @@ grep -A 30 "async initialize" src/thematicDirectionsManager/controllers/thematic
 ```
 
 Typical flow:
+
 1. Cache DOM elements
 2. Setup event listeners
 3. Initialize UI components
@@ -48,6 +49,7 @@ Typical flow:
 ### Step 2: Map to Base Controller Lifecycle
 
 Base controller lifecycle order:
+
 1. `constructor()` - Basic field initialization
 2. `initialize()` - Base class method (calls hooks in order):
    - `_preInitialize()` - Pre-initialization setup
@@ -58,7 +60,7 @@ Base controller lifecycle order:
    - `_initializeUIState()` - Setup UI state
    - `_postInitialize()` - Final setup
 
-### Step 3: Implement _preInitialize()
+### Step 3: Implement \_preInitialize()
 
 Optional hook for early setup:
 
@@ -71,16 +73,16 @@ Optional hook for early setup:
  */
 async _preInitialize() {
   await super._preInitialize();
-  
+
   // Initialize any early state or utilities
   this.#filterManager = this._createFilterManager();
   this.#getFilteredData = this._createFilteredDataGetter();
-  
+
   this.logger.debug('ThematicDirectionsManager: Pre-initialization complete');
 }
 ```
 
-### Step 4: Implement _initializeAdditionalServices()
+### Step 4: Implement \_initializeAdditionalServices()
 
 Initialize components that aren't core dependencies:
 
@@ -93,7 +95,7 @@ Initialize components that aren't core dependencies:
  */
 async _initializeAdditionalServices() {
   await super._initializeAdditionalServices();
-  
+
   // Initialize concept dropdown
   this.#conceptDropdown = new PreviousItemsDropdown({
     element: this._getElement('conceptFilter'),
@@ -102,18 +104,18 @@ async _initializeAdditionalServices() {
     allowClear: true,
     storageKey: 'thematic-directions-concept-filter'
   });
-  
+
   // Initialize modal manager if using custom modal system
   this.#modalManager = new ModalManager(this);
-  
+
   // Load concepts for dropdown
   await this._loadConceptsForDropdown();
-  
+
   this.logger.debug('Additional services initialized');
 }
 ```
 
-### Step 5: Implement _loadInitialData()
+### Step 5: Implement \_loadInitialData()
 
 Move data loading logic here:
 
@@ -128,7 +130,7 @@ async _loadInitialData() {
   try {
     // Show loading state while fetching
     this._showLoading('Loading thematic directions...');
-    
+
     // Fetch all required data in parallel
     const [directions, concepts, orphanedCount] = await this._executeWithErrorHandling(
       () => Promise.all([
@@ -137,22 +139,22 @@ async _loadInitialData() {
         this.characterBuilderService.getOrphanedThematicDirections()
       ]),
       'load initial data',
-      { 
+      {
         retries: 2,
         userErrorMessage: 'Failed to load thematic directions. Please try again.'
       }
     );
-    
+
     // Store the data
     this.#directionsData = directions || [];
     this.#conceptsData = concepts || [];
     this.#orphanedCount = orphanedCount?.length || 0;
-    
+
     // Process data if needed
     this._processDirectionsData();
-    
+
     this.logger.info(`Loaded ${this.#directionsData.length} directions, ${this.#orphanedCount} orphaned`);
-    
+
   } catch (error) {
     // Error already handled by _executeWithErrorHandling
     this.logger.error('Failed to load initial data', error);
@@ -161,7 +163,7 @@ async _loadInitialData() {
 }
 ```
 
-### Step 6: Implement _initializeUIState()
+### Step 6: Implement \_initializeUIState()
 
 Set up the initial UI state based on loaded data:
 
@@ -174,16 +176,16 @@ Set up the initial UI state based on loaded data:
  */
 async _initializeUIState() {
   await super._initializeUIState(); // Initializes UIStateManager
-  
+
   // Update stats displays
   this._updateStats();
-  
+
   // Determine and show appropriate state
   if (this.#directionsData.length > 0) {
     // Display the directions
     this._displayDirections();
     this._showState(UI_STATES.RESULTS);
-    
+
     // Restore previous filters if any
     this._restoreFilterState();
   } else {
@@ -191,14 +193,14 @@ async _initializeUIState() {
     this._showState(UI_STATES.EMPTY);
     this._updateEmptyStateMessage();
   }
-  
+
   // Initialize any UI-specific features
   this._initializeTooltips();
   this._initializeSortOptions();
 }
 ```
 
-### Step 7: Implement _postInitialize()
+### Step 7: Implement \_postInitialize()
 
 Final initialization tasks:
 
@@ -211,26 +213,26 @@ Final initialization tasks:
  */
 async _postInitialize() {
   await super._postInitialize();
-  
+
   // Set up keyboard shortcuts
   this._initializeKeyboardShortcuts();
-  
+
   // Start any background processes
   this._startAutoSave();
-  
+
   // Focus initial element
   const filterInput = this._getElement('directionFilter');
   if (filterInput && !this._hasActiveModal()) {
     filterInput.focus();
   }
-  
+
   // Log successful initialization
   this.logger.info('ThematicDirectionsManagerController initialized successfully', {
     directionsCount: this.#directionsData.length,
     conceptsCount: this.#conceptsData.length,
     orphanedCount: this.#orphanedCount
   });
-  
+
   // Dispatch initialization complete event
   this.eventBus.dispatch({
     type: 'THEMATIC_DIRECTIONS_MANAGER_INITIALIZED',
@@ -251,10 +253,10 @@ async initialize() {
   try {
     // Cache DOM elements
     this.#cacheElements();
-    
+
     // Setup event listeners
     this.#setupEventListeners();
-    
+
     // ... rest of old initialization
   } catch (error) {
     this.#logger.error('Failed to initialize', error);
@@ -268,6 +270,7 @@ async initialize() {
 Update how the controller is initialized:
 
 **Before**:
+
 ```javascript
 // In thematicDirectionsManagerMain.js
 const controller = new ThematicDirectionsManagerController(dependencies);
@@ -275,6 +278,7 @@ await controller.initialize();
 ```
 
 **After**:
+
 ```javascript
 // In thematicDirectionsManagerMain.js
 const controller = new ThematicDirectionsManagerController(dependencies);
@@ -283,7 +287,7 @@ await controller.initialize(); // Now calls base class initialize()
 
 ## Error Handling Patterns
 
-### Use _executeWithErrorHandling
+### Use \_executeWithErrorHandling
 
 ```javascript
 async _loadInitialData() {
@@ -300,7 +304,7 @@ async _loadInitialData() {
       fallbackValue: []          // Return empty array on failure
     }
   );
-  
+
   this.#directionsData = data;
 }
 ```
@@ -366,25 +370,28 @@ async _postInitialize() {
 describe('Lifecycle Methods', () => {
   it('should load initial data on initialization', async () => {
     const mockDirections = [{ id: 1, name: 'Direction 1' }];
-    mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
-      .mockResolvedValue(mockDirections);
-    
+    mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+      mockDirections
+    );
+
     await controller.initialize();
-    
-    expect(mockCharacterBuilderService.getAllThematicDirectionsWithConcepts)
-      .toHaveBeenCalled();
-    expect(controller._getElement('directionsList').children.length)
-      .toBe(mockDirections.length);
+
+    expect(
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
+    ).toHaveBeenCalled();
+    expect(controller._getElement('directionsList').children.length).toBe(
+      mockDirections.length
+    );
   });
-  
+
   it('should show empty state when no data', async () => {
-    mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
-      .mockResolvedValue([]);
-    
+    mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+      []
+    );
+
     await controller.initialize();
-    
-    expect(mockUIStateManager.setState)
-      .toHaveBeenCalledWith(UI_STATES.EMPTY);
+
+    expect(mockUIStateManager.setState).toHaveBeenCalledWith(UI_STATES.EMPTY);
   });
 });
 ```
@@ -392,11 +399,11 @@ describe('Lifecycle Methods', () => {
 ## Migration Checklist
 
 - [ ] Current initialize() analyzed
-- [ ] _preInitialize() implemented (if needed)
-- [ ] _initializeAdditionalServices() implemented
-- [ ] _loadInitialData() implemented
-- [ ] _initializeUIState() implemented
-- [ ] _postInitialize() implemented
+- [ ] \_preInitialize() implemented (if needed)
+- [ ] \_initializeAdditionalServices() implemented
+- [ ] \_loadInitialData() implemented
+- [ ] \_initializeUIState() implemented
+- [ ] \_postInitialize() implemented
 - [ ] Old initialize() method removed
 - [ ] Entry point updated (if needed)
 - [ ] Error handling preserved

@@ -39,6 +39,7 @@ grep -n "showElement\|hideElement" src/thematicDirectionsManager/controllers/the
 ```
 
 Common patterns to replace:
+
 - `this.#uiStateManager.setState(UI_STATES.LOADING)`
 - `this.#uiStateManager.setState(UI_STATES.ERROR, errorMessage)`
 - `this.#uiStateManager.showElement('elementId')`
@@ -87,7 +88,7 @@ async _loadDirectionsData() {
   try {
     // Show contextual loading message
     this._showLoading('Loading thematic directions...');
-    
+
     const [directions, concepts, orphaned] = await this._executeWithErrorHandling(
       () => Promise.all([
         this.characterBuilderService.getAllThematicDirectionsWithConcepts(),
@@ -100,15 +101,15 @@ async _loadDirectionsData() {
         userErrorMessage: 'Unable to load thematic directions. Please check your connection and try again.'
       }
     );
-    
+
     // Update data
     this.#directionsData = directions || [];
     this.#conceptsData = concepts || [];
     this.#orphanedCount = orphaned?.length || 0;
-    
+
     // Show appropriate state based on data
     this._updateUIStateBasedOnData();
-    
+
   } catch (error) {
     // Error already shown by _executeWithErrorHandling
     this.logger.error('Failed to load directions:', error);
@@ -121,7 +122,7 @@ async _loadDirectionsData() {
  */
 _updateUIStateBasedOnData() {
   const filteredDirections = this._getFilteredDirections();
-  
+
   if (this.#directionsData.length === 0) {
     // No data at all
     this._showState(UI_STATES.EMPTY);
@@ -135,7 +136,7 @@ _updateUIStateBasedOnData() {
     this._displayDirections();
     this._showState(UI_STATES.RESULTS);
   }
-  
+
   // Always update stats
   this._updateStats();
 }
@@ -152,7 +153,7 @@ _updateUIStateBasedOnData() {
 async _deleteDirection(directionId) {
   try {
     this._showLoading('Deleting thematic direction...');
-    
+
     await this._executeWithErrorHandling(
       () => this.characterBuilderService.deleteThematicDirection(directionId),
       'delete direction',
@@ -161,20 +162,20 @@ async _deleteDirection(directionId) {
         userErrorMessage: 'Failed to delete the direction. Please try again.'
       }
     );
-    
+
     // Remove from local data
     this.#directionsData = this.#directionsData.filter(d => d.id !== directionId);
-    
+
     // Update UI
     this._updateUIStateBasedOnData();
     this._showSuccess('Thematic direction deleted successfully');
-    
+
     // Dispatch event
     this.eventBus.dispatch({
       type: 'core:thematic_direction_deleted',
       payload: { directionId }
     });
-    
+
   } catch (error) {
     // Show error with recovery option
     this._showErrorWithRetry(
@@ -193,10 +194,10 @@ async _deleteDirection(directionId) {
 _showErrorWithRetry(message, retryCallback) {
   // Update error message
   this._showError(message);
-  
+
   // Store retry callback
   this.#pendingRetryAction = retryCallback;
-  
+
   // Make sure retry button is visible and wired up
   const retryBtn = this._getElement('retryBtn');
   if (retryBtn) {
@@ -216,12 +217,12 @@ _showErrorWithRetry(message, retryCallback) {
 _updateEmptyStateMessage(message) {
   const emptyStateElement = this._getElement('emptyState');
   if (!emptyStateElement) return;
-  
+
   const messageElement = emptyStateElement.querySelector('.empty-message');
   if (messageElement) {
     messageElement.textContent = message || this._getDefaultEmptyMessage();
   }
-  
+
   // Update action button visibility based on context
   this._updateEmptyStateActions();
 }
@@ -235,11 +236,11 @@ _getDefaultEmptyMessage() {
   if (this.#currentFilter || this.#currentConcept) {
     return 'No thematic directions match your filters. Try adjusting your search criteria.';
   }
-  
+
   if (this.#directionsData.length === 0) {
     return 'No thematic directions found. Create your first direction to get started.';
   }
-  
+
   return 'No directions to display.';
 }
 
@@ -249,7 +250,7 @@ _getDefaultEmptyMessage() {
  */
 _updateEmptyStateActions() {
   const hasFilters = this.#currentFilter || this.#currentConcept;
-  
+
   // Show/hide appropriate actions
   if (hasFilters) {
     this._showElement('filterClear');
@@ -272,7 +273,7 @@ _updateEmptyStateActions() {
  */
 _showLoadingWithProgress(message, options = {}) {
   this._showLoading(message);
-  
+
   if (options.showProgress) {
     // Update loading state to show progress
     const loadingState = this._getElement('loadingState');
@@ -284,7 +285,7 @@ _showLoadingWithProgress(message, options = {}) {
       }
     }
   }
-  
+
   if (options.showCancel) {
     // Add cancel button to loading state
     this._addLoadingCancelButton(options.onCancel);
@@ -315,9 +316,9 @@ _updateProgress(percent) {
 _applyFilters() {
   // Don't show loading for instant operations
   // Just update the display
-  
+
   const filteredCount = this._getFilteredDirections().length;
-  
+
   if (filteredCount === 0 && this.#directionsData.length > 0) {
     // Show empty state with filter message
     this._showState(UI_STATES.EMPTY);
@@ -327,10 +328,10 @@ _applyFilters() {
     this._displayDirections();
     this._showState(UI_STATES.RESULTS);
   }
-  
+
   // Update stats to show filtered count
   this._updateStats();
-  
+
   // Update filter indicators
   this._updateFilterIndicators();
 }
@@ -341,14 +342,14 @@ _applyFilters() {
  */
 _updateFilterIndicators() {
   const hasActiveFilters = this.#currentFilter || this.#currentConcept;
-  
+
   // Show/hide clear button
   if (hasActiveFilters) {
     this._showElement('filterClear');
   } else {
     this._hideElement('filterClear');
   }
-  
+
   // Update active filter display
   const activeFiltersElement = this._getElement('activeFilters');
   if (activeFiltersElement) {
@@ -388,10 +389,10 @@ _showSuccess(message, duration = 3000) {
     notification.className = 'notification notification-success';
     document.body.appendChild(notification);
   }
-  
+
   notification.textContent = message;
   notification.classList.add('notification-visible');
-  
+
   // Auto-hide after duration
   clearTimeout(this.#notificationTimeout);
   this.#notificationTimeout = setTimeout(() => {
@@ -421,7 +422,7 @@ this.#uiStateManager.updateErrorMessage('message');
 ```javascript
 async _performOperation() {
   this._showLoading('Processing...');
-  
+
   try {
     const result = await this._doAsyncWork();
     this._processResult(result);
@@ -438,7 +439,7 @@ async _performOperation() {
 _handleFilterChange(filterValue) {
   this.#currentFilter = filterValue;
   const filtered = this._getFilteredDirections();
-  
+
   if (filtered.length === 0) {
     this._showState(UI_STATES.EMPTY);
     this._updateEmptyStateMessage('No matches found.');
@@ -471,31 +472,35 @@ _handleRetryClick() {
 describe('State Management', () => {
   it('should show loading state during data fetch', async () => {
     const showLoadingSpy = jest.spyOn(controller, '_showLoading');
-    
+
     const promise = controller._loadDirectionsData();
-    
-    expect(showLoadingSpy).toHaveBeenCalledWith('Loading thematic directions...');
-    
+
+    expect(showLoadingSpy).toHaveBeenCalledWith(
+      'Loading thematic directions...'
+    );
+
     await promise;
   });
-  
+
   it('should show empty state when no data', async () => {
-    mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
-      .mockResolvedValue([]);
-    
+    mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+      []
+    );
+
     await controller._loadInitialData();
     controller._initializeUIState();
-    
+
     expect(controller.uiStateManager.currentState).toBe(UI_STATES.EMPTY);
   });
-  
+
   it('should show error state on failure', async () => {
     const showErrorSpy = jest.spyOn(controller, '_showError');
-    mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
-      .mockRejectedValue(new Error('Network error'));
-    
+    mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
+      new Error('Network error')
+    );
+
     await controller._loadDirectionsData();
-    
+
     expect(showErrorSpy).toHaveBeenCalled();
   });
 });
