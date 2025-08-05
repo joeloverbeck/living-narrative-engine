@@ -1,4 +1,11 @@
 {
-  "mods": ["core", "positioning", "anatomy", "clothing", "violence", "isekai"],
+  "mods": [
+    "core",
+    "positioning",
+    "anatomy",
+    "clothing",
+    "violence",
+    "p_erotica"
+  ],
   "startWorld": "p_erotica:donostia"
 }

@@ -3,7 +3,7 @@
   "id": "core:stop_following",
   "name": "Stop Following",
   "description": "Stops following your current target and becomes independent again.",
-  "scope": "none",
+  "targets": "none",
   "required_components": {
     "actor": ["core:following"]
   },

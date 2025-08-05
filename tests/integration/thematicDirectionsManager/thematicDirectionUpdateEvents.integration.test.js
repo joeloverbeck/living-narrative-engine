@@ -9,13 +9,12 @@ import {
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureBaseContainer } from '../../../src/dependencyInjection/baseContainerConfig.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { ThematicDirectionsManagerController } from '../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { v4 as uuidv4 } from 'uuid';
+import { CHARACTER_BUILDER_EVENTS } from '../../../src/characterBuilder/services/characterBuilderService.js';
 
 describe('Thematic Direction Update Events - Integration Test', () => {
   let container;
-  let controller;
   let characterBuilderService;
   let eventBus;
   let schemaValidator;
@@ -23,6 +22,7 @@ describe('Thematic Direction Update Events - Integration Test', () => {
   let logger;
   let testConcept;
   let testDirection;
+  let storageService;
 
   beforeEach(async () => {
     logger = new ConsoleLogger('error'); // Only log errors in tests
@@ -47,6 +47,7 @@ describe('Thematic Direction Update Events - Integration Test', () => {
     dataRegistry = container.resolve(tokens.IDataRegistry);
     eventBus = container.resolve(tokens.ISafeEventDispatcher);
     characterBuilderService = container.resolve(tokens.CharacterBuilderService);
+    storageService = container.resolve(tokens.CharacterStorageService);
 
     // Mock schema validator methods to avoid network requests
     schemaValidator.validateAgainstSchema = jest.fn().mockReturnValue(true);
@@ -86,6 +87,9 @@ describe('Thematic Direction Update Events - Integration Test', () => {
       background: 'Test background',
       appearance: 'Test appearance',
       motivations: 'Test motivations',
+      concept: 'Test character concept for testing purposes',
+      status: 'active',
+      createdAt: new Date().toISOString(),
     };
 
     // Create test thematic direction
@@ -100,48 +104,26 @@ describe('Thematic Direction Update Events - Integration Test', () => {
       createdAt: new Date().toISOString(),
     };
 
-    // Mock characterBuilderService methods
-    characterBuilderService.saveCharacterConcept = jest
+    // Initialize the service
+    await characterBuilderService.initialize();
+
+    // Mock storage service methods to provide test data
+    storageService.getCharacterConcept = jest
       .fn()
       .mockResolvedValue(testConcept);
-    characterBuilderService.saveThematicDirections = jest
-      .fn()
-      .mockResolvedValue([testDirection]);
-    characterBuilderService.getThematicDirection = jest
+    storageService.getThematicDirection = jest
       .fn()
       .mockResolvedValue(testDirection);
-    characterBuilderService.updateThematicDirection = jest
+    storageService.updateThematicDirection = jest
       .fn()
-      .mockImplementation(async (directionId, updates) => {
-        // Dispatch events for each field that changed
-        for (const [field, newValue] of Object.entries(updates)) {
-          const oldValue = testDirection[field];
-          if (oldValue !== newValue) {
-            eventBus.dispatch('core:direction_updated', {
-              directionId,
-              field,
-              oldValue: oldValue || '',
-              newValue: newValue || '',
-            });
-          }
-        }
-        return { ...testDirection, ...updates };
-      });
-    characterBuilderService.deleteThematicDirection = jest
+      .mockImplementation(async (directionId, updates) => ({
+        ...testDirection,
+        ...updates,
+      }));
+    storageService.storeThematicDirections = jest
       .fn()
-      .mockResolvedValue(true);
-    characterBuilderService.deleteCharacterConcept = jest
-      .fn()
-      .mockResolvedValue(true);
-
-    // Create and initialize controller
-    controller = new ThematicDirectionsManagerController({
-      logger,
-      characterBuilderService,
-      eventBus,
-      schemaValidator,
-    });
-    await controller.initialize();
+      .mockResolvedValue([testDirection]);
+    storageService.findOrphanedDirections = jest.fn().mockResolvedValue([]);
   });
 
   afterEach(async () => {
@@ -156,7 +138,7 @@ describe('Thematic Direction Update Events - Integration Test', () => {
       const listener = jest.fn((event) => {
         capturedEvents.push(event.payload);
       });
-      eventBus.subscribe('core:direction_updated', listener);
+      eventBus.subscribe(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, listener);
 
       // Update the direction through the service
       const updates = {
@@ -193,22 +175,24 @@ describe('Thematic Direction Update Events - Integration Test', () => {
       });
 
       // Clean up listener
-      eventBus.unsubscribe('core:direction_updated', listener);
+      eventBus.unsubscribe(
+        CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED,
+        listener
+      );
     });
 
-    it('should pass validation when dispatching through controller', async () => {
+    it('should pass validation when dispatching through service', async () => {
       const capturedEvents = [];
       const listener = jest.fn((event) => {
         capturedEvents.push(event.payload);
       });
-      eventBus.subscribe('core:direction_updated', listener);
+      eventBus.subscribe(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, listener);
 
-      // Simulate the controller's field save method
+      // Update a single field
       const fieldName = 'uniqueTwist';
       const oldValue = testDirection.uniqueTwist;
       const newValue = 'A completely new and different twist';
 
-      // Update through controller's approach
       await characterBuilderService.updateThematicDirection(testDirection.id, {
         [fieldName]: newValue,
       });
@@ -225,7 +209,10 @@ describe('Thematic Direction Update Events - Integration Test', () => {
         newValue,
       });
 
-      eventBus.unsubscribe('core:direction_updated', listener);
+      eventBus.unsubscribe(
+        CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED,
+        listener
+      );
     });
 
     it('should handle null values correctly in event payload', async () => {
@@ -238,30 +225,25 @@ describe('Thematic Direction Update Events - Integration Test', () => {
         coreTension: 'Test tension',
         uniqueTwist: null, // Null value
         narrativePotential: 'Test potential',
+        createdAt: new Date().toISOString(),
       };
 
-      // Mock the update to handle null values properly
-      characterBuilderService.updateThematicDirection = jest
+      // Mock storage to return the direction with null
+      storageService.getThematicDirection = jest
         .fn()
-        .mockImplementation(async (directionId, updates) => {
-          // Dispatch events for each field that changed
-          for (const [field, newValue] of Object.entries(updates)) {
-            const oldValue = directionWithNull[field];
-            eventBus.dispatch('core:direction_updated', {
-              directionId,
-              field,
-              oldValue: oldValue || '',
-              newValue: newValue || '',
-            });
-          }
-          return { ...directionWithNull, ...updates };
-        });
+        .mockResolvedValue(directionWithNull);
+      storageService.updateThematicDirection = jest
+        .fn()
+        .mockImplementation(async (directionId, updates) => ({
+          ...directionWithNull,
+          ...updates,
+        }));
 
       const capturedEvents = [];
       const listener = jest.fn((event) => {
         capturedEvents.push(event.payload);
       });
-      eventBus.subscribe('core:direction_updated', listener);
+      eventBus.subscribe(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, listener);
 
       // Update the null field
       await characterBuilderService.updateThematicDirection(
@@ -277,16 +259,19 @@ describe('Thematic Direction Update Events - Integration Test', () => {
       expect(capturedEvents[0]).toEqual({
         directionId: directionWithNull.id,
         field: 'uniqueTwist',
-        oldValue: '', // Null converted to empty string
+        oldValue: '', // Null converted to empty string by service
         newValue: 'Now has a value',
       });
 
-      eventBus.unsubscribe('core:direction_updated', listener);
+      eventBus.unsubscribe(
+        CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED,
+        listener
+      );
     });
 
     it('should not dispatch events for unchanged fields', async () => {
       const listener = jest.fn();
-      eventBus.subscribe('core:direction_updated', listener);
+      eventBus.subscribe(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, listener);
 
       // Update with same values
       await characterBuilderService.updateThematicDirection(testDirection.id, {
@@ -309,7 +294,10 @@ describe('Thematic Direction Update Events - Integration Test', () => {
         })
       );
 
-      eventBus.unsubscribe('core:direction_updated', listener);
+      eventBus.unsubscribe(
+        CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED,
+        listener
+      );
     });
 
     it('should handle multiple simultaneous updates', async () => {
@@ -317,7 +305,7 @@ describe('Thematic Direction Update Events - Integration Test', () => {
       const listener = jest.fn((event) => {
         capturedEvents.push(event.payload);
       });
-      eventBus.subscribe('core:direction_updated', listener);
+      eventBus.subscribe(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, listener);
 
       // Update all fields at once
       const updates = {
@@ -347,23 +335,22 @@ describe('Thematic Direction Update Events - Integration Test', () => {
       expect(fields).toContain('uniqueTwist');
       expect(fields).toContain('narrativePotential');
 
-      eventBus.unsubscribe('core:direction_updated', listener);
+      eventBus.unsubscribe(
+        CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED,
+        listener
+      );
     });
   });
 
   describe('Error scenarios', () => {
     it('should not dispatch events if direction not found', async () => {
       const listener = jest.fn();
-      eventBus.subscribe('core:direction_updated', listener);
+      eventBus.subscribe(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, listener);
 
       const fakeId = uuidv4();
 
-      // Mock the update to throw an error for non-existent direction
-      characterBuilderService.updateThematicDirection = jest
-        .fn()
-        .mockRejectedValue(
-          new Error(`Thematic direction not found: ${fakeId}`)
-        );
+      // Mock storage to return null for non-existent direction
+      storageService.getThematicDirection = jest.fn().mockResolvedValue(null);
 
       await expect(
         characterBuilderService.updateThematicDirection(fakeId, {
@@ -376,32 +363,16 @@ describe('Thematic Direction Update Events - Integration Test', () => {
       // No events should be dispatched
       expect(listener).not.toHaveBeenCalled();
 
-      eventBus.unsubscribe('core:direction_updated', listener);
+      eventBus.unsubscribe(
+        CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED,
+        listener
+      );
     });
 
     it('should validate event payload against schema', async () => {
       // This test verifies that the event payload matches the required schema
       const listener = jest.fn();
-      eventBus.subscribe('core:direction_updated', listener);
-
-      // Restore the original mock for this test
-      characterBuilderService.updateThematicDirection = jest
-        .fn()
-        .mockImplementation(async (directionId, updates) => {
-          // Dispatch events for each field that changed
-          for (const [field, newValue] of Object.entries(updates)) {
-            const oldValue = testDirection[field];
-            if (oldValue !== newValue) {
-              eventBus.dispatch('core:direction_updated', {
-                directionId,
-                field,
-                oldValue: oldValue || '',
-                newValue: newValue || '',
-              });
-            }
-          }
-          return { ...testDirection, ...updates };
-        });
+      eventBus.subscribe(CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED, listener);
 
       await characterBuilderService.updateThematicDirection(testDirection.id, {
         coreTension: 'Schema-validated tension update',
@@ -426,7 +397,10 @@ describe('Thematic Direction Update Events - Integration Test', () => {
       expect(typeof payload.oldValue).toBe('string');
       expect(typeof payload.newValue).toBe('string');
 
-      eventBus.unsubscribe('core:direction_updated', listener);
+      eventBus.unsubscribe(
+        CHARACTER_BUILDER_EVENTS.DIRECTION_UPDATED,
+        listener
+      );
     });
   });
 });
