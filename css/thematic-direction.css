@@ -274,6 +274,8 @@
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+  margin-top: 2rem;
+  justify-content: center;
 }
 
 /* Large Generate Button */

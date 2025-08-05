@@ -1407,7 +1407,14 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       createBtn?.addEventListener('click', () => this._showCreateModal());
     }
 
-    this._showState('empty');
+    // Check if UIStateManager is initialized before calling _showState
+    // This prevents warnings during initial data loading
+    if (this.currentState !== null) {
+      this._showState('empty');
+    } else {
+      // Store the fact that we need to show empty state later
+      this.#pendingUIState = 'empty';
+    }
   }
 
   /**
@@ -1456,6 +1463,9 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       // Store original text for comparison (add property if doesn't exist)
       this.#originalConceptText = concept.concept;
       this.#hasUnsavedChanges = false;
+
+      // Set up real-time validation for edit modal (fixes bug where validation wasn't set up)
+      this._setupConceptFormValidation();
 
       // Add change tracking to textarea
       this._getElement('conceptText').addEventListener(

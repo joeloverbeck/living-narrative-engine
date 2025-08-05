@@ -481,6 +481,75 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
         console.warn('Test exports not available, skipping edit modal test');
       }
     });
+
+    it('should enable save button when editing pre-existing concept text', async () => {
+      // This test reproduces the bug where the Update Concept button doesn't become
+      // active when editing pre-existing concepts
+      if (controller._testExports && controller._testExports.showEditModal) {
+        // Clear previous events
+        capturedEvents = [];
+
+        // Ensure concepts data is populated
+        if (controller._testExports.conceptsData.length === 0) {
+          await controller._testExports.loadData();
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        expect(controller._testExports.conceptsData.length).toBeGreaterThan(0);
+
+        // Open edit modal for an existing concept
+        await controller._testExports.showEditModal('existing-concept-1');
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        const modal = document.getElementById('concept-modal');
+        const conceptText = document.getElementById('concept-text');
+        const saveBtn = document.getElementById('save-concept-btn');
+
+        // Modal should be visible with existing content
+        expect(modal.style.display).toBe('flex');
+        expect(conceptText.value).toBe('A brave knight with a mysterious past');
+
+        // Record initial button state
+        const initialButtonState = saveBtn.disabled;
+
+        // Clear the text to make it invalid (less than 50 chars)
+        conceptText.value = 'Too short';
+        conceptText.dispatchEvent(new Event('input', { bubbles: true }));
+
+        // Wait for any potential validation
+        await new Promise((resolve) => setTimeout(resolve, 350));
+
+        // Check if button state changed (it won't due to the bug)
+        const stateAfterInvalidInput = saveBtn.disabled;
+
+        // Type new valid text (more than 50 characters as per ValidationPatterns.concept)
+        const newText =
+          'A completely different character concept that is definitely long enough to be valid';
+        conceptText.value = newText;
+        conceptText.dispatchEvent(new Event('input', { bubbles: true }));
+
+        // Wait for validation to complete
+        await new Promise((resolve) => setTimeout(resolve, 350)); // 300ms debounce + buffer
+
+        // Check final button state
+        const stateAfterValidInput = saveBtn.disabled;
+
+        // The bug: button state never changes regardless of input validity
+        // With proper validation setup:
+        // - initialButtonState should be false (valid existing content)
+        // - stateAfterInvalidInput should be true (invalid short text)
+        // - stateAfterValidInput should be false (valid long text)
+        // But without validation setup, all three will be the same
+
+        // This test will fail, demonstrating the bug
+        expect(stateAfterInvalidInput).toBe(true); // Should be disabled for invalid input
+        expect(stateAfterValidInput).toBe(false); // Should be enabled for valid input
+      } else {
+        console.warn(
+          'Test exports not available, skipping edit modal validation test'
+        );
+      }
+    });
   });
 
   describe('Modal Keyboard Navigation', () => {

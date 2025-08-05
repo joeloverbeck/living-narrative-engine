@@ -1,0 +1,63 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:character_concept_updated",
+  "description": "Dispatched when an existing character concept is updated.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "concept": {
+        "description": "The updated character concept object",
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Unique identifier of the concept",
+            "type": "string"
+          },
+          "concept": {
+            "description": "The character concept text",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Creation timestamp",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "object",
+                "description": "Date object"
+              }
+            ]
+          },
+          "updatedAt": {
+            "description": "Update timestamp",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "object",
+                "description": "Date object"
+              }
+            ]
+          },
+          "status": {
+            "description": "Current status of the concept",
+            "type": "string"
+          }
+        },
+        "required": ["id", "concept"],
+        "additionalProperties": true
+      },
+      "updates": {
+        "description": "The updates that were applied to the concept",
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "required": ["concept", "updates"],
+    "additionalProperties": true
+  }
+}

@@ -103,7 +103,7 @@ export class MyController {
 }
 
 // AFTER: MyController.js
-import { BaseCharacterBuilderController } from '../BaseCharacterBuilderController.js';
+import { BaseCharacterBuilderController } from '../characterBuilder/controllers/BaseCharacterBuilderController.js';
 
 export class MyController extends BaseCharacterBuilderController {
   // Only page-specific fields needed
@@ -187,6 +187,14 @@ async _initializeServices() {
   // Called after element caching but before event listeners
   // Use for service initialization that depends on DOM elements
   await this.characterBuilderService.initialize();
+}
+
+async _initializeAdditionalServices() {
+  // Called after _initializeServices() for page-specific services
+  // Use for initializing any additional services passed to constructor
+  if (this.additionalServices?.analyticsService) {
+    await this.additionalServices.analyticsService.initialize();
+  }
 }
 
 async _loadInitialData() {
@@ -367,6 +375,7 @@ describe('MyController', () => {
 });
 
 // AFTER: Use test base class
+// Note: Adjust the import path based on your test file location
 import { BaseCharacterBuilderControllerTestBase } from '../../../../tests/unit/characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 
 describe('MyController', () => {
@@ -454,7 +463,7 @@ If issues arise post-migration:
 
 ## Real-World Example Patterns
 
-### Current Controller Pattern (ThematicDirectionController)
+### Current Controller Pattern (CharacterConceptsManagerController)
 
 Here's how existing controllers implement common patterns that you'll migrate:
 
@@ -523,7 +532,7 @@ async _initializeUIState() {
 
 ## Next Steps
 
-1. See [Complete Migration Example](examples/thematic-direction-migration.md) for a real-world implementation
+1. Review `CharacterConceptsManagerController` in `src/domUI/characterConceptsManagerController.js` for a real-world implementation example
 2. Use [Quick Reference Card](base-controller-quick-reference.md) for daily development
 3. Run tests continuously during migration
 4. Document any unique patterns for future reference

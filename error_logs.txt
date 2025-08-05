@@ -1,155 +1,8 @@
-EventLoader: Loading events definitions for mod 'core'.
-consoleLogger.js:163 EventLoader [core]: Payload schema ID 'core:character_concept_created#payload' for event 'core:character_concept_created' was already loaded. Overwriting.
-warn @ consoleLogger.js:163
-registerSchema @ schemaUtils.js:28
-registerInlineSchema @ schemaUtils.js:69
-_registerItemSchema @ baseInlineSchemaLoader.js:32
-_processFetchedItem @ eventLoader.js:83
-runSubclassProcessing @ baseManifestItemLoader.js:441
-_processFileWrapper @ baseManifestItemLoader.js:321
-await in _processFileWrapper
-(anonymous) @ baseManifestItemLoader.js:506
-_loadItemsInternal @ baseManifestItemLoader.js:505
-loadItemsForMod @ baseManifestItemLoader.js:640
-runLoadersForMod_fn @ ModProcessor.js:164
-await in runLoadersForMod_fn
-processMod @ ModProcessor.js:80
-await in processMod
-executeModProcessing_fn @ ContentLoadManager.js:222
-processMod @ ContentLoadManager.js:212
-loadContentForPhase @ ContentLoadManager.js:174
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-loadMods_fn2 @ CharacterBuilderBootstrap.js:489
-bootstrap @ CharacterBuilderBootstrap.js:98
-await in bootstrap
-initializeApp @ character-concepts-manager-main.js:47
-(anonymous) @ character-concepts-manager-entry.js:25
-Promise.then
-(anonymous) @ character-concepts-manager-entry.js:24
-(anonymous) @ character-concepts-manager-entry.js:29Understand this warning
-consoleLogger.js:163 EventLoader [core]: Payload schema ID 'core:character_concept_deleted#payload' for event 'core:character_concept_deleted' was already loaded. Overwriting.
-warn @ consoleLogger.js:163
-registerSchema @ schemaUtils.js:28
-registerInlineSchema @ schemaUtils.js:69
-_registerItemSchema @ baseInlineSchemaLoader.js:32
-_processFetchedItem @ eventLoader.js:83
-runSubclassProcessing @ baseManifestItemLoader.js:441
-_processFileWrapper @ baseManifestItemLoader.js:321
-await in _processFileWrapper
-(anonymous) @ baseManifestItemLoader.js:506
-_loadItemsInternal @ baseManifestItemLoader.js:505
-loadItemsForMod @ baseManifestItemLoader.js:640
-runLoadersForMod_fn @ ModProcessor.js:164
-await in runLoadersForMod_fn
-processMod @ ModProcessor.js:80
-await in processMod
-executeModProcessing_fn @ ContentLoadManager.js:222
-processMod @ ContentLoadManager.js:212
-loadContentForPhase @ ContentLoadManager.js:174
-loadContent @ ContentLoadManager.js:81
-execute @ contentPhase.js:51
-run @ ModsLoadSession.js:19
-await in run
-loadMods @ modsLoader.js:85
-loadMods_fn2 @ CharacterBuilderBootstrap.js:489
-bootstrap @ CharacterBuilderBootstrap.js:98
-await in bootstrap
-initializeApp @ character-concepts-manager-main.js:47
-(anonymous) @ character-concepts-manager-entry.js:25
-Promise.then
-(anonymous) @ character-concepts-manager-entry.js:24
-(anonymous) @ character-concepts-manager-entry.js:29Understand this warning
-consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'core'.
-consoleLogger.js:151 MacroLoader: Loading macros definitions for mod 'core'.
-consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'core'.
-consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'core'.
-consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'core'.
-consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'positioning'.
-consoleLogger.js:151 EventLoader: Loading events definitions for mod 'positioning'.
-consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'positioning'.
-consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'positioning'.
-consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'positioning'.
-consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'positioning'.
-consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'descriptors'.
-consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'anatomy'.
-consoleLogger.js:151 EventLoader: Loading events definitions for mod 'anatomy'.
-consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'anatomy'.
-consoleLogger.js:151 AnatomySlotLibraryLoader: Loading anatomySlotLibraries definitions for mod 'anatomy'.
-consoleLogger.js:151 AnatomyBlueprintPartLoader: Loading anatomyBlueprintParts definitions for mod 'anatomy'.
-consoleLogger.js:151 AnatomyBlueprintLoader: Loading anatomyBlueprints definitions for mod 'anatomy'.
-consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'anatomy'.
-consoleLogger.js:151 AnatomyFormattingLoader: Loading anatomyFormatting definitions for mod 'anatomy'.
-consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'clothing'.
-consoleLogger.js:151 EventLoader: Loading events definitions for mod 'clothing'.
-consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'clothing'.
-consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'clothing'.
-consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'clothing'.
-consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'clothing'.
-consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'clothing'.
-consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'violence'.
-consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'violence'.
-consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'violence'.
-consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'intimacy'.
-consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'intimacy'.
-consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'intimacy'.
-consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'intimacy'.
-consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'intimacy'.
-consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'sex'.
-consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'sex'.
-consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'sex'.
-consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'sex'.
-consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'p_erotica'.
-consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'p_erotica'.
-consoleLogger.js:151 EntityInstanceLoader: Loading entityInstances definitions for mod 'p_erotica'.
-consoleLogger.js:151 — WorldPhase starting —
-consoleLogger.js:151 --- Starting World File Loading Phase ---
-consoleLogger.js:151 --- World File Loading Phase Complete ---
-consoleLogger.js:151 WorldLoader: Successfully processed and registered 1 worlds, containing 4 entity instances. All 4 definition references were resolved.
-consoleLogger.js:151 — SummaryPhase starting —
-consoleLogger.js:151 — ModsLoader Load Summary (World: 'default') —
-consoleLogger.js:151   • Requested Mods (raw): [core, positioning, anatomy, clothing, violence, p_erotica]
-consoleLogger.js:151   • Final Load Order     : [core, positioning, descriptors, anatomy, clothing, violence, intimacy, sex, p_erotica]
-consoleLogger.js:151   • Content Loading Summary (Totals):
-consoleLogger.js:151      - actions             : 42 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - anatomyBlueprintParts: 1 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - anatomyBlueprints   : 2 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - anatomyFormatting   : 1 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - anatomyRecipes      : 6 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - anatomySlotLibraries: 1 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - components          : 55 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - conditions          : 59 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - entityDefinitions   : 56 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - entityInstances     : 5 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - events              : 58 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - macros              : 4 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - rules               : 48 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - scopes              : 29 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - worlds              : 1 loaded, 0 overrides, 0 errors
-consoleLogger.js:151      - ----------------------------------------------
-consoleLogger.js:151      - TOTAL               : C:368, O:0, E:0
-consoleLogger.js:151 ———————————————————————————————————————————
-consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
-consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
-consoleLogger.js:151 [CharacterBuilderBootstrap] Core mod loaded successfully
-consoleLogger.js:151 CharacterConceptsManagerController: Successfully created with dependencies {coreServices: Array(4), additionalServices: Array(0)}
-consoleLogger.js:151 CharacterConceptsManagerController initialized
-consoleLogger.js:151 CharacterConceptsManagerController: Starting initialization
-consoleLogger.js:151 CharacterConceptsManagerController: Cached 32/32 elements (0 optional, 0 failed) in 12.50ms
-consoleLogger.js:151 CharacterDatabase: Successfully opened database
+CharacterDatabase: Successfully opened database
 consoleLogger.js:151 CharacterStorageService: Successfully initialized
-2consoleLogger.js:151 CharacterBuilderService: Successfully initialized
-consoleLogger.js:151 Loading character concepts data
-consoleLogger.js:151 CharacterStorageService: No thematic directions found {conceptId: '383eeff7-13cf-4b7f-9f22-f351af333177'}
-consoleLogger.js:151 CharacterStorageService: No thematic directions found {conceptId: '4fa66144-0dca-4d7c-b117-7a7db9a67811'}
-consoleLogger.js:151 CharacterStorageService: No thematic directions found {conceptId: 'a7abe335-1041-4cdb-924f-f4de5e502c13'}
-consoleLogger.js:151 CharacterStorageService: No thematic directions found {conceptId: 'bfcdca5f-b9bc-4e0c-9186-00b4d2a659ef'}
-consoleLogger.js:151 Statistics updated {totalConcepts: 4, conceptsWithDirections: 0, totalDirections: 0, averageDirectionsPerConcept: '0.0', completionRate: 0, …}
-consoleLogger.js:151 Loaded 4 concepts
-consoleLogger.js:163 VED: EventDefinition not found for 'UI_STATE_CHANGED'. Cannot validate payload. Proceeding with dispatch.
+consoleLogger.js:151 CharacterBuilderService: Successfully initialized
+consoleLogger.js:151 Loaded 2 character concepts
+consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_state_changed'. Cannot validate payload. Proceeding with dispatch.
 warn @ consoleLogger.js:163
 validatePayload_fn @ validatedEventDispatcher.js:87
 dispatch @ validatedEventDispatcher.js:219
@@ -159,19 +12,16 @@ dispatch @ safeEventDispatcher.js:122
 _showState @ BaseCharacterBuilderController.js:1071
 _initializeUIState @ BaseCharacterBuilderController.js:2015
 await in _initializeUIState
-_initializeUIState @ characterConceptsManagerController.js:250
+_initializeUIState @ thematicDirectionController.js:173
 _executeLifecycleMethod @ BaseCharacterBuilderController.js:1888
 initialize @ BaseCharacterBuilderController.js:1816
 await in initialize
-initializeController_fn @ CharacterBuilderBootstrap.js:592
+initializeController_fn @ CharacterBuilderBootstrap.js:604
 bootstrap @ CharacterBuilderBootstrap.js:108
 await in bootstrap
-initializeApp @ character-concepts-manager-main.js:47
-(anonymous) @ character-concepts-manager-entry.js:25
-Promise.then
-(anonymous) @ character-concepts-manager-entry.js:24
-(anonymous) @ character-concepts-manager-entry.js:29Understand this warning
-consoleLogger.js:163 VED: EventDefinition not found for 'UI_STATE_CHANGED'. Cannot validate payload. Proceeding with dispatch.
+initialize @ thematic-direction-main.js:76
+initialize @ thematic-direction-main.js:108Understand this warning
+consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_state_changed'. Cannot validate payload. Proceeding with dispatch.
 warn @ consoleLogger.js:163
 validatePayload_fn @ validatedEventDispatcher.js:87
 dispatch @ validatedEventDispatcher.js:219
@@ -179,22 +29,18 @@ __privateMethod.call.payload.payload @ safeEventDispatcher.js:124
 executeSafely_fn @ safeEventDispatcher.js:88
 dispatch @ safeEventDispatcher.js:122
 _showState @ BaseCharacterBuilderController.js:1071
-_initializeUIState @ characterConceptsManagerController.js:254
+_initializeUIState @ thematicDirectionController.js:180
 await in _initializeUIState
 _executeLifecycleMethod @ BaseCharacterBuilderController.js:1888
 initialize @ BaseCharacterBuilderController.js:1816
 await in initialize
-initializeController_fn @ CharacterBuilderBootstrap.js:592
+initializeController_fn @ CharacterBuilderBootstrap.js:604
 bootstrap @ CharacterBuilderBootstrap.js:108
 await in bootstrap
-initializeApp @ character-concepts-manager-main.js:47
-(anonymous) @ character-concepts-manager-entry.js:25
-Promise.then
-(anonymous) @ character-concepts-manager-entry.js:24
-(anonymous) @ character-concepts-manager-entry.js:29Understand this warning
-consoleLogger.js:151 Cross-tab sync initialized {tabId: 'tab-1754323871027-9pyumskqg'}
-consoleLogger.js:151 CharacterConceptsManagerController: Initialization completed in 74.20ms
-consoleLogger.js:163 VED: EventDefinition not found for 'CONTROLLER_INITIALIZED'. Cannot validate payload. Proceeding with dispatch.
+initialize @ thematic-direction-main.js:76
+initialize @ thematic-direction-main.js:108Understand this warning
+consoleLogger.js:151 ThematicDirectionController: Initialization completed in 16.50ms
+consoleLogger.js:163 VED: EventDefinition not found for 'core:controller_initialized'. Cannot validate payload. Proceeding with dispatch.
 warn @ consoleLogger.js:163
 validatePayload_fn @ validatedEventDispatcher.js:87
 dispatch @ validatedEventDispatcher.js:219
@@ -203,12 +49,10 @@ executeSafely_fn @ safeEventDispatcher.js:88
 dispatch @ safeEventDispatcher.js:122
 initialize @ BaseCharacterBuilderController.js:1837
 await in initialize
-initializeController_fn @ CharacterBuilderBootstrap.js:592
+initializeController_fn @ CharacterBuilderBootstrap.js:604
 bootstrap @ CharacterBuilderBootstrap.js:108
 await in bootstrap
-initializeApp @ character-concepts-manager-main.js:47
-(anonymous) @ character-concepts-manager-entry.js:25
-Promise.then
-(anonymous) @ character-concepts-manager-entry.js:24
-(anonymous) @ character-concepts-manager-entry.js:29Understand this warning
-consoleLogger.js:151 [CharacterBuilderBootstrap] Page 'Character Concepts Manager' bootstrapped in 2857.10ms {metrics: {…}}
+initialize @ thematic-direction-main.js:76
+initialize @ thematic-direction-main.js:108Understand this warning
+consoleLogger.js:151 [CharacterBuilderBootstrap] Page 'Thematic Direction Generator' bootstrapped in 599.10ms {metrics: {…}}
+thematic-direction-main.js:78 Thematic Direction Generator initialized successfully in 599.10ms

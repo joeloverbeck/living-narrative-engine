@@ -296,120 +296,132 @@ export class CharacterBuilderBootstrap {
     });
 
     // Base events used by all character builder pages
-    const baseEvents = [
-      {
-        id: 'core:character_concept_created',
-        description: 'Fired when a character concept is successfully created',
-        payloadSchema: {
-          type: 'object',
-          required: ['conceptId', 'concept', 'autoSaved'],
-          properties: {
-            conceptId: {
-              type: 'string',
-              description: 'The unique ID of the created character concept',
-            },
-            concept: {
-              type: 'string',
-              description: 'The character concept text (truncated for events)',
-            },
-            autoSaved: {
-              type: 'boolean',
-              description: 'Whether the concept was automatically saved',
-            },
-          },
-          additionalProperties: false,
-        },
-      },
-      {
-        id: 'core:character_concept_updated',
-        description: 'Fired when a character concept is updated',
-        payloadSchema: {
-          type: 'object',
-          required: ['conceptId', 'previousConcept', 'newConcept'],
-          properties: {
-            conceptId: {
-              type: 'string',
-              description: 'The unique ID of the updated character concept',
-            },
-            previousConcept: {
-              type: 'string',
-              description: 'The previous concept text',
-            },
-            newConcept: {
-              type: 'string',
-              description: 'The new concept text',
+    // Only register these if mods are NOT being loaded (to avoid duplicate registration)
+    const baseEvents = config.includeModLoading
+      ? []
+      : [
+          {
+            id: 'core:character_concept_created',
+            description:
+              'Fired when a character concept is successfully created',
+            payloadSchema: {
+              type: 'object',
+              required: ['conceptId', 'concept', 'autoSaved'],
+              properties: {
+                conceptId: {
+                  type: 'string',
+                  description: 'The unique ID of the created character concept',
+                },
+                concept: {
+                  type: 'string',
+                  description:
+                    'The character concept text (truncated for events)',
+                },
+                autoSaved: {
+                  type: 'boolean',
+                  description: 'Whether the concept was automatically saved',
+                },
+              },
+              additionalProperties: false,
             },
           },
-          additionalProperties: false,
-        },
-      },
-      {
-        id: 'core:character_concept_deleted',
-        description: 'Fired when a character concept is deleted',
-        payloadSchema: {
-          type: 'object',
-          required: ['conceptId'],
-          properties: {
-            conceptId: {
-              type: 'string',
-              description: 'The unique ID of the deleted character concept',
+          {
+            id: 'core:character_concept_updated',
+            description: 'Fired when a character concept is updated',
+            payloadSchema: {
+              type: 'object',
+              required: ['conceptId', 'previousConcept', 'newConcept'],
+              properties: {
+                conceptId: {
+                  type: 'string',
+                  description: 'The unique ID of the updated character concept',
+                },
+                previousConcept: {
+                  type: 'string',
+                  description: 'The previous concept text',
+                },
+                newConcept: {
+                  type: 'string',
+                  description: 'The new concept text',
+                },
+              },
+              additionalProperties: false,
             },
           },
-          additionalProperties: false,
-        },
-      },
-      {
-        id: 'core:thematic_directions_generated',
-        description:
-          'Fired when thematic directions are generated for a concept',
-        payloadSchema: {
-          type: 'object',
-          required: ['conceptId', 'directionCount', 'autoSaved'],
-          properties: {
-            conceptId: {
-              type: 'string',
-              description: 'The unique ID of the character concept',
-            },
-            directionCount: {
-              type: 'integer',
-              minimum: 0,
-              description: 'The number of thematic directions generated',
-            },
-            autoSaved: {
-              type: 'boolean',
-              description: 'Whether the directions were automatically saved',
+          {
+            id: 'core:character_concept_deleted',
+            description: 'Fired when a character concept is deleted',
+            payloadSchema: {
+              type: 'object',
+              required: ['conceptId'],
+              properties: {
+                conceptId: {
+                  type: 'string',
+                  description: 'The unique ID of the deleted character concept',
+                },
+              },
+              additionalProperties: false,
             },
           },
-          additionalProperties: false,
-        },
-      },
-      {
-        id: 'core:thematic_direction_updated',
-        description: 'Fired when a thematic direction is updated',
-        payloadSchema: {
-          type: 'object',
-          required: ['directionId', 'conceptId', 'field', 'value'],
-          properties: {
-            directionId: {
-              type: 'string',
-              description: 'The unique ID of the thematic direction',
-            },
-            conceptId: {
-              type: 'string',
-              description: 'The unique ID of the parent character concept',
-            },
-            field: {
-              type: 'string',
-              description: 'The field that was updated',
-            },
-            value: {
-              description: 'The new value of the field',
+          {
+            id: 'core:thematic_directions_generated',
+            description:
+              'Fired when thematic directions are generated for a concept',
+            payloadSchema: {
+              type: 'object',
+              required: ['conceptId', 'directionCount', 'autoSaved'],
+              properties: {
+                conceptId: {
+                  type: 'string',
+                  description: 'The unique ID of the character concept',
+                },
+                directionCount: {
+                  type: 'integer',
+                  minimum: 0,
+                  description: 'The number of thematic directions generated',
+                },
+                autoSaved: {
+                  type: 'boolean',
+                  description:
+                    'Whether the directions were automatically saved',
+                },
+              },
+              additionalProperties: false,
             },
           },
-          additionalProperties: false,
-        },
-      },
-    ];
+          {
+            id: 'core:thematic_direction_updated',
+            description: 'Fired when a thematic direction is updated',
+            payloadSchema: {
+              type: 'object',
+              required: ['directionId', 'conceptId', 'field', 'value'],
+              properties: {
+                directionId: {
+                  type: 'string',
+                  description: 'The unique ID of the thematic direction',
+                },
+                conceptId: {
+                  type: 'string',
+                  description: 'The unique ID of the parent character concept',
+                },
+                field: {
+                  type: 'string',
+                  description: 'The field that was updated',
+                },
+                value: {
+                  description: 'The new value of the field',
+                },
+              },
+              additionalProperties: false,
+            },
+          },
+        ];
+
+    if (this.#logger && config.includeModLoading) {
+      this.#logger.debug(
+        '[CharacterBuilderBootstrap] Skipping base event registration - events will be loaded from mods'
+      );
+    }
 
     // Combine with custom events
     const allEvents = [...baseEvents, ...(config.eventDefinitions || [])];

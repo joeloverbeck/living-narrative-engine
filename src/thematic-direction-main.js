@@ -26,7 +26,7 @@ class ThematicDirectionApp {
       const config = {
         pageName: 'Thematic Direction Generator',
         controllerClass: ThematicDirectionController,
-        includeModLoading: false, // Don't need mods for this page
+        includeModLoading: true, // Load core mod for event definitions
         customSchemas: [
           // Additional schemas specific to thematic direction
           '/data/schemas/llm-configs.schema.json',

@@ -67,6 +67,7 @@
       "character_builder_error_occurred.event.json",
       "character_concept_created.event.json",
       "character_concept_deleted.event.json",
+      "character_concept_updated.event.json",
       "component_added.event.json",
       "component_removed.event.json",
       "controller_initialized.event.json",

@@ -186,7 +186,7 @@ describe('thematic-direction-main', () => {
           expect.objectContaining({
             pageName: 'Thematic Direction Generator',
             controllerClass: mockThematicDirectionController,
-            includeModLoading: false,
+            includeModLoading: true,
             customSchemas: ['/data/schemas/llm-configs.schema.json'],
             hooks: expect.objectContaining({
               preContainer: expect.any(Function),
