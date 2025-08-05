@@ -237,8 +237,9 @@ async function checkCacheService(cacheService) {
 
     // Check if cache round-trip worked correctly
     // More robust than exact timestamp equality - checks structure and reasonable timestamp value
-    const isWorking = retrieved && 
-      typeof retrieved === 'object' && 
+    const isWorking =
+      retrieved &&
+      typeof retrieved === 'object' &&
       typeof retrieved.timestamp === 'number' &&
       Math.abs(retrieved.timestamp - testValue.timestamp) < 1000; // Allow up to 1 second difference
 

@@ -3,7 +3,7 @@
  * Provides detailed error information with formatting
  */
 
-const chalk = require('chalk');
+const { default: chalk } = require('chalk');
 
 class BuildError extends Error {
   /**

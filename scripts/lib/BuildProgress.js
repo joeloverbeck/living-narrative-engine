@@ -3,7 +3,7 @@
  * Provides visual feedback during build operations
  */
 
-const chalk = require('chalk');
+const { default: chalk } = require('chalk');
 const ora = require('ora').default;
 
 class BuildProgress {

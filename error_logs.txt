@@ -1,58 +1,30 @@
-CharacterDatabase: Successfully opened database
-consoleLogger.js:151 CharacterStorageService: Successfully initialized
-consoleLogger.js:151 CharacterBuilderService: Successfully initialized
-consoleLogger.js:151 Loaded 2 character concepts
-consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_state_changed'. Cannot validate payload. Proceeding with dispatch.
-warn @ consoleLogger.js:163
-validatePayload_fn @ validatedEventDispatcher.js:87
-dispatch @ validatedEventDispatcher.js:219
-__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
-executeSafely_fn @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-_showState @ BaseCharacterBuilderController.js:1071
-_initializeUIState @ BaseCharacterBuilderController.js:2015
-await in _initializeUIState
-_initializeUIState @ thematicDirectionController.js:173
-_executeLifecycleMethod @ BaseCharacterBuilderController.js:1888
-initialize @ BaseCharacterBuilderController.js:1816
-await in initialize
-initializeController_fn @ CharacterBuilderBootstrap.js:604
-bootstrap @ CharacterBuilderBootstrap.js:108
-await in bootstrap
-initialize @ thematic-direction-main.js:76
-initialize @ thematic-direction-main.js:108Understand this warning
-consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_state_changed'. Cannot validate payload. Proceeding with dispatch.
-warn @ consoleLogger.js:163
-validatePayload_fn @ validatedEventDispatcher.js:87
-dispatch @ validatedEventDispatcher.js:219
-__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
-executeSafely_fn @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-_showState @ BaseCharacterBuilderController.js:1071
-_initializeUIState @ thematicDirectionController.js:180
-await in _initializeUIState
-_executeLifecycleMethod @ BaseCharacterBuilderController.js:1888
-initialize @ BaseCharacterBuilderController.js:1816
-await in initialize
-initializeController_fn @ CharacterBuilderBootstrap.js:604
-bootstrap @ CharacterBuilderBootstrap.js:108
-await in bootstrap
-initialize @ thematic-direction-main.js:76
-initialize @ thematic-direction-main.js:108Understand this warning
-consoleLogger.js:151 ThematicDirectionController: Initialization completed in 16.50ms
-consoleLogger.js:163 VED: EventDefinition not found for 'core:controller_initialized'. Cannot validate payload. Proceeding with dispatch.
-warn @ consoleLogger.js:163
-validatePayload_fn @ validatedEventDispatcher.js:87
-dispatch @ validatedEventDispatcher.js:219
-__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
-executeSafely_fn @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-initialize @ BaseCharacterBuilderController.js:1837
-await in initialize
-initializeController_fn @ CharacterBuilderBootstrap.js:604
-bootstrap @ CharacterBuilderBootstrap.js:108
-await in bootstrap
-initialize @ thematic-direction-main.js:76
-initialize @ thematic-direction-main.js:108Understand this warning
-consoleLogger.js:151 [CharacterBuilderBootstrap] Page 'Thematic Direction Generator' bootstrapped in 599.10ms {metrics: {…}}
-thematic-direction-main.js:78 Thematic Direction Generator initialized successfully in 599.10ms
+joeloverbeck@WX32030INFOR033:~/projects/living-narrative-engine$ npm run build
+
+> living-narrative-engine@0.0.1 prebuild
+> npm run build:clean
+
+
+> living-narrative-engine@0.0.1 build:clean
+> rimraf dist
+
+
+> living-narrative-engine@0.0.1 build
+> node scripts/build.js
+
+/home/joeloverbeck/projects/living-narrative-engine/scripts/build.js:106
+    console.error(chalk.red('\n💥 Build system error:'));
+                        ^
+
+TypeError: chalk.red is not a function
+    at main (/home/joeloverbeck/projects/living-narrative-engine/scripts/build.js:106:25)
+    at Object.<anonymous> (/home/joeloverbeck/projects/living-narrative-engine/scripts/build.js:205:3)
+    at Module._compile (node:internal/modules/cjs/loader:1692:14)
+    at Object..js (node:internal/modules/cjs/loader:1824:10)
+    at Module.load (node:internal/modules/cjs/loader:1427:32)
+    at Module._load (node:internal/modules/cjs/loader:1250:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:152:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.3.0

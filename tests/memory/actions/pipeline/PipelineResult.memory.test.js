@@ -44,7 +44,8 @@ describe('PipelineResult - Memory Tests', () => {
 
       // Establish memory baseline
       await global.memoryTestUtils.forceGCAndWait();
-      const baselineMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const baselineMemory =
+        await global.memoryTestUtils.getStableMemoryUsage();
 
       // Arrange - create large data set
       const largeEntitySet = Array.from({ length: entityCount }, (_, i) => ({
@@ -116,11 +117,12 @@ describe('PipelineResult - Memory Tests', () => {
     it('should not leak memory during chained operations', async () => {
       // Establish memory baseline
       await global.memoryTestUtils.forceGCAndWait();
-      const baselineMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const baselineMemory =
+        await global.memoryTestUtils.getStableMemoryUsage();
 
       // Create multiple chained operations
-      let result = PipelineResult.success({ 
-        data: { value: 0, operations: [] } 
+      let result = PipelineResult.success({
+        data: { value: 0, operations: [] },
       });
 
       const chainLength = global.memoryTestUtils.isCI() ? 50 : 100;

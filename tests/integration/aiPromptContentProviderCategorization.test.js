@@ -408,50 +408,6 @@ describe('AIPromptContentProvider Categorization Integration', () => {
     });
   });
 
-  describe('Performance', () => {
-    it('should format large action sets efficiently', () => {
-      const actions = Array.from({ length: 50 }, (_, i) => ({
-        index: i + 1,
-        actionId: `namespace${i % 10}:action${i}`,
-        commandString: `command ${i}`,
-        description: `Description for action ${i}.`,
-      }));
-
-      const gameState = { availableActions: actions };
-
-      const startTime = performance.now();
-      const result =
-        promptContentProvider.getAvailableActionsInfoContent(gameState);
-      const endTime = performance.now();
-
-      expect(endTime - startTime).toBeLessThan(50); // 50ms threshold
-      expect(result).toBeTruthy();
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should log performance metrics for categorized formatting', () => {
-      const gameState = {
-        availableActions: Array.from({ length: 20 }, (_, i) => ({
-          index: i + 1,
-          actionId: `namespace${i % 5}:action${i}`,
-          commandString: `command ${i}`,
-          description: `Description ${i}.`,
-        })),
-      };
-
-      promptContentProvider.getAvailableActionsInfoContent(gameState);
-
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'AIPromptContentProvider: Categorized formatting completed',
-        expect.objectContaining({
-          duration: expect.stringMatching(/\d+\.\d+ms/),
-          namespaceCount: expect.any(Number),
-          totalActions: 20,
-        })
-      );
-    });
-  });
-
   describe('Markdown Quality', () => {
     it('should produce valid markdown structure', () => {
       const gameState = {

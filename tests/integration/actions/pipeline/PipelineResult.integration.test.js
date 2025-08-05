@@ -764,7 +764,6 @@ describe('PipelineResult - Integration Tests', () => {
     });
   });
 
-
   describe('Error Handling and Edge Cases', () => {
     it('should handle ActionResult conversion with various input scenarios', () => {
       // Test cases that should throw (truly invalid inputs)

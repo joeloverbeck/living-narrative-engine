@@ -6,7 +6,7 @@
 
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
-const chalk = require('chalk');
+const { default: chalk } = require('chalk');
 const BuildSystem = require('./lib/BuildSystem');
 const buildConfig = require('./build.config');
 
