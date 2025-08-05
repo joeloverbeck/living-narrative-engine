@@ -19,11 +19,15 @@ jest.mock(
     BaseCharacterBuilderController: jest
       .fn()
       .mockImplementation(function (dependencies) {
+        // Extract core dependencies and additional services (spread operator pattern)
+        const { logger, characterBuilderService, eventBus, schemaValidator, ...additionalServices } = dependencies;
+        
         // Store dependencies to make them accessible via getters
-        this._logger = dependencies.logger;
-        this._characterBuilderService = dependencies.characterBuilderService;
-        this._eventBus = dependencies.eventBus;
-        this._schemaValidator = dependencies.schemaValidator;
+        this._logger = logger;
+        this._characterBuilderService = characterBuilderService;
+        this._eventBus = eventBus;
+        this._schemaValidator = schemaValidator;
+        this._additionalServices = additionalServices;
 
         // Mock getter methods
         Object.defineProperty(this, 'logger', {
@@ -44,6 +48,11 @@ jest.mock(
         Object.defineProperty(this, 'schemaValidator', {
           get: function () {
             return this._schemaValidator;
+          },
+        });
+        Object.defineProperty(this, 'additionalServices', {
+          get: function () {
+            return { ...this._additionalServices };
           },
         });
       }),
@@ -88,6 +97,7 @@ describe('ThematicDirectionsManagerController - Concept Display', () => {
   let mockCharacterBuilderService;
   let mockEventBus;
   let mockSchemaValidator;
+  let mockUIStateManager;
   let mockElements;
 
   beforeEach(() => {
@@ -123,6 +133,12 @@ describe('ThematicDirectionsManagerController - Concept Display', () => {
     // Setup mock schema validator
     mockSchemaValidator = {
       validateAgainstSchema: jest.fn().mockReturnValue({ isValid: true }),
+    };
+
+    // Setup mock UI state manager
+    mockUIStateManager = {
+      showState: jest.fn(),
+      showError: jest.fn(),
     };
 
     // Setup mock DOM elements
@@ -162,6 +178,7 @@ describe('ThematicDirectionsManagerController - Concept Display', () => {
       characterBuilderService: mockCharacterBuilderService,
       eventBus: mockEventBus,
       schemaValidator: mockSchemaValidator,
+      uiStateManager: mockUIStateManager,
     });
   });
 

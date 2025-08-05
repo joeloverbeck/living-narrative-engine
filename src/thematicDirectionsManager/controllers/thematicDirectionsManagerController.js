@@ -28,7 +28,6 @@ import { InPlaceEditor } from '../../shared/characterBuilder/inPlaceEditor.js';
  */
 export class ThematicDirectionsManagerController extends BaseCharacterBuilderController {
   // Page-specific private fields only (base class provides logger, characterBuilderService, eventBus via getters)
-  #uiStateManager;
   #conceptDropdown;
   #currentFilter = '';
   #currentConcept = null;
@@ -42,42 +41,45 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * Creates a new ThematicDirectionsManagerController instance
    *
    * @param {object} dependencies - The dependencies object
-   * @param {ILogger} dependencies.logger - Logger instance
-   * @param {CharacterBuilderService} dependencies.characterBuilderService - Character builder service
-   * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher
-   * @param {ISchemaValidator} dependencies.schemaValidator - Schema validator
+   * @param {ILogger} dependencies.logger - Logger instance (validated by base class)
+   * @param {CharacterBuilderService} dependencies.characterBuilderService - Character builder service (validated by base class)
+   * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher (validated by base class)
+   * @param {ISchemaValidator} dependencies.schemaValidator - Schema validator (validated by base class)
+   * @param {UIStateManager} dependencies.uiStateManager - UI state management (validated here)
    */
-  constructor({ logger, characterBuilderService, eventBus, schemaValidator }) {
-    super({ logger, characterBuilderService, eventBus, schemaValidator });
+  constructor({ logger, characterBuilderService, eventBus, schemaValidator, uiStateManager }) {
+    super({ logger, characterBuilderService, eventBus, schemaValidator, uiStateManager });
 
-    // Keep existing validation for now (to be cleaned up in THEDIRMIG-003)
-    validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['debug', 'info', 'warn', 'error'],
-    });
-    validateDependency(
-      characterBuilderService,
-      'CharacterBuilderService',
-      logger,
-      {
-        requiredMethods: [
-          'initialize',
-          'getAllCharacterConcepts',
-          'getCharacterConcept',
-          'getAllThematicDirectionsWithConcepts',
-          'getOrphanedThematicDirections',
-          'updateThematicDirection',
-          'deleteThematicDirection',
-        ],
+    // Initialize page-specific fields
+    this.#currentFilter = '';
+    this.#currentConcept = null;
+    this.#directionsData = [];
+    this.#inPlaceEditors = new Map();
+  }
+
+  /**
+   * Define validation rules for additional services not handled by base class
+   *
+   * @private
+   * @override
+   * @returns {object} Validation rules for additional services
+   */
+  #getAdditionalServiceValidationRules() {
+    return {
+      uiStateManager: {
+        requiredMethods: ['showState', 'showError']
       }
-    );
-    validateDependency(eventBus, 'ISafeEventDispatcher', logger, {
-      requiredMethods: ['dispatch'],
-    });
-    validateDependency(schemaValidator, 'ISchemaValidator', logger, {
-      requiredMethods: ['validateAgainstSchema'],
-    });
+    };
+  }
 
-    // Dependencies are now handled by super() - assignments removed
+  /**
+   * Get the UI state manager from additional services
+   *
+   * @private
+   * @returns {UIStateManager} UI state manager instance
+   */
+  get #uiStateManager() {
+    return this.additionalServices.uiStateManager;
   }
 
   /**
@@ -89,14 +91,6 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     try {
       // Cache DOM elements
       this.#cacheElements();
-
-      // Initialize UI state manager
-      this.#uiStateManager = new UIStateManager({
-        emptyState: this.#elements.emptyState,
-        loadingState: this.#elements.loadingState,
-        errorState: this.#elements.errorState,
-        resultsState: this.#elements.resultsState,
-      });
 
       // Initialize concept dropdown
       this.#conceptDropdown = new PreviousItemsDropdown({

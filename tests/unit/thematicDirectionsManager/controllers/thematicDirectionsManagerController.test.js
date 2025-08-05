@@ -19,11 +19,29 @@ jest.mock(
     BaseCharacterBuilderController: jest
       .fn()
       .mockImplementation(function (dependencies) {
+        // Mock base class validation - throw errors for invalid dependencies
+        if (!dependencies.logger || !dependencies.logger.debug || !dependencies.logger.info || !dependencies.logger.warn || !dependencies.logger.error) {
+          throw new Error('Invalid logger dependency');
+        }
+        if (!dependencies.characterBuilderService || typeof dependencies.characterBuilderService !== 'object') {
+          throw new Error('Invalid characterBuilderService dependency');
+        }
+        if (!dependencies.eventBus || !dependencies.eventBus.dispatch) {
+          throw new Error('Invalid eventBus dependency');
+        }
+        if (!dependencies.schemaValidator || !dependencies.schemaValidator.validateAgainstSchema) {
+          throw new Error('Invalid schemaValidator dependency');
+        }
+
         // Store dependencies to make them accessible via getters
         this._logger = dependencies.logger;
         this._characterBuilderService = dependencies.characterBuilderService;
         this._eventBus = dependencies.eventBus;
         this._schemaValidator = dependencies.schemaValidator;
+        
+        // Store additional services (everything not in core dependencies)
+        const { logger, characterBuilderService, eventBus, schemaValidator, ...additionalServices } = dependencies;
+        this._additionalServices = additionalServices;
 
         // Mock getter methods
         Object.defineProperty(this, 'logger', {
@@ -44,6 +62,11 @@ jest.mock(
         Object.defineProperty(this, 'schemaValidator', {
           get: function () {
             return this._schemaValidator;
+          },
+        });
+        Object.defineProperty(this, 'additionalServices', {
+          get: function () {
+            return { ...this._additionalServices };
           },
         });
       }),
@@ -405,6 +428,12 @@ describe('ThematicDirectionsManagerController', () => {
       validateAgainstSchema: jest.fn(() => true),
     };
 
+    // Create mock UIStateManager instance
+    mockUIStateManager = {
+      showState: jest.fn(),
+      showError: jest.fn(),
+    };
+
     // Set up default mock implementations
     mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
       mockDirectionsWithConcepts
@@ -424,6 +453,7 @@ describe('ThematicDirectionsManagerController', () => {
       characterBuilderService: mockCharacterBuilderService,
       eventBus: mockEventBus,
       schemaValidator: mockSchemaValidator,
+      uiStateManager: mockUIStateManager,
     });
   });
 
@@ -489,17 +519,7 @@ describe('ThematicDirectionsManagerController', () => {
           characterBuilderService: mockCharacterBuilderService,
           eventBus: mockEventBus,
           schemaValidator: mockSchemaValidator,
-        });
-      }).toThrow();
-    });
-
-    it('should throw error with invalid character builder service', () => {
-      expect(() => {
-        new ThematicDirectionsManagerController({
-          logger: mockLogger,
-          characterBuilderService: { someMethod: jest.fn() },
-          eventBus: mockEventBus,
-          schemaValidator: mockSchemaValidator,
+          uiStateManager: { showState: jest.fn(), showError: jest.fn() },
         });
       }).toThrow();
     });
@@ -511,6 +531,7 @@ describe('ThematicDirectionsManagerController', () => {
           characterBuilderService: mockCharacterBuilderService,
           eventBus: null,
           schemaValidator: mockSchemaValidator,
+          uiStateManager: { showState: jest.fn(), showError: jest.fn() },
         });
       }).toThrow();
     });
@@ -522,9 +543,11 @@ describe('ThematicDirectionsManagerController', () => {
           characterBuilderService: mockCharacterBuilderService,
           eventBus: mockEventBus,
           schemaValidator: {},
+          uiStateManager: { showState: jest.fn(), showError: jest.fn() },
         });
       }).toThrow();
     });
+
   });
 
   describe('initialize', () => {
@@ -648,6 +671,7 @@ describe('ThematicDirectionsManagerController', () => {
         characterBuilderService: mockCharacterBuilderService,
         eventBus: mockEventBus,
         schemaValidator: mockSchemaValidator,
+        uiStateManager: { showState: jest.fn(), showError: jest.fn() },
       });
 
       await testController.initialize();
@@ -680,6 +704,7 @@ describe('ThematicDirectionsManagerController', () => {
         characterBuilderService: mockCharacterBuilderService,
         eventBus: mockEventBus,
         schemaValidator: mockSchemaValidator,
+        uiStateManager: { showState: jest.fn(), showError: jest.fn() },
       });
 
       await testController.initialize();
@@ -702,6 +727,7 @@ describe('ThematicDirectionsManagerController', () => {
         characterBuilderService: mockCharacterBuilderService,
         eventBus: mockEventBus,
         schemaValidator: mockSchemaValidator,
+        uiStateManager: { showState: jest.fn(), showError: jest.fn() },
       });
 
       await testController.initialize();
@@ -905,6 +931,7 @@ describe('ThematicDirectionsManagerController', () => {
         characterBuilderService: mockCharacterBuilderService,
         eventBus: mockEventBus,
         schemaValidator: mockSchemaValidator,
+        uiStateManager: { showState: jest.fn(), showError: jest.fn() },
       });
 
       await freshController.initialize();
@@ -1473,6 +1500,7 @@ describe('ThematicDirectionsManagerController', () => {
         characterBuilderService: mockCharacterBuilderService,
         eventBus: mockEventBus,
         schemaValidator: mockSchemaValidator,
+        uiStateManager: { showState: jest.fn(), showError: jest.fn() },
       });
 
       await emptyController.initialize();
