@@ -127,77 +127,56 @@ describe('ThematicDirectionsManagerApp Startup Integration', () => {
       });
     });
 
-    // Mock document for error handling
-    mockDocument = {
-      body: { innerHTML: '' },
-      readyState: 'complete',
-      addEventListener: jest.fn(),
-    };
-    global.document = mockDocument;
+    // jsdom provides a real document, so let's use it
+    mockDocument = global.document;
 
-    // Mock DOM elements that the controller expects
-    const createMockElement = (id) => ({
-      id,
-      style: { display: 'none' },
-      innerHTML: '',
-      textContent: '',
-      value: '',
-      addEventListener: jest.fn(),
-      appendChild: jest.fn(),
-      setAttribute: jest.fn(),
-      getAttribute: jest.fn(),
-      querySelector: jest.fn().mockReturnValue({
-        textContent: '',
-        innerHTML: '',
-      }),
-      querySelectorAll: jest.fn().mockReturnValue([]),
-      classList: {
-        add: jest.fn(),
-        remove: jest.fn(),
-        contains: jest.fn(() => false),
-      },
-    });
+    // Clear body and recreate to ensure clean state
+    document.body.innerHTML = '';
+
+    // Mock DOM elements that the controller expects using real DOM elements
+    const createMockElement = (id, tagName = 'DIV') => {
+      // Create a real DOM element using jsdom's document
+      const element = document.createElement(tagName.toLowerCase());
+      element.id = id;
+
+      // Add the element to document.body so it passes the "contains" check
+      document.body.appendChild(element);
+
+      return element;
+    };
 
     // Map of required element IDs to mock elements
     const mockElements = {};
-    const requiredIds = [
-      'empty-state',
-      'loading-state',
-      'error-state',
-      'results-state',
-      'concept-selector',
-      'direction-filter',
-      'directions-results',
-      'refresh-btn',
-      'cleanup-orphans-btn',
-      'back-to-menu-btn',
-      'retry-btn',
+
+    // Define elements with their proper IDs (kebab-case as they appear in HTML)
+    // The controller uses camelCase keys but queries by kebab-case IDs
+    const elementDefinitions = [
+      { id: 'empty-state', tagName: 'DIV' },
+      { id: 'loading-state', tagName: 'DIV' },
+      { id: 'error-state', tagName: 'DIV' },
+      { id: 'results-state', tagName: 'DIV' },
+      { id: 'concept-selector', tagName: 'SELECT' }, // This must be a SELECT element
+      { id: 'direction-filter', tagName: 'DIV' },
+      { id: 'directions-results', tagName: 'DIV' },
+      { id: 'refresh-btn', tagName: 'BUTTON' },
+      { id: 'cleanup-orphans-btn', tagName: 'BUTTON' },
+      { id: 'back-to-menu-btn', tagName: 'BUTTON' },
+      { id: 'retry-btn', tagName: 'BUTTON' },
+      { id: 'concept-display-container', tagName: 'DIV' },
+      { id: 'concept-display-content', tagName: 'DIV' },
+      { id: 'error-message-text', tagName: 'DIV' },
+      { id: 'total-directions', tagName: 'SPAN' },
+      { id: 'orphaned-count', tagName: 'SPAN' },
+      { id: 'confirmation-modal', tagName: 'DIV' },
     ];
 
-    requiredIds.forEach((id) => {
-      mockElements[id] = createMockElement(id);
+    elementDefinitions.forEach(({ id, tagName }) => {
+      mockElements[id] = createMockElement(id, tagName);
     });
 
-    global.document.getElementById = jest.fn(
-      (id) => mockElements[id] || createMockElement(id)
-    );
-
-    global.document.querySelector = jest.fn().mockReturnValue({
-      textContent: '',
-    });
-
-    global.document.createElement = jest.fn().mockImplementation(() => ({
-      className: '',
-      id: '',
-      textContent: '',
-      appendChild: jest.fn(),
-      setAttribute: jest.fn(),
-      querySelector: jest.fn().mockReturnValue({
-        textContent: '',
-        innerHTML: '',
-      }),
-      querySelectorAll: jest.fn().mockReturnValue([]),
-    }));
+    // Since we're using real DOM elements, just use the native methods
+    // The elements are already added to the document.body with their IDs set
+    // Don't mock document.createElement - we need the real one for our elements to work
 
     // Import the app class after mocks are set up
     const module = await import(

@@ -139,10 +139,16 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
                   }
                 }
 
-                // Resolve targets - match the original API signature
+                // Resolve targets - handle both legacy 'scope' and new 'targets' format
+                const scopeValue =
+                  actionDef.scope ||
+                  (typeof actionDef.targets === 'string'
+                    ? actionDef.targets
+                    : null);
+
                 const targetResult =
                   mocks.targetResolutionService.resolveTargets(
-                    actionDef.scope,
+                    scopeValue,
                     actor,
                     context,
                     trace,

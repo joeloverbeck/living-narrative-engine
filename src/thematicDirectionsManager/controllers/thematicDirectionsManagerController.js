@@ -92,33 +92,29 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
   }
 
   /**
-   * Initialize the thematic directions manager UI
+   * Initialize additional services and components
+   * Called during the standard initialization sequence after caching and event setup
    *
+   * @protected
+   * @override
    * @returns {Promise<void>}
    */
-  async initialize() {
-    try {
-      // Cache DOM elements using base class method
-      this._cacheElements();
+  async _initializeAdditionalServices() {
+    await super._initializeAdditionalServices();
 
-      // Initialize concept dropdown
+    try {
+      // Initialize concept dropdown (moved from initialize())
       this.#conceptDropdown = new PreviousItemsDropdown({
         element: this._getElement('conceptSelector'),
         onSelectionChange: this.#handleConceptSelection.bind(this),
         labelText: 'Choose Concept:',
       });
 
-      // Initialize service
+      // Initialize characterBuilderService (moved from initialize())
       await this.characterBuilderService.initialize();
 
-      // Set up event listeners using the base class helper method
-      this._setupEventListeners();
-
-      // Load initial data
-      await this.#loadDirectionsData();
-
-      this.logger.info(
-        'ThematicDirectionsManagerController: Successfully initialized'
+      this.logger.debug(
+        'ThematicDirectionsManagerController: Additional services initialized'
       );
     } catch (error) {
       this.logger.error(
@@ -130,7 +126,59 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
           'Failed to initialize directions manager. Please refresh the page.'
         );
       }
+      throw error; // Re-throw for base class to handle
     }
+  }
+
+  /**
+   * Load initial page data
+   * Called during the standard initialization sequence after services are initialized
+   *
+   * @protected
+   * @override
+   * @returns {Promise<void>}
+   */
+  async _loadInitialData() {
+    // Delegate to existing method (to minimize changes)
+    await this.#loadDirectionsData();
+  }
+
+  /**
+   * Initialize UI state based on loaded data
+   * Called during the standard initialization sequence after data is loaded
+   *
+   * @protected
+   * @override
+   * @returns {Promise<void>}
+   */
+  async _initializeUIState() {
+    await super._initializeUIState(); // Initializes UIStateManager
+
+    // Display directions and determine appropriate state
+    // (moved from #loadDirectionsData)
+    this.#filterAndDisplayDirections();
+
+    // Note: #filterAndDisplayDirections already handles:
+    // - Showing EMPTY state if no data
+    // - Showing RESULTS state if data exists
+    // - Displaying the directions
+  }
+
+  /**
+   * Post-initialization setup
+   * Called after all initialization steps are complete
+   *
+   * @protected
+   * @override
+   * @returns {Promise<void>}
+   */
+  async _postInitialize() {
+    await super._postInitialize();
+
+    // Log successful initialization (moved from initialize())
+    this.logger.info(
+      'ThematicDirectionsManagerController: Successfully initialized'
+    );
   }
 
   /**
@@ -159,9 +207,6 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
 
       // Update stats
       this.#updateStats();
-
-      // Display directions
-      this.#filterAndDisplayDirections();
 
       this.logger.info(
         'ThematicDirectionsManagerController: Loaded directions data',
@@ -483,13 +528,8 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
         dataItem.direction[fieldName] = newValue.trim();
       }
 
-      // Dispatch update event
-      this.eventBus.dispatch('core:direction_updated', {
-        directionId,
-        field: fieldName,
-        oldValue: originalValue,
-        newValue: newValue.trim(),
-      });
+      // Note: Event is already dispatched by characterBuilderService.updateThematicDirection
+      // No need to dispatch it again here
 
       this.logger.info(
         'ThematicDirectionsManagerController: Updated direction field',

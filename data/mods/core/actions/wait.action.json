@@ -3,7 +3,7 @@
   "id": "core:wait",
   "name": "Wait",
   "description": "Wait for a moment, doing nothing.",
-  "scope": "none",
+  "targets": "none",
   "template": "wait",
   "prerequisites": []
 }

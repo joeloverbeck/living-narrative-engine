@@ -413,6 +413,12 @@ describe('thematicDirectionsManagerMain', () => {
           characterBuilderService: mockCharacterBuilderService,
           eventBus: mockEventBus,
           schemaValidator: mockSchemaValidator,
+          uiStateManager: expect.objectContaining({
+            showState: expect.any(Function),
+            showError: expect.any(Function),
+            showLoading: expect.any(Function),
+            getCurrentState: expect.any(Function),
+          }),
         });
       });
 

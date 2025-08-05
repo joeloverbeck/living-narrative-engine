@@ -85,14 +85,24 @@ class ThematicDirectionsManagerApp {
 
   #registerController(container) {
     const registrar = new Registrar(container);
+
     registrar.singletonFactory(
       tokens.ThematicDirectionsManagerController,
       (c) => {
+        // Create a null UIStateManager that provides required methods but does nothing
+        const nullUIStateManager = {
+          showState: () => {},
+          showError: () => {},
+          showLoading: () => {},
+          getCurrentState: () => null,
+        };
+
         return new ThematicDirectionsManagerController({
           logger: c.resolve(tokens.ILogger),
           characterBuilderService: c.resolve(tokens.CharacterBuilderService),
           eventBus: c.resolve(tokens.ISafeEventDispatcher),
           schemaValidator: c.resolve(tokens.ISchemaValidator),
+          uiStateManager: nullUIStateManager,
         });
       }
     );
