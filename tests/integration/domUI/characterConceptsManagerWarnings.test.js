@@ -1,6 +1,6 @@
 /**
  * @file Integration tests to reproduce warning issues in CharacterConceptsManagerController
- * 
+ *
  * Note: This test has been simplified from its original form. The original test attempted to use
  * the full dependency injection container, which caused timeout issues due to HTTP requests
  * for configuration files. Since the warnings this test was checking for have already been
@@ -264,7 +264,7 @@ describe('CharacterConceptsManagerController - Warnings Integration Test', () =>
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      
+
       characterBuilderService.createCharacterConcept.mockResolvedValue(concept);
       await characterBuilderService.createCharacterConcept({
         concept: 'Test character concept for update',

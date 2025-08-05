@@ -215,4 +215,6 @@ export const coreTokens = freeze({
   ITargetContextBuilder: 'ITargetContextBuilder',
   // Multi-Target Resolution Stage
   IMultiTargetResolutionStage: 'IMultiTargetResolutionStage',
+  // Thematic Directions Manager Controller
+  ThematicDirectionsManagerController: 'ThematicDirectionsManagerController',
 });

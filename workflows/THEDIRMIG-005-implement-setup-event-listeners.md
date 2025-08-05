@@ -1,4 +1,4 @@
-# THEDIRMIG-005: Implement _setupEventListeners() Method
+# THEDIRMIG-005: Implement \_setupEventListeners() Method
 
 ## Overview
 
@@ -42,13 +42,14 @@ grep -n "onclick\|\.click" src/thematicDirectionsManager/controllers/thematicDir
 ```
 
 Common patterns to migrate:
+
 - Button click handlers
 - Input field listeners
 - Modal interactions
 - Event bus subscriptions
 - Delegated listeners for dynamic content
 
-### Step 2: Implement _setupEventListeners() Method
+### Step 2: Implement \_setupEventListeners() Method
 
 Replace the placeholder with actual implementation:
 
@@ -64,59 +65,59 @@ _setupEventListeners() {
   this._addEventListener('retryBtn', 'click', () => this._loadDirectionsData());
   this._addEventListener('cleanupOrphansBtn', 'click', () => this._handleCleanupOrphans());
   this._addEventListener('addDirectionBtn', 'click', () => this._showAddDirectionModal());
-  
+
   // === Filter Handlers ===
   // Debounced text input for search
-  this._addDebouncedListener('directionFilter', 'input', 
+  this._addDebouncedListener('directionFilter', 'input',
     (e) => this._handleFilterChange(e.target.value), 300);
-  
+
   // Concept dropdown change
-  this._addEventListener('conceptFilter', 'change', 
+  this._addEventListener('conceptFilter', 'change',
     (e) => this._handleConceptSelection(e.target.value));
-  
+
   // Clear filters button
   this._addEventListener('filterClear', 'click', () => this._clearFilters());
-  
+
   // === Delegated Listeners for Dynamic Content ===
   // Click on direction cards
-  this._addDelegatedListener('directionsList', '.direction-card', 'click', 
+  this._addDelegatedListener('directionsList', '.direction-card', 'click',
     (e, target) => this._handleDirectionClick(e, target));
-  
+
   // Delete button on cards (stop propagation)
-  this._addDelegatedListener('directionsList', '.delete-btn', 'click', 
+  this._addDelegatedListener('directionsList', '.delete-btn', 'click',
     (e, target) => {
       e.stopPropagation();
       this._handleDeleteClick(e, target);
     });
-  
+
   // Edit buttons on cards
   this._addDelegatedListener('directionsList', '.edit-btn', 'click',
     (e, target) => {
       e.stopPropagation();
       this._handleEditClick(e, target);
     });
-  
+
   // === Modal Event Handlers ===
   this._addEventListener('modalConfirmBtn', 'click', () => this._handleModalConfirm());
   this._addEventListener('modalCancelBtn', 'click', () => this._closeModal());
-  
+
   // Click outside modal to close
   this._addEventListener('modalOverlay', 'click', (e) => {
     if (e.target.id === 'modal-overlay') {
       this._closeModal();
     }
   });
-  
+
   // === Keyboard Shortcuts ===
   this._addEventListener(document, 'keydown', (e) => this._handleKeyPress(e));
-  
+
   // === Application Event Subscriptions ===
-  this._subscribeToEvent('core:thematic_direction_updated', 
+  this._subscribeToEvent('core:thematic_direction_updated',
     (data) => this._handleDirectionUpdated(data));
-  
-  this._subscribeToEvent('core:character_concept_updated', 
+
+  this._subscribeToEvent('core:character_concept_updated',
     (data) => this._handleConceptUpdated(data));
-  
+
   this._subscribeToEvent('core:thematic_direction_deleted',
     (data) => this._handleDirectionDeleted(data));
 }
@@ -127,6 +128,7 @@ _setupEventListeners() {
 Find and update existing event setup code:
 
 **Before**:
+
 ```javascript
 // In initialize() or setupEventListeners()
 document.getElementById('refresh-btn').addEventListener('click', () => {
@@ -142,12 +144,14 @@ this.#eventListeners.push({ element, event, handler });
 ```
 
 **After**:
+
 ```javascript
 // In _setupEventListeners()
 this._addEventListener('refreshBtn', 'click', () => this._loadDirectionsData());
 
-this._subscribeToEvent('core:thematic_direction_updated', 
-  (data) => this._handleDirectionUpdated(data));
+this._subscribeToEvent('core:thematic_direction_updated', (data) =>
+  this._handleDirectionUpdated(data)
+);
 
 // No manual cleanup needed - base class handles it
 ```
@@ -159,16 +163,20 @@ For dynamically created elements, use delegated listeners:
 ```javascript
 // Instead of adding listeners to each direction card:
 // ❌ AVOID
-directionCards.forEach(card => {
+directionCards.forEach((card) => {
   card.addEventListener('click', () => this._selectDirection(card.dataset.id));
 });
 
 // ✅ USE delegated listener on parent
-this._addDelegatedListener('directionsList', '.direction-card', 'click',
+this._addDelegatedListener(
+  'directionsList',
+  '.direction-card',
+  'click',
   (e, target) => {
     const directionId = target.dataset.directionId;
     this._selectDirection(directionId);
-  });
+  }
+);
 ```
 
 ### Step 5: Handle Special Event Cases
@@ -177,11 +185,13 @@ this._addDelegatedListener('directionsList', '.direction-card', 'click',
 
 ```javascript
 // For search/filter inputs that shouldn't fire on every keystroke
-this._addDebouncedListener('directionFilter', 'input', 
+this._addDebouncedListener(
+  'directionFilter',
+  'input',
   (e) => {
     const searchTerm = e.target.value.trim();
     this._filterDirections(searchTerm);
-  }, 
+  },
   300 // 300ms delay
 );
 ```
@@ -189,12 +199,15 @@ this._addDebouncedListener('directionFilter', 'input',
 #### Event Delegation with Data Attributes
 
 ```javascript
-this._addDelegatedListener('directionsList', '[data-action]', 'click',
+this._addDelegatedListener(
+  'directionsList',
+  '[data-action]',
+  'click',
   (e, target) => {
     e.preventDefault();
     const action = target.dataset.action;
     const directionId = target.closest('.direction-card').dataset.directionId;
-    
+
     switch (action) {
       case 'edit':
         this._editDirection(directionId);
@@ -206,7 +219,8 @@ this._addDelegatedListener('directionsList', '[data-action]', 'click',
         this._duplicateDirection(directionId);
         break;
     }
-  });
+  }
+);
 ```
 
 #### Keyboard Shortcuts
@@ -215,11 +229,13 @@ this._addDelegatedListener('directionsList', '[data-action]', 'click',
 // Global keyboard shortcuts
 this._addEventListener(document, 'keydown', (e) => {
   // Only handle if no input is focused
-  if (document.activeElement.tagName === 'INPUT' || 
-      document.activeElement.tagName === 'TEXTAREA') {
+  if (
+    document.activeElement.tagName === 'INPUT' ||
+    document.activeElement.tagName === 'TEXTAREA'
+  ) {
     return;
   }
-  
+
   switch (e.key) {
     case 'r':
       if (e.ctrlKey || e.metaKey) {
@@ -272,7 +288,7 @@ _handleFilterChange(value) {
 _handleDirectionClick(event, element) {
   const directionId = element.dataset.directionId;
   if (!directionId) return;
-  
+
   this._selectDirection(directionId);
 }
 
@@ -280,7 +296,7 @@ _handleDeleteClick(event, element) {
   event.stopPropagation(); // Prevent card click
   const card = element.closest('.direction-card');
   const directionId = card.dataset.directionId;
-  
+
   this._confirmDeleteDirection(directionId);
 }
 ```
@@ -325,21 +341,42 @@ describe('Event Listener Setup', () => {
     const addDebouncedSpy = jest.spyOn(controller, '_addDebouncedListener');
     const addDelegatedSpy = jest.spyOn(controller, '_addDelegatedListener');
     const subscribeToEventSpy = jest.spyOn(controller, '_subscribeToEvent');
-    
+
     controller._setupEventListeners();
-    
+
     // Verify button listeners
-    expect(addEventListenerSpy).toHaveBeenCalledWith('refreshBtn', 'click', expect.any(Function));
-    expect(addEventListenerSpy).toHaveBeenCalledWith('retryBtn', 'click', expect.any(Function));
-    
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'refreshBtn',
+      'click',
+      expect.any(Function)
+    );
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'retryBtn',
+      'click',
+      expect.any(Function)
+    );
+
     // Verify debounced listener
-    expect(addDebouncedSpy).toHaveBeenCalledWith('directionFilter', 'input', expect.any(Function), 300);
-    
+    expect(addDebouncedSpy).toHaveBeenCalledWith(
+      'directionFilter',
+      'input',
+      expect.any(Function),
+      300
+    );
+
     // Verify delegated listeners
-    expect(addDelegatedSpy).toHaveBeenCalledWith('directionsList', '.direction-card', 'click', expect.any(Function));
-    
+    expect(addDelegatedSpy).toHaveBeenCalledWith(
+      'directionsList',
+      '.direction-card',
+      'click',
+      expect.any(Function)
+    );
+
     // Verify event subscriptions
-    expect(subscribeToEventSpy).toHaveBeenCalledWith('core:thematic_direction_updated', expect.any(Function));
+    expect(subscribeToEventSpy).toHaveBeenCalledWith(
+      'core:thematic_direction_updated',
+      expect.any(Function)
+    );
   });
 });
 ```
@@ -352,13 +389,13 @@ describe('Event Listener Setup', () => {
 _setupEventListeners() {
   // === Group 1: User Actions ===
   this._setupActionButtons();
-  
+
   // === Group 2: Filtering ===
   this._setupFilterListeners();
-  
+
   // === Group 3: Dynamic Content ===
   this._setupDelegatedListeners();
-  
+
   // === Group 4: Application Events ===
   this._setupEventSubscriptions();
 }
@@ -377,12 +414,16 @@ _handleKeyPress(e) { }
 ### Pattern 3: Stop Propagation for Nested Elements
 
 ```javascript
-this._addDelegatedListener('directionsList', '.delete-btn', 'click',
+this._addDelegatedListener(
+  'directionsList',
+  '.delete-btn',
+  'click',
   (e, target) => {
     e.stopPropagation(); // Prevent parent click
-    e.preventDefault();  // Prevent default action
+    e.preventDefault(); // Prevent default action
     this._handleDeleteClick(e, target);
-  });
+  }
+);
 ```
 
 ## Files Modified
@@ -395,12 +436,12 @@ this._addDelegatedListener('directionsList', '.delete-btn', 'click',
 
 ## Definition of Done
 
-- [ ] _setupEventListeners() implemented
+- [ ] \_setupEventListeners() implemented
 - [ ] All direct addEventListener calls removed
 - [ ] All event handlers use base class helpers
 - [ ] Debounced listeners used for text inputs
 - [ ] Delegated listeners handle dynamic content
-- [ ] Event subscriptions use _subscribeToEvent()
+- [ ] Event subscriptions use \_subscribeToEvent()
 - [ ] Manual cleanup code removed
 - [ ] All event handling behavior preserved
 - [ ] Manual testing confirms all interactions work

@@ -1,4 +1,4 @@
-# THEDIRMIG-004: Implement _cacheElements() Method
+# THEDIRMIG-004: Implement \_cacheElements() Method
 
 ## Overview
 
@@ -35,6 +35,7 @@ grep -o 'id="[^"]*"' thematic-directions-manager.html | sort | uniq
 ```
 
 Expected elements:
+
 - Container elements
 - UIStateManager state containers
 - Filter controls
@@ -42,7 +43,7 @@ Expected elements:
 - Stats displays
 - Modal elements
 
-### Step 2: Implement _cacheElements() Method
+### Step 2: Implement \_cacheElements() Method
 
 Replace the placeholder with actual implementation:
 
@@ -58,31 +59,31 @@ _cacheElements() {
     directionsContainer: '#directions-container',
     directionsList: '#directions-list',
     directionsResults: '#directions-results',
-    
+
     // UIStateManager required elements
     emptyState: '#empty-state',
     loadingState: '#loading-state',
     errorState: '#error-state',
     resultsState: '#results-state',
     errorMessageText: '#error-message-text',
-    
+
     // Filter controls
     conceptFilter: '#concept-filter',
     directionFilter: '#direction-filter',
     filterClear: '#filter-clear',
     activeFilters: '#active-filters',
-    
+
     // Action buttons
     refreshBtn: '#refresh-btn',
     retryBtn: '#retry-btn',
     cleanupOrphansBtn: '#cleanup-orphans-btn',
     addDirectionBtn: '#add-direction-btn',
-    
+
     // Stats displays
     totalDirections: '#total-directions',
     orphanedDirections: '#orphaned-directions',
     filteredCount: '#filtered-count',
-    
+
     // Modal elements
     confirmationModal: '#confirmation-modal',
     modalTitle: '#modal-title',
@@ -90,7 +91,7 @@ _cacheElements() {
     modalConfirmBtn: '#modal-confirm-btn',
     modalCancelBtn: '#modal-cancel-btn',
     modalOverlay: '#modal-overlay',
-    
+
     // Optional elements (may not exist in all views)
     loadingSpinner: { selector: '.loading-spinner', required: false },
     searchHighlight: { selector: '.search-highlight', required: false },
@@ -114,6 +115,7 @@ const filterInput = this._getElement('directionFilter');
 ```
 
 Search for DOM access patterns:
+
 ```bash
 # Find direct DOM access
 grep -n "document\." src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js
@@ -151,15 +153,15 @@ The base class handles missing required elements, but add defensive coding for o
 _updateStats() {
   const totalElement = this._getElement('totalDirections');
   const orphanedElement = this._getElement('orphanedDirections');
-  
+
   if (totalElement) {
     totalElement.textContent = this.#directionsData.length;
   }
-  
+
   if (orphanedElement) {
     orphanedElement.textContent = this.#orphanedCount;
   }
-  
+
   // Optional element - check before use
   const filteredElement = this._getElement('filteredCount');
   if (filteredElement) {
@@ -186,14 +188,14 @@ _cacheElements() {
     directionsContainer: '#directions-container',     // Main wrapper
     directionsList: '#directions-list',              // List of direction cards
     directionsResults: '#directions-results',        // Results wrapper
-    
+
     // UIStateManager state containers (required by base class)
     emptyState: '#empty-state',                      // No directions message
     loadingState: '#loading-state',                  // Loading indicator
     errorState: '#error-state',                      // Error message display
     resultsState: '#results-state',                  // Results container
     errorMessageText: '#error-message-text',         // Error message text element
-    
+
     // ... rest of elements with descriptions
   });
 }
@@ -208,7 +210,7 @@ Add temporary debug code to verify caching:
 ```javascript
 _cacheElements() {
   this._cacheElementsFromMap({ /* ... */ });
-  
+
   // Temporary: Log cached elements
   if (this.logger.debug) {
     this.logger.debug('Cached elements:', {
@@ -223,6 +225,7 @@ _cacheElements() {
 ### Step 2: Test Missing Optional Elements
 
 Temporarily rename optional elements in HTML to test handling:
+
 ```html
 <!-- Rename id="tooltip-container" to id="tooltip-container-disabled" -->
 ```
@@ -232,6 +235,7 @@ Verify the controller still functions without errors.
 ### Step 3: Test Required Element Validation
 
 Temporarily rename a required element to test error handling:
+
 ```html
 <!-- Rename id="directions-container" to id="directions-container-broken" -->
 ```
@@ -246,15 +250,15 @@ Should see a clear error message from base class about missing element.
 _cacheElements() {
   this._cacheElementsFromMap({
     // Group related elements with comments
-    
+
     // === Container Elements ===
     directionsContainer: '#directions-container',
     directionsList: '#directions-list',
-    
+
     // === UIStateManager Elements ===
     emptyState: '#empty-state',
     loadingState: '#loading-state',
-    
+
     // === Filter Controls ===
     conceptFilter: '#concept-filter',
     directionFilter: '#direction-filter',
@@ -266,9 +270,9 @@ _cacheElements() {
 
 ```javascript
 // For elements that might not exist in all contexts
-tooltipContainer: { 
-  selector: '#tooltip-container', 
-  required: false 
+tooltipContainer: {
+  selector: '#tooltip-container',
+  required: false
 },
 
 // Shorthand for required elements
@@ -299,7 +303,7 @@ if (tooltip) {
 
 ## Definition of Done
 
-- [ ] _cacheElements() implemented with all required elements
+- [ ] \_cacheElements() implemented with all required elements
 - [ ] Optional elements marked appropriately
 - [ ] All direct DOM access replaced with cached access
 - [ ] UIStateManager elements included

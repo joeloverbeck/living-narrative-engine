@@ -20,7 +20,7 @@ Implement proper lifecycle management for the ~25-30 InPlaceEditor instances use
 - [ ] Editors are created when direction cards are displayed
 - [ ] Each editor is properly configured with field-specific settings
 - [ ] Editors are destroyed before creating new ones
-- [ ] All editors are cleaned up in _preDestroy()
+- [ ] All editors are cleaned up in \_preDestroy()
 - [ ] No memory leaks from orphaned editor instances
 - [ ] Edit functionality remains fully operational
 - [ ] Validation and parsing work correctly
@@ -34,13 +34,13 @@ Add instance tracking to the controller:
 ```javascript
 export class ThematicDirectionsManagerController extends BaseCharacterBuilderController {
   // Existing fields...
-  
+
   /**
    * Map of InPlaceEditor instances keyed by element ID
    * @type {Map<string, InPlaceEditor>}
    */
   #inPlaceEditors = new Map();
-  
+
   /**
    * Configuration for each editable field type
    * @type {Object}
@@ -49,7 +49,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     name: { maxLength: 100, required: true },
     description: { maxLength: 500, required: true, multiline: true },
     tags: { maxLength: 200, parser: this._parseTagsString.bind(this) },
-    concepts: { maxLength: 300, parser: this._parseConceptsString.bind(this) }
+    concepts: { maxLength: 300, parser: this._parseConceptsString.bind(this) },
   };
 }
 ```
@@ -74,12 +74,12 @@ _createInPlaceEditor(elementId, directionId, fieldName, config) {
     this.logger.warn(`Element not found for InPlaceEditor: ${elementId}`);
     return;
   }
-  
+
   // Destroy existing editor if any
   if (this.#inPlaceEditors.has(elementId)) {
     this._destroyInPlaceEditor(elementId);
   }
-  
+
   // Create new editor
   const editor = new InPlaceEditor({
     element: element,
@@ -98,10 +98,10 @@ _createInPlaceEditor(elementId, directionId, fieldName, config) {
     placeholder: `Enter ${fieldName}...`,
     trimValue: true
   });
-  
+
   // Track the editor
   this.#inPlaceEditors.set(elementId, editor);
-  
+
   return editor;
 }
 
@@ -126,7 +126,7 @@ _destroyInPlaceEditor(elementId) {
  */
 _destroyAllInPlaceEditors() {
   this.logger.debug(`Destroying ${this.#inPlaceEditors.size} InPlaceEditor instances`);
-  
+
   this.#inPlaceEditors.forEach((editor, elementId) => {
     try {
       if (typeof editor.destroy === 'function') {
@@ -136,7 +136,7 @@ _destroyAllInPlaceEditors() {
       this.logger.error(`Error destroying InPlaceEditor ${elementId}:`, error);
     }
   });
-  
+
   this.#inPlaceEditors.clear();
 }
 ```
@@ -153,27 +153,27 @@ Update the display method to initialize editors:
 _displayDirections() {
   // Destroy existing editors before re-rendering
   this._destroyAllInPlaceEditors();
-  
+
   const container = this._getElement('directionsList');
   if (!container) return;
-  
+
   const filteredDirections = this._getFilteredDirections();
-  
+
   if (filteredDirections.length === 0) {
     container.innerHTML = '<p class="no-results">No directions match your filters.</p>';
     return;
   }
-  
+
   // Render direction cards
   container.innerHTML = filteredDirections
     .map(direction => this._createDirectionCardHTML(direction))
     .join('');
-  
+
   // Initialize InPlaceEditors for each direction
   filteredDirections.forEach(direction => {
     this._initializeDirectionEditors(direction);
   });
-  
+
   this.logger.debug(`Displayed ${filteredDirections.length} directions with editors`);
 }
 
@@ -184,7 +184,7 @@ _displayDirections() {
  */
 _initializeDirectionEditors(direction) {
   const directionId = direction.id;
-  
+
   // Initialize editor for each editable field
   Object.entries(this.#editorConfigs).forEach(([fieldName, config]) => {
     const elementId = `direction-${directionId}-${fieldName}`;
@@ -201,12 +201,12 @@ _initializeDirectionEditors(direction) {
 _createDirectionCardHTML(direction) {
   const concepts = direction.concepts || [];
   const tags = direction.tags || [];
-  
+
   return `
     <div class="direction-card" data-direction-id="${direction.id}">
       <div class="direction-header">
-        <h3 id="direction-${direction.id}-name" 
-            class="direction-name editable" 
+        <h3 id="direction-${direction.id}-name"
+            class="direction-name editable"
             data-field="name">${this._escapeHtml(direction.name)}</h3>
         <div class="direction-actions">
           <button class="icon-btn edit-btn" data-action="edit" title="Edit">
@@ -217,27 +217,27 @@ _createDirectionCardHTML(direction) {
           </button>
         </div>
       </div>
-      
-      <div id="direction-${direction.id}-description" 
-           class="direction-description editable" 
+
+      <div id="direction-${direction.id}-description"
+           class="direction-description editable"
            data-field="description">${this._escapeHtml(direction.description)}</div>
-      
+
       <div class="direction-metadata">
         <div class="metadata-row">
           <span class="metadata-label">Tags:</span>
-          <span id="direction-${direction.id}-tags" 
-                class="metadata-value editable" 
+          <span id="direction-${direction.id}-tags"
+                class="metadata-value editable"
                 data-field="tags">${tags.join(', ') || 'None'}</span>
         </div>
-        
+
         <div class="metadata-row">
           <span class="metadata-label">Concepts:</span>
-          <span id="direction-${direction.id}-concepts" 
-                class="metadata-value editable" 
+          <span id="direction-${direction.id}-concepts"
+                class="metadata-value editable"
                 data-field="concepts">${concepts.map(c => c.name).join(', ') || 'None'}</span>
         </div>
       </div>
-      
+
       <div class="direction-footer">
         <span class="direction-id">ID: ${direction.id}</span>
         <span class="direction-status ${direction.orphaned ? 'orphaned' : ''}">
@@ -265,28 +265,28 @@ Implement the save handler:
 async _handleInPlaceEdit(directionId, fieldName, value) {
   try {
     this.logger.debug(`Saving edit for ${fieldName} on direction ${directionId}`);
-    
+
     // Find the direction
     const direction = this.#directionsData.find(d => d.id === directionId);
     if (!direction) {
       throw new Error(`Direction not found: ${directionId}`);
     }
-    
+
     // Prepare update data
     const updateData = { ...direction };
     updateData[fieldName] = value;
-    
+
     // Validate against schema
     const validation = await this.schemaValidator.validateAgainstSchema(
       updateData,
       'thematic-direction'
     );
-    
+
     if (!validation.valid) {
       this._showError(`Validation failed: ${validation.errors.join(', ')}`);
       return false;
     }
-    
+
     // Save to backend
     await this._executeWithErrorHandling(
       () => this.characterBuilderService.updateThematicDirection(directionId, updateData),
@@ -296,19 +296,19 @@ async _handleInPlaceEdit(directionId, fieldName, value) {
         userErrorMessage: `Failed to save ${fieldName}. Please try again.`
       }
     );
-    
+
     // Update local data
     Object.assign(direction, updateData);
-    
+
     // Dispatch update event
     this.eventBus.dispatch({
       type: 'core:thematic_direction_updated',
       payload: { direction: updateData }
     });
-    
+
     this._showSuccess(`${fieldName} updated successfully`);
     return true;
-    
+
   } catch (error) {
     this.logger.error(`Failed to save in-place edit:`, error);
     this._showError(`Failed to save changes: ${error.message}`);
@@ -332,21 +332,21 @@ Add field-specific validation:
  */
 _validateField(fieldName, value, config) {
   const validation = { valid: true, error: null };
-  
+
   // Check required
   if (config.required && !value?.toString().trim()) {
     return { valid: false, error: `${fieldName} is required` };
   }
-  
+
   // Check max length
   const stringValue = value?.toString() || '';
   if (config.maxLength && stringValue.length > config.maxLength) {
-    return { 
-      valid: false, 
-      error: `${fieldName} must be ${config.maxLength} characters or less` 
+    return {
+      valid: false,
+      error: `${fieldName} must be ${config.maxLength} characters or less`
     };
   }
-  
+
   // Field-specific validation
   switch (fieldName) {
     case 'name':
@@ -354,19 +354,19 @@ _validateField(fieldName, value, config) {
         return { valid: false, error: 'Name must be at least 3 characters' };
       }
       break;
-      
+
     case 'tags':
       const tags = this._parseTagsString(stringValue);
       if (tags.some(tag => tag.length > 30)) {
         return { valid: false, error: 'Individual tags must be 30 characters or less' };
       }
       break;
-      
+
     case 'concepts':
       // Concepts are validated during save against available concepts
       break;
   }
-  
+
   return validation;
 }
 
@@ -409,18 +409,18 @@ Add cleanup to the destroy lifecycle:
  */
 _preDestroy() {
   this.logger.debug('ThematicDirectionsManager: Starting pre-destroy cleanup');
-  
+
   // Destroy all InPlaceEditor instances
   this._destroyAllInPlaceEditors();
-  
+
   // Clear any pending operations
   if (this.#pendingModalAction) {
     this.#pendingModalAction = null;
   }
-  
+
   // Cancel any pending saves
   this._cancelPendingOperations();
-  
+
   super._preDestroy();
 }
 
@@ -432,9 +432,9 @@ _preDestroy() {
 _postDestroy() {
   // Additional cleanup if needed
   this.#editorConfigs = null;
-  
+
   super._postDestroy();
-  
+
   this.logger.debug('ThematicDirectionsManager: Cleanup complete');
 }
 ```
@@ -452,12 +452,12 @@ Update event handlers for dynamic content:
 _handleDirectionUpdated(data) {
   const { direction } = data;
   if (!direction) return;
-  
+
   // Update local data
   const index = this.#directionsData.findIndex(d => d.id === direction.id);
   if (index !== -1) {
     this.#directionsData[index] = direction;
-    
+
     // Only re-render if the updated direction is visible
     const isVisible = this._isDirectionVisible(direction);
     if (isVisible) {
@@ -475,17 +475,17 @@ _handleDirectionUpdated(data) {
 _updateDirectionCard(direction) {
   const card = document.querySelector(`[data-direction-id="${direction.id}"]`);
   if (!card) return;
-  
+
   // Destroy existing editors for this card
   Object.keys(this.#editorConfigs).forEach(fieldName => {
     const elementId = `direction-${direction.id}-${fieldName}`;
     this._destroyInPlaceEditor(elementId);
   });
-  
+
   // Replace card HTML
   const newCardHTML = this._createDirectionCardHTML(direction);
   card.outerHTML = newCardHTML;
-  
+
   // Re-initialize editors
   this._initializeDirectionEditors(direction);
 }
@@ -518,27 +518,31 @@ _updateDirectionCard(direction) {
 describe('InPlaceEditor Lifecycle', () => {
   it('should create editors when displaying directions', () => {
     const directions = [
-      { id: '1', name: 'Direction 1', description: 'Desc 1', tags: ['tag1'] }
+      { id: '1', name: 'Direction 1', description: 'Desc 1', tags: ['tag1'] },
     ];
     controller.#directionsData = directions;
-    
+
     controller._displayDirections();
-    
+
     // Verify editor was created for each field
     expect(controller.#inPlaceEditors.size).toBe(4); // name, desc, tags, concepts
     expect(controller.#inPlaceEditors.has('direction-1-name')).toBe(true);
   });
-  
+
   it('should destroy all editors on cleanup', () => {
     // Create some editors
-    controller._createInPlaceEditor('test-1', 'dir1', 'name', { maxLength: 100 });
-    controller._createInPlaceEditor('test-2', 'dir1', 'desc', { maxLength: 500 });
-    
+    controller._createInPlaceEditor('test-1', 'dir1', 'name', {
+      maxLength: 100,
+    });
+    controller._createInPlaceEditor('test-2', 'dir1', 'desc', {
+      maxLength: 500,
+    });
+
     expect(controller.#inPlaceEditors.size).toBe(2);
-    
+
     // Cleanup
     controller._preDestroy();
-    
+
     expect(controller.#inPlaceEditors.size).toBe(0);
   });
 });
@@ -550,7 +554,7 @@ describe('InPlaceEditor Lifecycle', () => {
 
 1. **Always destroy before create**: When re-rendering, destroy existing editors first
 2. **Track all instances**: Use Map to ensure no orphaned instances
-3. **Cleanup on destroy**: Implement thorough cleanup in _preDestroy()
+3. **Cleanup on destroy**: Implement thorough cleanup in \_preDestroy()
 4. **Handle errors gracefully**: Don't let destroy errors prevent cleanup of others
 
 ### Browser DevTools Verification
@@ -583,7 +587,7 @@ console.log(window.__DEBUG_EDITORS__.size);
 - [ ] Editors created when directions displayed
 - [ ] Field-specific configurations applied
 - [ ] Editors destroyed before re-rendering
-- [ ] Cleanup implemented in _preDestroy()
+- [ ] Cleanup implemented in \_preDestroy()
 - [ ] Edit functionality fully operational
 - [ ] Validation working correctly
 - [ ] No memory leaks detected

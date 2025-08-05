@@ -50,7 +50,14 @@ grep -A 20 "describe.*Warning" tests/unit/domUI/characterConceptsManagerControll
  * but don't cause failures. Ensures the controller handles degraded conditions properly.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { BaseCharacterBuilderControllerTestBase } from '../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 import { UI_STATES } from '../../../../src/shared/characterBuilder/uiStateManager.js';
@@ -60,11 +67,11 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
   let controller;
   let consoleWarnSpy;
   let loggerWarnSpy;
-  
+
   beforeEach(async () => {
     testBase = new BaseCharacterBuilderControllerTestBase();
     await testBase.setup();
-    
+
     // Add minimal DOM for warning tests
     testBase.addDOMElement(`
       <div id="directions-container">
@@ -82,19 +89,19 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
       <select id="concept-filter"></select>
       <input id="direction-filter" type="text" />
     `);
-    
+
     // Spy on warning methods
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
     loggerWarnSpy = jest.spyOn(testBase.mocks.logger, 'warn');
-    
+
     controller = new ThematicDirectionsManagerController(testBase.mocks);
   });
-  
+
   afterEach(async () => {
     consoleWarnSpy.mockRestore();
     await testBase.cleanup();
   });
-  
+
   describe('Component Initialization Warnings', () => {
     it('should warn but continue when InPlaceEditor fails to initialize', async () => {
       // Mock InPlaceEditor to throw during construction
@@ -102,73 +109,76 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
       global.InPlaceEditor = jest.fn(() => {
         throw mockError;
       });
-      
-      const mockDirections = [{
-        id: '1',
-        name: 'Test Direction',
-        description: 'Test description',
-        tags: ['test']
-      }];
-      
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts
-        .mockResolvedValue(mockDirections);
-      
+
+      const mockDirections = [
+        {
+          id: '1',
+          name: 'Test Direction',
+          description: 'Test description',
+          tags: ['test'],
+        },
+      ];
+
+      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirections
+      );
+
       await controller.initialize();
-      
+
       // Should log warning
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('InPlaceEditor'),
         expect.any(Object)
       );
-      
+
       // But should still display directions
       const directionsList = document.getElementById('directions-list');
       expect(directionsList.innerHTML).toContain('Test Direction');
-      
+
       // Cleanup
       delete global.InPlaceEditor;
     });
-    
+
     it('should handle missing PreviousItemsDropdown gracefully', async () => {
       // Don't define PreviousItemsDropdown
       delete global.PreviousItemsDropdown;
-      
+
       await expect(controller.initialize()).resolves.not.toThrow();
-      
+
       // Should warn about missing component
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('PreviousItemsDropdown'),
         expect.any(Object)
       );
-      
+
       // Concept filter should be disabled
       const conceptFilter = document.getElementById('concept-filter');
       expect(conceptFilter.disabled).toBe(true);
     });
-    
+
     it('should continue when concept dropdown element is missing', async () => {
       // Remove concept filter element
       const conceptFilter = document.getElementById('concept-filter');
       conceptFilter.remove();
-      
+
       // Mock PreviousItemsDropdown
       global.PreviousItemsDropdown = jest.fn();
-      
+
       await controller.initialize();
-      
+
       // Should warn about missing element
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Concept filter element not found')
       );
-      
+
       // But initialization should complete
       expect(controller).toBeTruthy();
-      
+
       // Cleanup
       delete global.PreviousItemsDropdown;
     });
   });
-  
+
   describe('Data Handling Warnings', () => {
     it('should warn when directions have invalid structure', async () => {
       const invalidDirections = [
@@ -176,230 +186,236 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
         { id: '2' }, // Missing required fields
         { name: 'No ID' }, // Missing ID
         null, // Null entry
-        { id: '3', name: '', description: null } // Empty/null values
+        { id: '3', name: '', description: null }, // Empty/null values
       ];
-      
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts
-        .mockResolvedValue(invalidDirections);
-      
+
+      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        invalidDirections
+      );
+
       await controller.initialize();
-      
+
       // Should warn about invalid entries
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Invalid direction'),
         expect.any(Object)
       );
-      
+
       // Should only display valid directions
       const directionCards = document.querySelectorAll('.direction-card');
       expect(directionCards.length).toBeLessThan(invalidDirections.length);
     });
-    
+
     it('should handle orphaned directions count mismatch', async () => {
       const directions = [
         { id: '1', name: 'Direction 1', orphaned: true },
-        { id: '2', name: 'Direction 2', orphaned: false }
+        { id: '2', name: 'Direction 2', orphaned: false },
       ];
-      
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts
-        .mockResolvedValue(directions);
-      
+
+      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        directions
+      );
+
       // Return different count than actual orphaned
-      testBase.mocks.characterBuilderService.getOrphanedThematicDirections
-        .mockResolvedValue([{ id: '1' }, { id: '3' }, { id: '4' }]); // Count mismatch
-      
+      testBase.mocks.characterBuilderService.getOrphanedThematicDirections.mockResolvedValue(
+        [{ id: '1' }, { id: '3' }, { id: '4' }]
+      ); // Count mismatch
+
       await controller.initialize();
-      
+
       // Should warn about mismatch
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Orphaned count mismatch'),
         expect.objectContaining({
           calculated: 1,
-          reported: 3
+          reported: 3,
         })
       );
     });
-    
+
     it('should handle concepts with circular references', async () => {
       const circularConcept = { id: 'c1', name: 'Concept 1' };
       circularConcept.parent = circularConcept; // Circular reference
-      
-      const directions = [{
-        id: '1',
-        name: 'Direction 1',
-        concepts: [circularConcept]
-      }];
-      
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts
-        .mockResolvedValue(directions);
-      
+
+      const directions = [
+        {
+          id: '1',
+          name: 'Direction 1',
+          concepts: [circularConcept],
+        },
+      ];
+
+      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        directions
+      );
+
       await controller.initialize();
-      
+
       // Should handle circular reference
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Circular reference detected'),
         expect.any(Object)
       );
-      
+
       // Should still display direction
       expect(document.querySelectorAll('.direction-card').length).toBe(1);
     });
   });
-  
+
   describe('Event Handling Warnings', () => {
     it('should warn when event payload is malformed', async () => {
       await controller.initialize();
-      
+
       // Dispatch event with malformed payload
       controller.eventBus.dispatch({
         type: 'core:thematic_direction_updated',
-        payload: null // Should have direction property
+        payload: null, // Should have direction property
       });
-      
+
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Invalid event payload'),
         expect.any(Object)
       );
-      
+
       // Should not crash
       expect(controller).toBeTruthy();
     });
-    
+
     it('should handle update event for non-existent direction', async () => {
       await controller.initialize();
-      
+
       // Dispatch update for direction that doesn't exist
       controller.eventBus.dispatch({
         type: 'core:thematic_direction_updated',
         payload: {
-          direction: { id: 'non-existent', name: 'Ghost Direction' }
-        }
+          direction: { id: 'non-existent', name: 'Ghost Direction' },
+        },
       });
-      
+
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Direction not found for update'),
         expect.objectContaining({ directionId: 'non-existent' })
       );
     });
-    
+
     it('should warn when modal action has no callback', async () => {
       await controller.initialize();
-      
+
       // Show modal without onConfirm callback
       controller._showConfirmationModal({
         title: 'Test',
-        message: 'Test message'
+        message: 'Test message',
         // Missing onConfirm
       });
-      
+
       // Try to confirm
       const confirmBtn = document.getElementById('modal-confirm-btn');
       confirmBtn.click();
-      
+
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('No pending modal action')
       );
     });
   });
-  
+
   describe('Filter Edge Cases', () => {
     it('should handle invalid filter values gracefully', async () => {
       await controller.initialize();
-      
+
       // Set invalid filter values
       const filterInput = document.getElementById('direction-filter');
-      
+
       // Very long filter string
       const longFilter = 'a'.repeat(1000);
       filterInput.value = longFilter;
       filterInput.dispatchEvent(new Event('input'));
-      
-      await new Promise(resolve => setTimeout(resolve, 350)); // Wait for debounce
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 350)); // Wait for debounce
+
       // Should warn about long filter
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Filter string too long'),
         expect.objectContaining({ length: 1000 })
       );
-      
+
       // Should truncate and apply
       expect(controller.#currentFilter.length).toBeLessThan(1000);
     });
-    
+
     it('should handle concept filter with invalid selection', async () => {
       // Mock dropdown to return invalid concept ID
       global.PreviousItemsDropdown = jest.fn(() => ({
-        _element: document.getElementById('concept-filter')
+        _element: document.getElementById('concept-filter'),
       }));
-      
+
       await controller.initialize();
-      
+
       // Manually trigger selection with invalid ID
       controller._handleConceptSelection('invalid-concept-id');
-      
+
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Invalid concept selected'),
         expect.objectContaining({ conceptId: 'invalid-concept-id' })
       );
-      
+
       // Should clear the filter
       expect(controller.#currentConcept).toBeNull();
-      
+
       // Cleanup
       delete global.PreviousItemsDropdown;
     });
   });
-  
+
   describe('Resource Cleanup Warnings', () => {
     it('should warn but continue when editor cleanup fails', async () => {
       // Create mock editor that throws on destroy
       const mockEditor = {
         destroy: jest.fn(() => {
           throw new Error('Destroy failed');
-        })
+        }),
       };
-      
+
       global.InPlaceEditor = jest.fn(() => mockEditor);
-      
+
       await controller.initialize();
-      
+
       // Create an editor
       controller._createInPlaceEditor('test-id', 'dir1', 'name', {});
-      
+
       // Destroy controller
       controller.destroy();
-      
+
       // Should warn about failed cleanup
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Failed to destroy InPlaceEditor'),
         expect.any(Object)
       );
-      
+
       // But destroy should complete
       expect(controller.#isDestroyed).toBe(true);
-      
+
       // Cleanup
       delete global.InPlaceEditor;
     });
-    
+
     it('should handle multiple destroy calls without errors', async () => {
       await controller.initialize();
-      
+
       // First destroy
       controller.destroy();
-      
+
       // Second destroy should warn but not error
       controller.destroy();
-      
+
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Destroy already called')
       );
-      
+
       // Third destroy for good measure
       expect(() => controller.destroy()).not.toThrow();
     });
   });
-  
+
   describe('Performance Warnings', () => {
     it('should warn when rendering too many directions', async () => {
       // Create large dataset
@@ -407,78 +423,83 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
         id: `dir-${i}`,
         name: `Direction ${i}`,
         description: `Description ${i}`,
-        tags: [`tag${i}`]
+        tags: [`tag${i}`],
       }));
-      
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts
-        .mockResolvedValue(manyDirections);
-      
+
+      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        manyDirections
+      );
+
       await controller.initialize();
-      
+
       // Should warn about performance
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Large number of directions'),
         expect.objectContaining({ count: 1000 })
       );
-      
+
       // Consider pagination suggestion
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Consider implementing pagination')
       );
     });
-    
+
     it('should warn about slow operations', async () => {
       // Mock slow service call
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts
-        .mockImplementation(() => new Promise(resolve => {
-          setTimeout(() => resolve([]), 3000); // 3 second delay
-        }));
-      
+      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(() => resolve([]), 3000); // 3 second delay
+          })
+      );
+
       const initPromise = controller.initialize();
-      
+
       // Fast forward time
       jest.advanceTimersByTime(3000);
-      
+
       await initPromise;
-      
+
       // Should warn about slow operation
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Slow operation detected'),
         expect.objectContaining({
           operation: 'load directions data',
-          duration: expect.any(Number)
+          duration: expect.any(Number),
         })
       );
     });
   });
-  
+
   describe('Schema Validation Warnings', () => {
     it('should warn about schema validation failures but continue', async () => {
-      const directions = [{
-        id: '1',
-        name: 'Test Direction',
-        description: 'Test',
-        extraField: 'Not in schema' // Extra field
-      }];
-      
+      const directions = [
+        {
+          id: '1',
+          name: 'Test Direction',
+          description: 'Test',
+          extraField: 'Not in schema', // Extra field
+        },
+      ];
+
       // Mock schema validator to return warnings
-      testBase.mocks.schemaValidator.validateAgainstSchema
-        .mockResolvedValue({
-          valid: true,
-          warnings: ['Additional property "extraField" not allowed']
-        });
-      
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts
-        .mockResolvedValue(directions);
-      
+      testBase.mocks.schemaValidator.validateAgainstSchema.mockResolvedValue({
+        valid: true,
+        warnings: ['Additional property "extraField" not allowed'],
+      });
+
+      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        directions
+      );
+
       await controller.initialize();
-      
+
       // Should log schema warnings
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Schema validation warnings'),
         expect.arrayContaining(['Additional property "extraField" not allowed'])
       );
-      
+
       // But should still display direction
       expect(document.querySelectorAll('.direction-card').length).toBe(1);
     });
@@ -496,7 +517,14 @@ describe('ThematicDirectionsManagerController - Warning Scenarios', () => {
  * @description Tests warning scenarios in integrated environment
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestContainerWithDefaults } from '../../common/testContainerFactory.js';
 import { ThematicDirectionsManagerController } from '../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 
@@ -505,16 +533,16 @@ describe('ThematicDirectionsManagerController - Integration Warnings', () => {
   let controller;
   let logger;
   let warnSpy;
-  
+
   beforeEach(() => {
     container = createTestContainerWithDefaults();
     logger = container.resolve('ILogger');
     warnSpy = jest.spyOn(logger, 'warn');
-    
+
     // Create full DOM
     document.body.innerHTML = getFullDOMStructure();
   });
-  
+
   afterEach(() => {
     if (controller && !controller.isDestroyed) {
       controller.destroy();
@@ -524,50 +552,57 @@ describe('ThematicDirectionsManagerController - Integration Warnings', () => {
     }
     document.body.innerHTML = '';
   });
-  
+
   describe('Service Integration Warnings', () => {
     it('should handle partial service failures', async () => {
-      const characterBuilderService = container.resolve('ICharacterBuilderService');
-      
+      const characterBuilderService = container.resolve(
+        'ICharacterBuilderService'
+      );
+
       // Mock mixed responses
-      jest.spyOn(characterBuilderService, 'getAllThematicDirectionsWithConcepts')
+      jest
+        .spyOn(characterBuilderService, 'getAllThematicDirectionsWithConcepts')
         .mockResolvedValue([{ id: '1', name: 'Direction 1' }]);
-      
-      jest.spyOn(characterBuilderService, 'getAllCharacterConcepts')
+
+      jest
+        .spyOn(characterBuilderService, 'getAllCharacterConcepts')
         .mockRejectedValue(new Error('Concepts service unavailable'));
-      
-      jest.spyOn(characterBuilderService, 'getOrphanedThematicDirections')
+
+      jest
+        .spyOn(characterBuilderService, 'getOrphanedThematicDirections')
         .mockResolvedValue([]);
-      
+
       controller = new ThematicDirectionsManagerController({
         logger,
         characterBuilderService,
         uiStateManager: container.resolve('IUIStateManager'),
         eventBus: container.resolve('IEventBus'),
-        schemaValidator: container.resolve('ISchemaValidator')
+        schemaValidator: container.resolve('ISchemaValidator'),
       });
-      
+
       await controller.initialize();
-      
+
       // Should warn about concepts failure
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Failed to load concepts'),
         expect.any(Error)
       );
-      
+
       // But should still show directions
       const directionCards = document.querySelectorAll('.direction-card');
       expect(directionCards.length).toBe(1);
-      
+
       // Concept filter should be disabled
       const conceptFilter = document.getElementById('concept-filter');
       expect(conceptFilter.disabled).toBe(true);
     });
-    
+
     it('should warn about event bus issues but continue', async () => {
       const eventBus = container.resolve('IEventBus');
-      const characterBuilderService = container.resolve('ICharacterBuilderService');
-      
+      const characterBuilderService = container.resolve(
+        'ICharacterBuilderService'
+      );
+
       // Mock event bus to throw on certain events
       const originalDispatch = eventBus.dispatch.bind(eventBus);
       jest.spyOn(eventBus, 'dispatch').mockImplementation((event) => {
@@ -576,58 +611,60 @@ describe('ThematicDirectionsManagerController - Integration Warnings', () => {
         }
         return originalDispatch(event);
       });
-      
+
       controller = new ThematicDirectionsManagerController({
         logger,
         characterBuilderService,
         uiStateManager: container.resolve('IUIStateManager'),
         eventBus,
-        schemaValidator: container.resolve('ISchemaValidator')
+        schemaValidator: container.resolve('ISchemaValidator'),
       });
-      
+
       await controller.initialize();
-      
+
       // Trigger an action that sends analytics
       const filterInput = document.getElementById('direction-filter');
       filterInput.value = 'test';
       filterInput.dispatchEvent(new Event('input'));
-      
-      await new Promise(resolve => setTimeout(resolve, 350));
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 350));
+
       // Should warn about analytics failure
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Failed to track analytics'),
         expect.any(Error)
       );
-      
+
       // But filtering should still work
       // (verify by checking that filter was applied)
     });
   });
-  
+
   describe('Browser Compatibility Warnings', () => {
     it('should warn about missing browser features', async () => {
       // Mock missing IntersectionObserver
       const originalIO = window.IntersectionObserver;
       delete window.IntersectionObserver;
-      
-      const characterBuilderService = container.resolve('ICharacterBuilderService');
+
+      const characterBuilderService = container.resolve(
+        'ICharacterBuilderService'
+      );
       controller = new ThematicDirectionsManagerController({
         logger,
         characterBuilderService,
         uiStateManager: container.resolve('IUIStateManager'),
         eventBus: container.resolve('IEventBus'),
-        schemaValidator: container.resolve('ISchemaValidator')
+        schemaValidator: container.resolve('ISchemaValidator'),
       });
-      
+
       await controller.initialize();
-      
+
       // Should warn about missing feature
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('IntersectionObserver not supported'),
         expect.any(Object)
       );
-      
+
       // Restore
       window.IntersectionObserver = originalIO;
     });
@@ -652,13 +689,13 @@ function getFullDOMStructure() {
 ```javascript
 it('should continue without optional component', async () => {
   delete global.OptionalComponent;
-  
+
   await controller.initialize();
-  
+
   expect(loggerWarnSpy).toHaveBeenCalledWith(
     expect.stringContaining('OptionalComponent not available')
   );
-  
+
   // Feature should be disabled but app continues
   expect(controller.optionalFeatureEnabled).toBe(false);
 });
@@ -669,13 +706,13 @@ it('should continue without optional component', async () => {
 ```javascript
 it('should operate in degraded mode when service unavailable', async () => {
   mockService.method.mockRejectedValue(new Error('Service down'));
-  
+
   await controller.initialize();
-  
+
   expect(loggerWarnSpy).toHaveBeenCalledWith(
     expect.stringContaining('Operating in degraded mode')
   );
-  
+
   // Basic functionality still works
   expect(controller.isOperational).toBe(true);
 });
@@ -688,15 +725,15 @@ it('should warn about suspicious data but continue', async () => {
   const suspiciousData = {
     count: -1, // Negative count
     percentage: 150, // Over 100%
-    date: 'invalid-date'
+    date: 'invalid-date',
   };
-  
+
   await controller.processData(suspiciousData);
-  
+
   expect(loggerWarnSpy).toHaveBeenCalledWith(
     expect.stringContaining('Suspicious data detected')
   );
-  
+
   // Should use safe defaults
   expect(controller.count).toBe(0);
   expect(controller.percentage).toBe(100);

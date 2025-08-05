@@ -12,6 +12,44 @@ import {
 } from '@jest/globals';
 import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 
+// Mock BaseCharacterBuilderController
+jest.mock(
+  '../../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js',
+  () => ({
+    BaseCharacterBuilderController: jest
+      .fn()
+      .mockImplementation(function (dependencies) {
+        // Store dependencies to make them accessible via getters
+        this._logger = dependencies.logger;
+        this._characterBuilderService = dependencies.characterBuilderService;
+        this._eventBus = dependencies.eventBus;
+        this._schemaValidator = dependencies.schemaValidator;
+
+        // Mock getter methods
+        Object.defineProperty(this, 'logger', {
+          get: function () {
+            return this._logger;
+          },
+        });
+        Object.defineProperty(this, 'characterBuilderService', {
+          get: function () {
+            return this._characterBuilderService;
+          },
+        });
+        Object.defineProperty(this, 'eventBus', {
+          get: function () {
+            return this._eventBus;
+          },
+        });
+        Object.defineProperty(this, 'schemaValidator', {
+          get: function () {
+            return this._schemaValidator;
+          },
+        });
+      }),
+  })
+);
+
 // Mock the UIStateManager
 jest.mock('../../../../src/shared/characterBuilder/uiStateManager.js', () => ({
   UIStateManager: jest.fn().mockImplementation(() => ({
@@ -61,11 +99,16 @@ describe('ThematicDirectionsManagerController - Concept Display', () => {
       error: jest.fn(),
     };
 
-    // Setup mock character builder service
+    // Setup mock character builder service with all required methods
     mockCharacterBuilderService = {
       initialize: jest.fn().mockResolvedValue(true),
       getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
+      createCharacterConcept: jest.fn().mockResolvedValue({}),
+      updateCharacterConcept: jest.fn().mockResolvedValue({}),
+      deleteCharacterConcept: jest.fn().mockResolvedValue(true),
       getCharacterConcept: jest.fn(),
+      generateThematicDirections: jest.fn().mockResolvedValue([]),
+      getThematicDirections: jest.fn().mockResolvedValue([]),
       getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([]),
       getOrphanedThematicDirections: jest.fn().mockResolvedValue([]),
       updateThematicDirection: jest.fn().mockResolvedValue(true),
