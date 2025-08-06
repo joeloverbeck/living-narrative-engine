@@ -195,7 +195,9 @@ describe('Performance Integration Tests', () => {
         // All operations are sub-millisecond - they're all fast enough
         // Use absolute difference check instead of ratio to avoid measurement noise
         expect(absoluteDifference).toBeLessThan(0.5); // Max 0.5ms difference
-        console.log('Using absolute difference check for sub-millisecond operations');
+        console.log(
+          'Using absolute difference check for sub-millisecond operations'
+        );
       } else {
         // Operations are measurably different - use ratio comparison
         expect(performanceVariation).toBeLessThan(8); // Should not vary by more than 8x

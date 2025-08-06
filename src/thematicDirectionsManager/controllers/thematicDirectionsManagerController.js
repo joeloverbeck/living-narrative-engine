@@ -4,11 +4,7 @@
  */
 
 import { BaseCharacterBuilderController } from '../../characterBuilder/controllers/BaseCharacterBuilderController.js';
-import { validateDependency } from '../../utils/dependencyUtils.js';
-import {
-  UIStateManager,
-  UI_STATES,
-} from '../../shared/characterBuilder/uiStateManager.js';
+import { UIStateManager } from '../../shared/characterBuilder/uiStateManager.js';
 import { PreviousItemsDropdown } from '../../shared/characterBuilder/previousItemsDropdown.js';
 import { InPlaceEditor } from '../../shared/characterBuilder/inPlaceEditor.js';
 
@@ -35,6 +31,36 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
   #inPlaceEditors = new Map(); // Track InPlaceEditor instances
   #dropdownStateKey = 'thematic-directions-dropdown-state';
   #sessionId = `session-${Date.now()}`;
+  #notificationTimeout = null;
+
+  // Modal state management
+  /**
+   * Current modal state
+   *
+   * @type {object | null}
+   */
+  #activeModal = null;
+
+  /**
+   * Pending modal action callback
+   *
+   * @type {Function|null}
+   */
+  #pendingModalAction = null;
+
+  /**
+   * Modal keyboard event handler
+   *
+   * @type {Function|null}
+   */
+  #modalKeyHandler = null;
+
+  /**
+   * Previously focused element
+   *
+   * @type {Element|null}
+   */
+  #previousFocus = null;
 
   /**
    * Creates a new ThematicDirectionsManagerController instance
@@ -66,31 +92,6 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     this.#currentConcept = null;
     this.#directionsData = [];
     this.#inPlaceEditors = new Map();
-  }
-
-  /**
-   * Define validation rules for additional services not handled by base class
-   *
-   * @private
-   * @override
-   * @returns {object} Validation rules for additional services
-   */
-  #getAdditionalServiceValidationRules() {
-    return {
-      uiStateManager: {
-        requiredMethods: ['showState', 'showError'],
-      },
-    };
-  }
-
-  /**
-   * Get the UI state manager from additional services
-   *
-   * @private
-   * @returns {UIStateManager} UI state manager instance
-   */
-  get #uiStateManager() {
-    return this.additionalServices.uiStateManager;
   }
 
   /**
@@ -136,11 +137,9 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
         'ThematicDirectionsManagerController: Failed to initialize',
         error
       );
-      if (this.#uiStateManager) {
-        this.#uiStateManager.showError(
-          'Failed to initialize directions manager. Please refresh the page.'
-        );
-      }
+      this._showError(
+        'Failed to initialize directions manager. Please refresh the page.'
+      );
       throw error; // Re-throw for base class to handle
     }
   }
@@ -205,7 +204,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @private
    */
   async #loadDirectionsData() {
-    this.#uiStateManager.showState(UI_STATES.LOADING);
+    this._showLoading('Loading thematic directions...');
     this.#setDropdownLoading(true);
 
     try {
@@ -241,9 +240,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
         'ThematicDirectionsManagerController: Failed to load directions',
         error
       );
-      this.#uiStateManager.showError(
-        'Failed to load thematic directions. Please try again.'
-      );
+      this._showError('Failed to load thematic directions. Please try again.');
     } finally {
       this.#setDropdownLoading(false);
     }
@@ -310,12 +307,18 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
       });
     }
 
-    // Display results
-    if (filteredData.length === 0) {
-      this.#uiStateManager.showState(UI_STATES.EMPTY);
+    // Display results with contextual messages
+    if (this.#directionsData.length === 0) {
+      this._showEmptyWithMessage(
+        'No thematic directions found. Create your first direction to get started.'
+      );
+    } else if (filteredData.length === 0) {
+      this._showEmptyWithMessage(
+        'No directions match your current filters. Try adjusting your search criteria.'
+      );
     } else {
       this.#displayDirections(filteredData);
-      this.#uiStateManager.showState(UI_STATES.RESULTS);
+      this._showResults(filteredData);
     }
   }
 
@@ -672,10 +675,10 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @param {ThematicDirection} direction - Direction to delete
    */
   #handleDeleteDirection(direction) {
-    this.#showModal(
-      'Delete Direction',
-      `Are you sure you want to delete "${direction.title}"? This action cannot be undone.`,
-      async () => {
+    this._showConfirmationModal({
+      title: 'Delete Thematic Direction',
+      message: `Are you sure you want to delete "${direction.title}"? This action cannot be undone.`,
+      onConfirm: async () => {
         try {
           await this.characterBuilderService.deleteThematicDirection(
             direction.id
@@ -695,6 +698,8 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
             directionId: direction.id,
           });
 
+          this._showSuccess('Thematic direction deleted successfully');
+
           this.logger.info(
             'ThematicDirectionsManagerController: Deleted direction',
             { directionId: direction.id }
@@ -706,8 +711,11 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
           );
           alert('Failed to delete direction. Please try again.');
         }
-      }
-    );
+      },
+      confirmText: 'Delete',
+      cancelText: 'Keep',
+      type: 'confirm',
+    });
   }
 
   /**
@@ -721,14 +729,18 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     ).length;
 
     if (orphanedCount === 0) {
-      alert('No orphaned directions found.');
+      this._showAlert({
+        title: 'No Orphaned Directions',
+        message: 'There are no orphaned thematic directions to clean up.',
+        type: 'info',
+      });
       return;
     }
 
-    this.#showModal(
-      'Clean Up Orphaned Directions',
-      `This will delete ${orphanedCount} orphaned direction(s) that have no associated character concept. This action cannot be undone.`,
-      async () => {
+    this._showConfirmationModal({
+      title: 'Clean Up Orphaned Directions',
+      message: `This will remove ${orphanedCount} orphaned thematic direction(s) that are not linked to any character concepts. Continue?`,
+      onConfirm: async () => {
         try {
           const orphanedDirections = this.#directionsData
             .filter((item) => !item.concept)
@@ -755,13 +767,13 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
             deletedCount: orphanedDirections.length,
           });
 
+          this._showSuccess(
+            `Successfully deleted ${orphanedDirections.length} orphaned direction(s).`
+          );
+
           this.logger.info(
             'ThematicDirectionsManagerController: Cleaned orphaned directions',
             { deletedCount: orphanedDirections.length }
-          );
-
-          alert(
-            `Successfully deleted ${orphanedDirections.length} orphaned direction(s).`
           );
         } catch (error) {
           this.logger.error(
@@ -770,50 +782,262 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
           );
           alert('Failed to cleanup orphaned directions. Please try again.');
         }
-      }
-    );
+      },
+      confirmText: `Remove ${orphanedCount} Orphaned`,
+      cancelText: 'Cancel',
+      type: 'confirm',
+    });
   }
 
   /**
-   * Show confirmation modal
+   * Show confirmation modal with dynamic content
    *
    * @private
-   * @param {string} title - Modal title
-   * @param {string} message - Modal message
-   * @param {Function} onConfirm - Confirmation callback
+   * @param {object} options - Modal options
+   * @param {string} options.title - Modal title
+   * @param {string} options.message - Modal message
+   * @param {Function} options.onConfirm - Confirm callback
+   * @param {Function} [options.onCancel] - Cancel callback
+   * @param {string} [options.confirmText] - Confirm button text
+   * @param {string} [options.cancelText] - Cancel button text
+   * @param {string} [options.type] - Modal type (confirm, alert, error)
    */
-  #showModal(title, message, onConfirm) {
-    const confirmationModal = this._getElement('confirmationModal');
-    if (!confirmationModal) return;
+  _showConfirmationModal(options) {
+    const {
+      title,
+      message,
+      onConfirm,
+      onCancel,
+      confirmText = 'Confirm',
+      cancelText = 'Cancel',
+      type = 'confirm',
+    } = options;
 
-    this._setElementText('modalTitle', title);
-    this._setElementText('modalMessage', message);
-
-    // Set up confirm handler
-    const confirmHandler = async () => {
-      this.#hideModal();
-      await onConfirm();
+    // Store modal state
+    this.#activeModal = {
+      type: 'confirmation',
+      options: options,
     };
 
-    // Remove existing listeners
-    const modalConfirmBtn = this._getElement('modalConfirmBtn');
-    const newConfirmBtn = modalConfirmBtn.cloneNode(true);
-    modalConfirmBtn.parentNode.replaceChild(newConfirmBtn, modalConfirmBtn);
+    // Store callbacks
+    this.#pendingModalAction = onConfirm;
+    this.#activeModal.onCancel = onCancel;
 
-    // Add new listener
-    newConfirmBtn.addEventListener('click', confirmHandler);
+    // Update modal content
+    this._updateModalContent({
+      title,
+      message,
+      confirmText,
+      cancelText,
+      type,
+    });
 
-    // Show modal
-    this._showElement('confirmationModal', 'flex');
+    // Show modal using base controller helpers
+    this._showModal();
+
+    // Focus confirm button for accessibility
+    const confirmBtn = this._getElement('modalConfirmBtn');
+    if (confirmBtn) {
+      setTimeout(() => confirmBtn.focus(), 100);
+    }
   }
 
   /**
-   * Hide confirmation modal
+   * Update modal content
+   *
+   * @private
+   * @param {object} content - Content to display
+   */
+  _updateModalContent(content) {
+    const { title, message, confirmText, cancelText, type } = content;
+
+    // Update text content
+    this._setElementText('modalTitle', title);
+    this._setElementText('modalMessage', message);
+    this._setElementText('modalConfirmBtn', confirmText);
+    this._setElementText('modalCancelBtn', cancelText);
+
+    // Update modal styling based on type
+    const modal = this._getElement('confirmationModal');
+    if (modal) {
+      modal.className = `modal modal-${type}`;
+    }
+
+    // Show/hide buttons based on type
+    if (type === 'alert') {
+      this._hideElement('modalCancelBtn');
+    } else {
+      this._showElement('modalCancelBtn');
+    }
+  }
+
+  /**
+   * Show the modal
    *
    * @private
    */
-  #hideModal() {
+  _showModal() {
+    // Show confirmation modal using base controller helpers
+    this._showElement('confirmationModal', 'flex');
+
+    // Track focus before showing modal
+    this._trackFocus();
+
+    // Setup ESC key handler
+    this._setupModalKeyHandling();
+
+    // Focus confirm button for accessibility
+    const confirmBtn = this._getElement('modalConfirmBtn');
+    if (confirmBtn) {
+      setTimeout(() => confirmBtn.focus(), 100);
+    }
+  }
+
+  /**
+   * Close the modal
+   *
+   * @private
+   * @param {boolean} [cancelled] - Whether modal was cancelled
+   */
+  _closeModal(cancelled = false) {
+    if (!this.#activeModal) return;
+
+    // Call cancel callback if cancelled
+    if (cancelled && this.#activeModal.onCancel) {
+      try {
+        this.#activeModal.onCancel();
+      } catch (error) {
+        this.logger.error('Error in modal cancel callback:', error);
+      }
+    }
+
+    // Hide modal using base controller helper
     this._hideElement('confirmationModal');
+
+    // Clear modal state
+    this.#activeModal = null;
+    this.#pendingModalAction = null;
+
+    // Remove ESC handler
+    this._removeModalKeyHandling();
+
+    // Restore focus to previous element
+    this._restoreFocus();
+  }
+
+  /**
+   * Handle modal confirm button click
+   *
+   * @private
+   */
+  _handleModalConfirm() {
+    if (!this.#pendingModalAction) {
+      this.logger.warn('No pending modal action to confirm');
+      return;
+    }
+
+    // Execute the pending action
+    try {
+      const result = this.#pendingModalAction();
+
+      // Handle promise results
+      if (result && typeof result.then === 'function') {
+        result
+          .then(() => {
+            this._closeModal();
+          })
+          .catch((error) => {
+            this.logger.error('Modal action failed:', error);
+            alert('Operation failed. Please try again.');
+          });
+      } else {
+        // Synchronous action
+        this._closeModal();
+      }
+    } catch (error) {
+      this.logger.error('Error executing modal action:', error);
+      alert('An error occurred. Please try again.');
+    }
+  }
+
+  /**
+   * Handle modal cancel
+   *
+   * @private
+   */
+  _handleModalCancel() {
+    this._closeModal(true); // true = cancelled
+  }
+
+  /**
+   * Setup keyboard handling for modal
+   *
+   * @private
+   */
+  _setupModalKeyHandling() {
+    // Store handler reference for removal
+    this.#modalKeyHandler = (e) => {
+      if (e.key === 'Escape' && this.#activeModal) {
+        e.preventDefault();
+        this._closeModal(true);
+      }
+    };
+
+    // Use capture phase to handle before other handlers
+    document.addEventListener('keydown', this.#modalKeyHandler, true);
+  }
+
+  /**
+   * Remove modal keyboard handling
+   *
+   * @private
+   */
+  _removeModalKeyHandling() {
+    if (this.#modalKeyHandler) {
+      document.removeEventListener('keydown', this.#modalKeyHandler, true);
+      this.#modalKeyHandler = null;
+    }
+  }
+
+  /**
+   * Track and restore focus
+   *
+   * @private
+   */
+  _trackFocus() {
+    this.#previousFocus = document.activeElement;
+  }
+
+  /**
+   * Restore focus after modal closes
+   *
+   * @private
+   */
+  _restoreFocus() {
+    if (this.#previousFocus && this.#previousFocus.focus) {
+      try {
+        this.#previousFocus.focus();
+      } catch (err) {
+        // Element might be removed from DOM
+        this.logger.debug('Failed to restore focus to previous element:', err);
+      }
+    }
+    this.#previousFocus = null;
+  }
+
+  /**
+   * Show alert modal (single button)
+   *
+   * @private
+   * @param {object} options - Alert options
+   */
+  _showAlert(options) {
+    this._showConfirmationModal({
+      ...options,
+      type: 'alert',
+      onConfirm: () => {}, // Just close
+      confirmText: 'OK',
+    });
   }
 
   /**
@@ -877,8 +1101,8 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
   /**
    * Show loading state in dropdown
    *
-   * @param isLoading
    * @private
+   * @param {boolean} isLoading - Whether dropdown should show loading state
    */
   #setDropdownLoading(isLoading) {
     const selectElement = this._getElement('conceptSelector');
@@ -1088,6 +1312,52 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
   }
 
   /**
+   * Show success notification (missing from base controller)
+   *
+   * @private
+   * @param {string} message - Success message
+   * @param {number} [duration] - Display duration in ms
+   */
+  _showSuccess(message, duration = 3000) {
+    // Create or reuse notification element
+    let notification = document.getElementById('success-notification');
+    if (!notification) {
+      notification = document.createElement('div');
+      notification.id = 'success-notification';
+      notification.className = 'notification notification-success';
+      document.body.appendChild(notification);
+    }
+
+    notification.textContent = message;
+    notification.classList.add('notification-visible');
+
+    // Auto-hide after duration
+    clearTimeout(this.#notificationTimeout);
+    this.#notificationTimeout = setTimeout(() => {
+      notification.classList.remove('notification-visible');
+    }, duration);
+  }
+
+  /**
+   * Show empty state with contextual message (enhancement)
+   *
+   * @private
+   * @param {string} [customMessage] - Custom empty state message
+   */
+  _showEmptyWithMessage(customMessage) {
+    this._showEmpty();
+
+    // Update empty state message if element exists
+    const emptyStateElement = this._getElement('emptyState');
+    if (emptyStateElement && customMessage) {
+      const messageElement = emptyStateElement.querySelector('.empty-message');
+      if (messageElement) {
+        messageElement.textContent = customMessage;
+      }
+    }
+  }
+
+  /**
    * Cache DOM elements needed by the controller
    *
    * @protected
@@ -1194,11 +1464,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
       this.#handleDropdownError(error);
 
       // Show error message to user
-      if (this.#uiStateManager) {
-        this.#uiStateManager.showError(
-          'Failed to refresh concepts. Please try again.'
-        );
-      }
+      this._showError('Failed to refresh concepts. Please try again.');
     } finally {
       this.#setDropdownLoading(false);
     }
@@ -1299,23 +1565,29 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     });
 
     // === Modal Event Handlers ===
-    this._addEventListener('modalCancelBtn', 'click', () => this.#hideModal());
-    this._addEventListener('closeModalBtn', 'click', () => this.#hideModal());
+    this._addEventListener('modalConfirmBtn', 'click', () =>
+      this._handleModalConfirm()
+    );
+    this._addEventListener('modalCancelBtn', 'click', () =>
+      this._handleModalCancel()
+    );
+    this._addEventListener('closeModalBtn', 'click', () =>
+      this._handleModalCancel()
+    );
 
     // Click outside modal to close (backdrop click)
     this._addEventListener('confirmationModal', 'click', (e) => {
       if (e.target === e.currentTarget) {
-        this.#hideModal();
+        this._handleModalCancel();
       }
     });
 
     // Note: Delete buttons are handled within #createEditableDirectionElement
-    // Note: Modal confirm button uses a special clone/replace pattern in #showModal
   }
 
   /**
    * Pre-destroy cleanup hook
-   * Ensures all InPlaceEditor instances are properly destroyed
+   * Ensures all InPlaceEditor instances and modal state are properly destroyed
    *
    * @protected
    * @override
@@ -1324,6 +1596,17 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     this.logger.debug(
       'ThematicDirectionsManagerController: Starting pre-destroy cleanup'
     );
+
+    // Close any open modals
+    if (this.#activeModal) {
+      this._closeModal();
+    }
+
+    // Clear pending actions
+    this.#pendingModalAction = null;
+
+    // Remove any lingering handlers
+    this._removeModalKeyHandling();
 
     // Destroy all InPlaceEditor instances to prevent memory leaks
     this.#cleanupInPlaceEditors();

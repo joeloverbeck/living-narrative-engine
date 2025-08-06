@@ -21,6 +21,7 @@ describe('ActionTraceConfigLoader', () => {
       info: jest.fn(),
       error: jest.fn(),
       warn: jest.fn(),
+      debug: jest.fn(),
     };
     mockValidator = {
       validate: jest.fn(),
@@ -391,6 +392,413 @@ describe('ActionTraceConfigLoader', () => {
       expect(await loader.shouldTraceAction('custom:anything')).toBe(true);
       expect(await loader.shouldTraceAction('specific:action')).toBe(true);
       expect(await loader.shouldTraceAction('specific:other')).toBe(false);
+    });
+  });
+
+  describe('Performance Optimizations', () => {
+    it('should use O(1) exact matching with Set', async () => {
+      mockTraceConfigLoader.loadConfig.mockResolvedValue({
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go', 'core:attack', 'core:examine'],
+          outputDirectory: './traces',
+        },
+      });
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      // Load config to build optimized structures
+      await loader.loadConfig();
+
+      // Test that exact matches are fast
+      const start = performance.now();
+      const result = await loader.shouldTraceAction('core:go');
+      const duration = performance.now() - start;
+
+      expect(result).toBe(true);
+      expect(duration).toBeLessThan(1); // <1ms requirement
+    });
+
+    it('should provide verbosity configuration methods', async () => {
+      mockTraceConfigLoader.loadConfig.mockResolvedValue({
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['*'],
+          verbosity: 'detailed',
+          includeComponentData: false,
+          includePrerequisites: true,
+          includeTargets: false,
+          outputDirectory: './traces',
+          rotationPolicy: 'count',
+          maxTraceFiles: 50,
+          maxFileAge: 3600,
+        },
+      });
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      expect(await loader.getVerbosityLevel()).toBe('detailed');
+
+      const inclusion = await loader.getInclusionConfig();
+      expect(inclusion).toEqual({
+        includeComponentData: false,
+        includePrerequisites: true,
+        includeTargets: false,
+      });
+
+      expect(await loader.getOutputDirectory()).toBe('./traces');
+
+      const rotation = await loader.getRotationConfig();
+      expect(rotation).toEqual({
+        rotationPolicy: 'count',
+        maxTraceFiles: 50,
+        maxFileAge: 3600,
+      });
+    });
+
+    it('should provide performance statistics', async () => {
+      mockTraceConfigLoader.loadConfig.mockResolvedValue({
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go', 'custom:*'],
+          outputDirectory: './traces',
+        },
+      });
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      // Load config and perform some lookups
+      await loader.loadConfig();
+      await loader.shouldTraceAction('core:go'); // exact match
+      await loader.shouldTraceAction('custom:action'); // wildcard match
+      await loader.shouldTraceAction('nonexistent:action'); // no match
+
+      const stats = loader.getStatistics();
+      expect(stats).toHaveProperty('exactMatches');
+      expect(stats).toHaveProperty('wildcardMatches');
+      expect(stats).toHaveProperty('totalLookups');
+      expect(stats).toHaveProperty('averageLookupTime');
+      expect(stats).toHaveProperty('tracedActionsCount');
+      expect(stats).toHaveProperty('wildcardPatternsCount');
+
+      expect(stats.exactMatches).toBe(1);
+      expect(stats.wildcardMatches).toBe(1);
+      expect(stats.totalLookups).toBe(3);
+      expect(stats.tracedActionsCount).toBe(1); // 'core:go'
+      expect(stats.wildcardPatternsCount).toBe(1); // 'custom:*'
+    });
+
+    it('should filter data by verbosity level', async () => {
+      mockTraceConfigLoader.loadConfig.mockResolvedValue({
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['*'],
+          verbosity: 'detailed',
+          includeComponentData: true,
+          includePrerequisites: false,
+          includeTargets: true,
+          outputDirectory: './traces',
+        },
+      });
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      const data = {
+        timestamp: Date.now(),
+        actionId: 'core:go',
+        result: 'success',
+        executionTime: 150,
+        success: true,
+        componentData: { some: 'data' },
+        prerequisites: { prereq: 'info' },
+        targets: { target: 'info' },
+        debugInfo: { debug: 'info' },
+        stackTrace: 'stack trace',
+      };
+
+      const filtered = await loader.filterDataByVerbosity(data);
+
+      expect(filtered).toHaveProperty('timestamp');
+      expect(filtered).toHaveProperty('actionId', 'core:go');
+      expect(filtered).toHaveProperty('result', 'success');
+      expect(filtered).toHaveProperty('executionTime', 150);
+      expect(filtered).toHaveProperty('success', true);
+      expect(filtered).toHaveProperty('componentData'); // included at detailed level
+      expect(filtered).not.toHaveProperty('prerequisites'); // includePrerequisites: false
+      expect(filtered).toHaveProperty('targets'); // includeTargets: true
+      expect(filtered).not.toHaveProperty('debugInfo'); // only at verbose level
+      expect(filtered).not.toHaveProperty('stackTrace'); // only at verbose level
+    });
+
+    it('should reset statistics', async () => {
+      mockTraceConfigLoader.loadConfig.mockResolvedValue({
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './traces',
+        },
+      });
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      // Perform a lookup to generate stats
+      await loader.loadConfig();
+      await loader.shouldTraceAction('core:go');
+
+      let stats = loader.getStatistics();
+      expect(stats.totalLookups).toBe(1);
+
+      // Reset and verify
+      loader.resetStatistics();
+      stats = loader.getStatistics();
+      expect(stats.totalLookups).toBe(0);
+      expect(stats.exactMatches).toBe(0);
+      expect(stats.wildcardMatches).toBe(0);
+      expect(stats.averageLookupTime).toBe(0);
+    });
+
+    it('should handle wildcard patterns efficiently with pre-compiled regex', async () => {
+      mockTraceConfigLoader.loadConfig.mockResolvedValue({
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:*', 'custom:*', 'mod1:*', 'mod2:*'],
+          outputDirectory: './traces',
+        },
+      });
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      // Load config to build optimized structures
+      await loader.loadConfig();
+
+      // Test multiple wildcard matches
+      const start = performance.now();
+      const results = await Promise.all([
+        loader.shouldTraceAction('core:something'),
+        loader.shouldTraceAction('custom:anything'),
+        loader.shouldTraceAction('mod1:action'),
+        loader.shouldTraceAction('mod2:behavior'),
+        loader.shouldTraceAction('nonexistent:action'),
+      ]);
+      const duration = performance.now() - start;
+
+      expect(results).toEqual([true, true, true, true, false]);
+      expect(duration).toBeLessThan(5); // Should be very fast even with multiple patterns
+    });
+  });
+
+  describe('Enhanced Wildcard Patterns', () => {
+    describe('general wildcard patterns', () => {
+      it('should support prefix wildcard patterns', async () => {
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: ['core:go*', 'test:move*'],
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
+
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
+
+        expect(await loader.shouldTraceAction('core:go')).toBe(true);
+        expect(await loader.shouldTraceAction('core:go_north')).toBe(true);
+        expect(await loader.shouldTraceAction('core:go_south')).toBe(true);
+        expect(await loader.shouldTraceAction('test:move_forward')).toBe(true);
+        expect(await loader.shouldTraceAction('core:attack')).toBe(false);
+      });
+
+      it('should support suffix wildcard patterns', async () => {
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: ['*_debug', '*_test'],
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
+
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
+
+        expect(await loader.shouldTraceAction('core:go_debug')).toBe(true);
+        expect(await loader.shouldTraceAction('test:attack_debug')).toBe(true);
+        expect(await loader.shouldTraceAction('custom:action_test')).toBe(true);
+        expect(await loader.shouldTraceAction('core:go')).toBe(false);
+      });
+
+      it('should support complex wildcard patterns', async () => {
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: ['core:*_action', 'test:debug_*', '*:move_*'],
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
+
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
+
+        expect(await loader.shouldTraceAction('core:attack_action')).toBe(true);
+        expect(await loader.shouldTraceAction('test:debug_info')).toBe(true);
+        expect(await loader.shouldTraceAction('any:move_forward')).toBe(true);
+        expect(await loader.shouldTraceAction('core:attack')).toBe(false);
+      });
+    });
+
+    describe('pattern validation', () => {
+      it('should warn about invalid patterns', async () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          info: jest.fn(),
+          error: jest.fn(),
+        };
+        const loaderWithMockLogger = new ActionTraceConfigLoader({
+          traceConfigLoader: mockTraceConfigLoader,
+          logger: mockLogger,
+          validator: mockValidator,
+        });
+
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: ['InvalidMod:action', 'core:**action', ''],
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
+
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
+
+        await loaderWithMockLogger.shouldTraceAction('core:go');
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid pattern')
+        );
+      });
+    });
+
+    describe('pattern testing utilities', () => {
+      it('should test individual patterns', () => {
+        const result = loader.testPattern('core:go*', 'core:go_north');
+
+        expect(result).toEqual({
+          matches: true,
+          patternType: 'general',
+          explanation: "Matches pattern 'core:go*' using regex",
+        });
+      });
+
+      it('should test exact patterns', () => {
+        const result = loader.testPattern('core:go', 'core:go');
+
+        expect(result).toEqual({
+          matches: true,
+          patternType: 'exact',
+          explanation: 'Exact string match',
+        });
+      });
+
+      it('should test universal wildcard', () => {
+        const result = loader.testPattern('*', 'any:action');
+
+        expect(result).toEqual({
+          matches: true,
+          patternType: 'all',
+          explanation: 'Matches all actions',
+        });
+      });
+
+      it('should test mod wildcard patterns', () => {
+        const result = loader.testPattern('core:*', 'core:go_north');
+
+        expect(result).toEqual({
+          matches: true,
+          patternType: 'mod',
+          explanation: "Matches actions starting with 'core:'",
+        });
+      });
+
+      it('should return matching patterns for action ID', async () => {
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: ['*', 'core:*', 'core:go*'],
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
+
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
+
+        const result = await loader.getMatchingPatterns('core:go_north');
+
+        expect(result.matches).toBe(true);
+        expect(result.matchingPatterns).toHaveLength(3);
+        expect(result.matchingPatterns[0].pattern).toBe('*');
+        expect(result.matchingPatterns[1].pattern).toBe('core:*');
+        expect(result.matchingPatterns[2].pattern).toBe('core:go*');
+      });
+
+      it('should return no matches for non-matching action', async () => {
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: ['core:*', 'test:debug*'],
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
+
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
+
+        const result = await loader.getMatchingPatterns('other:unrelated');
+
+        expect(result.matches).toBe(false);
+        expect(result.matchingPatterns).toHaveLength(0);
+      });
+    });
+
+    describe('performance with enhanced patterns', () => {
+      it('should maintain performance with complex patterns', async () => {
+        const patterns = [
+          ...Array.from({ length: 100 }, (_, i) => `mod${i}:action${i}`),
+          ...Array.from({ length: 50 }, (_, i) => `wildcard${i}:*`),
+          ...Array.from({ length: 25 }, (_, i) => `prefix${i}:action*`),
+          ...Array.from({ length: 25 }, (_, i) => `*_suffix${i}`),
+        ];
+
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: patterns,
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
+
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
+
+        const testActions = [
+          'mod50:action50',
+          'wildcard25:anything',
+          'prefix10:action_test',
+          'core:action_suffix15',
+        ];
+
+        const start = performance.now();
+
+        for (let i = 0; i < 1000; i++) {
+          const action = testActions[i % testActions.length];
+          await loader.shouldTraceAction(action);
+        }
+
+        const duration = performance.now() - start;
+        const avgTime = duration / 1000;
+
+        expect(avgTime).toBeLessThan(1); // Less than 1ms per check
+      });
     });
   });
 });

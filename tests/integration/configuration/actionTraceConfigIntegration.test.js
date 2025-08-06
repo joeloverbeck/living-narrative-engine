@@ -3,7 +3,14 @@
  * @see src/configuration/actionTraceConfigLoader.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import fs from 'fs/promises';
 import path from 'path';
 import ActionTraceConfigLoader from '../../../src/configuration/actionTraceConfigLoader.js';
@@ -114,6 +121,7 @@ describe('Action Trace Config Integration', () => {
           info: jest.fn(),
           error: jest.fn(),
           warn: jest.fn(),
+          debug: jest.fn(),
         },
         validator,
       });
@@ -147,6 +155,7 @@ describe('Action Trace Config Integration', () => {
           info: jest.fn(),
           error: jest.fn(),
           warn: jest.fn(),
+          debug: jest.fn(),
         },
         validator,
       });
@@ -356,6 +365,7 @@ describe('Action Trace Config Integration', () => {
           info: jest.fn(),
           error: jest.fn(),
           warn: jest.fn(),
+          debug: jest.fn(),
         },
         validator,
       });
@@ -380,6 +390,183 @@ describe('Action Trace Config Integration', () => {
       expect(config.outputDirectory).toBe('./traces2');
       expect(config.enabled).toBe(true);
       expect(config.tracedActions).toEqual(['core:*']);
+    });
+  });
+
+  describe('Enhanced Wildcard Pattern Integration', () => {
+    it('should work with real config files containing complex patterns', async () => {
+      const complexConfig = {
+        enabled: true,
+        tracedActions: [
+          'core:*',
+          'debug_*',
+          '*_test',
+          'combat:attack*',
+          '*:move_*',
+        ],
+        outputDirectory: './test-traces',
+        verbosity: 'detailed',
+        includeComponentData: true,
+      };
+
+      const fullConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: complexConfig,
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(fullConfig, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        validator,
+      });
+
+      expect(await testLoader.shouldTraceAction('core:anything')).toBe(true);
+      expect(await testLoader.shouldTraceAction('debug_info')).toBe(true);
+      expect(await testLoader.shouldTraceAction('custom:action_test')).toBe(
+        true
+      );
+      expect(await testLoader.shouldTraceAction('combat:attack_sword')).toBe(
+        true
+      );
+      expect(await testLoader.shouldTraceAction('player:move_north')).toBe(
+        true
+      );
+      expect(await testLoader.shouldTraceAction('other:unrelated')).toBe(false);
+    });
+
+    it('should handle mixed pattern types in real configuration', async () => {
+      const mixedConfig = {
+        enabled: true,
+        tracedActions: [
+          'core:go', // Exact match
+          'debug:*', // Mod wildcard
+          '*', // Universal wildcard
+          'action_*', // Prefix pattern
+          '*_test', // Suffix pattern
+          'mod:*_debug', // Complex pattern
+        ],
+        outputDirectory: './test-traces',
+        verbosity: 'standard',
+      };
+
+      const fullConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: mixedConfig,
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(fullConfig, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        validator,
+      });
+
+      // Test exact match
+      expect(await testLoader.shouldTraceAction('core:go')).toBe(true);
+
+      // Test mod wildcard
+      expect(await testLoader.shouldTraceAction('debug:something')).toBe(true);
+
+      // Test universal wildcard (should match everything)
+      expect(await testLoader.shouldTraceAction('random:action')).toBe(true);
+
+      // Test prefix pattern
+      expect(await testLoader.shouldTraceAction('action_start')).toBe(true);
+
+      // Test suffix pattern
+      expect(await testLoader.shouldTraceAction('integration_test')).toBe(true);
+
+      // Test complex pattern
+      expect(await testLoader.shouldTraceAction('mod:function_debug')).toBe(
+        true
+      );
+    });
+
+    it('should validate and warn about invalid patterns in real config', async () => {
+      const mockLogger = {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      const invalidConfig = {
+        enabled: true,
+        tracedActions: [
+          'core:valid', // Valid
+          'InvalidMod:action', // Invalid mod name
+          'core:**redundant', // Redundant asterisks
+          '', // Empty pattern
+          'valid:*', // Valid
+        ],
+        outputDirectory: './test-traces',
+        verbosity: 'standard',
+      };
+
+      const fullConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: invalidConfig,
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(fullConfig, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: mockLogger,
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: mockLogger,
+        validator,
+      });
+
+      await testLoader.loadConfig();
+
+      // Should warn about invalid patterns
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid pattern')
+      );
+
+      // Valid patterns should still work
+      expect(await testLoader.shouldTraceAction('core:valid')).toBe(true);
+      expect(await testLoader.shouldTraceAction('valid:something')).toBe(true);
     });
   });
 });

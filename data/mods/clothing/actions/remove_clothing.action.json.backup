@@ -3,7 +3,7 @@
   "id": "clothing:remove_clothing",
   "name": "Remove Clothing",
   "description": "Remove a piece of your topmost clothing",
-  "targets": "clothing:topmost_clothing",
+  "scope": "clothing:topmost_clothing",
   "required_components": {
     "actor": ["clothing:equipment"]
   },
