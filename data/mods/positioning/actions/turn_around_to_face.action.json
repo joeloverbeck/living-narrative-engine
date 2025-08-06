@@ -1,12 +1,18 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "positioning:turn_around_to_face",
-  "commandVerb": "turn-around-to-face",
   "name": "Turn Around to Face",
   "description": "Turn around to face someone you are currently facing away from.",
-  "scope": "positioning:actors_im_facing_away_from",
+  "targets": {
+    "primary": {
+      "scope": "positioning:actors_im_facing_away_from",
+      "placeholder": "target",
+      "description": "Actor you are facing away from"
+    }
+  },
   "required_components": {
     "actor": ["positioning:closeness", "positioning:facing_away"]
   },
-  "template": "turn around to face {target}"
+  "template": "turn around to face {target}",
+  "prerequisites": []
 }

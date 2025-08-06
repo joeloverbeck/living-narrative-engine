@@ -219,7 +219,15 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
 
       // Update dropdown with filtered concepts
       if (this.#conceptDropdown) {
-        await this.#conceptDropdown.loadItems(conceptsWithDirections);
+        try {
+          await this.#conceptDropdown.loadItems(conceptsWithDirections);
+        } catch (dropdownError) {
+          this.logger.error(
+            'Failed to load items into dropdown:',
+            dropdownError
+          );
+          // Continue without dropdown update
+        }
       }
 
       // Store data
@@ -280,6 +288,18 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @private
    */
   #filterAndDisplayDirections() {
+    // Ensure directionsData is always an array (defensive check for tests)
+    if (!Array.isArray(this.#directionsData)) {
+      this.logger.warn(
+        'directionsData is not an array, initializing to empty array',
+        {
+          type: typeof this.#directionsData,
+          value: this.#directionsData,
+        }
+      );
+      this.#directionsData = [];
+    }
+
     let filteredData = [...this.#directionsData];
 
     // Filter by concept
@@ -666,6 +686,16 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     }
 
     this.#filterAndDisplayDirections();
+  }
+
+  /**
+   * Delete a thematic direction (public method for testing)
+   *
+   * @public
+   * @param {ThematicDirection} direction - Direction to delete
+   */
+  deleteDirection(direction) {
+    this.#handleDeleteDirection(direction);
   }
 
   /**
@@ -1060,6 +1090,26 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @returns {CharacterConcept[]} Array of concepts with directions
    */
   #extractConceptsWithDirections(directionsWithConcepts) {
+    // Guard against undefined/null
+    if (!directionsWithConcepts) {
+      this.logger.warn(
+        'directionsWithConcepts is null/undefined, returning empty array'
+      );
+      return [];
+    }
+
+    // Guard against non-array values
+    if (!Array.isArray(directionsWithConcepts)) {
+      this.logger.warn(
+        'directionsWithConcepts is not an array, returning empty array',
+        {
+          type: typeof directionsWithConcepts,
+          value: directionsWithConcepts,
+        }
+      );
+      return [];
+    }
+
     const conceptMap = new Map();
 
     directionsWithConcepts.forEach((item) => {

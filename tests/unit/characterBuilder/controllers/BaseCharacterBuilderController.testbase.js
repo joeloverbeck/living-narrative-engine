@@ -38,6 +38,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
       characterBuilderService:
         this.createMockCharacterBuilderService.bind(this),
       schemaValidator: this.createMockSchemaValidator.bind(this),
+      uiStateManager: this.createMockUIStateManager.bind(this),
     });
 
     // Store references for easy access
@@ -126,6 +127,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
     return {
       initialize: jest.fn().mockResolvedValue(undefined),
       getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
+      getCharacterConcepts: jest.fn().mockResolvedValue([]), // Added for test compatibility
       getCharacterConcept: jest.fn().mockResolvedValue(null),
       createCharacterConcept: jest.fn().mockResolvedValue({ id: 'new-id' }),
       updateCharacterConcept: jest.fn().mockResolvedValue({ id: 'updated-id' }),
@@ -154,6 +156,25 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
       }),
       loadSchema: jest.fn().mockResolvedValue(true),
       hasSchema: jest.fn().mockReturnValue(true),
+    };
+  }
+
+  /**
+   * Create mock UIStateManager
+   *
+   * @returns {object} Mock UI state manager
+   */
+  createMockUIStateManager() {
+    return {
+      showEmpty: jest.fn(),
+      showLoading: jest.fn(),
+      showResults: jest.fn(),
+      showError: jest.fn(),
+      showState: jest.fn(), // Added for test compatibility
+      hideAll: jest.fn(),
+      getCurrentState: jest.fn().mockReturnValue('empty'),
+      isInState: jest.fn().mockReturnValue(false),
+      transition: jest.fn(),
     };
   }
 }

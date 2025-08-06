@@ -21,6 +21,7 @@ export const coreTokens = freeze({
   IConfiguration: 'IConfiguration',
   IPathConfiguration: 'IPathConfiguration',
   ITraceConfiguration: 'ITraceConfiguration',
+  ITraceConfigLoader: 'ITraceConfigLoader',
   IPathResolver: 'IPathResolver',
   ISchemaValidator: 'ISchemaValidator',
   IDataRegistry: 'IDataRegistry',

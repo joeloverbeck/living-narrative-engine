@@ -48,8 +48,18 @@ class TargetContextBuilder {
    * @returns {object} Base context object
    */
   buildBaseContext(actorId, locationId) {
-    assertNonBlankString(actorId, 'Actor ID is required');
-    assertNonBlankString(locationId, 'Location ID is required');
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'TargetContextBuilder.buildBaseContext',
+      this.#logger
+    );
+    assertNonBlankString(
+      locationId,
+      'locationId',
+      'TargetContextBuilder.buildBaseContext',
+      this.#logger
+    );
 
     try {
       const actor = this.#buildEntityContext(actorId);

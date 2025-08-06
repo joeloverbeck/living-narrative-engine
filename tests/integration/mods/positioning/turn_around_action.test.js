@@ -236,16 +236,6 @@ describe('Turn Around Action Discovery', () => {
     });
 
     it('should show action when actor has closeness', async () => {
-      // Mock the resolveTargets method to return expected results
-      const { ActionTargetContext } = await import(
-        '../../../../src/models/actionTargetContext.js'
-      );
-      targetResolutionService.resolveTargets = jest.fn().mockResolvedValue({
-        success: true,
-        value: [new ActionTargetContext('entity', { entityId: bob })],
-        errors: [],
-      });
-
       // Set up closeness
       entityManager.addComponent(alice, 'positioning:closeness', {
         partners: [bob],
@@ -254,8 +244,76 @@ describe('Turn Around Action Discovery', () => {
         partners: [alice],
       });
 
+      // Mock the unifiedScopeResolver to return Bob as a valid target
+      const unifiedScopeResolver = createMockUnifiedScopeResolver({
+        scopeRegistry,
+        entityManager,
+        logger,
+      });
+
+      // Override the resolve method to return Bob
+      unifiedScopeResolver.resolve = jest.fn().mockReturnValue({
+        success: true,
+        value: new Set([bob]),
+        errors: [],
+      });
+
+      // Create mock validatedEventDispatcher for SafeEventDispatcher
+      const validatedEventDispatcher = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+
+      const newSafeEventDispatcher = new SafeEventDispatcher({
+        validatedEventDispatcher,
+        logger,
+      });
+
+      // Recreate the ActionPipelineOrchestrator with the mocked resolver
+      const multiTargetStage = createMultiTargetResolutionStage({
+        entityManager,
+        logger,
+        unifiedScopeResolver,
+        targetResolver: targetResolutionService,
+      });
+
+      const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+        actionIndex,
+        prerequisiteService: {
+          evaluate: jest.fn().mockReturnValue(true),
+          evaluateActionConditions: jest.fn().mockResolvedValue({
+            success: true,
+            errors: [],
+          }),
+        },
+        entityManager,
+        targetService: targetResolutionService,
+        formatter: new ActionCommandFormatter({ logger }),
+        logger,
+        safeEventDispatcher: newSafeEventDispatcher,
+        getEntityDisplayNameFn: getEntityDisplayName,
+        errorBuilder: createMockActionErrorContextBuilder(),
+        unifiedScopeResolver,
+        targetContextBuilder: createMockTargetContextBuilder(),
+        multiTargetResolutionStage: multiTargetStage,
+      });
+
+      // Recreate the ActionDiscoveryService with the new orchestrator
+      const traceContextFactory = jest.fn(() => ({
+        addStep: jest.fn(),
+        toJSON: jest.fn(() => ({})),
+      }));
+
+      const actionDiscovery = new ActionDiscoveryService({
+        actionPipelineOrchestrator,
+        entityManager,
+        traceContextFactory,
+        logger,
+      });
+
       const aliceEntity = entityManager.getEntityInstance(alice);
-      const result = await actionDiscoveryService.getValidActions(aliceEntity);
+      const result = await actionDiscovery.getValidActions(aliceEntity);
       const actions = result.actions;
 
       const turnAroundAction = actions.find(
@@ -309,23 +367,77 @@ describe('Turn Around Action Discovery', () => {
     });
 
     it('should show action for actors facing each other', async () => {
-      // Mock the resolveTargets method to return expected results for facing each other scenario
-      const { ActionTargetContext } = await import(
-        '../../../../src/models/actionTargetContext.js'
-      );
-      targetResolutionService.resolveTargets = jest.fn().mockResolvedValue({
+      // Mock the unifiedScopeResolver to return all partners facing each other
+      const unifiedScopeResolver = createMockUnifiedScopeResolver({
+        scopeRegistry,
+        entityManager,
+        logger,
+      });
+
+      // Override the resolve method to return all partners
+      unifiedScopeResolver.resolve = jest.fn().mockReturnValue({
         success: true,
-        value: [
-          new ActionTargetContext('entity', { entityId: bob }),
-          new ActionTargetContext('entity', { entityId: charlie }),
-          new ActionTargetContext('entity', { entityId: diana }),
-        ],
+        value: new Set([bob, charlie, diana]),
         errors: [],
+      });
+
+      // Create mock validatedEventDispatcher for SafeEventDispatcher
+      const validatedEventDispatcher = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+
+      const newSafeEventDispatcher = new SafeEventDispatcher({
+        validatedEventDispatcher,
+        logger,
+      });
+
+      // Recreate the ActionPipelineOrchestrator with the mocked resolver
+      const multiTargetStage = createMultiTargetResolutionStage({
+        entityManager,
+        logger,
+        unifiedScopeResolver,
+        targetResolver: targetResolutionService,
+      });
+
+      const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+        actionIndex,
+        prerequisiteService: {
+          evaluate: jest.fn().mockReturnValue(true),
+          evaluateActionConditions: jest.fn().mockResolvedValue({
+            success: true,
+            errors: [],
+          }),
+        },
+        entityManager,
+        targetService: targetResolutionService,
+        formatter: new ActionCommandFormatter({ logger }),
+        logger,
+        safeEventDispatcher: newSafeEventDispatcher,
+        getEntityDisplayNameFn: getEntityDisplayName,
+        errorBuilder: createMockActionErrorContextBuilder(),
+        unifiedScopeResolver,
+        targetContextBuilder: createMockTargetContextBuilder(),
+        multiTargetResolutionStage: multiTargetStage,
+      });
+
+      // Recreate the ActionDiscoveryService with the new orchestrator
+      const traceContextFactory = jest.fn(() => ({
+        addStep: jest.fn(),
+        toJSON: jest.fn(() => ({})),
+      }));
+
+      const actionDiscovery = new ActionDiscoveryService({
+        actionPipelineOrchestrator,
+        entityManager,
+        traceContextFactory,
+        logger,
       });
 
       // Alice and Bob are facing each other (no facing_away components)
       const aliceEntity = entityManager.getEntityInstance(alice);
-      const result = await actionDiscoveryService.getValidActions(aliceEntity);
+      const result = await actionDiscovery.getValidActions(aliceEntity);
       const actions = result.actions;
 
       const turnAroundActions = actions.filter(
@@ -337,23 +449,81 @@ describe('Turn Around Action Discovery', () => {
     });
 
     it('should show action when actor is behind target', async () => {
-      // Mock the resolveTargets method to return Bob as a target when Alice is behind him
-      const { ActionTargetContext } = await import(
-        '../../../../src/models/actionTargetContext.js'
-      );
-      targetResolutionService.resolveTargets = jest.fn().mockResolvedValue({
-        success: true,
-        value: [new ActionTargetContext('entity', { entityId: bob })],
-        errors: [],
-      });
-
       // Bob is facing away from Alice (Alice is behind Bob)
       entityManager.addComponent(bob, 'positioning:facing_away', {
         facing_away_from: [alice],
       });
 
+      // Mock the unifiedScopeResolver to return Bob as a valid target
+      const unifiedScopeResolver = createMockUnifiedScopeResolver({
+        scopeRegistry,
+        entityManager,
+        logger,
+      });
+
+      // Override the resolve method to return Bob
+      unifiedScopeResolver.resolve = jest.fn().mockReturnValue({
+        success: true,
+        value: new Set([bob]),
+        errors: [],
+      });
+
+      // Create mock validatedEventDispatcher for SafeEventDispatcher
+      const validatedEventDispatcher = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+
+      const newSafeEventDispatcher = new SafeEventDispatcher({
+        validatedEventDispatcher,
+        logger,
+      });
+
+      // Recreate the ActionPipelineOrchestrator with the mocked resolver
+      const multiTargetStage = createMultiTargetResolutionStage({
+        entityManager,
+        logger,
+        unifiedScopeResolver,
+        targetResolver: targetResolutionService,
+      });
+
+      const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+        actionIndex,
+        prerequisiteService: {
+          evaluate: jest.fn().mockReturnValue(true),
+          evaluateActionConditions: jest.fn().mockResolvedValue({
+            success: true,
+            errors: [],
+          }),
+        },
+        entityManager,
+        targetService: targetResolutionService,
+        formatter: new ActionCommandFormatter({ logger }),
+        logger,
+        safeEventDispatcher: newSafeEventDispatcher,
+        getEntityDisplayNameFn: getEntityDisplayName,
+        errorBuilder: createMockActionErrorContextBuilder(),
+        unifiedScopeResolver,
+        targetContextBuilder: createMockTargetContextBuilder(),
+        multiTargetResolutionStage: multiTargetStage,
+      });
+
+      // Recreate the ActionDiscoveryService with the new orchestrator
+      const traceContextFactory = jest.fn(() => ({
+        addStep: jest.fn(),
+        toJSON: jest.fn(() => ({})),
+      }));
+
+      const actionDiscovery = new ActionDiscoveryService({
+        actionPipelineOrchestrator,
+        entityManager,
+        traceContextFactory,
+        logger,
+      });
+
       const aliceEntity = entityManager.getEntityInstance(alice);
-      const result = await actionDiscoveryService.getValidActions(aliceEntity);
+      const result = await actionDiscovery.getValidActions(aliceEntity);
       const actions = result.actions;
 
       const turnAroundActions = actions.filter(

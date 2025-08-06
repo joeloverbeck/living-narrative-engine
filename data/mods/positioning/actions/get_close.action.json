@@ -3,7 +3,13 @@
   "id": "positioning:get_close",
   "name": "Get Close",
   "description": "Move closer to the target, entering their personal space.",
-  "scope": "core:actors_in_location",
+  "targets": {
+    "primary": {
+      "scope": "core:actors_in_location",
+      "placeholder": "target",
+      "description": "Actor to get close to"
+    }
+  },
   "required_components": {},
   "template": "get close to {target}",
   "prerequisites": [

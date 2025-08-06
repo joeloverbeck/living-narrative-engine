@@ -342,11 +342,17 @@ class ActionTraceConfigLoader {
       averageLookupTime: this.#lookupStatistics.averageLookupTime,
       // Enhanced performance metrics
       slowLookups: this.#lookupStatistics.slowLookups,
-      fastestLookup: this.#lookupStatistics.fastestLookup === Number.MAX_VALUE ? 0 : this.#lookupStatistics.fastestLookup,
+      fastestLookup:
+        this.#lookupStatistics.fastestLookup === Number.MAX_VALUE
+          ? 0
+          : this.#lookupStatistics.fastestLookup,
       slowestLookup: this.#lookupStatistics.slowestLookup,
-      slowLookupRate: this.#lookupStatistics.totalLookups > 0 
-        ? (this.#lookupStatistics.slowLookups / this.#lookupStatistics.totalLookups) * 100 
-        : 0,
+      slowLookupRate:
+        this.#lookupStatistics.totalLookups > 0
+          ? (this.#lookupStatistics.slowLookups /
+              this.#lookupStatistics.totalLookups) *
+            100
+          : 0,
       tracedActionsCount: this.#tracedActionsSet.size,
       wildcardPatternsCount: this.#wildcardPatterns.length,
       cacheTtl: this.#cachedConfig.ttl,
@@ -534,22 +540,24 @@ class ActionTraceConfigLoader {
     const duration = performance.now() - startTime;
     const stats = this.#lookupStatistics;
     const totalLookups = stats.totalLookups;
-    
+
     // Accumulate total time for precise average calculation
     stats.totalLookupTime += duration;
     stats.averageLookupTime = stats.totalLookupTime / totalLookups;
-    
+
     // Track performance outliers
-    if (duration > 1) { // >1ms is considered slow
+    if (duration > 1) {
+      // >1ms is considered slow
       stats.slowLookups++;
       // Log performance warning for investigation
       this.#logger.warn('Slow action lookup detected', {
         duration: `${duration.toFixed(3)}ms`,
         totalLookups,
-        slowLookupRate: ((stats.slowLookups / totalLookups) * 100).toFixed(2) + '%'
+        slowLookupRate:
+          ((stats.slowLookups / totalLookups) * 100).toFixed(2) + '%',
       });
     }
-    
+
     // Update performance bounds
     if (duration < stats.fastestLookup) {
       stats.fastestLookup = duration;

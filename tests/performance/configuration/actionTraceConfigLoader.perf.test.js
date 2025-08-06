@@ -1,7 +1,7 @@
 /**
  * @file Performance tests for ActionTraceConfigLoader
  * @see src/configuration/actionTraceConfigLoader.js
- * 
+ *
  * Performance Test Guidelines:
  * - JavaScript timing precision varies due to system load, GC, and concurrent execution
  * - Thresholds account for realistic Node.js performance characteristics
@@ -23,7 +23,7 @@ describe('ActionTraceConfigLoader Performance', () => {
     if (global.gc) {
       global.gc();
     }
-    
+
     // Reset mocks
     mockTraceConfigLoader = {
       loadConfig: jest.fn(),
@@ -43,9 +43,9 @@ describe('ActionTraceConfigLoader Performance', () => {
       logger: mockLogger,
       validator: mockValidator,
     });
-    
+
     // Performance test stabilization: allow JIT to warm up
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
   });
 
   describe('Exact Match Performance', () => {
@@ -623,7 +623,7 @@ describe('ActionTraceConfigLoader Performance', () => {
 
         // Load initial config
         await testLoader.loadConfig();
-        
+
         // Warm up for this TTL configuration
         for (let warmup = 0; warmup < 100; warmup++) {
           await testLoader.loadConfig();
@@ -632,25 +632,25 @@ describe('ActionTraceConfigLoader Performance', () => {
         // Take multiple samples for statistical stability
         const samples = [];
         const iterations = 1000;
-        
+
         for (let sample = 0; sample < 5; sample++) {
           const start = performance.now();
-          
+
           for (let i = 0; i < iterations; i++) {
             await testLoader.loadConfig();
           }
-          
+
           const duration = performance.now() - start;
           const avgTime = duration / iterations;
           samples.push(avgTime);
-          
-          await new Promise(resolve => setTimeout(resolve, 10));
+
+          await new Promise((resolve) => setTimeout(resolve, 10));
         }
-        
+
         // Use median of samples for stability
         samples.sort((a, b) => a - b);
         const medianTime = samples[Math.floor(samples.length / 2)];
-        
+
         results.push({ ttl, avgTime: medianTime });
       }
 
@@ -744,46 +744,46 @@ describe('ActionTraceConfigLoader Performance', () => {
 
       // Load config to populate cache
       await ttlLoader.loadConfig();
-      
+
       // Extended warm-up for statistics performance measurement
       for (let warmup = 0; warmup < 1000; warmup++) {
         ttlLoader.getStatistics();
       }
-      
+
       // Stabilize timing with additional warm-up and GC
       if (global.gc) {
         global.gc();
       }
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Measure statistics performance with TTL calculations using multiple samples
       const iterations = 10000;
       const samples = [];
-      
+
       // Take multiple timing samples for statistical analysis
       for (let sample = 0; sample < 10; sample++) {
         const start = performance.now();
-        
+
         for (let i = 0; i < iterations; i++) {
           const stats = ttlLoader.getStatistics();
           expect(stats.cacheTtl).toBe(60000);
           expect(stats.cacheStatus).toBe('valid');
           expect(stats.cacheAge).toBeGreaterThanOrEqual(0);
         }
-        
+
         const duration = performance.now() - start;
         const avgTime = (duration * 1000000) / iterations; // Convert to nanoseconds
         samples.push(avgTime);
-        
+
         // Brief pause between samples to avoid interference
-        await new Promise(resolve => setTimeout(resolve, 5));
+        await new Promise((resolve) => setTimeout(resolve, 5));
       }
-      
+
       // Statistical analysis: use median for robustness against outliers
       samples.sort((a, b) => a - b);
       const medianTime = samples[Math.floor(samples.length / 2)];
       const p95Time = samples[Math.floor(samples.length * 0.95)];
-      
+
       // Statistics with TTL calculations should still be very fast
       // Note: Using median reduces impact of timing outliers from GC, system load, etc.
       // P95 threshold catches performance regressions while allowing realistic variance

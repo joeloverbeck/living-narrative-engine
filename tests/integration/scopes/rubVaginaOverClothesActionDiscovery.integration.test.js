@@ -30,7 +30,8 @@ import {
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
-import { createMultiTargetResolutionStage } from '../../common/actions/multiTargetStageTestUtilities.js';
+import { PipelineStage } from '../../../src/actions/pipeline/PipelineStage.js';
+import { PipelineResult } from '../../../src/actions/pipeline/PipelineResult.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
 import fs from 'fs';
 import path from 'path';
@@ -48,6 +49,113 @@ const vaginaCoveredScopeContent = fs.readFileSync(
 import rubVaginaOverClothesAction from '../../../data/mods/sex/actions/rub_vagina_over_clothes.action.json';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
+
+/**
+ * Creates a MultiTargetResolutionStage mock that actually evaluates scopes
+ * instead of bypassing them like the standard mock
+ *
+ * @param dependencies
+ */
+function createScopeEvaluatingMock(dependencies) {
+  const { scopeRegistry, scopeEngine, entityManager, logger, jsonLogicEval } =
+    dependencies;
+
+  return new (class extends PipelineStage {
+    constructor() {
+      super('ScopeEvaluatingMock');
+    }
+
+    async executeInternal(context) {
+      const { candidateActions, actor, actionContext } = context;
+      const actionsWithTargets = [];
+
+      for (const actionDef of candidateActions) {
+        // Extract scope from modern format (targets.primary.scope) or legacy format (scope)
+        const scopeName = actionDef.targets?.primary?.scope || actionDef.scope;
+        // Skip actions without scopes
+        if (!scopeName) {
+          continue;
+        }
+
+        // Get the unified scope resolver
+        const unifiedScopeResolver = createMockUnifiedScopeResolver({
+          scopeRegistry,
+          scopeEngine,
+          entityManager,
+          logger,
+          jsonLogicEvaluationService: jsonLogicEval,
+          dslParser: new DefaultDslParser({ logger }),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
+        });
+
+        // Create scope resolution context
+        // Ensure actor has an id property
+        const actorForScope = typeof actor === 'string' ? { id: actor } : actor;
+
+        const scopeContext = {
+          actor: actorForScope,
+          actionId: actionDef.id,
+          actionContext: actionContext,
+          trace: context.trace,
+        };
+
+        // Resolve the scope
+        const scopeResult = await unifiedScopeResolver.resolve(
+          scopeName,
+          scopeContext
+        );
+
+        // Check if resolve returned an ActionResult
+        let resolvedTargets;
+        if (scopeResult && scopeResult.success !== undefined) {
+          // It's an ActionResult
+          if (scopeResult.success) {
+            resolvedTargets = Array.from(scopeResult.value || []);
+          } else {
+            console.log(
+              `Scope resolution failed for ${scopeName}:`,
+              scopeResult.errors
+            );
+            resolvedTargets = [];
+          }
+        } else {
+          // Direct result (backward compatibility)
+          resolvedTargets = scopeResult;
+        }
+
+        // Add actions with valid targets
+        if (resolvedTargets && resolvedTargets.length > 0) {
+          actionsWithTargets.push({
+            actionDef,
+            targetContexts: resolvedTargets.map((target) => ({
+              type: 'entity',
+              entityId: target.id || target,
+              displayName: target.displayName || target,
+              placeholder: 'target',
+            })),
+            resolvedTargets: {
+              primary: resolvedTargets,
+            },
+            targetDefinitions: {
+              primary: {
+                scope: scopeName,
+                placeholder: 'target',
+              },
+            },
+            isMultiTarget: false,
+          });
+        }
+      }
+
+      return PipelineResult.success({
+        data: {
+          ...context.data,
+          actionsWithTargets,
+        },
+      });
+    }
+  })();
+}
 
 describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
   let entityManager;
@@ -91,7 +199,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
     dataRegistry.store('conditions', 'positioning:entity-not-in-facing-away', {
       id: 'positioning:entity-not-in-facing-away',
       logic: {
-        not: {
+        '!': {
           in: [
             { var: 'actor.id' },
             {
@@ -126,10 +234,12 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
 
+    const scopeDef = scopeDefinitions.get(
+      'sex:actors_with_vagina_facing_each_other_covered'
+    );
+
     scopeRegistry.initialize({
-      'sex:actors_with_vagina_facing_each_other_covered': scopeDefinitions.get(
-        'sex:actors_with_vagina_facing_each_other_covered'
-      ),
+      'sex:actors_with_vagina_facing_each_other_covered': scopeDef,
     });
 
     scopeEngine = new ScopeEngine();
@@ -163,17 +273,6 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         unsubscribe: jest.fn(),
       },
     });
-    const multiTargetResolutionStage = createMultiTargetResolutionStage({
-      entityManager,
-      logger,
-      unifiedScopeResolver: createMockUnifiedScopeResolver({
-        scopeRegistry,
-        entityManager,
-        logger,
-      }),
-      targetResolver: targetResolutionService,
-    });
-
     const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
@@ -196,7 +295,13 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         logger,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
-      multiTargetResolutionStage,
+      multiTargetResolutionStage: createScopeEvaluatingMock({
+        scopeRegistry,
+        scopeEngine,
+        entityManager,
+        logger,
+        jsonLogicEval,
+      }),
     });
 
     actionDiscoveryService = new ActionDiscoveryService({
@@ -271,12 +376,24 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
 
       entityManager.setEntities(entities);
 
+      // Mock buildAdjacencyCache - called before findPartsByType
+      mockBodyGraphService.buildAdjacencyCache.mockImplementation((rootId) => {
+        console.log('buildAdjacencyCache called with:', rootId);
+        // No-op, just needs to be callable
+      });
+
       // Mock hasPartOfType to find vagina
       mockBodyGraphService.findPartsByType.mockImplementation(
-        (bodyComponent, partType) => {
-          if (partType === 'vagina') {
+        (rootEntityId, partType) => {
+          console.log('findPartsByType called with:', {
+            rootEntityId,
+            partType,
+          });
+          if (rootEntityId === 'groin1' && partType === 'vagina') {
+            console.log('Returning vagina1');
             return ['vagina1'];
           }
+          console.log('Returning empty array');
           return [];
         }
       );
@@ -306,7 +423,31 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       const actorEntity = entityManager.getEntityInstance('actor1');
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
+        currentLocation: { id: 'test-location' },
       });
+
+      // Debug: Log the result
+      if (result.actions.length === 0) {
+        console.log('No actions found! Debugging info:');
+        const target1 = entityManager.getEntityInstance('target1');
+        console.log('Entity target1:', target1);
+        if (target1) {
+          console.log('Target1 components:', target1.getAllComponents());
+        }
+      }
+      console.log('Discovery result:', JSON.stringify(result, null, 2));
+      console.log(
+        'All actions found:',
+        result.actions.map((a) => a.id)
+      );
+      console.log(
+        'Mock calls - buildAdjacencyCache:',
+        mockBodyGraphService.buildAdjacencyCache.mock.calls
+      );
+      console.log(
+        'Mock calls - findPartsByType:',
+        mockBodyGraphService.findPartsByType.mock.calls
+      );
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
@@ -324,6 +465,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       const actorEntity = entityManager.getEntityInstance('actor1');
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
+        currentLocation: { id: 'test-location' },
       });
 
       // Assert
@@ -350,6 +492,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       const actorEntity = entityManager.getEntityInstance('actor1');
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
+        currentLocation: { id: 'test-location' },
       });
 
       // Assert
@@ -385,6 +528,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       const actorEntity = entityManager.getEntityInstance('actor1');
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
+        currentLocation: { id: 'test-location' },
       });
 
       // Assert
@@ -466,8 +610,8 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
 
       // Mock hasPartOfType to find vagina
       mockBodyGraphService.findPartsByType.mockImplementation(
-        (bodyComponent, partType) => {
-          if (partType === 'vagina') {
+        (rootEntityId, partType) => {
+          if (rootEntityId === 'groin1' && partType === 'vagina') {
             return ['vagina1'];
           }
           return [];
@@ -478,6 +622,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       const actorEntity = entityManager.getEntityInstance('actor1');
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
+        currentLocation: { id: 'test-location' },
       });
 
       // Assert
@@ -548,7 +693,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
 
       // Mock hasPartOfType to find no vagina
       mockBodyGraphService.findPartsByType.mockImplementation(
-        (bodyComponent, partType) => {
+        (rootEntityId, partType) => {
           return [];
         }
       );
@@ -557,6 +702,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       const actorEntity = entityManager.getEntityInstance('actor1');
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
+        currentLocation: { id: 'test-location' },
       });
 
       // Assert
@@ -629,8 +775,8 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
 
       // Mock hasPartOfType to find vagina
       mockBodyGraphService.findPartsByType.mockImplementation(
-        (bodyComponent, partType) => {
-          if (partType === 'vagina') {
+        (rootEntityId, partType) => {
+          if (rootEntityId === 'groin1' && partType === 'vagina') {
             return ['vagina1'];
           }
           return [];
@@ -641,6 +787,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       const actorEntity = entityManager.getEntityInstance('actor1');
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
+        currentLocation: { id: 'test-location' },
       });
 
       // Assert

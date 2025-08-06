@@ -187,9 +187,11 @@ export class MultiTargetResolutionStage extends PipelineStage {
           }
         }
       } catch (error) {
-        const errorMessage = error.scopeName
-          ? `Scope resolution failed for '${error.scopeName}': ${error.message}`
-          : error.message;
+        const errorMessage = error?.scopeName
+          ? `Scope resolution failed for '${error.scopeName}': ${error?.message || 'Unknown error'}`
+          : error?.message ||
+            String(error) ||
+            'Unknown error during target resolution';
 
         this.#logger.error(
           `Error resolving targets for action '${actionDef.id}':`,
@@ -200,7 +202,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
           phase: 'target_resolution',
           actionId: actionDef.id,
           stage: 'MultiTargetResolutionStage',
-          scopeName: error.scopeName,
+          scopeName: error?.scopeName,
         });
       }
     }
@@ -353,12 +355,15 @@ export class MultiTargetResolutionStage extends PipelineStage {
     } catch (error) {
       return PipelineResult.failure(
         {
-          error: error.message,
+          error: error?.message || 'Unknown error getting resolution order',
           phase: 'target_resolution',
           actionId: actionDef.id,
           stage: 'MultiTargetResolutionStage',
         },
-        { ...context.data, error: error.message }
+        {
+          ...context.data,
+          error: error?.message || 'Unknown error getting resolution order',
+        }
       );
     }
 
@@ -601,7 +606,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
         const errorDetails = result.errors || result.error || 'Unknown error';
         const errorMessage =
           Array.isArray(errorDetails) && errorDetails.length > 0
-            ? errorDetails[0].message
+            ? errorDetails[0]?.message || errorDetails[0] || 'Unknown error'
             : typeof errorDetails === 'string'
               ? errorDetails
               : 'Unknown error';
@@ -628,7 +633,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
     } catch (error) {
       this.#logger.error(`Error evaluating scope '${scope}':`, error);
       trace?.failure(
-        `Scope evaluation failed: ${error.message}`,
+        `Scope evaluation failed: ${error?.message || 'Unknown error'}`,
         'MultiTargetResolutionStage'
       );
       return [];

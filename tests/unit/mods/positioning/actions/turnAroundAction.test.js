@@ -17,7 +17,7 @@ describe('positioning:turn_around action', () => {
     });
 
     it('uses positioning:close_actors_facing_each_other_or_behind_target scope', () => {
-      expect(turnAroundAction.scope).toBe(
+      expect(turnAroundAction.targets.primary.scope).toBe(
         'positioning:close_actors_facing_each_other_or_behind_target'
       );
     });

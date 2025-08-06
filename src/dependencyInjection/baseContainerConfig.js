@@ -3,6 +3,7 @@
 // --- Import registration bundle functions ---
 import { registerLoaders } from './registrations/loadersRegistrations.js';
 import { registerInfrastructure } from './registrations/infrastructureRegistrations.js';
+import { registerActionTracing } from './registrations/actionTracingRegistrations.js';
 import { registerPersistence } from './registrations/persistenceRegistrations.js';
 import { registerWorldAndEntity } from './registrations/worldAndEntityRegistrations.js';
 import { registerCommandAndAction } from './registrations/commandAndActionRegistrations.js';
@@ -59,6 +60,7 @@ export async function configureBaseContainer(container, options = {}) {
   // These services are required by both game and tools
   registerLoaders(container);
   registerInfrastructure(container);
+  registerActionTracing(container);
   registerPersistence(container);
   registerWorldAndEntity(container);
   registerPipelineServices(container);

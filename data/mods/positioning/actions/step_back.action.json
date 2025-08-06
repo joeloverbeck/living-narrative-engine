@@ -3,7 +3,7 @@
   "id": "positioning:step_back",
   "name": "Step Back",
   "description": "Step back from your current intimate partner, ending the closeness.",
-  "scope": "none",
+  "targets": "none",
   "required_components": {
     "actor": ["positioning:closeness"]
   },
