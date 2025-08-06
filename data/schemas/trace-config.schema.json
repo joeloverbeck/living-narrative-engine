@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/trace-config.schema.json",
+  "title": "Trace Configuration Schema",
+  "description": "Complete schema for trace configuration including analysis, performance monitoring, visualization, and action tracing",
+  "type": "object",
+  "properties": {
+    "traceAnalysisEnabled": {
+      "type": "boolean",
+      "description": "Whether trace analysis tools should be enabled",
+      "default": false
+    },
+    "performanceMonitoring": {
+      "type": "object",
+      "description": "Performance monitoring configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether performance monitoring is enabled",
+          "default": false
+        },
+        "thresholds": {
+          "type": "object",
+          "description": "Performance thresholds",
+          "properties": {
+            "slowOperationMs": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Slow operation threshold in milliseconds",
+              "default": 100
+            },
+            "criticalOperationMs": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Critical operation threshold in milliseconds",
+              "default": 500
+            },
+            "maxConcurrency": {
+              "type": "number",
+              "minimum": 1,
+              "description": "Maximum concurrency threshold",
+              "default": 10
+            },
+            "maxTotalDurationMs": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Maximum total duration threshold in milliseconds",
+              "default": 5000
+            },
+            "maxErrorRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Maximum error rate percentage",
+              "default": 5
+            },
+            "maxMemoryUsageMB": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Maximum memory usage in MB",
+              "default": 50
+            }
+          },
+          "additionalProperties": false
+        },
+        "sampling": {
+          "type": "object",
+          "description": "Sampling configuration",
+          "properties": {
+            "rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Sampling rate (0.0-1.0)",
+              "default": 1.0
+            },
+            "strategy": {
+              "type": "string",
+              "enum": ["random", "adaptive", "error_biased"],
+              "description": "Sampling strategy",
+              "default": "random"
+            },
+            "alwaysSampleErrors": {
+              "type": "boolean",
+              "description": "Always sample operations with errors",
+              "default": true
+            },
+            "alwaysSampleSlow": {
+              "type": "boolean",
+              "description": "Always sample slow operations",
+              "default": true
+            },
+            "slowThresholdMs": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Slow threshold for sampling in milliseconds",
+              "default": 1000
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "visualization": {
+      "type": "object",
+      "description": "Visualization configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether visualization is enabled",
+          "default": false
+        },
+        "options": {
+          "type": "object",
+          "description": "Visualization options",
+          "properties": {
+            "showAttributes": {
+              "type": "boolean",
+              "description": "Show span attributes",
+              "default": true
+            },
+            "showTimings": {
+              "type": "boolean",
+              "description": "Show timing information",
+              "default": true
+            },
+            "showErrors": {
+              "type": "boolean",
+              "description": "Show error details",
+              "default": true
+            },
+            "showCriticalPath": {
+              "type": "boolean",
+              "description": "Highlight critical path",
+              "default": true
+            },
+            "maxDepth": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Maximum depth to display (0 = no limit)",
+              "default": 0
+            },
+            "minDuration": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Minimum duration to display in milliseconds",
+              "default": 0
+            },
+            "colorsEnabled": {
+              "type": "boolean",
+              "description": "Enable ANSI colors",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "analysis": {
+      "type": "object",
+      "description": "Analysis configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether analysis is enabled",
+          "default": false
+        },
+        "bottleneckThresholdMs": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Bottleneck detection threshold in milliseconds",
+          "default": 100
+        }
+      },
+      "additionalProperties": false
+    },
+    "actionTracing": {
+      "$ref": "./actionTraceConfig.schema.json#/properties/actionTracing"
+    }
+  },
+  "additionalProperties": false
+}

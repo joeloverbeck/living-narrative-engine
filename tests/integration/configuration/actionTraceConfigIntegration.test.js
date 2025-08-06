@@ -1,0 +1,385 @@
+/**
+ * @file Integration tests for action trace configuration
+ * @see src/configuration/actionTraceConfigLoader.js
+ */
+
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import fs from 'fs/promises';
+import path from 'path';
+import ActionTraceConfigLoader from '../../../src/configuration/actionTraceConfigLoader.js';
+import { TraceConfigLoader } from '../../../src/configuration/traceConfigLoader.js';
+import ActionTracingConfigMigration from '../../../src/configuration/actionTracingMigration.js';
+import { fetchWithRetry } from '../../../src/utils';
+
+// Mock fetchWithRetry to read from actual filesystem during tests
+jest.mock('../../../src/utils', () => ({
+  fetchWithRetry: jest.fn(),
+}));
+
+describe('Action Trace Config Integration', () => {
+  const testConfigPath = path.join(
+    process.cwd(),
+    'config',
+    'trace-config.test.json'
+  );
+  let originalConfig;
+  let validator;
+
+  beforeEach(async () => {
+    // Backup original config
+    const configPath = path.join(process.cwd(), 'config', 'trace-config.json');
+    try {
+      originalConfig = await fs.readFile(configPath, 'utf-8');
+    } catch {
+      // Config might not exist in test environment
+      originalConfig = null;
+    }
+
+    // Create a simple mock validator for integration tests
+    validator = {
+      validate: jest.fn().mockResolvedValue({ isValid: true }),
+    };
+
+    // Set up fetchWithRetry mock to read from filesystem
+    fetchWithRetry.mockImplementation(async (filePath) => {
+      try {
+        const content = await fs.readFile(filePath, 'utf-8');
+        return JSON.parse(content);
+      } catch {
+        // Simulate HTTP 404 for missing files
+        const httpError = new Error(`failed to fetch ${filePath}`);
+        httpError.status = 404;
+        throw httpError;
+      }
+    });
+  });
+
+  afterEach(async () => {
+    // Clear mocks
+    jest.clearAllMocks();
+
+    // Clean up test config if it exists
+    try {
+      await fs.unlink(testConfigPath);
+    } catch {
+      // File might not exist
+    }
+
+    // Restore original config if it existed
+    if (originalConfig) {
+      const configPath = path.join(
+        process.cwd(),
+        'config',
+        'trace-config.json'
+      );
+      await fs.writeFile(configPath, originalConfig);
+    }
+  });
+
+  describe('Configuration Loading', () => {
+    it('should load configuration from actual file system', async () => {
+      const testConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go', 'core:attack'],
+          outputDirectory: './test-traces',
+          verbosity: 'detailed',
+          includeComponentData: true,
+          includePrerequisites: false,
+          includeTargets: true,
+          maxTraceFiles: 50,
+          rotationPolicy: 'count',
+          maxFileAge: 7200,
+        },
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(testConfig, null, 2));
+
+      // Update loader to use test config
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+        },
+        validator,
+      });
+
+      const config = await testLoader.loadConfig();
+
+      expect(config.enabled).toBe(true);
+      expect(config.tracedActions).toContain('core:go');
+      expect(config.tracedActions).toContain('core:attack');
+      expect(config.verbosity).toBe('detailed');
+      expect(config.includePrerequisites).toBe(false);
+      expect(config.maxTraceFiles).toBe(50);
+    });
+
+    it('should handle missing configuration file gracefully', async () => {
+      // Use a non-existent config path
+      const missingConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: './non-existent-config.json',
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: missingConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+        },
+        validator,
+      });
+
+      const config = await testLoader.loadConfig();
+
+      // Should return defaults
+      expect(config.enabled).toBe(false);
+      expect(config.tracedActions).toEqual([]);
+      expect(config.outputDirectory).toBe('./traces/actions');
+    });
+  });
+
+  describe('Configuration Migration', () => {
+    it('should migrate configuration without action tracing', () => {
+      const oldConfig = {
+        traceAnalysisEnabled: true,
+        performanceMonitoring: {
+          enabled: true,
+        },
+      };
+
+      const migratedConfig =
+        ActionTracingConfigMigration.migrateConfig(oldConfig);
+
+      expect(migratedConfig.traceAnalysisEnabled).toBe(true);
+      expect(migratedConfig.performanceMonitoring.enabled).toBe(true);
+      expect(migratedConfig.actionTracing).toBeDefined();
+      expect(migratedConfig.actionTracing.enabled).toBe(false);
+      expect(migratedConfig.actionTracing.tracedActions).toEqual([]);
+    });
+
+    it('should not modify configuration that already has action tracing', () => {
+      const existingConfig = {
+        traceAnalysisEnabled: true,
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:*'],
+          outputDirectory: './custom-traces',
+        },
+      };
+
+      const migratedConfig =
+        ActionTracingConfigMigration.migrateConfig(existingConfig);
+
+      expect(migratedConfig).toBe(existingConfig); // Same reference
+    });
+
+    it('should validate migrated configuration', () => {
+      const validConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+          rotationPolicy: 'age',
+        },
+      };
+
+      expect(ActionTracingConfigMigration.isValidMigration(validConfig)).toBe(
+        true
+      );
+
+      const invalidConfig = {
+        actionTracing: {
+          enabled: 'not-a-boolean',
+          tracedActions: 'not-an-array',
+          outputDirectory: './traces',
+        },
+      };
+
+      expect(ActionTracingConfigMigration.isValidMigration(invalidConfig)).toBe(
+        false
+      );
+    });
+
+    it('should merge user config with defaults', () => {
+      const userConfig = {
+        enabled: true,
+        tracedActions: ['core:go'],
+        verbosity: 'verbose',
+      };
+
+      const merged = ActionTracingConfigMigration.mergeWithDefaults(userConfig);
+
+      expect(merged.enabled).toBe(true);
+      expect(merged.tracedActions).toEqual(['core:go']);
+      expect(merged.verbosity).toBe('verbose');
+      // Defaults should be filled in
+      expect(merged.outputDirectory).toBe('./traces/actions');
+      expect(merged.includeComponentData).toBe(true);
+      expect(merged.maxTraceFiles).toBe(100);
+      expect(merged.rotationPolicy).toBe('age');
+    });
+  });
+
+  describe('TraceConfigLoader Integration', () => {
+    it('should check if any tracing is enabled', async () => {
+      const testConfig = {
+        traceAnalysisEnabled: false,
+        performanceMonitoring: { enabled: false },
+        visualization: { enabled: false },
+        analysis: { enabled: false },
+        actionTracing: {
+          enabled: true,
+          tracedActions: [],
+          outputDirectory: './traces',
+        },
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(testConfig, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const anyEnabled = await testTraceConfigLoader.isAnyTracingEnabled();
+      expect(anyEnabled).toBe(true);
+
+      // Test with all disabled
+      testConfig.actionTracing.enabled = false;
+      await fs.writeFile(testConfigPath, JSON.stringify(testConfig, null, 2));
+
+      const testTraceConfigLoader2 = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const noneEnabled = await testTraceConfigLoader2.isAnyTracingEnabled();
+      expect(noneEnabled).toBe(false);
+    });
+
+    it('should get action tracing config from TraceConfigLoader', async () => {
+      const testConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:*'],
+          outputDirectory: './action-traces',
+          verbosity: 'minimal',
+        },
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(testConfig, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const actionConfig = await testTraceConfigLoader.getActionTracingConfig();
+
+      expect(actionConfig).toBeDefined();
+      expect(actionConfig.enabled).toBe(true);
+      expect(actionConfig.tracedActions).toEqual(['core:*']);
+      expect(actionConfig.outputDirectory).toBe('./action-traces');
+      expect(actionConfig.verbosity).toBe('minimal');
+    });
+  });
+
+  describe('Hot Reload', () => {
+    it('should support configuration hot reload', async () => {
+      const config1 = {
+        traceAnalysisEnabled: false,
+        actionTracing: {
+          enabled: false,
+          tracedActions: [],
+          outputDirectory: './traces1',
+        },
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(config1, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+        },
+        validator,
+      });
+
+      let config = await testLoader.loadConfig();
+      expect(config.outputDirectory).toBe('./traces1');
+
+      // Update config file
+      const config2 = {
+        traceAnalysisEnabled: false,
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:*'],
+          outputDirectory: './traces2',
+        },
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(config2, null, 2));
+
+      // Reload configuration
+      config = await testLoader.reloadConfig();
+      expect(config.outputDirectory).toBe('./traces2');
+      expect(config.enabled).toBe(true);
+      expect(config.tracedActions).toEqual(['core:*']);
+    });
+  });
+});

@@ -10,7 +10,6 @@ Migrate the modal management system to use base controller patterns. This includ
 
 ## Dependencies
 
-- **Blocked by**: THEDIRMIG-005 (event listeners for modal buttons)
 - **Related**: THEDIRMIG-004 (cached modal elements)
 - **Enables**: THEDIRMIG-011 (modal cleanup)
 
@@ -20,10 +19,10 @@ Migrate the modal management system to use base controller patterns. This includ
 - [ ] Modal show/hide uses base controller helpers
 - [ ] Confirmation callbacks properly managed
 - [ ] ESC key handling works
-- [ ] Click-outside-to-close works
 - [ ] Modal state tracked correctly
-- [ ] Multiple modal scenarios handled
 - [ ] No memory leaks from callbacks
+- [ ] Error handling for missing DOM elements
+- [ ] CSS requirements documented for animations
 
 ## Implementation Steps
 
@@ -46,10 +45,16 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
   #pendingModalAction = null;
 
   /**
-   * Modal stack for nested modals
-   * @type {Array<Object>}
+   * Modal keyboard event handler
+   * @type {Function|null}
    */
-  #modalStack = [];
+  #modalKeyHandler = null;
+
+  /**
+   * Previously focused element
+   * @type {Element|null}
+   */
+  #previousFocus = null;
 }
 ```
 
@@ -141,23 +146,20 @@ _updateModalContent(content) {
  * @private
  */
 _showModal() {
-  // Show overlay and modal
-  this._showElement('modalOverlay');
+  // Show confirmation modal using base controller helpers
   this._showElement('confirmationModal');
 
-  // Add active class for animations
-  const modal = this._getElement('confirmationModal');
-  if (modal) {
-    // Force reflow for animation
-    modal.offsetHeight;
-    modal.classList.add('modal-active');
-  }
-
-  // Prevent body scroll
-  document.body.classList.add('modal-open');
+  // Track focus before showing modal
+  this._trackFocus();
 
   // Setup ESC key handler
   this._setupModalKeyHandling();
+
+  // Focus confirm button for accessibility
+  const confirmBtn = this._getElement('modalConfirmBtn');
+  if (confirmBtn) {
+    setTimeout(() => confirmBtn.focus(), 100);
+  }
 }
 
 /**
@@ -177,30 +179,18 @@ _closeModal(cancelled = false) {
     }
   }
 
-  // Remove active class for animation
-  const modal = this._getElement('confirmationModal');
-  if (modal) {
-    modal.classList.remove('modal-active');
-  }
+  // Hide modal using base controller helper
+  this._hideElement('confirmationModal');
 
-  // Hide modal after animation
-  setTimeout(() => {
-    this._hideElement('confirmationModal');
-    this._hideElement('modalOverlay');
+  // Clear modal state
+  this.#activeModal = null;
+  this.#pendingModalAction = null;
 
-    // Restore body scroll
-    document.body.classList.remove('modal-open');
+  // Remove ESC handler
+  this._removeModalKeyHandling();
 
-    // Clear modal state
-    this.#activeModal = null;
-    this.#pendingModalAction = null;
-
-    // Remove ESC handler
-    this._removeModalKeyHandling();
-
-    // Restore focus to previous element
-    this._restoreFocus();
-  }, 200); // Match CSS transition duration
+  // Restore focus to previous element
+  this._restoreFocus();
 }
 ```
 
@@ -372,48 +362,7 @@ _showAlert(options) {
 }
 ```
 
-### Step 5: Handle Nested Modals
-
-```javascript
-/**
- * Handle nested modal scenarios
- * @private
- * @param {Object} modalOptions - New modal options
- */
-_pushModal(modalOptions) {
-  // Save current modal to stack
-  if (this.#activeModal) {
-    this.#modalStack.push({
-      modal: this.#activeModal,
-      action: this.#pendingModalAction
-    });
-  }
-
-  // Show new modal
-  this._showConfirmationModal(modalOptions);
-}
-
-/**
- * Pop modal from stack
- * @private
- */
-_popModal() {
-  if (this.#modalStack.length === 0) {
-    this._closeModal();
-    return;
-  }
-
-  // Restore previous modal
-  const previous = this.#modalStack.pop();
-  this.#activeModal = previous.modal;
-  this.#pendingModalAction = previous.action;
-
-  // Update content
-  this._updateModalContent(previous.modal.options);
-}
-```
-
-### Step 6: Add Focus Management
+### Step 5: Add Focus Management
 
 ```javascript
 /**
@@ -439,14 +388,9 @@ _restoreFocus() {
   this.#previousFocus = null;
 }
 
-// Update _showModal to track focus
-_showModal() {
-  this._trackFocus();
-  // ... rest of method
-}
 ```
 
-### Step 7: Clean Up in Destroy
+### Step 6: Clean Up in Destroy
 
 ```javascript
 /**
@@ -460,9 +404,6 @@ _preDestroy() {
     this._closeModal();
   }
 
-  // Clear modal stack
-  this.#modalStack = [];
-
   // Clear pending actions
   this.#pendingModalAction = null;
 
@@ -473,38 +414,32 @@ _preDestroy() {
 }
 ```
 
-## CSS Considerations
+## CSS Requirements
 
-Ensure CSS supports the modal system:
+The following CSS will need to be added to support the modal system:
 
 ```css
-/* Modal states */
-.modal {
-  display: none;
-  opacity: 0;
-  transition: opacity 200ms ease-in-out;
+/* Modal type classes for different modal styles */
+.modal-confirm {
+  /* Default confirmation modal styling */
 }
 
-.modal.modal-active {
-  opacity: 1;
-}
-
-/* Body scroll lock */
-body.modal-open {
-  overflow: hidden;
-}
-
-/* Modal types */
-.modal.modal-confirm {
-  /* default */
-}
-.modal.modal-alert .modal-cancel-btn {
+.modal-alert .modal-cancel-btn {
   display: none;
 }
-.modal.modal-error .modal-header {
-  background-color: var(--error-color);
+
+.modal-error {
+  /* Error modal styling - red theme */
+  border-left: 4px solid #e74c3c;
+}
+
+.modal-error .modal-header {
+  background-color: #e74c3c;
+  color: white;
 }
 ```
+
+**Note**: The existing modal HTML structure will be used with basic show/hide functionality. Advanced animations and transitions can be added later if needed.
 
 ## Testing Strategy
 
@@ -521,15 +456,11 @@ body.modal-open {
    - [ ] Tab cycles through buttons
    - [ ] Enter on focused button works
 
-3. **Click Outside**:
-   - [ ] Clicking overlay closes modal
-   - [ ] Clicking modal content doesn't close
-
-4. **Focus Management**:
+3. **Focus Management**:
    - [ ] Focus moves to confirm button
    - [ ] Focus returns after close
 
-5. **Async Actions**:
+4. **Async Actions**:
    - [ ] Loading state during async operations
    - [ ] Error handling for failed actions
 
@@ -595,7 +526,9 @@ _showConfirmationModal({
     this._showLoading('Saving...');
     try {
       await this._saveAllChanges();
-      this._showSuccess('Changes saved');
+      // Show success message using available methods
+      this.logger.info('Changes saved successfully');
+      // Modal will close automatically on success
     } catch (error) {
       this._showError('Failed to save changes');
       throw error; // Re-throw to prevent modal close
@@ -604,31 +537,17 @@ _showConfirmationModal({
 });
 ```
 
-### Pattern 2: Form Modal
+### Pattern 2: Error Recovery Modal
 
 ```javascript
-_showFormModal() {
-  // Implementation depends on requirements
-  // Could extend modal system for forms
-}
-```
-
-### Pattern 3: Multi-Step Modal
-
-```javascript
-_showMultiStepModal() {
+_showErrorRecoveryModal(errorMessage) {
   this._showConfirmationModal({
-    title: 'Step 1 of 3',
-    message: 'First step message',
-    onConfirm: () => {
-      this._showConfirmationModal({
-        title: 'Step 2 of 3',
-        message: 'Second step message',
-        onConfirm: () => {
-          // Final action
-        }
-      });
-    }
+    title: 'Operation Failed',
+    message: `${errorMessage}\n\nWould you like to try again?`,
+    onConfirm: () => this._retryOperation(),
+    confirmText: 'Retry',
+    cancelText: 'Cancel',
+    type: 'error'
   });
 }
 ```
@@ -648,12 +567,12 @@ _showMultiStepModal() {
 - [ ] Show/hide uses base controller helpers
 - [ ] Confirmation callbacks properly managed
 - [ ] ESC key handling implemented
-- [ ] Click-outside-to-close working
 - [ ] Modal state tracked correctly
 - [ ] Focus management implemented
 - [ ] Async actions handled properly
 - [ ] Memory leaks prevented
-- [ ] All modal scenarios working
+- [ ] Error handling for missing DOM elements
+- [ ] CSS requirements documented
 - [ ] Tests pass
 - [ ] Manual testing confirms all modals work
 - [ ] Code committed with descriptive message

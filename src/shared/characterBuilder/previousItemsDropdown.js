@@ -11,6 +11,7 @@ export class PreviousItemsDropdown {
   #onSelectionChange;
   #labelText;
   #items = [];
+  #changeHandler = null;
 
   /**
    * @param {object} config - Configuration object
@@ -224,10 +225,11 @@ export class PreviousItemsDropdown {
    * @private
    */
   #setupEventListeners() {
-    this.#element.addEventListener('change', (event) => {
+    this.#changeHandler = (event) => {
       const selectedId = event.target.value;
       this.#onSelectionChange(selectedId);
-    });
+    };
+    this.#element.addEventListener('change', this.#changeHandler);
   }
 
   /**
@@ -285,6 +287,19 @@ export class PreviousItemsDropdown {
   #updateAccessibility() {
     this.#element.setAttribute('aria-label', this.#labelText);
     this.#element.setAttribute('aria-describedby', this.#element.id + '-help');
+  }
+
+  /**
+   * Clean up the component and remove event listeners
+   */
+  destroy() {
+    if (this.#changeHandler && this.#element) {
+      this.#element.removeEventListener('change', this.#changeHandler);
+    }
+    this.#changeHandler = null;
+    this.#element = null;
+    this.#onSelectionChange = null;
+    this.#items = [];
   }
 }
 

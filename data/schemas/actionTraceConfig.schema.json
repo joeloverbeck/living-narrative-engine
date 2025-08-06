@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/actionTraceConfig.schema.json",
+  "title": "Action Trace Configuration Schema",
+  "description": "Defines the structure for action tracing configuration within the trace-config.json file",
+  "type": "object",
+  "properties": {
+    "actionTracing": {
+      "type": "object",
+      "description": "Configuration for action tracing system",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable action tracing globally",
+          "default": false
+        },
+        "tracedActions": {
+          "type": "array",
+          "description": "Action IDs to trace. Supports wildcards: '*', 'mod:*'",
+          "items": {
+            "type": "string",
+            "pattern": "^([a-z_]+:[a-z_]+|\\*|[a-z_]+:\\*)$"
+          },
+          "default": []
+        },
+        "outputDirectory": {
+          "type": "string",
+          "description": "Directory for trace output files",
+          "default": "./traces/actions"
+        },
+        "verbosity": {
+          "type": "string",
+          "enum": ["minimal", "standard", "detailed", "verbose"],
+          "description": "Level of detail in traces",
+          "default": "standard"
+        },
+        "includeComponentData": {
+          "type": "boolean",
+          "description": "Include component data in traces",
+          "default": true
+        },
+        "includePrerequisites": {
+          "type": "boolean",
+          "description": "Include prerequisite evaluation details",
+          "default": true
+        },
+        "includeTargets": {
+          "type": "boolean",
+          "description": "Include target resolution details",
+          "default": true
+        },
+        "maxTraceFiles": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Maximum number of trace files to keep",
+          "default": 100
+        },
+        "rotationPolicy": {
+          "type": "string",
+          "enum": ["age", "count"],
+          "description": "How to rotate old trace files",
+          "default": "age"
+        },
+        "maxFileAge": {
+          "type": "integer",
+          "minimum": 3600,
+          "description": "Maximum age of trace files in seconds (when using age policy)",
+          "default": 86400
+        }
+      },
+      "required": ["enabled", "tracedActions", "outputDirectory"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["actionTracing"]
+}

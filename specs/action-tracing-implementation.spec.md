@@ -5,9 +5,11 @@
 **IMPORTANT**: This specification has been updated to reflect the actual production code structure. The implementation extends the existing tracing infrastructure (StructuredTrace and TraceContext) rather than replacing it. All examples have been corrected to match the real API patterns and conventions used in the codebase.
 
 ### 1.1 Purpose
+
 The Action Tracing System provides targeted debugging capabilities for the Living Narrative Engine's action pipeline. It enables developers to trace specific action IDs (e.g., 'core:go') through the entire discovery, processing, and execution pipeline without impacting performance when disabled. It integrates with and extends the existing StructuredTrace system already in place.
 
 ### 1.2 Goals
+
 - **Targeted Tracing**: Trace specific action IDs without overhead for other actions
 - **Full Pipeline Coverage**: Capture every touchpoint an action passes through
 - **Detailed Context**: Include all relevant data at each stage
@@ -15,6 +17,7 @@ The Action Tracing System provides targeted debugging capabilities for the Livin
 - **Zero Impact**: No performance impact when tracing is disabled
 
 ### 1.3 Requirements
+
 - Must integrate with existing StructuredTrace infrastructure
 - Must maintain backward compatibility with current tracing
 - Must support configuration without code changes
@@ -22,6 +25,7 @@ The Action Tracing System provides targeted debugging capabilities for the Livin
 - Must handle high-frequency actions without blocking game loop
 
 ### 1.4 Constraints
+
 - Cannot modify existing game logic
 - Must use dependency injection pattern
 - Must follow project's validation patterns
@@ -32,6 +36,7 @@ The Action Tracing System provides targeted debugging capabilities for the Livin
 ### 2.1 Configuration Schema
 
 #### 2.1.1 File: `config/trace-config.json` (Extended)
+
 **Note**: This extends the existing trace configuration file rather than creating a new one.
 
 ```json
@@ -65,6 +70,7 @@ The Action Tracing System provides targeted debugging capabilities for the Livin
 **Note**: The `./traces/actions` directory will need to be created if it doesn't exist.
 
 #### 2.1.2 Schema Definition: `data/schemas/action-trace-config.schema.json`
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -133,6 +139,7 @@ The Action Tracing System provides targeted debugging capabilities for the Livin
 ### 2.2 ActionTraceFilter Class
 
 #### 2.2.1 Interface Definition
+
 ```javascript
 // src/actions/tracing/actionTraceFilter.js
 
@@ -188,7 +195,7 @@ class ActionTraceFilter {
     return {
       componentData: this.#config?.actionTracing?.includeComponentData,
       prerequisites: this.#config?.actionTracing?.includePrerequisites,
-      targets: this.#config?.actionTracing?.includeTargets
+      targets: this.#config?.actionTracing?.includeTargets,
     };
   }
 
@@ -203,6 +210,7 @@ class ActionTraceFilter {
 ```
 
 #### 2.2.2 Implementation Details
+
 - Cache parsed configuration for performance
 - Support wildcard patterns: `*` (all actions), `mod:*` (all actions from mod)
 - Use Set for O(1) lookup of exact matches
@@ -214,29 +222,30 @@ class ActionTraceFilter {
 ### 3.1 ActionDiscoveryService Enhancement
 
 #### 3.1.1 Modified Method
+
 ```javascript
 // src/actions/actionDiscoveryService.js
 
 async getValidActions(actorEntity, baseContext, options = {}) {
   const { trace: shouldTrace = false } = options;
   const trace = shouldTrace ? this.#traceContextFactory() : null;
-  
+
   // Check if action tracing should be enhanced
   const actionTraceFilter = this.#actionTraceFilter;
   const shouldEnhanceTrace = actionTraceFilter?.isEnabled() && shouldTrace;
-  
+
   // Enhance existing trace if action tracing is enabled
   if (shouldEnhanceTrace && trace) {
     // Wrap existing trace with action-aware functionality
     trace._actionTraceFilter = actionTraceFilter;
     trace._tracedActionData = new Map();
-    
+
     // Add method to capture action-specific data
     trace.captureActionData = function(stage, actionId, data) {
       if (!this._actionTraceFilter.shouldTrace(actionId)) {
         return;
       }
-      
+
       if (!this._tracedActionData.has(actionId)) {
         this._tracedActionData.set(actionId, {
           actionId,
@@ -245,24 +254,24 @@ async getValidActions(actorEntity, baseContext, options = {}) {
           stages: {}
         });
       }
-      
+
       const actionTrace = this._tracedActionData.get(actionId);
       actionTrace.stages[stage] = {
         timestamp: Date.now(),
         data: this._actionTraceFilter.filterDataByVerbosity(data)
       };
     };
-    
+
     trace.getTracedActions = function() {
       return this._tracedActionData;
     };
   }
-  
+
   // Support both old and new trace APIs (existing code)
   if (trace?.withSpanAsync) {
     // ... existing withSpanAsync code ...
   }
-  
+
   // Rest of existing method...
 }
 ```
@@ -270,6 +279,7 @@ async getValidActions(actorEntity, baseContext, options = {}) {
 ### 3.2 ActionAwareStructuredTrace Class
 
 #### 3.2.1 Class Definition
+
 ```javascript
 // src/actions/tracing/actionAwareStructuredTrace.js
 
@@ -303,14 +313,14 @@ class ActionAwareStructuredTrace extends StructuredTrace {
         actionId,
         actorId: this.#actorId,
         startTime: Date.now(),
-        stages: {}
+        stages: {},
       });
     }
 
     const actionTrace = this.#tracedActionData.get(actionId);
     actionTrace.stages[stage] = {
       timestamp: Date.now(),
-      data: this.#filterDataByVerbosity(data)
+      data: this.#filterDataByVerbosity(data),
     };
   }
 
@@ -325,7 +335,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
   #filterDataByVerbosity(data) {
     const verbosity = this.#actionTraceFilter.getVerbosityLevel();
     const config = this.#actionTraceFilter.getInclusionConfig();
-    
+
     // Filter data based on verbosity and inclusion config
     // Implementation depends on verbosity level
   }
@@ -335,19 +345,20 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 ### 3.3 Pipeline Stage Enhancements
 
 #### 3.3.1 ComponentFilteringStage
+
 ```javascript
 // src/actions/pipeline/stages/ComponentFilteringStage.js
 
 async executeInternal(context) {
   const { actor, trace } = context;
   const source = `${this.name}Stage.execute`;
-  
+
   // Get candidate actions from the index (existing logic)
   const candidateActions = this.#actionIndex.getCandidateActions(
     actor,
     trace
   );
-  
+
   // Enhanced tracing for action-aware traces
   if (trace?.captureActionData) {
     candidateActions.forEach(actionDef => {
@@ -362,34 +373,35 @@ async executeInternal(context) {
       });
     });
   }
-  
+
   // Existing trace logging
   trace?.step(
     `Filtering actions for actor ${actor.id} based on components`,
     source
   );
-  
+
   // Rest of existing logic...
 }
 ```
 
 #### 3.3.2 PrerequisiteEvaluationStage
+
 ```javascript
 // src/actions/pipeline/stages/PrerequisiteEvaluationStage.js
 
 async executeInternal(context) {
   const { actor, candidateActions, trace } = context;
   const source = `${this.name}Stage.execute`;
-  
+
   const validActions = [];
-  
+
   for (const actionDef of candidateActions) {
     // Skip if no prerequisites (existing logic)
     if (!actionDef.prerequisites || actionDef.prerequisites.length === 0) {
       validActions.push(actionDef);
       continue;
     }
-    
+
     // Evaluate prerequisites using the service
     const meetsPrereqs = this.#prerequisiteService.evaluate(
       actionDef.prerequisites,
@@ -397,7 +409,7 @@ async executeInternal(context) {
       actor,
       trace
     );
-    
+
     // Enhanced tracing
     if (trace?.captureActionData) {
       trace.captureActionData('prerequisite_evaluation', actionDef.id, {
@@ -407,35 +419,36 @@ async executeInternal(context) {
         timestamp: Date.now()
       });
     }
-    
+
     if (meetsPrereqs) {
       validActions.push(actionDef);
     }
   }
-  
+
   // Rest of existing logic...
 }
 ```
 
 #### 3.3.3 MultiTargetResolutionStage
+
 ```javascript
 // src/actions/pipeline/stages/MultiTargetResolutionStage.js
 
 async executeInternal(context) {
   const { candidateActions = [], actor, actionContext, trace } = context;
-  
+
   trace?.step(
     `Resolving targets for ${candidateActions.length} candidate actions`,
     'MultiTargetResolutionStage'
   );
-  
+
   const allActionsWithTargets = [];
-  
+
   for (const actionDef of candidateActions) {
     try {
       // Check if this is a legacy or multi-target action
       const isLegacy = this.#legacyLayer.isLegacyAction(actionDef);
-      
+
       let resolvedTargets;
       if (isLegacy) {
         // Process legacy action (existing logic)
@@ -458,12 +471,12 @@ async executeInternal(context) {
           resolvedTargets = result.data.resolvedTargets;
         }
       }
-      
+
       // Enhanced tracing
       if (trace?.captureActionData && resolvedTargets) {
         const targetCount = Object.values(resolvedTargets)
           .reduce((sum, targets) => sum + targets.length, 0);
-        
+
         trace.captureActionData('target_resolution', actionDef.id, {
           isLegacy,
           targetKeys: Object.keys(resolvedTargets),
@@ -486,12 +499,13 @@ async executeInternal(context) {
       );
     }
   }
-  
+
   // Rest of existing logic...
 }
 ```
 
 #### 3.3.4 ActionFormattingStage
+
 ```javascript
 // src/actions/pipeline/stages/ActionFormattingStage.js
 
@@ -504,17 +518,17 @@ async executeInternal(context) {
     trace,
   } = context;
   const source = `${this.name}Stage.execute`;
-  
+
   const formattedActions = [];
-  
+
   // Check if we have per-action metadata (new approach)
   const hasPerActionMetadata = actionsWithTargets.some(
     (awt) => awt.resolvedTargets && awt.targetDefinitions
   );
-  
+
   for (const actionWithTargets of actionsWithTargets) {
     const { actionDef, targetContexts } = actionWithTargets;
-    
+
     try {
       // Format the action (existing logic)
       let formattedAction;
@@ -536,7 +550,7 @@ async executeInternal(context) {
           trace
         );
       }
-      
+
       // Enhanced tracing
       if (trace?.captureActionData && formattedAction) {
         trace.captureActionData('formatting', actionDef.id, {
@@ -548,7 +562,7 @@ async executeInternal(context) {
           timestamp: Date.now()
         });
       }
-      
+
       if (formattedAction) {
         formattedActions.push(formattedAction);
       }
@@ -560,7 +574,7 @@ async executeInternal(context) {
       );
     }
   }
-  
+
   return PipelineResult.success({
     data: { ...context.data, formattedActions }
   });
@@ -572,6 +586,7 @@ async executeInternal(context) {
 ### 4.1 CommandProcessor Integration
 
 #### 4.1.1 Enhanced dispatchAction Method
+
 ```javascript
 // src/commands/commandProcessor.js
 
@@ -586,11 +601,11 @@ async dispatchAction(actor, turnAction) {
       turnAction?.actionDefinitionId
     );
   }
-  
+
   const actorId = actor.id;
   const { actionDefinitionId: actionId, commandString } = turnAction;
   let actionTrace = null;
-  
+
   // Check if this action should be traced
   if (this.#actionTraceFilter?.shouldTrace(actionId)) {
     actionTrace = new ActionExecutionTrace({
@@ -600,20 +615,20 @@ async dispatchAction(actor, turnAction) {
     });
     actionTrace.captureDispatchStart();
   }
-  
+
   this.#logger.debug(
     `CommandProcessor.dispatchAction: Dispatching pre-resolved action '${actionId}' for actor ${actorId}.`,
     { turnAction }
   );
-  
+
   try {
     // --- Payload Construction (existing logic) ---
     const payload = this.#createAttemptActionPayload(actor, turnAction);
-    
+
     if (actionTrace) {
       actionTrace.captureEventPayload(payload);
     }
-    
+
     // --- Dispatch using EventDispatchService ---
     const dispatchSuccess =
       await this.#eventDispatchService.dispatchWithErrorHandling(
@@ -621,7 +636,7 @@ async dispatchAction(actor, turnAction) {
         payload,
         `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionId}`
       );
-    
+
     if (actionTrace) {
       actionTrace.captureDispatchResult({
         success: dispatchSuccess,
@@ -629,7 +644,7 @@ async dispatchAction(actor, turnAction) {
       });
       await this.#traceOutputService.writeTrace(actionTrace);
     }
-    
+
     if (dispatchSuccess) {
       this.#logger.debug(
         `CommandProcessor.dispatchAction: Successfully dispatched '${actionId}' for actor ${actorId}.`
@@ -641,7 +656,7 @@ async dispatchAction(actor, turnAction) {
         actionResult: { actionId },
       };
     }
-    
+
     const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionId}". Dispatcher reported failure.`;
     return this.#handleDispatchFailure(
       'Internal error: Failed to initiate action.',
@@ -650,18 +665,18 @@ async dispatchAction(actor, turnAction) {
       actionId,
       { payload }
     );
-    
+
   } catch (error) {
     if (actionTrace) {
       actionTrace.captureError(error);
       await this.#traceOutputService.writeTrace(actionTrace);
     }
-    
+
     this.#logger.error(
       `CommandProcessor.dispatchAction: Error dispatching action '${actionId}':`,
       error
     );
-    
+
     return this.#handleDispatchFailure(
       'Internal error: Action dispatch failed.',
       error.message,
@@ -675,6 +690,7 @@ async dispatchAction(actor, turnAction) {
 ### 4.2 ActionExecutionTrace Class
 
 #### 4.2.1 Class Definition
+
 ```javascript
 // src/actions/tracing/actionExecutionTrace.js
 
@@ -693,7 +709,7 @@ class ActionExecutionTrace {
       endTime: null,
       eventPayload: null,
       result: null,
-      error: null
+      error: null,
     };
   }
 
@@ -708,7 +724,7 @@ class ActionExecutionTrace {
   captureDispatchResult(result) {
     this.#executionData.endTime = Date.now();
     this.#executionData.result = result;
-    this.#executionData.duration = 
+    this.#executionData.duration =
       this.#executionData.endTime - this.#executionData.startTime;
   }
 
@@ -717,7 +733,7 @@ class ActionExecutionTrace {
     this.#executionData.error = {
       message: error.message,
       stack: error.stack,
-      type: error.constructor.name
+      type: error.constructor.name,
     };
   }
 
@@ -726,7 +742,7 @@ class ActionExecutionTrace {
       actionId: this.#actionId,
       actorId: this.#actorId,
       turnAction: this.#turnAction,
-      execution: this.#executionData
+      execution: this.#executionData,
     };
   }
 }
@@ -739,6 +755,7 @@ class ActionExecutionTrace {
 **IMPORTANT**: The output directory (`./traces/actions`) does not exist by default and must be created. The ActionTraceOutputService will automatically create it on first use.
 
 #### 5.1.1 Class Definition
+
 ```javascript
 // src/actions/tracing/actionTraceOutputService.js
 
@@ -758,7 +775,7 @@ class ActionTraceOutputService {
     validateDependency(fileSystem, 'IFileSystem');
     validateDependency(logger, 'ILogger');
     validateDependency(actionTraceFilter, 'IActionTraceFilter');
-    
+
     this.#fileSystem = fileSystem;
     this.#logger = logger;
     this.#actionTraceFilter = actionTraceFilter;
@@ -774,7 +791,7 @@ class ActionTraceOutputService {
    */
   async writeTrace(trace) {
     this.#outputQueue.push(trace);
-    
+
     if (!this.#isProcessing) {
       this.#processQueue();
     }
@@ -786,17 +803,17 @@ class ActionTraceOutputService {
    */
   async #processQueue() {
     this.#isProcessing = true;
-    
+
     while (this.#outputQueue.length > 0) {
       const trace = this.#outputQueue.shift();
-      
+
       try {
         await this.#writeTraceToFile(trace);
       } catch (error) {
         this.#logger.error('Failed to write trace', error);
       }
     }
-    
+
     this.#isProcessing = false;
   }
 
@@ -806,26 +823,26 @@ class ActionTraceOutputService {
    */
   async #writeTraceToFile(trace) {
     const outputDir = this.#actionTraceFilter.getOutputDirectory();
-    
+
     // Create directory if it doesn't exist (first time only)
     if (!this.#directoryCreated) {
       await this.#ensureDirectoryExists(outputDir);
       this.#directoryCreated = true;
     }
-    
+
     // Generate filename
     const filename = this.#generateFilename(trace);
     const filepath = path.join(outputDir, filename);
-    
+
     // Format trace data
     const traceData = this.#formatTraceData(trace);
-    
+
     // Write JSON format
     await this.#fileSystem.writeFile(
       filepath + '.json',
       JSON.stringify(traceData, null, 2)
     );
-    
+
     // Write human-readable format if verbose
     if (this.#actionTraceFilter.getVerbosityLevel() !== 'minimal') {
       await this.#fileSystem.writeFile(
@@ -833,20 +850,21 @@ class ActionTraceOutputService {
         this.#formatHumanReadable(traceData)
       );
     }
-    
+
     // Handle rotation
     await this.#rotateOldFiles(outputDir);
   }
 
   #generateFilename(trace) {
-    const timestamp = new Date().toISOString()
+    const timestamp = new Date()
+      .toISOString()
       .replace(/[:.]/g, '-')
       .replace('T', '_')
       .slice(0, -5); // Remove milliseconds and Z
-    
+
     const actionId = trace.actionId || 'unknown';
     const sanitizedActionId = actionId.replace(':', '-');
-    
+
     return `${sanitizedActionId}_${timestamp}`;
   }
 
@@ -854,11 +872,11 @@ class ActionTraceOutputService {
     if (trace instanceof ActionExecutionTrace) {
       return trace.toJSON();
     }
-    
+
     if (trace instanceof ActionAwareStructuredTrace) {
       return this.#formatStructuredTrace(trace);
     }
-    
+
     return trace;
   }
 
@@ -867,13 +885,13 @@ class ActionTraceOutputService {
     const result = {
       timestamp: new Date().toISOString(),
       spans: trace.getSpans(),
-      actions: {}
+      actions: {},
     };
-    
+
     for (const [actionId, data] of tracedActions) {
       result.actions[actionId] = data;
     }
-    
+
     return result;
   }
 
@@ -891,6 +909,7 @@ class ActionTraceOutputService {
 ### 5.2 Output Format Specifications
 
 #### 5.2.1 JSON Format
+
 ```json
 {
   "timestamp": "2024-01-15T10:30:00.123Z",
@@ -946,6 +965,7 @@ class ActionTraceOutputService {
 ```
 
 #### 5.2.2 Human-Readable Format
+
 ```
 ACTION TRACE REPORT
 ==================
@@ -997,7 +1017,7 @@ Total Execution Time: 119.7ms
 export const actionTracingTokens = {
   IActionTraceFilter: Symbol('IActionTraceFilter'),
   IActionTraceOutputService: Symbol('IActionTraceOutputService'),
-  IActionTraceConfigLoader: Symbol('IActionTraceConfigLoader')
+  IActionTraceConfigLoader: Symbol('IActionTraceConfigLoader'),
 };
 
 // Export to be included in main tokens
@@ -1017,72 +1037,99 @@ import { tokens } from '../tokens.js';
 export function registerActionTracing(container) {
   // Use ServiceSetup pattern for consistency
   const setup = new ServiceSetup();
-  
+
   // Register config loader with proper validation
-  container.register(actionTracingTokens.IActionTraceConfigLoader, (deps) => {
-    const logger = setup.setupService('ActionTraceConfigLoader', deps.logger, {
-      configLoader: { value: deps.configLoader, requiredMethods: ['loadConfig'] }
-    });
-    
-    return new ActionTraceConfigLoader({
-      configLoader: deps.configLoader,
-      logger
-    });
-  }, {
-    lifetime: 'singleton',
-    dependencies: {
-      configLoader: tokens.IConfigLoader,
-      logger: tokens.ILogger
-    }
-  });
-  
-  // Register filter with proper validation
-  container.register(actionTracingTokens.IActionTraceFilter, (deps) => {
-    const logger = setup.setupService('ActionTraceFilter', deps.logger, {
-      configLoader: { 
-        value: deps.configLoader, 
-        requiredMethods: ['loadConfig', 'getConfig'] 
-      }
-    });
-    
-    return new ActionTraceFilter({
-      configLoader: deps.configLoader,
-      logger
-    });
-  }, {
-    lifetime: 'singleton',
-    dependencies: {
-      configLoader: actionTracingTokens.IActionTraceConfigLoader,
-      logger: tokens.ILogger
-    }
-  });
-  
-  // Register output service with proper validation
-  container.register(actionTracingTokens.IActionTraceOutputService, (deps) => {
-    const logger = setup.setupService('ActionTraceOutputService', deps.logger, {
-      fileSystem: { 
-        value: deps.fileSystem, 
-        requiredMethods: ['writeFile', 'mkdir', 'readdir'] 
+  container.register(
+    actionTracingTokens.IActionTraceConfigLoader,
+    (deps) => {
+      const logger = setup.setupService(
+        'ActionTraceConfigLoader',
+        deps.logger,
+        {
+          configLoader: {
+            value: deps.configLoader,
+            requiredMethods: ['loadConfig'],
+          },
+        }
+      );
+
+      return new ActionTraceConfigLoader({
+        configLoader: deps.configLoader,
+        logger,
+      });
+    },
+    {
+      lifetime: 'singleton',
+      dependencies: {
+        configLoader: tokens.IConfigLoader,
+        logger: tokens.ILogger,
       },
-      actionTraceFilter: {
-        value: deps.actionTraceFilter,
-        requiredMethods: ['shouldTrace', 'getOutputDirectory', 'getVerbosityLevel']
-      }
-    });
-    
-    return new ActionTraceOutputService({
-      fileSystem: deps.fileSystem,
-      logger,
-      actionTraceFilter: deps.actionTraceFilter
-    });
-  }, {
-    lifetime: 'singleton',
-    dependencies: {
-      fileSystem: tokens.IFileSystem,
-      logger: tokens.ILogger,
-      actionTraceFilter: actionTracingTokens.IActionTraceFilter
     }
-  });
+  );
+
+  // Register filter with proper validation
+  container.register(
+    actionTracingTokens.IActionTraceFilter,
+    (deps) => {
+      const logger = setup.setupService('ActionTraceFilter', deps.logger, {
+        configLoader: {
+          value: deps.configLoader,
+          requiredMethods: ['loadConfig', 'getConfig'],
+        },
+      });
+
+      return new ActionTraceFilter({
+        configLoader: deps.configLoader,
+        logger,
+      });
+    },
+    {
+      lifetime: 'singleton',
+      dependencies: {
+        configLoader: actionTracingTokens.IActionTraceConfigLoader,
+        logger: tokens.ILogger,
+      },
+    }
+  );
+
+  // Register output service with proper validation
+  container.register(
+    actionTracingTokens.IActionTraceOutputService,
+    (deps) => {
+      const logger = setup.setupService(
+        'ActionTraceOutputService',
+        deps.logger,
+        {
+          fileSystem: {
+            value: deps.fileSystem,
+            requiredMethods: ['writeFile', 'mkdir', 'readdir'],
+          },
+          actionTraceFilter: {
+            value: deps.actionTraceFilter,
+            requiredMethods: [
+              'shouldTrace',
+              'getOutputDirectory',
+              'getVerbosityLevel',
+            ],
+          },
+        }
+      );
+
+      return new ActionTraceOutputService({
+        fileSystem: deps.fileSystem,
+        logger,
+        actionTraceFilter: deps.actionTraceFilter,
+      });
+    },
+    {
+      lifetime: 'singleton',
+      dependencies: {
+        fileSystem: tokens.IFileSystem,
+        logger: tokens.ILogger,
+        actionTraceFilter: actionTracingTokens.IActionTraceFilter,
+      },
+    }
+  );
 }
 ```
 
@@ -1108,6 +1155,7 @@ export function registerActionTracing(container) {
 ### 7.1 Unit Tests
 
 #### 7.1.1 ActionTraceFilter Tests
+
 ```javascript
 // tests/unit/actions/tracing/actionTraceFilter.unit.test.js
 
@@ -1116,15 +1164,15 @@ import { ActionTraceFilterTestBed } from '../../../common/actions/actionTraceFil
 
 describe('ActionTraceFilter - Configuration and Filtering', () => {
   let testBed;
-  
+
   beforeEach(() => {
     testBed = new ActionTraceFilterTestBed();
   });
-  
+
   afterEach(() => {
     testBed.cleanup();
   });
-  
+
   it('should correctly identify actions to trace based on configuration');
   it('should support wildcard patterns (* and mod:*)');
   it('should handle disabled tracing globally');
@@ -1134,6 +1182,7 @@ describe('ActionTraceFilter - Configuration and Filtering', () => {
 ```
 
 #### 7.1.2 ActionTraceOutputService Tests
+
 ```javascript
 // tests/unit/actions/tracing/actionTraceOutputService.unit.test.js
 
@@ -1142,15 +1191,15 @@ import { ActionTraceOutputServiceTestBed } from '../../../common/actions/actionT
 
 describe('ActionTraceOutputService - File Output', () => {
   let testBed;
-  
+
   beforeEach(() => {
     testBed = new ActionTraceOutputServiceTestBed();
   });
-  
+
   afterEach(() => {
     testBed.cleanup();
   });
-  
+
   it('should write traces to correct directory');
   it('should generate unique filenames with timestamps');
   it('should format JSON output correctly');
@@ -1171,15 +1220,15 @@ import { ActionTracingIntegrationTestBed } from '../../../common/actions/actionT
 
 describe('Action Tracing - Pipeline Integration', () => {
   let testBed;
-  
+
   beforeEach(() => {
     testBed = new ActionTracingIntegrationTestBed();
   });
-  
+
   afterEach(() => {
     testBed.cleanup();
   });
-  
+
   it('should trace action through complete discovery pipeline');
   it('should capture data at all pipeline stages');
   it('should write trace files to filesystem');
@@ -1197,15 +1246,15 @@ import { CommandProcessorTracingTestBed } from '../../../common/commands/command
 
 describe('Action Tracing - Execution Integration', () => {
   let testBed;
-  
+
   beforeEach(() => {
     testBed = new CommandProcessorTracingTestBed();
   });
-  
+
   afterEach(() => {
     testBed.cleanup();
   });
-  
+
   it('should trace action execution through CommandProcessor');
   it('should capture dispatch timing and results');
   it('should handle execution errors gracefully');
@@ -1223,15 +1272,15 @@ import { ActionTracingPerformanceTestBed } from '../../../common/performance/act
 
 describe('Action Tracing - Performance Impact', () => {
   let testBed;
-  
+
   beforeEach(() => {
     testBed = new ActionTracingPerformanceTestBed();
   });
-  
+
   afterEach(() => {
     testBed.cleanup();
   });
-  
+
   it('should have <5ms overhead when disabled');
   it('should handle 100+ actions/second when enabled');
   it('should not block game loop or event processing');
@@ -1245,6 +1294,7 @@ describe('Action Tracing - Performance Impact', () => {
 ### 8.1 User Guide
 
 Create `docs/action-tracing-guide.md` with:
+
 - Configuration instructions
 - Common use cases
 - Trace file interpretation
@@ -1254,6 +1304,7 @@ Create `docs/action-tracing-guide.md` with:
 ### 8.2 Developer Guide
 
 Create `docs/action-tracing-development.md` with:
+
 - Architecture overview
 - Extension points
 - Adding new trace points
@@ -1263,6 +1314,7 @@ Create `docs/action-tracing-development.md` with:
 ### 8.3 API Documentation
 
 Update JSDoc comments for all public methods with:
+
 - Parameter descriptions
 - Return types
 - Usage examples
@@ -1296,18 +1348,21 @@ Update JSDoc comments for all public methods with:
 ## 10. Future Enhancements
 
 ### 10.1 Short Term (3 months)
+
 - Web UI for trace visualization
 - Real-time trace streaming
 - Trace comparison tools
 - Performance profiling integration
 
 ### 10.2 Medium Term (6 months)
+
 - Rule execution tracing
 - State change tracking
 - Machine learning for pattern detection
 - Automated issue detection
 
 ### 10.3 Long Term (12 months)
+
 - Distributed tracing for multiplayer
 - Cloud trace storage
 - AI-powered debugging assistance
@@ -1316,18 +1371,21 @@ Update JSDoc comments for all public methods with:
 ## 11. Success Metrics
 
 ### 11.1 Functional Metrics
+
 - Successfully trace 100% of configured actions
 - Zero performance impact when disabled
 - < 5ms overhead per traced action
 - 100% trace file generation success
 
 ### 11.2 Quality Metrics
+
 - 80%+ branch coverage in tests
 - Zero memory leaks
 - < 100MB total trace storage
 - < 10ms file write time
 
 ### 11.3 User Metrics
+
 - Reduce debugging time by 50%
 - Identify action issues in < 5 minutes
 - Support all core mod actions
@@ -1336,12 +1394,14 @@ Update JSDoc comments for all public methods with:
 ## 12. Risk Analysis
 
 ### 12.1 Technical Risks
+
 - **Performance Impact**: Mitigated by conditional tracing
 - **Memory Usage**: Mitigated by data limits and rotation
 - **File System Issues**: Mitigated by async queue and error handling
 - **Configuration Errors**: Mitigated by schema validation
 
 ### 12.2 Implementation Risks
+
 - **Integration Complexity**: Mitigated by phased approach
 - **Testing Coverage**: Mitigated by comprehensive test plan
 - **Documentation Debt**: Mitigated by documentation requirements
@@ -1349,6 +1409,7 @@ Update JSDoc comments for all public methods with:
 ## 13. Approval and Sign-off
 
 This specification requires approval from:
+
 - [ ] Technical Lead
 - [ ] Architecture Team
 - [ ] QA Team
@@ -1369,7 +1430,7 @@ This version corrects significant discrepancies between the original spec and th
 
 #### Key Corrections Made:
 
-1. **Trace Integration**: 
+1. **Trace Integration**:
    - Fixed to extend existing StructuredTrace/TraceContext rather than replace
    - Added `captureActionData` method dynamically to existing trace objects
    - Corrected all trace method calls to use actual API (`trace?.step()`, `trace?.info()`)
@@ -1410,6 +1471,7 @@ This version corrects significant discrepancies between the original spec and th
 ## Appendix A: Configuration Examples
 
 ### A.1 Minimal Configuration
+
 ```json
 {
   "actionTracing": {
@@ -1421,6 +1483,7 @@ This version corrects significant discrepancies between the original spec and th
 ```
 
 ### A.2 Development Configuration
+
 ```json
 {
   "actionTracing": {
@@ -1437,6 +1500,7 @@ This version corrects significant discrepancies between the original spec and th
 ```
 
 ### A.3 Production Configuration
+
 ```json
 {
   "actionTracing": {
@@ -1454,6 +1518,7 @@ This version corrects significant discrepancies between the original spec and th
 ## Appendix B: Trace Data Examples
 
 ### B.1 Minimal Trace
+
 ```json
 {
   "actionId": "core:go",
@@ -1465,9 +1530,11 @@ This version corrects significant discrepancies between the original spec and th
 ```
 
 ### B.2 Detailed Pipeline Trace
+
 [Full JSON example as shown in section 5.2.1]
 
 ### B.3 Error Trace
+
 ```json
 {
   "actionId": "core:go",
