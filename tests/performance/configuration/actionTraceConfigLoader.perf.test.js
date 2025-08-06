@@ -1,6 +1,12 @@
 /**
  * @file Performance tests for ActionTraceConfigLoader
  * @see src/configuration/actionTraceConfigLoader.js
+ * 
+ * Performance Test Guidelines:
+ * - JavaScript timing precision varies due to system load, GC, and concurrent execution
+ * - Thresholds account for realistic Node.js performance characteristics
+ * - Tests include warm-up periods to stabilize JIT compilation effects
+ * - Statistical variance is expected and accommodated in assertions
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
@@ -13,6 +19,11 @@ describe('ActionTraceConfigLoader Performance', () => {
   let mockValidator;
 
   beforeEach(async () => {
+    // Force garbage collection to stabilize memory state
+    if (global.gc) {
+      global.gc();
+    }
+    
     // Reset mocks
     mockTraceConfigLoader = {
       loadConfig: jest.fn(),
@@ -32,6 +43,9 @@ describe('ActionTraceConfigLoader Performance', () => {
       logger: mockLogger,
       validator: mockValidator,
     });
+    
+    // Performance test stabilization: allow JIT to warm up
+    await new Promise(resolve => setTimeout(resolve, 10));
   });
 
   describe('Exact Match Performance', () => {
@@ -450,6 +464,331 @@ describe('ActionTraceConfigLoader Performance', () => {
       const avgTime = duration / statsIterations;
 
       expect(avgTime).toBeLessThan(0.1); // Should be very fast (read-only)
+    });
+  });
+
+  describe('TTL Performance Impact', () => {
+    // Note: TTL (Time-To-Live) cache performance tests measure:
+    // 1. Cache hit performance with timestamp validation overhead
+    // 2. Performance consistency across different TTL configurations
+    // 3. Cache expiration detection and reload performance
+    // These tests account for JavaScript timing precision limitations
+    it('should measure TTL check overhead in cache hits', async () => {
+      const mockConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go', 'core:attack'],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          maxTraceFiles: 100,
+          rotationPolicy: 'age',
+          maxFileAge: 86400,
+        },
+      };
+
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      // Create loader with TTL enabled
+      const ttlLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: mockTraceConfigLoader,
+        logger: mockLogger,
+        validator: mockValidator,
+        cacheTtl: 60000, // 1 minute
+      });
+
+      // Load initial config
+      await ttlLoader.loadConfig();
+      expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
+
+      // Measure TTL check performance
+      const iterations = 10000;
+      const start = performance.now();
+
+      for (let i = 0; i < iterations; i++) {
+        await ttlLoader.loadConfig(); // All should be cache hits with TTL checks
+      }
+
+      const duration = performance.now() - start;
+      const avgTimePerCheck = (duration * 1000000) / iterations; // Convert to nanoseconds
+
+      // TTL check should add minimal overhead
+      expect(avgTimePerCheck).toBeLessThan(10000); // <10μs per check (being realistic for JS)
+      expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(1); // Only initial load
+    });
+
+    it('should compare performance with and without TTL', async () => {
+      const mockConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: Array.from(
+            { length: 50 },
+            (_, i) => `mod${i}:action${i}`
+          ),
+          outputDirectory: './traces',
+          verbosity: 'standard',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          maxTraceFiles: 100,
+          rotationPolicy: 'age',
+          maxFileAge: 86400,
+        },
+      };
+
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      // Test without TTL (disabled caching)
+      const noCacheLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: mockTraceConfigLoader,
+        logger: mockLogger,
+        validator: mockValidator,
+        cacheTtl: 0, // Disabled
+      });
+
+      // Test with TTL
+      const ttlLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: mockTraceConfigLoader,
+        logger: mockLogger,
+        validator: mockValidator,
+        cacheTtl: 60000, // 1 minute
+      });
+
+      const iterations = 1000;
+
+      // Warm up and measure no-cache performance
+      mockTraceConfigLoader.loadConfig.mockClear();
+      const noCacheStart = performance.now();
+
+      for (let i = 0; i < iterations; i++) {
+        await noCacheLoader.loadConfig();
+      }
+
+      const noCacheDuration = performance.now() - noCacheStart;
+
+      // Warm up and measure TTL cache performance
+      mockTraceConfigLoader.loadConfig.mockClear();
+      await ttlLoader.loadConfig(); // Initial load
+      const ttlCacheStart = performance.now();
+
+      for (let i = 0; i < iterations; i++) {
+        await ttlLoader.loadConfig(); // Should all be cache hits
+      }
+
+      const ttlCacheDuration = performance.now() - ttlCacheStart;
+
+      // TTL caching should be significantly faster than reloading every time
+      // Note: Speedup varies based on system load, but caching should provide meaningful benefit
+      const speedup = noCacheDuration / ttlCacheDuration;
+      expect(speedup).toBeGreaterThan(5); // At least 5x faster with caching (realistic for variable conditions)
+
+      // TTL cache should have minimal per-operation time
+      const avgTtlTime = ttlCacheDuration / iterations;
+      expect(avgTtlTime).toBeLessThan(0.1); // <0.1ms per cached operation
+    });
+
+    it('should measure performance with various TTL values', async () => {
+      const mockConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          maxTraceFiles: 100,
+          rotationPolicy: 'age',
+          maxFileAge: 86400,
+        },
+      };
+
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      const ttlValues = [1000, 5000, 30000, 60000, 300000]; // Various TTL values
+      const results = [];
+
+      for (const ttl of ttlValues) {
+        const testLoader = new ActionTraceConfigLoader({
+          traceConfigLoader: mockTraceConfigLoader,
+          logger: mockLogger,
+          validator: mockValidator,
+          cacheTtl: ttl,
+        });
+
+        // Load initial config
+        await testLoader.loadConfig();
+        
+        // Warm up for this TTL configuration
+        for (let warmup = 0; warmup < 100; warmup++) {
+          await testLoader.loadConfig();
+        }
+
+        // Take multiple samples for statistical stability
+        const samples = [];
+        const iterations = 1000;
+        
+        for (let sample = 0; sample < 5; sample++) {
+          const start = performance.now();
+          
+          for (let i = 0; i < iterations; i++) {
+            await testLoader.loadConfig();
+          }
+          
+          const duration = performance.now() - start;
+          const avgTime = duration / iterations;
+          samples.push(avgTime);
+          
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+        
+        // Use median of samples for stability
+        samples.sort((a, b) => a - b);
+        const medianTime = samples[Math.floor(samples.length / 2)];
+        
+        results.push({ ttl, avgTime: medianTime });
+      }
+
+      // All TTL values should have similar performance (timestamp comparison is constant time)
+      results.forEach(({ ttl, avgTime }) => {
+        expect(avgTime).toBeLessThan(0.1); // <0.1ms per operation regardless of TTL
+      });
+
+      // Performance should be consistent across different TTL values
+      // Note: JavaScript performance timing has inherent variability due to:
+      // - JIT compilation effects
+      // - Garbage collection interference
+      // - System load and concurrent test execution
+      const times = results.map((r) => r.avgTime);
+      const maxTime = Math.max(...times);
+      const minTime = Math.min(...times);
+      const variation = (maxTime - minTime) / minTime;
+
+      expect(variation).toBeLessThan(2.0); // <200% variation between different TTL values (realistic for micro-benchmarks)
+    });
+
+    it('should measure cache expiration and reload performance', async () => {
+      const mockConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          maxTraceFiles: 100,
+          rotationPolicy: 'age',
+          maxFileAge: 86400,
+        },
+      };
+
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      const expiredLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: mockTraceConfigLoader,
+        logger: mockLogger,
+        validator: mockValidator,
+        cacheTtl: 50, // Very short TTL for testing
+      });
+
+      // Load initial config
+      await expiredLoader.loadConfig();
+
+      // Wait for expiration
+      await new Promise((resolve) => setTimeout(resolve, 75));
+
+      // Measure reload performance after expiration
+      const reloadStart = performance.now();
+      await expiredLoader.loadConfig(); // Should trigger reload
+      const reloadDuration = performance.now() - reloadStart;
+
+      // Reload should still be reasonably fast
+      expect(reloadDuration).toBeLessThan(10); // <10ms for reload operation
+
+      // Verify it actually reloaded
+      expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(2);
+    });
+
+    it('should measure statistics performance with TTL information', async () => {
+      const mockConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          maxTraceFiles: 100,
+          rotationPolicy: 'age',
+          maxFileAge: 86400,
+        },
+      };
+
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      const ttlLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: mockTraceConfigLoader,
+        logger: mockLogger,
+        validator: mockValidator,
+        cacheTtl: 60000,
+      });
+
+      // Load config to populate cache
+      await ttlLoader.loadConfig();
+      
+      // Extended warm-up for statistics performance measurement
+      for (let warmup = 0; warmup < 1000; warmup++) {
+        ttlLoader.getStatistics();
+      }
+      
+      // Stabilize timing with additional warm-up and GC
+      if (global.gc) {
+        global.gc();
+      }
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Measure statistics performance with TTL calculations using multiple samples
+      const iterations = 10000;
+      const samples = [];
+      
+      // Take multiple timing samples for statistical analysis
+      for (let sample = 0; sample < 10; sample++) {
+        const start = performance.now();
+        
+        for (let i = 0; i < iterations; i++) {
+          const stats = ttlLoader.getStatistics();
+          expect(stats.cacheTtl).toBe(60000);
+          expect(stats.cacheStatus).toBe('valid');
+          expect(stats.cacheAge).toBeGreaterThanOrEqual(0);
+        }
+        
+        const duration = performance.now() - start;
+        const avgTime = (duration * 1000000) / iterations; // Convert to nanoseconds
+        samples.push(avgTime);
+        
+        // Brief pause between samples to avoid interference
+        await new Promise(resolve => setTimeout(resolve, 5));
+      }
+      
+      // Statistical analysis: use median for robustness against outliers
+      samples.sort((a, b) => a - b);
+      const medianTime = samples[Math.floor(samples.length / 2)];
+      const p95Time = samples[Math.floor(samples.length * 0.95)];
+      
+      // Statistics with TTL calculations should still be very fast
+      // Note: Using median reduces impact of timing outliers from GC, system load, etc.
+      // P95 threshold catches performance regressions while allowing realistic variance
+      expect(medianTime).toBeLessThan(200000); // <200μs median (typical case)
+      expect(p95Time).toBeLessThan(500000); // <500μs P95 (outlier tolerance)
     });
   });
 });

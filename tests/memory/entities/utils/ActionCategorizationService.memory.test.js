@@ -3,12 +3,19 @@
  * @description Memory usage and leak detection tests for ActionCategorizationService
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ActionCategorizationService from '../../../../src/entities/utils/ActionCategorizationService.js';
 
 describe('ActionCategorizationService - Memory Tests', () => {
   jest.setTimeout(120000); // 2 minutes for memory stabilization
-  
+
   let service;
   let mockLogger;
 
@@ -18,7 +25,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
       await global.memoryTestUtils.forceGCAndWait();
     } else if (global.gc) {
       global.gc();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     mockLogger = {
@@ -40,7 +47,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
       await global.memoryTestUtils.forceGCAndWait();
     } else if (global.gc) {
       global.gc();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   });
 
@@ -56,7 +63,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
 
       // Establish memory baseline
       if (global.gc) global.gc();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const baselineMemory = process.memoryUsage().heapUsed;
 
       // Perform many operations to test for memory leaks
@@ -71,10 +78,10 @@ describe('ActionCategorizationService - Memory Tests', () => {
       }
 
       // Allow memory to stabilize
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       if (global.gc) global.gc();
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryIncrease = finalMemory - baselineMemory;
 
@@ -104,7 +111,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
 
       // Establish baseline
       if (global.gc) global.gc();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const baselineMemory = process.memoryUsage().heapUsed;
 
       const startTime = performance.now();
@@ -118,9 +125,9 @@ describe('ActionCategorizationService - Memory Tests', () => {
       expect(duration).toBeLessThan(100); // Should complete in reasonable time
 
       // Allow cleanup
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       if (global.gc) global.gc();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryIncrease = finalMemory - baselineMemory;
@@ -147,7 +154,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
 
         // Establish baseline
         if (global.gc) global.gc();
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
         const baseline = process.memoryUsage().heapUsed;
 
         // Perform operations
@@ -171,11 +178,11 @@ describe('ActionCategorizationService - Memory Tests', () => {
         // Cleanup
         actions.length = 0;
         if (global.gc) global.gc();
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
       // Memory growth should be reasonable and relatively consistent
-      memoryUsageResults.forEach(result => {
+      memoryUsageResults.forEach((result) => {
         expect(result.memoryGrowth).toBeLessThan(5 * 1024 * 1024); // < 5MB per test
         expect(result.growthPerAction).toBeLessThan(100 * 1024); // < 100KB per action
       });
@@ -193,7 +200,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
 
       // Establish baseline
       if (global.gc) global.gc();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const baselineMemory = process.memoryUsage().heapUsed;
 
       // Process first set
@@ -203,7 +210,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
       // Clear first set and force cleanup
       actionsSet1.length = 0;
       if (global.gc) global.gc();
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Process second set
       service.groupActionsByNamespace(actionsSet2);
@@ -212,7 +219,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
       // Clear second set and force cleanup
       actionsSet2.length = 0;
       if (global.gc) global.gc();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryRetained = Math.max(0, finalMemory - baselineMemory);
@@ -226,19 +233,20 @@ describe('ActionCategorizationService - Memory Tests', () => {
   describe('Memory Efficiency', () => {
     it('should use memory efficiently for namespace operations', async () => {
       const namespaceCount = 50;
-      const namespaces = Array.from({ length: namespaceCount }, (_, i) => 
-        `namespace_${i.toString().padStart(3, '0')}`
+      const namespaces = Array.from(
+        { length: namespaceCount },
+        (_, i) => `namespace_${i.toString().padStart(3, '0')}`
       );
 
       // Establish baseline
       if (global.gc) global.gc();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const baselineMemory = process.memoryUsage().heapUsed;
 
       // Perform namespace operations
       for (let i = 0; i < 100; i++) {
         service.getSortedNamespaces(namespaces);
-        namespaces.forEach(ns => service.formatNamespaceDisplayName(ns));
+        namespaces.forEach((ns) => service.formatNamespaceDisplayName(ns));
       }
 
       const peakMemory = process.memoryUsage().heapUsed;

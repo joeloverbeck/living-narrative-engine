@@ -411,5 +411,4 @@ describe('ActionCategorizationService', () => {
       expect(service.formatNamespaceDisplayName('CamelCase')).toBe('CAMELCASE');
     });
   });
-
 });

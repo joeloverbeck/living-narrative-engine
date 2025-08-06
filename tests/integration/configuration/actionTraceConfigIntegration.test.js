@@ -569,4 +569,289 @@ describe('Action Trace Config Integration', () => {
       expect(await testLoader.shouldTraceAction('valid:something')).toBe(true);
     });
   });
+
+  describe('TTL Integration Behavior', () => {
+    it('should reload from file system after cache expires', async () => {
+      // Create initial configuration
+      const initialConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './test-traces',
+          verbosity: 'standard',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          maxTraceFiles: 100,
+          rotationPolicy: 'age',
+          maxFileAge: 86400,
+        },
+      };
+
+      await fs.writeFile(
+        testConfigPath,
+        JSON.stringify(initialConfig, null, 2)
+      );
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        validator,
+        cacheTtl: 100, // 100ms for testing
+      });
+
+      // Load initial config
+      const config1 = await testLoader.loadConfig();
+      expect(config1.enabled).toBe(true);
+      expect(config1.tracedActions).toContain('core:go');
+
+      // Modify the configuration file on disk
+      const modifiedConfig = {
+        ...initialConfig,
+        actionTracing: {
+          ...initialConfig.actionTracing,
+          enabled: false,
+          tracedActions: ['core:attack'],
+        },
+      };
+      await fs.writeFile(
+        testConfigPath,
+        JSON.stringify(modifiedConfig, null, 2)
+      );
+
+      // Wait for cache to expire
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // Load config again - should reflect file changes
+      const config2 = await testLoader.loadConfig();
+      expect(config2.enabled).toBe(false);
+      expect(config2.tracedActions).toContain('core:attack');
+      expect(config2.tracedActions).not.toContain('core:go');
+    });
+
+    it('should use cache when TTL has not expired with file system operations', async () => {
+      const testConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './test-traces',
+          verbosity: 'detailed',
+          includeComponentData: false,
+          includePrerequisites: true,
+          includeTargets: true,
+          maxTraceFiles: 50,
+          rotationPolicy: 'count',
+          maxFileAge: 7200,
+        },
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(testConfig, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      // Spy on the fetchWithRetry to track calls
+      const originalFetchWithRetry = fetchWithRetry.mockImplementation;
+      fetchWithRetry.mockClear();
+      fetchWithRetry.mockImplementation(async (filePath) => {
+        try {
+          const content = await fs.readFile(filePath, 'utf-8');
+          return JSON.parse(content);
+        } catch {
+          const httpError = new Error(`failed to fetch ${filePath}`);
+          httpError.status = 404;
+          throw httpError;
+        }
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        validator,
+        cacheTtl: 5000, // 5 seconds - long enough for test
+      });
+
+      // First load - should read from file
+      const config1 = await testLoader.loadConfig();
+      expect(config1.enabled).toBe(true);
+      expect(fetchWithRetry).toHaveBeenCalledTimes(1);
+
+      // Modify file on disk but cache shouldn't reload yet
+      const modifiedConfig = {
+        ...testConfig,
+        actionTracing: {
+          ...testConfig.actionTracing,
+          enabled: false,
+        },
+      };
+      await fs.writeFile(
+        testConfigPath,
+        JSON.stringify(modifiedConfig, null, 2)
+      );
+
+      // Second load - should use cache, not read from modified file
+      const config2 = await testLoader.loadConfig();
+      expect(config2.enabled).toBe(true); // Still original value from cache
+      expect(fetchWithRetry).toHaveBeenCalledTimes(1); // No additional file read
+    });
+
+    it('should handle file system errors during TTL reload gracefully', async () => {
+      const testConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './test-traces',
+          verbosity: 'standard',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          maxTraceFiles: 100,
+          rotationPolicy: 'age',
+          maxFileAge: 86400,
+        },
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(testConfig, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const mockLogger = {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: mockLogger,
+        validator,
+        cacheTtl: 50, // 50ms for quick expiration
+      });
+
+      // Load initial config
+      const config1 = await testLoader.loadConfig();
+      expect(config1.enabled).toBe(true);
+
+      // Delete the config file to simulate an error
+      await fs.unlink(testConfigPath);
+
+      // Wait for cache to expire
+      await new Promise((resolve) => setTimeout(resolve, 75));
+
+      // Try to reload - should handle error gracefully and return defaults
+      const config2 = await testLoader.loadConfig();
+      expect(config2.enabled).toBe(false); // Default value
+      expect(config2.tracedActions).toEqual([]); // Default value
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to load trace configuration'),
+        expect.anything()
+      );
+    });
+
+    it('should maintain performance with TTL in real file operations', async () => {
+      const testConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: {
+          enabled: true,
+          tracedActions: Array.from(
+            { length: 100 },
+            (_, i) => `mod${i}:action${i}`
+          ),
+          outputDirectory: './test-traces',
+          verbosity: 'standard',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          maxTraceFiles: 100,
+          rotationPolicy: 'age',
+          maxFileAge: 86400,
+        },
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(testConfig, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        validator,
+        cacheTtl: 30000, // 30 seconds - long enough for performance test
+      });
+
+      // Load config once to populate cache
+      await testLoader.loadConfig();
+
+      // Perform many cache hit operations and measure performance
+      const iterations = 1000;
+      const start = performance.now();
+
+      for (let i = 0; i < iterations; i++) {
+        await testLoader.loadConfig();
+        await testLoader.shouldTraceAction(`mod${i % 100}:action${i % 100}`);
+      }
+
+      const duration = performance.now() - start;
+      const avgTimePerOperation = duration / iterations;
+
+      // Performance should still be excellent with TTL
+      expect(avgTimePerOperation).toBeLessThan(1); // <1ms per operation including action tracing
+    });
+  });
 });

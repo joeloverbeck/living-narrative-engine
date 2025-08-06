@@ -16,7 +16,7 @@ Update all test files for ThematicDirectionsManagerController to use the BaseCha
 
 ## Acceptance Criteria
 
-- [ ] All 3 test files updated to use BaseCharacterBuilderControllerTestBase
+- [ ] All 5 test files updated to use BaseCharacterBuilderControllerTestBase
 - [ ] DOM setup uses test base helpers
 - [ ] Mock creation uses test base patterns
 - [ ] Lifecycle testing follows base patterns
@@ -27,37 +27,36 @@ Update all test files for ThematicDirectionsManagerController to use the BaseCha
 
 ## Current Test Files
 
-Based on the spec, there are 3 existing test files to update:
+Based on the current codebase, there are 5 existing test files to consolidate and update:
 
-1. `tests/unit/domUI/thematicDirectionsManagerController.test.js`
-2. `tests/integration/domUI/thematicDirectionsManagerController.integration.test.js`
-3. `tests/unit/domUI/thematicDirectionsManagerController.baseIntegration.test.js`
+1. `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.abstractMethods.test.js`
+2. `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.conceptDisplay.test.js`
+3. `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.stateManagement.test.js`
+4. `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.modalManagement.test.js`
+5. `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.resourceCleanup.test.js`
 
 ## Implementation Steps
 
-### Step 1: Analyze BaseCharacterBuilderControllerTestBase
+### Step 1: Enhance BaseCharacterBuilderControllerTestBase (if needed)
 
-First, understand the test base structure:
+First, verify the test base has UIStateManager support and enhance if necessary:
 
-```bash
-# Find the test base file
-find tests -name "*BaseCharacterBuilderController*testbase*" -o -name "*BaseCharacterBuilderController*TestBase*"
+**Location**: `tests/unit/characterBuilder/controllers/BaseCharacterBuilderController.testbase.js`
 
-# Review its API
-grep -A 20 "class.*TestBase" tests/unit/characterBuilder/controllers/BaseCharacterBuilderController.testbase.js
-```
-
-Expected TestBase API:
+The test base already includes UIStateManager support. Verify it provides:
 
 - `setup()` - Initialize test environment
 - `cleanup()` - Clean up after tests
 - `createController()` - Factory for controller instances
 - `addDOMElement()` - Add DOM elements for testing
-- `mocks` - Pre-configured mock objects
+- `mocks` - Pre-configured mock objects including UIStateManager
+- UIStateManager DOM setup for state management testing
 
-### Step 2: Update Unit Test File
+### Step 2: Consolidate Existing Test Files
 
-**File**: `tests/unit/domUI/thematicDirectionsManagerController.test.js`
+Consolidate the 5 existing test files into a single comprehensive test file:
+
+**Target File**: `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.test.js`
 
 ```javascript
 /**
@@ -72,7 +71,7 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { BaseCharacterBuilderControllerTestBase } from '../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
+import { BaseCharacterBuilderControllerTestBase } from '../../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 import { UI_STATES } from '../../../../src/shared/characterBuilder/uiStateManager.js';
 
@@ -383,9 +382,9 @@ describe('ThematicDirectionsManagerController', () => {
 });
 ```
 
-### Step 3: Update Integration Test File
+### Step 3: Create Integration Test File
 
-**File**: `tests/integration/domUI/thematicDirectionsManagerController.integration.test.js`
+**File**: `tests/integration/thematicDirectionsManager/controllers/thematicDirectionsManagerController.integration.test.js`
 
 ```javascript
 /**
@@ -639,9 +638,11 @@ function generateLargeDirectionsDataset(count) {
 }
 ```
 
-### Step 4: Create Base Integration Test
+### Step 4: Create Base Integration Test (Optional)
 
-**File**: `tests/unit/domUI/thematicDirectionsManagerController.baseIntegration.test.js`
+**File**: `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.baseIntegration.test.js`
+
+This file is optional and can be combined with the main unit test file if the test suite becomes manageable in size.
 
 ```javascript
 /**
@@ -650,7 +651,7 @@ function generateLargeDirectionsDataset(count) {
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { BaseCharacterBuilderControllerTestBase } from '../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
+import { BaseCharacterBuilderControllerTestBase } from '../../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 
 describe('ThematicDirectionsManagerController - Base Controller Integration', () => {
@@ -815,9 +816,16 @@ describe('ThematicDirectionsManagerController - Base Controller Integration', ()
 });
 ```
 
-### Step 5: Add Test Utilities
+### Step 5: Remove Old Test Files and Add Test Utilities
 
-Create shared test utilities if needed:
+**Remove after consolidation**:
+- `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.abstractMethods.test.js`
+- `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.conceptDisplay.test.js`
+- `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.stateManagement.test.js`
+- `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.modalManagement.test.js`
+- `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.resourceCleanup.test.js`
+
+**Create shared test utilities if needed**:
 
 ```javascript
 // tests/common/thematicDirectionsTestHelpers.js
@@ -957,11 +965,21 @@ Target coverage:
 
 ## Files Modified
 
-- [ ] `tests/unit/domUI/thematicDirectionsManagerController.test.js`
-- [ ] `tests/integration/domUI/thematicDirectionsManagerController.integration.test.js`
-- [ ] `tests/unit/domUI/thematicDirectionsManagerController.baseIntegration.test.js`
+- [ ] `tests/unit/characterBuilder/controllers/BaseCharacterBuilderController.testbase.js` (if UIStateManager enhancement needed)
 
 ## Files Created
+
+- [ ] `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.test.js` (consolidated)
+- [ ] `tests/integration/thematicDirectionsManager/controllers/thematicDirectionsManagerController.integration.test.js`
+- [ ] `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.baseIntegration.test.js` (optional)
+
+## Files Removed
+
+- [ ] `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.abstractMethods.test.js`
+- [ ] `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.conceptDisplay.test.js`
+- [ ] `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.stateManagement.test.js`
+- [ ] `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.modalManagement.test.js`
+- [ ] `tests/unit/thematicDirectionsManager/controllers/thematicDirectionsManagerController.resourceCleanup.test.js`
 
 - [ ] `tests/common/thematicDirectionsTestHelpers.js` (optional)
 
