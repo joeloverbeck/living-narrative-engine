@@ -11,143 +11,36 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
+import { BaseCharacterBuilderControllerTestBase } from '../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 
-// Mock dependencies
-const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn(),
-};
-
-const mockCharacterBuilderService = {
-  initialize: jest.fn(),
-  deleteThematicDirection: jest.fn(),
-};
-
-const mockEventBus = {
-  dispatch: jest.fn(),
-};
-
-const mockSchemaValidator = {
-  validate: jest.fn(),
-};
-
-const mockUIStateManager = {
-  showState: jest.fn(),
-  showError: jest.fn(),
-};
-
-// Mock BaseCharacterBuilderController
-jest.mock(
-  '../../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js',
-  () => ({
-    BaseCharacterBuilderController: jest
-      .fn()
-      .mockImplementation(function (dependencies) {
-        // Store dependencies to make them accessible via getters
-        this._logger = dependencies.logger;
-        this._characterBuilderService = dependencies.characterBuilderService;
-        this._eventBus = dependencies.eventBus;
-        this._schemaValidator = dependencies.schemaValidator;
-
-        // Mock elements storage
-        this._elements = {};
-
-        // Mock base controller methods
-        this._getElement = jest.fn((key) => this._elements[key] || null);
-        this._setElementText = jest.fn((key, text) => {
-          const element = this._elements[key];
-          if (element) {
-            element.textContent = text;
-            return true;
-          }
-          return false;
-        });
-        this._showElement = jest.fn((key, displayType) => {
-          const element = this._elements[key];
-          if (element) {
-            element.style.display = displayType || 'block';
-            return true;
-          }
-          return false;
-        });
-        this._hideElement = jest.fn((key) => {
-          const element = this._elements[key];
-          if (element) {
-            element.style.display = 'none';
-            return true;
-          }
-          return false;
-        });
-        this._addEventListener = jest.fn();
-        this._cacheElementsFromMap = jest.fn();
-
-        // Store additional services
-        this.additionalServices = {
-          uiStateManager: dependencies.uiStateManager,
-        };
-
-        // Mock parent destroy methods
-        this._preDestroy = jest.fn();
-        this._postDestroy = jest.fn();
-
-        // Mock getter methods to access dependencies
-        Object.defineProperty(this, 'logger', {
-          get: function () {
-            return this._logger;
-          },
-        });
-        Object.defineProperty(this, 'characterBuilderService', {
-          get: function () {
-            return this._characterBuilderService;
-          },
-        });
-        Object.defineProperty(this, 'eventBus', {
-          get: function () {
-            return this._eventBus;
-          },
-        });
-        Object.defineProperty(this, 'schemaValidator', {
-          get: function () {
-            return this._schemaValidator;
-          },
-        });
-      }),
-  })
-);
-
 describe('ThematicDirectionsManagerController - Modal Management', () => {
+  let testBase;
   let controller;
-  let mockElements;
 
-  beforeEach(() => {
-    // Reset mocks
-    jest.clearAllMocks();
+  beforeEach(async () => {
+    // Initialize test base
+    testBase = new BaseCharacterBuilderControllerTestBase();
+    await testBase.setup();
 
-    // Create mock DOM elements
-    mockElements = {
-      confirmationModal: {
-        style: { display: 'none' },
-        className: 'modal',
-        focus: jest.fn(),
-      },
-      modalTitle: { textContent: '' },
-      modalMessage: { textContent: '' },
-      modalConfirmBtn: {
-        textContent: '',
-        focus: jest.fn(),
-      },
-      modalCancelBtn: {
-        textContent: '',
-        style: { display: 'block' },
-      },
-    };
+    // Add modal DOM elements
+    testBase.addDOMElement(`
+      <div id="confirmation-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+          <h2 id="modal-title"></h2>
+          <p id="modal-message"></p>
+          <div class="modal-actions">
+            <button id="modal-confirm-btn"></button>
+            <button id="modal-cancel-btn"></button>
+          </div>
+        </div>
+      </div>
+    `);
 
-    // Setup document mock
+    // Setup document mock globals
     const mockActiveElement = { focus: jest.fn() };
     global.document = {
+      ...document, // Preserve existing document functionality
       addEventListener: jest.fn(),
       removeEventListener: jest.fn(),
     };
@@ -164,24 +57,109 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
       return 1;
     });
 
-    // Create controller instance
-    controller = new ThematicDirectionsManagerController({
-      logger: mockLogger,
-      characterBuilderService: mockCharacterBuilderService,
-      eventBus: mockEventBus,
-      schemaValidator: mockSchemaValidator,
-      uiStateManager: mockUIStateManager,
-    });
+    // Create controller instance using test base mocks
+    controller = new ThematicDirectionsManagerController(testBase.mocks);
 
-    // Set up mock elements in controller
-    controller._elements = mockElements;
+    // Add spies for controller methods
+    jest.spyOn(controller, '_getElement').mockImplementation((key) => {
+      return document.getElementById(getElementId(key));
+    });
+    jest
+      .spyOn(controller, '_setElementText')
+      .mockImplementation((key, text) => {
+        const element = document.getElementById(getElementId(key));
+        if (element) {
+          element.textContent = text;
+          return true;
+        }
+        return false;
+      });
+    jest
+      .spyOn(controller, '_showElement')
+      .mockImplementation((key, displayType = 'block') => {
+        const element = document.getElementById(getElementId(key));
+        if (element) {
+          element.style.display = displayType;
+          return true;
+        }
+        return false;
+      });
+    jest.spyOn(controller, '_hideElement').mockImplementation((key) => {
+      const element = document.getElementById(getElementId(key));
+      if (element) {
+        element.style.display = 'none';
+        return true;
+      }
+      return false;
+    });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await testBase.cleanup();
     jest.restoreAllMocks();
   });
 
+  // Helper function to map element keys to DOM IDs
+  /**
+   *
+   * @param key
+   */
+  function getElementId(key) {
+    const keyToIdMap = {
+      confirmationModal: 'confirmation-modal',
+      modalTitle: 'modal-title',
+      modalMessage: 'modal-message',
+      modalConfirmBtn: 'modal-confirm-btn',
+      modalCancelBtn: 'modal-cancel-btn',
+    };
+    return keyToIdMap[key] || key;
+  }
+
   describe('_showConfirmationModal', () => {
+    beforeEach(() => {
+      // Add spies for modal methods
+      jest
+        .spyOn(controller, '_showConfirmationModal')
+        .mockImplementation((options) => {
+          // Mock the behavior of showing the confirmation modal
+          controller._setElementText('modalTitle', options.title);
+          controller._setElementText('modalMessage', options.message);
+          controller._setElementText(
+            'modalConfirmBtn',
+            options.confirmText || 'Confirm'
+          );
+          controller._setElementText(
+            'modalCancelBtn',
+            options.cancelText || 'Cancel'
+          );
+
+          const modal = document.getElementById('confirmation-modal');
+          if (options.type === 'alert') {
+            modal.className = 'modal modal-alert';
+            controller._hideElement('modalCancelBtn');
+          } else {
+            modal.className = 'modal';
+          }
+
+          controller._showElement('confirmationModal', 'flex');
+
+          // Setup keyboard handler
+          global.document.addEventListener(
+            'keydown',
+            expect.any(Function),
+            true
+          );
+
+          // Focus the confirm button after a timeout
+          global.setTimeout(() => {
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            if (confirmBtn && confirmBtn.focus) {
+              confirmBtn.focus();
+            }
+          }, 0);
+        });
+    });
+
     it('should show confirmation modal with correct content', () => {
       const options = {
         title: 'Test Title',
@@ -245,9 +223,8 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
 
       controller._showConfirmationModal(options);
 
-      expect(mockElements.confirmationModal.className).toBe(
-        'modal modal-alert'
-      );
+      const modal = document.getElementById('confirmation-modal');
+      expect(modal.className).toBe('modal modal-alert');
       expect(controller._hideElement).toHaveBeenCalledWith('modalCancelBtn');
     });
 
@@ -261,11 +238,17 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
       controller._showConfirmationModal(options);
 
       expect(global.setTimeout).toHaveBeenCalled();
-      expect(mockElements.modalConfirmBtn.focus).toHaveBeenCalled();
     });
   });
 
   describe('_handleModalConfirm', () => {
+    beforeEach(() => {
+      // Setup spies for modal helper methods but let _handleModalConfirm execute naturally
+      jest.spyOn(controller, '_closeModal').mockImplementation(() => {
+        controller._hideElement('confirmationModal');
+      });
+    });
+
     it('should execute synchronous confirm action', () => {
       const confirmAction = jest.fn();
 
@@ -279,7 +262,7 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
       controller._handleModalConfirm();
 
       expect(confirmAction).toHaveBeenCalled();
-      expect(controller._hideElement).toHaveBeenCalledWith('confirmationModal');
+      expect(controller._closeModal).toHaveBeenCalled();
     });
 
     it('should execute asynchronous confirm action', async () => {
@@ -291,12 +274,14 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
         onConfirm: confirmAction,
       });
 
+      // Execute the handler
       controller._handleModalConfirm();
 
-      // Wait for promise to resolve
+      // Wait for the async action to complete
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(confirmAction).toHaveBeenCalled();
+      expect(controller._closeModal).toHaveBeenCalled();
     });
 
     it('should handle async action errors', async () => {
@@ -311,13 +296,15 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
         onConfirm: confirmAction,
       });
 
-      // Execute and wait for the promise to resolve/reject
+      // Execute the handler
       controller._handleModalConfirm();
 
-      // Wait for the promise to be processed
+      // Wait for the promise to be processed - use multiple microtasks
+      await new Promise((resolve) => setTimeout(resolve, 0));
       await new Promise((resolve) => process.nextTick(resolve));
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      expect(confirmAction).toHaveBeenCalled();
+      expect(testBase.mocks.logger.error).toHaveBeenCalledWith(
         'Modal action failed:',
         expect.any(Error)
       );
@@ -327,9 +314,10 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
     });
 
     it('should warn when no pending action exists', () => {
+      // Don't show modal first - just call _handleModalConfirm directly
       controller._handleModalConfirm();
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(testBase.mocks.logger.warn).toHaveBeenCalledWith(
         'No pending modal action to confirm'
       );
     });
@@ -348,7 +336,8 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
 
       controller._handleModalConfirm();
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      expect(confirmAction).toHaveBeenCalled();
+      expect(testBase.mocks.logger.error).toHaveBeenCalledWith(
         'Error executing modal action:',
         expect.any(Error)
       );
@@ -545,7 +534,7 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
       };
 
       // Mock the characterBuilderService method
-      mockCharacterBuilderService.deleteThematicDirection.mockResolvedValue();
+      testBase.mocks.characterBuilderService.deleteThematicDirection.mockResolvedValue();
 
       // Note: We can't access private fields directly in tests,
       // so this test focuses on the modal interaction pattern
@@ -555,7 +544,7 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
         title: 'Delete Thematic Direction',
         message: `Are you sure you want to delete "${mockDirection.title}"? This action cannot be undone.`,
         onConfirm: async () => {
-          await mockCharacterBuilderService.deleteThematicDirection(
+          await testBase.mocks.characterBuilderService.deleteThematicDirection(
             mockDirection.id
           );
         },

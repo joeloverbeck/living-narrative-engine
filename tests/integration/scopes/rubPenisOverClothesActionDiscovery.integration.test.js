@@ -71,8 +71,10 @@ function createScopeEvaluatingMock(dependencies) {
       const actionsWithTargets = [];
 
       for (const actionDef of candidateActions) {
+        // Extract scope from modern format (targets.primary.scope) or legacy format (scope)
+        const scopeName = actionDef.targets?.primary?.scope || actionDef.scope;
         // Skip actions without scopes
-        if (!actionDef.scope) {
+        if (!scopeName) {
           continue;
         }
 
@@ -97,7 +99,7 @@ function createScopeEvaluatingMock(dependencies) {
 
         // Resolve the scope
         const scopeResult = unifiedScopeResolver.resolve(
-          actionDef.scope,
+          scopeName,
           scopeContext
         );
 
@@ -122,7 +124,7 @@ function createScopeEvaluatingMock(dependencies) {
             },
             targetDefinitions: {
               primary: {
-                scope: actionDef.scope,
+                scope: scopeName,
                 placeholder: 'target',
               },
             },
@@ -359,10 +361,10 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       entityManager.setEntities(entities);
 
-      // Mock hasPartOfType to find penis
+      // Mock findPartsByType with correct signature (rootEntityId, partType)
       mockBodyGraphService.findPartsByType.mockImplementation(
-        (bodyComponent, partType) => {
-          if (partType === 'penis') {
+        (rootEntityId, partType) => {
+          if (rootEntityId === 'groin1' && partType === 'penis') {
             return ['penis1'];
           }
           return [];
@@ -371,7 +373,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       // Mock buildAdjacencyCache
       mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {
-        // No-op for tests
+        // No-op for tests - cache is handled by the mock above
       });
     }
 
@@ -557,10 +559,10 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       entityManager.setEntities(entities);
 
-      // Mock hasPartOfType to find penis
+      // Mock findPartsByType with correct signature (rootEntityId, partType)
       mockBodyGraphService.findPartsByType.mockImplementation(
-        (bodyComponent, partType) => {
-          if (partType === 'penis') {
+        (rootEntityId, partType) => {
+          if (rootEntityId === 'groin1' && partType === 'penis') {
             return ['penis1'];
           }
           return [];
@@ -639,9 +641,9 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       entityManager.setEntities(entities);
 
-      // Mock hasPartOfType to find no penis
+      // Mock findPartsByType to find no penis (correct signature)
       mockBodyGraphService.findPartsByType.mockImplementation(
-        (bodyComponent, partType) => {
+        (rootEntityId, partType) => {
           return [];
         }
       );
@@ -720,10 +722,10 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
       entityManager.setEntities(entities);
 
-      // Mock hasPartOfType to find penis
+      // Mock findPartsByType with correct signature (rootEntityId, partType)
       mockBodyGraphService.findPartsByType.mockImplementation(
-        (bodyComponent, partType) => {
-          if (partType === 'penis') {
+        (rootEntityId, partType) => {
+          if (rootEntityId === 'groin1' && partType === 'penis') {
             return ['penis1'];
           }
           return [];

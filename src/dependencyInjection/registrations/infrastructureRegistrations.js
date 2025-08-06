@@ -19,6 +19,7 @@ import DefaultDslParser from '../../scopeDsl/parser/defaultDslParser.js';
 import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
 import { EventDispatchService } from '../../utils/eventDispatchService.js';
 import { ProductionPathConfiguration } from '../../configuration/productionPathConfiguration.js';
+import { TraceConfigLoader } from '../../configuration/traceConfigLoader.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -66,6 +67,20 @@ export function registerInfrastructure(container) {
   );
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.IPathConfiguration)}.`
+  );
+
+  // Register trace configuration loader
+  container.register(
+    tokens.ITraceConfigLoader,
+    (c) =>
+      new TraceConfigLoader({
+        logger: c.resolve(tokens.ILogger),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Infrastructure Registration: Registered ${String(tokens.ITraceConfigLoader)}.`
   );
 
   // ─── Shared ActionIndexingService ─────────────────────────────

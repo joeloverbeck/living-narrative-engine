@@ -10,7 +10,7 @@ Implement schema validation at runtime for action tracing configuration with cle
 
 ## Dependencies
 
-- **Blocked by**: ACTTRA-006 (configuration loader) 
+- **Blocked by**: ACTTRA-006 (configuration loader)
 - **Requires**: ACTTRA-001 (action tracing configuration schema) ✅
 - **Enables**: ACTTRA-003 (ActionTraceFilter with validated config)
 - **Related**: All configuration-related tickets
@@ -116,7 +116,8 @@ ls data/schemas/
 ```
 
 Expected patterns:
-- AjvSchemaValidator class for JSON schema validation  
+
+- AjvSchemaValidator class for JSON schema validation
 - Schema loading and compilation at startup
 - Error formatting utilities for user-friendly messages
 - Integration with dependency injection system
@@ -151,7 +152,7 @@ class ActionTraceConfigValidator {
    */
   constructor({ schemaValidator, logger }) {
     validateDependency(schemaValidator, 'ISchemaValidator', null, {
-      requiredMethods: ['validate', 'loadSchema', 'formatErrors']
+      requiredMethods: ['validate', 'loadSchema', 'formatErrors'],
     });
     this.#logger = ensureValidLogger(logger, 'ActionTraceConfigValidator');
 
@@ -173,11 +174,13 @@ class ActionTraceConfigValidator {
       // Load the action trace config schema
       const schemaPath = 'data/schemas/action-trace-config.schema.json';
       const schema = await this.#schemaValidator.loadSchema(schemaPath);
-      
+
       // Compile schema for performance
       this.#schemaCompiled = await this.#schemaValidator.compile(schema);
 
-      this.#logger.info('Action trace config validator initialized successfully');
+      this.#logger.info(
+        'Action trace config validator initialized successfully'
+      );
     } catch (error) {
       this.#logger.error('Failed to initialize config validator', error);
       throw new Error(`Schema validation setup failed: ${error.message}`);
@@ -196,7 +199,7 @@ class ActionTraceConfigValidator {
       isValid: true,
       errors: [],
       warnings: [],
-      normalizedConfig: null
+      normalizedConfig: null,
     };
 
     try {
@@ -228,12 +231,12 @@ class ActionTraceConfigValidator {
       return result;
     } catch (error) {
       this.#logger.error('Configuration validation failed', error);
-      
+
       return {
         isValid: false,
         errors: [`Validation error: ${error.message}`],
         warnings: [],
-        normalizedConfig: null
+        normalizedConfig: null,
       };
     }
   }
@@ -250,7 +253,7 @@ class ActionTraceConfigValidator {
       return {
         isValid: true,
         errors: [],
-        warnings: []
+        warnings: [],
       };
     }
 
@@ -261,7 +264,7 @@ class ActionTraceConfigValidator {
       return {
         isValid: false,
         errors: [`Property ${property} validation error: ${error.message}`],
-        warnings: []
+        warnings: [],
       };
     }
   }
@@ -284,18 +287,19 @@ class ActionTraceConfigValidator {
     }
 
     const isValid = this.#schemaCompiled(config);
-    
+
     if (isValid) {
       return { isValid: true, errors: [] };
     }
 
     // Format AJV errors for user-friendly messages
-    const formattedErrors = this.#schemaValidator.formatErrors(this.#schemaCompiled.errors)
-      .map(error => this.#formatSchemaError(error));
+    const formattedErrors = this.#schemaValidator
+      .formatErrors(this.#schemaCompiled.errors)
+      .map((error) => this.#formatSchemaError(error));
 
     return {
       isValid: false,
-      errors: formattedErrors
+      errors: formattedErrors,
     };
   }
 
@@ -311,12 +315,16 @@ class ActionTraceConfigValidator {
     const actionTraceConfig = config.actionTracing || {};
 
     // Custom validation: tracedActions patterns
-    const actionResult = this.#validateTracedActions(actionTraceConfig.tracedActions);
+    const actionResult = this.#validateTracedActions(
+      actionTraceConfig.tracedActions
+    );
     errors.push(...actionResult.errors);
     warnings.push(...actionResult.warnings);
 
     // Custom validation: output directory
-    const dirResult = this.#validateOutputDirectory(actionTraceConfig.outputDirectory);
+    const dirResult = this.#validateOutputDirectory(
+      actionTraceConfig.outputDirectory
+    );
     errors.push(...dirResult.errors);
     warnings.push(...dirResult.warnings);
 
@@ -326,13 +334,14 @@ class ActionTraceConfigValidator {
     warnings.push(...rotationResult.warnings);
 
     // Custom validation: performance impact assessment
-    const performanceResult = this.#validatePerformanceImpact(actionTraceConfig);
+    const performanceResult =
+      this.#validatePerformanceImpact(actionTraceConfig);
     warnings.push(...performanceResult.warnings);
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -349,8 +358,8 @@ class ActionTraceConfigValidator {
     }
 
     // Check for duplicate actions
-    const duplicates = tracedActions.filter((action, index, arr) => 
-      arr.indexOf(action) !== index
+    const duplicates = tracedActions.filter(
+      (action, index, arr) => arr.indexOf(action) !== index
     );
 
     if (duplicates.length > 0) {
@@ -358,9 +367,9 @@ class ActionTraceConfigValidator {
     }
 
     // Validate action ID patterns
-    const invalidActions = tracedActions.filter(action => {
+    const invalidActions = tracedActions.filter((action) => {
       if (typeof action !== 'string') return true;
-      
+
       // Valid patterns: 'mod:action', '*', 'mod:*'
       const validPattern = /^([a-z_]+:[a-z_]+|\*|[a-z_]+:\*)$/;
       return !validPattern.test(action);
@@ -369,7 +378,7 @@ class ActionTraceConfigValidator {
     if (invalidActions.length > 0) {
       errors.push(
         `Invalid action ID patterns: ${invalidActions.join(', ')}. ` +
-        `Valid formats: 'mod:action', '*', 'mod:*'`
+          `Valid formats: 'mod:action', '*', 'mod:*'`
       );
     }
 
@@ -377,7 +386,7 @@ class ActionTraceConfigValidator {
     if (tracedActions.length > 20) {
       warnings.push(
         `Tracing ${tracedActions.length} actions may impact performance. ` +
-        `Consider using wildcards or reducing the count.`
+          `Consider using wildcards or reducing the count.`
       );
     }
 
@@ -409,7 +418,7 @@ class ActionTraceConfigValidator {
     if (normalizedPath.includes('..')) {
       errors.push(
         `Output directory contains path traversal: ${outputDirectory}. ` +
-        `Use absolute paths or paths relative to project root.`
+          `Use absolute paths or paths relative to project root.`
       );
     }
 
@@ -417,13 +426,13 @@ class ActionTraceConfigValidator {
     if (path.isAbsolute(outputDirectory)) {
       warnings.push(
         `Absolute path used for output directory: ${outputDirectory}. ` +
-        `Consider using relative paths for portability.`
+          `Consider using relative paths for portability.`
       );
     }
 
     // Check for potentially problematic paths
     const problematicPaths = ['/', '/tmp', '/var', '/etc', '/home'];
-    if (problematicPaths.some(p => normalizedPath.startsWith(p))) {
+    if (problematicPaths.some((p) => normalizedPath.startsWith(p))) {
       warnings.push(
         `Output directory may require special permissions: ${outputDirectory}`
       );
@@ -446,14 +455,14 @@ class ActionTraceConfigValidator {
     if (rotationPolicy === 'count' && !maxTraceFiles) {
       warnings.push(
         `Rotation policy 'count' specified but maxTraceFiles not set. ` +
-        `Files may accumulate indefinitely.`
+          `Files may accumulate indefinitely.`
       );
     }
 
     if (rotationPolicy === 'age' && !maxFileAge) {
       warnings.push(
         `Rotation policy 'age' specified but maxFileAge not set. ` +
-        `Files may accumulate indefinitely.`
+          `Files may accumulate indefinitely.`
       );
     }
 
@@ -496,7 +505,7 @@ class ActionTraceConfigValidator {
     if (impactScore >= 4) {
       warnings.push(
         `High performance impact configuration detected (score: ${impactScore}/5). ` +
-        `Consider reducing verbosity or disabling detailed data inclusion.`
+          `Consider reducing verbosity or disabling detailed data inclusion.`
       );
     }
 
@@ -518,11 +527,16 @@ class ActionTraceConfigValidator {
 
     // Normalize output directory path
     if (actionTracing.outputDirectory) {
-      actionTracing.outputDirectory = path.normalize(actionTracing.outputDirectory);
+      actionTracing.outputDirectory = path.normalize(
+        actionTracing.outputDirectory
+      );
     }
 
     // Set default rotation values based on policy
-    if (actionTracing.rotationPolicy === 'count' && !actionTracing.maxTraceFiles) {
+    if (
+      actionTracing.rotationPolicy === 'count' &&
+      !actionTracing.maxTraceFiles
+    ) {
       actionTracing.maxTraceFiles = 100;
     }
 
@@ -553,27 +567,28 @@ class ActionTraceConfigValidator {
    * @private
    */
   #formatSchemaError(error) {
-    const property = error.instancePath.replace('/actionTracing/', '') || 'root';
+    const property =
+      error.instancePath.replace('/actionTracing/', '') || 'root';
     const message = error.message;
     const value = error.data;
 
     switch (error.keyword) {
       case 'required':
         return `Missing required property: ${error.params.missingProperty}`;
-      
+
       case 'enum':
         return `Invalid value '${value}' for ${property}. Valid values: ${error.params.allowedValues.join(', ')}`;
-      
+
       case 'pattern':
         return `Invalid format for ${property}: '${value}'. Expected pattern: ${error.params.pattern}`;
-      
+
       case 'minimum':
       case 'maximum':
         return `Value ${value} for ${property} is outside valid range (${error.params.limit})`;
-      
+
       case 'type':
         return `Property ${property} must be of type ${error.params.type}, got ${typeof value}`;
-      
+
       default:
         return `${property}: ${message}`;
     }
@@ -586,18 +601,22 @@ class ActionTraceConfigValidator {
   #logValidationResult(result) {
     if (result.isValid) {
       this.#logger.debug('Action tracing configuration validation passed', {
-        warningCount: result.warnings.length
+        warningCount: result.warnings.length,
       });
     } else {
       this.#logger.warn('Action tracing configuration validation failed', {
         errorCount: result.errors.length,
-        warningCount: result.warnings.length
+        warningCount: result.warnings.length,
       });
     }
 
     // Log individual errors and warnings at appropriate levels
-    result.errors.forEach(error => this.#logger.error(`Config validation error: ${error}`));
-    result.warnings.forEach(warning => this.#logger.warn(`Config validation warning: ${warning}`));
+    result.errors.forEach((error) =>
+      this.#logger.error(`Config validation error: ${error}`)
+    );
+    result.warnings.forEach((warning) =>
+      this.#logger.warn(`Config validation warning: ${warning}`)
+    );
   }
 }
 
@@ -621,22 +640,22 @@ class ActionTraceConfigLoader {
   constructor({ configLoader, logger, schemaValidator }) {
     // ... existing validation ...
     validateDependency(schemaValidator, 'ISchemaValidator');
-    
+
     // ... existing assignments ...
-    
+
     // Initialize config validator
     this.#configValidator = new ActionTraceConfigValidator({
       schemaValidator,
-      logger: this.#logger
+      logger: this.#logger,
     });
   }
 
   async initialize(options = {}) {
     // ... existing code ...
-    
+
     // Initialize validator
     await this.#configValidator.initialize();
-    
+
     // ... rest of initialization ...
   }
 
@@ -645,15 +664,16 @@ class ActionTraceConfigLoader {
       // ... existing config loading ...
 
       // Validate configuration before applying defaults
-      const validationResult = await this.#configValidator.validateConfiguration({
-        actionTracing: actionTraceConfig
-      });
+      const validationResult =
+        await this.#configValidator.validateConfiguration({
+          actionTracing: actionTraceConfig,
+        });
 
       if (!validationResult.isValid) {
         this.#logger.error('Configuration validation failed', {
-          errors: validationResult.errors
+          errors: validationResult.errors,
         });
-        
+
         // Use fallback config on validation failure
         const fallbackConfig = this.#createFallbackConfig();
         this.#cachedConfig = fallbackConfig;
@@ -661,12 +681,13 @@ class ActionTraceConfigLoader {
       }
 
       // Log warnings even if validation passed
-      validationResult.warnings.forEach(warning => {
+      validationResult.warnings.forEach((warning) => {
         this.#logger.warn(`Configuration warning: ${warning}`);
       });
 
       // Use normalized configuration if available
-      const configToUse = validationResult.normalizedConfig?.actionTracing || actionTraceConfig;
+      const configToUse =
+        validationResult.normalizedConfig?.actionTracing || actionTraceConfig;
 
       // Apply defaults to normalized configuration
       const configWithDefaults = this.#applyDefaults(configToUse);
@@ -694,20 +715,16 @@ Update the container registration to include schema validator:
 container.register(
   actionTracingTokens.IActionTraceConfigLoader,
   (deps) => {
-    const logger = setup.setupService(
-      'ActionTraceConfigLoader',
-      deps.logger,
-      {
-        configLoader: {
-          value: deps.configLoader,
-          requiredMethods: ['loadConfig', 'watchConfig'],
-        },
-        schemaValidator: {
-          value: deps.schemaValidator,
-          requiredMethods: ['validate', 'loadSchema', 'formatErrors'],
-        },
-      }
-    );
+    const logger = setup.setupService('ActionTraceConfigLoader', deps.logger, {
+      configLoader: {
+        value: deps.configLoader,
+        requiredMethods: ['loadConfig', 'watchConfig'],
+      },
+      schemaValidator: {
+        value: deps.schemaValidator,
+        requiredMethods: ['validate', 'loadSchema', 'formatErrors'],
+      },
+    });
 
     return new ActionTraceConfigLoader({
       configLoader: deps.configLoader,
@@ -737,7 +754,14 @@ container.register(
  * @file Unit tests for ActionTraceConfigValidator
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ActionTraceConfigValidatorTestBed } from '../../common/configuration/actionTraceConfigValidatorTestBed.js';
 
 describe('ActionTraceConfigValidator', () => {
@@ -757,9 +781,9 @@ describe('ActionTraceConfigValidator', () => {
   describe('Schema Validation', () => {
     it('should validate complete valid configuration', async () => {
       const config = testBed.createValidConfig();
-      
+
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.isValid).toBe(true);
       expect(result.errors).toEqual([]);
       expect(result.normalizedConfig).toBeDefined();
@@ -769,34 +793,34 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           // Missing required 'enabled', 'tracedActions', 'outputDirectory'
-        }
+        },
       };
-      
+
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveLength(3);
-      expect(result.errors.some(e => e.includes('enabled'))).toBe(true);
+      expect(result.errors.some((e) => e.includes('enabled'))).toBe(true);
     });
 
     it('should validate verbosity enum values', async () => {
       const config = testBed.createValidConfig({
-        verbosity: 'invalid_level'
+        verbosity: 'invalid_level',
       });
-      
+
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.isValid).toBe(false);
-      expect(result.errors[0]).toContain('Invalid value \'invalid_level\'');
+      expect(result.errors[0]).toContain("Invalid value 'invalid_level'");
     });
 
     it('should validate integer ranges', async () => {
       const config = testBed.createValidConfig({
-        maxTraceFiles: 2000 // Exceeds maximum of 1000
+        maxTraceFiles: 2000, // Exceeds maximum of 1000
       });
-      
+
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.errors[0]).toContain('outside valid range');
     });
@@ -805,11 +829,11 @@ describe('ActionTraceConfigValidator', () => {
   describe('Custom Validation Rules', () => {
     it('should validate traced action patterns', async () => {
       const config = testBed.createValidConfig({
-        tracedActions: ['core:go', 'invalid-pattern', 'mod:*', '*']
+        tracedActions: ['core:go', 'invalid-pattern', 'mod:*', '*'],
       });
-      
+
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.errors[0]).toContain('Invalid action ID patterns');
       expect(result.errors[0]).toContain('invalid-pattern');
@@ -817,22 +841,24 @@ describe('ActionTraceConfigValidator', () => {
 
     it('should warn about duplicate actions', async () => {
       const config = testBed.createValidConfig({
-        tracedActions: ['core:go', 'core:look', 'core:go']
+        tracedActions: ['core:go', 'core:look', 'core:go'],
       });
-      
+
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.isValid).toBe(true);
-      expect(result.warnings).toContain(expect.stringContaining('Duplicate traced actions'));
+      expect(result.warnings).toContain(
+        expect.stringContaining('Duplicate traced actions')
+      );
     });
 
     it('should validate output directory paths', async () => {
       const config = testBed.createValidConfig({
-        outputDirectory: '../../../etc/passwd' // Path traversal attempt
+        outputDirectory: '../../../etc/passwd', // Path traversal attempt
       });
-      
+
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.errors[0]).toContain('path traversal');
     });
@@ -842,73 +868,84 @@ describe('ActionTraceConfigValidator', () => {
         verbosity: 'verbose',
         includeComponentData: true,
         includePrerequisites: true,
-        includeTargets: true
+        includeTargets: true,
       });
-      
+
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.isValid).toBe(true);
-      expect(result.warnings).toContain(expect.stringContaining('High performance impact'));
+      expect(result.warnings).toContain(
+        expect.stringContaining('High performance impact')
+      );
     });
 
     it('should validate rotation configuration consistency', async () => {
       const config = testBed.createValidConfig({
         rotationPolicy: 'count',
-        maxTraceFiles: undefined
+        maxTraceFiles: undefined,
       });
-      
+
       const result = await validator.validateConfiguration(config);
-      
-      expect(result.warnings).toContain(expect.stringContaining('maxTraceFiles not set'));
+
+      expect(result.warnings).toContain(
+        expect.stringContaining('maxTraceFiles not set')
+      );
     });
   });
 
   describe('Configuration Normalization', () => {
     it('should remove duplicate traced actions', async () => {
       const config = testBed.createValidConfig({
-        tracedActions: ['core:go', 'core:look', 'core:go', 'core:examine']
+        tracedActions: ['core:go', 'core:look', 'core:go', 'core:examine'],
       });
-      
+
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.normalizedConfig.actionTracing.tracedActions).toEqual([
-        'core:go', 'core:look', 'core:examine'
+        'core:go',
+        'core:look',
+        'core:examine',
       ]);
     });
 
     it('should normalize output directory paths', async () => {
       const config = testBed.createValidConfig({
-        outputDirectory: './traces/../traces/actions'
+        outputDirectory: './traces/../traces/actions',
       });
-      
+
       const result = await validator.validateConfiguration(config);
-      
-      expect(result.normalizedConfig.actionTracing.outputDirectory).toBe('traces/actions');
+
+      expect(result.normalizedConfig.actionTracing.outputDirectory).toBe(
+        'traces/actions'
+      );
     });
 
     it('should set default rotation values', async () => {
       const config = testBed.createValidConfig({
         rotationPolicy: 'count',
-        maxTraceFiles: undefined
+        maxTraceFiles: undefined,
       });
-      
+
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.normalizedConfig.actionTracing.maxTraceFiles).toBe(100);
     });
   });
 
   describe('Property Validation', () => {
     it('should validate individual properties', () => {
-      const result = validator.validateProperty('tracedActions', ['core:go', 'invalid']);
-      
+      const result = validator.validateProperty('tracedActions', [
+        'core:go',
+        'invalid',
+      ]);
+
       expect(result.isValid).toBe(false);
       expect(result.errors[0]).toContain('Invalid action ID patterns');
     });
 
     it('should return valid for non-validated properties', () => {
       const result = validator.validateProperty('unknownProperty', 'any-value');
-      
+
       expect(result.isValid).toBe(true);
       expect(result.errors).toEqual([]);
     });
@@ -916,18 +953,24 @@ describe('ActionTraceConfigValidator', () => {
 
   describe('Error Handling', () => {
     it('should handle schema compilation errors', async () => {
-      testBed.mockSchemaValidator.compile.mockRejectedValue(new Error('Schema error'));
-      
-      await expect(validator.initialize()).rejects.toThrow('Schema validation setup failed');
+      testBed.mockSchemaValidator.compile.mockRejectedValue(
+        new Error('Schema error')
+      );
+
+      await expect(validator.initialize()).rejects.toThrow(
+        'Schema validation setup failed'
+      );
     });
 
     it('should handle validation runtime errors', async () => {
       testBed.mockSchemaValidator.formatErrors.mockImplementation(() => {
         throw new Error('Format error');
       });
-      
-      const result = await validator.validateConfiguration(testBed.createValidConfig());
-      
+
+      const result = await validator.validateConfiguration(
+        testBed.createValidConfig()
+      );
+
       expect(result.isValid).toBe(false);
       expect(result.errors[0]).toContain('Validation error');
     });
@@ -936,7 +979,7 @@ describe('ActionTraceConfigValidator', () => {
   describe('Schema Access', () => {
     it('should provide access to compiled schema', () => {
       const schema = validator.getSchema();
-      
+
       expect(schema).toBeDefined();
       expect(schema).toBe(testBed.mockCompiledSchema.schema);
     });
@@ -959,14 +1002,14 @@ export class ActionTraceConfigValidatorTestBed {
   constructor() {
     this.mockCompiledSchema = {
       schema: { type: 'object' },
-      errors: []
+      errors: [],
     };
 
     this.mockSchemaValidator = {
       loadSchema: jest.fn().mockResolvedValue({ type: 'object' }),
       compile: jest.fn().mockResolvedValue(this.mockCompiledSchema),
       formatErrors: jest.fn().mockReturnValue([]),
-      validate: jest.fn().mockReturnValue(true)
+      validate: jest.fn().mockReturnValue(true),
     };
 
     this.mockLogger = {
@@ -980,7 +1023,7 @@ export class ActionTraceConfigValidatorTestBed {
     this.mockCompiledSchema = jest.fn().mockReturnValue(true);
     Object.assign(this.mockCompiledSchema, {
       schema: { type: 'object' },
-      errors: []
+      errors: [],
     });
     this.mockSchemaValidator.compile.mockResolvedValue(this.mockCompiledSchema);
   }
@@ -1008,8 +1051,8 @@ export class ActionTraceConfigValidatorTestBed {
         maxTraceFiles: 100,
         rotationPolicy: 'age',
         maxFileAge: 86400,
-        ...overrides
-      }
+        ...overrides,
+      },
     };
   }
 
@@ -1044,8 +1087,10 @@ describe('Action Trace Configuration Validation Integration', () => {
 
   beforeEach(async () => {
     container = createTestContainerWithDefaults();
-    configLoader = container.resolve(actionTracingTokens.IActionTraceConfigLoader);
-    
+    configLoader = container.resolve(
+      actionTracingTokens.IActionTraceConfigLoader
+    );
+
     // Initialize the loader (including validator)
     await configLoader.initialize();
   });
@@ -1063,8 +1108,8 @@ describe('Action Trace Configuration Validation Integration', () => {
         enabled: true,
         tracedActions: ['core:go'],
         outputDirectory: './traces/actions',
-        verbosity: 'standard'
-      }
+        verbosity: 'standard',
+      },
     };
 
     // Mock the underlying config loader
@@ -1083,8 +1128,8 @@ describe('Action Trace Configuration Validation Integration', () => {
       actionTracing: {
         enabled: 'not-a-boolean',
         tracedActions: 'not-an-array',
-        verbosity: 'invalid-level'
-      }
+        verbosity: 'invalid-level',
+      },
     };
 
     const baseConfigLoader = container.resolve('IConfigLoader');
@@ -1122,7 +1167,7 @@ The validator will provide clear, actionable error messages:
 ## Files Created
 
 - [ ] `src/configuration/actionTraceConfigValidator.js`
-- [ ] `tests/unit/configuration/actionTraceConfigValidator.test.js` 
+- [ ] `tests/unit/configuration/actionTraceConfigValidator.test.js`
 - [ ] `tests/common/configuration/actionTraceConfigValidatorTestBed.js`
 - [ ] `tests/integration/configuration/actionTraceConfigValidation.integration.test.js`
 

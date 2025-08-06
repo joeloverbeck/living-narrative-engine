@@ -598,22 +598,22 @@ describe('Multi-Target Action Schema Validation', () => {
   });
 
   // ── VIOLENCE MOD MIGRATION VALIDATION TESTS ──────────────────────────────
-  
+
   describe('Violence Mod Migration Validation', () => {
     test('✓ should validate migrated violence:slap action', () => {
       const slapAction = {
-        "$schema": "schema://living-narrative-engine/action.schema.json",
-        "id": "violence:slap",
-        "name": "Slap",
-        "description": "Slap someone across the face",
-        "targets": {
-          "primary": {
-            "scope": "core:actors_in_location",
-            "placeholder": "target",
-            "description": "Person to slap"
-          }
+        $schema: 'schema://living-narrative-engine/action.schema.json',
+        id: 'violence:slap',
+        name: 'Slap',
+        description: 'Slap someone across the face',
+        targets: {
+          primary: {
+            scope: 'core:actors_in_location',
+            placeholder: 'target',
+            description: 'Person to slap',
+          },
         },
-        "template": "slap {target}"
+        template: 'slap {target}',
       };
 
       const isValid = validate(slapAction);
@@ -625,23 +625,27 @@ describe('Multi-Target Action Schema Validation', () => {
 
     test('✓ should validate migrated violence:sucker_punch action', () => {
       const suckerPunchAction = {
-        "$schema": "schema://living-narrative-engine/action.schema.json",
-        "id": "violence:sucker_punch",
-        "name": "Sucker Punch",
-        "description": "Throw an unexpected punch at someone when they're not looking",
-        "targets": {
-          "primary": {
-            "scope": "core:actors_in_location",
-            "placeholder": "target",
-            "description": "Person to punch unexpectedly"
-          }
+        $schema: 'schema://living-narrative-engine/action.schema.json',
+        id: 'violence:sucker_punch',
+        name: 'Sucker Punch',
+        description:
+          "Throw an unexpected punch at someone when they're not looking",
+        targets: {
+          primary: {
+            scope: 'core:actors_in_location',
+            placeholder: 'target',
+            description: 'Person to punch unexpectedly',
+          },
         },
-        "template": "sucker-punch {target}"
+        template: 'sucker-punch {target}',
       };
 
       const isValid = validate(suckerPunchAction);
       if (!isValid) {
-        console.error('Sucker punch action validation errors:', validate.errors);
+        console.error(
+          'Sucker punch action validation errors:',
+          validate.errors
+        );
       }
       expect(isValid).toBe(true);
     });
@@ -649,95 +653,114 @@ describe('Multi-Target Action Schema Validation', () => {
     test('✓ should validate both violence actions have correct target structure', () => {
       const violenceActions = [
         {
-          id: "violence:slap",
+          id: 'violence:slap',
           targets: {
             primary: {
-              scope: "core:actors_in_location",
-              placeholder: "target",
-              description: "Person to slap"
-            }
-          }
+              scope: 'core:actors_in_location',
+              placeholder: 'target',
+              description: 'Person to slap',
+            },
+          },
         },
         {
-          id: "violence:sucker_punch", 
+          id: 'violence:sucker_punch',
           targets: {
             primary: {
-              scope: "core:actors_in_location",
-              placeholder: "target",
-              description: "Person to punch unexpectedly"
-            }
-          }
-        }
+              scope: 'core:actors_in_location',
+              placeholder: 'target',
+              description: 'Person to punch unexpectedly',
+            },
+          },
+        },
       ];
 
-      violenceActions.forEach(actionData => {
+      violenceActions.forEach((actionData) => {
         // Verify target structure matches expected pattern
         expect(actionData.targets).toHaveProperty('primary');
-        expect(actionData.targets.primary).toHaveProperty('scope', 'core:actors_in_location');
-        expect(actionData.targets.primary).toHaveProperty('placeholder', 'target');
+        expect(actionData.targets.primary).toHaveProperty(
+          'scope',
+          'core:actors_in_location'
+        );
+        expect(actionData.targets.primary).toHaveProperty(
+          'placeholder',
+          'target'
+        );
         expect(actionData.targets.primary).toHaveProperty('description');
         expect(typeof actionData.targets.primary.description).toBe('string');
-        expect(actionData.targets.primary.description.length).toBeGreaterThan(0);
+        expect(actionData.targets.primary.description.length).toBeGreaterThan(
+          0
+        );
       });
     });
 
     test('✓ should verify violence actions maintain template compatibility', () => {
       const expectedTemplates = {
         'violence:slap': 'slap {target}',
-        'violence:sucker_punch': 'sucker-punch {target}' // Note hyphen preservation
+        'violence:sucker_punch': 'sucker-punch {target}', // Note hyphen preservation
       };
 
-      Object.entries(expectedTemplates).forEach(([actionId, expectedTemplate]) => {
-        const action = {
-          "$schema": "schema://living-narrative-engine/action.schema.json",
-          "id": actionId,
-          "name": "Test",
-          "description": "Test action for template validation",
-          "targets": {
-            "primary": {
-              "scope": "core:actors_in_location",
-              "placeholder": "target",
-              "description": "Test target"
-            }
-          },
-          "template": expectedTemplate
-        };
+      Object.entries(expectedTemplates).forEach(
+        ([actionId, expectedTemplate]) => {
+          const action = {
+            $schema: 'schema://living-narrative-engine/action.schema.json',
+            id: actionId,
+            name: 'Test',
+            description: 'Test action for template validation',
+            targets: {
+              primary: {
+                scope: 'core:actors_in_location',
+                placeholder: 'target',
+                description: 'Test target',
+              },
+            },
+            template: expectedTemplate,
+          };
 
-        const isValid = validate(action);
-        if (!isValid) {
-          console.error(`Template validation failed for ${actionId}:`, validate.errors);
+          const isValid = validate(action);
+          if (!isValid) {
+            console.error(
+              `Template validation failed for ${actionId}:`,
+              validate.errors
+            );
+          }
+          expect(isValid).toBe(true);
+          expect(action.template).toBe(expectedTemplate);
         }
-        expect(isValid).toBe(true);
-        expect(action.template).toBe(expectedTemplate);
-      });
+      );
     });
 
     test('✓ should verify violence actions use proper schema reference', () => {
       const violenceActions = [
         {
-          "$schema": "schema://living-narrative-engine/action.schema.json",
-          "id": "violence:slap",
-          "name": "Slap",
-          "description": "Test",
-          "targets": { "primary": { "scope": "test:scope", "placeholder": "target" }},
-          "template": "slap {target}"
+          $schema: 'schema://living-narrative-engine/action.schema.json',
+          id: 'violence:slap',
+          name: 'Slap',
+          description: 'Test',
+          targets: { primary: { scope: 'test:scope', placeholder: 'target' } },
+          template: 'slap {target}',
         },
         {
-          "$schema": "schema://living-narrative-engine/action.schema.json", 
-          "id": "violence:sucker_punch",
-          "name": "Sucker Punch",
-          "description": "Test",
-          "targets": { "primary": { "scope": "test:scope", "placeholder": "target" }},
-          "template": "sucker-punch {target}"
-        }
+          $schema: 'schema://living-narrative-engine/action.schema.json',
+          id: 'violence:sucker_punch',
+          name: 'Sucker Punch',
+          description: 'Test',
+          targets: { primary: { scope: 'test:scope', placeholder: 'target' } },
+          template: 'sucker-punch {target}',
+        },
       ];
 
-      violenceActions.forEach(action => {
-        expect(action).toHaveProperty('$schema', 'schema://living-narrative-engine/action.schema.json');
-        
+      violenceActions.forEach((action) => {
+        expect(action).toHaveProperty(
+          '$schema',
+          'schema://living-narrative-engine/action.schema.json'
+        );
+
         const isValid = validate(action);
         if (!isValid) {
-          console.error(`Schema validation failed for ${action.id}:`, validate.errors);
+          console.error(
+            `Schema validation failed for ${action.id}:`,
+            validate.errors
+          );
         }
         expect(isValid).toBe(true);
       });

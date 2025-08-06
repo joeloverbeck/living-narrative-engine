@@ -3,7 +3,13 @@
   "id": "sex:rub_penis_over_clothes",
   "name": "Rub Penis Over Clothes",
   "description": "Rub the target's penis over their clothing.",
-  "scope": "sex:actors_with_penis_facing_each_other_covered",
+  "targets": {
+    "primary": {
+      "scope": "sex:actors_with_penis_facing_each_other_covered",
+      "placeholder": "target",
+      "description": "Person with clothed penis to rub"
+    }
+  },
   "required_components": {
     "actor": ["positioning:closeness"]
   },

@@ -3,7 +3,13 @@
   "id": "sex:fondle_penis",
   "name": "Fondle Penis",
   "description": "Gently fondle the target's penis.",
-  "scope": "sex:actors_with_penis_facing_each_other",
+  "targets": {
+    "primary": {
+      "scope": "sex:actors_with_penis_facing_each_other",
+      "placeholder": "target",
+      "description": "Person with penis to fondle"
+    }
+  },
   "required_components": {
     "actor": ["positioning:closeness"]
   },
