@@ -86,15 +86,15 @@ describe('ActionCategorizationService - Performance Tests', () => {
 
         const avgDuration = totalDuration / iterations;
         benchmarks.push({ size, duration: avgDuration });
-        
+
         // Performance should scale reasonably with size
         expect(avgDuration).toBeLessThan(size * 0.2); // <0.2ms per action (more realistic)
       });
 
       // Verify performance doesn't degrade dramatically
-      const durations = benchmarks.map(b => b.duration);
+      const durations = benchmarks.map((b) => b.duration);
       const maxDuration = Math.max(...durations);
-      
+
       // Even the largest dataset should complete reasonably quickly
       expect(maxDuration).toBeLessThan(50); // <50ms for largest dataset
     });
@@ -122,11 +122,11 @@ describe('ActionCategorizationService - Performance Tests', () => {
 
       const iterations = 100;
       const startTime = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         service.shouldUseGrouping(actions);
       }
-      
+
       const duration = performance.now() - startTime;
       const avgDuration = duration / iterations;
 
@@ -147,27 +147,31 @@ describe('ActionCategorizationService - Performance Tests', () => {
       const operations = [];
 
       const startTime = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         // Mix of operations
         const groupingDecision = service.shouldUseGrouping(actions);
-        operations.push(() => service.extractNamespace(actions[i % actions.length].actionId));
-        
+        operations.push(() =>
+          service.extractNamespace(actions[i % actions.length].actionId)
+        );
+
         if (groupingDecision) {
           operations.push(() => service.groupActionsByNamespace(actions));
         }
-        
-        operations.push(() => service.getSortedNamespaces(['core', 'intimacy', 'anatomy']));
+
+        operations.push(() =>
+          service.getSortedNamespaces(['core', 'intimacy', 'anatomy'])
+        );
       }
 
       // Execute all operations
-      operations.forEach(op => op());
-      
+      operations.forEach((op) => op());
+
       const duration = performance.now() - startTime;
 
       // Total time should be reasonable for mixed operations
       expect(duration).toBeLessThan(100); // Less than 100ms total
-      
+
       // Average operation time should be minimal
       const avgOpTime = duration / operations.length;
       expect(avgOpTime).toBeLessThan(1); // Less than 1ms per operation

@@ -1,7 +1,14 @@
 {
+  "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "violence:slap",
   "name": "Slap",
   "description": "Slap someone across the face",
-  "scope": "core:actors_in_location",
+  "targets": {
+    "primary": {
+      "scope": "core:actors_in_location",
+      "placeholder": "target",
+      "description": "Person to slap"
+    }
+  },
   "template": "slap {target}"
 }

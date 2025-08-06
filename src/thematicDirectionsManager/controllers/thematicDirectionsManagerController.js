@@ -1608,6 +1608,12 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     // Remove any lingering handlers
     this._removeModalKeyHandling();
 
+    // Clear notification timeout to prevent memory leaks
+    if (this.#notificationTimeout) {
+      clearTimeout(this.#notificationTimeout);
+      this.#notificationTimeout = null;
+    }
+
     // Destroy all InPlaceEditor instances to prevent memory leaks
     this.#cleanupInPlaceEditors();
 
@@ -1644,10 +1650,65 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
       this.#conceptDropdown = null;
     }
 
+    // Check for potential memory leaks in development
+    this.#checkForLeaks();
+
     // Call parent implementation to maintain base class behavior
     super._postDestroy();
 
     this.logger.debug('ThematicDirectionsManagerController: Cleanup complete');
+  }
+
+  /**
+   * Debug method to check for potential memory leaks
+   * Only active in development mode
+   *
+   * @private
+   */
+  #checkForLeaks() {
+    /* global process */
+    if (process.env.NODE_ENV !== 'development') return;
+
+    const leaks = [];
+
+    // Check InPlaceEditors
+    if (this.#inPlaceEditors && this.#inPlaceEditors.size > 0) {
+      leaks.push(`${this.#inPlaceEditors.size} InPlaceEditor instances`);
+    }
+
+    // Check notification timeout
+    if (this.#notificationTimeout) {
+      leaks.push('Active notification timeout');
+    }
+
+    // Check modal state
+    if (this.#activeModal) {
+      leaks.push('Active modal state');
+    }
+
+    // Check pending modal action
+    if (this.#pendingModalAction) {
+      leaks.push('Pending modal action');
+    }
+
+    // Check event handlers
+    if (this.#modalKeyHandler) {
+      leaks.push('Active modal key handler');
+    }
+
+    // Check dropdown instance
+    if (this.#conceptDropdown) {
+      leaks.push('Active concept dropdown');
+    }
+
+    if (leaks.length > 0) {
+      /* eslint-disable-next-line no-console */
+      console.warn('Potential memory leaks detected:', leaks);
+      this.logger.warn(
+        'ThematicDirectionsManagerController: Potential memory leaks detected',
+        { leaks }
+      );
+    }
   }
 }
 

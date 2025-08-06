@@ -41,6 +41,11 @@ class ActionTraceConfigLoader {
     wildcardMatches: 0,
     totalLookups: 0,
     averageLookupTime: 0,
+    // Enhanced performance monitoring
+    slowLookups: 0, // Count of lookups >1ms
+    fastestLookup: Number.MAX_VALUE,
+    slowestLookup: 0,
+    totalLookupTime: 0, // For precise average calculation
   };
 
   /**
@@ -48,8 +53,9 @@ class ActionTraceConfigLoader {
    * @param {object} dependencies.traceConfigLoader - Loader for trace configuration
    * @param {ILogger} dependencies.logger - Logger instance
    * @param {ISchemaValidator} dependencies.validator - Schema validator instance
+   * @param {number} [dependencies.cacheTtl] - Cache TTL in milliseconds (default: 1 minute)
    */
-  constructor({ traceConfigLoader, logger, validator }) {
+  constructor({ traceConfigLoader, logger, validator, cacheTtl = 60000 }) {
     validateDependency(traceConfigLoader, 'ITraceConfigLoader', null, {
       requiredMethods: ['loadConfig'],
     });
@@ -63,7 +69,11 @@ class ActionTraceConfigLoader {
     this.#traceConfigLoader = traceConfigLoader;
     this.#logger = logger;
     this.#validator = validator;
-    this.#cachedConfig = null;
+    this.#cachedConfig = {
+      data: null,
+      timestamp: null,
+      ttl: cacheTtl,
+    };
   }
 
   /**
@@ -72,8 +82,8 @@ class ActionTraceConfigLoader {
    * @returns {Promise<ActionTracingConfig>} Action tracing configuration
    */
   async loadConfig() {
-    if (this.#cachedConfig) {
-      return this.#cachedConfig;
+    if (this.#cachedConfig.data && !this.#isCacheExpired()) {
+      return this.#cachedConfig.data;
     }
 
     try {
@@ -117,8 +127,9 @@ class ActionTraceConfigLoader {
         return defaultConfig;
       }
 
-      // Cache the validated configuration
-      this.#cachedConfig = actionTracingConfig;
+      // Cache the validated configuration with timestamp
+      this.#cachedConfig.data = actionTracingConfig;
+      this.#cachedConfig.timestamp = Date.now();
 
       // Build optimized lookup structures for performance
       this.#buildLookupStructures(actionTracingConfig);
@@ -169,7 +180,11 @@ class ActionTraceConfigLoader {
    * @returns {Promise<ActionTracingConfig>}
    */
   async reloadConfig() {
-    this.#cachedConfig = null;
+    this.#cachedConfig = {
+      data: null,
+      timestamp: null,
+      ttl: this.#cachedConfig.ttl, // Preserve TTL setting
+    };
     // Reset performance optimization structures
     this.#tracedActionsSet.clear();
     this.#wildcardPatterns = [];
@@ -307,16 +322,36 @@ class ActionTraceConfigLoader {
   /**
    * Get performance and usage statistics
    *
-   * @returns {{exactMatches: number, wildcardMatches: number, totalLookups: number, averageLookupTime: number, tracedActionsCount: number, wildcardPatternsCount: number}}
+   * @returns {{exactMatches: number, wildcardMatches: number, totalLookups: number, averageLookupTime: number, tracedActionsCount: number, wildcardPatternsCount: number, cacheTtl: number, cacheStatus: string, cacheAge: number}}
    */
   getStatistics() {
+    const now = Date.now();
+    const cacheAge = this.#cachedConfig.timestamp
+      ? now - this.#cachedConfig.timestamp
+      : 0;
+    const cacheStatus = this.#cachedConfig.data
+      ? this.#isCacheExpired()
+        ? 'expired'
+        : 'valid'
+      : 'empty';
+
     return {
       exactMatches: this.#lookupStatistics.exactMatches,
       wildcardMatches: this.#lookupStatistics.wildcardMatches,
       totalLookups: this.#lookupStatistics.totalLookups,
       averageLookupTime: this.#lookupStatistics.averageLookupTime,
+      // Enhanced performance metrics
+      slowLookups: this.#lookupStatistics.slowLookups,
+      fastestLookup: this.#lookupStatistics.fastestLookup === Number.MAX_VALUE ? 0 : this.#lookupStatistics.fastestLookup,
+      slowestLookup: this.#lookupStatistics.slowestLookup,
+      slowLookupRate: this.#lookupStatistics.totalLookups > 0 
+        ? (this.#lookupStatistics.slowLookups / this.#lookupStatistics.totalLookups) * 100 
+        : 0,
       tracedActionsCount: this.#tracedActionsSet.size,
       wildcardPatternsCount: this.#wildcardPatterns.length,
+      cacheTtl: this.#cachedConfig.ttl,
+      cacheStatus,
+      cacheAge,
     };
   }
 
@@ -329,6 +364,11 @@ class ActionTraceConfigLoader {
       wildcardMatches: 0,
       totalLookups: 0,
       averageLookupTime: 0,
+      // Enhanced performance monitoring
+      slowLookups: 0,
+      fastestLookup: Number.MAX_VALUE,
+      slowestLookup: 0,
+      totalLookupTime: 0,
     };
   }
 
@@ -485,19 +525,38 @@ class ActionTraceConfigLoader {
   }
 
   /**
-   * Update lookup time statistics
+   * Update lookup time statistics with enhanced monitoring
    *
    * @private
    * @param {number} startTime - Performance start time
    */
   #updateLookupTime(startTime) {
     const duration = performance.now() - startTime;
-    const currentAvg = this.#lookupStatistics.averageLookupTime;
-    const totalLookups = this.#lookupStatistics.totalLookups;
-
-    // Calculate rolling average
-    this.#lookupStatistics.averageLookupTime =
-      (currentAvg * (totalLookups - 1) + duration) / totalLookups;
+    const stats = this.#lookupStatistics;
+    const totalLookups = stats.totalLookups;
+    
+    // Accumulate total time for precise average calculation
+    stats.totalLookupTime += duration;
+    stats.averageLookupTime = stats.totalLookupTime / totalLookups;
+    
+    // Track performance outliers
+    if (duration > 1) { // >1ms is considered slow
+      stats.slowLookups++;
+      // Log performance warning for investigation
+      this.#logger.warn('Slow action lookup detected', {
+        duration: `${duration.toFixed(3)}ms`,
+        totalLookups,
+        slowLookupRate: ((stats.slowLookups / totalLookups) * 100).toFixed(2) + '%'
+      });
+    }
+    
+    // Update performance bounds
+    if (duration < stats.fastestLookup) {
+      stats.fastestLookup = duration;
+    }
+    if (duration > stats.slowestLookup) {
+      stats.slowestLookup = duration;
+    }
   }
 
   /**
@@ -535,6 +594,19 @@ class ActionTraceConfigLoader {
     }
 
     return result;
+  }
+
+  /**
+   * Check if cache has expired based on TTL
+   *
+   * @private
+   * @returns {boolean} True if cache is expired or no timestamp exists
+   */
+  #isCacheExpired() {
+    if (!this.#cachedConfig.timestamp || this.#cachedConfig.ttl === 0) {
+      return true;
+    }
+    return Date.now() - this.#cachedConfig.timestamp > this.#cachedConfig.ttl;
   }
 
   /**
