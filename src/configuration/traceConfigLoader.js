@@ -42,6 +42,17 @@ import { isNonBlankString } from '../utils/textUtils.js';
  * @property {object} [analysis] - Analysis configuration
  * @property {boolean} [analysis.enabled] - Whether analysis is enabled
  * @property {number} [analysis.bottleneckThresholdMs] - Bottleneck detection threshold
+ * @property {object} [actionTracing] - Action tracing configuration
+ * @property {boolean} [actionTracing.enabled] - Enable or disable action tracing globally
+ * @property {string[]} [actionTracing.tracedActions] - Action IDs to trace
+ * @property {string} [actionTracing.outputDirectory] - Directory for trace output files
+ * @property {string} [actionTracing.verbosity] - Level of detail in traces
+ * @property {boolean} [actionTracing.includeComponentData] - Include component data in traces
+ * @property {boolean} [actionTracing.includePrerequisites] - Include prerequisite evaluation details
+ * @property {boolean} [actionTracing.includeTargets] - Include target resolution details
+ * @property {number} [actionTracing.maxTraceFiles] - Maximum number of trace files to keep
+ * @property {string} [actionTracing.rotationPolicy] - How to rotate old trace files
+ * @property {number} [actionTracing.maxFileAge] - Maximum age of trace files in seconds
  */
 
 /**
@@ -240,6 +251,44 @@ export class TraceConfigLoader {
         path: path,
       };
     }
+  }
+
+  /**
+   * Check if any tracing feature is enabled
+   *
+   * @returns {Promise<boolean>}
+   */
+  async isAnyTracingEnabled() {
+    const config = await this.loadConfig();
+
+    // Handle error results
+    if (config.error) {
+      return false;
+    }
+
+    return (
+      config.traceAnalysisEnabled ||
+      config.performanceMonitoring?.enabled ||
+      config.visualization?.enabled ||
+      config.analysis?.enabled ||
+      config.actionTracing?.enabled
+    );
+  }
+
+  /**
+   * Get action tracing configuration
+   *
+   * @returns {Promise<object | null>}
+   */
+  async getActionTracingConfig() {
+    const config = await this.loadConfig();
+
+    // Handle error results
+    if (config.error) {
+      return null;
+    }
+
+    return config.actionTracing || null;
   }
 
   /**
