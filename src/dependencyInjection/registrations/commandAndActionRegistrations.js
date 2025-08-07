@@ -262,14 +262,52 @@ export function registerCommandAndAction(container) {
   registrar
     .tagged(INITIALIZABLE)
     .singletonFactory(tokens.IActionDiscoveryService, (c) => {
+      const logger = c.resolve(tokens.ILogger);
+      
+      // Get optional action tracing dependencies
+      let actionAwareTraceFactory = null;
+      let actionTraceFilter = null;
+      
+      try {
+        // Try to resolve action-aware trace factory if registered
+        if (c.isRegistered(tokens.IActionAwareStructuredTrace)) {
+          actionAwareTraceFactory = c.resolve(tokens.IActionAwareStructuredTrace);
+        }
+      } catch (err) {
+        logger.debug('ActionAwareStructuredTrace not available', err);
+      }
+      
+      try {
+        // Try to resolve action trace filter if registered
+        if (c.isRegistered(tokens.IActionTraceFilter)) {
+          actionTraceFilter = c.resolve(tokens.IActionTraceFilter);
+        }
+      } catch (err) {
+        logger.debug('ActionTraceFilter not available', err);
+      }
+
+      // Log action tracing availability
+      const actionTracingAvailable = !!(
+        actionAwareTraceFactory && actionTraceFilter
+      );
+      logger.info(
+        `ActionDiscoveryService: Action tracing ${actionTracingAvailable ? 'available' : 'not available'}`,
+        {
+          hasActionAwareTraceFactory: !!actionAwareTraceFactory,
+          hasActionTraceFilter: !!actionTraceFilter,
+        }
+      );
+
       return new ActionDiscoveryService({
         entityManager: c.resolve(tokens.IEntityManager),
-        logger: c.resolve(tokens.ILogger),
+        logger,
         serviceSetup: c.resolve(tokens.ServiceSetup),
         actionPipelineOrchestrator: c.resolve(
           tokens.ActionPipelineOrchestrator
         ),
         traceContextFactory: c.resolve(tokens.TraceContextFactory),
+        actionAwareTraceFactory,
+        actionTraceFilter,
         getActorLocationFn: getActorLocation,
       });
     });

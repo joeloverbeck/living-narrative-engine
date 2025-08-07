@@ -281,6 +281,8 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
       logger: mocks.logger,
       actionPipelineOrchestrator,
       traceContextFactory: overrides.traceContextFactory ?? traceContextFactory,
+      actionAwareTraceFactory: overrides.actionAwareTraceFactory ?? null,
+      actionTraceFilter: overrides.actionTraceFilter ?? null,
       getActorLocationFn: mocks.getActorLocationFn,
     });
   },
@@ -293,7 +295,245 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
  */
 export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
   FactoryTestBed
-) {}
+) {
+  #lastCreatedTraceType = 'Unknown';
+  #currentService = null;
+  #capturedLogs = {
+    debug: [],
+    info: [],
+    warn: [],
+    error: [],
+  };
+
+  /**
+   * Create discovery service with action tracing support
+   * 
+   * @param {object} options - Configuration options
+   * @returns {ActionDiscoveryService} Configured discovery service
+   */
+  createDiscoveryServiceWithTracing(options = {}) {
+    const {
+      actionTracingEnabled = false,
+      tracedActions = ['*'],
+      verbosity = 'standard',
+      hasActionAwareTraceFactory = true,
+      hasActionTraceFilter = true,
+      actionAwareTraceFactoryFailure = false,
+      actionTraceFilterFailure = null,
+      traceContextFactoryFailure = false,
+    } = options;
+
+    // Reset captured logs
+    this.#capturedLogs = {
+      debug: [],
+      info: [],
+      warn: [],
+      error: [],
+    };
+
+    // Create mock logger that captures logs
+    const mockLogger = {
+      debug: jest.fn((msg, ...args) => {
+        this.#capturedLogs.debug.push(msg);
+      }),
+      info: jest.fn((msg, ...args) => {
+        this.#capturedLogs.info.push(msg);
+      }),
+      warn: jest.fn((msg, ...args) => {
+        this.#capturedLogs.warn.push(msg);
+      }),
+      error: jest.fn((msg, ...args) => {
+        this.#capturedLogs.error.push(msg);
+      }),
+    };
+
+    // Create optional action tracing mocks
+    const mockActionAwareTraceFactory = hasActionAwareTraceFactory
+      ? this.#createMockActionAwareTraceFactory(actionAwareTraceFactoryFailure)
+      : null;
+
+    const mockActionTraceFilter = hasActionTraceFilter
+      ? this.#createMockActionTraceFilter({
+          enabled: actionTracingEnabled,
+          tracedActions,
+          verbosity,
+          failure: actionTraceFilterFailure,
+        })
+      : null;
+
+    // Create trace context factory
+    const traceContextFactory = traceContextFactoryFailure
+      ? () => { throw new Error('TraceContextFactory failed'); }
+      : () => {
+          this.#lastCreatedTraceType = 'StructuredTrace';
+          return {
+            info: jest.fn(),
+            step: jest.fn(),
+            withSpanAsync: jest.fn().mockImplementation(async (name, fn) => fn()),
+          };
+        };
+
+    // Directly create the service using the mocks from the parent class
+    const parentMocks = this.mocks;
+    
+    // Create the ActionDiscoveryService directly with our custom dependencies
+    const service = new ActionDiscoveryService({
+      entityManager: parentMocks.entityManager,
+      logger: mockLogger,
+      actionPipelineOrchestrator: parentMocks.actionPipelineOrchestrator || 
+        this.#createMockActionPipelineOrchestrator(),
+      traceContextFactory,
+      actionAwareTraceFactory: mockActionAwareTraceFactory,
+      actionTraceFilter: mockActionTraceFilter,
+      getActorLocationFn: parentMocks.getActorLocationFn,
+    });
+    
+    // Store reference so we can track state
+    this.#currentService = service;
+    
+    return service;
+  }
+
+  /**
+   * Create a standard discovery service without tracing
+   */
+  createStandardDiscoveryService() {
+    // Use the same parent mocks to ensure consistency
+    const parentMocks = this.mocks;
+    
+    return new ActionDiscoveryService({
+      entityManager: parentMocks.entityManager,
+      logger: parentMocks.logger,
+      actionPipelineOrchestrator: parentMocks.actionPipelineOrchestrator || 
+        this.#createMockActionPipelineOrchestrator(),
+      traceContextFactory: () => ({
+        info: jest.fn(),
+        step: jest.fn(),
+        withSpanAsync: jest.fn().mockImplementation(async (name, fn) => fn()),
+      }),
+      getActorLocationFn: parentMocks.getActorLocationFn,
+    });
+  }
+
+  /**
+   * Create a mock actor for testing
+   *
+   * @param actorId
+   */
+  createMockActor(actorId) {
+    return {
+      id: actorId,
+      components: {},
+    };
+  }
+
+  /**
+   * Create a mock context for testing
+   */
+  createMockContext() {
+    return {
+      currentLocation: 'test-location',
+    };
+  }
+
+  #createMockActionAwareTraceFactory(shouldFail = false) {
+    return jest.fn().mockImplementation((options) => {
+      if (shouldFail) {
+        throw new Error('ActionAwareTraceFactory creation failed');
+      }
+
+      this.#lastCreatedTraceType = 'ActionAwareStructuredTrace';
+
+      return {
+        captureActionData: jest.fn(),
+        getTracedActions: jest.fn().mockReturnValue(new Map()),
+        getTracingSummary: jest.fn().mockReturnValue({
+          tracedActionCount: 0,
+          totalStagesTracked: 0,
+          sessionDuration: 0,
+        }),
+        step: jest.fn(),
+        info: jest.fn(),
+        withSpanAsync: jest
+          .fn()
+          .mockImplementation(async (name, fn) => fn()),
+      };
+    });
+  }
+
+  #createMockActionPipelineOrchestrator() {
+    return {
+      discoverActions: jest.fn().mockImplementation(async (actor, context, options) => {
+        return {
+          actions: [
+            { id: 'core:go', name: 'Go' },
+            { id: 'core:look', name: 'Look' },
+          ],
+          errors: [],
+        };
+      }),
+    };
+  }
+
+  #createMockActionTraceFilter(config = {}) {
+    const {
+      enabled = false,
+      tracedActions = [],
+      verbosity = 'standard',
+      failure = null,
+    } = config;
+
+    return {
+      isEnabled: jest.fn().mockImplementation(() => {
+        if (failure === 'isEnabled') {
+          throw new Error('ActionTraceFilter.isEnabled() failed');
+        }
+        return enabled;
+      }),
+      shouldTrace: jest.fn().mockImplementation((actionId) => {
+        if (tracedActions.includes('*')) return true;
+        return tracedActions.includes(actionId);
+      }),
+      getVerbosityLevel: jest.fn().mockReturnValue(verbosity),
+      getInclusionConfig: jest.fn().mockReturnValue({
+        componentData: true,
+        prerequisites: true,
+        targets: true,
+      }),
+    };
+  }
+
+  getCreatedTraceType() {
+    return this.#lastCreatedTraceType;
+  }
+
+  getDebugLogs() {
+    return this.#capturedLogs.debug;
+  }
+
+  getInfoLogs() {
+    return this.#capturedLogs.info;
+  }
+
+  getWarningLogs() {
+    return this.#capturedLogs.warn;
+  }
+
+  getErrorLogs() {
+    return this.#capturedLogs.error;
+  }
+
+  cleanup() {
+    super.cleanup();
+    this.#lastCreatedTraceType = 'Unknown';
+    this.#capturedLogs = {
+      debug: [],
+      info: [],
+      warn: [],
+      error: [],
+    };
+  }
+}
 /**
  * Defines a test suite with automatic {@link ActionDiscoveryServiceTestBed} setup.
  *
