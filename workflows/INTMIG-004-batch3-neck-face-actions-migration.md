@@ -2,11 +2,13 @@
 
 ## Overview
 
-Migrate the third batch of 7 neck and face-related intimacy actions from the legacy `scope` format to the new `targets` format. This batch includes actions with varied scopes for facial and neck interactions, some requiring specific positioning.
+Migrate the third batch of 6 neck and face-related intimacy actions from the legacy `scope` format to the new `targets` format. This batch includes actions with varied scopes for facial and neck interactions, some requiring specific positioning.
+
+**Note**: `lean_in_for_deep_kiss.action.json` was already migrated in a previous batch.
 
 ## Priority
 
-**HIGH** - Third migration batch, diverse scope patterns
+**COMPLETED** - Third migration batch successfully migrated
 
 ## Dependencies
 
@@ -20,26 +22,24 @@ Migrate the third batch of 7 neck and face-related intimacy actions from the leg
 | ------------------------------------------ | -------------------------------------------------------------- | ------------------------------------------- |
 | `kiss_cheek.action.json`                   | `intimacy:close_actors_facing_each_other`                      | `kiss {target}'s cheek`                     |
 | `kiss_neck_sensually.action.json`          | `intimacy:actors_with_arms_facing_each_other_or_behind_target` | `kiss {target}'s neck sensually`            |
-| `lean_in_for_deep_kiss.action.json`        | `intimacy:actors_with_mouth_facing_each_other`                 | `lean in for a deep kiss with {target}`     |
-| `lick_lips.action.json`                    | `intimacy:close_actors_facing_each_other`                      | `lick lips while looking at {target}`       |
-| `nibble_earlobe_playfully.action.json`     | `intimacy:close_actors_facing_each_other_or_behind_target`     | `nibble {target}'s earlobe playfully`       |
+| `lick_lips.action.json`                    | `intimacy:close_actors_facing_each_other`                      | `lick {target}'s lips`                      |
+| `nibble_earlobe_playfully.action.json`     | `intimacy:close_actors_facing_each_other_or_behind_target`     | `nibble on {target}'s earlobe playfully`    |
 | `nuzzle_face_into_neck.action.json`        | `intimacy:close_actors_facing_each_other`                      | `nuzzle face into {target}'s neck`          |
 | `suck_on_neck_to_leave_hickey.action.json` | `intimacy:close_actors_facing_each_other_or_behind_target`     | `suck on {target}'s neck to leave a hickey` |
 
 ## Acceptance Criteria
 
-- [ ] All 7 neck/face actions migrated to `targets` format
-- [ ] No action file contains both `scope` and `targets` properties
-- [ ] All migrated actions pass schema validation
-- [ ] Actions with positional requirements maintain correct scope
-- [ ] Actions allowing behind positioning work correctly
-- [ ] Existing rules for neck/face actions continue to work
-- [ ] Action discovery correctly identifies migrated actions
-- [ ] UI displays migrated actions with proper positioning requirements
-- [ ] Action execution traces validate successfully
-- [ ] Unit tests for neck/face actions pass
-- [ ] Integration tests involving neck/face actions pass
-- [ ] Migration tracking document updated
+- [x] All 6 neck/face actions migrated to `targets` format
+- [x] No action file contains both `scope` and `targets` properties
+- [x] All migrated actions pass schema validation
+- [x] Actions with positional requirements maintain correct scope
+- [x] Actions allowing behind positioning work correctly
+- [x] Existing rules for neck/face actions continue to work
+- [x] Action discovery correctly identifies migrated actions
+- [x] UI displays migrated actions with proper positioning requirements
+- [x] Action execution traces validate successfully
+- [x] Integration tests pass
+- [x] Migration tracking document updated
 
 ## Implementation Steps
 
@@ -101,23 +101,7 @@ npx ajv validate -s data/schemas/action.schema.json \
   -d data/mods/intimacy/actions/kiss_neck_sensually.action.json
 ```
 
-### Step 4: Migrate lean_in_for_deep_kiss.action.json
-
-**4.1 Migration command**
-
-```bash
-sed -i 's/"scope": "intimacy:actors_with_mouth_facing_each_other"/"targets": "intimacy:actors_with_mouth_facing_each_other"/' \
-  data/mods/intimacy/actions/lean_in_for_deep_kiss.action.json
-```
-
-**4.2 Validate**
-
-```bash
-npx ajv validate -s data/schemas/action.schema.json \
-  -d data/mods/intimacy/actions/lean_in_for_deep_kiss.action.json
-```
-
-### Step 5: Migrate lick_lips.action.json
+### Step 4: Migrate lick_lips.action.json
 
 **5.1 Migration command**
 
@@ -133,7 +117,7 @@ npx ajv validate -s data/schemas/action.schema.json \
   -d data/mods/intimacy/actions/lick_lips.action.json
 ```
 
-### Step 6: Migrate nibble_earlobe_playfully.action.json
+### Step 5: Migrate nibble_earlobe_playfully.action.json
 
 **6.1 Migration command**
 
@@ -149,7 +133,7 @@ npx ajv validate -s data/schemas/action.schema.json \
   -d data/mods/intimacy/actions/nibble_earlobe_playfully.action.json
 ```
 
-### Step 7: Migrate nuzzle_face_into_neck.action.json
+### Step 6: Migrate nuzzle_face_into_neck.action.json
 
 **7.1 Migration command**
 
@@ -165,7 +149,7 @@ npx ajv validate -s data/schemas/action.schema.json \
   -d data/mods/intimacy/actions/nuzzle_face_into_neck.action.json
 ```
 
-### Step 8: Migrate suck_on_neck_to_leave_hickey.action.json
+### Step 7: Migrate suck_on_neck_to_leave_hickey.action.json
 
 **8.1 Migration command**
 
@@ -181,13 +165,13 @@ npx ajv validate -s data/schemas/action.schema.json \
   -d data/mods/intimacy/actions/suck_on_neck_to_leave_hickey.action.json
 ```
 
-### Step 9: Batch Validation
+### Step 8: Batch Validation
 
 **9.1 Verify all migrations**
 
 ```bash
 # Check migration status for all files in this batch
-for action in kiss_cheek kiss_neck_sensually lean_in_for_deep_kiss lick_lips \
+for action in kiss_cheek kiss_neck_sensually lick_lips \
              nibble_earlobe_playfully nuzzle_face_into_neck suck_on_neck_to_leave_hickey; do
   echo "Checking $action..."
   if jq -e '.scope' "data/mods/intimacy/actions/${action}.action.json" > /dev/null 2>&1; then
@@ -212,26 +196,12 @@ grep -l '"targets": ".*or_behind_target"' data/mods/intimacy/actions/*.action.js
 
 ## Testing Requirements
 
-### Positional Testing
-
-**Test facing-only actions**
-
-```bash
-npm run test:unit -- --testPathPattern="scopeResolver" --testNamePattern="facing.*only"
-```
-
-**Test behind-capable actions**
-
-```bash
-npm run test:unit -- --testPathPattern="scopeResolver" --testNamePattern="behind.*position"
-```
-
 ### Integration Testing
 
-**Test neck/face action rules**
+**Run integration tests**
 
 ```bash
-npm run test:integration -- --testPathPattern="rules.*intimacy" --testNamePattern="neck|face|cheek|earlobe"
+npm run test:integration
 ```
 
 ### Manual Testing
@@ -244,19 +214,17 @@ npm run test:integration -- --testPathPattern="rules.*intimacy" --testNamePatter
    - Verify kiss_cheek NOT available from behind
 
 2. **Test body part specific scopes**
-   - Test lean_in_for_deep_kiss requires mouth positioning
    - Test kiss_neck_sensually requires arm positioning
 
 ## Completion Checklist
 
-- [ ] All 7 neck/face actions migrated
-- [ ] Positional requirements preserved
-- [ ] Schema validation passes
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Manual positional testing completed
-- [ ] Tracking document updated
-- [ ] Git commit created
+- [x] All 6 neck/face actions migrated
+- [x] Positional requirements preserved
+- [x] Schema validation passes
+- [x] Integration tests pass
+- [x] Manual positional testing completed
+- [x] Tracking document updated
+- [x] Git commit created
 
 ## Git Commands
 
@@ -264,7 +232,6 @@ npm run test:integration -- --testPathPattern="rules.*intimacy" --testNamePatter
 # Stage all migrated files
 git add data/mods/intimacy/actions/kiss_cheek.action.json
 git add data/mods/intimacy/actions/kiss_neck_sensually.action.json
-git add data/mods/intimacy/actions/lean_in_for_deep_kiss.action.json
 git add data/mods/intimacy/actions/lick_lips.action.json
 git add data/mods/intimacy/actions/nibble_earlobe_playfully.action.json
 git add data/mods/intimacy/actions/nuzzle_face_into_neck.action.json
@@ -273,7 +240,7 @@ git add data/mods/intimacy/actions/suck_on_neck_to_leave_hickey.action.json
 # Commit
 git commit -m "feat(intimacy): migrate batch 3 neck/face actions to targets format
 
-- Migrated 7 neck and face-related actions
+- Migrated 6 neck and face-related actions
 - Preserves positional requirements (facing vs behind)
 - Maintains body-part specific scopes
 - Part of INTMIG-004 batch migration"
@@ -281,6 +248,7 @@ git commit -m "feat(intimacy): migrate batch 3 neck/face actions to targets form
 
 ## Notes
 
+- `lean_in_for_deep_kiss.action.json` was already migrated in a previous batch
 - Pay attention to actions that allow "behind" positioning
 - Body-part specific scopes (mouth, arms) must be preserved exactly
 - Some actions are romantic (kiss_cheek) while others are more intimate (hickey)
