@@ -3,7 +3,14 @@
  * Tests all functionality including initialization, event handlers, and error handling
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 // Create mock bootstrap
 const mockBootstrap = jest.fn();
@@ -33,7 +40,9 @@ jest.mock('../../src/characterBuilder/CharacterBuilderBootstrap.js', () => {
 // Mock CharacterConceptsManagerController
 jest.mock('../../src/domUI/characterConceptsManagerController.js', () => {
   return {
-    CharacterConceptsManagerController: jest.fn().mockImplementation(() => mockController),
+    CharacterConceptsManagerController: jest
+      .fn()
+      .mockImplementation(() => mockController),
   };
 });
 
@@ -74,14 +83,18 @@ describe('Character Concepts Manager Main', () => {
     });
 
     // Spy on addEventListener methods to capture handlers
-    jest.spyOn(document, 'addEventListener').mockImplementation((event, handler) => {
-      eventHandlers.document[event] = handler;
-    });
+    jest
+      .spyOn(document, 'addEventListener')
+      .mockImplementation((event, handler) => {
+        eventHandlers.document[event] = handler;
+      });
     jest.spyOn(document, 'removeEventListener').mockImplementation(() => {});
 
-    jest.spyOn(window, 'addEventListener').mockImplementation((event, handler) => {
-      eventHandlers.window[event] = handler;
-    });
+    jest
+      .spyOn(window, 'addEventListener')
+      .mockImplementation((event, handler) => {
+        eventHandlers.window[event] = handler;
+      });
     jest.spyOn(window, 'removeEventListener').mockImplementation(() => {});
 
     // Mock console
@@ -96,7 +109,7 @@ describe('Character Concepts Manager Main', () => {
     mockController.handleOnline?.mockClear();
     mockController.handleOffline?.mockClear();
     mockController.refreshOnVisible = false;
-    
+
     // Ensure optional methods exist as mocks
     if (!mockController.handleOnline) {
       mockController.handleOnline = jest.fn();
@@ -112,14 +125,14 @@ describe('Character Concepts Manager Main', () => {
   afterEach(() => {
     // Restore spies
     jest.restoreAllMocks();
-    
+
     // Restore document.hidden to original state
     delete document.hidden;
-    
+
     // Restore console
     console.log = originalConsole.log;
     console.error = originalConsole.error;
-    
+
     // Clear window property
     delete window.__characterConceptsManagerController;
   });
@@ -134,7 +147,7 @@ describe('Character Concepts Manager Main', () => {
   describe('Successful Initialization', () => {
     it('should initialize successfully with bootstrap time', async () => {
       const bootstrapTime = 123.45;
-      
+
       // Setup successful bootstrap
       mockBootstrap.mockImplementation(async (config) => {
         // Validate config structure
@@ -145,12 +158,12 @@ describe('Character Concepts Manager Main', () => {
           displayDuration: 5000,
           dismissible: true,
         });
-        
+
         // Execute postInit hook if present
         if (config.hooks && config.hooks.postInit) {
           await config.hooks.postInit(mockController);
         }
-        
+
         return { bootstrapTime };
       });
 
@@ -165,11 +178,26 @@ describe('Character Concepts Manager Main', () => {
       expect(window.__characterConceptsManagerController).toBe(mockController);
 
       // Verify event listeners were registered
-      expect(document.addEventListener).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
-      expect(window.addEventListener).toHaveBeenCalledWith('online', expect.any(Function));
-      expect(window.addEventListener).toHaveBeenCalledWith('offline', expect.any(Function));
-      expect(window.addEventListener).toHaveBeenCalledWith('error', expect.any(Function));
-      expect(window.addEventListener).toHaveBeenCalledWith('unhandledrejection', expect.any(Function));
+      expect(document.addEventListener).toHaveBeenCalledWith(
+        'visibilitychange',
+        expect.any(Function)
+      );
+      expect(window.addEventListener).toHaveBeenCalledWith(
+        'online',
+        expect.any(Function)
+      );
+      expect(window.addEventListener).toHaveBeenCalledWith(
+        'offline',
+        expect.any(Function)
+      );
+      expect(window.addEventListener).toHaveBeenCalledWith(
+        'error',
+        expect.any(Function)
+      );
+      expect(window.addEventListener).toHaveBeenCalledWith(
+        'unhandledrejection',
+        expect.any(Function)
+      );
     });
 
     it('should handle undefined bootstrap time', async () => {
@@ -234,14 +262,14 @@ describe('Character Concepts Manager Main', () => {
         }
         return { bootstrapTime: 100 };
       });
-      
+
       await module.initializeApp();
     });
 
     it('should handle page becoming hidden', () => {
       // Page becomes hidden
       document.hidden = true;
-      
+
       // Trigger visibility change event
       const handler = eventHandlers.document.visibilitychange;
       expect(handler).toBeDefined();
@@ -254,10 +282,10 @@ describe('Character Concepts Manager Main', () => {
       // First hide the page
       document.hidden = true;
       eventHandlers.document.visibilitychange();
-      
+
       // Clear previous calls
       mockController.logger.info.mockClear();
-      
+
       // Now make it visible without refresh
       document.hidden = false;
       mockController.refreshOnVisible = false;
@@ -271,10 +299,10 @@ describe('Character Concepts Manager Main', () => {
       // First hide the page
       document.hidden = true;
       eventHandlers.document.visibilitychange();
-      
+
       // Clear previous calls
       mockController.logger.info.mockClear();
-      
+
       // Now make it visible with refresh enabled
       document.hidden = false;
       mockController.refreshOnVisible = true;
@@ -294,7 +322,7 @@ describe('Character Concepts Manager Main', () => {
         }
         return { bootstrapTime: 100 };
       });
-      
+
       await module.initializeApp();
     });
 
@@ -303,7 +331,9 @@ describe('Character Concepts Manager Main', () => {
       expect(handler).toBeDefined();
       handler();
 
-      expect(mockController.logger.info).toHaveBeenCalledWith('Connection restored');
+      expect(mockController.logger.info).toHaveBeenCalledWith(
+        'Connection restored'
+      );
       expect(mockController.handleOnline).toHaveBeenCalled();
     });
 
@@ -312,7 +342,9 @@ describe('Character Concepts Manager Main', () => {
       expect(handler).toBeDefined();
       handler();
 
-      expect(mockController.logger.warn).toHaveBeenCalledWith('Connection lost');
+      expect(mockController.logger.warn).toHaveBeenCalledWith(
+        'Connection lost'
+      );
       expect(mockController.handleOffline).toHaveBeenCalled();
     });
 
@@ -325,8 +357,12 @@ describe('Character Concepts Manager Main', () => {
       expect(() => eventHandlers.window.online()).not.toThrow();
       expect(() => eventHandlers.window.offline()).not.toThrow();
 
-      expect(mockController.logger.info).toHaveBeenCalledWith('Connection restored');
-      expect(mockController.logger.warn).toHaveBeenCalledWith('Connection lost');
+      expect(mockController.logger.info).toHaveBeenCalledWith(
+        'Connection restored'
+      );
+      expect(mockController.logger.warn).toHaveBeenCalledWith(
+        'Connection lost'
+      );
     });
   });
 
@@ -339,7 +375,7 @@ describe('Character Concepts Manager Main', () => {
         }
         return { bootstrapTime: 100 };
       });
-      
+
       await module.initializeApp();
     });
 
@@ -357,13 +393,16 @@ describe('Character Concepts Manager Main', () => {
       expect(handler).toBeDefined();
       handler(errorEvent);
 
-      expect(mockController.logger.error).toHaveBeenCalledWith('Unhandled error', {
-        message: errorEvent.message,
-        filename: errorEvent.filename,
-        lineno: errorEvent.lineno,
-        colno: errorEvent.colno,
-        error: errorEvent.error,
-      });
+      expect(mockController.logger.error).toHaveBeenCalledWith(
+        'Unhandled error',
+        {
+          message: errorEvent.message,
+          filename: errorEvent.filename,
+          lineno: errorEvent.lineno,
+          colno: errorEvent.colno,
+          error: errorEvent.error,
+        }
+      );
 
       expect(errorEvent.preventDefault).toHaveBeenCalled();
     });
@@ -371,7 +410,7 @@ describe('Character Concepts Manager Main', () => {
     it('should handle unhandled promise rejections', () => {
       // Create a properly handled promise to avoid real unhandled rejection
       const handledPromise = Promise.reject('test').catch(() => {});
-      
+
       const rejectionEvent = {
         reason: 'Promise rejected',
         promise: handledPromise,
@@ -382,10 +421,13 @@ describe('Character Concepts Manager Main', () => {
       expect(handler).toBeDefined();
       handler(rejectionEvent);
 
-      expect(mockController.logger.error).toHaveBeenCalledWith('Unhandled promise rejection', {
-        reason: rejectionEvent.reason,
-        promise: rejectionEvent.promise,
-      });
+      expect(mockController.logger.error).toHaveBeenCalledWith(
+        'Unhandled promise rejection',
+        {
+          reason: rejectionEvent.reason,
+          promise: rejectionEvent.promise,
+        }
+      );
 
       expect(rejectionEvent.preventDefault).toHaveBeenCalled();
     });
@@ -401,11 +443,16 @@ describe('Character Concepts Manager Main', () => {
 
       // Mock controller to return minimal version
       jest.resetModules();
-      jest.doMock('../../src/domUI/characterConceptsManagerController.js', () => ({
-        CharacterConceptsManagerController: jest.fn(() => minimalController),
-      }));
+      jest.doMock(
+        '../../src/domUI/characterConceptsManagerController.js',
+        () => ({
+          CharacterConceptsManagerController: jest.fn(() => minimalController),
+        })
+      );
 
-      const freshModule = await import('../../src/character-concepts-manager-main.js');
+      const freshModule = await import(
+        '../../src/character-concepts-manager-main.js'
+      );
 
       mockBootstrap.mockImplementation(async (config) => {
         if (config.hooks && config.hooks.postInit) {

@@ -290,30 +290,5 @@ describe('Error Message Validation', () => {
 
       // All documented error behaviors are now validated by tests
     });
-
-    it('should validate performance error behavior matches documentation', () => {
-      // Test that large operations complete within documented timeframes
-      const start = Date.now();
-
-      // Simple scope should complete quickly (< 1ms target from docs)
-      const ast = parseDslExpression('actor');
-      const actorEntity = { id: 'test-actor' };
-      const mockRuntimeCtx = {
-        entityManager: {
-          getComponentData: jest.fn(() => ({})),
-          getEntityInstance: jest.fn(() => actorEntity),
-        },
-        logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
-      };
-
-      const engine = new ScopeEngine();
-      const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-
-      const duration = Date.now() - start;
-
-      // Should complete very quickly for simple scopes
-      expect(duration).toBeLessThan(10); // Give some leeway for test environment
-      expect(result).toEqual(new Set(['test-actor']));
-    });
   });
 });

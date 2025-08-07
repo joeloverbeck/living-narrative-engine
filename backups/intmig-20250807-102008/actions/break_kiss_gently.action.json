@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "intimacy:break_kiss_gently",
+  "name": "Break the kiss gently",
+  "description": "Slowly and gently end the kiss",
+  "scope": "intimacy:current_kissing_partner",
+  "required_components": {
+    "actor": ["intimacy:kissing"]
+  },
+  "prerequisites": [],
+  "template": "gently break the kiss with {target}"
+}

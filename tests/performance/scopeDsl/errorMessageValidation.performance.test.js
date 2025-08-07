@@ -1,0 +1,38 @@
+/**
+ * @file Performance benchmarks for error message validation
+ * @description Tests focused on measuring and validating scope DSL error handling performance
+ * including operation completion times for simple scopes
+ */
+
+import { describe, it, expect } from '@jest/globals';
+import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
+import ScopeEngine from '../../../src/scopeDsl/engine.js';
+
+describe('Error Message Validation Performance', () => {
+  describe('Documentation Performance Validation', () => {
+    it('should validate performance error behavior matches documentation', () => {
+      // Test that large operations complete within documented timeframes
+      const start = Date.now();
+
+      // Simple scope should complete quickly (< 1ms target from docs)
+      const ast = parseDslExpression('actor');
+      const actorEntity = { id: 'test-actor' };
+      const mockRuntimeCtx = {
+        entityManager: {
+          getComponentData: jest.fn(() => ({})),
+          getEntityInstance: jest.fn(() => actorEntity),
+        },
+        logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
+      };
+
+      const engine = new ScopeEngine();
+      const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+
+      const duration = Date.now() - start;
+
+      // Should complete very quickly for simple scopes
+      expect(duration).toBeLessThan(10); // Give some leeway for test environment
+      expect(result).toEqual(new Set(['test-actor']));
+    });
+  });
+});

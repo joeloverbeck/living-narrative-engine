@@ -1,10 +1,10 @@
 {
   "$schema": "../data/schemas/trace-config.schema.json",
-  "traceAnalysisEnabled": false,
+  "traceAnalysisEnabled": true,
   "actionTracing": {
-    "enabled": false,
-    "tracedActions": [],
-    "outputDirectory": "./traces/actions",
+    "enabled": true,
+    "tracedActions": ["intimacy:*"],
+    "outputDirectory": "./traces/intmig-migration",
     "verbosity": "standard",
     "includeComponentData": true,
     "includePrerequisites": true,
