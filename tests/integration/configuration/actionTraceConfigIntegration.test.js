@@ -45,6 +45,8 @@ describe('Action Trace Config Integration', () => {
     // Create a simple mock validator for integration tests
     validator = {
       validate: jest.fn().mockResolvedValue({ isValid: true }),
+      addSchema: jest.fn(),
+      removeSchema: jest.fn(),
     };
 
     // Set up fetchWithRetry mock to read from filesystem
@@ -677,7 +679,6 @@ describe('Action Trace Config Integration', () => {
       });
 
       // Spy on the fetchWithRetry to track calls
-      const originalFetchWithRetry = fetchWithRetry.mockImplementation;
       fetchWithRetry.mockClear();
       fetchWithRetry.mockImplementation(async (filePath) => {
         try {

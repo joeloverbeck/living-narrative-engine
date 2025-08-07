@@ -9,7 +9,6 @@
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
 /** @typedef {import('../types/perceptionLogTypes.js').RawPerceptionLogEntry} RawPerceptionLogEntry */
-/** @typedef {import('../interfaces/IActionCategorizationService.js').IActionCategorizationService} IActionCategorizationService */
 
 import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
 import { ensureTerminalPunctuation } from '../utils/textUtils.js';
@@ -50,7 +49,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   #gameStateValidationService;
   /** @type {CharacterDataFormatter} */
   #characterDataFormatter;
-  /** @type {IActionCategorizationService} */
+  /** @type {*} */
   #actionCategorizationService;
 
   /**
@@ -59,7 +58,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @param {IPromptStaticContentService} dependencies.promptStaticContentService - Service for static prompt content.
    * @param {IPerceptionLogFormatter} dependencies.perceptionLogFormatter - Service to format perception logs.
    * @param {IGameStateValidationServiceForPrompting} dependencies.gameStateValidationService - Service to validate game state for prompting.
-   * @param {IActionCategorizationService} dependencies.actionCategorizationService - Service for action categorization.
+   * @param {*} dependencies.actionCategorizationService - Service for action categorization.
    * @returns {void}
    */
   constructor({

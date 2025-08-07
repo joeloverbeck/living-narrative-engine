@@ -5,6 +5,7 @@
 
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { ConfigurationError } from '../errors/configurationError.js';
+import ActionTraceConfigValidator from './actionTraceConfigValidator.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -32,6 +33,7 @@ class ActionTraceConfigLoader {
   #traceConfigLoader;
   #logger;
   #validator;
+  #configValidator;
   #cachedConfig;
   // Performance optimization fields
   #tracedActionsSet = new Set(); // O(1) exact match lookups
@@ -74,6 +76,12 @@ class ActionTraceConfigLoader {
       timestamp: null,
       ttl: cacheTtl,
     };
+
+    // Initialize enhanced config validator
+    this.#configValidator = new ActionTraceConfigValidator({
+      schemaValidator: validator,
+      logger: this.#logger,
+    });
   }
 
   /**
@@ -102,7 +110,7 @@ class ActionTraceConfigLoader {
       }
 
       // Extract action tracing section
-      const actionTracingConfig =
+      let actionTracingConfig =
         fullConfig.actionTracing || this.#getDefaultConfig();
 
       // If using defaults due to missing section, build lookup structures immediately
@@ -110,13 +118,46 @@ class ActionTraceConfigLoader {
         this.#buildLookupStructures(actionTracingConfig);
       }
 
-      // Validate configuration against schema
-      const validationResult = await this.#validator.validate(
-        'action-trace-config',
-        { actionTracing: actionTracingConfig }
-      );
+      // First, try enhanced validation if the validator is initialized
+      let validationResult;
+      try {
+        // Initialize the enhanced validator
+        await this.#configValidator.initialize();
 
-      if (!validationResult.isValid) {
+        // Use enhanced validator for comprehensive validation
+        validationResult = await this.#configValidator.validateConfiguration({
+          actionTracing: actionTracingConfig,
+        });
+
+        // Log warnings even if validation passed
+        validationResult.warnings.forEach((warning) => {
+          this.#logger.warn(`Configuration warning: ${warning}`);
+        });
+
+        // Use normalized configuration if available
+        if (validationResult.normalizedConfig) {
+          actionTracingConfig = validationResult.normalizedConfig.actionTracing;
+        }
+      } catch (validatorError) {
+        this.#logger.warn(
+          'Enhanced validator failed, falling back to basic validation',
+          validatorError
+        );
+
+        // Fall back to basic schema validation
+        validationResult = await this.#validator.validate(
+          'action-trace-config',
+          { actionTracing: actionTracingConfig }
+        );
+      }
+
+      // Handle both validation result formats (isValid or valid)
+      const isValid =
+        validationResult.isValid !== undefined
+          ? validationResult.isValid
+          : validationResult.valid;
+
+      if (!isValid) {
         this.#logger.error(
           'Invalid action tracing configuration, using defaults',
           { errors: validationResult.errors }
@@ -456,7 +497,7 @@ class ActionTraceConfigLoader {
           prefix,
           pattern: pattern,
           regex: new RegExp(
-            `^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[a-z_]+$`
+            `^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.+$`
           ),
         });
       } else if (pattern.includes('*')) {
@@ -486,10 +527,11 @@ class ActionTraceConfigLoader {
    * @returns {RegExp} Compiled regex
    */
   #compileWildcardPattern(pattern) {
-    // Escape regex special chars, then replace * with .*
+    // Escape regex special chars except *, then replace * with .*
     const regexPattern = pattern
-      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
-      .replace(/\*/g, '.*');
+      .split('*')
+      .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+      .join('.*');
 
     return new RegExp(`^${regexPattern}$`);
   }
@@ -515,15 +557,61 @@ class ActionTraceConfigLoader {
       result.errors.push('Multiple consecutive asterisks are redundant');
     }
 
+    // Check for invalid characters - be lenient with uppercase
+    const lenientAllowedPattern = /^[a-zA-Z0-9_:*]+$/;
+    if (!lenientAllowedPattern.test(pattern)) {
+      result.valid = false;
+      result.errors.push(
+        `Pattern contains invalid characters - only alphanumeric, underscore, colon, and asterisk allowed`
+      );
+      return result;
+    }
+    
+    // Warn about uppercase but don't fail
+    const strictAllowedPattern = /^[a-z0-9_:*]+$/;
+    if (!strictAllowedPattern.test(pattern)) {
+      result.errors.push('Pattern contains uppercase characters - should be lowercase');
+      // Don't set valid = false, just warn
+    }
+
     // Validate mod name format if pattern contains colon
     if (pattern.includes(':')) {
-      const modPart = pattern.split(':')[0];
-      // Allow wildcards in mod names for general patterns, otherwise enforce strict format
-      if (modPart !== '*' && !/^[a-z][a-z0-9_]*$/.test(modPart)) {
+      const parts = pattern.split(':');
+      if (parts.length !== 2) {
+        result.valid = false;
+        result.errors.push('Pattern can only contain one colon');
+        return result;
+      }
+      
+      const [modPart, actionPart] = parts;
+      
+      // Mod part must be either '*' or valid mod name (no wildcards in mod name except full wildcard)
+      if (modPart !== '*' && modPart.includes('*')) {
         result.valid = false;
         result.errors.push(
-          `Invalid mod name '${modPart}' - must be lowercase alphanumeric with underscores, or '*' for wildcard`
+          `Invalid mod name '${modPart}' - mod name cannot contain partial wildcards`
         );
+        return result;
+      }
+      
+      if (modPart !== '*' && !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(modPart)) {
+        result.valid = false;
+        result.errors.push(
+          `Invalid mod name '${modPart}' - must be alphanumeric with underscores, or '*' for wildcard`
+        );
+        return result;
+      }
+      
+      // Warn about uppercase in mod name but don't fail
+      if (modPart !== '*' && !/^[a-z][a-z0-9_]*$/.test(modPart)) {
+        result.errors.push(`Mod name '${modPart}' should be lowercase`);
+        // Don't set valid = false, just warn
+      }
+      
+      if (actionPart.length === 0) {
+        result.valid = false;
+        result.errors.push('Action part after colon cannot be empty');
+        return result;
       }
     }
 
