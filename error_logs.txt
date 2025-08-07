@@ -1,30 +1,111 @@
-joeloverbeck@WX32030INFOR033:~/projects/living-narrative-engine$ npm run build
-
-> living-narrative-engine@0.0.1 prebuild
-> npm run build:clean
-
-
-> living-narrative-engine@0.0.1 build:clean
-> rimraf dist
-
-
-> living-narrative-engine@0.0.1 build
-> node scripts/build.js
-
-/home/joeloverbeck/projects/living-narrative-engine/scripts/build.js:106
-    console.error(chalk.red('\n💥 Build system error:'));
-                        ^
-
-TypeError: chalk.red is not a function
-    at main (/home/joeloverbeck/projects/living-narrative-engine/scripts/build.js:106:25)
-    at Object.<anonymous> (/home/joeloverbeck/projects/living-narrative-engine/scripts/build.js:205:3)
-    at Module._compile (node:internal/modules/cjs/loader:1692:14)
-    at Object..js (node:internal/modules/cjs/loader:1824:10)
-    at Module.load (node:internal/modules/cjs/loader:1427:32)
-    at Module._load (node:internal/modules/cjs/loader:1250:12)
-    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
-    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
-    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:152:5)
-    at node:internal/main/run_main_module:33:47
-
-Node.js v24.3.0
+ThematicDirectionsManagerApp: Starting initialization
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+consoleLogger.js:151 Loaders Registration: All core services, loaders, and phases registered.
+consoleLogger.js:151 [CharacterBuilderBootstrap] Loading 2 schemas
+consoleLogger.js:151 [CharacterBuilderBootstrap] Loading core mod...
+consoleLogger.js:151 — SchemaPhase starting —
+consoleLogger.js:151 SchemaLoader: Loaded 68 schemas: http://json-schema.org/draft-07/schema, llmTurnActionResponseSchema/v4, schema://living-narrative-engine/thematic-direction.schema.json, schema://living-narrative-engine/character-concept.schema.json, character-concept, core:direction_updated#payload, core:direction_deleted#payload, core:orphans_cleaned#payload, schema://living-narrative-engine/common.schema.json, schema://living-narrative-engine/json-logic.schema.json, schema://living-narrative-engine/condition-container.schema.json, schema://living-narrative-engine/action.schema.json, schema://living-narrative-engine/action-result.schema.json, schema://living-narrative-engine/component.schema.json, schema://living-narrative-engine/condition.schema.json, schema://living-narrative-engine/entity-definition.schema.json, schema://living-narrative-engine/entity-instance.schema.json, schema://living-narrative-engine/event.schema.json, schema://living-narrative-engine/game.schema.json, schema://living-narrative-engine/goal.schema.json, schema://living-narrative-engine/mod-manifest.schema.json, schema://living-narrative-engine/operation.schema.json, schema://living-narrative-engine/rule.schema.json, schema://living-narrative-engine/llm-configs.schema.json, schema://living-narrative-engine/prompt-text.schema.json, schema://living-narrative-engine/macro.schema.json, schema://living-narrative-engine/ui-icons.schema.json, schema://living-narrative-engine/ui-labels.schema.json, schema://living-narrative-engine/world.schema.json, schema://living-narrative-engine/anatomy.recipe.schema.json, schema://living-narrative-engine/anatomy.blueprint.schema.json, schema://living-narrative-engine/anatomy.blueprint-part.schema.json, schema://living-narrative-engine/anatomy.slot-library.schema.json, schema://living-narrative-engine/anatomy-formatting.schema.json, schema://living-narrative-engine/target-context.schema.json, schema://living-narrative-engine/base-operation.schema.json, schema://living-narrative-engine/operations/addComponent.schema.json, schema://living-narrative-engine/operations/addPerceptionLogEntry.schema.json, schema://living-narrative-engine/operations/autoMoveFollowers.schema.json, schema://living-narrative-engine/operations/breakFollowRelation.schema.json, schema://living-narrative-engine/operations/checkFollowCycle.schema.json, schema://living-narrative-engine/operations/dispatchEvent.schema.json, schema://living-narrative-engine/operations/dispatchPerceptibleEvent.schema.json, schema://living-narrative-engine/operations/dispatchSpeech.schema.json, schema://living-narrative-engine/operations/endTurn.schema.json, schema://living-narrative-engine/operations/establishFollowRelation.schema.json, schema://living-narrative-engine/operations/forEach.schema.json, schema://living-narrative-engine/operations/getName.schema.json, schema://living-narrative-engine/operations/getTimestamp.schema.json, schema://living-narrative-engine/operations/hasComponent.schema.json, schema://living-narrative-engine/operations/if.schema.json, schema://living-narrative-engine/operations/ifCoLocated.schema.json, schema://living-narrative-engine/operations/log.schema.json, schema://living-narrative-engine/operations/math.schema.json, schema://living-narrative-engine/operations/mergeClosenessCircle.schema.json, schema://living-narrative-engine/operations/modifyArrayField.schema.json, schema://living-narrative-engine/operations/modifyComponent.schema.json, schema://living-narrative-engine/operations/modifyContextArray.schema.json, schema://living-narrative-engine/operations/queryComponent.schema.json, schema://living-narrative-engine/operations/queryComponents.schema.json, schema://living-narrative-engine/operations/queryEntities.schema.json, schema://living-narrative-engine/operations/rebuildLeaderListCache.schema.json, schema://living-narrative-engine/operations/removeComponent.schema.json, schema://living-narrative-engine/operations/removeFromClosenessCircle.schema.json, schema://living-narrative-engine/operations/resolveDirection.schema.json, schema://living-narrative-engine/operations/setVariable.schema.json, schema://living-narrative-engine/operations/systemMoveEntity.schema.json, schema://living-narrative-engine/operations/unequipClothing.schema.json
+consoleLogger.js:151 — GameConfigPhase starting —
+consoleLogger.js:151 — ManifestPhase starting —
+consoleLogger.js:151 — ContentPhase starting —
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'core'.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'core'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'core'.
+consoleLogger.js:151 MacroLoader: Loading macros definitions for mod 'core'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'core'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'core'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'core'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'positioning'.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'positioning'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'positioning'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'positioning'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'positioning'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'positioning'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'descriptors'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'anatomy'.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'anatomy'.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomySlotLibraryLoader: Loading anatomySlotLibraries definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyBlueprintPartLoader: Loading anatomyBlueprintParts definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyBlueprintLoader: Loading anatomyBlueprints definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyFormattingLoader: Loading anatomyFormatting definitions for mod 'anatomy'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'clothing'.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'clothing'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'clothing'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'clothing'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'clothing'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'clothing'.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'clothing'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'violence'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'violence'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'violence'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'intimacy'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'intimacy'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'intimacy'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'intimacy'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'intimacy'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'sex'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'sex'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'sex'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'sex'.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'p_erotica'.
+consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'p_erotica'.
+consoleLogger.js:151 EntityInstanceLoader: Loading entityInstances definitions for mod 'p_erotica'.
+consoleLogger.js:151 — WorldPhase starting —
+consoleLogger.js:151 --- Starting World File Loading Phase ---
+consoleLogger.js:151 --- World File Loading Phase Complete ---
+consoleLogger.js:151 WorldLoader: Successfully processed and registered 1 worlds, containing 5 entity instances. All 5 definition references were resolved.
+consoleLogger.js:151 — SummaryPhase starting —
+consoleLogger.js:151 — ModsLoader Load Summary (World: 'default') —
+consoleLogger.js:151   • Requested Mods (raw): [core, positioning, anatomy, clothing, violence, p_erotica]
+consoleLogger.js:151   • Final Load Order     : [core, positioning, descriptors, anatomy, clothing, violence, intimacy, sex, p_erotica]
+consoleLogger.js:151   • Content Loading Summary (Totals):
+consoleLogger.js:151      - actions             : 42 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyBlueprintParts: 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyBlueprints   : 2 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyFormatting   : 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyRecipes      : 6 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomySlotLibraries: 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - components          : 55 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - conditions          : 59 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - entityDefinitions   : 70 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - entityInstances     : 5 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - events              : 60 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - macros              : 4 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - rules               : 48 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - scopes              : 29 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - worlds              : 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - ----------------------------------------------
+consoleLogger.js:151      - TOTAL               : C:384, O:0, E:0
+consoleLogger.js:151 ———————————————————————————————————————————
+consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
+consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
+consoleLogger.js:151 [CharacterBuilderBootstrap] Core mod loaded successfully
+consoleLogger.js:163 ThematicDirectionsManagerController: Optional service 'uiStateManager' is null/undefined
+warn @ consoleLogger.js:163
+validateAdditionalServices_fn @ BaseCharacterBuilderController.js:306
+BaseCharacterBuilderController @ BaseCharacterBuilderController.js:165
+ThematicDirectionsManagerController @ thematicDirectionsManagerController.js:82
+createController_fn @ CharacterBuilderBootstrap.js:580
+bootstrap @ CharacterBuilderBootstrap.js:105
+await in bootstrap
+initialize @ thematicDirectionsManagerMain.js:115
+initialize @ thematicDirectionsManagerMain.js:238Understand this warning
+consoleLogger.js:151 ThematicDirectionsManagerController: Successfully created with dependencies {coreServices: Array(4), additionalServices: Array(0)}
+consoleLogger.js:151 ThematicDirectionsManagerController: Starting initialization
+consoleLogger.js:151 ThematicDirectionsManagerController: Cached 23/23 elements (0 optional, 0 failed) in 0.40ms
+consoleLogger.js:151 CharacterDatabase: Successfully opened database
+consoleLogger.js:151 CharacterStorageService: Successfully initialized
+2consoleLogger.js:151 CharacterBuilderService: Successfully initialized
+consoleLogger.js:151 ThematicDirectionsManagerController: Loaded directions data {directionCount: 20, conceptsWithDirections: 4}
+consoleLogger.js:151 ThematicDirectionsManagerController: Successfully initialized
+consoleLogger.js:151 ThematicDirectionsManagerController: Initialization completed in 6.20ms
+consoleLogger.js:151 [CharacterBuilderBootstrap] Page 'Thematic Directions Manager' bootstrapped in 871.50ms {metrics: {…}}
+consoleLogger.js:163 ThematicDirectionsManagerController: Already initialized, skipping re-initialization
+warn @ consoleLogger.js:163
+initialize @ BaseCharacterBuilderController.js:1762
+initialize @ thematicDirectionsManagerMain.js:118
+await in initialize
+initialize @ thematicDirectionsManagerMain.js:238Understand this warning
+thematicDirectionsManagerMain.js:121 ThematicDirectionsManagerApp: Successfully initialized

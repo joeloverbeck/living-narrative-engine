@@ -63,6 +63,7 @@
     },
     "events": [
       "action_decided.event.json",
+      "analytics_track.event.json",
       "attempt_action.event.json",
       "character_builder_error_occurred.event.json",
       "character_concept_created.event.json",

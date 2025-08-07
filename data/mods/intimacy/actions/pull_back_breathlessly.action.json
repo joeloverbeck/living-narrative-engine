@@ -3,7 +3,7 @@
   "id": "intimacy:pull_back_breathlessly",
   "name": "Pull back breathlessly",
   "description": "End the kiss by pulling back, breathing heavily",
-  "scope": "intimacy:current_kissing_partner",
+  "targets": "intimacy:current_kissing_partner",
   "required_components": {
     "actor": ["intimacy:kissing"]
   },

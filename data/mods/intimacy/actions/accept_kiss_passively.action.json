@@ -3,7 +3,7 @@
   "id": "intimacy:accept_kiss_passively",
   "name": "Accept kiss passively",
   "description": "Let them lead the kiss, not actively participating",
-  "scope": "intimacy:current_kissing_partner",
+  "targets": "intimacy:current_kissing_partner",
   "required_components": {
     "actor": ["intimacy:kissing"]
   },

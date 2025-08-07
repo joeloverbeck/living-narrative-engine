@@ -3,7 +3,7 @@
   "id": "intimacy:suck_on_tongue",
   "name": "Suck on tongue",
   "description": "Intensify the kiss by sucking on your partner's tongue",
-  "scope": "intimacy:current_kissing_partner",
+  "targets": "intimacy:current_kissing_partner",
   "required_components": {
     "actor": ["intimacy:kissing"]
   },

@@ -1,0 +1,59 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "ANALYTICS_TRACK",
+  "description": "Event for tracking user analytics and interactions within the application. Used to collect data on user behavior patterns, dropdown interactions, and other UI engagement metrics.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "event": {
+        "description": "The name/type of the analytics event being tracked",
+        "type": "string",
+        "minLength": 1
+      },
+      "properties": {
+        "description": "Contextual properties and metadata for the analytics event",
+        "type": "object",
+        "properties": {
+          "action": {
+            "description": "The specific action performed by the user",
+            "type": "string"
+          },
+          "value": {
+            "description": "The value associated with the action (can be any type)",
+            "oneOf": [
+              {"type": "string"},
+              {"type": "number"},
+              {"type": "boolean"},
+              {"type": "null"},
+              {"type": "object"},
+              {"type": "array"}
+            ]
+          },
+          "timestamp": {
+            "description": "Unix timestamp when the event occurred",
+            "type": "number",
+            "minimum": 0
+          },
+          "sessionId": {
+            "description": "Unique identifier for the user session",
+            "type": "string"
+          },
+          "filter": {
+            "description": "Current filter state in the UI",
+            "type": "string"
+          },
+          "conceptId": {
+            "description": "ID of the currently selected concept",
+            "oneOf": [
+              {"type": "string"},
+              {"type": "null"}
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "required": ["event", "properties"],
+    "additionalProperties": false
+  }
+}

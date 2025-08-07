@@ -3,7 +3,7 @@
   "id": "intimacy:explore_mouth_with_tongue",
   "name": "Explore mouth with tongue",
   "description": "Deepen the kiss by exploring their mouth with your tongue",
-  "scope": "intimacy:current_kissing_partner",
+  "targets": "intimacy:current_kissing_partner",
   "required_components": {
     "actor": ["intimacy:kissing"]
   },

@@ -3,7 +3,7 @@
   "id": "intimacy:kiss_back_passionately",
   "name": "Kiss back passionately",
   "description": "Return the kiss with equal or greater passion",
-  "scope": "intimacy:current_kissing_partner",
+  "targets": "intimacy:current_kissing_partner",
   "required_components": {
     "actor": ["intimacy:kissing"]
   },
