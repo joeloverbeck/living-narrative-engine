@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
-  "id": "ANALYTICS_TRACK",
+  "id": "core:analytics_track",
   "description": "Event for tracking user analytics and interactions within the application. Used to collect data on user behavior patterns, dropdown interactions, and other UI engagement metrics.",
   "payloadSchema": {
     "type": "object",
@@ -21,12 +21,12 @@
           "value": {
             "description": "The value associated with the action (can be any type)",
             "oneOf": [
-              {"type": "string"},
-              {"type": "number"},
-              {"type": "boolean"},
-              {"type": "null"},
-              {"type": "object"},
-              {"type": "array"}
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "boolean" },
+              { "type": "null" },
+              { "type": "object" },
+              { "type": "array" }
             ]
           },
           "timestamp": {
@@ -44,10 +44,7 @@
           },
           "conceptId": {
             "description": "ID of the currently selected concept",
-            "oneOf": [
-              {"type": "string"},
-              {"type": "null"}
-            ]
+            "oneOf": [{ "type": "string" }, { "type": "null" }]
           }
         },
         "additionalProperties": true

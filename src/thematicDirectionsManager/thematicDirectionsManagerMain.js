@@ -50,7 +50,10 @@ class ThematicDirectionsManagerApp {
                   description: 'Updated direction ID',
                 },
                 field: { type: 'string', description: 'Updated field name' },
-                oldValue: { type: 'string', description: 'Previous field value' },
+                oldValue: {
+                  type: 'string',
+                  description: 'Previous field value',
+                },
                 newValue: { type: 'string', description: 'New field value' },
               },
             },
@@ -83,66 +86,6 @@ class ThematicDirectionsManagerApp {
               },
             },
           },
-          // Add fallback definitions for core events in case mod loading fails
-          {
-            id: 'core:ui_state_changed',
-            description: 'Signals when a UI controller changes its display state.',
-            payloadSchema: {
-              type: 'object',
-              properties: {
-                controller: {
-                  description: 'The name of the controller that changed state',
-                  type: 'string',
-                  minLength: 1,
-                },
-                previousState: {
-                  description: 'The previous state (null for initial state change)',
-                  oneOf: [
-                    {
-                      type: 'string',
-                      enum: ['empty', 'loading', 'results', 'error'],
-                    },
-                    {
-                      type: 'null',
-                    },
-                  ],
-                },
-                currentState: {
-                  description: 'The new current state',
-                  type: 'string',
-                  enum: ['empty', 'loading', 'results', 'error'],
-                },
-                timestamp: {
-                  description: 'ISO 8601 timestamp of when the state change occurred',
-                  type: 'string',
-                  pattern: '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$',
-                },
-              },
-              required: ['controller', 'currentState', 'timestamp'],
-              additionalProperties: false,
-            },
-          },
-          {
-            id: 'core:controller_initialized',
-            description: 'Signals when a character builder controller has completed its initialization process.',
-            payloadSchema: {
-              type: 'object',
-              properties: {
-                controllerName: {
-                  description: 'The name of the controller that completed initialization',
-                  type: 'string',
-                  minLength: 1,
-                },
-                initializationTime: {
-                  description: 'Time taken to initialize the controller in milliseconds',
-                  type: 'number',
-                  minimum: 0,
-                },
-              },
-              required: ['controllerName', 'initializationTime'],
-              additionalProperties: false,
-            },
-          },
         ],
         hooks: {
           preContainer: async (container) => {
@@ -151,36 +94,15 @@ class ThematicDirectionsManagerApp {
             registrar.singletonFactory(
               tokens.ThematicDirectionsManagerController,
               (c) => {
-                // Create a proper UIStateManager with the required DOM elements
-                const stateElements = {
-                  emptyState: document.getElementById('empty-state'),
-                  loadingState: document.getElementById('loading-state'),
-                  errorState: document.getElementById('error-state'),
-                  resultsState: document.getElementById('results-state'),
-                };
-
-                // Only create UIStateManager if all required elements are present
-                let uiStateManager = null;
-                const hasAllElements = Object.values(stateElements).every(element => element !== null);
-                
-                if (hasAllElements) {
-                  try {
-                    uiStateManager = new UIStateManager(stateElements);
-                  } catch (error) {
-                    // If UIStateManager creation fails, use null and let the controller handle it
-                    console.warn('Failed to create UIStateManager, controller will use fallback:', error.message);
-                    uiStateManager = null;
-                  }
-                } else {
-                  console.warn('Required UI state elements not found, UIStateManager will be null');
-                }
-
+                // The BaseCharacterBuilderController will automatically initialize UIStateManager
+                // from the DOM elements it finds, so we don't need to create it here
                 return new ThematicDirectionsManagerController({
                   logger: c.resolve(tokens.ILogger),
-                  characterBuilderService: c.resolve(tokens.CharacterBuilderService),
+                  characterBuilderService: c.resolve(
+                    tokens.CharacterBuilderService
+                  ),
                   eventBus: c.resolve(tokens.ISafeEventDispatcher),
                   schemaValidator: c.resolve(tokens.ISchemaValidator),
-                  uiStateManager: uiStateManager,
                 });
               }
             );
@@ -194,12 +116,14 @@ class ThematicDirectionsManagerApp {
       this.#initialized = true;
       console.log('ThematicDirectionsManagerApp: Successfully initialized');
     } catch (error) {
-      console.error('ThematicDirectionsManagerApp: Failed to initialize', error);
+      console.error(
+        'ThematicDirectionsManagerApp: Failed to initialize',
+        error
+      );
       this.#showInitializationError(error);
       throw error;
     }
   }
-
 
   #showInitializationError(error) {
     const errorHtml = `

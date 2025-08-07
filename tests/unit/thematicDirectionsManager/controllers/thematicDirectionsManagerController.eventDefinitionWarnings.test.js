@@ -16,7 +16,9 @@ import { configureBaseContainer } from '../../../../src/dependencyInjection/base
 import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { MockModsLoader } from '../../../common/mocks/MockModsLoader.js';
-import ConsoleLogger, { LogLevel } from '../../../../src/logging/consoleLogger.js';
+import ConsoleLogger, {
+  LogLevel,
+} from '../../../../src/logging/consoleLogger.js';
 
 describe('ThematicDirectionsManagerController - EventDefinition Warnings Validation', () => {
   let loggerWarnSpy;
@@ -79,10 +81,10 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
     // Setup proper DI container with full mod loading support
     container = new AppContainer();
     logger = new ConsoleLogger(LogLevel.DEBUG);
-    
+
     // Register logger first
     container.register(tokens.ILogger, () => logger);
-    
+
     // Configure base container with character builder support
     await configureBaseContainer(container, {
       includeCharacterBuilder: true,
@@ -111,13 +113,17 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
   describe('Event Definition Loading Tests', () => {
     it('should load all problematic event definitions with mod loading enabled', async () => {
       // Register MockModsLoader to simulate mod loading
-      container.register(tokens.ModsLoader, (c) => new MockModsLoader({
-        logger: c.resolve(tokens.ILogger),
-        cache: null,
-        session: null,
-        registry: c.resolve(tokens.IDataRegistry),
-      }));
-      
+      container.register(
+        tokens.ModsLoader,
+        (c) =>
+          new MockModsLoader({
+            logger: c.resolve(tokens.ILogger),
+            cache: null,
+            session: null,
+            registry: c.resolve(tokens.IDataRegistry),
+          })
+      );
+
       // Load mods using the MockModsLoader
       const modsLoader = container.resolve(tokens.ModsLoader);
       await modsLoader.loadMods('test', ['core']);
@@ -129,17 +135,17 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
       // Check that the problematic event definitions are now loaded
       // Note: MockModsLoader registers these with different IDs than production
       const problematicEventIds = [
-        'UI_STATE_CHANGED',      // MockModsLoader uses this ID
+        'UI_STATE_CHANGED', // MockModsLoader uses this ID
         'CONTROLLER_INITIALIZED', // MockModsLoader uses this ID
-        'ANALYTICS_TRACK',        // This ID should be loaded from real mod
+        'ANALYTICS_TRACK', // This ID should be loaded from real mod
       ];
 
       // Only test the first two events that MockModsLoader registers
       const mockEvents = ['UI_STATE_CHANGED', 'CONTROLLER_INITIALIZED'];
-      
+
       for (const id of mockEvents) {
         const eventDefinition = dataRegistry.getEventDefinition(id);
-        
+
         expect(eventDefinition).toBeDefined();
         expect(eventDefinition).not.toBeNull();
         expect(eventDefinition.id).toBe(id);
@@ -181,96 +187,120 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
       await controller.initialize();
       expect(controller).toBeDefined();
 
-      console.log('✅ SUCCESS: All event definitions loaded properly - no warnings!');
+      console.log(
+        '✅ SUCCESS: All event definitions loaded properly - no warnings!'
+      );
     });
-    
+
     it('should demonstrate warnings occur without mod loading (legacy issue)', async () => {
       // Without registering MockModsLoader, no events should be loaded
       const dataRegistry = container.resolve(tokens.IDataRegistry);
 
       // These should be null or undefined (not loaded because mods weren't loaded)
-      const uiStateChangedEvent = dataRegistry.getEventDefinition('core:ui_state_changed');
-      const controllerInitializedEvent = dataRegistry.getEventDefinition('core:controller_initialized');
-      const analyticsTrackEvent = dataRegistry.getEventDefinition('ANALYTICS_TRACK');
+      const uiStateChangedEvent = dataRegistry.getEventDefinition(
+        'core:ui_state_changed'
+      );
+      const controllerInitializedEvent = dataRegistry.getEventDefinition(
+        'core:controller_initialized'
+      );
+      const analyticsTrackEvent =
+        dataRegistry.getEventDefinition('ANALYTICS_TRACK');
 
       expect(uiStateChangedEvent).toBeFalsy();
       expect(controllerInitializedEvent).toBeFalsy();
       expect(analyticsTrackEvent).toBeFalsy();
 
-      console.log('✓ Demonstrated that event definitions are NOT loaded without mod loading');
+      console.log(
+        '✓ Demonstrated that event definitions are NOT loaded without mod loading'
+      );
     });
-    
+
     it('should verify that analytics_track.event.json is now properly defined', async () => {
       // Register MockModsLoader and load mods
-      container.register(tokens.ModsLoader, (c) => new MockModsLoader({
-        logger: c.resolve(tokens.ILogger),
-        cache: null,
-        session: null,
-        registry: c.resolve(tokens.IDataRegistry),
-      }));
+      container.register(
+        tokens.ModsLoader,
+        (c) =>
+          new MockModsLoader({
+            logger: c.resolve(tokens.ILogger),
+            cache: null,
+            session: null,
+            registry: c.resolve(tokens.IDataRegistry),
+          })
+      );
       const modsLoader = container.resolve(tokens.ModsLoader);
       await modsLoader.loadMods('test', ['core']);
-      
+
       const dataRegistry = container.resolve(tokens.IDataRegistry);
-      
+
       // Specifically test the ANALYTICS_TRACK event which is dispatched by the controller
       // Note: We need to manually register this event since MockModsLoader doesn't include it
       const analyticsEventDef = {
         id: 'ANALYTICS_TRACK',
-        description: 'Event for tracking user analytics and interactions within the application',
+        description:
+          'Event for tracking user analytics and interactions within the application',
         payloadSchema: {
           type: 'object',
           properties: {
             event: {
               description: 'The name/type of the analytics event being tracked',
               type: 'string',
-              minLength: 1
+              minLength: 1,
             },
             properties: {
-              description: 'Contextual properties and metadata for the analytics event',
+              description:
+                'Contextual properties and metadata for the analytics event',
               type: 'object',
-              additionalProperties: true
-            }
+              additionalProperties: true,
+            },
           },
           required: ['event', 'properties'],
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       };
-      
+
       dataRegistry.setEventDefinition('ANALYTICS_TRACK', analyticsEventDef);
-      
+
       const analyticsEvent = dataRegistry.getEventDefinition('ANALYTICS_TRACK');
-      
+
       expect(analyticsEvent).toBeDefined();
       expect(analyticsEvent.id).toBe('ANALYTICS_TRACK');
       expect(analyticsEvent.description).toContain('analytics');
       expect(analyticsEvent.payloadSchema).toBeDefined();
       expect(analyticsEvent.payloadSchema.type).toBe('object');
-      
+
       // Verify required fields in the schema
-      expect(analyticsEvent.payloadSchema.required).toEqual(['event', 'properties']);
+      expect(analyticsEvent.payloadSchema.required).toEqual([
+        'event',
+        'properties',
+      ]);
       expect(analyticsEvent.payloadSchema.properties.event).toBeDefined();
       expect(analyticsEvent.payloadSchema.properties.properties).toBeDefined();
-      
-      console.log('✓ ANALYTICS_TRACK event definition is properly loaded and valid');
+
+      console.log(
+        '✓ ANALYTICS_TRACK event definition is properly loaded and valid'
+      );
     });
   });
 
   describe('Event Validation Tests', () => {
     it('should validate that event dispatches succeed without warnings', async () => {
       // Register MockModsLoader and load events
-      container.register(tokens.ModsLoader, (c) => new MockModsLoader({
-        logger: c.resolve(tokens.ILogger),
-        cache: null,
-        session: null,
-        registry: c.resolve(tokens.IDataRegistry),
-      }));
+      container.register(
+        tokens.ModsLoader,
+        (c) =>
+          new MockModsLoader({
+            logger: c.resolve(tokens.ILogger),
+            cache: null,
+            session: null,
+            registry: c.resolve(tokens.IDataRegistry),
+          })
+      );
       const modsLoader = container.resolve(tokens.ModsLoader);
       await modsLoader.loadMods('test', ['core']);
-      
+
       // Manually register all events that the controller dispatches
       const dataRegistry = container.resolve(tokens.IDataRegistry);
-      
+
       // Register ANALYTICS_TRACK event
       const analyticsEventDef = {
         id: 'ANALYTICS_TRACK',
@@ -279,11 +309,11 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
           type: 'object',
           properties: {
             event: { type: 'string', minLength: 1 },
-            properties: { type: 'object', additionalProperties: true }
+            properties: { type: 'object', additionalProperties: true },
           },
           required: ['event', 'properties'],
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       };
       dataRegistry.setEventDefinition('ANALYTICS_TRACK', analyticsEventDef);
 
@@ -295,36 +325,49 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
           type: 'object',
           properties: {
             controller: { type: 'string', minLength: 1 },
-            previousState: { 
+            previousState: {
               oneOf: [
-                { type: 'string', enum: ['empty', 'loading', 'results', 'error'] },
-                { type: 'null' }
-              ]
+                {
+                  type: 'string',
+                  enum: ['empty', 'loading', 'results', 'error'],
+                },
+                { type: 'null' },
+              ],
             },
-            currentState: { type: 'string', enum: ['empty', 'loading', 'results', 'error'] },
-            timestamp: { type: 'string' }
+            currentState: {
+              type: 'string',
+              enum: ['empty', 'loading', 'results', 'error'],
+            },
+            timestamp: { type: 'string' },
           },
           required: ['controller', 'currentState', 'timestamp'],
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       };
-      dataRegistry.setEventDefinition('core:ui_state_changed', uiStateChangedEventDef);
+      dataRegistry.setEventDefinition(
+        'core:ui_state_changed',
+        uiStateChangedEventDef
+      );
 
       // Register core:controller_initialized event that the controller dispatches
       const controllerInitEventDef = {
         id: 'core:controller_initialized',
-        description: 'Signals when a character builder controller has completed its initialization',
+        description:
+          'Signals when a character builder controller has completed its initialization',
         payloadSchema: {
           type: 'object',
           properties: {
             controllerName: { type: 'string', minLength: 1 },
-            initializationTime: { type: 'number', minimum: 0 }
+            initializationTime: { type: 'number', minimum: 0 },
           },
           required: ['controllerName', 'initializationTime'],
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       };
-      dataRegistry.setEventDefinition('core:controller_initialized', controllerInitEventDef);
+      dataRegistry.setEventDefinition(
+        'core:controller_initialized',
+        controllerInitEventDef
+      );
 
       // Create and initialize controller
       const mockCharacterBuilderService = {
@@ -368,7 +411,7 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
       // Verify controller is properly initialized
       expect(controller).toBeDefined();
 
-      // Note: The controller doesn't actually dispatch ui_state_changed or controller_initialized 
+      // Note: The controller doesn't actually dispatch ui_state_changed or controller_initialized
       // events during normal initialization. This was an incorrect assumption in the original test.
       // Instead, we verify that when the controller DOES dispatch events (like ANALYTICS_TRACK),
       // they don't generate warnings because the event definitions are loaded.
@@ -385,7 +428,9 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
 
       expect(eventDefinitionWarnings).toHaveLength(0);
 
-      console.log('✅ SUCCESS: No event definition warnings during controller lifecycle');
+      console.log(
+        '✅ SUCCESS: No event definition warnings during controller lifecycle'
+      );
     }, 10000);
   });
 });

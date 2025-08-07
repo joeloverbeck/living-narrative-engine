@@ -252,8 +252,14 @@ describe('Performance Integration Tests', () => {
         showCounts: false,
       };
 
-      // Establish baseline
-      const baselineIterations = 100;
+      // Warm-up phase to allow JIT optimization
+      const warmupIterations = 100;
+      for (let i = 0; i < warmupIterations; i++) {
+        service.shouldUseGrouping(baselineActions);
+      }
+
+      // Establish baseline with more iterations for stability
+      const baselineIterations = 500;
       const baselineTimes = [];
 
       for (let i = 0; i < baselineIterations; i++) {
@@ -263,6 +269,10 @@ describe('Performance Integration Tests', () => {
         baselineTimes.push(endTime - startTime);
       }
 
+      // Use median instead of average for more stable measurements
+      baselineTimes.sort((a, b) => a - b);
+      const baselineMedian =
+        baselineTimes[Math.floor(baselineTimes.length / 2)];
       const baselineAvg =
         baselineTimes.reduce((sum, time) => sum + time, 0) /
         baselineTimes.length;
@@ -278,7 +288,12 @@ describe('Performance Integration Tests', () => {
           description: `Description ${i}`,
         }));
 
-        const testIterations = 50;
+        // Warm-up for this test case
+        for (let i = 0; i < 50; i++) {
+          service.shouldUseGrouping(testActions);
+        }
+
+        const testIterations = 200;
         const testTimes = [];
 
         for (let i = 0; i < testIterations; i++) {
@@ -288,14 +303,26 @@ describe('Performance Integration Tests', () => {
           testTimes.push(endTime - startTime);
         }
 
+        // Use median for more stable measurements
+        testTimes.sort((a, b) => a - b);
+        const testMedian = testTimes[Math.floor(testTimes.length / 2)];
         const testAvg =
           testTimes.reduce((sum, time) => sum + time, 0) / testTimes.length;
-        const degradationRatio = testAvg / baselineAvg;
+
+        // Use median for comparison if baseline median is meaningful
+        const effectiveBaseline =
+          baselineMedian > 0.001 ? baselineMedian : baselineAvg;
+        const effectiveTest = baselineMedian > 0.001 ? testMedian : testAvg;
+        const degradationRatio = effectiveTest / effectiveBaseline;
 
         // Performance should scale reasonably
-        expect(degradationRatio).toBeLessThan((actionCount / 10) * 2); // Reasonable scaling
+        // For very fast operations (< 0.01ms), allow more variance
+        const scalingFactor = effectiveBaseline < 0.01 ? 3 : 2;
+        const maxDegradation = Math.max((actionCount / 10) * scalingFactor, 5);
+
+        expect(degradationRatio).toBeLessThan(maxDegradation); // Reasonable scaling with minimum threshold
         console.log(
-          `${actionCount} actions: ${testAvg.toFixed(2)}ms avg (${degradationRatio.toFixed(2)}x baseline)`
+          `${actionCount} actions: ${effectiveTest.toFixed(3)}ms (${degradationRatio.toFixed(2)}x baseline)`
         );
       });
     });

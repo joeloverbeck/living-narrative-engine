@@ -904,7 +904,9 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should log debug message about skipping base events
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Skipping base event registration - events will be loaded from mods')
+        expect.stringContaining(
+          'Skipping base event registration - events will be loaded from mods'
+        )
       );
     });
 
@@ -932,7 +934,9 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should log error display configuration
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Error display configured with element: error-display')
+        expect.stringContaining(
+          'Error display configured with element: error-display'
+        )
       );
     });
   });
@@ -956,16 +960,20 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should log warning for failed schema fetch
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to load schema /data/schemas/custom.json: Failed to load schema: 404')
+        expect.stringContaining(
+          'Failed to load schema /data/schemas/custom.json: Failed to load schema: 404'
+        )
       );
     });
 
     it('should log warning when schema JSON parsing fails', async () => {
       global.fetch.mockImplementation(async (url) => {
         if (url.includes('custom.json')) {
-          return { 
-            ok: true, 
-            json: async () => { throw new Error('Invalid JSON'); }
+          return {
+            ok: true,
+            json: async () => {
+              throw new Error('Invalid JSON');
+            },
           };
         }
         return { ok: true, json: async () => ({ $schema: 'test-schema' }) };
@@ -981,7 +989,9 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should log warning for JSON parsing error
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to load schema /data/schemas/custom.json: Invalid JSON')
+        expect.stringContaining(
+          'Failed to load schema /data/schemas/custom.json: Invalid JSON'
+        )
       );
     });
 
@@ -1002,7 +1012,9 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should log warning for schema validator error
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to load schema /data/schemas/custom.json: Schema validation failed')
+        expect.stringContaining(
+          'Failed to load schema /data/schemas/custom.json: Schema validation failed'
+        )
       );
     });
 
@@ -1027,7 +1039,9 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should log debug message about skipping payload schema registration
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Skipping payload schema registration for test:custom_event#payload - already loaded from mods')
+        expect.stringContaining(
+          'Skipping payload schema registration for test:custom_event#payload - already loaded from mods'
+        )
       );
     });
 
@@ -1048,7 +1062,9 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should log warning for failed event registration
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to register event core:character_concept_created: Event registration failed')
+        expect.stringContaining(
+          'Failed to register event core:character_concept_created: Event registration failed'
+        )
       );
     });
   });
@@ -1111,16 +1127,19 @@ describe('CharacterBuilderBootstrap', () => {
         controllerClass: MockController,
       };
 
-      await expect(localBootstrap.bootstrap(config)).rejects.toThrow('Container creation failed');
+      await expect(localBootstrap.bootstrap(config)).rejects.toThrow(
+        'Container creation failed'
+      );
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Fatal error during initialization of \'test-page\': Container creation failed'),
+        expect.stringContaining(
+          "Fatal error during initialization of 'test-page': Container creation failed"
+        ),
         expect.any(Error)
       );
 
       consoleSpy.mockRestore();
     });
-
   });
 
   describe('ModsLoader success path', () => {
@@ -1177,7 +1196,10 @@ describe('CharacterBuilderBootstrap', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         '[CharacterBuilderBootstrap] Registered custom service: customService'
       );
-      expect(mockContainer.register).toHaveBeenCalledWith('customService', customService);
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        'customService',
+        customService
+      );
     });
 
     it('should log failed custom service registration', async () => {
@@ -1226,7 +1248,7 @@ describe('CharacterBuilderBootstrap', () => {
     it('should handle bootstrap without logger available initially', async () => {
       // Create a new bootstrap instance that won't have logger initially
       const localBootstrap = new CharacterBuilderBootstrap();
-      
+
       const config = {
         pageName: 'test-page',
         controllerClass: MockController,
@@ -1315,7 +1337,9 @@ describe('CharacterBuilderBootstrap', () => {
       errorHandler({ payload: { error: 'Test error' } });
 
       // Should not look for dismiss button when not dismissible
-      expect(mockErrorDiv.querySelector).not.toHaveBeenCalledWith('.cb-error-dismiss');
+      expect(mockErrorDiv.querySelector).not.toHaveBeenCalledWith(
+        '.cb-error-dismiss'
+      );
     });
 
     it('should handle string error instead of Error object', async () => {

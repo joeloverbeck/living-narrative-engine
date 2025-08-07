@@ -82,7 +82,12 @@ export async function registerInlineSchema(
     if (errorLogMessage) {
       let context;
       if (typeof errorContext === 'function') {
-        context = errorContext(error) || {};
+        try {
+          context = errorContext(error) || {};
+        } catch (contextError) {
+          // If context function fails, use empty context
+          context = {};
+        }
       } else {
         context = { ...(errorContext || {}) };
       }

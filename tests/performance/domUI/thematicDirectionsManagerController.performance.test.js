@@ -48,9 +48,11 @@ describe('ThematicDirectionsManagerController Performance', () => {
     setupPerformanceMocks(testBase.mocks);
 
     // Get the mocked InPlaceEditor for this test suite
-    const module = await import('../../../src/shared/characterBuilder/inPlaceEditor.js');
+    const module = await import(
+      '../../../src/shared/characterBuilder/inPlaceEditor.js'
+    );
     InPlaceEditor = module.InPlaceEditor;
-    
+
     // Set up default mock implementation
     InPlaceEditor.mockImplementation(() => ({
       destroy: jest.fn(),
@@ -62,7 +64,7 @@ describe('ThematicDirectionsManagerController Performance', () => {
       controller.destroy();
     }
     await testBase.cleanup();
-    
+
     // Clear mock calls for next test
     if (InPlaceEditor) {
       InPlaceEditor.mockClear();
@@ -124,10 +126,14 @@ describe('ThematicDirectionsManagerController Performance', () => {
 
       const duration = endTime - startTime;
       // Include initialization and initial render time
-      expect(duration).toBeLessThan(THRESHOLDS.renderSmall + THRESHOLDS.initialization);
+      expect(duration).toBeLessThan(
+        THRESHOLDS.renderSmall + THRESHOLDS.initialization
+      );
 
       // Verify directions were rendered
-      const directionCards = document.querySelectorAll('.direction-card-editable');
+      const directionCards = document.querySelectorAll(
+        '.direction-card-editable'
+      );
       expect(directionCards.length).toBe(10);
 
       console.log(`Initialize + Render 10 items: ${duration.toFixed(2)}ms`);
@@ -146,10 +152,14 @@ describe('ThematicDirectionsManagerController Performance', () => {
 
       const duration = endTime - startTime;
       // Include initialization and initial render time
-      expect(duration).toBeLessThan(THRESHOLDS.renderMedium + THRESHOLDS.initialization);
+      expect(duration).toBeLessThan(
+        THRESHOLDS.renderMedium + THRESHOLDS.initialization
+      );
 
       // Verify directions were rendered
-      const directionCards = document.querySelectorAll('.direction-card-editable');
+      const directionCards = document.querySelectorAll(
+        '.direction-card-editable'
+      );
       expect(directionCards.length).toBe(100);
 
       console.log(`Initialize + Render 100 items: ${duration.toFixed(2)}ms`);
@@ -168,10 +178,14 @@ describe('ThematicDirectionsManagerController Performance', () => {
 
       const duration = endTime - startTime;
       // Include initialization and initial render time
-      expect(duration).toBeLessThan(THRESHOLDS.renderLarge + THRESHOLDS.initialization);
+      expect(duration).toBeLessThan(
+        THRESHOLDS.renderLarge + THRESHOLDS.initialization
+      );
 
       // Verify directions were rendered
-      const directionCards = document.querySelectorAll('.direction-card-editable');
+      const directionCards = document.querySelectorAll(
+        '.direction-card-editable'
+      );
       expect(directionCards.length).toBe(1000);
 
       console.log(`Initialize + Render 1000 items: ${duration.toFixed(2)}ms`);
@@ -219,7 +233,9 @@ describe('ThematicDirectionsManagerController Performance', () => {
       await controller.initialize();
 
       const filterInput = document.getElementById('direction-filter');
-      const initialCount = document.querySelectorAll('.direction-card-editable').length;
+      const initialCount = document.querySelectorAll(
+        '.direction-card-editable'
+      ).length;
 
       // Rapidly type characters
       const startTime = performance.now();
@@ -233,14 +249,14 @@ describe('ThematicDirectionsManagerController Performance', () => {
       const duration = endTime - startTime;
 
       // Check that filtering happened
-      const finalCount = document.querySelectorAll('.direction-card-editable').length;
-      
+      const finalCount = document.querySelectorAll(
+        '.direction-card-editable'
+      ).length;
+
       // Performance should still be good despite rapid changes
       expect(duration).toBeLessThan(500); // 500ms for 10 rapid filter changes
 
-      console.log(
-        `Rapid filtering completed in: ${duration.toFixed(2)}ms`
-      );
+      console.log(`Rapid filtering completed in: ${duration.toFixed(2)}ms`);
     });
   });
 
@@ -248,7 +264,7 @@ describe('ThematicDirectionsManagerController Performance', () => {
     it('should create InPlaceEditors efficiently', async () => {
       // Track creation times
       let creationTimes = [];
-      
+
       // Configure mock implementation to measure creation time
       InPlaceEditor.mockImplementation((config) => {
         const start = performance.now();
@@ -334,17 +350,18 @@ describe('ThematicDirectionsManagerController Performance', () => {
         filterInput.dispatchEvent(new Event('input'));
         filterInput.value = '';
         filterInput.dispatchEvent(new Event('input'));
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
 
       // Perform multiple operations with improved measurement stability
-      for (let i = 0; i < 7; i++) { // Increased sample size from 5 to 7
+      for (let i = 0; i < 7; i++) {
+        // Increased sample size from 5 to 7
         // Force garbage collection multiple times for more stable measurements
         if (global.gc) {
           global.gc();
           global.gc(); // Double GC to ensure cleanup
           // Allow GC to complete
-          await new Promise(resolve => setTimeout(resolve, 20));
+          await new Promise((resolve) => setTimeout(resolve, 20));
         }
 
         const beforeOp = process.memoryUsage().heapUsed;
@@ -359,7 +376,7 @@ describe('ThematicDirectionsManagerController Performance', () => {
         filterInput.dispatchEvent(new Event('input'));
 
         // Allow async operations to complete with longer timeout
-        await new Promise(resolve => setTimeout(resolve, 25));
+        await new Promise((resolve) => setTimeout(resolve, 25));
 
         const afterOp = process.memoryUsage().heapUsed;
         measurements.push(afterOp - beforeOp);
@@ -367,15 +384,16 @@ describe('ThematicDirectionsManagerController Performance', () => {
 
       // Calculate median instead of average to reduce impact of outliers
       const sortedMeasurements = [...measurements].sort((a, b) => a - b);
-      const medianIncrease = sortedMeasurements[Math.floor(sortedMeasurements.length / 2)];
-      
+      const medianIncrease =
+        sortedMeasurements[Math.floor(sortedMeasurements.length / 2)];
+
       // Realistic memory usage for DOM operations with 250 rich components (50 directions × 5 editors)
       // Each InPlaceEditor instance has DOM references, event handlers, and callback functions
       // Increased to 10MB to account for jsdom overhead, test environment variability, and V8 optimization patterns
       expect(medianIncrease).toBeLessThan(10 * 1024 * 1024); // Less than 10MB median increase (accounts for test environment variability)
 
       console.log(
-        `Memory measurements (KB): [${measurements.map(m => (m / 1024).toFixed(0)).join(', ')}]`
+        `Memory measurements (KB): [${measurements.map((m) => (m / 1024).toFixed(0)).join(', ')}]`
       );
       console.log(
         `Median memory increase per operation: ${(medianIncrease / 1024).toFixed(2)}KB`
@@ -397,7 +415,9 @@ describe('ThematicDirectionsManagerController Performance', () => {
       await controller.initialize();
 
       const clickTimes = [];
-      const directionCards = document.querySelectorAll('.direction-card-editable');
+      const directionCards = document.querySelectorAll(
+        '.direction-card-editable'
+      );
 
       // Check if we have any cards to test
       if (directionCards.length === 0) {
@@ -491,12 +511,15 @@ function generateDirections(count) {
       uniqueTwist: `A unique twist that makes direction ${i} special and interesting.`,
       narrativePotential: `The narrative potential of direction ${i} provides rich storytelling opportunities.`,
     },
-    concept: i % 10 !== 0 ? {
-      id: `concept-${i % 5}`,
-      concept: `Character concept ${i % 5} with detailed background and motivation that shapes the narrative direction.`,
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      thematicDirections: [`dir-${i}`],
-    } : null,
+    concept:
+      i % 10 !== 0
+        ? {
+            id: `concept-${i % 5}`,
+            concept: `Character concept ${i % 5} with detailed background and motivation that shapes the narrative direction.`,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            thematicDirections: [`dir-${i}`],
+          }
+        : null,
   }));
 }

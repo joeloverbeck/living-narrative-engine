@@ -28,13 +28,17 @@ describe('ThematicDirectionsManagerMain - Warning Fixes Verification', () => {
     mockDocument = {
       getElementById: jest.fn((id) => {
         // Return mock elements for required IDs
-        const mockElement = { style: {}, innerHTML: '', appendChild: jest.fn() };
+        const mockElement = {
+          style: {},
+          innerHTML: '',
+          appendChild: jest.fn(),
+        };
         return mockElement;
       }),
       addEventListener: jest.fn(),
       readyState: 'complete',
     };
-    
+
     // Replace global document
     global.document = mockDocument;
   });
@@ -54,14 +58,20 @@ describe('ThematicDirectionsManagerMain - Warning Fixes Verification', () => {
         'results-state': { style: {} },
       };
 
-      mockDocument.getElementById.mockImplementation((id) => mockElements[id] || null);
+      mockDocument.getElementById.mockImplementation(
+        (id) => mockElements[id] || null
+      );
 
       // Import the main module (this would trigger initialization in real app)
       // For this test, we're just validating the setup doesn't produce the warning
-      
+
       // The key test: no warning about null/undefined uiStateManager should be captured
-      const uiStateManagerWarnings = capturedWarnings.filter(warning =>
-        typeof warning === 'string' && warning.includes("Optional service 'uiStateManager' is null/undefined")
+      const uiStateManagerWarnings = capturedWarnings.filter(
+        (warning) =>
+          typeof warning === 'string' &&
+          warning.includes(
+            "Optional service 'uiStateManager' is null/undefined"
+          )
       );
 
       expect(uiStateManagerWarnings).toHaveLength(0);
@@ -83,11 +93,11 @@ describe('ThematicDirectionsManagerMain - Warning Fixes Verification', () => {
     it('should validate that double initialization pattern is fixed', () => {
       // This test documents the fix: removing the duplicate controller.initialize() call
       // In thematicDirectionsManagerMain.js, line 118 was removed
-      
+
       // The pattern that was causing the issue:
       // 1. Bootstrap calls controller.initialize() (automatic)
       // 2. Main app calls controller.initialize() again (manual - this was removed)
-      
+
       // Since the fix is architectural (removing duplicate call), this test serves as documentation
       expect(true).toBe(true); // Test passes to document the fix
     });
@@ -98,16 +108,18 @@ describe('ThematicDirectionsManagerMain - Warning Fixes Verification', () => {
       // The two warnings from error_logs.txt that should no longer appear:
       // 1. Line 85: "ThematicDirectionsManagerController: Optional service 'uiStateManager' is null/undefined"
       // 2. Line 105: "ThematicDirectionsManagerController: Already initialized, skipping re-initialization"
-      
+
       // This test serves as documentation that these specific issues have been fixed:
       // 1. UIStateManager is now properly instantiated when DOM elements are available
       // 2. Double initialization call was removed from thematicDirectionsManagerMain.js:118
-      
-      const problematicWarnings = capturedWarnings.filter(warning =>
-        typeof warning === 'string' && (
-          warning.includes("Optional service 'uiStateManager' is null/undefined") ||
-          warning.includes("Already initialized, skipping re-initialization")
-        )
+
+      const problematicWarnings = capturedWarnings.filter(
+        (warning) =>
+          typeof warning === 'string' &&
+          (warning.includes(
+            "Optional service 'uiStateManager' is null/undefined"
+          ) ||
+            warning.includes('Already initialized, skipping re-initialization'))
       );
 
       expect(problematicWarnings).toHaveLength(0);

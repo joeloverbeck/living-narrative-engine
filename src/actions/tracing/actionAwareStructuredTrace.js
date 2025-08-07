@@ -381,10 +381,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
    */
   #applyDetailedFiltering(data, filteredData, config) {
     // Include standard data
-    Object.assign(
-      filteredData,
-      this.#applyStandardFiltering(data, {}, config)
-    );
+    Object.assign(filteredData, this.#applyStandardFiltering(data, {}, config));
 
     // Add detailed-level information
     if (config.prerequisites && data.prerequisites) {
@@ -425,10 +422,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
    */
   #applyVerboseFiltering(data, filteredData, config) {
     // Include detailed data
-    Object.assign(
-      filteredData,
-      this.#applyDetailedFiltering(data, {}, config)
-    );
+    Object.assign(filteredData, this.#applyDetailedFiltering(data, {}, config));
 
     // Add verbose-level information - include most data with some safety limits
     const safeData = this.#createSafeDataCopy(data);
@@ -506,7 +500,10 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
       return JSON.parse(jsonString);
     } catch (error) {
-      this.#logger.warn('Failed to create safe data copy, using fallback', error);
+      this.#logger.warn(
+        'Failed to create safe data copy, using fallback',
+        error
+      );
       return { dataError: 'Failed to serialize data safely' };
     }
   }

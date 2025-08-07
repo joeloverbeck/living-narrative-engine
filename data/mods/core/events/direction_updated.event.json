@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:direction_updated",
+  "description": "Fired when a thematic direction is updated. Contains details about which field was changed and its old/new values.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "description": "The unique identifier of the updated thematic direction",
+        "type": "string",
+        "minLength": 1
+      },
+      "field": {
+        "description": "The name of the field that was updated",
+        "type": "string",
+        "enum": [
+          "title",
+          "description",
+          "coreTension",
+          "uniqueTwist",
+          "narrativePotential"
+        ]
+      },
+      "oldValue": {
+        "description": "The previous value of the field before the update",
+        "type": "string"
+      },
+      "newValue": {
+        "description": "The new value of the field after the update",
+        "type": "string"
+      }
+    },
+    "required": ["directionId", "field", "oldValue", "newValue"],
+    "additionalProperties": false
+  }
+}

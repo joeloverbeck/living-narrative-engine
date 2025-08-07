@@ -19,7 +19,7 @@ jest.mock('../../../src/configuration/actionTraceConfigValidator.js');
 describe('ActionTraceConfigLoader Performance', () => {
   // Shared test fixtures
   let testFixtures;
-  
+
   // Reduced iteration count for faster tests while maintaining statistical accuracy
   const PERFORMANCE_ITERATIONS = 1000;
   const TTL_ITERATIONS = 1000;
@@ -33,7 +33,7 @@ describe('ActionTraceConfigLoader Performance', () => {
 
     // Create shared test fixtures
     testFixtures = createTestFixtures();
-    
+
     // Setup the ActionTraceConfigValidator mock once
     ActionTraceConfigValidator.mockClear();
     ActionTraceConfigValidator.mockImplementation(() => ({
@@ -51,6 +51,9 @@ describe('ActionTraceConfigLoader Performance', () => {
     jest.clearAllMocks();
   });
 
+  /**
+   *
+   */
   function createTestFixtures() {
     // Shared mock objects
     const mockTraceConfigLoader = {
@@ -73,7 +76,10 @@ describe('ActionTraceConfigLoader Performance', () => {
       exactMatches: {
         actionTracing: {
           enabled: true,
-          tracedActions: Array.from({ length: 50 }, (_, i) => `mod${i}:action${i}`), // Reduced from 100
+          tracedActions: Array.from(
+            { length: 50 },
+            (_, i) => `mod${i}:action${i}`
+          ), // Reduced from 100
           outputDirectory: './traces',
           verbosity: 'standard',
           includeComponentData: true,
@@ -125,9 +131,13 @@ describe('ActionTraceConfigLoader Performance', () => {
     };
   }
 
+  /**
+   *
+   * @param config
+   */
   function createLoader(config) {
     const { mockTraceConfigLoader, mockLogger, mockValidator } = testFixtures;
-    
+
     if (config) {
       mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
     }
@@ -149,7 +159,11 @@ describe('ActionTraceConfigLoader Performance', () => {
       // Test scenarios: exact match, wildcard match, global wildcard, non-match
       const testCases = [
         { action: 'exact12:action12', expectedMatch: true, type: 'exact' },
-        { action: 'wildcard2:something', expectedMatch: true, type: 'wildcard' },
+        {
+          action: 'wildcard2:something',
+          expectedMatch: true,
+          type: 'wildcard',
+        },
         { action: 'any:random:action', expectedMatch: true, type: 'global' },
         { action: 'nonexistent:action', expectedMatch: true, type: 'global' }, // Still matches * pattern
       ];
@@ -179,7 +193,9 @@ describe('ActionTraceConfigLoader Performance', () => {
       // Verify statistics
       const stats = loader.getStatistics();
       expect(stats.totalLookups).toBe(PERFORMANCE_ITERATIONS);
-      expect(stats.exactMatches + stats.wildcardMatches).toBe(PERFORMANCE_ITERATIONS);
+      expect(stats.exactMatches + stats.wildcardMatches).toBe(
+        PERFORMANCE_ITERATIONS
+      );
     });
   });
 
@@ -190,7 +206,10 @@ describe('ActionTraceConfigLoader Performance', () => {
       const config1 = {
         actionTracing: {
           enabled: true,
-          tracedActions: Array.from({ length: 25 }, (_, i) => `config1_${i}:action`), // Reduced from 50
+          tracedActions: Array.from(
+            { length: 25 },
+            (_, i) => `config1_${i}:action`
+          ), // Reduced from 50
           outputDirectory: './traces1',
           verbosity: 'standard',
         },
@@ -199,7 +218,10 @@ describe('ActionTraceConfigLoader Performance', () => {
       const config2 = {
         actionTracing: {
           enabled: true,
-          tracedActions: Array.from({ length: 35 }, (_, i) => `config2_${i}:action`), // Reduced from 75  
+          tracedActions: Array.from(
+            { length: 35 },
+            (_, i) => `config2_${i}:action`
+          ), // Reduced from 75
           outputDirectory: './traces2',
           verbosity: 'detailed',
         },
@@ -288,7 +310,7 @@ describe('ActionTraceConfigLoader Performance', () => {
       const avgConfigTime = duration / (PERFORMANCE_ITERATIONS * 4); // 4 method calls per iteration
       expect(avgConfigTime).toBeLessThan(0.1); // Should be very fast since config is cached
 
-      // Test data filtering performance  
+      // Test data filtering performance
       start = performance.now();
       for (let i = 0; i < PERFORMANCE_ITERATIONS; i++) {
         const filtered = await loader.filterDataByVerbosity(testData);
@@ -373,7 +395,7 @@ describe('ActionTraceConfigLoader Performance', () => {
       }
       const ttlDuration = performance.now() - ttlStart;
       const avgTtlTime = ttlDuration / TTL_ITERATIONS;
-      
+
       expect(avgTtlTime).toBeLessThan(0.1); // <0.1ms per cached operation
       expect(mockTraceConfigLoader.loadConfig).not.toHaveBeenCalled(); // Should use cache
 
@@ -406,7 +428,9 @@ describe('ActionTraceConfigLoader Performance', () => {
         cacheTtl: 50, // Very short TTL for testing
       });
 
-      mockTraceConfigLoader.loadConfig.mockResolvedValue(testFixtures.configs.exactMatches);
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(
+        testFixtures.configs.exactMatches
+      );
 
       // Load initial config
       await expiredLoader.loadConfig();

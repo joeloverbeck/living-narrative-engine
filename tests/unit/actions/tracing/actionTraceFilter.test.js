@@ -71,7 +71,7 @@ describe('ActionTraceFilter - Basic Functionality', () => {
       });
 
       expect(filter.getVerbosityLevel()).toBe('minimal');
-      
+
       filter.setVerbosityLevel('verbose');
       expect(filter.getVerbosityLevel()).toBe('verbose');
     });
