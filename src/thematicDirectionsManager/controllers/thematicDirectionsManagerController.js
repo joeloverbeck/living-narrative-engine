@@ -204,7 +204,8 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @private
    */
   async #loadDirectionsData() {
-    this._showLoading('Loading thematic directions...');
+    // Note: Loading state is handled by base class during initialization sequence
+    // Don't call _showLoading() here as UIStateManager may not be initialized yet
     this.#setDropdownLoading(true);
 
     try {

@@ -1,9 +1,8 @@
-import ConsoleLogger from '../logging/consoleLogger.js';
-import AppContainer from '../dependencyInjection/appContainer.js';
-import { configureBaseContainer } from '../dependencyInjection/baseContainerConfig.js';
+import { CharacterBuilderBootstrap } from '../characterBuilder/CharacterBuilderBootstrap.js';
+import { ThematicDirectionsManagerController } from './controllers/thematicDirectionsManagerController.js';
 import { tokens } from '../dependencyInjection/tokens.js';
 import { Registrar } from '../utils/registrarHelpers.js';
-import { ThematicDirectionsManagerController } from './controllers/thematicDirectionsManagerController.js';
+import { UIStateManager } from '../shared/characterBuilder/uiStateManager.js';
 
 /**
  * Character Builder Events for thematic directions manager
@@ -15,156 +14,192 @@ const MANAGER_EVENTS = {
 };
 
 class ThematicDirectionsManagerApp {
-  #logger;
-  #controller;
+  #bootstrap;
+  #result;
   #initialized = false;
 
   constructor() {
-    this.#logger = new ConsoleLogger('debug');
+    this.#bootstrap = new CharacterBuilderBootstrap();
   }
 
   async initialize() {
     if (this.#initialized) {
-      this.#logger.warn('ThematicDirectionsManagerApp: Already initialized');
+      console.warn('ThematicDirectionsManagerApp: Already initialized');
       return;
     }
 
     try {
-      this.#logger.info(
-        'ThematicDirectionsManagerApp: Starting initialization'
-      );
+      console.log('ThematicDirectionsManagerApp: Starting initialization');
 
-      // Setup DI container
-      const container = new AppContainer();
-      container.register(tokens.ILogger, this.#logger);
+      // Configure bootstrap with mod loading enabled to load event definitions from core mod
+      const config = {
+        pageName: 'Thematic Directions Manager',
+        controllerClass: ThematicDirectionsManagerController,
+        includeModLoading: true, // KEY FIX: Load event definitions from mods
+        eventDefinitions: [
+          // Add the custom events specific to this manager
+          {
+            id: MANAGER_EVENTS.DIRECTION_UPDATED,
+            description: 'Fired when a thematic direction is updated.',
+            payloadSchema: {
+              type: 'object',
+              required: ['directionId', 'field', 'oldValue', 'newValue'],
+              properties: {
+                directionId: {
+                  type: 'string',
+                  description: 'Updated direction ID',
+                },
+                field: { type: 'string', description: 'Updated field name' },
+                oldValue: { type: 'string', description: 'Previous field value' },
+                newValue: { type: 'string', description: 'New field value' },
+              },
+            },
+          },
+          {
+            id: MANAGER_EVENTS.DIRECTION_DELETED,
+            description: 'Fired when a thematic direction is deleted.',
+            payloadSchema: {
+              type: 'object',
+              required: ['directionId'],
+              properties: {
+                directionId: {
+                  type: 'string',
+                  description: 'Deleted direction ID',
+                },
+              },
+            },
+          },
+          {
+            id: MANAGER_EVENTS.ORPHANS_CLEANED,
+            description: 'Fired when orphaned directions are cleaned up.',
+            payloadSchema: {
+              type: 'object',
+              required: ['deletedCount'],
+              properties: {
+                deletedCount: {
+                  type: 'number',
+                  description: 'Number of deleted orphaned directions',
+                },
+              },
+            },
+          },
+          // Add fallback definitions for core events in case mod loading fails
+          {
+            id: 'core:ui_state_changed',
+            description: 'Signals when a UI controller changes its display state.',
+            payloadSchema: {
+              type: 'object',
+              properties: {
+                controller: {
+                  description: 'The name of the controller that changed state',
+                  type: 'string',
+                  minLength: 1,
+                },
+                previousState: {
+                  description: 'The previous state (null for initial state change)',
+                  oneOf: [
+                    {
+                      type: 'string',
+                      enum: ['empty', 'loading', 'results', 'error'],
+                    },
+                    {
+                      type: 'null',
+                    },
+                  ],
+                },
+                currentState: {
+                  description: 'The new current state',
+                  type: 'string',
+                  enum: ['empty', 'loading', 'results', 'error'],
+                },
+                timestamp: {
+                  description: 'ISO 8601 timestamp of when the state change occurred',
+                  type: 'string',
+                  pattern: '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$',
+                },
+              },
+              required: ['controller', 'currentState', 'timestamp'],
+              additionalProperties: false,
+            },
+          },
+          {
+            id: 'core:controller_initialized',
+            description: 'Signals when a character builder controller has completed its initialization process.',
+            payloadSchema: {
+              type: 'object',
+              properties: {
+                controllerName: {
+                  description: 'The name of the controller that completed initialization',
+                  type: 'string',
+                  minLength: 1,
+                },
+                initializationTime: {
+                  description: 'Time taken to initialize the controller in milliseconds',
+                  type: 'number',
+                  minimum: 0,
+                },
+              },
+              required: ['controllerName', 'initializationTime'],
+              additionalProperties: false,
+            },
+          },
+        ],
+        hooks: {
+          preContainer: async (container) => {
+            // Register thematic directions manager controller factory
+            const registrar = new Registrar(container);
+            registrar.singletonFactory(
+              tokens.ThematicDirectionsManagerController,
+              (c) => {
+                // Create a proper UIStateManager with the required DOM elements
+                const stateElements = {
+                  emptyState: document.getElementById('empty-state'),
+                  loadingState: document.getElementById('loading-state'),
+                  errorState: document.getElementById('error-state'),
+                  resultsState: document.getElementById('results-state'),
+                };
 
-      await configureBaseContainer(container, {
-        includeGameSystems: true,
-        includeCharacterBuilder: true,
-        logger: this.#logger,
-      });
+                // Only create UIStateManager if all required elements are present
+                let uiStateManager = null;
+                const hasAllElements = Object.values(stateElements).every(element => element !== null);
+                
+                if (hasAllElements) {
+                  try {
+                    uiStateManager = new UIStateManager(stateElements);
+                  } catch (error) {
+                    // If UIStateManager creation fails, use null and let the controller handle it
+                    console.warn('Failed to create UIStateManager, controller will use fallback:', error.message);
+                    uiStateManager = null;
+                  }
+                } else {
+                  console.warn('Required UI state elements not found, UIStateManager will be null');
+                }
 
-      // Load schemas
-      const schemaLoader = container.resolve(tokens.SchemaLoader);
-      await schemaLoader.loadAndCompileAllSchemas();
+                return new ThematicDirectionsManagerController({
+                  logger: c.resolve(tokens.ILogger),
+                  characterBuilderService: c.resolve(tokens.CharacterBuilderService),
+                  eventBus: c.resolve(tokens.ISafeEventDispatcher),
+                  schemaValidator: c.resolve(tokens.ISchemaValidator),
+                  uiStateManager: uiStateManager,
+                });
+              }
+            );
+          },
+        },
+      };
 
-      // Register events
-      await this.#registerEventDefinitions(
-        container.resolve(tokens.IDataRegistry),
-        container.resolve(tokens.ISchemaValidator)
-      );
-
-      // Register controller
-      this.#registerController(container);
-
-      // Initialize LLM adapter (for any future needs)
-      const llmAdapter = container.resolve(tokens.LLMAdapter);
-      await llmAdapter.init({
-        llmConfigLoader: container.resolve(tokens.LlmConfigLoader),
-      });
-
-      // Get and initialize controller
-      this.#controller = container.resolve(
-        tokens.ThematicDirectionsManagerController
-      );
-      await this.#controller.initialize();
+      // Bootstrap the application
+      this.#result = await this.#bootstrap.bootstrap(config);
 
       this.#initialized = true;
-      this.#logger.info(
-        'ThematicDirectionsManagerApp: Successfully initialized'
-      );
+      console.log('ThematicDirectionsManagerApp: Successfully initialized');
     } catch (error) {
-      this.#logger.error(
-        'ThematicDirectionsManagerApp: Failed to initialize',
-        error
-      );
+      console.error('ThematicDirectionsManagerApp: Failed to initialize', error);
       this.#showInitializationError(error);
       throw error;
     }
   }
 
-  #registerController(container) {
-    const registrar = new Registrar(container);
-
-    registrar.singletonFactory(
-      tokens.ThematicDirectionsManagerController,
-      (c) => {
-        // Create a null UIStateManager that provides required methods but does nothing
-        const nullUIStateManager = {
-          showState: () => {},
-          showError: () => {},
-          showLoading: () => {},
-          getCurrentState: () => null,
-        };
-
-        return new ThematicDirectionsManagerController({
-          logger: c.resolve(tokens.ILogger),
-          characterBuilderService: c.resolve(tokens.CharacterBuilderService),
-          eventBus: c.resolve(tokens.ISafeEventDispatcher),
-          schemaValidator: c.resolve(tokens.ISchemaValidator),
-          uiStateManager: nullUIStateManager,
-        });
-      }
-    );
-  }
-
-  async #registerEventDefinitions(dataRegistry, schemaValidator) {
-    const events = [
-      {
-        id: MANAGER_EVENTS.DIRECTION_UPDATED,
-        description: 'Fired when a thematic direction is updated.',
-        payloadSchema: {
-          type: 'object',
-          required: ['directionId', 'field', 'oldValue', 'newValue'],
-          properties: {
-            directionId: {
-              type: 'string',
-              description: 'Updated direction ID',
-            },
-            field: { type: 'string', description: 'Updated field name' },
-            oldValue: { type: 'string', description: 'Previous field value' },
-            newValue: { type: 'string', description: 'New field value' },
-          },
-        },
-      },
-      {
-        id: MANAGER_EVENTS.DIRECTION_DELETED,
-        description: 'Fired when a thematic direction is deleted.',
-        payloadSchema: {
-          type: 'object',
-          required: ['directionId'],
-          properties: {
-            directionId: {
-              type: 'string',
-              description: 'Deleted direction ID',
-            },
-          },
-        },
-      },
-      {
-        id: MANAGER_EVENTS.ORPHANS_CLEANED,
-        description: 'Fired when orphaned directions are cleaned up.',
-        payloadSchema: {
-          type: 'object',
-          required: ['deletedCount'],
-          properties: {
-            deletedCount: {
-              type: 'number',
-              description: 'Number of deleted orphaned directions',
-            },
-          },
-        },
-      },
-    ];
-
-    for (const event of events) {
-      await schemaValidator.addSchema(
-        event.payloadSchema,
-        `${event.id}#payload`
-      );
-      dataRegistry.setEventDefinition(event.id, event);
-    }
-  }
 
   #showInitializationError(error) {
     const errorHtml = `

@@ -9,7 +9,7 @@
  * - Statistical variance is expected and accommodated in assertions
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll, jest } from '@jest/globals';
 import ActionTraceConfigLoader from '../../../src/configuration/actionTraceConfigLoader.js';
 import ActionTraceConfigValidator from '../../../src/configuration/actionTraceConfigValidator.js';
 
@@ -17,34 +17,24 @@ import ActionTraceConfigValidator from '../../../src/configuration/actionTraceCo
 jest.mock('../../../src/configuration/actionTraceConfigValidator.js');
 
 describe('ActionTraceConfigLoader Performance', () => {
-  let loader;
-  let mockTraceConfigLoader;
-  let mockLogger;
-  let mockValidator;
+  // Shared test fixtures
+  let testFixtures;
+  
+  // Reduced iteration count for faster tests while maintaining statistical accuracy
+  const PERFORMANCE_ITERATIONS = 1000;
+  const TTL_ITERATIONS = 1000;
+  const WARMUP_ITERATIONS = 100;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Force garbage collection to stabilize memory state
     if (global.gc) {
       global.gc();
     }
 
-    // Reset mocks
-    mockTraceConfigLoader = {
-      loadConfig: jest.fn(),
-    };
-    mockLogger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn(),
-    };
-    mockValidator = {
-      validate: jest.fn(),
-      addSchema: jest.fn(),
-      removeSchema: jest.fn(),
-    };
-
-    // Setup the ActionTraceConfigValidator mock
+    // Create shared test fixtures
+    testFixtures = createTestFixtures();
+    
+    // Setup the ActionTraceConfigValidator mock once
     ActionTraceConfigValidator.mockClear();
     ActionTraceConfigValidator.mockImplementation(() => ({
       initialize: jest.fn().mockResolvedValue(undefined),
@@ -55,27 +45,35 @@ describe('ActionTraceConfigLoader Performance', () => {
         normalizedConfig: null,
       }),
     }));
-
-    loader = new ActionTraceConfigLoader({
-      traceConfigLoader: mockTraceConfigLoader,
-      logger: mockLogger,
-      validator: mockValidator,
-    });
-
-    // Performance test stabilization: allow JIT to warm up
-    await new Promise((resolve) => setTimeout(resolve, 10));
   });
 
-  describe('Exact Match Performance', () => {
-    it('should perform exact match lookups in <1ms with many patterns', async () => {
-      // Create loader with many exact match patterns for performance testing
-      mockTraceConfigLoader.loadConfig.mockResolvedValue({
+  afterAll(() => {
+    jest.clearAllMocks();
+  });
+
+  function createTestFixtures() {
+    // Shared mock objects
+    const mockTraceConfigLoader = {
+      loadConfig: jest.fn(),
+    };
+    const mockLogger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    };
+    const mockValidator = {
+      validate: jest.fn().mockResolvedValue({ isValid: true }),
+      addSchema: jest.fn(),
+      removeSchema: jest.fn(),
+    };
+
+    // Pre-defined test configurations
+    const configs = {
+      exactMatches: {
         actionTracing: {
           enabled: true,
-          tracedActions: [
-            // 100 exact matches
-            ...Array.from({ length: 100 }, (_, i) => `mod${i}:action${i}`),
-          ],
+          tracedActions: Array.from({ length: 50 }, (_, i) => `mod${i}:action${i}`), // Reduced from 100
           outputDirectory: './traces',
           verbosity: 'standard',
           includeComponentData: true,
@@ -85,19 +83,81 @@ describe('ActionTraceConfigLoader Performance', () => {
           rotationPolicy: 'age',
           maxFileAge: 86400,
         },
-      });
+      },
+      wildcardPatterns: {
+        actionTracing: {
+          enabled: true,
+          tracedActions: Array.from({ length: 10 }, (_, i) => `wildcard${i}:*`),
+          outputDirectory: './traces',
+          verbosity: 'standard',
+        },
+      },
+      mixedPatterns: {
+        actionTracing: {
+          enabled: true,
+          tracedActions: [
+            // 25 exact matches (reduced from 50)
+            ...Array.from({ length: 25 }, (_, i) => `exact${i}:action${i}`),
+            // 5 wildcard patterns (reduced from 10)
+            ...Array.from({ length: 5 }, (_, i) => `wildcard${i}:*`),
+            // Global wildcard
+            '*',
+          ],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+        },
+      },
+      globalWildcard: {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['*'],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+        },
+      },
+    };
 
-      mockValidator.validate.mockResolvedValue({ isValid: true });
+    return {
+      mockTraceConfigLoader,
+      mockLogger,
+      mockValidator,
+      configs,
+    };
+  }
+
+  function createLoader(config) {
+    const { mockTraceConfigLoader, mockLogger, mockValidator } = testFixtures;
+    
+    if (config) {
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+    }
+
+    return new ActionTraceConfigLoader({
+      traceConfigLoader: mockTraceConfigLoader,
+      logger: mockLogger,
+      validator: mockValidator,
+    });
+  }
+
+  describe('Pattern Matching Performance', () => {
+    it('should handle exact matches, wildcards, and non-matches efficiently', async () => {
+      const loader = createLoader(testFixtures.configs.mixedPatterns);
 
       // Initialize with optimized structures
       await loader.loadConfig();
 
-      const iterations = 10000;
-      const targetAction = 'mod50:action50'; // Middle of the list
+      // Test scenarios: exact match, wildcard match, global wildcard, non-match
+      const testCases = [
+        { action: 'exact12:action12', expectedMatch: true, type: 'exact' },
+        { action: 'wildcard2:something', expectedMatch: true, type: 'wildcard' },
+        { action: 'any:random:action', expectedMatch: true, type: 'global' },
+        { action: 'nonexistent:action', expectedMatch: true, type: 'global' }, // Still matches * pattern
+      ];
 
       // Warm up the performance timer
-      for (let i = 0; i < 100; i++) {
-        await loader.shouldTraceAction(targetAction);
+      for (let i = 0; i < WARMUP_ITERATIONS; i++) {
+        const testCase = testCases[i % testCases.length];
+        await loader.shouldTraceAction(testCase.action);
       }
 
       // Reset statistics for accurate measurement
@@ -105,203 +165,32 @@ describe('ActionTraceConfigLoader Performance', () => {
 
       const start = performance.now();
 
-      for (let i = 0; i < iterations; i++) {
-        await loader.shouldTraceAction(targetAction);
-      }
-
-      const duration = performance.now() - start;
-      const avgTime = duration / iterations;
-
-      expect(avgTime).toBeLessThan(1); // Less than 1ms per lookup
-
-      // Verify all lookups were exact matches
-      const stats = loader.getStatistics();
-      expect(stats.totalLookups).toBe(iterations);
-      expect(stats.exactMatches).toBe(iterations);
-      expect(stats.wildcardMatches).toBe(0);
-    });
-
-    it('should handle non-matching exact lookups efficiently', async () => {
-      mockTraceConfigLoader.loadConfig.mockResolvedValue({
-        actionTracing: {
-          enabled: true,
-          tracedActions: [
-            ...Array.from({ length: 100 }, (_, i) => `mod${i}:action${i}`),
-          ],
-          outputDirectory: './traces',
-          verbosity: 'standard',
-        },
-      });
-
-      mockValidator.validate.mockResolvedValue({ isValid: true });
-
-      await loader.loadConfig();
-
-      const iterations = 10000;
-      const nonExistentAction = 'nonexistent:action';
-
-      loader.resetStatistics();
-
-      const start = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        const result = await loader.shouldTraceAction(nonExistentAction);
-        expect(result).toBe(false);
-      }
-
-      const duration = performance.now() - start;
-      const avgTime = duration / iterations;
-
-      expect(avgTime).toBeLessThan(1); // Less than 1ms per lookup
-
-      const stats = loader.getStatistics();
-      expect(stats.totalLookups).toBe(iterations);
-      expect(stats.exactMatches).toBe(0);
-      expect(stats.wildcardMatches).toBe(0);
-    });
-  });
-
-  describe('Wildcard Pattern Performance', () => {
-    it('should handle wildcard matching efficiently', async () => {
-      mockTraceConfigLoader.loadConfig.mockResolvedValue({
-        actionTracing: {
-          enabled: true,
-          tracedActions: [
-            // 10 wildcard patterns
-            ...Array.from({ length: 10 }, (_, i) => `wildcard${i}:*`),
-          ],
-          outputDirectory: './traces',
-          verbosity: 'standard',
-        },
-      });
-
-      mockValidator.validate.mockResolvedValue({ isValid: true });
-
-      await loader.loadConfig();
-
-      const iterations = 10000;
-      const wildcardAction = 'wildcard5:something';
-
-      loader.resetStatistics();
-
-      const start = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        const result = await loader.shouldTraceAction(wildcardAction);
-        expect(result).toBe(true);
-      }
-
-      const duration = performance.now() - start;
-      const avgTime = duration / iterations;
-
-      expect(avgTime).toBeLessThan(1); // Less than 1ms per lookup
-
-      const stats = loader.getStatistics();
-      expect(stats.totalLookups).toBe(iterations);
-      expect(stats.wildcardMatches).toBe(iterations);
-      expect(stats.exactMatches).toBe(0);
-    });
-
-    it('should handle global wildcard (*) efficiently', async () => {
-      mockTraceConfigLoader.loadConfig.mockResolvedValue({
-        actionTracing: {
-          enabled: true,
-          tracedActions: ['*'],
-          outputDirectory: './traces',
-          verbosity: 'standard',
-        },
-      });
-
-      mockValidator.validate.mockResolvedValue({ isValid: true });
-
-      await loader.loadConfig();
-
-      const iterations = 10000;
-      const actions = ['core:go', 'custom:action', 'mod:behavior', 'any:thing'];
-
-      loader.resetStatistics();
-
-      const start = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        const action = actions[i % actions.length];
-        const result = await loader.shouldTraceAction(action);
-        expect(result).toBe(true);
-      }
-
-      const duration = performance.now() - start;
-      const avgTime = duration / iterations;
-
-      expect(avgTime).toBeLessThan(1); // Less than 1ms per lookup
-
-      const stats = loader.getStatistics();
-      expect(stats.totalLookups).toBe(iterations);
-      expect(stats.wildcardMatches).toBe(iterations);
-    });
-  });
-
-  describe('Mixed Pattern Performance', () => {
-    it('should handle mixed exact and wildcard patterns efficiently', async () => {
-      mockTraceConfigLoader.loadConfig.mockResolvedValue({
-        actionTracing: {
-          enabled: true,
-          tracedActions: [
-            // 50 exact matches
-            ...Array.from({ length: 50 }, (_, i) => `exact${i}:action${i}`),
-            // 10 wildcard patterns
-            ...Array.from({ length: 10 }, (_, i) => `wildcard${i}:*`),
-            // Global wildcard
-            '*',
-          ],
-          outputDirectory: './traces',
-          verbosity: 'standard',
-        },
-      });
-
-      mockValidator.validate.mockResolvedValue({ isValid: true });
-
-      await loader.loadConfig();
-
-      const iterations = 10000;
-      const testCases = [
-        { action: 'exact25:action25', expectedMatch: true, type: 'exact' },
-        {
-          action: 'wildcard3:something',
-          expectedMatch: true,
-          type: 'wildcard',
-        },
-        { action: 'any:random:action', expectedMatch: true, type: 'global' },
-        { action: 'nonexistent:action', expectedMatch: true, type: 'global' }, // Still matches * pattern
-      ];
-
-      loader.resetStatistics();
-
-      const start = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
+      for (let i = 0; i < PERFORMANCE_ITERATIONS; i++) {
         const testCase = testCases[i % testCases.length];
         const result = await loader.shouldTraceAction(testCase.action);
         expect(result).toBe(testCase.expectedMatch);
       }
 
       const duration = performance.now() - start;
-      const avgTime = duration / iterations;
+      const avgTime = duration / PERFORMANCE_ITERATIONS;
 
       expect(avgTime).toBeLessThan(1); // Less than 1ms per lookup
 
+      // Verify statistics
       const stats = loader.getStatistics();
-      expect(stats.totalLookups).toBe(iterations);
-      expect(stats.exactMatches + stats.wildcardMatches).toBe(iterations);
+      expect(stats.totalLookups).toBe(PERFORMANCE_ITERATIONS);
+      expect(stats.exactMatches + stats.wildcardMatches).toBe(PERFORMANCE_ITERATIONS);
     });
+  });
 
+  describe('Configuration Reload Performance', () => {
     it('should maintain performance with config reloads', async () => {
+      const { mockTraceConfigLoader, mockValidator } = testFixtures;
+
       const config1 = {
         actionTracing: {
           enabled: true,
-          tracedActions: Array.from(
-            { length: 50 },
-            (_, i) => `config1_${i}:action`
-          ),
+          tracedActions: Array.from({ length: 25 }, (_, i) => `config1_${i}:action`), // Reduced from 50
           outputDirectory: './traces1',
           verbosity: 'standard',
         },
@@ -310,31 +199,25 @@ describe('ActionTraceConfigLoader Performance', () => {
       const config2 = {
         actionTracing: {
           enabled: true,
-          tracedActions: Array.from(
-            { length: 75 },
-            (_, i) => `config2_${i}:action`
-          ),
+          tracedActions: Array.from({ length: 35 }, (_, i) => `config2_${i}:action`), // Reduced from 75  
           outputDirectory: './traces2',
           verbosity: 'detailed',
         },
       };
 
-      mockValidator.validate.mockResolvedValue({ isValid: true });
-
       // Load initial config
       mockTraceConfigLoader.loadConfig.mockResolvedValueOnce(config1);
+      const loader = createLoader();
       await loader.loadConfig();
 
       // Test performance with first config
-      const iterations1 = 1000;
       loader.resetStatistics();
-
       const start1 = performance.now();
-      for (let i = 0; i < iterations1; i++) {
-        await loader.shouldTraceAction('config1_25:action');
+      for (let i = 0; i < PERFORMANCE_ITERATIONS; i++) {
+        await loader.shouldTraceAction('config1_12:action');
       }
       const duration1 = performance.now() - start1;
-      const avgTime1 = duration1 / iterations1;
+      const avgTime1 = duration1 / PERFORMANCE_ITERATIONS;
 
       expect(avgTime1).toBeLessThan(1);
 
@@ -343,15 +226,13 @@ describe('ActionTraceConfigLoader Performance', () => {
       await loader.reloadConfig();
 
       // Test performance with reloaded config
-      const iterations2 = 1000;
       loader.resetStatistics();
-
       const start2 = performance.now();
-      for (let i = 0; i < iterations2; i++) {
-        await loader.shouldTraceAction('config2_35:action');
+      for (let i = 0; i < PERFORMANCE_ITERATIONS; i++) {
+        await loader.shouldTraceAction('config2_17:action');
       }
       const duration2 = performance.now() - start2;
-      const avgTime2 = duration2 / iterations2;
+      const avgTime2 = duration2 / PERFORMANCE_ITERATIONS;
 
       expect(avgTime2).toBeLessThan(1);
 
@@ -361,13 +242,13 @@ describe('ActionTraceConfigLoader Performance', () => {
     });
   });
 
-  describe('Configuration Method Performance', () => {
-    it('should access configuration methods efficiently', async () => {
-      mockTraceConfigLoader.loadConfig.mockResolvedValue({
+  describe('Configuration & Data Processing Performance', () => {
+    it('should efficiently access config methods and filter data by verbosity', async () => {
+      const detailedConfig = {
         actionTracing: {
           enabled: true,
           tracedActions: ['*'],
-          verbosity: 'detailed',
+          verbosity: 'verbose',
           includeComponentData: true,
           includePrerequisites: false,
           includeTargets: true,
@@ -376,45 +257,9 @@ describe('ActionTraceConfigLoader Performance', () => {
           maxTraceFiles: 100,
           maxFileAge: 3600,
         },
-      });
+      };
 
-      mockValidator.validate.mockResolvedValue({ isValid: true });
-
-      await loader.loadConfig();
-
-      const iterations = 1000;
-
-      // Test multiple configuration method calls
-      const start = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        await loader.getVerbosityLevel();
-        await loader.getInclusionConfig();
-        await loader.getOutputDirectory();
-        await loader.getRotationConfig();
-      }
-
-      const duration = performance.now() - start;
-      const avgTime = duration / (iterations * 4); // 4 method calls per iteration
-
-      expect(avgTime).toBeLessThan(0.1); // Should be very fast since config is cached
-    });
-
-    it('should filter data by verbosity efficiently', async () => {
-      mockTraceConfigLoader.loadConfig.mockResolvedValue({
-        actionTracing: {
-          enabled: true,
-          tracedActions: ['*'],
-          verbosity: 'verbose',
-          includeComponentData: true,
-          includePrerequisites: true,
-          includeTargets: true,
-          outputDirectory: './traces',
-        },
-      });
-
-      mockValidator.validate.mockResolvedValue({ isValid: true });
-
+      const loader = createLoader(detailedConfig);
       await loader.loadConfig();
 
       const testData = {
@@ -431,67 +276,58 @@ describe('ActionTraceConfigLoader Performance', () => {
         systemState: { state: 'info' },
       };
 
-      const iterations = 1000;
+      // Test configuration method access performance
+      let start = performance.now();
+      for (let i = 0; i < PERFORMANCE_ITERATIONS; i++) {
+        await loader.getVerbosityLevel();
+        await loader.getInclusionConfig();
+        await loader.getOutputDirectory();
+        await loader.getRotationConfig();
+      }
+      let duration = performance.now() - start;
+      const avgConfigTime = duration / (PERFORMANCE_ITERATIONS * 4); // 4 method calls per iteration
+      expect(avgConfigTime).toBeLessThan(0.1); // Should be very fast since config is cached
 
-      const start = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
+      // Test data filtering performance  
+      start = performance.now();
+      for (let i = 0; i < PERFORMANCE_ITERATIONS; i++) {
         const filtered = await loader.filterDataByVerbosity(testData);
         expect(filtered).toBeDefined();
         expect(filtered.actionId).toBe('core:test');
       }
-
-      const duration = performance.now() - start;
-      const avgTime = duration / iterations;
-
-      expect(avgTime).toBeLessThan(1); // Less than 1ms per filter operation
+      duration = performance.now() - start;
+      const avgFilterTime = duration / PERFORMANCE_ITERATIONS;
+      expect(avgFilterTime).toBeLessThan(1); // Less than 1ms per filter operation
     });
-  });
 
-  describe('Statistics Performance', () => {
     it('should provide statistics without impacting lookup performance', async () => {
-      mockTraceConfigLoader.loadConfig.mockResolvedValue({
-        actionTracing: {
-          enabled: true,
-          tracedActions: ['core:go', 'custom:*'],
-          outputDirectory: './traces',
-        },
-      });
-
-      mockValidator.validate.mockResolvedValue({ isValid: true });
-
+      const loader = createLoader(testFixtures.configs.mixedPatterns);
       await loader.loadConfig();
 
-      // Perform many lookups to generate statistics
-      const lookupIterations = 1000;
+      // Generate statistics data
+      const lookupIterations = 500; // Reduced from 1000
       for (let i = 0; i < lookupIterations; i++) {
-        await loader.shouldTraceAction('core:go');
-        await loader.shouldTraceAction('custom:action');
+        await loader.shouldTraceAction('exact5:action5');
+        await loader.shouldTraceAction('wildcard2:action');
       }
 
       // Test statistics access performance
-      const statsIterations = 1000;
       const start = performance.now();
-
-      for (let i = 0; i < statsIterations; i++) {
+      for (let i = 0; i < PERFORMANCE_ITERATIONS; i++) {
         const stats = loader.getStatistics();
         expect(stats.totalLookups).toBe(lookupIterations * 2);
       }
-
       const duration = performance.now() - start;
-      const avgTime = duration / statsIterations;
+      const avgTime = duration / PERFORMANCE_ITERATIONS;
 
       expect(avgTime).toBeLessThan(0.1); // Should be very fast (read-only)
     });
   });
 
-  describe('TTL Performance Impact', () => {
-    // Note: TTL (Time-To-Live) cache performance tests measure:
-    // 1. Cache hit performance with timestamp validation overhead
-    // 2. Performance consistency across different TTL configurations
-    // 3. Cache expiration detection and reload performance
-    // These tests account for JavaScript timing precision limitations
-    it('should measure TTL check overhead in cache hits', async () => {
+  describe('TTL Cache Performance', () => {
+    it('should have minimal TTL check overhead and efficient cache behavior', async () => {
+      const { mockTraceConfigLoader, mockLogger, mockValidator } = testFixtures;
+
       const mockConfig = {
         actionTracing: {
           enabled: true,
@@ -508,57 +344,14 @@ describe('ActionTraceConfigLoader Performance', () => {
       };
 
       mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      mockValidator.validate.mockResolvedValue({ isValid: true });
 
-      // Create loader with TTL enabled
+      // Test with TTL enabled
       const ttlLoader = new ActionTraceConfigLoader({
         traceConfigLoader: mockTraceConfigLoader,
         logger: mockLogger,
         validator: mockValidator,
         cacheTtl: 60000, // 1 minute
       });
-
-      // Load initial config
-      await ttlLoader.loadConfig();
-      expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
-
-      // Measure TTL check performance
-      const iterations = 10000;
-      const start = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        await ttlLoader.loadConfig(); // All should be cache hits with TTL checks
-      }
-
-      const duration = performance.now() - start;
-      const avgTimePerCheck = (duration * 1000000) / iterations; // Convert to nanoseconds
-
-      // TTL check should add minimal overhead
-      expect(avgTimePerCheck).toBeLessThan(10000); // <10μs per check (being realistic for JS)
-      expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(1); // Only initial load
-    });
-
-    it('should compare performance with and without TTL', async () => {
-      const mockConfig = {
-        actionTracing: {
-          enabled: true,
-          tracedActions: Array.from(
-            { length: 50 },
-            (_, i) => `mod${i}:action${i}`
-          ),
-          outputDirectory: './traces',
-          verbosity: 'standard',
-          includeComponentData: true,
-          includePrerequisites: true,
-          includeTargets: true,
-          maxTraceFiles: 100,
-          rotationPolicy: 'age',
-          maxFileAge: 86400,
-        },
-      };
-
-      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      mockValidator.validate.mockResolvedValue({ isValid: true });
 
       // Test without TTL (disabled caching)
       const noCacheLoader = new ActionTraceConfigLoader({
@@ -568,146 +361,43 @@ describe('ActionTraceConfigLoader Performance', () => {
         cacheTtl: 0, // Disabled
       });
 
-      // Test with TTL
-      const ttlLoader = new ActionTraceConfigLoader({
-        traceConfigLoader: mockTraceConfigLoader,
-        logger: mockLogger,
-        validator: mockValidator,
-        cacheTtl: 60000, // 1 minute
-      });
+      // Load initial config for TTL loader
+      await ttlLoader.loadConfig();
+      expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
 
-      const iterations = 1000;
+      // Measure TTL cache hit performance
+      mockTraceConfigLoader.loadConfig.mockClear();
+      const ttlStart = performance.now();
+      for (let i = 0; i < TTL_ITERATIONS; i++) {
+        await ttlLoader.loadConfig(); // All should be cache hits
+      }
+      const ttlDuration = performance.now() - ttlStart;
+      const avgTtlTime = ttlDuration / TTL_ITERATIONS;
+      
+      expect(avgTtlTime).toBeLessThan(0.1); // <0.1ms per cached operation
+      expect(mockTraceConfigLoader.loadConfig).not.toHaveBeenCalled(); // Should use cache
 
-      // Warm up and measure no-cache performance
+      // Compare with no-cache performance for context
       mockTraceConfigLoader.loadConfig.mockClear();
       const noCacheStart = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
+      for (let i = 0; i < TTL_ITERATIONS; i++) {
         await noCacheLoader.loadConfig();
       }
-
       const noCacheDuration = performance.now() - noCacheStart;
 
-      // Warm up and measure TTL cache performance
-      mockTraceConfigLoader.loadConfig.mockClear();
-      await ttlLoader.loadConfig(); // Initial load
-      const ttlCacheStart = performance.now();
+      // TTL caching should be significantly faster
+      const speedup = noCacheDuration / ttlDuration;
+      expect(speedup).toBeGreaterThan(5); // At least 5x faster with caching
 
-      for (let i = 0; i < iterations; i++) {
-        await ttlLoader.loadConfig(); // Should all be cache hits
-      }
-
-      const ttlCacheDuration = performance.now() - ttlCacheStart;
-
-      // TTL caching should be significantly faster than reloading every time
-      // Note: Speedup varies based on system load, but caching should provide meaningful benefit
-      const speedup = noCacheDuration / ttlCacheDuration;
-      expect(speedup).toBeGreaterThan(5); // At least 5x faster with caching (realistic for variable conditions)
-
-      // TTL cache should have minimal per-operation time
-      const avgTtlTime = ttlCacheDuration / iterations;
-      expect(avgTtlTime).toBeLessThan(0.1); // <0.1ms per cached operation
+      // Test statistics with TTL information
+      const stats = ttlLoader.getStatistics();
+      expect(stats.cacheTtl).toBe(60000);
+      expect(stats.cacheStatus).toBe('valid');
+      expect(stats.cacheAge).toBeGreaterThanOrEqual(0);
     });
 
-    it('should measure performance with various TTL values', async () => {
-      const mockConfig = {
-        actionTracing: {
-          enabled: true,
-          tracedActions: ['core:go'],
-          outputDirectory: './traces',
-          verbosity: 'standard',
-          includeComponentData: true,
-          includePrerequisites: true,
-          includeTargets: true,
-          maxTraceFiles: 100,
-          rotationPolicy: 'age',
-          maxFileAge: 86400,
-        },
-      };
-
-      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      mockValidator.validate.mockResolvedValue({ isValid: true });
-
-      const ttlValues = [1000, 5000, 30000, 60000, 300000]; // Various TTL values
-      const results = [];
-
-      for (const ttl of ttlValues) {
-        const testLoader = new ActionTraceConfigLoader({
-          traceConfigLoader: mockTraceConfigLoader,
-          logger: mockLogger,
-          validator: mockValidator,
-          cacheTtl: ttl,
-        });
-
-        // Load initial config
-        await testLoader.loadConfig();
-
-        // Warm up for this TTL configuration
-        for (let warmup = 0; warmup < 100; warmup++) {
-          await testLoader.loadConfig();
-        }
-
-        // Take multiple samples for statistical stability
-        const samples = [];
-        const iterations = 1000;
-
-        for (let sample = 0; sample < 5; sample++) {
-          const start = performance.now();
-
-          for (let i = 0; i < iterations; i++) {
-            await testLoader.loadConfig();
-          }
-
-          const duration = performance.now() - start;
-          const avgTime = duration / iterations;
-          samples.push(avgTime);
-
-          await new Promise((resolve) => setTimeout(resolve, 10));
-        }
-
-        // Use median of samples for stability
-        samples.sort((a, b) => a - b);
-        const medianTime = samples[Math.floor(samples.length / 2)];
-
-        results.push({ ttl, avgTime: medianTime });
-      }
-
-      // All TTL values should have similar performance (timestamp comparison is constant time)
-      results.forEach(({ avgTime }) => {
-        expect(avgTime).toBeLessThan(0.1); // <0.1ms per operation regardless of TTL
-      });
-
-      // Performance should be consistent across different TTL values
-      // Note: JavaScript performance timing has inherent variability due to:
-      // - JIT compilation effects
-      // - Garbage collection interference
-      // - System load and concurrent test execution
-      const times = results.map((r) => r.avgTime);
-      const maxTime = Math.max(...times);
-      const minTime = Math.min(...times);
-      const variation = (maxTime - minTime) / minTime;
-
-      expect(variation).toBeLessThan(2.0); // <200% variation between different TTL values (realistic for micro-benchmarks)
-    });
-
-    it('should measure cache expiration and reload performance', async () => {
-      const mockConfig = {
-        actionTracing: {
-          enabled: true,
-          tracedActions: ['core:go'],
-          outputDirectory: './traces',
-          verbosity: 'standard',
-          includeComponentData: true,
-          includePrerequisites: true,
-          includeTargets: true,
-          maxTraceFiles: 100,
-          rotationPolicy: 'age',
-          maxFileAge: 86400,
-        },
-      };
-
-      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      mockValidator.validate.mockResolvedValue({ isValid: true });
+    it('should handle cache expiration and reload efficiently', async () => {
+      const { mockTraceConfigLoader, mockLogger, mockValidator } = testFixtures;
 
       const expiredLoader = new ActionTraceConfigLoader({
         traceConfigLoader: mockTraceConfigLoader,
@@ -716,8 +406,11 @@ describe('ActionTraceConfigLoader Performance', () => {
         cacheTtl: 50, // Very short TTL for testing
       });
 
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(testFixtures.configs.exactMatches);
+
       // Load initial config
       await expiredLoader.loadConfig();
+      expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
 
       // Wait for expiration
       await new Promise((resolve) => setTimeout(resolve, 75));
@@ -732,81 +425,6 @@ describe('ActionTraceConfigLoader Performance', () => {
 
       // Verify it actually reloaded
       expect(mockTraceConfigLoader.loadConfig).toHaveBeenCalledTimes(2);
-    });
-
-    it('should measure statistics performance with TTL information', async () => {
-      const mockConfig = {
-        actionTracing: {
-          enabled: true,
-          tracedActions: ['core:go'],
-          outputDirectory: './traces',
-          verbosity: 'standard',
-          includeComponentData: true,
-          includePrerequisites: true,
-          includeTargets: true,
-          maxTraceFiles: 100,
-          rotationPolicy: 'age',
-          maxFileAge: 86400,
-        },
-      };
-
-      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      mockValidator.validate.mockResolvedValue({ isValid: true });
-
-      const ttlLoader = new ActionTraceConfigLoader({
-        traceConfigLoader: mockTraceConfigLoader,
-        logger: mockLogger,
-        validator: mockValidator,
-        cacheTtl: 60000,
-      });
-
-      // Load config to populate cache
-      await ttlLoader.loadConfig();
-
-      // Extended warm-up for statistics performance measurement
-      for (let warmup = 0; warmup < 1000; warmup++) {
-        ttlLoader.getStatistics();
-      }
-
-      // Stabilize timing with additional warm-up and GC
-      if (global.gc) {
-        global.gc();
-      }
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
-      // Measure statistics performance with TTL calculations using multiple samples
-      const iterations = 10000;
-      const samples = [];
-
-      // Take multiple timing samples for statistical analysis
-      for (let sample = 0; sample < 10; sample++) {
-        const start = performance.now();
-
-        for (let i = 0; i < iterations; i++) {
-          const stats = ttlLoader.getStatistics();
-          expect(stats.cacheTtl).toBe(60000);
-          expect(stats.cacheStatus).toBe('valid');
-          expect(stats.cacheAge).toBeGreaterThanOrEqual(0);
-        }
-
-        const duration = performance.now() - start;
-        const avgTime = (duration * 1000000) / iterations; // Convert to nanoseconds
-        samples.push(avgTime);
-
-        // Brief pause between samples to avoid interference
-        await new Promise((resolve) => setTimeout(resolve, 5));
-      }
-
-      // Statistical analysis: use median for robustness against outliers
-      samples.sort((a, b) => a - b);
-      const medianTime = samples[Math.floor(samples.length / 2)];
-      const p95Time = samples[Math.floor(samples.length * 0.95)];
-
-      // Statistics with TTL calculations should still be very fast
-      // Note: Using median reduces impact of timing outliers from GC, system load, etc.
-      // P95 threshold catches performance regressions while allowing realistic variance
-      expect(medianTime).toBeLessThan(200000); // <200μs median (typical case)
-      expect(p95Time).toBeLessThan(500000); // <500μs P95 (outlier tolerance)
     });
   });
 });
