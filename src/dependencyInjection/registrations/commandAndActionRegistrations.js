@@ -263,20 +263,22 @@ export function registerCommandAndAction(container) {
     .tagged(INITIALIZABLE)
     .singletonFactory(tokens.IActionDiscoveryService, (c) => {
       const logger = c.resolve(tokens.ILogger);
-      
+
       // Get optional action tracing dependencies
       let actionAwareTraceFactory = null;
       let actionTraceFilter = null;
-      
+
       try {
         // Try to resolve action-aware trace factory if registered
         if (c.isRegistered(tokens.IActionAwareStructuredTrace)) {
-          actionAwareTraceFactory = c.resolve(tokens.IActionAwareStructuredTrace);
+          actionAwareTraceFactory = c.resolve(
+            tokens.IActionAwareStructuredTrace
+          );
         }
       } catch (err) {
         logger.debug('ActionAwareStructuredTrace not available', err);
       }
-      
+
       try {
         // Try to resolve action trace filter if registered
         if (c.isRegistered(tokens.IActionTraceFilter)) {

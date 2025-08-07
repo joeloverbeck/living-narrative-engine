@@ -135,7 +135,8 @@ export class ActionPipelineOrchestrator {
       new ComponentFilteringStage(
         this.#actionIndex,
         this.#errorBuilder,
-        this.#logger
+        this.#logger,
+        this.#entityManager
       ),
       new PrerequisiteEvaluationStage(
         this.#prerequisiteService,

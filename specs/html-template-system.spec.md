@@ -1,10 +1,12 @@
 # HTML Template System for Character Builder Pages - Implementation Specification
 
 ---
+
 **Status**: Proposal (Not Implemented)
 **Created**: [Original Date]
 **Last Updated**: 2025-08-07
 **Type**: Feature Proposal
+
 ---
 
 ## Current Implementation Status
@@ -12,6 +14,7 @@
 **IMPORTANT**: This specification describes a proposed template system that has not yet been implemented. The current character builder pages use the following approach:
 
 ### Current Architecture
+
 - **Static HTML Files**: Each character builder page has its own HTML file in `data/html/`
 - **Direct DOM Manipulation**: Controllers directly manipulate DOM elements
 - **No Template System**: HTML structure is duplicated across pages
@@ -19,13 +22,16 @@
 - **Manual Updates**: Changes require updating each HTML file individually
 
 ### Files That Currently Exist
+
 - `data/html/` - Contains static HTML files for each page
 - `src/characterBuilder/controllers/` - Controllers that manipulate the static HTML
 - `src/characterBuilder/BaseCharacterBuilderController.js` - Base controller class
 - `src/bootstrap/CharacterBuilderBootstrap.js` - Bootstrap system (no template support)
 
 ### Proposed Solution
+
 This specification outlines a template system that would:
+
 - Eliminate the current HTML duplication
 - Provide a component-based approach
 - Enable dynamic content generation
@@ -133,9 +139,9 @@ class ConcreteController extends BaseCharacterBuilderController {
       subtitle: 'Page Description',
       leftPanel: this.createLeftPanelContent(),
       rightPanel: this.createRightPanelContent(),
-      modals: this.getModalDefinitions()
+      modals: this.getModalDefinitions(),
     });
-    
+
     this.renderTemplate(template);
   }
 }
@@ -146,8 +152,10 @@ CharacterBuilderBootstrap.bootstrap({
   templateConfig: {
     useTemplate: true,
     templateType: 'dual-panel',
-    customizations: { /* ... */ }
-  }
+    customizations: {
+      /* ... */
+    },
+  },
 });
 ```
 
@@ -158,7 +166,7 @@ CharacterBuilderBootstrap.bootstrap({
 #### FR-1: Core Template System
 
 - **Requirement**: Will create modular template system with composable components
-- **Details**: 
+- **Details**:
   - Templates will be pure functions returning HTML strings or DOM elements
   - Will support both server-side rendering (build time) and client-side rendering (runtime)
   - Templates will be framework-agnostic (pure JavaScript)
@@ -202,7 +210,6 @@ CharacterBuilderBootstrap.bootstrap({
   - ModalTemplate: Modal dialogs with backdrop and focus management
   - StatisticsTemplate: Metrics display with icons and values
   - DisplayCardTemplate: Content cards for data display
-  
 - **Acceptance Criteria**:
   - Each component is independently testable
   - Components support customization via options
@@ -213,24 +220,26 @@ CharacterBuilderBootstrap.bootstrap({
 
 - **Requirement**: Will provide utilities for template usage
 - **Proposed Utilities**:
+
   ```javascript
   // Proposed Template Renderer API
   TemplateRenderer.render(template, data) => HTMLString
   TemplateRenderer.renderToDOM(template, data) => DocumentFragment
-  
+
   // Proposed Template Injector API
   TemplateInjector.inject(target, template, position)
   TemplateInjector.replace(target, template)
-  
+
   // Proposed Template Validator API
   TemplateValidator.validate(template) => ValidationResult
   TemplateValidator.validateStructure(html) => boolean
-  
+
   // Proposed Template Cache API
   TemplateCache.set(key, template)
   TemplateCache.get(key) => template
   TemplateCache.clear()
   ```
+
 - **Acceptance Criteria**:
   - Utilities handle edge cases gracefully
   - Performance optimized for repeated rendering
@@ -252,8 +261,8 @@ CharacterBuilderBootstrap.bootstrap({
     content: '${data.items.map(item => createItemTemplate(item)).join("")}',
     showFooter: '${data.hasFooter}',
     events: {
-      'click .action-btn': 'handleAction'
-    }
+      'click .action-btn': 'handleAction',
+    },
   });
   ```
 - **Acceptance Criteria**:
@@ -360,7 +369,7 @@ export function createCharacterBuilderPage(config) {
       ${createMain({ leftPanel, rightPanel })}
       ${createFooter(footer)}
     </div>
-    ${modals.map(modal => createModal(modal)).join('')}
+    ${modals.map((modal) => createModal(modal)).join('')}
   `;
 }
 ```
@@ -391,7 +400,8 @@ export function createPanel(config) {
   } = config;
 
   const panelId = id ? `id="${id}"` : '';
-  const displayStyle = !content && !showWhenEmpty ? 'style="display: none;"' : '';
+  const displayStyle =
+    !content && !showWhenEmpty ? 'style="display: none;"' : '';
 
   return `
     <section ${panelId} class="cb-panel ${className}" ${displayStyle}>
@@ -407,7 +417,9 @@ export function createPanel(config) {
 function createPanelActions(actions) {
   return `
     <div class="cb-panel-actions">
-      ${actions.map(action => `
+      ${actions
+        .map(
+          (action) => `
         <button 
           type="button"
           class="cb-action-btn ${action.className || ''}"
@@ -416,7 +428,9 @@ function createPanelActions(actions) {
         >
           ${action.label}
         </button>
-      `).join('')}
+      `
+        )
+        .join('')}
     </div>
   `;
 }
@@ -524,9 +538,10 @@ export class BaseCharacterBuilderController {
       throw new Error('Template container not found');
     }
 
-    const rendered = typeof template === 'function'
-      ? TemplateRenderer.render(template, data)
-      : template;
+    const rendered =
+      typeof template === 'function'
+        ? TemplateRenderer.render(template, data)
+        : template;
 
     container.innerHTML = rendered;
     this.onTemplateRendered();
@@ -581,7 +596,7 @@ export class BaseCharacterBuilderController {
 export class ThematicDirectionController extends BaseCharacterBuilderController {
   async initialize() {
     await super.initialize();
-    
+
     // Create and render page template
     const template = this.createPageTemplate({
       title: 'Thematic Direction Generator',
@@ -633,25 +648,27 @@ export class ThematicDirectionController extends BaseCharacterBuilderController 
 
   createResultsPanel() {
     const directions = this.getGeneratedDirections();
-    
+
     if (!directions.length) {
       return '';
     }
 
-    return directions.map(direction => 
-      createDisplayCardTemplate({
-        title: direction.title,
-        content: direction.description,
-        metadata: {
-          created: direction.createdAt,
-          complexity: direction.complexity,
-        },
-        actions: [
-          { label: 'Edit', name: 'edit', data: { id: direction.id } },
-          { label: 'Delete', name: 'delete', data: { id: direction.id } },
-        ],
-      })
-    ).join('');
+    return directions
+      .map((direction) =>
+        createDisplayCardTemplate({
+          title: direction.title,
+          content: direction.description,
+          metadata: {
+            created: direction.createdAt,
+            complexity: direction.complexity,
+          },
+          actions: [
+            { label: 'Edit', name: 'edit', data: { id: direction.id } },
+            { label: 'Delete', name: 'delete', data: { id: direction.id } },
+          ],
+        })
+      )
+      .join('');
   }
 }
 ```
@@ -717,7 +734,7 @@ describe('PageTemplate', () => {
       title: 'Test Page',
       leftPanel: { content: 'Test content' },
     });
-    
+
     expect(html).toContain('cb-page-container');
     expect(html).toContain('Test Page');
     expect(html).toContain('Test content');
@@ -727,7 +744,7 @@ describe('PageTemplate', () => {
     const html = createCharacterBuilderPage({
       title: 'Minimal Page',
     });
-    
+
     expect(html).toBeDefined();
     expect(html).not.toContain('undefined');
   });
@@ -738,7 +755,7 @@ describe('TemplateRenderer', () => {
   it('should render template with data', () => {
     const template = (data) => `<h1>${data.title}</h1>`;
     const result = TemplateRenderer.render(template, { title: 'Test' });
-    
+
     expect(result).toBe('<h1>Test</h1>');
   });
 
@@ -747,7 +764,7 @@ describe('TemplateRenderer', () => {
     const result = TemplateRenderer.render(template, {
       content: '<script>alert("XSS")</script>',
     });
-    
+
     expect(result).not.toContain('<script>');
   });
 });
@@ -759,15 +776,17 @@ describe('TemplateRenderer', () => {
 // Proposed integration tests
 describe('Template Integration with Controller', () => {
   let controller;
-  
+
   beforeEach(() => {
     document.body.innerHTML = '<div id="app"></div>';
-    controller = new TestController({ /* deps */ });
+    controller = new TestController({
+      /* deps */
+    });
   });
 
   it('should render template on initialization', async () => {
     await controller.initialize();
-    
+
     const container = document.getElementById('app');
     expect(container.querySelector('.cb-page-container')).toBeDefined();
     expect(container.querySelector('.cb-page-header')).toBeDefined();
@@ -775,17 +794,17 @@ describe('Template Integration with Controller', () => {
 
   it('should re-cache elements after template render', async () => {
     await controller.initialize();
-    
+
     const button = document.querySelector('#test-button');
     expect(controller.elements['testButton']).toBe(button);
   });
 
   it('should maintain event listeners after template render', async () => {
     await controller.initialize();
-    
+
     const button = document.querySelector('#test-button');
     const clickSpy = jest.spyOn(controller, 'handleClick');
-    
+
     button.click();
     expect(clickSpy).toHaveBeenCalled();
   });
@@ -806,29 +825,31 @@ describe('Template Integration with Controller', () => {
 describe('Template Performance', () => {
   it('should render page template in under 10ms', () => {
     const start = performance.now();
-    
+
     createCharacterBuilderPage({
       title: 'Performance Test',
       leftPanel: { content: 'Test' },
       rightPanel: { content: 'Test' },
       modals: [{ title: 'Modal', content: 'Test' }],
     });
-    
+
     const duration = performance.now() - start;
     expect(duration).toBeLessThan(10);
   });
 
   it('should handle large lists efficiently', () => {
-    const items = Array(1000).fill().map((_, i) => ({
-      id: i,
-      title: `Item ${i}`,
-      content: `Content for item ${i}`,
-    }));
-    
+    const items = Array(1000)
+      .fill()
+      .map((_, i) => ({
+        id: i,
+        title: `Item ${i}`,
+        content: `Content for item ${i}`,
+      }));
+
     const start = performance.now();
     const html = createListTemplate({ items });
     const duration = performance.now() - start;
-    
+
     expect(duration).toBeLessThan(100);
     expect(html).toContain('Item 999');
   });
@@ -839,22 +860,22 @@ describe('Template Performance', () => {
 
 ### 7.1 Technical Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|------------|--------|------------|
-| Breaking existing functionality | Medium | High | Comprehensive testing, gradual migration, feature flags |
-| Performance degradation | Low | Medium | Performance testing, caching, optimization |
-| Browser compatibility issues | Low | Medium | Progressive enhancement, polyfills if needed |
-| Memory leaks from templates | Low | High | Proper cleanup, memory profiling, WeakMap usage |
-| XSS vulnerabilities | Medium | Critical | HTML sanitization, Content Security Policy |
+| Risk                            | Probability | Impact   | Mitigation                                              |
+| ------------------------------- | ----------- | -------- | ------------------------------------------------------- |
+| Breaking existing functionality | Medium      | High     | Comprehensive testing, gradual migration, feature flags |
+| Performance degradation         | Low         | Medium   | Performance testing, caching, optimization              |
+| Browser compatibility issues    | Low         | Medium   | Progressive enhancement, polyfills if needed            |
+| Memory leaks from templates     | Low         | High     | Proper cleanup, memory profiling, WeakMap usage         |
+| XSS vulnerabilities             | Medium      | Critical | HTML sanitization, Content Security Policy              |
 
 ### 7.2 Project Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|------------|--------|------------|
-| Scope creep | Medium | Medium | Clear boundaries, phased approach |
-| Timeline overrun | Low | Medium | Buffer time, parallel work streams |
-| Adoption resistance | Low | Low | Documentation, training, clear benefits |
-| Maintenance burden | Low | Low | Comprehensive tests, documentation |
+| Risk                | Probability | Impact | Mitigation                              |
+| ------------------- | ----------- | ------ | --------------------------------------- |
+| Scope creep         | Medium      | Medium | Clear boundaries, phased approach       |
+| Timeline overrun    | Low         | Medium | Buffer time, parallel work streams      |
+| Adoption resistance | Low         | Low    | Documentation, training, clear benefits |
+| Maintenance burden  | Low         | Low    | Comprehensive tests, documentation      |
 
 ### 7.3 Mitigation Strategies
 
@@ -986,32 +1007,76 @@ describe('Template Performance', () => {
 
 ```css
 /* Template-specific classes to be added to character-builder base CSS */
-.cb-page-container { /* Main page container */ }
-.cb-page-header { /* Page header */ }
-.cb-page-main { /* Main content area */ }
-.cb-page-footer { /* Page footer */ }
+.cb-page-container {
+  /* Main page container */
+}
+.cb-page-header {
+  /* Page header */
+}
+.cb-page-main {
+  /* Main content area */
+}
+.cb-page-footer {
+  /* Page footer */
+}
 
-.cb-panel { /* Content panel */ }
-.cb-panel-heading { /* Panel heading */ }
-.cb-panel-content { /* Panel content */ }
-.cb-panel-actions { /* Panel actions */ }
+.cb-panel {
+  /* Content panel */
+}
+.cb-panel-heading {
+  /* Panel heading */
+}
+.cb-panel-content {
+  /* Panel content */
+}
+.cb-panel-actions {
+  /* Panel actions */
+}
 
-.cb-form-group { /* Form field group */ }
-.cb-form-label { /* Form label */ }
-.cb-form-input { /* Form input */ }
-.cb-form-help { /* Help text */ }
-.cb-form-error { /* Error message */ }
+.cb-form-group {
+  /* Form field group */
+}
+.cb-form-label {
+  /* Form label */
+}
+.cb-form-input {
+  /* Form input */
+}
+.cb-form-help {
+  /* Help text */
+}
+.cb-form-error {
+  /* Error message */
+}
 
-.cb-modal { /* Modal container */ }
-.cb-modal-backdrop { /* Modal backdrop */ }
-.cb-modal-content { /* Modal content */ }
-.cb-modal-header { /* Modal header */ }
-.cb-modal-body { /* Modal body */ }
-.cb-modal-footer { /* Modal footer */ }
+.cb-modal {
+  /* Modal container */
+}
+.cb-modal-backdrop {
+  /* Modal backdrop */
+}
+.cb-modal-content {
+  /* Modal content */
+}
+.cb-modal-header {
+  /* Modal header */
+}
+.cb-modal-body {
+  /* Modal body */
+}
+.cb-modal-footer {
+  /* Modal footer */
+}
 
-.cb-empty-message { /* Empty state message */ }
-.cb-loading { /* Loading state */ }
-.cb-error { /* Error state */ }
+.cb-empty-message {
+  /* Empty state message */
+}
+.cb-loading {
+  /* Loading state */
+}
+.cb-error {
+  /* Error state */
+}
 ```
 
 ### Appendix C: Migration Example
@@ -1120,4 +1185,4 @@ To begin implementation:
 
 ---
 
-*This specification provides a comprehensive blueprint for implementing the HTML Template System for character builder pages. When implemented, it will eliminate duplication, ensure consistency, and enable rapid development while maintaining backward compatibility and high quality standards.*
+_This specification provides a comprehensive blueprint for implementing the HTML Template System for character builder pages. When implemented, it will eliminate duplication, ensure consistency, and enable rapid development while maintaining backward compatibility and high quality standards._

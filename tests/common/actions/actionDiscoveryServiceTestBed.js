@@ -307,7 +307,7 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
 
   /**
    * Create discovery service with action tracing support
-   * 
+   *
    * @param {object} options - Configuration options
    * @returns {ActionDiscoveryService} Configured discovery service
    */
@@ -363,34 +363,39 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
 
     // Create trace context factory
     const traceContextFactory = traceContextFactoryFailure
-      ? () => { throw new Error('TraceContextFactory failed'); }
+      ? () => {
+          throw new Error('TraceContextFactory failed');
+        }
       : () => {
           this.#lastCreatedTraceType = 'StructuredTrace';
           return {
             info: jest.fn(),
             step: jest.fn(),
-            withSpanAsync: jest.fn().mockImplementation(async (name, fn) => fn()),
+            withSpanAsync: jest
+              .fn()
+              .mockImplementation(async (name, fn) => fn()),
           };
         };
 
     // Directly create the service using the mocks from the parent class
     const parentMocks = this.mocks;
-    
+
     // Create the ActionDiscoveryService directly with our custom dependencies
     const service = new ActionDiscoveryService({
       entityManager: parentMocks.entityManager,
       logger: mockLogger,
-      actionPipelineOrchestrator: parentMocks.actionPipelineOrchestrator || 
+      actionPipelineOrchestrator:
+        parentMocks.actionPipelineOrchestrator ||
         this.#createMockActionPipelineOrchestrator(),
       traceContextFactory,
       actionAwareTraceFactory: mockActionAwareTraceFactory,
       actionTraceFilter: mockActionTraceFilter,
       getActorLocationFn: parentMocks.getActorLocationFn,
     });
-    
+
     // Store reference so we can track state
     this.#currentService = service;
-    
+
     return service;
   }
 
@@ -400,11 +405,12 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
   createStandardDiscoveryService() {
     // Use the same parent mocks to ensure consistency
     const parentMocks = this.mocks;
-    
+
     return new ActionDiscoveryService({
       entityManager: parentMocks.entityManager,
       logger: parentMocks.logger,
-      actionPipelineOrchestrator: parentMocks.actionPipelineOrchestrator || 
+      actionPipelineOrchestrator:
+        parentMocks.actionPipelineOrchestrator ||
         this.#createMockActionPipelineOrchestrator(),
       traceContextFactory: () => ({
         info: jest.fn(),
@@ -454,24 +460,24 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
         }),
         step: jest.fn(),
         info: jest.fn(),
-        withSpanAsync: jest
-          .fn()
-          .mockImplementation(async (name, fn) => fn()),
+        withSpanAsync: jest.fn().mockImplementation(async (name, fn) => fn()),
       };
     });
   }
 
   #createMockActionPipelineOrchestrator() {
     return {
-      discoverActions: jest.fn().mockImplementation(async (actor, context, options) => {
-        return {
-          actions: [
-            { id: 'core:go', name: 'Go' },
-            { id: 'core:look', name: 'Look' },
-          ],
-          errors: [],
-        };
-      }),
+      discoverActions: jest
+        .fn()
+        .mockImplementation(async (actor, context, options) => {
+          return {
+            actions: [
+              { id: 'core:go', name: 'Go' },
+              { id: 'core:look', name: 'Look' },
+            ],
+            errors: [],
+          };
+        }),
     };
   }
 

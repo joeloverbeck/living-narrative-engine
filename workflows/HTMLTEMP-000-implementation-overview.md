@@ -7,6 +7,7 @@ This document provides a comprehensive overview of the HTML Template System impl
 ## Current State Analysis
 
 ### Problems Being Solved
+
 - **70% HTML duplication** across character builder pages
 - **No component reusability** - each page has its own HTML file
 - **Manual updates required** for global changes across all pages
@@ -15,6 +16,7 @@ This document provides a comprehensive overview of the HTML Template System impl
 - **No template system** - direct DOM manipulation only
 
 ### Proposed Solution Impact
+
 - **Single source of truth** for page structure
 - **6-hour page creation** (down from 2-3 days)
 - **Component-based architecture** with reusable templates
@@ -326,6 +328,7 @@ This document provides a comprehensive overview of the HTML Template System impl
 ## Success Metrics
 
 ### Quantitative Metrics
+
 - **Code Reduction**: 70% reduction in HTML duplication
 - **Development Speed**: < 6 hours for new page creation
 - **Performance**: < 10ms template rendering, < 20ms DOM injection
@@ -333,6 +336,7 @@ This document provides a comprehensive overview of the HTML Template System impl
 - **Bundle Size**: < 5KB increase (gzipped)
 
 ### Qualitative Metrics
+
 - **Developer Satisfaction**: Improved developer experience
 - **Maintainability**: Easier global changes
 - **Consistency**: Uniform structure across pages
@@ -342,15 +346,17 @@ This document provides a comprehensive overview of the HTML Template System impl
 ## Risk Management
 
 ### Technical Risks
-| Risk | Probability | Impact | Mitigation |
-|------|------------|--------|------------|
-| Breaking existing functionality | Medium | High | Comprehensive testing, gradual migration |
-| Performance degradation | Low | Medium | Performance benchmarks, optimization |
-| Browser compatibility | Low | Medium | Progressive enhancement |
-| Memory leaks | Low | High | Proper cleanup, profiling |
-| XSS vulnerabilities | Medium | Critical | HTML sanitization, CSP |
+
+| Risk                            | Probability | Impact   | Mitigation                               |
+| ------------------------------- | ----------- | -------- | ---------------------------------------- |
+| Breaking existing functionality | Medium      | High     | Comprehensive testing, gradual migration |
+| Performance degradation         | Low         | Medium   | Performance benchmarks, optimization     |
+| Browser compatibility           | Low         | Medium   | Progressive enhancement                  |
+| Memory leaks                    | Low         | High     | Proper cleanup, profiling                |
+| XSS vulnerabilities             | Medium      | Critical | HTML sanitization, CSP                   |
 
 ### Mitigation Strategies
+
 1. **Incremental Rollout**: Start with proof of concept
 2. **Comprehensive Testing**: All levels of testing
 3. **Performance Monitoring**: Continuous benchmarking
@@ -359,12 +365,14 @@ This document provides a comprehensive overview of the HTML Template System impl
 ## Dependencies
 
 ### Technical Dependencies
+
 - Modern browser support (ES6+)
 - Existing BaseCharacterBuilderController
 - CharacterBuilderBootstrap system
 - Current event bus architecture
 
 ### Resource Dependencies
+
 - Development team availability
 - QA resources for testing
 - DevOps support for deployment
@@ -372,6 +380,7 @@ This document provides a comprehensive overview of the HTML Template System impl
 ## Timeline Estimate
 
 ### Phase Timeline
+
 - **Phase 1**: 1 week (36 hours)
 - **Phase 2**: 1 week (29 hours)
 - **Phase 3**: 1.5 weeks (47 hours)

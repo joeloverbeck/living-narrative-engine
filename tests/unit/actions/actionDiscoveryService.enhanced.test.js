@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ActionDiscoveryServiceTestBed } from '../../common/actions/actionDiscoveryServiceTestBed.js';
 
 describe('ActionDiscoveryService - Action Tracing Enhancement', () => {
@@ -64,9 +71,11 @@ describe('ActionDiscoveryService - Action Tracing Enhancement', () => {
       expect(result.actions).toBeDefined();
       expect(result.errors).toBeDefined();
       expect(testBed.getCreatedTraceType()).toBe('StructuredTrace');
-      
+
       const errorLogs = testBed.getErrorLogs();
-      expect(errorLogs.some(log => log.includes('Failed to create trace context'))).toBe(true);
+      expect(
+        errorLogs.some((log) => log.includes('Failed to create trace context'))
+      ).toBe(true);
     });
 
     it('should handle missing action tracing dependencies gracefully', async () => {
@@ -147,7 +156,7 @@ describe('ActionDiscoveryService - Action Tracing Enhancement', () => {
 
       // All existing methods should still exist
       expect(typeof discoveryService.getValidActions).toBe('function');
-      
+
       // New methods should also exist
       expect(typeof discoveryService.isActionTracingAvailable).toBe('function');
       expect(typeof discoveryService.getActionTracingStatus).toBe('function');
@@ -166,7 +175,11 @@ describe('ActionDiscoveryService - Action Tracing Enhancement', () => {
         discoveryService.getValidActions(actor, {}, { trace: true })
       ).resolves.not.toThrow();
 
-      const result = await discoveryService.getValidActions(actor, {}, { trace: true });
+      const result = await discoveryService.getValidActions(
+        actor,
+        {},
+        { trace: true }
+      );
       expect(result.actions).toBeDefined();
       expect(result.errors).toBeDefined();
     });
@@ -200,10 +213,13 @@ describe('ActionDiscoveryService - Action Tracing Enhancement', () => {
       await discoveryService.getValidActions(actor, {}, { trace: true });
 
       const infoLogs = testBed.getInfoLogs();
-      expect(infoLogs.some(log => 
-        log.includes('Action discovery completed') && 
-        log.includes('with action tracing')
-      )).toBe(true);
+      expect(
+        infoLogs.some(
+          (log) =>
+            log.includes('Action discovery completed') &&
+            log.includes('with action tracing')
+        )
+      ).toBe(true);
     });
 
     it('should log trace type for debugging', async () => {
@@ -215,10 +231,13 @@ describe('ActionDiscoveryService - Action Tracing Enhancement', () => {
       await discoveryService.getValidActions(actor, {}, { trace: true });
 
       const debugLogs = testBed.getDebugLogs();
-      expect(debugLogs.some(log => 
-        log.includes('Created ActionAwareStructuredTrace') ||
-        log.includes('Created StructuredTrace')
-      )).toBe(true);
+      expect(
+        debugLogs.some(
+          (log) =>
+            log.includes('Created ActionAwareStructuredTrace') ||
+            log.includes('Created StructuredTrace')
+        )
+      ).toBe(true);
     });
   });
 });

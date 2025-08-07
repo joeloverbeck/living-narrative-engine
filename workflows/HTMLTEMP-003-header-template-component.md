@@ -1,11 +1,12 @@
 # HTMLTEMP-003: Create Header Template Component
 
 ## Status
+
 **Status**: Not Started  
 **Priority**: High  
 **Estimated**: 3 hours  
 **Complexity**: Medium  
-**Dependencies**: HTMLTEMP-001, HTMLTEMP-002  
+**Dependencies**: HTMLTEMP-001, HTMLTEMP-002
 
 ## Objective
 
@@ -60,7 +61,7 @@ Each character builder page currently implements its own header with varying str
  */
 export function createHeader(config) {
   validateHeaderConfig(config);
-  
+
   const {
     title,
     subtitle = '',
@@ -68,7 +69,7 @@ export function createHeader(config) {
     actions = [],
     branding = null,
     sticky = false,
-    className = ''
+    className = '',
   } = config;
 
   const stickyClass = sticky ? 'cb-header-sticky' : '';
@@ -96,17 +97,26 @@ export function createHeader(config) {
 function createBranding(branding) {
   return `
     <div class="cb-header-branding">
-      ${branding.logo ? `
+      ${
+        branding.logo
+          ? `
         <div class="cb-header-logo">
-          ${isImagePath(branding.logo) 
-            ? `<img src="${escapeHtml(branding.logo)}" alt="${escapeHtml(branding.appName || 'Logo')}" />`
-            : branding.logo
+          ${
+            isImagePath(branding.logo)
+              ? `<img src="${escapeHtml(branding.logo)}" alt="${escapeHtml(branding.appName || 'Logo')}" />`
+              : branding.logo
           }
         </div>
-      ` : ''}
-      ${branding.appName ? `
+      `
+          : ''
+      }
+      ${
+        branding.appName
+          ? `
         <span class="cb-header-app-name">${escapeHtml(branding.appName)}</span>
-      ` : ''}
+      `
+          : ''
+      }
     </div>
   `;
 }
@@ -123,9 +133,13 @@ function createHeaderContent(title, subtitle) {
     <div class="cb-header-content">
       <div class="cb-header-text">
         <h1 class="cb-page-title">${escapeHtml(title)}</h1>
-        ${subtitle ? `
+        ${
+          subtitle
+            ? `
           <p class="cb-page-subtitle">${escapeHtml(subtitle)}</p>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
     </div>
   `;
@@ -141,7 +155,7 @@ function createNavigation(items) {
   return `
     <nav class="cb-header-nav" role="navigation" aria-label="Main navigation">
       <ul class="cb-nav-list" role="menubar">
-        ${items.map(item => createNavItem(item)).join('')}
+        ${items.map((item) => createNavItem(item)).join('')}
       </ul>
     </nav>
   `;
@@ -157,7 +171,7 @@ function createNavItem(item) {
   const hasChildren = item.children && item.children.length > 0;
   const activeClass = item.active ? 'cb-nav-active' : '';
   const parentClass = hasChildren ? 'cb-nav-parent' : '';
-  
+
   return `
     <li class="cb-nav-item ${activeClass} ${parentClass}" role="none">
       <a href="${escapeHtml(item.href)}" 
@@ -183,7 +197,9 @@ function createNavItem(item) {
 function createSubMenu(children) {
   return `
     <ul class="cb-nav-submenu" role="menu" aria-hidden="true">
-      ${children.map(child => `
+      ${children
+        .map(
+          (child) => `
         <li class="cb-nav-subitem" role="none">
           <a href="${escapeHtml(child.href)}" 
              class="cb-nav-sublink"
@@ -192,7 +208,9 @@ function createSubMenu(children) {
             <span class="cb-nav-label">${escapeHtml(child.label)}</span>
           </a>
         </li>
-      `).join('')}
+      `
+        )
+        .join('')}
     </ul>
   `;
 }
@@ -206,7 +224,7 @@ function createSubMenu(children) {
 function createHeaderActions(actions) {
   return `
     <div class="cb-header-actions" role="toolbar" aria-label="Page actions">
-      ${actions.map(action => createActionButton(action)).join('')}
+      ${actions.map((action) => createActionButton(action)).join('')}
     </div>
   `;
 }
@@ -218,14 +236,17 @@ function createHeaderActions(actions) {
  * @returns {string} Button HTML
  */
 function createActionButton(action) {
-  const dataAttributes = action.data 
-    ? Object.entries(action.data).map(([key, value]) => 
-        `data-${escapeHtml(key)}="${escapeHtml(String(value))}"`
-      ).join(' ')
+  const dataAttributes = action.data
+    ? Object.entries(action.data)
+        .map(
+          ([key, value]) =>
+            `data-${escapeHtml(key)}="${escapeHtml(String(value))}"`
+        )
+        .join(' ')
     : '';
 
   const ariaLabel = action.tooltip || action.label;
-  
+
   return `
     <button type="${action.type || 'button'}"
             class="cb-header-action cb-action-btn ${action.className || ''}"
@@ -234,9 +255,13 @@ function createActionButton(action) {
             ${action.disabled ? 'disabled' : ''}
             ${action.tooltip ? `title="${escapeHtml(action.tooltip)}"` : ''}
             ${dataAttributes}>
-      ${action.icon ? `
+      ${
+        action.icon
+          ? `
         <span class="cb-action-icon" aria-hidden="true">${action.icon}</span>
-      ` : ''}
+      `
+          : ''
+      }
       <span class="cb-action-label">${escapeHtml(action.label)}</span>
     </button>
   `;
@@ -270,23 +295,29 @@ function createMobileMenuToggle() {
  */
 export function createBreadcrumb(items) {
   if (!items || items.length === 0) return '';
-  
+
   return `
     <nav class="cb-breadcrumb" aria-label="Breadcrumb">
       <ol class="cb-breadcrumb-list">
-        ${items.map((item, index) => {
-          const isLast = index === items.length - 1;
-          return `
+        ${items
+          .map((item, index) => {
+            const isLast = index === items.length - 1;
+            return `
             <li class="cb-breadcrumb-item">
-              ${isLast ? `
+              ${
+                isLast
+                  ? `
                 <span aria-current="page">${escapeHtml(item.label)}</span>
-              ` : `
+              `
+                  : `
                 <a href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a>
                 <span class="cb-breadcrumb-separator" aria-hidden="true">/</span>
-              `}
+              `
+              }
             </li>
           `;
-        }).join('')}
+          })
+          .join('')}
       </ol>
     </nav>
   `;
@@ -302,9 +333,9 @@ export function createHeaderSearch(config = {}) {
     placeholder = 'Search...',
     action = '#search',
     method = 'GET',
-    name = 'q'
+    name = 'q',
   } = config;
-  
+
   return `
     <form class="cb-header-search" 
           action="${escapeHtml(action)}" 
@@ -336,19 +367,19 @@ function validateHeaderConfig(config) {
   if (!config) {
     throw new Error('Header configuration is required');
   }
-  
+
   if (!config.title) {
     throw new Error('Header title is required');
   }
-  
+
   if (typeof config.title !== 'string') {
     throw new Error('Header title must be a string');
   }
-  
+
   if (config.navigation && !Array.isArray(config.navigation)) {
     throw new Error('Navigation must be an array');
   }
-  
+
   if (config.actions && !Array.isArray(config.actions)) {
     throw new Error('Actions must be an array');
   }
@@ -361,7 +392,9 @@ function validateHeaderConfig(config) {
  * @returns {boolean} True if string appears to be an image path
  */
 function isImagePath(str) {
-  return /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(str) || str.startsWith('data:image');
+  return (
+    /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(str) || str.startsWith('data:image')
+  );
 }
 
 /**
@@ -372,23 +405,23 @@ function isImagePath(str) {
  */
 function escapeHtml(str) {
   if (str == null) return '';
-  
+
   const htmlEscapes = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    "'": '&#39;'
+    "'": '&#39;',
   };
-  
-  return String(str).replace(/[&<>"']/g, char => htmlEscapes[char]);
+
+  return String(str).replace(/[&<>"']/g, (char) => htmlEscapes[char]);
 }
 
 // Export for testing
 export const __testUtils = {
   validateHeaderConfig,
   isImagePath,
-  escapeHtml
+  escapeHtml,
 };
 ```
 
@@ -480,10 +513,12 @@ export const __testUtils = {
   background: white;
   border: 1px solid var(--cb-border-color, #e0e0e0);
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s, visibility 0.2s;
+  transition:
+    opacity 0.2s,
+    visibility 0.2s;
 }
 
 .cb-nav-parent:hover .cb-nav-submenu,
@@ -505,12 +540,12 @@ export const __testUtils = {
   .cb-mobile-menu-toggle {
     display: block;
   }
-  
+
   .cb-header-nav,
   .cb-header-actions {
     display: none;
   }
-  
+
   .cb-header-main {
     flex-wrap: wrap;
   }
@@ -520,26 +555,31 @@ export const __testUtils = {
 ## Implementation Steps
 
 ### Step 1: Create Header Template File
+
 1. Create `src/characterBuilder/templates/core/headerTemplate.js`
 2. Implement all functions as specified
 3. Add comprehensive JSDoc comments
 
 ### Step 2: Implement Navigation System
+
 1. Create navigation item renderer
 2. Add submenu support
 3. Implement active state management
 
 ### Step 3: Add Action Buttons
+
 1. Implement action button creation
 2. Add data attribute support
 3. Include accessibility attributes
 
 ### Step 4: Mobile Support
+
 1. Add mobile menu toggle
 2. Implement responsive behavior
 3. Add touch-friendly interactions
 
 ### Step 5: Export and Integration
+
 1. Update `src/characterBuilder/templates/core/index.js`
 2. Integrate with page template
 
@@ -550,20 +590,20 @@ export const __testUtils = {
 ```javascript
 // tests/unit/characterBuilder/templates/core/headerTemplate.test.js
 import { describe, it, expect } from '@jest/globals';
-import { 
-  createHeader, 
-  createBreadcrumb, 
+import {
+  createHeader,
+  createBreadcrumb,
   createHeaderSearch,
-  __testUtils 
+  __testUtils,
 } from '../../../../src/characterBuilder/templates/core/headerTemplate.js';
 
 describe('Header Template Component', () => {
   describe('createHeader', () => {
     it('should create basic header with title', () => {
       const html = createHeader({
-        title: 'Test Page'
+        title: 'Test Page',
       });
-      
+
       expect(html).toContain('cb-page-header');
       expect(html).toContain('Test Page');
       expect(html).toContain('role="banner"');
@@ -572,9 +612,9 @@ describe('Header Template Component', () => {
     it('should include subtitle when provided', () => {
       const html = createHeader({
         title: 'Test Page',
-        subtitle: 'Page description'
+        subtitle: 'Page description',
       });
-      
+
       expect(html).toContain('Page description');
       expect(html).toContain('cb-page-subtitle');
     });
@@ -584,10 +624,10 @@ describe('Header Template Component', () => {
         title: 'Test',
         navigation: [
           { label: 'Home', href: '/' },
-          { label: 'About', href: '/about', active: true }
-        ]
+          { label: 'About', href: '/about', active: true },
+        ],
       });
-      
+
       expect(html).toContain('cb-header-nav');
       expect(html).toContain('Home');
       expect(html).toContain('About');
@@ -598,16 +638,18 @@ describe('Header Template Component', () => {
     it('should render nested navigation', () => {
       const html = createHeader({
         title: 'Test',
-        navigation: [{
-          label: 'Products',
-          href: '#',
-          children: [
-            { label: 'Product A', href: '/products/a' },
-            { label: 'Product B', href: '/products/b' }
-          ]
-        }]
+        navigation: [
+          {
+            label: 'Products',
+            href: '#',
+            children: [
+              { label: 'Product A', href: '/products/a' },
+              { label: 'Product B', href: '/products/b' },
+            ],
+          },
+        ],
       });
-      
+
       expect(html).toContain('cb-nav-parent');
       expect(html).toContain('cb-nav-submenu');
       expect(html).toContain('Product A');
@@ -619,10 +661,10 @@ describe('Header Template Component', () => {
         title: 'Test',
         actions: [
           { label: 'Save', name: 'save', icon: '💾' },
-          { label: 'Settings', name: 'settings', disabled: true }
-        ]
+          { label: 'Settings', name: 'settings', disabled: true },
+        ],
       });
-      
+
       expect(html).toContain('cb-header-actions');
       expect(html).toContain('Save');
       expect(html).toContain('Settings');
@@ -633,9 +675,9 @@ describe('Header Template Component', () => {
     it('should add sticky class when configured', () => {
       const html = createHeader({
         title: 'Test',
-        sticky: true
+        sticky: true,
       });
-      
+
       expect(html).toContain('cb-header-sticky');
     });
 
@@ -644,10 +686,10 @@ describe('Header Template Component', () => {
         title: 'Test',
         branding: {
           logo: '/logo.png',
-          appName: 'My App'
-        }
+          appName: 'My App',
+        },
       });
-      
+
       expect(html).toContain('cb-header-branding');
       expect(html).toContain('<img src="/logo.png"');
       expect(html).toContain('My App');
@@ -655,9 +697,9 @@ describe('Header Template Component', () => {
 
     it('should escape HTML in content', () => {
       const html = createHeader({
-        title: '<script>alert("XSS")</script>'
+        title: '<script>alert("XSS")</script>',
       });
-      
+
       expect(html).not.toContain('<script>');
       expect(html).toContain('&lt;script&gt;');
     });
@@ -668,9 +710,9 @@ describe('Header Template Component', () => {
       const html = createBreadcrumb([
         { label: 'Home', href: '/' },
         { label: 'Products', href: '/products' },
-        { label: 'Item' }
+        { label: 'Item' },
       ]);
-      
+
       expect(html).toContain('cb-breadcrumb');
       expect(html).toContain('aria-label="Breadcrumb"');
       expect(html).toContain('aria-current="page"');
@@ -681,9 +723,9 @@ describe('Header Template Component', () => {
     it('should create search form', () => {
       const html = createHeaderSearch({
         placeholder: 'Search products...',
-        action: '/search'
+        action: '/search',
       });
-      
+
       expect(html).toContain('cb-header-search');
       expect(html).toContain('role="search"');
       expect(html).toContain('Search products...');
@@ -697,14 +739,18 @@ describe('Header Template Component', () => {
     it('should validate required fields', () => {
       expect(() => validateHeaderConfig(null)).toThrow();
       expect(() => validateHeaderConfig({})).toThrow('title is required');
-      expect(() => validateHeaderConfig({ title: 123 })).toThrow('must be a string');
+      expect(() => validateHeaderConfig({ title: 123 })).toThrow(
+        'must be a string'
+      );
     });
 
     it('should validate array fields', () => {
-      expect(() => validateHeaderConfig({
-        title: 'Test',
-        navigation: 'not-an-array'
-      })).toThrow('must be an array');
+      expect(() =>
+        validateHeaderConfig({
+          title: 'Test',
+          navigation: 'not-an-array',
+        })
+      ).toThrow('must be an array');
     });
   });
 });

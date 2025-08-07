@@ -1,11 +1,12 @@
 # HTMLTEMP-002: Implement Page Template Container
 
 ## Status
+
 **Status**: Not Started  
 **Priority**: Critical  
 **Estimated**: 4 hours  
 **Complexity**: Medium  
-**Dependencies**: HTMLTEMP-001 (Directory Structure)  
+**Dependencies**: HTMLTEMP-001 (Directory Structure)
 
 ## Objective
 
@@ -37,7 +38,7 @@ Currently, each character builder page has its own complete HTML structure with 
  */
 export function createCharacterBuilderPage(config) {
   validatePageConfig(config);
-  
+
   const {
     title,
     subtitle = '',
@@ -47,7 +48,7 @@ export function createCharacterBuilderPage(config) {
     modals = [],
     footer = getDefaultFooterConfig(),
     customClasses = '',
-    singlePanel = false
+    singlePanel = false,
   } = config;
 
   // Determine layout type
@@ -100,7 +101,7 @@ function createPageHeader(title, subtitle, actions) {
 function createHeaderActions(actions) {
   return `
     <div class="cb-header-actions" role="toolbar" aria-label="Page actions">
-      ${actions.map(action => createActionButton(action, 'header')).join('')}
+      ${actions.map((action) => createActionButton(action, 'header')).join('')}
     </div>
   `;
 }
@@ -148,16 +149,20 @@ function createPageMain(leftPanel, rightPanel, singlePanel) {
 function createPanelPlaceholder(panel, position) {
   const positionClass = `cb-panel-${position}`;
   const id = panel.id ? `id="${panel.id}"` : '';
-  
+
   return `
     <section ${id} class="cb-panel ${positionClass} ${panel.className || ''}" 
              role="region" 
              ${panel.heading ? `aria-labelledby="${panel.id}-heading"` : ''}>
-      ${panel.heading ? `
+      ${
+        panel.heading
+          ? `
         <h2 id="${panel.id || position}-heading" class="cb-panel-heading">
           ${escapeHtml(panel.heading)}
         </h2>
-      ` : ''}
+      `
+          : ''
+      }
       <div class="cb-panel-content">
         ${typeof panel.content === 'function' ? panel.content() : panel.content}
       </div>
@@ -175,7 +180,7 @@ function createPanelPlaceholder(panel, position) {
 function createPanelActions(actions) {
   return `
     <div class="cb-panel-actions">
-      ${actions.map(action => createActionButton(action, 'panel')).join('')}
+      ${actions.map((action) => createActionButton(action, 'panel')).join('')}
     </div>
   `;
 }
@@ -208,13 +213,17 @@ function createPageFooter(footer) {
 function createFooterLinks(links) {
   return `
     <nav class="cb-footer-links" aria-label="Footer navigation">
-      ${links.map(link => `
+      ${links
+        .map(
+          (link) => `
         <a href="${escapeHtml(link.href)}" 
            target="${link.target || '_self'}"
            class="cb-footer-link ${link.className || ''}">
           ${escapeHtml(link.label)}
         </a>
-      `).join('<span class="cb-footer-separator">|</span>')}
+      `
+        )
+        .join('<span class="cb-footer-separator">|</span>')}
     </nav>
   `;
 }
@@ -227,11 +236,13 @@ function createFooterLinks(links) {
  */
 function createModalsContainer(modals) {
   if (!modals.length) return '';
-  
+
   // Placeholder - will be replaced by HTMLTEMP-006
   return `
     <div class="cb-modals-container" aria-hidden="true">
-      ${modals.map(modal => `
+      ${modals
+        .map(
+          (modal) => `
         <div id="${modal.id}" class="cb-modal" role="dialog" aria-modal="true" aria-labelledby="${modal.id}-title">
           <div class="cb-modal-backdrop"></div>
           <div class="cb-modal-content">
@@ -245,7 +256,9 @@ function createModalsContainer(modals) {
             ${modal.actions ? createModalActions(modal.actions) : ''}
           </div>
         </div>
-      `).join('')}
+      `
+        )
+        .join('')}
     </div>
   `;
 }
@@ -259,7 +272,7 @@ function createModalsContainer(modals) {
 function createModalActions(actions) {
   return `
     <div class="cb-modal-footer">
-      ${actions.map(action => createActionButton(action, 'modal')).join('')}
+      ${actions.map((action) => createActionButton(action, 'modal')).join('')}
     </div>
   `;
 }
@@ -272,10 +285,12 @@ function createModalActions(actions) {
  * @returns {string} Button HTML
  */
 function createActionButton(action, context) {
-  const dataAttributes = action.data 
-    ? Object.entries(action.data).map(([key, value]) => `data-${key}="${escapeHtml(value)}"`).join(' ')
+  const dataAttributes = action.data
+    ? Object.entries(action.data)
+        .map(([key, value]) => `data-${key}="${escapeHtml(value)}"`)
+        .join(' ')
     : '';
-  
+
   return `
     <button type="${action.type || 'button'}"
             class="cb-action-btn cb-action-${context} ${action.className || ''}"
@@ -299,19 +314,19 @@ function validatePageConfig(config) {
   if (!config) {
     throw new Error('Page configuration is required');
   }
-  
+
   if (!config.title) {
     throw new Error('Page title is required');
   }
-  
+
   if (typeof config.title !== 'string') {
     throw new Error('Page title must be a string');
   }
-  
+
   if (config.singlePanel && config.rightPanel) {
     console.warn('Right panel will be ignored in single panel mode');
   }
-  
+
   if (!config.singlePanel && !config.leftPanel && !config.rightPanel) {
     console.warn('No panels provided for dual-panel layout');
   }
@@ -327,8 +342,8 @@ function getDefaultFooterConfig() {
     showVersion: true,
     links: [
       { label: 'Help', href: '#help' },
-      { label: 'About', href: '#about' }
-    ]
+      { label: 'About', href: '#about' },
+    ],
   };
 }
 
@@ -342,23 +357,23 @@ function escapeHtml(str) {
   if (typeof str !== 'string') {
     return String(str);
   }
-  
+
   const htmlEscapes = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    "'": '&#39;'
+    "'": '&#39;',
   };
-  
-  return str.replace(/[&<>"']/g, char => htmlEscapes[char]);
+
+  return str.replace(/[&<>"']/g, (char) => htmlEscapes[char]);
 }
 
 // Export additional utilities for testing
 export const __testUtils = {
   validatePageConfig,
   escapeHtml,
-  getDefaultFooterConfig
+  getDefaultFooterConfig,
 };
 ```
 
@@ -412,20 +427,24 @@ export const __testUtils = {
 ## Implementation Steps
 
 ### Step 1: Create Page Template File
+
 1. Create `src/characterBuilder/templates/core/pageTemplate.js`
 2. Implement all functions as specified above
 3. Add comprehensive JSDoc comments
 
 ### Step 2: Create Helper Functions
+
 1. Implement HTML escaping utility
 2. Implement validation functions
 3. Create default configuration getters
 
 ### Step 3: Add Temporary Placeholders
+
 1. Create placeholder functions for components not yet implemented
 2. Add TODO comments for future tickets
 
 ### Step 4: Export from Index
+
 1. Update `src/characterBuilder/templates/core/index.js` to export the page template
 2. Ensure proper module resolution
 
@@ -436,15 +455,18 @@ export const __testUtils = {
 ```javascript
 // tests/unit/characterBuilder/templates/core/pageTemplate.test.js
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { createCharacterBuilderPage, __testUtils } from '../../../../src/characterBuilder/templates/core/pageTemplate.js';
+import {
+  createCharacterBuilderPage,
+  __testUtils,
+} from '../../../../src/characterBuilder/templates/core/pageTemplate.js';
 
 describe('Page Template Container', () => {
   describe('createCharacterBuilderPage', () => {
     it('should create a basic page with title', () => {
       const html = createCharacterBuilderPage({
-        title: 'Test Page'
+        title: 'Test Page',
       });
-      
+
       expect(html).toContain('cb-page-container');
       expect(html).toContain('Test Page');
       expect(html).toContain('cb-page-header');
@@ -457,10 +479,10 @@ describe('Page Template Container', () => {
         title: 'Single Panel Page',
         singlePanel: true,
         leftPanel: {
-          content: 'Panel content'
-        }
+          content: 'Panel content',
+        },
       });
-      
+
       expect(html).toContain('cb-single-panel');
       expect(html).toContain('cb-main-single');
       expect(html).toContain('Panel content');
@@ -470,9 +492,9 @@ describe('Page Template Container', () => {
       const html = createCharacterBuilderPage({
         title: 'Dual Panel Page',
         leftPanel: { content: 'Left content' },
-        rightPanel: { content: 'Right content' }
+        rightPanel: { content: 'Right content' },
       });
-      
+
       expect(html).toContain('cb-dual-panel');
       expect(html).toContain('cb-main-dual');
       expect(html).toContain('Left content');
@@ -482,9 +504,9 @@ describe('Page Template Container', () => {
     it('should include subtitle when provided', () => {
       const html = createCharacterBuilderPage({
         title: 'Test Page',
-        subtitle: 'Test Description'
+        subtitle: 'Test Description',
       });
-      
+
       expect(html).toContain('Test Description');
       expect(html).toContain('cb-page-subtitle');
     });
@@ -494,10 +516,10 @@ describe('Page Template Container', () => {
         title: 'Test Page',
         headerActions: [
           { label: 'Save', name: 'save' },
-          { label: 'Cancel', name: 'cancel' }
-        ]
+          { label: 'Cancel', name: 'cancel' },
+        ],
       });
-      
+
       expect(html).toContain('cb-header-actions');
       expect(html).toContain('Save');
       expect(html).toContain('Cancel');
@@ -507,13 +529,15 @@ describe('Page Template Container', () => {
     it('should include modals when provided', () => {
       const html = createCharacterBuilderPage({
         title: 'Test Page',
-        modals: [{
-          id: 'test-modal',
-          title: 'Test Modal',
-          content: 'Modal content'
-        }]
+        modals: [
+          {
+            id: 'test-modal',
+            title: 'Test Modal',
+            content: 'Modal content',
+          },
+        ],
       });
-      
+
       expect(html).toContain('cb-modals-container');
       expect(html).toContain('test-modal');
       expect(html).toContain('Test Modal');
@@ -522,9 +546,9 @@ describe('Page Template Container', () => {
 
     it('should escape HTML in user content', () => {
       const html = createCharacterBuilderPage({
-        title: '<script>alert("XSS")</script>'
+        title: '<script>alert("XSS")</script>',
       });
-      
+
       expect(html).not.toContain('<script>');
       expect(html).toContain('&lt;script&gt;');
     });
@@ -538,9 +562,9 @@ describe('Page Template Container', () => {
     it('should support custom CSS classes', () => {
       const html = createCharacterBuilderPage({
         title: 'Test Page',
-        customClasses: 'custom-theme dark-mode'
+        customClasses: 'custom-theme dark-mode',
       });
-      
+
       expect(html).toContain('custom-theme dark-mode');
     });
 
@@ -548,9 +572,9 @@ describe('Page Template Container', () => {
       const contentFn = () => '<div>Dynamic content</div>';
       const html = createCharacterBuilderPage({
         title: 'Test Page',
-        leftPanel: { content: contentFn }
+        leftPanel: { content: contentFn },
       });
-      
+
       expect(html).toContain('Dynamic content');
     });
   });
@@ -566,13 +590,13 @@ describe('Page Template Container', () => {
 
     it('should warn about conflicting configurations', () => {
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-      
+
       createCharacterBuilderPage({
         title: 'Test',
         singlePanel: true,
-        rightPanel: { content: 'ignored' }
+        rightPanel: { content: 'ignored' },
       });
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('Right panel will be ignored')
       );
@@ -624,12 +648,12 @@ describe('Page Template Container', () => {
 
 ## Risks and Mitigation
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| Performance issues with large content | Medium | Low | Use efficient string concatenation |
-| XSS vulnerabilities | Critical | Medium | Comprehensive HTML escaping |
-| Browser compatibility issues | Medium | Low | Use standard HTML5 elements |
-| Memory leaks from closures | Medium | Low | Careful function scoping |
+| Risk                                  | Impact   | Probability | Mitigation                         |
+| ------------------------------------- | -------- | ----------- | ---------------------------------- |
+| Performance issues with large content | Medium   | Low         | Use efficient string concatenation |
+| XSS vulnerabilities                   | Critical | Medium      | Comprehensive HTML escaping        |
+| Browser compatibility issues          | Medium   | Low         | Use standard HTML5 elements        |
+| Memory leaks from closures            | Medium   | Low         | Careful function scoping           |
 
 ## Notes
 

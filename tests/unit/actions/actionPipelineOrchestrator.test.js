@@ -113,7 +113,8 @@ describe('ActionPipelineOrchestrator', () => {
       expect(ComponentFilteringStage).toHaveBeenCalledWith(
         mockDependencies.actionIndex,
         mockDependencies.errorBuilder,
-        mockDependencies.logger
+        mockDependencies.logger,
+        mockDependencies.entityManager
       );
 
       expect(PrerequisiteEvaluationStage).toHaveBeenCalledWith(

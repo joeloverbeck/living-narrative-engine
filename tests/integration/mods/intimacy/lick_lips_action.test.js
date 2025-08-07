@@ -137,7 +137,9 @@ describe('intimacy:lick_lips action integration', () => {
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe("Alice leans in and seductively licks Bob's lips.");
+    expect(successEvent.payload.message).toBe(
+      "Alice leans in and seductively licks Bob's lips."
+    );
 
     const turnEndedEvent = testEnv.events.find(
       (e) => e.eventType === 'core:turn_ended'
@@ -355,7 +357,9 @@ describe('intimacy:lick_lips action integration', () => {
     expect(perceptibleEvent).toBeDefined();
 
     // Both should have the same descriptive message
-    expect(successEvent.payload.message).toBe("Diana leans in and seductively licks Victor's lips.");
+    expect(successEvent.payload.message).toBe(
+      "Diana leans in and seductively licks Victor's lips."
+    );
     expect(perceptibleEvent.payload.descriptionText).toBe(
       "Diana leans in and seductively licks Victor's lips."
     );
