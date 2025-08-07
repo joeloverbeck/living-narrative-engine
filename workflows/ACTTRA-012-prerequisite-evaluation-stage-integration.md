@@ -3,12 +3,15 @@
 ## Executive Summary
 
 ### Problem Statement
+
 The PrerequisiteEvaluationStage evaluates complex JSON Logic prerequisites for actions but lacks detailed tracing of prerequisite evaluation decisions, conditions, and failures. This makes debugging prerequisite failures extremely difficult, especially when dealing with complex nested conditions or dynamic data dependencies.
 
 ### Solution Approach
+
 Enhance the PrerequisiteEvaluationStage to capture comprehensive prerequisite evaluation data when ActionAwareStructuredTrace is available. The integration will capture prerequisite conditions, evaluation context, JSON Logic trace data, and detailed failure analysis while maintaining full backward compatibility.
 
 ### Business Value
+
 - Provides complete visibility into prerequisite evaluation logic and decisions
 - Enables rapid debugging of action availability issues due to failed prerequisites
 - Captures JSON Logic evaluation traces for complex conditional logic analysis
@@ -19,24 +22,28 @@ Enhance the PrerequisiteEvaluationStage to capture comprehensive prerequisite ev
 ### Functional Requirements
 
 #### FR-012-01: Prerequisite Evaluation Tracing
+
 - Must capture prerequisite conditions and evaluation context for traced actions
 - Must include JSON Logic evaluation traces and intermediate results
 - Must capture prerequisite evaluation success/failure with detailed reasoning
 - Must handle multiple prerequisites per action with individual evaluation results
 
 #### FR-012-02: JSON Logic Integration
+
 - Must integrate with JSON Logic evaluation service to capture trace data
 - Must capture applied data context and variable resolution
 - Must include evaluation steps and decision points in trace data
 - Must handle complex nested conditions with hierarchical trace structure
 
 #### FR-012-03: Prerequisite Data Capture
+
 - Must capture prerequisite definitions in various formats (arrays, objects, mixed)
 - Must capture evaluation context including actor data, base context, and resolved variables
 - Must capture evaluation timing and performance metrics
 - Must include failure analysis with specific condition failures and missing data
 
 #### FR-012-04: Error and Edge Case Handling
+
 - Must capture prerequisite evaluation errors and exceptions
 - Must handle missing or invalid prerequisite data gracefully
 - Must trace actions with no prerequisites (pass-through scenario)
@@ -45,18 +52,21 @@ Enhance the PrerequisiteEvaluationStage to capture comprehensive prerequisite ev
 ### Non-Functional Requirements
 
 #### NFR-012-01: Performance
+
 - <2ms overhead per traced action during prerequisite evaluation
-- No performance impact when action tracing is disabled  
+- No performance impact when action tracing is disabled
 - Efficient JSON Logic trace data collection and formatting
 - Minimal memory footprint for prerequisite trace data
 
 #### NFR-012-02: Reliability
+
 - Must not affect existing prerequisite evaluation logic or results
 - Must handle prerequisite service failures gracefully without breaking stage
 - Must continue stage execution even if tracing capture fails
 - Must maintain existing error handling and logging patterns
 
 #### NFR-012-03: Maintainability
+
 - Must integrate cleanly with existing PrerequisiteService dependency
 - Must follow project patterns for service integration and error handling
 - Must use consistent data structures with other pipeline stages
@@ -65,11 +75,12 @@ Enhance the PrerequisiteEvaluationStage to capture comprehensive prerequisite ev
 ## Architecture Design
 
 ### Current PrerequisiteEvaluationStage Flow
+
 ```
 executeInternal(context)
   ↓
 For each candidate action:
-  - Check if action has prerequisites  
+  - Check if action has prerequisites
   - PrerequisiteService.evaluate(prerequisites, actionDef, actor, trace)
   - Include/exclude action based on evaluation result
   ↓
@@ -77,6 +88,7 @@ Return actions that passed prerequisite evaluation
 ```
 
 ### Enhanced Flow with Action Tracing
+
 ```
 executeInternal(context)
   ↓
@@ -96,16 +108,19 @@ Return filtered actions with comprehensive prerequisite tracing
 ### Data Capture Points
 
 #### Pre-Evaluation Capture
+
 - Action ID and prerequisite definitions
 - Evaluation context and available data
 - Stage start timing
 
 #### During Evaluation Capture
+
 - JSON Logic evaluation steps and intermediate results
 - Variable resolution and data binding
 - Condition evaluation results (true/false/error)
 
 #### Post-Evaluation Capture
+
 - Final evaluation result with detailed reasoning
 - Performance metrics and timing data
 - Error information for failed evaluations
@@ -121,7 +136,10 @@ Modify `src/actions/pipeline/stages/PrerequisiteEvaluationStage.js`:
  * @file PrerequisiteEvaluationStage - Enhanced with action tracing capabilities
  */
 
-import { validateDependency, assertPresent } from '../../../utils/validationUtils.js';
+import {
+  validateDependency,
+  assertPresent,
+} from '../../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../../utils/loggerUtils.js';
 import PipelineResult from '../pipelineResult.js';
 
@@ -136,7 +154,7 @@ class PrerequisiteEvaluationStage {
 
   constructor({ prerequisiteService, logger }) {
     validateDependency(prerequisiteService, 'IPrerequisiteService', null, {
-      requiredMethods: ['evaluate']
+      requiredMethods: ['evaluate'],
     });
     this.#logger = ensureValidLogger(logger, 'PrerequisiteEvaluationStage');
     this.#prerequisiteService = prerequisiteService;
@@ -148,7 +166,7 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Execute prerequisite evaluation stage with enhanced action tracing
-   * 
+   *
    * @param {Object} context - Pipeline context
    * @param {Object} context.actor - Actor entity
    * @param {Array} context.candidateActions - Actions to evaluate
@@ -167,15 +185,15 @@ class PrerequisiteEvaluationStage {
     try {
       this.#logger.debug(
         `PrerequisiteEvaluationStage: Starting prerequisite evaluation for ${candidateActions.length} actions`,
-        { 
-          actorId: actor.id, 
-          candidateActionCount: candidateActions.length 
+        {
+          actorId: actor.id,
+          candidateActionCount: candidateActions.length,
         }
       );
 
       // Check if we have action-aware tracing capability
       const isActionAwareTrace = this.#isActionAwareTrace(trace);
-      
+
       if (isActionAwareTrace) {
         this.#logger.debug(
           `PrerequisiteEvaluationStage: Action tracing enabled for actor ${actor.id}`,
@@ -186,9 +204,9 @@ class PrerequisiteEvaluationStage {
       // Capture pre-evaluation data for tracing
       if (isActionAwareTrace) {
         await this.#capturePreEvaluationData(
-          trace, 
-          actor, 
-          candidateActions, 
+          trace,
+          actor,
+          candidateActions,
           actionContext,
           stageStartTime
         );
@@ -212,7 +230,6 @@ class PrerequisiteEvaluationStage {
           if (evaluationResult.passed) {
             validActions.push(actionDef);
           }
-
         } catch (error) {
           this.#logger.error(
             `PrerequisiteEvaluationStage: Error evaluating prerequisites for action '${actionDef.id}'`,
@@ -221,7 +238,12 @@ class PrerequisiteEvaluationStage {
 
           // Capture error in tracing if available
           if (isActionAwareTrace && trace.captureActionData) {
-            await this.#capturePrerequisiteError(trace, actionDef, actor, error);
+            await this.#capturePrerequisiteError(
+              trace,
+              actionDef,
+              actor,
+              error
+            );
           }
 
           // Continue processing other actions
@@ -248,19 +270,18 @@ class PrerequisiteEvaluationStage {
 
       this.#logger.info(
         `PrerequisiteEvaluationStage: Evaluated ${candidateActions.length} → ${validActions.length} actions for actor ${actor.id}`,
-        { 
-          actorId: actor.id, 
-          originalCount: candidateActions.length, 
+        {
+          actorId: actor.id,
+          originalCount: candidateActions.length,
           passedCount: validActions.length,
           failedCount: candidateActions.length - validActions.length,
-          stageDuration: Date.now() - stageStartTime
+          stageDuration: Date.now() - stageStartTime,
         }
       );
 
       return PipelineResult.success({
-        data: { ...context.data, candidateActions: validActions }
+        data: { ...context.data, candidateActions: validActions },
       });
-
     } catch (error) {
       this.#logger.error(
         `PrerequisiteEvaluationStage: Failed to evaluate prerequisites for actor ${actor.id}`,
@@ -269,9 +290,9 @@ class PrerequisiteEvaluationStage {
 
       return PipelineResult.failure(
         `Prerequisite evaluation failed for actor ${actor.id}`,
-        { 
-          originalError: error.message, 
-          stageDuration: Date.now() - stageStartTime 
+        {
+          originalError: error.message,
+          stageDuration: Date.now() - stageStartTime,
         }
       );
     }
@@ -279,7 +300,7 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Check if trace is ActionAwareStructuredTrace
-   * 
+   *
    * @private
    * @param {Object} trace - Trace instance to check
    * @returns {boolean}
@@ -290,7 +311,7 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Evaluate single action prerequisites with optional tracing
-   * 
+   *
    * @private
    * @param {Object} actionDef - Action definition to evaluate
    * @param {Object} actor - Actor entity
@@ -299,7 +320,13 @@ class PrerequisiteEvaluationStage {
    * @param {boolean} isActionAwareTrace - Whether trace supports action data capture
    * @returns {Promise<Object>} Evaluation result with detailed data
    */
-  async #evaluateActionWithTracing(actionDef, actor, actionContext, trace, isActionAwareTrace) {
+  async #evaluateActionWithTracing(
+    actionDef,
+    actor,
+    actionContext,
+    trace,
+    isActionAwareTrace
+  ) {
     const evaluationStartTime = Date.now();
 
     try {
@@ -309,12 +336,17 @@ class PrerequisiteEvaluationStage {
           passed: true,
           reason: 'No prerequisites defined',
           hasPrerequisites: false,
-          evaluationTime: Date.now() - evaluationStartTime
+          evaluationTime: Date.now() - evaluationStartTime,
         };
 
         // Capture no-prerequisites scenario if tracing enabled
         if (isActionAwareTrace && trace.captureActionData) {
-          await this.#captureNoPrerequisitesData(trace, actionDef, actor, result);
+          await this.#captureNoPrerequisitesData(
+            trace,
+            actionDef,
+            actor,
+            result
+          );
         }
 
         return result;
@@ -322,9 +354,9 @@ class PrerequisiteEvaluationStage {
 
       // Extract and normalize prerequisites
       const prerequisites = this.#extractPrerequisites(actionDef);
-      
+
       // Create enhanced trace for prerequisite service if action tracing is enabled
-      const enhancedTrace = isActionAwareTrace 
+      const enhancedTrace = isActionAwareTrace
         ? this.#createPrerequisiteTrace(trace, actionDef)
         : trace;
 
@@ -345,20 +377,26 @@ class PrerequisiteEvaluationStage {
 
       const result = {
         passed: evaluationPassed,
-        reason: evaluationPassed ? 'All prerequisites satisfied' : 'One or more prerequisites failed',
+        reason: evaluationPassed
+          ? 'All prerequisites satisfied'
+          : 'One or more prerequisites failed',
         hasPrerequisites: true,
         prerequisites: prerequisites,
         evaluationDetails: evaluationDetails,
-        evaluationTime: Date.now() - evaluationStartTime
+        evaluationTime: Date.now() - evaluationStartTime,
       };
 
       // Capture detailed evaluation data if tracing enabled
       if (isActionAwareTrace && trace.captureActionData) {
-        await this.#capturePrerequisiteEvaluationData(trace, actionDef, actor, result);
+        await this.#capturePrerequisiteEvaluationData(
+          trace,
+          actionDef,
+          actor,
+          result
+        );
       }
 
       return result;
-
     } catch (error) {
       const result = {
         passed: false,
@@ -366,7 +404,7 @@ class PrerequisiteEvaluationStage {
         hasPrerequisites: this.#hasPrerequisites(actionDef),
         error: error.message,
         errorType: error.constructor.name,
-        evaluationTime: Date.now() - evaluationStartTime
+        evaluationTime: Date.now() - evaluationStartTime,
       };
 
       // Don't rethrow - let the stage continue processing other actions
@@ -381,7 +419,7 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Check if action has prerequisites
-   * 
+   *
    * @private
    * @param {Object} actionDef - Action definition
    * @returns {boolean}
@@ -404,7 +442,7 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Extract prerequisites from action definition
-   * 
+   *
    * @private
    * @param {Object} actionDef - Action definition
    * @returns {Array|Object} Normalized prerequisites
@@ -428,7 +466,7 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Create enhanced trace for prerequisite service integration
-   * 
+   *
    * @private
    * @param {Object} baseTrace - Base ActionAwareStructuredTrace
    * @param {Object} actionDef - Action being evaluated
@@ -440,7 +478,7 @@ class PrerequisiteEvaluationStage {
       // Preserve original trace methods
       step: baseTrace.step?.bind(baseTrace),
       info: baseTrace.info?.bind(baseTrace),
-      
+
       // Add prerequisite-specific capture method
       captureJsonLogicTrace: (logicExpression, context, result, steps) => {
         try {
@@ -454,9 +492,8 @@ class PrerequisiteEvaluationStage {
             context: this.#createSafeContext(context),
             result,
             evaluationSteps: steps || [],
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
-
         } catch (error) {
           this.#logger.warn(
             `Failed to capture JSON Logic trace for action '${actionDef.id}'`,
@@ -467,8 +504,9 @@ class PrerequisiteEvaluationStage {
 
       // Add context capture method
       captureEvaluationContext: (contextData) => {
-        prerequisiteTrace._evaluationContext = this.#createSafeContext(contextData);
-      }
+        prerequisiteTrace._evaluationContext =
+          this.#createSafeContext(contextData);
+      },
     };
 
     return prerequisiteTrace;
@@ -476,32 +514,34 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Create safe context for tracing (handles circular references)
-   * 
+   *
    * @private
    * @param {Object} context - Context to make safe
    * @returns {Object} Safe context for JSON serialization
    */
   #createSafeContext(context) {
     try {
-      return JSON.parse(JSON.stringify(context, (key, value) => {
-        // Handle circular references
-        if (typeof value === 'object' && value !== null) {
-          if (this.#seenObjects && this.#seenObjects.has(value)) {
-            return '[Circular Reference]';
+      return JSON.parse(
+        JSON.stringify(context, (key, value) => {
+          // Handle circular references
+          if (typeof value === 'object' && value !== null) {
+            if (this.#seenObjects && this.#seenObjects.has(value)) {
+              return '[Circular Reference]';
+            }
+            if (!this.#seenObjects) {
+              this.#seenObjects = new WeakSet();
+            }
+            this.#seenObjects.add(value);
           }
-          if (!this.#seenObjects) {
-            this.#seenObjects = new WeakSet();
+
+          // Limit string length for large data
+          if (typeof value === 'string' && value.length > 500) {
+            return value.substring(0, 500) + '... [truncated]';
           }
-          this.#seenObjects.add(value);
-        }
 
-        // Limit string length for large data
-        if (typeof value === 'string' && value.length > 500) {
-          return value.substring(0, 500) + '... [truncated]';
-        }
-
-        return value;
-      }));
+          return value;
+        })
+      );
     } catch (error) {
       return { contextError: 'Failed to serialize context safely' };
     } finally {
@@ -511,7 +551,7 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Extract evaluation details from enhanced trace
-   * 
+   *
    * @private
    * @param {Object} enhancedTrace - Enhanced trace with captured data
    * @param {Array} prerequisites - Original prerequisites
@@ -520,14 +560,19 @@ class PrerequisiteEvaluationStage {
    */
   #extractEvaluationDetails(enhancedTrace, prerequisites, evaluationPassed) {
     const details = {
-      prerequisiteCount: Array.isArray(prerequisites) ? prerequisites.length : 1,
+      prerequisiteCount: Array.isArray(prerequisites)
+        ? prerequisites.length
+        : 1,
       evaluationPassed,
       hasJsonLogicTraces: false,
-      hasEvaluationContext: false
+      hasEvaluationContext: false,
     };
 
     // Extract JSON Logic traces if available
-    if (enhancedTrace._jsonLogicTraces && enhancedTrace._jsonLogicTraces.length > 0) {
+    if (
+      enhancedTrace._jsonLogicTraces &&
+      enhancedTrace._jsonLogicTraces.length > 0
+    ) {
       details.hasJsonLogicTraces = true;
       details.jsonLogicTraces = enhancedTrace._jsonLogicTraces;
     }
@@ -543,10 +588,16 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Capture pre-evaluation stage data
-   * 
+   *
    * @private
    */
-  async #capturePreEvaluationData(trace, actor, candidateActions, actionContext, stageStartTime) {
+  async #capturePreEvaluationData(
+    trace,
+    actor,
+    candidateActions,
+    actionContext,
+    stageStartTime
+  ) {
     try {
       // This is general stage information, not action-specific
       const stageData = {
@@ -555,36 +606,46 @@ class PrerequisiteEvaluationStage {
         candidateActionCount: candidateActions.length,
         hasActionContext: !!actionContext,
         stageStartTime,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       this.#logger.debug(
         'PrerequisiteEvaluationStage: Captured pre-evaluation data',
         stageData
       );
-
     } catch (error) {
-      this.#logger.warn('Failed to capture pre-evaluation data for tracing', error);
+      this.#logger.warn(
+        'Failed to capture pre-evaluation data for tracing',
+        error
+      );
     }
   }
 
   /**
    * Capture prerequisite evaluation data for traced action
-   * 
+   *
    * @private
    */
-  async #capturePrerequisiteEvaluationData(trace, actionDef, actor, evaluationResult) {
+  async #capturePrerequisiteEvaluationData(
+    trace,
+    actionDef,
+    actor,
+    evaluationResult
+  ) {
     try {
       const traceData = {
         stage: 'prerequisite_evaluation',
         actorId: actor.id,
         hasPrerequisites: evaluationResult.hasPrerequisites,
-        prerequisiteCount: evaluationResult.prerequisites ? 
-          (Array.isArray(evaluationResult.prerequisites) ? evaluationResult.prerequisites.length : 1) : 0,
+        prerequisiteCount: evaluationResult.prerequisites
+          ? Array.isArray(evaluationResult.prerequisites)
+            ? evaluationResult.prerequisites.length
+            : 1
+          : 0,
         evaluationPassed: evaluationResult.passed,
         evaluationReason: evaluationResult.reason,
         evaluationTimeMs: evaluationResult.evaluationTime,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // Include prerequisites if present (filtered by verbosity in ActionAwareStructuredTrace)
@@ -603,18 +664,21 @@ class PrerequisiteEvaluationStage {
         traceData.errorType = evaluationResult.errorType;
       }
 
-      await trace.captureActionData('prerequisite_evaluation', actionDef.id, traceData);
+      await trace.captureActionData(
+        'prerequisite_evaluation',
+        actionDef.id,
+        traceData
+      );
 
       this.#logger.debug(
         `PrerequisiteEvaluationStage: Captured prerequisite data for action '${actionDef.id}'`,
-        { 
-          actionId: actionDef.id, 
+        {
+          actionId: actionDef.id,
           passed: evaluationResult.passed,
           hasPrerequisites: evaluationResult.hasPrerequisites,
-          prerequisiteCount: traceData.prerequisiteCount
+          prerequisiteCount: traceData.prerequisiteCount,
         }
       );
-
     } catch (error) {
       this.#logger.warn(
         `Failed to capture prerequisite evaluation data for action '${actionDef.id}'`,
@@ -625,7 +689,7 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Capture data for actions with no prerequisites
-   * 
+   *
    * @private
    */
   async #captureNoPrerequisitesData(trace, actionDef, actor, result) {
@@ -637,11 +701,14 @@ class PrerequisiteEvaluationStage {
         evaluationPassed: true,
         evaluationReason: 'No prerequisites defined',
         evaluationTimeMs: result.evaluationTime,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
-      await trace.captureActionData('prerequisite_evaluation', actionDef.id, traceData);
-
+      await trace.captureActionData(
+        'prerequisite_evaluation',
+        actionDef.id,
+        traceData
+      );
     } catch (error) {
       this.#logger.warn(
         `Failed to capture no-prerequisites data for action '${actionDef.id}'`,
@@ -652,7 +719,7 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Capture prerequisite evaluation error
-   * 
+   *
    * @private
    */
   async #capturePrerequisiteError(trace, actionDef, actor, error) {
@@ -663,16 +730,19 @@ class PrerequisiteEvaluationStage {
         evaluationFailed: true,
         error: error.message,
         errorType: error.constructor.name,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
-      await trace.captureActionData('prerequisite_evaluation', actionDef.id, errorData);
+      await trace.captureActionData(
+        'prerequisite_evaluation',
+        actionDef.id,
+        errorData
+      );
 
       this.#logger.debug(
         `PrerequisiteEvaluationStage: Captured prerequisite error for action '${actionDef.id}'`,
         { actionId: actionDef.id, error: error.message }
       );
-
     } catch (traceError) {
       this.#logger.warn(
         `Failed to capture prerequisite error data for action '${actionDef.id}'`,
@@ -683,10 +753,17 @@ class PrerequisiteEvaluationStage {
 
   /**
    * Capture post-evaluation summary data
-   * 
+   *
    * @private
    */
-  async #capturePostEvaluationData(trace, actor, originalCount, passedCount, evaluationResults, stageStartTime) {
+  async #capturePostEvaluationData(
+    trace,
+    actor,
+    originalCount,
+    passedCount,
+    evaluationResults,
+    stageStartTime
+  ) {
     try {
       const summaryData = {
         stage: 'prerequisite_evaluation_summary',
@@ -694,9 +771,10 @@ class PrerequisiteEvaluationStage {
         originalActionCount: originalCount,
         passedActionCount: passedCount,
         failedActionCount: originalCount - passedCount,
-        evaluationSuccessRate: originalCount > 0 ? (passedCount / originalCount) : 1.0,
+        evaluationSuccessRate:
+          originalCount > 0 ? passedCount / originalCount : 1.0,
         stageDurationMs: Date.now() - stageStartTime,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // Add statistics about prerequisite types if available
@@ -718,15 +796,17 @@ class PrerequisiteEvaluationStage {
         'PrerequisiteEvaluationStage: Captured post-evaluation summary',
         summaryData
       );
-
     } catch (error) {
-      this.#logger.warn('Failed to capture post-evaluation summary for tracing', error);
+      this.#logger.warn(
+        'Failed to capture post-evaluation summary for tracing',
+        error
+      );
     }
   }
 
   /**
    * Get stage statistics for debugging
-   * 
+   *
    * @returns {Object} Stage statistics
    */
   getStageStatistics() {
@@ -734,7 +814,7 @@ class PrerequisiteEvaluationStage {
       name: this.#name,
       type: 'PrerequisiteEvaluationStage',
       hasPrerequisiteService: !!this.#prerequisiteService,
-      supportsTracing: true
+      supportsTracing: true,
     };
   }
 }
@@ -753,7 +833,7 @@ Create `src/actions/tracing/prerequisiteAnalysisUtils.js`:
 
 /**
  * Analyze prerequisite structure and complexity
- * 
+ *
  * @param {Array|Object} prerequisites - Prerequisites to analyze
  * @returns {Object} Detailed prerequisite analysis
  */
@@ -763,7 +843,7 @@ export function analyzePrerequisiteStructure(prerequisites) {
       hasPrerequisites: false,
       complexity: 'none',
       count: 0,
-      types: []
+      types: [],
     };
   }
 
@@ -773,35 +853,44 @@ export function analyzePrerequisiteStructure(prerequisites) {
     types: [],
     complexity: 'simple',
     structure: 'unknown',
-    nestedLevels: 0
+    nestedLevels: 0,
   };
 
   if (Array.isArray(prerequisites)) {
     analysis.structure = 'array';
     analysis.count = prerequisites.length;
-    
+
     // Analyze each prerequisite
     const complexityScores = [];
-    prerequisites.forEach(prereq => {
+    prerequisites.forEach((prereq) => {
       const prereqAnalysis = analyzePrerequisiteItem(prereq);
       analysis.types.push(prereqAnalysis.type);
       complexityScores.push(prereqAnalysis.complexityScore);
-      analysis.nestedLevels = Math.max(analysis.nestedLevels, prereqAnalysis.nestedLevels);
+      analysis.nestedLevels = Math.max(
+        analysis.nestedLevels,
+        prereqAnalysis.nestedLevels
+      );
     });
 
     // Determine overall complexity
-    const avgComplexity = complexityScores.reduce((sum, score) => sum + score, 0) / complexityScores.length;
-    analysis.complexity = getComplexityLevel(avgComplexity, analysis.nestedLevels);
-
+    const avgComplexity =
+      complexityScores.reduce((sum, score) => sum + score, 0) /
+      complexityScores.length;
+    analysis.complexity = getComplexityLevel(
+      avgComplexity,
+      analysis.nestedLevels
+    );
   } else if (typeof prerequisites === 'object') {
     analysis.structure = 'object';
     analysis.count = 1;
-    
+
     const prereqAnalysis = analyzePrerequisiteItem(prerequisites);
     analysis.types = [prereqAnalysis.type];
-    analysis.complexity = getComplexityLevel(prereqAnalysis.complexityScore, prereqAnalysis.nestedLevels);
+    analysis.complexity = getComplexityLevel(
+      prereqAnalysis.complexityScore,
+      prereqAnalysis.nestedLevels
+    );
     analysis.nestedLevels = prereqAnalysis.nestedLevels;
-
   } else {
     analysis.structure = 'primitive';
     analysis.count = 1;
@@ -813,7 +902,7 @@ export function analyzePrerequisiteStructure(prerequisites) {
 
 /**
  * Analyze individual prerequisite item
- * 
+ *
  * @private
  * @param {*} prereq - Prerequisite item to analyze
  * @returns {Object} Analysis of individual prerequisite
@@ -822,7 +911,7 @@ function analyzePrerequisiteItem(prereq) {
   const analysis = {
     type: typeof prereq,
     complexityScore: 0,
-    nestedLevels: 0
+    nestedLevels: 0,
   };
 
   if (typeof prereq === 'object' && prereq !== null) {
@@ -845,7 +934,7 @@ function analyzePrerequisiteItem(prereq) {
 
 /**
  * Check if object is a JSON Logic expression
- * 
+ *
  * @private
  * @param {Object} obj - Object to check
  * @returns {boolean}
@@ -857,20 +946,42 @@ function isJsonLogicExpression(obj) {
 
   // Common JSON Logic operators
   const jsonLogicOperators = [
-    '==', '!=', '===', '!==', '>', '<', '>=', '<=',
-    'and', 'or', 'not', '!',
-    'if', 'in', 'var',
-    '+', '-', '*', '/', '%',
-    'map', 'filter', 'reduce', 'all', 'some', 'none',
-    'merge', 'cat'
+    '==',
+    '!=',
+    '===',
+    '!==',
+    '>',
+    '<',
+    '>=',
+    '<=',
+    'and',
+    'or',
+    'not',
+    '!',
+    'if',
+    'in',
+    'var',
+    '+',
+    '-',
+    '*',
+    '/',
+    '%',
+    'map',
+    'filter',
+    'reduce',
+    'all',
+    'some',
+    'none',
+    'merge',
+    'cat',
   ];
 
-  return jsonLogicOperators.some(op => obj.hasOwnProperty(op));
+  return jsonLogicOperators.some((op) => obj.hasOwnProperty(op));
 }
 
 /**
  * Calculate JSON Logic expression complexity
- * 
+ *
  * @private
  * @param {Object} expression - JSON Logic expression
  * @returns {number} Complexity score
@@ -881,27 +992,51 @@ function calculateJsonLogicComplexity(expression) {
   for (const [operator, operand] of Object.entries(expression)) {
     // Operator complexity weights
     const operatorWeights = {
-      '==': 1, '!=': 1, '===': 1, '!==': 1,
-      '>': 1, '<': 1, '>=': 1, '<=': 1,
-      'and': 2, 'or': 2, 'not': 1,
-      'if': 3,
-      'in': 2,
-      'var': 0.5,
-      '+': 1, '-': 1, '*': 1, '/': 1, '%': 1,
-      'map': 4, 'filter': 4, 'reduce': 5,
-      'all': 3, 'some': 3, 'none': 3
+      '==': 1,
+      '!=': 1,
+      '===': 1,
+      '!==': 1,
+      '>': 1,
+      '<': 1,
+      '>=': 1,
+      '<=': 1,
+      and: 2,
+      or: 2,
+      not: 1,
+      if: 3,
+      in: 2,
+      var: 0.5,
+      '+': 1,
+      '-': 1,
+      '*': 1,
+      '/': 1,
+      '%': 1,
+      map: 4,
+      filter: 4,
+      reduce: 5,
+      all: 3,
+      some: 3,
+      none: 3,
     };
 
     complexity += operatorWeights[operator] || 2; // Default weight for unknown operators
 
     // Add complexity for nested expressions
     if (Array.isArray(operand)) {
-      operand.forEach(item => {
-        if (typeof item === 'object' && item !== null && isJsonLogicExpression(item)) {
+      operand.forEach((item) => {
+        if (
+          typeof item === 'object' &&
+          item !== null &&
+          isJsonLogicExpression(item)
+        ) {
           complexity += calculateJsonLogicComplexity(item) * 0.8; // Nested expressions are weighted
         }
       });
-    } else if (typeof operand === 'object' && operand !== null && isJsonLogicExpression(operand)) {
+    } else if (
+      typeof operand === 'object' &&
+      operand !== null &&
+      isJsonLogicExpression(operand)
+    ) {
       complexity += calculateJsonLogicComplexity(operand) * 0.8;
     }
   }
@@ -911,7 +1046,7 @@ function calculateJsonLogicComplexity(expression) {
 
 /**
  * Calculate nested levels in JSON Logic expression
- * 
+ *
  * @private
  * @param {Object} expression - JSON Logic expression
  * @returns {number} Maximum nesting depth
@@ -921,12 +1056,20 @@ function calculateNestedLevels(expression) {
 
   for (const operand of Object.values(expression)) {
     if (Array.isArray(operand)) {
-      operand.forEach(item => {
-        if (typeof item === 'object' && item !== null && isJsonLogicExpression(item)) {
+      operand.forEach((item) => {
+        if (
+          typeof item === 'object' &&
+          item !== null &&
+          isJsonLogicExpression(item)
+        ) {
           maxDepth = Math.max(maxDepth, 1 + calculateNestedLevels(item));
         }
       });
-    } else if (typeof operand === 'object' && operand !== null && isJsonLogicExpression(operand)) {
+    } else if (
+      typeof operand === 'object' &&
+      operand !== null &&
+      isJsonLogicExpression(operand)
+    ) {
       maxDepth = Math.max(maxDepth, 1 + calculateNestedLevels(operand));
     }
   }
@@ -936,7 +1079,7 @@ function calculateNestedLevels(expression) {
 
 /**
  * Calculate object nesting depth
- * 
+ *
  * @private
  * @param {Object} obj - Object to analyze
  * @returns {number} Nesting depth
@@ -955,7 +1098,7 @@ function calculateObjectNesting(obj) {
 
 /**
  * Determine complexity level from score and nesting
- * 
+ *
  * @private
  * @param {number} score - Complexity score
  * @param {number} nesting - Nesting depth
@@ -970,7 +1113,7 @@ function getComplexityLevel(score, nesting) {
 
 /**
  * Generate human-readable prerequisite report
- * 
+ *
  * @param {Object} analysis - Result from analyzePrerequisiteStructure
  * @returns {string} Human-readable report
  */
@@ -991,7 +1134,9 @@ export function generatePrerequisiteReport(analysis) {
       return acc;
     }, {});
 
-    report += `- Types: ${Object.entries(typeCounts).map(([type, count]) => `${type}(${count})`).join(', ')}\n`;
+    report += `- Types: ${Object.entries(typeCounts)
+      .map(([type, count]) => `${type}(${count})`)
+      .join(', ')}\n`;
   }
 
   return report;
@@ -999,7 +1144,7 @@ export function generatePrerequisiteReport(analysis) {
 
 /**
  * Validate prerequisite trace data
- * 
+ *
  * @param {Object} traceData - Prerequisite trace data to validate
  * @returns {Object} Validation result
  */
@@ -1020,7 +1165,9 @@ export function validatePrerequisiteTraceData(traceData) {
   }
 
   if (traceData.hasPrerequisites && !traceData.prerequisites) {
-    warnings.push('Action marked as having prerequisites but no prerequisite data provided');
+    warnings.push(
+      'Action marked as having prerequisites but no prerequisite data provided'
+    );
   }
 
   if (traceData.evaluationDetails) {
@@ -1032,13 +1179,13 @@ export function validatePrerequisiteTraceData(traceData) {
   return {
     valid: issues.length === 0,
     issues,
-    warnings
+    warnings,
   };
 }
 
 /**
  * Extract prerequisite failure reasons from evaluation details
- * 
+ *
  * @param {Object} evaluationDetails - Detailed evaluation results
  * @returns {Array<string>} Array of failure reasons
  */
@@ -1092,7 +1239,7 @@ export class TracingPrerequisiteServiceWrapper {
 
   /**
    * Enhanced evaluate method with improved trace capture
-   * 
+   *
    * @param {Array|Object} prerequisites - Prerequisites to evaluate
    * @param {Object} actionDef - Action definition
    * @param {Object} actor - Actor entity
@@ -1107,11 +1254,25 @@ export class TracingPrerequisiteServiceWrapper {
     }
 
     // Delegate to original service
-    const result = this.#prerequisiteService.evaluate(prerequisites, actionDef, actor, trace);
+    const result = this.#prerequisiteService.evaluate(
+      prerequisites,
+      actionDef,
+      actor,
+      trace
+    );
 
     // Capture JSON Logic traces if enhanced trace supports it
-    if (trace?.captureJsonLogicTrace && this.#hasJsonLogicExpressions(prerequisites)) {
-      this.#captureJsonLogicTraces(prerequisites, actionDef, actor, trace, result);
+    if (
+      trace?.captureJsonLogicTrace &&
+      this.#hasJsonLogicExpressions(prerequisites)
+    ) {
+      this.#captureJsonLogicTraces(
+        prerequisites,
+        actionDef,
+        actor,
+        trace,
+        result
+      );
     }
 
     return result;
@@ -1122,13 +1283,13 @@ export class TracingPrerequisiteServiceWrapper {
       actionId: actionDef.id,
       actorId: actor.id,
       actorComponents: Array.from(actor.components?.keys() || []),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
   #hasJsonLogicExpressions(prerequisites) {
     if (Array.isArray(prerequisites)) {
-      return prerequisites.some(p => this.#isJsonLogicExpression(p));
+      return prerequisites.some((p) => this.#isJsonLogicExpression(p));
     }
     return this.#isJsonLogicExpression(prerequisites);
   }
@@ -1139,17 +1300,32 @@ export class TracingPrerequisiteServiceWrapper {
     }
 
     const jsonLogicOperators = [
-      '==', '!=', '===', '!==', '>', '<', '>=', '<=',
-      'and', 'or', 'not', '!', 'if', 'in', 'var'
+      '==',
+      '!=',
+      '===',
+      '!==',
+      '>',
+      '<',
+      '>=',
+      '<=',
+      'and',
+      'or',
+      'not',
+      '!',
+      'if',
+      'in',
+      'var',
     ];
 
-    return jsonLogicOperators.some(op => obj.hasOwnProperty(op));
+    return jsonLogicOperators.some((op) => obj.hasOwnProperty(op));
   }
 
   #captureJsonLogicTraces(prerequisites, actionDef, actor, trace, result) {
     try {
-      const prereqArray = Array.isArray(prerequisites) ? prerequisites : [prerequisites];
-      
+      const prereqArray = Array.isArray(prerequisites)
+        ? prerequisites
+        : [prerequisites];
+
       prereqArray.forEach((prereq, index) => {
         if (this.#isJsonLogicExpression(prereq)) {
           trace.captureJsonLogicTrace(
@@ -1193,20 +1369,22 @@ describe('PrerequisiteEvaluationStage - Action Tracing Enhancement', () => {
       const stage = testBed.createStage();
       const context = testBed.createContext({
         traceType: 'ActionAwareStructuredTrace',
-        tracedActions: ['core:cast_spell']
+        tracedActions: ['core:cast_spell'],
       });
 
       const result = await stage.executeInternal(context);
 
       expect(result.success).toBe(true);
       expect(testBed.getActionTraceCaptures()).toHaveLength(1);
-      expect(testBed.getActionTraceCaptures()[0].actionId).toBe('core:cast_spell');
+      expect(testBed.getActionTraceCaptures()[0].actionId).toBe(
+        'core:cast_spell'
+      );
     });
 
     it('should work normally with standard StructuredTrace', async () => {
       const stage = testBed.createStage();
       const context = testBed.createContext({
-        traceType: 'StructuredTrace'
+        traceType: 'StructuredTrace',
       });
 
       const result = await stage.executeInternal(context);
@@ -1223,14 +1401,16 @@ describe('PrerequisiteEvaluationStage - Action Tracing Enhancement', () => {
       const context = testBed.createContext({
         traceType: 'ActionAwareStructuredTrace',
         tracedActions: ['core:cast_spell'],
-        actionDefinitions: [{
-          id: 'core:cast_spell',
-          prerequisites: [
-            { '>=': [{ 'var': 'actor.mana' }, 10] },
-            { '==': [{ 'var': 'actor.canCastMagic' }, true] }
-          ]
-        }],
-        prerequisiteEvaluationResult: true
+        actionDefinitions: [
+          {
+            id: 'core:cast_spell',
+            prerequisites: [
+              { '>=': [{ var: 'actor.mana' }, 10] },
+              { '==': [{ var: 'actor.canCastMagic' }, true] },
+            ],
+          },
+        ],
+        prerequisiteEvaluationResult: true,
       });
 
       await stage.executeInternal(context);
@@ -1251,20 +1431,24 @@ describe('PrerequisiteEvaluationStage - Action Tracing Enhancement', () => {
       const context = testBed.createContext({
         traceType: 'ActionAwareStructuredTrace',
         tracedActions: ['core:look'],
-        actionDefinitions: [{
-          id: 'core:look'
-          // No prerequisites
-        }]
+        actionDefinitions: [
+          {
+            id: 'core:look',
+            // No prerequisites
+          },
+        ],
       });
 
       await stage.executeInternal(context);
 
       const captures = testBed.getActionTraceCaptures();
       const captureData = captures[0];
-      
+
       expect(captureData.data.hasPrerequisites).toBe(false);
       expect(captureData.data.evaluationPassed).toBe(true);
-      expect(captureData.data.evaluationReason).toBe('No prerequisites defined');
+      expect(captureData.data.evaluationReason).toBe(
+        'No prerequisites defined'
+      );
     });
 
     it('should capture prerequisite evaluation failures', async () => {
@@ -1272,20 +1456,24 @@ describe('PrerequisiteEvaluationStage - Action Tracing Enhancement', () => {
       const context = testBed.createContext({
         traceType: 'ActionAwareStructuredTrace',
         tracedActions: ['core:cast_spell'],
-        actionDefinitions: [{
-          id: 'core:cast_spell',
-          prerequisites: [{ '>=': [{ 'var': 'actor.mana' }, 100] }]
-        }],
-        prerequisiteEvaluationResult: false
+        actionDefinitions: [
+          {
+            id: 'core:cast_spell',
+            prerequisites: [{ '>=': [{ var: 'actor.mana' }, 100] }],
+          },
+        ],
+        prerequisiteEvaluationResult: false,
       });
 
       await stage.executeInternal(context);
 
       const captures = testBed.getActionTraceCaptures();
       const captureData = captures[0];
-      
+
       expect(captureData.data.evaluationPassed).toBe(false);
-      expect(captureData.data.evaluationReason).toContain('prerequisites failed');
+      expect(captureData.data.evaluationReason).toContain(
+        'prerequisites failed'
+      );
     });
 
     it('should capture JSON Logic evaluation details', async () => {
@@ -1293,24 +1481,28 @@ describe('PrerequisiteEvaluationStage - Action Tracing Enhancement', () => {
       const context = testBed.createContext({
         traceType: 'ActionAwareStructuredTrace',
         tracedActions: ['core:complex_action'],
-        actionDefinitions: [{
-          id: 'core:complex_action',
-          prerequisites: [
-            { 'and': [
-              { '>=': [{ 'var': 'actor.level' }, 5] },
-              { 'in': [{ 'var': 'actor.location' }, ['town', 'city']] }
-            ]}
-          ]
-        }],
+        actionDefinitions: [
+          {
+            id: 'core:complex_action',
+            prerequisites: [
+              {
+                and: [
+                  { '>=': [{ var: 'actor.level' }, 5] },
+                  { in: [{ var: 'actor.location' }, ['town', 'city']] },
+                ],
+              },
+            ],
+          },
+        ],
         prerequisiteEvaluationResult: true,
-        includeJsonLogicTraces: true
+        includeJsonLogicTraces: true,
       });
 
       await stage.executeInternal(context);
 
       const captures = testBed.getActionTraceCaptures();
       const captureData = captures[0];
-      
+
       expect(captureData.data.evaluationDetails).toBeDefined();
       expect(captureData.data.evaluationDetails.hasJsonLogicTraces).toBe(true);
     });
@@ -1319,14 +1511,14 @@ describe('PrerequisiteEvaluationStage - Action Tracing Enhancement', () => {
       const stage = testBed.createStage();
       const context = testBed.createContext({
         traceType: 'ActionAwareStructuredTrace',
-        tracedActions: ['core:test_action']
+        tracedActions: ['core:test_action'],
       });
 
       await stage.executeInternal(context);
 
       const captures = testBed.getActionTraceCaptures();
       const captureData = captures[0];
-      
+
       expect(typeof captureData.data.evaluationTimeMs).toBe('number');
       expect(captureData.data.evaluationTimeMs).toBeGreaterThanOrEqual(0);
     });
@@ -1338,13 +1530,13 @@ describe('PrerequisiteEvaluationStage - Action Tracing Enhancement', () => {
       const context = testBed.createContext({
         traceType: 'ActionAwareStructuredTrace',
         tracedActions: ['core:error_action'],
-        prerequisiteServiceError: true
+        prerequisiteServiceError: true,
       });
 
       const result = await stage.executeInternal(context);
 
       expect(result.success).toBe(true); // Stage should continue despite service errors
-      
+
       const captures = testBed.getActionTraceCaptures();
       expect(captures[0].data.evaluationFailed).toBe(true);
       expect(captures[0].data.error).toBeTruthy();
@@ -1355,13 +1547,15 @@ describe('PrerequisiteEvaluationStage - Action Tracing Enhancement', () => {
       const context = testBed.createContext({
         traceType: 'ActionAwareStructuredTrace',
         tracedActions: ['core:test_action'],
-        traceCaptureFailure: true
+        traceCaptureFailure: true,
       });
 
       const result = await stage.executeInternal(context);
 
       expect(result.success).toBe(true);
-      expect(testBed.getWarningLogs()).toContain('Failed to capture prerequisite');
+      expect(testBed.getWarningLogs()).toContain(
+        'Failed to capture prerequisite'
+      );
     });
 
     it('should handle malformed prerequisite structures', async () => {
@@ -1369,10 +1563,12 @@ describe('PrerequisiteEvaluationStage - Action Tracing Enhancement', () => {
       const context = testBed.createContext({
         traceType: 'ActionAwareStructuredTrace',
         tracedActions: ['core:malformed_action'],
-        actionDefinitions: [{
-          id: 'core:malformed_action',
-          prerequisites: null // Malformed prerequisites
-        }]
+        actionDefinitions: [
+          {
+            id: 'core:malformed_action',
+            prerequisites: null, // Malformed prerequisites
+          },
+        ],
       });
 
       const result = await stage.executeInternal(context);
@@ -1402,7 +1598,7 @@ export class PrerequisiteEvaluationStageTestBed {
 
     const stage = new PrerequisiteEvaluationStage({
       prerequisiteService: mockPrerequisiteService,
-      logger: mockLogger
+      logger: mockLogger,
     });
 
     this.#instances.push(stage);
@@ -1412,9 +1608,9 @@ export class PrerequisiteEvaluationStageTestBed {
   createStageWithJsonLogicTrace() {
     // Create stage that captures JSON Logic trace data
     const mockService = this.createMockPrerequisiteService({
-      captureJsonLogicTraces: true
+      captureJsonLogicTraces: true,
     });
-    
+
     return this.createStage({ prerequisiteService: mockService });
   }
 
@@ -1430,11 +1626,15 @@ export class PrerequisiteEvaluationStageTestBed {
       prerequisiteEvaluationResult = true,
       prerequisiteServiceError = false,
       traceCaptureFailure = false,
-      includeJsonLogicTraces = false
+      includeJsonLogicTraces = false,
     } = options;
 
     const mockActor = this.createMockActor();
-    const mockTrace = this.createMockTrace(traceType, tracedActions, traceCaptureFailure);
+    const mockTrace = this.createMockTrace(
+      traceType,
+      tracedActions,
+      traceCaptureFailure
+    );
     const mockActionContext = this.createMockActionContext();
 
     // Configure prerequisite service mock
@@ -1454,34 +1654,33 @@ export class PrerequisiteEvaluationStageTestBed {
       candidateActions: actionDefinitions,
       trace: mockTrace,
       actionContext: mockActionContext,
-      data: {}
+      data: {},
     };
   }
 
   createMockPrerequisiteService(options = {}) {
-    const {
-      simulateErrors = false,
-      captureJsonLogicTraces = false
-    } = options;
+    const { simulateErrors = false, captureJsonLogicTraces = false } = options;
 
     const service = {
-      evaluate: jest.fn().mockImplementation((prerequisites, actionDef, actor, trace) => {
-        if (simulateErrors) {
-          throw new Error('Mock prerequisite service error');
-        }
+      evaluate: jest
+        .fn()
+        .mockImplementation((prerequisites, actionDef, actor, trace) => {
+          if (simulateErrors) {
+            throw new Error('Mock prerequisite service error');
+          }
 
-        // Simulate JSON Logic trace capture if enhanced trace is provided
-        if (captureJsonLogicTraces && trace?.captureJsonLogicTrace) {
-          trace.captureJsonLogicTrace(
-            prerequisites,
-            { action: actionDef, actor },
-            true,
-            ['Mock JSON Logic evaluation steps']
-          );
-        }
+          // Simulate JSON Logic trace capture if enhanced trace is provided
+          if (captureJsonLogicTraces && trace?.captureJsonLogicTrace) {
+            trace.captureJsonLogicTrace(
+              prerequisites,
+              { action: actionDef, actor },
+              true,
+              ['Mock JSON Logic evaluation steps']
+            );
+          }
 
-        return true; // Default to passing evaluation
-      })
+          return true; // Default to passing evaluation
+        }),
     };
 
     this.#mocks.set('prerequisiteService', service);
@@ -1491,24 +1690,27 @@ export class PrerequisiteEvaluationStageTestBed {
   createMockTrace(traceType, tracedActions = [], shouldFailCapture = false) {
     const baseTrace = {
       step: jest.fn(),
-      info: jest.fn()
+      info: jest.fn(),
     };
 
     if (traceType === 'ActionAwareStructuredTrace') {
-      baseTrace.captureActionData = jest.fn().mockImplementation((stage, actionId, data) => {
-        if (shouldFailCapture) {
-          throw new Error('Trace capture failure simulation');
-        }
+      baseTrace.captureActionData = jest
+        .fn()
+        .mockImplementation((stage, actionId, data) => {
+          if (shouldFailCapture) {
+            throw new Error('Trace capture failure simulation');
+          }
 
-        const shouldTrace = tracedActions.includes('*') || tracedActions.includes(actionId);
-        if (shouldTrace) {
-          this.#capturedActionTraces.push({
-            stage,
-            actionId,
-            data: { ...data }
-          });
-        }
-      });
+          const shouldTrace =
+            tracedActions.includes('*') || tracedActions.includes(actionId);
+          if (shouldTrace) {
+            this.#capturedActionTraces.push({
+              stage,
+              actionId,
+              data: { ...data },
+            });
+          }
+        });
 
       // Enhanced trace methods for prerequisite integration
       baseTrace.captureJsonLogicTrace = jest.fn();
@@ -1524,8 +1726,8 @@ export class PrerequisiteEvaluationStageTestBed {
       id: 'test-actor',
       components: new Map([
         ['core:position', { id: 'core:position' }],
-        ['core:stats', { level: 5, mana: 50 }]
-      ])
+        ['core:stats', { level: 5, mana: 50 }],
+      ]),
     };
   }
 
@@ -1533,7 +1735,7 @@ export class PrerequisiteEvaluationStageTestBed {
     return {
       location: 'town',
       time: 'day',
-      weather: 'clear'
+      weather: 'clear',
     };
   }
 
@@ -1542,7 +1744,7 @@ export class PrerequisiteEvaluationStageTestBed {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     this.#mocks.set('logger', logger);
@@ -1555,12 +1757,12 @@ export class PrerequisiteEvaluationStageTestBed {
 
   getTraceSteps() {
     const trace = this.#mocks.get('trace');
-    return trace ? trace.step.mock.calls.map(call => call[0]) : [];
+    return trace ? trace.step.mock.calls.map((call) => call[0]) : [];
   }
 
   getWarningLogs() {
     const logger = this.#mocks.get('logger');
-    return logger ? logger.warn.mock.calls.map(call => call[0]) : [];
+    return logger ? logger.warn.mock.calls.map((call) => call[0]) : [];
   }
 
   cleanup() {
@@ -1593,21 +1795,22 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
   it('should integrate with full action discovery pipeline', async () => {
     await testBed.setupFullPipeline({
       tracedActions: ['core:cast_spell'],
-      verbosity: 'detailed'
+      verbosity: 'detailed',
     });
 
     const actor = testBed.createActorWithStats({ level: 10, mana: 100 });
     const result = await testBed.runActionDiscovery(actor);
 
     expect(result.success).toBe(true);
-    
+
     const traceData = testBed.getActionTraceData();
     const spellActionTrace = traceData.get('core:cast_spell');
-    
+
     expect(spellActionTrace).toBeDefined();
     expect(spellActionTrace.stages.prerequisite_evaluation).toBeDefined();
-    
-    const prereqStageData = spellActionTrace.stages.prerequisite_evaluation.data;
+
+    const prereqStageData =
+      spellActionTrace.stages.prerequisite_evaluation.data;
     expect(prereqStageData.hasPrerequisites).toBe(true);
     expect(prereqStageData.evaluationPassed).toBe(true);
     expect(prereqStageData.prerequisites).toBeDefined();
@@ -1616,7 +1819,7 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
   it('should capture JSON Logic evaluation traces in full pipeline', async () => {
     await testBed.setupFullPipelineWithJsonLogic({
       tracedActions: ['core:complex_action'],
-      verbosity: 'verbose'
+      verbosity: 'verbose',
     });
 
     const actor = testBed.createActorWithComplexState();
@@ -1625,9 +1828,11 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
     const traceData = testBed.getActionTraceData();
     const actionTrace = traceData.get('core:complex_action');
     const prereqData = actionTrace.stages.prerequisite_evaluation.data;
-    
+
     expect(prereqData.evaluationDetails.hasJsonLogicTraces).toBe(true);
-    expect(prereqData.evaluationDetails.jsonLogicTraces.length).toBeGreaterThan(0);
+    expect(prereqData.evaluationDetails.jsonLogicTraces.length).toBeGreaterThan(
+      0
+    );
   });
 });
 ```
@@ -1637,24 +1842,28 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
 ### Functional Acceptance Criteria
 
 #### AC-012-01: Prerequisite Evaluation Tracing
+
 - [ ] PrerequisiteEvaluationStage detects ActionAwareStructuredTrace and enables prerequisite tracing
 - [ ] Stage captures detailed prerequisite data only for traced actions
 - [ ] Captured data includes prerequisite definitions, evaluation context, and results
 - [ ] JSON Logic evaluation traces are captured when available
 
 #### AC-012-02: Prerequisite Data Accuracy
+
 - [ ] Prerequisites are extracted correctly from various action definition formats
-- [ ] Actions with no prerequisites are handled and traced appropriately  
+- [ ] Actions with no prerequisites are handled and traced appropriately
 - [ ] Complex JSON Logic expressions are analyzed and traced with detail
 - [ ] Evaluation timing and performance metrics are captured accurately
 
 #### AC-012-03: Error Handling and Robustness
+
 - [ ] Prerequisite service errors are captured in trace data without breaking stage execution
 - [ ] Malformed prerequisite structures are handled gracefully
 - [ ] Trace capture failures don't prevent stage from continuing normal operation
 - [ ] Stage continues processing remaining actions when individual evaluations fail
 
 #### AC-012-04: Performance Requirements
+
 - [ ] <2ms overhead per traced action during prerequisite evaluation
 - [ ] No measurable performance impact when action tracing is disabled
 - [ ] JSON Logic trace capture doesn't significantly slow evaluation process
@@ -1663,12 +1872,14 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
 ### Technical Acceptance Criteria
 
 #### AC-012-05: Code Quality and Integration
+
 - [ ] Prerequisite extraction logic handles various definition formats correctly
 - [ ] JSON Logic integration captures detailed evaluation steps and context
 - [ ] Error handling includes comprehensive logging with actionable information
 - [ ] Code follows project patterns for service integration and dependency management
 
 #### AC-012-06: Testing Coverage
+
 - [ ] Unit tests cover prerequisite extraction for all supported formats
 - [ ] JSON Logic integration tests verify trace capture functionality
 - [ ] Integration tests confirm tracing works with PrerequisiteService
@@ -1677,17 +1888,20 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
 ## Dependencies
 
 ### Technical Dependencies
+
 - `src/actions/tracing/actionAwareStructuredTrace.js` - ACTTRA-009 (ActionAwareStructuredTrace class)
 - `src/actions/pipeline/stages/PrerequisiteEvaluationStage.js` - Existing stage to enhance
 - `src/actions/services/prerequisiteService.js` - Service for prerequisite evaluation
 - `src/utils/validationUtils.js` - Input validation utilities
 
 ### Workflow Dependencies
+
 - **ACTTRA-009**: ActionAwareStructuredTrace must be implemented for data capture
 - **ACTTRA-010**: Enhanced ActionDiscoveryService provides action-aware trace context
 - **ACTTRA-011**: ComponentFilteringStage integration for pipeline consistency
 
 ### Service Dependencies
+
 - PrerequisiteService must be available and functional for evaluation
 - JSON Logic evaluation capabilities within PrerequisiteService
 - Existing trace integration patterns within PrerequisiteService
@@ -1695,24 +1909,28 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
 ## Definition of Done
 
 ### Code Complete
+
 - [ ] PrerequisiteEvaluationStage enhanced with action tracing capabilities
 - [ ] Prerequisite analysis utilities created for complex prerequisite handling
 - [ ] PrerequisiteService integration layer created for enhanced trace capture
 - [ ] Error handling and logging implemented for all failure scenarios
 
 ### Testing Complete
+
 - [ ] Unit tests written with >90% coverage for enhanced functionality
 - [ ] Integration tests verify tracing works with actual PrerequisiteService
 - [ ] JSON Logic tracing tests confirm detailed evaluation capture
 - [ ] Performance tests validate overhead requirements
 
 ### Documentation Complete
+
 - [ ] All enhanced methods have comprehensive JSDoc documentation
 - [ ] Prerequisite analysis logic documented with examples
 - [ ] JSON Logic integration patterns documented
 - [ ] Performance characteristics and limitations documented
 
 ### Quality Assurance
+
 - [ ] Code review completed by senior developer
 - [ ] Integration with PrerequisiteService verified and tested
 - [ ] Performance benchmarks meet requirements without degradation
@@ -1721,6 +1939,7 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
 ## Effort Estimation
 
 ### Development Tasks
+
 - Stage enhancement implementation: **2.5 hours**
 - Prerequisite analysis utilities: **2 hours**
 - PrerequisiteService integration layer: **1.5 hours**
@@ -1728,18 +1947,21 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
 - Error handling and logging: **1 hour**
 
 ### Testing Tasks
+
 - Unit test implementation: **3 hours**
 - Integration test development: **2 hours**
 - JSON Logic tracing tests: **1.5 hours**
 - Performance validation: **1 hour**
 
 ### Documentation Tasks
+
 - JSDoc documentation: **1 hour**
 - Prerequisite analysis documentation: **0.5 hours**
 
 ### Total Estimated Effort: **16 hours**
 
 ### Risk Factors
+
 - **Medium Risk**: JSON Logic integration complexity may require additional time for comprehensive trace capture
 - **Low Risk**: PrerequisiteService integration should be straightforward with existing patterns
 - **Low Risk**: Performance requirements are achievable with efficient data processing
@@ -1747,12 +1969,14 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
 ## Success Metrics
 
 ### Quantitative Metrics
+
 - Unit test coverage ≥90% for enhanced functionality
 - <2ms overhead per traced action
 - Zero performance impact when tracing disabled
 - JSON Logic trace capture accuracy 100% for supported expressions
 
 ### Qualitative Metrics
+
 - Clear visibility into prerequisite evaluation decisions and failures
 - Comprehensive JSON Logic evaluation traces for debugging complex conditions
 - Robust error handling for various prerequisite formats and service failures

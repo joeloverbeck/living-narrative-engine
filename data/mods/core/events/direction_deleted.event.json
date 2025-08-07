@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:direction_deleted",
+  "description": "Fired when a thematic direction is deleted. Contains the ID of the deleted direction for cleanup and state management purposes.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "description": "The unique identifier of the deleted thematic direction",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required": ["directionId"],
+    "additionalProperties": false
+  }
+}

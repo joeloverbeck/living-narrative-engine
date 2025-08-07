@@ -28,13 +28,17 @@ describe('ThematicDirectionsManager - No Warnings Integration Test', () => {
     capturedWarnings = [];
     capturedLogs = [];
 
-    mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation((message) => {
-      capturedWarnings.push(message);
-    });
+    mockConsoleWarn = jest
+      .spyOn(console, 'warn')
+      .mockImplementation((message) => {
+        capturedWarnings.push(message);
+      });
 
-    mockConsoleLog = jest.spyOn(console, 'log').mockImplementation((message) => {
-      capturedLogs.push(message);
-    });
+    mockConsoleLog = jest
+      .spyOn(console, 'log')
+      .mockImplementation((message) => {
+        capturedLogs.push(message);
+      });
 
     // Set up complete DOM structure that matches thematic-directions-manager.html
     document.body.innerHTML = `
@@ -143,9 +147,8 @@ describe('ThematicDirectionsManager - No Warnings Integration Test', () => {
       const dependencies = testBase.mocks;
 
       // Mock the service to return test data
-      dependencies.characterBuilderService.getAllThematicDirectionsWithConcepts = jest
-        .fn()
-        .mockResolvedValue([
+      dependencies.characterBuilderService.getAllThematicDirectionsWithConcepts =
+        jest.fn().mockResolvedValue([
           {
             direction: {
               id: 'test-direction-1',
@@ -153,40 +156,44 @@ describe('ThematicDirectionsManager - No Warnings Integration Test', () => {
               description: 'Test description',
               coreTension: 'Test tension',
               uniqueTwist: 'Test twist',
-              narrativePotential: 'Test potential'
+              narrativePotential: 'Test potential',
             },
             concept: {
               id: 'test-concept-1',
               concept: 'Test concept text',
               status: 'active',
-              createdAt: new Date().toISOString()
-            }
-          }
+              createdAt: new Date().toISOString(),
+            },
+          },
         ]);
 
       // Create and initialize controller
       const controller = new ThematicDirectionsManagerController(dependencies);
-      
+
       // Initialize - this should complete without warnings
       await controller.initialize();
 
       // Wait for all async operations to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify controller is initialized
       expect(controller.isInitialized).toBe(true);
 
       // Check for UIStateManager warnings (should be none after our fix)
-      const uiStateWarnings = capturedWarnings.filter(warning =>
-        warning && warning.toString().includes('UIStateManager not initialized')
+      const uiStateWarnings = capturedWarnings.filter(
+        (warning) =>
+          warning &&
+          warning.toString().includes('UIStateManager not initialized')
       );
       expect(uiStateWarnings).toEqual([]);
 
       // Check for EventDefinition warnings (may still exist due to production vs test environment differences)
-      const eventDefWarnings = capturedWarnings.filter(warning =>
-        warning && warning.toString().includes('EventDefinition not found for')
+      const eventDefWarnings = capturedWarnings.filter(
+        (warning) =>
+          warning &&
+          warning.toString().includes('EventDefinition not found for')
       );
-      
+
       // Log any remaining warnings for analysis
       if (eventDefWarnings.length > 0) {
         console.log('Remaining EventDefinition warnings:', eventDefWarnings);
@@ -207,20 +214,21 @@ describe('ThematicDirectionsManager - No Warnings Integration Test', () => {
       const dependencies = testBase.mocks;
 
       // Mock with empty data to test empty state
-      dependencies.characterBuilderService.getAllThematicDirectionsWithConcepts = jest
-        .fn()
-        .mockResolvedValue([]);
+      dependencies.characterBuilderService.getAllThematicDirectionsWithConcepts =
+        jest.fn().mockResolvedValue([]);
 
       const controller = new ThematicDirectionsManagerController(dependencies);
-      
+
       await controller.initialize();
 
       // Wait for state transitions
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Verify no UIStateManager warnings during state transitions
-      const uiStateWarnings = capturedWarnings.filter(warning =>
-        warning && warning.toString().includes('UIStateManager not initialized')
+      const uiStateWarnings = capturedWarnings.filter(
+        (warning) =>
+          warning &&
+          warning.toString().includes('UIStateManager not initialized')
       );
       expect(uiStateWarnings).toEqual([]);
 
@@ -238,22 +246,22 @@ describe('ThematicDirectionsManager - No Warnings Integration Test', () => {
       const dependencies = testBase.mocks;
 
       // Make service slower to test loading states
-      dependencies.characterBuilderService.getAllThematicDirectionsWithConcepts = jest
-        .fn()
-        .mockImplementation(() => 
-          new Promise(resolve => 
-            setTimeout(() => resolve([]), 100)
-          )
-        );
+      dependencies.characterBuilderService.getAllThematicDirectionsWithConcepts =
+        jest
+          .fn()
+          .mockImplementation(
+            () => new Promise((resolve) => setTimeout(() => resolve([]), 100))
+          );
 
       const controller = new ThematicDirectionsManagerController(dependencies);
-      
+
       // Initialize - should not call _showLoading before UIStateManager is ready
       await controller.initialize();
 
       // Verify no premature loading state calls
-      const loadingStateWarnings = capturedWarnings.filter(warning =>
-        warning && warning.toString().includes("cannot show state 'loading'")
+      const loadingStateWarnings = capturedWarnings.filter(
+        (warning) =>
+          warning && warning.toString().includes("cannot show state 'loading'")
       );
       expect(loadingStateWarnings).toEqual([]);
 
@@ -268,9 +276,8 @@ describe('ThematicDirectionsManager - No Warnings Integration Test', () => {
       const dependencies = testBase.mocks;
 
       // Mock with realistic test data
-      dependencies.characterBuilderService.getAllThematicDirectionsWithConcepts = jest
-        .fn()
-        .mockResolvedValue([
+      dependencies.characterBuilderService.getAllThematicDirectionsWithConcepts =
+        jest.fn().mockResolvedValue([
           {
             direction: {
               id: 'test-direction-1',
@@ -278,14 +285,14 @@ describe('ThematicDirectionsManager - No Warnings Integration Test', () => {
               description: 'A thrilling adventure story',
               coreTension: 'Hero vs villain',
               uniqueTwist: 'Unexpected ally',
-              narrativePotential: 'High drama potential'
+              narrativePotential: 'High drama potential',
             },
             concept: {
               id: 'concept-1',
               concept: 'Heroic adventure concept',
               status: 'active',
-              createdAt: new Date().toISOString()
-            }
+              createdAt: new Date().toISOString(),
+            },
           },
           {
             direction: {
@@ -294,22 +301,24 @@ describe('ThematicDirectionsManager - No Warnings Integration Test', () => {
               description: 'A puzzling mystery',
               coreTension: 'Truth vs deception',
               uniqueTwist: 'Hidden identity',
-              narrativePotential: 'Suspense and revelation'
+              narrativePotential: 'Suspense and revelation',
             },
-            concept: null // Orphaned direction
-          }
+            concept: null, // Orphaned direction
+          },
         ]);
 
       const controller = new ThematicDirectionsManagerController(dependencies);
-      
+
       await controller.initialize();
 
       // Wait for complete initialization
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       // Should have no UIStateManager warnings throughout the process
-      const allWarnings = capturedWarnings.filter(warning =>
-        warning && warning.toString().includes('UIStateManager not initialized')
+      const allWarnings = capturedWarnings.filter(
+        (warning) =>
+          warning &&
+          warning.toString().includes('UIStateManager not initialized')
       );
       expect(allWarnings).toEqual([]);
 

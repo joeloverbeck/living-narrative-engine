@@ -70,21 +70,13 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @param {CharacterBuilderService} dependencies.characterBuilderService - Character builder service (validated by base class)
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher (validated by base class)
    * @param {ISchemaValidator} dependencies.schemaValidator - Schema validator (validated by base class)
-   * @param {UIStateManager} dependencies.uiStateManager - UI state management (validated here)
    */
-  constructor({
-    logger,
-    characterBuilderService,
-    eventBus,
-    schemaValidator,
-    uiStateManager,
-  }) {
+  constructor({ logger, characterBuilderService, eventBus, schemaValidator }) {
     super({
       logger,
       characterBuilderService,
       eventBus,
       schemaValidator,
-      uiStateManager,
     });
 
     // Initialize page-specific fields
@@ -92,6 +84,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
     this.#currentConcept = null;
     this.#directionsData = [];
     this.#inPlaceEditors = new Map();
+    this._dropdownUpdated = false;
   }
 
   /**
@@ -121,6 +114,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
           onSelectionChange: this.#handleConceptSelection.bind(this),
           labelText: 'Choose Concept:',
         });
+        this.logger.info('PreviousItemsDropdown created successfully');
       } catch (dropdownError) {
         this.logger.error('Failed to initialize dropdown:', dropdownError);
         this.#fallbackToNativeSelect();
@@ -221,7 +215,16 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
       // Update dropdown with filtered concepts
       if (this.#conceptDropdown) {
         try {
+          this.logger.info('Loading concepts into dropdown:', {
+            conceptCount: conceptsWithDirections.length,
+            concepts: conceptsWithDirections.map((c) => ({
+              id: c.id,
+              concept: c.concept?.substring(0, 50),
+            })),
+          });
           await this.#conceptDropdown.loadItems(conceptsWithDirections);
+          this._dropdownUpdated = true; // Mark that dropdown has been updated with new content
+          this.logger.info('Successfully loaded concepts into dropdown');
         } catch (dropdownError) {
           this.logger.error(
             'Failed to load items into dropdown:',
@@ -229,6 +232,10 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
           );
           // Continue without dropdown update
         }
+      } else {
+        this.logger.warn(
+          'Concept dropdown not initialized, cannot load concepts'
+        );
       }
 
       // Store data
@@ -1163,8 +1170,9 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
       selectElement.disabled = true;
       selectElement.classList.add('loading');
 
-      // Store current options to restore later
+      // Store current options to restore later (only if dropdown hasn't been updated)
       this._cachedOptions = Array.from(selectElement.options);
+      this._dropdownUpdated = false; // Reset the flag
 
       // Clear and add loading option
       selectElement.innerHTML = '';
@@ -1178,14 +1186,21 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
       selectElement.disabled = false;
       selectElement.classList.remove('loading');
 
-      // Restore cached options if they exist
-      if (this._cachedOptions && this._cachedOptions.length > 0) {
+      // Only restore cached options if the dropdown hasn't been updated with new content
+      if (
+        this._cachedOptions &&
+        this._cachedOptions.length > 0 &&
+        !this._dropdownUpdated
+      ) {
         selectElement.innerHTML = '';
         this._cachedOptions.forEach((option) => {
           selectElement.appendChild(option.cloneNode(true));
         });
-        this._cachedOptions = null;
       }
+
+      // Clean up cached data
+      this._cachedOptions = null;
+      this._dropdownUpdated = false;
     }
   }
 
@@ -1223,7 +1238,7 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @param {*} value - The value involved
    */
   #trackDropdownInteraction(action, value) {
-    this.eventBus.dispatch('ANALYTICS_TRACK', {
+    this.eventBus.dispatch('core:analytics_track', {
       event: 'thematic_dropdown_interaction',
       properties: {
         action: action,

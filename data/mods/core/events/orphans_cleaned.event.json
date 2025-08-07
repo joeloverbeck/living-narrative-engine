@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:orphans_cleaned",
+  "description": "Fired when orphaned thematic directions (directions without associated character concepts) are bulk deleted. Contains the count of directions that were removed.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "deletedCount": {
+        "description": "The number of orphaned thematic directions that were deleted",
+        "type": "number",
+        "minimum": 0,
+        "multipleOf": 1
+      }
+    },
+    "required": ["deletedCount"],
+    "additionalProperties": false
+  }
+}

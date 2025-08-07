@@ -93,7 +93,11 @@ class ActionTraceFilter {
       return false;
     }
 
-    string.assertNonBlank(actionId, 'actionId', 'ActionTraceFilter.shouldTrace');
+    string.assertNonBlank(
+      actionId,
+      'actionId',
+      'ActionTraceFilter.shouldTrace'
+    );
 
     // Check exclusions first - they take precedence
     if (this.#isExcluded(actionId)) {
@@ -169,9 +173,13 @@ class ActionTraceFilter {
    */
   addTracedActions(actions) {
     const actionList = Array.isArray(actions) ? actions : [actions];
-    
+
     for (const action of actionList) {
-      string.assertNonBlank(action, 'action', 'ActionTraceFilter.addTracedActions');
+      string.assertNonBlank(
+        action,
+        'action',
+        'ActionTraceFilter.addTracedActions'
+      );
       this.#tracedActions.add(action);
     }
 
@@ -185,7 +193,7 @@ class ActionTraceFilter {
    */
   removeTracedActions(actions) {
     const actionList = Array.isArray(actions) ? actions : [actions];
-    
+
     for (const action of actionList) {
       this.#tracedActions.delete(action);
     }
@@ -200,9 +208,13 @@ class ActionTraceFilter {
    */
   addExcludedActions(actions) {
     const actionList = Array.isArray(actions) ? actions : [actions];
-    
+
     for (const action of actionList) {
-      string.assertNonBlank(action, 'action', 'ActionTraceFilter.addExcludedActions');
+      string.assertNonBlank(
+        action,
+        'action',
+        'ActionTraceFilter.addExcludedActions'
+      );
       this.#excludedActions.add(action);
     }
 
@@ -292,7 +304,7 @@ class ActionTraceFilter {
    */
   #validateVerbosityLevel(level) {
     const validLevels = ['minimal', 'standard', 'detailed', 'verbose'];
-    
+
     if (!validLevels.includes(level)) {
       throw new InvalidArgumentError(
         `Invalid verbosity level: ${level}. Must be one of: ${validLevels.join(', ')}`
@@ -312,9 +324,7 @@ class ActionTraceFilter {
    */
   #validateInclusionConfig(config) {
     if (!config || typeof config !== 'object') {
-      throw new InvalidArgumentError(
-        'Inclusion config must be an object'
-      );
+      throw new InvalidArgumentError('Inclusion config must be an object');
     }
 
     const validConfig = {

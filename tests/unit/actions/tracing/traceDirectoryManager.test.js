@@ -66,7 +66,7 @@ describe('TraceDirectoryManager', () => {
       ...global.window, // Preserve any existing window properties
       showDirectoryPicker: mockShowDirectoryPicker,
     };
-    
+
     // Also make sure window.showDirectoryPicker is available directly
     if (!global.window) {
       global.window = {};
@@ -157,11 +157,10 @@ describe('TraceDirectoryManager', () => {
         'traces',
         { create: true }
       );
-      expect(firstSubDir.getDirectoryHandle).toHaveBeenCalledWith(
-        'actions',
-        { create: true }
-      );
-    })
+      expect(firstSubDir.getDirectoryHandle).toHaveBeenCalledWith('actions', {
+        create: true,
+      });
+    });
 
     it('should handle permission denial', async () => {
       mockDirectoryHandle.queryPermission.mockResolvedValue('denied');
@@ -173,7 +172,9 @@ describe('TraceDirectoryManager', () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('denied');
       // The warning is logged in #getRootDirectoryHandle
-      expect(mockLogger.warn).toHaveBeenCalledWith('User denied write permission to directory');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'User denied write permission to directory'
+      );
     });
 
     it('should cache successful directory operations', async () => {
@@ -211,7 +212,9 @@ describe('TraceDirectoryManager', () => {
       const result = await manager.ensureDirectoryExists('./traces/actions');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('User denied directory access or cancelled selection');
+      expect(result.error).toBe(
+        'User denied directory access or cancelled selection'
+      );
       expect(mockLogger.info).toHaveBeenCalledWith(
         'User cancelled directory selection'
       );
@@ -253,14 +256,12 @@ describe('TraceDirectoryManager', () => {
         'traces',
         { create: true }
       );
-      expect(tracesDir.getDirectoryHandle).toHaveBeenCalledWith(
-        'actions',
-        { create: true }
-      );
-      expect(actionsDir.getDirectoryHandle).toHaveBeenCalledWith(
-        '2024',
-        { create: true }
-      );
+      expect(tracesDir.getDirectoryHandle).toHaveBeenCalledWith('actions', {
+        create: true,
+      });
+      expect(actionsDir.getDirectoryHandle).toHaveBeenCalledWith('2024', {
+        create: true,
+      });
     });
 
     it('should handle directory creation errors', async () => {
@@ -445,7 +446,9 @@ describe('TraceDirectoryManager', () => {
           kind: 'directory',
         }),
       };
-      mockDirectoryHandle.getDirectoryHandle.mockResolvedValueOnce(secondSubDir);
+      mockDirectoryHandle.getDirectoryHandle.mockResolvedValueOnce(
+        secondSubDir
+      );
 
       // Should prompt for new root handle after cache clear
       await manager.ensureDirectoryExists('./traces/rules');
@@ -457,7 +460,8 @@ describe('TraceDirectoryManager', () => {
       const firstSubDir = {
         name: 'traces',
         kind: 'directory',
-        getDirectoryHandle: jest.fn()
+        getDirectoryHandle: jest
+          .fn()
           .mockResolvedValueOnce({
             name: 'actions',
             kind: 'directory',
@@ -610,7 +614,9 @@ describe('TraceDirectoryManager', () => {
       const result = await manager.ensureDirectoryExists('./traces/actions');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('User denied directory access or cancelled selection');
+      expect(result.error).toBe(
+        'User denied directory access or cancelled selection'
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to get root directory handle',
         expect.any(Error)
@@ -622,7 +628,7 @@ describe('TraceDirectoryManager', () => {
     it('should request permission when not granted initially', async () => {
       mockDirectoryHandle.queryPermission.mockResolvedValue('prompt');
       mockDirectoryHandle.requestPermission.mockResolvedValue('granted');
-      
+
       // Setup proper mock for successful directory creation after permission granted
       const firstSubDir = {
         name: 'traces',
@@ -657,7 +663,8 @@ describe('TraceDirectoryManager', () => {
       const firstSubDir = {
         name: 'traces',
         kind: 'directory',
-        getDirectoryHandle: jest.fn()
+        getDirectoryHandle: jest
+          .fn()
           .mockResolvedValueOnce({
             name: 'actions',
             kind: 'directory',
@@ -691,7 +698,7 @@ describe('TraceDirectoryManager', () => {
 
       for (const path of paths) {
         manager.clearCache(); // Clear cache to test each path independently
-        
+
         // Setup proper mock for each iteration
         const firstSubDir = {
           name: 'traces',
@@ -701,8 +708,10 @@ describe('TraceDirectoryManager', () => {
             kind: 'directory',
           }),
         };
-        mockDirectoryHandle.getDirectoryHandle.mockResolvedValueOnce(firstSubDir);
-        
+        mockDirectoryHandle.getDirectoryHandle.mockResolvedValueOnce(
+          firstSubDir
+        );
+
         const result = await manager.ensureDirectoryExists(path);
         expect(result.path).toBe('traces/actions');
       }

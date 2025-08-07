@@ -105,9 +105,11 @@ export function registerActionTracing(container) {
         traceConfig = null,
       }) {
         if (!actorId) {
-          throw new Error('actorId is required to create ActionAwareStructuredTrace');
+          throw new Error(
+            'actorId is required to create ActionAwareStructuredTrace'
+          );
         }
-        
+
         return new ActionAwareStructuredTrace({
           actionTraceFilter: c.resolve(tokens.IActionTraceFilter),
           actorId,

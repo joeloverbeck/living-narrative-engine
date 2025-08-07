@@ -1,15 +1,67 @@
-ThematicDirectionsManagerApp: Starting initialization
-consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
-consoleLogger.js:151 Loaders Registration: All core services, loaders, and phases registered.
-consoleLogger.js:151 [CharacterBuilderBootstrap] Loading 2 schemas
-consoleLogger.js:151 [CharacterBuilderBootstrap] Loading core mod...
-consoleLogger.js:151 — SchemaPhase starting —
-consoleLogger.js:151 SchemaLoader: Loaded 68 schemas: http://json-schema.org/draft-07/schema, llmTurnActionResponseSchema/v4, schema://living-narrative-engine/thematic-direction.schema.json, schema://living-narrative-engine/character-concept.schema.json, character-concept, core:direction_updated#payload, core:direction_deleted#payload, core:orphans_cleaned#payload, schema://living-narrative-engine/common.schema.json, schema://living-narrative-engine/json-logic.schema.json, schema://living-narrative-engine/condition-container.schema.json, schema://living-narrative-engine/action.schema.json, schema://living-narrative-engine/action-result.schema.json, schema://living-narrative-engine/component.schema.json, schema://living-narrative-engine/condition.schema.json, schema://living-narrative-engine/entity-definition.schema.json, schema://living-narrative-engine/entity-instance.schema.json, schema://living-narrative-engine/event.schema.json, schema://living-narrative-engine/game.schema.json, schema://living-narrative-engine/goal.schema.json, schema://living-narrative-engine/mod-manifest.schema.json, schema://living-narrative-engine/operation.schema.json, schema://living-narrative-engine/rule.schema.json, schema://living-narrative-engine/llm-configs.schema.json, schema://living-narrative-engine/prompt-text.schema.json, schema://living-narrative-engine/macro.schema.json, schema://living-narrative-engine/ui-icons.schema.json, schema://living-narrative-engine/ui-labels.schema.json, schema://living-narrative-engine/world.schema.json, schema://living-narrative-engine/anatomy.recipe.schema.json, schema://living-narrative-engine/anatomy.blueprint.schema.json, schema://living-narrative-engine/anatomy.blueprint-part.schema.json, schema://living-narrative-engine/anatomy.slot-library.schema.json, schema://living-narrative-engine/anatomy-formatting.schema.json, schema://living-narrative-engine/target-context.schema.json, schema://living-narrative-engine/base-operation.schema.json, schema://living-narrative-engine/operations/addComponent.schema.json, schema://living-narrative-engine/operations/addPerceptionLogEntry.schema.json, schema://living-narrative-engine/operations/autoMoveFollowers.schema.json, schema://living-narrative-engine/operations/breakFollowRelation.schema.json, schema://living-narrative-engine/operations/checkFollowCycle.schema.json, schema://living-narrative-engine/operations/dispatchEvent.schema.json, schema://living-narrative-engine/operations/dispatchPerceptibleEvent.schema.json, schema://living-narrative-engine/operations/dispatchSpeech.schema.json, schema://living-narrative-engine/operations/endTurn.schema.json, schema://living-narrative-engine/operations/establishFollowRelation.schema.json, schema://living-narrative-engine/operations/forEach.schema.json, schema://living-narrative-engine/operations/getName.schema.json, schema://living-narrative-engine/operations/getTimestamp.schema.json, schema://living-narrative-engine/operations/hasComponent.schema.json, schema://living-narrative-engine/operations/if.schema.json, schema://living-narrative-engine/operations/ifCoLocated.schema.json, schema://living-narrative-engine/operations/log.schema.json, schema://living-narrative-engine/operations/math.schema.json, schema://living-narrative-engine/operations/mergeClosenessCircle.schema.json, schema://living-narrative-engine/operations/modifyArrayField.schema.json, schema://living-narrative-engine/operations/modifyComponent.schema.json, schema://living-narrative-engine/operations/modifyContextArray.schema.json, schema://living-narrative-engine/operations/queryComponent.schema.json, schema://living-narrative-engine/operations/queryComponents.schema.json, schema://living-narrative-engine/operations/queryEntities.schema.json, schema://living-narrative-engine/operations/rebuildLeaderListCache.schema.json, schema://living-narrative-engine/operations/removeComponent.schema.json, schema://living-narrative-engine/operations/removeFromClosenessCircle.schema.json, schema://living-narrative-engine/operations/resolveDirection.schema.json, schema://living-narrative-engine/operations/setVariable.schema.json, schema://living-narrative-engine/operations/systemMoveEntity.schema.json, schema://living-narrative-engine/operations/unequipClothing.schema.json
+schema://living-narrative-engine/character-concept.schema.json, character-concept, core:direction_updated#payload, core:direction_deleted#payload, core:orphans_cleaned#payload, core:ui_state_changed#payload, core:controller_initialized#payload, schema://living-narrative-engine/common.schema.json, schema://living-narrative-engine/json-logic.schema.json, schema://living-narrative-engine/condition-container.schema.json, schema://living-narrative-engine/action.schema.json, schema://living-narrative-engine/action-result.schema.json, schema://living-narrative-engine/component.schema.json, schema://living-narrative-engine/condition.schema.json, schema://living-narrative-engine/entity-definition.schema.json, schema://living-narrative-engine/entity-instance.schema.json, schema://living-narrative-engine/event.schema.json, schema://living-narrative-engine/game.schema.json, schema://living-narrative-engine/goal.schema.json, schema://living-narrative-engine/mod-manifest.schema.json, schema://living-narrative-engine/operation.schema.json, schema://living-narrative-engine/rule.schema.json, schema://living-narrative-engine/llm-configs.schema.json, schema://living-narrative-engine/prompt-text.schema.json, schema://living-narrative-engine/macro.schema.json, schema://living-narrative-engine/ui-icons.schema.json, schema://living-narrative-engine/ui-labels.schema.json, schema://living-narrative-engine/world.schema.json, schema://living-narrative-engine/anatomy.recipe.schema.json, schema://living-narrative-engine/anatomy.blueprint.schema.json, schema://living-narrative-engine/anatomy.blueprint-part.schema.json, schema://living-narrative-engine/anatomy.slot-library.schema.json, schema://living-narrative-engine/anatomy-formatting.schema.json, schema://living-narrative-engine/target-context.schema.json, schema://living-narrative-engine/base-operation.schema.json, schema://living-narrative-engine/operations/addComponent.schema.json, schema://living-narrative-engine/operations/addPerceptionLogEntry.schema.json, schema://living-narrative-engine/operations/autoMoveFollowers.schema.json, schema://living-narrative-engine/operations/breakFollowRelation.schema.json, schema://living-narrative-engine/operations/checkFollowCycle.schema.json, schema://living-narrative-engine/operations/dispatchEvent.schema.json, schema://living-narrative-engine/operations/dispatchPerceptibleEvent.schema.json, schema://living-narrative-engine/operations/dispatchSpeech.schema.json, schema://living-narrative-engine/operations/endTurn.schema.json, schema://living-narrative-engine/operations/establishFollowRelation.schema.json, schema://living-narrative-engine/operations/forEach.schema.json, schema://living-narrative-engine/operations/getName.schema.json, schema://living-narrative-engine/operations/getTimestamp.schema.json, schema://living-narrative-engine/operations/hasComponent.schema.json, schema://living-narrative-engine/operations/if.schema.json, schema://living-narrative-engine/operations/ifCoLocated.schema.json, schema://living-narrative-engine/operations/log.schema.json, schema://living-narrative-engine/operations/math.schema.json, schema://living-narrative-engine/operations/mergeClosenessCircle.schema.json, schema://living-narrative-engine/operations/modifyArrayField.schema.json, schema://living-narrative-engine/operations/modifyComponent.schema.json, schema://living-narrative-engine/operations/modifyContextArray.schema.json, schema://living-narrative-engine/operations/queryComponent.schema.json, schema://living-narrative-engine/operations/queryComponents.schema.json, schema://living-narrative-engine/operations/queryEntities.schema.json, schema://living-narrative-engine/operations/rebuildLeaderListCache.schema.json, schema://living-narrative-engine/operations/removeComponent.schema.json, schema://living-narrative-engine/operations/removeFromClosenessCircle.schema.json, schema://living-narrative-engine/operations/resolveDirection.schema.json, schema://living-narrative-engine/operations/setVariable.schema.json, schema://living-narrative-engine/operations/systemMoveEntity.schema.json, schema://living-narrative-engine/operations/unequipClothing.schema.json
 consoleLogger.js:151 — GameConfigPhase starting —
 consoleLogger.js:151 — ManifestPhase starting —
 consoleLogger.js:151 — ContentPhase starting —
 consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'core'.
 consoleLogger.js:151 EventLoader: Loading events definitions for mod 'core'.
+consoleLogger.js:163 EventLoader [core]: Payload schema ID 'core:controller_initialized#payload' for event 'core:controller_initialized' was already loaded. Overwriting.
+warn @ consoleLogger.js:163
+registerSchema @ schemaUtils.js:28
+registerInlineSchema @ schemaUtils.js:69
+_registerItemSchema @ baseInlineSchemaLoader.js:32
+_processFetchedItem @ eventLoader.js:83
+runSubclassProcessing @ baseManifestItemLoader.js:441
+_processFileWrapper @ baseManifestItemLoader.js:321
+await in _processFileWrapper
+(anonymous) @ baseManifestItemLoader.js:506
+_loadItemsInternal @ baseManifestItemLoader.js:505
+loadItemsForMod @ baseManifestItemLoader.js:640
+runLoadersForMod_fn @ ModProcessor.js:164
+await in runLoadersForMod_fn
+processMod @ ModProcessor.js:80
+await in processMod
+executeModProcessing_fn @ ContentLoadManager.js:222
+processMod @ ContentLoadManager.js:212
+loadContentForPhase @ ContentLoadManager.js:174
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+loadMods_fn2 @ CharacterBuilderBootstrap.js:501
+bootstrap @ CharacterBuilderBootstrap.js:98
+await in bootstrap
+initialize @ thematicDirectionsManagerMain.js:181
+initialize @ thematicDirectionsManagerMain.js:303Understand this warning
+consoleLogger.js:163 EventLoader [core]: Payload schema ID 'core:ui_state_changed#payload' for event 'core:ui_state_changed' was already loaded. Overwriting.
+warn @ consoleLogger.js:163
+registerSchema @ schemaUtils.js:28
+registerInlineSchema @ schemaUtils.js:69
+_registerItemSchema @ baseInlineSchemaLoader.js:32
+_processFetchedItem @ eventLoader.js:83
+runSubclassProcessing @ baseManifestItemLoader.js:441
+_processFileWrapper @ baseManifestItemLoader.js:321
+await in _processFileWrapper
+(anonymous) @ baseManifestItemLoader.js:506
+_loadItemsInternal @ baseManifestItemLoader.js:505
+loadItemsForMod @ baseManifestItemLoader.js:640
+runLoadersForMod_fn @ ModProcessor.js:164
+await in runLoadersForMod_fn
+processMod @ ModProcessor.js:80
+await in processMod
+executeModProcessing_fn @ ContentLoadManager.js:222
+processMod @ ContentLoadManager.js:212
+loadContentForPhase @ ContentLoadManager.js:174
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+loadMods_fn2 @ CharacterBuilderBootstrap.js:501
+bootstrap @ CharacterBuilderBootstrap.js:98
+await in bootstrap
+initialize @ thematicDirectionsManagerMain.js:181
+initialize @ thematicDirectionsManagerMain.js:303Understand this warning
 consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'core'.
 consoleLogger.js:151 MacroLoader: Loading macros definitions for mod 'core'.
 consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'core'.
@@ -82,30 +134,59 @@ consoleLogger.js:151 ———————————————————�
 consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
 consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
 consoleLogger.js:151 [CharacterBuilderBootstrap] Core mod loaded successfully
-consoleLogger.js:163 ThematicDirectionsManagerController: Optional service 'uiStateManager' is null/undefined
-warn @ consoleLogger.js:163
-validateAdditionalServices_fn @ BaseCharacterBuilderController.js:306
-BaseCharacterBuilderController @ BaseCharacterBuilderController.js:165
-ThematicDirectionsManagerController @ thematicDirectionsManagerController.js:82
-createController_fn @ CharacterBuilderBootstrap.js:580
-bootstrap @ CharacterBuilderBootstrap.js:105
-await in bootstrap
-initialize @ thematicDirectionsManagerMain.js:115
-initialize @ thematicDirectionsManagerMain.js:238Understand this warning
 consoleLogger.js:151 ThematicDirectionsManagerController: Successfully created with dependencies {coreServices: Array(4), additionalServices: Array(0)}
 consoleLogger.js:151 ThematicDirectionsManagerController: Starting initialization
-consoleLogger.js:151 ThematicDirectionsManagerController: Cached 23/23 elements (0 optional, 0 failed) in 0.40ms
+consoleLogger.js:151 ThematicDirectionsManagerController: Cached 23/23 elements (0 optional, 0 failed) in 0.90ms
 consoleLogger.js:151 CharacterDatabase: Successfully opened database
 consoleLogger.js:151 CharacterStorageService: Successfully initialized
-2consoleLogger.js:151 CharacterBuilderService: Successfully initialized
+consoleLogger.js:151 CharacterBuilderService: Successfully initialized
+consoleLogger.js:151 PreviousItemsDropdown created successfully
+consoleLogger.js:151 CharacterBuilderService: Successfully initialized
+consoleLogger.js:151 Loading concepts into dropdown: {conceptCount: 4, concepts: Array(4)}
+consoleLogger.js:151 Successfully loaded concepts into dropdown
 consoleLogger.js:151 ThematicDirectionsManagerController: Loaded directions data {directionCount: 20, conceptsWithDirections: 4}
 consoleLogger.js:151 ThematicDirectionsManagerController: Successfully initialized
-consoleLogger.js:151 ThematicDirectionsManagerController: Initialization completed in 6.20ms
-consoleLogger.js:151 [CharacterBuilderBootstrap] Page 'Thematic Directions Manager' bootstrapped in 871.50ms {metrics: {…}}
-consoleLogger.js:163 ThematicDirectionsManagerController: Already initialized, skipping re-initialization
+consoleLogger.js:151 ThematicDirectionsManagerController: Initialization completed in 11.70ms
+consoleLogger.js:151 [CharacterBuilderBootstrap] Page 'Thematic Directions Manager' bootstrapped in 912.90ms {metrics: {…}}
+thematicDirectionsManagerMain.js:184 ThematicDirectionsManagerApp: Successfully initialized
+consoleLogger.js:163 VED: EventDefinition not found for 'ANALYTICS_TRACK'. Cannot validate payload. Proceeding with dispatch.
 warn @ consoleLogger.js:163
-initialize @ BaseCharacterBuilderController.js:1762
-initialize @ thematicDirectionsManagerMain.js:118
-await in initialize
-initialize @ thematicDirectionsManagerMain.js:238Understand this warning
-thematicDirectionsManagerMain.js:121 ThematicDirectionsManagerApp: Successfully initialized
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+trackDropdownInteraction_fn @ thematicDirectionsManagerController.js:1237
+handleConceptSelection_fn @ thematicDirectionsManagerController.js:654
+(anonymous) @ previousItemsDropdown.js:230
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:163 VED: EventDefinition not found for 'ANALYTICS_TRACK'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+trackDropdownInteraction_fn @ thematicDirectionsManagerController.js:1237
+handleConceptSelection_fn @ thematicDirectionsManagerController.js:654
+(anonymous) @ previousItemsDropdown.js:230
+handleMouseUp_ @ unknownUnderstand this warning
+consoleLogger.js:151 CharacterDatabase: Successfully updated thematic direction 7f116c46-425b-47eb-b468-c9cf1498123a
+consoleLogger.js:151 CharacterStorageService: Successfully updated thematic direction {directionId: '7f116c46-425b-47eb-b468-c9cf1498123a'}
+consoleLogger.js:163 VED: EventDefinition not found for 'core:direction_updated'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:87
+dispatch @ validatedEventDispatcher.js:219
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+updateThematicDirection @ characterBuilderService.js:667
+await in updateThematicDirection
+handleFieldSave_fn @ thematicDirectionsManagerController.js:572
+onSave @ thematicDirectionsManagerController.js:526
+saveChanges @ inPlaceEditor.js:86
+(anonymous) @ inPlaceEditor.js:262Understand this warning
+consoleLogger.js:151 ThematicDirectionsManagerController: Updated direction field {directionId: '7f116c46-425b-47eb-b468-c9cf1498123a', fieldName: 'coreTension'}
+consoleLogger.js:151 CharacterDatabase: Successfully updated thematic direction 7f116c46-425b-47eb-b468-c9cf1498123a
+consoleLogger.js:151 CharacterStorageService: Successfully updated thematic direction {directionId: '7f116c46-425b-47eb-b468-c9cf1498123a'}
+consoleLogger.js:163 VED: EventDefinition not found for 'core:direction_updated'. Cannot validate payload. Proceeding with dispatch.

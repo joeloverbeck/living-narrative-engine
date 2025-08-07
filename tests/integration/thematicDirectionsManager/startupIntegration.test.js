@@ -105,10 +105,10 @@ describe('ThematicDirectionsManagerApp Startup Integration', () => {
       if (url.includes('schema')) {
         const fileName = url.split('/').pop();
         const schemaId = fileName.replace('.schema.json', '');
-        
+
         // Provide specific schemas for known types
         let schema;
-        
+
         if (fileName === 'game.schema.json') {
           schema = {
             $schema: 'http://json-schema.org/draft-07/schema#',
