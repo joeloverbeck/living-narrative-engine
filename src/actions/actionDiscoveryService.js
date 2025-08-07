@@ -12,6 +12,7 @@
 /** @typedef {import('./actionPipelineOrchestrator.js').ActionPipelineOrchestrator} ActionPipelineOrchestrator */
 /** @typedef {import('./errors/actionErrorContextBuilder.js').ActionErrorContextBuilder} ActionErrorContextBuilder */
 /** @typedef {import('./errors/actionErrorTypes.js').ActionErrorContext} ActionErrorContext */
+/** @typedef {import('./tracing/actionTraceFilter.js').default} ActionTraceFilter */
 
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
 import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
@@ -24,6 +25,7 @@ import { isNonBlankString } from '../utils/textUtils.js';
  * @class ActionDiscoveryService
  * @augments IActionDiscoveryService
  * @description Discovers valid actions for entities using a pipeline orchestrator.
+ * Enhanced with action tracing capabilities when tracing is enabled.
  */
 export class ActionDiscoveryService extends IActionDiscoveryService {
   #entityManager;
@@ -31,6 +33,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #getActorLocationFn;
   #traceContextFactory;
   #actionPipelineOrchestrator;
+  #actionAwareTraceFactory;
+  #actionTraceFilter;
 
   /**
    * Creates an ActionDiscoveryService instance.
@@ -41,6 +45,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {ActionPipelineOrchestrator} deps.actionPipelineOrchestrator - The pipeline orchestrator.
    * @param {TraceContextFactory} deps.traceContextFactory - Factory for creating trace contexts.
    * @param {Function} deps.getActorLocationFn - Function to get actor location.
+   * @param {Function} [deps.actionAwareTraceFactory] - Optional factory for creating action-aware traces.
+   * @param {ActionTraceFilter} [deps.actionTraceFilter] - Optional filter for action tracing.
    * @param {ServiceSetup} [deps.serviceSetup] - Optional service setup helper.
    */
   constructor({
@@ -50,6 +56,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     traceContextFactory,
     serviceSetup,
     getActorLocationFn = getActorLocation,
+    actionAwareTraceFactory = null,
+    actionTraceFilter = null,
   }) {
     super();
     const setup = serviceSetup ?? new ServiceSetup();
@@ -70,8 +78,38 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#traceContextFactory = traceContextFactory;
     this.#getActorLocationFn = getActorLocationFn;
 
+    // Optional action tracing dependencies
+    if (actionAwareTraceFactory) {
+      if (typeof actionAwareTraceFactory !== 'function') {
+        this.#logger.warn(
+          'ActionDiscoveryService: actionAwareTraceFactory must be a function, ignoring'
+        );
+      } else {
+        this.#actionAwareTraceFactory = actionAwareTraceFactory;
+      }
+    }
+
+    if (actionTraceFilter) {
+      if (!actionTraceFilter.isEnabled || !actionTraceFilter.shouldTrace) {
+        this.#logger.warn(
+          'ActionDiscoveryService: actionTraceFilter missing required methods, ignoring'
+        );
+      } else {
+        this.#actionTraceFilter = actionTraceFilter;
+      }
+    }
+
+    const actionTracingAvailable = !!(
+      this.#actionAwareTraceFactory && this.#actionTraceFilter
+    );
+
     this.#logger.debug(
-      'ActionDiscoveryService initialised with pipeline orchestrator.'
+      'ActionDiscoveryService initialised with pipeline orchestrator.',
+      {
+        actionTracingAvailable,
+        hasActionAwareTraceFactory: !!this.#actionAwareTraceFactory,
+        hasActionTraceFilter: !!this.#actionTraceFilter,
+      }
     );
   }
 
@@ -98,6 +136,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
 
   /**
    * The main public method now delegates to the pipeline orchestrator.
+   * Enhanced with action tracing capabilities.
    *
    * @param {Entity} actorEntity - The entity for whom to find actions.
    * @param {ActionContext} [baseContext] - The current action context.
@@ -107,7 +146,39 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    */
   async getValidActions(actorEntity, baseContext = {}, options = {}) {
     const { trace: shouldTrace = false } = options;
-    const trace = shouldTrace ? this.#traceContextFactory() : null;
+    const source = 'ActionDiscoveryService.getValidActions';
+
+    // Validate actor entity first
+    if (!actorEntity || !isNonBlankString(actorEntity.id)) {
+      const message =
+        'ActionDiscoveryService.getValidActions: actorEntity parameter must be an object with a non-empty id';
+      this.#logger.error(message, { actorEntity });
+      throw new InvalidActorEntityError(message);
+    }
+
+    // Create appropriate trace based on tracing configuration
+    const trace = shouldTrace
+      ? await this.#createTraceContext(actorEntity.id, baseContext, options)
+      : null;
+
+    this.#logger.debug(
+      `Starting action discovery for actor ${actorEntity.id}`,
+      {
+        actorId: actorEntity.id,
+        traceEnabled: !!trace,
+        actionTracingEnabled: this.#isActionTracingEnabled(),
+        options,
+      }
+    );
+
+    // Log trace type for debugging
+    if (trace) {
+      const traceType = this.#getTraceTypeName(trace);
+      this.#logger.debug(`Created ${traceType} for actor ${actorEntity.id}`, {
+        actorId: actorEntity.id,
+        traceType,
+      });
+    }
 
     // Support both old and new trace APIs
     if (trace?.withSpanAsync) {
@@ -150,13 +221,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   async #getValidActionsInternal(actorEntity, baseContext, trace, shouldTrace) {
     const SOURCE = 'getValidActions';
 
-    if (!actorEntity || !isNonBlankString(actorEntity.id)) {
-      const message =
-        'ActionDiscoveryService.getValidActions: actorEntity parameter must be an object with a non-empty id';
-      this.#logger.error(message, { actorEntity });
-      throw new InvalidActorEntityError(message);
-    }
-
     if (
       baseContext !== undefined &&
       (typeof baseContext !== 'object' || baseContext === null)
@@ -179,17 +243,160 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       baseContext
     );
 
-    // Delegate to the pipeline orchestrator
+    // Delegate to the pipeline orchestrator with enhanced trace
     const result = await this.#actionPipelineOrchestrator.discoverActions(
       actorEntity,
       discoveryContext,
       { trace }
     );
 
-    this.#logger.debug(
-      `Finished action discovery for actor ${actorEntity.id}. Found ${result.actions.length} actions.`
-    );
+    // Log pipeline completion with action tracing statistics
+    if (
+      trace?.getTracedActions &&
+      typeof trace.getTracedActions === 'function'
+    ) {
+      const tracedActions = trace.getTracedActions();
+      const tracingSummary = trace.getTracingSummary?.() || {};
+
+      this.#logger.info(
+        `Action discovery completed for actor ${actorEntity.id} with action tracing`,
+        {
+          actorId: actorEntity.id,
+          actionCount: result.actions?.length || 0,
+          errorCount: result.errors?.length || 0,
+          tracedActionCount: tracedActions.size,
+          totalStagesTracked: tracingSummary.totalStagesTracked || 0,
+          sessionDuration: tracingSummary.sessionDuration || 0,
+        }
+      );
+    } else {
+      this.#logger.debug(
+        `Finished action discovery for actor ${actorEntity.id}. Found ${result.actions.length} actions.`
+      );
+    }
 
     return result;
+  }
+
+  /**
+   * Create appropriate trace context based on action tracing configuration
+   *
+   * @private
+   * @param {string} actorId - Actor ID for trace context
+   * @param {object} baseContext - Base context for tracing
+   * @param {object} options - Discovery options
+   * @returns {Promise<TraceContext|null>}
+   */
+  async #createTraceContext(actorId, baseContext, options) {
+    try {
+      // Check if action tracing should be enabled
+      const actionTracingEnabled = this.#isActionTracingEnabled();
+
+      if (actionTracingEnabled && this.#actionAwareTraceFactory) {
+        this.#logger.debug(
+          `Creating ActionAwareStructuredTrace for actor ${actorId}`,
+          { actorId, actionTracingEnabled }
+        );
+
+        // Create action-aware trace using the factory function pattern
+        const actionAwareTrace = this.#actionAwareTraceFactory({
+          actorId,
+          enableActionTracing: true,
+          context: {
+            ...baseContext,
+            discoveryOptions: options,
+            createdAt: Date.now(),
+          },
+        });
+
+        return actionAwareTrace;
+      }
+
+      // Fall back to standard trace
+      this.#logger.debug(
+        `Creating standard StructuredTrace for actor ${actorId}`,
+        {
+          actorId,
+          actionTracingEnabled,
+          hasActionAwareFactory: !!this.#actionAwareTraceFactory,
+        }
+      );
+
+      return this.#traceContextFactory();
+    } catch (error) {
+      this.#logger.error(
+        `Failed to create trace context for actor ${actorId}, falling back to standard trace`,
+        error
+      );
+
+      // Always fall back to standard trace on error
+      try {
+        return this.#traceContextFactory();
+      } catch (fallbackError) {
+        this.#logger.error(
+          `Failed to create fallback trace context for actor ${actorId}`,
+          fallbackError
+        );
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Check if action tracing is enabled
+   *
+   * @private
+   * @returns {boolean}
+   */
+  #isActionTracingEnabled() {
+    try {
+      return this.#actionTraceFilter?.isEnabled() || false;
+    } catch (error) {
+      this.#logger.warn(
+        'Error checking action tracing status, assuming disabled',
+        error
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Get trace type name for debugging
+   *
+   * @private
+   * @param {object} trace - Trace instance
+   * @returns {string}
+   */
+  #getTraceTypeName(trace) {
+    if (trace?.captureActionData) {
+      return 'ActionAwareStructuredTrace';
+    }
+    if (trace?.step) {
+      return 'StructuredTrace';
+    }
+    return 'UnknownTrace';
+  }
+
+  /**
+   * Check if action tracing is available
+   *
+   * @returns {boolean} True if action tracing is configured and available
+   */
+  isActionTracingAvailable() {
+    return !!(this.#actionAwareTraceFactory && this.#actionTraceFilter);
+  }
+
+  /**
+   * Get action tracing status for debugging
+   *
+   * @returns {object} Action tracing status information
+   */
+  getActionTracingStatus() {
+    return {
+      available: this.isActionTracingAvailable(),
+      enabled: this.#isActionTracingEnabled(),
+      hasFilter: !!this.#actionTraceFilter,
+      hasFactory: !!this.#actionAwareTraceFactory,
+    };
   }
 }

@@ -3,7 +3,7 @@
   "id": "intimacy:kiss_neck_sensually",
   "name": "Kiss Neck Sensually",
   "description": "Kiss the target's neck in a sensual, intimate manner.",
-  "scope": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+  "targets": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
   "required_components": {
     "actor": ["positioning:closeness"]
   },
