@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "intimacy:massage_shoulders",
+  "name": "Massage Shoulders",
+  "description": "Gently massage the target's shoulders.",
+  "scope": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["intimacy:kissing"]
+  },
+  "template": "massage {target}'s shoulders",
+  "prerequisites": []
+}

@@ -15,4 +15,5 @@ export const actionTracingTokens = freeze({
   IActionTraceConfigValidator: 'IActionTraceConfigValidator',
   IActionTraceFilter: 'IActionTraceFilter',
   IActionTraceOutputService: 'IActionTraceOutputService',
+  ITraceDirectoryManager: 'ITraceDirectoryManager',
 });

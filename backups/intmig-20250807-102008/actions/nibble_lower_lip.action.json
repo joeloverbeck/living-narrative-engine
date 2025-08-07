@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "intimacy:nibble_lower_lip",
+  "name": "Nibble lower lip",
+  "description": "Gently nibble on their lower lip during the kiss",
+  "scope": "intimacy:current_kissing_partner",
+  "required_components": {
+    "actor": ["intimacy:kissing"]
+  },
+  "prerequisites": [],
+  "template": "nibble on {target}'s lower lip"
+}

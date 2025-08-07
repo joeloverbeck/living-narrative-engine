@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "intimacy:massage_back",
+  "name": "Massage Back",
+  "description": "Gently massage the target's back.",
+  "scope": "intimacy:close_actors_facing_away",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:facing_away"]
+  },
+  "template": "massage {target}'s back",
+  "prerequisites": []
+}

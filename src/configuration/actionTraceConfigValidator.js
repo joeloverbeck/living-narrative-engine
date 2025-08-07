@@ -264,7 +264,7 @@ class ActionTraceConfigValidator {
     // Validate action ID patterns - separate critical errors from warnings
     const criticallyInvalidActions = [];
     const warningPatterns = [];
-    
+
     tracedActions.forEach((action) => {
       if (typeof action !== 'string') {
         criticallyInvalidActions.push(action);
@@ -280,35 +280,41 @@ class ActionTraceConfigValidator {
       // - '*middle*' (contains wildcard)
       // - 'mod:prefix*' (mod with action prefix)
       // - 'mod:*suffix' (mod with action suffix)
-      
+
       // Basic validation: non-empty string
       if (action.length === 0) {
         warningPatterns.push({ pattern: action, reason: 'Empty pattern' });
         return;
       }
-      
+
       // Check for multiple consecutive asterisks - warning not error
       if (action.includes('**')) {
-        warningPatterns.push({ pattern: action, reason: 'Redundant asterisks' });
+        warningPatterns.push({
+          pattern: action,
+          reason: 'Redundant asterisks',
+        });
         return;
       }
-      
+
       // Check for invalid characters - allow uppercase as warning
       const strictAllowedPattern = /^[a-z0-9_:*]+$/;
       const lenientAllowedPattern = /^[a-zA-Z0-9_:*]+$/;
-      
+
       if (!lenientAllowedPattern.test(action)) {
         // Contains truly invalid characters
         criticallyInvalidActions.push(action);
         return;
       }
-      
+
       if (!strictAllowedPattern.test(action)) {
         // Contains uppercase - warning
-        warningPatterns.push({ pattern: action, reason: 'Contains uppercase characters' });
+        warningPatterns.push({
+          pattern: action,
+          reason: 'Contains uppercase characters',
+        });
         return;
       }
-      
+
       // Check if pattern contains a colon (namespace separator)
       if (action.includes(':')) {
         const parts = action.split(':');
@@ -316,15 +322,18 @@ class ActionTraceConfigValidator {
           criticallyInvalidActions.push(action); // Only one colon allowed
           return;
         }
-        
+
         const [modPart, actionPart] = parts;
-        
+
         // Mod part must be either '*' or valid mod name (no wildcards in mod name except full wildcard)
         if (modPart !== '*' && modPart.includes('*')) {
-          warningPatterns.push({ pattern: action, reason: 'Mod name contains partial wildcards' });
+          warningPatterns.push({
+            pattern: action,
+            reason: 'Mod name contains partial wildcards',
+          });
           return;
         }
-        
+
         // Check mod name format - be lenient with uppercase
         if (modPart !== '*') {
           if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(modPart)) {
@@ -332,14 +341,20 @@ class ActionTraceConfigValidator {
             return;
           }
           if (!/^[a-z][a-z0-9_]*$/.test(modPart)) {
-            warningPatterns.push({ pattern: action, reason: 'Mod name should be lowercase' });
+            warningPatterns.push({
+              pattern: action,
+              reason: 'Mod name should be lowercase',
+            });
             return;
           }
         }
-        
+
         // Action part can contain wildcards
         if (actionPart.length === 0) {
-          warningPatterns.push({ pattern: action, reason: 'Empty action part after colon' });
+          warningPatterns.push({
+            pattern: action,
+            reason: 'Empty action part after colon',
+          });
           return;
         }
       } else {
@@ -360,7 +375,7 @@ class ActionTraceConfigValidator {
           `Valid formats: 'mod:action', '*', 'mod:*', 'prefix*', '*suffix', '*middle*', 'mod:prefix*'`
       );
     }
-    
+
     // Add warnings for patterns that can be processed but are not ideal
     warningPatterns.forEach(({ pattern, reason }) => {
       warnings.push(`Invalid pattern '${pattern}': ${reason}`);

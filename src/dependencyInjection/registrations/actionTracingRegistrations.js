@@ -6,6 +6,7 @@ import { Registrar } from '../../utils/registrarHelpers.js';
 import { tokens } from '../tokens.js';
 import ActionTraceConfigLoader from '../../configuration/actionTraceConfigLoader.js';
 import ActionTraceConfigValidator from '../../configuration/actionTraceConfigValidator.js';
+import TraceDirectoryManager from '../../actions/tracing/traceDirectoryManager.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -52,6 +53,20 @@ export function registerActionTracing(container) {
   );
   log.debug(
     `Action Tracing Registration: Registered ${String(tokens.IActionTraceConfigLoader)}.`
+  );
+
+  // Register TraceDirectoryManager
+  container.register(
+    tokens.ITraceDirectoryManager,
+    (c) =>
+      new TraceDirectoryManager({
+        storageProvider: c.resolve(tokens.IStorageProvider),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered ${String(tokens.ITraceDirectoryManager)}.`
   );
 
   log.debug('Action Tracing Registration: complete.');

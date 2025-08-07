@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "intimacy:suck_on_tongue",
+  "name": "Suck on tongue",
+  "description": "Intensify the kiss by sucking on your partner's tongue",
+  "scope": "intimacy:current_kissing_partner",
+  "required_components": {
+    "actor": ["intimacy:kissing"]
+  },
+  "prerequisites": [],
+  "template": "suck on {target}'s tongue"
+}

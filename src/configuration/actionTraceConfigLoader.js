@@ -566,11 +566,13 @@ class ActionTraceConfigLoader {
       );
       return result;
     }
-    
+
     // Warn about uppercase but don't fail
     const strictAllowedPattern = /^[a-z0-9_:*]+$/;
     if (!strictAllowedPattern.test(pattern)) {
-      result.errors.push('Pattern contains uppercase characters - should be lowercase');
+      result.errors.push(
+        'Pattern contains uppercase characters - should be lowercase'
+      );
       // Don't set valid = false, just warn
     }
 
@@ -582,9 +584,9 @@ class ActionTraceConfigLoader {
         result.errors.push('Pattern can only contain one colon');
         return result;
       }
-      
+
       const [modPart, actionPart] = parts;
-      
+
       // Mod part must be either '*' or valid mod name (no wildcards in mod name except full wildcard)
       if (modPart !== '*' && modPart.includes('*')) {
         result.valid = false;
@@ -593,7 +595,7 @@ class ActionTraceConfigLoader {
         );
         return result;
       }
-      
+
       if (modPart !== '*' && !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(modPart)) {
         result.valid = false;
         result.errors.push(
@@ -601,13 +603,13 @@ class ActionTraceConfigLoader {
         );
         return result;
       }
-      
+
       // Warn about uppercase in mod name but don't fail
       if (modPart !== '*' && !/^[a-z][a-z0-9_]*$/.test(modPart)) {
         result.errors.push(`Mod name '${modPart}' should be lowercase`);
         // Don't set valid = false, just warn
       }
-      
+
       if (actionPart.length === 0) {
         result.valid = false;
         result.errors.push('Action part after colon cannot be empty');
