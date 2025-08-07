@@ -11,6 +11,10 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import ActionTraceConfigLoader from '../../../src/configuration/actionTraceConfigLoader.js';
+import ActionTraceConfigValidator from '../../../src/configuration/actionTraceConfigValidator.js';
+
+// Mock the ActionTraceConfigValidator to prevent real instantiation
+jest.mock('../../../src/configuration/actionTraceConfigValidator.js');
 
 describe('ActionTraceConfigLoader Performance', () => {
   let loader;
@@ -36,7 +40,21 @@ describe('ActionTraceConfigLoader Performance', () => {
     };
     mockValidator = {
       validate: jest.fn(),
+      addSchema: jest.fn(),
+      removeSchema: jest.fn(),
     };
+
+    // Setup the ActionTraceConfigValidator mock
+    ActionTraceConfigValidator.mockClear();
+    ActionTraceConfigValidator.mockImplementation(() => ({
+      initialize: jest.fn().mockResolvedValue(undefined),
+      validateConfiguration: jest.fn().mockResolvedValue({
+        isValid: true,
+        errors: [],
+        warnings: [],
+        normalizedConfig: null,
+      }),
+    }));
 
     loader = new ActionTraceConfigLoader({
       traceConfigLoader: mockTraceConfigLoader,
@@ -655,7 +673,7 @@ describe('ActionTraceConfigLoader Performance', () => {
       }
 
       // All TTL values should have similar performance (timestamp comparison is constant time)
-      results.forEach(({ ttl, avgTime }) => {
+      results.forEach(({ avgTime }) => {
         expect(avgTime).toBeLessThan(0.1); // <0.1ms per operation regardless of TTL
       });
 

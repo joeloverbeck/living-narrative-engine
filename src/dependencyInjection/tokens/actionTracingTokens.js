@@ -12,6 +12,7 @@ import { freeze } from '../../utils/cloneUtils.js';
  */
 export const actionTracingTokens = freeze({
   IActionTraceConfigLoader: 'IActionTraceConfigLoader',
+  IActionTraceConfigValidator: 'IActionTraceConfigValidator',
   IActionTraceFilter: 'IActionTraceFilter',
   IActionTraceOutputService: 'IActionTraceOutputService',
 });

@@ -1,8 +1,8 @@
-# ACTTRA-008: Create Trace Output Directory Management
+# ACTTRA-008: Create Trace Output Directory Management (Browser-Based)
 
 ## Overview
 
-Implement automatic creation of trace output directories with permission checking and path validation. This utility ensures that the action tracing system can write files to the configured output directory, creating the necessary directory structure if it doesn't exist and handling filesystem permission issues gracefully.
+Implement browser-compatible trace output directory management using the File System Access API. This utility ensures that the action tracing system can write files to the configured output directory in a browser environment, handling directory creation and permission management through the browser's File System Access API.
 
 ## Priority
 
@@ -12,26 +12,26 @@ Implement automatic creation of trace output directories with permission checkin
 
 - **Enables**: ACTTRA-024 (ActionTraceOutputService)
 - **Related**: ACTTRA-006 (configuration loader), ACTTRA-007 (path validation)
-- **Requires**: File system access through existing IFileSystem interface
+- **Requires**: Browser File System Access API through existing IStorageProvider interface
 
 ## Acceptance Criteria
 
-- [ ] TraceDirectoryManager class for directory operations
-- [ ] Auto-creation of trace output directories with proper permissions
-- [ ] Path validation and sanitization before directory creation
-- [ ] Permission checking with clear error messages for access issues
+- [ ] TraceDirectoryManager class for browser-based directory operations
+- [ ] Auto-creation of trace output directories using File System Access API
+- [ ] Path validation and sanitization for browser environment
+- [ ] Permission handling through browser permission prompts
 - [ ] Support for nested directory structures
-- [ ] Integration with existing IFileSystem interface
-- [ ] Graceful handling of readonly filesystems and permission errors
+- [ ] Integration with existing IStorageProvider interface
+- [ ] Graceful handling of permission denials and user cancellations
 - [ ] Comprehensive logging of directory operations
-- [ ] Unit tests with filesystem mocking
-- [ ] Cross-platform compatibility (Windows/Linux/macOS paths)
+- [ ] Unit tests with mocked browser APIs
+- [ ] Browser-compatible path handling (forward slashes)
 
 ## Current Directory Structure
 
 Based on the specification, trace files will be written to:
 
-**Default Location**: `./traces/actions/`
+**Default Location**: `./traces/actions/` (relative to user-selected root directory)
 
 **File Structure**:
 
@@ -44,29 +44,30 @@ traces/
     └── core-look_2024-01-15_10-31-15.txt
 ```
 
-**Important Note**: The `./traces/actions` directory does not exist by default and must be created by the system.
+**Important Note**: Directory creation happens within the user-selected root directory through browser File System Access API.
 
 ## Implementation Steps
 
-### Step 1: Analyze Existing File System Integration
+### Step 1: Analyze Existing Browser Storage Integration
 
-Review current filesystem patterns in the codebase:
+Review current browser storage patterns in the codebase:
 
 ```bash
-# Find existing filesystem usage
-find src -name "*fileSystem*" -o -name "*FileSystem*"
-find src -name "*fs*" -type f
+# Find existing storage usage
+grep -r "IStorageProvider" src/
+grep -r "BrowserStorageProvider" src/
+grep -r "FileSystemDirectoryHandle" src/
 
 # Check for directory creation patterns
-grep -r "mkdir\|createDir" src/
+grep -r "getDirectoryHandle" src/
 ```
 
 Expected patterns:
 
-- IFileSystem interface for filesystem operations
-- Dependency injection for file system services
-- Error handling for filesystem permissions
-- Cross-platform path handling
+- IStorageProvider interface for storage operations
+- BrowserStorageProvider for File System Access API
+- Browser permission handling
+- FileSystemDirectoryHandle for directories
 
 ### Step 2: Create TraceDirectoryManager Class
 
@@ -74,8 +75,8 @@ Expected patterns:
 
 ```javascript
 /**
- * @file Directory management for action tracing system
- * Handles creation and validation of trace output directories
+ * @file Browser-based directory management for action tracing system
+ * Handles creation and validation of trace output directories using File System Access API
  */
 
 import {
@@ -83,34 +84,36 @@ import {
   assertNonBlankString,
 } from '../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
-import path from 'path';
 
 /**
- * Manages trace output directories with automatic creation and validation
+ * Manages trace output directories in browser environment
+ * Uses File System Access API for directory operations
  */
 class TraceDirectoryManager {
-  #fileSystem;
+  #storageProvider;
   #logger;
   #createdDirectories;
+  #rootHandle;
 
   /**
    * @param {Object} dependencies
-   * @param {IFileSystem} dependencies.fileSystem - File system service
-   * @param {ILogger} dependencies.logger - Logger instance
+   * @param {import('../../interfaces/IStorageProvider.js').IStorageProvider} dependencies.storageProvider - Storage service
+   * @param {import('../../interfaces/coreServices.js').ILogger} dependencies.logger - Logger instance
    */
-  constructor({ fileSystem, logger }) {
-    validateDependency(fileSystem, 'IFileSystem', null, {
-      requiredMethods: ['mkdir', 'access', 'stat'],
+  constructor({ storageProvider, logger }) {
+    validateDependency(storageProvider, 'IStorageProvider', null, {
+      requiredMethods: ['getRootHandle', 'ensureDirectoryExists'],
     });
     this.#logger = ensureValidLogger(logger, 'TraceDirectoryManager');
 
-    this.#fileSystem = fileSystem;
+    this.#storageProvider = storageProvider;
     this.#createdDirectories = new Set();
+    this.#rootHandle = null;
   }
 
   /**
-   * Ensure directory exists, creating it if necessary
-   * @param {string} directoryPath - Path to directory
+   * Ensure directory exists within the browser's sandboxed filesystem
+   * @param {string} directoryPath - Path to directory (relative to root)
    * @returns {Promise<DirectoryResult>} Result with status and metadata
    */
   async ensureDirectoryExists(directoryPath) {
@@ -149,63 +152,59 @@ class TraceDirectoryManager {
         };
       }
 
-      // Check if directory already exists
-      const existsResult = await this.#checkDirectoryExists(normalizedPath);
-
-      if (existsResult.exists) {
-        // Verify it's writable
-        const writableResult =
-          await this.#checkDirectoryWritable(normalizedPath);
-
-        if (writableResult.writable) {
-          this.#createdDirectories.add(normalizedPath);
-          this.#logger.debug('Directory exists and is writable', {
-            path: normalizedPath,
-          });
-
+      // Get or prompt for root directory handle
+      if (!this.#rootHandle) {
+        this.#rootHandle = await this.#getRootDirectoryHandle();
+        if (!this.#rootHandle) {
           return {
-            success: true,
+            success: false,
             path: normalizedPath,
-            existed: true,
+            existed: false,
             created: false,
-            writable: true,
+            writable: false,
+            error: 'User denied directory access or cancelled selection',
           };
-        } else {
-          this.#logger.error('Directory exists but is not writable', {
+        }
+      }
+
+      // Create nested directory structure
+      const segments = normalizedPath.split('/').filter(Boolean);
+      let currentHandle = this.#rootHandle;
+
+      for (const segment of segments) {
+        try {
+          // Create directory if it doesn't exist
+          currentHandle = await currentHandle.getDirectoryHandle(segment, {
+            create: true,
+          });
+        } catch (error) {
+          this.#logger.error('Failed to create directory segment', error, {
+            segment,
             path: normalizedPath,
-            error: writableResult.error,
           });
 
           return {
             success: false,
             path: normalizedPath,
-            existed: true,
+            existed: false,
             created: false,
             writable: false,
-            error: writableResult.error,
+            error: this.#formatBrowserError(error),
           };
         }
       }
 
-      // Directory doesn't exist, create it
-      const createResult = await this.#createDirectory(normalizedPath);
-
-      if (createResult.success) {
-        this.#createdDirectories.add(normalizedPath);
-        this.#logger.info('Trace directory created successfully', {
-          path: normalizedPath,
-          recursive: createResult.recursive,
-        });
-      }
+      this.#createdDirectories.add(normalizedPath);
+      this.#logger.info('Trace directory created successfully', {
+        path: normalizedPath,
+      });
 
       return {
-        success: createResult.success,
+        success: true,
         path: normalizedPath,
         existed: false,
-        created: createResult.success,
-        writable: createResult.success,
-        recursive: createResult.recursive,
-        error: createResult.error,
+        created: true,
+        writable: true,
       };
     } catch (error) {
       this.#logger.error('Failed to ensure directory exists', error, {
@@ -236,63 +235,53 @@ class TraceDirectoryManager {
   }
 
   /**
-   * Get information about a directory
-   * @param {string} directoryPath - Path to analyze
-   * @returns {Promise<DirectoryInfo>} Directory information
+   * Get the root directory handle from storage provider
+   * @private
+   * @returns {Promise<FileSystemDirectoryHandle|null>}
    */
-  async getDirectoryInfo(directoryPath) {
-    assertNonBlankString(directoryPath, 'Directory path is required');
-
-    const normalizedPath = this.#normalizePath(directoryPath);
-
+  async #getRootDirectoryHandle() {
     try {
-      const existsResult = await this.#checkDirectoryExists(normalizedPath);
-
-      if (!existsResult.exists) {
-        return {
-          path: normalizedPath,
-          exists: false,
-          writable: false,
-          parentExists: await this.#checkParentDirectoryExists(normalizedPath),
-        };
-      }
-
-      const writableResult = await this.#checkDirectoryWritable(normalizedPath);
-      const stats = await this.#fileSystem.stat(normalizedPath);
-
-      return {
-        path: normalizedPath,
-        exists: true,
-        writable: writableResult.writable,
-        parentExists: true,
-        isDirectory: stats.isDirectory(),
-        size: stats.size,
-        created: stats.birthtime,
-        modified: stats.mtime,
-        permissions: stats.mode,
-      };
-    } catch (error) {
-      this.#logger.error('Failed to get directory info', error, {
-        path: directoryPath,
+      // This would need to be added to BrowserStorageProvider
+      // For now, we'll prompt the user
+      const handle = await window.showDirectoryPicker({
+        mode: 'readwrite',
+        startIn: 'documents',
       });
 
-      return {
-        path: normalizedPath,
-        exists: false,
-        writable: false,
-        parentExists: false,
-        error: error.message,
-      };
+      // Verify permissions
+      const permission = await handle.queryPermission({ mode: 'readwrite' });
+      if (permission !== 'granted') {
+        const requestResult = await handle.requestPermission({
+          mode: 'readwrite',
+        });
+        if (requestResult !== 'granted') {
+          this.#logger.warn('User denied write permission to directory');
+          return null;
+        }
+      }
+
+      this.#logger.debug('Root directory handle obtained', {
+        name: handle.name,
+      });
+
+      return handle;
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        this.#logger.info('User cancelled directory selection');
+      } else {
+        this.#logger.error('Failed to get root directory handle', error);
+      }
+      return null;
     }
   }
 
   /**
    * Clear the cache of created directories
-   * Useful for testing or when filesystem state might have changed
    */
   clearCache() {
     const count = this.#createdDirectories.size;
     this.#createdDirectories.clear();
+    this.#rootHandle = null;
 
     this.#logger.debug('Directory creation cache cleared', {
       clearedCount: count,
@@ -308,19 +297,21 @@ class TraceDirectoryManager {
   }
 
   /**
-   * Normalize path for consistent handling across platforms
+   * Normalize path for consistent handling in browser
    * @private
    */
   #normalizePath(directoryPath) {
-    // Normalize path separators and resolve relative paths
-    const normalized = path.normalize(directoryPath);
+    // Remove leading ./ and ensure forward slashes
+    let normalized = directoryPath.replace(/\\/g, '/');
+    normalized = normalized.replace(/^\.\//, '');
+    normalized = normalized.replace(/\/+/g, '/'); // Remove duplicate slashes
+    normalized = normalized.replace(/\/$/, ''); // Remove trailing slash
 
-    // Convert to forward slashes for consistency (works on Windows too)
-    return normalized.replace(/\\/g, '/');
+    return normalized;
   }
 
   /**
-   * Validate directory path for security and correctness
+   * Validate directory path for browser environment
    * @private
    */
   #validatePath(normalizedPath) {
@@ -331,29 +322,29 @@ class TraceDirectoryManager {
       errors.push('Path contains directory traversal sequences');
     }
 
-    // Check for potentially dangerous paths
-    const dangerousPaths = ['/etc', '/var', '/sys', '/proc', '/dev'];
-    if (
-      dangerousPaths.some((dangerous) => normalizedPath.startsWith(dangerous))
-    ) {
-      errors.push('Path points to system directory');
-    }
-
     // Check for null bytes (security)
     if (normalizedPath.includes('\0')) {
       errors.push('Path contains null bytes');
     }
 
-    // Check path length (filesystem limits)
-    if (normalizedPath.length > 260) {
-      // Windows MAX_PATH limit
-      errors.push('Path exceeds maximum length (260 characters)');
+    // Check path length (browser limits)
+    if (normalizedPath.length > 255) {
+      errors.push('Path exceeds maximum length (255 characters)');
     }
 
-    // Check for invalid characters
-    const invalidChars = /[<>:"|?*]/;
+    // Check for invalid characters in browser context
+    const invalidChars = /[<>:"|?*\0]/;
     if (invalidChars.test(normalizedPath)) {
       errors.push('Path contains invalid characters');
+    }
+
+    // Check for reserved names
+    const reservedNames = ['con', 'prn', 'aux', 'nul', 'com1', 'lpt1'];
+    const segments = normalizedPath.split('/');
+    for (const segment of segments) {
+      if (reservedNames.includes(segment.toLowerCase())) {
+        errors.push(`Path contains reserved name: ${segment}`);
+      }
     }
 
     return {
@@ -364,142 +355,34 @@ class TraceDirectoryManager {
   }
 
   /**
-   * Check if directory exists
+   * Format browser filesystem errors for user-friendly messages
    * @private
    */
-  async #checkDirectoryExists(directoryPath) {
-    try {
-      await this.#fileSystem.access(directoryPath);
-      const stats = await this.#fileSystem.stat(directoryPath);
+  #formatBrowserError(error) {
+    switch (error.name) {
+      case 'NotAllowedError':
+        return 'Permission denied. User needs to grant access to the directory.';
 
-      return {
-        exists: true,
-        isDirectory: stats.isDirectory(),
-      };
-    } catch (error) {
-      // Directory doesn't exist or can't be accessed
-      return {
-        exists: false,
-        isDirectory: false,
-        error: error.code,
-      };
-    }
-  }
+      case 'NotFoundError':
+        return 'Directory or parent directory not found.';
 
-  /**
-   * Check if directory is writable
-   * @private
-   */
-  async #checkDirectoryWritable(directoryPath) {
-    try {
-      // Try to access with write permission
-      await this.#fileSystem.access(
-        directoryPath,
-        this.#fileSystem.constants.W_OK
-      );
+      case 'TypeMismatchError':
+        return 'Path component exists but is not a directory.';
 
-      return {
-        writable: true,
-      };
-    } catch (error) {
-      return {
-        writable: false,
-        error: `Directory not writable: ${error.message}`,
-      };
-    }
-  }
+      case 'InvalidStateError':
+        return 'Invalid directory state or handle.';
 
-  /**
-   * Check if parent directory exists
-   * @private
-   */
-  async #checkParentDirectoryExists(directoryPath) {
-    try {
-      const parentPath = path.dirname(directoryPath);
-      const result = await this.#checkDirectoryExists(parentPath);
-      return result.exists;
-    } catch (error) {
-      return false;
-    }
-  }
+      case 'SecurityError':
+        return 'Security restrictions prevent this operation.';
 
-  /**
-   * Create directory with proper error handling
-   * @private
-   */
-  async #createDirectory(directoryPath) {
-    try {
-      // Use recursive creation to handle nested directories
-      await this.#fileSystem.mkdir(directoryPath, { recursive: true });
+      case 'AbortError':
+        return 'Operation was aborted by the user.';
 
-      // Verify creation was successful
-      const verifyResult = await this.#checkDirectoryExists(directoryPath);
-
-      if (!verifyResult.exists || !verifyResult.isDirectory) {
-        return {
-          success: false,
-          recursive: true,
-          error: 'Directory creation verification failed',
-        };
-      }
-
-      // Verify it's writable
-      const writableResult = await this.#checkDirectoryWritable(directoryPath);
-
-      if (!writableResult.writable) {
-        return {
-          success: false,
-          recursive: true,
-          error: writableResult.error,
-        };
-      }
-
-      return {
-        success: true,
-        recursive: true,
-      };
-    } catch (error) {
-      // Handle specific filesystem errors
-      const errorMessage = this.#formatFilesystemError(error);
-
-      return {
-        success: false,
-        recursive: true,
-        error: errorMessage,
-      };
-    }
-  }
-
-  /**
-   * Format filesystem errors for user-friendly messages
-   * @private
-   */
-  #formatFilesystemError(error) {
-    switch (error.code) {
-      case 'EACCES':
-        return 'Permission denied. Check directory permissions or run with appropriate privileges.';
-
-      case 'ENOTDIR':
-        return 'Path component is not a directory.';
-
-      case 'ENOENT':
-        return 'Parent directory does not exist.';
-
-      case 'ENOSPC':
-        return 'No space left on device.';
-
-      case 'EROFS':
-        return 'File system is read-only.';
-
-      case 'EMFILE':
-      case 'ENFILE':
-        return 'Too many open files.';
-
-      case 'ENAMETOOLONG':
-        return 'Path name too long.';
+      case 'QuotaExceededError':
+        return 'Storage quota exceeded.';
 
       default:
-        return `Filesystem error: ${error.message} (${error.code || 'unknown'})`;
+        return `Browser filesystem error: ${error.message || error.name || 'unknown'}`;
     }
   }
 }
@@ -513,23 +396,8 @@ export default TraceDirectoryManager;
  * @property {boolean} existed - Whether directory existed before operation
  * @property {boolean} created - Whether directory was created
  * @property {boolean} writable - Whether directory is writable
- * @property {boolean} [recursive] - Whether recursive creation was used
  * @property {boolean} [cached] - Whether result came from cache
  * @property {string} [error] - Error message if operation failed
- */
-
-/**
- * @typedef {Object} DirectoryInfo
- * @property {string} path - Normalized directory path
- * @property {boolean} exists - Whether directory exists
- * @property {boolean} writable - Whether directory is writable
- * @property {boolean} parentExists - Whether parent directory exists
- * @property {boolean} [isDirectory] - Whether path is a directory
- * @property {number} [size] - Directory size in bytes
- * @property {Date} [created] - Directory creation time
- * @property {Date} [modified] - Directory modification time
- * @property {number} [permissions] - Directory permissions
- * @property {string} [error] - Error message if info retrieval failed
  */
 
 /**
@@ -540,165 +408,63 @@ export default TraceDirectoryManager;
  */
 ```
 
-### Step 3: Create Integration Utility
+### Step 3: Update Storage Provider Interface
 
-**File**: `src/actions/tracing/directoryUtils.js`
+Since the browser storage provider needs to support directory operations, we should extend it:
 
-```javascript
-/**
- * @file Utility functions for directory operations in action tracing
- * Provides convenience functions for common directory tasks
- */
-
-import TraceDirectoryManager from './traceDirectoryManager.js';
-
-/**
- * Create a configured TraceDirectoryManager instance
- * @param {Object} dependencies
- * @returns {TraceDirectoryManager}
- */
-export function createTraceDirectoryManager(dependencies) {
-  return new TraceDirectoryManager(dependencies);
-}
-
-/**
- * Ensure multiple directories exist
- * @param {TraceDirectoryManager} dirManager - Directory manager instance
- * @param {string[]} directories - Array of directory paths
- * @returns {Promise<DirectoryBatchResult>} Results for all directories
- */
-export async function ensureMultipleDirectories(dirManager, directories) {
-  const results = [];
-  const errors = [];
-  let successCount = 0;
-
-  for (const dir of directories) {
-    try {
-      const result = await dirManager.ensureDirectoryExists(dir);
-      results.push(result);
-
-      if (result.success) {
-        successCount++;
-      } else {
-        errors.push(`${dir}: ${result.error}`);
-      }
-    } catch (error) {
-      const errorResult = {
-        success: false,
-        path: dir,
-        existed: false,
-        created: false,
-        writable: false,
-        error: error.message,
-      };
-      results.push(errorResult);
-      errors.push(`${dir}: ${error.message}`);
-    }
-  }
-
-  return {
-    results,
-    successCount,
-    totalCount: directories.length,
-    errors,
-    allSuccessful: errors.length === 0,
-  };
-}
-
-/**
- * Get the standard trace directories configuration
- * @param {string} baseOutputDir - Base output directory
- * @returns {string[]} Array of standard trace directories
- */
-export function getStandardTraceDirectories(baseOutputDir = './traces') {
-  return [
-    baseOutputDir,
-    `${baseOutputDir}/actions`,
-    `${baseOutputDir}/actions/archive`,
-  ];
-}
-
-/**
- * Validate and normalize a trace output path
- * @param {string} outputPath - Path to validate
- * @returns {ValidationResult} Validation result
- */
-export function validateTraceOutputPath(outputPath) {
-  // Create temporary manager for validation
-  const tempManager = {
-    validateDirectoryPath:
-      TraceDirectoryManager.prototype.validateDirectoryPath.bind({
-        _normalizePath: TraceDirectoryManager.prototype._normalizePath,
-        _validatePath: TraceDirectoryManager.prototype._validatePath,
-      }),
-  };
-
-  return tempManager.validateDirectoryPath(outputPath);
-}
-
-/**
- * @typedef {Object} DirectoryBatchResult
- * @property {DirectoryResult[]} results - Individual directory results
- * @property {number} successCount - Number of successful operations
- * @property {number} totalCount - Total number of directories processed
- * @property {string[]} errors - List of error messages
- * @property {boolean} allSuccessful - Whether all operations succeeded
- */
-```
+**Note**: This would require extending `BrowserStorageProvider` with directory-specific methods. For now, the `TraceDirectoryManager` handles this directly.
 
 ### Step 4: Integration with DI Container
 
-Update the action tracing container to register the directory manager:
+Update the action tracing registrations to include the directory manager:
 
-**File**: `src/dependencyInjection/containers/actionTracingContainer.js` (addition)
+**File**: `src/dependencyInjection/registrations/actionTracingRegistrations.js` (addition)
 
 ```javascript
-// ... existing imports ...
+// Add to existing imports
 import TraceDirectoryManager from '../../actions/tracing/traceDirectoryManager.js';
 
-export function registerActionTracing(container) {
-  // ... existing registrations ...
+// Add to registerActionTracing function after existing registrations:
 
   // Register TraceDirectoryManager
   container.register(
-    actionTracingTokens.ITraceDirectoryManager,
-    (deps) => {
-      const logger = setup.setupService('TraceDirectoryManager', deps.logger, {
-        fileSystem: {
-          value: deps.fileSystem,
-          requiredMethods: ['mkdir', 'access', 'stat'],
-        },
-      });
-
-      return new TraceDirectoryManager({
-        fileSystem: deps.fileSystem,
-        logger,
-      });
-    },
-    {
-      lifetime: 'singleton',
-      dependencies: {
-        fileSystem: tokens.IFileSystem,
-        logger: tokens.ILogger,
-      },
-    }
+    tokens.ITraceDirectoryManager,
+    (c) =>
+      new TraceDirectoryManager({
+        storageProvider: c.resolve(tokens.IStorageProvider),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
   );
-}
+  log.debug(
+    `Action Tracing Registration: Registered ${String(tokens.ITraceDirectoryManager)}.`
+  );
 ```
 
 ### Step 5: Update Token Definitions
 
-**File**: `src/dependencyInjection/tokens/actionTracingTokens.js` (addition)
+**File**: `src/dependencyInjection/tokens/actionTracingTokens.js` (modification)
 
 ```javascript
-export const actionTracingTokens = {
-  IActionTraceConfigLoader: Symbol('IActionTraceConfigLoader'),
-  IActionTraceFilter: Symbol('IActionTraceFilter'),
-  IActionTraceOutputService: Symbol('IActionTraceOutputService'),
-  ITraceDirectoryManager: Symbol('ITraceDirectoryManager'),
-};
+import { freeze } from '../../utils/cloneUtils.js';
 
-// ... rest of existing exports ...
+/**
+ * @file Action tracing DI tokens.
+ * @typedef {string} DiToken
+ */
+
+/**
+ * Action tracing tokens for dependency injection.
+ *
+ * @type {Readonly<Record<string, DiToken>>}
+ */
+export const actionTracingTokens = freeze({
+  IActionTraceConfigLoader: 'IActionTraceConfigLoader',
+  IActionTraceConfigValidator: 'IActionTraceConfigValidator',
+  IActionTraceFilter: 'IActionTraceFilter',
+  IActionTraceOutputService: 'IActionTraceOutputService',
+  ITraceDirectoryManager: 'ITraceDirectoryManager',
+});
 ```
 
 ## Testing Strategy
@@ -709,7 +475,7 @@ export const actionTracingTokens = {
 
 ```javascript
 /**
- * @file Unit tests for TraceDirectoryManager
+ * @file Unit tests for browser-based TraceDirectoryManager
  */
 
 import {
@@ -720,100 +486,133 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { TraceDirectoryManagerTestBed } from '../../../common/actions/traceDirectoryManagerTestBed.js';
+import TraceDirectoryManager from '../../../../src/actions/tracing/traceDirectoryManager.js';
 
 describe('TraceDirectoryManager', () => {
-  let testBed;
-  let dirManager;
+  let manager;
+  let mockStorageProvider;
+  let mockLogger;
+  let mockDirectoryHandle;
 
   beforeEach(() => {
-    testBed = new TraceDirectoryManagerTestBed();
-    dirManager = testBed.createDirectoryManager();
+    // Mock FileSystemDirectoryHandle
+    mockDirectoryHandle = {
+      name: 'test-dir',
+      kind: 'directory',
+      getDirectoryHandle: jest.fn(),
+      queryPermission: jest.fn().mockResolvedValue('granted'),
+      requestPermission: jest.fn().mockResolvedValue('granted'),
+    };
+
+    // Mock window.showDirectoryPicker
+    global.window = {
+      showDirectoryPicker: jest.fn().mockResolvedValue(mockDirectoryHandle),
+    };
+
+    mockStorageProvider = {
+      getRootHandle: jest.fn().mockResolvedValue(mockDirectoryHandle),
+      ensureDirectoryExists: jest.fn().mockResolvedValue({ success: true }),
+    };
+
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    manager = new TraceDirectoryManager({
+      storageProvider: mockStorageProvider,
+      logger: mockLogger,
+    });
   });
 
   afterEach(() => {
-    testBed.cleanup();
+    jest.clearAllMocks();
+    delete global.window;
   });
 
   describe('Constructor', () => {
     it('should initialize with valid dependencies', () => {
-      expect(dirManager).toBeDefined();
-      expect(() => dirManager.clearCache()).not.toThrow();
+      expect(manager).toBeDefined();
+      expect(() => manager.clearCache()).not.toThrow();
     });
 
-    it('should validate file system dependency', () => {
-      expect(() =>
-        testBed.createDirectoryManager({
-          fileSystem: null,
-        })
-      ).toThrow('IFileSystem');
+    it('should validate storage provider dependency', () => {
+      expect(
+        () =>
+          new TraceDirectoryManager({
+            storageProvider: null,
+            logger: mockLogger,
+          })
+      ).toThrow('IStorageProvider');
     });
   });
 
   describe('Directory Creation', () => {
     it('should create directory when it does not exist', async () => {
-      testBed.mockFileSystem.access.mockRejectedValue({ code: 'ENOENT' });
-      testBed.mockFileSystem.mkdir.mockResolvedValue();
-      testBed.setupDirectoryExists('./traces/actions', true, true);
+      mockDirectoryHandle.getDirectoryHandle.mockResolvedValue(
+        mockDirectoryHandle
+      );
 
-      const result = await dirManager.ensureDirectoryExists('./traces/actions');
+      const result = await manager.ensureDirectoryExists('./traces/actions');
 
       expect(result.success).toBe(true);
       expect(result.created).toBe(true);
-      expect(result.existed).toBe(false);
       expect(result.writable).toBe(true);
-      expect(testBed.mockFileSystem.mkdir).toHaveBeenCalledWith(
-        'traces/actions',
-        { recursive: true }
+      expect(mockDirectoryHandle.getDirectoryHandle).toHaveBeenCalledWith(
+        'traces',
+        { create: true }
       );
     });
 
-    it('should handle existing writable directory', async () => {
-      testBed.setupDirectoryExists('./traces/actions', true, true);
+    it('should handle permission denial', async () => {
+      mockDirectoryHandle.queryPermission.mockResolvedValue('denied');
+      mockDirectoryHandle.requestPermission.mockResolvedValue('denied');
+      global.window.showDirectoryPicker.mockResolvedValue(mockDirectoryHandle);
 
-      const result = await dirManager.ensureDirectoryExists('./traces/actions');
-
-      expect(result.success).toBe(true);
-      expect(result.created).toBe(false);
-      expect(result.existed).toBe(true);
-      expect(result.writable).toBe(true);
-      expect(testBed.mockFileSystem.mkdir).not.toHaveBeenCalled();
-    });
-
-    it('should handle existing non-writable directory', async () => {
-      testBed.setupDirectoryExists('./traces/actions', true, false);
-
-      const result = await dirManager.ensureDirectoryExists('./traces/actions');
+      const result = await manager.ensureDirectoryExists('./traces/actions');
 
       expect(result.success).toBe(false);
-      expect(result.created).toBe(false);
-      expect(result.existed).toBe(true);
-      expect(result.writable).toBe(false);
-      expect(result.error).toContain('not writable');
+      expect(result.error).toContain('denied');
     });
 
     it('should cache successful directory operations', async () => {
-      testBed.setupDirectoryExists('./traces/actions', true, true);
+      mockDirectoryHandle.getDirectoryHandle.mockResolvedValue(
+        mockDirectoryHandle
+      );
 
       // First call
-      const result1 =
-        await dirManager.ensureDirectoryExists('./traces/actions');
+      const result1 = await manager.ensureDirectoryExists('./traces/actions');
       // Second call
-      const result2 =
-        await dirManager.ensureDirectoryExists('./traces/actions');
+      const result2 = await manager.ensureDirectoryExists('./traces/actions');
 
       expect(result1.success).toBe(true);
       expect(result2.success).toBe(true);
       expect(result2.cached).toBe(true);
 
-      // Should only check directory once
-      expect(testBed.mockFileSystem.access).toHaveBeenCalledTimes(2); // First call checks exists + writable
+      // Should only create directory once
+      expect(mockDirectoryHandle.getDirectoryHandle).toHaveBeenCalledTimes(2); // traces + actions
+    });
+
+    it('should handle user cancellation', async () => {
+      const abortError = new Error('User cancelled');
+      abortError.name = 'AbortError';
+      global.window.showDirectoryPicker.mockRejectedValue(abortError);
+
+      const result = await manager.ensureDirectoryExists('./traces/actions');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('denied');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'User cancelled directory selection'
+      );
     });
   });
 
   describe('Path Validation', () => {
     it('should validate safe paths', () => {
-      const result = dirManager.validateDirectoryPath('./traces/actions');
+      const result = manager.validateDirectoryPath('./traces/actions');
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toEqual([]);
@@ -821,7 +620,7 @@ describe('TraceDirectoryManager', () => {
     });
 
     it('should reject path traversal attempts', () => {
-      const result = dirManager.validateDirectoryPath('../../etc/passwd');
+      const result = manager.validateDirectoryPath('../../etc/passwd');
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain(
@@ -829,459 +628,127 @@ describe('TraceDirectoryManager', () => {
       );
     });
 
-    it('should reject system directories', () => {
-      const result = dirManager.validateDirectoryPath('/etc/traces');
-
-      expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Path points to system directory');
-    });
-
     it('should reject paths with invalid characters', () => {
-      const result = dirManager.validateDirectoryPath('traces/actions|test');
+      const result = manager.validateDirectoryPath('traces/actions|test');
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('Path contains invalid characters');
     });
 
-    it('should reject overly long paths', () => {
-      const longPath = 'a'.repeat(300);
-      const result = dirManager.validateDirectoryPath(longPath);
+    it('should reject reserved Windows names', () => {
+      const result = manager.validateDirectoryPath('traces/con/test');
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Path exceeds maximum length');
-    });
-  });
-
-  describe('Directory Information', () => {
-    it('should provide comprehensive directory information', async () => {
-      testBed.setupDirectoryExists('./traces', true, true);
-      testBed.mockFileSystem.stat.mockResolvedValue({
-        isDirectory: () => true,
-        size: 4096,
-        birthtime: new Date('2024-01-01'),
-        mtime: new Date('2024-01-02'),
-        mode: 0o755,
-      });
-
-      const info = await dirManager.getDirectoryInfo('./traces');
-
-      expect(info.exists).toBe(true);
-      expect(info.writable).toBe(true);
-      expect(info.isDirectory).toBe(true);
-      expect(info.size).toBe(4096);
-      expect(info.created).toEqual(new Date('2024-01-01'));
-      expect(info.permissions).toBe(0o755);
+      expect(result.errors).toContain('Path contains reserved name: con');
     });
 
-    it('should handle non-existent directories', async () => {
-      testBed.setupDirectoryExists('./nonexistent', false, false);
+    it('should normalize paths correctly', () => {
+      const result = manager.validateDirectoryPath(
+        './traces//actions/archive/'
+      );
 
-      const info = await dirManager.getDirectoryInfo('./nonexistent');
-
-      expect(info.exists).toBe(false);
-      expect(info.writable).toBe(false);
-      expect(info.parentExists).toBe(false);
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('should handle permission denied errors', async () => {
-      testBed.mockFileSystem.access.mockRejectedValue({ code: 'ENOENT' });
-      testBed.mockFileSystem.mkdir.mockRejectedValue({
-        code: 'EACCES',
-        message: 'Permission denied',
-      });
-
-      const result = await dirManager.ensureDirectoryExists('./traces/actions');
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Permission denied');
-    });
-
-    it('should handle read-only filesystem errors', async () => {
-      testBed.mockFileSystem.access.mockRejectedValue({ code: 'ENOENT' });
-      testBed.mockFileSystem.mkdir.mockRejectedValue({
-        code: 'EROFS',
-        message: 'Read-only file system',
-      });
-
-      const result = await dirManager.ensureDirectoryExists('./traces/actions');
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('read-only');
-    });
-
-    it('should handle no space left errors', async () => {
-      testBed.mockFileSystem.access.mockRejectedValue({ code: 'ENOENT' });
-      testBed.mockFileSystem.mkdir.mockRejectedValue({
-        code: 'ENOSPC',
-        message: 'No space left on device',
-      });
-
-      const result = await dirManager.ensureDirectoryExists('./traces/actions');
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('No space left');
+      expect(result.isValid).toBe(true);
+      expect(result.normalizedPath).toBe('traces/actions/archive');
     });
   });
 
   describe('Cache Management', () => {
     it('should clear directory cache', async () => {
-      testBed.setupDirectoryExists('./traces/actions', true, true);
+      mockDirectoryHandle.getDirectoryHandle.mockResolvedValue(
+        mockDirectoryHandle
+      );
 
-      await dirManager.ensureDirectoryExists('./traces/actions');
-      expect(dirManager.getCachedDirectories()).toContain('traces/actions');
+      await manager.ensureDirectoryExists('./traces/actions');
+      expect(manager.getCachedDirectories()).toContain('traces/actions');
 
-      dirManager.clearCache();
-      expect(dirManager.getCachedDirectories()).toEqual([]);
+      manager.clearCache();
+      expect(manager.getCachedDirectories()).toEqual([]);
     });
 
     it('should provide list of cached directories', async () => {
-      testBed.setupDirectoryExists('./traces/actions', true, true);
-      testBed.setupDirectoryExists('./traces/rules', true, true);
+      mockDirectoryHandle.getDirectoryHandle.mockResolvedValue(
+        mockDirectoryHandle
+      );
 
-      await dirManager.ensureDirectoryExists('./traces/actions');
-      await dirManager.ensureDirectoryExists('./traces/rules');
+      await manager.ensureDirectoryExists('./traces/actions');
+      await manager.ensureDirectoryExists('./traces/rules');
 
-      const cached = dirManager.getCachedDirectories();
+      const cached = manager.getCachedDirectories();
       expect(cached).toContain('traces/actions');
       expect(cached).toContain('traces/rules');
     });
   });
-});
-```
 
-### Step 7: Create Test Helper
+  describe('Error Handling', () => {
+    it('should handle NotAllowedError', async () => {
+      const error = new Error('Not allowed');
+      error.name = 'NotAllowedError';
+      mockDirectoryHandle.getDirectoryHandle.mockRejectedValue(error);
 
-**File**: `tests/common/actions/traceDirectoryManagerTestBed.js`
+      const result = await manager.ensureDirectoryExists('./traces/actions');
 
-```javascript
-/**
- * @file Test helper for TraceDirectoryManager
- */
-
-import TraceDirectoryManager from '../../../src/actions/tracing/traceDirectoryManager.js';
-
-export class TraceDirectoryManagerTestBed {
-  constructor() {
-    this.mockFileSystem = {
-      mkdir: jest.fn(),
-      access: jest.fn(),
-      stat: jest.fn(),
-      constants: {
-        W_OK: 2, // Write permission constant
-      },
-    };
-
-    this.mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-    };
-  }
-
-  createDirectoryManager(overrides = {}) {
-    const dependencies = {
-      fileSystem: this.mockFileSystem,
-      logger: this.mockLogger,
-      ...overrides,
-    };
-
-    return new TraceDirectoryManager(dependencies);
-  }
-
-  /**
-   * Setup mock filesystem to simulate directory existence and writability
-   * @param {string} path - Directory path
-   * @param {boolean} exists - Whether directory exists
-   * @param {boolean} writable - Whether directory is writable
-   */
-  setupDirectoryExists(path, exists, writable) {
-    const normalizedPath = path.replace(/\\/g, '/').replace(/^\.\//, '');
-
-    if (exists) {
-      // Directory exists - access succeeds
-      this.mockFileSystem.access.mockImplementation((checkPath, mode) => {
-        if (checkPath.includes(normalizedPath)) {
-          if (mode === this.mockFileSystem.constants.W_OK && !writable) {
-            const error = new Error('Permission denied');
-            error.code = 'EACCES';
-            throw error;
-          }
-          return Promise.resolve();
-        }
-        const error = new Error('No such file or directory');
-        error.code = 'ENOENT';
-        throw error;
-      });
-
-      this.mockFileSystem.stat.mockImplementation((checkPath) => {
-        if (checkPath.includes(normalizedPath)) {
-          return Promise.resolve({
-            isDirectory: () => true,
-            size: 4096,
-            birthtime: new Date(),
-            mtime: new Date(),
-            mode: 0o755,
-          });
-        }
-        const error = new Error('No such file or directory');
-        error.code = 'ENOENT';
-        throw error;
-      });
-    } else {
-      // Directory doesn't exist - access fails
-      this.mockFileSystem.access.mockImplementation((checkPath) => {
-        if (checkPath.includes(normalizedPath)) {
-          const error = new Error('No such file or directory');
-          error.code = 'ENOENT';
-          throw error;
-        }
-        return Promise.resolve();
-      });
-
-      this.mockFileSystem.stat.mockImplementation((checkPath) => {
-        if (checkPath.includes(normalizedPath)) {
-          const error = new Error('No such file or directory');
-          error.code = 'ENOENT';
-          throw error;
-        }
-        return Promise.resolve({
-          isDirectory: () => true,
-          size: 4096,
-          birthtime: new Date(),
-          mtime: new Date(),
-          mode: 0o755,
-        });
-      });
-    }
-  }
-
-  /**
-   * Setup filesystem error for testing error conditions
-   * @param {string} operation - Operation that should fail ('mkdir', 'access', 'stat')
-   * @param {string} errorCode - Error code to simulate
-   * @param {string} message - Error message
-   */
-  setupFilesystemError(operation, errorCode, message = 'Simulated error') {
-    const error = new Error(message);
-    error.code = errorCode;
-
-    this.mockFileSystem[operation].mockRejectedValue(error);
-  }
-
-  cleanup() {
-    jest.clearAllMocks();
-  }
-}
-```
-
-### Step 8: Create Utility Tests
-
-**File**: `tests/unit/actions/tracing/directoryUtils.test.js`
-
-```javascript
-/**
- * @file Unit tests for directory utilities
- */
-
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import {
-  ensureMultipleDirectories,
-  getStandardTraceDirectories,
-  validateTraceOutputPath,
-} from '../../../../src/actions/tracing/directoryUtils.js';
-
-describe('Directory Utilities', () => {
-  describe('ensureMultipleDirectories', () => {
-    it('should process multiple directories', async () => {
-      const mockDirectoryManager = {
-        ensureDirectoryExists: jest
-          .fn()
-          .mockResolvedValueOnce({ success: true, path: 'traces' })
-          .mockResolvedValueOnce({ success: true, path: 'traces/actions' })
-          .mockResolvedValueOnce({
-            success: false,
-            path: 'traces/readonly',
-            error: 'Permission denied',
-          }),
-      };
-
-      const result = await ensureMultipleDirectories(mockDirectoryManager, [
-        './traces',
-        './traces/actions',
-        './traces/readonly',
-      ]);
-
-      expect(result.totalCount).toBe(3);
-      expect(result.successCount).toBe(2);
-      expect(result.allSuccessful).toBe(false);
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain('Permission denied');
-    });
-  });
-
-  describe('getStandardTraceDirectories', () => {
-    it('should return standard directory structure', () => {
-      const dirs = getStandardTraceDirectories('./custom-traces');
-
-      expect(dirs).toEqual([
-        './custom-traces',
-        './custom-traces/actions',
-        './custom-traces/actions/archive',
-      ]);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Permission denied');
     });
 
-    it('should use default base directory', () => {
-      const dirs = getStandardTraceDirectories();
+    it('should handle QuotaExceededError', async () => {
+      const error = new Error('Quota exceeded');
+      error.name = 'QuotaExceededError';
+      mockDirectoryHandle.getDirectoryHandle.mockRejectedValue(error);
 
-      expect(dirs[0]).toBe('./traces');
-    });
-  });
+      const result = await manager.ensureDirectoryExists('./traces/actions');
 
-  describe('validateTraceOutputPath', () => {
-    it('should validate safe paths', () => {
-      const result = validateTraceOutputPath('./traces/actions');
-
-      expect(result.isValid).toBe(true);
-      expect(result.errors).toEqual([]);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Storage quota exceeded');
     });
 
-    it('should reject dangerous paths', () => {
-      const result = validateTraceOutputPath('../../../etc');
+    it('should handle TypeMismatchError', async () => {
+      const error = new Error('Type mismatch');
+      error.name = 'TypeMismatchError';
+      mockDirectoryHandle.getDirectoryHandle.mockRejectedValue(error);
 
-      expect(result.isValid).toBe(false);
-      expect(result.errors.length).toBeGreaterThan(0);
+      const result = await manager.ensureDirectoryExists('./traces/actions');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not a directory');
     });
-  });
-});
-```
-
-### Step 9: Integration Tests
-
-**File**: `tests/integration/actions/tracing/traceDirectoryManager.integration.test.js`
-
-```javascript
-/**
- * @file Integration tests for TraceDirectoryManager
- */
-
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createTestContainerWithDefaults } from '../../../common/testContainerFactory.js';
-import { actionTracingTokens } from '../../../../src/dependencyInjection/tokens/actionTracingTokens.js';
-import path from 'path';
-import { promises as fs } from 'fs';
-
-describe('TraceDirectoryManager Integration', () => {
-  let container;
-  let directoryManager;
-  let tempTestDir;
-
-  beforeEach(async () => {
-    container = createTestContainerWithDefaults();
-    directoryManager = container.resolve(
-      actionTracingTokens.ITraceDirectoryManager
-    );
-
-    // Create temporary directory for testing
-    tempTestDir = path.join(process.cwd(), 'tmp-test-traces');
-  });
-
-  afterEach(async () => {
-    // Clean up test directories
-    try {
-      await fs.rm(tempTestDir, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
-    }
-
-    if (container?.dispose) {
-      container.dispose();
-    }
-  });
-
-  it('should create actual directory structure', async () => {
-    const testDir = path.join(tempTestDir, 'actions');
-
-    const result = await directoryManager.ensureDirectoryExists(testDir);
-
-    expect(result.success).toBe(true);
-    expect(result.created).toBe(true);
-
-    // Verify directory actually exists
-    const stats = await fs.stat(testDir);
-    expect(stats.isDirectory()).toBe(true);
-  });
-
-  it('should handle nested directory creation', async () => {
-    const nestedDir = path.join(tempTestDir, 'deep', 'nested', 'actions');
-
-    const result = await directoryManager.ensureDirectoryExists(nestedDir);
-
-    expect(result.success).toBe(true);
-    expect(result.recursive).toBe(true);
-
-    // Verify all nested directories exist
-    const stats = await fs.stat(nestedDir);
-    expect(stats.isDirectory()).toBe(true);
-  });
-
-  it('should provide accurate directory information', async () => {
-    const testDir = path.join(tempTestDir, 'info-test');
-    await fs.mkdir(testDir, { recursive: true });
-
-    const info = await directoryManager.getDirectoryInfo(testDir);
-
-    expect(info.exists).toBe(true);
-    expect(info.isDirectory).toBe(true);
-    expect(info.writable).toBe(true);
-    expect(info.size).toBeGreaterThan(0);
-    expect(info.created).toBeInstanceOf(Date);
   });
 });
 ```
 
 ## Performance Considerations
 
-- **Directory Caching**: Cache successful directory operations to avoid redundant filesystem checks
-- **Batch Operations**: Support batch directory creation for better performance
+- **Directory Caching**: Cache successful directory operations to avoid redundant permission checks
+- **Handle Reuse**: Reuse FileSystemDirectoryHandle instances to minimize permission prompts
 - **Error Categorization**: Quick identification of error types to avoid retries on permanent failures
 - **Path Normalization**: Normalize paths once and cache results
 
-## Cross-Platform Compatibility
+## Browser Compatibility
 
-- **Path Separators**: Normalize to forward slashes for consistency
-- **Permission Checking**: Use filesystem constants for cross-platform permission checks
-- **Error Codes**: Handle platform-specific filesystem error codes
-- **Path Limits**: Account for different filesystem path length limitations
+- **File System Access API**: Chrome 86+, Edge 86+, Opera 72+
+- **Not supported**: Firefox, Safari (as of 2024)
+- **Fallback options**: IndexedDB for browsers without File System Access API
+- **Progressive Enhancement**: Detect API availability and provide appropriate fallback
 
 ## Files Created
 
 - [ ] `src/actions/tracing/traceDirectoryManager.js`
-- [ ] `src/actions/tracing/directoryUtils.js`
 - [ ] `tests/unit/actions/tracing/traceDirectoryManager.test.js`
-- [ ] `tests/unit/actions/tracing/directoryUtils.test.js`
-- [ ] `tests/common/actions/traceDirectoryManagerTestBed.js`
-- [ ] `tests/integration/actions/tracing/traceDirectoryManager.integration.test.js`
 
 ## Files Modified
 
 - [ ] `src/dependencyInjection/tokens/actionTracingTokens.js` (add ITraceDirectoryManager)
-- [ ] `src/dependencyInjection/containers/actionTracingContainer.js` (register TraceDirectoryManager)
+- [ ] `src/dependencyInjection/registrations/actionTracingRegistrations.js` (register TraceDirectoryManager)
 
 ## Definition of Done
 
-- [ ] TraceDirectoryManager class implemented with all methods
-- [ ] Path validation covers security concerns and filesystem limits
-- [ ] Directory creation supports nested structures with proper permissions
-- [ ] Cross-platform compatibility verified (Windows/Linux/macOS)
-- [ ] Comprehensive error handling with user-friendly messages
+- [ ] TraceDirectoryManager class implemented for browser environment
+- [ ] Path validation covers security concerns and browser limitations
+- [ ] Directory creation through File System Access API
+- [ ] Browser permission handling with user-friendly messages
 - [ ] Directory caching improves performance for repeated operations
 - [ ] Unit tests achieve 80%+ coverage including edge cases
-- [ ] Integration tests verify actual filesystem operations
-- [ ] Utility functions for common directory tasks
-- [ ] All tests pass on multiple platforms
+- [ ] All tests pass in browser environment
 - [ ] Documentation includes usage examples
 - [ ] Memory usage optimized with proper cleanup
 - [ ] Code review completed
@@ -1294,9 +761,9 @@ describe('TraceDirectoryManager Integration', () => {
 ### Basic Directory Creation
 
 ```javascript
-const dirManager = container.resolve('ITraceDirectoryManager');
+const dirManager = container.resolve(tokens.ITraceDirectoryManager);
 
-// Ensure trace directory exists
+// Ensure trace directory exists (may prompt user for directory selection)
 const result = await dirManager.ensureDirectoryExists('./traces/actions');
 
 if (result.success) {
@@ -1304,22 +771,6 @@ if (result.success) {
 } else {
   console.error(`Failed to create directory: ${result.error}`);
 }
-```
-
-### Batch Directory Setup
-
-```javascript
-import {
-  ensureMultipleDirectories,
-  getStandardTraceDirectories,
-} from './directoryUtils.js';
-
-const directories = getStandardTraceDirectories('./custom-traces');
-const results = await ensureMultipleDirectories(dirManager, directories);
-
-console.log(
-  `Created ${results.successCount} of ${results.totalCount} directories`
-);
 ```
 
 ### Path Validation
@@ -1335,10 +786,10 @@ if (!validation.isValid) {
 ## Security Considerations
 
 - **Path Traversal Protection**: Reject paths containing `../` sequences
-- **System Directory Protection**: Block access to system directories (`/etc`, `/var`, etc.)
 - **Input Sanitization**: Validate and normalize all path inputs
-- **Permission Validation**: Check write permissions before attempting operations
+- **Permission Management**: Handle browser permission prompts gracefully
 - **Error Information**: Avoid exposing sensitive filesystem information in error messages
+- **Sandboxed Environment**: All operations occur within browser's sandboxed filesystem
 
 ## Next Steps
 

@@ -48,7 +48,9 @@ async function initializeApp() {
 
     // eslint-disable-next-line no-console
     console.log(
-      `${PAGE_NAME} initialized successfully in ${bootstrapTime.toFixed(2)}ms`
+      `${PAGE_NAME} initialized successfully in ${
+        bootstrapTime !== undefined ? bootstrapTime.toFixed(2) : 'unknown'
+      }ms`
     );
   } catch (error) {
     // eslint-disable-next-line no-console

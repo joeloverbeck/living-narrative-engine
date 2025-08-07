@@ -5,6 +5,7 @@
 import { Registrar } from '../../utils/registrarHelpers.js';
 import { tokens } from '../tokens.js';
 import ActionTraceConfigLoader from '../../configuration/actionTraceConfigLoader.js';
+import ActionTraceConfigValidator from '../../configuration/actionTraceConfigValidator.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -23,6 +24,20 @@ export function registerActionTracing(container) {
   const log = container.resolve(tokens.ILogger);
 
   log.debug('Action Tracing Registration: starting…');
+
+  // Register ActionTraceConfigValidator
+  container.register(
+    tokens.IActionTraceConfigValidator,
+    (c) =>
+      new ActionTraceConfigValidator({
+        schemaValidator: c.resolve(tokens.ISchemaValidator),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered ${String(tokens.IActionTraceConfigValidator)}.`
+  );
 
   // Register ActionTraceConfigLoader
   container.register(
