@@ -15,6 +15,7 @@ describe('StructuredTrace - Integration Tests', () => {
   let mockActionIndex;
   let mockErrorContextBuilder;
   let mockPrerequisiteEvaluationService;
+  let mockEntityManager;
 
   beforeEach(() => {
     // Create mocks for dependencies
@@ -40,6 +41,10 @@ describe('StructuredTrace - Integration Tests', () => {
 
     mockPrerequisiteEvaluationService = {
       evaluate: jest.fn().mockReturnValue(true),
+    };
+
+    mockEntityManager = {
+      getAllComponentTypesForEntity: jest.fn().mockReturnValue(['core:actor', 'core:position']),
     };
   });
 
@@ -81,7 +86,8 @@ describe('StructuredTrace - Integration Tests', () => {
         new ComponentFilteringStage(
           mockActionIndex,
           mockErrorContextBuilder,
-          mockLogger
+          mockLogger,
+          mockEntityManager
         ),
       ];
 
@@ -548,7 +554,8 @@ describe('StructuredTrace - Integration Tests', () => {
         new ComponentFilteringStage(
           mockActionIndex,
           mockErrorContextBuilder,
-          mockLogger
+          mockLogger,
+          mockEntityManager
         ),
       ];
 

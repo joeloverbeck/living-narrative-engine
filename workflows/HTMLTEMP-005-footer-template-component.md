@@ -1,11 +1,12 @@
 # HTMLTEMP-005: Build Footer Template Component
 
 ## Status
+
 **Status**: Not Started  
 **Priority**: Medium  
 **Estimated**: 2 hours  
 **Complexity**: Low  
-**Dependencies**: HTMLTEMP-001, HTMLTEMP-002  
+**Dependencies**: HTMLTEMP-001, HTMLTEMP-002
 
 ## Objective
 
@@ -61,12 +62,13 @@ export function createFooter(config = {}) {
     customContent = '',
     className = '',
     sticky = false,
-    theme = 'auto'
+    theme = 'auto',
   } = config;
 
   const stickyClass = sticky ? 'cb-footer-sticky' : '';
   const themeClass = `cb-footer-theme-${theme}`;
-  const footerClasses = `cb-page-footer ${stickyClass} ${themeClass} ${className}`.trim();
+  const footerClasses =
+    `cb-page-footer ${stickyClass} ${themeClass} ${className}`.trim();
 
   return `
     <footer class="${footerClasses}" role="contentinfo">
@@ -133,7 +135,7 @@ function createFooterNav(links) {
   return `
     <nav class="cb-footer-nav" aria-label="Footer navigation">
       <ul class="cb-footer-links">
-        ${links.map(link => createFooterLink(link)).join('')}
+        ${links.map((link) => createFooterLink(link)).join('')}
       </ul>
     </nav>
   `;
@@ -148,7 +150,7 @@ function createFooterNav(links) {
 function createFooterLink(link) {
   const target = link.target || '_self';
   const rel = target === '_blank' ? 'rel="noopener noreferrer"' : '';
-  
+
   return `
     <li class="cb-footer-link-item">
       <a href="${escapeHtml(link.href)}"
@@ -174,7 +176,9 @@ function createSocialLinks(socialLinks) {
     <div class="cb-footer-social">
       <span class="cb-footer-social-label">Follow us:</span>
       <div class="cb-footer-social-links">
-        ${socialLinks.map(link => `
+        ${socialLinks
+          .map(
+            (link) => `
           <a href="${escapeHtml(link.href)}"
              target="_blank"
              rel="noopener noreferrer"
@@ -182,7 +186,9 @@ function createSocialLinks(socialLinks) {
              aria-label="${escapeHtml(link.label || link.platform)}">
             ${link.icon || getSocialIcon(link.platform)}
           </a>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
     </div>
   `;
@@ -252,7 +258,7 @@ function createFooterBottom() {
  */
 export function createMinimalFooter(config = {}) {
   const { text = '', className = '' } = config;
-  
+
   return `
     <footer class="cb-footer-minimal ${className}" role="contentinfo">
       <div class="cb-footer-minimal-content">
@@ -273,9 +279,9 @@ export function createDebugFooter(config = {}) {
     showPerformance = true,
     showMemory = true,
     showBuildInfo = true,
-    className = ''
+    className = '',
   } = config;
-  
+
   return `
     <footer class="cb-footer-debug ${className}" role="contentinfo">
       <div class="cb-footer-debug-content">
@@ -342,7 +348,7 @@ function getDefaultLinks() {
     { label: 'Help', href: '#help' },
     { label: 'Documentation', href: '#docs' },
     { label: 'Support', href: '#support' },
-    { label: 'About', href: '#about' }
+    { label: 'About', href: '#about' },
   ];
 }
 
@@ -399,9 +405,9 @@ function getSocialIcon(platform) {
     linkedin: 'in',
     github: '⚡',
     discord: '💬',
-    youtube: '▶'
+    youtube: '▶',
   };
-  
+
   return `<span class="cb-social-icon">${icons[platform] || '🔗'}</span>`;
 }
 
@@ -413,16 +419,16 @@ function getSocialIcon(platform) {
  */
 function escapeHtml(str) {
   if (str == null) return '';
-  
+
   const htmlEscapes = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    "'": '&#39;'
+    "'": '&#39;',
   };
-  
-  return String(str).replace(/[&<>"']/g, char => htmlEscapes[char]);
+
+  return String(str).replace(/[&<>"']/g, (char) => htmlEscapes[char]);
 }
 
 // Export for testing
@@ -430,7 +436,7 @@ export const __testUtils = {
   getDefaultLinks,
   getDefaultCopyright,
   escapeHtml,
-  getSocialIcon
+  getSocialIcon,
 };
 ```
 
@@ -505,7 +511,7 @@ export const __testUtils = {
     grid-template-columns: 1fr;
     text-align: center;
   }
-  
+
   .cb-footer-links {
     flex-direction: column;
     gap: 0.5rem;
@@ -516,21 +522,25 @@ export const __testUtils = {
 ## Implementation Steps
 
 ### Step 1: Create Footer Template File
+
 1. Create `src/characterBuilder/templates/core/footerTemplate.js`
 2. Implement all functions as specified
 3. Add comprehensive JSDoc comments
 
 ### Step 2: Implement Footer Variations
+
 1. Standard footer with all features
 2. Minimal footer for simple pages
 3. Debug footer for development
 
 ### Step 3: Add Interactive Elements
+
 1. Back to top button
 2. Theme toggle button
 3. Social media links
 
 ### Step 4: Export and Integration
+
 1. Update `src/characterBuilder/templates/core/index.js`
 2. Integrate with page template
 
@@ -541,18 +551,18 @@ export const __testUtils = {
 ```javascript
 // tests/unit/characterBuilder/templates/core/footerTemplate.test.js
 import { describe, it, expect } from '@jest/globals';
-import { 
-  createFooter, 
-  createMinimalFooter, 
+import {
+  createFooter,
+  createMinimalFooter,
   createDebugFooter,
-  __testUtils 
+  __testUtils,
 } from '../../../../src/characterBuilder/templates/core/footerTemplate.js';
 
 describe('Footer Template Component', () => {
   describe('createFooter', () => {
     it('should create basic footer with defaults', () => {
       const html = createFooter();
-      
+
       expect(html).toContain('cb-page-footer');
       expect(html).toContain('role="contentinfo"');
       expect(html).toContain('Version');
@@ -560,20 +570,18 @@ describe('Footer Template Component', () => {
 
     it('should display status when provided', () => {
       const html = createFooter({
-        status: 'System online'
+        status: 'System online',
       });
-      
+
       expect(html).toContain('cb-footer-status-bar');
       expect(html).toContain('System online');
     });
 
     it('should render custom links', () => {
       const html = createFooter({
-        links: [
-          { label: 'Custom', href: '/custom' }
-        ]
+        links: [{ label: 'Custom', href: '/custom' }],
       });
-      
+
       expect(html).toContain('Custom');
       expect(html).toContain('/custom');
     });
@@ -582,27 +590,27 @@ describe('Footer Template Component', () => {
       const html = createFooter({
         socialLinks: [
           { platform: 'twitter', href: 'https://twitter.com' },
-          { platform: 'github', href: 'https://github.com' }
-        ]
+          { platform: 'github', href: 'https://github.com' },
+        ],
       });
-      
+
       expect(html).toContain('cb-footer-social');
       expect(html).toContain('cb-social-twitter');
     });
 
     it('should support sticky footer', () => {
       const html = createFooter({
-        sticky: true
+        sticky: true,
       });
-      
+
       expect(html).toContain('cb-footer-sticky');
     });
 
     it('should escape HTML in content', () => {
       const html = createFooter({
-        status: '<script>alert("XSS")</script>'
+        status: '<script>alert("XSS")</script>',
       });
-      
+
       expect(html).not.toContain('<script>');
       expect(html).toContain('&lt;script&gt;');
     });
@@ -611,9 +619,9 @@ describe('Footer Template Component', () => {
   describe('createMinimalFooter', () => {
     it('should create minimal footer', () => {
       const html = createMinimalFooter({
-        text: 'Simple footer'
+        text: 'Simple footer',
       });
-      
+
       expect(html).toContain('cb-footer-minimal');
       expect(html).toContain('Simple footer');
     });
@@ -624,9 +632,9 @@ describe('Footer Template Component', () => {
       const html = createDebugFooter({
         showPerformance: true,
         showMemory: true,
-        showBuildInfo: true
+        showBuildInfo: true,
       });
-      
+
       expect(html).toContain('cb-footer-debug');
       expect(html).toContain('cb-debug-performance');
       expect(html).toContain('cb-debug-memory');

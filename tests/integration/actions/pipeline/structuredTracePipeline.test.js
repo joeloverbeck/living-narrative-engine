@@ -64,6 +64,9 @@ describe('Pipeline - Structured Trace Integration', () => {
 
     mockEntityManager = {
       getEntityById: jest.fn(),
+      getAllComponentTypesForEntity: jest
+        .fn()
+        .mockReturnValue(['core:actor', 'core:position']),
     };
 
     mockSafeEventDispatcher = {
@@ -77,7 +80,8 @@ describe('Pipeline - Structured Trace Integration', () => {
       new ComponentFilteringStage(
         mockActionIndex,
         mockErrorContextBuilder,
-        mockLogger
+        mockLogger,
+        mockEntityManager
       ),
       new PrerequisiteEvaluationStage(
         mockPrerequisiteEvaluationService,

@@ -9,7 +9,7 @@ class ActionTracingIntegrationTestBed extends ActionDiscoveryServiceTestBed {
 
   /**
    * Setup action tracing with configuration
-   * 
+   *
    * @param {object} config - Tracing configuration
    */
   async setupActionTracing(config = {}) {
@@ -117,7 +117,7 @@ describe('ActionDiscoveryService - Action Tracing Integration', () => {
     await testBed.runActionDiscovery(actor);
 
     const traceData = testBed.getActionTraceData();
-    
+
     // If 'core:go' action was discovered, it should be traced
     if (traceData.has('core:go')) {
       const goActionTrace = traceData.get('core:go');
@@ -161,7 +161,7 @@ describe('ActionDiscoveryService - Action Tracing Integration', () => {
     expect(result.errors).toBeDefined();
 
     const traceData = testBed.getActionTraceData();
-    
+
     // Only 'core:go' should be traced if it exists
     for (const [actionId] of traceData) {
       expect(actionId).toBe('core:go');
@@ -183,9 +183,11 @@ describe('ActionDiscoveryService - Action Tracing Integration', () => {
 
     // Verify debugging logs were captured
     const debugLogs = testBed.getDebugLogs();
-    expect(debugLogs.some(log => 
-      log.includes('ActionDiscoveryService initialised')
-    )).toBe(true);
+    expect(
+      debugLogs.some((log) =>
+        log.includes('ActionDiscoveryService initialised')
+      )
+    ).toBe(true);
   });
 
   it('should gracefully handle tracing failures during discovery', async () => {
@@ -195,13 +197,17 @@ describe('ActionDiscoveryService - Action Tracing Integration', () => {
     });
 
     const actor = testBed.createTestActor();
-    
+
     // Should not throw even with tracing failures
     await expect(
       discoveryService.getValidActions(actor, {}, { trace: true })
     ).resolves.not.toThrow();
 
-    const result = await discoveryService.getValidActions(actor, {}, { trace: true });
+    const result = await discoveryService.getValidActions(
+      actor,
+      {},
+      { trace: true }
+    );
     expect(result.actions).toBeDefined();
     expect(result.errors).toBeDefined();
   });

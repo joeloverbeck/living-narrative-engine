@@ -137,7 +137,9 @@ describe('intimacy:kiss_cheek action integration', () => {
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe("Alice leans in to kiss Bob's cheek softly.");
+    expect(successEvent.payload.message).toBe(
+      "Alice leans in to kiss Bob's cheek softly."
+    );
 
     const turnEndedEvent = testEnv.events.find(
       (e) => e.eventType === 'core:turn_ended'
@@ -355,7 +357,9 @@ describe('intimacy:kiss_cheek action integration', () => {
     expect(perceptibleEvent).toBeDefined();
 
     // Both should have the same descriptive message
-    expect(successEvent.payload.message).toBe("Diana leans in to kiss Victor's cheek softly.");
+    expect(successEvent.payload.message).toBe(
+      "Diana leans in to kiss Victor's cheek softly."
+    );
     expect(perceptibleEvent.payload.descriptionText).toBe(
       "Diana leans in to kiss Victor's cheek softly."
     );

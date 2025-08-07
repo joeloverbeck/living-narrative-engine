@@ -13,6 +13,7 @@ describe('ComponentFilteringStage', () => {
   let mockActionIndex;
   let mockErrorContextBuilder;
   let mockLogger;
+  let mockEntityManager;
   let mockActor;
   let mockTrace;
 
@@ -40,6 +41,12 @@ describe('ComponentFilteringStage', () => {
       error: jest.fn(),
     };
 
+    mockEntityManager = {
+      getAllComponentTypesForEntity: jest
+        .fn()
+        .mockReturnValue(['core:actor', 'core:position']),
+    };
+
     mockActor = {
       id: 'test-actor-123',
       components: ['core:actor', 'core:position'],
@@ -55,7 +62,8 @@ describe('ComponentFilteringStage', () => {
     stage = new ComponentFilteringStage(
       mockActionIndex,
       mockErrorContextBuilder,
-      mockLogger
+      mockLogger,
+      mockEntityManager
     );
   });
 
@@ -407,6 +415,327 @@ describe('ComponentFilteringStage', () => {
       expect(result.data.candidateActions).toHaveLength(1000);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `Found 1000 candidate actions for actor ${mockActor.id}`
+      );
+    });
+  });
+
+  describe('Action-Aware Tracing', () => {
+    let mockActionAwareTrace;
+
+    beforeEach(() => {
+      mockActionAwareTrace = {
+        step: jest.fn(),
+        info: jest.fn(),
+        success: jest.fn(),
+        data: jest.fn(),
+        captureActionData: jest.fn(),
+      };
+    });
+
+    it('should detect action-aware trace and capture component data', async () => {
+      const candidateActions = [
+        {
+          id: 'core:go',
+          name: 'Go',
+          required_components: { actor: ['core:position'] },
+          forbidden_components: { actor: [] },
+        },
+        {
+          id: 'core:look',
+          name: 'Look',
+          required_components: { actor: [] },
+          forbidden_components: { actor: ['core:blind'] },
+        },
+      ];
+
+      mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:actor',
+        'core:position',
+      ]);
+
+      const context = {
+        actor: mockActor,
+        trace: mockActionAwareTrace,
+      };
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions).toEqual(candidateActions);
+
+      // Verify EntityManager was called to get actor components
+      expect(
+        mockEntityManager.getAllComponentTypesForEntity
+      ).toHaveBeenCalledWith(mockActor.id);
+
+      // Verify captureActionData was called for each candidate action
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledTimes(2);
+
+      // Check first action capture
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'component_filtering',
+        'core:go',
+        expect.objectContaining({
+          stage: 'component_filtering',
+          actorId: mockActor.id,
+          actorComponents: ['core:actor', 'core:position'],
+          requiredComponents: ['core:position'],
+          forbiddenComponents: [],
+          componentMatchPassed: true,
+          missingComponents: [],
+          forbiddenComponentsPresent: [],
+          analysisMethod: 'post-processing',
+          timestamp: expect.any(Number),
+        })
+      );
+
+      // Check second action capture
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'component_filtering',
+        'core:look',
+        expect.objectContaining({
+          stage: 'component_filtering',
+          actorId: mockActor.id,
+          actorComponents: ['core:actor', 'core:position'],
+          requiredComponents: [],
+          forbiddenComponents: ['core:blind'],
+          componentMatchPassed: true,
+          missingComponents: [],
+          forbiddenComponentsPresent: [],
+          analysisMethod: 'post-processing',
+          timestamp: expect.any(Number),
+        })
+      );
+    });
+
+    it('should work normally without action-aware trace', async () => {
+      const candidateActions = [{ id: 'core:go', name: 'Go' }];
+      mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
+
+      const context = {
+        actor: mockActor,
+        trace: mockTrace, // Regular trace, not action-aware
+      };
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions).toEqual(candidateActions);
+
+      // EntityManager should NOT be called for regular traces
+      expect(
+        mockEntityManager.getAllComponentTypesForEntity
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should handle missing required components in trace data', async () => {
+      const candidateActions = [
+        {
+          id: 'core:climb',
+          name: 'Climb',
+          required_components: { actor: ['core:position', 'core:climbing'] },
+          forbidden_components: { actor: [] },
+        },
+      ];
+
+      mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:actor',
+        'core:position',
+        // Note: 'core:climbing' is missing
+      ]);
+
+      const context = {
+        actor: mockActor,
+        trace: mockActionAwareTrace,
+      };
+
+      await stage.executeInternal(context);
+
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'component_filtering',
+        'core:climb',
+        expect.objectContaining({
+          actorComponents: ['core:actor', 'core:position'],
+          requiredComponents: ['core:position', 'core:climbing'],
+          missingComponents: ['core:climbing'], // Should detect missing component
+          componentMatchPassed: true, // Still true because it's in candidateActions
+        })
+      );
+    });
+
+    it('should handle forbidden components present in trace data', async () => {
+      const candidateActions = [
+        {
+          id: 'core:stealth',
+          name: 'Stealth',
+          required_components: { actor: [] },
+          forbidden_components: { actor: ['core:noisy'] },
+        },
+      ];
+
+      mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:actor',
+        'core:position',
+        'core:noisy', // Has a forbidden component (but still in candidates somehow)
+      ]);
+
+      const context = {
+        actor: mockActor,
+        trace: mockActionAwareTrace,
+      };
+
+      await stage.executeInternal(context);
+
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'component_filtering',
+        'core:stealth',
+        expect.objectContaining({
+          forbiddenComponents: ['core:noisy'],
+          forbiddenComponentsPresent: ['core:noisy'], // Should detect forbidden component
+          componentMatchPassed: true, // Still true because it's in candidateActions
+        })
+      );
+    });
+
+    it('should handle EntityManager errors gracefully', async () => {
+      const candidateActions = [{ id: 'core:go', name: 'Go' }];
+
+      mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
+      mockEntityManager.getAllComponentTypesForEntity.mockImplementation(() => {
+        throw new Error('EntityManager error');
+      });
+
+      const context = {
+        actor: mockActor,
+        trace: mockActionAwareTrace,
+      };
+
+      const result = await stage.executeInternal(context);
+
+      // Should still succeed even if EntityManager fails
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions).toEqual(candidateActions);
+
+      // Should log warning about failure
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to get actor components for tracing')
+      );
+
+      // Should still capture action data with empty components
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'component_filtering',
+        'core:go',
+        expect.objectContaining({
+          actorComponents: [], // Empty due to error
+        })
+      );
+    });
+
+    it('should handle captureActionData errors gracefully', async () => {
+      const candidateActions = [{ id: 'core:go', name: 'Go' }];
+
+      mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
+      mockActionAwareTrace.captureActionData.mockImplementation(() => {
+        throw new Error('Capture error');
+      });
+
+      const context = {
+        actor: mockActor,
+        trace: mockActionAwareTrace,
+      };
+
+      const result = await stage.executeInternal(context);
+
+      // Should still succeed even if capture fails
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions).toEqual(candidateActions);
+
+      // Should log warning about capture failure
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to capture component analysis')
+      );
+    });
+
+    it('should not capture data if trace lacks captureActionData method', async () => {
+      const candidateActions = [{ id: 'core:go', name: 'Go' }];
+
+      mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
+
+      // Trace without captureActionData method
+      const incompleteTrace = {
+        step: jest.fn(),
+        info: jest.fn(),
+        success: jest.fn(),
+        // No captureActionData method
+      };
+
+      const context = {
+        actor: mockActor,
+        trace: incompleteTrace,
+      };
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions).toEqual(candidateActions);
+
+      // Should not call EntityManager if trace isn't fully action-aware
+      expect(
+        mockEntityManager.getAllComponentTypesForEntity
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should handle empty candidateActions with action-aware trace', async () => {
+      mockActionIndex.getCandidateActions.mockReturnValue([]);
+
+      const context = {
+        actor: mockActor,
+        trace: mockActionAwareTrace,
+      };
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions).toEqual([]);
+      expect(result.continueProcessing).toBe(false);
+
+      // Should not capture any action data when no candidates
+      expect(mockActionAwareTrace.captureActionData).not.toHaveBeenCalled();
+    });
+
+    it('should handle null EntityManager gracefully', async () => {
+      // Create stage without EntityManager
+      const stageWithoutEM = new ComponentFilteringStage(
+        mockActionIndex,
+        mockErrorContextBuilder,
+        mockLogger,
+        null // No EntityManager
+      );
+
+      const candidateActions = [{ id: 'core:go', name: 'Go' }];
+
+      mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
+
+      const context = {
+        actor: mockActor,
+        trace: mockActionAwareTrace,
+      };
+
+      const result = await stageWithoutEM.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions).toEqual(candidateActions);
+
+      // Should still capture action data with empty components
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'component_filtering',
+        'core:go',
+        expect.objectContaining({
+          actorComponents: [], // Empty because no EntityManager
+        })
       );
     });
   });

@@ -1,11 +1,12 @@
 # HTMLTEMP-004: Implement Main Content Template
 
 ## Status
+
 **Status**: Not Started  
 **Priority**: High  
 **Estimated**: 4 hours  
 **Complexity**: Medium  
-**Dependencies**: HTMLTEMP-001, HTMLTEMP-002  
+**Dependencies**: HTMLTEMP-001, HTMLTEMP-002
 
 ## Objective
 
@@ -55,7 +56,7 @@ export function createMain(config = {}) {
     panels = [],
     layout = determineLayout(config),
     className = '',
-    fluid = false
+    fluid = false,
   } = config;
 
   const containerClass = fluid ? 'cb-main-fluid' : 'cb-main-container';
@@ -80,7 +81,8 @@ function determineLayout(config) {
   if (config.layout) return config.layout;
   if (config.panels && config.panels.length > 0) return 'grid';
   if (config.sidebar) return 'sidebar';
-  if (config.centerPanel || (!config.leftPanel && !config.rightPanel)) return 'single';
+  if (config.centerPanel || (!config.leftPanel && !config.rightPanel))
+    return 'single';
   return 'dual';
 }
 
@@ -114,13 +116,14 @@ function renderLayout(layout, config) {
  * @returns {string} Single layout HTML
  */
 function renderSingleLayout(config) {
-  const panel = config.centerPanel || config.leftPanel || config.rightPanel || {};
-  
+  const panel =
+    config.centerPanel || config.leftPanel || config.rightPanel || {};
+
   return `
     <div class="cb-single-layout">
       ${createPanel({
         ...panel,
-        className: `cb-panel-single ${panel.className || ''}`.trim()
+        className: `cb-panel-single ${panel.className || ''}`.trim(),
       })}
     </div>
   `;
@@ -134,17 +137,25 @@ function renderSingleLayout(config) {
  */
 function renderDualLayout(config) {
   const { leftPanel, rightPanel } = config;
-  
+
   return `
     <div class="cb-dual-layout">
-      ${leftPanel ? createPanel({
-        ...leftPanel,
-        className: `cb-panel-left ${leftPanel.className || ''}`.trim()
-      }) : '<div class="cb-panel-placeholder"></div>'}
-      ${rightPanel ? createPanel({
-        ...rightPanel,
-        className: `cb-panel-right ${rightPanel.className || ''}`.trim()
-      }) : '<div class="cb-panel-placeholder"></div>'}
+      ${
+        leftPanel
+          ? createPanel({
+              ...leftPanel,
+              className: `cb-panel-left ${leftPanel.className || ''}`.trim(),
+            })
+          : '<div class="cb-panel-placeholder"></div>'
+      }
+      ${
+        rightPanel
+          ? createPanel({
+              ...rightPanel,
+              className: `cb-panel-right ${rightPanel.className || ''}`.trim(),
+            })
+          : '<div class="cb-panel-placeholder"></div>'
+      }
     </div>
   `;
 }
@@ -157,16 +168,20 @@ function renderDualLayout(config) {
  */
 function renderGridLayout(config) {
   const { panels = [], columns = 'auto' } = config;
-  const gridStyle = columns === 'auto' 
-    ? '' 
-    : `style="--cb-grid-columns: ${columns}"`;
-  
+  const gridStyle =
+    columns === 'auto' ? '' : `style="--cb-grid-columns: ${columns}"`;
+
   return `
     <div class="cb-grid-layout" ${gridStyle}>
-      ${panels.map((panel, index) => createPanel({
-        ...panel,
-        className: `cb-panel-grid cb-panel-${index} ${panel.className || ''}`.trim()
-      })).join('')}
+      ${panels
+        .map((panel, index) =>
+          createPanel({
+            ...panel,
+            className:
+              `cb-panel-grid cb-panel-${index} ${panel.className || ''}`.trim(),
+          })
+        )
+        .join('')}
     </div>
   `;
 }
@@ -180,7 +195,7 @@ function renderGridLayout(config) {
 function renderSidebarLayout(config) {
   const { sidebar, centerPanel } = config;
   const sidebarPosition = sidebar.position || 'left';
-  
+
   return `
     <div class="cb-sidebar-layout cb-sidebar-${sidebarPosition}">
       <aside class="cb-sidebar" role="complementary">
@@ -210,7 +225,7 @@ function createPanel(config) {
     actions = [],
     state = null,
     collapsible = false,
-    collapsed = false
+    collapsed = false,
   } = config;
 
   const hasContent = content || showWhenEmpty;
@@ -230,11 +245,15 @@ function createPanel(config) {
       ${heading ? createPanelHeader(heading, id, collapsible, state) : ''}
       <div class="cb-panel-body" ${collapsible ? `id="${id}-content"` : ''}>
         <div class="cb-panel-content">
-          ${content ? renderContent(content) : `
+          ${
+            content
+              ? renderContent(content)
+              : `
             <div class="cb-panel-empty">
               <p class="cb-empty-message">${escapeHtml(emptyMessage)}</p>
             </div>
-          `}
+          `
+          }
         </div>
         ${actions.length > 0 ? createPanelActions(actions) : ''}
       </div>
@@ -253,11 +272,13 @@ function createPanel(config) {
  */
 function createPanelHeader(heading, id, collapsible, state) {
   const headingId = `${id || 'panel'}-heading`;
-  
+
   return `
     <div class="cb-panel-header">
       <h2 id="${headingId}" class="cb-panel-heading">
-        ${collapsible ? `
+        ${
+          collapsible
+            ? `
           <button type="button" 
                   class="cb-panel-toggle"
                   aria-controls="${id}-content"
@@ -265,7 +286,9 @@ function createPanelHeader(heading, id, collapsible, state) {
             <span class="cb-toggle-icon" aria-hidden="true">▼</span>
             ${escapeHtml(heading)}
           </button>
-        ` : escapeHtml(heading)}
+        `
+            : escapeHtml(heading)
+        }
       </h2>
       ${state ? createPanelState(state) : ''}
     </div>
@@ -299,13 +322,13 @@ function renderContent(content) {
   if (typeof content === 'function') {
     return content();
   }
-  
+
   if (Array.isArray(content)) {
-    return content.map(item => 
-      typeof item === 'function' ? item() : item
-    ).join('');
+    return content
+      .map((item) => (typeof item === 'function' ? item() : item))
+      .join('');
   }
-  
+
   return String(content);
 }
 
@@ -318,7 +341,7 @@ function renderContent(content) {
 function createPanelActions(actions) {
   return `
     <div class="cb-panel-actions">
-      ${actions.map(action => createActionButton(action)).join('')}
+      ${actions.map((action) => createActionButton(action)).join('')}
     </div>
   `;
 }
@@ -330,7 +353,7 @@ function createPanelActions(actions) {
  * @returns {string} Button HTML
  */
 function createActionButton(action) {
-  const dataAttrs = action.data 
+  const dataAttrs = action.data
     ? Object.entries(action.data)
         .map(([k, v]) => `data-${escapeHtml(k)}="${escapeHtml(String(v))}"`)
         .join(' ')
@@ -360,7 +383,7 @@ function createSidebar(sidebar) {
     title = '',
     items = [],
     sticky = false,
-    collapsible = false
+    collapsible = false,
   } = sidebar;
 
   const stickyClass = sticky ? 'cb-sidebar-sticky' : '';
@@ -371,7 +394,7 @@ function createSidebar(sidebar) {
       ${title ? `<h3 class="cb-sidebar-title">${escapeHtml(title)}</h3>` : ''}
       <nav class="cb-sidebar-nav" role="navigation">
         <ul class="cb-sidebar-list">
-          ${items.map(item => createSidebarItem(item)).join('')}
+          ${items.map((item) => createSidebarItem(item)).join('')}
         </ul>
       </nav>
     </div>
@@ -386,7 +409,7 @@ function createSidebar(sidebar) {
  */
 function createSidebarItem(item) {
   const activeClass = item.active ? 'cb-sidebar-active' : '';
-  
+
   return `
     <li class="cb-sidebar-item ${activeClass}">
       <a href="${escapeHtml(item.href)}" 
@@ -407,11 +430,13 @@ function createSidebarItem(item) {
  */
 export function createTabPanel(config) {
   const { tabs = [], activeTab = 0 } = config;
-  
+
   return `
     <div class="cb-tabs" role="tablist">
       <div class="cb-tab-list">
-        ${tabs.map((tab, index) => `
+        ${tabs
+          .map(
+            (tab, index) => `
           <button type="button"
                   role="tab"
                   class="cb-tab ${index === activeTab ? 'cb-tab-active' : ''}"
@@ -421,17 +446,23 @@ export function createTabPanel(config) {
             ${tab.icon ? `<span class="cb-tab-icon">${tab.icon}</span>` : ''}
             <span class="cb-tab-label">${escapeHtml(tab.label)}</span>
           </button>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
       <div class="cb-tab-panels">
-        ${tabs.map((tab, index) => `
+        ${tabs
+          .map(
+            (tab, index) => `
           <div role="tabpanel"
                id="tab-panel-${index}"
                class="cb-tab-panel ${index === activeTab ? 'cb-tab-panel-active' : ''}"
                ${index !== activeTab ? 'hidden' : ''}>
             ${renderContent(tab.content)}
           </div>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
     </div>
   `;
@@ -445,46 +476,50 @@ export function createTabPanel(config) {
  */
 function escapeHtml(str) {
   if (str == null) return '';
-  
+
   const htmlEscapes = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    "'": '&#39;'
+    "'": '&#39;',
   };
-  
-  return String(str).replace(/[&<>"']/g, char => htmlEscapes[char]);
+
+  return String(str).replace(/[&<>"']/g, (char) => htmlEscapes[char]);
 }
 
 // Export for testing
 export const __testUtils = {
   determineLayout,
   renderContent,
-  escapeHtml
+  escapeHtml,
 };
 ```
 
 ## Implementation Steps
 
 ### Step 1: Create Main Template File
+
 1. Create `src/characterBuilder/templates/core/mainTemplate.js`
 2. Implement all layout functions
 3. Add comprehensive JSDoc comments
 
 ### Step 2: Implement Layout Types
+
 1. Single panel layout
 2. Dual panel layout
 3. Grid layout with multiple panels
 4. Sidebar layout
 
 ### Step 3: Add Panel Features
+
 1. Collapsible panels
 2. Panel state indicators
 3. Panel actions
 4. Empty state handling
 
 ### Step 4: Export and Integration
+
 1. Update `src/characterBuilder/templates/core/index.js`
 2. Integrate with page template
 
@@ -495,15 +530,19 @@ export const __testUtils = {
 ```javascript
 // tests/unit/characterBuilder/templates/core/mainTemplate.test.js
 import { describe, it, expect } from '@jest/globals';
-import { createMain, createTabPanel, __testUtils } from '../../../../src/characterBuilder/templates/core/mainTemplate.js';
+import {
+  createMain,
+  createTabPanel,
+  __testUtils,
+} from '../../../../src/characterBuilder/templates/core/mainTemplate.js';
 
 describe('Main Content Template', () => {
   describe('createMain', () => {
     it('should create single layout by default with center panel', () => {
       const html = createMain({
-        centerPanel: { content: 'Center content' }
+        centerPanel: { content: 'Center content' },
       });
-      
+
       expect(html).toContain('cb-layout-single');
       expect(html).toContain('Center content');
     });
@@ -511,9 +550,9 @@ describe('Main Content Template', () => {
     it('should create dual layout with left and right panels', () => {
       const html = createMain({
         leftPanel: { content: 'Left' },
-        rightPanel: { content: 'Right' }
+        rightPanel: { content: 'Right' },
       });
-      
+
       expect(html).toContain('cb-layout-dual');
       expect(html).toContain('Left');
       expect(html).toContain('Right');
@@ -524,10 +563,10 @@ describe('Main Content Template', () => {
         panels: [
           { content: 'Panel 1' },
           { content: 'Panel 2' },
-          { content: 'Panel 3' }
-        ]
+          { content: 'Panel 3' },
+        ],
       });
-      
+
       expect(html).toContain('cb-layout-grid');
       expect(html).toContain('Panel 1');
       expect(html).toContain('Panel 2');
@@ -541,12 +580,12 @@ describe('Main Content Template', () => {
           title: 'Navigation',
           items: [
             { label: 'Item 1', href: '#1' },
-            { label: 'Item 2', href: '#2', active: true }
-          ]
+            { label: 'Item 2', href: '#2', active: true },
+          ],
         },
-        centerPanel: { content: 'Main content' }
+        centerPanel: { content: 'Main content' },
       });
-      
+
       expect(html).toContain('cb-layout-sidebar');
       expect(html).toContain('Navigation');
       expect(html).toContain('Item 1');
@@ -558,10 +597,10 @@ describe('Main Content Template', () => {
         leftPanel: {
           heading: 'Collapsible',
           content: 'Content',
-          collapsible: true
-        }
+          collapsible: true,
+        },
       });
-      
+
       expect(html).toContain('cb-panel-collapsible');
       expect(html).toContain('aria-expanded="true"');
     });
@@ -573,11 +612,11 @@ describe('Main Content Template', () => {
           content: 'Content',
           state: {
             loading: true,
-            count: 5
-          }
-        }
+            count: 5,
+          },
+        },
       });
-      
+
       expect(html).toContain('cb-state-loading');
       expect(html).toContain('cb-state-count');
       expect(html).toContain('5');
@@ -589,11 +628,11 @@ describe('Main Content Template', () => {
       const html = createTabPanel({
         tabs: [
           { label: 'Tab 1', content: 'Content 1' },
-          { label: 'Tab 2', content: 'Content 2' }
+          { label: 'Tab 2', content: 'Content 2' },
         ],
-        activeTab: 0
+        activeTab: 0,
       });
-      
+
       expect(html).toContain('cb-tabs');
       expect(html).toContain('Tab 1');
       expect(html).toContain('Tab 2');

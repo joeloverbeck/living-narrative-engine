@@ -71,6 +71,9 @@ describe('PipelineResult - Integration Tests', () => {
 
     mockEntityManager = {
       getEntityById: jest.fn(),
+      getAllComponentTypesForEntity: jest
+        .fn()
+        .mockReturnValue(['core:actor', 'core:position']),
     };
 
     mockSafeEventDispatcher = {
@@ -84,7 +87,8 @@ describe('PipelineResult - Integration Tests', () => {
       new ComponentFilteringStage(
         mockActionIndex,
         mockErrorContextBuilder,
-        mockLogger
+        mockLogger,
+        mockEntityManager
       ),
       new PrerequisiteEvaluationStage(
         mockPrerequisiteEvaluationService,

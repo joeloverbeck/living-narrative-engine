@@ -1,11 +1,12 @@
 # HTMLTEMP-006: Create Modal Template System
 
 ## Status
+
 **Status**: Not Started  
 **Priority**: High  
 **Estimated**: 4 hours  
 **Complexity**: High  
-**Dependencies**: HTMLTEMP-001, HTMLTEMP-002  
+**Dependencies**: HTMLTEMP-001, HTMLTEMP-002
 
 ## Objective
 
@@ -56,7 +57,7 @@ Character builder pages currently implement modals inconsistently with varying a
  */
 export function createModal(config) {
   validateModalConfig(config);
-  
+
   const {
     id,
     title,
@@ -69,14 +70,15 @@ export function createModal(config) {
     scrollable = false,
     showClose = true,
     variant = 'default',
-    className = ''
+    className = '',
   } = config;
 
   const sizeClass = `cb-modal-${size}`;
   const variantClass = `cb-modal-${variant}`;
   const centeredClass = centered ? 'cb-modal-centered' : '';
   const scrollableClass = scrollable ? 'cb-modal-scrollable' : '';
-  const modalClasses = `cb-modal ${sizeClass} ${variantClass} ${centeredClass} ${scrollableClass} ${className}`.trim();
+  const modalClasses =
+    `cb-modal ${sizeClass} ${variantClass} ${centeredClass} ${scrollableClass} ${className}`.trim();
 
   return `
     <div id="${escapeHtml(id)}" 
@@ -143,7 +145,7 @@ function createModalContent(id, title, content, actions, showClose, variant) {
  */
 function createModalHeader(id, title, showClose, variant) {
   const icon = getVariantIcon(variant);
-  
+
   return `
     <div class="cb-modal-header">
       <h2 id="${escapeHtml(id)}-title" class="cb-modal-title">
@@ -164,7 +166,7 @@ function createModalHeader(id, title, showClose, variant) {
  */
 function createModalBody(id, content) {
   const renderedContent = typeof content === 'function' ? content() : content;
-  
+
   return `
     <div id="${escapeHtml(id)}-body" class="cb-modal-body">
       ${renderedContent || ''}
@@ -181,7 +183,7 @@ function createModalBody(id, content) {
 function createModalFooter(actions) {
   return `
     <div class="cb-modal-footer">
-      ${actions.map(action => createModalAction(action)).join('')}
+      ${actions.map((action) => createModalAction(action)).join('')}
     </div>
   `;
 }
@@ -196,8 +198,8 @@ function createModalAction(action) {
   const isPrimary = action.primary || false;
   const isDismiss = action.dismiss || false;
   const buttonClass = isPrimary ? 'cb-btn-primary' : 'cb-btn-secondary';
-  
-  const dataAttrs = action.data 
+
+  const dataAttrs = action.data
     ? Object.entries(action.data)
         .map(([k, v]) => `data-${escapeHtml(k)}="${escapeHtml(String(v))}"`)
         .join(' ')
@@ -247,7 +249,7 @@ export function createConfirmModal(config) {
     cancelLabel = 'Cancel',
     variant = 'warning',
     onConfirm,
-    onCancel
+    onCancel,
   } = config;
 
   return createModal({
@@ -261,15 +263,15 @@ export function createConfirmModal(config) {
         label: cancelLabel,
         name: 'cancel',
         dismiss: true,
-        className: 'cb-btn-outline'
+        className: 'cb-btn-outline',
       },
       {
         label: confirmLabel,
         name: 'confirm',
         primary: true,
-        data: { callback: 'onConfirm' }
-      }
-    ]
+        data: { callback: 'onConfirm' },
+      },
+    ],
   });
 }
 
@@ -284,7 +286,7 @@ export function createAlertModal(config) {
     title = 'Alert',
     message,
     variant = 'default',
-    dismissLabel = 'OK'
+    dismissLabel = 'OK',
   } = config;
 
   return createModal({
@@ -299,9 +301,9 @@ export function createAlertModal(config) {
         label: dismissLabel,
         name: 'dismiss',
         primary: true,
-        dismiss: true
-      }
-    ]
+        dismiss: true,
+      },
+    ],
   });
 }
 
@@ -317,12 +319,12 @@ export function createFormModal(config) {
     fields = [],
     submitLabel = 'Submit',
     cancelLabel = 'Cancel',
-    variant = 'default'
+    variant = 'default',
   } = config;
 
   const formContent = `
     <form class="cb-modal-form" id="${escapeHtml(id)}-form">
-      ${fields.map(field => createFormField(field)).join('')}
+      ${fields.map((field) => createFormField(field)).join('')}
     </form>
   `;
 
@@ -336,16 +338,16 @@ export function createFormModal(config) {
       {
         label: cancelLabel,
         name: 'cancel',
-        dismiss: true
+        dismiss: true,
       },
       {
         label: submitLabel,
         name: 'submit',
         type: 'submit',
         primary: true,
-        data: { form: `${id}-form` }
-      }
-    ]
+        data: { form: `${id}-form` },
+      },
+    ],
   });
 }
 
@@ -365,7 +367,7 @@ function createFormField(field) {
     placeholder = '',
     required = false,
     disabled = false,
-    help = ''
+    help = '',
   } = field;
 
   const fieldId = id || `field-${name}`;
@@ -376,14 +378,17 @@ function createFormField(field) {
         ${escapeHtml(label)}
         ${required ? '<span class="cb-required" aria-label="required">*</span>' : ''}
       </label>
-      ${type === 'textarea' ? `
+      ${
+        type === 'textarea'
+          ? `
         <textarea id="${escapeHtml(fieldId)}"
                   name="${escapeHtml(name)}"
                   class="cb-form-control"
                   placeholder="${escapeHtml(placeholder)}"
                   ${required ? 'required' : ''}
                   ${disabled ? 'disabled' : ''}>${escapeHtml(value)}</textarea>
-      ` : `
+      `
+          : `
         <input type="${escapeHtml(type)}"
                id="${escapeHtml(fieldId)}"
                name="${escapeHtml(name)}"
@@ -392,7 +397,8 @@ function createFormField(field) {
                placeholder="${escapeHtml(placeholder)}"
                ${required ? 'required' : ''}
                ${disabled ? 'disabled' : ''}>
-      `}
+      `
+      }
       ${help ? `<small class="cb-form-help">${escapeHtml(help)}</small>` : ''}
     </div>
   `;
@@ -408,21 +414,25 @@ export function createLoadingModal(config = {}) {
     id = 'loading-modal',
     title = 'Loading',
     message = 'Please wait...',
-    showProgress = false
+    showProgress = false,
   } = config;
 
   const content = `
     <div class="cb-modal-loading">
       <div class="cb-loading-spinner" aria-hidden="true"></div>
       <p class="cb-loading-message">${escapeHtml(message)}</p>
-      ${showProgress ? `
+      ${
+        showProgress
+          ? `
         <div class="cb-loading-progress">
           <div class="cb-progress-bar" role="progressbar" 
                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
             <span class="cb-progress-value">0%</span>
           </div>
         </div>
-      ` : ''}
+      `
+          : ''
+      }
     </div>
   `;
 
@@ -434,7 +444,7 @@ export function createLoadingModal(config = {}) {
     closeOnEscape: false,
     closeOnBackdrop: false,
     showClose: false,
-    centered: true
+    centered: true,
   });
 }
 
@@ -448,7 +458,7 @@ export function createModalsContainer(modals = []) {
 
   return `
     <div class="cb-modals-container" aria-hidden="true">
-      ${modals.map(modal => createModal(modal)).join('')}
+      ${modals.map((modal) => createModal(modal)).join('')}
     </div>
   `;
 }
@@ -464,9 +474,9 @@ function getVariantIcon(variant) {
     danger: '⚠️',
     warning: '⚡',
     success: '✅',
-    info: 'ℹ️'
+    info: 'ℹ️',
   };
-  
+
   return icons[variant] || '';
 }
 
@@ -480,19 +490,19 @@ function validateModalConfig(config) {
   if (!config) {
     throw new Error('Modal configuration is required');
   }
-  
+
   if (!config.id) {
     throw new Error('Modal ID is required');
   }
-  
+
   if (!config.title) {
     throw new Error('Modal title is required');
   }
-  
+
   if (typeof config.id !== 'string') {
     throw new Error('Modal ID must be a string');
   }
-  
+
   if (typeof config.title !== 'string') {
     throw new Error('Modal title must be a string');
   }
@@ -506,23 +516,23 @@ function validateModalConfig(config) {
  */
 function escapeHtml(str) {
   if (str == null) return '';
-  
+
   const htmlEscapes = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    "'": '&#39;'
+    "'": '&#39;',
   };
-  
-  return String(str).replace(/[&<>"']/g, char => htmlEscapes[char]);
+
+  return String(str).replace(/[&<>"']/g, (char) => htmlEscapes[char]);
 }
 
 // Export for testing
 export const __testUtils = {
   validateModalConfig,
   getVariantIcon,
-  escapeHtml
+  escapeHtml,
 };
 ```
 
@@ -640,8 +650,12 @@ export const __testUtils = {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
@@ -681,11 +695,13 @@ export const __testUtils = {
 ## Implementation Steps
 
 ### Step 1: Create Modal Template File
+
 1. Create `src/characterBuilder/templates/core/modalTemplate.js`
 2. Implement all modal functions
 3. Add comprehensive JSDoc comments
 
 ### Step 2: Implement Modal Variants
+
 1. Basic modal with all options
 2. Confirmation modal
 3. Alert modal
@@ -693,12 +709,14 @@ export const __testUtils = {
 5. Loading modal
 
 ### Step 3: Add Accessibility Features
+
 1. Proper ARIA attributes
 2. Focus management setup
 3. Keyboard navigation support
 4. Screen reader announcements
 
 ### Step 4: Export and Integration
+
 1. Update `src/characterBuilder/templates/core/index.js`
 2. Integrate with page template
 
@@ -709,13 +727,13 @@ export const __testUtils = {
 ```javascript
 // tests/unit/characterBuilder/templates/core/modalTemplate.test.js
 import { describe, it, expect } from '@jest/globals';
-import { 
+import {
   createModal,
   createConfirmModal,
   createAlertModal,
   createFormModal,
   createLoadingModal,
-  __testUtils 
+  __testUtils,
 } from '../../../../src/characterBuilder/templates/core/modalTemplate.js';
 
 describe('Modal Template System', () => {
@@ -724,9 +742,9 @@ describe('Modal Template System', () => {
       const html = createModal({
         id: 'test-modal',
         title: 'Test Modal',
-        content: 'Modal content'
+        content: 'Modal content',
       });
-      
+
       expect(html).toContain('test-modal');
       expect(html).toContain('Test Modal');
       expect(html).toContain('Modal content');
@@ -738,9 +756,9 @@ describe('Modal Template System', () => {
       const small = createModal({
         id: 'modal',
         title: 'Title',
-        size: 'small'
+        size: 'small',
       });
-      
+
       expect(small).toContain('cb-modal-small');
     });
 
@@ -748,9 +766,9 @@ describe('Modal Template System', () => {
       const danger = createModal({
         id: 'modal',
         title: 'Delete',
-        variant: 'danger'
+        variant: 'danger',
       });
-      
+
       expect(danger).toContain('cb-modal-danger');
       expect(danger).toContain('⚠️');
     });
@@ -761,10 +779,10 @@ describe('Modal Template System', () => {
         title: 'Title',
         actions: [
           { label: 'Cancel', name: 'cancel' },
-          { label: 'Save', name: 'save', primary: true }
-        ]
+          { label: 'Save', name: 'save', primary: true },
+        ],
       });
-      
+
       expect(html).toContain('cb-modal-footer');
       expect(html).toContain('Cancel');
       expect(html).toContain('Save');
@@ -775,9 +793,9 @@ describe('Modal Template System', () => {
       const html = createModal({
         id: 'modal',
         title: '<script>alert("XSS")</script>',
-        content: '<img onerror="alert(1)">'
+        content: '<img onerror="alert(1)">',
       });
-      
+
       expect(html).not.toContain('<script>');
       expect(html).toContain('&lt;script&gt;');
     });
@@ -788,9 +806,9 @@ describe('Modal Template System', () => {
       const html = createConfirmModal({
         message: 'Are you sure?',
         confirmLabel: 'Yes',
-        cancelLabel: 'No'
+        cancelLabel: 'No',
       });
-      
+
       expect(html).toContain('Are you sure?');
       expect(html).toContain('Yes');
       expect(html).toContain('No');
@@ -805,10 +823,10 @@ describe('Modal Template System', () => {
         title: 'User Form',
         fields: [
           { name: 'username', label: 'Username', required: true },
-          { name: 'email', label: 'Email', type: 'email' }
-        ]
+          { name: 'email', label: 'Email', type: 'email' },
+        ],
       });
-      
+
       expect(html).toContain('cb-modal-form');
       expect(html).toContain('Username');
       expect(html).toContain('Email');
@@ -822,7 +840,9 @@ describe('Modal Template System', () => {
     it('should validate required fields', () => {
       expect(() => validateModalConfig(null)).toThrow();
       expect(() => validateModalConfig({})).toThrow('ID is required');
-      expect(() => validateModalConfig({ id: 'test' })).toThrow('title is required');
+      expect(() => validateModalConfig({ id: 'test' })).toThrow(
+        'title is required'
+      );
     });
   });
 });
