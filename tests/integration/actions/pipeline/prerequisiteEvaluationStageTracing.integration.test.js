@@ -38,7 +38,7 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
     jsonLogicEvaluationService = new MockJsonLogicEvaluationService();
     actionValidationContextBuilder = new MockActionValidationContextBuilder();
     gameDataRepository = new MockGameDataRepository();
-    
+
     // Create mock entity manager and fix suggestion engine
     mockEntityManager = createMockEntityManager();
     mockFixSuggestionEngine = createMockFixSuggestionEngine();
@@ -88,7 +88,10 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
 
   afterEach(() => {
     // Clean up any resources
-    if (actionAwareTrace && typeof actionAwareTrace.clearActionData === 'function') {
+    if (
+      actionAwareTrace &&
+      typeof actionAwareTrace.clearActionData === 'function'
+    ) {
       actionAwareTrace.clearActionData();
     }
   });
@@ -478,17 +481,19 @@ describe('PrerequisiteEvaluationStage - Action Tracing Integration', () => {
       // The trace only captures data for actions that go through the normal evaluation flow
       const tracedActions = actionAwareTrace.getTracedActions();
       const actionTrace = tracedActions.get('core:cast_spell');
-      
+
       // Since the error is handled in #evaluateActionWithTracing, the trace data
       // will have error information but not evaluationFailed (that's for outer catch)
       const prereqData = actionTrace.stages.prerequisite_evaluation.data;
-      
+
       // The test assumption was incorrect - when the JSON Logic evaluation fails,
       // the trace captures the failure but with different field names
       expect(prereqData.hasPrerequisites).toBe(true);
       expect(prereqData.evaluationPassed).toBe(false);
       // The evaluationReason is set based on whether prerequisites passed or failed
-      expect(prereqData.evaluationReason).toBe('One or more prerequisites failed');
+      expect(prereqData.evaluationReason).toBe(
+        'One or more prerequisites failed'
+      );
       // In verbose mode, error details might be included
       // However, the error from JsonLogic evaluation is caught and handled internally,
       // so it may not propagate to the trace data

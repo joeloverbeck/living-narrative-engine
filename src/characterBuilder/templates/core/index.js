@@ -3,10 +3,17 @@
  * @module characterBuilder/templates/core
  */
 
-// NOTE: These exports reference files that will be created in subsequent tickets
-// They are included here to establish the expected API surface
+// Page template container
 export { createCharacterBuilderPage } from './pageTemplate.js';
-export { createHeader } from './headerTemplate.js';
+
+// Header template and utilities (HTMLTEMP-003)
+export {
+  createHeader,
+  createBreadcrumb,
+  createHeaderSearch,
+} from './headerTemplate.js';
+
+// NOTE: These exports reference files that will be created in subsequent tickets
 export { createMain } from './mainTemplate.js';
 export { createFooter } from './footerTemplate.js';
 export { createModal } from './modalTemplate.js';

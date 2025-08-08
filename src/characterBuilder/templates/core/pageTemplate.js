@@ -3,6 +3,8 @@
  * @module characterBuilder/templates/core/pageTemplate
  */
 
+import { createHeader } from './headerTemplate.js';
+
 /** @typedef {import('../types.js').PageConfig} PageConfig */
 /** @typedef {import('../types.js').PanelConfig} PanelConfig */
 
@@ -55,33 +57,12 @@ export function createCharacterBuilderPage(config) {
  * @returns {string} Header HTML
  */
 function createPageHeader(title, subtitle, actions) {
-  // Placeholder - will be replaced by HTMLTEMP-003
-  return `
-    <header class="cb-page-header" role="banner">
-      <div class="cb-header-content">
-        <div class="cb-header-text">
-          <h1 class="cb-page-title">${escapeHtml(title)}</h1>
-          ${subtitle ? `<p class="cb-page-subtitle">${escapeHtml(subtitle)}</p>` : ''}
-        </div>
-        ${actions.length > 0 ? createHeaderActions(actions) : ''}
-      </div>
-    </header>
-  `;
-}
-
-/**
- * Creates header action buttons
- *
- * @private
- * @param {Array} actions - Action configurations
- * @returns {string} Actions HTML
- */
-function createHeaderActions(actions) {
-  return `
-    <div class="cb-header-actions" role="toolbar" aria-label="Page actions">
-      ${actions.map((action) => createActionButton(action, 'header')).join('')}
-    </div>
-  `;
+  // Using the new header template from HTMLTEMP-003
+  return createHeader({
+    title,
+    subtitle,
+    actions,
+  });
 }
 
 /**

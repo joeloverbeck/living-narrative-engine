@@ -112,11 +112,22 @@ export class MultiTargetResolutionStage extends PipelineStage {
    */
   async executeInternal(context) {
     const { candidateActions = [], actor, actionContext, trace } = context;
+    const stageStartTime = Date.now();
 
     trace?.step(
       `Resolving targets for ${candidateActions.length} candidate actions`,
       'MultiTargetResolutionStage'
     );
+
+    // Check if we have action-aware tracing capability
+    const isActionAwareTrace = this.#isActionAwareTrace(trace);
+
+    if (isActionAwareTrace) {
+      this.#logger.debug(
+        `MultiTargetResolutionStage: Action tracing enabled for actor ${actor.id}`,
+        { actorId: actor.id, candidateActionCount: candidateActions.length }
+      );
+    }
 
     const allActionsWithTargets = [];
     const errors = [];
@@ -125,6 +136,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
     let allTargetContexts = [];
     let hasLegacyActions = false;
     let hasMultiTargetActions = false;
+    let tracedActionCount = 0;
 
     // Process each candidate action
     for (const actionDef of candidateActions) {
@@ -141,12 +153,31 @@ export class MultiTargetResolutionStage extends PipelineStage {
         };
 
         // Check if this is a legacy single-target action
-        if (this.#legacyLayer.isLegacyAction(actionDef)) {
+        const isLegacy = this.#legacyLayer.isLegacyAction(actionDef);
+        const resolutionStartTime = Date.now();
+
+        if (isLegacy) {
           hasLegacyActions = true;
           const result = await this.#resolveLegacyTarget(
             actionProcessContext,
             trace
           );
+
+          // Capture tracing data for legacy action if enabled
+          if (isActionAwareTrace && trace.captureActionData) {
+            this.#captureTargetResolutionData(trace, actionDef, actor, {
+              isLegacy: true,
+              resolutionSuccess: result.success,
+              resolutionTimeMs: Date.now() - resolutionStartTime,
+              targetCount: result.data?.resolvedTargets?.primary?.length || 0,
+              scope:
+                result.data?.targetDefinitions?.primary?.scope ||
+                actionDef.scope ||
+                actionDef.targets,
+            });
+            tracedActionCount++;
+          }
+
           if (result.success && result.data.actionsWithTargets) {
             allActionsWithTargets.push(...result.data.actionsWithTargets);
             // For backward compatibility, merge target contexts
@@ -161,6 +192,36 @@ export class MultiTargetResolutionStage extends PipelineStage {
             actionProcessContext,
             trace
           );
+
+          // Capture tracing data for multi-target action if enabled
+          if (isActionAwareTrace && trace.captureActionData) {
+            const targetKeys = actionDef.targets
+              ? Object.keys(actionDef.targets)
+              : [];
+            const resolvedTargetCounts = {};
+
+            if (result.data?.resolvedTargets) {
+              for (const [key, targets] of Object.entries(
+                result.data.resolvedTargets
+              )) {
+                resolvedTargetCounts[key] = targets.length;
+              }
+            }
+
+            this.#captureTargetResolutionData(trace, actionDef, actor, {
+              isLegacy: false,
+              resolutionSuccess: result.success,
+              resolutionTimeMs: Date.now() - resolutionStartTime,
+              targetKeys,
+              resolvedTargetCounts,
+              totalTargetCount: Object.values(resolvedTargetCounts).reduce(
+                (sum, count) => sum + count,
+                0
+              ),
+            });
+            tracedActionCount++;
+          }
+
           if (result.success && result.data.actionsWithTargets) {
             // Attach metadata to each action instead of globally
             result.data.actionsWithTargets.forEach((awt) => {
@@ -197,6 +258,12 @@ export class MultiTargetResolutionStage extends PipelineStage {
           `Error resolving targets for action '${actionDef.id}':`,
           error
         );
+
+        // Capture error in tracing if available
+        if (isActionAwareTrace && trace.captureActionData) {
+          this.#captureTargetResolutionError(trace, actionDef, actor, error);
+        }
+
         errors.push({
           error: errorMessage,
           phase: 'target_resolution',
@@ -205,6 +272,19 @@ export class MultiTargetResolutionStage extends PipelineStage {
           scopeName: error?.scopeName,
         });
       }
+    }
+
+    // Capture post-resolution summary if tracing enabled
+    if (isActionAwareTrace && tracedActionCount > 0) {
+      this.#capturePostResolutionSummary(
+        trace,
+        actor,
+        candidateActions.length,
+        allActionsWithTargets.length,
+        hasLegacyActions,
+        hasMultiTargetActions,
+        Date.now() - stageStartTime
+      );
     }
 
     trace?.info(
@@ -637,6 +717,138 @@ export class MultiTargetResolutionStage extends PipelineStage {
         'MultiTargetResolutionStage'
       );
       return [];
+    }
+  }
+
+  /**
+   * Check if trace is ActionAwareStructuredTrace
+   *
+   * @private
+   * @param {object} trace - Trace instance to check
+   * @returns {boolean}
+   */
+  #isActionAwareTrace(trace) {
+    return trace && typeof trace.captureActionData === 'function';
+  }
+
+  /**
+   * Capture target resolution data for traced action
+   *
+   * @private
+   * @param {object} trace - Trace instance
+   * @param {object} actionDef - Action definition
+   * @param {object} actor - Actor entity
+   * @param {object} data - Resolution data to capture
+   */
+  #captureTargetResolutionData(trace, actionDef, actor, data) {
+    try {
+      const traceData = {
+        stage: 'target_resolution',
+        actorId: actor.id,
+        ...data,
+        timestamp: Date.now(),
+      };
+
+      trace.captureActionData('target_resolution', actionDef.id, traceData);
+
+      this.#logger.debug(
+        `MultiTargetResolutionStage: Captured target resolution data for action '${actionDef.id}'`,
+        {
+          actionId: actionDef.id,
+          isLegacy: data.isLegacy,
+          success: data.resolutionSuccess,
+        }
+      );
+    } catch (error) {
+      // Don't throw - tracing failures shouldn't break the pipeline
+      this.#logger.warn(
+        `Failed to capture target resolution data for action '${actionDef.id}'`,
+        error
+      );
+    }
+  }
+
+  /**
+   * Capture target resolution error
+   *
+   * @private
+   * @param {object} trace - Trace instance
+   * @param {object} actionDef - Action definition
+   * @param {object} actor - Actor entity
+   * @param {Error} error - Error that occurred
+   */
+  #captureTargetResolutionError(trace, actionDef, actor, error) {
+    try {
+      const errorData = {
+        stage: 'target_resolution',
+        actorId: actor.id,
+        resolutionFailed: true,
+        error: error.message,
+        errorType: error.constructor.name,
+        scopeName: error.scopeName,
+        timestamp: Date.now(),
+      };
+
+      trace.captureActionData('target_resolution', actionDef.id, errorData);
+
+      this.#logger.debug(
+        `MultiTargetResolutionStage: Captured target resolution error for action '${actionDef.id}'`,
+        { actionId: actionDef.id, error: error.message }
+      );
+    } catch (traceError) {
+      this.#logger.warn(
+        `Failed to capture target resolution error data for action '${actionDef.id}'`,
+        traceError
+      );
+    }
+  }
+
+  /**
+   * Capture post-resolution summary data
+   *
+   * @private
+   * @param {object} trace - Trace instance
+   * @param {object} actor - Actor entity
+   * @param {number} originalCount - Original candidate action count
+   * @param {number} resolvedCount - Actions with resolved targets count
+   * @param {boolean} hasLegacy - Whether legacy actions were processed
+   * @param {boolean} hasMultiTarget - Whether multi-target actions were processed
+   * @param {number} stageDuration - Time taken for stage execution
+   */
+  #capturePostResolutionSummary(
+    trace,
+    actor,
+    originalCount,
+    resolvedCount,
+    hasLegacy,
+    hasMultiTarget,
+    stageDuration
+  ) {
+    try {
+      const summaryData = {
+        stage: 'target_resolution_summary',
+        actorId: actor.id,
+        originalActionCount: originalCount,
+        resolvedActionCount: resolvedCount,
+        hasLegacyActions: hasLegacy,
+        hasMultiTargetActions: hasMultiTarget,
+        resolutionSuccessRate:
+          originalCount > 0 ? resolvedCount / originalCount : 1.0,
+        stageDurationMs: stageDuration,
+        timestamp: Date.now(),
+      };
+
+      // Note: Summary data is not action-specific, so we don't pass an actionId
+      // This could be logged differently or sent to a different trace method if available
+      this.#logger.debug(
+        'MultiTargetResolutionStage: Captured post-resolution summary',
+        summaryData
+      );
+    } catch (error) {
+      this.#logger.warn(
+        'Failed to capture post-resolution summary for tracing',
+        error
+      );
     }
   }
 }
