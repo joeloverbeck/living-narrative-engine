@@ -44,7 +44,9 @@ describe('StructuredTrace - Integration Tests', () => {
     };
 
     mockEntityManager = {
-      getAllComponentTypesForEntity: jest.fn().mockReturnValue(['core:actor', 'core:position']),
+      getAllComponentTypesForEntity: jest
+        .fn()
+        .mockReturnValue(['core:actor', 'core:position']),
     };
   });
 

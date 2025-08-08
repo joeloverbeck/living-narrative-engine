@@ -124,6 +124,18 @@ describe('Scope Integration Tests', () => {
         ],
       },
     });
+    registry.store('conditions', 'core:actor-can-move', {
+      id: 'core:actor-can-move',
+      logic: {
+        '!!': { var: 'actor.components.core:movement' },
+      },
+    });
+    registry.store('conditions', 'core:actor-is-following', {
+      id: 'core:actor-is-following',
+      logic: {
+        '!!': { var: 'actor.components.core:following' },
+      },
+    });
 
     gameDataRepository = new GameDataRepository(registry, logger);
     jsonLogicEval = new JsonLogicEvaluationService({
@@ -132,7 +144,9 @@ describe('Scope Integration Tests', () => {
     });
     // FIX: Ensure the mock has a function with the correct arity
     const prerequisiteEvaluationService = {
-      evaluate: () => true,
+      evaluate: (prerequisites, actionDef, actor, trace) => {
+        return true;
+      },
     };
     const validatedEventDispatcher = {
       dispatch: () => {},
@@ -213,7 +227,10 @@ describe('Scope Integration Tests', () => {
       const entities = [
         {
           id: actorId,
-          components: { [POSITION_COMPONENT_ID]: { locationId: room1Id } },
+          components: {
+            [POSITION_COMPONENT_ID]: { locationId: room1Id },
+            'core:movement': {},
+          },
         },
         {
           id: targetId,
@@ -252,7 +269,10 @@ describe('Scope Integration Tests', () => {
       entityManager.setEntities([
         {
           id: actorId,
-          components: { [POSITION_COMPONENT_ID]: { locationId: roomId } },
+          components: {
+            [POSITION_COMPONENT_ID]: { locationId: roomId },
+            'core:movement': {},
+          },
         },
         { id: roomId, components: {} },
       ]);
@@ -279,7 +299,10 @@ describe('Scope Integration Tests', () => {
       entityManager.setEntities([
         {
           id: actorId,
-          components: { [POSITION_COMPONENT_ID]: { locationId: room1Id } },
+          components: {
+            [POSITION_COMPONENT_ID]: { locationId: room1Id },
+            'core:movement': {},
+          },
         },
         {
           id: targetId,

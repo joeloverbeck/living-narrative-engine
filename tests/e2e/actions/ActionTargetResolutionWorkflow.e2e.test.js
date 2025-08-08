@@ -124,7 +124,7 @@ describe('Action Target Resolution Workflow E2E', () => {
     dataRegistry.store('conditions', 'core:actor-can-move', {
       id: 'core:actor-can-move',
       logic: {
-        '==': [{ var: 'actor.core:movement.locked' }, false],
+        '==': [{ var: 'actor.components.core:movement.locked' }, false],
       },
     });
     dataRegistry.store('conditions', 'core:actor-is-following', {
@@ -282,9 +282,31 @@ describe('Action Target Resolution Workflow E2E', () => {
       actionErrorContextBuilder: createMockActionErrorContextBuilder(),
     });
 
-    // Create prerequisite evaluation service
+    // Create prerequisite evaluation service that actually evaluates conditions
     const prerequisiteEvaluationService = {
-      evaluate: jest.fn(() => true), // All prerequisites pass for testing
+      evaluate: (prerequisites, actionDef, actor, actionContext, trace) => {
+        if (!prerequisites || prerequisites.length === 0) {
+          return true; // No prerequisites to check
+        }
+
+        // Build actor context for condition evaluation
+        const actorData = {
+          id: actor.id,
+          components: actor.getAllComponents(),
+        };
+
+        // Evaluate each prerequisite using JSON Logic
+        for (const prereq of prerequisites) {
+          const result = jsonLogicEval.evaluate(prereq.logic, {
+            actor: actorData,
+          });
+          if (!result) {
+            return false;
+          }
+        }
+
+        return true;
+      },
     };
 
     // Create the ActionPipelineOrchestrator using test utility

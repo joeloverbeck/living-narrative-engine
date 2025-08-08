@@ -51,12 +51,16 @@ describe('Template System Directory Structure', () => {
     it('should have main index file with exports', () => {
       const mainIndexPath = path.join(templatesPath, 'index.js');
       expect(fs.existsSync(mainIndexPath)).toBe(true);
-      
+
       const mainIndexContent = fs.readFileSync(mainIndexPath, 'utf8');
       // Check that it exports from subdirectories
       expect(mainIndexContent).toContain("export * from './core/index.js'");
-      expect(mainIndexContent).toContain("export * from './components/index.js'");
-      expect(mainIndexContent).toContain("export * from './utilities/index.js'");
+      expect(mainIndexContent).toContain(
+        "export * from './components/index.js'"
+      );
+      expect(mainIndexContent).toContain(
+        "export * from './utilities/index.js'"
+      );
       // Note: Specific exports will be tested as they're implemented in subsequent tickets
     });
 
@@ -89,7 +93,7 @@ describe('Template System Directory Structure', () => {
     it('should export Types object for IDE support', () => {
       const typesPath = path.join(templatesPath, 'types.js');
       const typesContent = fs.readFileSync(typesPath, 'utf8');
-      
+
       // Check that it exports a Types object
       expect(typesContent).toContain('export const Types = {}');
     });
