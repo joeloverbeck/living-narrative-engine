@@ -5,7 +5,14 @@
  * multi-target actions
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { IntegrationTestBed } from '../../common/integrationTestBed.js';
 
 describe('Intimacy Action Event Integration - INTMIG-007', () => {
@@ -20,90 +27,109 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
   beforeEach(async () => {
     testBed = new IntegrationTestBed();
     await testBed.initialize();
-    
+
     // Get services from container
     eventBus = testBed.get('IEventBus');
     entityManager = testBed.get('IEntityManager');
     commandProcessor = testBed.get('ICommandProcessor');
-    
+
     // Mock entity manager to avoid entity definition errors
     entityManager = {
-      createEntityInstance: jest.fn().mockImplementation(async (definitionId, options) => {
-        // Return a simple test entity ID
-        entityIdCounter++;
-        return `test-entity-${entityIdCounter}`;
-      }),
+      createEntityInstance: jest
+        .fn()
+        .mockImplementation(async (definitionId, options) => {
+          // Return a simple test entity ID
+          entityIdCounter++;
+          return `test-entity-${entityIdCounter}`;
+        }),
     };
     testBed.setOverride('IEntityManager', entityManager);
-    
+
     // Mock command processor to match production signature
     if (!commandProcessor) {
       commandProcessor = {
-        dispatchAction: jest.fn().mockImplementation(async (actor, turnAction) => {
-          // Create the event payload matching production CommandProcessor structure
-          const payload = {
-            eventName: 'ATTEMPT_ACTION',
-            actorId: actor.id,
-            actionId: turnAction.actionDefinitionId,
-            originalInput: turnAction.commandString || turnAction.actionDefinitionId,
-            timestamp: Date.now(),
-          };
-          
-          // Handle single-target vs multi-target based on turnAction structure
-          if (turnAction.resolvedParameters) {
-            if (turnAction.resolvedParameters.isMultiTarget && turnAction.resolvedParameters.targetIds) {
-              // Multi-target action - simulate production MultiTargetEventBuilder behavior exactly
-              const targets = {};
-              Object.entries(turnAction.resolvedParameters.targetIds).forEach(([key, value]) => {
-                if (Array.isArray(value) && value.length > 0) {
-                  const entityId = value[0];
-                  // Create complex target object like production CommandProcessor
-                  targets[key] = {
-                    entityId: entityId,
-                    placeholder: key,
-                    description: entityId, // Simple description for testing
-                    resolvedFromContext: false,
-                  };
-                }
-              });
-              payload.targets = targets;
-              // Set targetId to primary target's entityId (matching production behavior)
-              const primaryTarget = targets.primary || targets.target || Object.values(targets)[0];
-              payload.targetId = primaryTarget ? primaryTarget.entityId : null;
-              // Add flattened target IDs for backward compatibility (extracting entityId from objects)
-              if (targets.primary) payload.primaryId = targets.primary.entityId;
-              if (targets.secondary) payload.secondaryId = targets.secondary.entityId;
-              if (targets.tertiary) payload.tertiaryId = targets.tertiary.entityId;
-              payload.resolvedTargetCount = Object.keys(targets).length;
-            } else if (turnAction.resolvedParameters.targetId) {
-              // Single target action
-              payload.targetId = turnAction.resolvedParameters.targetId;
-              payload.primaryId = turnAction.resolvedParameters.targetId;
-              payload.secondaryId = null;
-              payload.tertiaryId = null;
-              payload.resolvedTargetCount = 1;
-            } else {
-              // No targets
-              payload.targetId = null;
-              payload.primaryId = null;
-              payload.secondaryId = null;
-              payload.tertiaryId = null;
-              payload.resolvedTargetCount = 0;
+        dispatchAction: jest
+          .fn()
+          .mockImplementation(async (actor, turnAction) => {
+            // Create the event payload matching production CommandProcessor structure
+            const payload = {
+              eventName: 'ATTEMPT_ACTION',
+              actorId: actor.id,
+              actionId: turnAction.actionDefinitionId,
+              originalInput:
+                turnAction.commandString || turnAction.actionDefinitionId,
+              timestamp: Date.now(),
+            };
+
+            // Handle single-target vs multi-target based on turnAction structure
+            if (turnAction.resolvedParameters) {
+              if (
+                turnAction.resolvedParameters.isMultiTarget &&
+                turnAction.resolvedParameters.targetIds
+              ) {
+                // Multi-target action - simulate production MultiTargetEventBuilder behavior exactly
+                const targets = {};
+                Object.entries(turnAction.resolvedParameters.targetIds).forEach(
+                  ([key, value]) => {
+                    if (Array.isArray(value) && value.length > 0) {
+                      const entityId = value[0];
+                      // Create complex target object like production CommandProcessor
+                      targets[key] = {
+                        entityId: entityId,
+                        placeholder: key,
+                        description: entityId, // Simple description for testing
+                        resolvedFromContext: false,
+                      };
+                    }
+                  }
+                );
+                payload.targets = targets;
+                // Set targetId to primary target's entityId (matching production behavior)
+                const primaryTarget =
+                  targets.primary ||
+                  targets.target ||
+                  Object.values(targets)[0];
+                payload.targetId = primaryTarget
+                  ? primaryTarget.entityId
+                  : null;
+                // Add flattened target IDs for backward compatibility (extracting entityId from objects)
+                if (targets.primary)
+                  payload.primaryId = targets.primary.entityId;
+                if (targets.secondary)
+                  payload.secondaryId = targets.secondary.entityId;
+                if (targets.tertiary)
+                  payload.tertiaryId = targets.tertiary.entityId;
+                payload.resolvedTargetCount = Object.keys(targets).length;
+              } else if (turnAction.resolvedParameters.targetId) {
+                // Single target action
+                payload.targetId = turnAction.resolvedParameters.targetId;
+                payload.primaryId = turnAction.resolvedParameters.targetId;
+                payload.secondaryId = null;
+                payload.tertiaryId = null;
+                payload.resolvedTargetCount = 1;
+              } else {
+                // No targets
+                payload.targetId = null;
+                payload.primaryId = null;
+                payload.secondaryId = null;
+                payload.tertiaryId = null;
+                payload.resolvedTargetCount = 0;
+              }
             }
-          }
-          
-          payload.hasContextDependencies = false;
-          
-          // Dispatch event with correct structure - using the actual event name from production
-          eventBus.dispatch('core:attempt_action', payload);
-          
-          return { 
-            success: true,
-            turnEnded: false,
-            originalInput: turnAction.commandString || turnAction.actionDefinitionId,
-            actionResult: { actionId: turnAction.actionDefinitionId }
-          };
-        }),
+
+            payload.hasContextDependencies = false;
+
+            // Dispatch event with correct structure - using the actual event name from production
+            eventBus.dispatch('core:attempt_action', payload);
+
+            return {
+              success: true,
+              turnEnded: false,
+              originalInput:
+                turnAction.commandString || turnAction.actionDefinitionId,
+              actionResult: { actionId: turnAction.actionDefinitionId },
+            };
+          }),
       };
       testBed.setOverride('ICommandProcessor', commandProcessor);
     }
@@ -157,7 +183,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
         // Create actor entity mock
         const actor = { id: actorId };
-        
+
         // Create turnAction matching production structure
         const turnAction = {
           actionDefinitionId: actionId,
@@ -172,7 +198,10 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
         // Find action-related events (using the actual event type from production)
         const actionEvents = capturedEvents.filter(
-          (e) => e.type === 'core:attempt_action' && e.payload && e.payload.actionId === actionId
+          (e) =>
+            e.type === 'core:attempt_action' &&
+            e.payload &&
+            e.payload.actionId === actionId
         );
 
         expect(actionEvents.length).toBeGreaterThan(0);
@@ -212,7 +241,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // Create actor entity mock
       const actor = { id: actorId };
-      
+
       // Create turnAction for kiss action
       const turnAction = {
         actionDefinitionId: 'intimacy:kiss_cheek',
@@ -227,14 +256,17 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // Find the action event
       const actionEvent = capturedEvents.find(
-        (e) => e.type === 'core:attempt_action' && e.payload && e.payload.actionId === 'intimacy:kiss_cheek'
+        (e) =>
+          e.type === 'core:attempt_action' &&
+          e.payload &&
+          e.payload.actionId === 'intimacy:kiss_cheek'
       );
 
       expect(actionEvent).toBeDefined();
-      
+
       if (actionEvent) {
         const payload = actionEvent.payload;
-        
+
         // Verify all required fields are present
         expect(payload.actionId).toBe('intimacy:kiss_cheek');
         expect(payload.actorId).toBe(actorId);
@@ -242,7 +274,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
         expect(payload.eventName).toBe('core:attempt_action');
         expect(payload.originalInput).toBeDefined();
         expect(payload.timestamp).toBeDefined();
-        
+
         // Verify structure follows single-target pattern
         expect(payload.targets).toBeUndefined();
         expect(payload.primaryId).toBe(targetId);
@@ -282,7 +314,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // Create actor entity mock
       const actor = { id: actorId };
-      
+
       // Create multi-target turnAction
       const turnAction = {
         actionDefinitionId: 'intimacy:adjust_clothing',
@@ -301,14 +333,17 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // Find action event
       const actionEvent = capturedEvents.find(
-        (e) => e.type === 'core:attempt_action' && e.payload && e.payload.actionId === 'intimacy:adjust_clothing'
+        (e) =>
+          e.type === 'core:attempt_action' &&
+          e.payload &&
+          e.payload.actionId === 'intimacy:adjust_clothing'
       );
 
       expect(actionEvent).toBeDefined();
-      
+
       if (actionEvent) {
         const payload = actionEvent.payload;
-        
+
         // Multi-target action should have targets object, not targetId
         expect(payload.targets).toBeDefined();
         expect(payload.targets.primary.entityId).toBe(targetId);
@@ -317,7 +352,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
         expect(typeof payload.targets.secondary).toBe('object');
         expect(payload.targetId).toBe(targetId); // targetId should be set to primary target entityId
         expect(payload.actorId).toBe(actorId);
-        
+
         // Check legacy compatibility fields
         expect(payload.primaryId).toBe(targetId);
         expect(payload.secondaryId).toBe(clothingId);
@@ -334,30 +369,39 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
         },
       });
 
-      const primaryTarget = await entityManager.createEntityInstance('core:actor', {
-        componentOverrides: {
-          'positioning:closeness': { distance: 'intimate' },
-          'core:name': { name: 'Primary Target' },
-        },
-      });
+      const primaryTarget = await entityManager.createEntityInstance(
+        'core:actor',
+        {
+          componentOverrides: {
+            'positioning:closeness': { distance: 'intimate' },
+            'core:name': { name: 'Primary Target' },
+          },
+        }
+      );
 
-      const secondaryTarget = await entityManager.createEntityInstance('core:item', {
-        componentOverrides: {
-          'core:name': { name: 'Secondary Target' },
-        },
-      });
+      const secondaryTarget = await entityManager.createEntityInstance(
+        'core:item',
+        {
+          componentOverrides: {
+            'core:name': { name: 'Secondary Target' },
+          },
+        }
+      );
 
       // Track all events for this action
       const actionEvents = [];
       const actionUnsubscribe = eventBus.subscribe('*', (event) => {
-        if (event.payload && event.payload.actionId === 'intimacy:adjust_clothing') {
+        if (
+          event.payload &&
+          event.payload.actionId === 'intimacy:adjust_clothing'
+        ) {
           actionEvents.push(event);
         }
       });
 
       // Create actor entity mock
       const actor = { id: actorId };
-      
+
       // Create multi-target turnAction
       const turnAction = {
         actionDefinitionId: 'intimacy:adjust_clothing',
@@ -376,7 +420,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // All events for this action should maintain multi-target structure
       expect(actionEvents.length).toBeGreaterThan(0);
-      
+
       actionEvents.forEach((event) => {
         expect(event.payload.targets).toBeDefined();
         expect(event.payload.targets.primary.entityId).toBe(primaryTarget);
@@ -423,7 +467,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // Create actor entity mock
       const actor = { id: actorId };
-      
+
       // Create turnAction
       const turnAction = {
         actionDefinitionId: 'intimacy:kiss_neck_sensually',
@@ -438,13 +482,15 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // Verify events were dispatched
       expect(eventSequence.length).toBeGreaterThan(0);
-      
+
       // Should have at least the core:attempt_action event
-      const attemptActionEvent = eventSequence.find(e => e.type === 'core:attempt_action');
+      const attemptActionEvent = eventSequence.find(
+        (e) => e.type === 'core:attempt_action'
+      );
       expect(attemptActionEvent).toBeDefined();
       expect(attemptActionEvent.hasPayload).toBe(true);
       expect(attemptActionEvent.actionId).toBe('intimacy:kiss_neck_sensually');
-      
+
       if (sequenceUnsubscribe) sequenceUnsubscribe();
     });
 
@@ -465,7 +511,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // Create actor entity mock
       const actor = { id: actorId };
-      
+
       // Create turnAction
       const turnAction = {
         actionDefinitionId: 'intimacy:caress_arm',
@@ -483,11 +529,14 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // All events should maintain the core payload fields
       const relevantEvents = capturedEvents.filter(
-        (e) => e.type === 'core:attempt_action' && e.payload && e.payload.actionId === 'intimacy:caress_arm'
+        (e) =>
+          e.type === 'core:attempt_action' &&
+          e.payload &&
+          e.payload.actionId === 'intimacy:caress_arm'
       );
 
       expect(relevantEvents.length).toBeGreaterThan(0);
-      
+
       relevantEvents.forEach((event) => {
         expect(event.payload.actorId).toBe(actorId);
         expect(event.payload.targetId).toBe(targetId);
@@ -528,7 +577,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
         'intimacy:lick_lips',
         'intimacy:nibble_earlobe_playfully',
         'intimacy:nuzzle_face_into_neck',
-        
+
         // Touch actions
         'intimacy:brush_hand',
         'intimacy:place_hand_on_waist',
@@ -551,7 +600,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
         // Create actor entity mock
         const actor = { id: actorId };
-        
+
         // Create turnAction with single-target format
         const turnAction = {
           actionDefinitionId: actionId,
@@ -566,11 +615,14 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
         // Find the action event
         const actionEvent = capturedEvents.find(
-          (e) => e.type === 'core:attempt_action' && e.payload && e.payload.actionId === actionId
+          (e) =>
+            e.type === 'core:attempt_action' &&
+            e.payload &&
+            e.payload.actionId === actionId
         );
 
         expect(actionEvent).toBeDefined();
-        
+
         if (actionEvent) {
           // Verify backward compatible structure
           expect(actionEvent.payload.targetId).toBeDefined();
@@ -601,7 +653,12 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
       let legacyListenerCalled = false;
       let legacyEventReceived = null;
       const legacyUnsubscribe = eventBus.subscribe('*', (event) => {
-        if (event.type === 'core:attempt_action' && event.payload && event.payload.actionId && event.payload.actionId.startsWith('intimacy:')) {
+        if (
+          event.type === 'core:attempt_action' &&
+          event.payload &&
+          event.payload.actionId &&
+          event.payload.actionId.startsWith('intimacy:')
+        ) {
           // Legacy code expects targetId for non-adjust_clothing actions
           if (event.payload.actionId !== 'intimacy:adjust_clothing') {
             if (event.payload.targetId) {
@@ -614,7 +671,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // Create actor entity mock
       const actor = { id: actorId };
-      
+
       // Create turnAction
       const turnAction = {
         actionDefinitionId: 'intimacy:kiss_cheek',
@@ -642,7 +699,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
   describe('Event Validation', () => {
     it('should validate event payloads against schemas if available', async () => {
       const schemaValidator = testBed.get('ISchemaValidator');
-      
+
       if (!schemaValidator) {
         // Skip if no schema validator available
         return;
@@ -664,7 +721,7 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // Create actor entity mock
       const actor = { id: actorId };
-      
+
       // Create turnAction
       const turnAction = {
         actionDefinitionId: 'intimacy:stroke_cheek_softly',
@@ -679,13 +736,19 @@ describe('Intimacy Action Event Integration - INTMIG-007', () => {
 
       // Get action events
       const actionEvents = capturedEvents.filter(
-        (e) => e.type === 'core:attempt_action' && e.payload && e.payload.actionId === 'intimacy:stroke_cheek_softly'
+        (e) =>
+          e.type === 'core:attempt_action' &&
+          e.payload &&
+          e.payload.actionId === 'intimacy:stroke_cheek_softly'
       );
 
       // Validate event payloads if schemas are available
       actionEvents.forEach((event) => {
         if (event.type && schemaValidator.validateEventPayload) {
-          const result = schemaValidator.validateEventPayload(event.type, event.payload);
+          const result = schemaValidator.validateEventPayload(
+            event.type,
+            event.payload
+          );
           if (result !== undefined) {
             expect(result.valid).toBe(true);
           }

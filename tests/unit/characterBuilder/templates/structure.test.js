@@ -106,7 +106,9 @@ describe('Template System Directory Structure', () => {
 
       // Check for expected exports (placeholder for now)
       // Use regex to match both standalone and grouped export syntax
-      expect(coreContent).toMatch(/export\s*{\s*[^}]*\bcreateCharacterBuilderPage\b[^}]*}/);
+      expect(coreContent).toMatch(
+        /export\s*{\s*[^}]*\bcreateCharacterBuilderPage\b[^}]*}/
+      );
       expect(coreContent).toMatch(/export\s*{\s*[^}]*\bcreateHeader\b[^}]*}/);
       expect(coreContent).toMatch(/export\s*{\s*[^}]*\bcreateMain\b[^}]*}/);
       expect(coreContent).toMatch(/export\s*{\s*[^}]*\bcreateFooter\b[^}]*}/);

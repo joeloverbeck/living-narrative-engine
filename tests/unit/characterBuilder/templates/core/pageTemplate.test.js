@@ -33,7 +33,7 @@ describe('Page Template Container', () => {
       });
 
       expect(html).toContain('cb-single-panel');
-      expect(html).toContain('cb-main-single');
+      expect(html).toContain('cb-layout-single');
       expect(html).toContain('Panel content');
     });
 
@@ -45,7 +45,7 @@ describe('Page Template Container', () => {
       });
 
       expect(html).toContain('cb-dual-panel');
-      expect(html).toContain('cb-main-dual');
+      expect(html).toContain('cb-layout-dual');
       expect(html).toContain('Left content');
       expect(html).toContain('Right content');
     });

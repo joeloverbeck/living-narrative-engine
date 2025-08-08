@@ -99,6 +99,14 @@ class ActionTraceFilter {
       'ActionTraceFilter.shouldTrace'
     );
 
+    // System actions (starting with '__') are always traced when tracing is enabled
+    if (actionId.startsWith('__')) {
+      this.#logger.debug(
+        `System action '${actionId}' always traced (system action bypass)`
+      );
+      return true;
+    }
+
     // Check exclusions first - they take precedence
     if (this.#isExcluded(actionId)) {
       this.#logger.debug(

@@ -267,6 +267,196 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
     });
   });
 
+  describe('additional branch coverage tests', () => {
+    it('should handle validation errors array with multiple errors (line 257)', async () => {
+      // Mock getEntityInstance to return entity with component
+      mockDeps.entityManager.getEntityInstance.mockReturnValue({
+        getComponentData: jest.fn().mockReturnValue({
+          equipmentSlots: { primary: 'shirt' },
+        }),
+      });
+      
+      // Mock validation to return isValid: false with errors array
+      mockDeps.clothingSlotValidator.validateSlotCompatibility.mockResolvedValue({
+        valid: false,
+        reason: 'Slot not compatible',
+      });
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            targetSlot: 'shirt',
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
+
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('Slot not compatible');
+    });
+
+    it('should handle recipe with null clothingEntities (line 313)', async () => {
+      const recipe = {
+        clothingEntities: null,
+      };
+
+      const result = await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
+
+      expect(result.instantiated).toHaveLength(0);
+      expect(mockDeps.eventBus.dispatch).not.toHaveBeenCalledWith(
+        'clothing:instantiation_completed',
+        expect.any(Object)
+      );
+    });
+
+    it('should handle recipe with undefined clothingEntities (line 313)', async () => {
+      const recipe = {
+        // clothingEntities is undefined
+      };
+
+      const result = await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
+
+      expect(result.instantiated).toHaveLength(0);
+      expect(mockDeps.eventBus.dispatch).not.toHaveBeenCalledWith(
+        'clothing:instantiation_completed',
+        expect.any(Object)
+      );
+    });
+
+    it('should handle entity with existing clothing:wearable in properties (line 581)', async () => {
+      mockDeps.dataRegistry.get.mockReturnValue({
+        components: {
+          'clothing:wearable': {
+            equipmentSlots: { primary: 'shirt' },
+            layer: 'base',
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      });
+
+      mockDeps.layerResolutionService.resolveAndValidateLayer.mockReturnValue({
+        isValid: true,
+        layer: 'outer',
+      });
+
+      let capturedProperties;
+      mockDeps.entityManager.createEntityInstance.mockImplementation(
+        (entityDefId, properties) => {
+          capturedProperties = properties;
+          return 'clothing_instance_123';
+        }
+      );
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            layer: 'outer',
+            properties: {
+              'clothing:wearable': {
+                someExistingProp: 'value',
+              },
+              'core:physical': { weight: 2 },
+            },
+          },
+        ],
+      };
+
+      await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
+
+      // Should preserve existing clothing:wearable properties and add layer
+      expect(capturedProperties['clothing:wearable']).toHaveProperty('someExistingProp', 'value');
+      expect(capturedProperties['clothing:wearable']).toHaveProperty('layer', 'outer');
+    });
+
+    it('should handle missing clothing instance when validating (line 473)', async () => {
+      // Mock getEntityInstance to return null
+      mockDeps.entityManager.getEntityInstance.mockReturnValue(null);
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            targetSlot: 'shirt',
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
+
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('Clothing instance');
+      expect(result.errors[0]).toContain('not found');
+    });
+
+    it('should handle clothing instance without clothing:wearable component (line 480)', async () => {
+      // Mock getEntityInstance to return entity without clothing component
+      mockDeps.entityManager.getEntityInstance.mockReturnValue({
+        getComponentData: jest.fn().mockReturnValue(null),
+      });
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            targetSlot: 'shirt',
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
+
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('does not have clothing:wearable component');
+    });
+
+    it('should handle clothing without targetSlot or primary equipment slot (line 489)', async () => {
+      // Mock getEntityInstance to return entity with component but no equipment slots
+      mockDeps.entityManager.getEntityInstance.mockReturnValue({
+        getComponentData: jest.fn().mockReturnValue({
+          // No equipmentSlots property
+        }),
+      });
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            // No targetSlot specified
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
+
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('does not specify a clothing slot');
+    });
+  });
+
   describe('caching', () => {
     it('should cache validation results', async () => {
       mockDeps.anatomyClothingCache.get.mockReturnValueOnce(undefined);
@@ -400,6 +590,394 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
           ),
         })
       );
+    });
+
+    it('should use default error message when validation errors array is undefined (line 257)', async () => {
+      // Mock validation to return isValid: false but without errors array
+      mockDeps.clothingSlotValidator.validateSlotCompatibility.mockResolvedValue(
+        {
+          valid: false,
+          // No reason provided, which will trigger the fallback
+        }
+      );
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            targetSlot: 'shirt',
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
+
+      // Should have the fallback error message - the actual message format
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toMatch(/Cannot equip instance .* to slot shirt/);
+    });
+
+    it('should use default error message in validation result (line 508)', async () => {
+      // Mock the validation to return invalid without a reason
+      mockDeps.clothingSlotValidator.validateSlotCompatibility.mockResolvedValue(
+        {
+          valid: false,
+          // No reason provided
+        }
+      );
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            targetSlot: 'shirt',
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
+
+      // The error should include the default message format
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toMatch(
+        /Cannot equip instance .* to slot shirt/
+      );
+    });
+
+    it('should handle equipment failure gracefully', async () => {
+      mockDeps.equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
+        success: false,
+        errors: ['Equipment failed due to conflict'],
+      });
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            equip: true,
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
+
+      expect(result.instantiated).toHaveLength(1);
+      expect(result.equipped).toHaveLength(0);
+      expect(result.errors).toContainEqual('Equipment failed due to conflict');
+    });
+
+    it('should handle equipment failure with unknown error', async () => {
+      mockDeps.equipmentOrchestrator.orchestrateEquipment.mockResolvedValue({
+        success: false,
+        // No errors array provided
+      });
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            equip: true,
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
+
+      expect(result.instantiated).toHaveLength(1);
+      expect(result.equipped).toHaveLength(0);
+      expect(result.errors).toContainEqual('Unknown equipment error');
+    });
+  });
+
+  describe('edge cases and branch coverage', () => {
+    it('should not dispatch clothing:instantiation_completed event when no clothing entities in recipe (line 313)', async () => {
+      const recipe = {};  // No clothingEntities property at all
+
+      await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
+
+      // Should not dispatch the completion event
+      expect(mockDeps.eventBus.dispatch).not.toHaveBeenCalledWith(
+        'clothing:instantiation_completed',
+        expect.any(Object)
+      );
+    });
+
+    it('should not dispatch system error event when no errors occur (line 327)', async () => {
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            equip: true,
+          },
+        ],
+      };
+
+      await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
+
+      // Should dispatch completion but not error
+      expect(mockDeps.eventBus.dispatch).toHaveBeenCalledWith(
+        'clothing:instantiation_completed',
+        expect.any(Object)
+      );
+      expect(mockDeps.eventBus.dispatch).not.toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.any(Object)
+      );
+    });
+
+    it('should handle entity definition without clothing component (line 565)', async () => {
+      // Mock a definition without clothing:wearable component
+      mockDeps.dataRegistry.get.mockReturnValue({
+        components: {
+          // No clothing:wearable component
+          'core:physical': { weight: 1 },
+        },
+      });
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'non_clothing_item',
+            layer: 'outer',
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
+
+      // Should still create the entity but without layer resolution
+      expect(result.instantiated).toHaveLength(1);
+      expect(
+        mockDeps.layerResolutionService.resolveAndValidateLayer
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should initialize clothing:wearable in finalProperties when not present (line 581)', async () => {
+      // Set up a scenario where we have a clothing component but property overrides don't include it
+      mockDeps.dataRegistry.get.mockReturnValue({
+        components: {
+          'clothing:wearable': {
+            equipmentSlots: { primary: 'shirt' },
+            layer: 'base',
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      });
+
+      // Mock layer resolution to return 'outer'
+      mockDeps.layerResolutionService.resolveAndValidateLayer.mockReturnValue({
+        isValid: true,
+        layer: 'outer',
+      });
+
+      // Mock createEntityInstance to capture the properties passed to it
+      let capturedProperties;
+      mockDeps.entityManager.createEntityInstance.mockImplementation(
+        (entityDefId, properties) => {
+          capturedProperties = properties;
+          return 'clothing_instance_123';
+        }
+      );
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            layer: 'outer',
+            properties: {
+              // Property overrides that don't include clothing:wearable
+              'core:physical': { weight: 2 },
+            },
+          },
+        ],
+      };
+
+      await service.instantiateRecipeClothing('actor123', recipe, {
+        slotEntityMappings: new Map(),
+        partsMap: new Map(),
+      });
+
+      // Verify that clothing:wearable was created in finalProperties
+      expect(capturedProperties).toHaveProperty('clothing:wearable');
+      expect(capturedProperties['clothing:wearable']).toHaveProperty(
+        'layer',
+        'outer'
+      );
+      expect(capturedProperties).toHaveProperty('core:physical');
+    });
+
+    it('should handle layer resolution failure', async () => {
+      mockDeps.layerResolutionService.resolveAndValidateLayer.mockReturnValue({
+        isValid: false,
+        error: 'Invalid layer specified',
+      });
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            layer: 'invalid_layer',
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
+
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('Invalid layer specified');
+    });
+
+    it('should handle missing entity definition', async () => {
+      mockDeps.dataRegistry.get.mockReturnValue(null);
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'non_existent_item',
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
+
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain(
+        "Entity definition 'non_existent_item' not found in registry"
+      );
+    });
+
+    it('should handle entity creation returning null', async () => {
+      mockDeps.entityManager.createEntityInstance.mockReturnValue(null);
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
+
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain("Failed to create clothing entity");
+    });
+
+    it('should handle entity object with id property', async () => {
+      // Test the branch where clothingEntity is an object with id property
+      mockDeps.entityManager.createEntityInstance.mockReturnValue({
+        id: 'entity_object_123',
+      });
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+            equip: false,
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
+
+      expect(result.instantiated).toHaveLength(1);
+      expect(result.instantiated[0].clothingId).toBe('entity_object_123');
+    });
+
+    it('should handle entity without valid ID', async () => {
+      mockDeps.entityManager.createEntityInstance.mockReturnValue({
+        // Object without id property
+        someOtherProp: 'value',
+      });
+
+      const recipe = {
+        clothingEntities: [
+          {
+            entityId: 'shirt',
+          },
+        ],
+      };
+
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
+
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('has no valid ID');
     });
   });
 });
