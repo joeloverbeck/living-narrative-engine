@@ -214,14 +214,14 @@ describe('registerCommandAndAction', () => {
   describe('TraceContextFactory Error Handling', () => {
     test('should handle ITraceConfiguration not being registered', () => {
       // Arrange - Don't register ITraceConfiguration to trigger the catch block
-      
+
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - Get the factory and test it creates trace with fallback config
       const traceFactory = container.resolve(tokens.TraceContextFactory);
       expect(traceFactory).toBeDefined();
-      
+
       const trace = traceFactory();
       expect(trace).toBeDefined();
     });
@@ -232,29 +232,32 @@ describe('registerCommandAndAction', () => {
         throw new Error('Configuration resolution failed');
       };
       container.register(tokens.ITraceConfiguration, throwingConfig);
-      
+
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - Factory should still work with fallback config
       const traceFactory = container.resolve(tokens.TraceContextFactory);
       expect(traceFactory).toBeDefined();
-      
+
       const trace = traceFactory();
       expect(trace).toBeDefined();
     });
 
     test('should use ITraceConfiguration when available', () => {
       // Arrange - Register ITraceConfiguration properly
-      container.register(tokens.ITraceConfiguration, () => mockTraceConfiguration);
-      
+      container.register(
+        tokens.ITraceConfiguration,
+        () => mockTraceConfiguration
+      );
+
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - Factory should work with the registered config
       const traceFactory = container.resolve(tokens.TraceContextFactory);
       expect(traceFactory).toBeDefined();
-      
+
       const trace = traceFactory();
       expect(trace).toBeDefined();
     });
@@ -266,14 +269,14 @@ describe('registerCommandAndAction', () => {
       container.register(tokens.IActionAwareStructuredTrace, () => {
         throw new Error('ActionAwareStructuredTrace resolution failed');
       });
-      
+
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - ActionDiscoveryService should be created without tracing
       const actionDiscovery = container.resolve(tokens.IActionDiscoveryService);
       expect(actionDiscovery).toBeInstanceOf(ActionDiscoveryService);
-      
+
       // Check that debug logging occurred for the error
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'ActionAwareStructuredTrace not available',
@@ -286,14 +289,14 @@ describe('registerCommandAndAction', () => {
       container.register(tokens.IActionTraceFilter, () => {
         throw new Error('ActionTraceFilter resolution failed');
       });
-      
+
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - ActionDiscoveryService should be created
       const actionDiscovery = container.resolve(tokens.IActionDiscoveryService);
       expect(actionDiscovery).toBeInstanceOf(ActionDiscoveryService);
-      
+
       // Check that debug logging occurred for the error
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'ActionTraceFilter not available',
@@ -303,14 +306,14 @@ describe('registerCommandAndAction', () => {
 
     test('should handle both action tracing dependencies missing', () => {
       // Arrange - Don't register either tracing dependency
-      
+
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - ActionDiscoveryService should be created without tracing
       const actionDiscovery = container.resolve(tokens.IActionDiscoveryService);
       expect(actionDiscovery).toBeInstanceOf(ActionDiscoveryService);
-      
+
       // Check that info logging shows tracing not available
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ActionDiscoveryService: Action tracing not available',
@@ -323,16 +326,22 @@ describe('registerCommandAndAction', () => {
 
     test('should handle both action tracing dependencies available', () => {
       // Arrange - Register both tracing dependencies
-      container.register(tokens.IActionAwareStructuredTrace, () => mockActionAwareStructuredTrace);
-      container.register(tokens.IActionTraceFilter, () => mockActionTraceFilter);
-      
+      container.register(
+        tokens.IActionAwareStructuredTrace,
+        () => mockActionAwareStructuredTrace
+      );
+      container.register(
+        tokens.IActionTraceFilter,
+        () => mockActionTraceFilter
+      );
+
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - ActionDiscoveryService should be created with tracing
       const actionDiscovery = container.resolve(tokens.IActionDiscoveryService);
       expect(actionDiscovery).toBeInstanceOf(ActionDiscoveryService);
-      
+
       // Check that info logging shows tracing available
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ActionDiscoveryService: Action tracing available',
@@ -348,11 +357,11 @@ describe('registerCommandAndAction', () => {
     test('should register ActionCandidateProcessor via singletonFactory', () => {
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - Service should be resolvable and be a singleton
       const first = container.resolve(tokens.ActionCandidateProcessor);
       const second = container.resolve(tokens.ActionCandidateProcessor);
-      
+
       expect(first).toBeDefined();
       expect(first).toBe(second); // Singleton behavior
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -363,11 +372,11 @@ describe('registerCommandAndAction', () => {
     test('should register UnifiedErrorHandler via singletonFactory', () => {
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - Service should be resolvable and be a singleton
       const first = container.resolve(tokens.UnifiedErrorHandler);
       const second = container.resolve(tokens.UnifiedErrorHandler);
-      
+
       expect(first).toBeDefined();
       expect(first).toBe(second); // Singleton behavior
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -378,11 +387,11 @@ describe('registerCommandAndAction', () => {
     test('should register DirectiveStrategyResolver via singletonFactory', () => {
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - Service should be resolvable and be a singleton
       const first = container.resolve(tokens.DirectiveStrategyResolver);
       const second = container.resolve(tokens.DirectiveStrategyResolver);
-      
+
       expect(first).toBeDefined();
       expect(first).toBe(second); // Singleton behavior
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -393,11 +402,11 @@ describe('registerCommandAndAction', () => {
     test('should register CommandDispatcher via singletonFactory', () => {
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - Service should be resolvable and be a singleton
       const first = container.resolve(tokens.CommandDispatcher);
       const second = container.resolve(tokens.CommandDispatcher);
-      
+
       expect(first).toBeDefined();
       expect(first).toBe(second); // Singleton behavior
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -408,11 +417,11 @@ describe('registerCommandAndAction', () => {
     test('should register DirectiveExecutor via singletonFactory', () => {
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - Service should be resolvable and be a singleton
       const first = container.resolve(tokens.DirectiveExecutor);
       const second = container.resolve(tokens.DirectiveExecutor);
-      
+
       expect(first).toBeDefined();
       expect(first).toBe(second); // Singleton behavior
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -423,11 +432,11 @@ describe('registerCommandAndAction', () => {
     test('should register ResultInterpreter via singletonFactory', () => {
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - Service should be resolvable and be a singleton
       const first = container.resolve(tokens.ResultInterpreter);
       const second = container.resolve(tokens.ResultInterpreter);
-      
+
       expect(first).toBeDefined();
       expect(first).toBe(second); // Singleton behavior
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -440,7 +449,7 @@ describe('registerCommandAndAction', () => {
     test('should register all singletonFactory services with proper dependencies', () => {
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - All factory-based services should be resolvable
       const services = [
         tokens.IScopeRegistry,
@@ -462,7 +471,7 @@ describe('registerCommandAndAction', () => {
         tokens.DirectiveExecutor,
         tokens.ResultInterpreter,
       ];
-      
+
       services.forEach((token) => {
         expect(() => container.resolve(token)).not.toThrow();
         const instance = container.resolve(token);
@@ -473,19 +482,25 @@ describe('registerCommandAndAction', () => {
     test('should maintain proper service dependencies and initialization order', () => {
       // Act
       registerCommandAndAction(container);
-      
+
       // Assert - Complex service dependencies should work
       const actionDiscovery = container.resolve(tokens.IActionDiscoveryService);
       const commandProcessor = container.resolve(tokens.ICommandProcessor);
-      const pipelineOrchestrator = container.resolve(tokens.ActionPipelineOrchestrator);
-      
+      const pipelineOrchestrator = container.resolve(
+        tokens.ActionPipelineOrchestrator
+      );
+
       expect(actionDiscovery).toBeInstanceOf(ActionDiscoveryService);
       expect(commandProcessor).toBeInstanceOf(CommandProcessor);
       expect(pipelineOrchestrator).toBeDefined();
-      
+
       // Verify logging shows complete registration
-      expect(mockLogger.debug).toHaveBeenCalledWith('Command and Action Registration: Starting...');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Command and Action Registration: Completed.');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Command and Action Registration: Starting...'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Command and Action Registration: Completed.'
+      );
     });
   });
 });

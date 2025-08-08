@@ -2,18 +2,18 @@
 
 ## Executive Summary
 
-Implement comprehensive multi-target action support within the action tracing system, enabling detailed trace capture for actions that affect multiple entities, targets, or scope expressions simultaneously. This ticket focuses on capturing target resolution patterns, scope evaluation results, and multi-target processing workflows while maintaining optimal performance for complex target scenarios.
+Enhance the existing action tracing system with comprehensive multi-target action support, enabling detailed trace capture for actions that affect multiple entities through the modern multi-target resolution system. This ticket focuses on extending `ActionAwareStructuredTrace` with multi-target capabilities while leveraging existing infrastructure from `MultiTargetResolutionStage` and `UnifiedScopeResolver`.
 
 ## Technical Requirements
 
 ### Core Objectives
 
-- Support multi-target action tracing with comprehensive target resolution data
-- Capture scope expression evaluation and target matching details
-- Track target relationship mapping and dependency analysis
+- Enhance `ActionAwareStructuredTrace` with multi-target tracing capabilities
+- Capture comprehensive target resolution data from `MultiTargetResolutionStage`
+- Track scope expression evaluation via `UnifiedScopeResolver` integration
 - Record multi-target processing performance and optimization metrics
 - Provide detailed target validation and filtering trace data
-- Support both static target lists and dynamic scope-based targeting
+- Support both legacy single-target and modern multi-target actions
 - Maintain efficient processing for large target sets
 
 ### Performance Requirements
@@ -21,53 +21,57 @@ Implement comprehensive multi-target action support within the action tracing sy
 - Efficient trace data collection for large target sets (>100 targets)
 - Minimal memory overhead for multi-target trace data structures
 - Optimized scope expression evaluation with trace capture
-- Thread-safe multi-target processing with concurrent access support
+- Leverage existing caching mechanisms in `UnifiedScopeResolver`
 
 ### Compatibility Requirements
 
-- Support all existing target resolution mechanisms
-- Maintain compatibility with scope DSL expressions
-- Work with legacy target formats and modern multi-target actions
+- Build on existing `MultiTargetResolutionStage` infrastructure
+- Integrate with `UnifiedScopeResolver` for scope evaluation
+- Support legacy target formats via existing `LegacyTargetCompatibilityLayer`
 - Preserve existing multi-target action processing behavior
 
 ## Architecture Design
 
 ### Multi-Target Tracing Strategy
 
-The multi-target support will be implemented through enhanced tracing interfaces and specialized data structures:
+The multi-target support will be implemented by enhancing the existing `ActionAwareStructuredTrace` class with multi-target capabilities, building on the infrastructure already present in `MultiTargetResolutionStage`:
 
 ```javascript
-class MultiTargetTraceCapture {
-  constructor({ scopeEvaluator, logger }) {
-    this.scopeEvaluator = scopeEvaluator;
-    this.logger = logger;
-    this.targetProcessingStats = new Map();
+// Enhancement to ActionAwareStructuredTrace
+class ActionAwareStructuredTrace extends StructuredTrace {
+  // Existing constructor with actionTraceFilter, actorId, etc.
+  
+  // New multi-target methods
+  isMultiTargetAction(action) {
+    // Determine if action involves multiple targets
+    const hasMultipleStaticTargets = 
+      Array.isArray(action.targets) && action.targets.length > 1;
+    const hasScopeExpression = !!(action.scope || action.targetScope);
+    const hasDynamicTargets = !!(action.targetQuery || action.dynamicTargets);
+    
+    return hasMultipleStaticTargets || hasScopeExpression || hasDynamicTargets;
   }
 
-  captureTargetResolutionProcess(action, trace, resolutionContext) {
-    const startTime = performance.now();
+  captureMultiTargetResolution(actionId, resolutionData) {
+    // Capture comprehensive multi-target resolution data
+    this.captureActionData('multi_target_resolution', actionId, {
+      targetKeys: resolutionData.targetKeys,
+      resolvedCounts: resolutionData.resolvedCounts,
+      resolutionOrder: resolutionData.resolutionOrder,
+      dependencies: resolutionData.dependencies,
+      performanceMetrics: resolutionData.metrics,
+      timestamp: Date.now(),
+    });
+  }
 
-    // Capture initial target specification
-    const targetSpec = this.analyzeTargetSpecification(action);
-
-    // Process and trace target resolution
-    const resolutionResults = this.traceTargetResolution(
-      action,
-      resolutionContext,
-      trace
-    );
-
-    // Capture performance metrics
-    const processingTime = performance.now() - startTime;
-
-    return {
-      targetSpecification: targetSpec,
-      resolutionResults: resolutionResults,
-      performanceMetrics: {
-        processingTime: processingTime,
-        targetCount: resolutionResults.resolvedTargets.length,
-      },
-    };
+  captureTargetRelationships(actionId, relationships) {
+    // Capture relationships between resolved targets
+    this.captureActionData('target_relationships', actionId, {
+      relationships: relationships,
+      analysisTime: relationships.analysisTime,
+      patterns: relationships.patterns,
+      timestamp: Date.now(),
+    });
   }
 }
 ```
@@ -109,1248 +113,388 @@ const multiTargetData = {
 
 ## Implementation Steps
 
-### Step 1: Create Multi-Target Trace Capture System
-
-**File**: `src/actions/tracing/multiTarget/multiTargetTraceCapture.js`
-
-```javascript
-/**
- * @file Multi-target action tracing capture system
- */
-
-import { validateDependency } from '../../../utils/validationUtils.js';
-
-class MultiTargetTraceCapture {
-  constructor({ scopeEvaluator, entityManager, logger }) {
-    validateDependency(scopeEvaluator, 'IScopeEvaluator');
-    validateDependency(entityManager, 'IEntityManager');
-    validateDependency(logger, 'ILogger');
-
-    this.scopeEvaluator = scopeEvaluator;
-    this.entityManager = entityManager;
-    this.logger = logger;
-
-    this.targetProcessingStats = new Map();
-    this.resolutionCache = new Map();
-  }
-
-  captureMultiTargetAction(action, trace, context) {
-    const captureStartTime = performance.now();
-
-    try {
-      // Analyze target specification
-      const targetSpec = this.analyzeTargetSpecification(action);
-
-      // Capture target specification analysis
-      trace.captureActionData('multi_target', 'target_specification', {
-        actionId: action.id,
-        specification: targetSpec,
-        timestamp: new Date().toISOString(),
-      });
-
-      // Process target resolution with tracing
-      const resolutionResults = this.traceTargetResolution(
-        action,
-        context,
-        trace
-      );
-
-      // Capture target relationship analysis
-      if (resolutionResults.resolvedTargets.length > 1) {
-        const relationshipData = this.analyzeTargetRelationships(
-          resolutionResults.resolvedTargets,
-          trace
-        );
-
-        trace.captureActionData('multi_target', 'target_relationships', {
-          actionId: action.id,
-          relationships: relationshipData,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Capture performance summary
-      const totalCaptureTime = performance.now() - captureStartTime;
-      trace.captureActionData('multi_target', 'capture_performance', {
-        actionId: action.id,
-        captureTime: totalCaptureTime,
-        targetCount: resolutionResults.resolvedTargets.length,
-        complexity: targetSpec.complexity,
-        timestamp: new Date().toISOString(),
-      });
-
-      return resolutionResults;
-    } catch (error) {
-      trace.captureActionData('multi_target', 'capture_error', {
-        actionId: action.id,
-        error: error.message,
-        stack: error.stack,
-        captureTime: performance.now() - captureStartTime,
-        timestamp: new Date().toISOString(),
-      });
-
-      throw error;
-    }
-  }
-
-  analyzeTargetSpecification(action) {
-    const specification = {
-      actionId: action.id,
-      targetingMethod: 'unknown',
-      complexity: 'low',
-      expectedTargetCount: 0,
-      scopeExpressions: [],
-      staticTargets: [],
-      dynamicQueries: [],
-    };
-
-    // Analyze different targeting methods
-    if (action.targets) {
-      // Static target list
-      specification.targetingMethod = 'static_list';
-      specification.staticTargets = Array.isArray(action.targets)
-        ? action.targets
-        : [action.targets];
-      specification.expectedTargetCount = specification.staticTargets.length;
-      specification.complexity =
-        specification.staticTargets.length > 10 ? 'medium' : 'low';
-    }
-
-    if (action.scope || action.targetScope) {
-      // Scope-based targeting
-      specification.targetingMethod = 'scope_expression';
-      const scopeExpr = action.scope || action.targetScope;
-      specification.scopeExpressions = Array.isArray(scopeExpr)
-        ? scopeExpr
-        : [scopeExpr];
-      specification.complexity = this.evaluateScopeComplexity(
-        specification.scopeExpressions
-      );
-    }
-
-    if (action.targetQuery || action.dynamicTargets) {
-      // Dynamic query-based targeting
-      specification.targetingMethod = 'dynamic_query';
-      specification.dynamicQueries = this.extractDynamicQueries(action);
-      specification.complexity = 'high';
-    }
-
-    // Handle hybrid targeting (multiple methods)
-    const methodCount = [
-      specification.staticTargets.length > 0,
-      specification.scopeExpressions.length > 0,
-      specification.dynamicQueries.length > 0,
-    ].filter(Boolean).length;
-
-    if (methodCount > 1) {
-      specification.targetingMethod = 'hybrid';
-      specification.complexity = 'high';
-    }
-
-    return specification;
-  }
-
-  traceTargetResolution(action, context, trace) {
-    const resolutionStartTime = performance.now();
-
-    // Initialize resolution results
-    const resolutionResults = {
-      resolvedTargets: [],
-      resolutionSteps: [],
-      filteringResults: [],
-      validationResults: [],
-      performance: {},
-    };
-
-    // Process static targets
-    if (action.targets) {
-      const staticResults = this.traceStaticTargetResolution(
-        action.targets,
-        trace
-      );
-      resolutionResults.resolvedTargets.push(...staticResults.targets);
-      resolutionResults.resolutionSteps.push(staticResults.step);
-    }
-
-    // Process scope-based targets
-    if (action.scope || action.targetScope) {
-      const scopeResults = this.traceScopeTargetResolution(
-        action.scope || action.targetScope,
-        context,
-        trace
-      );
-      resolutionResults.resolvedTargets.push(...scopeResults.targets);
-      resolutionResults.resolutionSteps.push(scopeResults.step);
-    }
-
-    // Process dynamic targets
-    if (action.targetQuery || action.dynamicTargets) {
-      const dynamicResults = this.traceDynamicTargetResolution(
-        action,
-        context,
-        trace
-      );
-      resolutionResults.resolvedTargets.push(...dynamicResults.targets);
-      resolutionResults.resolutionSteps.push(dynamicResults.step);
-    }
-
-    // Remove duplicates and validate
-    const uniqueTargets = this.deduplicateTargets(
-      resolutionResults.resolvedTargets
-    );
-    const validationResults = this.validateResolvedTargets(
-      uniqueTargets,
-      action,
-      trace
-    );
-
-    resolutionResults.resolvedTargets = validationResults.validTargets;
-    resolutionResults.validationResults = validationResults.results;
-
-    // Capture performance metrics
-    const totalResolutionTime = performance.now() - resolutionStartTime;
-    resolutionResults.performance = {
-      totalTime: totalResolutionTime,
-      targetCount: resolutionResults.resolvedTargets.length,
-      stepsExecuted: resolutionResults.resolutionSteps.length,
-    };
-
-    // Capture comprehensive resolution data
-    trace.captureActionData('multi_target', 'target_resolution', {
-      actionId: action.id,
-      resolutionResults: {
-        targetCount: resolutionResults.resolvedTargets.length,
-        resolutionSteps: resolutionResults.resolutionSteps.length,
-        performance: resolutionResults.performance,
-      },
-      timestamp: new Date().toISOString(),
-    });
-
-    return resolutionResults;
-  }
-
-  traceStaticTargetResolution(targets, trace) {
-    const staticStartTime = performance.now();
-    const staticTargets = Array.isArray(targets) ? targets : [targets];
-
-    const resolvedTargets = [];
-    const resolutionDetails = [];
-
-    for (let i = 0; i < staticTargets.length; i++) {
-      const target = staticTargets[i];
-      const targetStartTime = performance.now();
-
-      try {
-        // Resolve target entity
-        const resolvedTarget = this.resolveStaticTarget(target);
-
-        if (resolvedTarget) {
-          resolvedTargets.push(resolvedTarget);
-          resolutionDetails.push({
-            index: i,
-            originalTarget: target,
-            resolvedTarget: resolvedTarget.id,
-            resolutionTime: performance.now() - targetStartTime,
-            success: true,
-          });
-        } else {
-          resolutionDetails.push({
-            index: i,
-            originalTarget: target,
-            resolutionTime: performance.now() - targetStartTime,
-            success: false,
-            reason: 'target_not_found',
-          });
-        }
-      } catch (error) {
-        resolutionDetails.push({
-          index: i,
-          originalTarget: target,
-          resolutionTime: performance.now() - targetStartTime,
-          success: false,
-          reason: 'resolution_error',
-          error: error.message,
-        });
-      }
-    }
-
-    const stepData = {
-      type: 'static_target_resolution',
-      inputTargets: staticTargets,
-      resolvedCount: resolvedTargets.length,
-      resolutionDetails: resolutionDetails,
-      processingTime: performance.now() - staticStartTime,
-    };
-
-    // Capture static resolution data
-    trace.captureActionData('multi_target', 'static_resolution', {
-      step: stepData,
-      timestamp: new Date().toISOString(),
-    });
-
-    return {
-      targets: resolvedTargets,
-      step: stepData,
-    };
-  }
-
-  traceScopeTargetResolution(scopeExpression, context, trace) {
-    const scopeStartTime = performance.now();
-    const scopeExpressions = Array.isArray(scopeExpression)
-      ? scopeExpression
-      : [scopeExpression];
-
-    const allResolvedTargets = [];
-    const evaluationDetails = [];
-
-    for (let i = 0; i < scopeExpressions.length; i++) {
-      const expr = scopeExpressions[i];
-      const exprStartTime = performance.now();
-
-      try {
-        // Capture scope expression analysis
-        const scopeAnalysis = this.analyzeScopeExpression(expr);
-
-        // Evaluate scope expression
-        const evaluationResult = this.scopeEvaluator.evaluate(expr, context);
-        const scopeTargets = Array.isArray(evaluationResult)
-          ? evaluationResult
-          : [evaluationResult];
-
-        allResolvedTargets.push(...scopeTargets.filter((t) => t));
-
-        evaluationDetails.push({
-          index: i,
-          expression: expr,
-          analysis: scopeAnalysis,
-          resolvedCount: scopeTargets.length,
-          evaluationTime: performance.now() - exprStartTime,
-          success: true,
-        });
-
-        // Capture individual scope evaluation
-        trace.captureActionData('multi_target', 'scope_evaluation', {
-          expression: expr,
-          analysis: scopeAnalysis,
-          resolvedCount: scopeTargets.length,
-          evaluationTime: performance.now() - exprStartTime,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        evaluationDetails.push({
-          index: i,
-          expression: expr,
-          evaluationTime: performance.now() - exprStartTime,
-          success: false,
-          error: error.message,
-        });
-      }
-    }
-
-    const stepData = {
-      type: 'scope_target_resolution',
-      scopeExpressions: scopeExpressions,
-      resolvedCount: allResolvedTargets.length,
-      evaluationDetails: evaluationDetails,
-      processingTime: performance.now() - scopeStartTime,
-    };
-
-    return {
-      targets: allResolvedTargets,
-      step: stepData,
-    };
-  }
-
-  traceDynamicTargetResolution(action, context, trace) {
-    const dynamicStartTime = performance.now();
-
-    const query = action.targetQuery || action.dynamicTargets;
-    const queryAnalysis = this.analyzeDynamicQuery(query);
-
-    try {
-      // Execute dynamic query with tracing
-      const queryResults = this.executeDynamicQuery(query, context, trace);
-
-      const stepData = {
-        type: 'dynamic_target_resolution',
-        query: query,
-        analysis: queryAnalysis,
-        resolvedCount: queryResults.length,
-        processingTime: performance.now() - dynamicStartTime,
-        success: true,
-      };
-
-      // Capture dynamic resolution data
-      trace.captureActionData('multi_target', 'dynamic_resolution', {
-        step: stepData,
-        timestamp: new Date().toISOString(),
-      });
-
-      return {
-        targets: queryResults,
-        step: stepData,
-      };
-    } catch (error) {
-      const stepData = {
-        type: 'dynamic_target_resolution',
-        query: query,
-        analysis: queryAnalysis,
-        processingTime: performance.now() - dynamicStartTime,
-        success: false,
-        error: error.message,
-      };
-
-      return {
-        targets: [],
-        step: stepData,
-      };
-    }
-  }
-
-  analyzeTargetRelationships(targets, trace) {
-    if (targets.length < 2) {
-      return { relationships: [], analysis: 'insufficient_targets' };
-    }
-
-    const relationshipStartTime = performance.now();
-    const relationships = [];
-    const targetMap = new Map(targets.map((t) => [t.id, t]));
-
-    // Analyze pairwise relationships
-    for (let i = 0; i < targets.length; i++) {
-      for (let j = i + 1; j < targets.length; j++) {
-        const target1 = targets[i];
-        const target2 = targets[j];
-
-        const relationship = this.analyzeTargetPair(target1, target2);
-
-        if (relationship.type !== 'none') {
-          relationships.push({
-            target1: target1.id,
-            target2: target2.id,
-            relationship: relationship,
-          });
-        }
-      }
-    }
-
-    // Analyze group patterns
-    const groupPatterns = this.analyzeTargetGroupPatterns(targets);
-
-    const analysisResult = {
-      relationships: relationships,
-      groupPatterns: groupPatterns,
-      analysisTime: performance.now() - relationshipStartTime,
-      targetCount: targets.length,
-      relationshipCount: relationships.length,
-    };
-
-    return analysisResult;
-  }
-
-  evaluateScopeComplexity(scopeExpressions) {
-    let maxComplexity = 'low';
-
-    for (const expr of scopeExpressions) {
-      const complexity = this.analyzeScopeExpression(expr).complexity;
-
-      if (complexity === 'high') {
-        maxComplexity = 'high';
-      } else if (complexity === 'medium' && maxComplexity === 'low') {
-        maxComplexity = 'medium';
-      }
-    }
-
-    return maxComplexity;
-  }
-
-  analyzeScopeExpression(expression) {
-    const analysis = {
-      expression: expression,
-      complexity: 'low',
-      operators: [],
-      depthLevel: 0,
-      estimatedTargets: 'unknown',
-    };
-
-    if (typeof expression === 'string') {
-      // Simple string scope
-      analysis.operators = this.extractScopeOperators(expression);
-      analysis.depthLevel = this.calculateScopeDepth(expression);
-
-      if (analysis.operators.length > 3 || analysis.depthLevel > 2) {
-        analysis.complexity = 'medium';
-      }
-
-      if (
-        analysis.operators.includes('[') ||
-        analysis.operators.includes('{')
-      ) {
-        analysis.complexity = 'high';
-      }
-    } else if (typeof expression === 'object') {
-      // Complex object-based scope
-      analysis.complexity = 'high';
-      analysis.operators = ['object_query'];
-    }
-
-    return analysis;
-  }
-
-  extractScopeOperators(expression) {
-    const operators = [];
-    const operatorRegex = /[.\[\]{}+|:]/g;
-    let match;
-
-    while ((match = operatorRegex.exec(expression)) !== null) {
-      if (!operators.includes(match[0])) {
-        operators.push(match[0]);
-      }
-    }
-
-    return operators;
-  }
-
-  calculateScopeDepth(expression) {
-    let depth = 0;
-    let currentDepth = 0;
-
-    for (const char of expression) {
-      if (char === '[' || char === '{') {
-        currentDepth++;
-        depth = Math.max(depth, currentDepth);
-      } else if (char === ']' || char === '}') {
-        currentDepth--;
-      }
-    }
-
-    return depth;
-  }
-
-  extractDynamicQueries(action) {
-    const queries = [];
-
-    if (action.targetQuery) {
-      queries.push(action.targetQuery);
-    }
-
-    if (action.dynamicTargets) {
-      if (Array.isArray(action.dynamicTargets)) {
-        queries.push(...action.dynamicTargets);
-      } else {
-        queries.push(action.dynamicTargets);
-      }
-    }
-
-    return queries;
-  }
-
-  analyzeDynamicQuery(query) {
-    return {
-      type: typeof query,
-      complexity: 'high', // Dynamic queries are always considered high complexity
-      estimatedExecutionTime: 'unknown',
-      cacheability: this.assessQueryCacheability(query),
-    };
-  }
-
-  assessQueryCacheability(query) {
-    // Simple heuristic for query cacheability
-    if (
-      typeof query === 'string' &&
-      !query.includes('random') &&
-      !query.includes('time')
-    ) {
-      return 'high';
-    }
-    return 'low';
-  }
-
-  resolveStaticTarget(target) {
-    // Delegate to entity manager for target resolution
-    if (typeof target === 'string') {
-      return this.entityManager.getEntity(target);
-    } else if (target && target.id) {
-      return this.entityManager.getEntity(target.id);
-    }
-    return null;
-  }
-
-  executeDynamicQuery(query, context, trace) {
-    // Implementation would depend on the specific dynamic query system
-    // This is a placeholder for the actual dynamic query execution
-    const queryStartTime = performance.now();
-
-    try {
-      // Execute query (placeholder implementation)
-      const results = [];
-
-      trace.captureActionData('multi_target', 'dynamic_query_execution', {
-        query: query,
-        executionTime: performance.now() - queryStartTime,
-        resultCount: results.length,
-        timestamp: new Date().toISOString(),
-      });
-
-      return results;
-    } catch (error) {
-      trace.captureActionData('multi_target', 'dynamic_query_error', {
-        query: query,
-        error: error.message,
-        executionTime: performance.now() - queryStartTime,
-        timestamp: new Date().toISOString(),
-      });
-
-      throw error;
-    }
-  }
-
-  deduplicateTargets(targets) {
-    const seen = new Set();
-    const unique = [];
-
-    for (const target of targets) {
-      const id = target?.id || target;
-      if (!seen.has(id)) {
-        seen.add(id);
-        unique.push(target);
-      }
-    }
-
-    return unique;
-  }
-
-  validateResolvedTargets(targets, action, trace) {
-    const validationStartTime = performance.now();
-    const validTargets = [];
-    const validationResults = [];
-
-    for (let i = 0; i < targets.length; i++) {
-      const target = targets[i];
-      const validation = this.validateSingleTarget(target, action);
-
-      validationResults.push({
-        index: i,
-        targetId: target?.id || 'unknown',
-        valid: validation.valid,
-        reasons: validation.reasons,
-      });
-
-      if (validation.valid) {
-        validTargets.push(target);
-      }
-    }
-
-    // Capture validation summary
-    trace.captureActionData('multi_target', 'target_validation', {
-      actionId: action.id,
-      totalTargets: targets.length,
-      validTargets: validTargets.length,
-      invalidTargets: targets.length - validTargets.length,
-      validationTime: performance.now() - validationStartTime,
-      timestamp: new Date().toISOString(),
-    });
-
-    return {
-      validTargets: validTargets,
-      results: validationResults,
-    };
-  }
-
-  validateSingleTarget(target, action) {
-    const reasons = [];
-
-    // Basic existence check
-    if (!target) {
-      reasons.push('target_null_or_undefined');
-      return { valid: false, reasons };
-    }
-
-    // ID check
-    if (!target.id) {
-      reasons.push('missing_target_id');
-      return { valid: false, reasons };
-    }
-
-    // Type compatibility check (if action specifies target types)
-    if (action.targetTypes && !action.targetTypes.includes(target.type)) {
-      reasons.push('incompatible_target_type');
-      return { valid: false, reasons };
-    }
-
-    return { valid: true, reasons: [] };
-  }
-
-  analyzeTargetPair(target1, target2) {
-    // Analyze relationship between two targets
-    const relationship = {
-      type: 'none',
-      strength: 0,
-      details: {},
-    };
-
-    // Check for parent-child relationships
-    if (target1.parent === target2.id || target2.parent === target1.id) {
-      relationship.type = 'parent_child';
-      relationship.strength = 0.8;
-    }
-
-    // Check for sibling relationships (same parent)
-    else if (target1.parent && target1.parent === target2.parent) {
-      relationship.type = 'sibling';
-      relationship.strength = 0.6;
-    }
-
-    // Check for same type
-    else if (target1.type === target2.type) {
-      relationship.type = 'same_type';
-      relationship.strength = 0.3;
-    }
-
-    return relationship;
-  }
-
-  analyzeTargetGroupPatterns(targets) {
-    const patterns = [];
-
-    // Group by type
-    const typeGroups = new Map();
-    for (const target of targets) {
-      const type = target.type || 'unknown';
-      if (!typeGroups.has(type)) {
-        typeGroups.set(type, []);
-      }
-      typeGroups.get(type).push(target);
-    }
-
-    // Identify type patterns
-    for (const [type, group] of typeGroups.entries()) {
-      if (group.length > 1) {
-        patterns.push({
-          type: 'type_grouping',
-          targetType: type,
-          count: group.length,
-          percentage: (group.length / targets.length) * 100,
-        });
-      }
-    }
-
-    // Group by parent
-    const parentGroups = new Map();
-    for (const target of targets) {
-      const parent = target.parent || 'none';
-      if (!parentGroups.has(parent)) {
-        parentGroups.set(parent, []);
-      }
-      parentGroups.get(parent).push(target);
-    }
-
-    // Identify parent patterns
-    for (const [parent, group] of parentGroups.entries()) {
-      if (group.length > 1 && parent !== 'none') {
-        patterns.push({
-          type: 'parent_grouping',
-          parent: parent,
-          count: group.length,
-          percentage: (group.length / targets.length) * 100,
-        });
-      }
-    }
-
-    return patterns;
-  }
-}
-
-export default MultiTargetTraceCapture;
-```
-
-### Step 2: Integrate Multi-Target Support into ActionAwareStructuredTrace
+### Step 1: Enhance ActionAwareStructuredTrace with Multi-Target Support
 
 **File**: `src/actions/tracing/actionAwareStructuredTrace.js` (Enhancement)
 
 ```javascript
 /**
- * Enhanced ActionAwareStructuredTrace with multi-target support
+ * @file Enhanced ActionAwareStructuredTrace with multi-target support
  */
 
-import { StructuredTrace } from '../../tracing/structuredTrace.js';
-import {
-  validateDependency,
-  assertNonBlankString,
-} from '../../utils/validationUtils.js';
-import MultiTargetTraceCapture from './multiTarget/multiTargetTraceCapture.js';
+import { StructuredTrace } from './structuredTrace.js';
+import ActionTraceFilter from './actionTraceFilter.js';
+import { string } from '../../utils/validationCore.js';
+import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 class ActionAwareStructuredTrace extends StructuredTrace {
-  constructor({
-    traceId,
-    verbosity = 'basic',
-    scopeEvaluator,
-    entityManager,
-    logger,
-  }) {
-    super({ traceId });
+  // ... existing constructor and fields ...
 
-    assertNonBlankString(verbosity, 'Verbosity level');
-    validateDependency(scopeEvaluator, 'IScopeEvaluator');
-    validateDependency(entityManager, 'IEntityManager');
-    validateDependency(logger, 'ILogger');
-
-    this.verbosity = verbosity;
-    this.actionData = {};
-
-    // Initialize multi-target support
-    this.multiTargetCapture = new MultiTargetTraceCapture({
-      scopeEvaluator,
-      entityManager,
-      logger,
-    });
-
-    this.logger = logger;
-  }
-
+  /**
+   * Check if an action uses multi-target resolution
+   * @param {object} action - Action definition
+   * @returns {boolean}
+   */
   isMultiTargetAction(action) {
-    // Determine if action involves multiple targets
-    const hasMultipleStaticTargets =
-      Array.isArray(action.targets) && action.targets.length > 1;
-    const hasScopeExpression = !!(action.scope || action.targetScope);
-    const hasDynamicTargets = !!(action.targetQuery || action.dynamicTargets);
-    const hasTargetTypes =
-      Array.isArray(action.targetTypes) && action.targetTypes.length > 1;
-
-    return (
-      hasMultipleStaticTargets ||
-      hasScopeExpression ||
-      hasDynamicTargets ||
-      hasTargetTypes
-    );
+    // Check for modern multi-target format
+    if (action.targets && typeof action.targets === 'object' && 
+        !Array.isArray(action.targets)) {
+      return true;
+    }
+    
+    // Check for scope-based targeting (can resolve to multiple)
+    if (action.scope || action.targetScope) {
+      return true;
+    }
+    
+    // Check for dynamic targets
+    if (action.targetQuery || action.dynamicTargets) {
+      return true;
+    }
+    
+    // Legacy single target or no targets
+    return false;
   }
 
-  captureMultiTargetProcessing(action, context) {
-    if (!this.isMultiTargetAction(action)) {
+  /**
+   * Capture multi-target resolution data
+   * @param {string} actionId - Action ID
+   * @param {object} resolutionData - Resolution data from MultiTargetResolutionStage
+   */
+  captureMultiTargetResolution(actionId, resolutionData) {
+    if (!this.#actionTraceFilter.shouldTrace(actionId)) {
+      return;
+    }
+
+    const traceData = {
+      stage: 'multi_target_resolution',
+      targetKeys: resolutionData.targetKeys || [],
+      resolvedCounts: resolutionData.resolvedCounts || {},
+      totalTargets: resolutionData.totalTargets || 0,
+      resolutionOrder: resolutionData.resolutionOrder || [],
+      hasContextDependencies: resolutionData.hasContextDependencies || false,
+      resolutionTimeMs: resolutionData.resolutionTimeMs || 0,
+      timestamp: Date.now(),
+    };
+
+    this.captureActionData('multi_target_resolution', actionId, traceData);
+  }
+
+  /**
+   * Capture scope evaluation details
+   * @param {string} actionId - Action ID
+   * @param {string} targetKey - Target placeholder key
+   * @param {object} evaluationData - Scope evaluation data
+   */
+  captureScopeEvaluation(actionId, targetKey, evaluationData) {
+    if (!this.#actionTraceFilter.shouldTrace(actionId)) {
+      return;
+    }
+
+    const traceData = {
+      stage: 'scope_evaluation',
+      targetKey,
+      scope: evaluationData.scope,
+      context: evaluationData.context,
+      resultCount: evaluationData.resultCount || 0,
+      evaluationTimeMs: evaluationData.evaluationTimeMs || 0,
+      cacheHit: evaluationData.cacheHit || false,
+      error: evaluationData.error,
+      timestamp: Date.now(),
+    };
+
+    this.captureActionData('scope_evaluation', actionId, traceData);
+  }
+
+  /**
+   * Capture target relationship analysis
+   * @param {string} actionId - Action ID
+   * @param {object} relationshipData - Analyzed relationships
+   */
+  captureTargetRelationships(actionId, relationshipData) {
+    if (!this.#actionTraceFilter.shouldTrace(actionId)) {
+      return;
+    }
+
+    const traceData = {
+      stage: 'target_relationships',
+      totalTargets: relationshipData.totalTargets || 0,
+      relationships: relationshipData.relationships || [],
+      patterns: relationshipData.patterns || [],
+      analysisTimeMs: relationshipData.analysisTimeMs || 0,
+      timestamp: Date.now(),
+    };
+
+    this.captureActionData('target_relationships', actionId, traceData);
+  }
+
+  /**
+   * Get multi-target summary for a traced action
+   * @param {string} actionId - Action ID
+   * @returns {object|null} Multi-target summary or null
+   */
+  getMultiTargetSummary(actionId) {
+    const actionTrace = this.getActionTrace(actionId);
+    if (!actionTrace) {
       return null;
     }
 
-    const multiTargetStartTime = performance.now();
-
-    try {
-      // Use multi-target capture system
-      const results = this.multiTargetCapture.captureMultiTargetAction(
-        action,
-        this,
-        context
-      );
-
-      // Capture high-level multi-target summary
-      this.captureActionData('multi_target', 'processing_summary', {
-        actionId: action.id,
-        totalTargets: results.resolvedTargets.length,
-        resolutionSteps: results.resolutionSteps.length,
-        processingTime: performance.now() - multiTargetStartTime,
-        success: true,
-        timestamp: new Date().toISOString(),
-      });
-
-      return results;
-    } catch (error) {
-      this.captureActionData('multi_target', 'processing_error', {
-        actionId: action.id,
-        error: error.message,
-        processingTime: performance.now() - multiTargetStartTime,
-        success: false,
-        timestamp: new Date().toISOString(),
-      });
-
-      throw error;
-    }
-  }
-
-  getMultiTargetData() {
-    return this.actionData.multi_target || {};
-  }
-
-  getTargetResolutionSummary() {
-    const multiTargetData = this.getMultiTargetData();
-
     const summary = {
-      totalActionsProcessed: 0,
-      totalTargetsResolved: 0,
-      resolutionMethods: {},
-      averageTargetsPerAction: 0,
-      averageResolutionTime: 0,
+      isMultiTarget: false,
+      targetKeys: [],
+      totalTargets: 0,
+      resolutionTimeMs: 0,
+      scopeEvaluations: [],
+      hasRelationships: false,
     };
 
-    // Analyze processing summaries
-    const processingSummaries = multiTargetData.processing_summary || [];
-    summary.totalActionsProcessed = processingSummaries.length;
+    // Check for multi-target resolution data
+    const multiTargetStage = actionTrace.stages['multi_target_resolution'];
+    if (multiTargetStage && multiTargetStage.data) {
+      summary.isMultiTarget = true;
+      summary.targetKeys = multiTargetStage.data.targetKeys || [];
+      summary.totalTargets = multiTargetStage.data.totalTargets || 0;
+      summary.resolutionTimeMs = multiTargetStage.data.resolutionTimeMs || 0;
+    }
 
-    let totalTargets = 0;
-    let totalProcessingTime = 0;
+    // Check for scope evaluations
+    const scopeStage = actionTrace.stages['scope_evaluation'];
+    if (scopeStage && scopeStage.data) {
+      summary.scopeEvaluations.push(scopeStage.data);
+    }
 
-    processingSummaries.forEach((summary_data) => {
-      if (summary_data.success) {
-        totalTargets += summary_data.totalTargets;
-        totalProcessingTime += summary_data.processingTime;
-      }
-    });
-
-    summary.totalTargetsResolved = totalTargets;
-    summary.averageTargetsPerAction =
-      summary.totalActionsProcessed > 0
-        ? totalTargets / summary.totalActionsProcessed
-        : 0;
-    summary.averageResolutionTime =
-      summary.totalActionsProcessed > 0
-        ? totalProcessingTime / summary.totalActionsProcessed
-        : 0;
-
-    // Analyze resolution methods
-    const targetSpecifications = multiTargetData.target_specification || [];
-    targetSpecifications.forEach((spec) => {
-      const method = spec.specification.targetingMethod;
-      summary.resolutionMethods[method] =
-        (summary.resolutionMethods[method] || 0) + 1;
-    });
+    // Check for relationship data
+    const relationshipStage = actionTrace.stages['target_relationships'];
+    if (relationshipStage && relationshipStage.data) {
+      summary.hasRelationships = true;
+      summary.relationshipCount = relationshipStage.data.relationships?.length || 0;
+    }
 
     return summary;
   }
 
-  // Multi-target specific verbosity filtering
-  captureActionData(category, type, data) {
-    // Apply multi-target specific verbosity filtering
-    if (
-      category === 'multi_target' &&
-      !this.shouldCaptureMultiTargetData(type)
-    ) {
-      return;
-    }
-
-    super.captureActionData(category, type, data);
-  }
-
-  shouldCaptureMultiTargetData(type) {
-    switch (this.verbosity) {
-      case 'minimal':
-        return ['processing_summary', 'processing_error'].includes(type);
-      case 'basic':
-        return [
-          'processing_summary',
-          'processing_error',
-          'target_specification',
-          'target_resolution',
-        ].includes(type);
-      case 'detailed':
-        return true; // Capture all multi-target data
-      default:
-        return true;
-    }
-  }
 }
 
-export { ActionAwareStructuredTrace };
+export default ActionAwareStructuredTrace;
 ```
 
-### Step 3: Enhanced Multi-Target Tests
+### Step 2: Update MultiTargetResolutionStage Integration
 
-**File**: `tests/unit/actions/tracing/multiTarget/multiTargetTraceCapture.test.js`
+**File**: `src/actions/pipeline/stages/MultiTargetResolutionStage.js` (Enhancement)
+
+The existing `MultiTargetResolutionStage` already has some tracing support. We need to enhance it to use the new multi-target methods:
+
+```javascript
+// Enhanced tracing integration in MultiTargetResolutionStage
+async #resolveMultiTargets(context, trace) {
+  const { actionDef, actor, actionContext } = context;
+  const targetDefs = actionDef.targets;
+  const resolutionStartTime = Date.now();
+
+  // ... existing validation logic ...
+
+  // Get resolution order based on dependencies
+  const resolutionOrder = this.#dependencyResolver.getResolutionOrder(targetDefs);
+  
+  // Check if trace supports multi-target capture
+  const isActionAwareTrace = trace && typeof trace.captureMultiTargetResolution === 'function';
+  
+  if (isActionAwareTrace) {
+    // Capture multi-target resolution data
+    trace.captureMultiTargetResolution(actionDef.id, {
+      targetKeys: Object.keys(targetDefs),
+      resolutionOrder,
+      hasContextDependencies: resolutionOrder.some(key => targetDefs[key].contextFrom),
+      resolutionTimeMs: 0, // Will be updated after resolution
+    });
+  }
+  
+  // Resolve targets sequentially in dependency order
+  const resolvedTargets = {};
+  const resolvedCounts = {};
+  
+  for (const targetKey of resolutionOrder) {
+    const targetDef = targetDefs[targetKey];
+    const scopeStartTime = Date.now();
+    
+    // Build scope context (using existing methods)
+    const scopeContext = targetDef.contextFrom 
+      ? this.#contextBuilder.buildScopeContextForSpecificPrimary(/*...*/)
+      : this.#contextBuilder.buildScopeContext(/*...*/);
+    
+    // Resolve scope using UnifiedScopeResolver
+    const candidates = await this.#unifiedScopeResolver.resolve(
+      targetDef.scope,
+      scopeContext,
+      { useCache: true }
+    );
+    
+    resolvedTargets[targetKey] = Array.from(candidates.value || []);
+    resolvedCounts[targetKey] = resolvedTargets[targetKey].length;
+    
+    // Capture scope evaluation if trace supports it
+    if (isActionAwareTrace && trace.captureScopeEvaluation) {
+      trace.captureScopeEvaluation(actionDef.id, targetKey, {
+        scope: targetDef.scope,
+        context: targetDef.contextFrom || 'actor',
+        resultCount: resolvedCounts[targetKey],
+        evaluationTimeMs: Date.now() - scopeStartTime,
+        cacheHit: candidates.metadata?.cacheHit || false,
+      });
+    }
+  }
+  
+  // Update final resolution time
+  if (isActionAwareTrace) {
+    trace.captureMultiTargetResolution(actionDef.id, {
+      targetKeys: Object.keys(targetDefs),
+      resolvedCounts,
+      totalTargets: Object.values(resolvedCounts).reduce((sum, count) => sum + count, 0),
+      resolutionOrder,
+      hasContextDependencies: resolutionOrder.some(key => targetDefs[key].contextFrom),
+      resolutionTimeMs: Date.now() - resolutionStartTime,
+    });
+  }
+  
+  // ... continue with existing logic to create actionsWithTargets ...
+}
+```
+
+### Step 3: Create Tests for Multi-Target Support
+
+**File**: `tests/unit/actions/tracing/actionAwareStructuredTrace.test.js` (Enhancement)
 
 ```javascript
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import MultiTargetTraceCapture from '../../../../../src/actions/tracing/multiTarget/multiTargetTraceCapture.js';
-
-describe('MultiTargetTraceCapture', () => {
-  let capture;
-  let mockScopeEvaluator;
-  let mockEntityManager;
-  let mockLogger;
-  let mockTrace;
-
+import ActionAwareStructuredTrace from '../../../../src/actions/tracing/actionAwareStructuredTrace.js';
+import ActionTraceFilter from '../../../../src/actions/tracing/actionTraceFilter.js';
+describe('ActionAwareStructuredTrace - Multi-Target Support', () => {
+  let trace;
+  let mockFilter;
+  
   beforeEach(() => {
-    mockScopeEvaluator = {
-      evaluate: jest.fn(),
-    };
-
-    mockEntityManager = {
-      getEntity: jest.fn(),
-    };
-
-    mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    mockTrace = {
-      captureActionData: jest.fn(),
-    };
-
-    capture = new MultiTargetTraceCapture({
-      scopeEvaluator: mockScopeEvaluator,
-      entityManager: mockEntityManager,
-      logger: mockLogger,
+    mockFilter = new ActionTraceFilter({
+      enabled: true,
+      actionIds: ['test:action'],
+      verbosity: 'detailed'
+    });
+    
+    trace = new ActionAwareStructuredTrace({
+      actionTraceFilter: mockFilter,
+      actorId: 'test-actor',
+      context: {},
+      logger: console
     });
   });
-
-  describe('Target Specification Analysis', () => {
-    it('should analyze static target lists', () => {
+  
+  describe('isMultiTargetAction', () => {
+    it('should identify modern multi-target actions', () => {
       const action = {
-        id: 'multi-static',
-        targets: ['target1', 'target2', 'target3'],
+        id: 'test:action',
+        targets: {
+          primary: { scope: 'actor', placeholder: 'target' },
+          secondary: { scope: 'location', placeholder: 'location' }
+        }
       };
-
-      const spec = capture.analyzeTargetSpecification(action);
-
-      expect(spec.targetingMethod).toBe('static_list');
-      expect(spec.expectedTargetCount).toBe(3);
-      expect(spec.complexity).toBe('low');
-      expect(spec.staticTargets).toEqual(['target1', 'target2', 'target3']);
+      
+      expect(trace.isMultiTargetAction(action)).toBe(true);
     });
-
-    it('should analyze scope expression targets', () => {
+    
+    it('should identify scope-based actions as potentially multi-target', () => {
       const action = {
-        id: 'multi-scope',
-        scope: 'actor.followers[].items[{"==": [{"var": "type"}, "weapon"]}]',
+        id: 'test:action',
+        scope: 'actor.followers[]'
       };
-
-      const spec = capture.analyzeTargetSpecification(action);
-
-      expect(spec.targetingMethod).toBe('scope_expression');
-      expect(spec.complexity).toBe('high');
-      expect(spec.scopeExpressions).toEqual([action.scope]);
+      
+      expect(trace.isMultiTargetAction(action)).toBe(true);
     });
-
-    it('should analyze dynamic query targets', () => {
+    
+    it('should identify legacy single-target actions', () => {
       const action = {
-        id: 'multi-dynamic',
-        targetQuery: { type: 'character', location: 'forest' },
+        id: 'test:action',
+        targets: 'self'
       };
-
-      const spec = capture.analyzeTargetSpecification(action);
-
-      expect(spec.targetingMethod).toBe('dynamic_query');
-      expect(spec.complexity).toBe('high');
-      expect(spec.dynamicQueries).toHaveLength(1);
+      
+      expect(trace.isMultiTargetAction(action)).toBe(false);
     });
-
-    it('should detect hybrid targeting methods', () => {
-      const action = {
-        id: 'multi-hybrid',
-        targets: ['target1'],
+  });
+  
+  describe('captureMultiTargetResolution', () => {
+    it('should capture multi-target resolution data', () => {
+      const captureDataSpy = jest.spyOn(trace, 'captureActionData');
+      
+      trace.captureMultiTargetResolution('test:action', {
+        targetKeys: ['primary', 'secondary'],
+        resolvedCounts: { primary: 3, secondary: 2 },
+        totalTargets: 5,
+        resolutionOrder: ['primary', 'secondary'],
+        hasContextDependencies: false,
+        resolutionTimeMs: 150
+      });
+      
+      expect(captureDataSpy).toHaveBeenCalledWith(
+        'multi_target_resolution',
+        'test:action',
+        expect.objectContaining({
+          stage: 'multi_target_resolution',
+          targetKeys: ['primary', 'secondary'],
+          totalTargets: 5
+        })
+      );
+    });
+  });
+  
+  describe('captureScopeEvaluation', () => {
+    it('should capture scope evaluation details', () => {
+      const captureDataSpy = jest.spyOn(trace, 'captureActionData');
+      
+      trace.captureScopeEvaluation('test:action', 'primary', {
         scope: 'actor.followers[]',
-      };
-
-      const spec = capture.analyzeTargetSpecification(action);
-
-      expect(spec.targetingMethod).toBe('hybrid');
-      expect(spec.complexity).toBe('high');
-    });
-  });
-
-  describe('Target Resolution Tracing', () => {
-    it('should trace static target resolution', () => {
-      const targets = ['entity1', 'entity2'];
-
-      mockEntityManager.getEntity.mockImplementation((id) => ({
-        id,
-        type: 'character',
-      }));
-
-      const result = capture.traceStaticTargetResolution(targets, mockTrace);
-
-      expect(result.targets).toHaveLength(2);
-      expect(result.step.type).toBe('static_target_resolution');
-      expect(result.step.resolvedCount).toBe(2);
-      expect(mockTrace.captureActionData).toHaveBeenCalledWith(
-        'multi_target',
-        'static_resolution',
-        expect.any(Object)
-      );
-    });
-
-    it('should trace scope target resolution', () => {
-      const scopeExpression = 'actor.followers[]';
-      const context = { actor: { id: 'player' } };
-
-      mockScopeEvaluator.evaluate.mockReturnValue([
-        { id: 'follower1', type: 'character' },
-        { id: 'follower2', type: 'character' },
-      ]);
-
-      const result = capture.traceScopeTargetResolution(
-        scopeExpression,
-        context,
-        mockTrace
-      );
-
-      expect(result.targets).toHaveLength(2);
-      expect(result.step.type).toBe('scope_target_resolution');
-      expect(mockTrace.captureActionData).toHaveBeenCalledWith(
-        'multi_target',
+        context: 'actor',
+        resultCount: 3,
+        evaluationTimeMs: 50,
+        cacheHit: true
+      });
+      
+      expect(captureDataSpy).toHaveBeenCalledWith(
         'scope_evaluation',
-        expect.any(Object)
+        'test:action',
+        expect.objectContaining({
+          stage: 'scope_evaluation',
+          targetKey: 'primary',
+          resultCount: 3,
+          cacheHit: true
+        })
       );
-    });
-
-    it('should handle scope evaluation errors gracefully', () => {
-      const scopeExpression = 'invalid.scope[]';
-      const context = {};
-
-      mockScopeEvaluator.evaluate.mockRejectedValue(new Error('Invalid scope'));
-
-      const result = capture.traceScopeTargetResolution(
-        scopeExpression,
-        context,
-        mockTrace
-      );
-
-      expect(result.targets).toHaveLength(0);
-      expect(result.step.evaluationDetails[0].success).toBe(false);
     });
   });
-
-  describe('Target Relationship Analysis', () => {
-    it('should analyze parent-child relationships', () => {
-      const targets = [
-        { id: 'parent1', type: 'character' },
-        { id: 'child1', type: 'character', parent: 'parent1' },
-        { id: 'child2', type: 'character', parent: 'parent1' },
-      ];
-
-      const relationships = capture.analyzeTargetRelationships(
-        targets,
-        mockTrace
-      );
-
-      expect(relationships.relationships).toHaveLength(2); // parent-child + sibling
-      expect(relationships.relationships[0].relationship.type).toBe(
-        'parent_child'
-      );
-      expect(relationships.relationships[1].relationship.type).toBe('sibling');
-    });
-
-    it('should identify group patterns', () => {
-      const targets = [
-        { id: 'char1', type: 'character' },
-        { id: 'char2', type: 'character' },
-        { id: 'item1', type: 'item' },
-        { id: 'item2', type: 'item' },
-        { id: 'item3', type: 'item' },
-      ];
-
-      const relationships = capture.analyzeTargetRelationships(
-        targets,
-        mockTrace
-      );
-
-      expect(relationships.groupPatterns).toHaveLength(2);
-      expect(relationships.groupPatterns[0].type).toBe('type_grouping');
-      expect(relationships.groupPatterns[0].targetType).toBe('character');
-      expect(relationships.groupPatterns[1].targetType).toBe('item');
-    });
-  });
-
-  describe('Scope Expression Analysis', () => {
-    it('should analyze simple scope expressions', () => {
-      const expression = 'actor.items[]';
-
-      const analysis = capture.analyzeScopeExpression(expression);
-
-      expect(analysis.complexity).toBe('low');
-      expect(analysis.operators).toContain('.');
-      expect(analysis.operators).toContain('[');
-      expect(analysis.depthLevel).toBe(1);
-    });
-
-    it('should analyze complex scope expressions', () => {
-      const expression =
-        'actor.followers[].items[{"==": [{"var": "type"}, "weapon"]}]';
-
-      const analysis = capture.analyzeScopeExpression(expression);
-
-      expect(analysis.complexity).toBe('high');
-      expect(analysis.operators).toContain('{');
-      expect(analysis.depthLevel).toBeGreaterThan(1);
-    });
-
-    it('should handle object-based scope expressions', () => {
-      const expression = { type: 'character', location: 'forest' };
-
-      const analysis = capture.analyzeScopeExpression(expression);
-
-      expect(analysis.complexity).toBe('high');
-      expect(analysis.operators).toContain('object_query');
-    });
-  });
-
-  describe('Target Validation', () => {
-    it('should validate resolved targets', () => {
-      const targets = [
-        { id: 'valid1', type: 'character' },
-        { id: 'valid2', type: 'item' },
-        null, // Invalid target
-        { type: 'character' }, // Missing ID
-      ];
-
-      const action = { id: 'test-action' };
-
-      const result = capture.validateResolvedTargets(
-        targets,
-        action,
-        mockTrace
-      );
-
-      expect(result.validTargets).toHaveLength(2);
-      expect(result.results).toHaveLength(4);
-      expect(result.results[2].valid).toBe(false);
-      expect(result.results[3].valid).toBe(false);
-    });
-
-    it('should check target type compatibility', () => {
-      const targets = [
-        { id: 'char1', type: 'character' },
-        { id: 'item1', type: 'item' },
-      ];
-
-      const action = {
-        id: 'test-action',
-        targetTypes: ['character'], // Only allows characters
-      };
-
-      const result = capture.validateResolvedTargets(
-        targets,
-        action,
-        mockTrace
-      );
-
-      expect(result.validTargets).toHaveLength(1);
-      expect(result.results[1].valid).toBe(false);
-      expect(result.results[1].reasons).toContain('incompatible_target_type');
-    });
-  });
-
-  describe('Performance Optimization', () => {
-    it('should handle large target sets efficiently', () => {
-      const largeTargetList = Array.from(
-        { length: 200 },
-        (_, i) => `target${i}`
-      );
-      const action = { id: 'large-action', targets: largeTargetList };
-      const context = {};
-
-      mockEntityManager.getEntity.mockImplementation((id) => ({
-        id,
-        type: 'entity',
+  
+  describe('getMultiTargetSummary', () => {
+    it('should return multi-target summary for traced action', () => {
+      // First capture some multi-target data
+      trace.captureMultiTargetResolution('test:action', {
+        targetKeys: ['primary', 'secondary'],
+        resolvedCounts: { primary: 3, secondary: 2 },
+        totalTargets: 5,
+        resolutionOrder: ['primary', 'secondary'],
+        hasContextDependencies: false,
+        resolutionTimeMs: 150
+      });
+      
+      const summary = trace.getMultiTargetSummary('test:action');
+      
+      expect(summary).toEqual(expect.objectContaining({
+        isMultiTarget: true,
+        targetKeys: ['primary', 'secondary'],
+        totalTargets: 5,
+        resolutionTimeMs: 150
       }));
-
-      const startTime = performance.now();
-      const result = capture.captureMultiTargetAction(
-        action,
-        mockTrace,
-        context
-      );
-      const endTime = performance.now();
-
-      expect(endTime - startTime).toBeLessThan(100); // Should complete within 100ms
-      expect(result.resolvedTargets.length).toBe(200);
+    });
+    
+    it('should return null for non-traced action', () => {
+      const summary = trace.getMultiTargetSummary('unknown:action');
+      expect(summary).toBeNull();
     });
   });
 });
@@ -1360,105 +504,107 @@ describe('MultiTargetTraceCapture', () => {
 
 ### Unit Tests Required
 
-- [ ] MultiTargetTraceCapture target specification analysis
-- [ ] Static target resolution tracing
-- [ ] Scope expression target resolution tracing
-- [ ] Dynamic target query resolution tracing
+- [ ] ActionAwareStructuredTrace multi-target detection methods
+- [ ] Multi-target resolution data capture
+- [ ] Scope evaluation tracing
 - [ ] Target relationship analysis
-- [ ] Target validation with type checking
+- [ ] Multi-target summary generation
+- [ ] Integration with MultiTargetResolutionStage
 - [ ] Performance metrics capture
 - [ ] Error handling for invalid targets
 
 ### Integration Tests Required
 
-- [ ] End-to-end multi-target action processing
-- [ ] Pipeline integration with multi-target actions
+- [ ] End-to-end multi-target action processing with tracing
+- [ ] Pipeline integration with enhanced tracing
 - [ ] Large-scale target resolution performance
-- [ ] Mixed target resolution methods
+- [ ] Mixed legacy and modern target formats
 
 ### Performance Tests Required
 
 - [ ] Scalability testing with large target sets (>100 targets)
-- [ ] Memory usage analysis for multi-target data structures
-- [ ] Scope expression evaluation performance
-- [ ] Target relationship analysis performance
+- [ ] Memory usage analysis for trace data structures
+- [ ] Scope expression evaluation performance with caching
+- [ ] Trace data collection overhead measurement
 
 ## Acceptance Criteria
 
 ### Functional Requirements
 
-- [ ] All multi-target action types are properly detected and traced
-- [ ] Target resolution captures comprehensive data for all resolution methods
-- [ ] Scope expression evaluation is fully traced with performance metrics
-- [ ] Target relationships are analyzed and captured
-- [ ] Dynamic query execution is traced with error handling
-- [ ] Target validation includes type compatibility checking
+- [ ] Multi-target actions are properly detected via `isMultiTargetAction` method
+- [ ] Target resolution data is captured through enhanced trace methods
+- [ ] Scope evaluation details are traced with performance metrics
+- [ ] Integration with existing `MultiTargetResolutionStage` is seamless
+- [ ] Both legacy and modern target formats are supported
+- [ ] Trace data is properly filtered based on verbosity levels
 
 ### Performance Requirements
 
-- [ ] Efficient processing for large target sets (>100 targets)
-- [ ] Memory efficient trace data structures
-- [ ] Optimized scope expression evaluation with tracing
-- [ ] Minimal overhead for single-target actions
+- [ ] Efficient trace capture for large target sets (>100 targets)
+- [ ] Minimal memory overhead for trace data structures  
+- [ ] Leverages existing caching in UnifiedScopeResolver
+- [ ] Trace capture adds <5% overhead to resolution time
 
 ### Quality Requirements
 
-- [ ] 85% test coverage for multi-target functionality
-- [ ] Comprehensive error handling for all target resolution paths
+- [ ] 85% test coverage for new multi-target methods
+- [ ] Comprehensive error handling for trace capture failures
 - [ ] Performance benchmarks for large target scenarios
-- [ ] Clear trace data structure documentation
+- [ ] Clear documentation of trace data structure
 
 ## Dependencies
 
-### Prerequisite Tickets
+### Prerequisite Work
 
-- ACTTRA-009: ActionAwareStructuredTrace class (Foundation)
-- ACTTRA-013: MultiTargetResolutionStage integration (Pipeline Integration)
+- ACTTRA-009: ActionAwareStructuredTrace class (Complete)
+- ACTTRA-013: MultiTargetResolutionStage (Complete)
+- UnifiedScopeResolver implementation (Complete)
+- LegacyTargetCompatibilityLayer (Complete)
 
 ### Related Systems
 
-- Scope evaluation system for scope expression tracing
-- Entity manager for target resolution
-- Action pipeline for multi-target processing
-- Event bus for multi-target events
+- `MultiTargetResolutionStage` for target resolution
+- `UnifiedScopeResolver` for scope evaluation
+- `ActionTraceFilter` for trace filtering
+- `TargetContextBuilder` for context creation
+- `TargetDependencyResolver` for resolution ordering
 
 ### External Dependencies
 
-- Scope evaluator for scope expression processing
-- Entity manager for target entity resolution
-- ActionAwareStructuredTrace for trace capture
+- `validateDependency` from `utils/dependencyUtils.js`
+- `string` utilities from `utils/validationCore.js`
+- `ensureValidLogger` from `utils/loggerUtils.js`
 
 ## Effort Estimation
 
-**Total Effort: 18 hours**
+**Total Effort: 8 hours**
 
-- Multi-target capture system implementation: 8 hours
-- ActionAwareStructuredTrace integration: 3 hours
-- Target relationship analysis: 3 hours
-- Unit tests: 3 hours
-- Integration tests: 1 hour
+- Enhance ActionAwareStructuredTrace with multi-target methods: 3 hours
+- Update MultiTargetResolutionStage integration: 2 hours
+- Create comprehensive unit tests: 2 hours
+- Integration testing and performance validation: 1 hour
 
 ## Implementation Notes
 
+### Key Differences from Original Design
+
+1. **No New Subdirectory**: Instead of creating `multiTarget/multiTargetTraceCapture.js`, we enhance the existing `ActionAwareStructuredTrace` class directly
+2. **Use UnifiedScopeResolver**: Instead of a generic `IScopeEvaluator`, use the actual `UnifiedScopeResolver` service
+3. **Leverage Existing Infrastructure**: Build on existing multi-target support in `MultiTargetResolutionStage`
+4. **Simpler Integration**: Add methods to existing class rather than creating new complex hierarchies
+
 ### Performance Considerations
 
-- Optimized for large target sets with efficient data structures
-- Target relationship analysis uses optimized algorithms
-- Scope expression evaluation cached for repeated expressions
-- Memory efficient trace data collection with data summarization
+- Trace capture is conditional based on `ActionTraceFilter.shouldTrace()`
+- Leverages existing caching mechanisms in `UnifiedScopeResolver`
+- Minimal overhead through efficient data structures
+- Verbosity-based filtering reduces unnecessary data capture
 
 ### Error Handling Strategy
 
-- Graceful degradation when target resolution fails
-- Comprehensive error context capture
-- Continued processing when individual targets fail
-- Event-driven error reporting for monitoring
+- Trace capture failures should not break the pipeline
+- Log warnings for trace failures but continue processing
+- Graceful degradation when trace methods are unavailable
+- Comprehensive error context in trace data
 
-### Scalability Design
-
-- Efficient algorithms for target relationship analysis
-- Optimized memory usage for large target collections
-- Cached scope expression evaluation results
-- Parallel processing support for independent target resolution
-
-This ticket provides comprehensive multi-target action support within the action tracing system, capturing detailed target resolution data, relationship analysis, and performance metrics while maintaining optimal performance for complex targeting scenarios.
+This corrected workflow provides a realistic and implementable approach for adding multi-target action support to the existing action tracing system, building on the current codebase infrastructure rather than creating parallel structures.

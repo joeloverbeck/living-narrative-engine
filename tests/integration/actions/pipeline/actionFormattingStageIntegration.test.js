@@ -41,13 +41,15 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
     mockGetEntityDisplayNameFn = jest.fn((id) => `Display_${id}`);
 
     mockErrorContextBuilder = {
-      buildErrorContext: jest.fn().mockImplementation(({ error, actionDef, actorId, targetId }) => ({
-        error: error?.message || error,
-        actionId: actionDef.id,
-        actorId,
-        targetId,
-        phase: ERROR_PHASES.VALIDATION,
-      })),
+      buildErrorContext: jest
+        .fn()
+        .mockImplementation(({ error, actionDef, actorId, targetId }) => ({
+          error: error?.message || error,
+          actionId: actionDef.id,
+          actorId,
+          targetId,
+          phase: ERROR_PHASES.VALIDATION,
+        })),
     };
 
     mockCommandFormatter = {
@@ -70,7 +72,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       const actionTraceFilter = new ActionTraceFilter({
         enabled: true,
         tracedActions: ['*'],
-        verbosityLevel: 'verbose',  // Changed to verbose to capture all data including statistics
+        verbosityLevel: 'verbose', // Changed to verbose to capture all data including statistics
         logger: mockLogger,
       });
 
@@ -144,7 +146,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       // Verify trace data was captured
       const tracedActions = trace.getTracedActions();
       expect(tracedActions.size).toBeGreaterThan(0);
-      
+
       // Check that each action has formatting data
       for (const [actionId, actionTrace] of tracedActions) {
         if (actionId !== '__stage_summary') {
@@ -207,9 +209,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
               name: 'Legacy Action',
               template: 'Attack {target}',
             },
-            targetContexts: [
-              { entityId: 'goblin', displayName: 'Goblin' },
-            ],
+            targetContexts: [{ entityId: 'goblin', displayName: 'Goblin' }],
             resolvedTargets: null,
             targetDefinitions: null,
             isMultiTarget: false,
@@ -221,9 +221,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
               name: 'Simple Action',
               template: 'Look at {target}',
             },
-            targetContexts: [
-              { entityId: 'door', displayName: 'Door' },
-            ],
+            targetContexts: [{ entityId: 'door', displayName: 'Door' }],
           },
         ],
       };
@@ -265,7 +263,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       const actionTraceFilter = new ActionTraceFilter({
         enabled: true,
         tracedActions: ['*'],
-        verbosityLevel: 'verbose',  // Changed to verbose to capture all data including errors
+        verbosityLevel: 'verbose', // Changed to verbose to capture all data including errors
         logger: mockLogger,
       });
 
@@ -318,7 +316,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       // Verify error traces were captured
       const failingTrace = trace.getActionTrace('failing-action');
       expect(failingTrace).toBeDefined();
-      
+
       const throwingTrace = trace.getActionTrace('throwing-action');
       expect(throwingTrace).toBeDefined();
 
@@ -329,7 +327,9 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       expect(summaryTrace.stages.formatting).toBeDefined();
       expect(summaryTrace.stages.formatting.data).toBeDefined();
       expect(summaryTrace.stages.formatting.data.errors).toBe(2);
-      expect(summaryTrace.stages.formatting.data.statistics.failed).toBeGreaterThan(0);
+      expect(
+        summaryTrace.stages.formatting.data.statistics.failed
+      ).toBeGreaterThan(0);
     });
 
     it('should track performance metrics across all actions', async () => {
@@ -396,11 +396,13 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       expect(summaryTrace.stages).toBeDefined();
       expect(summaryTrace.stages.formatting).toBeDefined();
       const performance = summaryTrace.stages.formatting.data.performance;
-      
+
       expect(performance.totalDuration).toBeDefined();
       expect(performance.totalDuration).toBeGreaterThan(0);
-      expect(performance.totalDuration).toBeLessThanOrEqual(endTime - startTime);
-      
+      expect(performance.totalDuration).toBeLessThanOrEqual(
+        endTime - startTime
+      );
+
       expect(performance.averagePerAction).toBeDefined();
       expect(performance.averagePerAction).toBe(performance.totalDuration / 10);
 
@@ -414,7 +416,9 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
         expect(formattingStageData).toBeDefined();
         expect(formattingStageData.data).toBeDefined();
         expect(formattingStageData.data.performance).toBeDefined();
-        expect(formattingStageData.data.performance.duration).toBeGreaterThanOrEqual(0);
+        expect(
+          formattingStageData.data.performance.duration
+        ).toBeGreaterThanOrEqual(0);
       }
     });
 
@@ -422,7 +426,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       const actionTraceFilter = new ActionTraceFilter({
         enabled: true,
         tracedActions: ['*'],
-        verbosityLevel: 'verbose',  // Changed to verbose to capture all data including fallback flags
+        verbosityLevel: 'verbose', // Changed to verbose to capture all data including fallback flags
         logger: mockLogger,
       });
 
@@ -484,7 +488,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       const actionTrace = trace.getActionTrace('multi-target-with-fallback');
       expect(actionTrace).toBeDefined();
       expect(actionTrace.stages).toBeDefined();
-      
+
       // The fallback flag should be in the formatting stage data
       const formattingStageData = actionTrace.stages.formatting;
       expect(formattingStageData).toBeDefined();
@@ -499,7 +503,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
     it('should work correctly with selective action tracing', async () => {
       const actionTraceFilter = new ActionTraceFilter({
         enabled: true,
-        tracedActions: ['important-*'],  // Only trace actions starting with 'important-'
+        tracedActions: ['important-*'], // Only trace actions starting with 'important-'
         verbosityLevel: 'verbose',
         logger: mockLogger,
       });
@@ -526,7 +530,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
           {
             actionDef: {
               id: 'normal-action',
-              name: 'Normal Action', 
+              name: 'Normal Action',
               template: 'Do normal {thing}',
             },
             targetContexts: [{ entityId: 'target-2' }],
@@ -548,7 +552,7 @@ describe('ActionFormattingStage - Integration with Action Tracing', () => {
       const tracedActions = trace.getTracedActions();
       expect(tracedActions.has('important-action')).toBe(true);
       expect(tracedActions.has('normal-action')).toBe(false);
-      
+
       // Stage summary should still be captured
       expect(tracedActions.has('__stage_summary')).toBe(true);
     });

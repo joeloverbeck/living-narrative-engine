@@ -117,18 +117,30 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
     mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValueOnce(
       true
     );
-    mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValueOnce(
-      {
+    // convertLegacyFormat is called twice for legacy actions (once in main loop, once in #resolveLegacyTarget)
+    mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat
+      .mockReturnValueOnce({
         targetDefinitions: {
           primary: { scope: 'core:actors_in_location', placeholder: 'target' },
         },
-      }
-    );
+      })
+      .mockReturnValueOnce({
+        targetDefinitions: {
+          primary: { scope: 'core:actors_in_location', placeholder: 'target' },
+        },
+      });
 
-    // Mock for legacy action
+    // Mock for legacy action - return proper target context structure
     mockDeps.targetResolver.resolveTargets.mockResolvedValueOnce({
       success: true,
-      value: [{ entityId: 'target1', displayName: 'Target 1' }],
+      value: [
+        {
+          type: 'entity',
+          entityId: 'target1',
+          displayName: 'Target 1',
+          placeholder: 'target',
+        },
+      ],
     });
     mockDeps.entityManager.getEntityInstance.mockReturnValueOnce({
       id: 'target1',
@@ -335,16 +347,22 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
     mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValueOnce(
       true
     );
-    mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValueOnce(
-      {
+    // convertLegacyFormat is called twice for legacy actions (once in main loop, once in #resolveLegacyTarget)
+    mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat
+      .mockReturnValueOnce({
         targetDefinitions: {
           primary: { scope: 'none', placeholder: 'target' },
         },
-      }
-    );
+      })
+      .mockReturnValueOnce({
+        targetDefinitions: {
+          primary: { scope: 'none', placeholder: 'target' },
+        },
+      });
+    // For 'none' scope, targetResolver returns empty array but action should still be included
     mockDeps.targetResolver.resolveTargets.mockResolvedValueOnce({
       success: true,
-      value: [],
+      value: [], // Empty array is valid for 'none' scope
     });
 
     // Mock setup for multi-target action

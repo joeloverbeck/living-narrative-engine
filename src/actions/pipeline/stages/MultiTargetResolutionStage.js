@@ -156,12 +156,47 @@ export class MultiTargetResolutionStage extends PipelineStage {
         const isLegacy = this.#legacyLayer.isLegacyAction(actionDef);
         const resolutionStartTime = Date.now();
 
+        // Capture legacy detection if action-aware tracing is enabled
+        if (isActionAwareTrace && trace.captureLegacyDetection) {
+          trace.captureLegacyDetection(actionDef.id, {
+            hasStringTargets: typeof actionDef.targets === 'string',
+            hasScopeOnly: !!(actionDef.scope && !actionDef.targets),
+            hasLegacyFields: !!(actionDef.targetType || actionDef.targetCount),
+            detectedFormat: this.#analyzeLegacyFormat(actionDef),
+            requiresConversion: isLegacy,
+          });
+        }
+
         if (isLegacy) {
           hasLegacyActions = true;
+          const conversionStartTime = performance.now();
+
+          // Get conversion data from legacy layer
+          const conversionResult = this.#legacyLayer.convertLegacyFormat(
+            actionDef,
+            actor
+          );
+
           const result = await this.#resolveLegacyTarget(
             actionProcessContext,
             trace
           );
+
+          const processingTime = performance.now() - conversionStartTime;
+
+          // Capture legacy conversion if action-aware tracing is enabled
+          if (isActionAwareTrace && trace.captureLegacyConversion) {
+            trace.captureLegacyConversion(actionDef.id, {
+              isLegacy: true,
+              originalAction: actionDef,
+              targetDefinitions: conversionResult.targetDefinitions,
+              processingTime,
+              error: conversionResult.error,
+              migrationSuggestion:
+                this.#legacyLayer.getMigrationSuggestion(actionDef),
+              success: result.success,
+            });
+          }
 
           // Capture tracing data for legacy action if enabled
           if (isActionAwareTrace && trace.captureActionData) {
@@ -850,6 +885,20 @@ export class MultiTargetResolutionStage extends PipelineStage {
         error
       );
     }
+  }
+
+  /**
+   * Helper method to analyze legacy format for tracing
+   *
+   * @private
+   * @param {object} action - Action definition to analyze
+   * @returns {string} Detected legacy format type
+   */
+  #analyzeLegacyFormat(action) {
+    if (typeof action.targets === 'string') return 'string_targets';
+    if (action.scope && !action.targets) return 'scope_property';
+    if (action.targetType || action.targetCount) return 'legacy_target_type';
+    return 'modern';
   }
 }
 

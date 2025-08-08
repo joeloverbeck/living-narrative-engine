@@ -253,6 +253,118 @@ class ActionAwareStructuredTrace extends StructuredTrace {
   }
 
   /**
+   * Capture detailed legacy conversion data from LegacyTargetCompatibilityLayer
+   *
+   * @param {string} actionId - Action being processed
+   * @param {object} conversionData - Data from legacy compatibility layer
+   */
+  captureLegacyConversion(actionId, conversionData) {
+    if (!this.#actionTraceFilter.shouldTrace(actionId)) {
+      return;
+    }
+
+    this.captureActionData('legacy_processing', actionId, {
+      isLegacy: conversionData.isLegacy,
+      originalFormat: this.#analyzeLegacyFormat(conversionData.originalAction),
+      conversionResult: conversionData.targetDefinitions,
+      conversionTime: conversionData.processingTime,
+      success: !conversionData.error,
+      error: conversionData.error,
+      migrationSuggestion: conversionData.migrationSuggestion,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Capture legacy action detection and format analysis
+   *
+   * @param {string} actionId - Action ID
+   * @param {object} detectionData - Legacy detection results
+   */
+  captureLegacyDetection(actionId, detectionData) {
+    if (!this.#actionTraceFilter.shouldTrace(actionId)) {
+      return;
+    }
+
+    this.captureActionData('legacy_detection', actionId, {
+      hasStringTargets: detectionData.hasStringTargets,
+      hasScopeOnly: detectionData.hasScopeOnly,
+      hasLegacyFields: detectionData.hasLegacyFields,
+      legacyFormat: detectionData.detectedFormat,
+      requiresConversion: detectionData.requiresConversion,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Get summary of legacy action processing for this trace session
+   *
+   * @returns {object} Legacy processing summary
+   */
+  getLegacyProcessingSummary() {
+    const summary = {
+      totalLegacyActions: 0,
+      conversionsByFormat: {},
+      successfulConversions: 0,
+      failedConversions: 0,
+      averageConversionTime: 0,
+      totalConversionTime: 0,
+    };
+
+    for (const [actionId, traceData] of this.#tracedActionData) {
+      const legacyData = traceData.stages.legacy_processing;
+      if (legacyData && legacyData.data.isLegacy) {
+        summary.totalLegacyActions++;
+
+        const format = legacyData.data.originalFormat;
+        summary.conversionsByFormat[format] =
+          (summary.conversionsByFormat[format] || 0) + 1;
+
+        if (legacyData.data.success) {
+          summary.successfulConversions++;
+        } else {
+          summary.failedConversions++;
+        }
+
+        if (legacyData.data.conversionTime) {
+          summary.totalConversionTime += legacyData.data.conversionTime;
+        }
+      }
+    }
+
+    summary.averageConversionTime =
+      summary.totalLegacyActions > 0
+        ? summary.totalConversionTime / summary.totalLegacyActions
+        : 0;
+
+    return summary;
+  }
+
+  /**
+   * Analyze legacy action format for tracing purposes
+   *
+   * @private
+   * @param {object} action - Action definition to analyze
+   * @returns {string} Detected legacy format type
+   */
+  #analyzeLegacyFormat(action) {
+    if (!action) {
+      return 'unknown';
+    }
+
+    if (typeof action.targets === 'string') {
+      return 'string_targets';
+    }
+    if (action.scope && !action.targets) {
+      return 'scope_property';
+    }
+    if (action.targetType || action.targetCount) {
+      return 'legacy_target_type';
+    }
+    return 'unknown';
+  }
+
+  /**
    * Filter captured data based on verbosity level and inclusion configuration
    *
    * @private
@@ -269,6 +381,11 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       timestamp: data.timestamp || Date.now(),
       stage,
     };
+
+    // Special handling for legacy stages - always include all data
+    if (stage === 'legacy_processing' || stage === 'legacy_detection') {
+      return { ...filteredData, ...data };
+    }
 
     try {
       switch (verbosity) {
