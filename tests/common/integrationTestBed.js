@@ -70,8 +70,9 @@ export class IntegrationTestBed extends BaseTestBed {
     );
     registerCharacterBuilder(this.container);
 
-    // For integration tests, manually register event definitions instead of loading mods
+    // For integration tests, manually register schemas and definitions instead of loading mods
     // This avoids network requests during testing
+    await this._registerTestComponentSchemas();
     await this._registerTestEventDefinitions();
 
     // Store reference to mock logger for test assertions
@@ -191,6 +192,127 @@ export class IntegrationTestBed extends BaseTestBed {
         );
       }
       // Don't throw - allow tests to continue
+    }
+  }
+
+  /**
+   * Registers test component schemas needed for entity creation
+   *
+   * @private
+   * @returns {Promise<void>}
+   */
+  async _registerTestComponentSchemas() {
+    try {
+      const schemaValidator = this.container.resolve(tokens.ISchemaValidator);
+      if (!schemaValidator) {
+        throw new Error('ISchemaValidator not found in container');
+      }
+
+      // Register core component schemas needed for tests
+      const componentSchemas = [
+        {
+          id: 'core:name',
+          schema: {
+            type: 'object',
+            properties: {
+              text: { type: 'string' },
+            },
+            required: ['text'],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'core:position',
+          schema: {
+            type: 'object',
+            properties: {
+              locationId: { type: 'string' },
+            },
+            required: ['locationId'],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'positioning:closeness',
+          schema: {
+            type: 'object',
+            properties: {
+              partners: {
+                type: 'array',
+                uniqueItems: true,
+                items: { type: 'string' },
+              },
+            },
+            required: ['partners'],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'intimacy:kissing',
+          schema: {
+            type: 'object',
+            properties: {
+              partner: { type: 'string' },
+            },
+            required: ['partner'],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'positioning:facing_away',
+          schema: {
+            type: 'object',
+            properties: {
+              facing: { type: 'string' },
+            },
+            required: ['facing'],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'anatomy:mouth',
+          schema: {
+            type: 'object',
+            properties: {
+              state: { type: 'string' },
+            },
+            required: ['state'],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'clothing:wearable',
+          schema: {
+            type: 'object',
+            properties: {
+              slot: { type: 'string' },
+            },
+            required: ['slot'],
+            additionalProperties: false,
+          },
+        },
+      ];
+
+      // Register each component schema
+      for (const { id, schema } of componentSchemas) {
+        if (typeof schemaValidator.addSchema === 'function') {
+          await schemaValidator.addSchema(schema, id);
+        }
+      }
+
+      if (this.mockLogger && this.mockLogger.debug) {
+        this.mockLogger.debug(
+          'IntegrationTestBed: Test component schemas registered successfully'
+        );
+      }
+    } catch (error) {
+      if (this.mockLogger && this.mockLogger.error) {
+        this.mockLogger.error(
+          `IntegrationTestBed: Failed to register test component schemas: ${error.message}`,
+          error
+        );
+      }
+      throw error;
     }
   }
 

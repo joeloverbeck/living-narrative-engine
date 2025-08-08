@@ -105,11 +105,12 @@ describe('Template System Directory Structure', () => {
       const coreContent = fs.readFileSync(coreIndexPath, 'utf8');
 
       // Check for expected exports (placeholder for now)
-      expect(coreContent).toContain('export { createCharacterBuilderPage }');
-      expect(coreContent).toContain('export { createHeader }');
-      expect(coreContent).toContain('export { createMain }');
-      expect(coreContent).toContain('export { createFooter }');
-      expect(coreContent).toContain('export { createModal }');
+      // Use regex to match both standalone and grouped export syntax
+      expect(coreContent).toMatch(/export\s*{\s*[^}]*\bcreateCharacterBuilderPage\b[^}]*}/);
+      expect(coreContent).toMatch(/export\s*{\s*[^}]*\bcreateHeader\b[^}]*}/);
+      expect(coreContent).toMatch(/export\s*{\s*[^}]*\bcreateMain\b[^}]*}/);
+      expect(coreContent).toMatch(/export\s*{\s*[^}]*\bcreateFooter\b[^}]*}/);
+      expect(coreContent).toMatch(/export\s*{\s*[^}]*\bcreateModal\b[^}]*}/);
 
       // Check for comment about placeholder nature
       expect(coreContent).toContain(
