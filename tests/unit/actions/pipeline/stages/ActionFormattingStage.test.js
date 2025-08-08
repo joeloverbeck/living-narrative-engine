@@ -1,5 +1,5 @@
 /**
- * @file Unit tests for ActionFormattingStage - Enhanced Multi-Target Support
+ * @file Unit tests for ActionFormattingStage - Enhanced Multi-Target Support and Action Tracing
  * @see src/actions/pipeline/stages/ActionFormattingStage.js
  */
 
@@ -8,6 +8,8 @@ import { ActionFormattingStage } from '../../../../../src/actions/pipeline/stage
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
 import { MultiTargetActionFormatter } from '../../../../../src/actions/formatters/MultiTargetActionFormatter.js';
 import { ERROR_PHASES } from '../../../../../src/actions/errors/actionErrorTypes.js';
+import ActionAwareStructuredTrace from '../../../../../src/actions/tracing/actionAwareStructuredTrace.js';
+import { StructuredTrace } from '../../../../../src/actions/tracing/structuredTrace.js';
 
 describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
   let stage;
@@ -904,6 +906,696 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
       // Should use legacy formatter
       expect(mockMultiTargetFormatter.format).toHaveBeenCalled();
       expect(mockMultiTargetFormatter.formatMultiTarget).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('ActionFormattingStage - Action Tracing Integration', () => {
+  let stage;
+  let mockCommandFormatter;
+  let mockEntityManager;
+  let mockSafeEventDispatcher;
+  let mockGetEntityDisplayNameFn;
+  let mockErrorContextBuilder;
+  let mockLogger;
+
+  beforeEach(() => {
+    mockCommandFormatter = {
+      format: jest.fn(),
+      formatMultiTarget: jest.fn(),
+    };
+
+    mockEntityManager = {
+      getEntityInstance: jest.fn(),
+    };
+
+    mockSafeEventDispatcher = {
+      dispatch: jest.fn(),
+    };
+
+    mockGetEntityDisplayNameFn = jest.fn().mockReturnValue('Display Name');
+
+    mockErrorContextBuilder = {
+      buildErrorContext: jest.fn().mockReturnValue({
+        error: 'Error context',
+        actionId: 'test-action',
+      }),
+    };
+
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    stage = new ActionFormattingStage({
+      commandFormatter: mockCommandFormatter,
+      entityManager: mockEntityManager,
+      safeEventDispatcher: mockSafeEventDispatcher,
+      getEntityDisplayNameFn: mockGetEntityDisplayNameFn,
+      errorContextBuilder: mockErrorContextBuilder,
+      logger: mockLogger,
+    });
+  });
+
+  describe('Action-Aware Trace Detection', () => {
+    it('should detect action-aware traces and use tracing execution path', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: { test: true },
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test-action',
+              name: 'Test Action',
+              template: 'Test {target}',
+            },
+            targetContexts: [
+              {
+                type: 'entity',
+                entityId: 'target-1',
+                displayName: 'Target 1',
+              },
+            ],
+          },
+        ],
+      };
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'Test Target 1',
+      });
+
+      const result = await stage.executeInternal(context);
+      
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0].command).toBe('Test Target 1');
+
+      // Verify trace data was captured
+      const tracedActions = trace.getTracedActions();
+      expect(tracedActions.has('test-action')).toBe(true);
+
+      const actionTrace = trace.getActionTrace('test-action');
+      expect(actionTrace.stages.formatting).toBeDefined();
+
+      // Verify stage summary was captured
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      expect(summaryTrace).toBeDefined();
+      expect(summaryTrace.stages.formatting.data.statistics).toBeDefined();
+    });
+
+    it('should use standard execution for regular traces', async () => {
+      const trace = new StructuredTrace();
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test-action',
+              name: 'Test Action',
+              template: 'Test {target}',
+            },
+            targetContexts: [
+              {
+                type: 'entity',
+                entityId: 'target-1',
+                displayName: 'Target 1',
+              },
+            ],
+          },
+        ],
+      };
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'Test Target 1',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0].command).toBe('Test Target 1');
+
+      // Should not have action trace data since it's a regular trace
+      expect(trace.captureActionData).toBeUndefined();
+    });
+  });
+
+  describe('Formatting Path Tracing', () => {
+    it('should capture per-action metadata path decision', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      // Test per-action metadata path
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: { id: 'action-1', name: 'Action 1' },
+            targetContexts: [{ entityId: 'target-1' }],
+            resolvedTargets: { primary: [{ id: 'target-1' }] },
+            targetDefinitions: { primary: { placeholder: 'target' } },
+            isMultiTarget: true,
+          },
+        ],
+      };
+
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: 'Multi-target formatted',
+      });
+
+      await stage.executeInternal(context);
+
+      const actionTrace = trace.getActionTrace('action-1');
+      expect(actionTrace.stages.formatting).toBeDefined();
+
+      // Verify formatting path was captured
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      expect(summaryTrace.stages.formatting.data.formattingPath).toBe(
+        'per-action'
+      );
+    });
+
+    it('should capture multi-target path decision', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: { id: 'action-1', name: 'Action 1' },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: { primary: [{ id: 'target-1' }] },
+        targetDefinitions: { primary: { placeholder: 'target' } },
+      };
+
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: 'Multi-target formatted',
+      });
+
+      await stage.executeInternal(context);
+
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      expect(summaryTrace.stages.formatting.data.formattingPath).toBe(
+        'multi-target'
+      );
+    });
+
+    it('should capture legacy path decision', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: { id: 'action-1', name: 'Action 1' },
+            targetContexts: [{ entityId: 'target-1' }],
+          },
+        ],
+      };
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'Legacy formatted',
+      });
+
+      await stage.executeInternal(context);
+
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      expect(summaryTrace.stages.formatting.data.formattingPath).toBe('legacy');
+    });
+  });
+
+  describe('Fallback Usage Tracing', () => {
+    it('should capture fallback usage when multi-target formatting fails', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: { id: 'action-1', name: 'Action 1' },
+            targetContexts: [{ entityId: 'target-1' }],
+            resolvedTargets: {
+              primary: [{ id: 'target-1', displayName: 'Target 1' }],
+            },
+            targetDefinitions: { primary: { placeholder: 'target' } },
+            isMultiTarget: true,
+          },
+        ],
+      };
+
+      // Multi-target fails, fallback succeeds
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target formatting failed',
+      });
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'Fallback formatted',
+      });
+
+      await stage.executeInternal(context);
+
+      const actionTrace = trace.getActionTrace('action-1');
+      expect(actionTrace).toBeDefined();
+      expect(actionTrace.stages.formatting).toBeDefined();
+
+      // Find the completion capture which should have fallbackUsed flag
+      const formattingStages = Object.values(actionTrace.stages);
+      const completionCapture = formattingStages.find(
+        (s) => s.data?.fallbackUsed !== undefined
+      );
+      expect(completionCapture).toBeDefined();
+      expect(completionCapture.data.fallbackUsed).toBe(true);
+    });
+  });
+
+  describe('Error Tracing', () => {
+    it('should capture error details when formatting fails', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: { id: 'action-1', name: 'Action 1' },
+            targetContexts: [{ entityId: 'target-1' }],
+          },
+        ],
+      };
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: false,
+        error: 'Formatting failed',
+      });
+
+      await stage.executeInternal(context);
+
+      const actionTrace = trace.getActionTrace('action-1');
+      expect(actionTrace).toBeDefined();
+      expect(actionTrace.stages.formatting).toBeDefined();
+
+      // Verify error was captured in summary
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      expect(summaryTrace.stages.formatting.data.errors).toBeGreaterThan(0);
+    });
+
+    it('should capture exception details when formatting throws', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: { id: 'action-1', name: 'Action 1' },
+            targetContexts: [{ entityId: 'target-1' }],
+            resolvedTargets: { primary: [{ id: 'target-1' }] },
+            targetDefinitions: { primary: { placeholder: 'target' } },
+            isMultiTarget: true,
+          },
+        ],
+      };
+
+      mockCommandFormatter.formatMultiTarget.mockImplementation(() => {
+        throw new Error('Formatter exploded');
+      });
+
+      await stage.executeInternal(context);
+
+      const actionTrace = trace.getActionTrace('action-1');
+      expect(actionTrace).toBeDefined();
+
+      // Find the error capture
+      const formattingStages = Object.values(actionTrace.stages);
+      const errorCapture = formattingStages.find((s) => s.data?.error);
+      expect(errorCapture).toBeDefined();
+      expect(errorCapture.data.error).toBe('Formatter exploded');
+    });
+  });
+
+  describe('Performance Metrics', () => {
+    it('should capture performance metrics for each action', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: { id: 'action-1' },
+            targetContexts: [{ entityId: 't1' }],
+          },
+          {
+            actionDef: { id: 'action-2' },
+            targetContexts: [{ entityId: 't2' }],
+          },
+          {
+            actionDef: { id: 'action-3' },
+            targetContexts: [{ entityId: 't3' }],
+          },
+        ],
+      };
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'Formatted',
+      });
+
+      await stage.executeInternal(context);
+
+      // Check that each action has performance data
+      for (let i = 1; i <= 3; i++) {
+        const actionTrace = trace.getActionTrace(`action-${i}`);
+        expect(actionTrace).toBeDefined();
+
+        // Find the completion capture with performance data
+        const formattingStages = Object.values(actionTrace.stages);
+        const performanceCapture = formattingStages.find(
+          (s) => s.data?.performance
+        );
+        expect(performanceCapture).toBeDefined();
+        expect(performanceCapture.data.performance.duration).toBeDefined();
+        expect(
+          performanceCapture.data.performance.duration
+        ).toBeGreaterThanOrEqual(0);
+      }
+
+      // Check stage summary has aggregate performance metrics
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      expect(
+        summaryTrace.stages.formatting.data.performance.totalDuration
+      ).toBeDefined();
+      expect(
+        summaryTrace.stages.formatting.data.performance.averagePerAction
+      ).toBeDefined();
+    });
+  });
+
+  describe('Statistics Tracking', () => {
+    it('should track statistics across all formatting paths', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          // Per-action metadata with multi-target
+          {
+            actionDef: { id: 'action-1' },
+            targetContexts: [],
+            resolvedTargets: { primary: [{ id: 't1' }] },
+            targetDefinitions: { primary: { placeholder: 'target' } },
+            isMultiTarget: true,
+          },
+          // Per-action metadata with legacy
+          {
+            actionDef: { id: 'action-2' },
+            targetContexts: [{ entityId: 't2' }],
+            resolvedTargets: null,
+            targetDefinitions: null,
+            isMultiTarget: false,
+          },
+          // Regular legacy
+          {
+            actionDef: { id: 'action-3' },
+            targetContexts: [{ entityId: 't3' }],
+          },
+        ],
+      };
+
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: 'Multi formatted',
+      });
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'Legacy formatted',
+      });
+
+      await stage.executeInternal(context);
+
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      const stats = summaryTrace.stages.formatting.data.statistics;
+
+      expect(stats.total).toBe(3);
+      expect(stats.successful).toBeGreaterThan(0);
+      expect(stats.failed).toBe(0);
+      expect(stats.multiTarget).toBeGreaterThan(0);
+      expect(stats.legacy).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Backward Compatibility', () => {
+    it('should maintain existing behavior for non-traced execution', async () => {
+      const trace = new StructuredTrace();
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test-action',
+              name: 'Test Action',
+              template: 'Test {target}',
+            },
+            targetContexts: [
+              {
+                type: 'entity',
+                entityId: 'target-1',
+                displayName: 'Target 1',
+              },
+            ],
+          },
+        ],
+      };
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'Test Target 1',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0]).toEqual({
+        id: 'test-action',
+        name: 'Test Action',
+        command: 'Test Target 1',
+        description: '',
+        params: { targetId: 'target-1' },
+      });
+    });
+
+    it('should handle empty action arrays gracefully with tracing', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [],
+      };
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.actions).toEqual([]);
+
+      // Check that summary was still captured
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      expect(summaryTrace).toBeDefined();
+      expect(summaryTrace.stages.formatting.data.statistics.total).toBe(0);
+    });
+  });
+
+  describe('Performance Impact', () => {
+    it('should have minimal performance impact when tracing is enabled', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: Array(100)
+          .fill()
+          .map((_, i) => ({
+            actionDef: {
+              id: `action-${i}`,
+              name: `Action ${i}`,
+              template: 'Test {target}',
+            },
+            targetContexts: [
+              {
+                type: 'entity',
+                entityId: `target-${i}`,
+                displayName: `Target ${i}`,
+              },
+            ],
+          })),
+      };
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'Formatted',
+      });
+
+      const startTime = performance.now();
+      await stage.executeInternal(context);
+      const endTime = performance.now();
+      const executionTime = endTime - startTime;
+
+      // Should complete within reasonable time even with tracing
+      expect(executionTime).toBeLessThan(1000); // 1 second for 100 actions
+      expect(mockCommandFormatter.format).toHaveBeenCalledTimes(100);
+
+      // Verify all actions were traced
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      expect(summaryTrace.stages.formatting.data.statistics.total).toBe(100);
     });
   });
 });

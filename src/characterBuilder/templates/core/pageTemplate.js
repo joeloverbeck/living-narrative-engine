@@ -4,6 +4,7 @@
  */
 
 import { createHeader } from './headerTemplate.js';
+import { createMain } from './mainTemplate.js';
 
 /** @typedef {import('../types.js').PageConfig} PageConfig */
 /** @typedef {import('../types.js').PanelConfig} PanelConfig */
@@ -75,76 +76,20 @@ function createPageHeader(title, subtitle, actions) {
  * @returns {string} Main content HTML
  */
 function createPageMain(leftPanel, rightPanel, singlePanel) {
-  // Placeholder - will be replaced by HTMLTEMP-004
+  // Use the new main template from HTMLTEMP-004
   if (singlePanel) {
     const panel = leftPanel || rightPanel;
-    return `
-      <main class="cb-page-main cb-main-single" role="main">
-        <div class="cb-content-wrapper">
-          ${panel ? createPanelPlaceholder(panel, 'single') : ''}
-        </div>
-      </main>
-    `;
+    return createMain({
+      layout: 'single',
+      centerPanel: panel,
+    });
   }
 
-  return `
-    <main class="cb-page-main cb-main-dual" role="main">
-      <div class="cb-content-wrapper">
-        <div class="cb-panels-container">
-          ${leftPanel ? createPanelPlaceholder(leftPanel, 'left') : ''}
-          ${rightPanel ? createPanelPlaceholder(rightPanel, 'right') : ''}
-        </div>
-      </div>
-    </main>
-  `;
-}
-
-/**
- * Creates a panel placeholder (temporary until HTMLTEMP-011)
- *
- * @private
- * @param {PanelConfig} panel - Panel configuration
- * @param {string} position - Panel position
- * @returns {string} Panel HTML
- */
-function createPanelPlaceholder(panel, position) {
-  const positionClass = `cb-panel-${position}`;
-  const id = panel.id ? `id="${panel.id}"` : '';
-
-  return `
-    <section ${id} class="cb-panel ${positionClass} ${panel.className || ''}" 
-             role="region" 
-             ${panel.heading ? `aria-labelledby="${panel.id}-heading"` : ''}>
-      ${
-        panel.heading
-          ? `
-        <h2 id="${panel.id || position}-heading" class="cb-panel-heading">
-          ${escapeHtml(panel.heading)}
-        </h2>
-      `
-          : ''
-      }
-      <div class="cb-panel-content">
-        ${typeof panel.content === 'function' ? panel.content() : panel.content}
-      </div>
-      ${panel.actions ? createPanelActions(panel.actions) : ''}
-    </section>
-  `;
-}
-
-/**
- * Creates panel action buttons
- *
- * @private
- * @param {Array} actions - Panel actions
- * @returns {string} Actions HTML
- */
-function createPanelActions(actions) {
-  return `
-    <div class="cb-panel-actions">
-      ${actions.map((action) => createActionButton(action, 'panel')).join('')}
-    </div>
-  `;
+  return createMain({
+    layout: 'dual',
+    leftPanel,
+    rightPanel,
+  });
 }
 
 /**

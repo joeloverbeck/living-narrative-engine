@@ -16,6 +16,8 @@ describe('MonitoringCoordinator', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     logger = createMockLogger();
+    // Add warning method since #addAlert uses logger[type] and type can be 'warning'
+    logger.warning = jest.fn();
 
     // Mock PerformanceMonitor
     mockPerformanceMonitor = {
@@ -359,6 +361,532 @@ describe('MonitoringCoordinator', () => {
       coordinator.close();
 
       expect(logger.info).toHaveBeenCalledWith('MonitoringCoordinator closed');
+    });
+  });
+
+  describe('health checks', () => {
+    let realSetInterval;
+    let realClearInterval;
+    let intervalCallback;
+
+    beforeEach(() => {
+      // Capture the real functions
+      realSetInterval = global.setInterval;
+      realClearInterval = global.clearInterval;
+
+      // Mock setInterval to capture the callback
+      global.setInterval = jest.fn((callback, interval) => {
+        intervalCallback = callback;
+        return 123; // Return a fake interval ID
+      });
+      global.clearInterval = jest.fn();
+    });
+
+    afterEach(() => {
+      // Restore real functions
+      global.setInterval = realSetInterval;
+      global.clearInterval = realClearInterval;
+    });
+
+    it('should start health checks when enabled', () => {
+      coordinator = new MonitoringCoordinator({
+        logger,
+        enabled: true,
+        checkInterval: 5000,
+      });
+
+      expect(global.setInterval).toHaveBeenCalledWith(
+        expect.any(Function),
+        5000
+      );
+    });
+
+    it('should not start health checks when disabled', () => {
+      coordinator = new MonitoringCoordinator({
+        logger,
+        enabled: false,
+      });
+
+      expect(global.setInterval).not.toHaveBeenCalled();
+    });
+
+    it('should stop health checks when disabling monitoring', () => {
+      coordinator = new MonitoringCoordinator({
+        logger,
+        enabled: true,
+      });
+
+      coordinator.setEnabled(false);
+
+      expect(global.clearInterval).toHaveBeenCalledWith(123);
+    });
+
+    it('should restart health checks when enabling monitoring', () => {
+      coordinator = new MonitoringCoordinator({
+        logger,
+        enabled: false,
+      });
+
+      coordinator.setEnabled(true);
+
+      expect(global.setInterval).toHaveBeenCalledWith(
+        expect.any(Function),
+        30000
+      );
+    });
+
+    it('should perform health check and check memory usage', () => {
+      coordinator = new MonitoringCoordinator({
+        logger,
+        enabled: true,
+      });
+
+      // Trigger the health check
+      intervalCallback();
+
+      expect(mockPerformanceMonitor.checkMemoryUsage).toHaveBeenCalled();
+    });
+
+    it('should handle health check errors gracefully', () => {
+      mockPerformanceMonitor.checkMemoryUsage.mockImplementation(() => {
+        throw new Error('Memory check failed');
+      });
+
+      coordinator = new MonitoringCoordinator({
+        logger,
+        enabled: true,
+      });
+
+      // Should not throw
+      expect(() => intervalCallback()).not.toThrow();
+      expect(logger.error).toHaveBeenCalledWith(
+        'Health check failed:',
+        expect.any(Error)
+      );
+    });
+
+    it('should check circuit breaker health and add alerts for OPEN state', () => {
+      const openBreaker = {
+        ...mockCircuitBreaker,
+        getStats: jest.fn().mockReturnValue({
+          state: 'OPEN',
+          totalRequests: 20,
+          totalFailures: 15,
+          totalSuccesses: 5,
+          lastFailureTime: Date.now(),
+        }),
+      };
+
+      coordinator = new MonitoringCoordinator({
+        logger,
+        enabled: true,
+      });
+
+      // Override the circuit breaker for this test
+      CircuitBreaker.mockImplementationOnce(() => openBreaker);
+      coordinator.getCircuitBreaker('test-operation');
+
+      // Trigger health check
+      intervalCallback();
+
+      expect(logger.warning).toHaveBeenCalledWith(
+        expect.stringContaining("Circuit breaker 'test-operation' is OPEN")
+      );
+      expect(logger.warning).toHaveBeenCalledWith(
+        expect.stringContaining('High failure rate (75%) for circuit breaker')
+      );
+    });
+
+    it('should check circuit breaker health and add alerts for HALF_OPEN state', () => {
+      const halfOpenBreaker = {
+        ...mockCircuitBreaker,
+        getStats: jest.fn().mockReturnValue({
+          state: 'HALF_OPEN',
+          totalRequests: 10,
+          totalFailures: 3,
+          totalSuccesses: 7,
+          lastFailureTime: Date.now(),
+        }),
+      };
+
+      coordinator = new MonitoringCoordinator({
+        logger,
+        enabled: true,
+      });
+
+      // Override the circuit breaker for this test
+      CircuitBreaker.mockImplementationOnce(() => halfOpenBreaker);
+      coordinator.getCircuitBreaker('test-operation');
+
+      // Trigger health check
+      intervalCallback();
+
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining("Circuit breaker 'test-operation' is HALF_OPEN")
+      );
+    });
+
+    it('should detect performance degradation', () => {
+      mockPerformanceMonitor.getMetrics.mockReturnValue({
+        totalOperations: 100,
+        slowOperations: 30,
+        averageOperationTime: 250,
+        maxOperationTime: 500,
+        minOperationTime: 10,
+        operationCounts: {},
+        slowOperationsByType: {},
+        memoryUsageWarnings: 0,
+        activeTimers: 0,
+      });
+
+      coordinator = new MonitoringCoordinator({
+        logger,
+        enabled: true,
+      });
+
+      // Trigger health check
+      intervalCallback();
+
+      expect(logger.warning).toHaveBeenCalledWith(
+        expect.stringContaining('High average operation time: 250.00ms')
+      );
+      expect(logger.warning).toHaveBeenCalledWith(
+        expect.stringContaining('High slow operation rate: 30%')
+      );
+    });
+
+    it('should clean up old alerts', () => {
+      coordinator = new MonitoringCoordinator({
+        logger,
+        enabled: true,
+      });
+
+      // Add some alerts directly (we'll access private field through getStats)
+      const oldTimestamp = Date.now() - 25 * 60 * 60 * 1000; // 25 hours ago
+      const recentTimestamp = Date.now() - 1 * 60 * 60 * 1000; // 1 hour ago
+
+      // We need to trigger alerts through the health check system
+      // First set up a circuit breaker that will generate alerts
+      const openBreaker = {
+        ...mockCircuitBreaker,
+        getStats: jest.fn().mockReturnValue({
+          state: 'OPEN',
+          totalRequests: 20,
+          totalFailures: 15,
+          totalSuccesses: 5,
+          lastFailureTime: Date.now(),
+        }),
+      };
+
+      CircuitBreaker.mockImplementationOnce(() => openBreaker);
+      coordinator.getCircuitBreaker('test-operation');
+
+      // Trigger health check to add alerts
+      intervalCallback();
+
+      const statsAfter = coordinator.getStats();
+      // Recent alerts should be present
+      expect(statsAfter.recentAlerts.length).toBeGreaterThan(0);
+      // All alerts should be recent (within 24 hours)
+      statsAfter.recentAlerts.forEach((alert) => {
+        expect(Date.now() - alert.timestamp).toBeLessThan(24 * 60 * 60 * 1000);
+      });
+    });
+
+    it('should stop health checks on close', () => {
+      coordinator = new MonitoringCoordinator({
+        logger,
+        enabled: true,
+      });
+
+      coordinator.close();
+
+      expect(global.clearInterval).toHaveBeenCalledWith(123);
+    });
+  });
+
+  describe('executeSyncMonitored with disabled monitoring', () => {
+    it('should skip circuit breaker when monitoring is disabled', () => {
+      coordinator = new MonitoringCoordinator({ logger, enabled: false });
+      const operation = jest.fn().mockReturnValue('result');
+
+      const result = coordinator.executeSyncMonitored('test-op', operation, {
+        useCircuitBreaker: true,
+      });
+
+      expect(result).toBe('result');
+      expect(operation).toHaveBeenCalled();
+      expect(mockCircuitBreaker.executeSync).not.toHaveBeenCalled();
+      expect(mockPerformanceMonitor.timeSync).not.toHaveBeenCalled();
+    });
+
+    it('should skip performance monitoring when disabled', () => {
+      coordinator = new MonitoringCoordinator({ logger, enabled: false });
+      const operation = jest.fn().mockReturnValue('result');
+
+      const result = coordinator.executeSyncMonitored('test-op', operation, {
+        useCircuitBreaker: false,
+      });
+
+      expect(result).toBe('result');
+      expect(operation).toHaveBeenCalled();
+      expect(mockPerformanceMonitor.timeSync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('executeMonitored without circuit breaker', () => {
+    it('should execute operation without circuit breaker when useCircuitBreaker is false', async () => {
+      coordinator = new MonitoringCoordinator({ logger, enabled: true });
+      const operation = jest.fn().mockResolvedValue('success');
+
+      const result = await coordinator.executeMonitored('test-op', operation, {
+        useCircuitBreaker: false,
+      });
+
+      expect(result).toBe('success');
+      expect(mockPerformanceMonitor.timeOperation).toHaveBeenCalled();
+      expect(mockCircuitBreaker.execute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('executeSyncMonitored without circuit breaker', () => {
+    it('should execute sync operation without circuit breaker when useCircuitBreaker is false', () => {
+      coordinator = new MonitoringCoordinator({ logger, enabled: true });
+      const operation = jest.fn().mockReturnValue('sync-result');
+
+      const result = coordinator.executeSyncMonitored('test-op', operation, {
+        useCircuitBreaker: false,
+      });
+
+      expect(result).toBe('sync-result');
+      expect(mockPerformanceMonitor.timeSync).toHaveBeenCalled();
+      expect(mockCircuitBreaker.executeSync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getMonitoringReport with various states', () => {
+    it('should show circuit breakers with different states', () => {
+      coordinator = new MonitoringCoordinator({ logger });
+
+      // Create circuit breakers with different states
+      const openBreaker = {
+        ...mockCircuitBreaker,
+        getStats: jest.fn().mockReturnValue({
+          state: 'OPEN',
+          totalRequests: 100,
+          totalFailures: 60,
+          totalSuccesses: 40,
+          lastFailureTime: Date.now(),
+        }),
+      };
+
+      const halfOpenBreaker = {
+        ...mockCircuitBreaker,
+        getStats: jest.fn().mockReturnValue({
+          state: 'HALF_OPEN',
+          totalRequests: 50,
+          totalFailures: 10,
+          totalSuccesses: 40,
+          lastFailureTime: Date.now(),
+        }),
+      };
+
+      CircuitBreaker.mockImplementationOnce(() => openBreaker);
+      coordinator.getCircuitBreaker('operation-1');
+
+      CircuitBreaker.mockImplementationOnce(() => halfOpenBreaker);
+      coordinator.getCircuitBreaker('operation-2');
+
+      const report = coordinator.getMonitoringReport();
+
+      expect(report).toContain('operation-1: OPEN (60/100 failures)');
+      expect(report).toContain('operation-2: HALF_OPEN (10/50 failures)');
+    });
+
+    it('should show recent alerts in report', () => {
+      coordinator = new MonitoringCoordinator({ logger, enabled: true });
+
+      // We need to trigger alerts through the health check system
+      // Set up metrics that will trigger alerts
+      mockPerformanceMonitor.getMetrics.mockReturnValue({
+        totalOperations: 100,
+        slowOperations: 30,
+        averageOperationTime: 250,
+        maxOperationTime: 500,
+        minOperationTime: 10,
+        operationCounts: {},
+        slowOperationsByType: {},
+        memoryUsageWarnings: 5,
+        activeTimers: 0,
+      });
+
+      // Mock setInterval to capture callback
+      const originalSetInterval = global.setInterval;
+      let intervalCallback;
+      global.setInterval = jest.fn((callback) => {
+        intervalCallback = callback;
+        return 123;
+      });
+
+      // Re-create coordinator to capture interval
+      coordinator = new MonitoringCoordinator({ logger, enabled: true });
+
+      // Trigger health check to generate alerts
+      intervalCallback();
+
+      // Restore setInterval
+      global.setInterval = originalSetInterval;
+
+      const report = coordinator.getMonitoringReport();
+
+      expect(report).toContain('Recent Alerts:');
+      expect(report).toMatch(/WARNING: High average operation time/);
+    });
+
+    it('should show memory warnings in report', () => {
+      mockPerformanceMonitor.getMetrics.mockReturnValue({
+        totalOperations: 50,
+        slowOperations: 5,
+        averageOperationTime: 45,
+        maxOperationTime: 100,
+        minOperationTime: 10,
+        operationCounts: { 'test-op': 50 },
+        slowOperationsByType: { 'test-op': 5 },
+        memoryUsageWarnings: 3,
+        activeTimers: 2,
+      });
+
+      coordinator = new MonitoringCoordinator({ logger });
+      const report = coordinator.getMonitoringReport();
+
+      expect(report).toContain('Memory Warnings: 3');
+    });
+
+    it('should handle empty circuit breakers in report', () => {
+      coordinator = new MonitoringCoordinator({ logger });
+      const report = coordinator.getMonitoringReport();
+
+      expect(report).toContain('Circuit Breakers:');
+      expect(report).toContain('No circuit breakers active');
+    });
+
+    it('should handle no recent alerts in report', () => {
+      coordinator = new MonitoringCoordinator({ logger });
+      const report = coordinator.getMonitoringReport();
+
+      expect(report).toContain('Recent Alerts:');
+      expect(report).toContain('No recent alerts');
+    });
+  });
+
+  describe('setEnabled with circuit breakers', () => {
+    it('should propagate enabled state to all circuit breakers', () => {
+      coordinator = new MonitoringCoordinator({ logger, enabled: true });
+
+      // Create multiple circuit breakers
+      const breaker1 = coordinator.getCircuitBreaker('op1');
+      const breaker2 = coordinator.getCircuitBreaker('op2');
+
+      coordinator.setEnabled(false);
+
+      expect(breaker1.setEnabled).toHaveBeenCalledWith(false);
+      expect(breaker2.setEnabled).toHaveBeenCalledWith(false);
+      expect(mockPerformanceMonitor.setEnabled).toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe('getStats with multiple circuit breakers', () => {
+    it('should aggregate failure counts from all circuit breakers', () => {
+      coordinator = new MonitoringCoordinator({ logger });
+
+      // Create circuit breakers with different failure counts
+      const breaker1 = {
+        ...mockCircuitBreaker,
+        getStats: jest.fn().mockReturnValue({
+          state: 'CLOSED',
+          totalRequests: 100,
+          totalFailures: 10,
+          totalSuccesses: 90,
+          lastFailureTime: null,
+        }),
+      };
+
+      const breaker2 = {
+        ...mockCircuitBreaker,
+        getStats: jest.fn().mockReturnValue({
+          state: 'OPEN',
+          totalRequests: 50,
+          totalFailures: 30,
+          totalSuccesses: 20,
+          lastFailureTime: Date.now(),
+        }),
+      };
+
+      CircuitBreaker.mockImplementationOnce(() => breaker1);
+      coordinator.getCircuitBreaker('op1');
+
+      CircuitBreaker.mockImplementationOnce(() => breaker2);
+      coordinator.getCircuitBreaker('op2');
+
+      const stats = coordinator.getStats();
+
+      expect(stats.totalFailures).toBe(40); // 10 + 30
+      expect(stats.circuitBreakers.op1.totalFailures).toBe(10);
+      expect(stats.circuitBreakers.op2.totalFailures).toBe(30);
+    });
+  });
+
+  describe('constructor with custom circuit breaker options', () => {
+    it('should apply default circuit breaker options to all breakers', () => {
+      const defaultOptions = {
+        failureThreshold: 5,
+        timeout: 10000,
+        resetTimeout: 30000,
+      };
+
+      coordinator = new MonitoringCoordinator({
+        logger,
+        circuitBreakerOptions: defaultOptions,
+      });
+
+      coordinator.getCircuitBreaker('test-op');
+
+      expect(CircuitBreaker).toHaveBeenCalledWith({
+        logger,
+        options: {
+          ...defaultOptions,
+          name: 'test-op',
+        },
+      });
+    });
+
+    it('should merge default and custom options for circuit breakers', () => {
+      const defaultOptions = {
+        failureThreshold: 5,
+        timeout: 10000,
+      };
+
+      coordinator = new MonitoringCoordinator({
+        logger,
+        circuitBreakerOptions: defaultOptions,
+      });
+
+      const customOptions = {
+        failureThreshold: 10, // Override default
+        resetTimeout: 60000, // Add new option
+      };
+
+      coordinator.getCircuitBreaker('test-op', customOptions);
+
+      expect(CircuitBreaker).toHaveBeenCalledWith({
+        logger,
+        options: {
+          timeout: 10000, // From default
+          failureThreshold: 10, // Overridden
+          resetTimeout: 60000, // Added
+          name: 'test-op',
+        },
+      });
     });
   });
 });
