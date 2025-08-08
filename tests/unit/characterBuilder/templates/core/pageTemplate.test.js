@@ -208,7 +208,7 @@ describe('Page Template Container', () => {
 
       expect(html).toContain('Help');
       expect(html).toContain('About');
-      expect(html).toContain('v1.0.0');
+      expect(html).toContain('Version 1.0.0');
     });
 
     it('should support action tooltips', () => {
@@ -495,11 +495,12 @@ describe('Page Template Container', () => {
         title: 'Test',
         footer: {
           showVersion: true,
+          links: [], // Explicitly pass empty links array
         },
       });
 
-      expect(html).toContain('v1.0.0');
-      expect(html).not.toContain('cb-footer-links');
+      expect(html).toContain('Version 1.0.0');
+      expect(html).not.toContain('cb-footer-link-item'); // Check for no link items instead
     });
 
     it('should handle footer with custom content', () => {

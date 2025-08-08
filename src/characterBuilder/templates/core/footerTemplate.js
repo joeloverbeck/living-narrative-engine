@@ -1,46 +1,3 @@
-# HTMLTEMP-005: Build Footer Template Component
-
-## Status
-
-**Status**: Not Started  
-**Priority**: High (Missing file causes runtime error risk)  
-**Estimated**: 2 hours  
-**Complexity**: Low  
-**Dependencies**: HTMLTEMP-003 (headerTemplate), HTMLTEMP-004 (mainTemplate)
-
-## Objective
-
-Create a reusable footer template component that provides consistent page footers across all character builder pages, including status information, navigation links, version display, and customizable content areas.
-
-## Background
-
-Each character builder page currently has its own footer implementation with varying content and structure. This template will standardize the footer while allowing page-specific customization.
-
-## Current State Analysis
-
-### Pre-existing Integration Points
-
-1. **Export Already Present**: The `createFooter` function is already exported from `src/characterBuilder/templates/core/index.js` (line 18), but the file doesn't exist yet - creating a runtime error risk.
-
-2. **Placeholder Implementation**: The `pageTemplate.js` file (lines 102-112) contains a placeholder footer implementation that needs to be replaced with the actual template.
-
-3. **Import Already in Place**: The footer template is already imported in `pageTemplate.js` (line 7) as part of the mainTemplate import, expecting this file to exist.
-
-4. **Type Definitions**: Basic `FooterConfig` type already exists in `types.js` (lines 56-61) with:
-   - `status` (optional string)
-   - `links` (optional Link array)
-   - `showVersion` (optional boolean, default true)
-   - `customContent` (optional string)
-
-5. **Utility Functions Available**: The `escapeHtml` function already exists in `pageTemplate.js` (lines 271-285) and can be reused or extracted.
-
-## Technical Requirements
-
-### 1. Footer Template Implementation
-
-#### File: `src/characterBuilder/templates/core/footerTemplate.js`
-
-```javascript
 /**
  * @file Footer template component for character builder pages
  * @module characterBuilder/templates/core/footerTemplate
@@ -51,22 +8,31 @@ Each character builder page currently has its own footer implementation with var
 
 /**
  * Extended footer configuration
- * NOTE: Extends the existing FooterConfig type with additional properties
- * @typedef {Object} ExtendedFooterConfig
- * @property {string} [status] - Status text to display (EXISTING in FooterConfig)
- * @property {Array<Link>} [links] - Footer navigation links (EXISTING in FooterConfig)
- * @property {boolean} [showVersion=true] - Show version information (EXISTING in FooterConfig)
- * @property {string} [version] - Version string (NEW - auto-detected if not provided)
- * @property {string} [copyright] - Copyright text (NEW)
- * @property {Array<Link>} [socialLinks] - Social media links (NEW)
- * @property {string} [customContent] - Custom HTML content (EXISTING in FooterConfig)
- * @property {string} [className] - Additional CSS classes (NEW)
- * @property {boolean} [sticky=false] - Make footer sticky to bottom (NEW)
- * @property {'light'|'dark'|'auto'} [theme='auto'] - Footer theme (NEW)
+ *
+ * @typedef {object} ExtendedFooterConfig
+ * @property {string} [status] - Status text to display
+ * @property {Array<Link>} [links] - Footer navigation links
+ * @property {boolean} [showVersion=true] - Show version information
+ * @property {string} [version] - Version string (auto-detected if not provided)
+ * @property {string} [copyright] - Copyright text
+ * @property {Array<SocialLink>} [socialLinks] - Social media links
+ * @property {string} [customContent] - Custom HTML content
+ * @property {string} [className] - Additional CSS classes
+ * @property {boolean} [sticky=false] - Make footer sticky to bottom
+ * @property {'light'|'dark'|'auto'} [theme='auto'] - Footer theme
+ */
+
+/**
+ * @typedef {object} SocialLink
+ * @property {string} href - Link URL (required)
+ * @property {string} platform - Social platform name
+ * @property {string} [label] - Link label for accessibility
+ * @property {string} [icon] - Custom icon HTML
  */
 
 /**
  * Creates a footer component for character builder pages
+ *
  * @param {ExtendedFooterConfig} config - Footer configuration
  * @returns {string} Footer HTML
  */
@@ -106,6 +72,7 @@ export function createFooter(config = {}) {
 
 /**
  * Creates status bar section
+ *
  * @private
  * @param {string} status - Status text
  * @returns {string} Status bar HTML
@@ -120,6 +87,7 @@ function createStatusBar(status) {
 
 /**
  * Creates main footer content
+ *
  * @private
  * @param {Array<Link>} links - Footer links
  * @param {string} copyright - Copyright text
@@ -146,6 +114,7 @@ function createFooterContent(links, copyright, showVersion, version) {
 
 /**
  * Creates footer navigation
+ *
  * @private
  * @param {Array<Link>} links - Navigation links
  * @returns {string} Navigation HTML
@@ -162,6 +131,7 @@ function createFooterNav(links) {
 
 /**
  * Creates a footer link
+ *
  * @private
  * @param {Link} link - Link configuration
  * @returns {string} Link HTML
@@ -169,6 +139,7 @@ function createFooterNav(links) {
 function createFooterLink(link) {
   const target = link.target || '_self';
   const rel = target === '_blank' ? 'rel="noopener noreferrer"' : '';
+  const title = link.title || '';
 
   return `
     <li class="cb-footer-link-item">
@@ -176,7 +147,7 @@ function createFooterLink(link) {
          target="${escapeHtml(target)}"
          ${rel}
          class="cb-footer-link ${link.className || ''}"
-         ${link.title ? `title="${escapeHtml(link.title)}"` : ''}>
+         ${title ? `title="${escapeHtml(title)}"` : ''}>
         ${link.icon ? `<span class="cb-footer-link-icon">${link.icon}</span>` : ''}
         <span class="cb-footer-link-text">${escapeHtml(link.label)}</span>
       </a>
@@ -186,8 +157,9 @@ function createFooterLink(link) {
 
 /**
  * Creates social media links
+ *
  * @private
- * @param {Array<Link>} socialLinks - Social media links
+ * @param {Array<SocialLink>} socialLinks - Social media links
  * @returns {string} Social links HTML
  */
 function createSocialLinks(socialLinks) {
@@ -202,7 +174,7 @@ function createSocialLinks(socialLinks) {
              target="_blank"
              rel="noopener noreferrer"
              class="cb-footer-social-link cb-social-${link.platform || 'default'}"
-             aria-label="${escapeHtml(link.label || link.platform)}">
+             aria-label="${escapeHtml(link.label || link.platform || 'Social media')}">
             ${link.icon || getSocialIcon(link.platform)}
           </a>
         `
@@ -215,6 +187,7 @@ function createSocialLinks(socialLinks) {
 
 /**
  * Creates custom content section
+ *
  * @private
  * @param {string} content - Custom HTML content
  * @returns {string} Custom content HTML
@@ -229,6 +202,7 @@ function createCustomContent(content) {
 
 /**
  * Creates quick action buttons
+ *
  * @private
  * @returns {string} Quick actions HTML
  */
@@ -253,6 +227,7 @@ function createQuickActions() {
 
 /**
  * Creates footer bottom section
+ *
  * @private
  * @returns {string} Footer bottom HTML
  */
@@ -272,7 +247,10 @@ function createFooterBottom() {
 
 /**
  * Creates a minimal footer
- * @param {Object} config - Minimal footer configuration
+ *
+ * @param {object} config - Minimal footer configuration
+ * @param {string} [config.text] - Footer text
+ * @param {string} [config.className] - Additional CSS classes
  * @returns {string} Minimal footer HTML
  */
 export function createMinimalFooter(config = {}) {
@@ -290,7 +268,12 @@ export function createMinimalFooter(config = {}) {
 
 /**
  * Creates a debug footer with system information
- * @param {Object} config - Debug footer configuration
+ *
+ * @param {object} config - Debug footer configuration
+ * @param {boolean} [config.showPerformance] - Show performance metrics
+ * @param {boolean} [config.showMemory] - Show memory usage
+ * @param {boolean} [config.showBuildInfo] - Show build information
+ * @param {string} [config.className] - Additional CSS classes
  * @returns {string} Debug footer HTML
  */
 export function createDebugFooter(config = {}) {
@@ -314,6 +297,7 @@ export function createDebugFooter(config = {}) {
 
 /**
  * Creates performance information display
+ *
  * @private
  * @returns {string} Performance info HTML
  */
@@ -329,6 +313,7 @@ function createPerformanceInfo() {
 
 /**
  * Creates memory information display
+ *
  * @private
  * @returns {string} Memory info HTML
  */
@@ -344,6 +329,7 @@ function createMemoryInfo() {
 
 /**
  * Creates build information display
+ *
  * @private
  * @returns {string} Build info HTML
  */
@@ -359,6 +345,7 @@ function createBuildInfo() {
 
 /**
  * Gets default footer links
+ *
  * @private
  * @returns {Array<Link>} Default links
  */
@@ -373,6 +360,7 @@ function getDefaultLinks() {
 
 /**
  * Gets default copyright text
+ *
  * @private
  * @returns {string} Copyright text
  */
@@ -383,7 +371,7 @@ function getDefaultCopyright() {
 
 /**
  * Gets application version
- * NOTE: This function needs to be implemented to read from actual package.json
+ *
  * @private
  * @returns {string} Version string
  */
@@ -394,7 +382,7 @@ function getAppVersion() {
 
 /**
  * Gets build timestamp
- * NOTE: This function needs to be implemented with actual build timestamp
+ *
  * @private
  * @returns {string} Build timestamp
  */
@@ -405,7 +393,7 @@ function getBuildTimestamp() {
 
 /**
  * Gets environment name
- * NOTE: This function needs to read from actual environment variables
+ *
  * @private
  * @returns {string} Environment
  */
@@ -416,6 +404,7 @@ function getEnvironment() {
 
 /**
  * Gets social media icon
+ *
  * @private
  * @param {string} platform - Social platform name
  * @returns {string} Icon HTML
@@ -435,8 +424,7 @@ function getSocialIcon(platform) {
 
 /**
  * Escapes HTML special characters
- * NOTE: This function already exists in pageTemplate.js and should be extracted
- * to a shared utility or reused from there
+ *
  * @private
  * @param {string} str - String to escape
  * @returns {string} Escaped string
@@ -462,256 +450,3 @@ export const __testUtils = {
   escapeHtml,
   getSocialIcon,
 };
-```
-
-### 2. CSS Structure (Reference)
-
-```css
-/* Footer styles to be added to character-builder.css */
-
-.cb-page-footer {
-  background: var(--cb-footer-bg, #f8f9fa);
-  border-top: 1px solid var(--cb-border-color, #e0e0e0);
-  margin-top: auto;
-}
-
-.cb-footer-sticky {
-  position: sticky;
-  bottom: 0;
-  z-index: 50;
-}
-
-.cb-footer-status-bar {
-  background: var(--cb-status-bg, #333);
-  color: var(--cb-status-color, #fff);
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-}
-
-.cb-footer-main {
-  padding: 1.5rem 1rem;
-}
-
-.cb-footer-container {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.cb-footer-content {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 2rem;
-}
-
-.cb-footer-links {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  gap: 1.5rem;
-}
-
-.cb-footer-link {
-  color: var(--cb-footer-link-color, #666);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.cb-footer-link:hover {
-  color: var(--cb-footer-link-hover, #333);
-}
-
-.cb-footer-bottom {
-  background: var(--cb-footer-bottom-bg, #e9ecef);
-  padding: 0.75rem 1rem;
-  text-align: center;
-  font-size: 0.8125rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .cb-footer-content {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-
-  .cb-footer-links {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}
-```
-
-## Implementation Steps
-
-### Step 1: Create Footer Template File
-
-1. Create `src/characterBuilder/templates/core/footerTemplate.js`
-2. Implement all functions as specified
-3. Add comprehensive JSDoc comments
-
-### Step 2: Implement Footer Variations
-
-1. Standard footer with all features
-2. Minimal footer for simple pages
-3. Debug footer for development
-
-### Step 3: Add Interactive Elements
-
-1. Back to top button
-2. Theme toggle button
-3. Social media links
-
-### Step 4: Integration (Minimal Changes Needed)
-
-1. **No changes needed** to `src/characterBuilder/templates/core/index.js` (export already exists on line 18)
-2. **Replace placeholder** in `pageTemplate.js` function `createPageFooter` (lines 102-112) to use the new template
-3. **Update import** in `pageTemplate.js` if needed to import from `./footerTemplate.js` instead of current placeholder
-
-## Testing Requirements
-
-### Unit Tests
-
-```javascript
-// tests/unit/characterBuilder/templates/core/footerTemplate.test.js
-import { describe, it, expect } from '@jest/globals';
-import {
-  createFooter,
-  createMinimalFooter,
-  createDebugFooter,
-  __testUtils,
-} from '../../../../src/characterBuilder/templates/core/footerTemplate.js';
-
-describe('Footer Template Component', () => {
-  describe('createFooter', () => {
-    it('should create basic footer with defaults', () => {
-      const html = createFooter();
-
-      expect(html).toContain('cb-page-footer');
-      expect(html).toContain('role="contentinfo"');
-      expect(html).toContain('Version');
-    });
-
-    it('should display status when provided', () => {
-      const html = createFooter({
-        status: 'System online',
-      });
-
-      expect(html).toContain('cb-footer-status-bar');
-      expect(html).toContain('System online');
-    });
-
-    it('should render custom links', () => {
-      const html = createFooter({
-        links: [{ label: 'Custom', href: '/custom' }],
-      });
-
-      expect(html).toContain('Custom');
-      expect(html).toContain('/custom');
-    });
-
-    it('should render social links', () => {
-      const html = createFooter({
-        socialLinks: [
-          { platform: 'twitter', href: 'https://twitter.com' },
-          { platform: 'github', href: 'https://github.com' },
-        ],
-      });
-
-      expect(html).toContain('cb-footer-social');
-      expect(html).toContain('cb-social-twitter');
-    });
-
-    it('should support sticky footer', () => {
-      const html = createFooter({
-        sticky: true,
-      });
-
-      expect(html).toContain('cb-footer-sticky');
-    });
-
-    it('should escape HTML in content', () => {
-      const html = createFooter({
-        status: '<script>alert("XSS")</script>',
-      });
-
-      expect(html).not.toContain('<script>');
-      expect(html).toContain('&lt;script&gt;');
-    });
-  });
-
-  describe('createMinimalFooter', () => {
-    it('should create minimal footer', () => {
-      const html = createMinimalFooter({
-        text: 'Simple footer',
-      });
-
-      expect(html).toContain('cb-footer-minimal');
-      expect(html).toContain('Simple footer');
-    });
-  });
-
-  describe('createDebugFooter', () => {
-    it('should create debug footer with info sections', () => {
-      const html = createDebugFooter({
-        showPerformance: true,
-        showMemory: true,
-        showBuildInfo: true,
-      });
-
-      expect(html).toContain('cb-footer-debug');
-      expect(html).toContain('cb-debug-performance');
-      expect(html).toContain('cb-debug-memory');
-      expect(html).toContain('cb-debug-build');
-    });
-  });
-});
-```
-
-## Acceptance Criteria
-
-- [ ] Footer renders with default content
-- [ ] Status bar displays when provided
-- [ ] Navigation links render correctly
-- [ ] Social media links work with icons
-- [ ] Copyright text displays with current year
-- [ ] Version information shows
-- [ ] Sticky footer option works
-- [ ] Theme support implemented
-- [ ] Back to top button included
-- [ ] Minimal footer variant works
-- [ ] Debug footer shows system info
-- [ ] All content is properly escaped
-- [ ] Proper semantic HTML and ARIA
-- [ ] Responsive design works
-- [ ] All tests pass with 100% coverage
-
-## Performance Requirements
-
-- Template rendering < 3ms
-- No memory leaks
-- Efficient string concatenation
-
-## Notes
-
-- Consider adding language/locale support in future
-- Back to top and theme toggle will need JavaScript implementation
-- Debug footer useful for development environments
-
-## Risk Assessment
-
-**High Priority Issue**: The missing `footerTemplate.js` file creates a runtime error risk because:
-- The function is already exported from `core/index.js` (line 18)
-- It's imported in `pageTemplate.js` (line 7) via the missing file
-- Any attempt to use the page template will fail with import error
-
-## Related Tickets
-
-- **Depends on**: HTMLTEMP-003 (headerTemplate), HTMLTEMP-004 (mainTemplate) - IMPLEMENTED
-- **Next**: HTMLTEMP-006 (Modal Template)
-- **Related**: HTMLTEMP-031 (Controller Integration)
-
-## Implementation Priority
-
-This ticket should be prioritized to prevent runtime errors in the existing template system. The placeholder implementation exists, but the expected file structure requires this component to exist.

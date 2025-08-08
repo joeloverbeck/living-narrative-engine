@@ -5,6 +5,7 @@
 
 import { createHeader } from './headerTemplate.js';
 import { createMain } from './mainTemplate.js';
+import { createFooter } from './footerTemplate.js';
 
 /** @typedef {import('../types.js').PageConfig} PageConfig */
 /** @typedef {import('../types.js').PanelConfig} PanelConfig */
@@ -100,41 +101,8 @@ function createPageMain(leftPanel, rightPanel, singlePanel) {
  * @returns {string} Footer HTML
  */
 function createPageFooter(footer) {
-  // Placeholder - will be replaced by HTMLTEMP-005
-  return `
-    <footer class="cb-page-footer" role="contentinfo">
-      <div class="cb-footer-content">
-        ${footer.status ? `<span class="cb-footer-status">${escapeHtml(footer.status)}</span>` : ''}
-        ${footer.links ? createFooterLinks(footer.links) : ''}
-        ${footer.showVersion ? '<span class="cb-footer-version">v1.0.0</span>' : ''}
-      </div>
-    </footer>
-  `;
-}
-
-/**
- * Creates footer links
- *
- * @private
- * @param {Array} links - Link configurations
- * @returns {string} Links HTML
- */
-function createFooterLinks(links) {
-  return `
-    <nav class="cb-footer-links" aria-label="Footer navigation">
-      ${links
-        .map(
-          (link) => `
-        <a href="${escapeHtml(link.href)}" 
-           target="${link.target || '_self'}"
-           class="cb-footer-link ${link.className || ''}">
-          ${escapeHtml(link.label)}
-        </a>
-      `
-        )
-        .join('<span class="cb-footer-separator">|</span>')}
-    </nav>
-  `;
+  // Use the new footer template from HTMLTEMP-005
+  return createFooter(footer);
 }
 
 /**

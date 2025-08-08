@@ -1002,7 +1002,7 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
       });
 
       const result = await stage.executeInternal(context);
-      
+
       expect(result.actions).toHaveLength(1);
       expect(result.actions[0].command).toBe('Test Target 1');
 

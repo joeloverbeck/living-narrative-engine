@@ -14,7 +14,7 @@ Create a comprehensive modal template system that provides accessible dialog com
 
 ## Background
 
-Character builder pages currently implement modals inconsistently with varying accessibility support. This template system will provide standardized, fully accessible modal dialogs with proper focus management and keyboard navigation.
+Character builder pages currently have a placeholder modal implementation in `pageTemplate.js` (lines 115-142) that needs to be replaced with a proper, standardized modal system. This template will provide fully accessible modal dialogs with proper focus management and keyboard navigation.
 
 ## Technical Requirements
 
@@ -27,6 +27,9 @@ Character builder pages currently implement modals inconsistently with varying a
  * @file Modal template system for character builder pages
  * @module characterBuilder/templates/core/modalTemplate
  */
+
+import { DomUtils } from '../../../utils/domUtils.js';
+import { string } from '../../../utils/validationCore.js';
 
 /** @typedef {import('../types.js').ModalConfig} ModalConfig */
 /** @typedef {import('../types.js').Action} Action */
@@ -48,6 +51,21 @@ Character builder pages currently implement modals inconsistently with varying a
  * @property {string} [className] - Additional CSS classes
  * @property {Function} [onOpen] - Callback when modal opens
  * @property {Function} [onClose] - Callback when modal closes
+ */
+
+/**
+ * Modal action with additional properties
+ * @typedef {Object} ModalAction
+ * @property {string} label - Action label (required)
+ * @property {string} name - Action name (required)
+ * @property {'button'|'submit'|'reset'} [type='button'] - Button type
+ * @property {string} [className] - Additional CSS classes
+ * @property {boolean} [disabled=false] - Whether action is disabled
+ * @property {object} [data] - Data attributes
+ * @property {string} [icon] - Action icon
+ * @property {string} [tooltip] - Action tooltip
+ * @property {boolean} [primary=false] - Whether this is a primary action
+ * @property {boolean} [dismiss=false] - Whether this dismisses the modal
  */
 
 /**
@@ -81,12 +99,12 @@ export function createModal(config) {
     `cb-modal ${sizeClass} ${variantClass} ${centeredClass} ${scrollableClass} ${className}`.trim();
 
   return `
-    <div id="${escapeHtml(id)}" 
+    <div id="${DomUtils.escapeHtml(id)}" 
          class="${modalClasses}"
          role="dialog"
          aria-modal="true"
-         aria-labelledby="${escapeHtml(id)}-title"
-         aria-describedby="${escapeHtml(id)}-body"
+         aria-labelledby="${DomUtils.escapeHtml(id)}-title"
+         aria-describedby="${DomUtils.escapeHtml(id)}-body"
          data-close-on-escape="${closeOnEscape}"
          data-close-on-backdrop="${closeOnBackdrop}"
          tabindex="-1"
@@ -119,7 +137,7 @@ function createModalBackdrop(closeOnBackdrop) {
  * @param {string} id - Modal ID
  * @param {string} title - Modal title
  * @param {string|Function} content - Modal content
- * @param {Array<Action>} actions - Modal actions
+ * @param {Array<ModalAction>} actions - Modal actions
  * @param {boolean} showClose - Show close button
  * @param {string} variant - Modal variant
  * @returns {string} Modal content HTML
@@ -148,9 +166,9 @@ function createModalHeader(id, title, showClose, variant) {
 
   return `
     <div class="cb-modal-header">
-      <h2 id="${escapeHtml(id)}-title" class="cb-modal-title">
+      <h2 id="${DomUtils.escapeHtml(id)}-title" class="cb-modal-title">
         ${icon ? `<span class="cb-modal-icon" aria-hidden="true">${icon}</span>` : ''}
-        <span class="cb-modal-title-text">${escapeHtml(title)}</span>
+        <span class="cb-modal-title-text">${DomUtils.escapeHtml(title)}</span>
       </h2>
       ${showClose ? createCloseButton() : ''}
     </div>
@@ -168,7 +186,7 @@ function createModalBody(id, content) {
   const renderedContent = typeof content === 'function' ? content() : content;
 
   return `
-    <div id="${escapeHtml(id)}-body" class="cb-modal-body">
+    <div id="${DomUtils.escapeHtml(id)}-body" class="cb-modal-body">
       ${renderedContent || ''}
     </div>
   `;
@@ -177,7 +195,7 @@ function createModalBody(id, content) {
 /**
  * Creates modal footer with actions
  * @private
- * @param {Array<Action>} actions - Modal actions
+ * @param {Array<ModalAction>} actions - Modal actions
  * @returns {string} Footer HTML
  */
 function createModalFooter(actions) {
@@ -191,7 +209,7 @@ function createModalFooter(actions) {
 /**
  * Creates modal action button
  * @private
- * @param {Action} action - Action configuration
+ * @param {ModalAction} action - Action configuration
  * @returns {string} Action button HTML
  */
 function createModalAction(action) {
@@ -201,20 +219,20 @@ function createModalAction(action) {
 
   const dataAttrs = action.data
     ? Object.entries(action.data)
-        .map(([k, v]) => `data-${escapeHtml(k)}="${escapeHtml(String(v))}"`)
+        .map(([k, v]) => `data-${DomUtils.escapeHtml(k)}="${DomUtils.escapeHtml(String(v))}"`)
         .join(' ')
     : '';
 
   return `
     <button type="${action.type || 'button'}"
             class="cb-modal-action ${buttonClass} ${action.className || ''}"
-            data-action="${escapeHtml(action.name)}"
+            data-action="${DomUtils.escapeHtml(action.name)}"
             ${isDismiss ? 'data-dismiss="modal"' : ''}
             ${action.disabled ? 'disabled' : ''}
-            ${action.tooltip ? `title="${escapeHtml(action.tooltip)}"` : ''}
+            ${action.tooltip ? `title="${DomUtils.escapeHtml(action.tooltip)}"` : ''}
             ${dataAttrs}>
       ${action.icon ? `<span class="cb-action-icon">${action.icon}</span>` : ''}
-      <span class="cb-action-label">${escapeHtml(action.label)}</span>
+      <span class="cb-action-label">${DomUtils.escapeHtml(action.label)}</span>
     </button>
   `;
 }
@@ -255,7 +273,7 @@ export function createConfirmModal(config) {
   return createModal({
     id,
     title,
-    content: `<p class="cb-modal-message">${escapeHtml(message)}</p>`,
+    content: `<p class="cb-modal-message">${DomUtils.escapeHtml(message)}</p>`,
     variant,
     size: 'small',
     actions: [
@@ -292,7 +310,7 @@ export function createAlertModal(config) {
   return createModal({
     id,
     title,
-    content: `<p class="cb-modal-message">${escapeHtml(message)}</p>`,
+    content: `<p class="cb-modal-message">${DomUtils.escapeHtml(message)}</p>`,
     variant,
     size: 'small',
     closeOnEscape: true,
@@ -323,7 +341,7 @@ export function createFormModal(config) {
   } = config;
 
   const formContent = `
-    <form class="cb-modal-form" id="${escapeHtml(id)}-form">
+    <form class="cb-modal-form" id="${DomUtils.escapeHtml(id)}-form">
       ${fields.map((field) => createFormField(field)).join('')}
     </form>
   `;
@@ -374,32 +392,32 @@ function createFormField(field) {
 
   return `
     <div class="cb-form-group">
-      <label for="${escapeHtml(fieldId)}" class="cb-form-label">
-        ${escapeHtml(label)}
+      <label for="${DomUtils.escapeHtml(fieldId)}" class="cb-form-label">
+        ${DomUtils.escapeHtml(label)}
         ${required ? '<span class="cb-required" aria-label="required">*</span>' : ''}
       </label>
       ${
         type === 'textarea'
           ? `
-        <textarea id="${escapeHtml(fieldId)}"
-                  name="${escapeHtml(name)}"
+        <textarea id="${DomUtils.escapeHtml(fieldId)}"
+                  name="${DomUtils.escapeHtml(name)}"
                   class="cb-form-control"
-                  placeholder="${escapeHtml(placeholder)}"
+                  placeholder="${DomUtils.escapeHtml(placeholder)}"
                   ${required ? 'required' : ''}
-                  ${disabled ? 'disabled' : ''}>${escapeHtml(value)}</textarea>
+                  ${disabled ? 'disabled' : ''}>${DomUtils.escapeHtml(value)}</textarea>
       `
           : `
-        <input type="${escapeHtml(type)}"
-               id="${escapeHtml(fieldId)}"
-               name="${escapeHtml(name)}"
+        <input type="${DomUtils.escapeHtml(type)}"
+               id="${DomUtils.escapeHtml(fieldId)}"
+               name="${DomUtils.escapeHtml(name)}"
                class="cb-form-control"
-               value="${escapeHtml(value)}"
-               placeholder="${escapeHtml(placeholder)}"
+               value="${DomUtils.escapeHtml(value)}"
+               placeholder="${DomUtils.escapeHtml(placeholder)}"
                ${required ? 'required' : ''}
                ${disabled ? 'disabled' : ''}>
       `
       }
-      ${help ? `<small class="cb-form-help">${escapeHtml(help)}</small>` : ''}
+      ${help ? `<small class="cb-form-help">${DomUtils.escapeHtml(help)}</small>` : ''}
     </div>
   `;
 }
@@ -420,7 +438,7 @@ export function createLoadingModal(config = {}) {
   const content = `
     <div class="cb-modal-loading">
       <div class="cb-loading-spinner" aria-hidden="true"></div>
-      <p class="cb-loading-message">${escapeHtml(message)}</p>
+      <p class="cb-loading-message">${DomUtils.escapeHtml(message)}</p>
       ${
         showProgress
           ? `
@@ -450,6 +468,7 @@ export function createLoadingModal(config = {}) {
 
 /**
  * Creates a modal container for multiple modals
+ * Note: This replaces the placeholder implementation in pageTemplate.js
  * @param {Array<ModalConfig>} modals - Array of modal configurations
  * @returns {string} Modals container HTML
  */
@@ -491,52 +510,58 @@ function validateModalConfig(config) {
     throw new Error('Modal configuration is required');
   }
 
-  if (!config.id) {
-    throw new Error('Modal ID is required');
-  }
-
-  if (!config.title) {
-    throw new Error('Modal title is required');
-  }
-
-  if (typeof config.id !== 'string') {
-    throw new Error('Modal ID must be a string');
-  }
-
-  if (typeof config.title !== 'string') {
-    throw new Error('Modal title must be a string');
-  }
-}
-
-/**
- * Escapes HTML special characters
- * @private
- * @param {string} str - String to escape
- * @returns {string} Escaped string
- */
-function escapeHtml(str) {
-  if (str == null) return '';
-
-  const htmlEscapes = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  };
-
-  return String(str).replace(/[&<>"']/g, (char) => htmlEscapes[char]);
+  // Use project validation utilities for consistency
+  string.assertNonBlank(config.id, 'id', 'Modal configuration');
+  string.assertNonBlank(config.title, 'title', 'Modal configuration');
 }
 
 // Export for testing
 export const __testUtils = {
   validateModalConfig,
   getVariantIcon,
-  escapeHtml,
 };
 ```
 
-### 2. CSS Structure (Reference)
+### 2. Integration with Page Template
+
+The existing `pageTemplate.js` file contains a placeholder implementation (lines 115-142) that needs to be replaced:
+
+#### Update `src/characterBuilder/templates/core/pageTemplate.js`:
+
+1. **Remove** the existing `createModalsContainer()` function (lines 115-142)
+2. **Remove** the existing `createModalActions()` function (lines 151-157) if present
+3. **Add import** at the top of the file:
+   ```javascript
+   import { createModalsContainer } from './modalTemplate.js';
+   ```
+4. **Export** the imported function if needed
+
+### 3. Update Index Exports
+
+#### Update `src/characterBuilder/templates/core/index.js`:
+
+The file already has a placeholder export for `createModal`. Update it to export all modal functions:
+
+```javascript
+export {
+  createModal,
+  createConfirmModal,
+  createAlertModal,
+  createFormModal,
+  createLoadingModal,
+  createModalsContainer,
+} from './modalTemplate.js';
+```
+
+### 4. Type Definitions
+
+The existing `ModalConfig` type in `types.js` (lines 32-41) may need to be extended or a new `ExtendedModalConfig` type should be added. Consider whether to:
+
+1. Extend the existing `ModalConfig` type to include all new properties
+2. Create a separate `ExtendedModalConfig` that extends `ModalConfig`
+3. Create a separate `ModalAction` type that extends the base `Action` type
+
+### 5. CSS Structure (Reference)
 
 ```css
 /* Modal styles to be added to character-builder.css */
@@ -697,10 +722,17 @@ export const __testUtils = {
 ### Step 1: Create Modal Template File
 
 1. Create `src/characterBuilder/templates/core/modalTemplate.js`
-2. Implement all modal functions
-3. Add comprehensive JSDoc comments
+2. Import required utilities (`DomUtils.escapeHtml()`, `string` validation)
+3. Implement all modal functions using existing project utilities
+4. Add comprehensive JSDoc comments
 
-### Step 2: Implement Modal Variants
+### Step 2: Integrate with Existing Code
+
+1. Remove placeholder implementation from `pageTemplate.js` (lines 115-142)
+2. Import new modal functions in `pageTemplate.js`
+3. Update exports in `index.js`
+
+### Step 3: Implement Modal Variants
 
 1. Basic modal with all options
 2. Confirmation modal
@@ -708,17 +740,12 @@ export const __testUtils = {
 4. Form modal
 5. Loading modal
 
-### Step 3: Add Accessibility Features
+### Step 4: Add Accessibility Features
 
 1. Proper ARIA attributes
 2. Focus management setup
 3. Keyboard navigation support
 4. Screen reader announcements
-
-### Step 4: Export and Integration
-
-1. Update `src/characterBuilder/templates/core/index.js`
-2. Integrate with page template
 
 ## Testing Requirements
 
@@ -734,7 +761,7 @@ import {
   createFormModal,
   createLoadingModal,
   __testUtils,
-} from '../../../../src/characterBuilder/templates/core/modalTemplate.js';
+} from '../../../../../src/characterBuilder/templates/core/modalTemplate.js';
 
 describe('Modal Template System', () => {
   describe('createModal', () => {
@@ -789,7 +816,7 @@ describe('Modal Template System', () => {
       expect(html).toContain('cb-btn-primary');
     });
 
-    it('should escape HTML content', () => {
+    it('should escape HTML content using DomUtils', () => {
       const html = createModal({
         id: 'modal',
         title: '<script>alert("XSS")</script>',
@@ -839,7 +866,7 @@ describe('Modal Template System', () => {
 
     it('should validate required fields', () => {
       expect(() => validateModalConfig(null)).toThrow();
-      expect(() => validateModalConfig({})).toThrow('ID is required');
+      expect(() => validateModalConfig({})).toThrow('id is required');
       expect(() => validateModalConfig({ id: 'test' })).toThrow(
         'title is required'
       );
@@ -862,7 +889,9 @@ describe('Modal Template System', () => {
 - [ ] Loading modal shows spinner and progress
 - [ ] All ARIA attributes are present
 - [ ] Focus management attributes included
-- [ ] Content is properly HTML-escaped
+- [ ] Content is properly HTML-escaped using DomUtils
+- [ ] Validation uses project utilities (string.assertNonBlank)
+- [ ] Integration with existing pageTemplate.js is clean
 - [ ] All tests pass with 100% coverage
 
 ## Performance Requirements
@@ -873,6 +902,10 @@ describe('Modal Template System', () => {
 
 ## Notes
 
+- **IMPORTANT**: This replaces the placeholder implementation in `pageTemplate.js` (lines 115-142)
+- Uses existing `DomUtils.escapeHtml()` from `src/utils/domUtils.js` (not a local implementation)
+- Uses `string.assertNonBlank()` from `src/utils/validationCore.js` for validation
+- The `ModalAction` type extends the base `Action` type with `primary` and `dismiss` properties
 - JavaScript implementation needed for:
   - Focus trap management
   - Keyboard navigation (ESC key, Tab cycling)

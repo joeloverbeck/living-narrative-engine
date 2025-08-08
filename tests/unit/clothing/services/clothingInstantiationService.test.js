@@ -275,12 +275,14 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
           equipmentSlots: { primary: 'shirt' },
         }),
       });
-      
+
       // Mock validation to return isValid: false with errors array
-      mockDeps.clothingSlotValidator.validateSlotCompatibility.mockResolvedValue({
-        valid: false,
-        reason: 'Slot not compatible',
-      });
+      mockDeps.clothingSlotValidator.validateSlotCompatibility.mockResolvedValue(
+        {
+          valid: false,
+          reason: 'Slot not compatible',
+        }
+      );
 
       const recipe = {
         clothingEntities: [
@@ -291,10 +293,14 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         ],
       };
 
-      const result = await service.instantiateRecipeClothing('actor123', recipe, {
-        slotEntityMappings: new Map(),
-        partsMap: new Map(),
-      });
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
 
       expect(result.errors.length).toBeGreaterThan(0);
       expect(result.errors[0]).toContain('Slot not compatible');
@@ -305,10 +311,14 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         clothingEntities: null,
       };
 
-      const result = await service.instantiateRecipeClothing('actor123', recipe, {
-        slotEntityMappings: new Map(),
-        partsMap: new Map(),
-      });
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
 
       expect(result.instantiated).toHaveLength(0);
       expect(mockDeps.eventBus.dispatch).not.toHaveBeenCalledWith(
@@ -322,10 +332,14 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         // clothingEntities is undefined
       };
 
-      const result = await service.instantiateRecipeClothing('actor123', recipe, {
-        slotEntityMappings: new Map(),
-        partsMap: new Map(),
-      });
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
 
       expect(result.instantiated).toHaveLength(0);
       expect(mockDeps.eventBus.dispatch).not.toHaveBeenCalledWith(
@@ -379,8 +393,14 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
       });
 
       // Should preserve existing clothing:wearable properties and add layer
-      expect(capturedProperties['clothing:wearable']).toHaveProperty('someExistingProp', 'value');
-      expect(capturedProperties['clothing:wearable']).toHaveProperty('layer', 'outer');
+      expect(capturedProperties['clothing:wearable']).toHaveProperty(
+        'someExistingProp',
+        'value'
+      );
+      expect(capturedProperties['clothing:wearable']).toHaveProperty(
+        'layer',
+        'outer'
+      );
     });
 
     it('should handle missing clothing instance when validating (line 473)', async () => {
@@ -396,10 +416,14 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         ],
       };
 
-      const result = await service.instantiateRecipeClothing('actor123', recipe, {
-        slotEntityMappings: new Map(),
-        partsMap: new Map(),
-      });
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
 
       expect(result.errors.length).toBeGreaterThan(0);
       expect(result.errors[0]).toContain('Clothing instance');
@@ -421,13 +445,19 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         ],
       };
 
-      const result = await service.instantiateRecipeClothing('actor123', recipe, {
-        slotEntityMappings: new Map(),
-        partsMap: new Map(),
-      });
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
 
       expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0]).toContain('does not have clothing:wearable component');
+      expect(result.errors[0]).toContain(
+        'does not have clothing:wearable component'
+      );
     });
 
     it('should handle clothing without targetSlot or primary equipment slot (line 489)', async () => {
@@ -447,10 +477,14 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         ],
       };
 
-      const result = await service.instantiateRecipeClothing('actor123', recipe, {
-        slotEntityMappings: new Map(),
-        partsMap: new Map(),
-      });
+      const result = await service.instantiateRecipeClothing(
+        'actor123',
+        recipe,
+        {
+          slotEntityMappings: new Map(),
+          partsMap: new Map(),
+        }
+      );
 
       expect(result.errors.length).toBeGreaterThan(0);
       expect(result.errors[0]).toContain('does not specify a clothing slot');
@@ -621,7 +655,9 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
 
       // Should have the fallback error message - the actual message format
       expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0]).toMatch(/Cannot equip instance .* to slot shirt/);
+      expect(result.errors[0]).toMatch(
+        /Cannot equip instance .* to slot shirt/
+      );
     });
 
     it('should use default error message in validation result (line 508)', async () => {
@@ -719,7 +755,7 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
 
   describe('edge cases and branch coverage', () => {
     it('should not dispatch clothing:instantiation_completed event when no clothing entities in recipe (line 313)', async () => {
-      const recipe = {};  // No clothingEntities property at all
+      const recipe = {}; // No clothingEntities property at all
 
       await service.instantiateRecipeClothing('actor123', recipe, {
         slotEntityMappings: new Map(),
@@ -922,7 +958,7 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
       );
 
       expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0]).toContain("Failed to create clothing entity");
+      expect(result.errors[0]).toContain('Failed to create clothing entity');
     });
 
     it('should handle entity object with id property', async () => {
