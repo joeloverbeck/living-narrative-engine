@@ -267,73 +267,12 @@ export function createMockUnifiedScopeResolver(dependencies) {
         // If the context has a target (for dependent scopes), include it
         if (context.target) {
           runtimeCtx.target = context.target;
-          console.log('Added target to runtimeCtx:', context.target.id);
-          console.log('Target has components:', !!context.target.components);
-          console.log(
-            'Target clothing:equipment:',
-            context.target.components?.['clothing:equipment']
-          );
         } else if (context.actionContext?.target) {
           // Also check actionContext for target
           runtimeCtx.target = context.actionContext.target;
-          console.log(
-            'Added target from actionContext to runtimeCtx:',
-            context.actionContext.target.id
-          );
         }
 
         // Resolve scope
-        console.log(
-          `[SCOPE RESOLUTION DEBUG] Calling scopeEngine.resolve for '${scopeName}':`
-        );
-        console.log('  Actor:', actorWithComponents.id);
-        console.log(
-          '  Actor components:',
-          Object.keys(actorWithComponents.components || {})
-        );
-        console.log('  Scope expression:', scopeDefinition.expr);
-        console.log('  RuntimeCtx has target:', !!runtimeCtx.target);
-        if (runtimeCtx.target) {
-          console.log('  Target ID:', runtimeCtx.target.id);
-          console.log(
-            '  Target has clothing:equipment:',
-            !!runtimeCtx.target.components?.['clothing:equipment']
-          );
-        }
-
-        // Log all available entities for debugging
-        const allEntities = [];
-        try {
-          const entityIds = entityManager.getAllEntityIds
-            ? entityManager.getAllEntityIds()
-            : entityManager.entities
-              ? Array.from(entityManager.entities.keys())
-              : [];
-          for (const id of entityIds) {
-            const entity = entityManager.getEntityInstance(id);
-            if (entity) {
-              const components = entity.getAllComponents
-                ? entity.getAllComponents()
-                : {};
-              allEntities.push({
-                id,
-                hasActorComponent: !!components['core:actor'],
-                hasExitsComponent: !!components['core:exits'],
-                hasPositionComponent: !!components['core:position'],
-                componentKeys: Object.keys(components),
-              });
-            }
-          }
-          console.log(
-            `[SCOPE RESOLUTION DEBUG] Available entities:`,
-            allEntities
-          );
-        } catch (err) {
-          console.log(
-            `[SCOPE RESOLUTION DEBUG] Could not list entities:`,
-            err.message
-          );
-        }
 
         let resolvedIds;
         try {
@@ -343,10 +282,7 @@ export function createMockUnifiedScopeResolver(dependencies) {
             runtimeCtx,
             context.trace
           );
-          const resolvedArray = Array.from(resolvedIds || []);
         } catch (scopeError) {
-          console.log('scopeEngine.resolve threw error:', scopeError.message);
-          console.log('Error stack:', scopeError.stack);
           throw scopeError;
         }
 
