@@ -365,6 +365,181 @@ class ActionAwareStructuredTrace extends StructuredTrace {
   }
 
   /**
+   * Check if an action uses multi-target resolution
+   *
+   * @param {object} action - Action definition
+   * @returns {boolean}
+   */
+  isMultiTargetAction(action) {
+    // Check for modern multi-target format
+    if (
+      action.targets &&
+      typeof action.targets === 'object' &&
+      !Array.isArray(action.targets)
+    ) {
+      return true;
+    }
+
+    // Check for scope-based targeting (can resolve to multiple)
+    if (action.scope || action.targetScope) {
+      return true;
+    }
+
+    // Check for dynamic targets
+    if (action.targetQuery || action.dynamicTargets) {
+      return true;
+    }
+
+    // Legacy single target or no targets
+    return false;
+  }
+
+  /**
+   * Capture multi-target resolution data
+   *
+   * @param {string} actionId - Action ID
+   * @param {object} resolutionData - Resolution data from MultiTargetResolutionStage
+   */
+  captureMultiTargetResolution(actionId, resolutionData) {
+    if (!this.#actionTraceFilter.shouldTrace(actionId)) {
+      return;
+    }
+
+    const traceData = {
+      stage: 'multi_target_resolution',
+      targetKeys: resolutionData.targetKeys || [],
+      resolvedCounts: resolutionData.resolvedCounts || {},
+      totalTargets: resolutionData.totalTargets || 0,
+      resolutionOrder: resolutionData.resolutionOrder || [],
+      hasContextDependencies: resolutionData.hasContextDependencies || false,
+      resolutionTimeMs: resolutionData.resolutionTimeMs || 0,
+      timestamp: Date.now(),
+    };
+
+    this.captureActionData('multi_target_resolution', actionId, traceData);
+  }
+
+  /**
+   * Capture scope evaluation details
+   *
+   * @param {string} actionId - Action ID
+   * @param {string} targetKey - Target placeholder key
+   * @param {object} evaluationData - Scope evaluation data
+   */
+  captureScopeEvaluation(actionId, targetKey, evaluationData) {
+    if (!this.#actionTraceFilter.shouldTrace(actionId)) {
+      return;
+    }
+
+    const traceData = {
+      stage: 'scope_evaluation',
+      targetKey,
+      scope: evaluationData.scope,
+      context: evaluationData.context,
+      resultCount: evaluationData.resultCount || 0,
+      evaluationTimeMs: evaluationData.evaluationTimeMs || 0,
+      cacheHit: evaluationData.cacheHit || false,
+      error: evaluationData.error,
+      timestamp: Date.now(),
+    };
+
+    this.captureActionData('scope_evaluation', actionId, traceData);
+  }
+
+  /**
+   * Capture target relationship analysis
+   *
+   * @param {string} actionId - Action ID
+   * @param {object} relationshipData - Analyzed relationships
+   */
+  captureTargetRelationships(actionId, relationshipData) {
+    if (!this.#actionTraceFilter.shouldTrace(actionId)) {
+      return;
+    }
+
+    const traceData = {
+      stage: 'target_relationships',
+      totalTargets: relationshipData.totalTargets || 0,
+      relationships: relationshipData.relationships || [],
+      patterns: relationshipData.patterns || [],
+      analysisTimeMs: relationshipData.analysisTimeMs || 0,
+      timestamp: Date.now(),
+    };
+
+    this.captureActionData('target_relationships', actionId, traceData);
+  }
+
+  /**
+   * Get multi-target summary for a traced action
+   *
+   * @param {string} actionId - Action ID
+   * @returns {object|null} Multi-target summary or null
+   */
+  getMultiTargetSummary(actionId) {
+    const actionTrace = this.getActionTrace(actionId);
+    if (!actionTrace) {
+      return null;
+    }
+
+    const summary = {
+      isMultiTarget: false,
+      targetKeys: [],
+      totalTargets: 0,
+      resolutionTimeMs: 0,
+      scopeEvaluations: [],
+      hasRelationships: false,
+    };
+
+    // Check for multi-target resolution data
+    // Note: multi_target_resolution data is captured twice - once at start with
+    // resolutionTimeMs = 0, and once at end with actual time
+    // We need to get the final one with the actual resolution time
+    const multiTargetStage = actionTrace.stages['multi_target_resolution'];
+    let multiTargetData = null;
+    if (multiTargetStage && multiTargetStage.data) {
+      multiTargetData = multiTargetStage.data;
+      // If resolutionTimeMs is 0, it's the initial capture, so look for an update
+      // The update would overwrite the same stage, so we have the final data
+    }
+    
+    if (multiTargetData) {
+      summary.isMultiTarget = true;
+      summary.targetKeys = multiTargetData.targetKeys || [];
+      summary.totalTargets = multiTargetData.totalTargets || 0;
+      summary.resolutionTimeMs = multiTargetData.resolutionTimeMs || 0;
+    }
+
+    // Collect all scope evaluations
+    for (const [stageName, stageData] of Object.entries(actionTrace.stages)) {
+      if (stageName === 'scope_evaluation' && stageData.data) {
+        // Extract the relevant fields from the captured data
+        const scopeData = {
+          targetKey: stageData.data.targetKey,
+          scope: stageData.data.scope,
+          context: stageData.data.context,
+          resultCount: stageData.data.resultCount,
+          evaluationTimeMs: stageData.data.evaluationTimeMs,
+          cacheHit: stageData.data.cacheHit,
+        };
+        if (stageData.data.error) {
+          scopeData.error = stageData.data.error;
+        }
+        summary.scopeEvaluations.push(scopeData);
+      }
+    }
+
+    // Check for relationship data
+    const relationshipStage = actionTrace.stages['target_relationships'];
+    if (relationshipStage && relationshipStage.data) {
+      summary.hasRelationships = true;
+      summary.relationshipCount =
+        relationshipStage.data.relationships?.length || 0;
+    }
+
+    return summary;
+  }
+
+  /**
    * Filter captured data based on verbosity level and inclusion configuration
    *
    * @private
@@ -382,8 +557,14 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       stage,
     };
 
-    // Special handling for legacy stages - always include all data
-    if (stage === 'legacy_processing' || stage === 'legacy_detection') {
+    // Special handling for legacy and multi-target stages - always include all data
+    if (
+      stage === 'legacy_processing' ||
+      stage === 'legacy_detection' ||
+      stage === 'multi_target_resolution' ||
+      stage === 'scope_evaluation' ||
+      stage === 'target_relationships'
+    ) {
       return { ...filteredData, ...data };
     }
 

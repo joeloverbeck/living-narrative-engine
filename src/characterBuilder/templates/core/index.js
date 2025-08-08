@@ -16,4 +16,13 @@ export {
 // NOTE: These exports reference files that will be created in subsequent tickets
 export { createMain } from './mainTemplate.js';
 export { createFooter } from './footerTemplate.js';
-export { createModal } from './modalTemplate.js';
+
+// Modal template exports (HTMLTEMP-006)
+export {
+  createModal,
+  createConfirmModal,
+  createAlertModal,
+  createFormModal,
+  createLoadingModal,
+  createModalsContainer,
+} from './modalTemplate.js';

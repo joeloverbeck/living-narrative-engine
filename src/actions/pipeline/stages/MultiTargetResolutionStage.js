@@ -449,6 +449,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
   async #resolveMultiTargets(context, trace) {
     const { actionDef, actor, actionContext } = context;
     const targetDefs = actionDef.targets;
+    const resolutionStartTime = Date.now();
 
     // Validate targets object
     if (!targetDefs || typeof targetDefs !== 'object') {
@@ -487,12 +488,18 @@ export class MultiTargetResolutionStage extends PipelineStage {
       'MultiTargetResolutionStage'
     );
 
+    // Check if trace supports multi-target capture
+    const isActionAwareTrace =
+      trace && typeof trace.captureMultiTargetResolution === 'function';
+
     // Resolve targets sequentially
     const resolvedTargets = {};
+    const resolvedCounts = {};
     const allTargetContexts = []; // For backward compatibility
 
     for (const targetKey of resolutionOrder) {
       const targetDef = targetDefs[targetKey];
+      const scopeStartTime = Date.now();
 
       trace?.step(
         `Resolving ${targetKey} target`,
@@ -563,6 +570,18 @@ export class MultiTargetResolutionStage extends PipelineStage {
         }
 
         resolvedTargets[targetKey] = resolvedSecondaryTargets;
+        resolvedCounts[targetKey] = resolvedSecondaryTargets.length;
+
+        // Capture scope evaluation if trace supports it
+        if (isActionAwareTrace && trace.captureScopeEvaluation) {
+          trace.captureScopeEvaluation(actionDef.id, targetKey, {
+            scope: targetDef.scope,
+            context: targetDef.contextFrom,
+            resultCount: resolvedCounts[targetKey],
+            evaluationTimeMs: Date.now() - scopeStartTime,
+            cacheHit: false, // We don't have cache info for contextFrom targets yet
+          });
+        }
 
         // Add to flat list for backward compatibility
         resolvedSecondaryTargets.forEach((target) => {
@@ -631,6 +650,19 @@ export class MultiTargetResolutionStage extends PipelineStage {
           })
           .filter(Boolean); // Remove null entries
 
+        resolvedCounts[targetKey] = resolvedTargets[targetKey].length;
+
+        // Capture scope evaluation if trace supports it
+        if (isActionAwareTrace && trace.captureScopeEvaluation) {
+          trace.captureScopeEvaluation(actionDef.id, targetKey, {
+            scope: targetDef.scope,
+            context: 'actor', // Default context when no contextFrom
+            resultCount: resolvedCounts[targetKey],
+            evaluationTimeMs: Date.now() - scopeStartTime,
+            cacheHit: false, // We'll need to get this from UnifiedScopeResolver
+          });
+        }
+
         // Add to flat list for backward compatibility
         resolvedTargets[targetKey].forEach((target) => {
           allTargetContexts.push({
@@ -646,6 +678,23 @@ export class MultiTargetResolutionStage extends PipelineStage {
           'MultiTargetResolutionStage'
         );
       }
+    }
+
+    // Update final resolution time if using multi-target tracing
+    if (isActionAwareTrace) {
+      trace.captureMultiTargetResolution(actionDef.id, {
+        targetKeys: Object.keys(targetDefs),
+        resolvedCounts,
+        totalTargets: Object.values(resolvedCounts).reduce(
+          (sum, count) => sum + count,
+          0
+        ),
+        resolutionOrder,
+        hasContextDependencies: resolutionOrder.some(
+          (key) => targetDefs[key].contextFrom
+        ),
+        resolutionTimeMs: Date.now() - resolutionStartTime,
+      });
     }
 
     // Check if we have at least one valid target
