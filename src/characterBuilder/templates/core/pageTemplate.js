@@ -6,6 +6,7 @@
 import { createHeader } from './headerTemplate.js';
 import { createMain } from './mainTemplate.js';
 import { createFooter } from './footerTemplate.js';
+import { createModalsContainer } from './modalTemplate.js';
 
 /** @typedef {import('../types.js').PageConfig} PageConfig */
 /** @typedef {import('../types.js').PanelConfig} PanelConfig */
@@ -105,56 +106,7 @@ function createPageFooter(footer) {
   return createFooter(footer);
 }
 
-/**
- * Creates modals container
- *
- * @private
- * @param {Array} modals - Modal configurations
- * @returns {string} Modals container HTML
- */
-function createModalsContainer(modals) {
-  if (!modals.length) return '';
-
-  // Placeholder - will be replaced by HTMLTEMP-006
-  return `
-    <div class="cb-modals-container" aria-hidden="true">
-      ${modals
-        .map(
-          (modal) => `
-        <div id="${modal.id}" class="cb-modal" role="dialog" aria-modal="true" aria-labelledby="${modal.id}-title">
-          <div class="cb-modal-backdrop"></div>
-          <div class="cb-modal-content">
-            <div class="cb-modal-header">
-              <h3 id="${modal.id}-title" class="cb-modal-title">${escapeHtml(modal.title)}</h3>
-              <button type="button" class="cb-modal-close" aria-label="Close">×</button>
-            </div>
-            <div class="cb-modal-body">
-              ${typeof modal.content === 'function' ? modal.content() : modal.content}
-            </div>
-            ${modal.actions ? createModalActions(modal.actions) : ''}
-          </div>
-        </div>
-      `
-        )
-        .join('')}
-    </div>
-  `;
-}
-
-/**
- * Creates modal action buttons
- *
- * @private
- * @param {Array} actions - Modal actions
- * @returns {string} Actions HTML
- */
-function createModalActions(actions) {
-  return `
-    <div class="cb-modal-footer">
-      ${actions.map((action) => createActionButton(action, 'modal')).join('')}
-    </div>
-  `;
-}
+// Modal container creation is now handled by modalTemplate.js
 
 /**
  * Creates an action button
