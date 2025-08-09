@@ -323,6 +323,51 @@ describe('LayerCompatibilityService', () => {
       expect(result.conflicts).toEqual([]);
     });
 
+    it('should handle outer layers with undefined requirements in checkLayerOrdering', async () => {
+      // Test for line 340 - when LAYER_REQUIREMENTS[outerLayer] is undefined
+      entityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_clothing: {
+                  underwear: 'underwear_item', // Underwear layer has no requirements defined
+                  base: 'shirt', // Base layer has no requirements defined
+                },
+              },
+            };
+          }
+          if (componentId === 'clothing:wearable') {
+            return {
+              wearableType: 'new_underwear',
+              layer: 'underwear', // Trying to add to underwear layer
+              equipmentSlots: { primary: 'torso_clothing', secondary: [] },
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await service.checkLayerConflicts(
+        'entity1',
+        'new_underwear_item',
+        'underwear',
+        'torso_clothing'
+      );
+
+      // The underwear layer should conflict with existing underwear
+      expect(result.hasConflicts).toBe(true);
+      expect(result.conflicts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'layer_overlap',
+            conflictingItemId: 'underwear_item',
+            layer: 'underwear',
+          }),
+        ])
+      );
+    });
+
     it('should detect missing required layer conflicts', async () => {
       entityManager.getComponentData.mockImplementation(
         (entityId, componentId) => {
@@ -494,6 +539,126 @@ describe('LayerCompatibilityService', () => {
       expect(result.hasConflicts).toBe(false);
       expect(result.conflicts).toEqual([]);
     });
+
+    it('should handle items with no secondary slots defined', async () => {
+      // Test for lines 404-408 - when secondarySlots is undefined
+      entityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_clothing: {},
+                arms_clothing: {
+                  base: 'sleeve_shirt',
+                },
+              },
+            };
+          }
+          if (componentId === 'clothing:wearable') {
+            return {
+              wearableType: 'vest',
+              layer: 'base',
+              equipmentSlots: {
+                primary: 'torso_clothing',
+                // No secondary property defined at all
+              },
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await service.checkLayerConflicts(
+        'entity1',
+        'vest_item',
+        'base',
+        'torso_clothing'
+      );
+
+      // Should have no conflicts since secondary slots are undefined
+      expect(result.hasConflicts).toBe(false);
+      expect(result.conflicts).toEqual([]);
+    });
+
+    it('should handle items with null secondary slots', async () => {
+      // Another test for lines 404-408 - when secondarySlots is null
+      entityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_clothing: {},
+                arms_clothing: {
+                  base: 'sleeve_shirt',
+                },
+              },
+            };
+          }
+          if (componentId === 'clothing:wearable') {
+            return {
+              wearableType: 'tank_top',
+              layer: 'base',
+              equipmentSlots: {
+                primary: 'torso_clothing',
+                secondary: null, // Explicitly null
+              },
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await service.checkLayerConflicts(
+        'entity1',
+        'tank_top_item',
+        'base',
+        'torso_clothing'
+      );
+
+      // Should have no conflicts since secondary slots are null
+      expect(result.hasConflicts).toBe(false);
+      expect(result.conflicts).toEqual([]);
+    });
+
+    it('should handle secondary slots with equipment but different layer', async () => {
+      // Test for line 408 false branch - when secondaryEquipment exists but doesn't have targetLayer
+      entityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_clothing: {},
+                arms_clothing: {
+                  outer: 'jacket_sleeves', // Different layer - outer, not base
+                },
+              },
+            };
+          }
+          if (componentId === 'clothing:wearable') {
+            return {
+              wearableType: 'shirt',
+              layer: 'base', // Trying to add base layer
+              equipmentSlots: {
+                primary: 'torso_clothing',
+                secondary: ['arms_clothing'], // Has secondary slot
+              },
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await service.checkLayerConflicts(
+        'entity1',
+        'shirt_item',
+        'base', // Different from what's in arms_clothing (outer)
+        'torso_clothing'
+      );
+
+      // Should have no conflicts since the secondary slot has a different layer
+      expect(result.hasConflicts).toBe(false);
+      expect(result.conflicts).toEqual([]);
+    });
   });
 
   describe('validateLayerOrdering', () => {
@@ -551,6 +716,22 @@ describe('LayerCompatibilityService', () => {
       );
 
       expect(result).toBe(true);
+    });
+
+    it('should handle layers with undefined requirements in LAYER_REQUIREMENTS', async () => {
+      // Test for line 181 - when requirements for a layer is not defined in LAYER_REQUIREMENTS
+      const currentEquipment = {
+        underwear: 'underwear_item',
+      };
+
+      // 'base' and 'underwear' layers don't have entries in LAYER_REQUIREMENTS
+      const result = await service.validateLayerOrdering(
+        'entity1',
+        'base', // Layer that has no entry in LAYER_REQUIREMENTS
+        currentEquipment
+      );
+
+      expect(result).toBe(true); // Should pass since undefined requirements means no requirements
     });
 
     it('should handle errors gracefully', async () => {
@@ -634,6 +815,64 @@ describe('LayerCompatibilityService', () => {
 
       expect(result).toEqual([]);
     });
+
+    it('should handle layers without defined requirements in LAYER_REQUIREMENTS', async () => {
+      // Test for lines 239-240 - when a layer has no entry in LAYER_REQUIREMENTS
+      entityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_clothing: {
+                  underwear: 'underwear_item',
+                  base: 'shirt1', // Base layer that we're checking dependents for
+                  // Note: 'base' layer has no entry in LAYER_REQUIREMENTS, so nothing depends on it
+                },
+              },
+            };
+          }
+          return null;
+        }
+      );
+
+      const result = await service.findDependentItems(
+        'entity1',
+        'torso_clothing',
+        'underwear' // Underwear has no defined requirements
+      );
+
+      expect(result).toEqual([]); // No items depend on underwear since it has no requirements defined
+    });
+
+    it('should skip items in outer layers that have no requirement definitions', async () => {
+      // Another test to ensure line 239-240 coverage
+      entityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_clothing: {
+                  base: 'shirt1',
+                  underwear: 'underwear_item', // Underwear layer (no requirements defined)
+                  accessories: 'accessory_item', // Accessories layer (has empty requirements)
+                },
+              },
+            };
+          }
+          return null;
+        }
+      );
+
+      // Check dependents of base when there are items in layers without requirement definitions
+      const result = await service.findDependentItems(
+        'entity1',
+        'torso_clothing',
+        'base'
+      );
+
+      // Accessories have an empty requirements array, underwear has no entry
+      expect(result).toEqual([]); // Neither depend on base
+    });
   });
 
   describe('suggestResolutions', () => {
@@ -655,6 +894,50 @@ describe('LayerCompatibilityService', () => {
         target: 'item1',
         description: 'Automatically remove conflicting item from base layer',
         priority: 1,
+      });
+    });
+
+    it('should suggest auto_remove with lower priority for non-high severity layer overlaps', async () => {
+      // Test for line 272 - when severity is not 'high'
+      const conflicts = [
+        {
+          type: 'layer_overlap',
+          conflictingItemId: 'item2',
+          layer: 'outer',
+          severity: 'medium', // Non-high severity
+        },
+      ];
+
+      const result = await service.suggestResolutions(conflicts);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        type: 'auto_remove',
+        target: 'item2',
+        description: 'Automatically remove conflicting item from outer layer',
+        priority: 2, // Priority 2 for non-high severity
+      });
+    });
+
+    it('should handle layer_overlap with low severity', async () => {
+      // Another test for line 272 coverage
+      const conflicts = [
+        {
+          type: 'layer_overlap',
+          conflictingItemId: 'item3',
+          layer: 'accessories',
+          severity: 'low',
+        },
+      ];
+
+      const result = await service.suggestResolutions(conflicts);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        type: 'auto_remove',
+        target: 'item3',
+        description: 'Automatically remove conflicting item from accessories layer',
+        priority: 2, // Priority 2 for non-high severity
       });
     });
 
