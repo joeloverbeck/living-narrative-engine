@@ -74,7 +74,7 @@ export function createModal(config) {
   const centeredClass = centered ? 'cb-modal-centered' : '';
   const scrollableClass = scrollable ? 'cb-modal-scrollable' : '';
   const modalClasses =
-    `cb-modal ${sizeClass} ${variantClass} ${centeredClass} ${scrollableClass} ${className}`.trim();
+    `cb-modal ${sizeClass} ${variantClass} ${centeredClass} ${scrollableClass} ${DomUtils.escapeHtml(className)}`.trim();
 
   return `
     <div id="${DomUtils.escapeHtml(id)}" 
@@ -214,13 +214,13 @@ function createModalAction(action) {
 
   return `
     <button type="${action.type || 'button'}"
-            class="cb-modal-action ${buttonClass} ${action.className || ''}"
+            class="cb-modal-action ${buttonClass} ${DomUtils.escapeHtml(action.className || '')}"
             data-action="${DomUtils.escapeHtml(action.name)}"
             ${isDismiss ? 'data-dismiss="modal"' : ''}
             ${action.disabled ? 'disabled' : ''}
             ${action.tooltip ? `title="${DomUtils.escapeHtml(action.tooltip)}"` : ''}
             ${dataAttrs}>
-      ${action.icon ? `<span class="cb-action-icon">${action.icon}</span>` : ''}
+      ${action.icon ? `<span class="cb-action-icon">${DomUtils.escapeHtml(action.icon)}</span>` : ''}
       <span class="cb-action-label">${DomUtils.escapeHtml(action.label)}</span>
     </button>
   `;

@@ -2,7 +2,7 @@
  * @file Template Composition Engine
  * @module characterBuilder/templates/utilities/templateComposer
  * @description Handles nested template composition and slot-based content injection
- * 
+ *
  * NOTE: This is a standalone implementation that will be enhanced
  * when TemplateRegistry, TemplateCache, and TemplateValidator are
  * implemented in Phase 3 (HTMLTEMP-021 through HTMLTEMP-030)
@@ -32,10 +32,10 @@ export class TemplateComposer {
     this.#templates = config.templates || new Map();
     this.#enableCache = config.enableCache !== false;
     this.#validateOutput = config.validateOutput !== false;
-    
+
     // Simple cache implementation until TemplateCache is available
     this.#cache = this.#enableCache ? new Map() : null;
-    
+
     this.#compositionDepth = 0;
     this.#maxDepth = config.maxDepth || 10;
   }
@@ -254,7 +254,10 @@ export class TemplateComposer {
             const mergedContext = { ...context, ...localContext };
             return this.compose(template, mergedContext);
           } catch (e) {
-            console.error(`Invalid context JSON for template ${templateRef}:`, e);
+            console.error(
+              `Invalid context JSON for template ${templateRef}:`,
+              e
+            );
             return '';
           }
         }
@@ -262,7 +265,7 @@ export class TemplateComposer {
         return '';
       }
     );
-    
+
     // Also handle double quotes around JSON
     processed = processed.replace(
       /<template\s+ref\s*=\s*["']([^"']+)["']\s+context\s*=\s*"([^"]+)"(?:\s+[^>]*)?\/>/gi,
@@ -274,7 +277,10 @@ export class TemplateComposer {
             const mergedContext = { ...context, ...localContext };
             return this.compose(template, mergedContext);
           } catch (e) {
-            console.error(`Invalid context JSON for template ${templateRef}:`, e);
+            console.error(
+              `Invalid context JSON for template ${templateRef}:`,
+              e
+            );
             return '';
           }
         }
@@ -350,11 +356,13 @@ export class TemplateComposer {
    * @returns {string} Cache key
    */
   #generateCacheKey(template, context) {
-    const templateId = 
-      typeof template === 'string' ? template.substring(0, 100) :
-      typeof template === 'function' ? template.name || 'anonymous' :
-      template?.id || 'object';
-    
+    const templateId =
+      typeof template === 'string'
+        ? template.substring(0, 100)
+        : typeof template === 'function'
+          ? template.name || 'anonymous'
+          : template?.id || 'object';
+
     const contextHash = this.#hashObject(context);
     return `${templateId}:${contextHash}`;
   }
@@ -376,8 +384,14 @@ export class TemplateComposer {
         // Handle circular references
         if (typeof value === 'object' && value !== null) {
           // Handle SlotContentProvider specially
-          if (value.constructor && value.constructor.name === 'SlotContentProvider') {
-            return { __type: 'SlotContentProvider', data: value.toObject ? value.toObject() : {} };
+          if (
+            value.constructor &&
+            value.constructor.name === 'SlotContentProvider'
+          ) {
+            return {
+              __type: 'SlotContentProvider',
+              data: value.toObject ? value.toObject() : {},
+            };
           }
           if (value instanceof Map) {
             return { __type: 'Map', entries: Array.from(value.entries()) };
@@ -388,12 +402,12 @@ export class TemplateComposer {
         }
         return value;
       });
-      
+
       // Simple hash algorithm
       let hash = 0;
       for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
+        hash = (hash << 5) - hash + char;
         hash = hash & hash; // Convert to 32-bit integer
       }
       return hash.toString(36);
@@ -417,20 +431,34 @@ export class TemplateComposer {
     // Check for unclosed tags (basic check)
     const openTags = html.match(/<([a-z][a-z0-9]*)\b[^>]*(?<!\/\s*)>/gi) || [];
     const closeTags = html.match(/<\/([a-z][a-z0-9]*)\s*>/gi) || [];
-    
-    const selfClosingTags = ['br', 'hr', 'img', 'input', 'meta', 'link', 'area', 'base', 'col', 'embed', 'source', 'track', 'wbr'];
-    
+
+    const selfClosingTags = [
+      'br',
+      'hr',
+      'img',
+      'input',
+      'meta',
+      'link',
+      'area',
+      'base',
+      'col',
+      'embed',
+      'source',
+      'track',
+      'wbr',
+    ];
+
     const openCount = {};
     const closeCount = {};
 
-    openTags.forEach(tag => {
+    openTags.forEach((tag) => {
       const tagName = tag.match(/<([a-z][a-z0-9]*)/i)[1].toLowerCase();
       if (!selfClosingTags.includes(tagName)) {
         openCount[tagName] = (openCount[tagName] || 0) + 1;
       }
     });
 
-    closeTags.forEach(tag => {
+    closeTags.forEach((tag) => {
       const tagName = tag.match(/<\/([a-z][a-z0-9]*)/i)[1].toLowerCase();
       closeCount[tagName] = (closeCount[tagName] || 0) + 1;
     });

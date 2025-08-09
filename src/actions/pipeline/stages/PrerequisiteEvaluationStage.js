@@ -53,6 +53,7 @@ export class PrerequisiteEvaluationStage extends PipelineStage {
     const { actor, candidateActions = [], trace, actionContext } = context;
     const source = `${this.name}Stage.execute`;
     const stageStartTime = Date.now();
+    const startPerformanceTime = performance.now(); // ACTTRA-018: Performance timing
 
     // Check if we have action-aware tracing capability
     const isActionAwareTrace = this.#isActionAwareTrace(trace);
@@ -133,6 +134,21 @@ export class PrerequisiteEvaluationStage extends PipelineStage {
         if (isActionAwareTrace && trace.captureActionData) {
           await this.#capturePrerequisiteError(trace, actionDef, actor, error);
         }
+      }
+    }
+
+    // ACTTRA-018: Capture performance data for each action
+    const endPerformanceTime = performance.now();
+    if (isActionAwareTrace && trace.captureActionData) {
+      for (const actionDef of candidateActions) {
+        await this.#capturePerformanceData(
+          trace,
+          actionDef,
+          startPerformanceTime,
+          endPerformanceTime,
+          candidateActions.length,
+          validActions.length
+        );
       }
     }
 
@@ -695,6 +711,44 @@ export class PrerequisiteEvaluationStage extends PipelineStage {
       this.#logger.warn(
         'Failed to capture post-evaluation summary for tracing',
         error
+      );
+    }
+  }
+
+  /**
+   * Capture performance data for ACTTRA-018
+   *
+   * @private
+   * @param {import('../../tracing/actionAwareStructuredTrace.js').default} trace - The action-aware trace
+   * @param {object} actionDef - The action definition
+   * @param {number} startTime - Start performance time
+   * @param {number} endTime - End performance time
+   * @param {number} totalCandidates - Total number of candidates processed
+   * @param {number} passedCandidates - Number of candidates that passed prerequisites
+   * @returns {Promise<void>}
+   */
+  async #capturePerformanceData(
+    trace,
+    actionDef,
+    startTime,
+    endTime,
+    totalCandidates,
+    passedCandidates
+  ) {
+    try {
+      if (trace && trace.captureActionData) {
+        await trace.captureActionData('stage_performance', actionDef.id, {
+          stage: 'prerequisite_evaluation',
+          duration: endTime - startTime,
+          timestamp: Date.now(),
+          itemsProcessed: totalCandidates,
+          itemsPassed: passedCandidates,
+          stageName: this.name,
+        });
+      }
+    } catch (error) {
+      this.#logger.debug(
+        `Failed to capture performance data for action '${actionDef.id}': ${error.message}`
       );
     }
   }

@@ -10,7 +10,7 @@ describe('Enhanced Tracing Integration Tests', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    
+
     enhancedFilter = new EnhancedActionTraceFilter({
       enabled: true,
       tracedActions: ['*'],
@@ -41,7 +41,7 @@ describe('Enhanced Tracing Integration Tests', () => {
         },
         {
           category: 'business_logic',
-          context: { session: 'test' }
+          context: { session: 'test' },
         }
       );
 
@@ -57,7 +57,9 @@ describe('Enhanced Tracing Integration Tests', () => {
 
     it('should apply data summarization based on verbosity', () => {
       const largeData = {
-        items: Array(10).fill().map((_, i) => ({ id: i, name: `item_${i}` })),
+        items: Array(10)
+          .fill()
+          .map((_, i) => ({ id: i, name: `item_${i}` })),
         longString: 'x'.repeat(300),
         performance: { timing: 123, memory: 456 },
         diagnostic: { debug: 'info' },
@@ -70,7 +72,7 @@ describe('Enhanced Tracing Integration Tests', () => {
         largeData,
         {
           summarize: true,
-          targetVerbosity: 'minimal'
+          targetVerbosity: 'minimal',
         }
       );
 
@@ -163,17 +165,21 @@ describe('Enhanced Tracing Integration Tests', () => {
 
       // Export at minimal verbosity
       const minimalExport = trace.exportFilteredTraceData('minimal');
-      
+
       // Should include core data but not performance or diagnostic
       expect(Object.keys(minimalExport).length).toBeGreaterThan(0);
-      
+
       // Export with category filter
       const coreOnlyExport = trace.exportFilteredTraceData('verbose', ['core']);
-      
+
       // Should only include core category stages
       for (const actionData of Object.values(coreOnlyExport)) {
         for (const stage of Object.keys(actionData.stages)) {
-          expect(['core_operation', 'action_start', 'action_complete']).toContain(stage);
+          expect([
+            'core_operation',
+            'action_start',
+            'action_complete',
+          ]).toContain(stage);
         }
       }
     });
@@ -221,7 +227,11 @@ describe('Enhanced Tracing Integration Tests', () => {
     it('should achieve >70% cache hit rate for typical usage', () => {
       // Simulate typical usage pattern with repeated actions
       const actions = ['core:go', 'core:look', 'core:take', 'core:use'];
-      const stages = ['component_filtering', 'prerequisite_evaluation', 'formatting'];
+      const stages = [
+        'component_filtering',
+        'prerequisite_evaluation',
+        'formatting',
+      ];
 
       // Perform multiple iterations
       for (let i = 0; i < 5; i++) {
@@ -243,27 +253,33 @@ describe('Enhanced Tracing Integration Tests', () => {
 
     it('should handle large data sets efficiently', () => {
       const largeDataSet = {
-        entities: Array(1000).fill().map((_, i) => ({
-          id: `entity_${i}`,
-          components: Array(10).fill().map((_, j) => `component_${j}`),
-          attributes: { health: 100, position: { x: i, y: i } }
-        })),
-        events: Array(500).fill().map((_, i) => ({
-          type: 'event',
-          timestamp: Date.now() + i,
-          data: { index: i }
-        }))
+        entities: Array(1000)
+          .fill()
+          .map((_, i) => ({
+            id: `entity_${i}`,
+            components: Array(10)
+              .fill()
+              .map((_, j) => `component_${j}`),
+            attributes: { health: 100, position: { x: i, y: i } },
+          })),
+        events: Array(500)
+          .fill()
+          .map((_, i) => ({
+            type: 'event',
+            timestamp: Date.now() + i,
+            data: { index: i },
+          })),
       };
 
       const startTime = performance.now();
-      
+
       trace.captureEnhancedActionData(
         'large_data_processing',
         'bulk:action',
         largeDataSet,
         {
           summarize: true,
-          targetVerbosity: 'standard'
+          targetVerbosity: 'standard',
         }
       );
 
@@ -278,7 +294,7 @@ describe('Enhanced Tracing Integration Tests', () => {
       expect(actionTrace).toBeDefined();
       expect(actionTrace.stages.large_data_processing).toBeDefined();
       const capturedData = actionTrace.stages.large_data_processing.data;
-      
+
       // Arrays should be truncated
       expect(capturedData.entities).toBeDefined();
       expect(capturedData.entities.length).toBe(3);
@@ -290,25 +306,29 @@ describe('Enhanced Tracing Integration Tests', () => {
     it('should maintain reasonable memory usage with different verbosity levels', () => {
       const testData = {
         small: { value: 1 },
-        medium: Array(100).fill().map((_, i) => ({ id: i })),
+        medium: Array(100)
+          .fill()
+          .map((_, i) => ({ id: i })),
         large: {
           nested: {
             deep: {
-              data: Array(50).fill().map(() => ({ 
-                value: Math.random(),
-                timestamp: Date.now()
-              }))
-            }
-          }
-        }
+              data: Array(50)
+                .fill()
+                .map(() => ({
+                  value: Math.random(),
+                  timestamp: Date.now(),
+                })),
+            },
+          },
+        },
       };
 
       // Test at different verbosity levels
       const verbosityLevels = ['minimal', 'standard', 'detailed', 'verbose'];
-      
+
       for (const level of verbosityLevels) {
         enhancedFilter.setVerbosityLevel(level);
-        
+
         // Capture same data at different levels
         for (let i = 0; i < 10; i++) {
           trace.captureEnhancedActionData(
@@ -322,14 +342,14 @@ describe('Enhanced Tracing Integration Tests', () => {
 
       // Get all traced actions
       const tracedActions = trace.getTracedActions();
-      
+
       // Verify data was captured appropriately for each level
       expect(tracedActions.size).toBeGreaterThan(0);
-      
+
       // Check that minimal level has less data than verbose
       let minimalDataSize = 0;
       let verboseDataSize = 0;
-      
+
       for (const [actionId, actionData] of tracedActions) {
         if (actionId.includes('minimal')) {
           minimalDataSize += JSON.stringify(actionData).length;
@@ -337,7 +357,7 @@ describe('Enhanced Tracing Integration Tests', () => {
           verboseDataSize += JSON.stringify(actionData).length;
         }
       }
-      
+
       // Minimal should store less data than verbose
       // Note: Since all data at same verbosity level is captured the same, sizes may be equal
       if (minimalDataSize > 0 && verboseDataSize > 0) {
@@ -348,11 +368,9 @@ describe('Enhanced Tracing Integration Tests', () => {
     it('should optimize cache memory usage', () => {
       // Fill cache with many entries
       for (let i = 0; i < 100; i++) {
-        enhancedFilter.shouldCaptureEnhanced(
-          'category',
-          `type_${i}`,
-          { index: i }
-        );
+        enhancedFilter.shouldCaptureEnhanced('category', `type_${i}`, {
+          index: i,
+        });
       }
 
       // Test that cache works before optimization
@@ -363,17 +381,17 @@ describe('Enhanced Tracing Integration Tests', () => {
 
       // Clear cache explicitly
       enhancedFilter.clearEnhancedCache();
-      
+
       // Reset stats to test cleanly after clearing
       enhancedFilter.resetEnhancedStats();
-      
+
       // Verify cache was cleared - no cache hit on same request
       enhancedFilter.shouldCaptureEnhanced('category', 'type_0', {});
       stats = enhancedFilter.getEnhancedStats();
-      
+
       // Should not have hit cache after clearing
       expect(stats.cacheHits).toBe(0);
-      
+
       // Also test that optimize works without error
       enhancedFilter.optimizeCache(0);
       expect(enhancedFilter).toBeDefined(); // Just verify it didn't throw
@@ -397,7 +415,7 @@ describe('Enhanced Tracing Integration Tests', () => {
 
       // Verify cache was cleared by checking stats after new operations
       trace.resetEnhancedStats();
-      
+
       trace.captureEnhancedActionData(
         'stage',
         'action_0', // Same as before
@@ -412,11 +430,7 @@ describe('Enhanced Tracing Integration Tests', () => {
     it('should optimize cache periodically', () => {
       // Add entries to cache
       for (let i = 0; i < 20; i++) {
-        enhancedFilter.shouldCaptureEnhanced(
-          'category',
-          `type_${i}`,
-          {}
-        );
+        enhancedFilter.shouldCaptureEnhanced('category', `type_${i}`, {});
       }
 
       // Optimize with a short max age
@@ -432,8 +446,10 @@ describe('Enhanced Tracing Integration Tests', () => {
   describe('Backward Compatibility', () => {
     it('should work with non-enhanced ActionTraceFilter', async () => {
       // Create trace with regular ActionTraceFilter
-      const ActionTraceFilter = (await import('../../../../src/actions/tracing/actionTraceFilter.js')).default;
-      
+      const ActionTraceFilter = (
+        await import('../../../../src/actions/tracing/actionTraceFilter.js')
+      ).default;
+
       const regularFilter = new ActionTraceFilter({
         enabled: true,
         logger: mockLogger,
@@ -447,11 +463,9 @@ describe('Enhanced Tracing Integration Tests', () => {
 
       // Should still work with enhanced methods (graceful degradation)
       expect(() => {
-        regularTrace.captureEnhancedActionData(
-          'stage',
-          'action',
-          { data: 'test' }
-        );
+        regularTrace.captureEnhancedActionData('stage', 'action', {
+          data: 'test',
+        });
       }).not.toThrow();
 
       // Enhanced stats should return null
@@ -463,7 +477,7 @@ describe('Enhanced Tracing Integration Tests', () => {
       trace.captureActionData(
         'existing_stage',
         'existing:action',
-        { existingData: true, passed: true }  // Include fields that pass filtering
+        { existingData: true, passed: true } // Include fields that pass filtering
       );
 
       // Verify it still works

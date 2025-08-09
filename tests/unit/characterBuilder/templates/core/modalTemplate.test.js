@@ -267,7 +267,9 @@ describe('Modal Template System', () => {
 
       // ID and title should be escaped
       expect(html).toContain('id="modal&lt;script&gt;"');
-      expect(html).toContain('&lt;script&gt;alert("XSS")&lt;/script&gt;');
+      expect(html).toContain(
+        '&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;'
+      );
 
       // Content HTML should be preserved (caller responsibility to escape if needed)
       expect(html).toContain('<div class="test">Valid HTML content</div>');
@@ -680,13 +682,73 @@ describe('Modal Template System', () => {
 
       // ID and title should be escaped
       expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
-      expect(html).toContain('&lt;script&gt;alert("title")&lt;/script&gt;');
+      expect(html).toContain(
+        '&lt;script&gt;alert(&quot;title&quot;)&lt;/script&gt;'
+      );
 
       // Action attributes should be escaped
-      expect(html).toContain('&lt;script&gt;alert("label")&lt;/script&gt;');
+      expect(html).toContain(
+        '&lt;script&gt;alert(&quot;label&quot;)&lt;/script&gt;'
+      );
 
       // Content HTML should be preserved
       expect(html).toContain('<p>HTML content is preserved</p>');
+    });
+
+    it('should escape className parameter to prevent XSS', () => {
+      const html = createModal({
+        id: 'modal',
+        title: 'Test Modal',
+        className: '"><script>alert("xss")</script>',
+      });
+
+      // className should be escaped
+      expect(html).toContain(
+        '&quot;&gt;&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'
+      );
+      // Should not contain unescaped script tag
+      expect(html).not.toContain('<script>alert("xss")</script>');
+    });
+
+    it('should escape action className to prevent XSS', () => {
+      const html = createModal({
+        id: 'modal',
+        title: 'Test Modal',
+        actions: [
+          {
+            label: 'Test',
+            name: 'test',
+            className: '"><script>alert("action-xss")</script>',
+          },
+        ],
+      });
+
+      // Action className should be escaped
+      expect(html).toContain(
+        '&quot;&gt;&lt;script&gt;alert(&quot;action-xss&quot;)&lt;/script&gt;'
+      );
+      // Should not contain unescaped script tag
+      expect(html).not.toContain('<script>alert("action-xss")</script>');
+    });
+
+    it('should handle malicious action icons safely', () => {
+      const html = createModal({
+        id: 'modal',
+        title: 'Test Modal',
+        actions: [
+          {
+            label: 'Test',
+            name: 'test',
+            icon: '<script>alert("icon-xss")</script>',
+          },
+        ],
+      });
+
+      // Icons should be escaped for security
+      expect(html).toContain(
+        '&lt;script&gt;alert(&quot;icon-xss&quot;)&lt;/script&gt;'
+      );
+      expect(html).not.toContain('<script>alert("icon-xss")</script>');
     });
   });
 

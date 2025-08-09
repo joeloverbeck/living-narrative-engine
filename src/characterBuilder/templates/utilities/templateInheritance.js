@@ -13,13 +13,17 @@
  * @param {object} [config.metadata] - Additional metadata for the template
  * @returns {object} Base template object
  */
-export function createBaseTemplate({ blocks = {}, name = 'base', metadata = {} } = {}) {
+export function createBaseTemplate({
+  blocks = {},
+  name = 'base',
+  metadata = {},
+} = {}) {
   // Default blocks if not provided
   const defaultBlocks = {
     header: blocks.header || '<header>Default Header</header>',
     main: blocks.main || '<main><slot></slot></main>',
     footer: blocks.footer || '<footer>Default Footer</footer>',
-    ...blocks // Allow custom blocks beyond the defaults
+    ...blocks, // Allow custom blocks beyond the defaults
   };
 
   return {
@@ -28,7 +32,7 @@ export function createBaseTemplate({ blocks = {}, name = 'base', metadata = {} }
     blocks: defaultBlocks,
     metadata,
     parent: null,
-    
+
     /**
      * Render the template with optional block overrides
      *
@@ -49,7 +53,7 @@ export function createBaseTemplate({ blocks = {}, name = 'base', metadata = {} }
     compose(blocks) {
       // Default composition - can be overridden in extended templates
       const layout = this.metadata.layout || 'default';
-      
+
       if (layout === 'default') {
         return `
           <div class="template-container" data-template="${this.name}">
@@ -72,7 +76,7 @@ export function createBaseTemplate({ blocks = {}, name = 'base', metadata = {} }
       } else if (layout === 'custom' && this.metadata.customCompose) {
         return this.metadata.customCompose(blocks);
       }
-      
+
       // Fallback to simple concatenation
       return Object.values(blocks).join('\n');
     },
@@ -115,9 +119,9 @@ export function createBaseTemplate({ blocks = {}, name = 'base', metadata = {} }
       return createBaseTemplate({
         blocks: { ...this.blocks },
         name: this.name,
-        metadata: { ...this.metadata }
+        metadata: { ...this.metadata },
       });
-    }
+    },
   };
 }
 
@@ -137,7 +141,7 @@ export function extendTemplate(baseTemplate, extensions = {}) {
   }
 
   const extendedName = extensions.name || `${baseTemplate.name}-extended`;
-  
+
   const extended = {
     ...baseTemplate,
     type: 'extended',
@@ -145,11 +149,11 @@ export function extendTemplate(baseTemplate, extensions = {}) {
     parent: baseTemplate,
     blocks: {
       ...baseTemplate.blocks,
-      ...(extensions.blocks || {})
+      ...(extensions.blocks || {}),
     },
     metadata: {
       ...baseTemplate.metadata,
-      ...(extensions.metadata || {})
+      ...(extensions.metadata || {}),
     },
 
     /**
@@ -161,7 +165,7 @@ export function extendTemplate(baseTemplate, extensions = {}) {
     render(overrides = {}) {
       const finalBlocks = {
         ...this.blocks,
-        ...overrides
+        ...overrides,
       };
 
       // Allow access to parent blocks via special syntax
@@ -170,7 +174,10 @@ export function extendTemplate(baseTemplate, extensions = {}) {
         if (typeof value === 'string' && value.includes('{{parent}}')) {
           // Replace {{parent}} with parent block content
           const parentContent = this.parent.blocks[key] || '';
-          processedBlocks[key] = value.replace(/\{\{parent\}\}/g, parentContent);
+          processedBlocks[key] = value.replace(
+            /\{\{parent\}\}/g,
+            parentContent
+          );
         } else {
           processedBlocks[key] = value;
         }
@@ -191,12 +198,12 @@ export function extendTemplate(baseTemplate, extensions = {}) {
     getInheritanceChain() {
       const chain = [this];
       let current = this.parent;
-      
+
       while (current) {
         chain.push(current);
         current = current.parent;
       }
-      
+
       return chain;
     },
 
@@ -232,7 +239,7 @@ export function extendTemplate(baseTemplate, extensions = {}) {
      */
     getOverriddenBlocks() {
       if (!this.parent) return this.blocks;
-      
+
       const overridden = {};
       for (const [key, value] of Object.entries(this.blocks)) {
         if (value !== this.parent.blocks[key]) {
@@ -240,7 +247,7 @@ export function extendTemplate(baseTemplate, extensions = {}) {
         }
       }
       return overridden;
-    }
+    },
   };
 
   // If custom compose method is provided in extensions
@@ -263,10 +270,10 @@ export function createTemplateChain(...templates) {
   }
 
   let result = templates[0];
-  
+
   for (let i = 1; i < templates.length; i++) {
     const extension = templates[i];
-    
+
     // If extension is a plain object, use it as extensions
     if (extension.type === undefined) {
       result = extendTemplate(result, extension);
@@ -275,7 +282,7 @@ export function createTemplateChain(...templates) {
       result = extendTemplate(result, {
         blocks: extension.blocks,
         name: extension.name,
-        metadata: extension.metadata
+        metadata: extension.metadata,
       });
     }
   }
@@ -298,7 +305,7 @@ export function createMultiInheritanceTemplate(parents = [], config = {}) {
   // Merge blocks from all parents (later parents override earlier ones)
   const mergedBlocks = {};
   const mergedMetadata = {};
-  
+
   for (const parent of parents) {
     Object.assign(mergedBlocks, parent.blocks || {});
     Object.assign(mergedMetadata, parent.metadata || {});
@@ -323,12 +330,12 @@ export function createMultiInheritanceTemplate(parents = [], config = {}) {
      */
     render(overrides = {}) {
       const finalBlocks = { ...this.blocks, ...overrides };
-      
+
       // Use first parent's compose method by default
       if (this.parents[0] && this.parents[0].compose) {
         return this.parents[0].compose.call(this, finalBlocks);
       }
-      
+
       // Fallback to simple composition
       return Object.values(finalBlocks).join('\n');
     },
@@ -351,8 +358,8 @@ export function createMultiInheritanceTemplate(parents = [], config = {}) {
      * @returns {Array<string>} Array of parent template names
      */
     getParentNames() {
-      return this.parents.map(p => p.name || 'unnamed');
-    }
+      return this.parents.map((p) => p.name || 'unnamed');
+    },
   };
 
   // Copy compose method from config if provided

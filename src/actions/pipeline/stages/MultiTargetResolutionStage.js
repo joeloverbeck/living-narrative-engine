@@ -113,6 +113,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
   async executeInternal(context) {
     const { candidateActions = [], actor, actionContext, trace } = context;
     const stageStartTime = Date.now();
+    const startPerformanceTime = performance.now(); // ACTTRA-018: Performance timing
 
     trace?.step(
       `Resolving targets for ${candidateActions.length} candidate actions`,
@@ -326,6 +327,21 @@ export class MultiTargetResolutionStage extends PipelineStage {
       `Target resolution completed: ${allActionsWithTargets.length} actions with targets`,
       'MultiTargetResolutionStage'
     );
+
+    // ACTTRA-018: Capture performance data for each action
+    const endPerformanceTime = performance.now();
+    if (isActionAwareTrace && trace.captureActionData) {
+      for (const actionDef of candidateActions) {
+        await this.#capturePerformanceData(
+          trace,
+          actionDef,
+          startPerformanceTime,
+          endPerformanceTime,
+          candidateActions.length,
+          allActionsWithTargets.length
+        );
+      }
+    }
 
     // Build final result data
     const resultData = {
@@ -948,6 +964,44 @@ export class MultiTargetResolutionStage extends PipelineStage {
     if (action.scope && !action.targets) return 'scope_property';
     if (action.targetType || action.targetCount) return 'legacy_target_type';
     return 'modern';
+  }
+
+  /**
+   * Capture performance data for ACTTRA-018
+   *
+   * @private
+   * @param {import('../../tracing/actionAwareStructuredTrace.js').default} trace - The action-aware trace
+   * @param {object} actionDef - The action definition
+   * @param {number} startTime - Start performance time
+   * @param {number} endTime - End performance time
+   * @param {number} totalCandidates - Total number of candidates processed
+   * @param {number} actionsWithTargets - Number of actions that successfully resolved targets
+   * @returns {Promise<void>}
+   */
+  async #capturePerformanceData(
+    trace,
+    actionDef,
+    startTime,
+    endTime,
+    totalCandidates,
+    actionsWithTargets
+  ) {
+    try {
+      if (trace && trace.captureActionData) {
+        await trace.captureActionData('stage_performance', actionDef.id, {
+          stage: 'multi_target_resolution',
+          duration: endTime - startTime,
+          timestamp: Date.now(),
+          itemsProcessed: totalCandidates,
+          itemsResolved: actionsWithTargets,
+          stageName: this.name,
+        });
+      }
+    } catch (error) {
+      this.#logger.debug(
+        `Failed to capture performance data for action '${actionDef.id}': ${error.message}`
+      );
+    }
   }
 }
 

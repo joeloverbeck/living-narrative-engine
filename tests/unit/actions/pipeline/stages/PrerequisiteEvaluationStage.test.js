@@ -551,8 +551,20 @@ describe('PrerequisiteEvaluationStage', () => {
         expect.any(Error)
       );
 
-      // Trace capture is NOT called in the current error path
-      expect(mockActionAwareTrace.captureActionData).not.toHaveBeenCalled();
+      // Performance data is still captured for all actions, even those with errors (ACTTRA-018)
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledTimes(1);
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'stage_performance',
+        'core:error_action',
+        expect.objectContaining({
+          stage: 'prerequisite_evaluation',
+          duration: expect.any(Number),
+          timestamp: expect.any(Number),
+          itemsProcessed: 1,
+          itemsPassed: 0,
+          stageName: 'PrerequisiteEvaluation',
+        })
+      );
     });
 
     it('should continue when trace capture fails', async () => {

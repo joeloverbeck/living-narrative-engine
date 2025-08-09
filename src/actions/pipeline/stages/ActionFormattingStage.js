@@ -100,6 +100,7 @@ export class ActionFormattingStage extends PipelineStage {
 
     // Capture stage start
     const stageStartTime = Date.now();
+    const startPerformanceTime = performance.now(); // ACTTRA-018: Performance timing
 
     // Track overall statistics
     const processingStats = {

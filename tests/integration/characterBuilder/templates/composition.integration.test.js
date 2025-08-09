@@ -11,7 +11,7 @@ import {
   CompositionCache,
   createBaseTemplate,
   extendTemplate,
-  createTemplateChain
+  createTemplateChain,
 } from '../../../../src/characterBuilder/templates/utilities/index.js';
 
 // Import existing templates
@@ -27,10 +27,14 @@ describe('Template Composition Integration', () => {
   let cache;
 
   beforeEach(() => {
-    cache = new CompositionCache({ maxSize: 50, ttl: 60000, enableStats: true });
-    composer = new TemplateComposer({ 
+    cache = new CompositionCache({
+      maxSize: 50,
+      ttl: 60000,
+      enableStats: true,
+    });
+    composer = new TemplateComposer({
       enableCache: true,
-      validateOutput: true 
+      validateOutput: true,
     });
     assembler = new ComponentAssembler({ composer });
   });
@@ -38,7 +42,9 @@ describe('Template Composition Integration', () => {
   describe('Complete composition workflow', () => {
     it('should compose existing templates with new composition engine', () => {
       // Register existing templates
-      assembler.registerLayout('page', (ctx) => createCharacterBuilderPage(ctx));
+      assembler.registerLayout('page', (ctx) =>
+        createCharacterBuilderPage(ctx)
+      );
       assembler.registerComponent('header', (ctx) => createHeader(ctx));
       assembler.registerComponent('main', (ctx) => createMain(ctx));
       assembler.registerComponent('footer', (ctx) => createFooter(ctx));
@@ -51,13 +57,13 @@ describe('Template Composition Integration', () => {
           subtitle: 'Create your character',
           leftPanel: {
             heading: 'Character Details',
-            content: '<form>Character form here</form>'
+            content: '<form>Character form here</form>',
           },
           rightPanel: {
             heading: 'Preview',
-            content: '<div>Character preview</div>'
-          }
-        }
+            content: '<div>Character preview</div>',
+          },
+        },
       };
 
       const result = assembler.assemble(config);
@@ -72,29 +78,32 @@ describe('Template Composition Integration', () => {
       // Create base layout template
       const baseLayout = createBaseTemplate({
         blocks: {
-          header: '<header class="base-header"><slot name="header-content"></slot></header>',
+          header:
+            '<header class="base-header"><slot name="header-content"></slot></header>',
           main: '<main class="base-main"><slot></slot></main>',
-          footer: '<footer class="base-footer"><slot name="footer-content"></slot></footer>'
-        }
+          footer:
+            '<footer class="base-footer"><slot name="footer-content"></slot></footer>',
+        },
       });
 
       // Extend the base layout
       const extendedLayout = extendTemplate(baseLayout, {
         blocks: {
-          header: '<header class="extended-header">{{parent}}<nav>Navigation</nav></header>'
-        }
+          header:
+            '<header class="extended-header">{{parent}}<nav>Navigation</nav></header>',
+        },
       });
 
       // Register templates
       composer.registerTemplate('extended-layout', extendedLayout);
-      
+
       // Compose with slots
       const result = composer.compose(extendedLayout, {
         slots: {
           'header-content': '<h1>Page Title</h1>',
-          'default': '<article>Main content</article>',
-          'footer-content': '<p>Copyright 2024</p>'
-        }
+          default: '<article>Main content</article>',
+          'footer-content': '<p>Copyright 2024</p>',
+        },
       });
 
       expect(result).toContain('<h1>Page Title</h1>');
@@ -105,7 +114,9 @@ describe('Template Composition Integration', () => {
 
     it('should assemble complex component hierarchies', () => {
       // Define layout with multiple slot regions
-      assembler.registerLayout('dashboard', `
+      assembler.registerLayout(
+        'dashboard',
+        `
         <div class="dashboard">
           <div class="dashboard-header">
             <slot name="header"></slot>
@@ -120,17 +131,23 @@ describe('Template Composition Integration', () => {
             <slot name="footer"></slot>
           </div>
         </div>
-      `);
+      `
+      );
 
       // Register various components
-      assembler.registerComponent('user-menu', `
+      assembler.registerComponent(
+        'user-menu',
+        `
         <div class="user-menu">
           <span>${'${username}'}</span>
           <button>Logout</button>
         </div>
-      `);
+      `
+      );
 
-      assembler.registerComponent('nav-menu', `
+      assembler.registerComponent(
+        'nav-menu',
+        `
         <nav class="nav-menu">
           <ul>
             <li>Dashboard</li>
@@ -138,38 +155,42 @@ describe('Template Composition Integration', () => {
             <li>Help</li>
           </ul>
         </nav>
-      `);
+      `
+      );
 
-      assembler.registerComponent('stats-widget', `
+      assembler.registerComponent(
+        'stats-widget',
+        `
         <div class="stats-widget">
           <h3>${'${title}'}</h3>
           <p>${'${value}'}</p>
         </div>
-      `);
+      `
+      );
 
       // Assemble dashboard
       const config = {
         layout: 'dashboard',
         props: {
-          username: 'John Doe'
+          username: 'John Doe',
         },
         components: [
           { type: 'user-menu', slot: 'header' },
           { type: 'nav-menu', slot: 'sidebar' },
-          { 
-            type: 'stats-widget', 
+          {
+            type: 'stats-widget',
             slot: 'content',
-            props: { title: 'Total Users', value: '1,234' }
+            props: { title: 'Total Users', value: '1,234' },
           },
-          { 
-            type: 'stats-widget', 
+          {
+            type: 'stats-widget',
             slot: 'content',
-            props: { title: 'Active Sessions', value: '89' }
-          }
+            props: { title: 'Active Sessions', value: '89' },
+          },
         ],
         slots: {
-          footer: '<p>© 2024 Dashboard Inc.</p>'
-        }
+          footer: '<p>© 2024 Dashboard Inc.</p>',
+        },
       };
 
       const result = assembler.assemble(config);
@@ -188,12 +209,15 @@ describe('Template Composition Integration', () => {
     it('should handle deep nesting efficiently', () => {
       // Create deeply nested template structure
       for (let i = 0; i < 5; i++) {
-        composer.registerTemplate(`level-${i}`, `
+        composer.registerTemplate(
+          `level-${i}`,
+          `
           <div class="level-${i}">
             Level ${i}
             ${i < 4 ? `<template ref="level-${i + 1}" />` : '<span>Final level</span>'}
           </div>
-        `);
+        `
+        );
       }
 
       const start = performance.now();
@@ -208,14 +232,14 @@ describe('Template Composition Integration', () => {
 
     it('should cache and reuse compositions', () => {
       const cacheKey = cache.generateKey('test-template', { value: 'test' });
-      
+
       // First composition
       cache.set(cacheKey, '<div>Cached result</div>');
-      
+
       // Should retrieve from cache
       const cached = cache.get(cacheKey);
       expect(cached).toBe('<div>Cached result</div>');
-      
+
       // Check cache stats
       const stats = cache.getStats();
       expect(stats.hits).toBeGreaterThan(0);
@@ -229,9 +253,7 @@ describe('Template Composition Integration', () => {
       for (let i = 0; i < 100; i++) {
         configs.push({
           layout: 'simple',
-          components: [
-            { type: 'item', props: { text: `Item ${i}` } }
-          ]
+          components: [{ type: 'item', props: { text: `Item ${i}` } }],
         });
       }
 
@@ -252,26 +274,26 @@ describe('Template Composition Integration', () => {
         blocks: {
           header: 'Base Header',
           main: 'Base Main',
-          footer: 'Base Footer'
-        }
+          footer: 'Base Footer',
+        },
       });
 
       const level1 = extendTemplate(base, {
         blocks: {
-          header: 'Level 1 Header'
-        }
+          header: 'Level 1 Header',
+        },
       });
 
       const level2 = extendTemplate(level1, {
         blocks: {
-          main: 'Level 2 Main'
-        }
+          main: 'Level 2 Main',
+        },
       });
 
       const level3 = extendTemplate(level2, {
         blocks: {
-          footer: 'Level 3 Footer'
-        }
+          footer: 'Level 3 Footer',
+        },
       });
 
       const result = level3.render();
@@ -283,7 +305,7 @@ describe('Template Composition Integration', () => {
 
     it('should create template chains', () => {
       const base = createBaseTemplate({
-        blocks: { main: 'Original' }
+        blocks: { main: 'Original' },
       });
 
       const chain = createTemplateChain(
@@ -302,7 +324,7 @@ describe('Template Composition Integration', () => {
     it('should handle missing templates gracefully', () => {
       const config = {
         layout: 'non-existent',
-        components: []
+        components: [],
       };
 
       expect(() => {
@@ -316,8 +338,14 @@ describe('Template Composition Integration', () => {
       composer.registerTemplate('b', '<div>B: <template ref="a" /></div>');
 
       const limitedComposer = new TemplateComposer({ maxDepth: 5 });
-      limitedComposer.registerTemplate('a', '<div>A: <template ref="b" /></div>');
-      limitedComposer.registerTemplate('b', '<div>B: <template ref="a" /></div>');
+      limitedComposer.registerTemplate(
+        'a',
+        '<div>A: <template ref="b" /></div>'
+      );
+      limitedComposer.registerTemplate(
+        'b',
+        '<div>B: <template ref="a" /></div>'
+      );
 
       expect(() => {
         limitedComposer.compose('<template ref="a" />', {});
@@ -326,10 +354,10 @@ describe('Template Composition Integration', () => {
 
     it('should validate HTML output when enabled', () => {
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-      
+
       const invalidTemplate = '<div><span>Unclosed span</div>';
       composer.compose(invalidTemplate, {});
-      
+
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
@@ -343,8 +371,8 @@ describe('Template Composition Integration', () => {
         content: '<p>Modal content</p>',
         actions: [
           { label: 'Cancel', name: 'cancel' },
-          { label: 'Save', name: 'save' }
-        ]
+          { label: 'Save', name: 'save' },
+        ],
       });
 
       // Use composer to add slots to modal
@@ -357,8 +385,8 @@ describe('Template Composition Integration', () => {
 
       const result = composer.compose(enhancedModal, {
         slots: {
-          extra: '<p>Additional content</p>'
-        }
+          extra: '<p>Additional content</p>',
+        },
       });
 
       expect(result).toContain('Test Modal');
@@ -374,21 +402,21 @@ describe('Template Composition Integration', () => {
           heading: 'Configuration',
           content: composer.compose('<div><slot name="config"></slot></div>', {
             slots: {
-              config: '<form>Config form</form>'
-            }
-          })
+              config: '<form>Config form</form>',
+            },
+          }),
         },
         rightPanel: {
           heading: 'Results',
-          content: '<div>Results here</div>'
+          content: '<div>Results here</div>',
         },
         modals: [
           {
             id: 'help-modal',
             title: 'Help',
-            content: '<p>Help content</p>'
-          }
-        ]
+            content: '<p>Help content</p>',
+          },
+        ],
       });
 
       expect(page).toContain('Advanced Character Builder');

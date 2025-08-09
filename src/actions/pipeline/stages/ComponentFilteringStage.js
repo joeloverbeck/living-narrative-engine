@@ -51,6 +51,7 @@ export class ComponentFilteringStage extends PipelineStage {
     const { actor, trace } = context;
     const source = `${this.name}Stage.execute`;
     const stageStartTime = Date.now();
+    const startPerformanceTime = performance.now(); // ACTTRA-018: Performance timing
 
     // Check if we have action-aware tracing
     const isActionAwareTrace = this.#isActionAwareTrace(trace);
@@ -93,6 +94,16 @@ export class ComponentFilteringStage extends PipelineStage {
             actor.id,
             actorComponents,
             true // passed filtering (it's in candidateActions)
+          );
+
+          // ACTTRA-018: Capture performance data for this action
+          const endPerformanceTime = performance.now();
+          await this.#capturePerformanceData(
+            trace,
+            actionDef,
+            startPerformanceTime,
+            endPerformanceTime,
+            candidateActions.length
           );
         }
       }
@@ -200,6 +211,41 @@ export class ComponentFilteringStage extends PipelineStage {
     } catch (error) {
       this.#logger.warn(
         `Failed to capture component analysis for action '${actionDef.id}': ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Capture performance data for ACTTRA-018
+   *
+   * @private
+   * @param {import('../../tracing/actionAwareStructuredTrace.js').default} trace - The action-aware trace
+   * @param {object} actionDef - The action definition
+   * @param {number} startTime - Start performance time
+   * @param {number} endTime - End performance time
+   * @param {number} totalCandidates - Total number of candidates processed
+   * @returns {Promise<void>}
+   */
+  async #capturePerformanceData(
+    trace,
+    actionDef,
+    startTime,
+    endTime,
+    totalCandidates
+  ) {
+    try {
+      if (trace && trace.captureActionData) {
+        await trace.captureActionData('stage_performance', actionDef.id, {
+          stage: 'component_filtering',
+          duration: endTime - startTime,
+          timestamp: Date.now(),
+          itemsProcessed: totalCandidates,
+          stageName: this.name,
+        });
+      }
+    } catch (error) {
+      this.#logger.debug(
+        `Failed to capture performance data for action '${actionDef.id}': ${error.message}`
       );
     }
   }

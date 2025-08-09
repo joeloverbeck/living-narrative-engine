@@ -15,7 +15,7 @@ export {
   extendTemplate,
   createTemplateChain,
   createMultiInheritanceTemplate,
-  applyMixins
+  applyMixins,
 } from './templateInheritance.js';
 
 // Composition Error Classes (HTMLTEMP-007)
@@ -30,7 +30,7 @@ export {
   AssemblyError,
   CacheError,
   ContextError,
-  createCompositionError
+  createCompositionError,
 } from './compositionErrors.js';
 
 // NOTE: These exports reference files that will be created in subsequent tickets (Phase 3)

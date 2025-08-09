@@ -358,7 +358,7 @@ describe('ErrorRecovery', () => {
     it('should handle MISSING_ANATOMY_DATA error code without retry callback', async () => {
       const error = AnatomyDataError.missingAnatomyData('test-entity');
 
-      // Without retry callback, should fail and return failed strategy
+      // Without retry callback, error has recoverable: true but no callback means failed strategy
       const result = await errorRecovery.handleError(error, {
         operation: 'data-loading',
       });
@@ -398,7 +398,7 @@ describe('ErrorRecovery', () => {
         'part2',
       ]);
 
-      // Without retry callback, should fail and return failed strategy
+      // Without retry callback, MISSING_ANATOMY_PARTS is retryable but will fail without callback
       const result = await errorRecovery.handleError(error, {
         operation: 'data-loading',
       });

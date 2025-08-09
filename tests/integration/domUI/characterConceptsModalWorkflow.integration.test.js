@@ -130,6 +130,7 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
             <form id="concept-form">
               <textarea id="concept-text" required minlength="10"></textarea>
               <span id="char-count">0/1000</span>
+              <div id="concept-help" class="input-help">Describe your character concept (50-3000 characters)</div>
               <div id="concept-error"></div>
               <button id="save-concept-btn" type="submit">Save Concept</button>
               <button id="cancel-concept-btn" type="button">Cancel</button>
@@ -141,6 +142,7 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
         <!-- Delete Modal -->
         <div id="delete-confirmation-modal" class="modal" style="display: none;">
           <div class="modal-content">
+            <h2 id="delete-modal-title">Confirm Deletion</h2>
             <div id="delete-modal-message"></div>
             <button id="confirm-delete-btn">Delete</button>
             <button id="cancel-delete-btn">Cancel</button>
@@ -483,8 +485,7 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
     });
 
     it('should enable save button when editing pre-existing concept text', async () => {
-      // This test reproduces the bug where the Update Concept button doesn't become
-      // active when editing pre-existing concepts
+      // This test verifies that validation works correctly when editing existing concepts
       if (controller._testExports && controller._testExports.showEditModal) {
         // Clear previous events
         capturedEvents = [];
@@ -499,51 +500,47 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
 
         // Open edit modal for an existing concept
         await controller._testExports.showEditModal('existing-concept-1');
-        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        // Wait for modal setup and element replacement
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         const modal = document.getElementById('concept-modal');
-        const conceptText = document.getElementById('concept-text');
-        const saveBtn = document.getElementById('save-concept-btn');
+
+        // Re-query elements after modal setup (they get replaced by _setupConceptFormValidation)
+        let conceptText = document.getElementById('concept-text');
+        let saveBtn = document.getElementById('save-concept-btn');
 
         // Modal should be visible with existing content
         expect(modal.style.display).toBe('flex');
         expect(conceptText.value).toBe('A brave knight with a mysterious past');
 
-        // Record initial button state
-        const initialButtonState = saveBtn.disabled;
+        // Initial button state should be enabled (valid existing content)
+        expect(saveBtn.disabled).toBe(false);
 
         // Clear the text to make it invalid (less than 50 chars)
         conceptText.value = 'Too short';
         conceptText.dispatchEvent(new Event('input', { bubbles: true }));
 
-        // Wait for any potential validation
-        await new Promise((resolve) => setTimeout(resolve, 350));
+        // Wait for validation debounce (300ms + buffer)
+        await new Promise((resolve) => setTimeout(resolve, 400));
 
-        // Check if button state changed (it won't due to the bug)
-        const stateAfterInvalidInput = saveBtn.disabled;
+        // Re-query button after validation
+        saveBtn = document.getElementById('save-concept-btn');
+        expect(saveBtn.disabled).toBe(true); // Should be disabled for invalid input
 
         // Type new valid text (more than 50 characters as per ValidationPatterns.concept)
+        conceptText = document.getElementById('concept-text');
         const newText =
           'A completely different character concept that is definitely long enough to be valid';
         conceptText.value = newText;
         conceptText.dispatchEvent(new Event('input', { bubbles: true }));
 
         // Wait for validation to complete
-        await new Promise((resolve) => setTimeout(resolve, 350)); // 300ms debounce + buffer
+        await new Promise((resolve) => setTimeout(resolve, 400)); // 300ms debounce + buffer
 
-        // Check final button state
-        const stateAfterValidInput = saveBtn.disabled;
-
-        // The bug: button state never changes regardless of input validity
-        // With proper validation setup:
-        // - initialButtonState should be false (valid existing content)
-        // - stateAfterInvalidInput should be true (invalid short text)
-        // - stateAfterValidInput should be false (valid long text)
-        // But without validation setup, all three will be the same
-
-        // This test will fail, demonstrating the bug
-        expect(stateAfterInvalidInput).toBe(true); // Should be disabled for invalid input
-        expect(stateAfterValidInput).toBe(false); // Should be enabled for valid input
+        // Re-query button after validation
+        saveBtn = document.getElementById('save-concept-btn');
+        expect(saveBtn.disabled).toBe(false); // Should be enabled for valid input
       } else {
         console.warn(
           'Test exports not available, skipping edit modal validation test'
@@ -594,10 +591,14 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
   });
 
   describe('Form Validation Integration', () => {
-    it('should disable save button when concept text is too short', () => {
+    it('should disable save button when concept text is too short', async () => {
       // Open modal
       document.getElementById('create-concept-btn').click();
 
+      // Wait for modal setup and element replacement
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Re-query elements after modal setup (they get replaced)
       const conceptText = document.getElementById('concept-text');
       const saveBtn = document.getElementById('save-concept-btn');
 
@@ -605,9 +606,15 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       conceptText.value = 'Too short for validation';
       conceptText.dispatchEvent(new Event('input', { bubbles: true }));
 
-      // Save button should be disabled (controller should handle this)
-      // Note: The actual validation is done by FormValidationHelper
+      // Wait for validation debounce (300ms + buffer)
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      // Re-query save button after validation
+      const updatedSaveBtn = document.getElementById('save-concept-btn');
+
+      // Save button should be disabled for invalid input
       expect(conceptText.value.length).toBeLessThan(50);
+      expect(updatedSaveBtn.disabled).toBe(true);
     });
   });
 

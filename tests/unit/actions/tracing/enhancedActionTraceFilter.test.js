@@ -9,7 +9,7 @@ describe('EnhancedActionTraceFilter', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    
+
     mockDependencies = {
       enabled: true,
       tracedActions: ['*'],
@@ -51,7 +51,7 @@ describe('EnhancedActionTraceFilter', () => {
     it('should inherit parent action management', () => {
       filter.addTracedActions('new:action');
       expect(filter.shouldTrace('new:action')).toBe(true);
-      
+
       filter.addExcludedActions('excluded:action');
       expect(filter.shouldTrace('excluded:action')).toBe(false);
     });
@@ -72,7 +72,7 @@ describe('EnhancedActionTraceFilter', () => {
     it('should cache filter decisions', () => {
       // First call
       filter.shouldCaptureEnhanced('core', 'action_start', {});
-      
+
       // Second call should use cache
       filter.shouldCaptureEnhanced('core', 'action_start', {});
 
@@ -84,7 +84,7 @@ describe('EnhancedActionTraceFilter', () => {
       // Create filter with minimal verbosity
       const minimalFilter = new EnhancedActionTraceFilter({
         ...mockDependencies,
-        verbosityLevel: 'minimal'
+        verbosityLevel: 'minimal',
       });
 
       // Core types at standard level should not be captured at minimal
@@ -103,7 +103,7 @@ describe('EnhancedActionTraceFilter', () => {
       // Create filter with detailed verbosity
       const detailedFilter = new EnhancedActionTraceFilter({
         ...mockDependencies,
-        verbosityLevel: 'detailed'
+        verbosityLevel: 'detailed',
       });
 
       // Debug info should require verbose level
@@ -120,7 +120,7 @@ describe('EnhancedActionTraceFilter', () => {
       // Create filter with verbose verbosity
       const verboseFilter = new EnhancedActionTraceFilter({
         ...mockDependencies,
-        verbosityLevel: 'verbose'
+        verbosityLevel: 'verbose',
       });
 
       const shouldCapture = verboseFilter.shouldCaptureEnhanced(
@@ -138,7 +138,7 @@ describe('EnhancedActionTraceFilter', () => {
         'critical_error',
         {}
       );
-      
+
       const shouldCaptureDebug = filter.shouldCaptureEnhanced(
         'unknown',
         'debug_trace',
@@ -159,7 +159,11 @@ describe('EnhancedActionTraceFilter', () => {
       filter.addDynamicRule('testRule', testRule);
 
       const allowed = filter.shouldCaptureEnhanced('core', 'allowed_type', {});
-      const filtered = filter.shouldCaptureEnhanced('core', 'filtered_type', {});
+      const filtered = filter.shouldCaptureEnhanced(
+        'core',
+        'filtered_type',
+        {}
+      );
 
       expect(allowed).toBe(true);
       expect(filtered).toBe(false);
@@ -167,19 +171,19 @@ describe('EnhancedActionTraceFilter', () => {
 
     it('should remove dynamic rules', () => {
       const testRule = () => false;
-      
+
       filter.addDynamicRule('testRule', testRule);
-      
+
       // Should be filtered by the rule
       let shouldCapture = filter.shouldCaptureEnhanced('core', 'test', {});
       expect(shouldCapture).toBe(false);
-      
+
       // Remove the rule
       filter.removeDynamicRule('testRule');
-      
+
       // Clear cache to ensure fresh evaluation
       filter.clearEnhancedCache();
-      
+
       // Should no longer be filtered
       shouldCapture = filter.shouldCaptureEnhanced('core', 'test', {});
       expect(shouldCapture).toBe(true);
@@ -233,7 +237,7 @@ describe('EnhancedActionTraceFilter', () => {
       filter.shouldCaptureEnhanced('core', 'test1', {}); // Cache hit
 
       const stats = filter.getEnhancedStats();
-      
+
       expect(stats.totalChecks).toBe(3);
       expect(stats.cacheHits).toBe(1);
       expect(stats.filterRate).toBeDefined();
@@ -245,15 +249,30 @@ describe('EnhancedActionTraceFilter', () => {
       const restrictiveFilter = new EnhancedActionTraceFilter({
         ...mockDependencies,
         tracedActions: ['core:*'],
-        verbosityLevel: 'minimal'
+        verbosityLevel: 'minimal',
       });
 
       // First call - will be filtered out
-      restrictiveFilter.shouldCaptureEnhanced('other', 'action_start', {}, { actionId: 'other:action' });
+      restrictiveFilter.shouldCaptureEnhanced(
+        'other',
+        'action_start',
+        {},
+        { actionId: 'other:action' }
+      );
       // Second call - will pass
-      restrictiveFilter.shouldCaptureEnhanced('core', 'action_start', {}, { actionId: 'core:go' });
+      restrictiveFilter.shouldCaptureEnhanced(
+        'core',
+        'action_start',
+        {},
+        { actionId: 'core:go' }
+      );
       // Third call - cache hit for same key
-      restrictiveFilter.shouldCaptureEnhanced('core', 'action_start', {}, { actionId: 'core:go' });
+      restrictiveFilter.shouldCaptureEnhanced(
+        'core',
+        'action_start',
+        {},
+        { actionId: 'core:go' }
+      );
 
       const stats = restrictiveFilter.getEnhancedStats();
       expect(stats.filterRate).toBeGreaterThan(0);
@@ -263,7 +282,7 @@ describe('EnhancedActionTraceFilter', () => {
     it('should optimize cache by removing old entries', () => {
       filter.shouldCaptureEnhanced('core', 'test1', {});
       filter.shouldCaptureEnhanced('core', 'test2', {});
-      
+
       // Try to hit cache to verify it exists
       filter.shouldCaptureEnhanced('core', 'test1', {});
       const beforeOptimize = filter.getEnhancedStats();
@@ -275,13 +294,13 @@ describe('EnhancedActionTraceFilter', () => {
 
       // Reset stats to cleanly test post-clear behavior
       filter.resetEnhancedStats();
-      
+
       // Cache should be cleared, so no cache hit
       filter.shouldCaptureEnhanced('core', 'test1', {});
-      
+
       const newStats = filter.getEnhancedStats();
       expect(newStats.cacheHits).toBe(0); // No cache hits after clearing
-      
+
       // Also test optimize separately to ensure it works
       filter.optimizeCache(0);
       expect(filter).toBeDefined(); // Verify it doesn't throw
@@ -290,12 +309,12 @@ describe('EnhancedActionTraceFilter', () => {
     it('should reset statistics', () => {
       filter.shouldCaptureEnhanced('core', 'test', {});
       filter.shouldCaptureEnhanced('diagnostic', 'debug', {});
-      
+
       let stats = filter.getEnhancedStats();
       expect(stats.totalChecks).toBeGreaterThan(0);
-      
+
       filter.resetEnhancedStats();
-      
+
       stats = filter.getEnhancedStats();
       expect(stats.totalChecks).toBe(0);
       expect(stats.filteredOut).toBe(0);
@@ -305,18 +324,18 @@ describe('EnhancedActionTraceFilter', () => {
 
     it('should clear cache on demand', () => {
       filter.shouldCaptureEnhanced('core', 'test', {});
-      
+
       let stats = filter.getEnhancedStats();
       const checks1 = stats.totalChecks;
-      
+
       // Second call should hit cache
       filter.shouldCaptureEnhanced('core', 'test', {});
       stats = filter.getEnhancedStats();
       expect(stats.cacheHits).toBe(1);
-      
+
       // Clear cache
       filter.clearEnhancedCache();
-      
+
       // Next call should not hit cache
       filter.shouldCaptureEnhanced('core', 'test', {});
       stats = filter.getEnhancedStats();
@@ -331,8 +350,8 @@ describe('EnhancedActionTraceFilter', () => {
         categoryConfig: {
           core: 'minimal',
           performance: 'verbose',
-          diagnostic: 'standard'
-        }
+          diagnostic: 'standard',
+        },
       });
 
       expect(customFilter).toBeDefined();
@@ -340,14 +359,14 @@ describe('EnhancedActionTraceFilter', () => {
 
     it('should use default categories when not provided', () => {
       const defaultFilter = new EnhancedActionTraceFilter(mockDependencies);
-      
+
       // Should have reasonable defaults
       const shouldCapture = defaultFilter.shouldCaptureEnhanced(
         'core',
         'action_start',
         {}
       );
-      
+
       expect(shouldCapture).toBeDefined();
     });
   });
@@ -357,7 +376,7 @@ describe('EnhancedActionTraceFilter', () => {
       const excludingFilter = new EnhancedActionTraceFilter({
         ...mockDependencies,
         tracedActions: ['core:*'],
-        excludedActions: ['core:debug']
+        excludedActions: ['core:debug'],
       });
 
       const shouldCapture = excludingFilter.shouldCaptureEnhanced(
@@ -373,7 +392,7 @@ describe('EnhancedActionTraceFilter', () => {
     it('should respect parent filter enabled state', () => {
       const disabledFilter = new EnhancedActionTraceFilter({
         ...mockDependencies,
-        enabled: false
+        enabled: false,
       });
 
       const shouldCapture = disabledFilter.shouldCaptureEnhanced(

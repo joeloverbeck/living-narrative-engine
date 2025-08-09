@@ -2,7 +2,7 @@
  * @file Component Assembly System
  * @module characterBuilder/templates/utilities/componentAssembler
  * @description Assembles components dynamically based on configuration
- * 
+ *
  * NOTE: Currently uses simple template storage. Will integrate with
  * TemplateRegistry when available (HTMLTEMP-030)
  */
@@ -25,7 +25,9 @@ export class ComponentAssembler {
    */
   constructor({ composer, templates }) {
     if (!composer) {
-      throw new Error('ComponentAssembler requires a TemplateComposer instance');
+      throw new Error(
+        'ComponentAssembler requires a TemplateComposer instance'
+      );
     }
 
     this.#composer = composer;
@@ -119,7 +121,7 @@ export class ComponentAssembler {
       components = [],
       props = {},
       slots = {},
-      context = {}
+      context = {},
     } = config;
 
     // Get layout template
@@ -130,15 +132,15 @@ export class ComponentAssembler {
 
     // Prepare slot content from components
     const slotProvider = new SlotContentProvider();
-    
+
     // Process each component
     for (const component of components) {
-      const { 
-        type, 
-        slot = 'default', 
+      const {
+        type,
+        slot = 'default',
         props: componentProps = {},
         condition = true,
-        repeat = 1
+        repeat = 1,
       } = component;
 
       // Check condition
@@ -148,7 +150,7 @@ export class ComponentAssembler {
 
       // Get component template
       const template = this.getTemplate(type, 'component');
-      
+
       if (template) {
         // Compose component content
         const componentContext = {
@@ -158,8 +160,8 @@ export class ComponentAssembler {
           component: {
             type,
             slot,
-            index: 0
-          }
+            index: 0,
+          },
         };
 
         // Handle repeat
@@ -171,7 +173,7 @@ export class ComponentAssembler {
         }
 
         const finalContent = contents.join('\n');
-        
+
         // Add to slot (handle 'default' as null for default slot)
         const slotName = slot === 'default' ? null : slot;
         if (slotProvider.hasSlot(slotName)) {
@@ -201,8 +203,8 @@ export class ComponentAssembler {
       ...context,
       slots: slotProvider,
       layout: {
-        name: layout
-      }
+        name: layout,
+      },
     };
 
     return this.#composer.compose(layoutTemplate, layoutContext);
@@ -223,14 +225,14 @@ export class ComponentAssembler {
     if (parallel) {
       // Process in parallel using Promise.all
       return Promise.all(
-        configs.map(config => 
+        configs.map((config) =>
           Promise.resolve().then(() => this.assemble(config))
         )
       );
     }
 
     // Process sequentially
-    return configs.map(config => this.assemble(config));
+    return configs.map((config) => this.assemble(config));
   }
 
   /**
@@ -247,7 +249,7 @@ export class ComponentAssembler {
       slot: options.slot || 'default',
       props: options.props || {},
       condition: options.condition !== undefined ? options.condition : true,
-      repeat: options.repeat || 1
+      repeat: options.repeat || 1,
     };
   }
 
@@ -266,7 +268,7 @@ export class ComponentAssembler {
       components,
       props: options.props || {},
       slots: options.slots || {},
-      context: options.context || {}
+      context: options.context || {},
     };
   }
 
@@ -309,7 +311,8 @@ export class ComponentAssembler {
       total: this.#templates.size,
       layouts: this.#layouts.size,
       components: this.#components.size,
-      templates: this.#templates.size - this.#layouts.size - this.#components.size
+      templates:
+        this.#templates.size - this.#layouts.size - this.#components.size,
     };
   }
 
@@ -322,7 +325,7 @@ export class ComponentAssembler {
     const exported = {
       layouts: {},
       components: {},
-      templates: {}
+      templates: {},
     };
 
     for (const [key, value] of this.#templates.entries()) {
