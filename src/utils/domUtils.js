@@ -28,6 +28,7 @@ export const DomUtils = {
 
   /**
    * Escapes HTML special characters in a string to prevent XSS attacks.
+   * Escapes <, >, &, ", and ' for safe use in HTML attributes and content.
    *
    * @param {string} text - The text to escape.
    * @returns {string} The escaped text.
@@ -36,7 +37,10 @@ export const DomUtils = {
     if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
-    return div.innerHTML;
+    const escaped = div.innerHTML;
+
+    // Additionally escape quotes for attribute safety
+    return escaped.replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
   },
 
   /**

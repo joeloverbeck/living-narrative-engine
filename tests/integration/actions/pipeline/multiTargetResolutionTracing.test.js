@@ -484,7 +484,7 @@ describe('Multi-Target Resolution Tracing Integration', () => {
       expect(summary).toBeDefined();
       expect(summary.totalTargets).toBe(150);
       expect(summary.resolutionTimeMs).toBeGreaterThanOrEqual(0);
-      
+
       // In real execution with actual async operations, time would be > 0
       // In test environment, Date.now() might not advance between calls
     });

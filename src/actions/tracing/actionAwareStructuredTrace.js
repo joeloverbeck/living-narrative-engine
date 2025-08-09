@@ -60,6 +60,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
    * @param {object} [dependencies.logger] - Logger instance
    * @param {import('./traceContext.js').TraceContext} [dependencies.traceContext] - Optional existing TraceContext
    * @param {import('../configuration/traceConfigLoader.js').TraceConfigurationFile} [dependencies.traceConfig] - Optional trace configuration
+   * @param {import('./performanceMonitor.js').PerformanceMonitor} [dependencies.performanceMonitor] - Optional performance monitor
    */
   constructor({
     actionTraceFilter,
@@ -68,6 +69,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
     logger = null,
     traceContext = null,
     traceConfig = null,
+    performanceMonitor = null,
   }) {
     super(traceContext, traceConfig);
 
@@ -87,10 +89,20 @@ class ActionAwareStructuredTrace extends StructuredTrace {
     this.#actorId = actorId;
     this.#context = context;
 
+    // Optional performance monitor integration for ACTTRA-018
+    // If trace config enables performance tracking, use the provided monitor
+    if (traceConfig?.enablePerformanceTracking && performanceMonitor) {
+      this.performanceMonitor = performanceMonitor;
+      this.#logger.debug(
+        'Performance tracking enabled for ActionAwareStructuredTrace'
+      );
+    }
+
     this.#logger.debug('ActionAwareStructuredTrace initialized', {
       actorId: this.#actorId,
       contextKeys: Object.keys(this.#context),
       filterEnabled: this.#actionTraceFilter.isEnabled(),
+      performanceTracking: !!this.performanceMonitor,
     });
   }
 
@@ -135,11 +147,38 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       const actionTrace = this.#tracedActionData.get(actionId);
       const filteredData = this.#filterDataByVerbosity(data, stage);
 
+      // Add performance timing if not already present (ACTTRA-018)
+      const captureTime = performance.now();
+      const enhancedData = {
+        ...filteredData,
+        _performance: {
+          captureTime: captureTime,
+          stage: stage,
+          actionId: actionId,
+          timestamp: Date.now(),
+        },
+      };
+
       actionTrace.stages[stage] = {
         timestamp: Date.now(),
-        data: filteredData,
+        data: enhancedData,
         stageCompletedAt: Date.now(),
       };
+
+      // If performance monitor is available, track the operation
+      if (this.performanceMonitor) {
+        try {
+          this.performanceMonitor.trackOperation?.(
+            `stage_${stage}`,
+            captureTime
+          );
+        } catch (monitorError) {
+          // Don't let monitor errors break tracing
+          this.#logger.debug(
+            `Performance monitor tracking failed for stage '${stage}': ${monitorError.message}`
+          );
+        }
+      }
 
       // Log trace capture for debugging
       this.#logger.debug(
@@ -147,8 +186,9 @@ class ActionAwareStructuredTrace extends StructuredTrace {
         {
           actionId,
           stage,
-          dataKeys: Object.keys(filteredData),
+          dataKeys: Object.keys(enhancedData),
           verbosity: this.#actionTraceFilter.getVerbosityLevel(),
+          hasPerformanceData: true,
         }
       );
     } catch (error) {
@@ -219,6 +259,64 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       sessionDuration: tracedCount > 0 ? newestStart - oldestStart : 0,
       averageStagesPerAction: tracedCount > 0 ? totalStages / tracedCount : 0,
     };
+  }
+
+  /**
+   * Calculate stage performance from captured data (ACTTRA-018)
+   * Analyzes timing data between stages to calculate inter-stage durations
+   *
+   * @param {string} actionId - Action ID to calculate performance for
+   * @returns {object|null} Stage performance data with timings, or null if not found
+   * @example
+   * const perf = trace.calculateStagePerformance('core:go');
+   * // Returns: {
+   * //   component_filtering: { startTime: 100, endTime: 100, duration: 0 },
+   * //   prerequisite_evaluation: { startTime: 100, endTime: 200, duration: 100 }
+   * // }
+   */
+  calculateStagePerformance(actionId) {
+    const actionTrace = this.#tracedActionData.get(actionId);
+    if (!actionTrace) {
+      return null;
+    }
+
+    const stageTimings = {};
+    let previousTime = null;
+
+    // Get all stages and sort them by timestamp
+    const stages = Object.entries(actionTrace.stages).sort(
+      (a, b) => a[1].timestamp - b[1].timestamp
+    );
+
+    // Calculate inter-stage durations (duration since previous stage)
+    for (const [stageName, stageData] of stages) {
+      if (stageData.data?._performance?.captureTime !== undefined) {
+        const stageTime = stageData.data._performance.captureTime;
+
+        if (previousTime === null) {
+          // First stage - has no previous stage
+          stageTimings[stageName] = {
+            startTime: stageTime,
+            endTime: stageTime,
+            duration: 0, // First stage has no duration from previous
+            timestamp: stageData.data._performance.timestamp,
+          };
+        } else {
+          // Subsequent stages - calculate duration from previous stage
+          const duration = stageTime - previousTime;
+          stageTimings[stageName] = {
+            startTime: previousTime,
+            endTime: stageTime,
+            duration: duration,
+            timestamp: stageData.data._performance.timestamp,
+          };
+        }
+
+        previousTime = stageTime;
+      }
+    }
+
+    return stageTimings;
   }
 
   /**
@@ -501,7 +599,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       // If resolutionTimeMs is 0, it's the initial capture, so look for an update
       // The update would overwrite the same stage, so we have the final data
     }
-    
+
     if (multiTargetData) {
       summary.isMultiTarget = true;
       summary.targetKeys = multiTargetData.targetKeys || [];
@@ -814,7 +912,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
   /**
    * Capture action data with enhanced filtering capabilities
    * This is an opt-in method that doesn't affect existing code
-   * 
+   *
    * @param {string} stage - Pipeline stage name
    * @param {string} actionId - Action ID being processed
    * @param {object} data - Stage-specific data to capture
@@ -831,8 +929,9 @@ class ActionAwareStructuredTrace extends StructuredTrace {
     string.assertNonBlank(actionId, 'Action ID');
 
     // Check if we have an enhanced filter
-    const isEnhancedFilter = this.#actionTraceFilter.shouldCaptureEnhanced !== undefined;
-    
+    const isEnhancedFilter =
+      this.#actionTraceFilter.shouldCaptureEnhanced !== undefined;
+
     // If we have an enhanced filter, use it
     if (isEnhancedFilter) {
       const shouldCapture = this.#actionTraceFilter.shouldCaptureEnhanced(
@@ -855,9 +954,11 @@ class ActionAwareStructuredTrace extends StructuredTrace {
     // Apply data summarization if requested
     let processedData = data;
     if (options.summarize) {
-      const targetVerbosity = options.targetVerbosity || 
-        (this.#actionTraceFilter.getVerbosityLevel ? 
-          this.#actionTraceFilter.getVerbosityLevel() : 'standard');
+      const targetVerbosity =
+        options.targetVerbosity ||
+        (this.#actionTraceFilter.getVerbosityLevel
+          ? this.#actionTraceFilter.getVerbosityLevel()
+          : 'standard');
       processedData = this.#summarizeDataEnhanced(data, targetVerbosity);
     }
 
@@ -866,11 +967,11 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       ...processedData,
       _enhanced: {
         category: options.category || 'core',
-        verbosityLevel: this.#actionTraceFilter.getVerbosityLevel 
-          ? this.#actionTraceFilter.getVerbosityLevel() 
+        verbosityLevel: this.#actionTraceFilter.getVerbosityLevel
+          ? this.#actionTraceFilter.getVerbosityLevel()
           : 'standard',
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     };
 
     // Capture data directly without using parent's filtering
@@ -886,7 +987,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
     }
 
     const actionTrace = this.#tracedActionData.get(actionId);
-    
+
     // Store the enhanced data directly without additional filtering
     actionTrace.stages[stage] = {
       timestamp: Date.now(),
@@ -908,7 +1009,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
   /**
    * Enhanced data summarization based on verbosity
-   * 
+   *
    * @private
    * @param {object} data - Data to summarize
    * @param {string} targetVerbosity - Target verbosity level
@@ -919,20 +1020,21 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       return data;
     }
 
-    const levelMap = { 'minimal': 0, 'standard': 1, 'detailed': 2, 'verbose': 3 };
+    const levelMap = { minimal: 0, standard: 1, detailed: 2, verbose: 3 };
     const targetLevel = levelMap[targetVerbosity] || 1;
 
     // Apply progressive summarization based on verbosity
     const summarized = { ...data };
 
-    if (targetLevel < 2) { // Less than detailed
+    if (targetLevel < 2) {
+      // Less than detailed
       // Remove performance metrics
       delete summarized.performance;
       delete summarized.timing;
       delete summarized.metrics;
 
       // Truncate arrays
-      Object.keys(summarized).forEach(key => {
+      Object.keys(summarized).forEach((key) => {
         if (Array.isArray(summarized[key]) && summarized[key].length > 3) {
           summarized[key] = summarized[key].slice(0, 3);
           summarized[`${key}_truncated`] = true;
@@ -941,15 +1043,19 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       });
     }
 
-    if (targetLevel < 3) { // Less than verbose
+    if (targetLevel < 3) {
+      // Less than verbose
       // Remove diagnostic information
       delete summarized.diagnostic;
       delete summarized.debug;
       delete summarized.internal;
 
       // Truncate long strings
-      Object.keys(summarized).forEach(key => {
-        if (typeof summarized[key] === 'string' && summarized[key].length > 200) {
+      Object.keys(summarized).forEach((key) => {
+        if (
+          typeof summarized[key] === 'string' &&
+          summarized[key].length > 200
+        ) {
           summarized[key] = summarized[key].substring(0, 197) + '...';
         }
       });
@@ -960,7 +1066,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
   /**
    * Add dynamic filtering rule (opt-in)
-   * 
+   *
    * @param {string} ruleName - Name of the rule
    * @param {Function} ruleFunction - Rule function
    * @returns {void}
@@ -975,7 +1081,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
   /**
    * Remove dynamic filtering rule
-   * 
+   *
    * @param {string} ruleName - Name of the rule to remove
    * @returns {void}
    */
@@ -987,7 +1093,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
   /**
    * Get enhanced statistics (opt-in)
-   * 
+   *
    * @returns {object|null} Enhanced statistics or null if not available
    */
   getEnhancedTraceStats() {
@@ -999,7 +1105,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
   /**
    * Export filtered trace data based on verbosity (opt-in)
-   * 
+   *
    * @param {string} targetVerbosity - Target verbosity level for export
    * @param {string[]} [categories] - Optional categories to include
    * @returns {object} Filtered trace data
@@ -1010,7 +1116,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
     for (const [actionId, actionTrace] of traceData) {
       const stageData = {};
-      
+
       for (const [stage, data] of Object.entries(actionTrace.stages)) {
         // Check if stage should be included based on categories
         if (categories && !this.#shouldIncludeStage(stage, categories)) {
@@ -1019,7 +1125,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
         // Apply verbosity filtering if enhanced
         if (data.data._enhanced) {
-          const levelMap = { 'minimal': 0, 'standard': 1, 'detailed': 2, 'verbose': 3 };
+          const levelMap = { minimal: 0, standard: 1, detailed: 2, verbose: 3 };
           const dataLevel = levelMap[data.data._enhanced.verbosityLevel] || 1;
           const targetLevel = levelMap[targetVerbosity] || 1;
 
@@ -1037,7 +1143,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       if (Object.keys(stageData).length > 0) {
         filteredData[actionId] = {
           ...actionTrace,
-          stages: stageData
+          stages: stageData,
         };
       }
     }
@@ -1047,7 +1153,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
   /**
    * Check if a stage should be included based on categories
-   * 
+   *
    * @private
    * @param {string} stage - Stage name
    * @param {string[]} categories - Categories to include
@@ -1056,25 +1162,25 @@ class ActionAwareStructuredTrace extends StructuredTrace {
   #shouldIncludeStage(stage, categories) {
     // Map stages to categories
     const stageCategories = {
-      'component_filtering': 'business_logic',
-      'prerequisite_evaluation': 'business_logic',
-      'target_resolution': 'business_logic',
-      'formatting': 'business_logic',
-      'legacy_processing': 'legacy',
-      'legacy_detection': 'legacy',
-      'multi_target_resolution': 'core',
-      'scope_evaluation': 'core',
-      'target_relationships': 'core',
-      'action_start': 'core',
-      'action_complete': 'core',
-      'stage_start': 'core',
-      'stage_complete': 'core',
-      'timing_data': 'performance',
-      'resource_usage': 'performance',
-      'performance_metrics': 'performance',
-      'error_details': 'diagnostic',
-      'validation_results': 'diagnostic',
-      'debug_info': 'diagnostic'
+      component_filtering: 'business_logic',
+      prerequisite_evaluation: 'business_logic',
+      target_resolution: 'business_logic',
+      formatting: 'business_logic',
+      legacy_processing: 'legacy',
+      legacy_detection: 'legacy',
+      multi_target_resolution: 'core',
+      scope_evaluation: 'core',
+      target_relationships: 'core',
+      action_start: 'core',
+      action_complete: 'core',
+      stage_start: 'core',
+      stage_complete: 'core',
+      timing_data: 'performance',
+      resource_usage: 'performance',
+      performance_metrics: 'performance',
+      error_details: 'diagnostic',
+      validation_results: 'diagnostic',
+      debug_info: 'diagnostic',
     };
 
     const category = stageCategories[stage];
@@ -1083,7 +1189,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
   /**
    * Reset enhanced statistics
-   * 
+   *
    * @returns {void}
    */
   resetEnhancedStats() {
@@ -1094,7 +1200,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
   /**
    * Clear enhanced filter cache
-   * 
+   *
    * @returns {void}
    */
   clearEnhancedCache() {
@@ -1105,7 +1211,7 @@ class ActionAwareStructuredTrace extends StructuredTrace {
 
   /**
    * Optimize enhanced filter cache
-   * 
+   *
    * @param {number} [maxAge] - Maximum age for cache entries in milliseconds
    * @returns {void}
    */

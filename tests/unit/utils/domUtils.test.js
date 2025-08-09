@@ -32,7 +32,7 @@ describe('DomUtils', () => {
   describe('escapeHtml', () => {
     it('should escape HTML special characters', () => {
       expect(DomUtils.escapeHtml('<script>alert("XSS")</script>')).toBe(
-        '&lt;script&gt;alert("XSS")&lt;/script&gt;'
+        '&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;'
       );
 
       expect(DomUtils.escapeHtml('Hello & goodbye')).toBe(
@@ -40,7 +40,7 @@ describe('DomUtils', () => {
       );
 
       expect(DomUtils.escapeHtml('"Quotes" and \'apostrophes\'')).toBe(
-        '"Quotes" and \'apostrophes\''
+        '&quot;Quotes&quot; and &#x27;apostrophes&#x27;'
       );
     });
 
@@ -68,7 +68,9 @@ describe('DomUtils', () => {
     it('should escape HTML while converting newlines', () => {
       expect(
         DomUtils.textToHtml('<script>alert("XSS")</script>\nNext line')
-      ).toBe('&lt;script&gt;alert("XSS")&lt;/script&gt;<br>Next line');
+      ).toBe(
+        '&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;<br>Next line'
+      );
     });
 
     it('should handle Windows-style line breaks', () => {

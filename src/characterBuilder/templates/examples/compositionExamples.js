@@ -23,7 +23,7 @@ import { createFooter } from '../core/footerTemplate.js';
  */
 export function simpleCompositionExample() {
   const composer = new TemplateComposer();
-  
+
   // Define a card template with slots
   const cardTemplate = `
     <div class="card">
@@ -38,14 +38,14 @@ export function simpleCompositionExample() {
       </div>
     </div>
   `;
-  
+
   // Compose with slot content
   return composer.compose(cardTemplate, {
     slots: {
       header: '<h2>Custom Card Title</h2>',
       default: '<p>This is the main card content.</p>',
-      footer: '<button class="btn">Action</button>'
-    }
+      footer: '<button class="btn">Action</button>',
+    },
   });
 }
 
@@ -54,24 +54,28 @@ export function simpleCompositionExample() {
  */
 export function nestedTemplateExample() {
   const composer = new TemplateComposer();
-  
+
   // Register reusable components
-  composer.registerTemplate('user-badge', (ctx) => 
-    `<span class="badge">${ctx.user?.name || 'Guest'}</span>`
+  composer.registerTemplate(
+    'user-badge',
+    (ctx) => `<span class="badge">${ctx.user?.name || 'Guest'}</span>`
   );
-  
-  composer.registerTemplate('navigation', `
+
+  composer.registerTemplate(
+    'navigation',
+    `
     <nav class="navbar">
       <div class="nav-brand">My App</div>
       <div class="nav-user">
         <template ref="user-badge" />
       </div>
     </nav>
-  `);
-  
+  `
+  );
+
   // Use nested templates
   return composer.compose('<template ref="navigation" />', {
-    user: { name: 'John Doe' }
+    user: { name: 'John Doe' },
   });
 }
 
@@ -85,24 +89,26 @@ export function templateInheritanceExample() {
     blocks: {
       header: '<header class="site-header">Default Header</header>',
       main: '<main class="site-main"><slot></slot></main>',
-      footer: '<footer class="site-footer">Default Footer</footer>'
-    }
+      footer: '<footer class="site-footer">Default Footer</footer>',
+    },
   });
-  
+
   // Extend base layout
   const customLayout = extendTemplate(baseLayout, {
     name: 'custom-layout',
     blocks: {
-      header: '<header class="custom-header">Custom Site Header with Navigation</header>',
+      header:
+        '<header class="custom-header">Custom Site Header with Navigation</header>',
       // main is inherited
-      footer: '<footer class="custom-footer">© 2024 My Company | {{parent}}</footer>'
-    }
+      footer:
+        '<footer class="custom-footer">© 2024 My Company | {{parent}}</footer>',
+    },
   });
-  
+
   // Render extended layout
   return customLayout.render({
     // Can still override blocks at render time
-    main: '<main class="custom-main">Custom content here</main>'
+    main: '<main class="custom-main">Custom content here</main>',
   });
 }
 
@@ -112,9 +118,11 @@ export function templateInheritanceExample() {
 export function componentAssemblyExample() {
   const composer = new TemplateComposer();
   const assembler = new ComponentAssembler({ composer });
-  
+
   // Register layout
-  assembler.registerLayout('dashboard', `
+  assembler.registerLayout(
+    'dashboard',
+    `
     <div class="dashboard">
       <div class="dashboard-header">
         <slot name="header"></slot>
@@ -128,17 +136,23 @@ export function componentAssemblyExample() {
         </div>
       </div>
     </div>
-  `);
-  
+  `
+  );
+
   // Register components
-  assembler.registerComponent('user-menu', `
+  assembler.registerComponent(
+    'user-menu',
+    `
     <div class="user-menu">
       <span class="username">${'${username}'}</span>
       <button class="logout">Logout</button>
     </div>
-  `);
-  
-  assembler.registerComponent('nav-menu', `
+  `
+  );
+
+  assembler.registerComponent(
+    'nav-menu',
+    `
     <nav class="nav-menu">
       <ul>
         <li><a href="#dashboard">Dashboard</a></li>
@@ -146,35 +160,39 @@ export function componentAssemblyExample() {
         <li><a href="#help">Help</a></li>
       </ul>
     </nav>
-  `);
-  
-  assembler.registerComponent('stats-card', `
+  `
+  );
+
+  assembler.registerComponent(
+    'stats-card',
+    `
     <div class="stats-card">
       <h3>${'${title}'}</h3>
       <p class="value">${'${value}'}</p>
     </div>
-  `);
-  
+  `
+  );
+
   // Assemble dashboard
   return assembler.assemble({
     layout: 'dashboard',
     props: {
-      username: 'John Doe'
+      username: 'John Doe',
     },
     components: [
       { type: 'user-menu', slot: 'header' },
       { type: 'nav-menu', slot: 'sidebar' },
-      { 
-        type: 'stats-card', 
+      {
+        type: 'stats-card',
         slot: 'main',
-        props: { title: 'Total Users', value: '1,234' }
+        props: { title: 'Total Users', value: '1,234' },
       },
-      { 
-        type: 'stats-card', 
+      {
+        type: 'stats-card',
         slot: 'main',
-        props: { title: 'Active Sessions', value: '89' }
-      }
-    ]
+        props: { title: 'Active Sessions', value: '89' },
+      },
+    ],
   });
 }
 
@@ -184,38 +202,43 @@ export function componentAssemblyExample() {
 export function characterBuilderIntegrationExample() {
   const composer = new TemplateComposer();
   const assembler = new ComponentAssembler({ composer });
-  
+
   // Register existing templates as components
   assembler.registerComponent('cb-header', (ctx) => createHeader(ctx));
   assembler.registerComponent('cb-main', (ctx) => createMain(ctx));
   assembler.registerComponent('cb-footer', (ctx) => createFooter(ctx));
-  
+
   // Create custom character builder page with composition
   const customPage = createCharacterBuilderPage({
     title: 'Character Creator',
     subtitle: 'Design your hero',
     leftPanel: {
       heading: 'Character Options',
-      content: composer.compose(`
+      content: composer.compose(
+        `
         <div class="character-options">
           <slot name="race-selector"></slot>
           <slot name="class-selector"></slot>
           <slot name="stats"></slot>
         </div>
-      `, {
-        slots: {
-          'race-selector': '<select><option>Human</option><option>Elf</option></select>',
-          'class-selector': '<select><option>Warrior</option><option>Mage</option></select>',
-          'stats': '<div>STR: 10, DEX: 12, INT: 14</div>'
+      `,
+        {
+          slots: {
+            'race-selector':
+              '<select><option>Human</option><option>Elf</option></select>',
+            'class-selector':
+              '<select><option>Warrior</option><option>Mage</option></select>',
+            stats: '<div>STR: 10, DEX: 12, INT: 14</div>',
+          },
         }
-      })
+      ),
     },
     rightPanel: {
       heading: 'Character Preview',
-      content: '<div class="character-preview">Preview will appear here</div>'
-    }
+      content: '<div class="character-preview">Preview will appear here</div>',
+    },
   });
-  
+
   return customPage;
 }
 
@@ -224,7 +247,7 @@ export function characterBuilderIntegrationExample() {
  */
 export function conditionalSlotsExample() {
   const composer = new TemplateComposer();
-  
+
   const template = `
     <article class="post">
       <header>
@@ -239,35 +262,38 @@ export function conditionalSlotsExample() {
       </footer>
     </article>
   `;
-  
+
   // Use SlotContentProvider for dynamic slot management
   const slots = new SlotContentProvider();
-  
+
   // Conditionally add slots based on context
   const context = {
     title: 'My Blog Post',
     showMeta: true,
-    isOwner: true
+    isOwner: true,
   };
-  
+
   if (context.showMeta) {
     slots.setSlot('meta', '<span class="date">2024-01-15</span>');
   }
-  
+
   slots.setSlot(null, '<p>This is the main content of the blog post.</p>');
-  
+
   if (context.isOwner) {
-    slots.setSlot('actions', `
+    slots.setSlot(
+      'actions',
+      `
       <button class="edit">Edit</button>
       <button class="delete">Delete</button>
-    `);
+    `
+    );
   } else {
     slots.setSlot('actions', '<button class="share">Share</button>');
   }
-  
+
   return composer.compose(template, {
     ...context,
-    slots
+    slots,
   });
 }
 
@@ -280,26 +306,29 @@ export const examples = {
   inheritance: templateInheritanceExample,
   assembly: componentAssemblyExample,
   characterBuilder: characterBuilderIntegrationExample,
-  conditional: conditionalSlotsExample
+  conditional: conditionalSlotsExample,
 };
 
 // Export runner function for testing
+/**
+ *
+ */
 export function runAllExamples() {
   const results = {};
-  
+
   for (const [name, exampleFn] of Object.entries(examples)) {
     try {
       results[name] = {
         success: true,
-        output: exampleFn()
+        output: exampleFn(),
       };
     } catch (error) {
       results[name] = {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
-  
+
   return results;
 }

@@ -28,6 +28,7 @@ export class PerformanceMonitor {
   #isMonitoring;
   #metrics;
   #startTime;
+  #recordedMetrics;
 
   /**
    * Creates a new PerformanceMonitor instance
@@ -48,6 +49,7 @@ export class PerformanceMonitor {
     this.#isMonitoring = false;
     this.#metrics = this.#initializeMetrics();
     this.#startTime = performance.now();
+    this.#recordedMetrics = new Map();
   }
 
   /**
@@ -599,6 +601,172 @@ export class PerformanceMonitor {
       samplingConfig: { ...this.#samplingConfig },
       alertCount: this.#alerts.length,
     };
+  }
+
+  /**
+   * Records a performance metric with a name and value
+   *
+   * @param {string} name - Name of the metric
+   * @param {number} value - Value of the metric
+   * @throws {Error} If name is invalid or value is not a number
+   */
+  recordMetric(name, value) {
+    assertPresent(name, 'Metric name is required');
+
+    if (typeof name !== 'string' || name.trim().length === 0) {
+      throw new Error('Metric name must be a non-empty string');
+    }
+
+    if (typeof value !== 'number' || isNaN(value)) {
+      throw new Error('Metric value must be a valid number');
+    }
+
+    // Store the metric with timestamp
+    const metricKey = name.trim();
+    const metricData = {
+      value,
+      timestamp: performance.now(),
+      count: 1,
+    };
+
+    // If metric already exists, update it
+    if (this.#recordedMetrics.has(metricKey)) {
+      const existing = this.#recordedMetrics.get(metricKey);
+      metricData.count = existing.count + 1;
+      metricData.previousValue = existing.value;
+    }
+
+    this.#recordedMetrics.set(metricKey, metricData);
+
+    // Generate debug log
+    if (this.#isMonitoring) {
+      this.#generateAlert({
+        type: 'metric_recorded',
+        severity: 'info',
+        message: `Metric recorded: ${name} = ${value}`,
+        operation: 'recordMetric',
+        value: value,
+        threshold: 0,
+        context: { metricName: name, count: metricData.count },
+      });
+    }
+  }
+
+  /**
+   * Checks if a value exceeds a threshold and generates alerts if needed
+   *
+   * @param {string} operation - Name of the operation being checked
+   * @param {number} value - Value to check against threshold
+   * @param {number} threshold - Threshold value
+   * @returns {boolean} True if value exceeds threshold
+   */
+  checkThreshold(operation, value, threshold) {
+    assertPresent(operation, 'Operation name is required');
+
+    if (typeof value !== 'number' || isNaN(value)) {
+      throw new Error('Value must be a valid number');
+    }
+
+    if (typeof threshold !== 'number' || isNaN(threshold)) {
+      throw new Error('Threshold must be a valid number');
+    }
+
+    const exceeded = value > threshold;
+
+    if (exceeded) {
+      // Determine severity based on how much threshold is exceeded
+      let severity = 'warning';
+      const overage = (value - threshold) / threshold;
+
+      if (overage > 1.0) {
+        // More than double the threshold
+        severity = 'critical';
+      } else if (overage > 0.5) {
+        // More than 1.5x the threshold
+        severity = 'warning';
+      }
+
+      this.#generateAlert({
+        type: 'threshold_exceeded',
+        severity,
+        message: `Threshold exceeded for ${operation}: ${value.toFixed(2)} > ${threshold}`,
+        operation,
+        value,
+        threshold,
+        context: { overage: overage.toFixed(2) },
+      });
+    }
+
+    return exceeded;
+  }
+
+  /**
+   * Tracks an operation with its timing information
+   *
+   * @param {string} operation - Name of the operation
+   * @param {number} timestamp - Timestamp when operation occurred (from performance.now())
+   */
+  trackOperation(operation, timestamp) {
+    assertPresent(operation, 'Operation name is required');
+
+    if (typeof timestamp !== 'number' || isNaN(timestamp)) {
+      throw new Error('Timestamp must be a valid number');
+    }
+
+    const now = performance.now();
+    const operationData = {
+      name: operation,
+      timestamp,
+      recordedAt: now,
+    };
+
+    // Check if this operation is slow based on thresholds
+    const duration = now - timestamp;
+
+    if (duration >= this.#thresholds.criticalOperationMs) {
+      this.#generateAlert({
+        type: 'critical_operation',
+        severity: 'critical',
+        message: `Critical operation tracked: ${operation} took ${duration.toFixed(2)}ms`,
+        operation,
+        value: duration,
+        threshold: this.#thresholds.criticalOperationMs,
+        context: operationData,
+      });
+    } else if (duration >= this.#thresholds.slowOperationMs) {
+      this.#generateAlert({
+        type: 'slow_operation',
+        severity: 'warning',
+        message: `Slow operation tracked: ${operation} took ${duration.toFixed(2)}ms`,
+        operation,
+        value: duration,
+        threshold: this.#thresholds.slowOperationMs,
+        context: operationData,
+      });
+    }
+
+    // Record operation metrics
+    this.recordMetric(`operation.${operation}.duration`, duration);
+  }
+
+  /**
+   * Gets all recorded metrics
+   *
+   * @returns {object} Map of metric names to their data
+   */
+  getRecordedMetrics() {
+    const metrics = {};
+    for (const [name, data] of this.#recordedMetrics) {
+      metrics[name] = { ...data };
+    }
+    return metrics;
+  }
+
+  /**
+   * Clears all recorded metrics
+   */
+  clearRecordedMetrics() {
+    this.#recordedMetrics.clear();
   }
 }
 

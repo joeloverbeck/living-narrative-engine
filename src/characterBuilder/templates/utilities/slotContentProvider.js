@@ -42,13 +42,15 @@ export class SlotContentProvider {
    */
   getSlot(name, fallback = '') {
     if (name === null || name === undefined || name === '') {
-      return this.#defaultSlot !== null ? this.#defaultSlot : this.#processContent(fallback);
+      return this.#defaultSlot !== null
+        ? this.#defaultSlot
+        : this.#processContent(fallback);
     }
-    
+
     if (this.#slots.has(name)) {
       return this.#slots.get(name);
     }
-    
+
     return this.#processContent(fallback);
   }
 
@@ -81,15 +83,15 @@ export class SlotContentProvider {
    */
   getAllSlots() {
     const slots = {};
-    
+
     if (this.#defaultSlot !== null) {
       slots.default = this.#defaultSlot;
     }
-    
+
     for (const [name, content] of this.#slots.entries()) {
       slots[name] = content;
     }
-    
+
     return slots;
   }
 
@@ -107,7 +109,7 @@ export class SlotContentProvider {
       }
       return false;
     }
-    
+
     return this.#slots.delete(name);
   }
 
@@ -148,7 +150,7 @@ export class SlotContentProvider {
     if (content === null || content === undefined) {
       return '';
     }
-    
+
     if (typeof content === 'function') {
       try {
         const result = content();
@@ -158,7 +160,7 @@ export class SlotContentProvider {
         return '';
       }
     }
-    
+
     return String(content);
   }
 
@@ -170,7 +172,9 @@ export class SlotContentProvider {
    */
   merge(other, overwrite = true) {
     if (!(other instanceof SlotContentProvider)) {
-      throw new Error('Can only merge with another SlotContentProvider instance');
+      throw new Error(
+        'Can only merge with another SlotContentProvider instance'
+      );
     }
 
     // Merge default slot
@@ -195,15 +199,15 @@ export class SlotContentProvider {
    */
   clone() {
     const clone = new SlotContentProvider();
-    
+
     if (this.#defaultSlot !== null) {
       clone.setSlot(null, this.#defaultSlot);
     }
-    
+
     for (const [name, content] of this.#slots.entries()) {
       clone.setSlot(name, content);
     }
-    
+
     return clone;
   }
 
@@ -216,11 +220,11 @@ export class SlotContentProvider {
    */
   static fromObject(obj) {
     const provider = new SlotContentProvider();
-    
+
     if (!obj || typeof obj !== 'object') {
       return provider;
     }
-    
+
     for (const [key, value] of Object.entries(obj)) {
       if (key === 'default') {
         provider.setSlot(null, value);
@@ -228,7 +232,7 @@ export class SlotContentProvider {
         provider.setSlot(key, value);
       }
     }
-    
+
     return provider;
   }
 

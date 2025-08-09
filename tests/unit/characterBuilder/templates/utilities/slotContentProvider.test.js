@@ -47,14 +47,14 @@ describe('SlotContentProvider', () => {
 
     it('should handle function errors gracefully', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       provider.setSlot('error', () => {
         throw new Error('Function error');
       });
-      
+
       expect(provider.getSlot('error')).toBe('');
       expect(consoleSpy).toHaveBeenCalled();
-      
+
       consoleSpy.mockRestore();
     });
 
@@ -88,7 +88,7 @@ describe('SlotContentProvider', () => {
     it('should handle null and undefined content', () => {
       provider.setSlot('null', null);
       provider.setSlot('undefined', undefined);
-      
+
       expect(provider.getSlot('null')).toBe('');
       expect(provider.getSlot('undefined')).toBe('');
     });
@@ -97,7 +97,7 @@ describe('SlotContentProvider', () => {
       provider.setSlot('number', 123);
       provider.setSlot('boolean', true);
       provider.setSlot('object', { toString: () => 'Object string' });
-      
+
       expect(provider.getSlot('number')).toBe('123');
       expect(provider.getSlot('boolean')).toBe('true');
       expect(provider.getSlot('object')).toBe('Object string');
@@ -122,7 +122,7 @@ describe('SlotContentProvider', () => {
     it('should remove named slots', () => {
       provider.setSlot('test', 'Content');
       expect(provider.hasSlot('test')).toBe(true);
-      
+
       const removed = provider.removeSlot('test');
       expect(removed).toBe(true);
       expect(provider.hasSlot('test')).toBe(false);
@@ -131,7 +131,7 @@ describe('SlotContentProvider', () => {
     it('should remove default slot', () => {
       provider.setSlot(null, 'Default');
       expect(provider.hasSlot(null)).toBe(true);
-      
+
       const removed = provider.removeSlot(null);
       expect(removed).toBe(true);
       expect(provider.hasSlot(null)).toBe(false);
@@ -147,7 +147,7 @@ describe('SlotContentProvider', () => {
       provider.setSlot('header', 'Header');
       provider.setSlot('footer', 'Footer');
       provider.setSlot('sidebar', 'Sidebar');
-      
+
       const names = provider.getSlotNames();
       expect(names).toEqual(['header', 'footer', 'sidebar']);
     });
@@ -155,7 +155,7 @@ describe('SlotContentProvider', () => {
     it('should not include default slot', () => {
       provider.setSlot(null, 'Default');
       provider.setSlot('named', 'Named');
-      
+
       const names = provider.getSlotNames();
       expect(names).toEqual(['named']);
     });
@@ -171,12 +171,12 @@ describe('SlotContentProvider', () => {
       provider.setSlot(null, 'Default');
       provider.setSlot('header', 'Header');
       provider.setSlot('footer', 'Footer');
-      
+
       const all = provider.getAllSlots();
       expect(all).toEqual({
         default: 'Default',
         header: 'Header',
-        footer: 'Footer'
+        footer: 'Footer',
       });
     });
 
@@ -190,11 +190,11 @@ describe('SlotContentProvider', () => {
       provider.setSlot(null, 'Default');
       provider.setSlot('header', 'Header');
       provider.setSlot('footer', 'Footer');
-      
+
       expect(provider.size).toBe(3);
-      
+
       provider.clear();
-      
+
       expect(provider.size).toBe(0);
       expect(provider.isEmpty).toBe(true);
       expect(provider.hasSlot(null)).toBe(false);
@@ -205,26 +205,26 @@ describe('SlotContentProvider', () => {
   describe('size and isEmpty', () => {
     it('should track size correctly', () => {
       expect(provider.size).toBe(0);
-      
+
       provider.setSlot('one', 'One');
       expect(provider.size).toBe(1);
-      
+
       provider.setSlot('two', 'Two');
       expect(provider.size).toBe(2);
-      
+
       provider.setSlot(null, 'Default');
       expect(provider.size).toBe(3);
-      
+
       provider.removeSlot('one');
       expect(provider.size).toBe(2);
     });
 
     it('should track isEmpty correctly', () => {
       expect(provider.isEmpty).toBe(true);
-      
+
       provider.setSlot('test', 'Test');
       expect(provider.isEmpty).toBe(false);
-      
+
       provider.clear();
       expect(provider.isEmpty).toBe(true);
     });
@@ -235,12 +235,12 @@ describe('SlotContentProvider', () => {
       const other = new SlotContentProvider();
       other.setSlot('header', 'Other Header');
       other.setSlot('footer', 'Other Footer');
-      
+
       provider.setSlot('header', 'Original Header');
       provider.setSlot('sidebar', 'Original Sidebar');
-      
+
       provider.merge(other);
-      
+
       expect(provider.getSlot('header')).toBe('Other Header'); // Overwritten
       expect(provider.getSlot('footer')).toBe('Other Footer'); // Added
       expect(provider.getSlot('sidebar')).toBe('Original Sidebar'); // Unchanged
@@ -249,20 +249,20 @@ describe('SlotContentProvider', () => {
     it('should respect overwrite flag', () => {
       const other = new SlotContentProvider();
       other.setSlot('header', 'Other Header');
-      
+
       provider.setSlot('header', 'Original Header');
-      
+
       provider.merge(other, false); // Don't overwrite
-      
+
       expect(provider.getSlot('header')).toBe('Original Header');
     });
 
     it('should merge default slots', () => {
       const other = new SlotContentProvider();
       other.setSlot(null, 'Other Default');
-      
+
       provider.merge(other);
-      
+
       expect(provider.getSlot(null)).toBe('Other Default');
     });
 
@@ -278,19 +278,19 @@ describe('SlotContentProvider', () => {
       provider.setSlot(null, 'Default');
       provider.setSlot('header', 'Header');
       provider.setSlot('footer', 'Footer');
-      
+
       const clone = provider.clone();
-      
+
       expect(clone).not.toBe(provider);
       expect(clone.getAllSlots()).toEqual(provider.getAllSlots());
     });
 
     it('should create independent copy', () => {
       provider.setSlot('test', 'Original');
-      
+
       const clone = provider.clone();
       clone.setSlot('test', 'Modified');
-      
+
       expect(provider.getSlot('test')).toBe('Original');
       expect(clone.getSlot('test')).toBe('Modified');
     });
@@ -301,11 +301,11 @@ describe('SlotContentProvider', () => {
       const obj = {
         default: 'Default content',
         header: 'Header content',
-        footer: 'Footer content'
+        footer: 'Footer content',
       };
-      
+
       const provider = SlotContentProvider.fromObject(obj);
-      
+
       expect(provider.getSlot(null)).toBe('Default content');
       expect(provider.getSlot('header')).toBe('Header content');
       expect(provider.getSlot('footer')).toBe('Footer content');
@@ -324,13 +324,13 @@ describe('SlotContentProvider', () => {
       provider.setSlot(null, 'Default');
       provider.setSlot('header', 'Header');
       provider.setSlot('footer', 'Footer');
-      
+
       const obj = provider.toObject();
-      
+
       expect(obj).toEqual({
         default: 'Default',
         header: 'Header',
-        footer: 'Footer'
+        footer: 'Footer',
       });
     });
 

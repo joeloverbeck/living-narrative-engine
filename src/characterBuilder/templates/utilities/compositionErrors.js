@@ -45,7 +45,7 @@ export class CompositionError extends Error {
       depth: this.depth,
       cause: this.cause,
       timestamp: this.timestamp,
-      stack: this.stack
+      stack: this.stack,
     };
   }
 
@@ -56,22 +56,23 @@ export class CompositionError extends Error {
    */
   toString() {
     let str = `${this.name}: ${this.message}`;
-    
+
     if (this.template) {
-      const templateId = typeof this.template === 'string' 
-        ? this.template.substring(0, 50) + '...'
-        : this.template.name || 'unnamed';
+      const templateId =
+        typeof this.template === 'string'
+          ? this.template.substring(0, 50) + '...'
+          : this.template.name || 'unnamed';
       str += `\n  Template: ${templateId}`;
     }
-    
+
     if (this.depth !== undefined) {
       str += `\n  Depth: ${this.depth}`;
     }
-    
+
     if (this.cause) {
       str += `\n  Caused by: ${this.cause.message}`;
     }
-    
+
     return str;
   }
 }
@@ -86,11 +87,13 @@ export class SlotNotFoundError extends CompositionError {
    * @param {object} details - Additional error details
    */
   constructor(slotName, availableSlots = [], details = {}) {
-    const slotsText = availableSlots.length > 0 
-      ? availableSlots.join(', ')
-      : 'none';
-    
-    super(`Slot "${slotName}" not found. Available slots: ${slotsText}`, details);
+    const slotsText =
+      availableSlots.length > 0 ? availableSlots.join(', ') : 'none';
+
+    super(
+      `Slot "${slotName}" not found. Available slots: ${slotsText}`,
+      details
+    );
     this.name = 'SlotNotFoundError';
     this.slotName = slotName;
     this.availableSlots = availableSlots;
@@ -186,10 +189,11 @@ export class TemplateSyntaxError extends CompositionError {
    * @param {object} details - Additional error details
    */
   constructor(message, line = null, column = null, details = {}) {
-    const locationText = line !== null 
-      ? ` at line ${line}${column !== null ? `, column ${column}` : ''}`
-      : '';
-    
+    const locationText =
+      line !== null
+        ? ` at line ${line}${column !== null ? `, column ${column}` : ''}`
+        : '';
+
     super(`Template syntax error${locationText}: ${message}`, details);
     this.name = 'TemplateSyntaxError';
     this.line = line;
@@ -207,7 +211,12 @@ export class InheritanceError extends CompositionError {
    * @param {object} parentTemplate - Parent template
    * @param {object} details - Additional error details
    */
-  constructor(message, childTemplate = null, parentTemplate = null, details = {}) {
+  constructor(
+    message,
+    childTemplate = null,
+    parentTemplate = null,
+    details = {}
+  ) {
     super(message, details);
     this.name = 'InheritanceError';
     this.childTemplate = childTemplate;
@@ -261,7 +270,12 @@ export class ContextError extends CompositionError {
    * @param {Array<string>} [missingFields] - Required fields that are missing
    * @param {object} details - Additional error details
    */
-  constructor(message, invalidContext = null, missingFields = [], details = {}) {
+  constructor(
+    message,
+    invalidContext = null,
+    missingFields = [],
+    details = {}
+  ) {
     super(message, details);
     this.name = 'ContextError';
     this.invalidContext = invalidContext;
@@ -303,7 +317,7 @@ export function createCompositionError(message, options = {}) {
     context,
     depth,
     cause,
-    ...additionalDetails
+    ...additionalDetails,
   };
 
   switch (type) {
@@ -313,28 +327,28 @@ export function createCompositionError(message, options = {}) {
         options.availableSlots || [],
         details
       );
-    
+
     case 'RecursionLimitError':
       return new RecursionLimitError(
         depth || 0,
         options.maxDepth || 10,
         details
       );
-    
+
     case 'TemplateNotFoundError':
       return new TemplateNotFoundError(
         options.templateName || 'unknown',
         options.templateType,
         details
       );
-    
+
     case 'TemplateValidationError':
       return new TemplateValidationError(
         message,
         options.validationErrors || [],
         details
       );
-    
+
     case 'TemplateSyntaxError':
       return new TemplateSyntaxError(
         message,
@@ -342,7 +356,7 @@ export function createCompositionError(message, options = {}) {
         options.column,
         details
       );
-    
+
     case 'InheritanceError':
       return new InheritanceError(
         message,
@@ -350,7 +364,7 @@ export function createCompositionError(message, options = {}) {
         options.parentTemplate,
         details
       );
-    
+
     case 'AssemblyError':
       return new AssemblyError(
         message,
@@ -358,7 +372,7 @@ export function createCompositionError(message, options = {}) {
         options.failedComponent,
         details
       );
-    
+
     case 'CacheError':
       return new CacheError(
         message,
@@ -366,7 +380,7 @@ export function createCompositionError(message, options = {}) {
         options.cacheKey,
         details
       );
-    
+
     case 'ContextError':
       return new ContextError(
         message,
@@ -374,7 +388,7 @@ export function createCompositionError(message, options = {}) {
         options.missingFields || [],
         details
       );
-    
+
     default:
       return new CompositionError(message, details);
   }
@@ -382,5 +396,6 @@ export function createCompositionError(message, options = {}) {
 
 // Export utility functions for testing
 export const __testUtils = {
-  createTestError: (type, message, options) => createCompositionError(message, { type, ...options }),
+  createTestError: (type, message, options) =>
+    createCompositionError(message, { type, ...options }),
 };

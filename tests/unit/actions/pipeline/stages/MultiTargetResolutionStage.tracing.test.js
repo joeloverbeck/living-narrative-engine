@@ -141,9 +141,14 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
 
       await stage.executeInternal(mockContext);
 
+      // Filter out performance data entries (ACTTRA-018)
+      const targetResolutionData = capturedTraceData.filter(
+        (d) => d.stage === 'target_resolution'
+      );
+
       // Check that trace data was captured
-      expect(capturedTraceData).toHaveLength(1);
-      const traceData = capturedTraceData[0];
+      expect(targetResolutionData).toHaveLength(1);
+      const traceData = targetResolutionData[0];
 
       expect(traceData.stage).toBe('target_resolution');
       expect(traceData.actionId).toBe('legacy_action');
@@ -174,8 +179,13 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
 
       await stage.executeInternal(mockContext);
 
-      expect(capturedTraceData).toHaveLength(1);
-      const traceData = capturedTraceData[0];
+      // Filter out performance data entries (ACTTRA-018)
+      const targetResolutionData = capturedTraceData.filter(
+        (d) => d.stage === 'target_resolution'
+      );
+
+      expect(targetResolutionData).toHaveLength(1);
+      const traceData = targetResolutionData[0];
 
       expect(traceData.data.targetCount).toBe(0);
       expect(traceData.data.resolutionSuccess).toBe(true);
@@ -203,8 +213,13 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
 
       await stage.executeInternal(mockContext);
 
-      expect(capturedTraceData).toHaveLength(1);
-      const traceData = capturedTraceData[0];
+      // Filter out performance data entries (ACTTRA-018)
+      const targetResolutionData = capturedTraceData.filter(
+        (d) => d.stage === 'target_resolution'
+      );
+
+      expect(targetResolutionData).toHaveLength(1);
+      const traceData = targetResolutionData[0];
 
       expect(traceData.stage).toBe('target_resolution');
       expect(traceData.actionId).toBe('multi_action');
@@ -243,8 +258,13 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
 
       await stage.executeInternal(mockContext);
 
-      expect(capturedTraceData).toHaveLength(1);
-      const traceData = capturedTraceData[0];
+      // Filter out performance data entries (ACTTRA-018)
+      const targetResolutionData = capturedTraceData.filter(
+        (d) => d.stage === 'target_resolution'
+      );
+
+      expect(targetResolutionData).toHaveLength(1);
+      const traceData = targetResolutionData[0];
 
       expect(traceData.data.resolvedTargetCounts).toEqual({
         primary: 1,
@@ -274,9 +294,14 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
 
       await stage.executeInternal(mockContext);
 
+      // Filter out performance data entries (ACTTRA-018)
+      const targetResolutionData = capturedTraceData.filter(
+        (d) => d.stage === 'target_resolution'
+      );
+
       // Should capture error data
-      expect(capturedTraceData).toHaveLength(1);
-      const errorTrace = capturedTraceData[0];
+      expect(targetResolutionData).toHaveLength(1);
+      const errorTrace = targetResolutionData[0];
 
       expect(errorTrace.data.resolutionFailed).toBe(true);
       expect(errorTrace.data.error).toBe('Resolution failed');
@@ -349,11 +374,122 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
 
       await stage.executeInternal(mockContext);
 
-      const traceData = capturedTraceData[0];
+      // Filter out performance data entries (ACTTRA-018)
+      const targetResolutionData = capturedTraceData.filter(
+        (d) => d.stage === 'target_resolution'
+      );
+
+      const traceData = targetResolutionData[0];
       expect(traceData.data.resolutionTimeMs).toBeDefined();
       expect(typeof traceData.data.resolutionTimeMs).toBe('number');
       expect(traceData.data.resolutionTimeMs).toBeGreaterThanOrEqual(0);
       expect(traceData.data.timestamp).toBeDefined();
+    });
+  });
+
+  describe('Performance Data Capture (ACTTRA-018)', () => {
+    it('should capture performance data for each action', async () => {
+      const actionDef = { id: 'perf_action', scope: 'test_scope' };
+      mockContext.candidateActions = [actionDef];
+
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+        true
+      );
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+        {
+          targetDefinitions: { primary: { scope: 'test_scope' } },
+        }
+      );
+
+      await stage.executeInternal(mockContext);
+
+      // Filter for performance data entries
+      const performanceData = capturedTraceData.filter(
+        (d) => d.stage === 'stage_performance'
+      );
+
+      expect(performanceData).toHaveLength(1);
+      const perfData = performanceData[0];
+
+      expect(perfData.actionId).toBe('perf_action');
+      expect(perfData.data.stage).toBe('multi_target_resolution');
+      expect(perfData.data.stageName).toBe('MultiTargetResolution');
+      expect(perfData.data.duration).toBeDefined();
+      expect(typeof perfData.data.duration).toBe('number');
+      expect(perfData.data.itemsProcessed).toBe(1);
+      expect(perfData.data.itemsResolved).toBe(1);
+      expect(perfData.data.timestamp).toBeDefined();
+    });
+
+    it('should capture performance data for multiple actions', async () => {
+      const action1 = { id: 'perf_action_1', scope: 'test_scope_1' };
+      const action2 = {
+        id: 'perf_action_2',
+        targets: { primary: { scope: 'test_scope_2' } },
+      };
+
+      mockContext.candidateActions = [action1, action2];
+
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction
+        .mockReturnValueOnce(true) // action1
+        .mockReturnValueOnce(false); // action2
+
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+        {
+          targetDefinitions: { primary: { scope: 'test_scope_1' } },
+        }
+      );
+
+      await stage.executeInternal(mockContext);
+
+      // Filter for performance data entries
+      const performanceData = capturedTraceData.filter(
+        (d) => d.stage === 'stage_performance'
+      );
+
+      expect(performanceData).toHaveLength(2);
+
+      const perf1 = performanceData.find((d) => d.actionId === 'perf_action_1');
+      const perf2 = performanceData.find((d) => d.actionId === 'perf_action_2');
+
+      expect(perf1).toBeDefined();
+      expect(perf2).toBeDefined();
+      expect(perf1.data.itemsProcessed).toBe(2);
+      expect(perf2.data.itemsProcessed).toBe(2);
+    });
+
+    it('should not break if performance capture fails', async () => {
+      const actionDef = { id: 'fail_perf_action', scope: 'test_scope' };
+      mockContext.candidateActions = [actionDef];
+
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+        true
+      );
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+        {
+          targetDefinitions: { primary: { scope: 'test_scope' } },
+        }
+      );
+
+      // Mock captureActionData to throw an error for performance data
+      const originalCaptureActionData = mockTrace.captureActionData;
+      mockTrace.captureActionData = jest.fn((stage, actionId, data) => {
+        if (stage === 'stage_performance') {
+          throw new Error('Performance capture failed');
+        }
+        originalCaptureActionData(stage, actionId, data);
+      });
+
+      const result = await stage.executeInternal(mockContext);
+
+      // Should still succeed despite performance capture failure
+      expect(result.success).toBe(true);
+
+      // Should still have target resolution data
+      const targetResolutionData = capturedTraceData.filter(
+        (d) => d.stage === 'target_resolution'
+      );
+      expect(targetResolutionData).toHaveLength(1);
     });
   });
 
@@ -379,12 +515,19 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
 
       await stage.executeInternal(mockContext);
 
-      expect(capturedTraceData).toHaveLength(2);
+      // Filter out performance data entries (ACTTRA-018)
+      const targetResolutionData = capturedTraceData.filter(
+        (d) => d.stage === 'target_resolution'
+      );
 
-      const legacyTrace = capturedTraceData.find(
+      expect(targetResolutionData).toHaveLength(2);
+
+      const legacyTrace = targetResolutionData.find(
         (t) => t.actionId === 'legacy'
       );
-      const multiTrace = capturedTraceData.find((t) => t.actionId === 'multi');
+      const multiTrace = targetResolutionData.find(
+        (t) => t.actionId === 'multi'
+      );
 
       expect(legacyTrace.data.isLegacy).toBe(true);
       expect(multiTrace.data.isLegacy).toBe(false);

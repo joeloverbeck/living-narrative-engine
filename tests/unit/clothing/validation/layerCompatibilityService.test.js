@@ -936,7 +936,8 @@ describe('LayerCompatibilityService', () => {
       expect(result[0]).toEqual({
         type: 'auto_remove',
         target: 'item3',
-        description: 'Automatically remove conflicting item from accessories layer',
+        description:
+          'Automatically remove conflicting item from accessories layer',
         priority: 2, // Priority 2 for non-high severity
       });
     });

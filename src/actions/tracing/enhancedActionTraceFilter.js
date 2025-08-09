@@ -90,7 +90,8 @@ class EnhancedActionTraceFilter extends ActionTraceFilter {
     this.#logger = ensureValidLogger(logger, 'EnhancedActionTraceFilter');
 
     // Enhanced features (opt-in)
-    this.#categoryConfig = categoryConfig || this.#initializeDefaultCategories();
+    this.#categoryConfig =
+      categoryConfig || this.#initializeDefaultCategories();
     this.#filterCache = new Map();
     this.#dynamicRules = new Map();
 
@@ -272,9 +273,7 @@ class EnhancedActionTraceFilter extends ActionTraceFilter {
     const stats = { ...this.#filterStats };
 
     stats.filterRate =
-      stats.totalChecks > 0
-        ? (stats.filteredOut / stats.totalChecks) * 100
-        : 0;
+      stats.totalChecks > 0 ? (stats.filteredOut / stats.totalChecks) * 100 : 0;
 
     stats.cacheHitRate =
       stats.totalChecks > 0 ? (stats.cacheHits / stats.totalChecks) * 100 : 0;

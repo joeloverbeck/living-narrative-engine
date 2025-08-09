@@ -470,7 +470,8 @@ describe('ComponentFilteringStage', () => {
       ).toHaveBeenCalledWith(mockActor.id);
 
       // Verify captureActionData was called for each candidate action
-      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledTimes(2);
+      // Note: Each action gets TWO calls - one for component analysis, one for performance data (ACTTRA-018)
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledTimes(4);
 
       // Check first action capture
       expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
@@ -505,6 +506,31 @@ describe('ComponentFilteringStage', () => {
           forbiddenComponentsPresent: [],
           analysisMethod: 'post-processing',
           timestamp: expect.any(Number),
+        })
+      );
+
+      // Check performance data captures (ACTTRA-018)
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'stage_performance',
+        'core:go',
+        expect.objectContaining({
+          stage: 'component_filtering',
+          duration: expect.any(Number),
+          timestamp: expect.any(Number),
+          itemsProcessed: 2,
+          stageName: 'ComponentFiltering',
+        })
+      );
+
+      expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+        'stage_performance',
+        'core:look',
+        expect.objectContaining({
+          stage: 'component_filtering',
+          duration: expect.any(Number),
+          timestamp: expect.any(Number),
+          itemsProcessed: 2,
+          stageName: 'ComponentFiltering',
         })
       );
     });
