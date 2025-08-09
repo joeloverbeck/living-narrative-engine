@@ -805,6 +805,315 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       return { dataError: 'Failed to serialize data safely' };
     }
   }
+
+  // ==========================================
+  // Enhanced Filtering Methods (Opt-in)
+  // Added for ACTTRA-017 - Backward compatible
+  // ==========================================
+
+  /**
+   * Capture action data with enhanced filtering capabilities
+   * This is an opt-in method that doesn't affect existing code
+   * 
+   * @param {string} stage - Pipeline stage name
+   * @param {string} actionId - Action ID being processed
+   * @param {object} data - Stage-specific data to capture
+   * @param {object} [options] - Enhanced capture options
+   * @param {string} [options.category] - Data category (core, performance, diagnostic, etc.)
+   * @param {object} [options.context] - Additional context for filtering
+   * @param {boolean} [options.summarize] - Whether to apply data summarization
+   * @param {string} [options.targetVerbosity] - Target verbosity for summarization
+   * @returns {void}
+   */
+  captureEnhancedActionData(stage, actionId, data, options = {}) {
+    // Validate inputs using existing patterns
+    string.assertNonBlank(stage, 'Stage');
+    string.assertNonBlank(actionId, 'Action ID');
+
+    // Check if we have an enhanced filter
+    const isEnhancedFilter = this.#actionTraceFilter.shouldCaptureEnhanced !== undefined;
+    
+    // If we have an enhanced filter, use it
+    if (isEnhancedFilter) {
+      const shouldCapture = this.#actionTraceFilter.shouldCaptureEnhanced(
+        options.category || 'core',
+        `${stage}_${actionId}`,
+        data,
+        options.context || {}
+      );
+
+      if (!shouldCapture) {
+        return; // Filtered out
+      }
+    } else {
+      // Fall back to regular shouldTrace if not enhanced
+      if (!this.#actionTraceFilter.shouldTrace(actionId)) {
+        return;
+      }
+    }
+
+    // Apply data summarization if requested
+    let processedData = data;
+    if (options.summarize) {
+      const targetVerbosity = options.targetVerbosity || 
+        (this.#actionTraceFilter.getVerbosityLevel ? 
+          this.#actionTraceFilter.getVerbosityLevel() : 'standard');
+      processedData = this.#summarizeDataEnhanced(data, targetVerbosity);
+    }
+
+    // Add enhanced metadata
+    const enhancedData = {
+      ...processedData,
+      _enhanced: {
+        category: options.category || 'core',
+        verbosityLevel: this.#actionTraceFilter.getVerbosityLevel 
+          ? this.#actionTraceFilter.getVerbosityLevel() 
+          : 'standard',
+        timestamp: new Date().toISOString()
+      }
+    };
+
+    // Capture data directly without using parent's filtering
+    // Initialize action trace data if first time seeing this action
+    if (!this.#tracedActionData.has(actionId)) {
+      this.#tracedActionData.set(actionId, {
+        actionId,
+        actorId: this.#actorId,
+        startTime: Date.now(),
+        stages: {},
+        context: this.#context,
+      });
+    }
+
+    const actionTrace = this.#tracedActionData.get(actionId);
+    
+    // Store the enhanced data directly without additional filtering
+    actionTrace.stages[stage] = {
+      timestamp: Date.now(),
+      data: enhancedData,
+      stageCompletedAt: Date.now(),
+    };
+
+    // Log trace capture for debugging
+    this.#logger.debug(
+      `ActionAwareStructuredTrace: Captured enhanced data for action '${actionId}' at stage '${stage}'`,
+      {
+        actionId,
+        stage,
+        dataKeys: Object.keys(enhancedData),
+        category: options.category || 'core',
+      }
+    );
+  }
+
+  /**
+   * Enhanced data summarization based on verbosity
+   * 
+   * @private
+   * @param {object} data - Data to summarize
+   * @param {string} targetVerbosity - Target verbosity level
+   * @returns {object} Summarized data
+   */
+  #summarizeDataEnhanced(data, targetVerbosity) {
+    if (!data || typeof data !== 'object') {
+      return data;
+    }
+
+    const levelMap = { 'minimal': 0, 'standard': 1, 'detailed': 2, 'verbose': 3 };
+    const targetLevel = levelMap[targetVerbosity] || 1;
+
+    // Apply progressive summarization based on verbosity
+    const summarized = { ...data };
+
+    if (targetLevel < 2) { // Less than detailed
+      // Remove performance metrics
+      delete summarized.performance;
+      delete summarized.timing;
+      delete summarized.metrics;
+
+      // Truncate arrays
+      Object.keys(summarized).forEach(key => {
+        if (Array.isArray(summarized[key]) && summarized[key].length > 3) {
+          summarized[key] = summarized[key].slice(0, 3);
+          summarized[`${key}_truncated`] = true;
+          summarized[`${key}_original_length`] = data[key].length;
+        }
+      });
+    }
+
+    if (targetLevel < 3) { // Less than verbose
+      // Remove diagnostic information
+      delete summarized.diagnostic;
+      delete summarized.debug;
+      delete summarized.internal;
+
+      // Truncate long strings
+      Object.keys(summarized).forEach(key => {
+        if (typeof summarized[key] === 'string' && summarized[key].length > 200) {
+          summarized[key] = summarized[key].substring(0, 197) + '...';
+        }
+      });
+    }
+
+    return summarized;
+  }
+
+  /**
+   * Add dynamic filtering rule (opt-in)
+   * 
+   * @param {string} ruleName - Name of the rule
+   * @param {Function} ruleFunction - Rule function
+   * @returns {void}
+   */
+  addDynamicTraceRule(ruleName, ruleFunction) {
+    if (this.#actionTraceFilter.addDynamicRule) {
+      this.#actionTraceFilter.addDynamicRule(ruleName, ruleFunction);
+    } else {
+      this.#logger.warn('Dynamic rules require EnhancedActionTraceFilter');
+    }
+  }
+
+  /**
+   * Remove dynamic filtering rule
+   * 
+   * @param {string} ruleName - Name of the rule to remove
+   * @returns {void}
+   */
+  removeDynamicTraceRule(ruleName) {
+    if (this.#actionTraceFilter.removeDynamicRule) {
+      this.#actionTraceFilter.removeDynamicRule(ruleName);
+    }
+  }
+
+  /**
+   * Get enhanced statistics (opt-in)
+   * 
+   * @returns {object|null} Enhanced statistics or null if not available
+   */
+  getEnhancedTraceStats() {
+    if (this.#actionTraceFilter.getEnhancedStats) {
+      return this.#actionTraceFilter.getEnhancedStats();
+    }
+    return null;
+  }
+
+  /**
+   * Export filtered trace data based on verbosity (opt-in)
+   * 
+   * @param {string} targetVerbosity - Target verbosity level for export
+   * @param {string[]} [categories] - Optional categories to include
+   * @returns {object} Filtered trace data
+   */
+  exportFilteredTraceData(targetVerbosity, categories = null) {
+    const filteredData = {};
+    const traceData = this.getTracedActions(); // Use existing method
+
+    for (const [actionId, actionTrace] of traceData) {
+      const stageData = {};
+      
+      for (const [stage, data] of Object.entries(actionTrace.stages)) {
+        // Check if stage should be included based on categories
+        if (categories && !this.#shouldIncludeStage(stage, categories)) {
+          continue;
+        }
+
+        // Apply verbosity filtering if enhanced
+        if (data.data._enhanced) {
+          const levelMap = { 'minimal': 0, 'standard': 1, 'detailed': 2, 'verbose': 3 };
+          const dataLevel = levelMap[data.data._enhanced.verbosityLevel] || 1;
+          const targetLevel = levelMap[targetVerbosity] || 1;
+
+          if (targetLevel < dataLevel) {
+            continue; // Skip data above target verbosity
+          }
+        }
+
+        stageData[stage] = this.#summarizeDataEnhanced(
+          data.data,
+          targetVerbosity
+        );
+      }
+
+      if (Object.keys(stageData).length > 0) {
+        filteredData[actionId] = {
+          ...actionTrace,
+          stages: stageData
+        };
+      }
+    }
+
+    return filteredData;
+  }
+
+  /**
+   * Check if a stage should be included based on categories
+   * 
+   * @private
+   * @param {string} stage - Stage name
+   * @param {string[]} categories - Categories to include
+   * @returns {boolean} Whether to include the stage
+   */
+  #shouldIncludeStage(stage, categories) {
+    // Map stages to categories
+    const stageCategories = {
+      'component_filtering': 'business_logic',
+      'prerequisite_evaluation': 'business_logic',
+      'target_resolution': 'business_logic',
+      'formatting': 'business_logic',
+      'legacy_processing': 'legacy',
+      'legacy_detection': 'legacy',
+      'multi_target_resolution': 'core',
+      'scope_evaluation': 'core',
+      'target_relationships': 'core',
+      'action_start': 'core',
+      'action_complete': 'core',
+      'stage_start': 'core',
+      'stage_complete': 'core',
+      'timing_data': 'performance',
+      'resource_usage': 'performance',
+      'performance_metrics': 'performance',
+      'error_details': 'diagnostic',
+      'validation_results': 'diagnostic',
+      'debug_info': 'diagnostic'
+    };
+
+    const category = stageCategories[stage];
+    return !category || categories.includes(category);
+  }
+
+  /**
+   * Reset enhanced statistics
+   * 
+   * @returns {void}
+   */
+  resetEnhancedStats() {
+    if (this.#actionTraceFilter.resetEnhancedStats) {
+      this.#actionTraceFilter.resetEnhancedStats();
+    }
+  }
+
+  /**
+   * Clear enhanced filter cache
+   * 
+   * @returns {void}
+   */
+  clearEnhancedCache() {
+    if (this.#actionTraceFilter.clearEnhancedCache) {
+      this.#actionTraceFilter.clearEnhancedCache();
+    }
+  }
+
+  /**
+   * Optimize enhanced filter cache
+   * 
+   * @param {number} [maxAge] - Maximum age for cache entries in milliseconds
+   * @returns {void}
+   */
+  optimizeEnhancedCache(maxAge = 300000) {
+    if (this.#actionTraceFilter.optimizeCache) {
+      this.#actionTraceFilter.optimizeCache(maxAge);
+    }
+  }
 }
 
 export default ActionAwareStructuredTrace;
