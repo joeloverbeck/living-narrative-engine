@@ -16,8 +16,10 @@ export class HighPrecisionTimer {
   constructor() {
     // Detect available timing APIs
     this.#performanceAPIAvailable =
-      typeof performance !== 'undefined' && typeof performance.now === 'function';
-    this.#hrTimeAvailable = typeof process !== 'undefined' && typeof process.hrtime === 'function';
+      typeof performance !== 'undefined' &&
+      typeof performance.now === 'function';
+    this.#hrTimeAvailable =
+      typeof process !== 'undefined' && typeof process.hrtime === 'function';
 
     // Initialize base timestamp for relative measurements
     this.#baseTimestamp = this.#performanceAPIAvailable

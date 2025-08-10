@@ -1,175 +1,322 @@
-# CLIGEN-004: Prompt Template & LLM Integration
+# CLIGEN-004: Enhance Prompt Template & LLM Integration
 
 ## Summary
 
-Design and implement the comprehensive prompt template for cliché generation, including response format validation, prompt versioning, and integration with the existing LLM proxy server. This ticket ensures high-quality, consistent cliché generation through optimized prompts.
+Enhance the existing cliché generation system by adding missing features such as prompt versioning, few-shot examples configuration, genre-specific context, response statistics, and advanced validation. The core system is already implemented and functional - this ticket focuses on adding value-added features.
 
 ## Status
 
-- **Type**: Implementation
-- **Priority**: High
-- **Complexity**: Medium
-- **Estimated Time**: 4 hours
-- **Dependencies**: CLIGEN-003 (ClicheGenerator Service)
+- **Type**: Enhancement
+- **Priority**: Medium
+- **Complexity**: Low-Medium
+- **Estimated Time**: 2-3 hours
+- **Dependencies**: None (Core system already implemented)
 
 ## Objectives
 
 ### Primary Goals
 
-1. **Design Prompt Template** - Create effective prompt for cliché generation
-2. **Response Schema** - Define and validate response format
-3. **Prompt Versioning** - Track and manage prompt iterations
-4. **LLM Configuration** - Optimize settings for quality responses
-5. **Example Management** - Include few-shot examples for consistency
-6. **Fallback Strategies** - Handle edge cases and poor responses
+1. **Add Prompt Versioning** - Track and manage prompt template iterations
+2. **Implement Few-Shot Examples** - Optional examples configuration for improved consistency
+3. **Add Genre-Specific Context** - Context-aware prompts based on genre/setting
+4. **Enhance Response Statistics** - Advanced metrics and quality analysis
+5. **Improve Validation** - Enhanced validation with warnings and recommendations
+6. **Add Configuration Options** - Flexible prompt behavior configuration
 
 ### Success Criteria
 
-- [ ] Prompt generates relevant clichés 95%+ of the time
-- [ ] Response format consistently valid JSON
-- [ ] All 11 categories populated with 3+ items
-- [ ] Tropes list contains 5+ relevant items
-- [ ] Prompt version tracking implemented
-- [ ] Few-shot examples improve quality
-- [ ] Edge cases handled gracefully
+- [ ] Prompt versioning system implemented and functional
+- [ ] Few-shot examples can be toggled on/off via configuration
+- [ ] Genre-specific context enhances prompt relevance
+- [ ] Response statistics provide detailed quality metrics
+- [ ] Enhanced validation provides actionable warnings
+- [ ] Configuration options allow flexible prompt behavior
+- [ ] All enhancements maintain backward compatibility with existing system
 
 ## Technical Specification
 
-### 1. Prompt Template System
+### Current Implementation Status
 
-#### File: `src/characterBuilder/prompts/clichePromptTemplate.js`
+**✅ Already Implemented:**
+- Functional prompt template system (`src/characterBuilder/prompts/clicheGenerationPrompt.js`)
+- Complete ClicheGenerator service (`src/characterBuilder/services/ClicheGenerator.js`)
+- JSON schema validation and response processing
+- Integration with ConfigurableLLMAdapter
+- Comprehensive error handling and logging
+- Full test coverage (24+ test files)
+
+**🚧 Enhancement Areas (This Ticket):**
+- Prompt versioning system
+- Few-shot examples configuration
+- Genre-specific context
+- Enhanced response statistics
+- Advanced validation with warnings
+
+### 1. Prompt Versioning Enhancement
+
+#### File: `src/characterBuilder/prompts/clicheGenerationPrompt.js` (enhancement)
 
 ```javascript
-/**
- * @file Prompt template for cliché generation
- * @see ClicheGenerator.js
- */
+// Add to existing clicheGenerationPrompt.js
 
 /**
- * Versioned prompt template system
+ * Prompt version information and management
  */
-export class ClichePromptTemplate {
-  static VERSION = '1.1.0';
-  static MIN_ITEMS_PER_CATEGORY = 3;
-  static MAX_ITEMS_PER_CATEGORY = 7;
+export const PROMPT_VERSION_INFO = {
+  version: '1.2.0',
+  previousVersions: {
+    '1.0.0': { date: '2024-01-01', description: 'Initial implementation' },
+    '1.1.0': { date: '2024-02-01', description: 'Enhanced instructions and validation' }
+  },
+  currentChanges: [
+    'Added few-shot examples support',
+    'Genre-specific context integration',
+    'Enhanced response statistics'
+  ]
+};
 
-  /**
-   * Get the current prompt template
-   * @param {object} context - Generation context
-   * @returns {string} Formatted prompt
-   */
-  static getPrompt(context) {
-    const { conceptText, direction, options = {} } = context;
+/**
+ * Enhanced prompt building with optional features
+ * @param {string} characterConcept - Character concept
+ * @param {object} direction - Thematic direction
+ * @param {object} options - Enhancement options
+ * @param {boolean} options.includeFewShotExamples - Include example responses
+ * @param {string} options.genre - Genre for context-specific prompts
+ * @param {number} options.minItemsPerCategory - Minimum items per category
+ * @param {number} options.maxItemsPerCategory - Maximum items per category
+ * @returns {string} Enhanced prompt
+ */
+export function buildEnhancedClicheGenerationPrompt(characterConcept, direction, options = {}) {
+  const basePrompt = buildClicheGenerationPrompt(characterConcept, direction);
+  
+  let enhancedPrompt = basePrompt;
 
-    return this.#buildPrompt(conceptText, direction, options);
+  // Add few-shot examples if requested
+  if (options.includeFewShotExamples) {
+    const examples = getFewShotExamples();
+    enhancedPrompt = enhancedPrompt.replace(
+      '<instructions>',
+      `${examples}\n\n<instructions>`
+    );
+  }
+  
+  // Add genre-specific context if provided
+  if (options.genre) {
+    const genreContext = getGenreSpecificContext(options.genre);
+    enhancedPrompt = enhancedPrompt.replace(
+      '</thematic_direction>',
+      `\n${genreContext}\n</thematic_direction>`
+    );
+  }
+  
+  // Adjust item count constraints if specified
+  if (options.minItemsPerCategory || options.maxItemsPerCategory) {
+    const minItems = options.minItemsPerCategory || 3;
+    const maxItems = options.maxItemsPerCategory || 8;
+    enhancedPrompt = enhancedPrompt.replace(
+      'Provide 3-8 items per category',
+      `Provide ${minItems}-${maxItems} items per category`
+    );
+  }
+  
+  return enhancedPrompt;
   }
 
-  /**
-   * Build the complete prompt
-   * @private
-   */
-  static #buildPrompt(conceptText, direction, options) {
-    const systemContext = this.#getSystemContext();
-    const task = this.#getTaskDescription();
-    const examples = options.includeFewShot ? this.#getFewShotExamples() : '';
-    const instructions = this.#getInstructions(options);
-    const responseFormat = this.#getResponseFormat();
-
-    return `${systemContext}
-
-${task}
-
-<character_concept>
-${conceptText}
-</character_concept>
-
-<thematic_direction>
-Title: ${direction.title}
-Description: ${direction.description || 'Not provided'}
-Core Tension: ${direction.coreTension || 'Not specified'}
-${direction.themes ? `Themes: ${direction.themes.join(', ')}` : ''}
-${direction.genre ? `Genre: ${direction.genre}` : ''}
-</thematic_direction>
-
-${examples}
-
-${instructions}
-
-${responseFormat}`;
-  }
-
-  /**
-   * Get system context
-   * @private
-   */
-  static #getSystemContext() {
-    return `<role>
-You are a narrative design expert specializing in identifying overused tropes, clichés, and stereotypes in character development. You have extensive knowledge of literature, film, television, and gaming narratives across all genres. Your goal is to help writers avoid predictable and uninspired character elements by identifying what has been done to death.
-</role>
-
-<expertise>
-- Deep understanding of narrative tropes across media
-- Knowledge of genre-specific clichés
-- Awareness of cultural stereotypes to avoid
-- Understanding of what makes characters feel generic
-- Ability to identify subtle and obvious clichés
-</expertise>`;
-  }
-
-  /**
-   * Get task description
-   * @private
-   */
-  static #getTaskDescription() {
-    return `<task>
-Analyze the provided character concept and thematic direction to generate a comprehensive list of clichés, stereotypes, and overused tropes that writers should avoid. Focus on elements that would make this character feel generic, predictable, or uninspired within the given thematic context.
-
-Consider:
-1. The specific genre and setting implied by the concept
-2. The thematic direction's influence on character development
-3. Common pitfalls for this type of character
-4. Both obvious and subtle clichés
-5. Cultural stereotypes that should be avoided
-</task>`;
-  }
-
-  /**
-   * Get few-shot examples
-   * @private
-   */
-  static #getFewShotExamples() {
-    return `<examples>
+/**
+ * Get few-shot examples for improved consistency
+ * @returns {string} Example section
+ */
+function getFewShotExamples() {
+  return `<examples>
 <example>
 <input>
-Concept: "A young farm boy discovers he has magical powers"
-Direction: "The Chosen One - Destined to save the world"
+Character Concept: "A young farm boy discovers he has magical powers"
+Thematic Direction: "The Chosen One - Destined to save the world"
 </input>
 <output>
 {
   "categories": {
     "names": ["Luke", "Arthur", "Eragon", "Will", "Rand"],
-    "physicalDescriptions": ["Unremarkable until powers manifest", "Secretly handsome under the dirt", "Eyes that change color with power", "Mysterious birthmark/scar", "Unusually tall or strong for their age"],
-    "personalityTraits": ["Reluctant at first", "Pure of heart", "Naive but naturally talented", "Quick to anger when friends threatened", "Humble despite great power"],
-    "skillsAbilities": ["Instantly masters complex magic", "Natural sword fighter", "Can talk to animals", "Prophetic dreams", "Immune to dark magic"],
-    "typicalLikes": ["Simple farm life (at first)", "Justice and fairness", "Protecting the innocent", "Their childhood sweetheart", "Their wise mentor"],
-    "typicalDislikes": ["Destiny/responsibility", "Politics and court intrigue", "Being treated as special", "Dark magic", "The empire/evil kingdom"],
-    "commonFears": ["Becoming like the villain", "Losing control of powers", "Friends dying for them", "Not living up to expectations", "The burden of destiny"],
-    "genericGoals": ["Save the world", "Avenge mentor's death", "Master their powers", "Defeat the dark lord", "Restore balance"],
-    "backgroundElements": ["Parents killed when young", "Raised by aunt/uncle", "Secret royal bloodline", "Mentor dies in Act 2", "Prophecy foretold birth"],
-    "overusedSecrets": ["Actually the villain's son", "Royal heir in hiding", "Last of an ancient bloodline", "Mentor was parent's friend", "Power comes with terrible cost"],
-    "speechPatterns": ["Questions everything", "Makes naive observations", "'I never asked for this'", "Inspirational speeches before battle", "References farm wisdom"]
+    "physicalDescriptions": ["Unremarkable until powers manifest", "Secretly handsome under the dirt", "Eyes that change color with power"],
+    "personalityTraits": ["Reluctant at first", "Pure of heart", "Naive but naturally talented"],
+    "skillsAbilities": ["Instantly masters complex magic", "Natural sword fighter", "Prophetic dreams"],
+    "typicalLikes": ["Simple farm life", "Justice and fairness", "Their childhood sweetheart"],
+    "typicalDislikes": ["Destiny/responsibility", "Politics and court intrigue", "Being treated as special"],
+    "commonFears": ["Becoming like the villain", "Losing control of powers", "Friends dying for them"],
+    "genericGoals": ["Save the world", "Avenge mentor's death", "Master their powers"],
+    "backgroundElements": ["Parents killed when young", "Raised by aunt/uncle", "Secret royal bloodline"],
+    "overusedSecrets": ["Actually the villain's son", "Royal heir in hiding", "Last of an ancient bloodline"],
+    "speechPatterns": ["Questions everything", "'I never asked for this'", "References farm wisdom"]
   },
-  "tropesAndStereotypes": [
-    "The Reluctant Hero",
-    "Farm Boy to Hero",
-    "The Chosen One Prophecy",
-    "Hidden Royal Heritage",
-    "Mentor's Sacrificial Death"
-  ]
+  "tropesAndStereotypes": ["The Reluctant Hero", "Farm Boy to Hero", "The Chosen One Prophecy", "Hidden Royal Heritage"]
 }
 </output>
 </example>
 </examples>`;
+  }
+
+/**
+ * Get genre-specific context additions
+ * @param {string} genre - Genre identifier
+ * @returns {string} Genre context
+ */
+function getGenreSpecificContext(genre) {
+  const genreContexts = {
+    fantasy: '<genre_context>\nFocus on fantasy-specific clichés: chosen ones, ancient prophecies, wise wizards, dark lords, medieval stereotypes, magical bloodlines, and quest-based character arcs.\n</genre_context>',
+    
+    scifi: '<genre_context>\nFocus on sci-fi clichés: lone space cowboys, AI gaining consciousness, time paradoxes, alien invasion tropes, dystopian societies, and technology-dependent solutions.\n</genre_context>',
+    
+    romance: '<genre_context>\nFocus on romance clichés: love triangles, enemies to lovers, billionaire love interests, miscommunication plots, and idealized relationship dynamics.\n</genre_context>',
+    
+    mystery: '<genre_context>\nFocus on mystery clichés: alcoholic detectives, red herrings, locked room mysteries, surprise twin reveals, and investigative procedural patterns.\n</genre_context>',
+    
+    horror: '<genre_context>\nFocus on horror clichés: investigating strange noises, splitting up, ancient curses, possessed children, and survival horror tropes.\n</genre_context>',
+    
+    contemporary: '<genre_context>\nFocus on contemporary fiction clichés: manic pixie dream girls, coming of age tropes, suburban ennui, and modern relationship dynamics.\n</genre_context>'
+  };
+  
+  return genreContexts[genre?.toLowerCase()] || '';
+  }
+
+/**
+ * Enhanced response validation with statistics and warnings
+ * @param {object} response - LLM response to validate
+ * @returns {object} Validation result with enhanced metrics
+ */
+export function validateClicheGenerationResponseEnhanced(response) {
+  // Use existing validation as base
+  const isValid = validateClicheGenerationResponse(response);
+  
+  if (!isValid) {
+    throw new Error('Basic validation failed');
+  }
+  
+  const stats = calculateResponseStatistics(response);
+  const warnings = generateResponseWarnings(response, stats);
+  const qualityMetrics = assessResponseQuality(response, stats);
+  
+  return {
+    valid: true,
+    statistics: stats,
+    warnings,
+    qualityMetrics,
+    recommendations: generateImprovementRecommendations(stats, warnings)
+  };
+}
+
+/**
+ * Calculate detailed response statistics
+ * @param {object} response - Validated response
+ * @returns {object} Statistical analysis
+ */
+function calculateResponseStatistics(response) {
+  let totalItems = 0;
+  const categoryCounts = {};
+  const categoryLengths = {};
+  
+  if (response.categories) {
+    for (const [category, items] of Object.entries(response.categories)) {
+      if (Array.isArray(items)) {
+        categoryCounts[category] = items.length;
+        categoryLengths[category] = {
+          min: Math.min(...items.map(item => item.length)),
+          max: Math.max(...items.map(item => item.length)),
+          avg: items.reduce((sum, item) => sum + item.length, 0) / items.length
+        };
+        totalItems += items.length;
+      }
+    }
+  }
+  
+  const tropesCount = Array.isArray(response.tropesAndStereotypes) 
+    ? response.tropesAndStereotypes.length : 0;
+  
+  return {
+    totalItems: totalItems + tropesCount,
+    categoryCounts,
+    categoryLengths,
+    tropesCount,
+    averageItemsPerCategory: totalItems / Object.keys(categoryCounts).length,
+    completenessScore: Object.keys(categoryCounts).length / 11 // 11 required categories
+  };
+}
+
+/**
+ * Generate warnings for response quality issues
+ * @param {object} response - Response to analyze
+ * @param {object} stats - Calculated statistics
+ * @returns {string[]} Array of warning messages
+ */
+function generateResponseWarnings(response, stats) {
+  const warnings = [];
+  
+  // Check for sparse categories
+  for (const [category, count] of Object.entries(stats.categoryCounts)) {
+    if (count < 3) {
+      warnings.push(`Category "${category}" has only ${count} items (recommended: 3+)`);
+    }
+    if (count > 8) {
+      warnings.push(`Category "${category}" has ${count} items (recommended: 3-8)`);
+    }
+  }
+  
+  // Check tropes count
+  if (stats.tropesCount < 5) {
+    warnings.push(`Only ${stats.tropesCount} tropes provided (recommended: 5+)`);
+  }
+  
+  // Check for very short items that might be low quality
+  for (const [category, lengths] of Object.entries(stats.categoryLengths)) {
+    if (lengths.avg < 10) {
+      warnings.push(`Category "${category}" items are quite short (avg: ${lengths.avg.toFixed(1)} chars)`);
+    }
+  }
+  
+  return warnings;
+}
+
+/**
+ * Assess overall response quality
+ * @param {object} response - Response to assess
+ * @param {object} stats - Calculated statistics
+ * @returns {object} Quality metrics
+ */
+function assessResponseQuality(response, stats) {
+  return {
+    completeness: stats.completenessScore,
+    itemDensity: stats.averageItemsPerCategory,
+    contentRichness: Object.values(stats.categoryLengths)
+      .reduce((sum, lengths) => sum + lengths.avg, 0) / Object.keys(stats.categoryLengths).length,
+    overallScore: (
+      stats.completenessScore * 0.4 + 
+      Math.min(stats.averageItemsPerCategory / 5, 1) * 0.3 +
+      Math.min(stats.tropesCount / 7, 1) * 0.3
+    )
+  };
+}
+
+/**
+ * Generate improvement recommendations
+ * @param {object} stats - Response statistics
+ * @param {string[]} warnings - Generated warnings
+ * @returns {string[]} Improvement recommendations
+ */
+function generateImprovementRecommendations(stats, warnings) {
+  const recommendations = [];
+  
+  if (stats.completenessScore < 1) {
+    recommendations.push('Ensure all required categories are populated');
+  }
+  
+  if (stats.averageItemsPerCategory < 4) {
+    recommendations.push('Consider generating more items per category for better coverage');
+  }
+  
+  if (warnings.length > 3) {
+    recommendations.push('Review response quality - multiple issues detected');
+  }
+  
+  return recommendations;
   }
 
   /**
@@ -394,238 +541,40 @@ Requirements:
 export default ClichePromptTemplate;
 ```
 
-### 2. LLM Service Integration
+### 2. Configuration Enhancement
 
-#### File: `src/characterBuilder/services/llm/LLMServiceAdapter.js`
-
-```javascript
-/**
- * Adapter for LLM proxy server integration
- */
-
-export class LLMServiceAdapter {
-  #baseUrl;
-  #apiKey;
-  #timeout;
-  #defaultModel;
-
-  constructor(config) {
-    this.#baseUrl = config.baseUrl || 'http://localhost:3001/api';
-    this.#apiKey = config.apiKey;
-    this.#timeout = config.timeout || 30000;
-    this.#defaultModel = config.defaultModel || 'gpt-4';
-  }
-
-  /**
-   * Generate completion from LLM
-   * @param {object} params - Generation parameters
-   * @returns {Promise<object>} LLM response
-   */
-  async generateCompletion(params) {
-    const {
-      prompt,
-      temperature = 0.7,
-      maxTokens = 2000,
-      model = this.#defaultModel,
-      signal,
-      systemPrompt,
-      responseFormat,
-    } = params;
-
-    const requestBody = {
-      model,
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt || 'You are a helpful assistant.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature,
-      max_tokens: maxTokens,
-      response_format: responseFormat,
-    };
-
-    const response = await fetch(`${this.#baseUrl}/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.#apiKey}`,
-      },
-      body: JSON.stringify(requestBody),
-      signal,
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`LLM request failed: ${error}`);
-    }
-
-    const data = await response.json();
-
-    return {
-      content: data.choices[0].message.content,
-      model: data.model,
-      usage: data.usage,
-      finishReason: data.choices[0].finish_reason,
-    };
-  }
-
-  /**
-   * Stream completion from LLM
-   * @param {object} params - Generation parameters
-   * @returns {AsyncGenerator} Response stream
-   */
-  async *streamCompletion(params) {
-    const {
-      prompt,
-      temperature = 0.7,
-      maxTokens = 2000,
-      model = this.#defaultModel,
-      signal,
-    } = params;
-
-    const requestBody = {
-      model,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature,
-      max_tokens: maxTokens,
-      stream: true,
-    };
-
-    const response = await fetch(`${this.#baseUrl}/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.#apiKey}`,
-      },
-      body: JSON.stringify(requestBody),
-      signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`LLM request failed: ${response.statusText}`);
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-      const { done, value } = await reader.read();
-
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-
-          if (data === '[DONE]') {
-            return;
-          }
-
-          try {
-            const parsed = JSON.parse(data);
-            yield parsed;
-          } catch (e) {
-            // Skip invalid JSON
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-### 3. Prompt Version Management
-
-#### File: `src/characterBuilder/prompts/promptVersionManager.js`
+#### File: `src/characterBuilder/prompts/clicheGenerationPrompt.js` (enhancement)
 
 ```javascript
-/**
- * Manage prompt template versions
- */
+// Add to existing file
 
-export class PromptVersionManager {
-  static VERSIONS = {
-    '1.0.0': {
-      releaseDate: '2024-01-01',
-      changes: ['Initial version'],
-      template: 'ClichePromptTemplate_v1_0_0',
-    },
-    '1.1.0': {
-      releaseDate: '2024-02-01',
-      changes: [
-        'Added few-shot examples',
-        'Improved instruction clarity',
-        'Added genre-specific context',
-      ],
-      template: 'ClichePromptTemplate',
-    },
+/**
+ * Configuration options for enhanced prompt generation
+ */
+export const DEFAULT_ENHANCEMENT_OPTIONS = {
+  includeFewShotExamples: false,
+  genre: null,
+  minItemsPerCategory: 3,
+  maxItemsPerCategory: 8,
+  enableAdvancedValidation: true,
+  includeQualityMetrics: true
+};
+
+/**
+ * Create enhanced LLM config with additional options
+ * @param {object} baseLlmConfig - Base LLM configuration
+ * @param {object} enhancementOptions - Enhancement options
+ * @returns {object} Enhanced config
+ */
+export function createEnhancedClicheGenerationLlmConfig(baseLlmConfig, enhancementOptions = {}) {
+  const options = { ...DEFAULT_ENHANCEMENT_OPTIONS, ...enhancementOptions };
+  const baseConfig = createClicheGenerationLlmConfig(baseLlmConfig);
+  
+  return {
+    ...baseConfig,
+    enhancementOptions: options,
+    promptVersion: PROMPT_VERSION_INFO.version
   };
-
-  static CURRENT_VERSION = '1.1.0';
-
-  /**
-   * Get prompt template for version
-   * @param {string} version - Version to retrieve
-   * @returns {object} Template class
-   */
-  static getTemplate(version = this.CURRENT_VERSION) {
-    const versionInfo = this.VERSIONS[version];
-
-    if (!versionInfo) {
-      throw new Error(`Unknown prompt version: ${version}`);
-    }
-
-    // Dynamic import based on version
-    switch (versionInfo.template) {
-      case 'ClichePromptTemplate':
-        return import('./clichePromptTemplate.js').then((m) => m.default);
-      case 'ClichePromptTemplate_v1_0_0':
-        return import('./legacy/clichePromptTemplate_v1_0_0.js').then(
-          (m) => m.default
-        );
-      default:
-        throw new Error(`Template not found: ${versionInfo.template}`);
-    }
-  }
-
-  /**
-   * Get version history
-   * @returns {object} Version information
-   */
-  static getVersionHistory() {
-    return this.VERSIONS;
-  }
-
-  /**
-   * Compare versions
-   * @param {string} v1 - First version
-   * @param {string} v2 - Second version
-   * @returns {number} -1, 0, or 1
-   */
-  static compareVersions(v1, v2) {
-    const parts1 = v1.split('.').map(Number);
-    const parts2 = v2.split('.').map(Number);
-
-    for (let i = 0; i < 3; i++) {
-      if (parts1[i] > parts2[i]) return 1;
-      if (parts1[i] < parts2[i]) return -1;
-    }
-
-    return 0;
-  }
 }
 ```
 
@@ -743,19 +692,25 @@ describe('ClichePromptTemplate', () => {
 
 ## Acceptance Criteria
 
-- [ ] Prompt template generates quality clichés
-- [ ] Response validation catches errors
-- [ ] Version management working
-- [ ] LLM integration successful
-- [ ] Few-shot examples improve quality
-- [ ] All tests passing
-- [ ] Documentation complete
+- [ ] **Versioning System**: PROMPT_VERSION_INFO tracking implemented and functional
+- [ ] **Few-Shot Examples**: Optional examples can be enabled/disabled via configuration
+- [ ] **Genre Context**: Genre-specific context enhances prompt relevance for 6+ genres
+- [ ] **Enhanced Validation**: Advanced validation provides statistics, warnings, and quality metrics
+- [ ] **Configuration Options**: Flexible enhancement options with sensible defaults
+- [ ] **Backward Compatibility**: All enhancements maintain compatibility with existing implementation
+- [ ] **Test Coverage**: Enhanced features covered by comprehensive unit tests
+- [ ] **Performance**: Enhancements do not significantly impact generation performance
 
 ## Definition of Done
 
-- [ ] Code implemented per specification
-- [ ] Unit tests passing (90% coverage)
-- [ ] Integration tested with LLM
-- [ ] Prompt quality validated
-- [ ] Code reviewed and approved
-- [ ] Documentation updated
+- [ ] **Enhancement functions added** to existing `clicheGenerationPrompt.js`
+- [ ] **Service methods enhanced** in existing `ClicheGenerator.js` class
+- [ ] **Unit tests extended** for all new functionality (maintain 90%+ coverage)
+- [ ] **Integration tested** with existing character builder service
+- [ ] **Quality validated** - enhanced prompts generate better responses
+- [ ] **Documentation updated** for new configuration options
+- [ ] **No breaking changes** - all existing functionality preserved
+
+---
+
+**Note**: This workflow has been corrected to reflect the current state of the codebase. The core cliché generation system is already fully implemented and functional. This ticket focuses on valuable enhancements to the existing working system.

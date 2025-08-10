@@ -966,6 +966,160 @@ describe('CharacterBuilderBootstrap', () => {
       );
     });
 
+    it('should handle schema fetch failure without logger (lines 259-275)', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      global.fetch.mockImplementation(async (url) => {
+        if (url.includes('custom.json')) {
+          return { ok: false, status: 404 };
+        }
+        return { ok: true, json: async () => ({ $schema: 'test-schema' }) };
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        customSchemas: ['/data/schemas/custom.json'],
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without schema failure logging
+      expect(result.controller).toBeInstanceOf(MockController);
+    });
+
+    it('should handle schema JSON parsing error without logger', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      global.fetch.mockImplementation(async (url) => {
+        if (url.includes('custom.json')) {
+          return {
+            ok: true,
+            json: async () => {
+              throw new Error('Invalid JSON');
+            },
+          };
+        }
+        return { ok: true, json: async () => ({ $schema: 'test-schema' }) };
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        customSchemas: ['/data/schemas/custom.json'],
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without JSON error logging
+      expect(result.controller).toBeInstanceOf(MockController);
+    });
+
+    it('should handle schema validator error without logger', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      // Mock schema validator to fail on specific schema
+      mockSchemaValidator.addSchema.mockImplementation(async (schema, id) => {
+        if (id.includes('custom')) {
+          throw new Error('Schema validation failed');
+        }
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        customSchemas: ['/data/schemas/custom.json'],
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without schema validation error logging
+      expect(result.controller).toBeInstanceOf(MockController);
+    });
+
+    it('should handle schema loading debug messages without logger', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        customSchemas: ['/data/schemas/custom.json'],
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without debug logging for loaded schemas
+      expect(result.controller).toBeInstanceOf(MockController);
+    });
+
     it('should log warning when schema JSON parsing fails', async () => {
       global.fetch.mockImplementation(async (url) => {
         if (url.includes('custom.json')) {
@@ -1066,6 +1220,132 @@ describe('CharacterBuilderBootstrap', () => {
           'Failed to register event core:character_concept_created: Event registration failed'
         )
       );
+    });
+
+    it('should handle event registration debug logging without logger (lines 443-470)', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      const customEvent = {
+        id: 'test:custom_event',
+        description: 'Test event',
+        payloadSchema: { type: 'object' },
+      };
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        eventDefinitions: [customEvent],
+        includeModLoading: false, // This ensures base events are registered
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without event registration debug logging
+      expect(result.controller).toBeInstanceOf(MockController);
+      // Should still register the events
+      expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(
+        'test:custom_event',
+        customEvent
+      );
+    });
+
+    it('should handle event registration error without logger', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      // Mock event registration to fail
+      mockDataRegistry.setEventDefinition.mockImplementation((id) => {
+        if (id === 'core:character_concept_created') {
+          throw new Error('Event registration failed');
+        }
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        includeModLoading: false, // This ensures base events are registered
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without event registration error logging
+      expect(result.controller).toBeInstanceOf(MockController);
+    });
+
+    it('should handle payload schema registration skipping without logger', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      // Mock payload schemas as already loaded
+      mockSchemaValidator.isSchemaLoaded.mockImplementation((schemaId) => {
+        return schemaId.includes('#payload');
+      });
+
+      const customEvent = {
+        id: 'test:custom_event',
+        description: 'Test event',
+        payloadSchema: { type: 'object' },
+      };
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        eventDefinitions: [customEvent],
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without payload schema skip debug logging
+      expect(result.controller).toBeInstanceOf(MockController);
     });
   });
 
@@ -1177,6 +1457,115 @@ describe('CharacterBuilderBootstrap', () => {
       );
       expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', ['core']);
     });
+
+    it('should handle mod loading without logger (lines 489-508)', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      const mockModsLoader = {
+        loadMods: jest.fn().mockResolvedValue(),
+      };
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        includeModLoading: true,
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.ModsLoader) return mockModsLoader;
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without mod loading logging
+      expect(result.controller).toBeInstanceOf(MockController);
+      expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', ['core']);
+    });
+
+    it('should handle missing ModsLoader without logger', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        includeModLoading: true,
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.ModsLoader) return null;
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without ModsLoader warning logging
+      expect(result.controller).toBeInstanceOf(MockController);
+    });
+
+    it('should handle mod loading errors without logger', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      const mockModsLoader = {
+        loadMods: jest.fn().mockRejectedValue(new Error('Failed to load mods')),
+      };
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        includeModLoading: true,
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.ModsLoader) return mockModsLoader;
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without mod loading error logging
+      expect(result.controller).toBeInstanceOf(MockController);
+      expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', ['core']);
+    });
   });
 
   describe('custom service registration logging', () => {
@@ -1224,6 +1613,86 @@ describe('CharacterBuilderBootstrap', () => {
         '[CharacterBuilderBootstrap] Failed to register service failingService: Registration failed'
       );
     });
+
+    it('should handle successful service registration without logger (lines 533-539)', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      const customService = { doSomething: jest.fn() };
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        services: {
+          customService,
+        },
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without service registration debug logging
+      expect(result.controller).toBeInstanceOf(MockController);
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        'customService',
+        customService
+      );
+    });
+
+    it('should handle failed service registration without logger', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      // Mock service registration to fail
+      mockContainer.register.mockImplementation((token) => {
+        if (token === 'failingService') {
+          throw new Error('Registration failed');
+        }
+      });
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        services: {
+          failingService: { method: jest.fn() },
+        },
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without service registration error logging
+      expect(result.controller).toBeInstanceOf(MockController);
+    });
   });
 
   describe('utility methods', () => {
@@ -1241,6 +1710,147 @@ describe('CharacterBuilderBootstrap', () => {
         expect.any(Object),
         'schema://living-narrative-engine/test-custom.schema.json'
       );
+    });
+  });
+
+  describe('logger availability scenarios', () => {
+    it('should handle logger null during bootstrap success logging (line 116)', async () => {
+      // Create new bootstrap instance to avoid logger state
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      // Mock ensureValidLogger to return null during bootstrap completion
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      // Mock container to return null logger
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without logging
+      expect(result).toMatchObject({
+        controller: expect.any(MockController),
+        container: mockContainer,
+        bootstrapTime: expect.any(Number),
+      });
+    });
+
+    it('should handle logger null during container setup completion (line 200)', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      // Mock ensureValidLogger to return null initially
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without container setup logging
+      expect(result).toMatchObject({
+        controller: expect.any(MockController),
+        container: mockContainer,
+        bootstrapTime: expect.any(Number),
+      });
+    });
+
+    it('should handle logger null during schema loading info (line 233)', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        customSchemas: ['/data/schemas/custom.json'],
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without schema loading info logging
+      expect(result.controller).toBeInstanceOf(MockController);
+    });
+
+    it('should handle logger null during "already loaded" schema check (line 246)', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      // Mock some schemas as already loaded
+      mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        customSchemas: ['/data/schemas/custom.json'],
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without "already loaded" logging
+      expect(result.controller).toBeInstanceOf(MockController);
     });
   });
 
@@ -1369,6 +1979,81 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should handle string error correctly
       expect(errorElement.appendChild).toHaveBeenCalledWith(mockErrorDiv);
+    });
+
+    it('should handle controller initialization completion without logger (line 612)', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without controller initialization logging
+      expect(result.controller).toBeInstanceOf(MockController);
+      expect(result.controller.initialize).toHaveBeenCalled();
+    });
+
+    it('should handle error display configuration without logger (lines 652-668)', async () => {
+      const localBootstrap = new CharacterBuilderBootstrap();
+
+      const errorElement = {
+        appendChild: jest.fn(),
+      };
+      document.getElementById.mockReturnValue(errorElement);
+
+      const config = {
+        pageName: 'test-page',
+        controllerClass: MockController,
+        errorDisplay: {
+          elementId: 'custom-error-display',
+        },
+      };
+
+      // Mock ensureValidLogger to return null
+      const {
+        ensureValidLogger,
+      } = require('../../../src/utils/loggerUtils.js');
+      ensureValidLogger.mockReturnValue(null);
+
+      mockContainer.resolve.mockImplementation((token) => {
+        const services = {
+          [tokens.ILogger]: null,
+          [tokens.ISchemaValidator]: mockSchemaValidator,
+          [tokens.IDataRegistry]: mockDataRegistry,
+          [tokens.ISafeEventDispatcher]: mockEventBus,
+          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+        };
+        return services[token];
+      });
+
+      const result = await localBootstrap.bootstrap(config);
+
+      // Should complete successfully without error display configuration logging
+      expect(result.controller).toBeInstanceOf(MockController);
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        'SYSTEM_ERROR_OCCURRED',
+        expect.any(Function)
+      );
     });
   });
 });

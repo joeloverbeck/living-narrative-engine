@@ -142,7 +142,9 @@ describe('CharacterBuilderService - Cliché Operations', () => {
       // Second call - uses cache
       await service.getClichesByDirectionId('dir-1');
       expect(mockDatabase.getClicheByDirectionId).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith('Cache hit for clichés: dir-1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cache hit for clichés: dir-1'
+      );
     });
 
     it('should return null for non-existent clichés', async () => {
@@ -151,11 +153,15 @@ describe('CharacterBuilderService - Cliché Operations', () => {
       const result = await service.getClichesByDirectionId('dir-999');
 
       expect(result).toBeNull();
-      expect(mockLogger.info).toHaveBeenCalledWith('No clichés found for direction: dir-999');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No clichés found for direction: dir-999'
+      );
     });
 
     it('should handle database errors', async () => {
-      mockDatabase.getClicheByDirectionId.mockRejectedValue(new Error('DB Error'));
+      mockDatabase.getClicheByDirectionId.mockRejectedValue(
+        new Error('DB Error')
+      );
 
       await expect(service.getClichesByDirectionId('dir-1')).rejects.toThrow(
         CharacterBuilderError
@@ -184,13 +190,17 @@ describe('CharacterBuilderService - Cliché Operations', () => {
       const result = await serviceWithoutDb.getClichesByDirectionId('dir-1');
 
       expect(result).toBeNull();
-      expect(mockLogger.warn).toHaveBeenCalledWith('Database not available for cliché operations');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Database not available for cliché operations'
+      );
     });
 
     it('should throw error for invalid directionId', async () => {
       await expect(service.getClichesByDirectionId('')).rejects.toThrow();
       await expect(service.getClichesByDirectionId(null)).rejects.toThrow();
-      await expect(service.getClichesByDirectionId(undefined)).rejects.toThrow();
+      await expect(
+        service.getClichesByDirectionId(undefined)
+      ).rejects.toThrow();
     });
   });
 
@@ -251,7 +261,9 @@ describe('CharacterBuilderService - Cliché Operations', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      mockDatabase.getClicheByDirectionId.mockRejectedValue(new Error('DB Error'));
+      mockDatabase.getClicheByDirectionId.mockRejectedValue(
+        new Error('DB Error')
+      );
 
       const result = await service.hasClichesForDirection('dir-1');
 
@@ -343,7 +355,9 @@ describe('CharacterBuilderService - Cliché Operations', () => {
 
     it('should validate against schema when validator available', async () => {
       mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
-      mockSchemaValidator.formatAjvErrors.mockReturnValue('Schema validation failed');
+      mockSchemaValidator.formatAjvErrors.mockReturnValue(
+        'Schema validation failed'
+      );
 
       await expect(service.storeCliches(mockClicheInput)).rejects.toThrow(
         'Invalid cliché data'
@@ -369,9 +383,9 @@ describe('CharacterBuilderService - Cliché Operations', () => {
         clicheGenerator: mockClicheGenerator,
       });
 
-      await expect(serviceWithoutDb.storeCliches(mockClicheInput)).rejects.toThrow(
-        'Database not available for cliché storage'
-      );
+      await expect(
+        serviceWithoutDb.storeCliches(mockClicheInput)
+      ).rejects.toThrow('Database not available for cliché storage');
     });
 
     it('should throw error for invalid input', async () => {
@@ -424,7 +438,10 @@ describe('CharacterBuilderService - Cliché Operations', () => {
     });
 
     it('should generate and store new clichés', async () => {
-      const result = await service.generateClichesForDirection(mockConcept, mockDirection);
+      const result = await service.generateClichesForDirection(
+        mockConcept,
+        mockDirection
+      );
 
       expect(result).toBeInstanceOf(Cliche);
       expect(result.directionId).toBe('dir-1');
@@ -467,7 +484,10 @@ describe('CharacterBuilderService - Cliché Operations', () => {
       });
       mockDatabase.getClicheByDirectionId.mockResolvedValue(existing.toJSON());
 
-      const result = await service.generateClichesForDirection(mockConcept, mockDirection);
+      const result = await service.generateClichesForDirection(
+        mockConcept,
+        mockDirection
+      );
 
       expect(result).toBeInstanceOf(Cliche);
       expect(mockClicheGenerator.generateCliches).not.toHaveBeenCalled();
@@ -499,12 +519,17 @@ describe('CharacterBuilderService - Cliché Operations', () => {
       });
 
       await expect(
-        serviceWithoutGenerator.generateClichesForDirection(mockConcept, mockDirection)
+        serviceWithoutGenerator.generateClichesForDirection(
+          mockConcept,
+          mockDirection
+        )
       ).rejects.toThrow('ClicheGenerator not available');
     });
 
     it('should handle generation errors', async () => {
-      mockClicheGenerator.generateCliches.mockRejectedValue(new Error('LLM Error'));
+      mockClicheGenerator.generateCliches.mockRejectedValue(
+        new Error('LLM Error')
+      );
 
       await expect(
         service.generateClichesForDirection(mockConcept, mockDirection)
@@ -521,8 +546,12 @@ describe('CharacterBuilderService - Cliché Operations', () => {
     });
 
     it('should throw error for invalid inputs', async () => {
-      await expect(service.generateClichesForDirection(null, mockDirection)).rejects.toThrow();
-      await expect(service.generateClichesForDirection(mockConcept, null)).rejects.toThrow();
+      await expect(
+        service.generateClichesForDirection(null, mockDirection)
+      ).rejects.toThrow();
+      await expect(
+        service.generateClichesForDirection(mockConcept, null)
+      ).rejects.toThrow();
     });
   });
 
@@ -574,19 +603,21 @@ describe('CharacterBuilderService - Cliché Operations', () => {
       // The first entries should be evicted
       const firstResult = await service.getClichesByDirectionId('dir-0');
       expect(mockDatabase.getClicheByDirectionId).toHaveBeenCalledWith('dir-0');
-      
+
       // More recent entries should be cached
       const recentResult = await service.getClichesByDirectionId('dir-59');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Cache hit for clichés: dir-59');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cache hit for clichés: dir-59'
+      );
     });
   });
 
   describe('Batch Operations', () => {
     describe('getClichesForDirections', () => {
       it('should get multiple clichés efficiently', async () => {
-        const mockData1 = { 
-          id: 'cliche-1', 
-          directionId: 'dir-1', 
+        const mockData1 = {
+          id: 'cliche-1',
+          directionId: 'dir-1',
           conceptId: 'concept-1',
           categories: {
             names: [],
@@ -600,13 +631,13 @@ describe('CharacterBuilderService - Cliché Operations', () => {
             backgroundElements: [],
             overusedSecrets: [],
             speechPatterns: [],
-          }, 
+          },
           tropesAndStereotypes: [],
           createdAt: '2023-01-01T00:00:00.000Z',
         };
-        const mockData2 = { 
-          id: 'cliche-2', 
-          directionId: 'dir-2', 
+        const mockData2 = {
+          id: 'cliche-2',
+          directionId: 'dir-2',
           conceptId: 'concept-2',
           categories: {
             names: [],
@@ -620,7 +651,7 @@ describe('CharacterBuilderService - Cliché Operations', () => {
             backgroundElements: [],
             overusedSecrets: [],
             speechPatterns: [],
-          }, 
+          },
           tropesAndStereotypes: [],
           createdAt: '2023-01-01T00:00:00.000Z',
         };
@@ -629,7 +660,10 @@ describe('CharacterBuilderService - Cliché Operations', () => {
           .mockResolvedValueOnce(mockData1)
           .mockResolvedValueOnce(mockData2);
 
-        const result = await service.getClichesForDirections(['dir-1', 'dir-2']);
+        const result = await service.getClichesForDirections([
+          'dir-1',
+          'dir-2',
+        ]);
 
         expect(result).toBeInstanceOf(Map);
         expect(result.size).toBe(2);
@@ -651,11 +685,16 @@ describe('CharacterBuilderService - Cliché Operations', () => {
         // Clear mock for batch operation
         mockDatabase.getClicheByDirectionId.mockClear();
 
-        const result = await service.getClichesForDirections(['dir-1', 'dir-2']);
+        const result = await service.getClichesForDirections([
+          'dir-1',
+          'dir-2',
+        ]);
 
         // Should only fetch dir-2 from database
         expect(mockDatabase.getClicheByDirectionId).toHaveBeenCalledTimes(1);
-        expect(mockDatabase.getClicheByDirectionId).toHaveBeenCalledWith('dir-2');
+        expect(mockDatabase.getClicheByDirectionId).toHaveBeenCalledWith(
+          'dir-2'
+        );
       });
     });
 

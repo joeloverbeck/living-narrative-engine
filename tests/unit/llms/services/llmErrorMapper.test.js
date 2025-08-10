@@ -132,7 +132,7 @@ describe('LLMErrorMapper', () => {
     it('should handle network timeout errors', () => {
       const error = new Error('Connection timeout');
       error.code = 'ETIMEDOUT';
-      
+
       const context = { llmId: 'test-llm', operation: 'getAIDecision' };
       const mapped = errorMapper.mapHttpError(error, context);
 
@@ -144,7 +144,7 @@ describe('LLMErrorMapper', () => {
     it('should handle network connection reset errors', () => {
       const error = new Error('Connection reset');
       error.code = 'ECONNRESET';
-      
+
       const mapped = errorMapper.mapHttpError(error);
 
       expect(mapped).toBeInstanceOf(LLMInteractionError);
@@ -154,7 +154,7 @@ describe('LLMErrorMapper', () => {
     it('should handle generic NetworkError', () => {
       const error = new Error('Network error');
       error.name = 'NetworkError';
-      
+
       const mapped = errorMapper.mapHttpError(error);
 
       expect(mapped).toBeInstanceOf(LLMInteractionError);
@@ -164,7 +164,7 @@ describe('LLMErrorMapper', () => {
     it('should handle JSON processing errors', () => {
       const error = new Error('Invalid JSON response');
       error.name = 'JsonProcessingError';
-      
+
       const context = { llmId: 'test-llm', operation: 'parseResponse' };
       const mapped = errorMapper.mapHttpError(error, context);
 
@@ -175,7 +175,7 @@ describe('LLMErrorMapper', () => {
 
     it('should return domain errors as-is', () => {
       const domainError = new ApiKeyError('API key invalid', { llmId: 'test' });
-      
+
       const mapped = errorMapper.mapHttpError(domainError);
 
       expect(mapped).toBe(domainError);
@@ -312,7 +312,9 @@ describe('LLMErrorMapper', () => {
     });
 
     it('should log warning errors with warn level', () => {
-      const error = new InsufficientCreditsError('No credits', { llmId: 'test' });
+      const error = new InsufficientCreditsError('No credits', {
+        llmId: 'test',
+      });
       const context = { llmId: 'test-llm', operation: 'generate' };
 
       errorMapper.logError(error, context);
@@ -502,7 +504,7 @@ describe('LLMErrorMapper', () => {
     it('should extract original error details from error property', () => {
       const originalError = new Error('Root cause');
       originalError.name = 'RootError';
-      
+
       const error = new Error('Wrapped error');
       error.originalError = originalError;
 
@@ -521,7 +523,7 @@ describe('LLMErrorMapper', () => {
     it('should extract original error details from context', () => {
       const originalError = new Error('Context root cause');
       originalError.name = 'ContextRootError';
-      
+
       const error = new Error('Main error');
       const context = { originalError, llmId: 'test' };
 
@@ -563,7 +565,7 @@ describe('LLMErrorMapper', () => {
     it('should not detect regular errors as domain errors', () => {
       const regularError = new Error('Regular error');
       const result = errorMapper.mapHttpError(regularError);
-      
+
       expect(result).not.toBe(regularError);
       expect(result).toBeInstanceOf(LLMInteractionError);
     });

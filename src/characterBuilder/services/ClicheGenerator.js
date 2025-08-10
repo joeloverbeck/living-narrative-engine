@@ -1,45 +1,3 @@
-# CLIGEN-003: ClicheGenerator Service Implementation
-
-## Summary
-
-Create a dedicated service for generating clichés via LLM integration. This service handles prompt construction, LLM communication, response parsing, and error recovery. It serves as the bridge between the character builder system and the LLM proxy server.
-
-## Status
-
-- **Type**: Implementation
-- **Priority**: High
-- **Complexity**: High
-- **Estimated Time**: 6 hours
-- **Dependencies**: CLIGEN-001 (Model), CLIGEN-002 (Service Extension)
-
-## Objectives
-
-### Primary Goals
-
-1. **Create ClicheGenerator Service** - Dedicated service for cliché generation
-2. **LLM Integration** - Connect to existing LLM proxy server
-3. **Response Parsing** - Convert LLM responses to structured data
-4. **Error Recovery** - Retry logic and fallback strategies
-5. **Performance Tracking** - Monitor generation metrics
-6. **Prompt Optimization** - Ensure high-quality responses
-
-### Success Criteria
-
-- [ ] Service generates comprehensive clichés (11 categories + tropes)
-- [ ] LLM responses parsed correctly 95%+ of the time
-- [ ] Retry logic handles transient failures
-- [ ] Generation completes in < 10 seconds
-- [ ] Response validation catches malformed data
-- [ ] Metrics tracked for analysis
-- [ ] 90% test coverage achieved
-
-## Technical Specification
-
-### 1. ClicheGenerator Service
-
-#### File: `src/characterBuilder/services/ClicheGenerator.js`
-
-````javascript
 /**
  * @file Service for generating clichés via LLM
  * @see CharacterBuilderService.js
@@ -103,16 +61,16 @@ export class ClicheGenerator {
     llmStrategyFactory,
     llmConfigManager,
   }) {
-    validateDependency(logger, 'ILogger', logger, {
+    validateDependency(logger, 'ILogger', null, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
     });
-    validateDependency(llmJsonService, 'LlmJsonService', logger, {
+    validateDependency(llmJsonService, 'LlmJsonService', null, {
       requiredMethods: ['clean', 'parseAndRepair'],
     });
-    validateDependency(llmStrategyFactory, 'ConfigurableLLMAdapter', logger, {
+    validateDependency(llmStrategyFactory, 'ConfigurableLLMAdapter', null, {
       requiredMethods: ['getAIDecision'],
     });
-    validateDependency(llmConfigManager, 'ILLMConfigurationManager', logger, {
+    validateDependency(llmConfigManager, 'ILLMConfigurationManager', null, {
       requiredMethods: [
         'loadConfiguration',
         'getActiveConfiguration',
@@ -146,9 +104,7 @@ export class ClicheGenerator {
       typeof conceptId !== 'string' ||
       conceptId.trim().length === 0
     ) {
-      throw new ClicheGenerationError(
-        'conceptId must be a non-empty string'
-      );
+      throw new ClicheGenerationError('conceptId must be a non-empty string');
     }
 
     if (
@@ -156,15 +112,11 @@ export class ClicheGenerator {
       typeof conceptText !== 'string' ||
       conceptText.trim().length === 0
     ) {
-      throw new ClicheGenerationError(
-        'conceptText must be a non-empty string'
-      );
+      throw new ClicheGenerationError('conceptText must be a non-empty string');
     }
 
     if (!direction || typeof direction !== 'object') {
-      throw new ClicheGenerationError(
-        'direction must be a valid object'
-      );
+      throw new ClicheGenerationError('direction must be a valid object');
     }
 
     this.#logger.info(
@@ -211,14 +163,11 @@ export class ClicheGenerator {
         llmMetadata
       );
 
-      this.#logger.info(
-        'ClicheGenerator: Successfully generated clichés',
-        {
-          conceptId,
-          clicheCount: cliches.length,
-          processingTime,
-        }
-      );
+      this.#logger.info('ClicheGenerator: Successfully generated clichés', {
+        conceptId,
+        clicheCount: cliches.length,
+        processingTime,
+      });
 
       return cliches;
     } catch (error) {
@@ -316,9 +265,7 @@ export class ClicheGenerator {
         }
       );
 
-      this.#logger.debug(
-        'ClicheGenerator: Successfully parsed LLM response'
-      );
+      this.#logger.debug('ClicheGenerator: Successfully parsed LLM response');
       return parsedResponse;
     } catch (error) {
       throw new ClicheGenerationError(
@@ -383,55 +330,3 @@ export class ClicheGenerator {
 }
 
 export default ClicheGenerator;
-````
-
-### 2. Dependency Injection Registration
-
-Update `src/dependencyInjection/registrations/characterBuilderRegistrations.js`:
-
-````javascript
-// Import the new service
-import { ClicheGenerator } from '../../characterBuilder/services/ClicheGenerator.js';
-
-// Add to registerCharacterBuilderServices function
-function registerCharacterBuilderServices(registrar, logger) {
-  // ... existing ThematicDirectionGenerator registration ...
-
-  registrar.singletonFactory(tokens.ClicheGenerator, (c) => {
-    return new ClicheGenerator({
-      logger: c.resolve(tokens.ILogger),
-      llmJsonService: c.resolve(tokens.LlmJsonService),
-      llmStrategyFactory: c.resolve(tokens.LLMAdapter), // Use the ConfigurableLLMAdapter
-      llmConfigManager: c.resolve(tokens.ILLMConfigurationManager),
-    });
-  });
-  logger.debug(
-    `Character Builder Registration: Registered ${tokens.ClicheGenerator}.`
-  );
-
-  // Update CharacterBuilderService registration to include clicheGenerator
-  registrar.singletonFactory(tokens.CharacterBuilderService, (c) => {
-    return new CharacterBuilderService({
-      logger: c.resolve(tokens.ILogger),
-      storageService: c.resolve(tokens.CharacterStorageService),
-      directionGenerator: c.resolve(tokens.ThematicDirectionGenerator),
-      eventBus: c.resolve(tokens.ISafeEventDispatcher),
-      database: c.resolve(tokens.CharacterDatabase),
-      schemaValidator: c.resolve(tokens.ISchemaValidator),
-      clicheGenerator: c.resolve(tokens.ClicheGenerator), // Replace null with actual service
-    });
-  });
-  logger.debug(
-    `Character Builder Registration: Updated ${tokens.CharacterBuilderService} with ClicheGenerator.`
-  );
-}
-````
-
-### 3. Token Definition
-
-Add to `src/dependencyInjection/tokens/tokens-core.js`:
-
-````javascript
-// Add to character builder tokens section
-ClicheGenerator: Symbol('ClicheGenerator'),
-````

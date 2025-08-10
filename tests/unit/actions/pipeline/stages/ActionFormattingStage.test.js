@@ -374,6 +374,85 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
     });
   });
 
+  describe('Mixed Action Type Warning Coverage', () => {
+    it('should log warning when processing mixed legacy and multi-target actions', async () => {
+      const mixedContext = {
+        actor: { id: 'player' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'legacy:action',
+              name: 'Legacy Action',
+              template: 'legacy {target}',
+            },
+            targetContexts: [{ entityId: 'target1', displayName: 'Target' }],
+          },
+          {
+            actionDef: {
+              id: 'multi:action',
+              name: 'Multi Action',
+              template: 'multi {item} {target}',
+              targets: {
+                primary: { placeholder: 'item' },
+                secondary: { placeholder: 'target' },
+              },
+            },
+            targetContexts: [{ entityId: 'target2', displayName: 'Target2' }],
+          },
+        ],
+      };
+
+      mockMultiTargetFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'formatted action',
+      });
+
+      await stage.executeInternal(mixedContext);
+
+      // Verify warning was logged for mixed action types in legacy path
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Processing mixed legacy and multi-target actions through legacy formatting path. ' +
+          'Multi-target actions will be handled individually with fallback formatting.'
+      );
+    });
+
+    it('should not log warning when all actions are legacy format', async () => {
+      const legacyOnlyContext = {
+        actor: { id: 'player' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'legacy1:action',
+              name: 'Legacy Action 1',
+              template: 'legacy1 {target}',
+            },
+            targetContexts: [{ entityId: 'target1', displayName: 'Target1' }],
+          },
+          {
+            actionDef: {
+              id: 'legacy2:action',
+              name: 'Legacy Action 2',
+              template: 'legacy2 {target}',
+            },
+            targetContexts: [{ entityId: 'target2', displayName: 'Target2' }],
+          },
+        ],
+      };
+
+      mockMultiTargetFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'formatted action',
+      });
+
+      await stage.executeInternal(legacyOnlyContext);
+
+      // Should not log warning for all legacy actions
+      expect(mockLogger.warn).not.toHaveBeenCalledWith(
+        expect.stringContaining('Processing mixed legacy and multi-target actions')
+      );
+    });
+  });
+
   describe('Backward Compatibility', () => {
     it('should maintain compatibility with existing pipeline', async () => {
       // Test that the enhanced stage still works with the existing pipeline architecture
@@ -908,6 +987,213 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
       expect(mockMultiTargetFormatter.formatMultiTarget).not.toHaveBeenCalled();
     });
   });
+
+  describe('Per-Action Metadata Error Handling', () => {
+    it('should handle multi-target failure with no primary target fallback in per-action metadata', async () => {
+      const context = {
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:multi-target',
+              name: 'Multi Target',
+              template: 'use {item} on {target}',
+            },
+            targetContexts: [],
+            resolvedTargets: {
+              // Empty targets - no primary target available
+            },
+            targetDefinitions: {
+              primary: { placeholder: 'item' },
+              secondary: { placeholder: 'target' },
+            },
+            isMultiTarget: true,
+          },
+        ],
+      };
+
+      mockMultiTargetFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target formatting failed',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      // Verify error context was built correctly
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Multi-target formatting failed',
+          actionDef: expect.objectContaining({ id: 'test:multi-target' }),
+          actorId: 'test-actor',
+          targetId: null, // No primary target available
+        })
+      );
+    });
+
+    it('should handle exceptions during per-action metadata processing', async () => {
+      const context = {
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:exception',
+              name: 'Exception Action',
+              template: 'exception {target}',
+            },
+            targetContexts: [
+              {
+                entityId: 'target_001',
+                displayName: 'Target 1',
+                type: 'entity',
+              },
+            ],
+            resolvedTargets: { primary: [{ id: 'target_001' }] },
+            targetDefinitions: { primary: { placeholder: 'target' } },
+            isMultiTarget: false,
+          },
+        ],
+      };
+
+      // Mock formatter to throw an exception
+      const thrownError = new Error('Formatter exception');
+      mockMultiTargetFormatter.format.mockImplementation(() => {
+        throw thrownError;
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      // Verify error context was built for the exception
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: thrownError,
+          actionDef: expect.objectContaining({ id: 'test:exception' }),
+          actorId: 'test-actor',
+          targetId: 'target_001',
+        })
+      );
+    });
+
+    it('should handle fallback formatter failure when multi-target fails in per-action metadata', async () => {
+      const context = {
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:fallback-fail',
+              name: 'Fallback Fail',
+              template: 'use {item} on {target}',
+            },
+            targetContexts: [],
+            resolvedTargets: {
+              primary: [{ id: 'item_001', displayName: 'Sword' }],
+            },
+            targetDefinitions: {
+              primary: { placeholder: 'item' },
+              secondary: { placeholder: 'target' },
+            },
+            isMultiTarget: true,
+          },
+        ],
+      };
+
+      // Multi-target formatter fails
+      mockMultiTargetFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target failed',
+      });
+
+      // Fallback formatter also fails
+      mockMultiTargetFormatter.format.mockReturnValue({
+        ok: false,
+        error: 'Fallback also failed',
+        details: { reason: 'No valid placeholder' },
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      // Verify error context includes fallback error and target ID
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Fallback also failed',
+          actionDef: expect.objectContaining({ id: 'test:fallback-fail' }),
+          actorId: 'test-actor',
+          targetId: 'item_001', // Primary target ID
+          additionalContext: expect.objectContaining({
+            stage: 'action_formatting',
+            formatDetails: { reason: 'No valid placeholder' },
+          }),
+        })
+      );
+    });
+
+    it('should handle formatMultiTarget not available with per-action metadata', async () => {
+      const context = {
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'test:no-multi-formatter',
+              name: 'No Multi Formatter',
+              template: 'use {item}',
+            },
+            targetContexts: [],
+            resolvedTargets: {
+              primary: [{ id: 'item_001', displayName: 'Sword' }],
+            },
+            targetDefinitions: {
+              primary: { placeholder: 'item' },
+            },
+            isMultiTarget: true,
+          },
+        ],
+      };
+
+      // Remove formatMultiTarget method
+      const formatterWithoutMulti = { ...mockMultiTargetFormatter };
+      delete formatterWithoutMulti.formatMultiTarget;
+
+      const stageWithoutMulti = new ActionFormattingStage({
+        commandFormatter: formatterWithoutMulti,
+        entityManager: mockEntityManager,
+        safeEventDispatcher: mockSafeEventDispatcher,
+        getEntityDisplayNameFn: mockGetEntityDisplayNameFn,
+        errorContextBuilder: mockErrorContextBuilder,
+        logger: mockLogger,
+      });
+
+      formatterWithoutMulti.format.mockReturnValue({
+        ok: false,
+        error: 'Legacy formatter failed',
+      });
+
+      const result = await stageWithoutMulti.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      // Verify error was created with primary target ID
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actionDef: expect.objectContaining({ id: 'test:no-multi-formatter' }),
+          actorId: 'test-actor',
+          targetId: 'item_001',
+        })
+      );
+    });
+  });
 });
 
 describe('ActionFormattingStage - Action Tracing Integration', () => {
@@ -1185,6 +1471,152 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
   });
 
   describe('Fallback Usage Tracing', () => {
+    it('should capture multi-target traced execution fallback with template transformation', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'action-1',
+              name: 'Action 1',
+              template: 'use {item} on {target}',
+            },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'item_001', displayName: 'Sword' }],
+          secondary: [{ id: 'target_001', displayName: 'Enemy' }],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'item' },
+          secondary: { placeholder: 'target' },
+        },
+      };
+
+      // Multi-target formatter fails initially
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target formatting failed',
+      });
+
+      // Fallback formatter succeeds with transformed template
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'use Sword on',
+      });
+
+      await stage.executeInternal(context);
+
+      const actionTrace = trace.getActionTrace('action-1');
+      expect(actionTrace).toBeDefined();
+
+      // Verify fallback was used
+      const formattingStages = Object.values(actionTrace.stages);
+      const completionCapture = formattingStages.find(
+        (s) => s.data?.fallbackUsed !== undefined
+      );
+      expect(completionCapture).toBeDefined();
+      expect(completionCapture.data.fallbackUsed).toBe(true);
+
+      // Verify template transformation was applied
+      expect(mockCommandFormatter.format).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'use on', // {item} -> {target}, {target} removed as secondary
+        }),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object)
+      );
+    });
+
+    it('should handle direct fallback to legacy when formatMultiTarget not available in traced execution', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'action-2',
+              name: 'Action 2',
+              template: 'cast {spell}',
+            },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'spell_001', displayName: 'Fireball' }],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'spell' },
+        },
+      };
+
+      // Remove formatMultiTarget to trigger direct fallback
+      const formatterWithoutMulti = { ...mockCommandFormatter };
+      delete formatterWithoutMulti.formatMultiTarget;
+
+      const stageWithoutMulti = new ActionFormattingStage({
+        commandFormatter: formatterWithoutMulti,
+        entityManager: mockEntityManager,
+        safeEventDispatcher: mockSafeEventDispatcher,
+        getEntityDisplayNameFn: mockGetEntityDisplayNameFn,
+        errorContextBuilder: mockErrorContextBuilder,
+        logger: mockLogger,
+      });
+
+      formatterWithoutMulti.format.mockReturnValue({
+        ok: true,
+        value: 'cast Fireball',
+      });
+
+      await stageWithoutMulti.executeInternal(context);
+
+      const actionTrace = trace.getActionTrace('action-2');
+      expect(actionTrace).toBeDefined();
+
+      // Verify fallback was used immediately since formatMultiTarget not available
+      const formattingStages = Object.values(actionTrace.stages);
+      const completionCapture = formattingStages.find(
+        (s) => s.data?.fallbackUsed !== undefined
+      );
+      expect(completionCapture).toBeDefined();
+      expect(completionCapture.data.fallbackUsed).toBe(true);
+
+      // Verify legacy formatter was called directly
+      expect(formatterWithoutMulti.format).toHaveBeenCalled();
+    });
+
     it('should capture fallback usage when multi-target formatting fails', async () => {
       const mockActionTraceFilter = {
         shouldTrace: jest.fn().mockReturnValue(true),
@@ -1240,6 +1672,168 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
       );
       expect(completionCapture).toBeDefined();
       expect(completionCapture.data.fallbackUsed).toBe(true);
+    });
+  });
+
+  describe('Multi-Target Error Conditions in Traced Execution', () => {
+    it('should handle formatter returning null in traced multi-target execution', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'action-null',
+              name: 'Null Action',
+              template: 'null {target}',
+            },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'target_001', displayName: 'Target' }],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'target' },
+        },
+      };
+
+      // Formatter returns null
+      mockCommandFormatter.formatMultiTarget.mockReturnValue(null);
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      // Verify error was captured in trace
+      const actionTrace = trace.getActionTrace('action-null');
+      expect(actionTrace).toBeDefined();
+
+      const formattingStages = Object.values(actionTrace.stages);
+      const errorCapture = formattingStages.find((s) => s.data?.status === 'failed');
+      expect(errorCapture).toBeDefined();
+    });
+
+    it('should handle formatter returning undefined in traced multi-target execution', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'action-undefined',
+              name: 'Undefined Action',
+              template: 'undefined {target}',
+            },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'target_002', displayName: 'Target2' }],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'target' },
+        },
+      };
+
+      // Formatter returns undefined
+      mockCommandFormatter.formatMultiTarget.mockReturnValue(undefined);
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      // Verify error context was built (note: undefined results in processing error)
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalled();
+    });
+
+    it('should handle exception during multi-target traced execution', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'action-exception',
+              name: 'Exception Action',
+              template: 'exception {target}',
+            },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'target_003', displayName: 'Target3' }],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'target' },
+        },
+      };
+
+      const thrownError = new Error('Multi-target formatter exploded');
+      mockCommandFormatter.formatMultiTarget.mockImplementation(() => {
+        throw thrownError;
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.actions).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+
+      // Verify exception was captured in trace
+      const actionTrace = trace.getActionTrace('action-exception');
+      expect(actionTrace).toBeDefined();
+
+      const formattingStages = Object.values(actionTrace.stages);
+      const errorCapture = formattingStages.find((s) => s.data?.error);
+      expect(errorCapture).toBeDefined();
+      expect(errorCapture.data.error).toBe('Multi-target formatter exploded');
+
+      // Verify performance data was still captured
+      expect(errorCapture.data.performance?.duration).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -1596,6 +2190,832 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
       // Verify all actions were traced
       const summaryTrace = trace.getActionTrace('__stage_summary');
       expect(summaryTrace.stages.formatting.data.statistics.total).toBe(100);
+    });
+  });
+
+  describe('Legacy Traced Multi-Target Processing', () => {
+    it('should process multi-target actions through legacy traced path with formatMultiTarget available', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'legacy-multi:action',
+              name: 'Legacy Multi Action',
+              template: 'use {item} on {enemy}',
+              targets: {
+                primary: { placeholder: 'item' },
+                secondary: { placeholder: 'enemy' },
+              },
+            },
+            targetContexts: [
+              { entityId: 'item_001', displayName: 'Sword', placeholder: 'item' },
+              { entityId: 'enemy_001', displayName: 'Goblin', placeholder: 'enemy' },
+            ],
+          },
+        ],
+      };
+
+      // Mock entity manager to return entities
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
+
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: ['use Sword on Goblin'],
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0]).toEqual({
+        id: 'legacy-multi:action',
+        name: 'Legacy Multi Action',
+        command: 'use Sword on Goblin',
+        description: '',
+        params: {
+          targetIds: { item: ['item_001'], enemy: ['enemy_001'] },
+          isMultiTarget: true,
+        },
+      });
+
+      // Verify trace captured the legacy multi-target processing
+      const actionTrace = trace.getActionTrace('legacy-multi:action');
+      expect(actionTrace).toBeDefined();
+
+      const formattingStages = Object.values(actionTrace.stages);
+      const startCapture = formattingStages.find((s) => s.data?.isMultiTargetInLegacy === true);
+      expect(startCapture).toBeDefined();
+    });
+
+    it('should handle multi-target action fallback to legacy formatting in legacy traced path', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'legacy-fallback:action',
+              name: 'Legacy Fallback Action',
+              template: 'cast {spell} at {target}',
+              targets: {
+                primary: { placeholder: 'spell' },
+                secondary: { placeholder: 'target' },
+              },
+            },
+            targetContexts: [
+              { entityId: 'spell_001', displayName: 'Fireball', placeholder: 'spell' },
+              { entityId: 'enemy_002', displayName: 'Orc', placeholder: 'target' },
+            ],
+          },
+        ],
+      };
+
+      // Multi-target formatting fails, fallback to legacy
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target failed in legacy path',
+      });
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'cast Fireball',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0]).toEqual({
+        id: 'legacy-fallback:action',
+        name: 'Legacy Fallback Action',
+        command: 'cast Fireball',
+        description: '',
+        params: { targetId: 'spell_001' },
+      });
+
+      // Verify both formatMultiTarget and fallback format were called
+      expect(mockCommandFormatter.formatMultiTarget).toHaveBeenCalled();
+      expect(mockCommandFormatter.format).toHaveBeenCalled();
+
+      // Verify trace captured the fallback in legacy path
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      expect(summaryTrace.stages.formatting.data.statistics.successful).toBeGreaterThan(0);
+      expect(summaryTrace.stages.formatting.data.statistics.legacy).toBeGreaterThan(0);
+    });
+
+    it('should handle multi-target action without formatMultiTarget in legacy traced path', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'legacy-no-multi:action',
+              name: 'Legacy No Multi Action',
+              template: 'swing {weapon} at {target}',
+              targets: {
+                primary: { placeholder: 'weapon' },
+                secondary: { placeholder: 'target' },
+              },
+            },
+            targetContexts: [
+              { entityId: 'weapon_001', displayName: 'Axe', placeholder: 'weapon' },
+              { entityId: 'enemy_003', displayName: 'Troll', placeholder: 'target' },
+            ],
+          },
+        ],
+      };
+
+      // Remove formatMultiTarget method
+      const formatterWithoutMulti = { ...mockCommandFormatter };
+      delete formatterWithoutMulti.formatMultiTarget;
+
+      const stageWithoutMulti = new ActionFormattingStage({
+        commandFormatter: formatterWithoutMulti,
+        entityManager: mockEntityManager,
+        safeEventDispatcher: mockSafeEventDispatcher,
+        getEntityDisplayNameFn: mockGetEntityDisplayNameFn,
+        errorContextBuilder: mockErrorContextBuilder,
+        logger: mockLogger,
+      });
+
+      formatterWithoutMulti.format.mockReturnValue({
+        ok: true,
+        value: 'swing Axe',
+      });
+
+      const result = await stageWithoutMulti.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0]).toEqual({
+        id: 'legacy-no-multi:action',
+        name: 'Legacy No Multi Action',
+        command: 'swing Axe',
+        description: '',
+        params: { targetId: 'weapon_001' },
+      });
+
+      // Verify only legacy formatter was called
+      expect(formatterWithoutMulti.format).toHaveBeenCalled();
+
+      // Verify trace captured statistics
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      expect(summaryTrace.stages.formatting.data.statistics.legacy).toBeGreaterThan(0);
+    });
+
+    it('should skip multi-target action with no resolved targets in legacy traced path', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'legacy-no-targets:action',
+              name: 'Legacy No Targets Action',
+              template: 'missing {item} and {target}',
+              targets: {
+                primary: { placeholder: 'item' },
+                secondary: { placeholder: 'target' },
+              },
+            },
+            targetContexts: [], // Empty target contexts - no resolved targets
+          },
+        ],
+      };
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(0);
+
+      // Verify warning was logged about skipping the action
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Skipping multi-target action 'legacy-no-targets:action'")
+      );
+
+      // Verify trace captured that the action was skipped
+      const actionTrace = trace.getActionTrace('legacy-no-targets:action');
+      expect(actionTrace).toBeDefined();
+
+      const formattingStages = Object.values(actionTrace.stages);
+      const startCapture = formattingStages.find((s) => s.data?.isMultiTargetInLegacy === true);
+      expect(startCapture).toBeDefined();
+    });
+
+    it('should process regular legacy actions alongside multi-target in legacy traced path', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          // Regular legacy action
+          {
+            actionDef: {
+              id: 'regular-legacy:action',
+              name: 'Regular Legacy Action',
+              template: 'look at {target}',
+            },
+            targetContexts: [
+              { entityId: 'object_001', displayName: 'Chest' },
+              { entityId: 'object_002', displayName: 'Door' },
+            ],
+          },
+          // Multi-target action in legacy path
+          {
+            actionDef: {
+              id: 'multi-in-legacy:action',
+              name: 'Multi in Legacy Action',
+              template: 'combine {item1} and {item2}',
+              targets: {
+                primary: { placeholder: 'item1' },
+                secondary: { placeholder: 'item2' },
+              },
+            },
+            targetContexts: [
+              { entityId: 'item_001', displayName: 'Gem', placeholder: 'item1' },
+              { entityId: 'item_002', displayName: 'Ring', placeholder: 'item2' },
+            ],
+          },
+        ],
+      };
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'look at Chest',
+      });
+
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: 'combine Gem and Ring',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(3); // 2 regular + 1 multi
+
+      // Verify both types were processed
+      const regularActions = result.actions.filter((a) => a.id === 'regular-legacy:action');
+      expect(regularActions).toHaveLength(2);
+
+      const multiAction = result.actions.find((a) => a.id === 'multi-in-legacy:action');
+      expect(multiAction).toBeDefined();
+      expect(multiAction.params.isMultiTarget).toBe(true);
+
+      // Verify trace captured mixed processing
+      const summaryTrace = trace.getActionTrace('__stage_summary');
+      expect(summaryTrace.stages.formatting.data.statistics.legacy).toBeGreaterThan(0);
+      expect(summaryTrace.stages.formatting.data.statistics.multiTarget).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Error Logging in Legacy Actions', () => {
+    it('should log detailed warning for formatting failures with target ID extraction', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'error-logging:action',
+              name: 'Error Logging Action',
+              template: 'error action with {target}',
+            },
+            targetContexts: [
+              { entityId: 'target_with_error', displayName: 'Error Target' },
+            ],
+          },
+        ],
+      };
+
+      // Formatter fails with error result
+      mockCommandFormatter.format.mockReturnValue({
+        ok: false,
+        error: 'Formatting failed',
+        details: { missingData: 'target placeholder' },
+      });
+
+      await stage.executeInternal(context);
+
+      // Verify detailed warning was logged
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "Failed to format command for action 'error-logging:action' with target 'target_with_error'",
+        expect.objectContaining({
+          formatResult: expect.objectContaining({
+            ok: false,
+            error: 'Formatting failed',
+            details: { missingData: 'target placeholder' },
+          }),
+          actionDef: expect.objectContaining({ id: 'error-logging:action' }),
+          targetContext: expect.objectContaining({ entityId: 'target_with_error' }),
+        })
+      );
+    });
+
+    it('should log warning for exceptions with target ID extraction from error object', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'exception-logging:action',
+              name: 'Exception Logging Action',
+              template: 'exception action with {target}',
+            },
+            targetContexts: [
+              { entityId: 'target_exception', displayName: 'Exception Target' },
+            ],
+          },
+        ],
+      };
+
+      // Formatter throws exception with target information
+      const thrownError = new Error('Formatter threw error');
+      thrownError.target = { entityId: 'extracted_target_id' };
+      thrownError.entityId = 'fallback_target_id';
+
+      mockCommandFormatter.format.mockImplementation(() => {
+        throw thrownError;
+      });
+
+      await stage.executeInternal(context);
+
+      // Verify warning was logged with target ID extracted from error
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "Failed to format command for action 'exception-logging:action' with target 'extracted_target_id'",
+        expect.objectContaining({
+          error: thrownError,
+          actionDef: expect.objectContaining({ id: 'exception-logging:action' }),
+          targetContext: expect.objectContaining({ entityId: 'target_exception' }),
+        })
+      );
+
+      // Verify error context was built with extracted target ID
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: thrownError,
+          actionDef: expect.objectContaining({ id: 'exception-logging:action' }),
+          actorId: 'test-actor',
+          targetId: 'extracted_target_id', // Error context extracting target ID
+          additionalContext: expect.objectContaining({
+            stage: 'action_formatting',
+          }),
+        })
+      );
+    });
+
+    it('should handle target ID extraction fallback chain in error logging', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'fallback-target:action',
+              name: 'Fallback Target Action',
+              template: 'fallback action with {target}',
+            },
+            targetContexts: [
+              { entityId: 'context_target', displayName: 'Context Target' },
+            ],
+          },
+        ],
+      };
+
+      // Formatter throws exception with only entityId property
+      const thrownError = new Error('Formatter threw error');
+      thrownError.entityId = 'error_entity_id';
+      // No target.entityId property to test fallback
+
+      mockCommandFormatter.format.mockImplementation(() => {
+        throw thrownError;
+      });
+
+      await stage.executeInternal(context);
+
+      // Verify warning was logged with fallback target ID
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "Failed to format command for action 'fallback-target:action' with target 'error_entity_id'",
+        expect.objectContaining({
+          error: thrownError,
+          actionDef: expect.objectContaining({ id: 'fallback-target:action' }),
+          targetContext: expect.objectContaining({ entityId: 'context_target' }),
+        })
+      );
+    });
+
+    it('should use context target ID when error has no target information', async () => {
+      const mockActionTraceFilter = {
+        shouldTrace: jest.fn().mockReturnValue(true),
+        getVerbosityLevel: jest.fn().mockReturnValue('verbose'),
+        getInclusionConfig: jest.fn().mockReturnValue({}),
+        isEnabled: jest.fn().mockReturnValue(true),
+      };
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockActionTraceFilter,
+        actorId: 'test-actor',
+        context: {},
+        logger: mockLogger,
+      });
+
+      const context = {
+        trace,
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'context-fallback:action',
+              name: 'Context Fallback Action',
+              template: 'context fallback with {target}',
+            },
+            targetContexts: [
+              { entityId: 'final_context_target', displayName: 'Final Context Target' },
+            ],
+          },
+        ],
+      };
+
+      // Formatter throws exception with no target information
+      const thrownError = new Error('Generic formatter error');
+      // No target properties to test final fallback
+
+      mockCommandFormatter.format.mockImplementation(() => {
+        throw thrownError;
+      });
+
+      await stage.executeInternal(context);
+
+      // Verify warning was logged with context target ID as final fallback
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "Failed to format command for action 'context-fallback:action' with target 'final_context_target'",
+        expect.objectContaining({
+          error: thrownError,
+          actionDef: expect.objectContaining({ id: 'context-fallback:action' }),
+          targetContext: expect.objectContaining({ entityId: 'final_context_target' }),
+        })
+      );
+    });
+  });
+
+  describe('Template Transformation Helpers', () => {
+    it('should handle template transformation with empty target definitions', async () => {
+      const context = {
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'empty-defs:action',
+              name: 'Empty Definitions Action',
+              template: 'action with {placeholder}',
+            },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'target_001', displayName: 'Target' }],
+        },
+        targetDefinitions: {}, // Empty target definitions
+      };
+
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target failed',
+      });
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'action with {placeholder}', // Template should remain unchanged
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+
+      // Verify template transformation was called with empty target definitions
+      expect(mockCommandFormatter.format).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'action with {placeholder}', // Should remain unchanged
+        }),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object)
+      );
+    });
+
+    it('should handle template transformation with null target definitions', async () => {
+      const context = {
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'null-defs:action',
+              name: 'Null Definitions Action',
+              template: 'null action with {item}',
+            },
+            targetContexts: [
+              { entityId: 'item_001' }
+            ],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'item_001', displayName: 'Item' }],
+        },
+        targetDefinitions: null, // Null target definitions - will use legacy path
+      };
+
+      // When targetDefinitions is null, it takes the legacy path
+      // No multi-target call should be made
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'null action with Item',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+
+      // With null target definitions, uses legacy path - template unchanged
+      expect(mockCommandFormatter.format).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'null action with {item}', // Should remain unchanged
+        }),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object)
+      );
+      
+      // Should not call formatMultiTarget when targetDefinitions is null
+      expect(mockCommandFormatter.formatMultiTarget).not.toHaveBeenCalled();
+    });
+
+    it('should clean up extra spaces in transformed template', async () => {
+      const context = {
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'spacing:action',
+              name: 'Spacing Action',
+              template: 'complex   {primary}    and   {secondary}   with  {tertiary}  end',
+            },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'item_001', displayName: 'Primary' }],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'primary' },
+          secondary: { placeholder: 'secondary' },
+          tertiary: { placeholder: 'tertiary' },
+        },
+      };
+
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target failed',
+      });
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'complex Primary with end',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+
+      // Verify template was cleaned up - extra spaces removed
+      expect(mockCommandFormatter.format).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'complex {target} and with end', // Cleaned up spaces
+        }),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object)
+      );
+    });
+
+    it('should handle complex template transformation with multiple placeholders', async () => {
+      const context = {
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'complex-transform:action',
+              name: 'Complex Transform Action',
+              template: 'cast {spell} using {focus} targeting {enemy} in {location} with {component}',
+            },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'spell_001', displayName: 'Fireball' }],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'spell' }, // This becomes {target}
+          secondary: { placeholder: 'focus' }, // This gets removed
+          tertiary: { placeholder: 'enemy' }, // This gets removed
+          quaternary: { placeholder: 'location' }, // This gets removed
+          quinary: { placeholder: 'component' }, // This gets removed
+        },
+      };
+
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target failed',
+      });
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'cast Fireball using targeting in with',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+
+      // Verify complex template transformation
+      expect(mockCommandFormatter.format).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'cast {target} using targeting in with',
+        }),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object)
+      );
+    });
+
+    it('should handle template with no placeholders to transform', async () => {
+      const context = {
+        actor: { id: 'test-actor' },
+        actionsWithTargets: [
+          {
+            actionDef: {
+              id: 'no-placeholders:action',
+              name: 'No Placeholders Action',
+              template: 'simple action with no placeholders',
+            },
+            targetContexts: [],
+          },
+        ],
+        resolvedTargets: {
+          primary: [{ id: 'item_001', displayName: 'Item' }],
+        },
+        targetDefinitions: {
+          primary: { placeholder: 'nonexistent' },
+        },
+      };
+
+      mockCommandFormatter.formatMultiTarget.mockReturnValue({
+        ok: false,
+        error: 'Multi-target failed',
+      });
+
+      mockCommandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'simple action with no placeholders',
+      });
+
+      const result = await stage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.actions).toHaveLength(1);
+
+      // Template should remain completely unchanged
+      expect(mockCommandFormatter.format).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'simple action with no placeholders',
+        }),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(Object)
+      );
     });
   });
 });

@@ -34,7 +34,12 @@ describe('ActionPerformanceAnalyzer', () => {
     });
 
     it('should skip traces without timing data', () => {
-      const traceWithoutTiming = createMockTrace('test:action', 'actor1', true, null);
+      const traceWithoutTiming = createMockTrace(
+        'test:action',
+        'actor1',
+        true,
+        null
+      );
       analyzer.addTrace(traceWithoutTiming);
 
       const stats = analyzer.getStats();
@@ -44,10 +49,10 @@ describe('ActionPerformanceAnalyzer', () => {
     it('should analyze single trace correctly', () => {
       const timingData = createMockTimingData(50, [
         { name: 'phase1', duration: 20 },
-        { name: 'phase2', duration: 30 }
+        { name: 'phase2', duration: 30 },
       ]);
       const trace = createMockTrace('test:action', 'actor1', true, timingData);
-      
+
       analyzer.addTrace(trace);
 
       const stats = analyzer.getStats();
@@ -60,12 +65,27 @@ describe('ActionPerformanceAnalyzer', () => {
 
     it('should analyze multiple traces correctly', () => {
       const traces = [
-        createMockTrace('test:action1', 'actor1', true, createMockTimingData(30)),
-        createMockTrace('test:action2', 'actor1', true, createMockTimingData(60)),
-        createMockTrace('test:action3', 'actor1', true, createMockTimingData(90)),
+        createMockTrace(
+          'test:action1',
+          'actor1',
+          true,
+          createMockTimingData(30)
+        ),
+        createMockTrace(
+          'test:action2',
+          'actor1',
+          true,
+          createMockTimingData(60)
+        ),
+        createMockTrace(
+          'test:action3',
+          'actor1',
+          true,
+          createMockTimingData(90)
+        ),
       ];
 
-      traces.forEach(trace => analyzer.addTrace(trace));
+      traces.forEach((trace) => analyzer.addTrace(trace));
 
       const stats = analyzer.getStats();
       expect(stats.totalTraces).toBe(3);
@@ -82,7 +102,12 @@ describe('ActionPerformanceAnalyzer', () => {
       const durations = [10, 25, 50, 75, 100, 150, 200, 300, 400, 500];
       durations.forEach((duration, index) => {
         const timingData = createMockTimingData(duration);
-        const trace = createMockTrace(`test:action${index}`, 'actor1', true, timingData);
+        const trace = createMockTrace(
+          `test:action${index}`,
+          'actor1',
+          true,
+          timingData
+        );
         analyzer.addTrace(trace);
       });
     });
@@ -124,28 +149,43 @@ describe('ActionPerformanceAnalyzer', () => {
     it('should identify bottlenecks from phase data', () => {
       // Create traces with specific phase patterns
       const traces = [
-        createMockTrace('test:action1', 'actor1', true, createMockTimingData(100, [
-          { name: 'database', duration: 60 },
-          { name: 'processing', duration: 20 },
-          { name: 'rendering', duration: 20 }
-        ])),
-        createMockTrace('test:action2', 'actor1', true, createMockTimingData(120, [
-          { name: 'database', duration: 80 },
-          { name: 'processing', duration: 20 },
-          { name: 'rendering', duration: 20 }
-        ])),
-        createMockTrace('test:action3', 'actor1', true, createMockTimingData(90, [
-          { name: 'database', duration: 50 },
-          { name: 'processing', duration: 20 },
-          { name: 'rendering', duration: 20 }
-        ])),
+        createMockTrace(
+          'test:action1',
+          'actor1',
+          true,
+          createMockTimingData(100, [
+            { name: 'database', duration: 60 },
+            { name: 'processing', duration: 20 },
+            { name: 'rendering', duration: 20 },
+          ])
+        ),
+        createMockTrace(
+          'test:action2',
+          'actor1',
+          true,
+          createMockTimingData(120, [
+            { name: 'database', duration: 80 },
+            { name: 'processing', duration: 20 },
+            { name: 'rendering', duration: 20 },
+          ])
+        ),
+        createMockTrace(
+          'test:action3',
+          'actor1',
+          true,
+          createMockTimingData(90, [
+            { name: 'database', duration: 50 },
+            { name: 'processing', duration: 20 },
+            { name: 'rendering', duration: 20 },
+          ])
+        ),
       ];
 
-      traces.forEach(trace => analyzer.addTrace(trace));
+      traces.forEach((trace) => analyzer.addTrace(trace));
 
       const bottlenecks = analyzer.identifyBottlenecks();
       expect(bottlenecks.length).toBeGreaterThan(0);
-      
+
       // Database should be the top bottleneck
       const topBottleneck = bottlenecks[0];
       expect(topBottleneck.phase).toBe('database');
@@ -160,16 +200,21 @@ describe('ActionPerformanceAnalyzer', () => {
       durations.forEach((duration, index) => {
         const timingData = createMockTimingData(duration, [
           { name: 'phase1', duration: duration * 0.6 },
-          { name: 'phase2', duration: duration * 0.4 }
+          { name: 'phase2', duration: duration * 0.4 },
         ]);
-        const trace = createMockTrace(`test:action${index}`, 'actor1', true, timingData);
+        const trace = createMockTrace(
+          `test:action${index}`,
+          'actor1',
+          true,
+          timingData
+        );
         analyzer.addTrace(trace);
       });
     });
 
     it('should generate comprehensive performance report', () => {
       const report = analyzer.generateReport();
-      
+
       expect(report).toContain('ACTION EXECUTION PERFORMANCE REPORT');
       expect(report).toContain('Total Traces: 3');
       expect(report).toContain('Average Duration:');
@@ -182,7 +227,7 @@ describe('ActionPerformanceAnalyzer', () => {
     it('should handle empty report generation', () => {
       const emptyAnalyzer = new ActionPerformanceAnalyzer();
       const report = emptyAnalyzer.generateReport();
-      
+
       expect(report).toContain('Total Traces: 0');
     });
   });
@@ -209,7 +254,7 @@ describe('ActionPerformanceAnalyzer', () => {
     it('should handle edge cases in percentile calculation', () => {
       const emptyAnalyzer = new ActionPerformanceAnalyzer();
       const stats = emptyAnalyzer.getStats();
-      
+
       expect(stats.percentiles.p50).toBe(0);
       expect(stats.percentiles.p90).toBe(0);
       expect(stats.percentiles.p95).toBe(0);
@@ -231,7 +276,7 @@ function createMockTrace(actionId, actorId, isComplete, timingData = null) {
     actionId,
     actorId,
     isComplete,
-    getTimingSummary: () => timingData
+    getTimingSummary: () => timingData,
   };
 }
 
@@ -243,8 +288,9 @@ function createMockTrace(actionId, actorId, isComplete, timingData = null) {
 function createMockTimingData(totalDuration, phases = []) {
   return {
     totalDuration,
-    phases: phases.length > 0 ? phases : [
-      { name: 'default_phase', duration: totalDuration }
-    ]
+    phases:
+      phases.length > 0
+        ? phases
+        : [{ name: 'default_phase', duration: totalDuration }],
   };
 }

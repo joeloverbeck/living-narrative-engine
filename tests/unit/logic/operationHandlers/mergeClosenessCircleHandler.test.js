@@ -266,42 +266,54 @@ describe('MergeClosenessCircleHandler', () => {
   });
 
   test('validates parameters - invalid result_variable as empty string', async () => {
-    await handler.execute({ 
-      actor_id: 'valid_actor', 
-      target_id: 'valid_target',
-      result_variable: '' 
-    }, execCtx);
+    await handler.execute(
+      {
+        actor_id: 'valid_actor',
+        target_id: 'valid_target',
+        result_variable: '',
+      },
+      execCtx
+    );
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({ message: expect.stringContaining('result_variable') })
+      expect.objectContaining({
+        message: expect.stringContaining('result_variable'),
+      })
     );
   });
 
   test('validates parameters - invalid result_variable as non-string', async () => {
-    await handler.execute({ 
-      actor_id: 'valid_actor', 
-      target_id: 'valid_target',
-      result_variable: 123 
-    }, execCtx);
+    await handler.execute(
+      {
+        actor_id: 'valid_actor',
+        target_id: 'valid_target',
+        result_variable: 123,
+      },
+      execCtx
+    );
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({ message: expect.stringContaining('result_variable') })
+      expect.objectContaining({
+        message: expect.stringContaining('result_variable'),
+      })
     );
   });
 
   test('handles addComponent error during partner update', async () => {
     em.getComponentData = jest.fn(() => null);
-    em.addComponent = jest.fn().mockRejectedValueOnce(new Error('Component update failed'));
+    em.addComponent = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('Component update failed'));
 
     await handler.execute({ actor_id: 'a1', target_id: 't1' }, execCtx);
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({ 
+      expect.objectContaining({
         message: expect.stringContaining('failed updating closeness'),
         details: expect.objectContaining({
-          error: 'Component update failed'
-        })
+          error: 'Component update failed',
+        }),
       })
     );
   });
@@ -318,32 +330,35 @@ describe('MergeClosenessCircleHandler', () => {
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({ 
+      expect.objectContaining({
         message: expect.stringContaining('failed locking movement'),
         details: expect.objectContaining({
-          error: 'Movement lock failed'
-        })
+          error: 'Movement lock failed',
+        }),
       })
     );
   });
 
   test('handles invalid evaluation context when result_variable provided', async () => {
     em.getComponentData = jest.fn(() => null);
-    
+
     // Create context without evaluationContext to trigger the error
     const invalidExecCtx = { logger };
 
-    await handler.execute({
-      actor_id: 'a1', 
-      target_id: 't1',
-      result_variable: 'test_var'
-    }, invalidExecCtx);
+    await handler.execute(
+      {
+        actor_id: 'a1',
+        target_id: 't1',
+        result_variable: 'test_var',
+      },
+      invalidExecCtx
+    );
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({ 
+      expect.objectContaining({
         message: expect.stringContaining('evaluationContext'),
-        details: expect.any(Object)
+        details: expect.any(Object),
       })
     );
   });
@@ -375,7 +390,7 @@ describe('MergeClosenessCircleHandler', () => {
     expect(closenessCircleService.merge).toHaveBeenCalledWith(
       ['a1', 't1'],
       [], // Should be empty array due to fallback
-      []  // Should be empty array due to fallback
+      [] // Should be empty array due to fallback
     );
   });
 });
