@@ -12,8 +12,11 @@ import {
   PermissionError,
   BadRequestError,
   MalformedResponseError,
+  LLMInteractionError,
 } from '../../../../src/errors/llmInteractionErrors.js';
 import { ConfigurationError } from '../../../../src/errors/configurationError.js';
+import PromptTooLongError from '../../../../src/errors/promptTooLongError.js';
+import { LLMStrategyError } from '../../../../src/llms/errors/LLMStrategyError.js';
 
 describe('LLMErrorMapper', () => {
   let errorMapper;
@@ -124,6 +127,58 @@ describe('LLMErrorMapper', () => {
 
       expect(mapped).toBeInstanceOf(Error);
       expect(mapped.message).toBe('Unknown error');
+    });
+
+    it('should handle network timeout errors', () => {
+      const error = new Error('Connection timeout');
+      error.code = 'ETIMEDOUT';
+      
+      const context = { llmId: 'test-llm', operation: 'getAIDecision' };
+      const mapped = errorMapper.mapHttpError(error, context);
+
+      expect(mapped).toBeInstanceOf(LLMInteractionError);
+      expect(mapped.message).toBe('Connection timeout');
+      expect(mapped.llmId).toBe('test-llm');
+    });
+
+    it('should handle network connection reset errors', () => {
+      const error = new Error('Connection reset');
+      error.code = 'ECONNRESET';
+      
+      const mapped = errorMapper.mapHttpError(error);
+
+      expect(mapped).toBeInstanceOf(LLMInteractionError);
+      expect(mapped.message).toBe('Connection reset');
+    });
+
+    it('should handle generic NetworkError', () => {
+      const error = new Error('Network error');
+      error.name = 'NetworkError';
+      
+      const mapped = errorMapper.mapHttpError(error);
+
+      expect(mapped).toBeInstanceOf(LLMInteractionError);
+      expect(mapped.message).toBe('Network error');
+    });
+
+    it('should handle JSON processing errors', () => {
+      const error = new Error('Invalid JSON response');
+      error.name = 'JsonProcessingError';
+      
+      const context = { llmId: 'test-llm', operation: 'parseResponse' };
+      const mapped = errorMapper.mapHttpError(error, context);
+
+      expect(mapped).toBeInstanceOf(MalformedResponseError);
+      expect(mapped.message).toBe('Invalid JSON response');
+      expect(mapped.llmId).toBe('test-llm');
+    });
+
+    it('should return domain errors as-is', () => {
+      const domainError = new ApiKeyError('API key invalid', { llmId: 'test' });
+      
+      const mapped = errorMapper.mapHttpError(domainError);
+
+      expect(mapped).toBe(domainError);
     });
   });
 
@@ -237,6 +292,60 @@ describe('LLMErrorMapper', () => {
         })
       );
     });
+
+    it('should log critical errors with error level', () => {
+      const error = new ApiKeyError('Invalid API key', { llmId: 'test' });
+      const context = { llmId: 'test-llm', operation: 'authenticate' };
+
+      errorMapper.logError(error, context);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Invalid API key',
+        expect.objectContaining({
+          message: 'Invalid API key',
+          errorName: 'ApiKeyError',
+          errorType: 'ApiKeyError',
+          llmId: 'test-llm',
+          operation: 'authenticate',
+        })
+      );
+    });
+
+    it('should log warning errors with warn level', () => {
+      const error = new InsufficientCreditsError('No credits', { llmId: 'test' });
+      const context = { llmId: 'test-llm', operation: 'generate' };
+
+      errorMapper.logError(error, context);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'No credits',
+        expect.objectContaining({
+          message: 'No credits',
+          errorName: 'InsufficientCreditsError',
+          errorType: 'InsufficientCreditsError',
+          llmId: 'test-llm',
+          operation: 'generate',
+        })
+      );
+    });
+
+    it('should log rate limiting errors with warn level', () => {
+      const error = new Error('Rate limited');
+      error.status = 429;
+      const context = { llmId: 'test-llm', operation: 'generate' };
+
+      errorMapper.logError(error, context);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Rate limited',
+        expect.objectContaining({
+          message: 'Rate limited',
+          status: 429,
+          llmId: 'test-llm',
+          operation: 'generate',
+        })
+      );
+    });
   });
 
   describe('getErrorTypeFromStatus', () => {
@@ -267,9 +376,24 @@ describe('LLMErrorMapper', () => {
       );
     });
 
-    it('should return generic for unknown status codes', () => {
+    it('should return bad_request for 422', () => {
+      expect(errorMapper.getErrorTypeFromStatus(422)).toBe('bad_request');
+    });
+
+    it('should return generic for rate limiting (429)', () => {
+      expect(errorMapper.getErrorTypeFromStatus(429)).toBe('generic');
+    });
+
+    it('should return generic for server errors', () => {
       expect(errorMapper.getErrorTypeFromStatus(500)).toBe('generic');
+      expect(errorMapper.getErrorTypeFromStatus(502)).toBe('generic');
+      expect(errorMapper.getErrorTypeFromStatus(503)).toBe('generic');
+      expect(errorMapper.getErrorTypeFromStatus(504)).toBe('generic');
+    });
+
+    it('should return generic for unknown status codes', () => {
       expect(errorMapper.getErrorTypeFromStatus(418)).toBe('generic');
+      expect(errorMapper.getErrorTypeFromStatus(999)).toBe('generic');
     });
   });
 
@@ -342,6 +466,106 @@ describe('LLMErrorMapper', () => {
         errorType: 'Error',
         timestamp: expect.any(String),
       });
+    });
+
+    it('should extract configuration error metadata', () => {
+      const error = new ConfigurationError('Invalid config', {
+        llmId: 'test',
+        problematicField: 'apiKey',
+      });
+      error.problematicFields = ['apiKey', 'model'];
+
+      const details = errorMapper.extractErrorDetails(error);
+
+      expect(details).toMatchObject({
+        message: 'Invalid config',
+        isConfigurationError: true,
+        problematicFields: ['apiKey', 'model'],
+      });
+    });
+
+    it('should extract configuration error with single problematic field', () => {
+      const error = new ConfigurationError('Invalid config', {
+        llmId: 'test',
+        problematicField: 'temperature',
+      });
+
+      const details = errorMapper.extractErrorDetails(error);
+
+      expect(details).toMatchObject({
+        message: 'Invalid config',
+        isConfigurationError: true,
+        problematicFields: 'temperature',
+      });
+    });
+
+    it('should extract original error details from error property', () => {
+      const originalError = new Error('Root cause');
+      originalError.name = 'RootError';
+      
+      const error = new Error('Wrapped error');
+      error.originalError = originalError;
+
+      const details = errorMapper.extractErrorDetails(error);
+
+      expect(details).toMatchObject({
+        message: 'Wrapped error',
+        originalError: {
+          message: 'Root cause',
+          name: 'RootError',
+          type: 'Error',
+        },
+      });
+    });
+
+    it('should extract original error details from context', () => {
+      const originalError = new Error('Context root cause');
+      originalError.name = 'ContextRootError';
+      
+      const error = new Error('Main error');
+      const context = { originalError, llmId: 'test' };
+
+      const details = errorMapper.extractErrorDetails(error, context);
+
+      expect(details).toMatchObject({
+        message: 'Main error',
+        llmId: 'test',
+        originalError: {
+          message: 'Context root cause',
+          name: 'ContextRootError',
+          type: 'Error',
+        },
+      });
+    });
+  });
+
+  describe('domain error detection', () => {
+    it('should detect all supported domain error types', () => {
+      const domainErrors = [
+        new LLMInteractionError('LLM error', { llmId: 'test' }),
+        new ApiKeyError('API key error', { llmId: 'test' }),
+        new InsufficientCreditsError('Credits error', { llmId: 'test' }),
+        new ContentPolicyError('Policy error', { llmId: 'test' }),
+        new PermissionError('Permission error', { llmId: 'test' }),
+        new BadRequestError('Bad request error', { llmId: 'test' }),
+        new MalformedResponseError('Malformed response', { llmId: 'test' }),
+        new ConfigurationError('Config error', { llmId: 'test' }),
+        new PromptTooLongError('Prompt too long', { llmId: 'test' }),
+        new LLMStrategyError('Strategy error', { llmId: 'test' }),
+      ];
+
+      domainErrors.forEach((domainError) => {
+        const result = errorMapper.mapHttpError(domainError);
+        expect(result).toBe(domainError);
+      });
+    });
+
+    it('should not detect regular errors as domain errors', () => {
+      const regularError = new Error('Regular error');
+      const result = errorMapper.mapHttpError(regularError);
+      
+      expect(result).not.toBe(regularError);
+      expect(result).toBeInstanceOf(LLMInteractionError);
     });
   });
 });

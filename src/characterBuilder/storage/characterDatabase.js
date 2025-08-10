@@ -748,4 +748,77 @@ export class CharacterDatabase {
     this.#ensureInitialized();
     return this.#db.objectStoreNames.contains(STORES.CLICHES);
   }
+
+  /**
+   * Add cliche (alias for saveCliche for consistency with workflow spec)
+   *
+   * @param {object} cliche - Cliche to save
+   * @returns {Promise<object>}
+   */
+  async addCliche(cliche) {
+    return this.saveCliche(cliche);
+  }
+
+  /**
+   * Delete a cliché by ID
+   *
+   * @param {string} clicheId - Cliche ID
+   * @returns {Promise<boolean>} Success status
+   */
+  async deleteCliche(clicheId) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.#getTransaction([STORES.CLICHES], 'readwrite');
+      const store = transaction.objectStore(STORES.CLICHES);
+      const request = store.delete(clicheId);
+
+      request.onsuccess = () => {
+        this.#logger.debug(
+          `CharacterDatabase: Successfully deleted cliche ${clicheId}`
+        );
+        resolve(true);
+      };
+
+      request.onerror = () => {
+        const error = new Error(
+          `Failed to delete cliche: ${request.error?.message || 'Unknown error'}`
+        );
+        this.#logger.error('CharacterDatabase: Error deleting cliche', error);
+        reject(error);
+      };
+    });
+  }
+
+  /**
+   * Add metadata entry
+   *
+   * @param {object} metadata - Metadata entry with key and value
+   * @returns {Promise<void>}
+   */
+  async addMetadata(metadata) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.#getTransaction([STORES.METADATA], 'readwrite');
+      const store = transaction.objectStore(STORES.METADATA);
+
+      const request = store.put({
+        key: metadata.key,
+        value: metadata.value,
+        timestamp: new Date().toISOString(),
+      });
+
+      request.onsuccess = () => {
+        this.#logger.debug(
+          `CharacterDatabase: Added metadata for ${metadata.key}`
+        );
+        resolve();
+      };
+
+      request.onerror = () => {
+        const error = new Error(
+          `Failed to add metadata: ${request.error?.message || 'Unknown error'}`
+        );
+        this.#logger.error('CharacterDatabase: Error adding metadata', error);
+        reject(error);
+      };
+    });
+  }
 }

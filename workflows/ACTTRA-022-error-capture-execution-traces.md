@@ -10,7 +10,7 @@ Implement comprehensive error capture and handling mechanisms for action executi
 - **Priority**: High
 - **Complexity**: Low
 - **Estimated Time**: 2 hours
-- **Dependencies**: ACTTRA-019 (ActionExecutionTrace), ACTTRA-021 (Timing Capture)
+- **Dependencies**: ACTTRA-019 (ActionExecutionTrace) - timing integration already complete
 
 ## Objectives
 
@@ -866,6 +866,10 @@ import { StackTraceAnalyzer } from './stackTraceAnalyzer.js';
 
 /**
  * Enhanced ActionExecutionTrace with comprehensive error capture
+ * Note: This enhances the existing ActionExecutionTrace class which already has:
+ * - Basic error capture via captureError(error) method
+ * - Timing integration via ExecutionPhaseTimer
+ * - Constructor with enableTiming parameter
  */
 export class ActionExecutionTrace {
   // ... existing fields ...
@@ -878,10 +882,11 @@ export class ActionExecutionTrace {
     actorId,
     turnAction,
     enableTiming = true,
-    enableErrorAnalysis = true,
+    enableErrorAnalysis = true, // NEW PARAMETER - add to existing constructor
   }) {
-    // ... existing constructor code ...
+    // ... existing constructor code remains unchanged ...
 
+    // NEW FUNCTIONALITY - add to existing constructor
     if (enableErrorAnalysis) {
       this.#errorClassifier = new ErrorClassifier({
         logger: console, // Fallback logger
@@ -902,10 +907,13 @@ export class ActionExecutionTrace {
 
   /**
    * Enhanced error capture with comprehensive analysis
+   * ENHANCEMENT: Modify existing captureError(error) method to:
+   * captureError(error, context = {}) and add classification/analysis
    * @param {Error} error - Error that occurred
-   * @param {Object} context - Additional error context
+   * @param {Object} context - Additional error context (NEW PARAMETER)
    */
   captureError(error, context = {}) {
+    // EXISTING ERROR CAPTURE CODE - keep as-is
     if (this.#startTime === null) {
       throw new Error(
         'Must call captureDispatchStart() before capturing error'
@@ -914,7 +922,7 @@ export class ActionExecutionTrace {
 
     const errorTime = this.#getHighPrecisionTime();
 
-    // End timing if not already ended
+    // End timing if not already ended - ALREADY IMPLEMENTED
     if (this.#endTime === null) {
       this.#endTime = errorTime;
       this.#executionData.endTime = this.#endTime;
@@ -956,12 +964,13 @@ export class ActionExecutionTrace {
       }
     }
 
-    // Handle timing for error case
+    // TIMING INTEGRATION - ALREADY EXISTS, ENHANCE WITH CLASSIFICATION
     if (
       this.#timingEnabled &&
       this.#phaseTimer &&
       this.#phaseTimer.isActive()
     ) {
+      // ENHANCEMENT: Add error classification to existing timing integration
       this.#phaseTimer.addMarker('error_occurred', null, {
         errorType: error.constructor.name,
         errorMessage: error.message,
@@ -977,22 +986,23 @@ export class ActionExecutionTrace {
       }
     }
 
-    // Store comprehensive error information
+    // ENHANCE EXISTING ERROR DATA STORAGE
+    // Base error data already captured, adding classification and analysis
     this.#executionData.error = {
-      // Basic error information
+      // EXISTING error information - already captured
       message: error.message || 'Unknown error',
       type: error.constructor.name || 'Error',
       name: error.name || error.constructor.name,
       stack: error.stack || null,
       timestamp: errorTime,
 
-      // Extended error properties
+      // EXISTING extended error properties - already captured
       code: error.code || null,
       cause: error.cause || null,
       errno: error.errno || null,
       syscall: error.syscall || null,
 
-      // Error context
+      // EXISTING error context - enhance with new fields
       context: {
         phase: this.#errorContext.phase,
         executionDuration: this.#executionData.duration,
@@ -1001,7 +1011,7 @@ export class ActionExecutionTrace {
         actorId: this.#actorId,
       },
 
-      // Classification results
+      // NEW: Classification results
       classification: classification || {
         category: 'unknown',
         severity: 'medium',
@@ -1011,15 +1021,15 @@ export class ActionExecutionTrace {
         confidence: 0,
       },
 
-      // Stack trace analysis
+      // NEW: Stack trace analysis
       stackAnalysis: stackAnalysis || null,
 
-      // Error location (from stack trace)
+      // NEW: Error location (from stack trace)
       location: stackAnalysis
         ? this.#stackTraceAnalyzer.getErrorLocation(stackAnalysis)
         : null,
 
-      // Formatted stack trace for readability
+      // NEW: Formatted stack trace for readability
       formattedStack:
         stackAnalysis && this.#stackTraceAnalyzer
           ? this.#stackTraceAnalyzer.formatStackTrace(stackAnalysis, {
@@ -1239,27 +1249,29 @@ export class ActionExecutionTrace {
 ### Phase 3: Integration and Enhancement (30 minutes)
 
 1. **Enhance ActionExecutionTrace**
-   - [ ] Integrate error classification
-   - [ ] Add stack trace analysis
-   - [ ] Enhance error context capture
-   - [ ] Create error reporting methods
+   - [ ] Integrate error classification into existing captureError method
+   - [ ] Add stack trace analysis to existing error capture
+   - [ ] Enhance existing error context capture with new context parameter
+   - [ ] Create NEW error reporting methods (getErrorSummary, getErrorReport, etc.)
 
-2. **Add error utilities**
-   - [ ] Error summary generation
-   - [ ] Recoverable error detection
-   - [ ] Error report formatting
-   - [ ] Context management
+2. **Add NEW error utilities** (these methods don't exist yet)
+   - [ ] Error summary generation (getErrorSummary method)
+   - [ ] Recoverable error detection (isErrorRecoverable method)
+   - [ ] Error report formatting (getErrorReport method)
+   - [ ] Context management (setErrorContext method)
 
 ## Code Examples
 
 ### Example 1: Basic Error Capture
 
 ```javascript
+// ENHANCED: Add enableErrorAnalysis to existing constructor
 const trace = new ActionExecutionTrace({
   actionId: 'core:go',
   actorId: 'player-1',
   turnAction: { actionDefinitionId: 'core:go' },
-  enableErrorAnalysis: true,
+  enableTiming: true, // EXISTING parameter
+  enableErrorAnalysis: true, // NEW parameter
 });
 
 trace.captureDispatchStart();
@@ -1268,17 +1280,18 @@ try {
   // Simulate action execution
   throw new Error('Validation failed: missing direction parameter');
 } catch (error) {
+  // ENHANCED: Use modified captureError signature with context parameter
   trace.captureError(error, {
     phase: 'validation',
     retryCount: 0,
   });
 }
 
-// Get error information
-const errorSummary = trace.getErrorSummary();
+// NEW: Get enhanced error information
+const errorSummary = trace.getErrorSummary(); // NEW method
 console.log(`Error: ${errorSummary.message}`);
-console.log(`Category: ${errorSummary.category}`);
-console.log(`Severity: ${errorSummary.severity}`);
+console.log(`Category: ${errorSummary.category}`); // NEW field
+console.log(`Severity: ${errorSummary.severity}`); // NEW field
 ```
 
 ### Example 2: Error Classification
@@ -1316,22 +1329,26 @@ const formatted = analyzer.formatStackTrace(stackTrace, {
 console.log(formatted);
 ```
 
-### Example 4: Error Recovery Assessment
+### Example 4: Error Recovery Assessment (ENHANCEMENT of existing error handling)
 
 ```javascript
-// In CommandProcessor error handling
+// In CommandProcessor error handling - ENHANCING existing patterns
 if (actionTrace) {
+  // ENHANCED: Add context parameter to existing captureError call
   actionTrace.captureError(error, {
     phase: currentPhase,
     retryCount: attemptNumber,
   });
 
+  // NEW: Get enhanced error analysis
   const errorSummary = actionTrace.getErrorSummary();
 
+  // ENHANCED: Use classification for smarter retry logic
   if (errorSummary.isRetryable && attemptNumber < maxRetries) {
     const delay = errorSummary.category === 'timeout' ? 5000 : 1000;
     setTimeout(() => retryAction(), delay);
   } else {
+    // ENHANCED: Use detailed error reporting
     logger.error(actionTrace.getErrorReport());
     return handlePermanentFailure();
   }
@@ -1618,37 +1635,39 @@ describe('Error Capture Integration', () => {
     const error = new Error('Validation failed: missing required parameter');
     error.code = 'VALIDATION_ERROR';
 
+    // ENHANCED: Use modified signature with context parameter
     trace.captureError(error, {
       phase: 'validation',
       retryCount: 1,
     });
 
-    // Verify error capture
-    expect(trace.hasError).toBe(true);
-    expect(trace.isComplete).toBe(true);
+    // Verify ENHANCED error capture
+    expect(trace.hasError).toBe(true); // EXISTING property
+    expect(trace.isComplete).toBe(true); // EXISTING property
 
-    const errorDetails = trace.getError();
+    const errorDetails = trace.getError(); // EXISTING method with NEW enhanced data
     expect(errorDetails.message).toBe(
       'Validation failed: missing required parameter'
-    );
-    expect(errorDetails.type).toBe('Error');
-    expect(errorDetails.code).toBe('VALIDATION_ERROR');
-    expect(errorDetails.classification).toBeTruthy();
-    expect(errorDetails.context.phase).toBe('validation');
+    ); // EXISTING field
+    expect(errorDetails.type).toBe('Error'); // EXISTING field
+    expect(errorDetails.code).toBe('VALIDATION_ERROR'); // EXISTING field
+    expect(errorDetails.classification).toBeTruthy(); // NEW field
+    expect(errorDetails.context.phase).toBe('validation'); // ENHANCED field
 
-    const errorSummary = trace.getErrorSummary();
-    expect(errorSummary.category).toBe('validation');
-    expect(errorSummary.isRetryable).toBe(true);
-    expect(errorSummary.troubleshooting.length).toBeGreaterThan(0);
+    const errorSummary = trace.getErrorSummary(); // NEW method
+    expect(errorSummary.category).toBe('validation'); // NEW field
+    expect(errorSummary.isRetryable).toBe(true); // NEW field
+    expect(errorSummary.troubleshooting.length).toBeGreaterThan(0); // NEW field
   });
 
   it('should generate comprehensive error report', () => {
     trace.captureDispatchStart();
 
     const error = new Error('Database connection timeout');
+    // ENHANCED: Use enhanced captureError (backward compatible)
     trace.captureError(error);
 
-    const report = trace.getErrorReport();
+    const report = trace.getErrorReport(); // NEW method
     expect(report).toContain('ACTION EXECUTION ERROR REPORT');
     expect(report).toContain('Database connection timeout');
     expect(report).toContain('Troubleshooting Steps:');
@@ -1661,50 +1680,53 @@ describe('Error Capture Integration', () => {
     delete error.stack; // Remove stack trace
 
     expect(() => {
+      // ENHANCED: Uses enhanced captureError
       trace.captureError(error);
     }).not.toThrow();
 
-    const errorDetails = trace.getError();
-    expect(errorDetails.stackAnalysis).toBeNull();
-    expect(errorDetails.formattedStack).toBeNull();
-    expect(errorDetails.location).toBeNull();
+    const errorDetails = trace.getError(); // EXISTING method with NEW fields
+    expect(errorDetails.stackAnalysis).toBeNull(); // NEW field
+    expect(errorDetails.formattedStack).toBeNull(); // NEW field
+    expect(errorDetails.location).toBeNull(); // NEW field
   });
 
   it('should integrate with JSON serialization', () => {
     trace.captureDispatchStart();
 
     const error = new Error('Serialization test error');
+    // ENHANCED: Use enhanced captureError
     trace.captureError(error);
 
-    const json = trace.toJSON();
-    expect(json.error).toBeTruthy();
-    expect(json.error.message).toBe('Serialization test error');
-    expect(json.error.classification).toBeTruthy();
-    expect(json.error.context).toBeTruthy();
-    expect(json.execution.status).toBe('error');
+    const json = trace.toJSON(); // EXISTING method with NEW enhanced data
+    expect(json.error).toBeTruthy(); // EXISTING field with NEW structure
+    expect(json.error.message).toBe('Serialization test error'); // EXISTING field
+    expect(json.error.classification).toBeTruthy(); // NEW field
+    expect(json.error.context).toBeTruthy(); // ENHANCED field
+    expect(json.execution.status).toBe('error'); // EXISTING field
   });
 });
 ```
 
 ## Integration Points
 
-### 1. ActionExecutionTrace Integration
+### 1. ActionExecutionTrace Integration (ENHANCEMENT of existing class)
 
-- Seamless integration with existing trace lifecycle
-- Enhanced error capture with classification and analysis
-- Comprehensive error reporting and JSON serialization
+- **Builds on existing**: Enhances existing trace lifecycle and captureError method
+- **Timing integration**: Uses existing ExecutionPhaseTimer integration
+- **New capabilities**: Adds classification and analysis to existing error capture
+- **Backward compatible**: Maintains existing JSON serialization format
 
-### 2. CommandProcessor Integration
+### 2. CommandProcessor Integration (ENHANCEMENT of existing usage)
 
-- Error context capture during action execution
-- Retry logic based on error classification
-- Logging and monitoring integration
+- **Existing context**: Leverages existing error context capture mechanisms
+- **Enhanced retry logic**: Adds classification-based retry decisions to existing error handling
+- **Current monitoring**: Integrates with existing logging patterns
 
-### 3. Error Monitoring Integration
+### 3. Error Monitoring Integration (NEW capabilities)
 
-- Structured error data for external monitoring systems
-- Error classification for automated alerting
-- Performance impact tracking for error handling
+- **Structured enhancement**: Adds classification data to existing error structures
+- **Alert classification**: Enables automated alerting based on error categories
+- **Performance tracking**: Monitors analysis overhead on existing error handling
 
 ## Error Handling
 

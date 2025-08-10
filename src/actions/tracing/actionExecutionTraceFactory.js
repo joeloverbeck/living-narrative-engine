@@ -25,9 +25,10 @@ export class ActionExecutionTraceFactory {
    * @param {string} options.actionId - Action definition ID
    * @param {string} options.actorId - Actor ID
    * @param {object} options.turnAction - Turn action object
+   * @param {boolean} [options.enableTiming] - Enable high-precision timing
    * @returns {ActionExecutionTrace} New trace instance
    */
-  createTrace({ actionId, actorId, turnAction }) {
+  createTrace({ actionId, actorId, turnAction, enableTiming = true }) {
     try {
       // Validate inputs using actual validation patterns
       string.assertNonBlank(
@@ -51,6 +52,7 @@ export class ActionExecutionTraceFactory {
         actionId,
         actorId,
         turnAction,
+        enableTiming,
       });
 
       this.#logger.debug(
@@ -68,9 +70,10 @@ export class ActionExecutionTraceFactory {
    *
    * @param {object} turnAction - Complete turn action
    * @param {string} actorId - Actor ID
+   * @param {boolean} [enableTiming] - Enable high-precision timing
    * @returns {ActionExecutionTrace} New trace instance
    */
-  createFromTurnAction(turnAction, actorId) {
+  createFromTurnAction(turnAction, actorId, enableTiming = true) {
     if (!turnAction || typeof turnAction !== 'object') {
       throw new InvalidArgumentError(
         'Turn action is required and must be an object'
@@ -84,7 +87,7 @@ export class ActionExecutionTraceFactory {
       throw new InvalidArgumentError('Turn action missing actionDefinitionId');
     }
 
-    return this.createTrace({ actionId, actorId, turnAction });
+    return this.createTrace({ actionId, actorId, turnAction, enableTiming });
   }
 
   /**
