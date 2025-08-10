@@ -4,12 +4,17 @@
  * @see ./thematicDirectionGenerator.js
  */
 
-import { validateDependency } from '../../utils/dependencyUtils.js';
+import { 
+  validateDependency,
+  assertNonBlankString,
+  assertPresent,
+} from '../../utils/dependencyUtils.js';
 import {
   createCharacterConcept,
   updateCharacterConcept,
   CHARACTER_CONCEPT_STATUS,
 } from '../models/characterConcept.js';
+import { Cliche } from '../models/cliche.js';
 
 /**
  * Retry configuration for character builder operations
@@ -29,6 +34,8 @@ const RETRY_CONFIG = {
  * @typedef {import('./thematicDirectionGenerator.js').ThematicDirectionGenerator} ThematicDirectionGenerator
  * @typedef {import('../models/characterConcept.js').CharacterConcept} CharacterConcept
  * @typedef {import('../models/thematicDirection.js').ThematicDirection} ThematicDirection
+ * @typedef {import('../storage/characterDatabase.js').CharacterDatabase} CharacterDatabase
+ * @typedef {import('../models/cliche.js').Cliche} Cliche
  */
 
 /**
@@ -43,6 +50,15 @@ export const CHARACTER_BUILDER_EVENTS = {
   DIRECTION_UPDATED: 'core:direction_updated',
   DIRECTION_DELETED: 'core:direction_deleted',
   ERROR_OCCURRED: 'core:character_builder_error_occurred',
+  // Cliché-related events
+  CLICHES_RETRIEVED: 'core:cliches_retrieved',
+  CLICHES_RETRIEVAL_FAILED: 'core:cliches_retrieval_failed',
+  CLICHES_STORED: 'core:cliches_stored',
+  CLICHES_STORAGE_FAILED: 'core:cliches_storage_failed',
+  CLICHES_GENERATION_STARTED: 'core:cliches_generation_started',
+  CLICHES_GENERATION_COMPLETED: 'core:cliches_generation_completed',
+  CLICHES_GENERATION_FAILED: 'core:cliches_generation_failed',
+  CLICHES_DELETED: 'core:cliches_deleted',
 };
 
 /**
@@ -64,7 +80,12 @@ export class CharacterBuilderService {
   #storageService;
   #directionGenerator;
   #eventBus;
+  #database;
+  #schemaValidator;
+  #clicheGenerator;
   #circuitBreakers = new Map(); // For circuit breaker pattern
+  #clicheCache = new Map(); // Cache for clichés with TTL
+  #clicheCacheTTL = 300000; // 5 minutes TTL
 
   /**
    * @param {object} dependencies
@@ -72,8 +93,19 @@ export class CharacterBuilderService {
    * @param {CharacterStorageService} dependencies.storageService - Storage service
    * @param {ThematicDirectionGenerator} dependencies.directionGenerator - Direction generator
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher
+   * @param {CharacterDatabase} [dependencies.database] - Database instance
+   * @param {object} [dependencies.schemaValidator] - Schema validator
+   * @param {object} [dependencies.clicheGenerator] - Cliché generator (CLIGEN-003)
    */
-  constructor({ logger, storageService, directionGenerator, eventBus }) {
+  constructor({ 
+    logger, 
+    storageService, 
+    directionGenerator, 
+    eventBus, 
+    database = null,
+    schemaValidator = null,
+    clicheGenerator = null,
+  }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
     });
@@ -104,6 +136,9 @@ export class CharacterBuilderService {
     this.#storageService = storageService;
     this.#directionGenerator = directionGenerator;
     this.#eventBus = eventBus;
+    this.#database = database;
+    this.#schemaValidator = schemaValidator;
+    this.#clicheGenerator = clicheGenerator;
   }
 
   /**
@@ -710,6 +745,405 @@ export class CharacterBuilderService {
     }
   }
 
+  // ============= Cliché Operations =============
+
+  /**
+   * Get clichés for a thematic direction
+   *
+   * @param {string} directionId - Thematic direction ID
+   * @returns {Promise<Cliche|null>} Cliche data or null if not found
+   */
+  async getClichesByDirectionId(directionId) {
+    assertNonBlankString(
+      directionId,
+      'directionId',
+      'getClichesByDirectionId',
+      this.#logger
+    );
+
+    try {
+      // Check cache first
+      const cached = this.#getCachedCliches(directionId);
+      if (cached) {
+        this.#logger.debug(`Cache hit for clichés: ${directionId}`);
+        return cached;
+      }
+
+      // Query database if available
+      if (!this.#database) {
+        this.#logger.warn('Database not available for cliché operations');
+        return null;
+      }
+
+      const rawData = await this.#database.getClicheByDirectionId(directionId);
+
+      if (!rawData) {
+        this.#logger.info(`No clichés found for direction: ${directionId}`);
+        return null;
+      }
+
+      // Create model instance
+      const cliche = Cliche.fromRawData(rawData);
+
+      // Cache the result
+      this.#cacheCliches(directionId, cliche);
+
+      // Dispatch event
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVED,
+        payload: {
+          directionId,
+          clicheId: cliche.id,
+          categoryStats: cliche.getCategoryStats(),
+        },
+      });
+
+      return cliche;
+    } catch (error) {
+      this.#logger.error(
+        `Failed to get clichés for direction ${directionId}:`,
+        error
+      );
+
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVAL_FAILED,
+        payload: {
+          directionId,
+          error: error.message,
+        },
+      });
+
+      throw new CharacterBuilderError(`Failed to retrieve clichés: ${error.message}`, error);
+    }
+  }
+
+  /**
+   * Check if clichés exist for a direction
+   *
+   * @param {string} directionId - Thematic direction ID
+   * @returns {Promise<boolean>} True if clichés exist
+   */
+  async hasClichesForDirection(directionId) {
+    assertNonBlankString(
+      directionId,
+      'directionId',
+      'hasClichesForDirection',
+      this.#logger
+    );
+
+    try {
+      // Check cache first
+      if (this.#clicheCache.has(directionId)) {
+        const cached = this.#getCachedCliches(directionId);
+        return cached !== null;
+      }
+
+      // Database availability check
+      if (!this.#database) {
+        return false;
+      }
+
+      // Quick existence check
+      const cliche = await this.#database.getClicheByDirectionId(directionId);
+
+      return cliche !== null;
+    } catch (error) {
+      this.#logger.error(
+        `Failed to check clichés existence for ${directionId}:`,
+        error
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Store clichés for a direction
+   *
+   * @param {Cliche|object} cliches - Cliche data to store
+   * @returns {Promise<Cliche>} Stored cliche data
+   */
+  async storeCliches(cliches) {
+    assertPresent(cliches, 'Clichés data is required', CharacterBuilderError, this.#logger);
+
+    try {
+      // Convert to Cliche instance if needed
+      const clicheInstance =
+        cliches instanceof Cliche ? cliches : new Cliche(cliches);
+
+      // Validate against schema if validator available
+      if (this.#schemaValidator) {
+        await this.#validateCliches(clicheInstance);
+      }
+
+      // Check for existing clichés (enforce one-to-one)
+      const existing = await this.hasClichesForDirection(
+        clicheInstance.directionId
+      );
+      if (existing) {
+        throw new CharacterBuilderError(
+          `Clichés already exist for direction ${clicheInstance.directionId}`
+        );
+      }
+
+      // Store clichés using database if available
+      if (!this.#database) {
+        throw new CharacterBuilderError('Database not available for cliché storage');
+      }
+
+      await this.#database.saveCliche(clicheInstance.toJSON());
+
+      // Store metadata
+      await this.#database.addMetadata({
+        key: `last_cliche_generation`,
+        value: {
+          directionId: clicheInstance.directionId,
+          timestamp: new Date().toISOString(),
+          count: clicheInstance.getTotalCount(),
+        },
+      });
+
+      // Clear cache for this direction
+      this.#invalidateClicheCache(clicheInstance.directionId);
+
+      // Cache the new data
+      this.#cacheCliches(clicheInstance.directionId, clicheInstance);
+
+      // Dispatch success event
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.CLICHES_STORED,
+        payload: {
+          directionId: clicheInstance.directionId,
+          conceptId: clicheInstance.conceptId,
+          clicheId: clicheInstance.id,
+          totalCount: clicheInstance.getTotalCount(),
+        },
+      });
+
+      this.#logger.info(
+        `Stored clichés for direction ${clicheInstance.directionId}`
+      );
+
+      return clicheInstance;
+    } catch (error) {
+      this.#logger.error('Failed to store clichés:', error);
+
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.CLICHES_STORAGE_FAILED,
+        payload: {
+          error: error.message,
+          directionId: cliches.directionId || 'unknown',
+        },
+      });
+
+      throw error instanceof CharacterBuilderError 
+        ? error 
+        : new CharacterBuilderError(`Failed to store clichés: ${error.message}`, error);
+    }
+  }
+
+  /**
+   * Generate clichés for a thematic direction
+   *
+   * @param {CharacterConcept} concept - Original character concept
+   * @param {ThematicDirection} direction - Selected thematic direction
+   * @returns {Promise<Cliche>} Generated and stored clichés
+   */
+  async generateClichesForDirection(concept, direction) {
+    assertPresent(
+      concept,
+      'Character concept is required',
+      CharacterBuilderError,
+      this.#logger
+    );
+    assertPresent(
+      direction,
+      'Thematic direction is required',
+      CharacterBuilderError,
+      this.#logger
+    );
+
+    try {
+      // Check if clichés already exist
+      const existing = await this.getClichesByDirectionId(direction.id);
+      if (existing) {
+        this.#logger.info(
+          `Clichés already exist for direction ${direction.id}`
+        );
+        return existing;
+      }
+
+      // Validate concept and direction relationship
+      if (direction.conceptId !== concept.id) {
+        throw new CharacterBuilderError('Direction does not belong to the provided concept');
+      }
+
+      // Dispatch generation started event
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_STARTED,
+        payload: {
+          conceptId: concept.id,
+          directionId: direction.id,
+          directionTitle: direction.title,
+        },
+      });
+
+      // Generate clichés using ClicheGenerator (implemented in CLIGEN-003)
+      if (!this.#clicheGenerator) {
+        throw new CharacterBuilderError('ClicheGenerator not available - CLIGEN-003 not implemented');
+      }
+
+      const generatedData = await this.#clicheGenerator.generateCliches(
+        concept.text || concept.concept,
+        {
+          title: direction.title,
+          description: direction.description,
+          coreTension: direction.coreTension,
+        }
+      );
+
+      // Create Cliche instance
+      const cliche = new Cliche({
+        directionId: direction.id,
+        conceptId: concept.id,
+        categories: generatedData.categories,
+        tropesAndStereotypes: generatedData.tropesAndStereotypes,
+        llmMetadata: generatedData.metadata,
+      });
+
+      // Store the generated clichés
+      const stored = await this.storeCliches(cliche);
+
+      // Dispatch generation completed event
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_COMPLETED,
+        payload: {
+          conceptId: concept.id,
+          directionId: direction.id,
+          clicheId: stored.id,
+          totalCount: stored.getTotalCount(),
+          generationTime: generatedData.metadata?.responseTime || 0,
+        },
+      });
+
+      return stored;
+    } catch (error) {
+      this.#logger.error(
+        `Failed to generate clichés for direction ${direction.id}:`,
+        error
+      );
+
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_FAILED,
+        payload: {
+          conceptId: concept.id,
+          directionId: direction.id,
+          error: error.message,
+        },
+      });
+
+      throw error instanceof CharacterBuilderError 
+        ? error 
+        : new CharacterBuilderError(`Failed to generate clichés: ${error.message}`, error);
+    }
+  }
+
+  // ============= Batch Operations =============
+
+  /**
+   * Get clichés for multiple directions
+   *
+   * @param {string[]} directionIds - Array of direction IDs
+   * @returns {Promise<Map<string, Cliche>>} Map of directionId to Cliche
+   */
+  async getClichesForDirections(directionIds) {
+    assertPresent(
+      directionIds,
+      'Direction IDs are required',
+      CharacterBuilderError,
+      this.#logger
+    );
+
+    const results = new Map();
+    const uncached = [];
+
+    // Check cache first
+    for (const id of directionIds) {
+      const cached = this.#getCachedCliches(id);
+      if (cached) {
+        results.set(id, cached);
+      } else {
+        uncached.push(id);
+      }
+    }
+
+    // Batch fetch uncached
+    if (uncached.length > 0 && this.#database) {
+      try {
+        // Fetch individually since no batch method exists
+        for (const directionId of uncached) {
+          const rawData =
+            await this.#database.getClicheByDirectionId(directionId);
+          if (rawData) {
+            const cliche = Cliche.fromRawData(rawData);
+            results.set(cliche.directionId, cliche);
+            this.#cacheCliches(cliche.directionId, cliche);
+          }
+        }
+      } catch (error) {
+        this.#logger.error('Batch fetch failed:', error);
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Delete clichés for a direction
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<boolean>} True if deleted
+   */
+  async deleteClichesForDirection(directionId) {
+    assertNonBlankString(
+      directionId,
+      'directionId',
+      'deleteClichesForDirection',
+      this.#logger
+    );
+
+    try {
+      const cliche = await this.getClichesByDirectionId(directionId);
+
+      if (!cliche) {
+        return false;
+      }
+
+      if (!this.#database) {
+        throw new CharacterBuilderError('Database not available for cliché deletion');
+      }
+
+      // Delete the cliché
+      await this.#database.deleteCliche(cliche.id);
+
+      this.#invalidateClicheCache(directionId);
+
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.CLICHES_DELETED,
+        payload: {
+          directionId,
+          clicheId: cliche.id,
+        },
+      });
+
+      return true;
+    } catch (error) {
+      this.#logger.error(`Failed to delete clichés for ${directionId}:`, error);
+      throw error instanceof CharacterBuilderError 
+        ? error 
+        : new CharacterBuilderError(`Failed to delete clichés: ${error.message}`, error);
+    }
+  }
+
   // Private helper methods for enhanced error handling
 
   /**
@@ -790,5 +1224,89 @@ export class CharacterBuilderService {
     this.#logger.debug(
       `CharacterBuilderService: Circuit breaker reset for ${key}`
     );
+  }
+
+  // ============= Cliché Cache Management =============
+
+  /**
+   * Get cached clichés
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Cliche|null} Cached cliche or null if expired/missing
+   * @private
+   */
+  #getCachedCliches(directionId) {
+    const cached = this.#clicheCache.get(directionId);
+
+    if (cached && cached.timestamp + this.#clicheCacheTTL > Date.now()) {
+      return cached.data;
+    }
+
+    // Remove expired cache
+    if (cached) {
+      this.#clicheCache.delete(directionId);
+    }
+
+    return null;
+  }
+
+  /**
+   * Cache clichés with TTL
+   *
+   * @param {string} directionId - Direction ID
+   * @param {Cliche} cliche - Cliche data to cache
+   * @private
+   */
+  #cacheCliches(directionId, cliche) {
+    this.#clicheCache.set(directionId, {
+      data: cliche,
+      timestamp: Date.now(),
+    });
+
+    // Limit cache size to prevent memory issues
+    if (this.#clicheCache.size > 50) {
+      const firstKey = this.#clicheCache.keys().next().value;
+      this.#clicheCache.delete(firstKey);
+    }
+  }
+
+  /**
+   * Invalidate cache for a direction
+   *
+   * @param {string} directionId - Direction ID
+   * @private
+   */
+  #invalidateClicheCache(directionId) {
+    this.#clicheCache.delete(directionId);
+  }
+
+  /**
+   * Clear all cliché caches
+   *
+   * @private
+   */
+  #clearClicheCache() {
+    this.#clicheCache.clear();
+  }
+
+  /**
+   * Validate clichés against schema
+   *
+   * @param {Cliche} cliche - Cliche instance to validate
+   * @returns {Promise<void>}
+   * @private
+   */
+  async #validateCliches(cliche) {
+    if (this.#schemaValidator) {
+      const isValid = this.#schemaValidator.validateAgainstSchema(
+        cliche.toJSON(),
+        'schema://living-narrative-engine/cliche.schema.json'
+      );
+
+      if (!isValid) {
+        const errors = this.#schemaValidator.formatAjvErrors();
+        throw new CharacterBuilderError(`Invalid cliché data: ${errors}`);
+      }
+    }
   }
 }

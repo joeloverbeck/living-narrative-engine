@@ -45,12 +45,23 @@ Create a dedicated service for generating clichés via LLM integration. This ser
  * @see CharacterBuilderService.js
  */
 
+import { validateDependency } from '../../utils/dependencyUtils.js';
 import {
-  validateDependency,
-  assertPresent,
-  assertNonBlankString,
-} from '../../utils/validationUtils.js';
-import { ensureValidLogger } from '../../utils/loggerUtils.js';
+  buildClicheGenerationPrompt,
+  validateClicheGenerationResponse,
+  CLICHE_GENERATION_RESPONSE_SCHEMA,
+  createClicheGenerationLlmConfig,
+  CHARACTER_BUILDER_LLM_PARAMS,
+} from '../prompts/clicheGenerationPrompt.js';
+import { createClichesFromLLMResponse } from '../models/cliche.js';
+
+/**
+ * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../../llms/llmJsonService.js').LlmJsonService} LlmJsonService
+ * @typedef {import('../../turns/adapters/configurableLLMAdapter.js').ConfigurableLLMAdapter} ConfigurableLLMAdapter
+ * @typedef {import('../../llms/interfaces/ILLMConfigurationManager.js').ILLMConfigurationManager} ILLMConfigurationManager
+ * @typedef {import('../models/cliche.js').Cliche} Cliche
+ */
 
 /**
  * @typedef {object} ClicheGenerationResult
@@ -60,458 +71,367 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
  */
 
 /**
+ * Custom error for cliche generation failures
+ */
+export class ClicheGenerationError extends Error {
+  constructor(message, cause) {
+    super(message);
+    this.name = 'ClicheGenerationError';
+    this.cause = cause;
+  }
+}
+
+/**
  * Service for generating character clichés via LLM
  */
 export class ClicheGenerator {
-  #llmService;
   #logger;
-  #maxRetries = 3;
-  #retryDelay = 1000;
-  #timeout = 30000; // 30 seconds
-  #temperature = 0.7;
-  #maxTokens = 2000;
-  #promptVersion = '1.0.0';
+  #llmJsonService;
+  #llmStrategyFactory;
+  #llmConfigManager;
 
   /**
-   * @param {object} config - Service configuration
-   * @param {ILLMService} config.llmService - LLM service for generation
-   * @param {ILogger} config.logger - Logger instance
+   * @param {object} dependencies
+   * @param {ILogger} dependencies.logger - Logger instance
+   * @param {LlmJsonService} dependencies.llmJsonService - LLM JSON processing service
+   * @param {ConfigurableLLMAdapter} dependencies.llmStrategyFactory - LLM adapter (provides strategy factory functionality)
+   * @param {ILLMConfigurationManager} dependencies.llmConfigManager - LLM configuration manager
    */
-  constructor({ llmService, logger }) {
-    validateDependency(llmService, 'ILLMService');
-    this.#logger = ensureValidLogger(logger);
-    this.#llmService = llmService;
+  constructor({
+    logger,
+    llmJsonService,
+    llmStrategyFactory,
+    llmConfigManager,
+  }) {
+    validateDependency(logger, 'ILogger', logger, {
+      requiredMethods: ['debug', 'info', 'warn', 'error'],
+    });
+    validateDependency(llmJsonService, 'LlmJsonService', logger, {
+      requiredMethods: ['clean', 'parseAndRepair'],
+    });
+    validateDependency(llmStrategyFactory, 'ConfigurableLLMAdapter', logger, {
+      requiredMethods: ['getAIDecision'],
+    });
+    validateDependency(llmConfigManager, 'ILLMConfigurationManager', logger, {
+      requiredMethods: [
+        'loadConfiguration',
+        'getActiveConfiguration',
+        'setActiveConfiguration',
+      ],
+    });
+
+    this.#logger = logger;
+    this.#llmJsonService = llmJsonService;
+    this.#llmStrategyFactory = llmStrategyFactory;
+    this.#llmConfigManager = llmConfigManager;
   }
 
   /**
    * Generate clichés for a character concept and thematic direction
+   *
+   * @param {string} conceptId - Character concept ID for association
    * @param {string} conceptText - Character concept description
    * @param {object} direction - Thematic direction details
    * @param {string} direction.title - Direction title
    * @param {string} direction.description - Direction description
    * @param {string} direction.coreTension - Core tension/conflict
-   * @returns {Promise<ClicheGenerationResult>} Generated clichés
+   * @param {object} [options] - Generation options
+   * @param {string} [options.llmConfigId] - Specific LLM config to use
+   * @returns {Promise<Cliche[]>} Generated clichés
+   * @throws {ClicheGenerationError} If generation fails
    */
-  async generateCliches(conceptText, direction) {
-    assertNonBlankString(conceptText, 'Concept text is required');
-    assertPresent(direction, 'Direction is required');
-    assertNonBlankString(direction.title, 'Direction title is required');
+  async generateCliches(conceptId, conceptText, direction, options = {}) {
+    if (
+      !conceptId ||
+      typeof conceptId !== 'string' ||
+      conceptId.trim().length === 0
+    ) {
+      throw new ClicheGenerationError(
+        'conceptId must be a non-empty string'
+      );
+    }
+
+    if (
+      !conceptText ||
+      typeof conceptText !== 'string' ||
+      conceptText.trim().length === 0
+    ) {
+      throw new ClicheGenerationError(
+        'conceptText must be a non-empty string'
+      );
+    }
+
+    if (!direction || typeof direction !== 'object') {
+      throw new ClicheGenerationError(
+        'direction must be a valid object'
+      );
+    }
+
+    this.#logger.info(
+      `ClicheGenerator: Starting generation for concept ${conceptId}`,
+      {
+        conceptId,
+        conceptLength: conceptText.length,
+        direction: direction.title,
+      }
+    );
 
     const startTime = Date.now();
 
     try {
       // Build the prompt
-      const prompt = this.#buildPrompt(conceptText, direction);
-
-      // Generate with retry logic
-      const response = await this.#generateWithRetry(prompt);
-
-      // Parse and validate response
-      const parsed = this.#parseResponse(response);
-
-      // Validate completeness
-      this.#validateResponse(parsed);
-
-      // Add metadata
-      const result = {
-        ...parsed,
-        metadata: {
-          model: response.model || 'unknown',
-          temperature: this.#temperature,
-          tokens: response.usage?.total_tokens || 0,
-          responseTime: Date.now() - startTime,
-          promptVersion: this.#promptVersion,
-          timestamp: new Date().toISOString(),
-        },
-      };
-
-      this.#logger.info(
-        `Generated clichés for direction "${direction.title}" in ${result.metadata.responseTime}ms`
-      );
-
-      return result;
-    } catch (error) {
-      this.#logger.error(`Failed to generate clichés: ${error.message}`, error);
-      throw new Error(`Cliché generation failed: ${error.message}`);
-    }
-  }
-
-  /**
-   * Build the generation prompt
-   * @private
-   */
-  #buildPrompt(conceptText, direction) {
-    return `<role>
-You are a narrative design assistant specializing in identifying overused tropes, clichés, and stereotypes in character development. Your goal is to help writers avoid predictable and uninspired character elements.
-</role>
-
-<task>
-Generate a comprehensive "what to avoid" list for the given character concept when developed in the specified thematic direction. Focus on genuinely overused elements that would make the character feel generic or predictable.
-</task>
-
-<character_concept>
-${conceptText}
-</character_concept>
-
-<thematic_direction>
-Title: ${direction.title}
-Description: ${direction.description || 'Not provided'}
-Core Tension: ${direction.coreTension || 'Not specified'}
-</thematic_direction>
-
-<instructions>
-Identify the most clichéd and overused elements that writers should avoid when developing this character in this direction. For each category, provide 3-5 specific examples that are genuinely problematic tropes or stereotypes.
-
-Categories to address:
-1. Names - Common/overused character names for this archetype
-2. Physical Descriptions - Clichéd appearance traits
-3. Personality Traits - Overused personality characteristics
-4. Skills/Abilities - Predictable capabilities
-5. Typical Likes - Common interests/preferences
-6. Typical Dislikes - Predictable aversions
-7. Common Fears - Overused fears/phobias
-8. Generic Goals - Predictable motivations
-9. Background Elements - Clichéd backstory components
-10. Overused Secrets - Common "twist" reveals
-11. Speech Patterns - Overused catchphrases/verbal tics
-12. Tropes and Stereotypes - Overall narrative patterns to avoid
-
-Important:
-- Be specific and concrete in your examples
-- Focus on truly overused elements, not just common traits
-- Consider the specific context of the character concept and thematic direction
-- Avoid being overly general - provide actionable "what not to do" guidance
-</instructions>
-
-<response_format>
-Return your response as a valid JSON object with this exact structure:
-{
-  "categories": {
-    "names": ["example1", "example2", "example3"],
-    "physicalDescriptions": ["example1", "example2", "example3"],
-    "personalityTraits": ["example1", "example2", "example3"],
-    "skillsAbilities": ["example1", "example2", "example3"],
-    "typicalLikes": ["example1", "example2", "example3"],
-    "typicalDislikes": ["example1", "example2", "example3"],
-    "commonFears": ["example1", "example2", "example3"],
-    "genericGoals": ["example1", "example2", "example3"],
-    "backgroundElements": ["example1", "example2", "example3"],
-    "overusedSecrets": ["example1", "example2", "example3"],
-    "speechPatterns": ["example1", "example2", "example3"]
-  },
-  "tropesAndStereotypes": ["trope1", "trope2", "trope3", "trope4", "trope5"]
-}
-
-Ensure all arrays contain at least 3 items and the JSON is properly formatted.
-</response_format>`;
-  }
-
-  /**
-   * Generate with retry logic
-   * @private
-   */
-  async #generateWithRetry(prompt) {
-    let lastError;
-
-    for (let attempt = 1; attempt <= this.#maxRetries; attempt++) {
-      try {
-        this.#logger.debug(`Generation attempt ${attempt}/${this.#maxRetries}`);
-
-        const response = await this.#callLLM(prompt);
-
-        if (response && response.content) {
-          return response;
-        }
-
-        throw new Error('Empty response from LLM');
-      } catch (error) {
-        lastError = error;
-        this.#logger.warn(`Attempt ${attempt} failed: ${error.message}`);
-
-        if (attempt < this.#maxRetries) {
-          // Exponential backoff
-          const delay = this.#retryDelay * Math.pow(2, attempt - 1);
-          await this.#delay(delay);
-        }
-      }
-    }
-
-    throw new Error(
-      `Failed after ${this.#maxRetries} attempts: ${lastError.message}`
-    );
-  }
-
-  /**
-   * Call the LLM service
-   * @private
-   */
-  async #callLLM(prompt) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.#timeout);
-
-    try {
-      const response = await this.#llmService.generateCompletion({
-        prompt,
-        temperature: this.#temperature,
-        maxTokens: this.#maxTokens,
-        model: 'gpt-4', // Or configured model
-        signal: controller.signal,
-        systemPrompt:
-          'You are a helpful assistant that always responds with valid JSON.',
-        responseFormat: { type: 'json_object' },
+      const prompt = buildClicheGenerationPrompt(conceptText, direction);
+      this.#logger.debug('ClicheGenerator: Built prompt', {
+        promptLength: prompt.length,
+        conceptId,
       });
 
-      clearTimeout(timeoutId);
+      // Get LLM response
+      const llmResponse = await this.#callLLM(prompt, options.llmConfigId);
+      const processingTime = Date.now() - startTime;
+
+      // Parse and validate response
+      const parsedResponse = await this.#parseResponse(llmResponse);
+      this.#validateResponseStructure(parsedResponse);
+
+      // Get active config for metadata
+      const activeConfig =
+        await this.#llmConfigManager.getActiveConfiguration();
+      const llmMetadata = {
+        modelId: activeConfig?.configId || 'unknown',
+        promptTokens: this.#estimateTokens(prompt),
+        responseTokens: this.#estimateTokens(JSON.stringify(parsedResponse)),
+        processingTime,
+      };
+
+      const cliches = createClichesFromLLMResponse(
+        conceptId,
+        parsedResponse.categories,
+        parsedResponse.tropesAndStereotypes,
+        llmMetadata
+      );
+
+      this.#logger.info(
+        'ClicheGenerator: Successfully generated clichés',
+        {
+          conceptId,
+          clicheCount: cliches.length,
+          processingTime,
+        }
+      );
+
+      return cliches;
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      this.#logger.error('ClicheGenerator: Generation failed', {
+        conceptId,
+        error: error.message,
+        processingTime,
+      });
+
+      if (error instanceof ClicheGenerationError) {
+        throw error;
+      }
+
+      throw new ClicheGenerationError(
+        `Failed to generate clichés for concept ${conceptId}: ${error.message}`,
+        error
+      );
+    }
+  }
+
+  /**
+   * Call the LLM with the generated prompt
+   *
+   * @private
+   * @param {string} prompt - Formatted prompt
+   * @param {string} [llmConfigId] - Specific LLM config to use
+   * @returns {Promise<string>} Raw LLM response
+   */
+  async #callLLM(prompt, llmConfigId) {
+    try {
+      // Set active LLM configuration if specified
+      if (llmConfigId) {
+        const success =
+          await this.#llmConfigManager.setActiveConfiguration(llmConfigId);
+        if (!success) {
+          const config =
+            await this.#llmConfigManager.loadConfiguration(llmConfigId);
+          if (!config) {
+            throw new Error(`LLM configuration not found: ${llmConfigId}`);
+          }
+        }
+      }
+
+      // Get the current active configuration
+      const activeConfig =
+        await this.#llmConfigManager.getActiveConfiguration();
+      if (!activeConfig) {
+        throw new Error('No active LLM configuration found.');
+      }
+
+      // Prepare request options with custom schema
+      const requestOptions = {
+        toolSchema: CLICHE_GENERATION_RESPONSE_SCHEMA,
+        toolName: 'generate_character_cliches',
+        toolDescription:
+          'Generate cliché warnings for character development based on the provided concept and thematic direction',
+      };
+
+      // Use the ConfigurableLLMAdapter with request options
+      const response = await this.#llmStrategyFactory.getAIDecision(
+        prompt,
+        null, // no abort signal
+        requestOptions
+      );
+
+      this.#logger.debug('ClicheGenerator: Received LLM response', {
+        responseLength: response.length,
+        modelId: activeConfig.configId,
+      });
+
       return response;
     } catch (error) {
-      clearTimeout(timeoutId);
-
-      if (error.name === 'AbortError') {
-        throw new Error(`Generation timeout after ${this.#timeout}ms`);
-      }
-
-      throw error;
+      throw new ClicheGenerationError(
+        `LLM request failed: ${error.message}`,
+        error
+      );
     }
   }
 
   /**
-   * Parse LLM response
+   * Parse and clean LLM response
+   *
    * @private
+   * @param {string} rawResponse - Raw LLM response
+   * @returns {Promise<object>} Parsed response object
    */
-  #parseResponse(response) {
+  async #parseResponse(rawResponse) {
     try {
-      // Extract JSON from response
-      let content = response.content || response.text || '';
+      const cleanedResponse = this.#llmJsonService.clean(rawResponse);
+      const parsedResponse = await this.#llmJsonService.parseAndRepair(
+        cleanedResponse,
+        {
+          logger: this.#logger,
+        }
+      );
 
-      // Clean up response (remove markdown code blocks if present)
-      content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-
-      // Parse JSON
-      const parsed = JSON.parse(content);
-
-      // Validate structure
-      if (!parsed.categories || typeof parsed.categories !== 'object') {
-        throw new Error('Invalid response structure: missing categories');
-      }
-
-      // Normalize the response
-      return this.#normalizeResponse(parsed);
+      this.#logger.debug(
+        'ClicheGenerator: Successfully parsed LLM response'
+      );
+      return parsedResponse;
     } catch (error) {
-      this.#logger.error('Failed to parse LLM response:', error);
-
-      // Attempt recovery with fallback parsing
-      return this.#attemptFallbackParsing(response);
-    }
-  }
-
-  /**
-   * Normalize parsed response
-   * @private
-   */
-  #normalizeResponse(parsed) {
-    const requiredCategories = [
-      'names',
-      'physicalDescriptions',
-      'personalityTraits',
-      'skillsAbilities',
-      'typicalLikes',
-      'typicalDislikes',
-      'commonFears',
-      'genericGoals',
-      'backgroundElements',
-      'overusedSecrets',
-      'speechPatterns',
-    ];
-
-    const normalized = {
-      categories: {},
-      tropesAndStereotypes: [],
-    };
-
-    // Normalize categories
-    for (const category of requiredCategories) {
-      const items = parsed.categories[category];
-
-      if (Array.isArray(items)) {
-        // Filter and clean items
-        normalized.categories[category] = items
-          .filter((item) => typeof item === 'string' && item.trim())
-          .map((item) => item.trim())
-          .slice(0, 10); // Limit to 10 items per category
-      } else {
-        // Provide empty array if missing
-        normalized.categories[category] = [];
-        this.#logger.warn(`Missing or invalid category: ${category}`);
-      }
-    }
-
-    // Normalize tropes
-    if (Array.isArray(parsed.tropesAndStereotypes)) {
-      normalized.tropesAndStereotypes = parsed.tropesAndStereotypes
-        .filter((item) => typeof item === 'string' && item.trim())
-        .map((item) => item.trim())
-        .slice(0, 15); // Limit to 15 tropes
-    } else {
-      normalized.tropesAndStereotypes = [];
-    }
-
-    return normalized;
-  }
-
-  /**
-   * Attempt fallback parsing for malformed responses
-   * @private
-   */
-  #attemptFallbackParsing(response) {
-    this.#logger.warn('Attempting fallback parsing');
-
-    const fallback = {
-      categories: {},
-      tropesAndStereotypes: [],
-    };
-
-    // Initialize with empty arrays
-    const categories = [
-      'names',
-      'physicalDescriptions',
-      'personalityTraits',
-      'skillsAbilities',
-      'typicalLikes',
-      'typicalDislikes',
-      'commonFears',
-      'genericGoals',
-      'backgroundElements',
-      'overusedSecrets',
-      'speechPatterns',
-    ];
-
-    for (const category of categories) {
-      fallback.categories[category] = [];
-    }
-
-    // Try to extract any useful content
-    const content = response.content || response.text || '';
-
-    // Look for bullet points or numbered lists
-    const lines = content.split('\n');
-    const items = [];
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed.match(/^[-*•]\s+(.+)/) || trimmed.match(/^\d+\.\s+(.+)/)) {
-        const item = trimmed.replace(/^[-*•]\s+/, '').replace(/^\d+\.\s+/, '');
-        items.push(item);
-      }
-    }
-
-    // Distribute items across categories (basic fallback)
-    if (items.length > 0) {
-      const itemsPerCategory = Math.max(
-        1,
-        Math.floor(items.length / categories.length)
+      throw new ClicheGenerationError(
+        `Failed to parse LLM response: ${error.message}`,
+        error
       );
-      let itemIndex = 0;
-
-      for (const category of categories) {
-        fallback.categories[category] = items
-          .slice(itemIndex, itemIndex + itemsPerCategory)
-          .slice(0, 5);
-        itemIndex += itemsPerCategory;
-      }
     }
-
-    return fallback;
   }
 
   /**
-   * Validate response completeness
+   * Validate the structure of the parsed response
+   *
    * @private
+   * @param {object} response - Parsed response
+   * @throws {ClicheGenerationError} If validation fails
    */
-  #validateResponse(parsed) {
-    const issues = [];
-
-    // Check categories
-    for (const [category, items] of Object.entries(parsed.categories)) {
-      if (!Array.isArray(items)) {
-        issues.push(`Category "${category}" is not an array`);
-      } else if (items.length === 0) {
-        issues.push(`Category "${category}" is empty`);
-      } else if (items.length < 2) {
-        this.#logger.warn(
-          `Category "${category}" has only ${items.length} item(s)`
-        );
-      }
-    }
-
-    // Check tropes
-    if (!Array.isArray(parsed.tropesAndStereotypes)) {
-      issues.push('Tropes and stereotypes is not an array');
-    } else if (parsed.tropesAndStereotypes.length === 0) {
-      issues.push('No tropes and stereotypes provided');
-    }
-
-    // Throw if critical issues
-    if (issues.length > 0) {
-      const totalItems = Object.values(parsed.categories).reduce(
-        (sum, items) => sum + items.length,
-        0
+  #validateResponseStructure(response) {
+    try {
+      validateClicheGenerationResponse(response);
+      this.#logger.debug(
+        'ClicheGenerator: Response structure validated successfully'
       );
-
-      if (totalItems < 10) {
-        throw new Error(
-          `Insufficient cliché data generated: ${issues.join(', ')}`
-        );
-      }
-
-      // Log warnings but don't fail if we have enough data
-      this.#logger.warn(`Response validation warnings: ${issues.join(', ')}`);
+    } catch (error) {
+      throw new ClicheGenerationError(
+        `Invalid response structure: ${error.message}`,
+        error
+      );
     }
   }
 
   /**
-   * Delay helper for retry logic
+   * Estimate token count for a text string
+   *
    * @private
+   * @param {string} text - Text to estimate
+   * @returns {number} Estimated token count
    */
-  #delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  #estimateTokens(text) {
+    // Simple estimation: ~4 characters per token on average
+    return Math.ceil(text.length / 4);
   }
 
   /**
-   * Update configuration
-   * @param {object} config - Configuration updates
+   * Validate LLM response against schema
+   *
+   * @param {object} response - LLM response to validate
+   * @returns {boolean} True if valid
+   * @throws {Error} If validation fails
    */
-  updateConfiguration(config) {
-    if (config.temperature !== undefined) {
-      this.#temperature = Math.max(0, Math.min(2, config.temperature));
-    }
-    if (config.maxTokens !== undefined) {
-      this.#maxTokens = Math.max(100, Math.min(4000, config.maxTokens));
-    }
-    if (config.maxRetries !== undefined) {
-      this.#maxRetries = Math.max(1, Math.min(5, config.maxRetries));
-    }
-    if (config.timeout !== undefined) {
-      this.#timeout = Math.max(5000, Math.min(60000, config.timeout));
-    }
-
-    this.#logger.info('Configuration updated:', config);
+  validateResponse(response) {
+    return validateClicheGenerationResponse(response);
   }
 
   /**
-   * Get current configuration
-   * @returns {object} Current configuration
+   * Get the schema used for LLM response validation
+   *
+   * @returns {object} JSON schema object
    */
-  getConfiguration() {
-    return {
-      temperature: this.#temperature,
-      maxTokens: this.#maxTokens,
-      maxRetries: this.#maxRetries,
-      timeout: this.#timeout,
-      retryDelay: this.#retryDelay,
-      promptVersion: this.#promptVersion,
-    };
+  getResponseSchema() {
+    return CLICHE_GENERATION_RESPONSE_SCHEMA;
   }
 }
 
 export default ClicheGenerator;
+````
+
+### 2. Dependency Injection Registration
+
+Update `src/dependencyInjection/registrations/characterBuilderRegistrations.js`:
+
+````javascript
+// Import the new service
+import { ClicheGenerator } from '../../characterBuilder/services/ClicheGenerator.js';
+
+// Add to registerCharacterBuilderServices function
+function registerCharacterBuilderServices(registrar, logger) {
+  // ... existing ThematicDirectionGenerator registration ...
+
+  registrar.singletonFactory(tokens.ClicheGenerator, (c) => {
+    return new ClicheGenerator({
+      logger: c.resolve(tokens.ILogger),
+      llmJsonService: c.resolve(tokens.LlmJsonService),
+      llmStrategyFactory: c.resolve(tokens.LLMAdapter), // Use the ConfigurableLLMAdapter
+      llmConfigManager: c.resolve(tokens.ILLMConfigurationManager),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.ClicheGenerator}.`
+  );
+
+  // Update CharacterBuilderService registration to include clicheGenerator
+  registrar.singletonFactory(tokens.CharacterBuilderService, (c) => {
+    return new CharacterBuilderService({
+      logger: c.resolve(tokens.ILogger),
+      storageService: c.resolve(tokens.CharacterStorageService),
+      directionGenerator: c.resolve(tokens.ThematicDirectionGenerator),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+      database: c.resolve(tokens.CharacterDatabase),
+      schemaValidator: c.resolve(tokens.ISchemaValidator),
+      clicheGenerator: c.resolve(tokens.ClicheGenerator), // Replace null with actual service
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Updated ${tokens.CharacterBuilderService} with ClicheGenerator.`
+  );
+}
+````
+
+### 3. Token Definition
+
+Add to `src/dependencyInjection/tokens/tokens-core.js`:
+
+````javascript
+// Add to character builder tokens section
+ClicheGenerator: Symbol('ClicheGenerator'),
 ````

@@ -3,6 +3,10 @@
  * Captures timing, payloads, results, and errors for action execution
  */
 
+/** @typedef {import('./timing/executionPhaseTimer.js').ExecutionPhaseTimer} ExecutionPhaseTimer */
+import { ExecutionPhaseTimer } from './timing/executionPhaseTimer.js';
+import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
+
 /**
  * ActionExecutionTrace class for capturing action execution data
  * Used by CommandProcessor to track action dispatch and execution
@@ -14,6 +18,8 @@ export class ActionExecutionTrace {
   #executionData;
   #startTime;
   #endTime;
+  #phaseTimer;
+  #timingEnabled;
 
   /**
    * Create new execution trace
@@ -22,8 +28,9 @@ export class ActionExecutionTrace {
    * @param {string} options.actionId - Action definition ID being executed
    * @param {string} options.actorId - Actor performing the action
    * @param {object} options.turnAction - Complete turn action object
+   * @param {boolean} [options.enableTiming] - Enable high-precision timing
    */
-  constructor({ actionId, actorId, turnAction }) {
+  constructor({ actionId, actorId, turnAction, enableTiming = true }) {
     // Validate required parameters
     if (!actionId || typeof actionId !== 'string') {
       throw new Error('ActionExecutionTrace requires valid actionId string');
@@ -33,6 +40,11 @@ export class ActionExecutionTrace {
     }
     if (!turnAction || typeof turnAction !== 'object') {
       throw new Error('ActionExecutionTrace requires valid turnAction object');
+    }
+    
+    // Validate enableTiming parameter
+    if (typeof enableTiming !== 'boolean') {
+      throw new InvalidArgumentError('enableTiming must be a boolean value');
     }
 
     this.#actionId = actionId;
@@ -52,11 +64,16 @@ export class ActionExecutionTrace {
 
     this.#startTime = null;
     this.#endTime = null;
+    
+    // Add timing support with backward compatibility
+    this.#timingEnabled = enableTiming;
+    if (this.#timingEnabled) {
+      this.#phaseTimer = new ExecutionPhaseTimer();
+    }
   }
 
   /**
-   * Mark the start of action dispatch
-   * Captures high-precision start time
+   * Enhanced dispatch start with timing
    */
   captureDispatchStart() {
     if (this.#startTime !== null) {
@@ -66,6 +83,15 @@ export class ActionExecutionTrace {
     this.#startTime = this.#getHighPrecisionTime();
     this.#executionData.startTime = this.#startTime;
 
+    // Start execution timing
+    if (this.#timingEnabled && this.#phaseTimer) {
+      this.#phaseTimer.startExecution('action_dispatch');
+      this.#phaseTimer.startPhase('initialization', {
+        actionId: this.#actionId,
+        actorId: this.#actorId,
+      });
+    }
+
     this.#executionData.phases.push({
       phase: 'dispatch_start',
       timestamp: this.#startTime,
@@ -74,9 +100,9 @@ export class ActionExecutionTrace {
   }
 
   /**
-   * Capture the event payload sent to EventDispatchService
+   * Enhanced payload capture with phase timing
    *
-   * @param {object} payload - Event payload object
+   * @param payload
    */
   captureEventPayload(payload) {
     if (this.#startTime === null) {
@@ -88,24 +114,34 @@ export class ActionExecutionTrace {
       throw new Error('Cannot capture payload after dispatch has ended');
     }
 
-    // Create immutable copy of payload, filtering sensitive data
+    // End initialization phase, start payload phase
+    if (this.#timingEnabled && this.#phaseTimer) {
+      this.#phaseTimer.endPhase('initialization');
+      this.#phaseTimer.startPhase('payload_creation', {
+        payloadSize: this.#calculatePayloadSize(payload),
+      });
+    }
+
     this.#executionData.eventPayload = this.#sanitizePayload(payload);
 
+    const timestamp = this.#getHighPrecisionTime();
     this.#executionData.phases.push({
       phase: 'payload_captured',
-      timestamp: this.#getHighPrecisionTime(),
+      timestamp,
       description: 'Event payload captured',
       payloadSize: this.#calculatePayloadSize(payload),
     });
+
+    // Add timing marker
+    if (this.#timingEnabled && this.#phaseTimer) {
+      this.#phaseTimer.addMarker('payload_sanitized');
+    }
   }
 
   /**
-   * Capture the result of dispatch operation
+   * Enhanced dispatch result with timing
    *
-   * @param {object} result - Dispatch result
-   * @param {boolean} result.success - Whether dispatch succeeded
-   * @param {number} [result.timestamp] - Result timestamp
-   * @param {object} [result.metadata] - Additional result metadata
+   * @param result
    */
   captureDispatchResult(result) {
     if (this.#startTime === null) {
@@ -121,7 +157,19 @@ export class ActionExecutionTrace {
     this.#executionData.endTime = this.#endTime;
     this.#executionData.duration = this.#endTime - this.#startTime;
 
-    // Store dispatch result
+    // End current phase and start completion phase
+    if (this.#timingEnabled && this.#phaseTimer) {
+      // End whichever phase is currently active (initialization or payload_creation)
+      const currentPhases = this.#phaseTimer.getAllPhases();
+      const activePhase = currentPhases.find(p => p.endTime === null);
+      if (activePhase) {
+        this.#phaseTimer.endPhase(activePhase.name);
+      }
+      this.#phaseTimer.startPhase('completion', {
+        success: Boolean(result.success),
+      });
+    }
+
     this.#executionData.dispatchResult = {
       success: Boolean(result.success),
       timestamp: result.timestamp || this.#endTime,
@@ -134,12 +182,21 @@ export class ActionExecutionTrace {
       description: result.success ? 'Dispatch succeeded' : 'Dispatch failed',
       success: result.success,
     });
+
+    // Complete timing
+    if (this.#timingEnabled && this.#phaseTimer) {
+      this.#phaseTimer.endPhase('completion');
+      this.#phaseTimer.endExecution({
+        success: result.success,
+        actionId: this.#actionId,
+      });
+    }
   }
 
   /**
-   * Capture error information
+   * Enhanced error capture with timing
    *
-   * @param {Error} error - Error that occurred during execution
+   * @param error
    */
   captureError(error) {
     if (this.#startTime === null) {
@@ -150,20 +207,36 @@ export class ActionExecutionTrace {
 
     const errorTime = this.#getHighPrecisionTime();
 
-    // End timing if not already ended
     if (this.#endTime === null) {
       this.#endTime = errorTime;
       this.#executionData.endTime = this.#endTime;
       this.#executionData.duration = this.#endTime - this.#startTime;
     }
 
-    // Capture comprehensive error information
+    // Handle timing for error case
+    if (this.#timingEnabled && this.#phaseTimer) {
+      // End any active phase
+      if (this.#phaseTimer.isActive()) {
+        this.#phaseTimer.addMarker('error_occurred', null, {
+          errorType: error.constructor.name,
+          errorMessage: error.message,
+        });
+      }
+
+      // End execution with error
+      if (this.#endTime === errorTime) {
+        this.#phaseTimer.endExecution({
+          success: false,
+          error: error.constructor.name,
+        });
+      }
+    }
+
     this.#executionData.error = {
       message: error.message || 'Unknown error',
       type: error.constructor.name || 'Error',
       stack: error.stack || null,
       timestamp: errorTime,
-      // Additional error properties if available
       code: error.code || null,
       cause: error.cause || null,
     };
@@ -231,12 +304,10 @@ export class ActionExecutionTrace {
   }
 
   /**
-   * Convert trace to JSON for serialization
-   *
-   * @returns {object} Serializable trace data
+   * Enhanced JSON export with timing data
    */
   toJSON() {
-    return {
+    const baseData = {
       metadata: {
         actionId: this.#actionId,
         actorId: this.#actorId,
@@ -247,7 +318,6 @@ export class ActionExecutionTrace {
       turnAction: {
         actionDefinitionId: this.#turnAction.actionDefinitionId,
         commandString: this.#turnAction.commandString,
-        // Include other non-sensitive turn action properties
         parameters: this.#turnAction.parameters || {},
       },
       execution: {
@@ -261,6 +331,13 @@ export class ActionExecutionTrace {
       result: this.#executionData.dispatchResult,
       error: this.#executionData.error,
     };
+
+    // Add timing data if available
+    if (this.#timingEnabled && this.#phaseTimer) {
+      baseData.timing = this.#phaseTimer.exportTimingData();
+    }
+
+    return baseData;
   }
 
   /**
@@ -275,6 +352,32 @@ export class ActionExecutionTrace {
       : 'incomplete';
 
     return `Action: ${this.#actionId} | Actor: ${this.#actorId} | Status: ${status} | Duration: ${duration}`;
+  }
+
+  /**
+   * Get detailed performance report
+   *
+   * @returns {string} Human-readable performance report
+   */
+  getPerformanceReport() {
+    if (!this.#timingEnabled || !this.#phaseTimer) {
+      return 'Timing not enabled for this trace';
+    }
+
+    return this.#phaseTimer.createReport();
+  }
+
+  /**
+   * Get timing summary
+   *
+   * @returns {object | null} Timing summary or null if timing disabled
+   */
+  getTimingSummary() {
+    if (!this.#timingEnabled || !this.#phaseTimer) {
+      return null;
+    }
+
+    return this.#phaseTimer.getSummary();
   }
 
   /**

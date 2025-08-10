@@ -241,11 +241,141 @@ describe('MergeClosenessCircleHandler', () => {
     });
   });
 
-  test('validates parameters', async () => {
+  test('validates parameters - missing actor_id', async () => {
     await handler.execute({}, execCtx);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({ message: expect.stringContaining('actor_id') })
+    );
+  });
+
+  test('validates parameters - invalid target_id', async () => {
+    await handler.execute({ actor_id: 'valid_actor', target_id: '' }, execCtx);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({ message: expect.stringContaining('target_id') })
+    );
+  });
+
+  test('validates parameters - target_id not a string', async () => {
+    await handler.execute({ actor_id: 'valid_actor', target_id: 123 }, execCtx);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({ message: expect.stringContaining('target_id') })
+    );
+  });
+
+  test('validates parameters - invalid result_variable as empty string', async () => {
+    await handler.execute({ 
+      actor_id: 'valid_actor', 
+      target_id: 'valid_target',
+      result_variable: '' 
+    }, execCtx);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({ message: expect.stringContaining('result_variable') })
+    );
+  });
+
+  test('validates parameters - invalid result_variable as non-string', async () => {
+    await handler.execute({ 
+      actor_id: 'valid_actor', 
+      target_id: 'valid_target',
+      result_variable: 123 
+    }, execCtx);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({ message: expect.stringContaining('result_variable') })
+    );
+  });
+
+  test('handles addComponent error during partner update', async () => {
+    em.getComponentData = jest.fn(() => null);
+    em.addComponent = jest.fn().mockRejectedValueOnce(new Error('Component update failed'));
+
+    await handler.execute({ actor_id: 'a1', target_id: 't1' }, execCtx);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({ 
+        message: expect.stringContaining('failed updating closeness'),
+        details: expect.objectContaining({
+          error: 'Component update failed'
+        })
+      })
+    );
+  });
+
+  test('handles updateMovementLock error during movement lock', async () => {
+    // Mock successful partner update but failed movement lock
+    em.getComponentData = jest.fn((id, componentId) => {
+      if (componentId === 'positioning:closeness') return null;
+      if (componentId === 'anatomy:body') return null;
+      throw new Error('Movement lock failed');
+    });
+
+    await handler.execute({ actor_id: 'a1', target_id: 't1' }, execCtx);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({ 
+        message: expect.stringContaining('failed locking movement'),
+        details: expect.objectContaining({
+          error: 'Movement lock failed'
+        })
+      })
+    );
+  });
+
+  test('handles invalid evaluation context when result_variable provided', async () => {
+    em.getComponentData = jest.fn(() => null);
+    
+    // Create context without evaluationContext to trigger the error
+    const invalidExecCtx = { logger };
+
+    await handler.execute({
+      actor_id: 'a1', 
+      target_id: 't1',
+      result_variable: 'test_var'
+    }, invalidExecCtx);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({ 
+        message: expect.stringContaining('evaluationContext'),
+        details: expect.any(Object)
+      })
+    );
+  });
+
+  test('handles null params and non-array partners', async () => {
+    // Test null params destructuring fallback (line 70)
+    await handler.execute(null, execCtx);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({ message: expect.stringContaining('actor_id') })
+    );
+
+    jest.clearAllMocks();
+
+    // Test non-array partners fallback (lines 130-131)
+    em.getComponentData = jest.fn((id, componentId) => {
+      if (componentId === 'positioning:closeness') {
+        // Return object with partners as non-array to test fallback
+        return { partners: 'not-an-array' };
+      }
+      if (componentId === 'anatomy:body') return null;
+      if (componentId === 'core:movement') return { locked: false };
+      return null;
+    });
+
+    await handler.execute({ actor_id: 'a1', target_id: 't1' }, execCtx);
+
+    // Verify the merge was called with empty arrays as fallback
+    expect(closenessCircleService.merge).toHaveBeenCalledWith(
+      ['a1', 't1'],
+      [], // Should be empty array due to fallback
+      []  // Should be empty array due to fallback
     );
   });
 });

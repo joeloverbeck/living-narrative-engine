@@ -72,6 +72,10 @@ function registerCharacterBuilderServices(registrar, logger) {
       storageService: c.resolve(tokens.CharacterStorageService),
       directionGenerator: c.resolve(tokens.ThematicDirectionGenerator),
       eventBus: c.resolve(tokens.ISafeEventDispatcher),
+      database: c.resolve(tokens.CharacterDatabase),
+      schemaValidator: c.resolve(tokens.ISchemaValidator),
+      // clicheGenerator will be added when CLIGEN-003 is implemented
+      clicheGenerator: null,
     });
   });
   logger.debug(
