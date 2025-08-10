@@ -374,74 +374,74 @@ Focus on genuinely overused elements, not just common traits.
 <!-- TO BE CREATED - This HTML file does not exist yet -->
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <title>Clichés Generator - Living Narrative Engine</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/components.css" />
-  <link rel="stylesheet" href="css/cliches-generator.css" />
-</head>
-<body>
-  <div id="cliches-generator-container" class="cb-page-container">
-    <header class="cb-page-header">
-      <h1>Clichés Generator</h1>
-      <p class="header-subtitle">Identify overused tropes to avoid</p>
-    </header>
+  <head>
+    <title>Clichés Generator - Living Narrative Engine</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/cliches-generator.css" />
+  </head>
+  <body>
+    <div id="cliches-generator-container" class="cb-page-container">
+      <header class="cb-page-header">
+        <h1>Clichés Generator</h1>
+        <p class="header-subtitle">Identify overused tropes to avoid</p>
+      </header>
 
-    <main class="cb-page-main cliches-generator-main">
-      <!-- Left Panel: Input -->
-      <section class="cb-input-panel">
-        <h2 class="cb-panel-title">Direction Selection</h2>
-        
-        <form id="cliches-form" novalidate>
-          <div class="cb-form-group">
-            <label for="direction-selector">
-              Select Thematic Direction:
-              <span class="required">*</span>
-            </label>
-            <select id="direction-selector" class="cb-select" required>
-              <option value="">-- Choose a thematic direction --</option>
-            </select>
+      <main class="cb-page-main cliches-generator-main">
+        <!-- Left Panel: Input -->
+        <section class="cb-input-panel">
+          <h2 class="cb-panel-title">Direction Selection</h2>
+
+          <form id="cliches-form" novalidate>
+            <div class="cb-form-group">
+              <label for="direction-selector">
+                Select Thematic Direction:
+                <span class="required">*</span>
+              </label>
+              <select id="direction-selector" class="cb-select" required>
+                <option value="">-- Choose a thematic direction --</option>
+              </select>
+            </div>
+
+            <div id="selected-direction-display" style="display: none;">
+              <h3>Selected Direction</h3>
+              <div id="direction-content"></div>
+              <div id="direction-meta"></div>
+            </div>
+
+            <div id="original-concept-display" style="display: none;">
+              <h3>Original Concept</h3>
+              <div id="concept-content"></div>
+            </div>
+
+            <div class="action-buttons">
+              <button type="submit" id="generate-btn" disabled>
+                Generate Clichés
+              </button>
+            </div>
+          </form>
+
+          <div id="status-messages"></div>
+        </section>
+
+        <!-- Right Panel: Results -->
+        <section class="cb-results-panel">
+          <h2 class="cb-panel-title">Generated Clichés</h2>
+
+          <div id="cliches-container" class="cb-state-container">
+            <!-- State containers (empty, loading, results, error) -->
           </div>
+        </section>
+      </main>
 
-          <div id="selected-direction-display" style="display: none;">
-            <h3>Selected Direction</h3>
-            <div id="direction-content"></div>
-            <div id="direction-meta"></div>
-          </div>
+      <footer class="cb-page-footer">
+        <button id="back-to-menu-btn">← Back to Main Menu</button>
+        <p>Living Narrative Engine - Clichés Generator</p>
+      </footer>
+    </div>
 
-          <div id="original-concept-display" style="display: none;">
-            <h3>Original Concept</h3>
-            <div id="concept-content"></div>
-          </div>
-
-          <div class="action-buttons">
-            <button type="submit" id="generate-btn" disabled>
-              Generate Clichés
-            </button>
-          </div>
-        </form>
-
-        <div id="status-messages"></div>
-      </section>
-
-      <!-- Right Panel: Results -->
-      <section class="cb-results-panel">
-        <h2 class="cb-panel-title">Generated Clichés</h2>
-        
-        <div id="cliches-container" class="cb-state-container">
-          <!-- State containers (empty, loading, results, error) -->
-        </div>
-      </section>
-    </main>
-
-    <footer class="cb-page-footer">
-      <button id="back-to-menu-btn">← Back to Main Menu</button>
-      <p>Living Narrative Engine - Clichés Generator</p>
-    </footer>
-  </div>
-
-  <script src="cliches-generator.js"></script>
-</body>
+    <script src="cliches-generator.js"></script>
+  </body>
 </html>
 ```
 
@@ -468,7 +468,7 @@ const initializeApp = async () => {
       controllerClass: ClichesGeneratorController,
       // Additional configuration as needed
     });
-    
+
     console.log('Clichés Generator initialized successfully');
   } catch (error) {
     console.error('Failed to initialize clichés generator:', error);
@@ -605,9 +605,11 @@ htmlFiles: [
 ## 14. Current Implementation Status
 
 ### Existing Infrastructure (Can Be Reused)
+
 ✅ **Already Implemented:**
+
 - `BaseCharacterBuilderController.js` - Base controller class
-- `CharacterBuilderService.js` - Core service layer  
+- `CharacterBuilderService.js` - Core service layer
 - `CharacterDatabase.js` - IndexedDB wrapper
 - `CharacterBuilderBootstrap.js` - Bootstrap system
 - `thematicDirection.js` - Direction model
@@ -618,7 +620,9 @@ htmlFiles: [
 - Validation utilities
 
 ### Components To Be Created
+
 ❌ **Not Yet Implemented:**
+
 - `ClichesGeneratorController` - New controller extending BaseCharacterBuilderController
 - `ClicheGenerator` service - New service for cliché generation logic
 - `Cliche` model - New data model for clichés
@@ -630,7 +634,9 @@ htmlFiles: [
 - Build configuration updates
 
 ### Integration Points Requiring Modification
+
 ⚠️ **Files That Need Updates:**
+
 - `character-database.js` - Add new `cliches` store definition
 - `CharacterBuilderService.js` - Add 4 new methods for cliché operations
 - `scripts/build.config.js` - Add new bundle and HTML file entries
@@ -639,6 +645,7 @@ htmlFiles: [
 ## 15. Dependencies
 
 ### Required Existing Files/Services
+
 - `BaseCharacterBuilderController.js` - Base controller class (EXISTS)
 - `CharacterBuilderService.js` - Core service layer (EXISTS)
 - `CharacterDatabase.js` - IndexedDB wrapper (EXISTS)
@@ -647,6 +654,7 @@ htmlFiles: [
 - `CharacterBuilderBootstrap.js` - Bootstrap system (EXISTS)
 
 ### New Files to Create
+
 - `ClichesGeneratorController.js` - Controller implementation (NEW)
 - `ClicheGenerator.js` - Service implementation (NEW)
 - `cliche.js` - Model definition (NEW)
@@ -654,6 +662,7 @@ htmlFiles: [
 - `cliches-generator-main.js` - Entry point (NEW)
 
 ### External Dependencies
+
 - LLM Service (via proxy server) - EXISTS
 - IndexedDB API - Browser native
 - UUID generation (uuid package) - EXISTS
@@ -661,11 +670,13 @@ htmlFiles: [
 ## 16. Risk Assessment
 
 ### Technical Risks
+
 - **LLM Response Quality**: Mitigate with structured prompts and validation
 - **Storage Limits**: IndexedDB has browser-specific limits
 - **Performance**: Large cliché lists may impact render time
 
 ### Mitigation Strategies
+
 - Implement response validation and retry logic
 - Monitor storage usage and provide warnings
 - Use virtual scrolling for large result sets

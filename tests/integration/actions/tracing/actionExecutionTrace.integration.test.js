@@ -129,12 +129,12 @@ describe('ActionExecutionTrace Integration', () => {
     trace.captureEventPayload(complexPayload);
 
     const json = trace.toJSON();
-    
+
     // Verify sensitive data is redacted
     expect(json.eventPayload.actor.auth.token).toBe('[REDACTED]');
     expect(json.eventPayload.actor.auth.password).toBe('[REDACTED]');
     expect(json.eventPayload.action.apiKey).toBe('[REDACTED]');
-    
+
     // Verify normal data is preserved
     expect(json.eventPayload.metadata.normal).toBe('data');
     expect(json.eventPayload.actor.id).toBe('player-1');
@@ -153,15 +153,17 @@ describe('ActionExecutionTrace Integration', () => {
     trace.captureDispatchResult({ success: true });
 
     const phases = trace.getExecutionPhases();
-    
+
     expect(phases).toHaveLength(3);
     expect(phases[0].phase).toBe('dispatch_start');
     expect(phases[1].phase).toBe('payload_captured');
     expect(phases[2].phase).toBe('dispatch_completed');
-    
+
     // Verify phases are in chronological order
     for (let i = 1; i < phases.length; i++) {
-      expect(phases[i].timestamp).toBeGreaterThanOrEqual(phases[i - 1].timestamp);
+      expect(phases[i].timestamp).toBeGreaterThanOrEqual(
+        phases[i - 1].timestamp
+      );
     }
   });
 });

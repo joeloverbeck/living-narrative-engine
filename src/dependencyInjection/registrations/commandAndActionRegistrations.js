@@ -17,6 +17,7 @@
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
+import { actionTracingTokens } from '../tokens/actionTracingTokens.js';
 import { Registrar } from '../../utils/registrarHelpers.js';
 import { INITIALIZABLE } from '../tags.js';
 
@@ -34,6 +35,8 @@ import { ActionErrorContextBuilder } from '../../actions/errors/actionErrorConte
 import { FixSuggestionEngine } from '../../actions/errors/fixSuggestionEngine.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
 import { StructuredTrace } from '../../actions/tracing/structuredTrace.js';
+import { ActionExecutionTraceFactory } from '../../actions/tracing/actionExecutionTraceFactory.js';
+import { ActionTraceOutputService } from '../../actions/tracing/actionTraceOutputService.js';
 import TargetContextBuilder from '../../scopeDsl/utils/targetContextBuilder.js';
 import { MultiTargetResolutionStage } from '../../actions/pipeline/stages/MultiTargetResolutionStage.js';
 
@@ -336,13 +339,96 @@ export function registerCommandAndAction(container) {
     `Command and Action Registration: Registered Action Validation services.`
   );
 
+  // --- Action Tracing Services ---
+  // Register ActionExecutionTraceFactory if not already registered
+  if (!c.isRegistered(actionTracingTokens.IActionExecutionTraceFactory)) {
+    registrar.singletonFactory(
+      actionTracingTokens.IActionExecutionTraceFactory,
+      (c) => {
+        return new ActionExecutionTraceFactory({
+          logger: c.resolve(tokens.ILogger),
+        });
+      }
+    );
+    logger.debug(
+      'Command and Action Registration: Registered ActionExecutionTraceFactory.'
+    );
+  }
+
+  // Register ActionTraceOutputService if not already registered
+  if (!c.isRegistered(actionTracingTokens.IActionTraceOutputService)) {
+    registrar.singletonFactory(
+      actionTracingTokens.IActionTraceOutputService,
+      (c) => {
+        return new ActionTraceOutputService({
+          logger: c.resolve(tokens.ILogger),
+        });
+      }
+    );
+    logger.debug(
+      'Command and Action Registration: Registered ActionTraceOutputService.'
+    );
+  }
+
   // --- Command Processing ---
 
   registrar.singletonFactory(tokens.ICommandProcessor, (c) => {
+    const logger = c.resolve(tokens.ILogger);
+    const safeEventDispatcher = c.resolve(tokens.ISafeEventDispatcher);
+    const eventDispatchService = c.resolve(tokens.EventDispatchService);
+
+    // Try to resolve optional tracing dependencies
+    let actionTraceFilter,
+      actionExecutionTraceFactory,
+      actionTraceOutputService;
+
+    try {
+      if (c.isRegistered(actionTracingTokens.IActionTraceFilter)) {
+        actionTraceFilter = c.resolve(actionTracingTokens.IActionTraceFilter);
+      }
+    } catch {
+      // Optional dependency not registered
+      actionTraceFilter = null;
+    }
+
+    try {
+      if (c.isRegistered(actionTracingTokens.IActionExecutionTraceFactory)) {
+        actionExecutionTraceFactory = c.resolve(
+          actionTracingTokens.IActionExecutionTraceFactory
+        );
+      }
+    } catch {
+      // Optional dependency not registered
+      actionExecutionTraceFactory = null;
+    }
+
+    try {
+      if (c.isRegistered(actionTracingTokens.IActionTraceOutputService)) {
+        actionTraceOutputService = c.resolve(
+          actionTracingTokens.IActionTraceOutputService
+        );
+      }
+    } catch {
+      // Optional dependency not registered
+      actionTraceOutputService = null;
+    }
+
+    // Log tracing status
+    const tracingEnabled =
+      actionTraceFilter &&
+      actionExecutionTraceFactory &&
+      actionTraceOutputService;
+    logger.info(
+      `CommandProcessor: Action execution tracing ${tracingEnabled ? 'enabled' : 'disabled'}`
+    );
+
     return new CommandProcessor({
-      logger: c.resolve(tokens.ILogger),
-      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-      eventDispatchService: c.resolve(tokens.EventDispatchService),
+      logger,
+      safeEventDispatcher,
+      eventDispatchService,
+      actionTraceFilter,
+      actionExecutionTraceFactory,
+      actionTraceOutputService,
     });
   });
   logger.debug(

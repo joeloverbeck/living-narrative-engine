@@ -18,12 +18,13 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * Database configuration constants
  */
 const DB_NAME = 'CharacterBuilder';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const STORES = {
   CHARACTER_CONCEPTS: 'characterConcepts',
   THEMATIC_DIRECTIONS: 'thematicDirections',
   METADATA: 'metadata',
+  CLICHES: 'cliches',
 };
 
 /**
@@ -78,7 +79,17 @@ export class CharacterDatabase {
           'CharacterDatabase: Database upgrade needed, creating object stores'
         );
         const db = event.target.result;
-        this.#createObjectStores(db);
+        const oldVersion = event.oldVersion;
+
+        // Call existing method for version 1 stores
+        if (oldVersion < 1) {
+          this.#createObjectStores(db);
+        }
+
+        // Add new cliches store for version 2
+        if (oldVersion < 2) {
+          this.#createClichesStore(db);
+        }
       };
     });
   }
@@ -119,6 +130,42 @@ export class CharacterDatabase {
     if (!db.objectStoreNames.contains(STORES.METADATA)) {
       db.createObjectStore(STORES.METADATA, { keyPath: 'key' });
       this.#logger.debug('CharacterDatabase: Created metadata object store');
+    }
+  }
+
+  /**
+   * Create cliches object store
+   *
+   * @private
+   * @param {IDBDatabase} db - Database instance
+   */
+  #createClichesStore(db) {
+    if (!db.objectStoreNames.contains(STORES.CLICHES)) {
+      const store = db.createObjectStore(STORES.CLICHES, {
+        keyPath: 'id',
+      });
+
+      // Unique index for one-to-one relationship with directions
+      store.createIndex('directionId', 'directionId', {
+        unique: true,
+      });
+
+      // Non-unique index for concept tracking
+      store.createIndex('conceptId', 'conceptId', {
+        unique: false,
+      });
+
+      // Index for chronological queries
+      store.createIndex('createdAt', 'createdAt', {
+        unique: false,
+      });
+
+      // Composite index for concept + direction queries
+      store.createIndex('conceptDirection', ['conceptId', 'directionId'], {
+        unique: true,
+      });
+
+      this.#logger.debug('CharacterDatabase: Created cliches object store');
     }
   }
 
@@ -592,5 +639,113 @@ export class CharacterDatabase {
       );
       throw new Error(errorMessage);
     }
+  }
+
+  /**
+   * Save a cliche
+   *
+   * @param {object} cliche - Cliche to save
+   * @returns {Promise<object>}
+   */
+  async saveCliche(cliche) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.#getTransaction([STORES.CLICHES], 'readwrite');
+      const store = transaction.objectStore(STORES.CLICHES);
+      const request = store.put(cliche);
+
+      request.onsuccess = () => {
+        this.#logger.debug(`CharacterDatabase: Saved cliche ${cliche.id}`);
+        resolve(cliche);
+      };
+
+      request.onerror = () => {
+        const error = new Error(
+          `Failed to save cliche: ${request.error?.message || 'Unknown error'}`
+        );
+        this.#logger.error('CharacterDatabase: Error saving cliche', error);
+        reject(error);
+      };
+    });
+  }
+
+  /**
+   * Get cliche by direction ID
+   *
+   * @param {string} directionId - Thematic direction ID
+   * @returns {Promise<object|null>}
+   */
+  async getClicheByDirectionId(directionId) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.#getTransaction([STORES.CLICHES]);
+      const store = transaction.objectStore(STORES.CLICHES);
+      const index = store.index('directionId');
+      const request = index.get(directionId);
+
+      request.onsuccess = () => {
+        const result = request.result || null;
+        this.#logger.debug(
+          `CharacterDatabase: Retrieved cliche for direction ${directionId}: ${result ? 'found' : 'not found'}`
+        );
+        resolve(result);
+      };
+
+      request.onerror = () => {
+        const error = new Error(
+          `Failed to get cliche: ${request.error?.message || 'Unknown error'}`
+        );
+        this.#logger.error('CharacterDatabase: Error getting cliche', error);
+        reject(error);
+      };
+    });
+  }
+
+  /**
+   * Store migration metadata
+   *
+   * @param {string} migrationKey - Migration identifier
+   * @param {object} migrationData - Migration details
+   * @returns {Promise<void>}
+   */
+  async storeMigrationMetadata(migrationKey, migrationData) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.#getTransaction([STORES.METADATA], 'readwrite');
+      const store = transaction.objectStore(STORES.METADATA);
+
+      const request = store.put({
+        key: migrationKey,
+        value: {
+          ...migrationData,
+          migratedAt: new Date().toISOString(),
+        },
+      });
+
+      request.onsuccess = () => {
+        this.#logger.debug(
+          `CharacterDatabase: Stored migration metadata for ${migrationKey}`
+        );
+        resolve();
+      };
+
+      request.onerror = () => {
+        const error = new Error(
+          `Failed to store migration metadata: ${request.error?.message || 'Unknown error'}`
+        );
+        this.#logger.error(
+          'CharacterDatabase: Error storing migration metadata',
+          error
+        );
+        reject(error);
+      };
+    });
+  }
+
+  /**
+   * Verify if cliches store exists
+   *
+   * @returns {boolean}
+   */
+  hasClichesStore() {
+    this.#ensureInitialized();
+    return this.#db.objectStoreNames.contains(STORES.CLICHES);
   }
 }

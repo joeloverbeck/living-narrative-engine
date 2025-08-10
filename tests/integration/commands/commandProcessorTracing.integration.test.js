@@ -1,0 +1,486 @@
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import CommandProcessor from '../../../src/commands/commandProcessor.js';
+import ActionTraceFilter from '../../../src/actions/tracing/actionTraceFilter.js';
+import { ActionExecutionTraceFactory } from '../../../src/actions/tracing/actionExecutionTraceFactory.js';
+import { ActionTraceOutputService } from '../../../src/actions/tracing/actionTraceOutputService.js';
+import {
+  createMockEventDispatchService,
+  createMockLogger,
+  createMockSafeEventDispatcher,
+} from '../../common/mockFactories/index.js';
+
+/**
+ * Test bed for CommandProcessor tracing integration tests
+ */
+class CommandProcessorTracingTestBed {
+  constructor() {
+    this.logger = createMockLogger();
+    this.safeEventDispatcher = createMockSafeEventDispatcher();
+    this.eventDispatchService = createMockEventDispatchService();
+
+    // Real tracing components
+    this.actionTraceFilter = null;
+    this.actionExecutionTraceFactory = null;
+    this.actionTraceOutputService = null;
+
+    // Track written traces
+    this.writtenTraces = [];
+
+    this.commandProcessor = null;
+  }
+
+  /**
+   * Configure tracing for specific actions
+   *
+   * @param {string[]} tracedActions - Actions to trace
+   */
+  configureTracing(tracedActions = ['*']) {
+    this.actionTraceFilter = new ActionTraceFilter({
+      enabled: true,
+      tracedActions,
+      excludedActions: [],
+      verbosityLevel: 'detailed',
+      logger: this.logger,
+    });
+
+    this.actionExecutionTraceFactory = new ActionExecutionTraceFactory({
+      logger: this.logger,
+    });
+
+    // Custom output handler to capture traces
+    this.actionTraceOutputService = new ActionTraceOutputService({
+      logger: this.logger,
+      outputHandler: async (writeData, trace) => {
+        this.writtenTraces.push({
+          writeData,
+          trace: {
+            actionId: trace.actionId,
+            actorId: trace.actorId,
+            isComplete: trace.isComplete,
+            hasError: trace.hasError,
+            duration: trace.duration,
+            phases: trace.getExecutionPhases(),
+          },
+        });
+      },
+    });
+
+    this.commandProcessor = new CommandProcessor({
+      logger: this.logger,
+      safeEventDispatcher: this.safeEventDispatcher,
+      eventDispatchService: this.eventDispatchService,
+      actionTraceFilter: this.actionTraceFilter,
+      actionExecutionTraceFactory: this.actionExecutionTraceFactory,
+      actionTraceOutputService: this.actionTraceOutputService,
+    });
+  }
+
+  /**
+   * Disable tracing
+   */
+  disableTracing() {
+    this.actionTraceFilter = new ActionTraceFilter({
+      enabled: false,
+      logger: this.logger,
+    });
+
+    this.commandProcessor = new CommandProcessor({
+      logger: this.logger,
+      safeEventDispatcher: this.safeEventDispatcher,
+      eventDispatchService: this.eventDispatchService,
+      actionTraceFilter: this.actionTraceFilter,
+      actionExecutionTraceFactory: this.actionExecutionTraceFactory,
+      actionTraceOutputService: this.actionTraceOutputService,
+    });
+  }
+
+  /**
+   * Setup real EventDispatchService (mock for now)
+   */
+  setupRealEventDispatchService() {
+    // In a real test, this would use the actual EventDispatchService
+    // For now, we'll configure the mock to behave more realistically
+    this.eventDispatchService.dispatchWithErrorHandling.mockImplementation(
+      async (eventName, payload, description) => {
+        // Simulate some processing time
+        await new Promise((resolve) => setTimeout(resolve, 5));
+
+        // Validate payload structure
+        if (!payload.eventName || !payload.actorId || !payload.actionId) {
+          throw new Error('Invalid payload structure');
+        }
+
+        return true;
+      }
+    );
+  }
+
+  /**
+   * Create test actor
+   *
+   * @param {string} id - Actor ID
+   * @returns {object} Actor object
+   */
+  createActor(id) {
+    return {
+      id,
+      name: `Actor ${id}`,
+      components: {},
+    };
+  }
+
+  /**
+   * Get written traces
+   *
+   * @returns {Promise<Array>} Written traces
+   */
+  async getWrittenTraces() {
+    // Wait for async writes to complete
+    await this.actionTraceOutputService.waitForPendingWrites();
+    return this.writtenTraces.map((t) => t.writeData);
+  }
+
+  /**
+   * Get raw trace objects
+   *
+   * @returns {Array} Raw trace objects
+   */
+  getRawTraces() {
+    return this.writtenTraces.map((t) => t.trace);
+  }
+
+  /**
+   * Clear written traces
+   */
+  clearTraces() {
+    this.writtenTraces = [];
+  }
+
+  /**
+   * Cleanup test bed
+   */
+  cleanup() {
+    this.writtenTraces = [];
+    this.actionTraceOutputService?.resetStatistics();
+  }
+}
+
+describe('CommandProcessor Tracing Integration', () => {
+  let testBed;
+
+  beforeEach(() => {
+    testBed = new CommandProcessorTracingTestBed();
+  });
+
+  afterEach(() => {
+    testBed.cleanup();
+  });
+
+  it('should create complete trace for traced action execution', async () => {
+    // Configure to trace 'core:go' actions
+    testBed.configureTracing(['core:go']);
+
+    const actor = testBed.createActor('player-1');
+    const turnAction = {
+      actionDefinitionId: 'core:go',
+      commandString: 'go north',
+      parameters: { direction: 'north' },
+    };
+
+    // Execute action
+    const result = await testBed.commandProcessor.dispatchAction(
+      actor,
+      turnAction
+    );
+
+    // Verify execution succeeded
+    expect(result.success).toBe(true);
+
+    // Verify trace was created and written
+    const traces = await testBed.getWrittenTraces();
+    expect(traces).toHaveLength(1);
+
+    const trace = traces[0];
+    expect(trace.metadata.actionId).toBe('core:go');
+    expect(trace.metadata.actorId).toBe('player-1');
+    expect(trace.execution.phases.length).toBeGreaterThanOrEqual(3);
+    expect(trace.eventPayload).toBeDefined();
+    expect(trace.result.success).toBe(true);
+  });
+
+  it('should handle multiple concurrent traced actions', async () => {
+    testBed.configureTracing(['core:*']);
+
+    const actor = testBed.createActor('player-1');
+    const actions = [
+      { actionDefinitionId: 'core:go', commandString: 'go north' },
+      { actionDefinitionId: 'core:look', commandString: 'look around' },
+      { actionDefinitionId: 'core:inventory', commandString: 'inventory' },
+    ];
+
+    // Execute actions concurrently
+    const results = await Promise.all(
+      actions.map((action) =>
+        testBed.commandProcessor.dispatchAction(actor, action)
+      )
+    );
+
+    // Verify all succeeded
+    results.forEach((result) => {
+      expect(result.success).toBe(true);
+    });
+
+    // Verify all traces were written
+    const traces = await testBed.getWrittenTraces();
+    expect(traces).toHaveLength(3);
+
+    // Verify each trace has correct action ID
+    const actionIds = traces.map((trace) => trace.metadata.actionId);
+    expect(actionIds).toContain('core:go');
+    expect(actionIds).toContain('core:look');
+    expect(actionIds).toContain('core:inventory');
+  });
+
+  it('should integrate with real EventDispatchService', async () => {
+    testBed.configureTracing(['core:test']);
+    testBed.setupRealEventDispatchService();
+
+    const actor = testBed.createActor('player-1');
+    const turnAction = {
+      actionDefinitionId: 'core:test',
+      commandString: 'test action',
+    };
+
+    const result = await testBed.commandProcessor.dispatchAction(
+      actor,
+      turnAction
+    );
+
+    expect(result.success).toBe(true);
+
+    const traces = await testBed.getWrittenTraces();
+    expect(traces).toHaveLength(1);
+
+    // Verify event payload contains real event data
+    const trace = traces[0];
+    expect(trace.eventPayload.eventName).toBe('core:attempt_action');
+    expect(trace.eventPayload.actorId).toBe('player-1');
+    expect(trace.eventPayload.actionId).toBe('core:test');
+  });
+
+  it('should handle error scenarios with complete tracing', async () => {
+    testBed.configureTracing(['core:fail']);
+
+    // Configure dispatch to fail
+    testBed.eventDispatchService.dispatchWithErrorHandling.mockRejectedValue(
+      new Error('Simulated dispatch failure')
+    );
+
+    const actor = testBed.createActor('player-1');
+    const turnAction = {
+      actionDefinitionId: 'core:fail',
+      commandString: 'fail action',
+    };
+
+    const result = await testBed.commandProcessor.dispatchAction(
+      actor,
+      turnAction
+    );
+
+    expect(result.success).toBe(false);
+
+    const traces = await testBed.getWrittenTraces();
+    expect(traces).toHaveLength(1);
+
+    const trace = traces[0];
+    expect(trace.metadata.actionId).toBe('core:fail');
+    expect(trace.error).toBeDefined();
+    expect(trace.error.message).toBe('Simulated dispatch failure');
+  });
+
+  it('should respect trace filtering patterns', async () => {
+    // Only trace 'core:go' actions
+    testBed.configureTracing(['core:go']);
+
+    const actor = testBed.createActor('player-1');
+
+    // Execute multiple actions
+    await testBed.commandProcessor.dispatchAction(actor, {
+      actionDefinitionId: 'core:go',
+      commandString: 'go north',
+    });
+
+    await testBed.commandProcessor.dispatchAction(actor, {
+      actionDefinitionId: 'core:look',
+      commandString: 'look around',
+    });
+
+    await testBed.commandProcessor.dispatchAction(actor, {
+      actionDefinitionId: 'custom:action',
+      commandString: 'custom action',
+    });
+
+    // Only 'core:go' should be traced
+    const traces = await testBed.getWrittenTraces();
+    expect(traces).toHaveLength(1);
+    expect(traces[0].metadata.actionId).toBe('core:go');
+  });
+
+  it('should capture execution timing accurately', async () => {
+    testBed.configureTracing(['core:timed']);
+
+    // Add artificial delay to dispatch
+    testBed.eventDispatchService.dispatchWithErrorHandling.mockImplementation(
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        return true;
+      }
+    );
+
+    const actor = testBed.createActor('player-1');
+    const turnAction = {
+      actionDefinitionId: 'core:timed',
+      commandString: 'timed action',
+    };
+
+    const startTime = Date.now();
+    await testBed.commandProcessor.dispatchAction(actor, turnAction);
+    const totalDuration = Date.now() - startTime;
+
+    const rawTraces = testBed.getRawTraces();
+    expect(rawTraces).toHaveLength(1);
+
+    const trace = rawTraces[0];
+    expect(trace.duration).toBeGreaterThanOrEqual(45); // Allow for some timing variance
+    expect(trace.duration).toBeLessThanOrEqual(totalDuration + 5); // Allow for small overhead
+  });
+
+  it('should handle multi-target actions with full tracing', async () => {
+    testBed.configureTracing(['core:give']);
+
+    const actor = testBed.createActor('player-1');
+    const turnAction = {
+      actionDefinitionId: 'core:give',
+      commandString: 'give sword to guard',
+      resolvedParameters: {
+        isMultiTarget: true,
+        targetIds: {
+          primary: ['item-sword'],
+          secondary: ['npc-guard'],
+        },
+      },
+    };
+
+    const result = await testBed.commandProcessor.dispatchAction(
+      actor,
+      turnAction
+    );
+
+    expect(result.success).toBe(true);
+
+    const traces = await testBed.getWrittenTraces();
+    expect(traces).toHaveLength(1);
+
+    const trace = traces[0];
+    const payload = trace.eventPayload;
+
+    // Verify multi-target structure
+    expect(payload.targets).toBeDefined();
+    expect(payload.targets.primary).toBeDefined();
+    expect(payload.targets.primary.entityId).toBe('item-sword');
+    expect(payload.targets.secondary).toBeDefined();
+    expect(payload.targets.secondary.entityId).toBe('npc-guard');
+  });
+
+  it('should accumulate statistics correctly', async () => {
+    testBed.configureTracing(['*']);
+
+    const actor = testBed.createActor('player-1');
+
+    // Execute several actions
+    for (let i = 0; i < 5; i++) {
+      await testBed.commandProcessor.dispatchAction(actor, {
+        actionDefinitionId: `core:action${i}`,
+        commandString: `action ${i}`,
+      });
+    }
+
+    // Check statistics
+    const stats = testBed.actionTraceOutputService.getStatistics();
+    expect(stats.totalWrites).toBe(5);
+    expect(stats.totalErrors).toBe(0);
+    expect(stats.errorRate).toBe(0);
+  });
+
+  describe('Performance', () => {
+    it('should have minimal impact on action execution', async () => {
+      testBed.configureTracing(['core:performance_test']);
+
+      const actor = testBed.createActor('player-1');
+      const turnAction = {
+        actionDefinitionId: 'core:performance_test',
+        commandString: 'performance test',
+      };
+
+      // Measure with tracing
+      const startWithTracing = performance.now();
+      await testBed.commandProcessor.dispatchAction(actor, turnAction);
+      const withTracingDuration = performance.now() - startWithTracing;
+
+      // Verify first execution was traced
+      const traces = await testBed.getWrittenTraces();
+      expect(traces).toHaveLength(1);
+
+      // Clear traces for second test
+      testBed.clearTraces();
+
+      // Measure without tracing
+      testBed.disableTracing();
+      const startWithoutTracing = performance.now();
+      await testBed.commandProcessor.dispatchAction(actor, turnAction);
+      const withoutTracingDuration = performance.now() - startWithoutTracing;
+
+      // Verify second execution was not traced
+      const tracesAfterDisable = await testBed.getWrittenTraces();
+      expect(tracesAfterDisable).toHaveLength(0);
+
+      // Tracing overhead should be minimal
+      const overhead = withTracingDuration - withoutTracingDuration;
+      expect(overhead).toBeLessThan(10); // <10ms overhead
+    });
+
+    it('should handle high-volume tracing efficiently', async () => {
+      testBed.configureTracing(['*']);
+
+      const actor = testBed.createActor('player-1');
+      const actionCount = 100;
+
+      const startTime = performance.now();
+
+      // Execute many actions concurrently
+      const promises = [];
+      for (let i = 0; i < actionCount; i++) {
+        promises.push(
+          testBed.commandProcessor.dispatchAction(actor, {
+            actionDefinitionId: `core:batch${i}`,
+            commandString: `batch action ${i}`,
+          })
+        );
+      }
+
+      const results = await Promise.all(promises);
+      const duration = performance.now() - startTime;
+
+      // All should succeed
+      results.forEach((result) => expect(result.success).toBe(true));
+
+      // All should be traced
+      const traces = await testBed.getWrittenTraces();
+      expect(traces).toHaveLength(actionCount);
+
+      // Performance should be reasonable
+      const averageTime = duration / actionCount;
+      expect(averageTime).toBeLessThan(5); // <5ms per action average
+    });
+  });
+});

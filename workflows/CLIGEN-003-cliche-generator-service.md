@@ -39,13 +39,17 @@ Create a dedicated service for generating clichés via LLM integration. This ser
 
 #### File: `src/characterBuilder/services/ClicheGenerator.js`
 
-```javascript
+````javascript
 /**
  * @file Service for generating clichés via LLM
  * @see CharacterBuilderService.js
  */
 
-import { validateDependency, assertPresent, assertNonBlankString } from '../../utils/validationUtils.js';
+import {
+  validateDependency,
+  assertPresent,
+  assertNonBlankString,
+} from '../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 
 /**
@@ -98,16 +102,16 @@ export class ClicheGenerator {
     try {
       // Build the prompt
       const prompt = this.#buildPrompt(conceptText, direction);
-      
+
       // Generate with retry logic
       const response = await this.#generateWithRetry(prompt);
-      
+
       // Parse and validate response
       const parsed = this.#parseResponse(response);
-      
+
       // Validate completeness
       this.#validateResponse(parsed);
-      
+
       // Add metadata
       const result = {
         ...parsed,
@@ -117,14 +121,15 @@ export class ClicheGenerator {
           tokens: response.usage?.total_tokens || 0,
           responseTime: Date.now() - startTime,
           promptVersion: this.#promptVersion,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
 
-      this.#logger.info(`Generated clichés for direction "${direction.title}" in ${result.metadata.responseTime}ms`);
-      
-      return result;
+      this.#logger.info(
+        `Generated clichés for direction "${direction.title}" in ${result.metadata.responseTime}ms`
+      );
 
+      return result;
     } catch (error) {
       this.#logger.error(`Failed to generate clichés: ${error.message}`, error);
       throw new Error(`Cliché generation failed: ${error.message}`);
@@ -207,23 +212,22 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
    */
   async #generateWithRetry(prompt) {
     let lastError;
-    
+
     for (let attempt = 1; attempt <= this.#maxRetries; attempt++) {
       try {
         this.#logger.debug(`Generation attempt ${attempt}/${this.#maxRetries}`);
-        
+
         const response = await this.#callLLM(prompt);
-        
+
         if (response && response.content) {
           return response;
         }
-        
+
         throw new Error('Empty response from LLM');
-        
       } catch (error) {
         lastError = error;
         this.#logger.warn(`Attempt ${attempt} failed: ${error.message}`);
-        
+
         if (attempt < this.#maxRetries) {
           // Exponential backoff
           const delay = this.#retryDelay * Math.pow(2, attempt - 1);
@@ -231,8 +235,10 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
         }
       }
     }
-    
-    throw new Error(`Failed after ${this.#maxRetries} attempts: ${lastError.message}`);
+
+    throw new Error(
+      `Failed after ${this.#maxRetries} attempts: ${lastError.message}`
+    );
   }
 
   /**
@@ -250,20 +256,20 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
         maxTokens: this.#maxTokens,
         model: 'gpt-4', // Or configured model
         signal: controller.signal,
-        systemPrompt: 'You are a helpful assistant that always responds with valid JSON.',
-        responseFormat: { type: 'json_object' }
+        systemPrompt:
+          'You are a helpful assistant that always responds with valid JSON.',
+        responseFormat: { type: 'json_object' },
       });
 
       clearTimeout(timeoutId);
       return response;
-
     } catch (error) {
       clearTimeout(timeoutId);
-      
+
       if (error.name === 'AbortError') {
         throw new Error(`Generation timeout after ${this.#timeout}ms`);
       }
-      
+
       throw error;
     }
   }
@@ -276,24 +282,23 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
     try {
       // Extract JSON from response
       let content = response.content || response.text || '';
-      
+
       // Clean up response (remove markdown code blocks if present)
       content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      
+
       // Parse JSON
       const parsed = JSON.parse(content);
-      
+
       // Validate structure
       if (!parsed.categories || typeof parsed.categories !== 'object') {
         throw new Error('Invalid response structure: missing categories');
       }
-      
+
       // Normalize the response
       return this.#normalizeResponse(parsed);
-      
     } catch (error) {
       this.#logger.error('Failed to parse LLM response:', error);
-      
+
       // Attempt recovery with fallback parsing
       return this.#attemptFallbackParsing(response);
     }
@@ -315,23 +320,23 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
       'genericGoals',
       'backgroundElements',
       'overusedSecrets',
-      'speechPatterns'
+      'speechPatterns',
     ];
 
     const normalized = {
       categories: {},
-      tropesAndStereotypes: []
+      tropesAndStereotypes: [],
     };
 
     // Normalize categories
     for (const category of requiredCategories) {
       const items = parsed.categories[category];
-      
+
       if (Array.isArray(items)) {
         // Filter and clean items
         normalized.categories[category] = items
-          .filter(item => typeof item === 'string' && item.trim())
-          .map(item => item.trim())
+          .filter((item) => typeof item === 'string' && item.trim())
+          .map((item) => item.trim())
           .slice(0, 10); // Limit to 10 items per category
       } else {
         // Provide empty array if missing
@@ -343,8 +348,8 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
     // Normalize tropes
     if (Array.isArray(parsed.tropesAndStereotypes)) {
       normalized.tropesAndStereotypes = parsed.tropesAndStereotypes
-        .filter(item => typeof item === 'string' && item.trim())
-        .map(item => item.trim())
+        .filter((item) => typeof item === 'string' && item.trim())
+        .map((item) => item.trim())
         .slice(0, 15); // Limit to 15 tropes
     } else {
       normalized.tropesAndStereotypes = [];
@@ -362,15 +367,22 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
 
     const fallback = {
       categories: {},
-      tropesAndStereotypes: []
+      tropesAndStereotypes: [],
     };
 
     // Initialize with empty arrays
     const categories = [
-      'names', 'physicalDescriptions', 'personalityTraits',
-      'skillsAbilities', 'typicalLikes', 'typicalDislikes',
-      'commonFears', 'genericGoals', 'backgroundElements',
-      'overusedSecrets', 'speechPatterns'
+      'names',
+      'physicalDescriptions',
+      'personalityTraits',
+      'skillsAbilities',
+      'typicalLikes',
+      'typicalDislikes',
+      'commonFears',
+      'genericGoals',
+      'backgroundElements',
+      'overusedSecrets',
+      'speechPatterns',
     ];
 
     for (const category of categories) {
@@ -379,7 +391,7 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
 
     // Try to extract any useful content
     const content = response.content || response.text || '';
-    
+
     // Look for bullet points or numbered lists
     const lines = content.split('\n');
     const items = [];
@@ -394,7 +406,10 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
 
     // Distribute items across categories (basic fallback)
     if (items.length > 0) {
-      const itemsPerCategory = Math.max(1, Math.floor(items.length / categories.length));
+      const itemsPerCategory = Math.max(
+        1,
+        Math.floor(items.length / categories.length)
+      );
       let itemIndex = 0;
 
       for (const category of categories) {
@@ -414,7 +429,7 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
    */
   #validateResponse(parsed) {
     const issues = [];
-    
+
     // Check categories
     for (const [category, items] of Object.entries(parsed.categories)) {
       if (!Array.isArray(items)) {
@@ -422,7 +437,9 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
       } else if (items.length === 0) {
         issues.push(`Category "${category}" is empty`);
       } else if (items.length < 2) {
-        this.#logger.warn(`Category "${category}" has only ${items.length} item(s)`);
+        this.#logger.warn(
+          `Category "${category}" has only ${items.length} item(s)`
+        );
       }
     }
 
@@ -435,13 +452,17 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
 
     // Throw if critical issues
     if (issues.length > 0) {
-      const totalItems = Object.values(parsed.categories)
-        .reduce((sum, items) => sum + items.length, 0);
-      
+      const totalItems = Object.values(parsed.categories).reduce(
+        (sum, items) => sum + items.length,
+        0
+      );
+
       if (totalItems < 10) {
-        throw new Error(`Insufficient cliché data generated: ${issues.join(', ')}`);
+        throw new Error(
+          `Insufficient cliché data generated: ${issues.join(', ')}`
+        );
       }
-      
+
       // Log warnings but don't fail if we have enough data
       this.#logger.warn(`Response validation warnings: ${issues.join(', ')}`);
     }
@@ -452,7 +473,7 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
    * @private
    */
   #delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -487,9 +508,10 @@ Ensure all arrays contain at least 3 items and the JSON is properly formatted.
       maxRetries: this.#maxRetries,
       timeout: this.#timeout,
       retryDelay: this.#retryDelay,
-      promptVersion: this.#promptVersion
+      promptVersion: this.#promptVersion,
     };
   }
 }
 
 export default ClicheGenerator;
+````

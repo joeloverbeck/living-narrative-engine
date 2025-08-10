@@ -9,6 +9,7 @@ export * from './entities.js';
 export * from './container.js';
 export * from './memoryStorageProvider.js';
 export * from './actions.js';
+export * from './actionTracing.js';
 export { createMockTargetResolutionServiceWithErrorContext } from './actions.js';
 
 // Explicit convenience exports
