@@ -1,7 +1,7 @@
 /**
- * @file Enhanced Template Composer with Data Binding
+ * @file Enhanced Template Composer with Data Binding and Configuration Support
  * @module characterBuilder/templates/utilities/EnhancedTemplateComposer
- * @description Integrates existing TemplateComposer with new DataBindingEngine
+ * @description Integrates existing TemplateComposer with DataBindingEngine and Configuration System
  */
 
 import { TemplateComposer } from './templateComposer.js';
@@ -9,24 +9,30 @@ import { DataBindingEngine } from './dataBinding/DataBindingEngine.js';
 import { HTMLSanitizer } from './dataBinding/HTMLSanitizer.js';
 import { ExpressionEvaluator } from './dataBinding/ExpressionEvaluator.js';
 import { TemplateEventManager } from './dataBinding/TemplateEventManager.js';
+import { TemplateConfigManager } from './templateConfigManager.js';
 import { validateDependency } from '../../../utils/index.js';
 
 /**
- * Enhanced template composer that combines basic composition with data binding
+ * Enhanced template composer that combines basic composition with data binding and configuration
  */
 export class EnhancedTemplateComposer {
   #templateComposer;
   #dataBindingEngine;
+  #configManager;
   #cleanupFunctions;
   #enableDataBinding;
+  #enableConfiguration;
 
   /**
    * @param {object} [config] - Composer configuration
    * @param {TemplateComposer} [config.templateComposer] - Template composer instance
    * @param {DataBindingEngine} [config.dataBindingEngine] - Data binding engine instance
+   * @param {TemplateConfigManager} [config.configManager] - Configuration manager instance
    * @param {boolean} [config.enableDataBinding] - Enable data binding features (default: true)
+   * @param {boolean} [config.enableConfiguration] - Enable configuration system (default: true)
    * @param {object} [config.composerConfig] - Config for TemplateComposer
    * @param {object} [config.bindingConfig] - Config for DataBindingEngine
+   * @param {object} [config.configManagerOptions] - Options for TemplateConfigManager
    */
   constructor(config = {}) {
     // Initialize template composer
@@ -48,6 +54,14 @@ export class EnhancedTemplateComposer {
         });
     }
 
+    // Initialize configuration manager if enabled
+    this.#enableConfiguration = config.enableConfiguration !== false;
+    
+    if (this.#enableConfiguration) {
+      this.#configManager = config.configManager || 
+        new TemplateConfigManager(config.configManagerOptions);
+    }
+
     // Track cleanup functions for event handlers
     this.#cleanupFunctions = new Map();
 
@@ -55,7 +69,7 @@ export class EnhancedTemplateComposer {
   }
 
   /**
-   * Render template with composition and data binding
+   * Render template with composition, data binding, and configuration
    *
    * @param {string|Function|object} template - Template to render
    * @param {object} [context] - Template context
@@ -64,34 +78,51 @@ export class EnhancedTemplateComposer {
    * @param {boolean} [options.sanitize] - Sanitize HTML output (default: true)
    * @param {object} [options.filters] - Custom filters for interpolation
    * @param {string} [options.templateId] - Unique ID for cleanup tracking
-   * @returns {{html: string, cleanup: Function}} Rendered HTML and cleanup function
+   * @param {string} [options.templateType] - Template type for configuration lookup
+   * @param {object} [options.configOverrides] - Configuration overrides for this render
+   * @param {boolean} [options.disableConfiguration] - Disable configuration for this render
+   * @returns {{html: string, cleanup: Function, config?: object}} Rendered HTML, cleanup function, and config used
    */
   render(template, context = {}, options = {}) {
     try {
+      let finalContext = context;
+      let appliedConfig = null;
+
+      // Apply configuration if enabled
+      if (this.#enableConfiguration && !options.disableConfiguration) {
+        const templateId = options.templateId || options.templateType || 'default';
+        appliedConfig = this.#configManager.getConfig(templateId, options.configOverrides || {});
+        
+        // Merge configuration into context
+        finalContext = {
+          ...context,
+          config: appliedConfig,
+        };
+      }
       // Step 1: Apply data binding to slot content if data binding is enabled
       if (
         this.#enableDataBinding &&
         !options.disableDataBinding &&
-        context.slots
+        finalContext.slots
       ) {
-        context = {
-          ...context,
+        finalContext = {
+          ...finalContext,
           slots: this.#processDataBindingInSlots(
-            context.slots,
-            context,
+            finalContext.slots,
+            finalContext,
             options
           ),
         };
       }
 
       // Step 2: Basic template composition (handles slots, nesting, basic ${})
-      const composedHtml = this.#templateComposer.compose(template, context);
+      const composedHtml = this.#templateComposer.compose(template, finalContext);
 
       // Step 3: Apply data binding if enabled and not disabled for this render
       if (this.#enableDataBinding && !options.disableDataBinding) {
         const bindingResult = this.#dataBindingEngine.bind(
           composedHtml,
-          context,
+          finalContext,
           options
         );
 
@@ -100,13 +131,17 @@ export class EnhancedTemplateComposer {
           this.#cleanupFunctions.set(options.templateId, bindingResult.cleanup);
         }
 
-        return bindingResult;
+        return {
+          ...bindingResult,
+          config: appliedConfig,
+        };
       }
 
       // Return without data binding
       return {
         html: composedHtml,
         cleanup: () => {}, // No cleanup needed
+        config: appliedConfig,
       };
     } catch (error) {
       console.error('Template rendering failed:', error);
@@ -276,7 +311,7 @@ export class EnhancedTemplateComposer {
    * @param {string} name - Filter name
    * @param {Function} filterFunction - Filter implementation
    */
-  addFilter(name, filterFunction) {
+  addFilter(/* name, filterFunction */) {
     if (!this.#enableDataBinding) {
       console.warn('Data binding is disabled, cannot add filters');
       return;
@@ -295,7 +330,7 @@ export class EnhancedTemplateComposer {
    * @param {string} html - HTML template to validate
    * @returns {object[]} Array of validation issues
    */
-  validateTemplate(html) {
+  validateTemplate(/* html */) {
     const issues = [];
 
     if (!this.#enableDataBinding) {
@@ -373,5 +408,69 @@ export class EnhancedTemplateComposer {
 
     // Fallback implementation
     return { ...parentContext, ...localContext };
+  }
+
+  /**
+   * Get configuration manager
+   * 
+   * @returns {TemplateConfigManager|null} Configuration manager or null if disabled
+   */
+  getConfigManager() {
+    return this.#enableConfiguration ? this.#configManager : null;
+  }
+
+  /**
+   * Set configuration for a template
+   * 
+   * @param {string} level - Configuration level
+   * @param {string} templateId - Template identifier
+   * @param {object} config - Configuration object
+   */
+  setTemplateConfig(level, templateId, config) {
+    if (!this.#enableConfiguration || !this.#configManager) {
+      console.warn('Configuration system is disabled');
+      return;
+    }
+    
+    this.#configManager.setConfig(level, templateId, config);
+  }
+
+  /**
+   * Get configuration for a template
+   * 
+   * @param {string} templateId - Template identifier
+   * @param {object} [overrides] - Runtime overrides
+   * @returns {object|null} Configuration or null if disabled
+   */
+  getTemplateConfig(templateId, overrides = {}) {
+    if (!this.#enableConfiguration || !this.#configManager) {
+      return null;
+    }
+    
+    return this.#configManager.getConfig(templateId, overrides);
+  }
+
+  /**
+   * Enable or disable configuration system
+   * 
+   * @param {boolean} enabled - Whether to enable configuration
+   * @param {object} [options] - Configuration manager options
+   */
+  setConfigurationEnabled(enabled, options) {
+    this.#enableConfiguration = enabled;
+    
+    if (enabled && !this.#configManager) {
+      // Initialize configuration manager if it wasn't created
+      this.#configManager = new TemplateConfigManager(options);
+    }
+  }
+
+  /**
+   * Check if configuration is enabled
+   * 
+   * @returns {boolean} True if configuration is enabled
+   */
+  isConfigurationEnabled() {
+    return this.#enableConfiguration;
   }
 }
