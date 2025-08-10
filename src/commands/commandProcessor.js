@@ -33,6 +33,12 @@ class CommandProcessor extends ICommandProcessor {
   #safeEventDispatcher;
   /** @type {EventDispatchService} */
   #eventDispatchService;
+  /** @type {import('../actions/tracing/actionTraceFilter.js').default} */
+  #actionTraceFilter;
+  /** @type {import('../actions/tracing/actionExecutionTraceFactory.js').ActionExecutionTraceFactory} */
+  #actionExecutionTraceFactory;
+  /** @type {import('../actions/tracing/actionTraceOutputService.js').ActionTraceOutputService} */
+  #actionTraceOutputService;
 
   // Performance metrics
   #payloadCreationCount = 0;
@@ -49,12 +55,22 @@ class CommandProcessor extends ICommandProcessor {
    * @param {ISafeEventDispatcher} options.safeEventDispatcher - Required event dispatcher that must implement `dispatch`.
    * @param {EventDispatchService} options.eventDispatchService - Required event dispatch service.
    * @param {ILogger} [options.logger] - Optional logger instance.
+   * @param {object} [options.actionTraceFilter] - Optional action trace filter.
+   * @param {object} [options.actionExecutionTraceFactory] - Optional trace factory.
+   * @param {object} [options.actionTraceOutputService] - Optional trace output service.
    * @throws {Error} If required dependencies are missing or lack required methods.
    */
   constructor(options) {
     super();
 
-    const { logger, safeEventDispatcher, eventDispatchService } = options || {};
+    const {
+      logger,
+      safeEventDispatcher,
+      eventDispatchService,
+      actionTraceFilter,
+      actionExecutionTraceFactory,
+      actionTraceOutputService,
+    } = options || {};
 
     this.#logger = initLogger('CommandProcessor', logger);
 
@@ -79,6 +95,40 @@ class CommandProcessor extends ICommandProcessor {
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#eventDispatchService = eventDispatchService;
 
+    // Optional tracing dependencies - can be null if tracing is disabled
+    this.#actionTraceFilter = actionTraceFilter;
+    this.#actionExecutionTraceFactory = actionExecutionTraceFactory;
+    this.#actionTraceOutputService = actionTraceOutputService;
+
+    // Validate optional tracing dependencies if provided
+    if (actionTraceFilter) {
+      validateDependency(actionTraceFilter, 'IActionTraceFilter', null, {
+        requiredMethods: ['isEnabled', 'shouldTrace'],
+      });
+    }
+
+    if (actionExecutionTraceFactory) {
+      validateDependency(
+        actionExecutionTraceFactory,
+        'IActionExecutionTraceFactory',
+        null,
+        {
+          requiredMethods: ['createFromTurnAction'],
+        }
+      );
+    }
+
+    if (actionTraceOutputService) {
+      validateDependency(
+        actionTraceOutputService,
+        'IActionTraceOutputService',
+        null,
+        {
+          requiredMethods: ['writeTrace'],
+        }
+      );
+    }
+
     this.#logger.debug(
       'CommandProcessor: Instance created and dependencies validated.'
     );
@@ -94,58 +144,234 @@ class CommandProcessor extends ICommandProcessor {
    * @returns {Promise<CommandResult>} A promise that resolves to the command result.
    */
   async dispatchAction(actor, turnAction) {
+    let actionTrace = null;
+    const actionId = turnAction?.actionDefinitionId;
+    const actorId = actor?.id;
+
+    // Early validation to prevent trace creation with invalid data
     try {
       this.#validateActionInputs(actor, turnAction);
     } catch (err) {
+      this.#logger.error(
+        'CommandProcessor.dispatchAction: Input validation failed',
+        {
+          error: err.message,
+          actionId,
+          actorId,
+        }
+      );
       return this.#handleDispatchFailure(
         'Internal error: Malformed action prevented execution.',
         err.message,
         turnAction?.commandString,
-        turnAction?.actionDefinitionId
+        actionId
       );
     }
 
-    const actorId = actor.id;
-    const { actionDefinitionId: actionId, commandString } = turnAction;
+    // Create execution trace if action should be traced
+    try {
+      if (this.#shouldCreateTrace(actionId)) {
+        actionTrace = this.#createExecutionTrace(turnAction, actorId);
+        actionTrace.captureDispatchStart();
+
+        this.#logger.debug(
+          `Created execution trace for action '${actionId}' by actor '${actorId}'`
+        );
+      }
+    } catch (traceError) {
+      // Log trace creation failure but continue execution
+      this.#logger.warn('Failed to create execution trace', {
+        error: traceError.message,
+        actionId,
+        actorId,
+      });
+    }
+
     this.#logger.debug(
       `CommandProcessor.dispatchAction: Dispatching pre-resolved action '${actionId}' for actor ${actorId}.`,
       { turnAction }
     );
 
-    // --- Payload Construction ---
-    const payload = this.#createAttemptActionPayload(actor, turnAction);
+    try {
+      // --- Phase 1: Payload Construction ---
+      const payload = this.#createAttemptActionPayload(actor, turnAction);
 
-    // --- Dispatch ---
-    const dispatchSuccess =
-      await this.#eventDispatchService.dispatchWithErrorHandling(
-        ATTEMPT_ACTION_ID,
-        payload,
-        `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionId}`
-      );
+      // Capture payload in trace
+      if (actionTrace) {
+        try {
+          actionTrace.captureEventPayload(payload);
+        } catch (payloadError) {
+          this.#logger.warn('Failed to capture event payload in trace', {
+            error: payloadError.message,
+            actionId,
+          });
+        }
+      }
 
-    if (dispatchSuccess) {
-      this.#logger.debug(
-        `CommandProcessor.dispatchAction: Successfully dispatched '${actionId}' for actor ${actorId}.`
-      );
-      return {
-        success: true,
-        turnEnded: false,
-        originalInput: commandString || actionId,
-        actionResult: { actionId },
+      // --- Phase 2: Event Dispatch ---
+      const dispatchSuccess =
+        await this.#eventDispatchService.dispatchWithErrorHandling(
+          ATTEMPT_ACTION_ID,
+          payload,
+          `ATTEMPT_ACTION_ID dispatch for pre-resolved action ${actionId}`
+        );
+
+      // --- Phase 3: Result Processing ---
+      const dispatchResult = {
+        success: dispatchSuccess,
+        timestamp: Date.now(),
+        metadata: {
+          actionId,
+          actorId,
+          eventType: ATTEMPT_ACTION_ID,
+        },
       };
-    }
 
-    const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionId}". Dispatcher reported failure.`;
-    return this.#handleDispatchFailure(
-      'Internal error: Failed to initiate action.',
-      internalMsg,
-      commandString,
-      actionId,
-      { payload }
-    );
+      // Capture result in trace
+      if (actionTrace) {
+        try {
+          actionTrace.captureDispatchResult(dispatchResult);
+        } catch (resultError) {
+          this.#logger.warn('Failed to capture dispatch result in trace', {
+            error: resultError.message,
+            actionId,
+          });
+        }
+      }
+
+      // --- Phase 4: Output and Return ---
+      if (dispatchSuccess) {
+        // Write trace asynchronously (success case)
+        if (actionTrace && this.#actionTraceOutputService) {
+          this.#writeTraceAsync(actionTrace, actionId);
+        }
+
+        this.#logger.debug(
+          `CommandProcessor.dispatchAction: Successfully dispatched '${actionId}' for actor ${actorId}.`
+        );
+
+        return {
+          success: true,
+          turnEnded: false,
+          originalInput: turnAction.commandString || actionId,
+          actionResult: { actionId },
+        };
+      }
+
+      // Handle dispatch failure
+      const internalMsg = `CRITICAL: Failed to dispatch pre-resolved ATTEMPT_ACTION_ID for ${actorId}, action "${actionId}". Dispatcher reported failure.`;
+
+      // Write trace asynchronously (failure case)
+      if (actionTrace && this.#actionTraceOutputService) {
+        this.#writeTraceAsync(actionTrace, actionId);
+      }
+
+      return this.#handleDispatchFailure(
+        'Internal error: Failed to initiate action.',
+        internalMsg,
+        turnAction.commandString,
+        actionId,
+        { payload }
+      );
+    } catch (error) {
+      // --- Phase 5: Error Handling ---
+      this.#logger.error(
+        `CommandProcessor.dispatchAction: Error dispatching action '${actionId}':`,
+        error
+      );
+
+      // Capture error in trace
+      if (actionTrace) {
+        try {
+          actionTrace.captureError(error);
+        } catch (errorCaptureError) {
+          this.#logger.warn('Failed to capture error in trace', {
+            originalError: error.message,
+            traceError: errorCaptureError.message,
+            actionId,
+          });
+        }
+      }
+
+      // Write trace asynchronously (error case)
+      if (actionTrace && this.#actionTraceOutputService) {
+        this.#writeTraceAsync(actionTrace, actionId);
+      }
+
+      return this.#handleDispatchFailure(
+        'Internal error: Action dispatch failed.',
+        error.message,
+        turnAction.commandString,
+        actionId
+      );
+    }
   }
 
   // --- Private Helper Methods ---
+
+  /**
+   * Determine if execution trace should be created
+   *
+   * @private
+   * @param {string} actionId - Action ID to check
+   * @returns {boolean} True if trace should be created
+   */
+  #shouldCreateTrace(actionId) {
+    // Fast path: no tracing infrastructure
+    if (!this.#actionTraceFilter || !this.#actionExecutionTraceFactory) {
+      return false;
+    }
+
+    // Check if tracing is globally enabled
+    if (!this.#actionTraceFilter.isEnabled()) {
+      return false;
+    }
+
+    // Check if this specific action should be traced
+    if (!actionId || !this.#actionTraceFilter.shouldTrace(actionId)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Create execution trace instance
+   *
+   * @private
+   * @param {object} turnAction - Turn action to trace
+   * @param {string} actorId - Actor performing action
+   * @returns {object} New trace instance
+   */
+  #createExecutionTrace(turnAction, actorId) {
+    if (!this.#actionExecutionTraceFactory) {
+      throw new Error('ActionExecutionTraceFactory not available');
+    }
+
+    return this.#actionExecutionTraceFactory.createFromTurnAction(
+      turnAction,
+      actorId
+    );
+  }
+
+  /**
+   * Write trace to output asynchronously
+   *
+   * @private
+   * @param {object} trace - Trace to write
+   * @param {string} actionId - Action ID for logging
+   */
+  #writeTraceAsync(trace, actionId) {
+    // Fire and forget - don't wait for trace writing
+    this.#actionTraceOutputService.writeTrace(trace).catch((writeError) => {
+      this.#logger.warn('Failed to write execution trace', {
+        error: writeError.message,
+        actionId,
+        traceComplete: trace.isComplete,
+        hasError: trace.hasError,
+      });
+    });
+  }
 
   /**
    * @description Validates actor and action inputs for dispatchAction.

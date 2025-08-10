@@ -225,12 +225,12 @@ async generateClichesForDirection(concept, direction)
 
 ### Technical Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|------------|--------|------------|
-| LLM Response Quality | Medium | High | Structured prompts, validation, retry logic |
-| Storage Limits | Low | Medium | Monitor usage, provide warnings |
-| Performance Impact | Low | Medium | Caching, virtual scrolling |
-| Integration Issues | Low | High | Comprehensive testing, gradual rollout |
+| Risk                 | Probability | Impact | Mitigation                                  |
+| -------------------- | ----------- | ------ | ------------------------------------------- |
+| LLM Response Quality | Medium      | High   | Structured prompts, validation, retry logic |
+| Storage Limits       | Low         | Medium | Monitor usage, provide warnings             |
+| Performance Impact   | Low         | Medium | Caching, virtual scrolling                  |
+| Integration Issues   | Low         | High   | Comprehensive testing, gradual rollout      |
 
 ### Mitigation Strategies
 

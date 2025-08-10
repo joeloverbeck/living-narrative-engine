@@ -37,12 +37,15 @@ Implement high-precision timing measurement capabilities for action execution tr
 
 ### 1. High-Precision Timer Service
 
-#### File: `src/actions/tracing/highPrecisionTimer.js`
+#### File: `src/actions/tracing/timing/highPrecisionTimer.js` (NEW FILE)
+
+**Note**: This is a new file to be created in a new `timing` subdirectory, not a modification to existing code.
 
 ```javascript
 /**
  * @file High-precision timing service for action execution tracing
  * Provides consistent, accurate timing across different JavaScript environments
+ * @see actionExecutionTrace.js
  */
 
 /**
@@ -296,15 +299,23 @@ export const highPrecisionTimer = new HighPrecisionTimer();
 
 ### 2. Execution Phase Timer
 
-#### File: `src/actions/tracing/executionPhaseTimer.js`
+#### File: `src/actions/tracing/timing/executionPhaseTimer.js` (NEW FILE)
+
+**Note**: This is a new file to be created in the `timing` subdirectory.
 
 ```javascript
 /**
  * @file Execution phase timing for action tracing
  * Tracks timing information for different phases of action execution
+ * @see actionExecutionTrace.js
  */
 
 import { highPrecisionTimer } from './highPrecisionTimer.js';
+import {
+  validateDependency,
+  assertPresent,
+} from '../../../utils/dependencyUtils.js';
+import { InvalidArgumentError } from '../../../errors/invalidArgumentError.js';
 
 /**
  * Execution phase timer for tracking action execution performance
@@ -636,12 +647,15 @@ export class ExecutionPhaseTimer {
 
 ### 3. ActionExecutionTrace Timing Integration
 
-#### File: `src/actions/tracing/actionExecutionTrace.js` (Enhanced)
+#### File: `src/actions/tracing/actionExecutionTrace.js` (EXISTING FILE - TO BE MODIFIED)
+
+**Note**: This file already exists and contains a `#getHighPrecisionTime()` method. The constructor will be extended with backward compatibility.
 
 ```javascript
-// Add to existing ActionExecutionTrace class
+// Add to existing ActionExecutionTrace class imports section
 
-import { ExecutionPhaseTimer } from './executionPhaseTimer.js';
+/** @typedef {import('./timing/executionPhaseTimer.js').ExecutionPhaseTimer} ExecutionPhaseTimer */
+import { ExecutionPhaseTimer } from './timing/executionPhaseTimer.js';
 
 /**
  * Enhanced ActionExecutionTrace with precise timing capabilities
@@ -652,8 +666,9 @@ export class ActionExecutionTrace {
   #timingEnabled;
 
   constructor({ actionId, actorId, turnAction, enableTiming = true }) {
-    // ... existing constructor code ...
+    // ... existing constructor code (validation and initialization) ...
 
+    // Add timing support with backward compatibility
     this.#timingEnabled = enableTiming;
     if (this.#timingEnabled) {
       this.#phaseTimer = new ExecutionPhaseTimer();
@@ -893,20 +908,27 @@ export class ActionExecutionTrace {
 
 ### 4. Performance Analysis Utilities
 
-#### File: `src/actions/tracing/performanceAnalyzer.js`
+#### File: `src/actions/tracing/timing/actionPerformanceAnalyzer.js` (NEW FILE)
+
+**Note**: Named `actionPerformanceAnalyzer.js` to avoid confusion with existing `performanceMonitor.js` which serves a different purpose (StructuredTrace).
 
 ```javascript
 /**
  * @file Performance analysis utilities for action execution traces
+ * @see actionExecutionTrace.js
  */
 
 import { highPrecisionTimer } from './highPrecisionTimer.js';
+import {
+  validateDependency,
+  assertPresent,
+} from '../../../utils/dependencyUtils.js';
 
 /**
  * Performance analyzer for action execution traces
  * Provides statistical analysis and performance insights
  */
-export class PerformanceAnalyzer {
+export class ActionPerformanceAnalyzer {
   #traces;
   #stats;
 
@@ -1154,13 +1176,19 @@ export class PerformanceAnalyzer {
 
 ### Phase 1: Core Timing Infrastructure (30 minutes)
 
-1. **Implement HighPrecisionTimer**
+1. **Create timing subdirectory structure**
+   - [ ] Create `src/actions/tracing/timing/` directory
+   - [ ] Create corresponding test directory `tests/unit/actions/tracing/timing/`
+
+2. **Implement HighPrecisionTimer (NEW FILE)**
+   - [ ] Create NEW file `src/actions/tracing/timing/highPrecisionTimer.js`
    - [ ] Create timing abstraction with performance.now() and process.hrtime support
    - [ ] Add fallback to Date.now() for compatibility
    - [ ] Implement duration formatting and precision detection
    - [ ] Add baseline measurement and capability detection
 
-2. **Create ExecutionPhaseTimer**
+3. **Create ExecutionPhaseTimer (NEW FILE)**
+   - [ ] Create NEW file `src/actions/tracing/timing/executionPhaseTimer.js`
    - [ ] Implement phase-based timing with start/end markers
    - [ ] Add marker support for detailed timing points
    - [ ] Create timing data export and summary generation
@@ -1168,13 +1196,20 @@ export class PerformanceAnalyzer {
 
 ### Phase 2: Integration with ActionExecutionTrace (20 minutes)
 
-1. **Enhance ActionExecutionTrace class**
+1. **Register new services in Dependency Injection**
+   - [ ] Add tokens to `src/dependencyInjection/tokens/actionTracingTokens.js` if needed
+   - [ ] Register services in DI container if they need injection
+   - [ ] Update ActionExecutionTraceFactory to pass timing configuration
+
+2. **Enhance EXISTING ActionExecutionTrace class**
+   - [ ] Modify `src/actions/tracing/actionExecutionTrace.js`
+   - [ ] Note: `#getHighPrecisionTime()` method already exists - enhance it
    - [ ] Integrate ExecutionPhaseTimer into existing trace lifecycle
    - [ ] Add timing data to JSON export
    - [ ] Create performance report methods
    - [ ] Ensure backward compatibility with existing traces
 
-2. **Add timing configuration**
+3. **Add timing configuration**
    - [ ] Support for enabling/disabling timing per trace
    - [ ] Configuration options for timing precision
    - [ ] Performance optimization for disabled timing
@@ -1182,7 +1217,8 @@ export class PerformanceAnalyzer {
 
 ### Phase 3: Analysis and Reporting (10 minutes)
 
-1. **Create PerformanceAnalyzer**
+1. **Create ActionPerformanceAnalyzer (NEW FILE)**
+   - [ ] Create NEW file `src/actions/tracing/timing/actionPerformanceAnalyzer.js`
    - [ ] Implement statistical analysis for multiple traces
    - [ ] Add bottleneck identification
    - [ ] Create percentile calculations
@@ -1221,7 +1257,7 @@ console.log(`Phases: ${summary.phases.length}`);
 
 ```javascript
 // Analyze multiple traces
-const analyzer = new PerformanceAnalyzer();
+const analyzer = new ActionPerformanceAnalyzer();
 
 // Add traces as they complete
 traces.forEach((trace) => analyzer.addTrace(trace));
@@ -1267,11 +1303,13 @@ console.log(phaseTimer.createReport());
 
 ### Unit Tests
 
-#### File: `tests/unit/actions/tracing/highPrecisionTimer.unit.test.js`
+#### File: `tests/unit/actions/tracing/timing/highPrecisionTimer.test.js`
+
+**Note**: Test files follow project pattern without `.unit` suffix.
 
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { HighPrecisionTimer } from '../../../../src/actions/tracing/highPrecisionTimer.js';
+import { HighPrecisionTimer } from '../../../../../src/actions/tracing/timing/highPrecisionTimer.js';
 
 describe('HighPrecisionTimer', () => {
   let timer;
@@ -1386,11 +1424,13 @@ describe('HighPrecisionTimer', () => {
 });
 ```
 
-#### File: `tests/unit/actions/tracing/executionPhaseTimer.unit.test.js`
+#### File: `tests/unit/actions/tracing/timing/executionPhaseTimer.test.js`
+
+**Note**: Test files follow project pattern without `.unit` suffix.
 
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { ExecutionPhaseTimer } from '../../../../src/actions/tracing/executionPhaseTimer.js';
+import { ExecutionPhaseTimer } from '../../../../../src/actions/tracing/timing/executionPhaseTimer.js';
 
 describe('ExecutionPhaseTimer', () => {
   let timer;
@@ -1537,7 +1577,7 @@ describe('ExecutionPhaseTimer', () => {
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ActionExecutionTrace } from '../../../../src/actions/tracing/actionExecutionTrace.js';
-import { PerformanceAnalyzer } from '../../../../src/actions/tracing/performanceAnalyzer.js';
+import { ActionPerformanceAnalyzer } from '../../../../src/actions/tracing/timing/actionPerformanceAnalyzer.js';
 
 describe('Timing Integration', () => {
   it('should capture complete timing data in ActionExecutionTrace', async () => {
@@ -1572,7 +1612,7 @@ describe('Timing Integration', () => {
   });
 
   it('should analyze performance across multiple traces', () => {
-    const analyzer = new PerformanceAnalyzer();
+    const analyzer = new ActionPerformanceAnalyzer();
     const traces = [];
 
     // Create multiple traces with different performance characteristics
@@ -1726,9 +1766,14 @@ describe('Timing Performance', () => {
 
 ### Internal Dependencies
 
-- HighPrecisionTimer for consistent timing API
-- ActionExecutionTrace for integration
-- Existing validation and error handling utilities
+- HighPrecisionTimer for consistent timing API (NEW)
+- ActionExecutionTrace for integration (EXISTING - to be modified)
+- ExecutionPhaseTimer for phase tracking (NEW)
+- ActionPerformanceAnalyzer for analysis (NEW)
+- Existing validation utilities: `validateDependency`, `assertPresent`
+- Existing error types: `InvalidArgumentError`
+- Existing factories: `ActionExecutionTraceFactory` (may need updates)
+- Existing services: `ActionTraceOutputService` (for outputting traces with timing)
 
 ### External Dependencies
 
@@ -1773,10 +1818,13 @@ describe('Timing Performance', () => {
 
 ## Definition of Done
 
-- [ ] HighPrecisionTimer implemented with cross-platform support
-- [ ] ExecutionPhaseTimer created with phase management
-- [ ] ActionExecutionTrace enhanced with timing integration
-- [ ] PerformanceAnalyzer created for statistical analysis
+- [ ] Created `src/actions/tracing/timing/` directory structure
+- [ ] HighPrecisionTimer implemented as NEW file with cross-platform support
+- [ ] ExecutionPhaseTimer created as NEW file with phase management
+- [ ] ActionExecutionTrace (EXISTING) enhanced with timing integration (backward compatible)
+- [ ] ActionPerformanceAnalyzer created as NEW file for statistical analysis
+- [ ] DI tokens registered if needed in `actionTracingTokens.js`
+- [ ] Integration with existing CommandProcessor and ActionExecutionTraceFactory verified
 - [ ] Unit tests written and passing (>95% coverage)
 - [ ] Integration tests verify end-to-end timing capture
 - [ ] Performance tests validate minimal overhead

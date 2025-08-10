@@ -70,14 +70,14 @@ export class ClichesStateManager extends EventEmitter {
   #maxHistorySize = 10;
   #cache;
   #cacheTTL = 300000; // 5 minutes
-  
+
   constructor() {
     super();
     this.#initializeState();
     this.#cache = new Map();
     this.#stateHistory = [];
   }
-  
+
   /**
    * Initialize default state
    * @private
@@ -95,13 +95,13 @@ export class ClichesStateManager extends EventEmitter {
       cache: {
         concepts: new Map(),
         directions: new Map(),
-        cliches: new Map()
-      }
+        cliches: new Map(),
+      },
     };
-    
+
     this.#previousState = null;
   }
-  
+
   /**
    * Get current state
    * @returns {ClichesPageState} Current state
@@ -109,7 +109,7 @@ export class ClichesStateManager extends EventEmitter {
   getState() {
     return { ...this.#state };
   }
-  
+
   /**
    * Get specific state property
    * @param {string} key - Property key
@@ -118,7 +118,7 @@ export class ClichesStateManager extends EventEmitter {
   get(key) {
     return this.#state[key];
   }
-  
+
   /**
    * Update state with partial updates
    * @param {Partial<ClichesPageState>} updates - State updates
@@ -126,20 +126,20 @@ export class ClichesStateManager extends EventEmitter {
   setState(updates) {
     // Store previous state
     this.#previousState = { ...this.#state };
-    
+
     // Apply updates
     this.#state = {
       ...this.#state,
-      ...updates
+      ...updates,
     };
-    
+
     // Add to history
     this.#addToHistory(updates);
-    
+
     // Emit change events
     this.#emitStateChanges(updates);
   }
-  
+
   /**
    * Add state change to history
    * @private
@@ -148,15 +148,15 @@ export class ClichesStateManager extends EventEmitter {
     this.#stateHistory.push({
       timestamp: Date.now(),
       updates,
-      previousState: this.#previousState
+      previousState: this.#previousState,
     });
-    
+
     // Limit history size
     if (this.#stateHistory.length > this.#maxHistorySize) {
       this.#stateHistory.shift();
     }
   }
-  
+
   /**
    * Emit state change events
    * @private
@@ -166,20 +166,20 @@ export class ClichesStateManager extends EventEmitter {
     this.emit('stateChanged', {
       updates,
       previousState: this.#previousState,
-      currentState: this.#state
+      currentState: this.#state,
     });
-    
+
     // Emit specific property changes
     for (const [key, value] of Object.entries(updates)) {
       this.emit(`${key}Changed`, {
         oldValue: this.#previousState?.[key],
-        newValue: value
+        newValue: value,
       });
     }
   }
-  
+
   // ============= Direction Management =============
-  
+
   /**
    * Set selected direction
    * @param {string} directionId - Direction ID
@@ -189,10 +189,10 @@ export class ClichesStateManager extends EventEmitter {
     this.setState({
       selectedDirectionId: directionId,
       currentDirection: directionData,
-      error: null
+      error: null,
     });
   }
-  
+
   /**
    * Clear direction selection
    */
@@ -202,10 +202,10 @@ export class ClichesStateManager extends EventEmitter {
       currentDirection: null,
       currentConcept: null,
       currentCliches: null,
-      error: null
+      error: null,
     });
   }
-  
+
   /**
    * Set directions data
    * @param {Array} directions - All directions
@@ -215,14 +215,14 @@ export class ClichesStateManager extends EventEmitter {
     for (const direction of directions) {
       this.#cacheData(`direction:${direction.id}`, direction);
     }
-    
+
     this.setState({
-      directionsData: directions
+      directionsData: directions,
     });
   }
-  
+
   // ============= Concept Management =============
-  
+
   /**
    * Set current concept
    * @param {object} concept - Concept data
@@ -231,14 +231,14 @@ export class ClichesStateManager extends EventEmitter {
     if (concept) {
       this.#cacheData(`concept:${concept.id}`, concept);
     }
-    
+
     this.setState({
-      currentConcept: concept
+      currentConcept: concept,
     });
   }
-  
+
   // ============= Cliché Management =============
-  
+
   /**
    * Set current clichés
    * @param {object} cliches - Generated clichés
@@ -247,24 +247,24 @@ export class ClichesStateManager extends EventEmitter {
     if (cliches && this.#state.selectedDirectionId) {
       this.#cacheData(`cliches:${this.#state.selectedDirectionId}`, cliches);
     }
-    
+
     this.setState({
       currentCliches: cliches,
       isGenerating: false,
-      error: null
+      error: null,
     });
   }
-  
+
   /**
    * Start cliché generation
    */
   startGeneration() {
     this.setState({
       isGenerating: true,
-      error: null
+      error: null,
     });
   }
-  
+
   /**
    * Complete cliché generation
    * @param {object} cliches - Generated clichés
@@ -272,7 +272,7 @@ export class ClichesStateManager extends EventEmitter {
   completeGeneration(cliches) {
     this.setCurrentCliches(cliches);
   }
-  
+
   /**
    * Fail cliché generation
    * @param {string} error - Error message
@@ -280,12 +280,12 @@ export class ClichesStateManager extends EventEmitter {
   failGeneration(error) {
     this.setState({
       isGenerating: false,
-      error
+      error,
     });
   }
-  
+
   // ============= Loading States =============
-  
+
   /**
    * Set loading state
    * @param {boolean} isLoading - Loading state
@@ -293,7 +293,7 @@ export class ClichesStateManager extends EventEmitter {
   setLoading(isLoading) {
     this.setState({ isLoading });
   }
-  
+
   /**
    * Set error state
    * @param {string|null} error - Error message
@@ -301,9 +301,9 @@ export class ClichesStateManager extends EventEmitter {
   setError(error) {
     this.setState({ error });
   }
-  
+
   // ============= Cache Management =============
-  
+
   /**
    * Cache data with TTL
    * @param {string} key - Cache key
@@ -313,13 +313,13 @@ export class ClichesStateManager extends EventEmitter {
     this.#cache.set(key, {
       data,
       timestamp: Date.now(),
-      ttl: this.#cacheTTL
+      ttl: this.#cacheTTL,
     });
-    
+
     // Clean expired entries
     this.#cleanExpiredCache();
   }
-  
+
   /**
    * Get cached data
    * @param {string} key - Cache key
@@ -327,32 +327,32 @@ export class ClichesStateManager extends EventEmitter {
    */
   getCached(key) {
     const entry = this.#cache.get(key);
-    
+
     if (!entry) return null;
-    
+
     // Check if expired
     if (Date.now() - entry.timestamp > entry.ttl) {
       this.#cache.delete(key);
       return null;
     }
-    
+
     return entry.data;
   }
-  
+
   /**
    * Clean expired cache entries
    * @private
    */
   #cleanExpiredCache() {
     const now = Date.now();
-    
+
     for (const [key, entry] of this.#cache) {
       if (now - entry.timestamp > entry.ttl) {
         this.#cache.delete(key);
       }
     }
   }
-  
+
   /**
    * Clear all cache
    */
@@ -362,13 +362,13 @@ export class ClichesStateManager extends EventEmitter {
       cache: {
         concepts: new Map(),
         directions: new Map(),
-        cliches: new Map()
-      }
+        cliches: new Map(),
+      },
     });
   }
-  
+
   // ============= History Management =============
-  
+
   /**
    * Get state history
    * @returns {Array} State history
@@ -376,25 +376,25 @@ export class ClichesStateManager extends EventEmitter {
   getHistory() {
     return [...this.#stateHistory];
   }
-  
+
   /**
    * Undo last state change
    */
   undo() {
     if (this.#stateHistory.length === 0) return;
-    
+
     const lastChange = this.#stateHistory.pop();
     if (lastChange.previousState) {
       this.#state = lastChange.previousState;
       this.emit('stateChanged', {
         updates: this.#state,
-        isUndo: true
+        isUndo: true,
       });
     }
   }
-  
+
   // ============= State Persistence =============
-  
+
   /**
    * Save state to session storage
    */
@@ -402,15 +402,18 @@ export class ClichesStateManager extends EventEmitter {
     try {
       const stateToSave = {
         selectedDirectionId: this.#state.selectedDirectionId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-      
-      sessionStorage.setItem('clichesGeneratorState', JSON.stringify(stateToSave));
+
+      sessionStorage.setItem(
+        'clichesGeneratorState',
+        JSON.stringify(stateToSave)
+      );
     } catch (error) {
       console.error('Failed to save state:', error);
     }
   }
-  
+
   /**
    * Load state from session storage
    * @returns {boolean} True if state was loaded
@@ -419,29 +422,28 @@ export class ClichesStateManager extends EventEmitter {
     try {
       const saved = sessionStorage.getItem('clichesGeneratorState');
       if (!saved) return false;
-      
+
       const state = JSON.parse(saved);
-      
+
       // Check if state is still valid (< 1 hour old)
       if (Date.now() - state.timestamp < 3600000) {
         this.setState({
-          selectedDirectionId: state.selectedDirectionId
+          selectedDirectionId: state.selectedDirectionId,
         });
         return true;
       }
-      
+
       // Clear expired state
       sessionStorage.removeItem('clichesGeneratorState');
-      
     } catch (error) {
       console.error('Failed to load state:', error);
     }
-    
+
     return false;
   }
-  
+
   // ============= State Validation =============
-  
+
   /**
    * Validate current state
    * @returns {object} Validation result
@@ -449,27 +451,27 @@ export class ClichesStateManager extends EventEmitter {
   validateState() {
     const errors = [];
     const warnings = [];
-    
+
     // Check for inconsistencies
     if (this.#state.selectedDirectionId && !this.#state.currentDirection) {
       errors.push('Selected direction ID without direction data');
     }
-    
+
     if (this.#state.currentDirection && !this.#state.currentConcept) {
       warnings.push('Direction without associated concept');
     }
-    
+
     if (this.#state.isGenerating && this.#state.currentCliches) {
       errors.push('Generation in progress but clichés already exist');
     }
-    
+
     return {
       valid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
-  
+
   /**
    * Reset state to initial
    */
@@ -492,7 +494,7 @@ export default ClichesStateManager;
 // Add to controller constructor
 constructor(dependencies) {
   super(dependencies);
-  
+
   // Initialize state manager
   this.#stateManager = new ClichesStateManager();
   this.#setupStateListeners();
@@ -511,23 +513,23 @@ constructor(dependencies) {
       this.#clearUI();
     }
   });
-  
+
   this.#stateManager.on('currentClichesChanged', ({ newValue }) => {
     if (newValue) {
       this.#displayCliches(newValue);
     }
   });
-  
+
   this.#stateManager.on('isGeneratingChanged', ({ newValue }) => {
     this.#updateGenerateButton(!newValue, newValue ? 'Generating...' : 'Generate Clichés');
   });
-  
+
   this.#stateManager.on('errorChanged', ({ newValue }) => {
     if (newValue) {
       this._showErrorMessage(newValue);
     }
   });
-  
+
   this.#stateManager.on('isLoadingChanged', ({ newValue }) => {
     if (newValue) {
       this._showLoadingState();
@@ -546,34 +548,34 @@ async #handleDirectionSelection(directionId) {
     this.#stateManager.clearSelection();
     return;
   }
-  
+
   // Check cache first
   const cachedDirection = this.#stateManager.getCached(`direction:${directionId}`);
   const cachedCliches = this.#stateManager.getCached(`cliches:${directionId}`);
-  
+
   if (cachedDirection && cachedCliches) {
     // Use cached data
     this.#stateManager.setSelectedDirection(directionId, cachedDirection);
     this.#stateManager.setCurrentCliches(cachedCliches);
     return;
   }
-  
+
   // Load fresh data
   try {
     this.#stateManager.setLoading(true);
-    
+
     const directionData = await this.#loadDirectionData(directionId);
     this.#stateManager.setSelectedDirection(directionId, directionData.direction);
     this.#stateManager.setCurrentConcept(directionData.concept);
-    
+
     // Check for existing clichés
     const hasCliches = await this._services.characterBuilderService.hasClichesForDirection(directionId);
-    
+
     if (hasCliches) {
       const cliches = await this._services.characterBuilderService.getClichesByDirectionId(directionId);
       this.#stateManager.setCurrentCliches(cliches);
     }
-    
+
   } catch (error) {
     this.#stateManager.setError(error.message);
   } finally {
@@ -595,16 +597,16 @@ export class DataFlowOrchestrator {
   #services;
   #eventBus;
   #logger;
-  
+
   constructor({ stateManager, services, eventBus, logger }) {
     this.#stateManager = stateManager;
     this.#services = services;
     this.#eventBus = eventBus;
     this.#logger = logger;
-    
+
     this.#setupEventListeners();
   }
-  
+
   /**
    * Set up event listeners for data flow
    * @private
@@ -614,40 +616,41 @@ export class DataFlowOrchestrator {
     this.#eventBus.on('CLICHES_GENERATION_STARTED', () => {
       this.#stateManager.startGeneration();
     });
-    
+
     this.#eventBus.on('CLICHES_GENERATION_COMPLETED', (event) => {
       this.#stateManager.completeGeneration(event.payload.cliches);
     });
-    
+
     this.#eventBus.on('CLICHES_GENERATION_FAILED', (event) => {
       this.#stateManager.failGeneration(event.payload.error);
     });
-    
+
     // State change reactions
     this.#stateManager.on('stateChanged', ({ updates }) => {
       this.#logger.debug('State changed:', updates);
-      
+
       // Save critical state to session
       if (updates.selectedDirectionId !== undefined) {
         this.#stateManager.saveToSession();
       }
     });
   }
-  
+
   /**
    * Load initial data
    */
   async loadInitialData() {
     try {
       this.#stateManager.setLoading(true);
-      
+
       // Try to restore from session
       const restored = this.#stateManager.loadFromSession();
-      
+
       // Load directions
-      const directions = await this.#services.characterBuilderService.getAllThematicDirections();
+      const directions =
+        await this.#services.characterBuilderService.getAllThematicDirections();
       this.#stateManager.setDirectionsData(directions);
-      
+
       // If restored, reload that direction
       if (restored) {
         const directionId = this.#stateManager.get('selectedDirectionId');
@@ -655,7 +658,6 @@ export class DataFlowOrchestrator {
           await this.loadDirection(directionId);
         }
       }
-      
     } catch (error) {
       this.#stateManager.setError('Failed to load initial data');
       this.#logger.error('Initial data load failed:', error);
@@ -663,7 +665,7 @@ export class DataFlowOrchestrator {
       this.#stateManager.setLoading(false);
     }
   }
-  
+
   /**
    * Load specific direction
    */
@@ -674,24 +676,29 @@ export class DataFlowOrchestrator {
       this.#applyDirectionData(cached);
       return;
     }
-    
+
     try {
       // Load direction and concept
-      const direction = await this.#services.characterBuilderService.getThematicDirection(directionId);
-      const concept = await this.#services.characterBuilderService.getCharacterConcept(direction.conceptId);
-      
+      const direction =
+        await this.#services.characterBuilderService.getThematicDirection(
+          directionId
+        );
+      const concept =
+        await this.#services.characterBuilderService.getCharacterConcept(
+          direction.conceptId
+        );
+
       const data = { direction, concept };
-      
+
       // Cache the full data
       this.#stateManager.cacheData(`fullDirection:${directionId}`, data);
-      
+
       this.#applyDirectionData(data);
-      
     } catch (error) {
       this.#stateManager.setError(`Failed to load direction: ${error.message}`);
     }
   }
-  
+
   /**
    * Apply direction data to state
    * @private
@@ -700,28 +707,28 @@ export class DataFlowOrchestrator {
     this.#stateManager.setSelectedDirection(data.direction.id, data.direction);
     this.#stateManager.setCurrentConcept(data.concept);
   }
-  
+
   /**
    * Generate clichés for current selection
    */
   async generateCliches() {
     const state = this.#stateManager.getState();
-    
+
     if (!state.currentConcept || !state.currentDirection) {
       this.#stateManager.setError('No direction selected');
       return;
     }
-    
+
     try {
       this.#stateManager.startGeneration();
-      
-      const cliches = await this.#services.characterBuilderService.generateClichesForDirection(
-        state.currentConcept,
-        state.currentDirection
-      );
-      
+
+      const cliches =
+        await this.#services.characterBuilderService.generateClichesForDirection(
+          state.currentConcept,
+          state.currentDirection
+        );
+
       this.#stateManager.completeGeneration(cliches);
-      
     } catch (error) {
       this.#stateManager.failGeneration(error.message);
     }
@@ -784,51 +791,51 @@ export class DataFlowOrchestrator {
 ```javascript
 describe('ClichesStateManager', () => {
   let stateManager;
-  
+
   beforeEach(() => {
     stateManager = new ClichesStateManager();
   });
-  
+
   describe('State Updates', () => {
     it('should update state and emit events', () => {
       const listener = jest.fn();
       stateManager.on('selectedDirectionIdChanged', listener);
-      
+
       stateManager.setSelectedDirection('dir-1', { id: 'dir-1' });
-      
+
       expect(stateManager.get('selectedDirectionId')).toBe('dir-1');
       expect(listener).toHaveBeenCalled();
     });
-    
+
     it('should maintain state history', () => {
       stateManager.setState({ isLoading: true });
       stateManager.setState({ isLoading: false });
-      
+
       const history = stateManager.getHistory();
       expect(history).toHaveLength(2);
     });
   });
-  
+
   describe('Cache Management', () => {
     it('should cache and retrieve data', () => {
       const data = { id: 'test' };
       stateManager.cacheData('test-key', data);
-      
+
       const cached = stateManager.getCached('test-key');
       expect(cached).toEqual(data);
     });
-    
+
     it('should expire old cache entries', () => {
       jest.useFakeTimers();
-      
+
       stateManager.cacheData('test-key', { id: 'test' });
-      
+
       // Advance time past TTL
       jest.advanceTimersByTime(6 * 60 * 1000);
-      
+
       const cached = stateManager.getCached('test-key');
       expect(cached).toBeNull();
-      
+
       jest.useRealTimers();
     });
   });

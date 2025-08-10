@@ -1,11 +1,13 @@
 # Feature requiremenst for creating a page of the Character Builder series, regarding generating clichés for a thematic direction
 
 We currently have four pages in the Character Builder series:
+
 - character-concepts-manager.html
 - thematic-direction-generator.html
-- thematic-directions-manager.html 
+- thematic-directions-manager.html
 
 We want to create a new page with the following features:
+
 - the user will be able to select an existing thematic direction, and generate a list of common clichés for the chosen thematic direction.
 
 The prompt sent to the large language model to generate the list of common clichés should be heavily inspired by the prompt used in thematic-direction-generator.html, but in general terms, the prompt should include the following:

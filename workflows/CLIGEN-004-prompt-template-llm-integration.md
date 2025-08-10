@@ -52,7 +52,7 @@ export class ClichePromptTemplate {
   static VERSION = '1.1.0';
   static MIN_ITEMS_PER_CATEGORY = 3;
   static MAX_ITEMS_PER_CATEGORY = 7;
-  
+
   /**
    * Get the current prompt template
    * @param {object} context - Generation context
@@ -60,10 +60,10 @@ export class ClichePromptTemplate {
    */
   static getPrompt(context) {
     const { conceptText, direction, options = {} } = context;
-    
+
     return this.#buildPrompt(conceptText, direction, options);
   }
-  
+
   /**
    * Build the complete prompt
    * @private
@@ -74,7 +74,7 @@ export class ClichePromptTemplate {
     const examples = options.includeFewShot ? this.#getFewShotExamples() : '';
     const instructions = this.#getInstructions(options);
     const responseFormat = this.#getResponseFormat();
-    
+
     return `${systemContext}
 
 ${task}
@@ -97,7 +97,7 @@ ${instructions}
 
 ${responseFormat}`;
   }
-  
+
   /**
    * Get system context
    * @private
@@ -115,7 +115,7 @@ You are a narrative design expert specializing in identifying overused tropes, c
 - Ability to identify subtle and obvious clichés
 </expertise>`;
   }
-  
+
   /**
    * Get task description
    * @private
@@ -132,7 +132,7 @@ Consider:
 5. Cultural stereotypes that should be avoided
 </task>`;
   }
-  
+
   /**
    * Get few-shot examples
    * @private
@@ -171,7 +171,7 @@ Direction: "The Chosen One - Destined to save the world"
 </example>
 </examples>`;
   }
-  
+
   /**
    * Get detailed instructions
    * @private
@@ -179,7 +179,7 @@ Direction: "The Chosen One - Destined to save the world"
   static #getInstructions(options) {
     const minItems = options.minItems || this.MIN_ITEMS_PER_CATEGORY;
     const maxItems = options.maxItems || this.MAX_ITEMS_PER_CATEGORY;
-    
+
     return `<instructions>
 Generate a comprehensive list of clichés and overused elements for each category below. Your response must:
 
@@ -214,7 +214,7 @@ Quality Guidelines:
 - Think about what would make readers/viewers roll their eyes
 </instructions>`;
   }
-  
+
   /**
    * Get response format specification
    * @private
@@ -249,7 +249,7 @@ Requirements:
 - Response must be valid, parseable JSON
 </response_format>`;
   }
-  
+
   /**
    * Get prompt for specific genre
    * @param {string} genre - Genre context
@@ -258,21 +258,21 @@ Requirements:
   static getGenreContext(genre) {
     const genreContexts = {
       fantasy: `Consider fantasy-specific clichés like chosen ones, prophecies, wise wizards, dark lords, and medieval stereotypes.`,
-      
+
       scifi: `Consider sci-fi clichés like lone space cowboys, AI gaining consciousness, time paradoxes, and alien invasion tropes.`,
-      
+
       romance: `Consider romance clichés like love triangles, enemies to lovers, billionaire love interests, and miscommunication plots.`,
-      
+
       mystery: `Consider mystery clichés like alcoholic detectives, red herrings, locked room mysteries, and surprise twin reveals.`,
-      
+
       horror: `Consider horror clichés like investigating strange noises, splitting up, ancient curses, and possessed children.`,
-      
-      contemporary: `Consider contemporary fiction clichés like manic pixie dream girls, coming of age tropes, and suburban ennui.`
+
+      contemporary: `Consider contemporary fiction clichés like manic pixie dream girls, coming of age tropes, and suburban ennui.`,
     };
-    
+
     return genreContexts[genre?.toLowerCase()] || '';
   }
-  
+
   /**
    * Validate a response against the expected format
    * @param {object} response - Response to validate
@@ -281,45 +281,60 @@ Requirements:
   static validateResponse(response) {
     const errors = [];
     const warnings = [];
-    
+
     // Check top-level structure
     if (!response.categories || typeof response.categories !== 'object') {
       errors.push('Missing or invalid categories object');
       return { valid: false, errors, warnings };
     }
-    
+
     if (!Array.isArray(response.tropesAndStereotypes)) {
       errors.push('Missing or invalid tropesAndStereotypes array');
     }
-    
+
     // Check each category
     const requiredCategories = [
-      'names', 'physicalDescriptions', 'personalityTraits',
-      'skillsAbilities', 'typicalLikes', 'typicalDislikes',
-      'commonFears', 'genericGoals', 'backgroundElements',
-      'overusedSecrets', 'speechPatterns'
+      'names',
+      'physicalDescriptions',
+      'personalityTraits',
+      'skillsAbilities',
+      'typicalLikes',
+      'typicalDislikes',
+      'commonFears',
+      'genericGoals',
+      'backgroundElements',
+      'overusedSecrets',
+      'speechPatterns',
     ];
-    
+
     for (const category of requiredCategories) {
       const items = response.categories[category];
-      
+
       if (!Array.isArray(items)) {
         errors.push(`Category "${category}" is not an array`);
       } else {
         if (items.length < this.MIN_ITEMS_PER_CATEGORY) {
-          warnings.push(`Category "${category}" has only ${items.length} items (minimum ${this.MIN_ITEMS_PER_CATEGORY})`);
+          warnings.push(
+            `Category "${category}" has only ${items.length} items (minimum ${this.MIN_ITEMS_PER_CATEGORY})`
+          );
         }
-        
+
         if (items.length > this.MAX_ITEMS_PER_CATEGORY) {
-          warnings.push(`Category "${category}" has ${items.length} items (maximum ${this.MAX_ITEMS_PER_CATEGORY})`);
+          warnings.push(
+            `Category "${category}" has ${items.length} items (maximum ${this.MAX_ITEMS_PER_CATEGORY})`
+          );
         }
-        
+
         // Check item quality
-        const emptyItems = items.filter(item => !item || typeof item !== 'string' || item.trim() === '');
+        const emptyItems = items.filter(
+          (item) => !item || typeof item !== 'string' || item.trim() === ''
+        );
         if (emptyItems.length > 0) {
-          errors.push(`Category "${category}" contains ${emptyItems.length} empty items`);
+          errors.push(
+            `Category "${category}" contains ${emptyItems.length} empty items`
+          );
         }
-        
+
         // Check for duplicate items
         const uniqueItems = new Set(items);
         if (uniqueItems.size < items.length) {
@@ -327,22 +342,24 @@ Requirements:
         }
       }
     }
-    
+
     // Check tropes
     if (Array.isArray(response.tropesAndStereotypes)) {
       if (response.tropesAndStereotypes.length < 5) {
-        warnings.push(`Only ${response.tropesAndStereotypes.length} tropes provided (minimum 5)`);
+        warnings.push(
+          `Only ${response.tropesAndStereotypes.length} tropes provided (minimum 5)`
+        );
       }
     }
-    
+
     return {
       valid: errors.length === 0,
       errors,
       warnings,
-      stats: this.#getResponseStats(response)
+      stats: this.#getResponseStats(response),
     };
   }
-  
+
   /**
    * Get response statistics
    * @private
@@ -350,7 +367,7 @@ Requirements:
   static #getResponseStats(response) {
     let totalItems = 0;
     const categoryCounts = {};
-    
+
     if (response.categories) {
       for (const [category, items] of Object.entries(response.categories)) {
         if (Array.isArray(items)) {
@@ -359,16 +376,17 @@ Requirements:
         }
       }
     }
-    
+
     if (Array.isArray(response.tropesAndStereotypes)) {
-      categoryCounts.tropesAndStereotypes = response.tropesAndStereotypes.length;
+      categoryCounts.tropesAndStereotypes =
+        response.tropesAndStereotypes.length;
       totalItems += response.tropesAndStereotypes.length;
     }
-    
+
     return {
       totalItems,
       categoryCounts,
-      averageItemsPerCategory: totalItems / Object.keys(categoryCounts).length
+      averageItemsPerCategory: totalItems / Object.keys(categoryCounts).length,
     };
   }
 }
@@ -390,14 +408,14 @@ export class LLMServiceAdapter {
   #apiKey;
   #timeout;
   #defaultModel;
-  
+
   constructor(config) {
     this.#baseUrl = config.baseUrl || 'http://localhost:3001/api';
     this.#apiKey = config.apiKey;
     this.#timeout = config.timeout || 30000;
     this.#defaultModel = config.defaultModel || 'gpt-4';
   }
-  
+
   /**
    * Generate completion from LLM
    * @param {object} params - Generation parameters
@@ -411,51 +429,51 @@ export class LLMServiceAdapter {
       model = this.#defaultModel,
       signal,
       systemPrompt,
-      responseFormat
+      responseFormat,
     } = params;
-    
+
     const requestBody = {
       model,
       messages: [
         {
           role: 'system',
-          content: systemPrompt || 'You are a helpful assistant.'
+          content: systemPrompt || 'You are a helpful assistant.',
         },
         {
           role: 'user',
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
       temperature,
       max_tokens: maxTokens,
-      response_format: responseFormat
+      response_format: responseFormat,
     };
-    
+
     const response = await fetch(`${this.#baseUrl}/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.#apiKey}`
+        Authorization: `Bearer ${this.#apiKey}`,
       },
       body: JSON.stringify(requestBody),
-      signal
+      signal,
     });
-    
+
     if (!response.ok) {
       const error = await response.text();
       throw new Error(`LLM request failed: ${error}`);
     }
-    
+
     const data = await response.json();
-    
+
     return {
       content: data.choices[0].message.content,
       model: data.model,
       usage: data.usage,
-      finishReason: data.choices[0].finish_reason
+      finishReason: data.choices[0].finish_reason,
     };
   }
-  
+
   /**
    * Stream completion from LLM
    * @param {object} params - Generation parameters
@@ -467,55 +485,55 @@ export class LLMServiceAdapter {
       temperature = 0.7,
       maxTokens = 2000,
       model = this.#defaultModel,
-      signal
+      signal,
     } = params;
-    
+
     const requestBody = {
       model,
       messages: [
         {
           role: 'user',
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
       temperature,
       max_tokens: maxTokens,
-      stream: true
+      stream: true,
     };
-    
+
     const response = await fetch(`${this.#baseUrl}/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.#apiKey}`
+        Authorization: `Bearer ${this.#apiKey}`,
       },
       body: JSON.stringify(requestBody),
-      signal
+      signal,
     });
-    
+
     if (!response.ok) {
       throw new Error(`LLM request failed: ${response.statusText}`);
     }
-    
+
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    
+
     while (true) {
       const { done, value } = await reader.read();
-      
+
       if (done) break;
-      
+
       const chunk = decoder.decode(value);
       const lines = chunk.split('\n');
-      
+
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const data = line.slice(6);
-          
+
           if (data === '[DONE]') {
             return;
           }
-          
+
           try {
             const parsed = JSON.parse(data);
             yield parsed;
@@ -543,21 +561,21 @@ export class PromptVersionManager {
     '1.0.0': {
       releaseDate: '2024-01-01',
       changes: ['Initial version'],
-      template: 'ClichePromptTemplate_v1_0_0'
+      template: 'ClichePromptTemplate_v1_0_0',
     },
     '1.1.0': {
       releaseDate: '2024-02-01',
       changes: [
         'Added few-shot examples',
         'Improved instruction clarity',
-        'Added genre-specific context'
+        'Added genre-specific context',
       ],
-      template: 'ClichePromptTemplate'
-    }
+      template: 'ClichePromptTemplate',
+    },
   };
-  
+
   static CURRENT_VERSION = '1.1.0';
-  
+
   /**
    * Get prompt template for version
    * @param {string} version - Version to retrieve
@@ -565,22 +583,24 @@ export class PromptVersionManager {
    */
   static getTemplate(version = this.CURRENT_VERSION) {
     const versionInfo = this.VERSIONS[version];
-    
+
     if (!versionInfo) {
       throw new Error(`Unknown prompt version: ${version}`);
     }
-    
+
     // Dynamic import based on version
     switch (versionInfo.template) {
       case 'ClichePromptTemplate':
-        return import('./clichePromptTemplate.js').then(m => m.default);
+        return import('./clichePromptTemplate.js').then((m) => m.default);
       case 'ClichePromptTemplate_v1_0_0':
-        return import('./legacy/clichePromptTemplate_v1_0_0.js').then(m => m.default);
+        return import('./legacy/clichePromptTemplate_v1_0_0.js').then(
+          (m) => m.default
+        );
       default:
         throw new Error(`Template not found: ${versionInfo.template}`);
     }
   }
-  
+
   /**
    * Get version history
    * @returns {object} Version information
@@ -588,7 +608,7 @@ export class PromptVersionManager {
   static getVersionHistory() {
     return this.VERSIONS;
   }
-  
+
   /**
    * Compare versions
    * @param {string} v1 - First version
@@ -598,12 +618,12 @@ export class PromptVersionManager {
   static compareVersions(v1, v2) {
     const parts1 = v1.split('.').map(Number);
     const parts2 = v2.split('.').map(Number);
-    
+
     for (let i = 0; i < 3; i++) {
       if (parts1[i] > parts2[i]) return 1;
       if (parts1[i] < parts2[i]) return -1;
     }
-    
+
     return 0;
   }
 }
@@ -670,25 +690,25 @@ describe('ClichePromptTemplate', () => {
     it('should generate complete prompt', () => {
       const prompt = ClichePromptTemplate.getPrompt({
         conceptText: 'A warrior',
-        direction: { title: 'The Leader' }
+        direction: { title: 'The Leader' },
       });
-      
+
       expect(prompt).toContain('<character_concept>');
       expect(prompt).toContain('<thematic_direction>');
       expect(prompt).toContain('<response_format>');
     });
-    
+
     it('should include few-shot examples when requested', () => {
       const prompt = ClichePromptTemplate.getPrompt({
         conceptText: 'A warrior',
         direction: { title: 'The Leader' },
-        options: { includeFewShot: true }
+        options: { includeFewShot: true },
       });
-      
+
       expect(prompt).toContain('<examples>');
     });
   });
-  
+
   describe('Response Validation', () => {
     it('should validate correct response', () => {
       const response = {
@@ -696,24 +716,26 @@ describe('ClichePromptTemplate', () => {
           names: ['John', 'Jane', 'Jack'],
           // ... other categories
         },
-        tropesAndStereotypes: ['Trope 1', 'Trope 2']
+        tropesAndStereotypes: ['Trope 1', 'Trope 2'],
       };
-      
+
       const result = ClichePromptTemplate.validateResponse(response);
       expect(result.valid).toBe(true);
     });
-    
+
     it('should detect missing categories', () => {
       const response = {
         categories: {
-          names: ['John']
+          names: ['John'],
           // Missing other categories
-        }
+        },
       };
-      
+
       const result = ClichePromptTemplate.validateResponse(response);
       expect(result.valid).toBe(false);
-      expect(result.errors).toContain('Category "physicalDescriptions" is not an array');
+      expect(result.errors).toContain(
+        'Category "physicalDescriptions" is not an array'
+      );
     });
   });
 });

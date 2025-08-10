@@ -148,7 +148,7 @@ describe('CharacterDatabase', () => {
 
       await initPromise;
 
-      expect(mockIndexedDB.open).toHaveBeenCalledWith('CharacterBuilder', 1);
+      expect(mockIndexedDB.open).toHaveBeenCalledWith('CharacterBuilder', 2);
       expect(mockLogger.info).toHaveBeenCalledWith(
         'CharacterDatabase: Successfully opened database'
       );
@@ -188,7 +188,10 @@ describe('CharacterDatabase', () => {
 
     it('should create object stores on upgrade needed', async () => {
       mockRequest.result = mockDbInstance;
-      const upgradeEvent = { target: { result: mockDbInstance } };
+      const upgradeEvent = {
+        target: { result: mockDbInstance },
+        oldVersion: 0, // Simulate fresh install
+      };
 
       const initPromise = database.initialize();
 
@@ -212,6 +215,9 @@ describe('CharacterDatabase', () => {
         'metadata',
         { keyPath: 'key' }
       );
+      expect(mockDbInstance.createObjectStore).toHaveBeenCalledWith('cliches', {
+        keyPath: 'id',
+      });
     });
 
     it('should skip creating existing object stores', async () => {

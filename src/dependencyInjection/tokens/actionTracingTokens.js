@@ -14,6 +14,7 @@ export const actionTracingTokens = freeze({
   IActionTraceConfigLoader: 'IActionTraceConfigLoader',
   IActionTraceConfigValidator: 'IActionTraceConfigValidator',
   IActionTraceFilter: 'IActionTraceFilter',
+  IActionExecutionTraceFactory: 'IActionExecutionTraceFactory',
   IActionTraceOutputService: 'IActionTraceOutputService',
   ITraceDirectoryManager: 'ITraceDirectoryManager',
   IActionAwareStructuredTrace: 'IActionAwareStructuredTrace',
