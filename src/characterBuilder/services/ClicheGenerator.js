@@ -139,9 +139,13 @@ export class ClicheGenerator {
     try {
       // Build the prompt (enhanced or standard)
       const prompt = options.useEnhancedPrompt
-        ? buildEnhancedClicheGenerationPrompt(conceptText, direction, options.enhancementOptions)
+        ? buildEnhancedClicheGenerationPrompt(
+            conceptText,
+            direction,
+            options.enhancementOptions
+          )
         : buildClicheGenerationPrompt(conceptText, direction);
-      
+
       this.#logger.debug('ClicheGenerator: Built prompt', {
         promptLength: prompt.length,
         conceptId,
@@ -155,12 +159,14 @@ export class ClicheGenerator {
 
       // Parse and validate response
       const parsedResponse = await this.#parseResponse(llmResponse);
-      
+
       let validationResult = null;
       let qualityMetrics = null;
-      
-      if (options.useEnhancedPrompt && 
-          options.enhancementOptions?.enableAdvancedValidation !== false) {
+
+      if (
+        options.useEnhancedPrompt &&
+        options.enhancementOptions?.enableAdvancedValidation !== false
+      ) {
         validationResult = this.#validateResponseEnhanced(parsedResponse);
         qualityMetrics = validationResult.qualityMetrics;
       } else {
@@ -175,7 +181,9 @@ export class ClicheGenerator {
         promptTokens: this.#estimateTokens(prompt),
         responseTokens: this.#estimateTokens(JSON.stringify(parsedResponse)),
         processingTime,
-        promptVersion: options.useEnhancedPrompt ? PROMPT_VERSION_INFO.version : '1.0.0',
+        promptVersion: options.useEnhancedPrompt
+          ? PROMPT_VERSION_INFO.version
+          : '1.0.0',
         enhanced: !!options.useEnhancedPrompt,
         qualityMetrics: qualityMetrics || null,
         validationWarnings: validationResult?.warnings || [],
@@ -338,14 +346,14 @@ export class ClicheGenerator {
         qualityScore: result.qualityMetrics.overallScore,
         recommendations: result.recommendations.length,
       });
-      
+
       // Log warnings if any exist
       if (result.warnings.length > 0) {
         this.#logger.warn('ClicheGenerator: Quality warnings detected', {
           warnings: result.warnings,
         });
       }
-      
+
       return result;
     } catch (error) {
       throw new ClicheGenerationError(
@@ -398,11 +406,20 @@ export class ClicheGenerator {
    * @returns {Promise<Cliche[]>} Generated clichés with enhanced features
    * @throws {ClicheGenerationError} If generation fails
    */
-  async generateEnhancedCliches(conceptId, conceptText, direction, enhancementOptions = {}, additionalOptions = {}) {
+  async generateEnhancedCliches(
+    conceptId,
+    conceptText,
+    direction,
+    enhancementOptions = {},
+    additionalOptions = {}
+  ) {
     const options = {
       ...additionalOptions,
       useEnhancedPrompt: true,
-      enhancementOptions: { ...DEFAULT_ENHANCEMENT_OPTIONS, ...enhancementOptions },
+      enhancementOptions: {
+        ...DEFAULT_ENHANCEMENT_OPTIONS,
+        ...enhancementOptions,
+      },
     };
 
     return this.generateCliches(conceptId, conceptText, direction, options);

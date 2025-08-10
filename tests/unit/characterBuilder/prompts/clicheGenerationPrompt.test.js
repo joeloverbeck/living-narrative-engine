@@ -469,7 +469,7 @@ describe('clicheGenerationPrompt', () => {
           minItemsPerCategory: 3,
           maxItemsPerCategory: 8,
           enableAdvancedValidation: true,
-          includeQualityMetrics: true
+          includeQualityMetrics: true,
         });
       });
     });
@@ -514,9 +514,16 @@ describe('clicheGenerationPrompt', () => {
       });
 
       it('should support all genre types', () => {
-        const genres = ['fantasy', 'scifi', 'romance', 'mystery', 'horror', 'contemporary'];
-        
-        genres.forEach(genre => {
+        const genres = [
+          'fantasy',
+          'scifi',
+          'romance',
+          'mystery',
+          'horror',
+          'contemporary',
+        ];
+
+        genres.forEach((genre) => {
           const enhancedPrompt = buildEnhancedClicheGenerationPrompt(
             validCharacterConcept,
             validDirection,
@@ -545,7 +552,7 @@ describe('clicheGenerationPrompt', () => {
             includeFewShotExamples: true,
             genre: 'scifi',
             minItemsPerCategory: 4,
-            maxItemsPerCategory: 6
+            maxItemsPerCategory: 6,
           }
         );
 
@@ -561,7 +568,7 @@ describe('clicheGenerationPrompt', () => {
           validDirection,
           { genre: 'invalid' }
         );
-        
+
         // Should not contain genre context for invalid genre
         expect(enhancedPrompt).not.toContain('<genre_context>');
       });
@@ -569,8 +576,9 @@ describe('clicheGenerationPrompt', () => {
 
     describe('validateClicheGenerationResponseEnhanced', () => {
       it('should validate correct response with statistics', () => {
-        const result = validateClicheGenerationResponseEnhanced(validLlmResponse);
-        
+        const result =
+          validateClicheGenerationResponseEnhanced(validLlmResponse);
+
         expect(result.valid).toBe(true);
         expect(result).toHaveProperty('statistics');
         expect(result).toHaveProperty('warnings');
@@ -579,15 +587,16 @@ describe('clicheGenerationPrompt', () => {
       });
 
       it('should calculate correct statistics', () => {
-        const result = validateClicheGenerationResponseEnhanced(validLlmResponse);
-        
+        const result =
+          validateClicheGenerationResponseEnhanced(validLlmResponse);
+
         expect(result.statistics).toHaveProperty('totalItems');
         expect(result.statistics).toHaveProperty('categoryCounts');
         expect(result.statistics).toHaveProperty('categoryLengths');
         expect(result.statistics).toHaveProperty('tropesCount');
         expect(result.statistics).toHaveProperty('averageItemsPerCategory');
         expect(result.statistics).toHaveProperty('completenessScore');
-        
+
         expect(result.statistics.tropesCount).toBe(2);
         expect(result.statistics.completenessScore).toBe(1); // All categories present
       });
@@ -605,15 +614,19 @@ describe('clicheGenerationPrompt', () => {
             genericGoals: ['save world', 'find love', 'get revenge'],
             backgroundElements: ['orphaned', 'royal', 'trained'],
             overusedSecrets: ['secret power', 'hidden identity', 'prophecy'],
-            speechPatterns: ['heroic', 'noble', 'inspiring']
+            speechPatterns: ['heroic', 'noble', 'inspiring'],
           },
-          tropesAndStereotypes: ['chosen one', 'reluctant hero']
+          tropesAndStereotypes: ['chosen one', 'reluctant hero'],
         };
 
         const result = validateClicheGenerationResponseEnhanced(sparseResponse);
-        
-        expect(result.warnings).toContain('Category "names" has only 1 items (recommended: 3+)');
-        expect(result.warnings).toContain('Category "physicalDescriptions" has only 2 items (recommended: 3+)');
+
+        expect(result.warnings).toContain(
+          'Category "names" has only 1 items (recommended: 3+)'
+        );
+        expect(result.warnings).toContain(
+          'Category "physicalDescriptions" has only 2 items (recommended: 3+)'
+        );
       });
 
       it('should generate warnings for too many items', () => {
@@ -621,34 +634,43 @@ describe('clicheGenerationPrompt', () => {
           ...validLlmResponse,
           categories: {
             ...validLlmResponse.categories,
-            names: Array(10).fill().map((_, i) => `Name${i}`) // 10 items
-          }
+            names: Array(10)
+              .fill()
+              .map((_, i) => `Name${i}`), // 10 items
+          },
         };
 
-        const result = validateClicheGenerationResponseEnhanced(overpackedResponse);
-        
-        expect(result.warnings).toContain('Category "names" has 10 items (recommended: 3-8)');
+        const result =
+          validateClicheGenerationResponseEnhanced(overpackedResponse);
+
+        expect(result.warnings).toContain(
+          'Category "names" has 10 items (recommended: 3-8)'
+        );
       });
 
       it('should generate warnings for few tropes', () => {
         const fewTropesResponse = {
           ...validLlmResponse,
-          tropesAndStereotypes: ['chosen one'] // Only 1 trope
+          tropesAndStereotypes: ['chosen one'], // Only 1 trope
         };
 
-        const result = validateClicheGenerationResponseEnhanced(fewTropesResponse);
-        
-        expect(result.warnings).toContain('Only 1 tropes provided (recommended: 5+)');
+        const result =
+          validateClicheGenerationResponseEnhanced(fewTropesResponse);
+
+        expect(result.warnings).toContain(
+          'Only 1 tropes provided (recommended: 5+)'
+        );
       });
 
       it('should calculate quality metrics', () => {
-        const result = validateClicheGenerationResponseEnhanced(validLlmResponse);
-        
+        const result =
+          validateClicheGenerationResponseEnhanced(validLlmResponse);
+
         expect(result.qualityMetrics).toHaveProperty('completeness');
         expect(result.qualityMetrics).toHaveProperty('itemDensity');
         expect(result.qualityMetrics).toHaveProperty('contentRichness');
         expect(result.qualityMetrics).toHaveProperty('overallScore');
-        
+
         expect(result.qualityMetrics.completeness).toBe(1);
         expect(typeof result.qualityMetrics.overallScore).toBe('number');
         expect(result.qualityMetrics.overallScore).toBeGreaterThan(0);
@@ -667,21 +689,25 @@ describe('clicheGenerationPrompt', () => {
             genericGoals: ['save world'],
             backgroundElements: ['orphaned'],
             overusedSecrets: ['secret power'],
-            speechPatterns: ['heroic']
+            speechPatterns: ['heroic'],
           },
-          tropesAndStereotypes: ['chosen one'] // Few tropes
+          tropesAndStereotypes: ['chosen one'], // Few tropes
         };
 
         const result = validateClicheGenerationResponseEnhanced(sparseResponse);
-        
+
         expect(result.recommendations.length).toBeGreaterThan(0);
-        expect(result.recommendations).toContain('Consider generating more items per category for better coverage');
+        expect(result.recommendations).toContain(
+          'Consider generating more items per category for better coverage'
+        );
       });
 
       it('should throw error for invalid response', () => {
         expect(() => {
           validateClicheGenerationResponseEnhanced({ invalid: 'response' });
-        }).toThrow('ClicheGenerationPrompt: Response must contain categories object');
+        }).toThrow(
+          'ClicheGenerationPrompt: Response must contain categories object'
+        );
       });
     });
 
@@ -695,33 +721,39 @@ describe('clicheGenerationPrompt', () => {
       };
 
       it('should create enhanced config with version info', () => {
-        const enhancedConfig = createEnhancedClicheGenerationLlmConfig(baseLlmConfig);
-        
+        const enhancedConfig =
+          createEnhancedClicheGenerationLlmConfig(baseLlmConfig);
+
         expect(enhancedConfig).toHaveProperty('enhancementOptions');
         expect(enhancedConfig).toHaveProperty('promptVersion');
         expect(enhancedConfig.promptVersion).toBe(PROMPT_VERSION_INFO.version);
-        expect(enhancedConfig.enhancementOptions).toEqual(DEFAULT_ENHANCEMENT_OPTIONS);
+        expect(enhancedConfig.enhancementOptions).toEqual(
+          DEFAULT_ENHANCEMENT_OPTIONS
+        );
       });
 
       it('should merge enhancement options', () => {
         const customOptions = {
           includeFewShotExamples: true,
-          genre: 'fantasy'
+          genre: 'fantasy',
         };
-        
+
         const enhancedConfig = createEnhancedClicheGenerationLlmConfig(
           baseLlmConfig,
           customOptions
         );
-        
-        expect(enhancedConfig.enhancementOptions.includeFewShotExamples).toBe(true);
+
+        expect(enhancedConfig.enhancementOptions.includeFewShotExamples).toBe(
+          true
+        );
         expect(enhancedConfig.enhancementOptions.genre).toBe('fantasy');
         expect(enhancedConfig.enhancementOptions.minItemsPerCategory).toBe(3); // Default preserved
       });
 
       it('should inherit base config properties', () => {
-        const enhancedConfig = createEnhancedClicheGenerationLlmConfig(baseLlmConfig);
-        
+        const enhancedConfig =
+          createEnhancedClicheGenerationLlmConfig(baseLlmConfig);
+
         expect(enhancedConfig.configId).toBe('test-config');
         expect(enhancedConfig.jsonOutputStrategy).toBeDefined();
         expect(enhancedConfig.defaultParameters.temperature).toBe(0.8); // CHARACTER_BUILDER_LLM_PARAMS

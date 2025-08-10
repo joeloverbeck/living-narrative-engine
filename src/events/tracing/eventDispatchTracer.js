@@ -21,7 +21,10 @@ export class EventDispatchTracer {
    */
   constructor({ logger, outputService }) {
     assertPresent(logger, 'EventDispatchTracer: logger is required');
-    assertPresent(outputService, 'EventDispatchTracer: outputService is required');
+    assertPresent(
+      outputService,
+      'EventDispatchTracer: outputService is required'
+    );
 
     this.#logger = logger;
     this.#outputService = outputService;
@@ -91,7 +94,7 @@ export class EventDispatchTrace {
       dispatchEnd: null,
       duration: null,
       success: null,
-      error: null
+      error: null,
     };
   }
 
@@ -130,7 +133,7 @@ export class EventDispatchTrace {
     this.#traceData.error = {
       message: error.message,
       type: error.constructor.name,
-      context
+      context,
     };
   }
 
@@ -147,16 +150,16 @@ export class EventDispatchTrace {
         context: this.#context,
         timestamp: this.#timestamp,
         createdAt: new Date().toISOString(),
-        version: '1.0'
+        version: '1.0',
       },
       dispatch: {
         startTime: this.#traceData.dispatchStart,
         endTime: this.#traceData.dispatchEnd,
         duration: this.#traceData.duration,
         success: this.#traceData.success,
-        error: this.#traceData.error
+        error: this.#traceData.error,
       },
-      payload: this.#payload
+      payload: this.#payload,
     };
   }
 }

@@ -260,7 +260,9 @@ describe('ActionTraceConfigLoader', () => {
         validateConfiguration: jest.fn().mockResolvedValue({
           isValid: true,
           errors: [],
-          warnings: ['Configuration warning: Using default value for maxTraceFiles'],
+          warnings: [
+            'Configuration warning: Using default value for maxTraceFiles',
+          ],
           normalizedConfig: normalizedConfig,
         }),
       }));
@@ -293,7 +295,9 @@ describe('ActionTraceConfigLoader', () => {
       // Setup the ActionTraceConfigValidator mock to throw during initialization
       ActionTraceConfigValidator.mockClear();
       ActionTraceConfigValidator.mockImplementation(() => ({
-        initialize: jest.fn().mockRejectedValue(new Error('Validator init failed')),
+        initialize: jest
+          .fn()
+          .mockRejectedValue(new Error('Validator init failed')),
         validateConfiguration: jest.fn(),
       }));
 
@@ -944,11 +948,13 @@ describe('ActionTraceConfigLoader', () => {
       expect(filtered).toHaveProperty('prerequisites');
       expect(filtered).toHaveProperty('targets');
       expect(filtered).toHaveProperty('debugInfo'); // included at verbose level
-      expect(filtered).toHaveProperty('stackTrace'); // included at verbose level  
+      expect(filtered).toHaveProperty('stackTrace'); // included at verbose level
       expect(filtered).toHaveProperty('systemState'); // included at verbose level
-      
+
       expect(filtered.debugInfo).toEqual({ debug: 'verbose_info' });
-      expect(filtered.stackTrace).toBe('Error\n  at function1()\n  at function2()');
+      expect(filtered.stackTrace).toBe(
+        'Error\n  at function1()\n  at function2()'
+      );
       expect(filtered.systemState).toEqual({ memory: '1GB', cpu: '50%' });
     });
 
@@ -1263,7 +1269,7 @@ describe('ActionTraceConfigLoader', () => {
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining('123invalid:action')
         );
-        
+
         // Uppercase patterns will only be caught if they have other issues
         // ValidMod:action is actually valid, so it won't generate warnings
         // The uppercase warning only shows up in the validation error list, not in logging
@@ -1271,10 +1277,13 @@ describe('ActionTraceConfigLoader', () => {
 
       it('should handle pattern validation internally without logging warnings', async () => {
         // The pattern validation happens during buildLookupStructures, but it only logs
-        // warnings for actually invalid patterns. Uppercase patterns are considered 
+        // warnings for actually invalid patterns. Uppercase patterns are considered
         // warnings in the validation logic but don't prevent the pattern from working.
-        
-        const testResult1 = loader.testPattern('ValidMod:action', 'ValidMod:action');
+
+        const testResult1 = loader.testPattern(
+          'ValidMod:action',
+          'ValidMod:action'
+        );
         expect(testResult1.matches).toBe(true);
         expect(testResult1.patternType).toBe('exact');
 
@@ -1282,7 +1291,10 @@ describe('ActionTraceConfigLoader', () => {
         expect(testResult2.matches).toBe(true);
         expect(testResult2.patternType).toBe('mod');
 
-        const testResult3 = loader.testPattern('Test*Pattern', 'TestSomePattern');
+        const testResult3 = loader.testPattern(
+          'Test*Pattern',
+          'TestSomePattern'
+        );
         expect(testResult3.matches).toBe(true);
         expect(testResult3.patternType).toBe('general');
       });

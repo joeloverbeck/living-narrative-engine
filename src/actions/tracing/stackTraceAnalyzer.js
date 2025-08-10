@@ -221,7 +221,11 @@ export class StackTraceAnalyzer {
       includeAnalysis = false,
     } = options;
 
-    if (!parsedTrace || !parsedTrace.frames || parsedTrace.frames.length === 0) {
+    if (
+      !parsedTrace ||
+      !parsedTrace.frames ||
+      parsedTrace.frames.length === 0
+    ) {
       return 'No stack trace available';
     }
 

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clichés Generator - Living Narrative Engine</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/cliches-generator.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+  </head>
+  <body>
+    <div id="cliches-generator-container" class="cb-page-container">
+      <header class="cb-page-header">
+        <div class="header-content">
+          <h1>Clichés Generator</h1>
+          <p class="header-subtitle">
+            Identify common tropes and stereotypes to avoid in your character
+            designs
+          </p>
+        </div>
+      </header>
+
+      <main class="cb-page-main cliches-generator-main">
+        <!-- Left Panel: Direction Selection & Controls -->
+        <section class="cb-input-panel direction-selection-panel">
+          <h2 class="cb-panel-title">Select Thematic Direction</h2>
+
+          <!-- Direction Selection Form -->
+          <form id="cliches-form" class="cb-form">
+            <div class="cb-form-group">
+              <label for="direction-selector">Choose Direction:</label>
+              <select id="direction-selector" class="cb-select">
+                <option value="">-- Choose a thematic direction --</option>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+
+            <!-- Generate Button -->
+            <div class="cb-form-actions">
+              <button
+                type="submit"
+                id="generate-btn"
+                class="cb-button cb-button-primary"
+                disabled
+              >
+                Generate Clichés
+              </button>
+            </div>
+          </form>
+
+          <!-- Selected Direction Display -->
+          <div
+            id="selected-direction-display"
+            class="direction-display-container"
+            style="display: none"
+          >
+            <div class="direction-display-header">
+              <h3>Selected Direction</h3>
+            </div>
+            <div id="direction-content" class="direction-display-content">
+              <!-- Direction details populated dynamically -->
+            </div>
+            <div id="direction-meta" class="direction-meta">
+              <!-- Direction metadata populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Original Concept Display -->
+          <div
+            id="original-concept-display"
+            class="concept-display-container"
+            style="display: none"
+          >
+            <div class="concept-display-header">
+              <h3>Original Concept</h3>
+            </div>
+            <div id="concept-content" class="concept-display-content">
+              <!-- Concept text populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Navigation -->
+          <div class="cb-navigation">
+            <button id="back-to-menu-btn" class="cb-button cb-button-secondary">
+              ← Back to Character Builder Menu
+            </button>
+          </div>
+        </section>
+
+        <!-- Right Panel: Clichés Display -->
+        <section class="cb-output-panel cliches-display-panel">
+          <h2 class="cb-panel-title">Clichés & Tropes</h2>
+
+          <!-- Status Messages -->
+          <div id="status-messages" class="status-messages">
+            <!-- Messages populated dynamically -->
+          </div>
+
+          <!-- Clichés Container -->
+          <div id="cliches-container" class="cliches-container">
+            <div class="empty-state">
+              <p>Select a thematic direction to begin.</p>
+              <p>You can either view existing clichés or generate new ones.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Loading Overlay -->
+      <div id="loading-overlay" class="loading-overlay" style="display: none">
+        <div class="loading-content">
+          <div class="spinner"></div>
+          <p class="loading-message">Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="dist/cliches-generator-main.js"></script>
+  </body>
+</html>

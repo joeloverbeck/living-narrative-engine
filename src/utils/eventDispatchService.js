@@ -55,10 +55,18 @@ export class EventDispatchService {
    * @param {import('../events/tracing/eventDispatchTracer.js').EventDispatchTracer} [dependencies.eventDispatchTracer] - Optional event dispatch tracer for recording traces.
    * @throws {Error} If required dependencies are missing.
    */
-  constructor({ safeEventDispatcher, logger, actionTraceFilter = null, eventDispatchTracer = null }) {
-    assertPresent(safeEventDispatcher, 'EventDispatchService: safeEventDispatcher is required');
+  constructor({
+    safeEventDispatcher,
+    logger,
+    actionTraceFilter = null,
+    eventDispatchTracer = null,
+  }) {
+    assertPresent(
+      safeEventDispatcher,
+      'EventDispatchService: safeEventDispatcher is required'
+    );
     assertPresent(logger, 'EventDispatchService: logger is required');
-    
+
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#logger = logger;
     this.#actionTraceFilter = actionTraceFilter;
@@ -123,7 +131,7 @@ export class EventDispatchService {
           eventName,
           payload: this.#sanitizePayload(payload),
           context,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
         eventTrace.captureDispatchStart();
       } catch (traceError) {
@@ -132,11 +140,11 @@ export class EventDispatchService {
     }
 
     const startTime = performance.now();
-    
+
     this.#logger.debug(
       `dispatchWithErrorHandling: Attempting dispatch: ${context} ('${eventName}')`
     );
-    
+
     try {
       const success = await this.#safeEventDispatcher.dispatch(
         eventName,
@@ -161,7 +169,7 @@ export class EventDispatchService {
       return success;
     } catch (error) {
       const duration = performance.now() - startTime;
-      
+
       if (eventTrace) {
         eventTrace.captureDispatchError(error, { duration, context });
         this.#writeTraceAsync(eventTrace);
@@ -313,7 +321,7 @@ export class EventDispatchService {
     if (!this.#actionTraceFilter || !this.#eventDispatchTracer) {
       return false;
     }
-    
+
     if (!this.#actionTraceFilter.isEnabled()) {
       return false;
     }
@@ -340,9 +348,15 @@ export class EventDispatchService {
     }
 
     const sanitized = { ...payload };
-    const sensitiveFields = ['password', 'token', 'apiKey', 'secret', 'credential'];
-    
-    sensitiveFields.forEach(field => {
+    const sensitiveFields = [
+      'password',
+      'token',
+      'apiKey',
+      'secret',
+      'credential',
+    ];
+
+    sensitiveFields.forEach((field) => {
       if (field in sanitized) {
         sanitized[field] = '[REDACTED]';
       }
@@ -360,7 +374,7 @@ export class EventDispatchService {
   #writeTraceAsync(eventTrace) {
     if (!this.#eventDispatchTracer) return;
 
-    this.#eventDispatchTracer.writeTrace(eventTrace).catch(error => {
+    this.#eventDispatchTracer.writeTrace(eventTrace).catch((error) => {
       this.#logger.warn('Failed to write event dispatch trace', error);
     });
   }

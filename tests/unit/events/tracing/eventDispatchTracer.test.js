@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { EventDispatchTracer, EventDispatchTrace } from '../../../../src/events/tracing/eventDispatchTracer.js';
+import {
+  EventDispatchTracer,
+  EventDispatchTrace,
+} from '../../../../src/events/tracing/eventDispatchTracer.js';
 
 describe('EventDispatchTracer', () => {
   let mockLogger;
@@ -78,7 +81,9 @@ describe('EventDispatchTracer', () => {
       mockOutputService.writeTrace.mockRejectedValue(error);
       const mockTrace = { toJSON: jest.fn() };
 
-      await expect(tracer.writeTrace(mockTrace)).rejects.toThrow('Write failed');
+      await expect(tracer.writeTrace(mockTrace)).rejects.toThrow(
+        'Write failed'
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to write event dispatch trace',

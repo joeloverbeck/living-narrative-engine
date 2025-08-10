@@ -122,6 +122,34 @@ export function createMockActionTraceOutputService() {
       errorRate: 0,
     }),
     resetStatistics: jest.fn(),
+    // Enhanced methods for queue processing
+    exportTraces: jest.fn().mockResolvedValue(undefined),
+    getQueueStats: jest.fn().mockReturnValue({
+      queueLength: 0,
+      isProcessing: false,
+      writeErrors: 0,
+      maxQueueSize: 1000,
+    }),
+    shutdown: jest.fn().mockResolvedValue(undefined),
+  };
+}
+
+/**
+ * Create mock IndexedDBStorageAdapter
+ *
+ * @returns {object} Mock IndexedDBStorageAdapter instance
+ */
+export function createMockIndexedDBStorageAdapter() {
+  return {
+    initialize: jest.fn().mockResolvedValue(undefined),
+    getItem: jest.fn().mockResolvedValue(null),
+    setItem: jest.fn().mockResolvedValue(undefined),
+    removeItem: jest.fn().mockResolvedValue(undefined),
+    getAllKeys: jest.fn().mockResolvedValue([]),
+    clear: jest.fn().mockResolvedValue(undefined),
+    count: jest.fn().mockResolvedValue(0),
+    close: jest.fn(),
+    isAvailable: jest.fn().mockResolvedValue(true),
   };
 }
 
