@@ -261,7 +261,9 @@ describe('ExecutionPhaseTimer', () => {
       timer.addMarker('auto_marker');
 
       const phaseData = timer.getPhaseData('active_phase');
-      const autoMarkers = phaseData.markers.filter((m) => m.label === 'auto_marker');
+      const autoMarkers = phaseData.markers.filter(
+        (m) => m.label === 'auto_marker'
+      );
       expect(autoMarkers.length).toBe(1);
       expect(autoMarkers[0].phase).toBe('active_phase');
     });
@@ -273,7 +275,9 @@ describe('ExecutionPhaseTimer', () => {
       timer.addMarker('explicit_marker', 'phase1');
 
       const phase1Data = timer.getPhaseData('phase1');
-      const explicitMarkers = phase1Data.markers.filter((m) => m.label === 'explicit_marker');
+      const explicitMarkers = phase1Data.markers.filter(
+        (m) => m.label === 'explicit_marker'
+      );
       expect(explicitMarkers.length).toBe(1);
       expect(explicitMarkers[0].phase).toBe('phase1');
     });

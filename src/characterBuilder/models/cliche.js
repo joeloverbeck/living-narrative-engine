@@ -261,4 +261,52 @@ export class Cliche {
   }
 }
 
+/**
+ * Create Cliche instances from LLM response data
+ *
+ * @param {string} conceptId - Character concept ID
+ * @param {object} categories - Categorized clichés from LLM
+ * @param {string[]} tropesAndStereotypes - Overall tropes from LLM
+ * @param {object} llmMetadata - LLM generation metadata
+ * @param {string} [directionId] - Optional thematic direction ID
+ * @returns {Cliche[]} Array with single created cliché instance
+ */
+export function createClichesFromLLMResponse(
+  conceptId,
+  categories,
+  tropesAndStereotypes,
+  llmMetadata = {},
+  directionId = null
+) {
+  if (
+    !conceptId ||
+    typeof conceptId !== 'string' ||
+    conceptId.trim().length === 0
+  ) {
+    throw new Error('conceptId must be a non-empty string');
+  }
+
+  if (!categories || typeof categories !== 'object') {
+    throw new Error('categories must be a valid object');
+  }
+
+  if (!Array.isArray(tropesAndStereotypes)) {
+    throw new Error('tropesAndStereotypes must be an array');
+  }
+
+  // Create a single Cliche instance with all the data
+  const clicheData = {
+    conceptId: conceptId.trim(),
+    directionId: directionId || 'temp-direction-' + Date.now(), // Temporary ID if not provided
+    categories,
+    tropesAndStereotypes,
+    llmMetadata,
+  };
+
+  const cliche = new Cliche(clicheData);
+
+  // Return as array for consistency with function name
+  return [cliche];
+}
+
 export default Cliche;

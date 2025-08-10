@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { HighPrecisionTimer, highPrecisionTimer } from '../../../../../src/actions/tracing/timing/highPrecisionTimer.js';
+import {
+  HighPrecisionTimer,
+  highPrecisionTimer,
+} from '../../../../../src/actions/tracing/timing/highPrecisionTimer.js';
 
 describe('HighPrecisionTimer', () => {
   let timer;
@@ -149,7 +152,7 @@ describe('HighPrecisionTimer', () => {
     it('should detect high-precision availability', () => {
       const isAvailable = timer.isHighPrecisionAvailable();
       expect(typeof isAvailable).toBe('boolean');
-      
+
       // Test singleton instance too
       const singletonAvailable = highPrecisionTimer.isHighPrecisionAvailable();
       expect(typeof singletonAvailable).toBe('boolean');
@@ -157,7 +160,11 @@ describe('HighPrecisionTimer', () => {
 
     it('should report correct API being used', () => {
       const info = timer.getPrecisionInfo();
-      const expectedApis = ['performance.now()', 'process.hrtime()', 'Date.now()'];
+      const expectedApis = [
+        'performance.now()',
+        'process.hrtime()',
+        'Date.now()',
+      ];
       expect(expectedApis).toContain(info.api);
     });
   });

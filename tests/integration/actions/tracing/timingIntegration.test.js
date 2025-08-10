@@ -8,7 +8,7 @@ describe('Timing Integration', () => {
 
   beforeEach(() => {
     factory = new ActionExecutionTraceFactory({
-      logger: { debug: jest.fn(), error: jest.fn() }
+      logger: { debug: jest.fn(), error: jest.fn() },
     });
   });
 
@@ -92,7 +92,7 @@ describe('Timing Integration', () => {
 
       trace.captureDispatchStart();
       trace.captureEventPayload({ test: 'data' });
-      
+
       const testError = new Error('Test execution error');
       trace.captureError(testError);
 
@@ -114,7 +114,7 @@ describe('Timing Integration', () => {
       const trace = factory.createTrace({
         actionId: 'core:factory_test',
         actorId: 'player-1',
-        turnAction: { actionDefinitionId: 'core:factory_test' }
+        turnAction: { actionDefinitionId: 'core:factory_test' },
       });
 
       trace.captureDispatchStart();
@@ -129,7 +129,7 @@ describe('Timing Integration', () => {
         actionId: 'core:factory_no_timing_test',
         actorId: 'player-1',
         turnAction: { actionDefinitionId: 'core:factory_no_timing_test' },
-        enableTiming: false
+        enableTiming: false,
       });
 
       trace.captureDispatchStart();
@@ -143,11 +143,19 @@ describe('Timing Integration', () => {
       const turnAction = {
         actionDefinitionId: 'core:turn_action_test',
         commandString: 'test command',
-        parameters: { param: 'value' }
+        parameters: { param: 'value' },
       };
 
-      const traceWithTiming = factory.createFromTurnAction(turnAction, 'player-1', true);
-      const traceWithoutTiming = factory.createFromTurnAction(turnAction, 'player-1', false);
+      const traceWithTiming = factory.createFromTurnAction(
+        turnAction,
+        'player-1',
+        true
+      );
+      const traceWithoutTiming = factory.createFromTurnAction(
+        turnAction,
+        'player-1',
+        false
+      );
 
       traceWithTiming.captureDispatchStart();
       traceWithTiming.captureDispatchResult({ success: true });
@@ -254,8 +262,8 @@ describe('Timing Integration', () => {
         actorId: 'player-1',
         turnAction: {
           actionDefinitionId: 'core:legacy_test',
-          commandString: 'legacy command'
-        }
+          commandString: 'legacy command',
+        },
         // No enableTiming parameter - should default to true
       });
 
@@ -271,7 +279,7 @@ describe('Timing Integration', () => {
 
       expect(trace.isComplete).toBe(true);
       expect(trace.duration).toBeGreaterThan(0);
-      
+
       const phases = trace.getExecutionPhases();
       expect(phases.length).toBeGreaterThan(0);
 
@@ -291,12 +299,12 @@ describe('Timing Integration', () => {
       const trace1 = factory.createTrace({
         actionId: 'core:factory_legacy_1',
         actorId: 'player-1',
-        turnAction: { actionDefinitionId: 'core:factory_legacy_1' }
+        turnAction: { actionDefinitionId: 'core:factory_legacy_1' },
       });
 
       const turnAction = {
         actionDefinitionId: 'core:factory_legacy_2',
-        commandString: 'test'
+        commandString: 'test',
       };
       const trace2 = factory.createFromTurnAction(turnAction, 'player-1');
 
@@ -321,7 +329,7 @@ describe('Timing Integration', () => {
       // Measure timing-enabled overhead
       for (let i = 0; i < iterations; i++) {
         const start = performance.now();
-        
+
         const trace = new ActionExecutionTrace({
           actionId: `core:perf_test_${i}`,
           actorId: 'player-1',
@@ -340,7 +348,7 @@ describe('Timing Integration', () => {
       // Measure timing-disabled overhead
       for (let i = 0; i < iterations; i++) {
         const start = performance.now();
-        
+
         const trace = new ActionExecutionTrace({
           actionId: `core:no_timing_perf_test_${i}`,
           actorId: 'player-1',
@@ -356,14 +364,18 @@ describe('Timing Integration', () => {
         noTimingOverheads.push(end - start);
       }
 
-      const avgTimingOverhead = timingOverheads.reduce((a, b) => a + b, 0) / iterations;
-      const avgNoTimingOverhead = noTimingOverheads.reduce((a, b) => a + b, 0) / iterations;
+      const avgTimingOverhead =
+        timingOverheads.reduce((a, b) => a + b, 0) / iterations;
+      const avgNoTimingOverhead =
+        noTimingOverheads.reduce((a, b) => a + b, 0) / iterations;
       const timingAddedOverhead = avgTimingOverhead - avgNoTimingOverhead;
 
       // Timing overhead should be minimal (<0.1ms as per requirement)
       expect(timingAddedOverhead).toBeLessThan(0.1);
-      
-      console.log(`Average timing overhead: ${timingAddedOverhead.toFixed(4)}ms`);
+
+      console.log(
+        `Average timing overhead: ${timingAddedOverhead.toFixed(4)}ms`
+      );
       console.log(`With timing: ${avgTimingOverhead.toFixed(4)}ms`);
       console.log(`Without timing: ${avgNoTimingOverhead.toFixed(4)}ms`);
     });

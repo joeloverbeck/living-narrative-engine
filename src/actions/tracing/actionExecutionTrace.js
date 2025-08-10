@@ -6,6 +6,8 @@
 /** @typedef {import('./timing/executionPhaseTimer.js').ExecutionPhaseTimer} ExecutionPhaseTimer */
 import { ExecutionPhaseTimer } from './timing/executionPhaseTimer.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
+import { ErrorClassifier } from './errorClassification.js';
+import { StackTraceAnalyzer } from './stackTraceAnalyzer.js';
 
 /**
  * ActionExecutionTrace class for capturing action execution data
@@ -20,6 +22,9 @@ export class ActionExecutionTrace {
   #endTime;
   #phaseTimer;
   #timingEnabled;
+  #errorClassifier;
+  #stackTraceAnalyzer;
+  #errorContext;
 
   /**
    * Create new execution trace
@@ -29,8 +34,15 @@ export class ActionExecutionTrace {
    * @param {string} options.actorId - Actor performing the action
    * @param {object} options.turnAction - Complete turn action object
    * @param {boolean} [options.enableTiming] - Enable high-precision timing
+   * @param {boolean} [options.enableErrorAnalysis] - Enable error classification and analysis
    */
-  constructor({ actionId, actorId, turnAction, enableTiming = true }) {
+  constructor({
+    actionId,
+    actorId,
+    turnAction,
+    enableTiming = true,
+    enableErrorAnalysis = true,
+  }) {
     // Validate required parameters
     if (!actionId || typeof actionId !== 'string') {
       throw new Error('ActionExecutionTrace requires valid actionId string');
@@ -41,10 +53,17 @@ export class ActionExecutionTrace {
     if (!turnAction || typeof turnAction !== 'object') {
       throw new Error('ActionExecutionTrace requires valid turnAction object');
     }
-    
+
     // Validate enableTiming parameter
     if (typeof enableTiming !== 'boolean') {
       throw new InvalidArgumentError('enableTiming must be a boolean value');
+    }
+
+    // Validate enableErrorAnalysis parameter
+    if (typeof enableErrorAnalysis !== 'boolean') {
+      throw new InvalidArgumentError(
+        'enableErrorAnalysis must be a boolean value'
+      );
     }
 
     this.#actionId = actionId;
@@ -64,12 +83,30 @@ export class ActionExecutionTrace {
 
     this.#startTime = null;
     this.#endTime = null;
-    
+
     // Add timing support with backward compatibility
     this.#timingEnabled = enableTiming;
     if (this.#timingEnabled) {
       this.#phaseTimer = new ExecutionPhaseTimer();
     }
+
+    // Add error analysis support
+    if (enableErrorAnalysis) {
+      this.#errorClassifier = new ErrorClassifier({
+        logger: console, // Fallback logger
+      });
+      this.#stackTraceAnalyzer = new StackTraceAnalyzer({
+        projectPath: process.cwd(),
+        logger: console,
+      });
+    }
+
+    this.#errorContext = {
+      phase: null,
+      timing: null,
+      retryCount: 0,
+      executionState: {},
+    };
   }
 
   /**
@@ -161,7 +198,7 @@ export class ActionExecutionTrace {
     if (this.#timingEnabled && this.#phaseTimer) {
       // End whichever phase is currently active (initialization or payload_creation)
       const currentPhases = this.#phaseTimer.getAllPhases();
-      const activePhase = currentPhases.find(p => p.endTime === null);
+      const activePhase = currentPhases.find((p) => p.endTime === null);
       if (activePhase) {
         this.#phaseTimer.endPhase(activePhase.name);
       }
@@ -194,58 +231,150 @@ export class ActionExecutionTrace {
   }
 
   /**
-   * Enhanced error capture with timing
+   * Enhanced error capture with timing and classification
    *
-   * @param error
+   * @param {Error} error - Error that occurred
+   * @param {object} context - Additional error context
    */
-  captureError(error) {
+  captureError(error, context = {}) {
     if (this.#startTime === null) {
       throw new Error(
         'Must call captureDispatchStart() before capturing error'
       );
     }
+    
+    if (this.#executionData.error !== null) {
+      throw new Error(
+        'Error already captured for this trace'
+      );
+    }
 
     const errorTime = this.#getHighPrecisionTime();
 
+    // End timing if not already ended
     if (this.#endTime === null) {
       this.#endTime = errorTime;
       this.#executionData.endTime = this.#endTime;
       this.#executionData.duration = this.#endTime - this.#startTime;
     }
 
-    // Handle timing for error case
-    if (this.#timingEnabled && this.#phaseTimer) {
-      // End any active phase
-      if (this.#phaseTimer.isActive()) {
-        this.#phaseTimer.addMarker('error_occurred', null, {
-          errorType: error.constructor.name,
-          errorMessage: error.message,
-        });
-      }
+    // Update error context
+    this.#errorContext = {
+      ...this.#errorContext,
+      ...context,
+      phase: context.phase || this.#getCurrentPhase(),
+      timing: this.#getTimingContext(),
+      captureTime: errorTime,
+    };
 
-      // End execution with error
+    // Classify error if classifier available
+    let classification = null;
+    if (this.#errorClassifier) {
+      try {
+        classification = this.#errorClassifier.classifyError(
+          error,
+          this.#errorContext
+        );
+      } catch (classificationError) {
+        console.warn(
+          'Error classification failed:',
+          classificationError.message
+        );
+      }
+    }
+
+    // Analyze stack trace if analyzer available
+    let stackAnalysis = null;
+    if (this.#stackTraceAnalyzer && error.stack) {
+      try {
+        stackAnalysis = this.#stackTraceAnalyzer.parseStackTrace(error.stack);
+      } catch (analysisError) {
+        console.warn('Stack trace analysis failed:', analysisError.message);
+      }
+    }
+
+    // Handle timing for error case with classification
+    if (
+      this.#timingEnabled &&
+      this.#phaseTimer &&
+      this.#phaseTimer.isActive()
+    ) {
+      this.#phaseTimer.addMarker('error_occurred', null, {
+        errorType: error.constructor.name,
+        errorMessage: error.message,
+        errorCategory: classification?.category || 'unknown',
+      });
+
       if (this.#endTime === errorTime) {
         this.#phaseTimer.endExecution({
           success: false,
           error: error.constructor.name,
+          errorCategory: classification?.category || 'unknown',
         });
       }
     }
 
     this.#executionData.error = {
+      // Existing error information
       message: error.message || 'Unknown error',
       type: error.constructor.name || 'Error',
+      name: error.name || error.constructor.name,
       stack: error.stack || null,
       timestamp: errorTime,
+
+      // Extended error properties
       code: error.code || null,
       cause: error.cause || null,
+      errno: error.errno || null,
+      syscall: error.syscall || null,
+
+      // Error context
+      context: {
+        phase: this.#errorContext.phase,
+        executionDuration: this.#executionData.duration,
+        retryCount: this.#errorContext.retryCount,
+        actionId: this.#actionId,
+        actorId: this.#actorId,
+      },
+
+      // Classification results
+      classification: classification || {
+        category: 'unknown',
+        severity: 'medium',
+        recoveryPotential: 'conditional',
+        isTransient: false,
+        isRetryable: false,
+        confidence: 0,
+      },
+
+      // Stack trace analysis
+      stackAnalysis: stackAnalysis || null,
+
+      // Error location (from stack trace)
+      location: stackAnalysis
+        ? this.#stackTraceAnalyzer.getErrorLocation(stackAnalysis)
+        : null,
+
+      // Formatted stack trace for readability
+      formattedStack:
+        stackAnalysis && this.#stackTraceAnalyzer
+          ? this.#stackTraceAnalyzer.formatStackTrace(stackAnalysis, {
+              showProjectOnly: false,
+              maxFrames: 15,
+              includeLineNumbers: true,
+              includeAnalysis: false,
+            })
+          : null,
     };
 
+    // Add to execution phases
     this.#executionData.phases.push({
       phase: 'error_captured',
       timestamp: errorTime,
       description: `Error occurred: ${error.message}`,
       errorType: error.constructor.name,
+      errorCategory: classification?.category || 'unknown',
+      severity: classification?.severity || 'unknown',
     });
   }
 
@@ -378,6 +507,173 @@ export class ActionExecutionTrace {
     }
 
     return this.#phaseTimer.getSummary();
+  }
+
+  /**
+   * Set error context for better error analysis
+   *
+   * @param {object} context - Error context
+   */
+  setErrorContext(context) {
+    this.#errorContext = {
+      ...this.#errorContext,
+      ...context,
+    };
+  }
+
+  /**
+   * Get error details
+   *
+   * @returns {object | null} Error details or null if no error
+   */
+  getError() {
+    return this.#executionData.error;
+  }
+
+  /**
+   * Get error summary
+   *
+   * @returns {object | null} Error summary or null if no error
+   */
+  getErrorSummary() {
+    if (!this.#executionData.error) {
+      return null;
+    }
+
+    const error = this.#executionData.error;
+    return {
+      type: error.type,
+      message: error.message,
+      category: error.classification?.category || 'unknown',
+      severity: error.classification?.severity || 'unknown',
+      isRetryable: error.classification?.isRetryable || false,
+      location: error.location
+        ? {
+            file: error.location.shortFile,
+            function: error.location.function,
+            line: error.location.line,
+          }
+        : null,
+      troubleshooting: error.classification?.troubleshooting || [],
+    };
+  }
+
+  /**
+   * Generate error report
+   *
+   * @returns {string} Human-readable error report
+   */
+  getErrorReport() {
+    if (!this.#executionData.error) {
+      return 'No error occurred during execution';
+    }
+
+    const error = this.#executionData.error;
+    const lines = [
+      'ACTION EXECUTION ERROR REPORT',
+      '='.repeat(30),
+      `Action: ${this.#actionId}`,
+      `Actor: ${this.#actorId}`,
+      `Error Type: ${error.type}`,
+      `Message: ${error.message}`,
+      `Category: ${error.classification?.category || 'unknown'}`,
+      `Severity: ${error.classification?.severity || 'unknown'}`,
+      `Phase: ${error.context?.phase || 'unknown'}`,
+      `Duration: ${
+        error.context?.executionDuration
+          ? `${error.context.executionDuration.toFixed(2)}ms`
+          : 'unknown'
+      }`,
+      '',
+    ];
+
+    // Add location information
+    if (error.location) {
+      lines.push('Error Location:');
+      lines.push(`  File: ${error.location.shortFile}`);
+      lines.push(`  Function: ${error.location.function}`);
+      if (error.location.line) {
+        lines.push(
+          `  Line: ${error.location.line}${error.location.column ? ':' + error.location.column : ''}`
+        );
+      }
+      lines.push('');
+    }
+
+    // Add troubleshooting steps
+    if (error.classification?.troubleshooting?.length > 0) {
+      lines.push('Troubleshooting Steps:');
+      error.classification.troubleshooting.forEach((step, index) => {
+        lines.push(`  ${index + 1}. ${step}`);
+      });
+      lines.push('');
+    }
+
+    // Add formatted stack trace
+    if (error.formattedStack) {
+      lines.push('Stack Trace:');
+      lines.push(error.formattedStack);
+    }
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Check if error is recoverable
+   *
+   * @returns {boolean} True if error is recoverable
+   */
+  isErrorRecoverable() {
+    if (!this.#executionData.error) {
+      return true; // No error, so recoverable
+    }
+
+    const recovery =
+      this.#executionData.error.classification?.recoveryPotential;
+    return (
+      recovery === 'immediate' ||
+      recovery === 'delayed' ||
+      recovery === 'conditional'
+    );
+  }
+
+  /**
+   * Get current execution phase
+   *
+   * @private
+   * @returns {string} Current phase
+   */
+  #getCurrentPhase() {
+    if (
+      !this.#executionData.phases ||
+      this.#executionData.phases.length === 0
+    ) {
+      return 'unknown';
+    }
+
+    const lastPhase =
+      this.#executionData.phases[this.#executionData.phases.length - 1];
+    return lastPhase.phase || 'unknown';
+  }
+
+  /**
+   * Get timing context for error
+   *
+   * @private
+   * @returns {object | null} Timing context
+   */
+  #getTimingContext() {
+    if (!this.#timingEnabled || !this.#phaseTimer) {
+      return null;
+    }
+
+    return {
+      totalDuration: this.#executionData.duration,
+      phaseDurations: this.#phaseTimer.getAllPhases().map((phase) => ({
+        name: phase.name,
+        duration: phase.duration,
+      })),
+    };
   }
 
   /**

@@ -15,6 +15,7 @@ import { Registrar } from '../../utils/registrarHelpers.js';
 import { CharacterDatabase } from '../../characterBuilder/storage/characterDatabase.js';
 import { CharacterStorageService } from '../../characterBuilder/services/characterStorageService.js';
 import { ThematicDirectionGenerator } from '../../characterBuilder/services/thematicDirectionGenerator.js';
+import { ClicheGenerator } from '../../characterBuilder/services/ClicheGenerator.js';
 import { CharacterBuilderService } from '../../characterBuilder/services/characterBuilderService.js';
 
 /**
@@ -66,6 +67,18 @@ function registerCharacterBuilderServices(registrar, logger) {
     `Character Builder Registration: Registered ${tokens.ThematicDirectionGenerator}.`
   );
 
+  registrar.singletonFactory(tokens.ClicheGenerator, (c) => {
+    return new ClicheGenerator({
+      logger: c.resolve(tokens.ILogger),
+      llmJsonService: c.resolve(tokens.LlmJsonService),
+      llmStrategyFactory: c.resolve(tokens.LLMAdapter), // Use the ConfigurableLLMAdapter
+      llmConfigManager: c.resolve(tokens.ILLMConfigurationManager),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.ClicheGenerator}.`
+  );
+
   registrar.singletonFactory(tokens.CharacterBuilderService, (c) => {
     return new CharacterBuilderService({
       logger: c.resolve(tokens.ILogger),
@@ -74,12 +87,11 @@ function registerCharacterBuilderServices(registrar, logger) {
       eventBus: c.resolve(tokens.ISafeEventDispatcher),
       database: c.resolve(tokens.CharacterDatabase),
       schemaValidator: c.resolve(tokens.ISchemaValidator),
-      // clicheGenerator will be added when CLIGEN-003 is implemented
-      clicheGenerator: null,
+      clicheGenerator: c.resolve(tokens.ClicheGenerator), // Replace null with actual service
     });
   });
   logger.debug(
-    `Character Builder Registration: Registered ${tokens.CharacterBuilderService}.`
+    `Character Builder Registration: Updated ${tokens.CharacterBuilderService} with ClicheGenerator.`
   );
 }
 

@@ -4,7 +4,7 @@
  * @see ./thematicDirectionGenerator.js
  */
 
-import { 
+import {
   validateDependency,
   assertNonBlankString,
   assertPresent,
@@ -97,11 +97,11 @@ export class CharacterBuilderService {
    * @param {object} [dependencies.schemaValidator] - Schema validator
    * @param {object} [dependencies.clicheGenerator] - Cliché generator (CLIGEN-003)
    */
-  constructor({ 
-    logger, 
-    storageService, 
-    directionGenerator, 
-    eventBus, 
+  constructor({
+    logger,
+    storageService,
+    directionGenerator,
+    eventBus,
     database = null,
     schemaValidator = null,
     clicheGenerator = null,
@@ -813,7 +813,10 @@ export class CharacterBuilderService {
         },
       });
 
-      throw new CharacterBuilderError(`Failed to retrieve clichés: ${error.message}`, error);
+      throw new CharacterBuilderError(
+        `Failed to retrieve clichés: ${error.message}`,
+        error
+      );
     }
   }
 
@@ -863,7 +866,12 @@ export class CharacterBuilderService {
    * @returns {Promise<Cliche>} Stored cliche data
    */
   async storeCliches(cliches) {
-    assertPresent(cliches, 'Clichés data is required', CharacterBuilderError, this.#logger);
+    assertPresent(
+      cliches,
+      'Clichés data is required',
+      CharacterBuilderError,
+      this.#logger
+    );
 
     try {
       // Convert to Cliche instance if needed
@@ -887,7 +895,9 @@ export class CharacterBuilderService {
 
       // Store clichés using database if available
       if (!this.#database) {
-        throw new CharacterBuilderError('Database not available for cliché storage');
+        throw new CharacterBuilderError(
+          'Database not available for cliché storage'
+        );
       }
 
       await this.#database.saveCliche(clicheInstance.toJSON());
@@ -935,9 +945,12 @@ export class CharacterBuilderService {
         },
       });
 
-      throw error instanceof CharacterBuilderError 
-        ? error 
-        : new CharacterBuilderError(`Failed to store clichés: ${error.message}`, error);
+      throw error instanceof CharacterBuilderError
+        ? error
+        : new CharacterBuilderError(
+            `Failed to store clichés: ${error.message}`,
+            error
+          );
     }
   }
 
@@ -974,7 +987,9 @@ export class CharacterBuilderService {
 
       // Validate concept and direction relationship
       if (direction.conceptId !== concept.id) {
-        throw new CharacterBuilderError('Direction does not belong to the provided concept');
+        throw new CharacterBuilderError(
+          'Direction does not belong to the provided concept'
+        );
       }
 
       // Dispatch generation started event
@@ -989,7 +1004,9 @@ export class CharacterBuilderService {
 
       // Generate clichés using ClicheGenerator (implemented in CLIGEN-003)
       if (!this.#clicheGenerator) {
-        throw new CharacterBuilderError('ClicheGenerator not available - CLIGEN-003 not implemented');
+        throw new CharacterBuilderError(
+          'ClicheGenerator not available - CLIGEN-003 not implemented'
+        );
       }
 
       const generatedData = await this.#clicheGenerator.generateCliches(
@@ -1041,9 +1058,12 @@ export class CharacterBuilderService {
         },
       });
 
-      throw error instanceof CharacterBuilderError 
-        ? error 
-        : new CharacterBuilderError(`Failed to generate clichés: ${error.message}`, error);
+      throw error instanceof CharacterBuilderError
+        ? error
+        : new CharacterBuilderError(
+            `Failed to generate clichés: ${error.message}`,
+            error
+          );
     }
   }
 
@@ -1119,7 +1139,9 @@ export class CharacterBuilderService {
       }
 
       if (!this.#database) {
-        throw new CharacterBuilderError('Database not available for cliché deletion');
+        throw new CharacterBuilderError(
+          'Database not available for cliché deletion'
+        );
       }
 
       // Delete the cliché
@@ -1138,9 +1160,12 @@ export class CharacterBuilderService {
       return true;
     } catch (error) {
       this.#logger.error(`Failed to delete clichés for ${directionId}:`, error);
-      throw error instanceof CharacterBuilderError 
-        ? error 
-        : new CharacterBuilderError(`Failed to delete clichés: ${error.message}`, error);
+      throw error instanceof CharacterBuilderError
+        ? error
+        : new CharacterBuilderError(
+            `Failed to delete clichés: ${error.message}`,
+            error
+          );
     }
   }
 
