@@ -4,6 +4,36 @@
  */
 
 /**
+ * Prompt version information and management
+ */
+export const PROMPT_VERSION_INFO = {
+  version: '1.2.0',
+  previousVersions: {
+    '1.0.0': { date: '2024-01-01', description: 'Initial implementation' },
+    '1.1.0': { date: '2024-02-01', description: 'Enhanced instructions and validation' }
+  },
+  currentChanges: [
+    'Added few-shot examples support',
+    'Genre-specific context integration',
+    'Enhanced response statistics',
+    'Advanced validation with warnings',
+    'Configurable item count constraints'
+  ]
+};
+
+/**
+ * Configuration options for enhanced prompt generation
+ */
+export const DEFAULT_ENHANCEMENT_OPTIONS = {
+  includeFewShotExamples: false,
+  genre: null,
+  minItemsPerCategory: 3,
+  maxItemsPerCategory: 8,
+  enableAdvancedValidation: true,
+  includeQualityMetrics: true
+};
+
+/**
  * Default parameters for cliché generation LLM requests
  */
 export const CHARACTER_BUILDER_LLM_PARAMS = {
@@ -300,7 +330,7 @@ export function validateClicheGenerationResponse(response) {
   const categories = response.categories;
 
   for (const category of requiredCategories) {
-    if (!categories.hasOwnProperty(category)) {
+    if (!Object.prototype.hasOwnProperty.call(categories, category)) {
       throw new Error(
         `ClicheGenerationPrompt: Missing required category '${category}'`
       );
@@ -376,4 +406,274 @@ export function createClicheGenerationLlmConfig(baseLlmConfig) {
   };
 
   return enhancedConfig;
+}
+
+/**
+ * Enhanced prompt building with optional features
+ *
+ * @param {string} characterConcept - Character concept
+ * @param {object} direction - Thematic direction
+ * @param {object} options - Enhancement options
+ * @param {boolean} options.includeFewShotExamples - Include example responses
+ * @param {string} options.genre - Genre for context-specific prompts
+ * @param {number} options.minItemsPerCategory - Minimum items per category
+ * @param {number} options.maxItemsPerCategory - Maximum items per category
+ * @returns {string} Enhanced prompt
+ */
+export function buildEnhancedClicheGenerationPrompt(characterConcept, direction, options = {}) {
+  const enhancementOptions = { ...DEFAULT_ENHANCEMENT_OPTIONS, ...options };
+  let enhancedPrompt = buildClicheGenerationPrompt(characterConcept, direction);
+  
+  // Add few-shot examples if requested
+  if (enhancementOptions.includeFewShotExamples) {
+    const examples = getFewShotExamples();
+    enhancedPrompt = enhancedPrompt.replace(
+      '<instructions>',
+      `${examples}\n\n<instructions>`
+    );
+  }
+  
+  // Add genre-specific context if provided
+  if (enhancementOptions.genre) {
+    const genreContext = getGenreSpecificContext(enhancementOptions.genre);
+    enhancedPrompt = enhancedPrompt.replace(
+      '</thematic_direction>',
+      `\n${genreContext}\n</thematic_direction>`
+    );
+  }
+  
+  // Adjust item count constraints if specified
+  if (enhancementOptions.minItemsPerCategory !== DEFAULT_ENHANCEMENT_OPTIONS.minItemsPerCategory ||
+      enhancementOptions.maxItemsPerCategory !== DEFAULT_ENHANCEMENT_OPTIONS.maxItemsPerCategory) {
+    const minItems = enhancementOptions.minItemsPerCategory;
+    const maxItems = enhancementOptions.maxItemsPerCategory;
+    enhancedPrompt = enhancedPrompt.replace(
+      'Provide 3-8 items per category',
+      `Provide ${minItems}-${maxItems} items per category`
+    );
+  }
+  
+  return enhancedPrompt;
+}
+
+/**
+ * Get few-shot examples for improved consistency
+ *
+ * @returns {string} Example section
+ */
+function getFewShotExamples() {
+  return `<examples>
+<example>
+<input>
+Character Concept: "A young farm boy discovers he has magical powers"
+Thematic Direction: "The Chosen One - Destined to save the world"
+</input>
+<output>
+{
+  "categories": {
+    "names": ["Luke", "Arthur", "Eragon", "Will", "Rand"],
+    "physicalDescriptions": ["Unremarkable until powers manifest", "Secretly handsome under the dirt", "Eyes that change color with power"],
+    "personalityTraits": ["Reluctant at first", "Pure of heart", "Naive but naturally talented"],
+    "skillsAbilities": ["Instantly masters complex magic", "Natural sword fighter", "Prophetic dreams"],
+    "typicalLikes": ["Simple farm life", "Justice and fairness", "Their childhood sweetheart"],
+    "typicalDislikes": ["Destiny/responsibility", "Politics and court intrigue", "Being treated as special"],
+    "commonFears": ["Becoming like the villain", "Losing control of powers", "Friends dying for them"],
+    "genericGoals": ["Save the world", "Avenge mentor's death", "Master their powers"],
+    "backgroundElements": ["Parents killed when young", "Raised by aunt/uncle", "Secret royal bloodline"],
+    "overusedSecrets": ["Actually the villain's son", "Royal heir in hiding", "Last of an ancient bloodline"],
+    "speechPatterns": ["Questions everything", "'I never asked for this'", "References farm wisdom"]
+  },
+  "tropesAndStereotypes": ["The Reluctant Hero", "Farm Boy to Hero", "The Chosen One Prophecy", "Hidden Royal Heritage"]
+}
+</output>
+</example>
+</examples>`;
+}
+
+/**
+ * Get genre-specific context additions
+ *
+ * @param {string} genre - Genre identifier
+ * @returns {string} Genre context
+ */
+function getGenreSpecificContext(genre) {
+  const genreContexts = {
+    fantasy: '<genre_context>\nFocus on fantasy-specific clichés: chosen ones, ancient prophecies, wise wizards, dark lords, medieval stereotypes, magical bloodlines, and quest-based character arcs.\n</genre_context>',
+    
+    scifi: '<genre_context>\nFocus on sci-fi clichés: lone space cowboys, AI gaining consciousness, time paradoxes, alien invasion tropes, dystopian societies, and technology-dependent solutions.\n</genre_context>',
+    
+    romance: '<genre_context>\nFocus on romance clichés: love triangles, enemies to lovers, billionaire love interests, miscommunication plots, and idealized relationship dynamics.\n</genre_context>',
+    
+    mystery: '<genre_context>\nFocus on mystery clichés: alcoholic detectives, red herrings, locked room mysteries, surprise twin reveals, and investigative procedural patterns.\n</genre_context>',
+    
+    horror: '<genre_context>\nFocus on horror clichés: investigating strange noises, splitting up, ancient curses, possessed children, and survival horror tropes.\n</genre_context>',
+    
+    contemporary: '<genre_context>\nFocus on contemporary fiction clichés: manic pixie dream girls, coming of age tropes, suburban ennui, and modern relationship dynamics.\n</genre_context>'
+  };
+  
+  return genreContexts[genre?.toLowerCase()] || '';
+}
+
+/**
+ * Enhanced response validation with statistics and warnings
+ *
+ * @param {object} response - LLM response to validate
+ * @returns {object} Validation result with enhanced metrics
+ */
+export function validateClicheGenerationResponseEnhanced(response) {
+  // Use existing validation as base
+  const isValid = validateClicheGenerationResponse(response);
+  
+  if (!isValid) {
+    throw new Error('Basic validation failed');
+  }
+  
+  const stats = calculateResponseStatistics(response);
+  const warnings = generateResponseWarnings(response, stats);
+  const qualityMetrics = assessResponseQuality(response, stats);
+  
+  return {
+    valid: true,
+    statistics: stats,
+    warnings,
+    qualityMetrics,
+    recommendations: generateImprovementRecommendations(stats, warnings)
+  };
+}
+
+/**
+ * Calculate detailed response statistics
+ *
+ * @param {object} response - Validated response
+ * @returns {object} Statistical analysis
+ */
+function calculateResponseStatistics(response) {
+  let totalItems = 0;
+  const categoryCounts = {};
+  const categoryLengths = {};
+  
+  if (response.categories) {
+    for (const [category, items] of Object.entries(response.categories)) {
+      if (Array.isArray(items)) {
+        categoryCounts[category] = items.length;
+        categoryLengths[category] = {
+          min: Math.min(...items.map(item => item.length)),
+          max: Math.max(...items.map(item => item.length)),
+          avg: items.reduce((sum, item) => sum + item.length, 0) / items.length
+        };
+        totalItems += items.length;
+      }
+    }
+  }
+  
+  const tropesCount = Array.isArray(response.tropesAndStereotypes) 
+    ? response.tropesAndStereotypes.length : 0;
+  
+  return {
+    totalItems: totalItems + tropesCount,
+    categoryCounts,
+    categoryLengths,
+    tropesCount,
+    averageItemsPerCategory: totalItems / Object.keys(categoryCounts).length,
+    completenessScore: Object.keys(categoryCounts).length / 11 // 11 required categories
+  };
+}
+
+/**
+ * Generate warnings for response quality issues
+ *
+ * @param {object} response - Response to analyze
+ * @param {object} stats - Calculated statistics
+ * @returns {string[]} Array of warning messages
+ */
+function generateResponseWarnings(response, stats) {
+  const warnings = [];
+  
+  // Check for sparse categories
+  for (const [category, count] of Object.entries(stats.categoryCounts)) {
+    if (count < 3) {
+      warnings.push(`Category "${category}" has only ${count} items (recommended: 3+)`);
+    }
+    if (count > 8) {
+      warnings.push(`Category "${category}" has ${count} items (recommended: 3-8)`);
+    }
+  }
+  
+  // Check tropes count
+  if (stats.tropesCount < 5) {
+    warnings.push(`Only ${stats.tropesCount} tropes provided (recommended: 5+)`);
+  }
+  
+  // Check for very short items that might be low quality
+  for (const [category, lengths] of Object.entries(stats.categoryLengths)) {
+    if (lengths.avg < 10) {
+      warnings.push(`Category "${category}" items are quite short (avg: ${lengths.avg.toFixed(1)} chars)`);
+    }
+  }
+  
+  return warnings;
+}
+
+/**
+ * Assess overall response quality
+ *
+ * @param {object} response - Response to assess
+ * @param {object} stats - Calculated statistics
+ * @returns {object} Quality metrics
+ */
+function assessResponseQuality(response, stats) {
+  return {
+    completeness: stats.completenessScore,
+    itemDensity: stats.averageItemsPerCategory,
+    contentRichness: Object.values(stats.categoryLengths)
+      .reduce((sum, lengths) => sum + lengths.avg, 0) / Object.keys(stats.categoryLengths).length,
+    overallScore: (
+      stats.completenessScore * 0.4 + 
+      Math.min(stats.averageItemsPerCategory / 5, 1) * 0.3 +
+      Math.min(stats.tropesCount / 7, 1) * 0.3
+    )
+  };
+}
+
+/**
+ * Generate improvement recommendations
+ *
+ * @param {object} stats - Response statistics
+ * @param {string[]} warnings - Generated warnings
+ * @returns {string[]} Improvement recommendations
+ */
+function generateImprovementRecommendations(stats, warnings) {
+  const recommendations = [];
+  
+  if (stats.completenessScore < 1) {
+    recommendations.push('Ensure all required categories are populated');
+  }
+  
+  if (stats.averageItemsPerCategory < 4) {
+    recommendations.push('Consider generating more items per category for better coverage');
+  }
+  
+  if (warnings.length > 3) {
+    recommendations.push('Review response quality - multiple issues detected');
+  }
+  
+  return recommendations;
+}
+
+/**
+ * Create enhanced LLM config with additional options
+ *
+ * @param {object} baseLlmConfig - Base LLM configuration
+ * @param {object} enhancementOptions - Enhancement options
+ * @returns {object} Enhanced config
+ */
+export function createEnhancedClicheGenerationLlmConfig(baseLlmConfig, enhancementOptions = {}) {
+  const options = { ...DEFAULT_ENHANCEMENT_OPTIONS, ...enhancementOptions };
+  const baseConfig = createClicheGenerationLlmConfig(baseLlmConfig);
+  
+  return {
+    ...baseConfig,
+    enhancementOptions: options,
+    promptVersion: PROMPT_VERSION_INFO.version
+  };
 }

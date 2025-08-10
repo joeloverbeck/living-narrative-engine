@@ -6,10 +6,15 @@
 import { describe, it, expect } from '@jest/globals';
 import {
   buildClicheGenerationPrompt,
+  buildEnhancedClicheGenerationPrompt,
   validateClicheGenerationResponse,
+  validateClicheGenerationResponseEnhanced,
   createClicheGenerationLlmConfig,
+  createEnhancedClicheGenerationLlmConfig,
   CLICHE_GENERATION_RESPONSE_SCHEMA,
   CHARACTER_BUILDER_LLM_PARAMS,
+  DEFAULT_ENHANCEMENT_OPTIONS,
+  PROMPT_VERSION_INFO,
 } from '../../../../src/characterBuilder/prompts/clicheGenerationPrompt.js';
 
 describe('clicheGenerationPrompt', () => {
@@ -442,6 +447,285 @@ describe('clicheGenerationPrompt', () => {
       }).toThrow(
         'ClicheGenerationPrompt: baseLlmConfig must be a valid object'
       );
+    });
+  });
+
+  describe('Enhancement Features', () => {
+    describe('PROMPT_VERSION_INFO', () => {
+      it('should have correct version information', () => {
+        expect(PROMPT_VERSION_INFO).toHaveProperty('version');
+        expect(PROMPT_VERSION_INFO).toHaveProperty('previousVersions');
+        expect(PROMPT_VERSION_INFO).toHaveProperty('currentChanges');
+        expect(PROMPT_VERSION_INFO.version).toBe('1.2.0');
+        expect(Array.isArray(PROMPT_VERSION_INFO.currentChanges)).toBe(true);
+      });
+    });
+
+    describe('DEFAULT_ENHANCEMENT_OPTIONS', () => {
+      it('should have correct default values', () => {
+        expect(DEFAULT_ENHANCEMENT_OPTIONS).toEqual({
+          includeFewShotExamples: false,
+          genre: null,
+          minItemsPerCategory: 3,
+          maxItemsPerCategory: 8,
+          enableAdvancedValidation: true,
+          includeQualityMetrics: true
+        });
+      });
+    });
+
+    describe('buildEnhancedClicheGenerationPrompt', () => {
+      it('should build standard prompt without enhancements by default', () => {
+        const enhancedPrompt = buildEnhancedClicheGenerationPrompt(
+          validCharacterConcept,
+          validDirection
+        );
+        const standardPrompt = buildClicheGenerationPrompt(
+          validCharacterConcept,
+          validDirection
+        );
+
+        expect(enhancedPrompt).toBe(standardPrompt);
+      });
+
+      it('should include few-shot examples when requested', () => {
+        const enhancedPrompt = buildEnhancedClicheGenerationPrompt(
+          validCharacterConcept,
+          validDirection,
+          { includeFewShotExamples: true }
+        );
+
+        expect(enhancedPrompt).toContain('<examples>');
+        expect(enhancedPrompt).toContain('<example>');
+        expect(enhancedPrompt).toContain('Luke');
+        expect(enhancedPrompt).toContain('Arthur');
+      });
+
+      it('should include genre context when specified', () => {
+        const enhancedPrompt = buildEnhancedClicheGenerationPrompt(
+          validCharacterConcept,
+          validDirection,
+          { genre: 'fantasy' }
+        );
+
+        expect(enhancedPrompt).toContain('<genre_context>');
+        expect(enhancedPrompt).toContain('fantasy-specific clichés');
+        expect(enhancedPrompt).toContain('chosen ones');
+      });
+
+      it('should support all genre types', () => {
+        const genres = ['fantasy', 'scifi', 'romance', 'mystery', 'horror', 'contemporary'];
+        
+        genres.forEach(genre => {
+          const enhancedPrompt = buildEnhancedClicheGenerationPrompt(
+            validCharacterConcept,
+            validDirection,
+            { genre }
+          );
+          expect(enhancedPrompt).toContain('<genre_context>');
+        });
+      });
+
+      it('should adjust item count constraints', () => {
+        const enhancedPrompt = buildEnhancedClicheGenerationPrompt(
+          validCharacterConcept,
+          validDirection,
+          { minItemsPerCategory: 5, maxItemsPerCategory: 10 }
+        );
+
+        expect(enhancedPrompt).toContain('Provide 5-10 items per category');
+        expect(enhancedPrompt).not.toContain('Provide 3-8 items per category');
+      });
+
+      it('should combine multiple enhancements', () => {
+        const enhancedPrompt = buildEnhancedClicheGenerationPrompt(
+          validCharacterConcept,
+          validDirection,
+          {
+            includeFewShotExamples: true,
+            genre: 'scifi',
+            minItemsPerCategory: 4,
+            maxItemsPerCategory: 6
+          }
+        );
+
+        expect(enhancedPrompt).toContain('<examples>');
+        expect(enhancedPrompt).toContain('<genre_context>');
+        expect(enhancedPrompt).toContain('sci-fi clichés');
+        expect(enhancedPrompt).toContain('Provide 4-6 items per category');
+      });
+
+      it('should handle invalid genre gracefully', () => {
+        const enhancedPrompt = buildEnhancedClicheGenerationPrompt(
+          validCharacterConcept,
+          validDirection,
+          { genre: 'invalid' }
+        );
+        
+        // Should not contain genre context for invalid genre
+        expect(enhancedPrompt).not.toContain('<genre_context>');
+      });
+    });
+
+    describe('validateClicheGenerationResponseEnhanced', () => {
+      it('should validate correct response with statistics', () => {
+        const result = validateClicheGenerationResponseEnhanced(validLlmResponse);
+        
+        expect(result.valid).toBe(true);
+        expect(result).toHaveProperty('statistics');
+        expect(result).toHaveProperty('warnings');
+        expect(result).toHaveProperty('qualityMetrics');
+        expect(result).toHaveProperty('recommendations');
+      });
+
+      it('should calculate correct statistics', () => {
+        const result = validateClicheGenerationResponseEnhanced(validLlmResponse);
+        
+        expect(result.statistics).toHaveProperty('totalItems');
+        expect(result.statistics).toHaveProperty('categoryCounts');
+        expect(result.statistics).toHaveProperty('categoryLengths');
+        expect(result.statistics).toHaveProperty('tropesCount');
+        expect(result.statistics).toHaveProperty('averageItemsPerCategory');
+        expect(result.statistics).toHaveProperty('completenessScore');
+        
+        expect(result.statistics.tropesCount).toBe(2);
+        expect(result.statistics.completenessScore).toBe(1); // All categories present
+      });
+
+      it('should generate warnings for sparse categories', () => {
+        const sparseResponse = {
+          categories: {
+            names: ['John'], // Only 1 item
+            physicalDescriptions: ['tall', 'dark'], // 2 items
+            personalityTraits: ['brooding', 'cheerful', 'brave'], // 3 items - ok
+            skillsAbilities: ['swordsmanship', 'magic', 'archery'],
+            typicalLikes: ['justice', 'freedom', 'honor'],
+            typicalDislikes: ['evil', 'tyranny', 'dishonesty'],
+            commonFears: ['death', 'failure', 'betrayal'],
+            genericGoals: ['save world', 'find love', 'get revenge'],
+            backgroundElements: ['orphaned', 'royal', 'trained'],
+            overusedSecrets: ['secret power', 'hidden identity', 'prophecy'],
+            speechPatterns: ['heroic', 'noble', 'inspiring']
+          },
+          tropesAndStereotypes: ['chosen one', 'reluctant hero']
+        };
+
+        const result = validateClicheGenerationResponseEnhanced(sparseResponse);
+        
+        expect(result.warnings).toContain('Category "names" has only 1 items (recommended: 3+)');
+        expect(result.warnings).toContain('Category "physicalDescriptions" has only 2 items (recommended: 3+)');
+      });
+
+      it('should generate warnings for too many items', () => {
+        const overpackedResponse = {
+          ...validLlmResponse,
+          categories: {
+            ...validLlmResponse.categories,
+            names: Array(10).fill().map((_, i) => `Name${i}`) // 10 items
+          }
+        };
+
+        const result = validateClicheGenerationResponseEnhanced(overpackedResponse);
+        
+        expect(result.warnings).toContain('Category "names" has 10 items (recommended: 3-8)');
+      });
+
+      it('should generate warnings for few tropes', () => {
+        const fewTropesResponse = {
+          ...validLlmResponse,
+          tropesAndStereotypes: ['chosen one'] // Only 1 trope
+        };
+
+        const result = validateClicheGenerationResponseEnhanced(fewTropesResponse);
+        
+        expect(result.warnings).toContain('Only 1 tropes provided (recommended: 5+)');
+      });
+
+      it('should calculate quality metrics', () => {
+        const result = validateClicheGenerationResponseEnhanced(validLlmResponse);
+        
+        expect(result.qualityMetrics).toHaveProperty('completeness');
+        expect(result.qualityMetrics).toHaveProperty('itemDensity');
+        expect(result.qualityMetrics).toHaveProperty('contentRichness');
+        expect(result.qualityMetrics).toHaveProperty('overallScore');
+        
+        expect(result.qualityMetrics.completeness).toBe(1);
+        expect(typeof result.qualityMetrics.overallScore).toBe('number');
+        expect(result.qualityMetrics.overallScore).toBeGreaterThan(0);
+      });
+
+      it('should generate recommendations', () => {
+        const sparseResponse = {
+          categories: {
+            names: ['John'], // Sparse
+            physicalDescriptions: ['tall'],
+            personalityTraits: ['brooding'],
+            skillsAbilities: ['swordsmanship'],
+            typicalLikes: ['justice'],
+            typicalDislikes: ['evil'],
+            commonFears: ['death'],
+            genericGoals: ['save world'],
+            backgroundElements: ['orphaned'],
+            overusedSecrets: ['secret power'],
+            speechPatterns: ['heroic']
+          },
+          tropesAndStereotypes: ['chosen one'] // Few tropes
+        };
+
+        const result = validateClicheGenerationResponseEnhanced(sparseResponse);
+        
+        expect(result.recommendations.length).toBeGreaterThan(0);
+        expect(result.recommendations).toContain('Consider generating more items per category for better coverage');
+      });
+
+      it('should throw error for invalid response', () => {
+        expect(() => {
+          validateClicheGenerationResponseEnhanced({ invalid: 'response' });
+        }).toThrow('ClicheGenerationPrompt: Response must contain categories object');
+      });
+    });
+
+    describe('createEnhancedClicheGenerationLlmConfig', () => {
+      const baseLlmConfig = {
+        configId: 'test-config',
+        defaultParameters: {
+          temperature: 0.5,
+          max_tokens: 1000,
+        },
+      };
+
+      it('should create enhanced config with version info', () => {
+        const enhancedConfig = createEnhancedClicheGenerationLlmConfig(baseLlmConfig);
+        
+        expect(enhancedConfig).toHaveProperty('enhancementOptions');
+        expect(enhancedConfig).toHaveProperty('promptVersion');
+        expect(enhancedConfig.promptVersion).toBe(PROMPT_VERSION_INFO.version);
+        expect(enhancedConfig.enhancementOptions).toEqual(DEFAULT_ENHANCEMENT_OPTIONS);
+      });
+
+      it('should merge enhancement options', () => {
+        const customOptions = {
+          includeFewShotExamples: true,
+          genre: 'fantasy'
+        };
+        
+        const enhancedConfig = createEnhancedClicheGenerationLlmConfig(
+          baseLlmConfig,
+          customOptions
+        );
+        
+        expect(enhancedConfig.enhancementOptions.includeFewShotExamples).toBe(true);
+        expect(enhancedConfig.enhancementOptions.genre).toBe('fantasy');
+        expect(enhancedConfig.enhancementOptions.minItemsPerCategory).toBe(3); // Default preserved
+      });
+
+      it('should inherit base config properties', () => {
+        const enhancedConfig = createEnhancedClicheGenerationLlmConfig(baseLlmConfig);
+        
+        expect(enhancedConfig.configId).toBe('test-config');
+        expect(enhancedConfig.jsonOutputStrategy).toBeDefined();
+        expect(enhancedConfig.defaultParameters.temperature).toBe(0.8); // CHARACTER_BUILDER_LLM_PARAMS
+      });
     });
   });
 });

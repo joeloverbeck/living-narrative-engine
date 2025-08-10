@@ -4,11 +4,13 @@
 
 import { Registrar } from '../../utils/registrarHelpers.js';
 import { tokens } from '../tokens.js';
+import { actionTracingTokens } from '../tokens/actionTracingTokens.js';
 import ActionTraceConfigLoader from '../../configuration/actionTraceConfigLoader.js';
 import ActionTraceConfigValidator from '../../configuration/actionTraceConfigValidator.js';
 import TraceDirectoryManager from '../../actions/tracing/traceDirectoryManager.js';
 import ActionTraceFilter from '../../actions/tracing/actionTraceFilter.js';
 import ActionAwareStructuredTrace from '../../actions/tracing/actionAwareStructuredTrace.js';
+import { EventDispatchTracer } from '../../events/tracing/eventDispatchTracer.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -30,7 +32,7 @@ export function registerActionTracing(container) {
 
   // Register ActionTraceConfigValidator
   container.register(
-    tokens.IActionTraceConfigValidator,
+    actionTracingTokens.IActionTraceConfigValidator,
     (c) =>
       new ActionTraceConfigValidator({
         schemaValidator: c.resolve(tokens.ISchemaValidator),
@@ -39,12 +41,12 @@ export function registerActionTracing(container) {
     { lifecycle: 'singleton' }
   );
   log.debug(
-    `Action Tracing Registration: Registered ${String(tokens.IActionTraceConfigValidator)}.`
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.IActionTraceConfigValidator)}.`
   );
 
   // Register ActionTraceConfigLoader
   container.register(
-    tokens.IActionTraceConfigLoader,
+    actionTracingTokens.IActionTraceConfigLoader,
     (c) =>
       new ActionTraceConfigLoader({
         traceConfigLoader: c.resolve(tokens.ITraceConfigLoader),
@@ -54,12 +56,12 @@ export function registerActionTracing(container) {
     { lifecycle: 'singleton' }
   );
   log.debug(
-    `Action Tracing Registration: Registered ${String(tokens.IActionTraceConfigLoader)}.`
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.IActionTraceConfigLoader)}.`
   );
 
   // Register TraceDirectoryManager
   container.register(
-    tokens.ITraceDirectoryManager,
+    actionTracingTokens.ITraceDirectoryManager,
     (c) =>
       new TraceDirectoryManager({
         storageProvider: c.resolve(tokens.IStorageProvider),
@@ -68,12 +70,12 @@ export function registerActionTracing(container) {
     { lifecycle: 'singleton' }
   );
   log.debug(
-    `Action Tracing Registration: Registered ${String(tokens.ITraceDirectoryManager)}.`
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.ITraceDirectoryManager)}.`
   );
 
   // Register ActionTraceFilter
   container.register(
-    tokens.IActionTraceFilter,
+    actionTracingTokens.IActionTraceFilter,
     (c) =>
       new ActionTraceFilter({
         enabled: true,
@@ -90,13 +92,13 @@ export function registerActionTracing(container) {
     { lifecycle: 'singleton' }
   );
   log.debug(
-    `Action Tracing Registration: Registered ${String(tokens.IActionTraceFilter)}.`
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.IActionTraceFilter)}.`
   );
 
   // Register ActionAwareStructuredTrace factory
   // Note: This is a factory registration - instances are created per-request
   container.register(
-    tokens.IActionAwareStructuredTrace,
+    actionTracingTokens.IActionAwareStructuredTrace,
     (c) => {
       return function createActionAwareStructuredTrace({
         actorId,
@@ -111,7 +113,7 @@ export function registerActionTracing(container) {
         }
 
         return new ActionAwareStructuredTrace({
-          actionTraceFilter: c.resolve(tokens.IActionTraceFilter),
+          actionTraceFilter: c.resolve(actionTracingTokens.IActionTraceFilter),
           actorId,
           context,
           logger: c.resolve(tokens.ILogger),
@@ -123,7 +125,21 @@ export function registerActionTracing(container) {
     { lifecycle: 'singleton' } // The factory is singleton, instances are created per-call
   );
   log.debug(
-    `Action Tracing Registration: Registered ${String(tokens.IActionAwareStructuredTrace)} factory.`
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.IActionAwareStructuredTrace)} factory.`
+  );
+
+  // Register EventDispatchTracer
+  container.register(
+    actionTracingTokens.IEventDispatchTracer,
+    (c) =>
+      new EventDispatchTracer({
+        logger: c.resolve(tokens.ILogger),
+        outputService: c.resolve(actionTracingTokens.IActionTraceOutputService),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.IEventDispatchTracer)}.`
   );
 
   log.debug('Action Tracing Registration: complete.');
