@@ -448,7 +448,9 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
 
       // Should not log warning for all legacy actions
       expect(mockLogger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining('Processing mixed legacy and multi-target actions')
+        expect.stringContaining(
+          'Processing mixed legacy and multi-target actions'
+        )
       );
     });
   });
@@ -1725,7 +1727,9 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
       expect(actionTrace).toBeDefined();
 
       const formattingStages = Object.values(actionTrace.stages);
-      const errorCapture = formattingStages.find((s) => s.data?.status === 'failed');
+      const errorCapture = formattingStages.find(
+        (s) => s.data?.status === 'failed'
+      );
       expect(errorCapture).toBeDefined();
     });
 
@@ -2224,8 +2228,16 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
               },
             },
             targetContexts: [
-              { entityId: 'item_001', displayName: 'Sword', placeholder: 'item' },
-              { entityId: 'enemy_001', displayName: 'Goblin', placeholder: 'enemy' },
+              {
+                entityId: 'item_001',
+                displayName: 'Sword',
+                placeholder: 'item',
+              },
+              {
+                entityId: 'enemy_001',
+                displayName: 'Goblin',
+                placeholder: 'enemy',
+              },
             ],
           },
         ],
@@ -2259,7 +2271,9 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
       expect(actionTrace).toBeDefined();
 
       const formattingStages = Object.values(actionTrace.stages);
-      const startCapture = formattingStages.find((s) => s.data?.isMultiTargetInLegacy === true);
+      const startCapture = formattingStages.find(
+        (s) => s.data?.isMultiTargetInLegacy === true
+      );
       expect(startCapture).toBeDefined();
     });
 
@@ -2293,8 +2307,16 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
               },
             },
             targetContexts: [
-              { entityId: 'spell_001', displayName: 'Fireball', placeholder: 'spell' },
-              { entityId: 'enemy_002', displayName: 'Orc', placeholder: 'target' },
+              {
+                entityId: 'spell_001',
+                displayName: 'Fireball',
+                placeholder: 'spell',
+              },
+              {
+                entityId: 'enemy_002',
+                displayName: 'Orc',
+                placeholder: 'target',
+              },
             ],
           },
         ],
@@ -2329,8 +2351,12 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
 
       // Verify trace captured the fallback in legacy path
       const summaryTrace = trace.getActionTrace('__stage_summary');
-      expect(summaryTrace.stages.formatting.data.statistics.successful).toBeGreaterThan(0);
-      expect(summaryTrace.stages.formatting.data.statistics.legacy).toBeGreaterThan(0);
+      expect(
+        summaryTrace.stages.formatting.data.statistics.successful
+      ).toBeGreaterThan(0);
+      expect(
+        summaryTrace.stages.formatting.data.statistics.legacy
+      ).toBeGreaterThan(0);
     });
 
     it('should handle multi-target action without formatMultiTarget in legacy traced path', async () => {
@@ -2363,8 +2389,16 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
               },
             },
             targetContexts: [
-              { entityId: 'weapon_001', displayName: 'Axe', placeholder: 'weapon' },
-              { entityId: 'enemy_003', displayName: 'Troll', placeholder: 'target' },
+              {
+                entityId: 'weapon_001',
+                displayName: 'Axe',
+                placeholder: 'weapon',
+              },
+              {
+                entityId: 'enemy_003',
+                displayName: 'Troll',
+                placeholder: 'target',
+              },
             ],
           },
         ],
@@ -2405,7 +2439,9 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
 
       // Verify trace captured statistics
       const summaryTrace = trace.getActionTrace('__stage_summary');
-      expect(summaryTrace.stages.formatting.data.statistics.legacy).toBeGreaterThan(0);
+      expect(
+        summaryTrace.stages.formatting.data.statistics.legacy
+      ).toBeGreaterThan(0);
     });
 
     it('should skip multi-target action with no resolved targets in legacy traced path', async () => {
@@ -2449,7 +2485,9 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
 
       // Verify warning was logged about skipping the action
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Skipping multi-target action 'legacy-no-targets:action'")
+        expect.stringContaining(
+          "Skipping multi-target action 'legacy-no-targets:action'"
+        )
       );
 
       // Verify trace captured that the action was skipped
@@ -2457,7 +2495,9 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
       expect(actionTrace).toBeDefined();
 
       const formattingStages = Object.values(actionTrace.stages);
-      const startCapture = formattingStages.find((s) => s.data?.isMultiTargetInLegacy === true);
+      const startCapture = formattingStages.find(
+        (s) => s.data?.isMultiTargetInLegacy === true
+      );
       expect(startCapture).toBeDefined();
     });
 
@@ -2504,8 +2544,16 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
               },
             },
             targetContexts: [
-              { entityId: 'item_001', displayName: 'Gem', placeholder: 'item1' },
-              { entityId: 'item_002', displayName: 'Ring', placeholder: 'item2' },
+              {
+                entityId: 'item_001',
+                displayName: 'Gem',
+                placeholder: 'item1',
+              },
+              {
+                entityId: 'item_002',
+                displayName: 'Ring',
+                placeholder: 'item2',
+              },
             ],
           },
         ],
@@ -2527,17 +2575,25 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
       expect(result.actions).toHaveLength(3); // 2 regular + 1 multi
 
       // Verify both types were processed
-      const regularActions = result.actions.filter((a) => a.id === 'regular-legacy:action');
+      const regularActions = result.actions.filter(
+        (a) => a.id === 'regular-legacy:action'
+      );
       expect(regularActions).toHaveLength(2);
 
-      const multiAction = result.actions.find((a) => a.id === 'multi-in-legacy:action');
+      const multiAction = result.actions.find(
+        (a) => a.id === 'multi-in-legacy:action'
+      );
       expect(multiAction).toBeDefined();
       expect(multiAction.params.isMultiTarget).toBe(true);
 
       // Verify trace captured mixed processing
       const summaryTrace = trace.getActionTrace('__stage_summary');
-      expect(summaryTrace.stages.formatting.data.statistics.legacy).toBeGreaterThan(0);
-      expect(summaryTrace.stages.formatting.data.statistics.multiTarget).toBeGreaterThan(0);
+      expect(
+        summaryTrace.stages.formatting.data.statistics.legacy
+      ).toBeGreaterThan(0);
+      expect(
+        summaryTrace.stages.formatting.data.statistics.multiTarget
+      ).toBeGreaterThan(0);
     });
   });
 
@@ -2593,7 +2649,9 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
             details: { missingData: 'target placeholder' },
           }),
           actionDef: expect.objectContaining({ id: 'error-logging:action' }),
-          targetContext: expect.objectContaining({ entityId: 'target_with_error' }),
+          targetContext: expect.objectContaining({
+            entityId: 'target_with_error',
+          }),
         })
       );
     });
@@ -2646,8 +2704,12 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
         "Failed to format command for action 'exception-logging:action' with target 'extracted_target_id'",
         expect.objectContaining({
           error: thrownError,
-          actionDef: expect.objectContaining({ id: 'exception-logging:action' }),
-          targetContext: expect.objectContaining({ entityId: 'target_exception' }),
+          actionDef: expect.objectContaining({
+            id: 'exception-logging:action',
+          }),
+          targetContext: expect.objectContaining({
+            entityId: 'target_exception',
+          }),
         })
       );
 
@@ -2655,7 +2717,9 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
       expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
         expect.objectContaining({
           error: thrownError,
-          actionDef: expect.objectContaining({ id: 'exception-logging:action' }),
+          actionDef: expect.objectContaining({
+            id: 'exception-logging:action',
+          }),
           actorId: 'test-actor',
           targetId: 'extracted_target_id', // Error context extracting target ID
           additionalContext: expect.objectContaining({
@@ -2714,7 +2778,9 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
         expect.objectContaining({
           error: thrownError,
           actionDef: expect.objectContaining({ id: 'fallback-target:action' }),
-          targetContext: expect.objectContaining({ entityId: 'context_target' }),
+          targetContext: expect.objectContaining({
+            entityId: 'context_target',
+          }),
         })
       );
     });
@@ -2745,7 +2811,10 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
               template: 'context fallback with {target}',
             },
             targetContexts: [
-              { entityId: 'final_context_target', displayName: 'Final Context Target' },
+              {
+                entityId: 'final_context_target',
+                displayName: 'Final Context Target',
+              },
             ],
           },
         ],
@@ -2767,7 +2836,9 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
         expect.objectContaining({
           error: thrownError,
           actionDef: expect.objectContaining({ id: 'context-fallback:action' }),
-          targetContext: expect.objectContaining({ entityId: 'final_context_target' }),
+          targetContext: expect.objectContaining({
+            entityId: 'final_context_target',
+          }),
         })
       );
     });
@@ -2830,9 +2901,7 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
               name: 'Null Definitions Action',
               template: 'null action with {item}',
             },
-            targetContexts: [
-              { entityId: 'item_001' }
-            ],
+            targetContexts: [{ entityId: 'item_001' }],
           },
         ],
         resolvedTargets: {
@@ -2863,7 +2932,7 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
         expect.any(Object),
         expect.any(Object)
       );
-      
+
       // Should not call formatMultiTarget when targetDefinitions is null
       expect(mockCommandFormatter.formatMultiTarget).not.toHaveBeenCalled();
     });
@@ -2876,7 +2945,8 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
             actionDef: {
               id: 'spacing:action',
               name: 'Spacing Action',
-              template: 'complex   {primary}    and   {secondary}   with  {tertiary}  end',
+              template:
+                'complex   {primary}    and   {secondary}   with  {tertiary}  end',
             },
             targetContexts: [],
           },
@@ -2926,7 +2996,8 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
             actionDef: {
               id: 'complex-transform:action',
               name: 'Complex Transform Action',
-              template: 'cast {spell} using {focus} targeting {enemy} in {location} with {component}',
+              template:
+                'cast {spell} using {focus} targeting {enemy} in {location} with {component}',
             },
             targetContexts: [],
           },

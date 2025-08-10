@@ -56,7 +56,7 @@ describe('EventDispatchService - Basic Tracing', () => {
     );
 
     // Wait for async operations
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     expect(result).toBe(true);
     expect(writtenTraces).toHaveLength(1);

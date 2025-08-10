@@ -20,4 +20,6 @@ export const actionTracingTokens = freeze({
   IActionAwareStructuredTrace: 'IActionAwareStructuredTrace',
   // Event dispatch tracing tokens
   IEventDispatchTracer: 'IEventDispatchTracer',
+  // Storage adapter for IndexedDB
+  IIndexedDBStorageAdapter: 'IIndexedDBStorageAdapter',
 });

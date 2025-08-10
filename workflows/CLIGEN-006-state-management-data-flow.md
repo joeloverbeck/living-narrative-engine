@@ -2,861 +2,370 @@
 
 ## Summary
 
-Implement comprehensive state management for the Clichés Generator, including data caching, state persistence, reactive updates, and efficient data flow between components. This ensures smooth user experience and optimal performance.
+Documentation of the current state management and data flow implementation in the Clichés Generator. The controller manages state through private fields and handles data flow directly through its methods, extending the base character builder controller functionality.
 
 ## Status
 
-- **Type**: Implementation
-- **Priority**: Medium
-- **Complexity**: Medium
-- **Estimated Time**: 4 hours
+- **Type**: Documentation (Current Implementation)
+- **Priority**: N/A (Documenting existing code)
+- **Complexity**: Low
 - **Dependencies**: CLIGEN-005 (Controller Implementation)
 
-## Objectives
+## Current Implementation Overview
 
-### Primary Goals
+### State Management Approach
 
-1. **State Management** - Centralized state for page data
-2. **Data Caching** - Efficient caching strategy
-3. **Reactive Updates** - UI updates based on state changes
-4. **Session Persistence** - Maintain state across interactions
-5. **Performance Optimization** - Minimize redundant operations
-6. **Memory Management** - Prevent memory leaks
+The Clichés Generator uses a straightforward state management approach:
 
-### Success Criteria
+1. **Private Fields** - State stored in controller's private fields
+2. **Direct Management** - Controller manages state directly without intermediary
+3. **UI State Manager** - Inherits UI state management from base class
+4. **Event Bus** - Uses EventBus for event-driven communication
+5. **No Persistence** - State exists only during page lifecycle
 
-- [ ] State changes trigger appropriate UI updates
-- [ ] Cached data reduces API calls by 50%+
-- [ ] No duplicate data fetching
-- [ ] State persists during session
-- [ ] Memory usage remains stable
-- [ ] State transitions are smooth
-- [ ] 90% test coverage achieved
+### Key Components
+
+- `ClichesGeneratorController` - Main controller extending BaseCharacterBuilderController
+- `BaseCharacterBuilderController` - Provides shared UI state management
+- `UIStateManager` - Manages loading, error, and display states
+- `EventBus` - Handles event dispatching and subscriptions
 
 ## Technical Specification
 
-### 1. State Manager Implementation
+### 1. Controller State Management
 
-#### File: `src/clichesGenerator/state/ClichesStateManager.js`
+#### File: `src/clichesGenerator/controllers/ClichesGeneratorController.js`
 
 ```javascript
 /**
- * @file State management for Clichés Generator
+ * Current state management implementation
  */
+export class ClichesGeneratorController extends BaseCharacterBuilderController {
+  // Page-specific state using private fields
+  #selectedDirectionId = null;
+  #currentConcept = null;
+  #currentDirection = null;
+  #currentCliches = null;
+  #directionsData = [];
+  #isGenerating = false;
 
-import { validateDependency } from '../../utils/validationUtils.js';
-import { EventEmitter } from '../../events/EventEmitter.js';
-
-/**
- * @typedef {object} ClichesPageState
- * @property {string|null} selectedDirectionId - Currently selected direction
- * @property {object|null} currentConcept - Active concept data
- * @property {object|null} currentDirection - Active direction data
- * @property {object|null} currentCliches - Generated clichés
- * @property {Array} directionsData - All available directions
- * @property {boolean} isGenerating - Generation in progress
- * @property {boolean} isLoading - Data loading in progress
- * @property {string|null} error - Current error message
- * @property {object} cache - Cached data
- */
-
-/**
- * State manager for Clichés Generator
- */
-export class ClichesStateManager extends EventEmitter {
-  #state;
-  #previousState;
-  #stateHistory;
-  #maxHistorySize = 10;
-  #cache;
-  #cacheTTL = 300000; // 5 minutes
-
-  constructor() {
-    super();
-    this.#initializeState();
-    this.#cache = new Map();
-    this.#stateHistory = [];
-  }
+  // DOM element cache
+  #directionSelector = null;
+  #generateBtn = null;
+  #directionDisplay = null;
+  #conceptDisplay = null;
+  #clichesContainer = null;
+  #statusMessages = null;
+  #loadingOverlay = null;
 
   /**
-   * Initialize default state
+   * Initialize page state
    * @private
    */
   #initializeState() {
-    this.#state = {
-      selectedDirectionId: null,
-      currentConcept: null,
-      currentDirection: null,
-      currentCliches: null,
-      directionsData: [],
-      isGenerating: false,
-      isLoading: false,
-      error: null,
-      cache: {
-        concepts: new Map(),
-        directions: new Map(),
-        cliches: new Map(),
-      },
-    };
-
-    this.#previousState = null;
-  }
-
-  /**
-   * Get current state
-   * @returns {ClichesPageState} Current state
-   */
-  getState() {
-    return { ...this.#state };
-  }
-
-  /**
-   * Get specific state property
-   * @param {string} key - Property key
-   * @returns {any} Property value
-   */
-  get(key) {
-    return this.#state[key];
-  }
-
-  /**
-   * Update state with partial updates
-   * @param {Partial<ClichesPageState>} updates - State updates
-   */
-  setState(updates) {
-    // Store previous state
-    this.#previousState = { ...this.#state };
-
-    // Apply updates
-    this.#state = {
-      ...this.#state,
-      ...updates,
-    };
-
-    // Add to history
-    this.#addToHistory(updates);
-
-    // Emit change events
-    this.#emitStateChanges(updates);
-  }
-
-  /**
-   * Add state change to history
-   * @private
-   */
-  #addToHistory(updates) {
-    this.#stateHistory.push({
-      timestamp: Date.now(),
-      updates,
-      previousState: this.#previousState,
-    });
-
-    // Limit history size
-    if (this.#stateHistory.length > this.#maxHistorySize) {
-      this.#stateHistory.shift();
-    }
-  }
-
-  /**
-   * Emit state change events
-   * @private
-   */
-  #emitStateChanges(updates) {
-    // Emit general state change
-    this.emit('stateChanged', {
-      updates,
-      previousState: this.#previousState,
-      currentState: this.#state,
-    });
-
-    // Emit specific property changes
-    for (const [key, value] of Object.entries(updates)) {
-      this.emit(`${key}Changed`, {
-        oldValue: this.#previousState?.[key],
-        newValue: value,
-      });
-    }
-  }
-
-  // ============= Direction Management =============
-
-  /**
-   * Set selected direction
-   * @param {string} directionId - Direction ID
-   * @param {object} directionData - Direction data
-   */
-  setSelectedDirection(directionId, directionData) {
-    this.setState({
-      selectedDirectionId: directionId,
-      currentDirection: directionData,
-      error: null,
-    });
-  }
-
-  /**
-   * Clear direction selection
-   */
-  clearSelection() {
-    this.setState({
-      selectedDirectionId: null,
-      currentDirection: null,
-      currentConcept: null,
-      currentCliches: null,
-      error: null,
-    });
-  }
-
-  /**
-   * Set directions data
-   * @param {Array} directions - All directions
-   */
-  setDirectionsData(directions) {
-    // Cache directions
-    for (const direction of directions) {
-      this.#cacheData(`direction:${direction.id}`, direction);
-    }
-
-    this.setState({
-      directionsData: directions,
-    });
-  }
-
-  // ============= Concept Management =============
-
-  /**
-   * Set current concept
-   * @param {object} concept - Concept data
-   */
-  setCurrentConcept(concept) {
-    if (concept) {
-      this.#cacheData(`concept:${concept.id}`, concept);
-    }
-
-    this.setState({
-      currentConcept: concept,
-    });
-  }
-
-  // ============= Cliché Management =============
-
-  /**
-   * Set current clichés
-   * @param {object} cliches - Generated clichés
-   */
-  setCurrentCliches(cliches) {
-    if (cliches && this.#state.selectedDirectionId) {
-      this.#cacheData(`cliches:${this.#state.selectedDirectionId}`, cliches);
-    }
-
-    this.setState({
-      currentCliches: cliches,
-      isGenerating: false,
-      error: null,
-    });
-  }
-
-  /**
-   * Start cliché generation
-   */
-  startGeneration() {
-    this.setState({
-      isGenerating: true,
-      error: null,
-    });
-  }
-
-  /**
-   * Complete cliché generation
-   * @param {object} cliches - Generated clichés
-   */
-  completeGeneration(cliches) {
-    this.setCurrentCliches(cliches);
-  }
-
-  /**
-   * Fail cliché generation
-   * @param {string} error - Error message
-   */
-  failGeneration(error) {
-    this.setState({
-      isGenerating: false,
-      error,
-    });
-  }
-
-  // ============= Loading States =============
-
-  /**
-   * Set loading state
-   * @param {boolean} isLoading - Loading state
-   */
-  setLoading(isLoading) {
-    this.setState({ isLoading });
-  }
-
-  /**
-   * Set error state
-   * @param {string|null} error - Error message
-   */
-  setError(error) {
-    this.setState({ error });
-  }
-
-  // ============= Cache Management =============
-
-  /**
-   * Cache data with TTL
-   * @param {string} key - Cache key
-   * @param {any} data - Data to cache
-   */
-  #cacheData(key, data) {
-    this.#cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl: this.#cacheTTL,
-    });
-
-    // Clean expired entries
-    this.#cleanExpiredCache();
-  }
-
-  /**
-   * Get cached data
-   * @param {string} key - Cache key
-   * @returns {any|null} Cached data or null
-   */
-  getCached(key) {
-    const entry = this.#cache.get(key);
-
-    if (!entry) return null;
-
-    // Check if expired
-    if (Date.now() - entry.timestamp > entry.ttl) {
-      this.#cache.delete(key);
-      return null;
-    }
-
-    return entry.data;
-  }
-
-  /**
-   * Clean expired cache entries
-   * @private
-   */
-  #cleanExpiredCache() {
-    const now = Date.now();
-
-    for (const [key, entry] of this.#cache) {
-      if (now - entry.timestamp > entry.ttl) {
-        this.#cache.delete(key);
-      }
-    }
-  }
-
-  /**
-   * Clear all cache
-   */
-  clearCache() {
-    this.#cache.clear();
-    this.setState({
-      cache: {
-        concepts: new Map(),
-        directions: new Map(),
-        cliches: new Map(),
-      },
-    });
-  }
-
-  // ============= History Management =============
-
-  /**
-   * Get state history
-   * @returns {Array} State history
-   */
-  getHistory() {
-    return [...this.#stateHistory];
-  }
-
-  /**
-   * Undo last state change
-   */
-  undo() {
-    if (this.#stateHistory.length === 0) return;
-
-    const lastChange = this.#stateHistory.pop();
-    if (lastChange.previousState) {
-      this.#state = lastChange.previousState;
-      this.emit('stateChanged', {
-        updates: this.#state,
-        isUndo: true,
-      });
-    }
-  }
-
-  // ============= State Persistence =============
-
-  /**
-   * Save state to session storage
-   */
-  saveToSession() {
-    try {
-      const stateToSave = {
-        selectedDirectionId: this.#state.selectedDirectionId,
-        timestamp: Date.now(),
-      };
-
-      sessionStorage.setItem(
-        'clichesGeneratorState',
-        JSON.stringify(stateToSave)
-      );
-    } catch (error) {
-      console.error('Failed to save state:', error);
-    }
-  }
-
-  /**
-   * Load state from session storage
-   * @returns {boolean} True if state was loaded
-   */
-  loadFromSession() {
-    try {
-      const saved = sessionStorage.getItem('clichesGeneratorState');
-      if (!saved) return false;
-
-      const state = JSON.parse(saved);
-
-      // Check if state is still valid (< 1 hour old)
-      if (Date.now() - state.timestamp < 3600000) {
-        this.setState({
-          selectedDirectionId: state.selectedDirectionId,
-        });
-        return true;
-      }
-
-      // Clear expired state
-      sessionStorage.removeItem('clichesGeneratorState');
-    } catch (error) {
-      console.error('Failed to load state:', error);
-    }
-
-    return false;
-  }
-
-  // ============= State Validation =============
-
-  /**
-   * Validate current state
-   * @returns {object} Validation result
-   */
-  validateState() {
-    const errors = [];
-    const warnings = [];
-
-    // Check for inconsistencies
-    if (this.#state.selectedDirectionId && !this.#state.currentDirection) {
-      errors.push('Selected direction ID without direction data');
-    }
-
-    if (this.#state.currentDirection && !this.#state.currentConcept) {
-      warnings.push('Direction without associated concept');
-    }
-
-    if (this.#state.isGenerating && this.#state.currentCliches) {
-      errors.push('Generation in progress but clichés already exist');
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors,
-      warnings,
-    };
-  }
-
-  /**
-   * Reset state to initial
-   */
-  reset() {
-    this.#initializeState();
-    this.#cache.clear();
-    this.#stateHistory = [];
-    this.emit('stateReset');
+    this.#selectedDirectionId = null;
+    this.#currentConcept = null;
+    this.#currentDirection = null;
+    this.#currentCliches = null;
+    this.#directionsData = [];
+    this.#isGenerating = false;
   }
 }
-
-export default ClichesStateManager;
 ```
 
-### 2. State Integration with Controller
+### 2. Data Flow Patterns
 
-#### File: `src/clichesGenerator/controllers/ClichesGeneratorController.js` (partial update)
+#### Direction Selection Flow
 
 ```javascript
-// Add to controller constructor
-constructor(dependencies) {
-  super(dependencies);
-
-  // Initialize state manager
-  this.#stateManager = new ClichesStateManager();
-  this.#setupStateListeners();
-}
-
 /**
- * Set up state change listeners
- * @private
- */
-#setupStateListeners() {
-  // React to state changes
-  this.#stateManager.on('selectedDirectionIdChanged', ({ newValue }) => {
-    if (newValue) {
-      this.#loadDirectionData(newValue);
-    } else {
-      this.#clearUI();
-    }
-  });
-
-  this.#stateManager.on('currentClichesChanged', ({ newValue }) => {
-    if (newValue) {
-      this.#displayCliches(newValue);
-    }
-  });
-
-  this.#stateManager.on('isGeneratingChanged', ({ newValue }) => {
-    this.#updateGenerateButton(!newValue, newValue ? 'Generating...' : 'Generate Clichés');
-  });
-
-  this.#stateManager.on('errorChanged', ({ newValue }) => {
-    if (newValue) {
-      this._showErrorMessage(newValue);
-    }
-  });
-
-  this.#stateManager.on('isLoadingChanged', ({ newValue }) => {
-    if (newValue) {
-      this._showLoadingState();
-    } else {
-      this._hideLoadingState();
-    }
-  });
-}
-
-/**
- * Handle direction selection with state management
+ * Handle direction selection - main data flow entry point
  * @private
  */
 async #handleDirectionSelection(directionId) {
   if (!directionId) {
-    this.#stateManager.clearSelection();
+    this.#clearSelection();
     return;
   }
 
-  // Check cache first
-  const cachedDirection = this.#stateManager.getCached(`direction:${directionId}`);
-  const cachedCliches = this.#stateManager.getCached(`cliches:${directionId}`);
-
-  if (cachedDirection && cachedCliches) {
-    // Use cached data
-    this.#stateManager.setSelectedDirection(directionId, cachedDirection);
-    this.#stateManager.setCurrentCliches(cachedCliches);
-    return;
-  }
-
-  // Load fresh data
   try {
-    this.#stateManager.setLoading(true);
+    // Show loading state (inherited from base)
+    this._showLoading('Loading direction details...');
 
-    const directionData = await this.#loadDirectionData(directionId);
-    this.#stateManager.setSelectedDirection(directionId, directionData.direction);
-    this.#stateManager.setCurrentConcept(directionData.concept);
+    // Find direction in cached data
+    const directionData = this.#findDirectionById(directionId);
+    
+    // Update internal state
+    this.#selectedDirectionId = directionId;
+    this.#currentDirection = directionData.direction;
+    this.#currentConcept = directionData.concept;
+
+    // Update UI displays
+    this.#displayDirectionInfo(this.#currentDirection);
+    this.#displayConceptInfo(directionData.concept);
 
     // Check for existing clichés
-    const hasCliches = await this._services.characterBuilderService.hasClichesForDirection(directionId);
+    const hasCliches = await this.characterBuilderService
+      .hasClichesForDirection(directionId);
 
     if (hasCliches) {
-      const cliches = await this._services.characterBuilderService.getClichesByDirectionId(directionId);
-      this.#stateManager.setCurrentCliches(cliches);
+      // Load and display existing
+      const cliches = await this.characterBuilderService
+        .getClichesByDirectionId(directionId);
+      this.#currentCliches = cliches;
+      this.#displayCliches(cliches);
     }
 
+    // Update UI state
+    this._showState('idle');
   } catch (error) {
-    this.#stateManager.setError(error.message);
-  } finally {
-    this.#stateManager.setLoading(false);
+    this.logger.error('Failed to handle direction selection:', error);
+    this._showError('Failed to load direction details');
+    this.#clearSelection();
   }
 }
 ```
 
-### 3. Data Flow Orchestrator
-
-#### File: `src/clichesGenerator/orchestration/DataFlowOrchestrator.js`
+#### Cliché Generation Flow
 
 ```javascript
 /**
- * Orchestrates data flow between components
+ * Handle cliché generation - async operation with state updates
+ * @private
  */
-export class DataFlowOrchestrator {
-  #stateManager;
-  #services;
-  #eventBus;
-  #logger;
-
-  constructor({ stateManager, services, eventBus, logger }) {
-    this.#stateManager = stateManager;
-    this.#services = services;
-    this.#eventBus = eventBus;
-    this.#logger = logger;
-
-    this.#setupEventListeners();
+async #handleGenerateCliches() {
+  if (!this.#selectedDirectionId || this.#isGenerating) {
+    return;
   }
 
-  /**
-   * Set up event listeners for data flow
-   * @private
-   */
-  #setupEventListeners() {
-    // Service events
-    this.#eventBus.on('CLICHES_GENERATION_STARTED', () => {
-      this.#stateManager.startGeneration();
+  try {
+    // Update generation state
+    this.#isGenerating = true;
+    this.#updateGenerateButton(false, 'Generating...');
+    this._showLoading('Generating clichés...');
+
+    // Generate via service
+    const cliches = await this.characterBuilderService
+      .generateClichesForDirection(
+        this.#currentConcept,
+        this.#currentDirection
+      );
+
+    // Update state with results
+    this.#currentCliches = cliches;
+    
+    // Display results
+    this.#displayCliches(cliches);
+    
+    // Show success
+    this._showResults({
+      message: `Generated ${cliches.getTotalCount()} clichés successfully!`
     });
-
-    this.#eventBus.on('CLICHES_GENERATION_COMPLETED', (event) => {
-      this.#stateManager.completeGeneration(event.payload.cliches);
-    });
-
-    this.#eventBus.on('CLICHES_GENERATION_FAILED', (event) => {
-      this.#stateManager.failGeneration(event.payload.error);
-    });
-
-    // State change reactions
-    this.#stateManager.on('stateChanged', ({ updates }) => {
-      this.#logger.debug('State changed:', updates);
-
-      // Save critical state to session
-      if (updates.selectedDirectionId !== undefined) {
-        this.#stateManager.saveToSession();
-      }
-    });
-  }
-
-  /**
-   * Load initial data
-   */
-  async loadInitialData() {
-    try {
-      this.#stateManager.setLoading(true);
-
-      // Try to restore from session
-      const restored = this.#stateManager.loadFromSession();
-
-      // Load directions
-      const directions =
-        await this.#services.characterBuilderService.getAllThematicDirections();
-      this.#stateManager.setDirectionsData(directions);
-
-      // If restored, reload that direction
-      if (restored) {
-        const directionId = this.#stateManager.get('selectedDirectionId');
-        if (directionId) {
-          await this.loadDirection(directionId);
-        }
-      }
-    } catch (error) {
-      this.#stateManager.setError('Failed to load initial data');
-      this.#logger.error('Initial data load failed:', error);
-    } finally {
-      this.#stateManager.setLoading(false);
-    }
-  }
-
-  /**
-   * Load specific direction
-   */
-  async loadDirection(directionId) {
-    // Check cache
-    const cached = this.#stateManager.getCached(`fullDirection:${directionId}`);
-    if (cached) {
-      this.#applyDirectionData(cached);
-      return;
-    }
-
-    try {
-      // Load direction and concept
-      const direction =
-        await this.#services.characterBuilderService.getThematicDirection(
-          directionId
-        );
-      const concept =
-        await this.#services.characterBuilderService.getCharacterConcept(
-          direction.conceptId
-        );
-
-      const data = { direction, concept };
-
-      // Cache the full data
-      this.#stateManager.cacheData(`fullDirection:${directionId}`, data);
-
-      this.#applyDirectionData(data);
-    } catch (error) {
-      this.#stateManager.setError(`Failed to load direction: ${error.message}`);
-    }
-  }
-
-  /**
-   * Apply direction data to state
-   * @private
-   */
-  #applyDirectionData(data) {
-    this.#stateManager.setSelectedDirection(data.direction.id, data.direction);
-    this.#stateManager.setCurrentConcept(data.concept);
-  }
-
-  /**
-   * Generate clichés for current selection
-   */
-  async generateCliches() {
-    const state = this.#stateManager.getState();
-
-    if (!state.currentConcept || !state.currentDirection) {
-      this.#stateManager.setError('No direction selected');
-      return;
-    }
-
-    try {
-      this.#stateManager.startGeneration();
-
-      const cliches =
-        await this.#services.characterBuilderService.generateClichesForDirection(
-          state.currentConcept,
-          state.currentDirection
-        );
-
-      this.#stateManager.completeGeneration(cliches);
-    } catch (error) {
-      this.#stateManager.failGeneration(error.message);
-    }
+  } catch (error) {
+    this.logger.error('Failed to generate clichés:', error);
+    this._showError(error.message || 'Failed to generate clichés');
+  } finally {
+    this.#isGenerating = false;
+    this._showState('idle');
   }
 }
 ```
 
-## Implementation Tasks
+### 3. Event System Integration
 
-### Phase 1: State Manager (1.5 hours)
-
-1. **Create state manager**
-   - [ ] Initialize state structure
-   - [ ] Implement state updates
-   - [ ] Add event emission
-
-2. **Add state methods**
-   - [ ] Direction management
-   - [ ] Concept management
-   - [ ] Cliché management
-
-### Phase 2: Cache System (1 hour)
-
-1. **Implement caching**
-   - [ ] Cache structure
-   - [ ] TTL management
-   - [ ] Cache cleanup
-
-2. **Session persistence**
-   - [ ] Save to session
-   - [ ] Load from session
-   - [ ] Expiration handling
-
-### Phase 3: Data Flow (1 hour)
-
-1. **Create orchestrator**
-   - [ ] Event listeners
-   - [ ] Data loading
-   - [ ] Error handling
-
-2. **Integrate with controller**
-   - [ ] State listeners
-   - [ ] UI updates
-   - [ ] Action handlers
-
-### Phase 4: Testing (30 minutes)
-
-1. **Test state manager**
-   - [ ] State updates
-   - [ ] Event emission
-   - [ ] Cache behavior
-
-2. **Test data flow**
-   - [ ] Load sequences
-   - [ ] Error scenarios
-   - [ ] Cache hits/misses
-
-## Testing Requirements
+#### Event Subscription Pattern
 
 ```javascript
-describe('ClichesStateManager', () => {
-  let stateManager;
+/**
+ * Subscribe to relevant events using EventBus
+ * @private
+ */
+_subscribeToEvents() {
+  // EventBus uses subscribe/unsubscribe pattern
+  this.eventBus.on('CLICHES_GENERATION_STARTED', (event) => {
+    this.logger.debug('Cliché generation started', event.payload);
+  });
+
+  this.eventBus.on('CLICHES_GENERATION_COMPLETED', (event) => {
+    this.logger.info('Cliché generation completed', event.payload);
+  });
+
+  this.eventBus.on('CLICHES_GENERATION_FAILED', (event) => {
+    this.logger.error('Cliché generation failed', event.payload);
+  });
+}
+```
+
+Note: The EventBus uses `on/off` methods for subscriptions, not `emit`. Events are dispatched using `dispatch()`.
+
+### 4. UI State Management (Inherited)
+
+The controller inherits UI state management from `BaseCharacterBuilderController`:
+
+```javascript
+// From BaseCharacterBuilderController
+class BaseCharacterBuilderController {
+  constructor(dependencies) {
+    // UIStateManager handles loading, error, success states
+    this.uiStateManager = dependencies.uiStateManager;
+  }
+
+  // Protected methods available to child controllers
+  _showLoading(message) { /* ... */ }
+  _showError(message) { /* ... */ }
+  _showResults(data) { /* ... */ }
+  _showState(state) { /* ... */ }
+  _showEmpty() { /* ... */ }
+}
+```
+
+### 5. Data Organization
+
+#### Initial Data Loading
+
+```javascript
+async _loadInitialData() {
+  try {
+    this._showLoading('Loading thematic directions...');
+
+    // Load all directions
+    const directions = await this.characterBuilderService
+      .getAllThematicDirections();
+
+    // Organize by concept
+    this.#directionsData = await this.#organizeDirectionsByConcept(directions);
+
+    // Populate UI
+    this.#populateDirectionSelector(this.#directionsData);
+
+    this._showState('idle');
+  } catch (error) {
+    this.logger.error('Failed to load initial data:', error);
+    this._showError('Failed to load thematic directions');
+  }
+}
+```
+
+### 6. State Cleanup
+
+```javascript
+async cleanup() {
+  // Clear state
+  this.#initializeState();
+
+  // Clear DOM references
+  this.#directionSelector = null;
+  this.#generateBtn = null;
+  // ... other DOM elements
+
+  // Call parent cleanup
+  await super.cleanup();
+}
+```
+
+## Current Data Flow Diagram
+
+```
+User Action → Controller Method → State Update → UI Update
+                    ↓
+              Service Call
+                    ↓
+              Event Dispatch
+```
+
+## State Management Characteristics
+
+### What Exists
+
+1. **Private Field State** - Simple, direct state management
+2. **UI State Manager** - Loading, error, success states
+3. **Event Bus** - Event-driven communication
+4. **Service Layer** - Data fetching and operations
+5. **DOM Caching** - Efficient element access
+
+### What Doesn't Exist
+
+1. **State Manager Class** - No separate state management class
+2. **EventEmitter** - Uses EventBus instead
+3. **State Persistence** - No session/local storage
+4. **Caching Layer** - No data caching implemented
+5. **State History** - No undo/redo functionality
+6. **Data Flow Orchestrator** - Controller handles flow directly
+
+## Testing Approach
+
+### Current Test Structure
+
+```javascript
+// From tests/unit/clichesGenerator/controllers/ClichesGeneratorController.test.js
+describe('ClichesGeneratorController', () => {
+  let testBed;
 
   beforeEach(() => {
-    stateManager = new ClichesStateManager();
+    testBed = new ClichesGeneratorControllerTestBed();
   });
 
-  describe('State Updates', () => {
-    it('should update state and emit events', () => {
-      const listener = jest.fn();
-      stateManager.on('selectedDirectionIdChanged', listener);
-
-      stateManager.setSelectedDirection('dir-1', { id: 'dir-1' });
-
-      expect(stateManager.get('selectedDirectionId')).toBe('dir-1');
-      expect(listener).toHaveBeenCalled();
-    });
-
-    it('should maintain state history', () => {
-      stateManager.setState({ isLoading: true });
-      stateManager.setState({ isLoading: false });
-
-      const history = stateManager.getHistory();
-      expect(history).toHaveLength(2);
-    });
-  });
-
-  describe('Cache Management', () => {
-    it('should cache and retrieve data', () => {
-      const data = { id: 'test' };
-      stateManager.cacheData('test-key', data);
-
-      const cached = stateManager.getCached('test-key');
-      expect(cached).toEqual(data);
-    });
-
-    it('should expire old cache entries', () => {
-      jest.useFakeTimers();
-
-      stateManager.cacheData('test-key', { id: 'test' });
-
-      // Advance time past TTL
-      jest.advanceTimersByTime(6 * 60 * 1000);
-
-      const cached = stateManager.getCached('test-key');
-      expect(cached).toBeNull();
-
-      jest.useRealTimers();
-    });
+  it('should handle direction selection', async () => {
+    // Test uses testBed pattern for setup
+    const controller = testBed.createController();
+    
+    // Simulate user action
+    await testBed.selectDirection('dir-1');
+    
+    // Verify state changes
+    expect(testBed.getDisplayedDirection()).toBeTruthy();
   });
 });
 ```
 
-## Acceptance Criteria
+## Dependency Injection
 
-- [ ] State management working
-- [ ] Cache reduces API calls
-- [ ] Session persistence functional
-- [ ] UI reacts to state changes
-- [ ] No memory leaks
-- [ ] Tests passing
-- [ ] Documentation complete
+Dependencies are injected through the CharacterBuilderBootstrap:
+
+```javascript
+// From bootstrap process
+const controller = new ClichesGeneratorController({
+  logger: container.get('ILogger'),
+  eventBus: container.get('IEventBus'),
+  characterBuilderService: container.get('ICharacterBuilderService'),
+  clicheGenerator: container.get('IClicheGenerator'),
+  uiStateManager: container.get('IUIStateManager'),
+  // ... other dependencies
+});
+```
+
+## Event Types
+
+Current event types used:
+- `CLICHES_GENERATION_STARTED`
+- `CLICHES_GENERATION_COMPLETED`
+- `CLICHES_GENERATION_FAILED`
+
+## Future Enhancement Opportunities
+
+If state management needs enhancement, consider:
+
+1. **Data Caching** - Cache loaded directions and concepts
+2. **Session Persistence** - Save selection across page refreshes
+3. **State History** - Add undo/redo capabilities
+4. **Optimistic Updates** - Update UI before async operations complete
+5. **State Validation** - Validate state consistency
+
+## Summary
+
+The current implementation uses a straightforward approach:
+- State managed through private controller fields
+- Data flow handled directly by controller methods
+- UI state management inherited from base class
+- Event-driven communication via EventBus
+- No persistence or caching layer
+
+This approach is simple, maintainable, and sufficient for current requirements.
 
 ## Definition of Done
 
-- [ ] Code implemented per specification
-- [ ] Unit tests passing (90% coverage)
-- [ ] Integration tested
-- [ ] Performance validated
-- [ ] Code reviewed and approved
-- [ ] Documentation updated
+- [x] Document reflects actual implementation
+- [x] No references to non-existent components
+- [x] Accurate method signatures and patterns
+- [x] Correct event system documentation
+- [x] Clear separation of current vs. future

@@ -10,15 +10,18 @@ export const PROMPT_VERSION_INFO = {
   version: '1.2.0',
   previousVersions: {
     '1.0.0': { date: '2024-01-01', description: 'Initial implementation' },
-    '1.1.0': { date: '2024-02-01', description: 'Enhanced instructions and validation' }
+    '1.1.0': {
+      date: '2024-02-01',
+      description: 'Enhanced instructions and validation',
+    },
   },
   currentChanges: [
     'Added few-shot examples support',
     'Genre-specific context integration',
     'Enhanced response statistics',
     'Advanced validation with warnings',
-    'Configurable item count constraints'
-  ]
+    'Configurable item count constraints',
+  ],
 };
 
 /**
@@ -30,7 +33,7 @@ export const DEFAULT_ENHANCEMENT_OPTIONS = {
   minItemsPerCategory: 3,
   maxItemsPerCategory: 8,
   enableAdvancedValidation: true,
-  includeQualityMetrics: true
+  includeQualityMetrics: true,
 };
 
 /**
@@ -420,10 +423,14 @@ export function createClicheGenerationLlmConfig(baseLlmConfig) {
  * @param {number} options.maxItemsPerCategory - Maximum items per category
  * @returns {string} Enhanced prompt
  */
-export function buildEnhancedClicheGenerationPrompt(characterConcept, direction, options = {}) {
+export function buildEnhancedClicheGenerationPrompt(
+  characterConcept,
+  direction,
+  options = {}
+) {
   const enhancementOptions = { ...DEFAULT_ENHANCEMENT_OPTIONS, ...options };
   let enhancedPrompt = buildClicheGenerationPrompt(characterConcept, direction);
-  
+
   // Add few-shot examples if requested
   if (enhancementOptions.includeFewShotExamples) {
     const examples = getFewShotExamples();
@@ -432,7 +439,7 @@ export function buildEnhancedClicheGenerationPrompt(characterConcept, direction,
       `${examples}\n\n<instructions>`
     );
   }
-  
+
   // Add genre-specific context if provided
   if (enhancementOptions.genre) {
     const genreContext = getGenreSpecificContext(enhancementOptions.genre);
@@ -441,10 +448,14 @@ export function buildEnhancedClicheGenerationPrompt(characterConcept, direction,
       `\n${genreContext}\n</thematic_direction>`
     );
   }
-  
+
   // Adjust item count constraints if specified
-  if (enhancementOptions.minItemsPerCategory !== DEFAULT_ENHANCEMENT_OPTIONS.minItemsPerCategory ||
-      enhancementOptions.maxItemsPerCategory !== DEFAULT_ENHANCEMENT_OPTIONS.maxItemsPerCategory) {
+  if (
+    enhancementOptions.minItemsPerCategory !==
+      DEFAULT_ENHANCEMENT_OPTIONS.minItemsPerCategory ||
+    enhancementOptions.maxItemsPerCategory !==
+      DEFAULT_ENHANCEMENT_OPTIONS.maxItemsPerCategory
+  ) {
     const minItems = enhancementOptions.minItemsPerCategory;
     const maxItems = enhancementOptions.maxItemsPerCategory;
     enhancedPrompt = enhancedPrompt.replace(
@@ -452,7 +463,7 @@ export function buildEnhancedClicheGenerationPrompt(characterConcept, direction,
       `Provide ${minItems}-${maxItems} items per category`
     );
   }
-  
+
   return enhancedPrompt;
 }
 
@@ -498,19 +509,25 @@ Thematic Direction: "The Chosen One - Destined to save the world"
  */
 function getGenreSpecificContext(genre) {
   const genreContexts = {
-    fantasy: '<genre_context>\nFocus on fantasy-specific clichés: chosen ones, ancient prophecies, wise wizards, dark lords, medieval stereotypes, magical bloodlines, and quest-based character arcs.\n</genre_context>',
-    
-    scifi: '<genre_context>\nFocus on sci-fi clichés: lone space cowboys, AI gaining consciousness, time paradoxes, alien invasion tropes, dystopian societies, and technology-dependent solutions.\n</genre_context>',
-    
-    romance: '<genre_context>\nFocus on romance clichés: love triangles, enemies to lovers, billionaire love interests, miscommunication plots, and idealized relationship dynamics.\n</genre_context>',
-    
-    mystery: '<genre_context>\nFocus on mystery clichés: alcoholic detectives, red herrings, locked room mysteries, surprise twin reveals, and investigative procedural patterns.\n</genre_context>',
-    
-    horror: '<genre_context>\nFocus on horror clichés: investigating strange noises, splitting up, ancient curses, possessed children, and survival horror tropes.\n</genre_context>',
-    
-    contemporary: '<genre_context>\nFocus on contemporary fiction clichés: manic pixie dream girls, coming of age tropes, suburban ennui, and modern relationship dynamics.\n</genre_context>'
+    fantasy:
+      '<genre_context>\nFocus on fantasy-specific clichés: chosen ones, ancient prophecies, wise wizards, dark lords, medieval stereotypes, magical bloodlines, and quest-based character arcs.\n</genre_context>',
+
+    scifi:
+      '<genre_context>\nFocus on sci-fi clichés: lone space cowboys, AI gaining consciousness, time paradoxes, alien invasion tropes, dystopian societies, and technology-dependent solutions.\n</genre_context>',
+
+    romance:
+      '<genre_context>\nFocus on romance clichés: love triangles, enemies to lovers, billionaire love interests, miscommunication plots, and idealized relationship dynamics.\n</genre_context>',
+
+    mystery:
+      '<genre_context>\nFocus on mystery clichés: alcoholic detectives, red herrings, locked room mysteries, surprise twin reveals, and investigative procedural patterns.\n</genre_context>',
+
+    horror:
+      '<genre_context>\nFocus on horror clichés: investigating strange noises, splitting up, ancient curses, possessed children, and survival horror tropes.\n</genre_context>',
+
+    contemporary:
+      '<genre_context>\nFocus on contemporary fiction clichés: manic pixie dream girls, coming of age tropes, suburban ennui, and modern relationship dynamics.\n</genre_context>',
   };
-  
+
   return genreContexts[genre?.toLowerCase()] || '';
 }
 
@@ -523,21 +540,21 @@ function getGenreSpecificContext(genre) {
 export function validateClicheGenerationResponseEnhanced(response) {
   // Use existing validation as base
   const isValid = validateClicheGenerationResponse(response);
-  
+
   if (!isValid) {
     throw new Error('Basic validation failed');
   }
-  
+
   const stats = calculateResponseStatistics(response);
   const warnings = generateResponseWarnings(response, stats);
   const qualityMetrics = assessResponseQuality(response, stats);
-  
+
   return {
     valid: true,
     statistics: stats,
     warnings,
     qualityMetrics,
-    recommendations: generateImprovementRecommendations(stats, warnings)
+    recommendations: generateImprovementRecommendations(stats, warnings),
   };
 }
 
@@ -551,31 +568,32 @@ function calculateResponseStatistics(response) {
   let totalItems = 0;
   const categoryCounts = {};
   const categoryLengths = {};
-  
+
   if (response.categories) {
     for (const [category, items] of Object.entries(response.categories)) {
       if (Array.isArray(items)) {
         categoryCounts[category] = items.length;
         categoryLengths[category] = {
-          min: Math.min(...items.map(item => item.length)),
-          max: Math.max(...items.map(item => item.length)),
-          avg: items.reduce((sum, item) => sum + item.length, 0) / items.length
+          min: Math.min(...items.map((item) => item.length)),
+          max: Math.max(...items.map((item) => item.length)),
+          avg: items.reduce((sum, item) => sum + item.length, 0) / items.length,
         };
         totalItems += items.length;
       }
     }
   }
-  
-  const tropesCount = Array.isArray(response.tropesAndStereotypes) 
-    ? response.tropesAndStereotypes.length : 0;
-  
+
+  const tropesCount = Array.isArray(response.tropesAndStereotypes)
+    ? response.tropesAndStereotypes.length
+    : 0;
+
   return {
     totalItems: totalItems + tropesCount,
     categoryCounts,
     categoryLengths,
     tropesCount,
     averageItemsPerCategory: totalItems / Object.keys(categoryCounts).length,
-    completenessScore: Object.keys(categoryCounts).length / 11 // 11 required categories
+    completenessScore: Object.keys(categoryCounts).length / 11, // 11 required categories
   };
 }
 
@@ -588,29 +606,37 @@ function calculateResponseStatistics(response) {
  */
 function generateResponseWarnings(response, stats) {
   const warnings = [];
-  
+
   // Check for sparse categories
   for (const [category, count] of Object.entries(stats.categoryCounts)) {
     if (count < 3) {
-      warnings.push(`Category "${category}" has only ${count} items (recommended: 3+)`);
+      warnings.push(
+        `Category "${category}" has only ${count} items (recommended: 3+)`
+      );
     }
     if (count > 8) {
-      warnings.push(`Category "${category}" has ${count} items (recommended: 3-8)`);
+      warnings.push(
+        `Category "${category}" has ${count} items (recommended: 3-8)`
+      );
     }
   }
-  
+
   // Check tropes count
   if (stats.tropesCount < 5) {
-    warnings.push(`Only ${stats.tropesCount} tropes provided (recommended: 5+)`);
+    warnings.push(
+      `Only ${stats.tropesCount} tropes provided (recommended: 5+)`
+    );
   }
-  
+
   // Check for very short items that might be low quality
   for (const [category, lengths] of Object.entries(stats.categoryLengths)) {
     if (lengths.avg < 10) {
-      warnings.push(`Category "${category}" items are quite short (avg: ${lengths.avg.toFixed(1)} chars)`);
+      warnings.push(
+        `Category "${category}" items are quite short (avg: ${lengths.avg.toFixed(1)} chars)`
+      );
     }
   }
-  
+
   return warnings;
 }
 
@@ -625,13 +651,15 @@ function assessResponseQuality(response, stats) {
   return {
     completeness: stats.completenessScore,
     itemDensity: stats.averageItemsPerCategory,
-    contentRichness: Object.values(stats.categoryLengths)
-      .reduce((sum, lengths) => sum + lengths.avg, 0) / Object.keys(stats.categoryLengths).length,
-    overallScore: (
-      stats.completenessScore * 0.4 + 
+    contentRichness:
+      Object.values(stats.categoryLengths).reduce(
+        (sum, lengths) => sum + lengths.avg,
+        0
+      ) / Object.keys(stats.categoryLengths).length,
+    overallScore:
+      stats.completenessScore * 0.4 +
       Math.min(stats.averageItemsPerCategory / 5, 1) * 0.3 +
-      Math.min(stats.tropesCount / 7, 1) * 0.3
-    )
+      Math.min(stats.tropesCount / 7, 1) * 0.3,
   };
 }
 
@@ -644,19 +672,21 @@ function assessResponseQuality(response, stats) {
  */
 function generateImprovementRecommendations(stats, warnings) {
   const recommendations = [];
-  
+
   if (stats.completenessScore < 1) {
     recommendations.push('Ensure all required categories are populated');
   }
-  
+
   if (stats.averageItemsPerCategory < 4) {
-    recommendations.push('Consider generating more items per category for better coverage');
+    recommendations.push(
+      'Consider generating more items per category for better coverage'
+    );
   }
-  
+
   if (warnings.length > 3) {
     recommendations.push('Review response quality - multiple issues detected');
   }
-  
+
   return recommendations;
 }
 
@@ -667,13 +697,16 @@ function generateImprovementRecommendations(stats, warnings) {
  * @param {object} enhancementOptions - Enhancement options
  * @returns {object} Enhanced config
  */
-export function createEnhancedClicheGenerationLlmConfig(baseLlmConfig, enhancementOptions = {}) {
+export function createEnhancedClicheGenerationLlmConfig(
+  baseLlmConfig,
+  enhancementOptions = {}
+) {
   const options = { ...DEFAULT_ENHANCEMENT_OPTIONS, ...enhancementOptions };
   const baseConfig = createClicheGenerationLlmConfig(baseLlmConfig);
-  
+
   return {
     ...baseConfig,
     enhancementOptions: options,
-    promptVersion: PROMPT_VERSION_INFO.version
+    promptVersion: PROMPT_VERSION_INFO.version,
   };
 }

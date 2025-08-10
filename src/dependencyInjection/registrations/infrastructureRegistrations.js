@@ -162,28 +162,29 @@ export function registerInfrastructure(container) {
   );
 
   // Event Dispatch Service
-  registrar.singletonFactory(
-    tokens.EventDispatchService,
-    (c) => {
-      // Helper function to resolve optional dependencies
-      const resolveOptional = (token) => {
-        try {
-          return c.isRegistered(token) ? c.resolve(token) : null;
-        } catch {
-          return null;
-        }
-      };
+  registrar.singletonFactory(tokens.EventDispatchService, (c) => {
+    // Helper function to resolve optional dependencies
+    const resolveOptional = (token) => {
+      try {
+        return c.isRegistered(token) ? c.resolve(token) : null;
+      } catch {
+        return null;
+      }
+    };
 
-      return new EventDispatchService({
-        safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (
-          c.resolve(tokens.ISafeEventDispatcher)
-        ),
-        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-        actionTraceFilter: resolveOptional(actionTracingTokens.IActionTraceFilter),
-        eventDispatchTracer: resolveOptional(actionTracingTokens.IEventDispatchTracer),
-      });
-    }
-  );
+    return new EventDispatchService({
+      safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (
+        c.resolve(tokens.ISafeEventDispatcher)
+      ),
+      logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+      actionTraceFilter: resolveOptional(
+        actionTracingTokens.IActionTraceFilter
+      ),
+      eventDispatchTracer: resolveOptional(
+        actionTracingTokens.IEventDispatchTracer
+      ),
+    });
+  });
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.EventDispatchService)}.`
   );

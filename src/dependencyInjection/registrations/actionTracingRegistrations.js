@@ -11,6 +11,8 @@ import TraceDirectoryManager from '../../actions/tracing/traceDirectoryManager.j
 import ActionTraceFilter from '../../actions/tracing/actionTraceFilter.js';
 import ActionAwareStructuredTrace from '../../actions/tracing/actionAwareStructuredTrace.js';
 import { EventDispatchTracer } from '../../events/tracing/eventDispatchTracer.js';
+import { ActionTraceOutputService } from '../../actions/tracing/actionTraceOutputService.js';
+import { IndexedDBStorageAdapter } from '../../storage/indexedDBStorageAdapter.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -73,6 +75,22 @@ export function registerActionTracing(container) {
     `Action Tracing Registration: Registered ${String(actionTracingTokens.ITraceDirectoryManager)}.`
   );
 
+  // Register IndexedDBStorageAdapter
+  container.register(
+    actionTracingTokens.IIndexedDBStorageAdapter,
+    (c) =>
+      new IndexedDBStorageAdapter({
+        logger: c.resolve(tokens.ILogger),
+        dbName: 'ActionTraces',
+        dbVersion: 1,
+        storeName: 'traces',
+      }),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.IIndexedDBStorageAdapter)}.`
+  );
+
   // Register ActionTraceFilter
   container.register(
     actionTracingTokens.IActionTraceFilter,
@@ -93,6 +111,21 @@ export function registerActionTracing(container) {
   );
   log.debug(
     `Action Tracing Registration: Registered ${String(actionTracingTokens.IActionTraceFilter)}.`
+  );
+
+  // Register enhanced ActionTraceOutputService with IndexedDB support
+  container.register(
+    actionTracingTokens.IActionTraceOutputService,
+    (c) =>
+      new ActionTraceOutputService({
+        storageAdapter: c.resolve(actionTracingTokens.IIndexedDBStorageAdapter),
+        logger: c.resolve(tokens.ILogger),
+        actionTraceFilter: c.resolve(actionTracingTokens.IActionTraceFilter),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered enhanced ${String(actionTracingTokens.IActionTraceOutputService)}.`
   );
 
   // Register ActionAwareStructuredTrace factory

@@ -242,11 +242,9 @@ export class ActionExecutionTrace {
         'Must call captureDispatchStart() before capturing error'
       );
     }
-    
+
     if (this.#executionData.error !== null) {
-      throw new Error(
-        'Error already captured for this trace'
-      );
+      throw new Error('Error already captured for this trace');
     }
 
     const errorTime = this.#getHighPrecisionTime();

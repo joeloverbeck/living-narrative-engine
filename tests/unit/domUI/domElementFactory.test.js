@@ -35,6 +35,21 @@ describe('DomElementFactory', () => {
     errorSpy.mockRestore();
   });
 
+  it('should handle object without create method as invalid context', () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const invalidContext = { someOtherMethod: () => {} }; // Object without create method
+    const invalidFactory = new DomElementFactory(invalidContext);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '[DomElementFactory] Invalid IDocumentContext provided.'
+      )
+    );
+
+    // Attempting to use the factory should return null
+    expect(invalidFactory.div()).toBeNull();
+    errorSpy.mockRestore();
+  });
+
   // Test div() helper
   describe('div()', () => {
     it('should create a basic div element', () => {
@@ -76,6 +91,49 @@ describe('DomElementFactory', () => {
       const el3 = factory.div('');
       expect(el3.classList.length).toBe(0);
     });
+
+    it('should filter out empty strings from array of classes', () => {
+      const el = factory.div(['valid-class', '', 'another-class', '']);
+      expect(el.classList.contains('valid-class')).toBe(true);
+      expect(el.classList.contains('another-class')).toBe(true);
+      expect(el.classList.length).toBe(2); // Only valid classes should be added
+    });
+
+    it('should handle spaces in space-separated string correctly', () => {
+      const el = factory.div('  class1   class2  '); // Extra spaces
+      expect(el.classList.contains('class1')).toBe(true);
+      expect(el.classList.contains('class2')).toBe(true);
+      expect(el.classList.length).toBe(2);
+    });
+
+    it('should handle string with only spaces gracefully', () => {
+      const el = factory.div('   '); // Only spaces
+      expect(el).toBeInstanceOf(HTMLDivElement);
+      expect(el.classList.length).toBe(0); // No classes should be added
+    });
+
+    it('should handle invalid class types gracefully', () => {
+      // Test with number
+      const el1 = factory.div(123);
+      expect(el1).toBeInstanceOf(HTMLDivElement);
+      expect(el1.classList.length).toBe(0);
+
+      // Test with object
+      const el2 = factory.div({ className: 'test' });
+      expect(el2).toBeInstanceOf(HTMLDivElement);
+      expect(el2.classList.length).toBe(0);
+
+      // Test with boolean
+      const el3 = factory.div(true);
+      expect(el3).toBeInstanceOf(HTMLDivElement);
+      expect(el3.classList.length).toBe(0);
+    });
+
+    it('should return null when docContext.create returns null', () => {
+      jest.spyOn(docContext, 'create').mockReturnValueOnce(null);
+      const el = factory.div('test-class');
+      expect(el).toBeNull();
+    });
   });
 
   // Test button() helper
@@ -110,6 +168,12 @@ describe('DomElementFactory', () => {
       expect(el.classList.contains('btn-secondary')).toBe(true);
       expect(el.classList.length).toBe(2);
     });
+
+    it('should return null when docContext.create returns null', () => {
+      jest.spyOn(docContext, 'create').mockReturnValueOnce(null);
+      const el = factory.button('Test', 'btn-class');
+      expect(el).toBeNull();
+    });
   });
 
   // Test ul() helper
@@ -143,6 +207,12 @@ describe('DomElementFactory', () => {
       expect(el.classList.contains('panel-list')).toBe(true);
       expect(el.classList.length).toBe(1);
     });
+
+    it('should return null when docContext.create returns null', () => {
+      jest.spyOn(docContext, 'create').mockReturnValueOnce(null);
+      const el = factory.ul('test-id', 'test-class');
+      expect(el).toBeNull();
+    });
   });
 
   // Test li() helper
@@ -174,6 +244,12 @@ describe('DomElementFactory', () => {
       expect(el).toBeInstanceOf(HTMLLIElement);
       expect(el.classList.contains('list-item')).toBe(true);
       expect(el.textContent).toBe('Hello');
+    });
+
+    it('should return null when docContext.create returns null', () => {
+      jest.spyOn(docContext, 'create').mockReturnValueOnce(null);
+      const el = factory.li('test-class', 'test-text');
+      expect(el).toBeNull();
     });
   });
 
@@ -207,6 +283,12 @@ describe('DomElementFactory', () => {
       expect(el.classList.contains('item-name')).toBe(true);
       expect(el.textContent).toBe('Sword');
     });
+
+    it('should return null when docContext.create returns null', () => {
+      jest.spyOn(docContext, 'create').mockReturnValueOnce(null);
+      const el = factory.span('test-class', 'test-text');
+      expect(el).toBeNull();
+    });
   });
 
   // Test p() helper
@@ -238,6 +320,12 @@ describe('DomElementFactory', () => {
       expect(el).toBeInstanceOf(HTMLParagraphElement);
       expect(el.classList.contains('description')).toBe(true);
       expect(el.textContent).toBe('You see a dusty trail.');
+    });
+
+    it('should return null when docContext.create returns null', () => {
+      jest.spyOn(docContext, 'create').mockReturnValueOnce(null);
+      const el = factory.p('test-class', 'test-text');
+      expect(el).toBeNull();
     });
   });
 
@@ -271,6 +359,12 @@ describe('DomElementFactory', () => {
       expect(el.classList.contains('panel-title')).toBe(true);
       expect(el.textContent).toBe('Settings');
     });
+
+    it('should return null when docContext.create returns null', () => {
+      jest.spyOn(docContext, 'create').mockReturnValueOnce(null);
+      const el = factory.h3('test-class', 'test-text');
+      expect(el).toBeNull();
+    });
   });
 
   // Test img() helper
@@ -295,6 +389,12 @@ describe('DomElementFactory', () => {
       expect(el.classList.contains('avatar')).toBe(true);
       expect(el.classList.contains('rounded')).toBe(true);
       expect(el.classList.length).toBe(2);
+    });
+
+    it('should return null when docContext.create returns null', () => {
+      jest.spyOn(docContext, 'create').mockReturnValueOnce(null);
+      const el = factory.img('test.jpg', 'test-alt', 'test-class');
+      expect(el).toBeNull();
     });
   });
 
