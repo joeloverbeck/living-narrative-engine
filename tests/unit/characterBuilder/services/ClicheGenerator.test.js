@@ -15,6 +15,10 @@ import {
   ClicheGenerator,
   ClicheGenerationError,
 } from '../../../../src/characterBuilder/services/ClicheGenerator.js';
+import { 
+  DEFAULT_ENHANCEMENT_OPTIONS,
+  PROMPT_VERSION_INFO 
+} from '../../../../src/characterBuilder/prompts/clicheGenerationPrompt.js';
 
 describe('ClicheGenerator', () => {
   let service;
@@ -394,6 +398,369 @@ describe('ClicheGenerator', () => {
       expect(schema).toHaveProperty('properties');
       expect(schema.properties).toHaveProperty('categories');
       expect(schema.properties).toHaveProperty('tropesAndStereotypes');
+    });
+  });
+
+  describe('Enhancement Features', () => {
+    describe('generateCliches with enhancement options', () => {
+      beforeEach(() => {
+        // Mock successful LLM response
+        mockLlmStrategyFactory.getAIDecision.mockResolvedValue(JSON.stringify(validLlmResponse));
+        mockLlmJsonService.clean.mockReturnValue(JSON.stringify(validLlmResponse));
+        mockLlmJsonService.parseAndRepair.mockResolvedValue(validLlmResponse);
+        mockLlmConfigManager.getActiveConfiguration.mockResolvedValue({
+          configId: 'test-config'
+        });
+      });
+
+      it('should use standard prompt by default', async () => {
+        const result = await service.generateCliches(
+          'test-concept-id',
+          'A brave warrior',
+          sampleDirection
+        );
+
+        expect(result).toHaveLength(1);
+        expect(result[0].llmMetadata.enhanced).toBe(false);
+        expect(result[0].llmMetadata.promptVersion).toBe('1.0.0');
+      });
+
+      it('should use enhanced prompt when requested', async () => {
+        const result = await service.generateCliches(
+          'test-concept-id',
+          'A brave warrior',
+          sampleDirection,
+          {
+            useEnhancedPrompt: true,
+            enhancementOptions: { genre: 'fantasy' }
+          }
+        );
+
+        expect(result).toHaveLength(1);
+        expect(result[0].llmMetadata.enhanced).toBe(true);
+        expect(result[0].llmMetadata.promptVersion).toBe(PROMPT_VERSION_INFO.version);
+        expect(result[0].llmMetadata.qualityMetrics).not.toBeNull();
+      });
+
+      it('should include quality metrics with enhanced validation', async () => {
+        const result = await service.generateCliches(
+          'test-concept-id',
+          'A brave warrior',
+          sampleDirection,
+          {
+            useEnhancedPrompt: true,
+            enhancementOptions: { enableAdvancedValidation: true }
+          }
+        );
+
+        expect(result[0].llmMetadata.qualityMetrics).toBeDefined();
+        expect(result[0].llmMetadata.validationWarnings).toBeDefined();
+        expect(result[0].llmMetadata.recommendations).toBeDefined();
+        expect(Array.isArray(result[0].llmMetadata.validationWarnings)).toBe(true);
+        expect(Array.isArray(result[0].llmMetadata.recommendations)).toBe(true);
+      });
+
+      it('should skip enhanced validation when disabled', async () => {
+        const result = await service.generateCliches(
+          'test-concept-id',
+          'A brave warrior',
+          sampleDirection,
+          {
+            useEnhancedPrompt: true,
+            enhancementOptions: { enableAdvancedValidation: false }
+          }
+        );
+
+        expect(result[0].llmMetadata.qualityMetrics).toBeNull();
+        expect(result[0].llmMetadata.validationWarnings).toEqual([]);
+        expect(result[0].llmMetadata.recommendations).toEqual([]);
+      });
+
+      it('should log warnings when quality issues detected', async () => {
+        const sparseResponse = {
+          categories: {
+            names: ['John'], // Only 1 item - will trigger warning
+            physicalDescriptions: ['tall', 'dark'], // 2 items - will trigger warning
+            personalityTraits: ['brooding', 'cheerful', 'brave'],
+            skillsAbilities: ['swordsmanship', 'magic', 'archery'],
+            typicalLikes: ['justice', 'freedom', 'honor'],
+            typicalDislikes: ['evil', 'tyranny', 'dishonesty'],
+            commonFears: ['death', 'failure', 'betrayal'],
+            genericGoals: ['save world', 'find love', 'get revenge'],
+            backgroundElements: ['orphaned', 'royal', 'trained'],
+            overusedSecrets: ['secret power', 'hidden identity', 'prophecy'],
+            speechPatterns: ['heroic', 'noble', 'inspiring']
+          },
+          tropesAndStereotypes: ['chosen one', 'reluctant hero']
+        };
+
+        // Reset mocks to use sparse response
+        mockLlmStrategyFactory.getAIDecision.mockResolvedValue(JSON.stringify(sparseResponse));
+        mockLlmJsonService.clean.mockReturnValue(JSON.stringify(sparseResponse));
+        mockLlmJsonService.parseAndRepair.mockResolvedValue(sparseResponse);
+        mockLlmConfigManager.getActiveConfiguration.mockResolvedValue({
+          configId: 'test-config'
+        });
+
+        const result = await service.generateCliches(
+          'test-concept-id',
+          'A brave warrior',
+          sampleDirection,
+          {
+            useEnhancedPrompt: true,
+            enhancementOptions: { enableAdvancedValidation: true }
+          }
+        );
+
+        // Verify warnings were generated in metadata
+        expect(result[0].llmMetadata.validationWarnings.length).toBeGreaterThan(0);
+        const hasExpectedWarning = result[0].llmMetadata.validationWarnings.some(warning =>
+          warning.includes('Category "physicalDescriptions" has only 2 items')
+        );
+        expect(hasExpectedWarning).toBe(true);
+      });
+
+      it('should handle enhanced validation errors gracefully', async () => {
+        const invalidResponse = { invalid: 'response' };
+        
+        // Create a new service instance with fresh mocks to avoid conflicts
+        const testService = new ClicheGenerator({
+          logger: mockLogger,
+          llmJsonService: mockLlmJsonService,
+          llmStrategyFactory: mockLlmStrategyFactory,
+          llmConfigManager: mockLlmConfigManager,
+        });
+
+        // Set up mocks for this specific test
+        mockLlmStrategyFactory.getAIDecision.mockResolvedValueOnce(JSON.stringify(invalidResponse));
+        mockLlmJsonService.clean.mockReturnValueOnce(JSON.stringify(invalidResponse));
+        mockLlmJsonService.parseAndRepair.mockResolvedValueOnce(invalidResponse);
+        mockLlmConfigManager.getActiveConfiguration.mockResolvedValueOnce({
+          configId: 'test-config'
+        });
+
+        await expect(
+          testService.generateCliches(
+            'test-concept-id',
+            'A brave warrior',
+            sampleDirection,
+            {
+              useEnhancedPrompt: true,
+              enhancementOptions: { enableAdvancedValidation: true }
+            }
+          )
+        ).rejects.toThrow(ClicheGenerationError);
+      });
+    });
+
+    describe('generateEnhancedCliches', () => {
+      beforeEach(() => {
+        mockLlmStrategyFactory.getAIDecision.mockResolvedValue(JSON.stringify(validLlmResponse));
+        mockLlmJsonService.clean.mockReturnValue(JSON.stringify(validLlmResponse));
+        mockLlmJsonService.parseAndRepair.mockResolvedValue(validLlmResponse);
+        mockLlmConfigManager.getActiveConfiguration.mockResolvedValue({
+          configId: 'test-config'
+        });
+      });
+
+      it('should generate clichés with enhancements by default', async () => {
+        const result = await service.generateEnhancedCliches(
+          'test-concept-id',
+          'A brave warrior',
+          sampleDirection
+        );
+
+        expect(result).toHaveLength(1);
+        expect(result[0].llmMetadata.enhanced).toBe(true);
+        expect(result[0].llmMetadata.promptVersion).toBe(PROMPT_VERSION_INFO.version);
+      });
+
+      it('should accept custom enhancement options', async () => {
+        const customOptions = {
+          genre: 'fantasy',
+          includeFewShotExamples: true,
+          minItemsPerCategory: 5
+        };
+
+        const result = await service.generateEnhancedCliches(
+          'test-concept-id',
+          'A brave warrior',
+          sampleDirection,
+          customOptions
+        );
+
+        expect(result).toHaveLength(1);
+        expect(result[0].llmMetadata.enhanced).toBe(true);
+      });
+
+      it('should merge enhancement options with defaults', async () => {
+        const customOptions = {
+          genre: 'scifi',
+          includeFewShotExamples: true
+          // Other options should use defaults
+        };
+
+        const result = await service.generateEnhancedCliches(
+          'test-concept-id',
+          'A brave warrior',
+          sampleDirection,
+          customOptions
+        );
+
+        expect(result).toHaveLength(1);
+        // Should have quality metrics enabled by default
+        expect(result[0].llmMetadata.qualityMetrics).not.toBeNull();
+      });
+
+      it('should accept additional generation options', async () => {
+        const enhancementOptions = { genre: 'horror' };
+        const additionalOptions = { llmConfigId: 'custom-config' };
+
+        // Create a fresh service instance to avoid mock state issues  
+        const testService = new ClicheGenerator({
+          logger: mockLogger,
+          llmJsonService: mockLlmJsonService,
+          llmStrategyFactory: mockLlmStrategyFactory,
+          llmConfigManager: mockLlmConfigManager,
+        });
+
+        // Clear previous calls and set up fresh mocks
+        mockLlmConfigManager.setActiveConfiguration.mockClear();
+        mockLlmConfigManager.setActiveConfiguration.mockResolvedValueOnce(true);
+        mockLlmConfigManager.getActiveConfiguration.mockResolvedValueOnce({
+          configId: 'custom-config'
+        });
+        mockLlmStrategyFactory.getAIDecision.mockResolvedValueOnce(JSON.stringify(validLlmResponse));
+        mockLlmJsonService.clean.mockReturnValueOnce(JSON.stringify(validLlmResponse));
+        mockLlmJsonService.parseAndRepair.mockResolvedValueOnce(validLlmResponse);
+
+        await testService.generateEnhancedCliches(
+          'test-concept-id',
+          'A brave warrior',
+          sampleDirection,
+          enhancementOptions,
+          additionalOptions
+        );
+
+        expect(mockLlmConfigManager.setActiveConfiguration).toHaveBeenCalledWith('custom-config');
+      });
+
+      it('should handle errors in enhanced generation', async () => {
+        // Create a new service instance for this test
+        const testService = new ClicheGenerator({
+          logger: mockLogger,
+          llmJsonService: mockLlmJsonService,
+          llmStrategyFactory: mockLlmStrategyFactory,
+          llmConfigManager: mockLlmConfigManager,
+        });
+        
+        mockLlmStrategyFactory.getAIDecision.mockRejectedValueOnce(
+          new Error('LLM request failed')
+        );
+
+        await expect(
+          testService.generateEnhancedCliches(
+            'test-concept-id',
+            'A brave warrior',
+            sampleDirection
+          )
+        ).rejects.toThrow(ClicheGenerationError);
+      });
+    });
+
+    describe('utility methods', () => {
+      it('should return prompt version info', () => {
+        const versionInfo = service.getPromptVersionInfo();
+        
+        expect(versionInfo).toEqual(PROMPT_VERSION_INFO);
+        expect(versionInfo.version).toBe('1.2.0');
+        expect(versionInfo).toHaveProperty('previousVersions');
+        expect(versionInfo).toHaveProperty('currentChanges');
+      });
+
+      it('should return default enhancement options', () => {
+        const defaultOptions = service.getDefaultEnhancementOptions();
+        
+        expect(defaultOptions).toEqual(DEFAULT_ENHANCEMENT_OPTIONS);
+        expect(defaultOptions.includeFewShotExamples).toBe(false);
+        expect(defaultOptions.genre).toBeNull();
+        expect(defaultOptions.minItemsPerCategory).toBe(3);
+        expect(defaultOptions.maxItemsPerCategory).toBe(8);
+        expect(defaultOptions.enableAdvancedValidation).toBe(true);
+        expect(defaultOptions.includeQualityMetrics).toBe(true);
+      });
+
+      it('should return copy of default options to prevent mutation', () => {
+        const defaultOptions1 = service.getDefaultEnhancementOptions();
+        const defaultOptions2 = service.getDefaultEnhancementOptions();
+        
+        defaultOptions1.genre = 'modified';
+        
+        expect(defaultOptions2.genre).toBeNull(); // Should not be affected
+      });
+    });
+
+    describe('backward compatibility', () => {
+      beforeEach(() => {
+        mockLlmStrategyFactory.getAIDecision.mockResolvedValue(JSON.stringify(validLlmResponse));
+        mockLlmJsonService.clean.mockReturnValue(JSON.stringify(validLlmResponse));
+        mockLlmJsonService.parseAndRepair.mockResolvedValue(validLlmResponse);
+        mockLlmConfigManager.getActiveConfiguration.mockResolvedValue({
+          configId: 'test-config'
+        });
+      });
+
+      it('should work exactly as before without enhancement options', async () => {
+        const result = await service.generateCliches(
+          'test-concept-id',
+          'A brave warrior',
+          sampleDirection
+        );
+
+        expect(result).toHaveLength(1);
+        expect(result[0]).toHaveProperty('id');
+        expect(result[0]).toHaveProperty('conceptId');
+        expect(result[0]).toHaveProperty('categories');
+        expect(result[0]).toHaveProperty('tropesAndStereotypes');
+        expect(result[0]).toHaveProperty('llmMetadata');
+        expect(result[0].llmMetadata.enhanced).toBe(false);
+      });
+
+      it('should maintain existing method signatures', () => {
+        // These methods should exist and work as before
+        expect(typeof service.validateResponse).toBe('function');
+        expect(typeof service.getResponseSchema).toBe('function');
+        
+        const isValid = service.validateResponse(validLlmResponse);
+        expect(isValid).toBe(true);
+        
+        const schema = service.getResponseSchema();
+        expect(schema).toBeDefined();
+        expect(schema).toHaveProperty('properties');
+      });
+
+      it('should generate same metadata structure for standard mode', async () => {
+        const result = await service.generateCliches(
+          'test-concept-id',
+          'A brave warrior',
+          sampleDirection
+        );
+
+        const metadata = result[0].llmMetadata;
+        
+        // Standard metadata fields should exist
+        expect(metadata).toHaveProperty('modelId');
+        expect(metadata).toHaveProperty('promptTokens');
+        expect(metadata).toHaveProperty('responseTokens');
+        expect(metadata).toHaveProperty('processingTime');
+        
+        // Enhanced fields should have default values
+        expect(metadata.promptVersion).toBe('1.0.0');
+        expect(metadata.enhanced).toBe(false);
+        expect(metadata.qualityMetrics).toBeNull();
+        expect(metadata.validationWarnings).toEqual([]);
+        expect(metadata.recommendations).toEqual([]);
+      });
     });
   });
 });

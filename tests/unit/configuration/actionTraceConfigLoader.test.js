@@ -228,6 +228,93 @@ describe('ActionTraceConfigLoader', () => {
       );
     });
 
+    it('should handle enhanced validator with warnings and normalized config', async () => {
+      const mockConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+        },
+      };
+
+      const normalizedConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          maxTraceFiles: 100,
+          rotationPolicy: 'age',
+          maxFileAge: 86400,
+        },
+      };
+
+      // Setup the ActionTraceConfigValidator mock to return warnings and normalizedConfig
+      ActionTraceConfigValidator.mockClear();
+      ActionTraceConfigValidator.mockImplementation(() => ({
+        initialize: jest.fn().mockResolvedValue(undefined),
+        validateConfiguration: jest.fn().mockResolvedValue({
+          isValid: true,
+          errors: [],
+          warnings: ['Configuration warning: Using default value for maxTraceFiles'],
+          normalizedConfig: normalizedConfig,
+        }),
+      }));
+
+      const freshLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: mockTraceConfigLoader,
+        logger: mockLogger,
+        validator: mockValidator,
+      });
+
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
+
+      const config = await freshLoader.loadConfig();
+
+      expect(config).toEqual(normalizedConfig.actionTracing);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Configuration warning: Configuration warning: Using default value for maxTraceFiles'
+      );
+    });
+
+    it('should handle enhanced validator initialization failure', async () => {
+      const mockConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './traces',
+        },
+      };
+
+      // Setup the ActionTraceConfigValidator mock to throw during initialization
+      ActionTraceConfigValidator.mockClear();
+      ActionTraceConfigValidator.mockImplementation(() => ({
+        initialize: jest.fn().mockRejectedValue(new Error('Validator init failed')),
+        validateConfiguration: jest.fn(),
+      }));
+
+      const freshLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: mockTraceConfigLoader,
+        logger: mockLogger,
+        validator: mockValidator,
+      });
+
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      const config = await freshLoader.loadConfig();
+
+      expect(config).toEqual(mockConfig.actionTracing);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Enhanced validator failed, falling back to basic validation',
+        expect.any(Error)
+      );
+    });
+
     it('should handle exceptions gracefully', async () => {
       const error = new Error('Unexpected error');
       mockTraceConfigLoader.loadConfig.mockRejectedValue(error);
@@ -817,6 +904,98 @@ describe('ActionTraceConfigLoader', () => {
       expect(filtered).not.toHaveProperty('stackTrace'); // only at verbose level
     });
 
+    it('should filter data by verbose level including debug and system data', async () => {
+      mockTraceConfigLoader.loadConfig.mockResolvedValue({
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['*'],
+          verbosity: 'verbose',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          outputDirectory: './traces',
+        },
+      });
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      const data = {
+        timestamp: Date.now(),
+        actionId: 'core:attack',
+        result: 'success',
+        executionTime: 250,
+        success: true,
+        componentData: { component: 'data' },
+        prerequisites: { prereq: 'info' },
+        targets: { target: 'info' },
+        debugInfo: { debug: 'verbose_info' },
+        stackTrace: 'Error\n  at function1()\n  at function2()',
+        systemState: { memory: '1GB', cpu: '50%' },
+      };
+
+      const filtered = await loader.filterDataByVerbosity(data);
+
+      // Verbose includes everything
+      expect(filtered).toHaveProperty('timestamp');
+      expect(filtered).toHaveProperty('actionId', 'core:attack');
+      expect(filtered).toHaveProperty('result', 'success');
+      expect(filtered).toHaveProperty('executionTime', 250);
+      expect(filtered).toHaveProperty('success', true);
+      expect(filtered).toHaveProperty('componentData');
+      expect(filtered).toHaveProperty('prerequisites');
+      expect(filtered).toHaveProperty('targets');
+      expect(filtered).toHaveProperty('debugInfo'); // included at verbose level
+      expect(filtered).toHaveProperty('stackTrace'); // included at verbose level  
+      expect(filtered).toHaveProperty('systemState'); // included at verbose level
+      
+      expect(filtered.debugInfo).toEqual({ debug: 'verbose_info' });
+      expect(filtered.stackTrace).toBe('Error\n  at function1()\n  at function2()');
+      expect(filtered.systemState).toEqual({ memory: '1GB', cpu: '50%' });
+    });
+
+    it('should filter data by minimal level excluding optional fields', async () => {
+      mockTraceConfigLoader.loadConfig.mockResolvedValue({
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['*'],
+          verbosity: 'minimal',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          outputDirectory: './traces',
+        },
+      });
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      const data = {
+        timestamp: Date.now(),
+        actionId: 'core:examine',
+        result: 'failure',
+        executionTime: 100,
+        success: false,
+        componentData: { component: 'data' },
+        prerequisites: { prereq: 'info' },
+        targets: { target: 'info' },
+        debugInfo: { debug: 'info' },
+        stackTrace: 'stack trace',
+        systemState: { state: 'info' },
+      };
+
+      const filtered = await loader.filterDataByVerbosity(data);
+
+      // Minimal only includes basic info
+      expect(filtered).toHaveProperty('timestamp');
+      expect(filtered).toHaveProperty('actionId', 'core:examine');
+      expect(filtered).toHaveProperty('result', 'failure');
+      expect(filtered).not.toHaveProperty('executionTime'); // excluded at minimal
+      expect(filtered).not.toHaveProperty('success'); // excluded at minimal
+      expect(filtered).not.toHaveProperty('componentData'); // excluded at minimal
+      expect(filtered).not.toHaveProperty('prerequisites'); // excluded at minimal
+      expect(filtered).not.toHaveProperty('targets'); // excluded at minimal
+      expect(filtered).not.toHaveProperty('debugInfo'); // excluded at minimal
+      expect(filtered).not.toHaveProperty('stackTrace'); // excluded at minimal
+      expect(filtered).not.toHaveProperty('systemState'); // excluded at minimal
+    });
+
     it('should reset statistics', async () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue({
         actionTracing: {
@@ -931,6 +1110,31 @@ describe('ActionTraceConfigLoader', () => {
         expect(await loader.shouldTraceAction('any:move_forward')).toBe(true);
         expect(await loader.shouldTraceAction('core:attack')).toBe(false);
       });
+
+      it('should handle general wildcard patterns that do not match', async () => {
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: ['core:go*', 'test:*_debug', '*move*'],
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
+
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
+
+        // These should match
+        expect(await loader.shouldTraceAction('core:go_north')).toBe(true);
+        expect(await loader.shouldTraceAction('test:action_debug')).toBe(true);
+        expect(await loader.shouldTraceAction('any:movement_now')).toBe(true);
+
+        // These should NOT match (testing the return false path in general wildcard matching)
+        expect(await loader.shouldTraceAction('core:attack')).toBe(false);
+        expect(await loader.shouldTraceAction('test:debug')).toBe(false);
+        expect(await loader.shouldTraceAction('other:action')).toBe(false);
+        expect(await loader.shouldTraceAction('nomatch:pattern')).toBe(false);
+      });
     });
 
     describe('pattern validation', () => {
@@ -964,6 +1168,123 @@ describe('ActionTraceConfigLoader', () => {
         // Check that warn was called with any message about invalid patterns
         // The actual implementation may log different messages
         expect(mockLogger.warn).toHaveBeenCalled();
+      });
+
+      it('should validate patterns with invalid characters', async () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          info: jest.fn(),
+          error: jest.fn(),
+        };
+        const loaderWithMockLogger = new ActionTraceConfigLoader({
+          traceConfigLoader: mockTraceConfigLoader,
+          logger: mockLogger,
+          validator: mockValidator,
+        });
+
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: [
+              'valid:action',
+              'invalid@pattern', // Contains @ which is invalid
+              'pattern-with-dash', // Contains dash which is invalid
+              'pattern$with$dollar', // Contains $ which is invalid
+              '', // Empty string
+              null, // Invalid type
+            ],
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
+
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
+
+        await loaderWithMockLogger.loadConfig();
+
+        // Should warn about each invalid pattern
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('invalid@pattern')
+        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('pattern-with-dash')
+        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('pattern$with$dollar')
+        );
+      });
+
+      it('should validate mod name patterns with edge cases', async () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          info: jest.fn(),
+          error: jest.fn(),
+        };
+        const loaderWithMockLogger = new ActionTraceConfigLoader({
+          traceConfigLoader: mockTraceConfigLoader,
+          logger: mockLogger,
+          validator: mockValidator,
+        });
+
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: [
+              'ValidMod:action', // Uppercase mod name (should warn but not fail)
+              'mod*part:action', // Partial wildcard in mod name (should fail)
+              'mod:multiple:colons', // Multiple colons (should fail)
+              'mod:', // Empty action part (should fail)
+              '123invalid:action', // Mod name starting with number (should fail)
+              '*:wildcard_action', // Valid wildcard mod
+            ],
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
+
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
+
+        await loaderWithMockLogger.loadConfig();
+
+        // Should warn about invalid patterns - checking for the specific error messages
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('mod*part:action')
+        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('mod:multiple:colons')
+        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('mod:')
+        );
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('123invalid:action')
+        );
+        
+        // Uppercase patterns will only be caught if they have other issues
+        // ValidMod:action is actually valid, so it won't generate warnings
+        // The uppercase warning only shows up in the validation error list, not in logging
+      });
+
+      it('should handle pattern validation internally without logging warnings', async () => {
+        // The pattern validation happens during buildLookupStructures, but it only logs
+        // warnings for actually invalid patterns. Uppercase patterns are considered 
+        // warnings in the validation logic but don't prevent the pattern from working.
+        
+        const testResult1 = loader.testPattern('ValidMod:action', 'ValidMod:action');
+        expect(testResult1.matches).toBe(true);
+        expect(testResult1.patternType).toBe('exact');
+
+        const testResult2 = loader.testPattern('CORE:*', 'CORE:GO');
+        expect(testResult2.matches).toBe(true);
+        expect(testResult2.patternType).toBe('mod');
+
+        const testResult3 = loader.testPattern('Test*Pattern', 'TestSomePattern');
+        expect(testResult3.matches).toBe(true);
+        expect(testResult3.patternType).toBe('general');
       });
     });
 
@@ -1089,6 +1410,71 @@ describe('ActionTraceConfigLoader', () => {
         const avgTime = duration / 1000;
 
         expect(avgTime).toBeLessThan(1); // Less than 1ms per check
+      });
+
+      it('should detect and log slow lookup performance', async () => {
+        const mockLogger = {
+          warn: jest.fn(),
+          debug: jest.fn(),
+          info: jest.fn(),
+          error: jest.fn(),
+        };
+        const loaderWithMockLogger = new ActionTraceConfigLoader({
+          traceConfigLoader: mockTraceConfigLoader,
+          logger: mockLogger,
+          validator: mockValidator,
+        });
+
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: ['core:*', 'test:action*'],
+            outputDirectory: './traces',
+            verbosity: 'standard',
+          },
+        };
+
+        mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+        mockValidator.validate.mockResolvedValue({ isValid: true });
+
+        // Mock performance.now to simulate slow lookups
+        const originalPerformanceNow = performance.now;
+        let callCount = 0;
+        const mockPerformanceNow = jest.fn(() => {
+          callCount++;
+          // First call (start time) = 0, second call (end time) = 2ms to simulate slow lookup
+          if (callCount % 2 === 1) {
+            return 0; // Start time
+          } else {
+            return 2; // End time (2ms duration - considered slow)
+          }
+        });
+
+        performance.now = mockPerformanceNow;
+
+        try {
+          // Perform a lookup that should be detected as slow
+          await loaderWithMockLogger.shouldTraceAction('core:slow_action');
+
+          // Should warn about slow lookup
+          expect(mockLogger.warn).toHaveBeenCalledWith(
+            'Slow action lookup detected',
+            expect.objectContaining({
+              duration: '2.000ms',
+              totalLookups: 1,
+              slowLookupRate: '100.00%',
+            })
+          );
+
+          // Verify performance statistics are updated
+          const stats = loaderWithMockLogger.getStatistics();
+          expect(stats.slowLookups).toBe(1);
+          expect(stats.slowestLookup).toBe(2);
+          expect(stats.slowLookupRate).toBe(100);
+        } finally {
+          // Restore original performance.now
+          performance.now = originalPerformanceNow;
+        }
       });
     });
   });

@@ -6,10 +6,12 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import {
   buildClicheGenerationPrompt,
+  buildEnhancedClicheGenerationPrompt,
   validateClicheGenerationResponse,
+  validateClicheGenerationResponseEnhanced,
   CLICHE_GENERATION_RESPONSE_SCHEMA,
-  createClicheGenerationLlmConfig,
-  CHARACTER_BUILDER_LLM_PARAMS,
+  DEFAULT_ENHANCEMENT_OPTIONS,
+  PROMPT_VERSION_INFO,
 } from '../prompts/clicheGenerationPrompt.js';
 import { createClichesFromLLMResponse } from '../models/cliche.js';
 
@@ -49,7 +51,9 @@ export class ClicheGenerator {
   #llmConfigManager;
 
   /**
-   * @param {object} dependencies
+   * Create a new ClicheGenerator instance
+   *
+   * @param {object} dependencies - Service dependencies
    * @param {ILogger} dependencies.logger - Logger instance
    * @param {LlmJsonService} dependencies.llmJsonService - LLM JSON processing service
    * @param {ConfigurableLLMAdapter} dependencies.llmStrategyFactory - LLM adapter (provides strategy factory functionality)
@@ -95,6 +99,8 @@ export class ClicheGenerator {
    * @param {string} direction.coreTension - Core tension/conflict
    * @param {object} [options] - Generation options
    * @param {string} [options.llmConfigId] - Specific LLM config to use
+   * @param {boolean} [options.useEnhancedPrompt] - Use enhanced prompt features
+   * @param {object} [options.enhancementOptions] - Enhancement options for prompt
    * @returns {Promise<Cliche[]>} Generated clichés
    * @throws {ClicheGenerationError} If generation fails
    */
@@ -131,11 +137,16 @@ export class ClicheGenerator {
     const startTime = Date.now();
 
     try {
-      // Build the prompt
-      const prompt = buildClicheGenerationPrompt(conceptText, direction);
+      // Build the prompt (enhanced or standard)
+      const prompt = options.useEnhancedPrompt
+        ? buildEnhancedClicheGenerationPrompt(conceptText, direction, options.enhancementOptions)
+        : buildClicheGenerationPrompt(conceptText, direction);
+      
       this.#logger.debug('ClicheGenerator: Built prompt', {
         promptLength: prompt.length,
         conceptId,
+        enhanced: !!options.useEnhancedPrompt,
+        enhancementOptions: options.enhancementOptions || null,
       });
 
       // Get LLM response
@@ -144,7 +155,17 @@ export class ClicheGenerator {
 
       // Parse and validate response
       const parsedResponse = await this.#parseResponse(llmResponse);
-      this.#validateResponseStructure(parsedResponse);
+      
+      let validationResult = null;
+      let qualityMetrics = null;
+      
+      if (options.useEnhancedPrompt && 
+          options.enhancementOptions?.enableAdvancedValidation !== false) {
+        validationResult = this.#validateResponseEnhanced(parsedResponse);
+        qualityMetrics = validationResult.qualityMetrics;
+      } else {
+        this.#validateResponseStructure(parsedResponse);
+      }
 
       // Get active config for metadata
       const activeConfig =
@@ -154,6 +175,11 @@ export class ClicheGenerator {
         promptTokens: this.#estimateTokens(prompt),
         responseTokens: this.#estimateTokens(JSON.stringify(parsedResponse)),
         processingTime,
+        promptVersion: options.useEnhancedPrompt ? PROMPT_VERSION_INFO.version : '1.0.0',
+        enhanced: !!options.useEnhancedPrompt,
+        qualityMetrics: qualityMetrics || null,
+        validationWarnings: validationResult?.warnings || [],
+        recommendations: validationResult?.recommendations || [],
       };
 
       const cliches = createClichesFromLLMResponse(
@@ -297,6 +323,39 @@ export class ClicheGenerator {
   }
 
   /**
+   * Enhanced validation with statistics and quality metrics
+   *
+   * @private
+   * @param {object} response - Parsed response
+   * @returns {object} Enhanced validation result
+   * @throws {ClicheGenerationError} If validation fails
+   */
+  #validateResponseEnhanced(response) {
+    try {
+      const result = validateClicheGenerationResponseEnhanced(response);
+      this.#logger.debug('ClicheGenerator: Enhanced validation completed', {
+        warnings: result.warnings.length,
+        qualityScore: result.qualityMetrics.overallScore,
+        recommendations: result.recommendations.length,
+      });
+      
+      // Log warnings if any exist
+      if (result.warnings.length > 0) {
+        this.#logger.warn('ClicheGenerator: Quality warnings detected', {
+          warnings: result.warnings,
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      throw new ClicheGenerationError(
+        `Enhanced validation failed: ${error.message}`,
+        error
+      );
+    }
+  }
+
+  /**
    * Estimate token count for a text string
    *
    * @private
@@ -326,6 +385,45 @@ export class ClicheGenerator {
    */
   getResponseSchema() {
     return CLICHE_GENERATION_RESPONSE_SCHEMA;
+  }
+
+  /**
+   * Generate clichés with enhanced features enabled by default
+   *
+   * @param {string} conceptId - Character concept ID for association
+   * @param {string} conceptText - Character concept description
+   * @param {object} direction - Thematic direction details
+   * @param {object} [enhancementOptions] - Enhancement options
+   * @param {object} [additionalOptions] - Additional generation options
+   * @returns {Promise<Cliche[]>} Generated clichés with enhanced features
+   * @throws {ClicheGenerationError} If generation fails
+   */
+  async generateEnhancedCliches(conceptId, conceptText, direction, enhancementOptions = {}, additionalOptions = {}) {
+    const options = {
+      ...additionalOptions,
+      useEnhancedPrompt: true,
+      enhancementOptions: { ...DEFAULT_ENHANCEMENT_OPTIONS, ...enhancementOptions },
+    };
+
+    return this.generateCliches(conceptId, conceptText, direction, options);
+  }
+
+  /**
+   * Get current prompt version information
+   *
+   * @returns {object} Version information
+   */
+  getPromptVersionInfo() {
+    return PROMPT_VERSION_INFO;
+  }
+
+  /**
+   * Get default enhancement options
+   *
+   * @returns {object} Default options
+   */
+  getDefaultEnhancementOptions() {
+    return { ...DEFAULT_ENHANCEMENT_OPTIONS };
   }
 }
 

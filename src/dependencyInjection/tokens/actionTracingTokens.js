@@ -18,4 +18,6 @@ export const actionTracingTokens = freeze({
   IActionTraceOutputService: 'IActionTraceOutputService',
   ITraceDirectoryManager: 'ITraceDirectoryManager',
   IActionAwareStructuredTrace: 'IActionAwareStructuredTrace',
+  // Event dispatch tracing tokens
+  IEventDispatchTracer: 'IEventDispatchTracer',
 });

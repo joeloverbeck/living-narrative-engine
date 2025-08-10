@@ -15,6 +15,7 @@
 import { createErrorDetails } from './errorDetails.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 import { ensureValidLogger } from './loggerUtils.js';
+import { assertPresent } from './dependencyUtils.js';
 
 /**
  * Error thrown when EventDispatchService receives an invalid dispatcher.
@@ -39,6 +40,10 @@ export class EventDispatchService {
   #safeEventDispatcher;
   /** @type {ILogger} */
   #logger;
+  /** @type {import('../actions/tracing/actionTraceFilter.js').ActionTraceFilter|null} */
+  #actionTraceFilter;
+  /** @type {import('../events/tracing/eventDispatchTracer.js').EventDispatchTracer|null} */
+  #eventDispatchTracer;
 
   /**
    * Creates an instance of EventDispatchService.
@@ -46,17 +51,18 @@ export class EventDispatchService {
    * @param {object} dependencies - The required dependencies.
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - The safe event dispatcher.
    * @param {ILogger} dependencies.logger - The logger instance.
+   * @param {import('../actions/tracing/actionTraceFilter.js').ActionTraceFilter} [dependencies.actionTraceFilter] - Optional action trace filter for determining what to trace.
+   * @param {import('../events/tracing/eventDispatchTracer.js').EventDispatchTracer} [dependencies.eventDispatchTracer] - Optional event dispatch tracer for recording traces.
    * @throws {Error} If required dependencies are missing.
    */
-  constructor({ safeEventDispatcher, logger }) {
-    if (!safeEventDispatcher) {
-      throw new Error('EventDispatchService: safeEventDispatcher is required');
-    }
-    if (!logger) {
-      throw new Error('EventDispatchService: logger is required');
-    }
+  constructor({ safeEventDispatcher, logger, actionTraceFilter = null, eventDispatchTracer = null }) {
+    assertPresent(safeEventDispatcher, 'EventDispatchService: safeEventDispatcher is required');
+    assertPresent(logger, 'EventDispatchService: logger is required');
+    
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#logger = logger;
+    this.#actionTraceFilter = actionTraceFilter;
+    this.#eventDispatchTracer = eventDispatchTracer;
   }
 
   /**
@@ -100,36 +106,69 @@ export class EventDispatchService {
    * Mimics the error handling behavior originally embedded in CommandProcessor.
    * On success, a debug message is logged. When the dispatcher returns `false`, a
    * warning is logged. On exception, a system error event is dispatched and the
-   * function returns `false`.
+   * function returns `false`. Optionally creates traces if tracing is enabled.
    * @param {string} eventName - Name of the event to dispatch.
    * @param {object} payload - Payload for the event.
    * @param {string} context - Contextual identifier used in log messages.
    * @returns {Promise<boolean>} `true` if the dispatcher reported success, `false` otherwise.
    */
   async dispatchWithErrorHandling(eventName, payload, context) {
+    const shouldTrace = this.#shouldTrace(eventName, payload);
+    let eventTrace = null;
+
+    // Create trace if enabled
+    if (shouldTrace && this.#eventDispatchTracer) {
+      try {
+        eventTrace = this.#eventDispatchTracer.createTrace({
+          eventName,
+          payload: this.#sanitizePayload(payload),
+          context,
+          timestamp: Date.now()
+        });
+        eventTrace.captureDispatchStart();
+      } catch (traceError) {
+        this.#logger.warn('Failed to create event dispatch trace', traceError);
+      }
+    }
+
+    const startTime = performance.now();
+    
     this.#logger.debug(
       `dispatchWithErrorHandling: Attempting dispatch: ${context} ('${eventName}')`
     );
+    
     try {
       const success = await this.#safeEventDispatcher.dispatch(
         eventName,
         payload
       );
+      const duration = performance.now() - startTime;
+
+      if (eventTrace) {
+        eventTrace.captureDispatchSuccess({ success, duration });
+        this.#writeTraceAsync(eventTrace);
+      }
+
       if (success) {
         this.#logger.debug(
           `dispatchWithErrorHandling: Dispatch successful for ${context}.`
         );
       } else {
         this.#logger.warn(
-          `dispatchWithErrorHandling: SafeEventDispatcher reported failure for ${context} (likely VED validation failure). Payload: ${JSON.stringify(
-            payload
-          )}`
+          `dispatchWithErrorHandling: SafeEventDispatcher reported failure for ${context}`
         );
       }
       return success;
     } catch (error) {
+      const duration = performance.now() - startTime;
+      
+      if (eventTrace) {
+        eventTrace.captureDispatchError(error, { duration, context });
+        this.#writeTraceAsync(eventTrace);
+      }
+
       this.#logger.error(
-        `dispatchWithErrorHandling: CRITICAL - Error during dispatch for ${context}. Error: ${error.message}`,
+        `dispatchWithErrorHandling: CRITICAL - Error during dispatch for ${context}`,
         error
       );
       this.dispatchSystemError(
@@ -260,5 +299,69 @@ export class EventDispatchService {
     return details !== undefined
       ? { ok: false, error: message, details }
       : { ok: false, error: message };
+  }
+
+  /**
+   * Determines whether an event should be traced based on filtering rules
+   *
+   * @param {string} eventName - Name of the event
+   * @param {object} payload - Event payload
+   * @returns {boolean} True if the event should be traced
+   * @private
+   */
+  #shouldTrace(eventName, payload) {
+    if (!this.#actionTraceFilter || !this.#eventDispatchTracer) {
+      return false;
+    }
+    
+    if (!this.#actionTraceFilter.isEnabled()) {
+      return false;
+    }
+
+    // For action events, check action ID
+    if (eventName === 'ATTEMPT_ACTION_ID' && payload?.action?.definitionId) {
+      return this.#actionTraceFilter.shouldTrace(payload.action.definitionId);
+    }
+
+    // For other events, check event name
+    return this.#actionTraceFilter.shouldTrace(eventName);
+  }
+
+  /**
+   * Sanitizes payload to remove sensitive information for tracing
+   *
+   * @param {object} payload - Original payload
+   * @returns {object} Sanitized payload safe for tracing
+   * @private
+   */
+  #sanitizePayload(payload) {
+    if (!payload || typeof payload !== 'object') {
+      return payload;
+    }
+
+    const sanitized = { ...payload };
+    const sensitiveFields = ['password', 'token', 'apiKey', 'secret', 'credential'];
+    
+    sensitiveFields.forEach(field => {
+      if (field in sanitized) {
+        sanitized[field] = '[REDACTED]';
+      }
+    });
+
+    return sanitized;
+  }
+
+  /**
+   * Writes a trace asynchronously without blocking execution
+   *
+   * @param {import('../events/tracing/eventDispatchTracer.js').EventDispatchTrace} eventTrace - Trace to write
+   * @private
+   */
+  #writeTraceAsync(eventTrace) {
+    if (!this.#eventDispatchTracer) return;
+
+    this.#eventDispatchTracer.writeTrace(eventTrace).catch(error => {
+      this.#logger.warn('Failed to write event dispatch trace', error);
+    });
   }
 }

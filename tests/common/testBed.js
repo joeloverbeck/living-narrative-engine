@@ -132,6 +132,137 @@ export function createTestBed() {
       };
     },
 
+    /**
+     * Creates an EventDispatchService with event dispatch tracing enabled for testing
+     *
+     * @param {object} options - Configuration options
+     * @param {string[]} options.tracedEvents - Events to trace (defaults to ['*'])
+     * @param {boolean} options.tracingEnabled - Whether tracing is enabled (default: true)
+     * @returns {Promise<{service: object, getWrittenTraces: Function, mockComponents: object}>}
+     */
+    async createEventDispatchServiceWithTracing(options = {}) {
+      const { tracedEvents = ['*'], tracingEnabled = true } = options;
+
+      // Dynamic import to avoid circular dependencies
+      const { EventDispatchService } = await import(
+        '../../src/utils/eventDispatchService.js'
+      );
+      const { EventDispatchTracer } = await import(
+        '../../src/events/tracing/eventDispatchTracer.js'
+      );
+
+      const writtenTraces = [];
+
+      // Create mock components
+      const mockSafeEventDispatcher = {
+        dispatch: jest.fn(),
+      };
+
+      const mockActionTraceFilter = this.createMockActionTraceFilter({
+        tracedActions: tracedEvents,
+        enabled: tracingEnabled,
+      });
+
+      const mockOutputService = {
+        writeTrace: jest.fn().mockImplementation((trace) => {
+          writtenTraces.push(trace.toJSON());
+          return Promise.resolve();
+        }),
+      };
+
+      const mockEventDispatchTracer = new EventDispatchTracer({
+        logger: mockObjects.mockLogger,
+        outputService: mockOutputService,
+      });
+
+      const service = new EventDispatchService({
+        safeEventDispatcher: mockSafeEventDispatcher,
+        logger: mockObjects.mockLogger,
+        actionTraceFilter: mockActionTraceFilter,
+        eventDispatchTracer: mockEventDispatchTracer,
+      });
+
+      return {
+        service,
+        getWrittenTraces: () => [...writtenTraces],
+        mockComponents: {
+          mockSafeEventDispatcher,
+          mockActionTraceFilter,
+          mockOutputService,
+          mockEventDispatchTracer,
+        },
+      };
+    },
+
+    /**
+     * Creates mock event dispatch tracing components
+     *
+     * @param {object} options - Configuration options
+     * @param {boolean} options.tracingEnabled - Whether tracing is enabled
+     * @param {string[]} options.tracedEvents - Events to trace
+     * @returns {object} Mock components for event dispatch tracing
+     */
+    createMockEventDispatchTracingComponents(options = {}) {
+      const { tracingEnabled = true, tracedEvents = ['*'] } = options;
+
+      const writtenTraces = [];
+
+      const mockOutputService = {
+        writeTrace: jest.fn().mockImplementation((trace) => {
+          writtenTraces.push(trace.toJSON());
+          return Promise.resolve();
+        }),
+      };
+
+      const mockEventDispatchTracer = {
+        createTrace: jest.fn().mockImplementation((context) => {
+          const mockTrace = {
+            captureDispatchStart: jest.fn(),
+            captureDispatchSuccess: jest.fn(),
+            captureDispatchError: jest.fn(),
+            toJSON: jest.fn().mockReturnValue({
+              metadata: {
+                traceType: 'event_dispatch',
+                eventName: context.eventName,
+                context: context.context,
+                timestamp: context.timestamp,
+                createdAt: new Date().toISOString(),
+                version: '1.0',
+              },
+              dispatch: {
+                startTime: null,
+                endTime: null,
+                duration: null,
+                success: null,
+                error: null,
+              },
+              payload: context.payload,
+            }),
+          };
+          return mockTrace;
+        }),
+        writeTrace: jest.fn().mockImplementation((trace) => {
+          writtenTraces.push(trace.toJSON());
+          return Promise.resolve();
+        }),
+      };
+
+      const mockActionTraceFilter = this.createMockActionTraceFilter({
+        tracedActions: tracedEvents,
+        enabled: tracingEnabled,
+      });
+
+      return {
+        mockOutputService,
+        mockEventDispatchTracer,
+        mockActionTraceFilter,
+        getWrittenTraces: () => [...writtenTraces],
+        clearTraces: () => {
+          writtenTraces.length = 0;
+        },
+      };
+    },
+
     cleanup() {
       jest.clearAllMocks();
     },
