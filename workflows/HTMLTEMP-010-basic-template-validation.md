@@ -39,25 +39,40 @@ Implement a comprehensive template validation system that ensures structural int
 
 ### 1. Template Validator Core
 
-#### File: `src/characterBuilder/templates/utilities/templateValidator.js`
+#### File: `src/characterBuilder/templates/validation/templateValidator.js`
 
 ```javascript
 /**
  * Comprehensive template validation system
+ * Integrates with existing template infrastructure
  */
+import { validateDependency } from '../../../utils/index.js';
+import { ValidationError } from '../../../errors/validationError.js';
+
 export class TemplateValidator {
+  #htmlValidator;
+  #a11yValidator;
+  #schemaValidator;
+  #perfAnalyzer;
+  #eventBus;
+  #validationRules;
+  #customValidators;
+
   /**
    * @param {object} config - Validator configuration
    * @param {HTMLValidator} config.htmlValidator - HTML5 validation service
    * @param {AccessibilityValidator} config.a11yValidator - Accessibility validator
    * @param {SchemaValidator} config.schemaValidator - Data schema validator
    * @param {PerformanceAnalyzer} config.perfAnalyzer - Performance analyzer
+   * @param {IEventBus} config.eventBus - Event bus for error reporting
    */
-  constructor({ htmlValidator, a11yValidator, schemaValidator, perfAnalyzer }) {
+  constructor({ htmlValidator, a11yValidator, schemaValidator, perfAnalyzer, eventBus }) {
+    validateDependency(eventBus, 'IEventBus');
     this.#htmlValidator = htmlValidator;
     this.#a11yValidator = a11yValidator;
     this.#schemaValidator = schemaValidator;
     this.#perfAnalyzer = perfAnalyzer;
+    this.#eventBus = eventBus;
     this.#validationRules = new Map();
     this.#customValidators = new Map();
     this.#initializeDefaultRules();
@@ -310,14 +325,22 @@ class ValidationResult {
 
 ### 2. HTML Structure Validator
 
-#### File: `src/characterBuilder/templates/utilities/validators/htmlValidator.js`
+#### File: `src/characterBuilder/templates/validation/htmlValidator.js`
 
 ```javascript
 /**
  * HTML5 structure and syntax validator
+ * Builds upon existing HTMLSanitizer for security-aware validation
  */
+import { HTMLSanitizer } from '../utilities/dataBinding/HTMLSanitizer.js';
+
 export class HTMLValidator {
-  constructor() {
+  #voidElements;
+  #requiredAttributes;
+  #htmlSanitizer;
+
+  constructor({ htmlSanitizer }) {
+    this.#htmlSanitizer = htmlSanitizer || new HTMLSanitizer();
     this.#voidElements = new Set([
       'area',
       'base',
@@ -355,9 +378,18 @@ export class HTMLValidator {
   validate(html, strict = false) {
     const errors = [];
 
-    // Parse HTML
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // Parse HTML using jsdom in Node.js environment
+    // Note: In browser environment, use DOMParser; in Node.js tests, use jsdom
+    let doc;
+    if (typeof DOMParser !== 'undefined') {
+      const parser = new DOMParser();
+      doc = parser.parseFromString(html, 'text/html');
+    } else {
+      // Handle Node.js environment with jsdom
+      const { JSDOM } = require('jsdom');
+      const dom = new JSDOM(html);
+      doc = dom.window.document;
+    }
 
     // Check for parser errors
     const parserErrors = doc.querySelector('parsererror');
@@ -651,13 +683,15 @@ export class HTMLValidator {
 
 ### 3. Accessibility Validator
 
-#### File: `src/characterBuilder/templates/utilities/validators/accessibilityValidator.js`
+#### File: `src/characterBuilder/templates/validation/accessibilityValidator.js`
 
 ```javascript
 /**
  * WCAG 2.1 AA accessibility validator
  */
 export class AccessibilityValidator {
+  #wcagCriteria;
+
   constructor() {
     this.#wcagCriteria = this.#initializeWCAGCriteria();
   }
@@ -669,8 +703,18 @@ export class AccessibilityValidator {
    */
   validate(html) {
     const errors = [];
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Parse HTML using jsdom in Node.js environment
+    let doc;
+    if (typeof DOMParser !== 'undefined') {
+      const parser = new DOMParser();
+      doc = parser.parseFromString(html, 'text/html');
+    } else {
+      // Handle Node.js environment with jsdom
+      const { JSDOM } = require('jsdom');
+      const dom = new JSDOM(html);
+      doc = dom.window.document;
+    }
 
     // 1. Check images for alt text
     errors.push(...this.#validateImages(doc));
@@ -1033,15 +1077,22 @@ export class AccessibilityValidator {
 
 ### 4. Data Schema Validator
 
-#### File: `src/characterBuilder/templates/utilities/validators/schemaValidator.js`
+#### File: `src/characterBuilder/templates/validation/schemaValidator.js`
 
 ```javascript
 /**
  * Validates template data against schemas
+ * Integrates with existing AJV schema validation infrastructure
  */
+import { AjvSchemaValidator } from '../../../validation/ajvSchemaValidator.js';
+
 export class SchemaValidator {
-  constructor() {
+  #schemas;
+  #ajvValidator;
+
+  constructor({ ajvValidator }) {
     this.#schemas = new Map();
+    this.#ajvValidator = ajvValidator || new AjvSchemaValidator();
     this.#initializeSchemas();
   }
 
@@ -1283,13 +1334,15 @@ export class SchemaValidator {
 
 ### 5. Performance Analyzer
 
-#### File: `src/characterBuilder/templates/utilities/validators/performanceAnalyzer.js`
+#### File: `src/characterBuilder/templates/validation/performanceAnalyzer.js`
 
 ```javascript
 /**
  * Analyzes template performance characteristics
  */
 export class PerformanceAnalyzer {
+  #thresholds;
+
   constructor() {
     this.#thresholds = {
       domNodes: 1500,
@@ -1309,8 +1362,18 @@ export class PerformanceAnalyzer {
    */
   analyze(html) {
     const warnings = [];
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Parse HTML using jsdom in Node.js environment
+    let doc;
+    if (typeof DOMParser !== 'undefined') {
+      const parser = new DOMParser();
+      doc = parser.parseFromString(html, 'text/html');
+    } else {
+      // Handle Node.js environment with jsdom
+      const { JSDOM } = require('jsdom');
+      const dom = new JSDOM(html);
+      doc = dom.window.document;
+    }
 
     // Check DOM complexity
     warnings.push(...this.#analyzeDOMComplexity(doc));
@@ -1591,25 +1654,33 @@ export class PerformanceAnalyzer {
    - [ ] Edge case tests
 
 2. **Integrate with template system**
-   - [ ] Update TemplateRenderer
-   - [ ] Add to build process
-   - [ ] Create CLI tool
-   - [ ] Add to CI/CD
+   - [ ] Update EnhancedTemplateComposer
+   - [ ] Add to composition pipeline
+   - [ ] Create validation configuration
+   - [ ] Add to existing event flow
 
 ## Testing Requirements
 
 ### Unit Tests
 
 ```javascript
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { TestBedClass } from '../../common/testbed.js';
+
 describe('TemplateValidator', () => {
   let validator;
+  let testBed;
 
   beforeEach(() => {
+    testBed = new TestBedClass();
+    const eventBus = testBed.createEventBus();
+    
     validator = new TemplateValidator({
-      htmlValidator: new HTMLValidator(),
+      htmlValidator: new HTMLValidator({ htmlSanitizer: testBed.createHTMLSanitizer() }),
       a11yValidator: new AccessibilityValidator(),
-      schemaValidator: new SchemaValidator(),
+      schemaValidator: new SchemaValidator({ ajvValidator: testBed.createAjvValidator() }),
       perfAnalyzer: new PerformanceAnalyzer(),
+      eventBus,
     });
   });
 
@@ -1665,7 +1736,7 @@ describe('TemplateValidator', () => {
 
   describe('Performance Analysis', () => {
     it('should warn about excessive DOM nodes', async () => {
-      const html = generateLargeDOM(2000); // Helper to create large DOM
+      const html = testBed.generateLargeDOM(2000); // Use testbed helper
       const result = await validator.validate(html);
 
       expect(result.warnings).toContainEqual(
@@ -1701,11 +1772,15 @@ describe('TemplateValidator', () => {
 
 ```javascript
 describe('Validation Performance', () => {
+  let testBed;
+
+  beforeEach(() => {
+    testBed = new TestBedClass();
+  });
+
   it('should validate standard template in < 50ms', async () => {
-    const validator = new TemplateValidator({
-      /* deps */
-    });
-    const html = generateStandardPageHTML();
+    const validator = testBed.createTemplateValidator();
+    const html = testBed.generateStandardPageHTML();
 
     const start = performance.now();
     await validator.validate(html);
@@ -1715,10 +1790,8 @@ describe('Validation Performance', () => {
   });
 
   it('should handle large templates efficiently', async () => {
-    const validator = new TemplateValidator({
-      /* deps */
-    });
-    const html = generateLargeTemplate(); // 10000+ nodes
+    const validator = testBed.createTemplateValidator();
+    const html = testBed.generateLargeTemplate(); // 10000+ nodes
 
     const start = performance.now();
     await validator.validate(html);
@@ -1734,15 +1807,16 @@ describe('Validation Performance', () => {
 ### 1. Build-Time Validation
 
 ```javascript
-// Webpack plugin for template validation
-class TemplateValidationPlugin {
-  apply(compiler) {
-    compiler.hooks.emit.tapAsync(
-      'TemplateValidation',
-      async (compilation, callback) => {
-        const validator = new TemplateValidator({
-          /* deps */
-        });
+// esbuild plugin for template validation (project uses esbuild, not webpack)
+import { TemplateValidator } from './src/characterBuilder/templates/validation/templateValidator.js';
+
+const templateValidationPlugin = {
+  name: 'template-validation',
+  setup(build) {
+    build.onLoad({ filter: /\.template\.js$/ }, async (args) => {
+      const validator = new TemplateValidator({
+        /* deps */
+      });
 
         for (const [filename, asset] of Object.entries(compilation.assets)) {
           if (filename.endsWith('.template.js')) {
@@ -1768,28 +1842,33 @@ class TemplateValidationPlugin {
 ### 2. Runtime Validation
 
 ```javascript
-// Controller integration
-class BaseCharacterBuilderController {
-  async renderTemplate(template, data) {
+// Integration with EnhancedTemplateComposer
+import { EnhancedTemplateComposer } from '../utilities/EnhancedTemplateComposer.js';
+
+class ValidatingTemplateComposer extends EnhancedTemplateComposer {
+  async compose(templateConfig, data) {
     if (this.#enableValidation) {
-      const result = await this.#validator.validate(template, {
+      const html = await super.compose(templateConfig, data);
+      const result = await this.#validator.validate(html, {
         data,
-        templateType: this.getTemplateType(),
+        templateType: templateConfig.type,
       });
 
       if (result.hasErrors()) {
-        console.error(
-          'Template validation failed:',
-          result.getFormattedReport()
-        );
+        this.#eventBus.dispatch({
+          type: 'TEMPLATE_VALIDATION_FAILED',
+          payload: { errors: result.errors, template: templateConfig.id },
+        });
 
         if (this.#strictMode) {
           throw new TemplateValidationError(result);
         }
       }
+
+      return html;
     }
 
-    // Continue with rendering...
+    return super.compose(templateConfig, data);
   }
 }
 ```
@@ -1827,7 +1906,10 @@ Promise.all(files.map(validateFile)).then(results => {
 ## Error Handling
 
 ```javascript
-class TemplateValidationError extends Error {
+// Extend existing ValidationError from project
+import { ValidationError } from '../../../errors/validationError.js';
+
+class TemplateValidationError extends ValidationError {
   constructor(result) {
     super('Template validation failed');
     this.name = 'TemplateValidationError';
@@ -1854,13 +1936,19 @@ class ValidationTimeoutError extends Error {
 
 ### Internal Dependencies
 
-- Template system components from HTMLTEMP-001 through HTMLTEMP-009
+- EnhancedTemplateComposer from HTMLTEMP-007
+- TemplateConfigManager from HTMLTEMP-009
+- HTMLSanitizer for security-aware validation
+- ConfigValidator for configuration validation patterns
+- AjvSchemaValidator for schema validation
 - Event bus for validation events
-- Logger for validation reporting
+- Existing validation utilities from src/utils/
+- Existing error classes from src/errors/
 
 ### External Dependencies
 
-- None (pure JavaScript implementation)
+- jsdom (already in project) for Node.js DOM parsing in tests
+- No additional external dependencies required
 
 ## Risks and Mitigation
 

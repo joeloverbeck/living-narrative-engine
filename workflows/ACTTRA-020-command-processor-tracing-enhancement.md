@@ -4,13 +4,26 @@
 
 Integrate the ActionExecutionTrace system into the CommandProcessor's dispatchAction method to provide comprehensive tracing of action execution. This enhancement will capture the complete action lifecycle from initial dispatch through event creation, payload construction, EventDispatchService interaction, and final result handling, while maintaining backward compatibility and ensuring zero performance impact when tracing is disabled.
 
+## Critical Updates from Original Workflow
+
+This workflow has been corrected to align with the actual codebase structure:
+
+1. **Constructor Pattern**: Uses options object pattern matching existing code, not individual parameters
+2. **Logger Initialization**: Uses `initLogger` from `loggerUtils.js`, not direct logger injection
+3. **Dependency Validation**: Uses existing `validateDependency` from `validationUtils.js`
+4. **Required Dependencies**: Includes `safeEventDispatcher` which is required by actual CommandProcessor
+5. **Import Paths**: All imports use correct relative paths based on actual file locations
+6. **DI Registration**: Updates `commandAndActionRegistrations.js`, not a non-existent `commandContainer.js`
+7. **Error Handling**: Uses simple inline try-catch with existing logger, not complex error handler classes
+8. **Prerequisite Service**: ActionTraceOutputService must be created first (ACTTRA-024)
+
 ## Status
 
 - **Type**: Enhancement
 - **Priority**: High
 - **Complexity**: Medium
 - **Estimated Time**: 3 hours
-- **Dependencies**: ACTTRA-019 (ActionExecutionTrace), ACTTRA-003 (ActionTraceFilter), ACTTRA-024 (ActionTraceOutputService)
+- **Dependencies**: ACTTRA-019 (ActionExecutionTrace), ACTTRA-003 (ActionTraceFilter), ACTTRA-024 (ActionTraceOutputService - must be created first)
 
 ## Objectives
 
@@ -35,6 +48,15 @@ Integrate the ActionExecutionTrace system into the CommandProcessor's dispatchAc
 
 ## Technical Specification
 
+### Prerequisites
+
+Before implementing this workflow, the following component must be created:
+
+#### ActionTraceOutputService (ACTTRA-024)
+- **Location**: `src/actions/tracing/actionTraceOutputService.js`
+- **Interface**: Must implement `writeTrace(trace)` method
+- **Token**: Add `IActionTraceOutputService` to `src/dependencyInjection/tokens/actionTracingTokens.js`
+
 ### 1. Enhanced CommandProcessor Integration
 
 #### File: `src/commands/commandProcessor.js` (Modified)
@@ -45,32 +67,44 @@ Integrate the ActionExecutionTrace system into the CommandProcessor's dispatchAc
  * Enhanced to support ActionExecutionTrace for debugging and analysis
  */
 
-import { validateDependency } from '../utils/dependencyUtils.js';
-import { ActionExecutionTrace } from '../actions/tracing/actionExecutionTrace.js';
+import { initLogger } from '../utils/loggerUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 
 /**
  * CommandProcessor handles action dispatching with optional execution tracing
  * Integrates with ActionTraceFilter to selectively trace action executions
  */
 export class CommandProcessor {
-  #eventDispatchService;
   #logger;
+  #safeEventDispatcher;
+  #eventDispatchService;
   #actionTraceFilter;
   #actionExecutionTraceFactory;
   #actionTraceOutputService;
 
-  constructor({
-    eventDispatchService,
-    logger,
-    actionTraceFilter = null,
-    actionExecutionTraceFactory = null,
-    actionTraceOutputService = null,
-  }) {
-    validateDependency(eventDispatchService, 'IEventDispatchService');
-    validateDependency(logger, 'ILogger');
+  constructor(options) {
+    const { 
+      logger, 
+      safeEventDispatcher, 
+      eventDispatchService,
+      actionTraceFilter,
+      actionExecutionTraceFactory,
+      actionTraceOutputService
+    } = options || {};
 
+    // Use existing validation patterns from codebase
+    this.#logger = initLogger('CommandProcessor', logger);
+    
+    validateDependency(safeEventDispatcher, 'safeEventDispatcher', this.#logger, {
+      requiredMethods: ['dispatch'],
+    });
+    
+    validateDependency(eventDispatchService, 'eventDispatchService', this.#logger, {
+      requiredMethods: ['dispatchWithErrorHandling'],
+    });
+
+    this.#safeEventDispatcher = safeEventDispatcher;
     this.#eventDispatchService = eventDispatchService;
-    this.#logger = logger;
 
     // Optional tracing dependencies - can be null if tracing is disabled
     this.#actionTraceFilter = actionTraceFilter;
@@ -424,372 +458,156 @@ export class CommandProcessor {
 }
 ```
 
-### 2. Dependency Injection Integration
+### 2. Token Definition Updates
 
-#### File: `src/dependencyInjection/containers/commandContainer.js` (Modified)
+#### File: `src/dependencyInjection/tokens/actionTracingTokens.js` (Modified)
 
 ```javascript
 /**
- * @file Command container with tracing support
- * Registers CommandProcessor with optional tracing dependencies
+ * @file Action tracing dependency injection tokens
  */
 
-import { validateDependency } from '../../utils/validationUtils.js';
+export const actionTracingTokens = {
+  IActionTraceFilter: 'IActionTraceFilter',
+  IActionExecutionTraceFactory: 'IActionExecutionTraceFactory', // Add this token
+  IActionTraceOutputService: 'IActionTraceOutputService', // Add this token
+};
+```
+
+### 3. Dependency Injection Integration
+
+#### File: `src/dependencyInjection/registrations/commandAndActionRegistrations.js` (Modified)
+
+```javascript
+/**
+ * @file Command and action registration with tracing support
+ */
+
 import { CommandProcessor } from '../../commands/commandProcessor.js';
-import { tokens } from '../tokens.js';
+import { tokens } from '../tokens/index.js';
 import { actionTracingTokens } from '../tokens/actionTracingTokens.js';
 
 /**
- * Register CommandProcessor with tracing support
- * @param {Container} container - DI container
+ * Register CommandProcessor with optional tracing support
  */
-export function registerCommandProcessor(container) {
-  container.register(
-    tokens.ICommandProcessor,
-    (deps) => {
-      // Required dependencies
-      validateDependency(deps.eventDispatchService, 'IEventDispatchService');
-      validateDependency(deps.logger, 'ILogger');
-
-      // Optional tracing dependencies
-      const actionTraceFilter = deps.actionTraceFilter || null;
-      const actionExecutionTraceFactory =
-        deps.actionExecutionTraceFactory || null;
-      const actionTraceOutputService = deps.actionTraceOutputService || null;
-
-      // Log tracing status
-      const tracingEnabled =
-        actionTraceFilter &&
-        actionExecutionTraceFactory &&
-        actionTraceOutputService;
-      deps.logger.info(
-        `CommandProcessor: Action execution tracing ${tracingEnabled ? 'enabled' : 'disabled'}`
-      );
-
-      return new CommandProcessor({
-        eventDispatchService: deps.eventDispatchService,
-        logger: deps.logger,
-        actionTraceFilter,
-        actionExecutionTraceFactory,
-        actionTraceOutputService,
-      });
-    },
-    {
-      lifetime: 'singleton',
-      dependencies: {
-        eventDispatchService: tokens.IEventDispatchService,
-        logger: tokens.ILogger,
-        // Optional tracing dependencies
-        actionTraceFilter: {
-          token: actionTracingTokens.IActionTraceFilter,
-          optional: true,
-        },
-        actionExecutionTraceFactory: {
-          token: actionTracingTokens.IActionExecutionTraceFactory,
-          optional: true,
-        },
-        actionTraceOutputService: {
-          token: actionTracingTokens.IActionTraceOutputService,
-          optional: true,
-        },
-      },
+export function registerCommandProcessor(registrar) {
+  registrar.singletonFactory(tokens.ICommandProcessor, (c) => {
+    // Required dependencies
+    const logger = c.resolve(tokens.ILogger);
+    const safeEventDispatcher = c.resolve(tokens.ISafeEventDispatcher);
+    const eventDispatchService = c.resolve(tokens.EventDispatchService);
+    
+    // Try to resolve optional tracing dependencies
+    let actionTraceFilter, actionExecutionTraceFactory, actionTraceOutputService;
+    
+    try {
+      actionTraceFilter = c.resolve(actionTracingTokens.IActionTraceFilter);
+    } catch {
+      // Optional dependency not registered
+      actionTraceFilter = null;
     }
-  );
+    
+    try {
+      actionExecutionTraceFactory = c.resolve(actionTracingTokens.IActionExecutionTraceFactory);
+    } catch {
+      // Optional dependency not registered
+      actionExecutionTraceFactory = null;
+    }
+    
+    try {
+      actionTraceOutputService = c.resolve(actionTracingTokens.IActionTraceOutputService);
+    } catch {
+      // Optional dependency not registered
+      actionTraceOutputService = null;
+    }
+    
+    // Log tracing status
+    const tracingEnabled = actionTraceFilter && actionExecutionTraceFactory && actionTraceOutputService;
+    logger.info(
+      `CommandProcessor: Action execution tracing ${tracingEnabled ? 'enabled' : 'disabled'}`
+    );
+    
+    return new CommandProcessor({
+      logger,
+      safeEventDispatcher,
+      eventDispatchService,
+      actionTraceFilter,
+      actionExecutionTraceFactory,
+      actionTraceOutputService,
+    });
+  });
 }
 ```
 
-### 3. Tracing Configuration Integration
+### 4. Simplified Error Handling (Using Existing Patterns)
 
-#### File: `src/commands/tracingConfig.js` (New)
+Instead of creating complex error handling classes, the implementation will use inline try-catch blocks with the existing logger, following the patterns already established in the codebase. Error handling will be kept simple:
 
 ```javascript
-/**
- * @file Tracing configuration utilities for CommandProcessor
- */
-
-/**
- * Configuration for CommandProcessor tracing
- */
-export const COMMAND_PROCESSOR_TRACING_CONFIG = {
-  // Performance thresholds
-  maxTraceCreationTime: 5, // ms
-  maxPayloadSize: 1024 * 1024, // 1MB
-
-  // Async write settings
-  traceWriteTimeout: 10000, // 10s
-  maxConcurrentWrites: 5,
-
-  // Error handling
-  maxTraceFailuresBeforeDisable: 10,
-  traceFailureWindow: 60000, // 1 minute
-
-  // Debug settings
-  logTraceCreation: false,
-  logTraceWriting: false,
-  includeStackTrace: false,
-};
-
-/**
- * Performance monitor for tracing operations
- */
-export class TracingPerformanceMonitor {
-  #traceCreationTimes = [];
-  #traceWriteTimes = [];
-  #failureCount = 0;
-  #lastFailureReset = Date.now();
-  #logger;
-
-  constructor({ logger }) {
-    this.#logger = logger;
+// In CommandProcessor, handle errors inline:
+try {
+  if (this.#shouldCreateTrace(actionId)) {
+    actionTrace = this.#createExecutionTrace(turnAction, actorId);
+    actionTrace.captureDispatchStart();
   }
-
-  /**
-   * Record trace creation performance
-   * @param {number} duration - Creation time in ms
-   */
-  recordTraceCreation(duration) {
-    this.#traceCreationTimes.push(duration);
-
-    // Keep only last 100 measurements
-    if (this.#traceCreationTimes.length > 100) {
-      this.#traceCreationTimes.shift();
-    }
-
-    // Warn on slow creation
-    if (duration > COMMAND_PROCESSOR_TRACING_CONFIG.maxTraceCreationTime) {
-      this.#logger.warn(`Slow trace creation: ${duration.toFixed(2)}ms`);
-    }
-  }
-
-  /**
-   * Record trace write performance
-   * @param {number} duration - Write time in ms
-   */
-  recordTraceWrite(duration) {
-    this.#traceWriteTimes.push(duration);
-
-    if (this.#traceWriteTimes.length > 100) {
-      this.#traceWriteTimes.shift();
-    }
-  }
-
-  /**
-   * Record trace failure
-   */
-  recordFailure() {
-    const now = Date.now();
-
-    // Reset failure count if window expired
-    if (
-      now - this.#lastFailureReset >
-      COMMAND_PROCESSOR_TRACING_CONFIG.traceFailureWindow
-    ) {
-      this.#failureCount = 0;
-      this.#lastFailureReset = now;
-    }
-
-    this.#failureCount++;
-
-    // Check if we should disable tracing
-    if (
-      this.#failureCount >=
-      COMMAND_PROCESSOR_TRACING_CONFIG.maxTraceFailuresBeforeDisable
-    ) {
-      this.#logger.error(
-        `Too many trace failures (${this.#failureCount}), consider disabling tracing`
-      );
-    }
-  }
-
-  /**
-   * Get performance statistics
-   * @returns {Object} Performance stats
-   */
-  getStats() {
-    const avgCreationTime =
-      this.#traceCreationTimes.length > 0
-        ? this.#traceCreationTimes.reduce((a, b) => a + b) /
-          this.#traceCreationTimes.length
-        : 0;
-
-    const avgWriteTime =
-      this.#traceWriteTimes.length > 0
-        ? this.#traceWriteTimes.reduce((a, b) => a + b) /
-          this.#traceWriteTimes.length
-        : 0;
-
-    return {
-      averageCreationTime: avgCreationTime,
-      averageWriteTime: avgWriteTime,
-      totalFailures: this.#failureCount,
-      measurementWindow: Math.min(
-        this.#traceCreationTimes.length,
-        this.#traceWriteTimes.length
-      ),
-    };
-  }
+} catch (traceError) {
+  // Log trace creation failure but continue execution
+  this.#logger.warn('Failed to create execution trace', {
+    error: traceError.message,
+    actionId,
+    actorId,
+  });
+  // Continue without trace - don't break action execution
 }
-```
 
-### 4. Error Recovery and Resilience
-
-#### File: `src/commands/tracingErrorHandler.js` (New)
-
-```javascript
-/**
- * @file Error handling utilities for CommandProcessor tracing
- */
-
-/**
- * Error handler for tracing operations
- * Provides graceful degradation and recovery
- */
-export class TracingErrorHandler {
-  #logger;
-  #performanceMonitor;
-  #consecutiveFailures = 0;
-  #lastFailureTime = null;
-  #tracingEnabled = true;
-
-  constructor({ logger, performanceMonitor }) {
-    this.#logger = logger;
-    this.#performanceMonitor = performanceMonitor;
-  }
-
-  /**
-   * Handle trace creation error
-   * @param {Error} error - Creation error
-   * @param {string} actionId - Action ID
-   * @param {string} actorId - Actor ID
-   * @returns {boolean} True if should retry, false if should skip tracing
-   */
-  handleTraceCreationError(error, actionId, actorId) {
-    this.#recordFailure('trace_creation', error, { actionId, actorId });
-
-    // Always continue execution - trace creation failure should never break action
-    return false; // Don't retry, skip tracing for this action
-  }
-
-  /**
-   * Handle payload capture error
-   * @param {Error} error - Capture error
-   * @param {string} actionId - Action ID
-   * @returns {boolean} True if execution should continue
-   */
-  handlePayloadCaptureError(error, actionId) {
-    this.#recordFailure('payload_capture', error, { actionId });
-
-    // Log but continue - payload capture failure shouldn't break execution
-    this.#logger.debug(
-      'Payload capture failed, continuing without trace data',
-      {
-        error: error.message,
-        actionId,
-      }
-    );
-
-    return true; // Continue execution
-  }
-
-  /**
-   * Handle result capture error
-   * @param {Error} error - Capture error
-   * @param {string} actionId - Action ID
-   * @returns {boolean} True if execution should continue
-   */
-  handleResultCaptureError(error, actionId) {
-    this.#recordFailure('result_capture', error, { actionId });
-
-    this.#logger.debug(
-      'Result capture failed, continuing without trace completion',
-      {
-        error: error.message,
-        actionId,
-      }
-    );
-
-    return true; // Continue execution
-  }
-
-  /**
-   * Handle trace write error
-   * @param {Error} error - Write error
-   * @param {string} actionId - Action ID
-   */
-  handleTraceWriteError(error, actionId) {
-    this.#recordFailure('trace_write', error, { actionId });
-
-    // Consider implementing retry logic or queuing here
-    this.#logger.warn('Failed to write execution trace', {
-      error: error.message,
+// Similarly for other trace operations:
+if (actionTrace) {
+  try {
+    actionTrace.captureEventPayload(payload);
+  } catch (payloadError) {
+    this.#logger.warn('Failed to capture event payload in trace', {
+      error: payloadError.message,
       actionId,
-      consecutiveFailures: this.#consecutiveFailures,
     });
-  }
-
-  /**
-   * Check if tracing should be temporarily disabled
-   * @returns {boolean} True if tracing should be disabled
-   */
-  shouldDisableTracing() {
-    return !this.#tracingEnabled || this.#consecutiveFailures >= 5;
-  }
-
-  /**
-   * Reset failure counters (for testing or recovery)
-   */
-  reset() {
-    this.#consecutiveFailures = 0;
-    this.#lastFailureTime = null;
-    this.#tracingEnabled = true;
-  }
-
-  /**
-   * Record failure and update counters
-   * @private
-   * @param {string} operation - Operation that failed
-   * @param {Error} error - Error that occurred
-   * @param {Object} context - Additional context
-   */
-  #recordFailure(operation, error, context) {
-    this.#consecutiveFailures++;
-    this.#lastFailureTime = Date.now();
-
-    if (this.#performanceMonitor) {
-      this.#performanceMonitor.recordFailure();
-    }
-
-    // Log detailed error information
-    this.#logger.warn(`Tracing ${operation} failed`, {
-      error: error.message,
-      stack: error.stack,
-      context,
-      consecutiveFailures: this.#consecutiveFailures,
-    });
-
-    // Disable tracing if too many failures
-    if (this.#consecutiveFailures >= 10) {
-      this.#tracingEnabled = false;
-      this.#logger.error(
-        'Disabling action execution tracing due to repeated failures'
-      );
-    }
   }
 }
-```
+
+// Write trace asynchronously without blocking:
+if (actionTrace && this.#actionTraceOutputService) {
+  this.#actionTraceOutputService.writeTrace(trace).catch((writeError) => {
+    this.#logger.warn('Failed to write execution trace', {
+      error: writeError.message,
+      actionId,
+    });
+  });
+}
 
 ## Implementation Tasks
+
+### Phase 0: Prerequisites (30 minutes)
+
+1. **Create ActionTraceOutputService (ACTTRA-024)**
+   - [ ] Create `src/actions/tracing/actionTraceOutputService.js`
+   - [ ] Implement `writeTrace(trace)` method
+   - [ ] Add unit tests for the service
+   - [ ] Register with DI container
+
+2. **Update Token Definitions**
+   - [ ] Add `IActionExecutionTraceFactory` to `actionTracingTokens.js`
+   - [ ] Add `IActionTraceOutputService` to `actionTracingTokens.js`
 
 ### Phase 1: Core Integration (1.5 hours)
 
 1. **Modify CommandProcessor constructor**
+   - [ ] Update to use options object pattern
+   - [ ] Use `initLogger` from `loggerUtils.js`
+   - [ ] Add validation for `safeEventDispatcher` and `eventDispatchService`
    - [ ] Add optional tracing dependencies
-   - [ ] Implement dependency validation with optional parameters
-   - [ ] Add initialization logging for tracing status
    - [ ] Ensure backward compatibility
 
 2. **Enhance dispatchAction method**
    - [ ] Add trace creation logic with shouldTrace check
+   - [ ] Use inline try-catch for error handling
    - [ ] Integrate payload capture after event payload creation
    - [ ] Add result capture after dispatch completion
    - [ ] Implement error capture in catch blocks
@@ -798,41 +616,32 @@ export class TracingErrorHandler {
    - [ ] Implement start/end trace tracking
    - [ ] Add async trace writing without blocking execution
    - [ ] Create helper methods for trace operations
-   - [ ] Add performance monitoring hooks
+   - [ ] Use existing logger for all warnings/errors
 
-### Phase 2: Error Handling and Performance (1 hour)
+### Phase 2: Simplified Error Handling (30 minutes)
 
-1. **Implement robust error handling**
-   - [ ] Create TracingErrorHandler for graceful degradation
+1. **Implement inline error handling**
    - [ ] Add try-catch around all trace operations
+   - [ ] Use existing logger for warnings
    - [ ] Ensure tracing failures never break action execution
-   - [ ] Implement failure counting and temporary disabling
+   - [ ] Continue execution on any trace failure
 
-2. **Add performance monitoring**
-   - [ ] Create TracingPerformanceMonitor
-   - [ ] Track trace creation and write times
-   - [ ] Add performance threshold warnings
-   - [ ] Implement statistics collection
-
-3. **Optimize for zero-impact when disabled**
+2. **Optimize for zero-impact when disabled**
    - [ ] Add fast-path exit for disabled tracing
    - [ ] Minimize object creation when tracing disabled
    - [ ] Ensure no performance overhead for non-traced actions
-   - [ ] Add configuration-based feature flags
 
 ### Phase 3: Integration and Testing (30 minutes)
 
 1. **Update dependency injection**
-   - [ ] Modify command container registration
-   - [ ] Add optional dependency handling
-   - [ ] Create tracing configuration
-   - [ ] Update service initialization
+   - [ ] Modify `commandAndActionRegistrations.js`
+   - [ ] Add optional dependency handling with try-catch
+   - [ ] Log tracing status on initialization
 
-2. **Add configuration support**
-   - [ ] Create tracing configuration file
-   - [ ] Add performance thresholds
-   - [ ] Implement feature flags
-   - [ ] Add environment-specific settings
+2. **Create test infrastructure**
+   - [ ] Create mock factories in test helpers
+   - [ ] Add unit tests for tracing scenarios
+   - [ ] Add integration tests for end-to-end flow
 
 ## Code Examples
 
@@ -883,7 +692,10 @@ if (actionTrace) {
   try {
     actionTrace.captureEventPayload(payload);
   } catch (payloadError) {
-    this.#tracingErrorHandler.handlePayloadCaptureError(payloadError, actionId);
+    this.#logger.warn('Failed to capture event payload in trace', {
+      error: payloadError.message,
+      actionId,
+    });
     // Continue execution - payload capture failure shouldn't break action
   }
 }
@@ -895,7 +707,10 @@ if (actionTrace) {
 // Write trace without blocking action execution
 #writeTraceAsync(trace, actionId) {
   this.#actionTraceOutputService.writeTrace(trace).catch(writeError => {
-    this.#tracingErrorHandler.handleTraceWriteError(writeError, actionId);
+    this.#logger.warn('Failed to write execution trace', {
+      error: writeError.message,
+      actionId,
+    });
   });
 }
 ```
@@ -916,11 +731,7 @@ import {
   jest,
 } from '@jest/globals';
 import { CommandProcessor } from '../../../src/commands/commandProcessor.js';
-import { createMockEventDispatchService } from '../../common/mocks/mockEventDispatchService.js';
-import { createMockLogger } from '../../common/mocks/mockLogger.js';
-import { createMockActionTraceFilter } from '../../common/mocks/mockActionTraceFilter.js';
-import { createMockActionExecutionTraceFactory } from '../../common/mocks/mockActionExecutionTraceFactory.js';
-import { createMockActionTraceOutputService } from '../../common/mocks/mockActionTraceOutputService.js';
+// Note: Mock factories need to be created in test helpers first
 
 describe('CommandProcessor - Execution Tracing', () => {
   let commandProcessor;
@@ -1469,8 +1280,35 @@ describe('CommandProcessor Tracing Performance', () => {
 3. **Performance Guide** - Understanding and optimizing trace overhead
 4. **Troubleshooting Guide** - Debugging tracing issues
 
+## Implementation Order
+
+To successfully implement this workflow, follow this order:
+
+1. **First**: Create ActionTraceOutputService (ACTTRA-024)
+   - Must be completed before starting this workflow
+   - Implement the `writeTrace(trace)` method
+   - Add corresponding token to `actionTracingTokens.js`
+
+2. **Second**: Update token definitions
+   - Add missing `IActionExecutionTraceFactory` token
+   - Verify all tokens are properly exported
+
+3. **Third**: Update CommandProcessor
+   - Modify constructor to accept options object
+   - Add optional tracing dependencies
+   - Implement inline error handling
+
+4. **Fourth**: Update DI registration
+   - Modify `commandAndActionRegistrations.js`
+   - Use try-catch for optional dependency resolution
+
+5. **Fifth**: Create tests
+   - Create necessary mock factories
+   - Add unit and integration tests
+
 ## Definition of Done
 
+- [ ] ActionTraceOutputService created and tested (prerequisite)
 - [ ] CommandProcessor enhanced according to specification
 - [ ] Tracing dependencies integrated with DI container
 - [ ] Error handling implemented for all trace operations
