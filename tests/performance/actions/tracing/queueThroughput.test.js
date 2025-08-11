@@ -15,7 +15,10 @@ import {
 } from '@jest/globals';
 import { ActionTraceOutputService } from '../../../../src/actions/tracing/actionTraceOutputService.js';
 import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
-import { createMockActionTraceFilter, createMockIndexedDBStorageAdapter } from '../../../common/mockFactories/actionTracing.js';
+import {
+  createMockActionTraceFilter,
+  createMockIndexedDBStorageAdapter,
+} from '../../../common/mockFactories/actionTracing.js';
 
 describe('TraceQueueProcessor - Performance Tests', () => {
   let service;
@@ -27,11 +30,11 @@ describe('TraceQueueProcessor - Performance Tests', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
-    
+
     mockLogger = createMockLogger();
     mockStorageAdapter = createMockIndexedDBStorageAdapter();
     mockActionTraceFilter = createMockActionTraceFilter();
-    
+
     mockEventBus = {
       dispatch: jest.fn(),
     };
@@ -106,9 +109,13 @@ describe('TraceQueueProcessor - Performance Tests', () => {
 
       // Calculate and log performance metrics
       const throughput = traceCount / (processingTime / 1000); // traces per second
-      console.log(`Processing time: ${processingTime.toFixed(2)}ms for ${traceCount} traces`);
+      console.log(
+        `Processing time: ${processingTime.toFixed(2)}ms for ${traceCount} traces`
+      );
       console.log(`Throughput: ${throughput.toFixed(2)} traces/second`);
-      console.log(`Batch efficiency: ${(metrics.batchEfficiency * 100).toFixed(2)}%`);
+      console.log(
+        `Batch efficiency: ${(metrics.batchEfficiency * 100).toFixed(2)}%`
+      );
     });
 
     it('should maintain performance with varying trace sizes', async () => {
@@ -150,13 +157,17 @@ describe('TraceQueueProcessor - Performance Tests', () => {
 
       // Performance should scale reasonably with data size
       expect(processingTime).toBeLessThan(8000); // 8 seconds for varied sizes
-      
+
       const metrics = service.getQueueMetrics();
       expect(metrics.totalProcessed).toBeGreaterThan(0); // Should process some traces
       expect(metrics.totalEnqueued).toBeGreaterThan(40); // Should enqueue most traces (queue size limit may apply)
 
-      console.log(`Mixed size processing: ${processingTime.toFixed(2)}ms for ${totalTraces} traces`);
-      console.log(`Average time per trace: ${(processingTime / totalTraces).toFixed(2)}ms`);
+      console.log(
+        `Mixed size processing: ${processingTime.toFixed(2)}ms for ${totalTraces} traces`
+      );
+      console.log(
+        `Average time per trace: ${(processingTime / totalTraces).toFixed(2)}ms`
+      );
     });
 
     it('should demonstrate parallel processing benefits', async () => {
@@ -227,7 +238,9 @@ describe('TraceQueueProcessor - Performance Tests', () => {
 
       console.log(`Serial processing: ${serialTime.toFixed(2)}ms`);
       console.log(`Parallel processing: ${parallelTime.toFixed(2)}ms`);
-      console.log(`Performance improvement: ${((1 - parallelTime/serialTime) * 100).toFixed(2)}%`);
+      console.log(
+        `Performance improvement: ${((1 - parallelTime / serialTime) * 100).toFixed(2)}%`
+      );
     });
 
     it('should handle burst traffic efficiently', async () => {
@@ -247,7 +260,7 @@ describe('TraceQueueProcessor - Performance Tests', () => {
       const burstSize = 50;
       const numberOfBursts = 3;
       const delayBetweenBursts = 100; // ms
-      
+
       const startTime = performance.now();
 
       for (let burst = 0; burst < numberOfBursts; burst++) {
@@ -264,9 +277,9 @@ describe('TraceQueueProcessor - Performance Tests', () => {
           };
           burstPromises.push(service.writeTrace(trace));
         }
-        
+
         await Promise.all(burstPromises);
-        
+
         // Small delay between bursts
         if (burst < numberOfBursts - 1) {
           await jest.advanceTimersByTimeAsync(delayBetweenBursts);
@@ -285,7 +298,9 @@ describe('TraceQueueProcessor - Performance Tests', () => {
       expect(metrics.totalEnqueued).toBeGreaterThanOrEqual(totalTraces); // Should enqueue all traces
 
       const throughput = totalTraces / (processingTime / 1000);
-      console.log(`Burst processing: ${processingTime.toFixed(2)}ms for ${totalTraces} traces in ${numberOfBursts} bursts`);
+      console.log(
+        `Burst processing: ${processingTime.toFixed(2)}ms for ${totalTraces} traces in ${numberOfBursts} bursts`
+      );
       console.log(`Burst throughput: ${throughput.toFixed(2)} traces/second`);
       console.log(`Priority distribution:`, metrics.priorityDistribution);
     });
@@ -326,7 +341,7 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         const processingTime = endTime - startTime;
 
         const metrics = testService.getQueueMetrics();
-        
+
         results.push({
           batchSize,
           processingTime,
@@ -340,14 +355,16 @@ describe('TraceQueueProcessor - Performance Tests', () => {
 
       // Log comparison results
       console.log('\nBatch Size Performance Comparison:');
-      results.forEach(r => {
-        console.log(`Batch ${r.batchSize}: ${r.processingTime.toFixed(2)}ms, ` +
-                   `Efficiency: ${(r.efficiency * 100).toFixed(2)}%, ` +
-                   `Throughput: ${r.throughput.toFixed(2)} traces/sec`);
+      results.forEach((r) => {
+        console.log(
+          `Batch ${r.batchSize}: ${r.processingTime.toFixed(2)}ms, ` +
+            `Efficiency: ${(r.efficiency * 100).toFixed(2)}%, ` +
+            `Throughput: ${r.throughput.toFixed(2)} traces/sec`
+        );
       });
 
       // All batch sizes should complete within reasonable time
-      results.forEach(r => {
+      results.forEach((r) => {
         expect(r.processingTime).toBeLessThan(10000); // 10 seconds max
       });
     });

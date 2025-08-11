@@ -14,7 +14,10 @@ import {
 } from '@jest/globals';
 import { ActionTraceOutputService } from '../../../../src/actions/tracing/actionTraceOutputService.js';
 import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
-import { createMockActionTraceFilter, createMockIndexedDBStorageAdapter } from '../../../common/mockFactories/actionTracing.js';
+import {
+  createMockActionTraceFilter,
+  createMockIndexedDBStorageAdapter,
+} from '../../../common/mockFactories/actionTracing.js';
 
 describe('TraceQueueProcessor Memory Efficiency Tests', () => {
   let service;
@@ -26,11 +29,11 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
-    
+
     mockLogger = createMockLogger();
     mockStorageAdapter = createMockIndexedDBStorageAdapter();
     mockActionTraceFilter = createMockActionTraceFilter();
-    
+
     mockEventBus = {
       dispatch: jest.fn(),
     };
@@ -84,11 +87,15 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
       }
 
       const stats = service.getQueueStats();
-      expect(stats.memoryUsage).toBeLessThanOrEqual(queueConfig.memoryLimit * 1.1); // Allow 10% tolerance
-      
+      expect(stats.memoryUsage).toBeLessThanOrEqual(
+        queueConfig.memoryLimit * 1.1
+      ); // Allow 10% tolerance
+
       // Log memory metrics for monitoring
       console.log(`Memory usage: ${(stats.memoryUsage / 1024).toFixed(2)} KB`);
-      console.log(`Memory limit: ${(queueConfig.memoryLimit / 1024).toFixed(2)} KB`);
+      console.log(
+        `Memory limit: ${(queueConfig.memoryLimit / 1024).toFixed(2)} KB`
+      );
       console.log(`Traces enqueued: ${successfulEnqueues}`);
     });
 
@@ -111,7 +118,7 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
         // Enqueue multiple batches of traces
         const batchCount = 3;
         const tracesPerBatch = 10;
-        
+
         for (let batch = 0; batch < batchCount; batch++) {
           for (let i = 0; i < tracesPerBatch; i++) {
             const trace = {
@@ -124,7 +131,7 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
             };
             await service.writeTrace(trace);
           }
-          
+
           // Process batch
           await jest.runAllTimersAsync();
         }
@@ -138,9 +145,11 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
         // timer scheduling, and heap fragmentation. The actual trace data is ~600 bytes,
         // but total heap impact includes all runtime overhead.
         expect(memoryPerTrace).toBeLessThan(100000); // Less than 100KB per trace (allowing for JS runtime overhead)
-        
+
         console.log(`Memory per trace: ${memoryPerTrace.toFixed(0)} bytes`);
-        console.log(`Total memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)} MB for ${batchCount * tracesPerBatch} traces`);
+        console.log(
+          `Total memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)} MB for ${batchCount * tracesPerBatch} traces`
+        );
       } else {
         // Skip memory test in browser environment
         expect(true).toBe(true);
@@ -163,7 +172,7 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
       for (let i = 0; i < 20; i++) {
         const circularObj = { id: i };
         circularObj.self = circularObj; // Circular reference
-        
+
         const trace = {
           actionId: `circular:${i}`,
           circularData: circularObj,
@@ -180,8 +189,10 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
       await jest.runAllTimersAsync();
 
       const stats = service.getQueueStats();
-      expect(stats.memoryUsage).toBeLessThanOrEqual(queueConfig.memoryLimit * 1.2); // Allow 20% tolerance for circular reference handling
-      
+      expect(stats.memoryUsage).toBeLessThanOrEqual(
+        queueConfig.memoryLimit * 1.2
+      ); // Allow 20% tolerance for circular reference handling
+
       // Verify processing completed without memory issues
       const metrics = service.getQueueMetrics();
       expect(metrics.totalProcessed).toBeGreaterThan(0);
@@ -222,10 +233,10 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
             };
             await service.writeTrace(trace);
           }
-          
+
           // Process all traces
           await jest.runAllTimersAsync();
-          
+
           // Force garbage collection between iterations
           global.gc();
         }
@@ -235,8 +246,10 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
 
         // Memory should not grow excessively across iterations
         expect(memoryGrowth).toBeLessThan(10 * 1024 * 1024); // Less than 10MB growth
-        
-        console.log(`Memory growth after ${iterations} iterations: ${(memoryGrowth / 1024 / 1024).toFixed(2)} MB`);
+
+        console.log(
+          `Memory growth after ${iterations} iterations: ${(memoryGrowth / 1024 / 1024).toFixed(2)} MB`
+        );
       });
     }
   });

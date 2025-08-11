@@ -71,8 +71,12 @@ describe('TraceQueueProcessor', () => {
       const normalTrace = testBed.createMockTrace({ actionId: 'normal' });
       const lowTrace = testBed.createMockTrace({ actionId: 'low' });
 
-      expect(testBed.processor.enqueue(criticalTrace, TracePriority.CRITICAL)).toBe(true);
-      expect(testBed.processor.enqueue(normalTrace, TracePriority.NORMAL)).toBe(true);
+      expect(
+        testBed.processor.enqueue(criticalTrace, TracePriority.CRITICAL)
+      ).toBe(true);
+      expect(testBed.processor.enqueue(normalTrace, TracePriority.NORMAL)).toBe(
+        true
+      );
       expect(testBed.processor.enqueue(lowTrace, TracePriority.LOW)).toBe(true);
 
       const stats = testBed.getQueueStats();
@@ -85,8 +89,12 @@ describe('TraceQueueProcessor', () => {
     it('should process critical traces first', async () => {
       // Enqueue traces in reverse priority order
       const lowTrace = testBed.createMockTrace({ actionId: 'low-priority' });
-      const normalTrace = testBed.createMockTrace({ actionId: 'normal-priority' });
-      const criticalTrace = testBed.createMockTrace({ actionId: 'critical-priority' });
+      const normalTrace = testBed.createMockTrace({
+        actionId: 'normal-priority',
+      });
+      const criticalTrace = testBed.createMockTrace({
+        actionId: 'critical-priority',
+      });
 
       testBed.processor.enqueue(lowTrace, TracePriority.LOW);
       testBed.processor.enqueue(normalTrace, TracePriority.NORMAL);
@@ -106,7 +114,7 @@ describe('TraceQueueProcessor', () => {
     it('should maintain FIFO order within same priority level', async () => {
       // Disable parallel processing to ensure FIFO order is maintained
       testBed.withConfig({ enableParallelProcessing: false });
-      
+
       const trace1 = testBed.createMockTrace({ actionId: 'normal-1' });
       const trace2 = testBed.createMockTrace({ actionId: 'normal-2' });
       const trace3 = testBed.createMockTrace({ actionId: 'normal-3' });
@@ -128,11 +136,11 @@ describe('TraceQueueProcessor', () => {
         actionId: 'error-action',
         hasError: true,
       });
-      
+
       const systemTrace = testBed.createMockTrace({
         actionId: 'system:important-action',
       });
-      
+
       const debugTrace = testBed.createMockTrace({
         actionId: 'debug:verbose-log',
       });
@@ -172,7 +180,7 @@ describe('TraceQueueProcessor', () => {
       // Enqueue fewer traces than batch size
       const trace1 = testBed.createMockTrace({ actionId: 'timeout-1' });
       const trace2 = testBed.createMockTrace({ actionId: 'timeout-2' });
-      
+
       testBed.processor.enqueue(trace1);
       testBed.processor.enqueue(trace2);
 
@@ -217,7 +225,9 @@ describe('TraceQueueProcessor', () => {
     it('should handle sequential processing when parallel disabled', async () => {
       testBed.withConfig({ enableParallelProcessing: false, batchSize: 3 });
 
-      const traces = testBed.createMultipleTraces(3, { actionId: 'sequential' });
+      const traces = testBed.createMultipleTraces(3, {
+        actionId: 'sequential',
+      });
       traces.forEach((trace) => testBed.processor.enqueue(trace));
 
       await testBed.advanceTimersAndFlush(200);
@@ -250,7 +260,7 @@ describe('TraceQueueProcessor', () => {
 
       // First trace might succeed
       const firstResult = testBed.processor.enqueue(largeMockTrace);
-      
+
       // Subsequent traces should be rejected due to memory limit
       let rejectedCount = 0;
       for (let i = 0; i < 10; i++) {
@@ -354,7 +364,9 @@ describe('TraceQueueProcessor', () => {
 
       const stats = testBed.getQueueStats();
       expect(stats.circuitBreakerOpen).toBe(true);
-      expect(testBed.wasEventDispatched(QUEUE_EVENTS.CIRCUIT_BREAKER)).toBe(true);
+      expect(testBed.wasEventDispatched(QUEUE_EVENTS.CIRCUIT_BREAKER)).toBe(
+        true
+      );
     });
 
     it('should reject new items when circuit breaker is open', async () => {
@@ -376,26 +388,26 @@ describe('TraceQueueProcessor', () => {
     it('should close circuit breaker after successful batch', async () => {
       // First cause failures to open circuit breaker
       testBed.simulateStorageFailure(new Error('Initial failure'));
-      
+
       for (let i = 0; i < 15; i++) {
         const trace = testBed.createMockTrace({ actionId: `failure-${i}` });
         testBed.processor.enqueue(trace);
       }
-      
+
       await testBed.advanceTimersAndFlush(1000);
-      
+
       let stats = testBed.getQueueStats();
       expect(stats.circuitBreakerOpen).toBe(true);
 
       // Then restore storage and process successfully
       testBed.simulateStorageSuccess();
-      
+
       const successTrace = testBed.createMockTrace({ actionId: 'success' });
       // Circuit breaker should prevent this, but let's test recovery
-      
+
       // Advance time to potentially trigger recovery attempt
       await testBed.advanceTimersAndFlush(2000);
-      
+
       // Circuit breaker should eventually close on successful processing
       // (This would require implementing circuit breaker recovery logic)
     });
@@ -407,7 +419,7 @@ describe('TraceQueueProcessor', () => {
         actionId: 'execution-trace',
         data: { executed: true },
       });
-      
+
       // Override the toJSON after creation to get the exact format we want
       trace.toJSON = jest.fn().mockReturnValue({
         actionId: 'execution-trace',
@@ -419,7 +431,7 @@ describe('TraceQueueProcessor', () => {
       await testBed.advanceTimersAndFlush(200);
 
       expect(trace.toJSON).toHaveBeenCalled();
-      
+
       const storedTraces = testBed.getStoredTraces();
       expect(storedTraces[0].data).toEqual({
         actionId: 'execution-trace',
@@ -444,7 +456,7 @@ describe('TraceQueueProcessor', () => {
 
       const storedTraces = testBed.getStoredTraces();
       const storedData = storedTraces[0].data;
-      
+
       expect(storedData.traceType).toBe('pipeline');
       expect(storedData.spans).toEqual(['span1', 'span2']);
       expect(storedData.actions).toHaveProperty('structured-trace');
@@ -463,7 +475,7 @@ describe('TraceQueueProcessor', () => {
 
       const storedTraces = testBed.getStoredTraces();
       const storedData = storedTraces[0].data;
-      
+
       expect(storedData.type).toBe('unknown');
       expect(storedData.data).toEqual(unknownTrace);
     });
@@ -472,16 +484,19 @@ describe('TraceQueueProcessor', () => {
   describe('Metrics and Statistics', () => {
     it('should track comprehensive metrics', async () => {
       // Enqueue and process various traces
-      const traces = testBed.createMultipleTraces(5, { actionId: 'metrics-test' });
+      const traces = testBed.createMultipleTraces(5, {
+        actionId: 'metrics-test',
+      });
       traces.forEach((trace, index) => {
-        const priority = index % 2 === 0 ? TracePriority.HIGH : TracePriority.LOW;
+        const priority =
+          index % 2 === 0 ? TracePriority.HIGH : TracePriority.LOW;
         testBed.processor.enqueue(trace, priority);
       });
 
       await testBed.advanceTimersAndFlush(200);
 
       const metrics = testBed.getMetrics();
-      
+
       expect(metrics.totalEnqueued).toBe(5);
       expect(metrics.totalProcessed).toBe(5);
       expect(metrics.totalBatches).toBeGreaterThan(0);
@@ -495,7 +510,9 @@ describe('TraceQueueProcessor', () => {
       testBed.withConfig({ batchSize: 3 });
 
       // Process exactly one full batch
-      const traces = testBed.createMultipleTraces(3, { actionId: 'efficiency-test' });
+      const traces = testBed.createMultipleTraces(3, {
+        actionId: 'efficiency-test',
+      });
       traces.forEach((trace) => testBed.processor.enqueue(trace));
 
       await testBed.advanceTimersAndFlush(200);
@@ -507,12 +524,16 @@ describe('TraceQueueProcessor', () => {
 
   describe('Event Notifications', () => {
     it('should dispatch batch processed events', async () => {
-      const traces = testBed.createMultipleTraces(3, { actionId: 'batch-event' });
+      const traces = testBed.createMultipleTraces(3, {
+        actionId: 'batch-event',
+      });
       traces.forEach((trace) => testBed.processor.enqueue(trace));
 
       await testBed.advanceTimersAndFlush(200);
 
-      expect(testBed.wasEventDispatched(QUEUE_EVENTS.BATCH_PROCESSED)).toBe(true);
+      expect(testBed.wasEventDispatched(QUEUE_EVENTS.BATCH_PROCESSED)).toBe(
+        true
+      );
     });
 
     it('should work without event bus', async () => {
@@ -530,7 +551,9 @@ describe('TraceQueueProcessor', () => {
 
   describe('Shutdown and Cleanup', () => {
     it('should flush remaining items on shutdown', async () => {
-      const traces = testBed.createMultipleTraces(3, { actionId: 'shutdown-test' });
+      const traces = testBed.createMultipleTraces(3, {
+        actionId: 'shutdown-test',
+      });
       traces.forEach((trace) => testBed.processor.enqueue(trace));
 
       await testBed.processor.shutdown();
@@ -577,10 +600,10 @@ describe('TraceQueueProcessor', () => {
       testBed.processor.enqueue(trace);
 
       const shutdownPromise = testBed.processor.shutdown();
-      
+
       // Advance timers to complete processing
       await testBed.advanceTimersAndFlush(200);
-      
+
       await shutdownPromise;
 
       const metrics = testBed.getMetrics();

@@ -11,10 +11,7 @@ import {
   inferPriority,
   getPriorityLevels,
 } from './tracePriority.js';
-import {
-  QUEUE_CONSTANTS,
-  QUEUE_EVENTS,
-} from './actionTraceTypes.js';
+import { QUEUE_CONSTANTS, QUEUE_EVENTS } from './actionTraceTypes.js';
 import { TimerService, defaultTimerService } from './timerService.js';
 
 /**
@@ -27,15 +24,15 @@ export class TraceQueueProcessor {
   #eventBus;
   #config;
   #timerService;
-  
+
   // Priority queue system
   #priorityQueues;
-  
+
   // Processing state
   #isProcessing;
   #processingBatch;
   #batchTimer;
-  
+
   // Resource management
   #currentMemoryUsage;
   #maxMemoryLimit;
@@ -43,7 +40,7 @@ export class TraceQueueProcessor {
   #consecutiveFailures;
   #circuitBreakerOpen;
   #shuttingDown;
-  
+
   // Metrics tracking
   #metrics;
   #startTime;
@@ -63,35 +60,37 @@ export class TraceQueueProcessor {
     validateDependency(storageAdapter, 'IStorageAdapter', null, {
       requiredMethods: ['getItem', 'setItem', 'removeItem', 'getAllKeys'],
     });
-    
+
     this.#storageAdapter = storageAdapter;
     this.#logger = ensureValidLogger(logger, 'TraceQueueProcessor');
     this.#eventBus = eventBus;
     this.#timerService = timerService || defaultTimerService;
-    
+
     // Initialize configuration
     this.#config = {
-      maxQueueSize: config.maxQueueSize || QUEUE_CONSTANTS.DEFAULT_MAX_QUEUE_SIZE,
+      maxQueueSize:
+        config.maxQueueSize || QUEUE_CONSTANTS.DEFAULT_MAX_QUEUE_SIZE,
       batchSize: Math.min(
         config.batchSize || QUEUE_CONSTANTS.DEFAULT_BATCH_SIZE,
         QUEUE_CONSTANTS.MAX_BATCH_SIZE
       ),
-      batchTimeout: config.batchTimeout || QUEUE_CONSTANTS.DEFAULT_BATCH_TIMEOUT,
+      batchTimeout:
+        config.batchTimeout || QUEUE_CONSTANTS.DEFAULT_BATCH_TIMEOUT,
       maxRetries: config.maxRetries || QUEUE_CONSTANTS.DEFAULT_MAX_RETRIES,
       memoryLimit: config.memoryLimit || QUEUE_CONSTANTS.DEFAULT_MEMORY_LIMIT,
       enableParallelProcessing: config.enableParallelProcessing !== false,
       storageKey: config.storageKey || 'actionTraces',
       maxStoredTraces: config.maxStoredTraces || 100,
     };
-    
+
     // Initialize priority queue system
     this.#initializePriorityQueues();
-    
+
     // Initialize processing state
     this.#isProcessing = false;
     this.#processingBatch = new Set();
     this.#batchTimer = null;
-    
+
     // Initialize resource management
     this.#currentMemoryUsage = 0;
     this.#maxMemoryLimit = this.#config.memoryLimit;
@@ -99,10 +98,10 @@ export class TraceQueueProcessor {
     this.#consecutiveFailures = 0;
     this.#circuitBreakerOpen = false;
     this.#shuttingDown = false;
-    
+
     // Initialize metrics tracking
     this.#initializeMetrics();
-    
+
     this.#logger.debug('TraceQueueProcessor initialized', {
       maxQueueSize: this.#config.maxQueueSize,
       batchSize: this.#config.batchSize,
@@ -118,7 +117,7 @@ export class TraceQueueProcessor {
    */
   #initializePriorityQueues() {
     this.#priorityQueues = new Map();
-    
+
     for (const priority of getPriorityLevels()) {
       this.#priorityQueues.set(priority, []);
     }
@@ -171,7 +170,9 @@ export class TraceQueueProcessor {
 
     // Circuit breaker check
     if (this.#circuitBreakerOpen || this.#shuttingDown) {
-      this.#logger.warn('TraceQueueProcessor: Circuit breaker open or shutting down, dropping trace');
+      this.#logger.warn(
+        'TraceQueueProcessor: Circuit breaker open or shutting down, dropping trace'
+      );
       this.#metrics.totalDropped++;
       return false;
     }
@@ -189,14 +190,17 @@ export class TraceQueueProcessor {
     if (!this.#checkMemoryLimit(traceSize)) {
       // First attempt: handle backpressure to free memory
       this.#handleBackpressure();
-      
+
       // Second check: if still over limit, drop the trace
       if (!this.#checkMemoryLimit(traceSize)) {
-        this.#logger.warn('TraceQueueProcessor: Memory limit still exceeded after backpressure, dropping trace', {
-          requestedSize: traceSize,
-          currentUsage: this.#currentMemoryUsage,
-          limit: this.#maxMemoryLimit
-        });
+        this.#logger.warn(
+          'TraceQueueProcessor: Memory limit still exceeded after backpressure, dropping trace',
+          {
+            requestedSize: traceSize,
+            currentUsage: this.#currentMemoryUsage,
+            limit: this.#maxMemoryLimit,
+          }
+        );
         this.#metrics.totalDropped++;
         return false;
       }
@@ -232,7 +236,7 @@ export class TraceQueueProcessor {
     this.#metrics.totalEnqueued++;
     this.#metrics.priorityDistribution[normalizedPriority]++;
     this.#currentMemoryUsage += traceSize;
-    
+
     this.#updateDerivedMetrics();
 
     // Start processing if not already running
@@ -263,7 +267,10 @@ export class TraceQueueProcessor {
       const jsonStr = JSON.stringify(trace);
       return new Blob([jsonStr]).size;
     } catch (error) {
-      this.#logger.warn('TraceQueueProcessor: Failed to estimate trace size', error);
+      this.#logger.warn(
+        'TraceQueueProcessor: Failed to estimate trace size',
+        error
+      );
       // Return conservative estimate
       return 1024; // 1KB default
     }
@@ -278,7 +285,7 @@ export class TraceQueueProcessor {
    */
   #checkMemoryLimit(additionalSize) {
     const projectedUsage = this.#currentMemoryUsage + additionalSize;
-    
+
     // Check configured limit
     if (projectedUsage > this.#maxMemoryLimit) {
       return false;
@@ -289,7 +296,7 @@ export class TraceQueueProcessor {
       const heapUsed = performance.memory.usedJSHeapSize;
       const heapLimit = performance.memory.jsHeapSizeLimit;
       const threshold = heapLimit * QUEUE_CONSTANTS.MEMORY_THRESHOLD;
-      
+
       if (heapUsed + additionalSize > threshold) {
         return false;
       }
@@ -339,14 +346,17 @@ export class TraceQueueProcessor {
     // Process immediately if we have enough items or critical priority items
     const criticalQueue = this.#priorityQueues.get(TracePriority.CRITICAL);
     const totalSize = this.#getTotalQueueSize();
-    
+
     if (criticalQueue.length > 0 || totalSize >= this.#config.batchSize) {
       // Process immediately - use setImmediate-like behavior for Jest compatibility
       this.#batchTimer = this.#timerService.setTimeout(() => {
         this.#batchTimer = null;
         // Call #processBatch directly - it's already async
-        this.#processBatch().catch(error => {
-          this.#logger.error('TraceQueueProcessor: Batch processing error', error);
+        this.#processBatch().catch((error) => {
+          this.#logger.error(
+            'TraceQueueProcessor: Batch processing error',
+            error
+          );
         });
       }, 0);
     } else {
@@ -354,8 +364,11 @@ export class TraceQueueProcessor {
       this.#batchTimer = this.#timerService.setTimeout(() => {
         this.#batchTimer = null;
         // Call #processBatch directly - it's already async
-        this.#processBatch().catch(error => {
-          this.#logger.error('TraceQueueProcessor: Batch processing error', error);
+        this.#processBatch().catch((error) => {
+          this.#logger.error(
+            'TraceQueueProcessor: Batch processing error',
+            error
+          );
         });
       }, this.#config.batchTimeout);
     }
@@ -370,10 +383,14 @@ export class TraceQueueProcessor {
     this.#consecutiveFailures++;
     this.#errorCount++;
 
-    if (this.#consecutiveFailures >= QUEUE_CONSTANTS.CIRCUIT_BREAKER_THRESHOLD) {
+    if (
+      this.#consecutiveFailures >= QUEUE_CONSTANTS.CIRCUIT_BREAKER_THRESHOLD
+    ) {
       this.#circuitBreakerOpen = true;
-      this.#logger.error('TraceQueueProcessor: Circuit breaker opened due to consecutive failures');
-      
+      this.#logger.error(
+        'TraceQueueProcessor: Circuit breaker opened due to consecutive failures'
+      );
+
       if (this.#eventBus) {
         this.#eventBus.dispatch({
           type: QUEUE_EVENTS.CIRCUIT_BREAKER,
@@ -407,27 +424,30 @@ export class TraceQueueProcessor {
    */
   #updateDerivedMetrics() {
     const elapsed = (Date.now() - this.#startTime) / 1000; // seconds
-    
+
     // Calculate throughput
     if (elapsed > 0) {
       this.#metrics.throughput = this.#metrics.totalProcessed / elapsed;
     }
-    
+
     // Calculate batch efficiency
     if (this.#metrics.totalBatches > 0) {
-      this.#metrics.batchEfficiency = this.#metrics.fullBatches / this.#metrics.totalBatches;
+      this.#metrics.batchEfficiency =
+        this.#metrics.fullBatches / this.#metrics.totalBatches;
     }
-    
+
     // Calculate drop rate
     if (this.#metrics.totalEnqueued > 0) {
-      this.#metrics.dropRate = this.#metrics.totalDropped / this.#metrics.totalEnqueued;
+      this.#metrics.dropRate =
+        this.#metrics.totalDropped / this.#metrics.totalEnqueued;
     }
-    
+
     // Calculate average latency
     if (this.#metrics.totalProcessed > 0) {
-      this.#metrics.avgLatency = this.#metrics.totalLatency / this.#metrics.totalProcessed;
+      this.#metrics.avgLatency =
+        this.#metrics.totalLatency / this.#metrics.totalProcessed;
     }
-    
+
     // Update current state
     this.#metrics.memoryUsage = this.#currentMemoryUsage;
     this.#metrics.queueSize = this.#getTotalQueueSize();
@@ -439,17 +459,23 @@ export class TraceQueueProcessor {
    * @private
    */
   #handleBackpressure() {
-    this.#logger.warn('TraceQueueProcessor: Backpressure detected, applying mitigation');
+    this.#logger.warn(
+      'TraceQueueProcessor: Backpressure detected, applying mitigation'
+    );
 
     let totalDropped = 0;
 
     // Priority order for dropping: LOW -> NORMAL -> HIGH (never drop CRITICAL)
-    const dropPriorities = [TracePriority.LOW, TracePriority.NORMAL, TracePriority.HIGH];
-    
+    const dropPriorities = [
+      TracePriority.LOW,
+      TracePriority.NORMAL,
+      TracePriority.HIGH,
+    ];
+
     for (const priority of dropPriorities) {
       const queue = this.#priorityQueues.get(priority);
       const dropCount = Math.floor(queue.length / 2);
-      
+
       for (let i = 0; i < dropCount && i < queue.length; i++) {
         const item = queue.shift();
         if (item) {
@@ -458,7 +484,7 @@ export class TraceQueueProcessor {
           totalDropped++;
         }
       }
-      
+
       // Stop dropping if we've freed enough memory (25% of limit)
       if (this.#currentMemoryUsage < this.#maxMemoryLimit * 0.75) {
         break;
@@ -478,12 +504,15 @@ export class TraceQueueProcessor {
     }
 
     this.#updateDerivedMetrics();
-    
-    this.#logger.debug('TraceQueueProcessor: Backpressure mitigation complete', {
-      droppedItems: totalDropped,
-      newMemoryUsage: this.#currentMemoryUsage,
-      newQueueSize: this.#getTotalQueueSize(),
-    });
+
+    this.#logger.debug(
+      'TraceQueueProcessor: Backpressure mitigation complete',
+      {
+        droppedItems: totalDropped,
+        newMemoryUsage: this.#currentMemoryUsage,
+        newQueueSize: this.#getTotalQueueSize(),
+      }
+    );
   }
 
   /**
@@ -555,16 +584,15 @@ export class TraceQueueProcessor {
     try {
       // Process batch items
       await this.#processBatchItems(batch);
-      
+
       // Update success metrics
       this.#metrics.totalBatches++;
       if (batch.length >= this.#config.batchSize) {
         this.#metrics.fullBatches++;
       }
-      
+
       // Reset failure tracking on successful batch
       this.#resetFailureTracking();
-
     } catch (error) {
       this.#logger.error('TraceQueueProcessor: Batch processing failed', error);
       await this.#handleBatchFailure(batch, error);
@@ -607,7 +635,7 @@ export class TraceQueueProcessor {
     // Collect items by priority (highest first)
     for (const priority of getPriorityLevels()) {
       const queue = this.#priorityQueues.get(priority);
-      
+
       while (queue.length > 0 && batch.length < maxBatchSize) {
         const item = queue.shift();
         if (item) {
@@ -615,7 +643,7 @@ export class TraceQueueProcessor {
           this.#currentMemoryUsage -= item.size;
         }
       }
-      
+
       // Break if batch is full
       if (batch.length >= maxBatchSize) {
         break;
@@ -652,13 +680,13 @@ export class TraceQueueProcessor {
       // Process items in parallel with concurrency limit
       const concurrencyLimit = Math.min(batch.length, 5);
       const promises = [];
-      
+
       for (let i = 0; i < batch.length; i += concurrencyLimit) {
         const chunk = batch.slice(i, i + concurrencyLimit);
         const chunkPromises = chunk.map((item) => this.#processItem(item));
         promises.push(Promise.all(chunkPromises));
       }
-      
+
       await Promise.all(promises);
     } else {
       // Process items sequentially
@@ -677,10 +705,10 @@ export class TraceQueueProcessor {
    */
   async #processItem(item) {
     const itemStartTime = Date.now();
-    
+
     try {
       // Get existing traces from storage
-      const existingTraces = 
+      const existingTraces =
         (await this.#storageAdapter.getItem(this.#config.storageKey)) || [];
 
       // Format trace data using existing logic
@@ -699,15 +727,21 @@ export class TraceQueueProcessor {
 
       // Implement rotation if needed
       if (existingTraces.length > this.#config.maxStoredTraces) {
-        existingTraces.splice(0, existingTraces.length - this.#config.maxStoredTraces);
+        existingTraces.splice(
+          0,
+          existingTraces.length - this.#config.maxStoredTraces
+        );
       }
 
       // Save to storage
-      await this.#storageAdapter.setItem(this.#config.storageKey, existingTraces);
+      await this.#storageAdapter.setItem(
+        this.#config.storageKey,
+        existingTraces
+      );
 
       // Update success metrics
       this.#metrics.totalProcessed++;
-      
+
       // Track latency for critical items
       if (item.priority === TracePriority.CRITICAL) {
         const itemLatency = Date.now() - item.timestamp;
@@ -719,13 +753,12 @@ export class TraceQueueProcessor {
         priority: item.priority,
         processingTime: Date.now() - itemStartTime,
       });
-
     } catch (error) {
       this.#logger.error('TraceQueueProcessor: Failed to process item', error);
-      
+
       // Track failure for circuit breaker
       this.#trackFailure();
-      
+
       // Handle item failure
       await this.#handleItemFailure(item, error);
       throw error; // Re-throw for batch handling
@@ -746,7 +779,10 @@ export class TraceQueueProcessor {
     }
 
     // Handle ActionAwareStructuredTrace
-    if (trace.getTracedActions && typeof trace.getTracedActions === 'function') {
+    if (
+      trace.getTracedActions &&
+      typeof trace.getTracedActions === 'function'
+    ) {
       return this.#formatStructuredTrace(trace);
     }
 
@@ -848,9 +884,12 @@ export class TraceQueueProcessor {
 
       // Don't re-queue if shutting down
       if (this.#shuttingDown) {
-        this.#logger.debug('TraceQueueProcessor: Not retrying item during shutdown', {
-          itemId: item.id,
-        });
+        this.#logger.debug(
+          'TraceQueueProcessor: Not retrying item during shutdown',
+          {
+            itemId: item.id,
+          }
+        );
         return;
       }
 
@@ -860,11 +899,11 @@ export class TraceQueueProcessor {
         if (this.#shuttingDown) {
           return;
         }
-        
+
         const priorityQueue = this.#priorityQueues.get(item.priority);
         priorityQueue.unshift(item); // Add to front for retry
         this.#currentMemoryUsage += item.size;
-        
+
         // Schedule processing if needed
         if (!this.#isProcessing) {
           this.#scheduleBatchProcessing();
@@ -876,11 +915,10 @@ export class TraceQueueProcessor {
         retryCount: item.retryCount,
         delay,
       });
-
     } else {
       // Permanently failed
       this.#metrics.totalDropped++;
-      
+
       if (this.#eventBus) {
         this.#eventBus.dispatch({
           type: QUEUE_EVENTS.ITEM_DROPPED,
@@ -937,14 +975,14 @@ export class TraceQueueProcessor {
     // During shutdown, we'll process items directly without going through
     // the normal batch processing which has timer dependencies
     const remainingItems = [];
-    
+
     // Collect all remaining items from priority queues
     for (const queue of this.#priorityQueues.values()) {
       while (queue.length > 0) {
         remainingItems.push(queue.shift());
       }
     }
-    
+
     // Try to save remaining items directly if storage is available
     if (remainingItems.length > 0) {
       try {
@@ -955,45 +993,60 @@ export class TraceQueueProcessor {
           priority: item.priority,
           data: this.#formatTraceData(item.trace),
         }));
-        
+
         // Try to get existing traces and append
         let existingTraces = [];
         try {
-          existingTraces = (await this.#storageAdapter.getItem(this.#config.storageKey)) || [];
+          existingTraces =
+            (await this.#storageAdapter.getItem(this.#config.storageKey)) || [];
         } catch (e) {
           // If we can't read, start fresh
-          this.#logger.debug('TraceQueueProcessor: Could not read existing traces during shutdown');
+          this.#logger.debug(
+            'TraceQueueProcessor: Could not read existing traces during shutdown'
+          );
         }
-        
+
         existingTraces.push(...traces);
-        
+
         // Implement rotation if needed
         if (existingTraces.length > this.#config.maxStoredTraces) {
-          existingTraces.splice(0, existingTraces.length - this.#config.maxStoredTraces);
+          existingTraces.splice(
+            0,
+            existingTraces.length - this.#config.maxStoredTraces
+          );
         }
-        
+
         // Attempt to save
-        await this.#storageAdapter.setItem(this.#config.storageKey, existingTraces);
+        await this.#storageAdapter.setItem(
+          this.#config.storageKey,
+          existingTraces
+        );
         this.#metrics.totalProcessed += remainingItems.length;
-        
-        this.#logger.info('TraceQueueProcessor: Saved remaining items during shutdown', {
-          itemCount: remainingItems.length
-        });
+
+        this.#logger.info(
+          'TraceQueueProcessor: Saved remaining items during shutdown',
+          {
+            itemCount: remainingItems.length,
+          }
+        );
       } catch (error) {
-        this.#logger.warn('TraceQueueProcessor: Could not save remaining items during shutdown', {
-          itemCount: remainingItems.length,
-          error: error.message
-        });
+        this.#logger.warn(
+          'TraceQueueProcessor: Could not save remaining items during shutdown',
+          {
+            itemCount: remainingItems.length,
+            error: error.message,
+          }
+        );
       }
     }
-    
+
     // Clear memory usage tracking
     this.#currentMemoryUsage = 0;
 
     // Log final shutdown status
     this.#logger.info('TraceQueueProcessor: Shutdown complete', {
       processedItems: this.#metrics.totalProcessed,
-      remainingItems: 0
+      remainingItems: 0,
     });
   }
 }

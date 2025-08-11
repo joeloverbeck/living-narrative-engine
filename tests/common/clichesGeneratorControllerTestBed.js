@@ -50,13 +50,15 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       generateCliches: jest.fn(),
     };
 
-    // Use enhanced event bus that tracks dispatches for state management testing  
+    // Use enhanced event bus that tracks dispatches for state management testing
     this.mockEventBus = this.createEnhancedEventBus();
 
     this.mockSchemaValidator = {
       validate: jest.fn().mockReturnValue({ valid: true }),
       getErrors: jest.fn().mockReturnValue([]),
-      validateAgainstSchema: jest.fn().mockReturnValue({ valid: true, errors: [] }),
+      validateAgainstSchema: jest
+        .fn()
+        .mockReturnValue({ valid: true, errors: [] }),
     };
 
     // Create DOM structure
@@ -159,16 +161,16 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
   createMockClichesData() {
     const categories = {
       names: ['John Smith', 'Jane Doe', 'Bob Johnson'],
-      physicalDescriptions: ['Tall and muscular', 'Beautiful but mysterious'],
+      physicalDescriptions: ['Tall and muscular', 'Beautiful but mysterious', 'Average build with scars'],
       personalityTraits: ['Brooding', 'Sarcastic', 'Rebellious'],
-      skillsAbilities: ['Master swordsman', 'Expert hacker'],
-      typicalLikes: ['Being alone', 'Justice'],
-      typicalDislikes: ['Authority', 'Crowds'],
-      commonFears: ['Losing loved ones', 'Being powerless'],
-      genericGoals: ['Save the world', 'Get revenge'],
-      backgroundElements: ['Orphaned at young age', 'Trained by mentor'],
-      overusedSecrets: ['Secret royal bloodline', 'Hidden powers'],
-      speechPatterns: ['I work alone', "This time it's personal"],
+      skillsAbilities: ['Master swordsman', 'Expert hacker', 'Martial artist'],
+      typicalLikes: ['Being alone', 'Justice', 'Classic music'],
+      typicalDislikes: ['Authority', 'Crowds', 'Small talk'],
+      commonFears: ['Losing loved ones', 'Being powerless', 'Failure'],
+      genericGoals: ['Save the world', 'Get revenge', 'Find their purpose'],
+      backgroundElements: ['Orphaned at young age', 'Trained by mentor', 'Noble upbringing'],
+      overusedSecrets: ['Secret royal bloodline', 'Hidden powers', 'Dark family history'],
+      speechPatterns: ['I work alone', "This time it's personal", 'You remind me of myself'],
     };
 
     const tropesAndStereotypes = [
@@ -281,10 +283,14 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       directions
     );
 
-    concepts.forEach((concept) => {
-      this.mockCharacterBuilderService.getCharacterConcept.mockResolvedValueOnce(
-        concept
-      );
+    // Mock getCharacterConcept to return the appropriate concept for each concept ID
+    this.mockCharacterBuilderService.getCharacterConcept.mockImplementation((conceptId) => {
+      const concept = concepts.find(c => c.id === conceptId);
+      if (concept) {
+        return Promise.resolve(concept);
+      }
+      // Return the first concept as fallback or create a new one for the ID
+      return Promise.resolve(this.createMockConcept(conceptId));
     });
 
     return { directions, concepts };
@@ -323,17 +329,72 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
   }
 
   /**
+   * Simulate direction selection through UI
+   * @param {string} directionId - Direction ID to select
+   */
+  async simulateDirectionSelection(directionId) {
+    const selector = this.getDirectionSelector();
+    selector.value = directionId;
+    
+    // Trigger change event
+    const changeEvent = new Event('change', { bubbles: true });
+    selector.dispatchEvent(changeEvent);
+    
+    // Allow event handlers to process
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+
+  /**
+   * Simulate generate button click
+   */
+  async simulateGenerateClick() {
+    const generateBtn = this.getGenerateButton();
+    
+    // Enable button for click
+    generateBtn.disabled = false;
+    
+    // Trigger click event
+    const clickEvent = new Event('click', { bubbles: true });
+    generateBtn.dispatchEvent(clickEvent);
+    
+    // Also trigger form submit
+    const form = document.getElementById('cliches-form');
+    if (form) {
+      const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+      form.dispatchEvent(submitEvent);
+    }
+    
+    // Allow event handlers to process
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+
+  /**
+   * Get dispatched events of a specific type
+   * @param {string} eventType - Event type to filter by
+   */
+  getDispatchedEvents(eventType) {
+    return this.dispatchedEvents.filter(e => e.type === eventType);
+  }
+
+  /**
+   * Create mock clichés data (alias for createMockClichesData)
+   */
+  createMockCliches() {
+    return this.createMockClichesData();
+  }
+
+  /**
    * Create enhanced EventBus mock that tracks dispatches
    */
   createEnhancedEventBus() {
     const baseEventBus = createEventBus({ captureEvents: true });
-    
+
     // Add the 'on' method as a jest mock that aliases to 'subscribe' for the new EventBus API
     baseEventBus.on = jest.fn((eventType, callback) => {
       return baseEventBus.subscribe(eventType, callback);
     });
     baseEventBus.off = baseEventBus.unsubscribe;
-    
+
     // Override dispatch method to track events
     const originalDispatch = baseEventBus.dispatch.bind(baseEventBus);
     baseEventBus.dispatch = (event) => {
@@ -375,7 +436,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
    * @param eventType
    */
   getDispatchedEventsByType(eventType) {
-    return this.dispatchedEvents.filter(event => event.type === eventType);
+    return this.dispatchedEvents.filter((event) => event.type === eventType);
   }
 
   /**
@@ -400,15 +461,15 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
    */
   async waitForEvent(eventType, timeout = 1000) {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       const events = this.getDispatchedEventsByType(eventType);
       if (events.length > 0) {
         return events[events.length - 1];
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
-    
+
     throw new Error(`Event ${eventType} not dispatched within ${timeout}ms`);
   }
 
@@ -419,7 +480,11 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
    * @param methodName
    * @param error
    */
-  simulateServiceError(serviceName, methodName, error = new Error('Test error')) {
+  simulateServiceError(
+    serviceName,
+    methodName,
+    error = new Error('Test error')
+  ) {
     const service = this[serviceName];
     if (service && service[methodName]) {
       service[methodName].mockRejectedValue(error);
@@ -437,12 +502,12 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
     if (events.length === 0) {
       throw new Error(`Event ${eventType} was not dispatched`);
     }
-    
+
     if (expectedPayload) {
       const lastEvent = events[events.length - 1];
       expect(lastEvent.payload).toMatchObject(expectedPayload);
     }
-    
+
     return events[events.length - 1];
   }
 
@@ -452,13 +517,18 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
    * @param expectedSequence
    */
   assertEventSequence(expectedSequence) {
-    const actualSequence = this.dispatchedEvents.map(event => event.type);
+    const actualSequence = this.dispatchedEvents.map((event) => event.type);
     const sequenceMatch = expectedSequence.every((eventType, index) => {
       const actualIndex = actualSequence.indexOf(eventType);
-      return actualIndex >= 0 && (index === 0 || actualIndex > actualSequence.indexOf(expectedSequence[index - 1]));
+      return (
+        actualIndex >= 0 &&
+        (index === 0 ||
+          actualIndex > actualSequence.indexOf(expectedSequence[index - 1]))
+      );
     });
-    
-    expect(sequenceMatch).toBe(true, 
+
+    expect(sequenceMatch).toBe(
+      true,
       `Expected sequence ${expectedSequence.join(' → ')} but got ${actualSequence.join(' → ')}`
     );
   }
@@ -497,15 +567,17 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
    */
   assertStateChangeRecorded(action, expectedData = null) {
     const history = this.getStateHistory();
-    const matchingChanges = history.filter(change => change.action === action);
-    
+    const matchingChanges = history.filter(
+      (change) => change.action === action
+    );
+
     expect(matchingChanges.length).toBeGreaterThan(0);
-    
+
     if (expectedData) {
       const lastChange = matchingChanges[matchingChanges.length - 1];
       expect(lastChange.data).toMatchObject(expectedData);
     }
-    
+
     return matchingChanges[matchingChanges.length - 1];
   }
 

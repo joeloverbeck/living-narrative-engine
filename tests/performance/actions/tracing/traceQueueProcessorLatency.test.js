@@ -4,13 +4,7 @@
  * @see src/actions/tracing/traceQueueProcessor.js
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { TraceQueueProcessor } from '../../../../src/actions/tracing/traceQueueProcessor.js';
 import { TracePriority } from '../../../../src/actions/tracing/tracePriority.js';
 import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
@@ -26,7 +20,7 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
     // Use real timers for performance measurements
     mockLogger = createMockLogger();
     mockStorageAdapter = createMockIndexedDBStorageAdapter();
-    
+
     mockEventBus = {
       dispatch: jest.fn(),
     };
@@ -77,17 +71,17 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
       }
 
       // Wait for processing to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const metrics = processor.getMetrics();
-      
+
       // Verify latency metrics were tracked
       expect(metrics.totalProcessed).toBeGreaterThan(0);
       expect(metrics.avgLatency).toBeGreaterThan(0);
       expect(metrics.minLatency).toBeGreaterThan(0);
       expect(metrics.minLatency).toBeLessThanOrEqual(metrics.maxLatency);
       expect(metrics.maxLatency).toBeGreaterThan(0);
-      
+
       // Log latency metrics for performance analysis
       console.log('Latency Metrics:', {
         avgLatency: `${metrics.avgLatency.toFixed(2)}ms`,
@@ -135,20 +129,20 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
       }
 
       // Wait for processing to complete
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const metrics = processor.getMetrics();
-      
+
       // Verify processing completed
       expect(metrics.totalProcessed).toBeGreaterThan(0);
       expect(metrics.totalProcessed).toBeLessThanOrEqual(50);
-      
+
       // Verify latency tracking
       expect(metrics.avgLatency).toBeGreaterThan(0);
       expect(metrics.minLatency).toBeGreaterThan(0);
       expect(metrics.minLatency).toBeLessThanOrEqual(metrics.maxLatency);
       expect(metrics.maxLatency).toBeGreaterThan(0);
-      
+
       console.log('Priority-based Latency Distribution:', {
         totalEnqueued: metrics.totalEnqueued,
         totalProcessed: metrics.totalProcessed,
@@ -181,7 +175,7 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
         // Enqueue traces to fill at least one batch
         const traceCount = batchSize * 2;
         const startTime = performance.now();
-        
+
         for (let i = 0; i < traceCount; i++) {
           const trace = {
             actionId: `batch-${batchSize}-trace-${i}`,
@@ -194,12 +188,12 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
         }
 
         // Wait for processing
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
         const endTime = performance.now();
 
         const metrics = processor.getMetrics();
         const processingTime = endTime - startTime;
-        
+
         results.push({
           batchSize,
           processingTime,
@@ -217,8 +211,9 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
 
       // Log comparison results
       console.log('\nBatch Size vs Latency Comparison:');
-      results.forEach(r => {
-        console.log(`Batch ${r.batchSize}:`,
+      results.forEach((r) => {
+        console.log(
+          `Batch ${r.batchSize}:`,
           `Processing: ${r.processingTime.toFixed(2)}ms,`,
           `Avg Latency: ${r.avgLatency.toFixed(2)}ms,`,
           `Range: ${r.minLatency.toFixed(2)}-${r.maxLatency.toFixed(2)}ms,`,
@@ -227,7 +222,7 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
       });
 
       // Verify all batch sizes completed processing
-      results.forEach(r => {
+      results.forEach((r) => {
         expect(r.totalProcessed).toBeGreaterThan(0);
         expect(r.avgLatency).toBeGreaterThan(0);
       });
@@ -256,7 +251,7 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
 
       for (const load of loadLevels) {
         const startTime = performance.now();
-        
+
         // Enqueue traces with specified delay between each
         for (let i = 0; i < load.count; i++) {
           const trace = {
@@ -267,23 +262,25 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
               loadLevel: load.name,
             }),
           };
-          
+
           // Mix priorities to simulate real conditions
-          const priority = i % 4 === 0 ? TracePriority.HIGH : TracePriority.NORMAL;
+          const priority =
+            i % 4 === 0 ? TracePriority.HIGH : TracePriority.NORMAL;
           processor.enqueue(trace, priority);
-          
+
           if (load.delay > 0) {
-            await new Promise(resolve => setTimeout(resolve, load.delay));
+            await new Promise((resolve) => setTimeout(resolve, load.delay));
           }
         }
-        
+
         // Wait for queue to drain
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         const metrics = processor.getMetrics();
         const endTime = performance.now();
-        
-        console.log(`${load.name} Load (${load.count} traces):`,
+
+        console.log(
+          `${load.name} Load (${load.count} traces):`,
           `Total Time: ${(endTime - startTime).toFixed(2)}ms,`,
           `Avg Latency: ${metrics.avgLatency.toFixed(2)}ms,`,
           `Min/Max: ${metrics.minLatency.toFixed(2)}/${metrics.maxLatency.toFixed(2)}ms,`,
@@ -303,9 +300,9 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
         { parallel: false, name: 'Sequential' },
         { parallel: true, name: 'Parallel' },
       ];
-      
+
       const results = [];
-      
+
       for (const config of configs) {
         processor = new TraceQueueProcessor({
           storageAdapter: mockStorageAdapter,
@@ -323,7 +320,7 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
 
         const traceCount = 30;
         const startTime = performance.now();
-        
+
         // Enqueue all traces at once
         for (let i = 0; i < traceCount; i++) {
           const trace = {
@@ -335,13 +332,13 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
           };
           processor.enqueue(trace, TracePriority.NORMAL);
         }
-        
+
         // Wait for processing
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
         const endTime = performance.now();
         const metrics = processor.getMetrics();
-        
+
         results.push({
           mode: config.name,
           processingTime: endTime - startTime,
@@ -350,23 +347,24 @@ describe('TraceQueueProcessor - Latency Performance Tests', () => {
           maxLatency: metrics.maxLatency,
           totalProcessed: metrics.totalProcessed,
         });
-        
+
         await processor.shutdown();
         processor = null;
       }
-      
+
       // Compare results
       console.log('\nParallel vs Sequential Latency:');
-      results.forEach(r => {
-        console.log(`${r.mode}:`,
+      results.forEach((r) => {
+        console.log(
+          `${r.mode}:`,
           `Total: ${r.processingTime.toFixed(2)}ms,`,
           `Avg Latency: ${r.avgLatency.toFixed(2)}ms,`,
           `Range: ${r.minLatency.toFixed(2)}-${r.maxLatency.toFixed(2)}ms`
         );
       });
-      
+
       // Verify both modes processed traces
-      results.forEach(r => {
+      results.forEach((r) => {
         expect(r.totalProcessed).toBeGreaterThan(0);
         expect(r.avgLatency).toBeGreaterThan(0);
       });

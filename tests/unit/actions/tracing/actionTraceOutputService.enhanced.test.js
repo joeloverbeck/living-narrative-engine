@@ -22,7 +22,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
   // Helper to flush promises
   // const flushPromises = () => new Promise(resolve => setImmediate(resolve));
-  
+
   // Helper to advance timers safely and flush all promises
   // const advanceTimersAndFlush = async (timeMs) => {
   //   await jest.advanceTimersByTime(timeMs);
@@ -32,7 +32,8 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
   // };
 
   // Helper to wait for real time to elapse (when using real timers)
-  const waitRealTime = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const waitRealTime = (ms) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
 
   beforeEach(() => {
     mockLogger = createMockLogger();
@@ -59,23 +60,23 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
         // Set a timeout to prevent hanging on shutdown
         await Promise.race([
           service.shutdown(),
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Shutdown timeout')), 5000)
-          )
+          ),
         ]);
       } catch {
         // Ignore shutdown errors in test cleanup
       }
     }
-    
+
     // Clear all timers and run any remaining ones
     jest.clearAllTimers();
     jest.runOnlyPendingTimers();
-    
+
     // Reset mocks and restore real timers
     jest.clearAllMocks();
     jest.useRealTimers();
-    
+
     // Clean up service reference
     service = null;
   });
@@ -122,21 +123,21 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       };
 
       await service.writeTrace(trace);
-      
+
       // TraceQueueProcessor schedules processing with setTimeout(0)
       // so processing won't start until we advance timers
       let stats = service.getQueueStats();
       expect(stats.queueLength).toBe(1);
       expect(stats.isProcessing).toBe(false);
-      
+
       // Advance timers to trigger batch processing
       await jest.runOnlyPendingTimersAsync();
-      
+
       // Now processing should have started and completed
       stats = service.getQueueStats();
       expect(stats.queueLength).toBe(0);
       expect(stats.isProcessing).toBe(false);
-      
+
       // Verify storage was called
       expect(mockStorageAdapter.setItem).toHaveBeenCalled();
     }, 5000);
@@ -158,7 +159,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
         resolveStorage = resolve;
       });
       mockStorageAdapter.setItem.mockReturnValue(storagePromise);
-      
+
       // Fill up queue to capacity (1000 items)
       const maxQueueSize = 1000;
       for (let i = 0; i < maxQueueSize; i++) {
@@ -167,28 +168,28 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
           toJSON: () => ({ id: i }),
         });
       }
-      
+
       // Verify queue is at capacity
       let stats = service.getQueueStats();
       expect(stats.queueLength).toBe(maxQueueSize);
-      
+
       // Try to add one more trace - should be dropped
       await service.writeTrace({
         actionId: 'overflow:1',
         toJSON: () => ({ action: 'overflow' }),
       });
-      
+
       // Check that TraceQueueProcessor logged the drop warning
       const warnCalls = mockLogger.warn.mock.calls;
-      const queueFullLogged = warnCalls.some(call => 
-        call[0] && call[0].includes('Queue full, dropping trace')
+      const queueFullLogged = warnCalls.some(
+        (call) => call[0] && call[0].includes('Queue full, dropping trace')
       );
       expect(queueFullLogged).toBe(true);
-      
+
       // Queue size should still be at max
       stats = service.getQueueStats();
       expect(stats.queueLength).toBe(maxQueueSize);
-      
+
       // Clean up
       resolveStorage();
     }, 10000);
@@ -330,7 +331,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
     it('should retry failed storage operations with exponential backoff', async () => {
       let attempts = 0;
-      
+
       mockStorageAdapter.setItem.mockImplementation(() => {
         attempts++;
         return Promise.reject(new Error('Storage error'));
@@ -342,11 +343,11 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       };
 
       await service.writeTrace(trace);
-      
+
       // TraceQueueProcessor retries items within the same batch processing cycle
       // so all attempts (initial + retries) happen in one runAllTimersAsync() call
       await jest.runAllTimersAsync();
-      
+
       // Should have made initial attempt plus retries (maxRetries = 3)
       expect(attempts).toBe(4); // 1 initial + 3 retries
 
@@ -397,7 +398,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       // Allow all processing and retries to complete
       await jest.runAllTimersAsync();
-      
+
       // Should have made multiple attempts (initial + retries)
       expect(attempts).toBeGreaterThan(1);
 
@@ -407,7 +408,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
         expect.objectContaining({
           itemId: expect.any(String),
           retryCount: expect.any(Number),
-          error: 'Permanent failure'
+          error: 'Permanent failure',
         })
       );
     });
@@ -552,7 +553,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       stats = service.getQueueStats();
       expect(stats.queueLength).toBe(0);
       expect(stats.isProcessing).toBe(false);
-      
+
       // Verify storage was called
       expect(mockStorageAdapter.setItem).toHaveBeenCalled();
     }, 5000);
@@ -587,7 +588,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ActionTraceOutputService: Shutdown complete'
       );
-      
+
       // TraceQueueProcessor batches all remaining items into a single write during shutdown
       expect(mockStorageAdapter.setItem).toHaveBeenCalledWith(
         'actionTraces',
@@ -633,7 +634,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
     it('should fall back to legacy behavior without storage adapter', async () => {
       // Use real timers for this test
       jest.useRealTimers();
-      
+
       const serviceNoStorage = new ActionTraceOutputService({
         logger: mockLogger,
       });
@@ -649,7 +650,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       // Write the trace and wait for completion
       await serviceNoStorage.writeTrace(trace);
-      
+
       // Give time for the setTimeout(resolve, 0) in defaultOutputHandler
       await waitRealTime(10);
 
@@ -663,7 +664,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
           hasError: false,
         })
       );
-      
+
       // Restore fake timers
       jest.useFakeTimers();
     }, 5000);
@@ -739,7 +740,9 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       const savedTraces = mockStorageAdapter.setItem.mock.calls[0][1];
       // TraceQueueProcessor generates IDs with format: sanitized_timestamp_random
-      expect(savedTraces[0].id).toMatch(/^test-action-with-special-chars_\d+_[a-z0-9]+$/);
+      expect(savedTraces[0].id).toMatch(
+        /^test-action-with-special-chars_\d+_[a-z0-9]+$/
+      );
     });
   });
 });

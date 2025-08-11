@@ -15,6 +15,7 @@ export class ActionTraceOutputService {
   #storageAdapter;
   #logger;
   #actionTraceFilter;
+  #jsonFormatter;
   #outputQueue;
   #isProcessing;
   #maxQueueSize;
@@ -34,17 +35,19 @@ export class ActionTraceOutputService {
    * @param {object} [dependencies.storageAdapter] - Storage interface for IndexedDB
    * @param {object} [dependencies.logger] - Logger interface
    * @param {object} [dependencies.actionTraceFilter] - Trace filter
+   * @param {object} [dependencies.jsonFormatter] - JSON trace formatter
    * @param {Function} [dependencies.outputHandler] - Custom output handler function for testing
    * @param {object} [dependencies.eventBus] - Event bus for queue notifications
    * @param {object} [dependencies.queueConfig] - Queue processor configuration
    */
-  constructor({ 
-    storageAdapter, 
-    logger, 
-    actionTraceFilter, 
+  constructor({
+    storageAdapter,
+    logger,
+    actionTraceFilter,
+    jsonFormatter,
     outputHandler,
     eventBus,
-    queueConfig 
+    queueConfig,
   } = {}) {
     // Validate dependencies if provided
     if (storageAdapter) {
@@ -61,10 +64,16 @@ export class ActionTraceOutputService {
         ],
       });
     }
+    if (jsonFormatter) {
+      validateDependency(jsonFormatter, 'IJsonTraceFormatter', null, {
+        requiredMethods: ['format'],
+      });
+    }
 
     this.#storageAdapter = storageAdapter;
     this.#logger = ensureValidLogger(logger, 'ActionTraceOutputService');
     this.#actionTraceFilter = actionTraceFilter;
+    this.#jsonFormatter = jsonFormatter;
     this.#eventBus = eventBus;
 
     // Initialize queue processing system
@@ -76,8 +85,10 @@ export class ActionTraceOutputService {
         eventBus: this.#eventBus,
         config: queueConfig,
       });
-      
-      this.#logger.debug('ActionTraceOutputService initialized with TraceQueueProcessor');
+
+      this.#logger.debug(
+        'ActionTraceOutputService initialized with TraceQueueProcessor'
+      );
     } else {
       // Fall back to simple queue implementation
       this.#outputQueue = [];
@@ -86,7 +97,9 @@ export class ActionTraceOutputService {
       this.#writeErrors = 0;
       this.#storageKey = 'actionTraces';
 
-      this.#logger.debug('ActionTraceOutputService initialized with simple queue');
+      this.#logger.debug(
+        'ActionTraceOutputService initialized with simple queue'
+      );
     }
 
     // Track pending writes for backward compatibility
@@ -95,7 +108,8 @@ export class ActionTraceOutputService {
     this.#errorCount = 0;
 
     // Use custom output handler if provided (for testing), otherwise use default
-    this.#outputHandler = outputHandler || this.#defaultOutputHandler.bind(this);
+    this.#outputHandler =
+      outputHandler || this.#defaultOutputHandler.bind(this);
   }
 
   /**
@@ -408,7 +422,24 @@ export class ActionTraceOutputService {
     let mimeType;
 
     if (format === 'json') {
-      content = JSON.stringify(traces, null, 2);
+      // Use JsonTraceFormatter for each trace if available
+      if (this.#jsonFormatter) {
+        const formattedTraces = traces.map((traceRecord) => {
+          try {
+            const formattedJson = this.#jsonFormatter.format(traceRecord.data);
+            return {
+              ...traceRecord,
+              data: JSON.parse(formattedJson),
+            };
+          } catch (error) {
+            this.#logger.warn('Failed to format trace during export', error);
+            return traceRecord;
+          }
+        });
+        content = JSON.stringify(formattedTraces, null, 2);
+      } else {
+        content = JSON.stringify(traces, null, 2);
+      }
       filename = `action-traces-${Date.now()}.json`;
       mimeType = 'application/json';
     } else {
@@ -469,6 +500,19 @@ export class ActionTraceOutputService {
    * @returns {object} Formatted trace data
    */
   #formatTraceData(trace) {
+    // Use JsonTraceFormatter if available
+    if (this.#jsonFormatter) {
+      try {
+        const jsonString = this.#jsonFormatter.format(trace);
+        return JSON.parse(jsonString);
+      } catch (error) {
+        this.#logger.warn(
+          'Failed to use JsonTraceFormatter, falling back to default formatting',
+          error
+        );
+      }
+    }
+
     // Handle ActionExecutionTrace
     if (trace.toJSON && typeof trace.toJSON === 'function') {
       return trace.toJSON();
@@ -601,20 +645,28 @@ export class ActionTraceOutputService {
       // Shutdown advanced queue processor if available with timeout
       if (this.#queueProcessor) {
         const shutdownPromise = this.#queueProcessor.shutdown();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Queue processor shutdown timeout')), 2000)
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Queue processor shutdown timeout')),
+            2000
+          )
         );
-        
+
         await Promise.race([shutdownPromise, timeoutPromise]);
       } else {
         // Process remaining items in simple queue if storage adapter is available
-        if (this.#storageAdapter && this.#outputQueue && this.#outputQueue.length > 0) {
+        if (
+          this.#storageAdapter &&
+          this.#outputQueue &&
+          this.#outputQueue.length > 0
+        ) {
           await this.#processQueue();
         }
 
         // Wait for processing to complete with timeout
         let waitCount = 0;
-        while (this.#isProcessing && waitCount < 20) { // Max 2 seconds
+        while (this.#isProcessing && waitCount < 20) {
+          // Max 2 seconds
           await new Promise((resolve) => setTimeout(resolve, 100));
           waitCount++;
         }
@@ -623,16 +675,19 @@ export class ActionTraceOutputService {
       // Wait for legacy pending writes with timeout
       if (this.#pendingWrites.size > 0) {
         const pendingPromise = this.waitForPendingWrites();
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Pending writes timeout')), 1000)
         );
-        
+
         await Promise.race([pendingPromise, timeoutPromise]);
       }
     } catch (error) {
-      this.#logger.warn('ActionTraceOutputService: Shutdown timeout, forcing completion', {
-        error: error.message
-      });
+      this.#logger.warn(
+        'ActionTraceOutputService: Shutdown timeout, forcing completion',
+        {
+          error: error.message,
+        }
+      );
     }
 
     this.#logger.info('ActionTraceOutputService: Shutdown complete');

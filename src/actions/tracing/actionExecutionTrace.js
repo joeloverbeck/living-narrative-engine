@@ -93,7 +93,7 @@ export class ActionExecutionTrace {
 
     // Store enableErrorAnalysis flag for lazy initialization
     this.#errorAnalysisEnabled = enableErrorAnalysis;
-    
+
     // Initialize error analysis components lazily when needed
     this.#errorClassifier = null;
     this.#stackTraceAnalyzer = null;
@@ -271,7 +271,8 @@ export class ActionExecutionTrace {
       }
       if (!this.#stackTraceAnalyzer) {
         this.#stackTraceAnalyzer = new StackTraceAnalyzer({
-          projectPath: typeof process !== 'undefined' && process.cwd ? process.cwd() : '/',
+          projectPath:
+            typeof process !== 'undefined' && process.cwd ? process.cwd() : '/',
           logger: console,
         });
       }

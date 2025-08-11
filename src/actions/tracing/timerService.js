@@ -64,10 +64,10 @@ export class TestTimerService extends TimerService {
   setTimeout(callback, delay) {
     const id = this.#nextId++;
     const timer = { id, callback, delay, createdAt: Date.now() };
-    
+
     this.#pendingTimers.push(timer);
     this.#activeTimers.set(id, timer);
-    
+
     return id;
   }
 
@@ -78,12 +78,12 @@ export class TestTimerService extends TimerService {
    */
   clearTimeout(timerId) {
     if (!timerId) return;
-    
+
     // Remove from active timers
     this.#activeTimers.delete(timerId);
-    
+
     // Remove from pending timers
-    const index = this.#pendingTimers.findIndex(t => t.id === timerId);
+    const index = this.#pendingTimers.findIndex((t) => t.id === timerId);
     if (index !== -1) {
       this.#pendingTimers.splice(index, 1);
     }
@@ -99,16 +99,16 @@ export class TestTimerService extends TimerService {
     // Process all currently pending timers
     const timersToProcess = [...this.#pendingTimers];
     this.#pendingTimers = [];
-    
+
     for (const timer of timersToProcess) {
       // Skip if timer was cleared
       if (!this.#activeTimers.has(timer.id)) {
         continue;
       }
-      
+
       // Remove from active timers before execution
       this.#activeTimers.delete(timer.id);
-      
+
       // Execute the callback
       try {
         const result = timer.callback();
@@ -132,7 +132,7 @@ export class TestTimerService extends TimerService {
   async advanceTime(timeMs) {
     const timersToProcess = [];
     const remainingTimers = [];
-    
+
     for (const timer of this.#pendingTimers) {
       // Always process immediate timers (delay 0) or timers whose delay has elapsed
       if (timer.delay === 0 || timer.delay <= timeMs) {
@@ -143,19 +143,19 @@ export class TestTimerService extends TimerService {
         remainingTimers.push(timer);
       }
     }
-    
+
     this.#pendingTimers = remainingTimers;
-    
+
     // Process timers that should fire
     for (const timer of timersToProcess) {
       // Skip if timer was cleared
       if (!this.#activeTimers.has(timer.id)) {
         continue;
       }
-      
+
       // Remove from active timers before execution
       this.#activeTimers.delete(timer.id);
-      
+
       // Execute the callback
       try {
         const result = timer.callback();

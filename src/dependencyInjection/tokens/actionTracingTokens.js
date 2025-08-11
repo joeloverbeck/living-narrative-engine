@@ -22,4 +22,6 @@ export const actionTracingTokens = freeze({
   IEventDispatchTracer: 'IEventDispatchTracer',
   // Storage adapter for IndexedDB
   IIndexedDBStorageAdapter: 'IIndexedDBStorageAdapter',
+  // JSON formatter for trace output
+  IJsonTraceFormatter: 'IJsonTraceFormatter',
 });
