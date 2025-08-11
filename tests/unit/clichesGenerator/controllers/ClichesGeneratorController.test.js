@@ -75,8 +75,10 @@ describe('ClichesGeneratorController', () => {
 
       // Assert
       expect(testBed.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to load initial data'),
-        error
+        'Controller error occurred:',
+        expect.objectContaining({
+          error: error.message
+        })
       );
     });
   });
@@ -185,8 +187,10 @@ describe('ClichesGeneratorController', () => {
 
       // Assert
       expect(testBed.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to handle direction selection'),
-        error
+        'Controller error occurred:',
+        expect.objectContaining({
+          error: error.message
+        })
       );
     });
   });
@@ -239,8 +243,10 @@ describe('ClichesGeneratorController', () => {
 
       // Assert
       expect(testBed.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to generate clichés'),
-        error
+        'Controller error occurred:',
+        expect.objectContaining({
+          error: error.message
+        })
       );
 
       const generateBtn = testBed.getGenerateButton();
@@ -346,20 +352,20 @@ describe('ClichesGeneratorController', () => {
   });
 
   describe('Event Handling', () => {
-    it('should subscribe to cliché generation events', async () => {
+    it('should subscribe to cliché generation events using EventBus.on', async () => {
       // Arrange & Act
       await testBed.controller.initialize();
 
-      // Assert
-      expect(testBed.mockEventBus.subscribe).toHaveBeenCalledWith(
+      // Assert - now using the 'on' method instead of 'subscribe'
+      expect(testBed.mockEventBus.on).toHaveBeenCalledWith(
         'CLICHES_GENERATION_STARTED',
         expect.any(Function)
       );
-      expect(testBed.mockEventBus.subscribe).toHaveBeenCalledWith(
+      expect(testBed.mockEventBus.on).toHaveBeenCalledWith(
         'CLICHES_GENERATION_COMPLETED',
         expect.any(Function)
       );
-      expect(testBed.mockEventBus.subscribe).toHaveBeenCalledWith(
+      expect(testBed.mockEventBus.on).toHaveBeenCalledWith(
         'CLICHES_GENERATION_FAILED',
         expect.any(Function)
       );
@@ -460,6 +466,334 @@ describe('ClichesGeneratorController', () => {
       // Assert
       expect(testBed.logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Required element missing: Generate button')
+      );
+    });
+  });
+
+  describe('Enhanced State Management', () => {
+    beforeEach(async () => {
+      testBed.setupSuccessfulDirectionLoad();
+      await testBed.controller.initialize();
+    });
+
+    it('should record state changes during direction selection', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+
+      // Act
+      await testBed.selectDirection('dir-1');
+
+      // Assert
+      testBed.assertStateChangeRecorded('initialized');
+      testBed.assertStateChangeRecorded('direction_selected', { directionId: 'dir-1' });
+    });
+
+    it('should record state changes during cliché generation', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+      
+      const cliches = testBed.setupSuccessfulClicheGeneration();
+      await testBed.selectDirection('dir-1');
+
+      // Act
+      await testBed.triggerGeneration();
+
+      // Assert
+      testBed.assertStateChangeRecorded('generation_started', { directionId: 'dir-1' });
+      testBed.assertStateChangeRecorded('generation_completed', { 
+        directionId: 'dir-1',
+        clichesCount: expect.any(Number)
+      });
+    });
+
+    it('should validate state transitions', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+
+      // Act - try to generate without selecting direction first
+      await testBed.triggerGeneration();
+
+      // Assert
+      expect(testBed.mockCharacterBuilderService.generateClichesForDirection).not.toHaveBeenCalled();
+    });
+
+    it('should prevent concurrent generations', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+      
+      const cliches = testBed.createMockClichesData();
+      testBed.mockCharacterBuilderService.generateClichesForDirection.mockImplementation(
+        () => new Promise(resolve => setTimeout(() => resolve(cliches), 50))
+      );
+      
+      await testBed.selectDirection('dir-1');
+
+      // Act - trigger generation twice
+      const promise1 = testBed.triggerGeneration();
+      const promise2 = testBed.triggerGeneration();
+      
+      await Promise.all([promise1, promise2]);
+
+      // Assert
+      expect(testBed.mockCharacterBuilderService.generateClichesForDirection).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Data Caching System', () => {
+    beforeEach(async () => {
+      testBed.setupSuccessfulDirectionLoad();
+      await testBed.controller.initialize();
+    });
+
+    it('should cache concepts after loading', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+
+      // Act
+      await testBed.selectDirection('dir-1');
+
+      // Assert
+      testBed.assertCacheContains('concepts');
+      expect(testBed.mockCharacterBuilderService.getCharacterConcept).toHaveBeenCalledTimes(2); // Initial + selection
+    });
+
+    it('should cache clichés after generation', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+      
+      const cliches = testBed.setupSuccessfulClicheGeneration();
+      await testBed.selectDirection('dir-1');
+
+      // Act
+      await testBed.triggerGeneration();
+
+      // Assert
+      testBed.assertCacheContains('cliches');
+    });
+
+    it('should reuse cached clichés on subsequent direction selections', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+      
+      const cliches = testBed.setupSuccessfulClicheGeneration();
+      await testBed.selectDirection('dir-1');
+      await testBed.triggerGeneration();
+
+      // Clear selection and reselect
+      await testBed.selectDirection('');
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+      testBed.mockCharacterBuilderService.getClichesByDirectionId.mockClear();
+
+      // Act - reselect same direction
+      await testBed.selectDirection('dir-1');
+
+      // Assert - should not call service again
+      expect(testBed.mockCharacterBuilderService.getClichesByDirectionId).not.toHaveBeenCalled();
+    });
+
+    it('should clear caches during cleanup', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+      
+      await testBed.selectDirection('dir-1');
+      const initialStats = testBed.getCacheStats();
+
+      // Act
+      await testBed.controller.cleanup();
+      const finalStats = testBed.getCacheStats();
+
+      // Assert
+      expect(initialStats.conceptsCacheSize).toBeGreaterThan(0);
+      expect(finalStats.conceptsCacheSize).toBe(0);
+    });
+  });
+
+  describe('Enhanced Event System', () => {
+    beforeEach(async () => {
+      testBed.setupSuccessfulDirectionLoad();
+      await testBed.controller.initialize();
+      testBed.clearEventTracking();
+    });
+
+    it('should dispatch direction selection events', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+
+      // Act
+      await testBed.selectDirection('dir-1');
+
+      // Assert
+      testBed.assertEventDispatched('DIRECTION_SELECTION_STARTED', { directionId: 'dir-1' });
+      testBed.assertEventDispatched('DIRECTION_SELECTION_COMPLETED', { 
+        directionId: 'dir-1',
+        hasExistingCliches: false
+      });
+    });
+
+    it('should dispatch generation events', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+      
+      const cliches = testBed.setupSuccessfulClicheGeneration();
+      await testBed.selectDirection('dir-1');
+      testBed.clearEventTracking();
+
+      // Act
+      await testBed.triggerGeneration();
+
+      // Assert
+      testBed.assertEventSequence([
+        'CLICHES_GENERATION_STARTED',
+        'CLICHES_GENERATION_COMPLETED'
+      ]);
+    });
+
+    it('should dispatch error events on failures', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+      
+      testBed.simulateServiceError('mockCharacterBuilderService', 'generateClichesForDirection');
+      await testBed.selectDirection('dir-1');
+      testBed.clearEventTracking();
+
+      // Act
+      await testBed.triggerGeneration();
+
+      // Assert
+      testBed.assertEventDispatched('CLICHES_GENERATION_FAILED', {
+        directionId: 'dir-1',
+        error: expect.any(String)
+      });
+    });
+
+    it('should use correct EventBus API (on instead of subscribe)', async () => {
+      // Act
+      await testBed.controller.initialize();
+
+      // Assert - verify the correct methods were called
+      expect(testBed.mockEventBus.on).toHaveBeenCalledWith('CLICHES_GENERATION_STARTED', expect.any(Function));
+      expect(testBed.mockEventBus.on).toHaveBeenCalledWith('CLICHES_GENERATION_COMPLETED', expect.any(Function));
+      expect(testBed.mockEventBus.on).toHaveBeenCalledWith('CLICHES_GENERATION_FAILED', expect.any(Function));
+      expect(testBed.mockEventBus.on).toHaveBeenCalledWith('DIRECTION_SELECTION_STARTED', expect.any(Function));
+    });
+  });
+
+  describe('Enhanced Error Handling', () => {
+    beforeEach(async () => {
+      testBed.setupSuccessfulDirectionLoad();
+      await testBed.controller.initialize();
+    });
+
+    it('should provide detailed error logging with state context', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+      
+      const error = new Error('Network timeout');
+      testBed.simulateServiceError('mockCharacterBuilderService', 'generateClichesForDirection', error);
+      await testBed.selectDirection('dir-1');
+
+      // Act
+      await testBed.triggerGeneration();
+
+      // Assert
+      const errorCalls = testBed.logger.error.mock.calls;
+      const controllerErrorCall = errorCalls.find(call => 
+        call[0] === 'Controller error occurred:'
+      );
+      
+      expect(controllerErrorCall).toBeDefined();
+      expect(controllerErrorCall[1]).toMatchObject({
+        error: 'Network timeout',
+        state: expect.objectContaining({
+          selectedDirectionId: 'dir-1',
+          isGenerating: true // Error occurs during generation, so this should be true
+        })
+      });
+    });
+
+    it('should record error states in history', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.simulateServiceError('mockCharacterBuilderService', 'hasClichesForDirection');
+
+      // Act
+      await testBed.selectDirection('dir-1');
+
+      // Assert
+      testBed.assertStateChangeRecorded('error_occurred', {
+        error: expect.any(String)
+      });
+    });
+
+    it('should provide user-friendly error messages', async () => {
+      // Arrange
+      const concept = testBed.createMockConcept();
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+      
+      testBed.simulateServiceError('mockCharacterBuilderService', 'generateClichesForDirection');
+      await testBed.selectDirection('dir-1');
+
+      // Act
+      await testBed.triggerGeneration();
+
+      // Assert
+      const generateBtn = testBed.getGenerateButton();
+      expect(generateBtn.textContent).toBe('Retry Generation');
+      expect(generateBtn.disabled).toBe(false);
+    });
+
+    it('should handle direction selection errors gracefully', async () => {
+      // Arrange
+      testBed.simulateServiceError('mockCharacterBuilderService', 'hasClichesForDirection');
+
+      // Act
+      await testBed.selectDirection('dir-1');
+
+      // Assert
+      testBed.assertEventDispatched('DIRECTION_SELECTION_FAILED');
+      testBed.assertStateChangeRecorded('error_occurred');
+    });
+
+    it('should execute recovery actions after errors', async () => {
+      // Arrange - Create a fresh controller that hasn't been initialized yet
+      const freshTestBed = new ClichesGeneratorControllerTestBed();
+      freshTestBed.simulateServiceError('mockCharacterBuilderService', 'getAllThematicDirections');
+
+      // Act
+      await freshTestBed.controller.initialize();
+
+      // Assert
+      expect(freshTestBed.logger.error).toHaveBeenCalledWith(
+        'Controller error occurred:',
+        expect.objectContaining({
+          error: 'Test error'
+        })
       );
     });
   });

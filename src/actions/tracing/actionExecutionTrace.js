@@ -22,6 +22,7 @@ export class ActionExecutionTrace {
   #endTime;
   #phaseTimer;
   #timingEnabled;
+  #errorAnalysisEnabled;
   #errorClassifier;
   #stackTraceAnalyzer;
   #errorContext;
@@ -41,7 +42,7 @@ export class ActionExecutionTrace {
     actorId,
     turnAction,
     enableTiming = true,
-    enableErrorAnalysis = true,
+    enableErrorAnalysis = false, // Default to false to reduce memory overhead
   }) {
     // Validate required parameters
     if (!actionId || typeof actionId !== 'string') {
@@ -90,16 +91,12 @@ export class ActionExecutionTrace {
       this.#phaseTimer = new ExecutionPhaseTimer();
     }
 
-    // Add error analysis support
-    if (enableErrorAnalysis) {
-      this.#errorClassifier = new ErrorClassifier({
-        logger: console, // Fallback logger
-      });
-      this.#stackTraceAnalyzer = new StackTraceAnalyzer({
-        projectPath: process.cwd(),
-        logger: console,
-      });
-    }
+    // Store enableErrorAnalysis flag for lazy initialization
+    this.#errorAnalysisEnabled = enableErrorAnalysis;
+    
+    // Initialize error analysis components lazily when needed
+    this.#errorClassifier = null;
+    this.#stackTraceAnalyzer = null;
 
     this.#errorContext = {
       phase: null,
@@ -264,6 +261,21 @@ export class ActionExecutionTrace {
       timing: this.#getTimingContext(),
       captureTime: errorTime,
     };
+
+    // Lazy initialize error analysis components if enabled and needed
+    if (this.#errorAnalysisEnabled) {
+      if (!this.#errorClassifier) {
+        this.#errorClassifier = new ErrorClassifier({
+          logger: console, // Fallback logger
+        });
+      }
+      if (!this.#stackTraceAnalyzer) {
+        this.#stackTraceAnalyzer = new StackTraceAnalyzer({
+          projectPath: typeof process !== 'undefined' && process.cwd ? process.cwd() : '/',
+          logger: console,
+        });
+      }
+    }
 
     // Classify error if classifier available
     let classification = null;

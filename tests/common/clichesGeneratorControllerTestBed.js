@@ -16,7 +16,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
   constructor() {
     super();
 
-    // Create mock logger
+    // Create mock logger with enhanced debugging support
     this.logger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -25,6 +25,10 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       log: jest.fn(),
     };
     this.mockLogger = this.logger; // Keep backwards compatibility
+
+    // Track event dispatches for state management testing
+    this.dispatchedEvents = [];
+    this.eventCallbacks = new Map();
 
     // Mock services
     this.mockCharacterBuilderService = {
@@ -46,8 +50,8 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       generateCliches: jest.fn(),
     };
 
-    // Use the standard event bus factory that complies with ISafeEventDispatcher
-    this.mockEventBus = createEventBus();
+    // Use enhanced event bus that tracks dispatches for state management testing  
+    this.mockEventBus = this.createEnhancedEventBus();
 
     this.mockSchemaValidator = {
       validate: jest.fn().mockReturnValue({ valid: true }),
@@ -319,6 +323,193 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
   }
 
   /**
+   * Create enhanced EventBus mock that tracks dispatches
+   */
+  createEnhancedEventBus() {
+    const baseEventBus = createEventBus({ captureEvents: true });
+    
+    // Add the 'on' method as a jest mock that aliases to 'subscribe' for the new EventBus API
+    baseEventBus.on = jest.fn((eventType, callback) => {
+      return baseEventBus.subscribe(eventType, callback);
+    });
+    baseEventBus.off = baseEventBus.unsubscribe;
+    
+    // Override dispatch method to track events
+    const originalDispatch = baseEventBus.dispatch.bind(baseEventBus);
+    baseEventBus.dispatch = (event) => {
+      this.dispatchedEvents.push({
+        ...event,
+        timestamp: Date.now(),
+      });
+      // Handle both old format (eventType, payload) and new format ({ type, payload })
+      if (typeof event === 'object' && event.type) {
+        return originalDispatch(event.type, event.payload);
+      } else {
+        return originalDispatch(event);
+      }
+    };
+
+    // Track callbacks when using the 'on' method
+    const originalOn = baseEventBus.on;
+    baseEventBus.on = jest.fn((eventType, callback) => {
+      if (!this.eventCallbacks.has(eventType)) {
+        this.eventCallbacks.set(eventType, []);
+      }
+      this.eventCallbacks.get(eventType).push(callback);
+      return originalOn.call(baseEventBus, eventType, callback);
+    });
+
+    return baseEventBus;
+  }
+
+  /**
+   * Get all dispatched events
+   */
+  getDispatchedEvents() {
+    return [...this.dispatchedEvents];
+  }
+
+  /**
+   * Get dispatched events by type
+   *
+   * @param eventType
+   */
+  getDispatchedEventsByType(eventType) {
+    return this.dispatchedEvents.filter(event => event.type === eventType);
+  }
+
+  /**
+   * Clear event tracking
+   */
+  clearEventTracking() {
+    this.dispatchedEvents = [];
+  }
+
+  /**
+   * Get last dispatched event
+   */
+  getLastDispatchedEvent() {
+    return this.dispatchedEvents[this.dispatchedEvents.length - 1] || null;
+  }
+
+  /**
+   * Wait for specific event to be dispatched
+   *
+   * @param eventType
+   * @param timeout
+   */
+  async waitForEvent(eventType, timeout = 1000) {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < timeout) {
+      const events = this.getDispatchedEventsByType(eventType);
+      if (events.length > 0) {
+        return events[events.length - 1];
+      }
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    
+    throw new Error(`Event ${eventType} not dispatched within ${timeout}ms`);
+  }
+
+  /**
+   * Simulate error in service call
+   *
+   * @param serviceName
+   * @param methodName
+   * @param error
+   */
+  simulateServiceError(serviceName, methodName, error = new Error('Test error')) {
+    const service = this[serviceName];
+    if (service && service[methodName]) {
+      service[methodName].mockRejectedValue(error);
+    }
+  }
+
+  /**
+   * Assert event was dispatched with specific payload
+   *
+   * @param eventType
+   * @param expectedPayload
+   */
+  assertEventDispatched(eventType, expectedPayload = null) {
+    const events = this.getDispatchedEventsByType(eventType);
+    if (events.length === 0) {
+      throw new Error(`Event ${eventType} was not dispatched`);
+    }
+    
+    if (expectedPayload) {
+      const lastEvent = events[events.length - 1];
+      expect(lastEvent.payload).toMatchObject(expectedPayload);
+    }
+    
+    return events[events.length - 1];
+  }
+
+  /**
+   * Assert event sequence was dispatched in order
+   *
+   * @param expectedSequence
+   */
+  assertEventSequence(expectedSequence) {
+    const actualSequence = this.dispatchedEvents.map(event => event.type);
+    const sequenceMatch = expectedSequence.every((eventType, index) => {
+      const actualIndex = actualSequence.indexOf(eventType);
+      return actualIndex >= 0 && (index === 0 || actualIndex > actualSequence.indexOf(expectedSequence[index - 1]));
+    });
+    
+    expect(sequenceMatch).toBe(true, 
+      `Expected sequence ${expectedSequence.join(' → ')} but got ${actualSequence.join(' → ')}`
+    );
+  }
+
+  /**
+   * Get cache statistics from controller
+   */
+  getCacheStats() {
+    return this.controller.getCacheStats();
+  }
+
+  /**
+   * Get state history from controller
+   */
+  getStateHistory() {
+    return this.controller.getStateHistory();
+  }
+
+  /**
+   * Assert cache contains specific entries
+   *
+   * @param cacheType
+   * @param key
+   */
+  assertCacheContains(cacheType, key) {
+    const stats = this.getCacheStats();
+    const cacheSize = stats[`${cacheType}CacheSize`];
+    expect(cacheSize).toBeGreaterThan(0);
+  }
+
+  /**
+   * Assert state change was recorded
+   *
+   * @param action
+   * @param expectedData
+   */
+  assertStateChangeRecorded(action, expectedData = null) {
+    const history = this.getStateHistory();
+    const matchingChanges = history.filter(change => change.action === action);
+    
+    expect(matchingChanges.length).toBeGreaterThan(0);
+    
+    if (expectedData) {
+      const lastChange = matchingChanges[matchingChanges.length - 1];
+      expect(lastChange.data).toMatchObject(expectedData);
+    }
+    
+    return matchingChanges[matchingChanges.length - 1];
+  }
+
+  /**
    * Utility to flush promises
    */
   async flushPromises() {
@@ -331,6 +522,10 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
   cleanup() {
     // Clear all mocks
     jest.clearAllMocks();
+
+    // Clear event tracking
+    this.clearEventTracking();
+    this.eventCallbacks.clear();
 
     // Clear DOM
     document.body.innerHTML = '';

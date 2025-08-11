@@ -135,21 +135,93 @@ export function createMockActionTraceOutputService() {
 }
 
 /**
- * Create mock IndexedDBStorageAdapter
+ * Create mock IndexedDBStorageAdapter with realistic async behavior
  *
+ * @param {object} [options] - Configuration options
+ * @param {number} [options.asyncDelay] - Async operation delay in ms
  * @returns {object} Mock IndexedDBStorageAdapter instance
  */
-export function createMockIndexedDBStorageAdapter() {
+export function createMockIndexedDBStorageAdapter(options = {}) {
+  const asyncDelay = options.asyncDelay || 5;
+  let storage = new Map();
+
+  const addAsyncDelay = (result) => {
+    return new Promise((resolve) => setTimeout(() => resolve(result), asyncDelay));
+  };
+
   return {
-    initialize: jest.fn().mockResolvedValue(undefined),
-    getItem: jest.fn().mockResolvedValue(null),
-    setItem: jest.fn().mockResolvedValue(undefined),
-    removeItem: jest.fn().mockResolvedValue(undefined),
-    getAllKeys: jest.fn().mockResolvedValue([]),
-    clear: jest.fn().mockResolvedValue(undefined),
-    count: jest.fn().mockResolvedValue(0),
+    initialize: jest.fn().mockImplementation(() => addAsyncDelay(undefined)),
+    getItem: jest.fn().mockImplementation((key) => {
+      const result = storage.get(key) || null;
+      return addAsyncDelay(result);
+    }),
+    setItem: jest.fn().mockImplementation((key, value) => {
+      storage.set(key, value);
+      return addAsyncDelay(undefined);
+    }),
+    removeItem: jest.fn().mockImplementation((key) => {
+      storage.delete(key);
+      return addAsyncDelay(undefined);
+    }),
+    getAllKeys: jest.fn().mockImplementation(() => {
+      return addAsyncDelay([...storage.keys()]);
+    }),
+    clear: jest.fn().mockImplementation(() => {
+      storage.clear();
+      return addAsyncDelay(undefined);
+    }),
+    count: jest.fn().mockImplementation(() => {
+      return addAsyncDelay(storage.size);
+    }),
     close: jest.fn(),
-    isAvailable: jest.fn().mockResolvedValue(true),
+    isAvailable: jest.fn().mockImplementation(() => addAsyncDelay(true)),
+  };
+}
+
+/**
+ * Create mock TraceQueueProcessor
+ *
+ * @returns {object} Mock TraceQueueProcessor instance
+ */
+export function createMockTraceQueueProcessor() {
+  return {
+    enqueue: jest.fn().mockReturnValue(true),
+    getMetrics: jest.fn().mockReturnValue({
+      totalEnqueued: 0,
+      totalProcessed: 0,
+      totalErrors: 0,
+      totalDropped: 0,
+      totalBatches: 0,
+      fullBatches: 0,
+      totalLatency: 0,
+      minLatency: Infinity,
+      maxLatency: 0,
+      avgLatency: 0,
+      throughput: 0,
+      batchEfficiency: 0,
+      dropRate: 0,
+      memoryUsage: 0,
+      queueSize: 0,
+      priorityDistribution: {
+        3: 0, // CRITICAL
+        2: 0, // HIGH
+        1: 0, // NORMAL
+        0: 0, // LOW
+      },
+    }),
+    getQueueStats: jest.fn().mockReturnValue({
+      totalSize: 0,
+      isProcessing: false,
+      memoryUsage: 0,
+      circuitBreakerOpen: false,
+      priorities: {
+        3: { size: 0, oldestTimestamp: null }, // CRITICAL
+        2: { size: 0, oldestTimestamp: null }, // HIGH
+        1: { size: 0, oldestTimestamp: null }, // NORMAL
+        0: { size: 0, oldestTimestamp: null }, // LOW
+      },
+    }),
+    shutdown: jest.fn().mockResolvedValue(undefined),
   };
 }
 

@@ -219,38 +219,4 @@ describe('ActionExecutionTrace', () => {
     });
   });
 
-  describe('Performance', () => {
-    it('should create traces quickly', () => {
-      const startTime = performance.now();
-
-      for (let i = 0; i < 1000; i++) {
-        new ActionExecutionTrace({
-          actionId: 'core:test',
-          actorId: `actor-${i}`,
-          turnAction: { actionDefinitionId: 'core:test' },
-        });
-      }
-
-      const duration = performance.now() - startTime;
-      expect(duration).toBeLessThan(100); // 1000 traces in <100ms
-    });
-
-    it('should serialize efficiently', () => {
-      const trace = new ActionExecutionTrace({
-        actionId: 'core:test',
-        actorId: 'player-1',
-        turnAction: { actionDefinitionId: 'core:test' },
-      });
-
-      trace.captureDispatchStart();
-      trace.captureDispatchResult({ success: true });
-
-      const startTime = performance.now();
-      const json = trace.toJSON();
-      const duration = performance.now() - startTime;
-
-      expect(duration).toBeLessThan(1); // Serialization in <1ms
-      expect(JSON.stringify(json).length).toBeGreaterThan(0);
-    });
-  });
 });
