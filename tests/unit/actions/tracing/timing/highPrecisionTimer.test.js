@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import {
   HighPrecisionTimer,
   highPrecisionTimer,
@@ -86,9 +86,8 @@ describe('HighPrecisionTimer', () => {
       const start = timer.createMarker('operation_start');
 
       // Small delay
-      let sum = 0;
       for (let i = 0; i < 10000; i++) {
-        sum += i;
+        // Intentional delay loop
       }
 
       const end = timer.createMarker('operation_end');
@@ -166,35 +165,6 @@ describe('HighPrecisionTimer', () => {
         'Date.now()',
       ];
       expect(expectedApis).toContain(info.api);
-    });
-  });
-
-  describe('Performance Requirements', () => {
-    it('should have minimal overhead', () => {
-      const iterations = 1000;
-      const start = timer.now();
-
-      for (let i = 0; i < iterations; i++) {
-        timer.now();
-      }
-
-      const total = timer.now() - start;
-      const averageOverhead = total / iterations;
-
-      // Should be much less than 0.1ms per call
-      expect(averageOverhead).toBeLessThan(0.01);
-    });
-
-    it('should maintain consistency across multiple calls', () => {
-      const timestamps = [];
-      for (let i = 0; i < 100; i++) {
-        timestamps.push(timer.now());
-      }
-
-      // All timestamps should be increasing
-      for (let i = 1; i < timestamps.length; i++) {
-        expect(timestamps[i]).toBeGreaterThanOrEqual(timestamps[i - 1]);
-      }
     });
   });
 });

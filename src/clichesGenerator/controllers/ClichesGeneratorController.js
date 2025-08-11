@@ -1,6 +1,14 @@
 /**
- * @file Controller for Clichés Generator page
+ * @file Controller for Clichés Generator page with enhanced state management
+ * 
+ * This controller implements a comprehensive state management and data flow system that includes:
+ * - Multi-level caching for concepts, directions, and clichés
+ * - State transition validation and history tracking
+ * - Enhanced event dispatching with proper EventBus integration
+ * - Robust error handling with user-friendly recovery mechanisms
+ * - Performance optimizations through intelligent caching strategies
  * @see BaseCharacterBuilderController.js
+ * @see UIStateManager.js
  */
 
 import { BaseCharacterBuilderController } from '../../characterBuilder/controllers/BaseCharacterBuilderController.js';
@@ -10,7 +18,22 @@ import { Cliche } from '../../characterBuilder/models/cliche.js';
 import { DomUtils } from '../../utils/domUtils.js';
 
 /**
- * Controller for cliché generation and display
+ * Enhanced controller for cliché generation and display with comprehensive state management
+ * 
+ * Features:
+ * - **Data Caching**: Intelligent caching of concepts (10min TTL) and clichés (30min TTL)
+ * - **State Management**: Complete state history tracking with validation
+ * - **Event System**: Full EventBus integration with proper event dispatching
+ * - **Error Handling**: Enhanced error recovery with detailed logging and user feedback
+ * - **Performance**: Optimized service calls through cache-first strategies
+ * 
+ * State Flow:
+ * 1. Initialize → Load directions → Cache concepts
+ * 2. Direction Selection → Validate transition → Update state → Cache data
+ * 3. Cliché Generation → Validate prerequisites → Generate → Cache results
+ * 4. Error Handling → Log context → Dispatch events → Execute recovery
+ * 
+ * @augments {BaseCharacterBuilderController}
  */
 export class ClichesGeneratorController extends BaseCharacterBuilderController {
   // Page-specific state
@@ -20,6 +43,16 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   #currentCliches = null;
   #directionsData = [];
   #isGenerating = false;
+
+  // Data caching layer
+  #conceptsCache = new Map();
+  #directionsCache = new Map();
+  #clichesCache = new Map();
+  #cacheTimestamps = new Map();
+
+  // State validation and consistency
+  #stateHistory = [];
+  #maxHistorySize = 10;
 
   // DOM element cache
   #directionSelector = null;
@@ -45,17 +78,28 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   }
 
   /**
-   * Initialize page state
+   * Initialize page state and caches
    *
    * @private
    */
   #initializeState() {
+    // Reset page state
     this.#selectedDirectionId = null;
     this.#currentConcept = null;
     this.#currentDirection = null;
     this.#currentCliches = null;
     this.#directionsData = [];
     this.#isGenerating = false;
+
+    // Initialize caches
+    this.#conceptsCache = new Map();
+    this.#directionsCache = new Map();
+    this.#clichesCache = new Map();
+    this.#cacheTimestamps = new Map();
+
+    // Initialize state tracking
+    this.#stateHistory = [];
+    this.#recordStateChange('initialized', null);
   }
 
   // ============= Required Abstract Method Implementations =============
@@ -156,17 +200,14 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
 
       this._showState('idle');
     } catch (error) {
-      this.logger.error('Failed to load initial data:', error);
-      this._showError(
-        'Failed to load thematic directions. Please refresh the page.'
-      );
+      this.#handleError(error, 'Failed to load initial data. Please refresh the page.');
     }
   }
 
   // ============= Page-Specific Methods =============
 
   /**
-   * Organize directions by their parent concepts
+   * Organize directions by their parent concepts with caching
    *
    * @param directions
    * @private
@@ -177,10 +218,19 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
 
     for (const direction of directions) {
       if (!conceptMap.has(direction.conceptId)) {
-        // Fetch the concept if not cached
-        const concept = await this.characterBuilderService.getCharacterConcept(
-          direction.conceptId
-        );
+        // Check cache first
+        let concept = this.#getCachedConcept(direction.conceptId);
+        
+        if (!concept) {
+          // Fetch and cache the concept
+          concept = await this.characterBuilderService.getCharacterConcept(
+            direction.conceptId
+          );
+          
+          if (concept) {
+            this.#cacheConcept(direction.conceptId, concept);
+          }
+        }
 
         if (concept) {
           conceptMap.set(direction.conceptId, {
@@ -252,7 +302,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   }
 
   /**
-   * Handle direction selection
+   * Handle direction selection with enhanced state management
    *
    * @param directionId
    * @private
@@ -263,7 +313,19 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       return;
     }
 
+    // Validate state transition
+    if (!this.#validateStateTransition('direction_selection', { directionId })) {
+      this.logger.warn('Invalid state transition for direction selection');
+      return;
+    }
+
     try {
+      // Dispatch selection started event
+      this.eventBus.dispatch({
+        type: 'DIRECTION_SELECTION_STARTED',
+        payload: { directionId },
+      });
+
       this._showLoading('Loading direction details...');
 
       // Find the selected direction
@@ -272,38 +334,69 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
         throw new Error('Direction not found');
       }
 
+      // Update state with validation
+      const previousState = {
+        selectedDirectionId: this.#selectedDirectionId,
+        currentDirection: this.#currentDirection,
+        currentConcept: this.#currentConcept,
+      };
+
       this.#selectedDirectionId = directionId;
       this.#currentDirection = directionData.direction;
       this.#currentConcept = directionData.concept;
+      this.#recordStateChange('direction_selected', { directionId, previousState });
 
       // Display direction and concept info
       this.#displayDirectionInfo(this.#currentDirection);
       this.#displayConceptInfo(directionData.concept);
 
-      // Check if clichés already exist
-      const hasCliches =
-        await this.characterBuilderService.hasClichesForDirection(directionId);
+      // Check cache first for existing clichés
+      let cliches = this.#getCachedCliches(directionId);
+      let hasCliches = !!cliches;
 
-      if (hasCliches) {
-        // Load and display existing clichés
-        const cliches =
-          await this.characterBuilderService.getClichesByDirectionId(
-            directionId
-          );
+      if (!cliches) {
+        // Check database for existing clichés
+        hasCliches = await this.characterBuilderService.hasClichesForDirection(directionId);
+        
+        if (hasCliches) {
+          cliches = await this.characterBuilderService.getClichesByDirectionId(directionId);
+          this.#cacheCliches(directionId, cliches);
+        }
+      }
+
+      if (hasCliches && cliches) {
         this.#currentCliches = cliches;
         this.#displayCliches(cliches);
         this.#updateGenerateButton(false, 'Clichés Already Generated');
+        
+        // Dispatch clichés loaded event
+        this.eventBus.dispatch({
+          type: 'EXISTING_CLICHES_LOADED',
+          payload: { directionId, count: cliches.getTotalCount() },
+        });
       } else {
         // Enable generation
         this.#showEmptyClichesState();
         this.#updateGenerateButton(true, 'Generate Clichés');
       }
 
+      // Dispatch selection completed event
+      this.eventBus.dispatch({
+        type: 'DIRECTION_SELECTION_COMPLETED',
+        payload: { directionId, hasExistingCliches: hasCliches },
+      });
+
       this._showState('idle');
     } catch (error) {
-      this.logger.error('Failed to handle direction selection:', error);
-      this._showError('Failed to load direction details');
-      this.#clearSelection();
+      // Dispatch selection failed event
+      this.eventBus.dispatch({
+        type: 'DIRECTION_SELECTION_FAILED',
+        payload: { directionId, error: error.message },
+      });
+      
+      this.#handleError(error, 'Failed to load direction details', () => {
+        this.#clearSelection();
+      });
     }
   }
 
@@ -389,7 +482,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   }
 
   /**
-   * Handle generate clichés button click
+   * Handle generate clichés button click with enhanced error handling
    *
    * @private
    */
@@ -398,12 +491,34 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       return;
     }
 
+    // Validate state transition
+    if (!this.#validateStateTransition('cliche_generation', {
+      selectedDirectionId: this.#selectedDirectionId,
+      currentConcept: this.#currentConcept,
+      currentDirection: this.#currentDirection,
+    })) {
+      this.logger.warn('Invalid state for cliché generation');
+      return;
+    }
+
     try {
       this.#isGenerating = true;
+      this.#recordStateChange('generation_started', {
+        directionId: this.#selectedDirectionId,
+      });
+
+      // Dispatch generation started event
+      this.eventBus.dispatch({
+        type: 'CLICHES_GENERATION_STARTED',
+        payload: {
+          directionId: this.#selectedDirectionId,
+          concept: this.#currentConcept,
+          direction: this.#currentDirection,
+        },
+      });
+
       this.#updateGenerateButton(false, 'Generating...');
       this._showLoading('Generating clichés... This may take a few moments.');
-
-      // Clear any existing error messages
 
       // Generate clichés
       const cliches =
@@ -413,6 +528,13 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
         );
 
       this.#currentCliches = cliches;
+      
+      // Cache the generated clichés
+      this.#cacheCliches(this.#selectedDirectionId, cliches);
+      this.#recordStateChange('generation_completed', {
+        directionId: this.#selectedDirectionId,
+        clichesCount: cliches.getTotalCount(),
+      });
 
       // Display the generated clichés
       this.#displayCliches(cliches);
@@ -420,16 +542,42 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       // Update button state
       this.#updateGenerateButton(false, 'Clichés Generated');
 
+      // Dispatch generation completed event
+      this.eventBus.dispatch({
+        type: 'CLICHES_GENERATION_COMPLETED',
+        payload: {
+          directionId: this.#selectedDirectionId,
+          count: cliches.getTotalCount(),
+          timestamp: new Date().toISOString(),
+        },
+      });
+
       // Show success message
       this._showResults({
         message: `Generated ${cliches.getTotalCount()} clichés successfully!`,
       });
     } catch (error) {
-      this.logger.error('Failed to generate clichés:', error);
-      this._showError(
-        error.message || 'Failed to generate clichés. Please try again.'
+      // Dispatch generation failed event
+      this.eventBus.dispatch({
+        type: 'CLICHES_GENERATION_FAILED',
+        payload: {
+          directionId: this.#selectedDirectionId,
+          error: error.message,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      
+      this.#recordStateChange('generation_failed', {
+        directionId: this.#selectedDirectionId,
+        error: error.message,
+      });
+      
+      this.#handleError(error, 
+        error.message || 'Failed to generate clichés. Please try again.',
+        () => {
+          this.#updateGenerateButton(true, 'Retry Generation');
+        }
       );
-      this.#updateGenerateButton(true, 'Retry Generation');
     } finally {
       this.#isGenerating = false;
       this._showState('idle');
@@ -635,23 +783,312 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   }
 
   /**
-   * Subscribe to relevant events
+   * Subscribe to relevant events using correct EventBus API
    *
    * @private
    */
   _subscribeToEvents() {
     // Listen for cliché generation events
-    this.eventBus.subscribe('CLICHES_GENERATION_STARTED', (event) => {
+    this.eventBus.on('CLICHES_GENERATION_STARTED', (event) => {
       this.logger.debug('Cliché generation started', event.payload);
     });
 
-    this.eventBus.subscribe('CLICHES_GENERATION_COMPLETED', (event) => {
+    this.eventBus.on('CLICHES_GENERATION_COMPLETED', (event) => {
       this.logger.info('Cliché generation completed', event.payload);
     });
 
-    this.eventBus.subscribe('CLICHES_GENERATION_FAILED', (event) => {
-      this.logger.error('Cliché generation failed', event.payload);
+    this.eventBus.on('CLICHES_GENERATION_FAILED', (event) => {
+      this.logger.debug('Cliché generation failed', event.payload);
     });
+
+    // Listen for direction selection events
+    this.eventBus.on('DIRECTION_SELECTION_STARTED', (event) => {
+      this.logger.debug('Direction selection started', event.payload);
+    });
+
+    this.eventBus.on('DIRECTION_SELECTION_COMPLETED', (event) => {
+      this.logger.debug('Direction selection completed', event.payload);
+    });
+
+    this.eventBus.on('DIRECTION_SELECTION_FAILED', (event) => {
+      this.logger.warn('Direction selection failed', event.payload);
+    });
+
+    // Listen for data loading events
+    this.eventBus.on('EXISTING_CLICHES_LOADED', (event) => {
+      this.logger.debug('Existing clichés loaded from cache/storage', event.payload);
+    });
+  }
+
+  // ============= Data Caching Methods =============
+
+  /**
+   * Get cached concept by ID
+   *
+   * @param {string} conceptId - Concept ID
+   * @returns {object|null} Cached concept or null
+   * @private
+   */
+  #getCachedConcept(conceptId) {
+    const cached = this.#conceptsCache.get(conceptId);
+    if (cached && this.#isCacheValid(conceptId, 'concept')) {
+      return cached;
+    }
+    return null;
+  }
+
+  /**
+   * Cache a concept
+   *
+   * @param {string} conceptId - Concept ID
+   * @param {object} concept - Concept data
+   * @private
+   */
+  #cacheConcept(conceptId, concept) {
+    this.#conceptsCache.set(conceptId, concept);
+    this.#cacheTimestamps.set(`concept_${conceptId}`, Date.now());
+  }
+
+  /**
+   * Get cached clichés by direction ID
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {object|null} Cached clichés or null
+   * @private
+   */
+  #getCachedCliches(directionId) {
+    const cached = this.#clichesCache.get(directionId);
+    if (cached && this.#isCacheValid(directionId, 'cliches')) {
+      return cached;
+    }
+    return null;
+  }
+
+  /**
+   * Cache clichés for a direction
+   *
+   * @param {string} directionId - Direction ID
+   * @param {object} cliches - Clichés data
+   * @private
+   */
+  #cacheCliches(directionId, cliches) {
+    this.#clichesCache.set(directionId, cliches);
+    this.#cacheTimestamps.set(`cliches_${directionId}`, Date.now());
+  }
+
+  /**
+   * Check if cache entry is valid (not expired)
+   *
+   * @param {string} key - Cache key
+   * @param {string} type - Cache type ('concept', 'cliches', 'direction')
+   * @returns {boolean} True if cache is valid
+   * @private
+   */
+  #isCacheValid(key, type) {
+    const timestamp = this.#cacheTimestamps.get(`${type}_${key}`);
+    if (!timestamp) return false;
+
+    // Cache expires after 10 minutes for concepts/directions, 30 minutes for clichés
+    const expirationTime = type === 'cliches' ? 30 * 60 * 1000 : 10 * 60 * 1000;
+    return (Date.now() - timestamp) < expirationTime;
+  }
+
+  /**
+   * Clear all caches
+   *
+   * @private
+   */
+  #clearCaches() {
+    this.#conceptsCache.clear();
+    this.#directionsCache.clear();
+    this.#clichesCache.clear();
+    this.#cacheTimestamps.clear();
+  }
+
+  // ============= State Validation & Management =============
+
+  /**
+   * Record a state change for debugging and validation
+   *
+   * @param {string} action - Action that caused the state change
+   * @param {object} data - Additional data about the change
+   * @private
+   */
+  #recordStateChange(action, data) {
+    const stateSnapshot = {
+      timestamp: new Date().toISOString(),
+      action,
+      data,
+      state: {
+        selectedDirectionId: this.#selectedDirectionId,
+        hasCurrentConcept: !!this.#currentConcept,
+        hasCurrentDirection: !!this.#currentDirection,
+        hasCurrentCliches: !!this.#currentCliches,
+        isGenerating: this.#isGenerating,
+      },
+    };
+
+    this.#stateHistory.push(stateSnapshot);
+    
+    // Keep history size manageable
+    if (this.#stateHistory.length > this.#maxHistorySize) {
+      this.#stateHistory.shift();
+    }
+
+    this.logger.debug('State change recorded:', stateSnapshot);
+  }
+
+  /**
+   * Validate state transition
+   *
+   * @param {string} transition - Type of transition
+   * @param {object} context - Context data for validation
+   * @returns {boolean} True if transition is valid
+   * @private
+   */
+  #validateStateTransition(transition, context) {
+    switch (transition) {
+      case 'direction_selection':
+        return this.#validateDirectionSelection(context);
+      case 'cliche_generation':
+        return this.#validateClicheGeneration(context);
+      default:
+        this.logger.warn(`Unknown state transition: ${transition}`);
+        return true; // Allow unknown transitions
+    }
+  }
+
+  /**
+   * Validate direction selection state
+   *
+   * @param {object} context - Validation context
+   * @returns {boolean} True if valid
+   * @private
+   */
+  #validateDirectionSelection(context) {
+    if (!context.directionId) {
+      this.logger.error('Direction selection: Missing directionId');
+      return false;
+    }
+
+    if (this.#directionsData.length === 0) {
+      this.logger.error('Direction selection: No directions data loaded');
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Validate cliché generation state
+   *
+   * @param {object} context - Validation context
+   * @returns {boolean} True if valid
+   * @private
+   */
+  #validateClicheGeneration(context) {
+    if (!context.selectedDirectionId) {
+      this.logger.error('Cliché generation: No direction selected');
+      return false;
+    }
+
+    if (!context.currentConcept || !context.currentDirection) {
+      this.logger.error('Cliché generation: Missing concept or direction data');
+      return false;
+    }
+
+    if (this.#isGenerating) {
+      this.logger.warn('Cliché generation: Already generating');
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Get current state for debugging
+   *
+   * @returns {object} Current state snapshot
+   * @private
+   */
+  #getCurrentState() {
+    return {
+      selectedDirectionId: this.#selectedDirectionId,
+      currentConcept: this.#currentConcept,
+      currentDirection: this.#currentDirection,
+      currentCliches: this.#currentCliches,
+      directionsDataLength: this.#directionsData.length,
+      isGenerating: this.#isGenerating,
+      cacheStats: {
+        conceptsCacheSize: this.#conceptsCache.size,
+        directionsCacheSize: this.#directionsCache.size,
+        clichesCacheSize: this.#clichesCache.size,
+      },
+      stateHistoryLength: this.#stateHistory.length,
+    };
+  }
+
+  /**
+   * Get cache statistics (for testing purposes)
+   * 
+   * @returns {object} Cache statistics
+   * @public
+   */
+  getCacheStats() {
+    return {
+      conceptsCacheSize: this.#conceptsCache.size,
+      directionsCacheSize: this.#directionsCache.size, 
+      clichesCacheSize: this.#clichesCache.size,
+      cacheTimestampsSize: this.#cacheTimestamps.size,
+    };
+  }
+
+  /**
+   * Get state history (for testing purposes)
+   * 
+   * @returns {Array} State history array
+   * @public
+   */
+  getStateHistory() {
+    return [...this.#stateHistory];
+  }
+
+  // ============= Enhanced Error Handling =============
+
+  /**
+   * Handle errors with enhanced user feedback and recovery
+   *
+   * @param {Error} error - The error that occurred
+   * @param {string} userMessage - User-friendly error message
+   * @param {Function} [recoveryAction] - Optional recovery action
+   * @private
+   */
+  #handleError(error, userMessage, recoveryAction) {
+    // Log detailed error information
+    this.logger.error('Controller error occurred:', {
+      error: error.message,
+      stack: error.stack,
+      state: this.#getCurrentState(),
+      timestamp: new Date().toISOString(),
+    });
+
+    // Record error in state history
+    this.#recordStateChange('error_occurred', {
+      error: error.message,
+      userMessage,
+    });
+
+    // Show user-friendly error message
+    this._showError(userMessage);
+
+    // Execute recovery action if provided
+    if (recoveryAction && typeof recoveryAction === 'function') {
+      try {
+        recoveryAction();
+      } catch (recoveryError) {
+        this.logger.error('Recovery action failed:', recoveryError);
+      }
+    }
   }
 
   // ============= Cleanup =============
@@ -663,6 +1100,12 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
    * @override
    */
   async cleanup() {
+    // Record cleanup in state history
+    this.#recordStateChange('cleanup_started', {});
+
+    // Clear caches first
+    this.#clearCaches();
+
     // Clear state
     this.#initializeState();
 

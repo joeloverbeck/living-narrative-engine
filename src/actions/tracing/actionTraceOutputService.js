@@ -5,6 +5,8 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import { TraceQueueProcessor } from './traceQueueProcessor.js';
+import { TracePriority, DEFAULT_PRIORITY } from './tracePriority.js';
 
 /**
  * Service for outputting action traces with queue processing
@@ -22,6 +24,8 @@ export class ActionTraceOutputService {
   #writeCount;
   #errorCount;
   #outputHandler;
+  #queueProcessor;
+  #eventBus;
 
   /**
    * Constructor
@@ -31,8 +35,17 @@ export class ActionTraceOutputService {
    * @param {object} [dependencies.logger] - Logger interface
    * @param {object} [dependencies.actionTraceFilter] - Trace filter
    * @param {Function} [dependencies.outputHandler] - Custom output handler function for testing
+   * @param {object} [dependencies.eventBus] - Event bus for queue notifications
+   * @param {object} [dependencies.queueConfig] - Queue processor configuration
    */
-  constructor({ storageAdapter, logger, actionTraceFilter, outputHandler } = {}) {
+  constructor({ 
+    storageAdapter, 
+    logger, 
+    actionTraceFilter, 
+    outputHandler,
+    eventBus,
+    queueConfig 
+  } = {}) {
     // Validate dependencies if provided
     if (storageAdapter) {
       validateDependency(storageAdapter, 'IStorageAdapter', null, {
@@ -52,13 +65,29 @@ export class ActionTraceOutputService {
     this.#storageAdapter = storageAdapter;
     this.#logger = ensureValidLogger(logger, 'ActionTraceOutputService');
     this.#actionTraceFilter = actionTraceFilter;
+    this.#eventBus = eventBus;
 
-    // Initialize queue management
-    this.#outputQueue = [];
-    this.#isProcessing = false;
-    this.#maxQueueSize = 1000; // Prevent unbounded growth
-    this.#writeErrors = 0;
-    this.#storageKey = 'actionTraces';
+    // Initialize queue processing system
+    if (this.#storageAdapter && typeof TraceQueueProcessor !== 'undefined') {
+      // Use advanced queue processor
+      this.#queueProcessor = new TraceQueueProcessor({
+        storageAdapter: this.#storageAdapter,
+        logger: this.#logger,
+        eventBus: this.#eventBus,
+        config: queueConfig,
+      });
+      
+      this.#logger.debug('ActionTraceOutputService initialized with TraceQueueProcessor');
+    } else {
+      // Fall back to simple queue implementation
+      this.#outputQueue = [];
+      this.#isProcessing = false;
+      this.#maxQueueSize = 1000; // Prevent unbounded growth
+      this.#writeErrors = 0;
+      this.#storageKey = 'actionTraces';
+
+      this.#logger.debug('ActionTraceOutputService initialized with simple queue');
+    }
 
     // Track pending writes for backward compatibility
     this.#pendingWrites = new Set();
@@ -67,24 +96,32 @@ export class ActionTraceOutputService {
 
     // Use custom output handler if provided (for testing), otherwise use default
     this.#outputHandler = outputHandler || this.#defaultOutputHandler.bind(this);
-
-    this.#logger.debug('ActionTraceOutputService initialized');
   }
 
   /**
    * Write trace to storage asynchronously with queue processing
    *
    * @param {object} trace - Trace to write (ActionExecutionTrace or ActionAwareStructuredTrace)
+   * @param {number} [priority] - Priority level for advanced queue processor
    * @returns {Promise<void>}
    */
-  async writeTrace(trace) {
+  async writeTrace(trace, priority) {
     if (!trace) {
       this.#logger.warn('ActionTraceOutputService: Null trace provided');
       return;
     }
 
-    // Check if we have storage adapter for new behavior
-    if (this.#storageAdapter) {
+    // Use advanced queue processor if available
+    if (this.#queueProcessor) {
+      const success = this.#queueProcessor.enqueue(trace, priority);
+      if (!success) {
+        this.#logger.warn('ActionTraceOutputService: Failed to enqueue trace');
+      }
+      return;
+    }
+
+    // Check if we have storage adapter for simple queue behavior
+    if (this.#storageAdapter && this.#outputQueue) {
       // Check queue size to prevent memory issues
       if (this.#outputQueue.length >= this.#maxQueueSize) {
         this.#logger.error(
@@ -527,11 +564,26 @@ export class ActionTraceOutputService {
    * @returns {object} Queue stats
    */
   getQueueStats() {
+    if (this.#queueProcessor) {
+      // Return advanced queue processor stats
+      const stats = this.#queueProcessor.getQueueStats();
+      return {
+        queueLength: stats.totalSize,
+        isProcessing: stats.isProcessing,
+        writeErrors: 0, // Handled internally by queue processor
+        maxQueueSize: this.#maxQueueSize || 1000,
+        memoryUsage: stats.memoryUsage,
+        circuitBreakerOpen: stats.circuitBreakerOpen,
+        priorities: stats.priorities,
+      };
+    }
+
+    // Simple queue stats
     return {
-      queueLength: this.#outputQueue.length,
+      queueLength: this.#outputQueue ? this.#outputQueue.length : 0,
       isProcessing: this.#isProcessing,
-      writeErrors: this.#writeErrors,
-      maxQueueSize: this.#maxQueueSize,
+      writeErrors: this.#writeErrors || 0,
+      maxQueueSize: this.#maxQueueSize || 1000,
     };
   }
 
@@ -545,21 +597,67 @@ export class ActionTraceOutputService {
       'ActionTraceOutputService: Shutting down, flushing queue...'
     );
 
-    // Process remaining items if storage adapter is available
-    if (this.#storageAdapter && this.#outputQueue.length > 0) {
-      await this.#processQueue();
-    }
+    try {
+      // Shutdown advanced queue processor if available with timeout
+      if (this.#queueProcessor) {
+        const shutdownPromise = this.#queueProcessor.shutdown();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Queue processor shutdown timeout')), 2000)
+        );
+        
+        await Promise.race([shutdownPromise, timeoutPromise]);
+      } else {
+        // Process remaining items in simple queue if storage adapter is available
+        if (this.#storageAdapter && this.#outputQueue && this.#outputQueue.length > 0) {
+          await this.#processQueue();
+        }
 
-    // Wait for processing to complete
-    while (this.#isProcessing) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
+        // Wait for processing to complete with timeout
+        let waitCount = 0;
+        while (this.#isProcessing && waitCount < 20) { // Max 2 seconds
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          waitCount++;
+        }
+      }
 
-    // Wait for legacy pending writes
-    if (this.#pendingWrites.size > 0) {
-      await this.waitForPendingWrites();
+      // Wait for legacy pending writes with timeout
+      if (this.#pendingWrites.size > 0) {
+        const pendingPromise = this.waitForPendingWrites();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Pending writes timeout')), 1000)
+        );
+        
+        await Promise.race([pendingPromise, timeoutPromise]);
+      }
+    } catch (error) {
+      this.#logger.warn('ActionTraceOutputService: Shutdown timeout, forcing completion', {
+        error: error.message
+      });
     }
 
     this.#logger.info('ActionTraceOutputService: Shutdown complete');
+  }
+
+  /**
+   * Get advanced queue processor metrics (if available)
+   *
+   * @returns {object|null} Queue processor metrics or null if not available
+   */
+  getQueueMetrics() {
+    if (this.#queueProcessor) {
+      return this.#queueProcessor.getMetrics();
+    }
+    return null;
+  }
+
+  /**
+   * Convenience method to write trace with priority
+   *
+   * @param {object} trace - Trace to write
+   * @param {number} priority - Priority level (TracePriority constants)
+   * @returns {Promise<void>}
+   */
+  async writeTraceWithPriority(trace, priority = DEFAULT_PRIORITY) {
+    return this.writeTrace(trace, priority);
   }
 }

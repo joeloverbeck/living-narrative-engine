@@ -90,7 +90,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       expect(service).toBeDefined();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'ActionTraceOutputService initialized'
+        'ActionTraceOutputService initialized with TraceQueueProcessor'
       );
     });
 
@@ -101,7 +101,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       expect(service).toBeDefined();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'ActionTraceOutputService initialized'
+        'ActionTraceOutputService initialized with simple queue'
       );
     });
   });
@@ -116,9 +116,6 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
     });
 
     it('should queue traces for processing', async () => {
-      // Use real timers for this test
-      jest.useRealTimers();
-      
       const trace = {
         actionId: 'test:action',
         toJSON: () => ({ action: 'test' }),
@@ -126,25 +123,22 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       await service.writeTrace(trace);
       
-      // Processing should have started
-      const stats = service.getQueueStats();
-      expect(stats.isProcessing).toBe(true);
+      // TraceQueueProcessor schedules processing with setTimeout(0)
+      // so processing won't start until we advance timers
+      let stats = service.getQueueStats();
+      expect(stats.queueLength).toBe(1);
+      expect(stats.isProcessing).toBe(false);
       
-      // Wait a short time for processing to complete with timeout
-      await Promise.race([
-        waitRealTime(100),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Processing timeout')), 2000)
-        )
-      ]);
+      // Advance timers to trigger batch processing
+      await jest.runOnlyPendingTimersAsync();
       
-      // Now processing should be complete
-      const finalStats = service.getQueueStats();
-      expect(finalStats.queueLength).toBe(0);
-      expect(finalStats.isProcessing).toBe(false);
+      // Now processing should have started and completed
+      stats = service.getQueueStats();
+      expect(stats.queueLength).toBe(0);
+      expect(stats.isProcessing).toBe(false);
       
-      // Restore fake timers
-      jest.useFakeTimers();
+      // Verify storage was called
+      expect(mockStorageAdapter.setItem).toHaveBeenCalled();
     }, 5000);
 
     it('should handle null traces gracefully', async () => {
@@ -158,9 +152,6 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
     });
 
     it('should enforce maximum queue size', async () => {
-      // Use real timers to avoid fake timer complications
-      jest.useRealTimers();
-      
       // Block storage adapter to prevent processing
       let resolveStorage;
       const storagePromise = new Promise((resolve) => {
@@ -168,7 +159,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       });
       mockStorageAdapter.setItem.mockReturnValue(storagePromise);
       
-      // Fill up queue to actual capacity (1000 items)
+      // Fill up queue to capacity (1000 items)
       const maxQueueSize = 1000;
       for (let i = 0; i < maxQueueSize; i++) {
         await service.writeTrace({
@@ -177,33 +168,29 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
         });
       }
       
-      // Allow some processing to start
-      await waitRealTime(10);
+      // Verify queue is at capacity
+      let stats = service.getQueueStats();
+      expect(stats.queueLength).toBe(maxQueueSize);
       
-      // Verify queue is near capacity (some items may have started processing)
-      const stats = service.getQueueStats();
-      expect(stats.queueLength).toBeGreaterThanOrEqual(maxQueueSize - 10);
+      // Try to add one more trace - should be dropped
+      await service.writeTrace({
+        actionId: 'overflow:1',
+        toJSON: () => ({ action: 'overflow' }),
+      });
       
-      // Try to add more traces until we hit the limit
-      let errorLogged = false;
-      for (let i = 0; i < 20 && !errorLogged; i++) {
-        await service.writeTrace({
-          actionId: `overflow:${i}`,
-          toJSON: () => ({ action: 'overflow' }),
-        });
-        
-        // Check if error was logged
-        const errorCalls = mockLogger.error.mock.calls;
-        errorLogged = errorCalls.some(call => 
-          call[0] && call[0].includes('Queue full')
-        );
-      }
-
-      expect(errorLogged).toBe(true);
+      // Check that TraceQueueProcessor logged the drop warning
+      const warnCalls = mockLogger.warn.mock.calls;
+      const queueFullLogged = warnCalls.some(call => 
+        call[0] && call[0].includes('Queue full, dropping trace')
+      );
+      expect(queueFullLogged).toBe(true);
+      
+      // Queue size should still be at max
+      stats = service.getQueueStats();
+      expect(stats.queueLength).toBe(maxQueueSize);
       
       // Clean up
       resolveStorage();
-      jest.useFakeTimers();
     }, 10000);
 
     it('should process queue asynchronously', async () => {
@@ -249,6 +236,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
           expect.objectContaining({
             id: expect.stringContaining('test-store'),
             timestamp: expect.any(Number),
+            priority: expect.any(Number), // TraceQueueProcessor adds priority
             data: expect.objectContaining({
               action: 'store',
               data: 'test',
@@ -279,7 +267,9 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
         'actionTraces',
         expect.arrayContaining([
           expect.objectContaining({
-            id: expect.stringContaining('action1'),
+            id: expect.any(String), // TraceQueueProcessor generates different IDs
+            timestamp: expect.any(Number),
+            priority: expect.any(Number), // TraceQueueProcessor adds priority
             data: expect.objectContaining({
               traceType: 'pipeline',
               spans: ['span1', 'span2'],
@@ -353,37 +343,41 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       await service.writeTrace(trace);
       
-      // Allow queue processing to run
+      // TraceQueueProcessor retries items within the same batch processing cycle
+      // so all attempts (initial + retries) happen in one runAllTimersAsync() call
       await jest.runAllTimersAsync();
-      expect(attempts).toBe(1);
+      
+      // Should have made initial attempt plus retries (maxRetries = 3)
+      expect(attempts).toBe(4); // 1 initial + 3 retries
 
-      // Verify error logging occurred for the initial failed attempt
+      // Verify TraceQueueProcessor error logging occurred
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to store trace'),
+        'TraceQueueProcessor: Failed to process item',
         expect.any(Error)
       );
     });
 
     it('should activate circuit breaker after 10 consecutive errors', async () => {
+      // Mock storage to always fail to trigger circuit breaker
       mockStorageAdapter.setItem.mockRejectedValue(
         new Error('Persistent error')
       );
 
-      const traces = Array(15)
-        .fill(null)
-        .map((_, i) => ({
+      // Add 11 traces at once to ensure they're processed in batches
+      // where all items fail consecutively
+      for (let i = 0; i < 11; i++) {
+        await service.writeTrace({
           actionId: `error:${i}`,
           toJSON: () => ({ id: i }),
-        }));
-
-      for (const trace of traces) {
-        await service.writeTrace(trace);
+        });
       }
 
+      // Process the batch - this will trigger consecutive item failures
       await jest.runAllTimersAsync();
 
+      // TraceQueueProcessor logs circuit breaker message with additional text
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'ActionTraceOutputService: Too many storage errors, stopping queue processing'
+        'TraceQueueProcessor: Circuit breaker opened due to consecutive failures'
       );
     }, 15000);
 
@@ -401,14 +395,20 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       await service.writeTrace(trace);
 
-      // Allow queue processing to run
+      // Allow all processing and retries to complete
       await jest.runAllTimersAsync();
-      expect(attempts).toBe(1);
+      
+      // Should have made multiple attempts (initial + retries)
+      expect(attempts).toBeGreaterThan(1);
 
-      // Verify that failure was logged for the initial attempt
+      // Verify TraceQueueProcessor logged the permanent failure
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to store trace'),
-        expect.any(Error)
+        expect.stringContaining('Item permanently failed'),
+        expect.objectContaining({
+          itemId: expect.any(String),
+          retryCount: expect.any(Number),
+          error: 'Permanent failure'
+        })
       );
     });
   });
@@ -521,13 +521,18 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
         isProcessing: false,
         writeErrors: 0,
         maxQueueSize: 1000,
+        memoryUsage: 0,
+        circuitBreakerOpen: false,
+        priorities: {
+          0: { size: 0, oldestTimestamp: null },
+          1: { size: 0, oldestTimestamp: null },
+          2: { size: 0, oldestTimestamp: null },
+          3: { size: 0, oldestTimestamp: null },
+        },
       });
     });
 
     it('should update statistics as queue processes', async () => {
-      // Use real timers for this test
-      jest.useRealTimers();
-      
       const trace = {
         actionId: 'stats:test',
         toJSON: () => ({ action: 'stats' }),
@@ -535,24 +540,21 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       await service.writeTrace(trace);
 
-      // Processing should have started immediately
+      // Initially, trace should be queued but not processing
       let stats = service.getQueueStats();
-      expect(stats.isProcessing).toBe(true);
+      expect(stats.queueLength).toBe(1);
+      expect(stats.isProcessing).toBe(false);
 
-      // Wait for processing to complete with timeout
-      await Promise.race([
-        waitRealTime(100),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Stats processing timeout')), 2000)
-        )
-      ]);
+      // Advance timers to trigger and complete processing
+      await jest.runOnlyPendingTimersAsync();
 
+      // After processing completes
       stats = service.getQueueStats();
       expect(stats.queueLength).toBe(0);
       expect(stats.isProcessing).toBe(false);
       
-      // Restore fake timers
-      jest.useFakeTimers();
+      // Verify storage was called
+      expect(mockStorageAdapter.setItem).toHaveBeenCalled();
     }, 5000);
   });
 
@@ -585,7 +587,21 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ActionTraceOutputService: Shutdown complete'
       );
-      expect(mockStorageAdapter.setItem).toHaveBeenCalledTimes(traces.length);
+      
+      // TraceQueueProcessor batches all remaining items into a single write during shutdown
+      expect(mockStorageAdapter.setItem).toHaveBeenCalledWith(
+        'actionTraces',
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.stringContaining('shutdown-1'),
+            data: expect.objectContaining({ id: 1 }),
+          }),
+          expect.objectContaining({
+            id: expect.stringContaining('shutdown-2'),
+            data: expect.objectContaining({ id: 2 }),
+          }),
+        ])
+      );
     });
 
     it('should wait for processing to complete', async () => {
@@ -722,7 +738,8 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       await jest.runAllTimersAsync();
 
       const savedTraces = mockStorageAdapter.setItem.mock.calls[0][1];
-      expect(savedTraces[0].id).toMatch(/^test-action-with-special-chars_\d+$/);
+      // TraceQueueProcessor generates IDs with format: sanitized_timestamp_random
+      expect(savedTraces[0].id).toMatch(/^test-action-with-special-chars_\d+_[a-z0-9]+$/);
     });
   });
 });
