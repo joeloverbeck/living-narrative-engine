@@ -1,53 +1,9 @@
-# ACTTRA-026: Add JSON Output Formatter
-
-## Summary
-
-Implement a comprehensive JSON output formatter for action traces that creates structured, schema-compliant JSON files with proper formatting, data organization, and metadata inclusion. The formatter should handle all trace types and verbosity levels while maintaining consistency and readability.
-
-## Status
-
-- **Type**: Implementation
-- **Priority**: Medium
-- **Complexity**: Low
-- **Estimated Time**: 2 hours
-- **Dependencies**:
-  - ACTTRA-024 (ActionTraceOutputService)
-  - ACTTRA-019 (ActionExecutionTrace)
-  - ACTTRA-009 (ActionAwareStructuredTrace)
-
-## Objectives
-
-### Primary Goals
-
-1. **Create JSON Formatter** - Structured JSON output generation
-2. **Schema Compliance** - Ensure output matches defined schemas
-3. **Verbosity Support** - Adapt output based on verbosity level
-4. **Data Organization** - Logical structure for easy consumption
-5. **Metadata Inclusion** - Add context and timing information
-6. **Safe Serialization** - Handle circular references and special types
-
-### Success Criteria
-
-- [ ] JSON output validates against schema
-- [ ] All trace types properly formatted
-- [ ] Verbosity levels control detail level
-- [ ] Circular references handled safely
-- [ ] Special types (Date, Error) serialized correctly
-- [ ] Output is human-readable with indentation
-- [ ] File size optimized based on verbosity
-- [ ] Consistent structure across trace types
-
-## Technical Specification
-
-### 1. JSON Formatter Implementation
-
-#### File: `src/actions/tracing/jsonTraceFormatter.js`
-
-```javascript
 /**
  * @file JSON formatter for action traces
  * @see actionTraceOutputService.js
  */
+
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
@@ -63,6 +19,7 @@ export class JsonTraceFormatter {
 
   /**
    * Constructor
+   *
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger - Logger service
    * @param {IActionTraceFilter} dependencies.actionTraceFilter - Trace filter
@@ -70,7 +27,7 @@ export class JsonTraceFormatter {
   constructor({ logger, actionTraceFilter }) {
     this.#logger = ensureValidLogger(logger, 'JsonTraceFormatter');
 
-    validateDependency(actionTraceFilter, 'IActionTraceFilter', null, {
+    validateDependency(actionTraceFilter, 'IActionTraceFilter', this.#logger, {
       requiredMethods: ['getVerbosityLevel', 'getInclusionConfig'],
     });
 
@@ -81,6 +38,7 @@ export class JsonTraceFormatter {
 
   /**
    * Format trace as JSON
+   *
    * @param {object} trace - Trace to format
    * @returns {string} JSON string
    */
@@ -104,12 +62,12 @@ export class JsonTraceFormatter {
 
   /**
    * Format trace based on type
+   *
    * @private
    * @param {object} trace - Raw trace
    * @returns {object} Formatted trace
    */
   #formatTrace(trace) {
-    // Determine trace type and format accordingly
     if (this.#isExecutionTrace(trace)) {
       return this.#formatExecutionTrace(trace);
     } else if (this.#isPipelineTrace(trace)) {
@@ -121,6 +79,8 @@ export class JsonTraceFormatter {
 
   /**
    * Check if trace is an execution trace
+   *
+   * @param trace
    * @private
    */
   #isExecutionTrace(trace) {
@@ -132,6 +92,8 @@ export class JsonTraceFormatter {
 
   /**
    * Check if trace is a pipeline trace
+   *
+   * @param trace
    * @private
    */
   #isPipelineTrace(trace) {
@@ -143,6 +105,8 @@ export class JsonTraceFormatter {
 
   /**
    * Format execution trace
+   *
+   * @param trace
    * @private
    */
   #formatExecutionTrace(trace) {
@@ -158,7 +122,6 @@ export class JsonTraceFormatter {
         : new Date().toISOString(),
     };
 
-    // Add execution details based on verbosity
     if (verbosity !== 'minimal') {
       formatted.execution = {
         startTime: trace.execution?.startTime,
@@ -170,15 +133,13 @@ export class JsonTraceFormatter {
       };
     }
 
-    // Add turn action details if verbose
     if (verbosity === 'detailed' || verbosity === 'verbose') {
       if (trace.turnAction) {
         formatted.turnAction = this.#sanitizeTurnAction(trace.turnAction);
       }
     }
 
-    // Add event payload if verbose and configured
-    if (verbosity === 'verbose' && config.includeComponentData) {
+    if (verbosity === 'verbose' && config.componentData) {
       if (trace.execution?.eventPayload) {
         formatted.eventPayload = this.#sanitizePayload(
           trace.execution.eventPayload
@@ -186,7 +147,6 @@ export class JsonTraceFormatter {
       }
     }
 
-    // Add error details if present
     if (trace.execution?.error) {
       formatted.error = this.#formatError(trace.execution.error);
     }
@@ -196,6 +156,8 @@ export class JsonTraceFormatter {
 
   /**
    * Format pipeline trace
+   *
+   * @param trace
    * @private
    */
   #formatPipelineTrace(trace) {
@@ -208,12 +170,10 @@ export class JsonTraceFormatter {
       traceType: 'pipeline',
     };
 
-    // Get traced actions
     const tracedActions = trace.getTracedActions
       ? trace.getTracedActions()
       : new Map();
 
-    // Format each traced action
     formatted.actions = {};
     for (const [actionId, actionData] of tracedActions) {
       formatted.actions[actionId] = this.#formatActionData(
@@ -224,7 +184,6 @@ export class JsonTraceFormatter {
       );
     }
 
-    // Add spans if available and not minimal
     if (verbosity !== 'minimal' && trace.getSpans) {
       const spans = trace.getSpans();
       if (spans && spans.length > 0) {
@@ -232,7 +191,6 @@ export class JsonTraceFormatter {
       }
     }
 
-    // Add summary statistics
     formatted.summary = this.#createPipelineSummary(tracedActions);
 
     return formatted;
@@ -240,6 +198,11 @@ export class JsonTraceFormatter {
 
   /**
    * Format individual action data from pipeline
+   *
+   * @param actionId
+   * @param actionData
+   * @param verbosity
+   * @param config
    * @private
    */
   #formatActionData(actionId, actionData, verbosity, config) {
@@ -249,7 +212,6 @@ export class JsonTraceFormatter {
       startTime: actionData.startTime,
     };
 
-    // Add stages based on verbosity
     if (verbosity !== 'minimal' && actionData.stages) {
       formatted.stages = {};
 
@@ -263,7 +225,6 @@ export class JsonTraceFormatter {
       }
     }
 
-    // Calculate and add timing
     if (actionData.stages) {
       const timings = this.#calculateStageTiming(actionData.stages);
       formatted.timing = timings;
@@ -274,6 +235,11 @@ export class JsonTraceFormatter {
 
   /**
    * Format stage data
+   *
+   * @param stageName
+   * @param stageData
+   * @param verbosity
+   * @param config
    * @private
    */
   #formatStageData(stageName, stageData, verbosity, config) {
@@ -281,10 +247,9 @@ export class JsonTraceFormatter {
       timestamp: stageData.timestamp,
     };
 
-    // Handle different stages based on configuration
     switch (stageName) {
       case 'component_filtering':
-        if (config.includeComponentData) {
+        if (config.componentData) {
           formatted.actorComponents = stageData.data?.actorComponents || [];
           formatted.requiredComponents =
             stageData.data?.requiredComponents || [];
@@ -293,7 +258,7 @@ export class JsonTraceFormatter {
         break;
 
       case 'prerequisite_evaluation':
-        if (config.includePrerequisites) {
+        if (config.prerequisites) {
           formatted.prerequisites = stageData.data?.prerequisites || [];
           formatted.passed = stageData.data?.passed || false;
 
@@ -304,7 +269,7 @@ export class JsonTraceFormatter {
         break;
 
       case 'target_resolution':
-        if (config.includeTargets) {
+        if (config.targets) {
           formatted.targetCount = stageData.data?.targetCount || 0;
           formatted.isLegacy = stageData.data?.isLegacy || false;
 
@@ -329,7 +294,6 @@ export class JsonTraceFormatter {
         break;
 
       default:
-        // Include raw data for unknown stages in verbose mode
         if (verbosity === 'verbose') {
           formatted.data = stageData.data;
         }
@@ -340,9 +304,14 @@ export class JsonTraceFormatter {
 
   /**
    * Format generic trace
+   *
+   * @param trace
    * @private
    */
   #formatGenericTrace(trace) {
+    // Reset circular ref handler for new sanitization
+    this.#circularRefHandler = new WeakSet();
+
     return {
       metadata: this.#createMetadata('generic'),
       timestamp: new Date().toISOString(),
@@ -352,6 +321,8 @@ export class JsonTraceFormatter {
 
   /**
    * Create metadata header
+   *
+   * @param traceType
    * @private
    */
   #createMetadata(traceType) {
@@ -365,13 +336,14 @@ export class JsonTraceFormatter {
 
   /**
    * Calculate stage timing statistics
+   *
+   * @param stages
    * @private
    */
   #calculateStageTiming(stages) {
     const timestamps = [];
     const stageTimings = {};
 
-    // Collect all timestamps
     for (const [stageName, stageData] of Object.entries(stages)) {
       if (stageData.timestamp) {
         timestamps.push({
@@ -381,10 +353,8 @@ export class JsonTraceFormatter {
       }
     }
 
-    // Sort by timestamp
     timestamps.sort((a, b) => a.time - b.time);
 
-    // Calculate durations
     for (let i = 0; i < timestamps.length - 1; i++) {
       const current = timestamps[i];
       const next = timestamps[i + 1];
@@ -394,7 +364,6 @@ export class JsonTraceFormatter {
       };
     }
 
-    // Add last stage (no end time)
     if (timestamps.length > 0) {
       const last = timestamps[timestamps.length - 1];
       stageTimings[last.stage] = {
@@ -402,7 +371,6 @@ export class JsonTraceFormatter {
       };
     }
 
-    // Calculate total
     if (timestamps.length >= 2) {
       const first = timestamps[0];
       const last = timestamps[timestamps.length - 1];
@@ -414,6 +382,8 @@ export class JsonTraceFormatter {
 
   /**
    * Create pipeline summary
+   *
+   * @param tracedActions
    * @private
    */
   #createPipelineSummary(tracedActions) {
@@ -424,14 +394,12 @@ export class JsonTraceFormatter {
     };
 
     for (const [actionId, actionData] of tracedActions) {
-      // Collect unique stages
       if (actionData.stages) {
         Object.keys(actionData.stages).forEach((stage) => {
           summary.stages.add(stage);
         });
       }
 
-      // Calculate total duration
       if (actionData.stages) {
         const timings = this.#calculateStageTiming(actionData.stages);
         if (timings.total) {
@@ -451,6 +419,9 @@ export class JsonTraceFormatter {
 
   /**
    * Format spans for output
+   *
+   * @param spans
+   * @param verbosity
    * @private
    */
   #formatSpans(spans, verbosity) {
@@ -469,6 +440,8 @@ export class JsonTraceFormatter {
 
   /**
    * Sanitize turn action for output
+   *
+   * @param turnAction
    * @private
    */
   #sanitizeTurnAction(turnAction) {
@@ -486,6 +459,8 @@ export class JsonTraceFormatter {
 
   /**
    * Sanitize event payload
+   *
+   * @param payload
    * @private
    */
   #sanitizePayload(payload) {
@@ -495,10 +470,8 @@ export class JsonTraceFormatter {
       return { type: payload.type || 'unknown' };
     }
 
-    // Remove sensitive or large data
     const sanitized = { ...payload };
 
-    // Remove large objects based on verbosity
     if (verbosity !== 'verbose') {
       delete sanitized.entityCache;
       delete sanitized.componentData;
@@ -509,6 +482,8 @@ export class JsonTraceFormatter {
 
   /**
    * Format error object
+   *
+   * @param error
    * @private
    */
   #formatError(error) {
@@ -534,6 +509,9 @@ export class JsonTraceFormatter {
 
   /**
    * Sanitize object for JSON serialization
+   *
+   * @param obj
+   * @param depth
    * @private
    */
   #sanitizeObject(obj, depth = 0) {
@@ -547,7 +525,6 @@ export class JsonTraceFormatter {
       return obj;
     }
 
-    // Handle circular references
     if (typeof obj === 'object') {
       if (this.#circularRefHandler.has(obj)) {
         return '[Circular reference]';
@@ -555,7 +532,6 @@ export class JsonTraceFormatter {
       this.#circularRefHandler.add(obj);
     }
 
-    // Handle special types
     if (obj instanceof Date) {
       return obj.toISOString();
     }
@@ -585,7 +561,6 @@ export class JsonTraceFormatter {
     if (typeof obj === 'object') {
       const result = {};
       for (const [key, value] of Object.entries(obj)) {
-        // Skip functions and symbols
         if (typeof value !== 'function' && typeof value !== 'symbol') {
           result[key] = this.#sanitizeObject(value, depth + 1);
         }
@@ -598,13 +573,13 @@ export class JsonTraceFormatter {
 
   /**
    * Create JSON replacer function
+   *
    * @private
    */
   #createReplacer() {
     const seen = new WeakSet();
 
     return (key, value) => {
-      // Handle circular references
       if (typeof value === 'object' && value !== null) {
         if (seen.has(value)) {
           return '[Circular]';
@@ -612,12 +587,10 @@ export class JsonTraceFormatter {
         seen.add(value);
       }
 
-      // Handle BigInt
       if (typeof value === 'bigint') {
         return value.toString();
       }
 
-      // Handle undefined (convert to null for JSON)
       if (value === undefined) {
         return null;
       }
@@ -628,12 +601,14 @@ export class JsonTraceFormatter {
 
   /**
    * Get indentation level based on verbosity
+   *
+   * @param verbosity
    * @private
    */
   #getIndentLevel(verbosity) {
     switch (verbosity) {
       case 'minimal':
-        return 0; // No indentation
+        return 0;
       case 'standard':
         return 2;
       case 'detailed':
@@ -646,6 +621,9 @@ export class JsonTraceFormatter {
 
   /**
    * Create error output when formatting fails
+   *
+   * @param trace
+   * @param error
    * @private
    */
   #createErrorOutput(trace, error) {
@@ -668,145 +646,3 @@ export class JsonTraceFormatter {
 }
 
 export default JsonTraceFormatter;
-```
-
-### 2. JSON Schema Definition
-
-#### File: `data/schemas/action-trace-output.schema.json`
-
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "action-trace-output.schema.json",
-  "title": "Action Trace Output",
-  "description": "Schema for action trace JSON output",
-  "type": "object",
-  "properties": {
-    "metadata": {
-      "type": "object",
-      "properties": {
-        "version": { "type": "string" },
-        "type": {
-          "type": "string",
-          "enum": ["execution", "pipeline", "generic", "error"]
-        },
-        "generated": { "type": "string", "format": "date-time" },
-        "generator": { "type": "string" }
-      },
-      "required": ["version", "type", "generated"]
-    },
-    "actionId": { "type": "string" },
-    "actorId": { "type": "string" },
-    "timestamp": { "type": "string", "format": "date-time" },
-    "execution": {
-      "type": "object",
-      "properties": {
-        "startTime": { "type": "number" },
-        "endTime": { "type": "number" },
-        "duration": { "type": "number" },
-        "status": { "type": "string", "enum": ["success", "failed"] }
-      }
-    },
-    "actions": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "actionId": { "type": "string" },
-          "actorId": { "type": "string" },
-          "startTime": { "type": "number" },
-          "stages": { "type": "object" },
-          "timing": { "type": "object" }
-        }
-      }
-    },
-    "error": {
-      "type": "object",
-      "properties": {
-        "message": { "type": "string" },
-        "type": { "type": "string" },
-        "stack": { "type": "string" },
-        "context": { "type": "object" }
-      }
-    }
-  },
-  "required": ["metadata", "timestamp"]
-}
-```
-
-## Implementation Notes
-
-### Verbosity Levels
-
-1. **Minimal**
-   - Essential data only
-   - No indentation
-   - Smallest file size
-   - Basic error info
-
-2. **Standard**
-   - Common use case data
-   - 2-space indentation
-   - Moderate detail
-   - Error messages
-
-3. **Detailed**
-   - Comprehensive data
-   - Full stage information
-   - Error stacks
-   - Target details
-
-4. **Verbose**
-   - Everything available
-   - Component data
-   - Event payloads
-   - Debug information
-
-### Data Safety
-
-1. **Circular References**
-   - WeakSet tracking
-   - Replacer function
-   - Fallback handling
-
-2. **Special Types**
-   - Date to ISO string
-   - Error to object
-   - Map/Set to arrays/objects
-   - BigInt to string
-
-## Testing Requirements
-
-### Unit Tests
-
-```javascript
-// tests/unit/actions/tracing/jsonTraceFormatter.unit.test.js
-
-describe('JsonTraceFormatter - Formatting', () => {
-  it('should format execution traces correctly');
-  it('should format pipeline traces correctly');
-  it('should handle verbosity levels');
-  it('should include/exclude data based on config');
-  it('should handle circular references');
-  it('should format errors properly');
-  it('should sanitize sensitive data');
-  it('should validate against schema');
-});
-```
-
-## Dependencies
-
-- `IActionTraceFilter` - Configuration and verbosity
-- `ILogger` - Error logging
-- JSON Schema for validation
-
-## Next Steps
-
-1. **ACTTRA-027** - Add human-readable output formatter
-2. **ACTTRA-028** - Implement file rotation policies
-
----
-
-**Ticket Status**: Ready for Implementation
-**Last Updated**: 2025-01-10
-**Author**: System Architect

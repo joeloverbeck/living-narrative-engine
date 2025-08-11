@@ -344,10 +344,7 @@ class CommandProcessor extends ICommandProcessor {
    * @returns {object} New trace instance
    */
   #createExecutionTrace(turnAction, actorId) {
-    if (!this.#actionExecutionTraceFactory) {
-      throw new Error('ActionExecutionTraceFactory not available');
-    }
-
+    // Factory existence is guaranteed by #shouldCreateTrace check
     return this.#actionExecutionTraceFactory.createFromTurnAction(
       turnAction,
       actorId
@@ -635,18 +632,10 @@ class CommandProcessor extends ICommandProcessor {
    * @private
    */
   #getEntityDescription(entityId) {
-    try {
-      // For now, return the entity ID
-      // In a full implementation, we would query the entity manager
-      // But we need to avoid circular dependencies
-      return entityId;
-    } catch (error) {
-      this.#logger.debug(
-        `Failed to get description for entity ${entityId}`,
-        error
-      );
-      return entityId;
-    }
+    // For now, return the entity ID
+    // In a full implementation, we would query the entity manager
+    // But we need to avoid circular dependencies
+    return entityId;
   }
 
   /**
@@ -776,11 +765,8 @@ class CommandProcessor extends ICommandProcessor {
       throw new Error('Valid turn action with actionDefinitionId is required');
     }
 
-    if (!turnAction.commandString && !turnAction.actionDefinitionId) {
-      throw new Error(
-        'Turn action must have either commandString or actionDefinitionId'
-      );
-    }
+    // Note: The check for commandString is redundant since we already verified actionDefinitionId exists
+    // If actionDefinitionId is missing, we throw above. If it exists, this condition can never be true.
   }
 
   /**

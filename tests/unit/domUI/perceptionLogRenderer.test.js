@@ -184,6 +184,31 @@ describe('PerceptionLogRenderer', () => {
       const expectedErrorMessage = `${CLASS_PREFIX} 'listContainerElement' is not defined or not found in the DOM. This element is required for BaseListDisplayComponent. Ensure it's specified in elementsConfig.`;
       expect(() => createRenderer()).toThrow(expectedErrorMessage);
     });
+
+    it('should throw if entityManager is null', () => {
+      const expectedErrorMessage = `${CLASS_PREFIX} 'entityManager' dependency is missing or invalid.`;
+      expect(() => createRenderer({ entityManager: null })).toThrow(
+        expectedErrorMessage
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMessage);
+    });
+
+    it('should throw if entityManager is undefined', () => {
+      const expectedErrorMessage = `${CLASS_PREFIX} 'entityManager' dependency is missing or invalid.`;
+      expect(() => createRenderer({ entityManager: undefined })).toThrow(
+        expectedErrorMessage
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMessage);
+    });
+
+    it('should throw if entityManager lacks getEntityInstance method', () => {
+      const invalidEntityManager = { someOtherMethod: jest.fn() };
+      const expectedErrorMessage = `${CLASS_PREFIX} 'entityManager' dependency is missing or invalid.`;
+      expect(() =>
+        createRenderer({ entityManager: invalidEntityManager })
+      ).toThrow(expectedErrorMessage);
+      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMessage);
+    });
   });
 
   describe('_getListItemsData', () => {
@@ -304,6 +329,135 @@ describe('PerceptionLogRenderer', () => {
         expect.any(Object)
       );
     });
+
+    it('should render speech entries with log-speech class and speaker-cue span', () => {
+      const speechEntry = {
+        descriptionText: 'Alice says: Hello, how are you?',
+        timestamp: '14:30',
+        perceptionType: 'Speech',
+        actorId: 'npc:alice',
+      };
+      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+
+      expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(
+        'log-speech'
+      );
+      expect(li.classList.contains('log-speech')).toBe(true);
+      expect(li.innerHTML).toContain(
+        '<span class="speaker-cue">Alice says:</span> Hello, how are you?'
+      );
+      expect(li.title).toBe('Time: 14:30');
+    });
+
+    it('should render speech with different speaker names', () => {
+      const speechEntry = {
+        descriptionText: 'The Dark Lord says: You shall not pass!',
+        timestamp: '15:00',
+        perceptionType: 'Speech',
+        actorId: 'npc:darklord',
+      };
+      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+
+      expect(li.innerHTML).toContain(
+        '<span class="speaker-cue">The Dark Lord says:</span> You shall not pass!'
+      );
+    });
+
+    it('should render action entries with log-action class and action-text span', () => {
+      const actionEntry = {
+        descriptionText: '*draws sword*',
+        timestamp: '16:15',
+        perceptionType: 'Action',
+        actorId: 'player:hero',
+      };
+      const li = renderer._renderListItem(actionEntry, 0, [actionEntry]);
+
+      expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(
+        'log-action'
+      );
+      expect(li.classList.contains('log-action')).toBe(true);
+      expect(li.innerHTML).toContain(
+        '<span class="action-text">draws sword</span>'
+      );
+      expect(li.title).toBe('Time: 16:15');
+    });
+
+    it('should render complex action entries', () => {
+      const actionEntry = {
+        descriptionText: '*carefully examines the ancient tome*',
+        timestamp: '17:00',
+        perceptionType: 'Action',
+        actorId: 'player:scholar',
+      };
+      const li = renderer._renderListItem(actionEntry, 0, [actionEntry]);
+
+      expect(li.innerHTML).toContain(
+        '<span class="action-text">carefully examines the ancient tome</span>'
+      );
+    });
+
+    it('should escape HTML in speech utterances', () => {
+      const speechEntry = {
+        descriptionText: 'Bob says: I have <script>alert("xss")</script> code!',
+        timestamp: '18:00',
+        perceptionType: 'Speech',
+        actorId: 'npc:bob',
+      };
+      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+
+      expect(li.innerHTML).toContain(
+        '&lt;script&gt;alert("xss")&lt;/script&gt;'
+      );
+      expect(li.innerHTML).not.toContain('<script>');
+    });
+
+    it('should escape HTML in action text', () => {
+      const actionEntry = {
+        descriptionText: '*uses <b>bold</b> & <i>italic</i> moves*',
+        timestamp: '18:30',
+        perceptionType: 'Action',
+        actorId: 'player:hacker',
+      };
+      const li = renderer._renderListItem(actionEntry, 0, [actionEntry]);
+
+      expect(li.innerHTML).toContain('&lt;b&gt;bold&lt;/b&gt;');
+      expect(li.innerHTML).toContain('&amp;');
+      expect(li.innerHTML).toContain('&lt;i&gt;italic&lt;/i&gt;');
+      expect(li.innerHTML).not.toContain('<b>');
+      expect(li.innerHTML).not.toContain('<i>');
+    });
+
+    it('should escape HTML in generic entries', () => {
+      const genericEntry = {
+        descriptionText: 'The <door> opens & reveals a > symbol',
+        timestamp: '19:00',
+        perceptionType: 'Generic',
+        actorId: 'system',
+      };
+      const li = renderer._renderListItem(genericEntry, 0, [genericEntry]);
+
+      expect(li.innerHTML).toBe(
+        'The &lt;door&gt; opens &amp; reveals a &gt; symbol'
+      );
+    });
+
+    it('should handle edge case of action without asterisks at both ends', () => {
+      const invalidActionEntry = {
+        descriptionText: '*draws sword', // Missing closing asterisk
+        timestamp: '19:30',
+        perceptionType: 'Action',
+        actorId: 'player:hero',
+      };
+      const li = renderer._renderListItem(invalidActionEntry, 0, [
+        invalidActionEntry,
+      ]);
+
+      // Should be treated as generic, not action
+      expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(
+        'log-generic'
+      );
+      expect(li.innerHTML).toBe('*draws sword');
+    });
   });
 
   describe('_getEmptyListMessage', () => {
@@ -347,6 +501,60 @@ describe('PerceptionLogRenderer', () => {
       };
       mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
       expect(renderer._getEmptyListMessage()).toBe('Perception log is empty.');
+    });
+
+    it('should handle error in getEntityInstance and return default message', () => {
+      setInternalCurrentActorId(renderer, actorId);
+      mockEntityManager.getEntityInstance.mockImplementation(() => {
+        throw new Error('Database connection failed');
+      });
+
+      const result = renderer._getEmptyListMessage();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `${CLASS_PREFIX} Error in _getEmptyListMessage:`,
+        expect.objectContaining({ message: 'Database connection failed' })
+      );
+      expect(result).toBe('No actor selected.');
+    });
+
+    it('should handle error in hasComponent and return default message', () => {
+      setInternalCurrentActorId(renderer, actorId);
+      const mockActor = {
+        id: actorId,
+        hasComponent: jest.fn().mockImplementation(() => {
+          throw new Error('Component check failed');
+        }),
+      };
+      mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+
+      const result = renderer._getEmptyListMessage();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `${CLASS_PREFIX} Error in _getEmptyListMessage:`,
+        expect.objectContaining({ message: 'Component check failed' })
+      );
+      expect(result).toBe('No actor selected.');
+    });
+
+    it('should handle error in getComponentData and return default message', () => {
+      setInternalCurrentActorId(renderer, actorId);
+      const mockActor = {
+        id: actorId,
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockImplementation(() => {
+          throw new Error('Component data retrieval failed');
+        }),
+      };
+      mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+
+      const result = renderer._getEmptyListMessage();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `${CLASS_PREFIX} Error in _getEmptyListMessage:`,
+        expect.objectContaining({ message: 'Component data retrieval failed' })
+      );
+      expect(result).toBe('No actor selected.');
     });
   });
 

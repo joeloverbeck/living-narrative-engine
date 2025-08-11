@@ -42,13 +42,15 @@ describe('ActionExecutionTrace - Performance Tests', () => {
       }
 
       const duration = performance.now() - startTime;
-      
+
       // Assert
       expect(duration).toBeLessThan(100); // 1000 traces in <100ms
-      
+
       // Log performance metrics for monitoring
       const avgTimePerTrace = duration / iterations;
-      console.log(`Trace creation performance: ${iterations} traces in ${duration.toFixed(2)}ms (avg: ${avgTimePerTrace.toFixed(3)}ms/trace)`);
+      console.log(
+        `Trace creation performance: ${iterations} traces in ${duration.toFixed(2)}ms (avg: ${avgTimePerTrace.toFixed(3)}ms/trace)`
+      );
     });
   });
 
@@ -77,29 +79,34 @@ describe('ActionExecutionTrace - Performance Tests', () => {
         const json = trace.toJSON();
         const duration = performance.now() - startTime;
         measurements.push(duration);
-        
+
         // Ensure serialization produces valid output
         expect(JSON.stringify(json).length).toBeGreaterThan(0);
       }
 
       // Calculate statistics
-      const avgDuration = measurements.reduce((sum, val) => sum + val, 0) / iterations;
+      const avgDuration =
+        measurements.reduce((sum, val) => sum + val, 0) / iterations;
       const maxDuration = Math.max(...measurements);
-      const p95Duration = measurements.sort((a, b) => a - b)[Math.floor(iterations * 0.95)];
+      const p95Duration = measurements.sort((a, b) => a - b)[
+        Math.floor(iterations * 0.95)
+      ];
 
       // Assert
       expect(avgDuration).toBeLessThan(1); // Average serialization in <1ms
       expect(p95Duration).toBeLessThan(2); // 95th percentile in <2ms
-      
+
       // Log performance metrics for monitoring
-      console.log(`Serialization performance - Avg: ${avgDuration.toFixed(3)}ms, P95: ${p95Duration.toFixed(3)}ms, Max: ${maxDuration.toFixed(3)}ms`);
+      console.log(
+        `Serialization performance - Avg: ${avgDuration.toFixed(3)}ms, P95: ${p95Duration.toFixed(3)}ms, Max: ${maxDuration.toFixed(3)}ms`
+      );
     });
 
     it('should handle complex payloads efficiently', () => {
       const trace = new ActionExecutionTrace(validParams);
-      
+
       trace.captureDispatchStart();
-      
+
       // Add complex nested payload
       const complexPayload = {
         actor: 'player-1',
@@ -108,21 +115,25 @@ describe('ActionExecutionTrace - Performance Tests', () => {
           level1: {
             level2: {
               level3: {
-                data: Array(100).fill(0).map((_, i) => ({
-                  id: i,
-                  value: `value-${i}`,
-                  metadata: { timestamp: Date.now() },
-                })),
+                data: Array(100)
+                  .fill(0)
+                  .map((_, i) => ({
+                    id: i,
+                    value: `value-${i}`,
+                    metadata: { timestamp: Date.now() },
+                  })),
               },
             },
           },
         },
-        arrays: Array(50).fill(0).map((_, i) => ({
-          index: i,
-          items: Array(10).fill(`item-${i}`),
-        })),
+        arrays: Array(50)
+          .fill(0)
+          .map((_, i) => ({
+            index: i,
+            items: Array(10).fill(`item-${i}`),
+          })),
       };
-      
+
       trace.captureEventPayload(complexPayload);
       trace.captureDispatchResult({ success: true });
 
@@ -134,19 +145,21 @@ describe('ActionExecutionTrace - Performance Tests', () => {
       // Measure performance with complex data
       const iterations = 100;
       const startTime = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         const json = trace.toJSON();
         expect(json).toBeTruthy();
       }
-      
+
       const totalDuration = performance.now() - startTime;
       const avgDuration = totalDuration / iterations;
-      
+
       // Even with complex data, should maintain reasonable performance
       expect(avgDuration).toBeLessThan(5); // <5ms per serialization with complex data
-      
-      console.log(`Complex payload serialization: ${avgDuration.toFixed(3)}ms average over ${iterations} iterations`);
+
+      console.log(
+        `Complex payload serialization: ${avgDuration.toFixed(3)}ms average over ${iterations} iterations`
+      );
     });
   });
 });

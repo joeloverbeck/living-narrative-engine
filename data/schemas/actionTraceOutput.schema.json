@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "actionTraceOutput.schema.json",
+  "title": "Action Trace Output",
+  "description": "Schema for action trace JSON output",
+  "type": "object",
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "version": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["execution", "pipeline", "generic", "error"]
+        },
+        "generated": { "type": "string", "format": "date-time" },
+        "generator": { "type": "string" }
+      },
+      "required": ["version", "type", "generated"]
+    },
+    "actionId": { "type": "string" },
+    "actorId": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "startTime": { "type": "number" },
+        "endTime": { "type": "number" },
+        "duration": { "type": "number" },
+        "status": { "type": "string", "enum": ["success", "failed"] }
+      }
+    },
+    "actions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "actionId": { "type": "string" },
+          "actorId": { "type": "string" },
+          "startTime": { "type": "number" },
+          "stages": { "type": "object" },
+          "timing": { "type": "object" }
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "stack": { "type": "string" },
+        "context": { "type": "object" }
+      }
+    }
+  },
+  "required": ["metadata", "timestamp"]
+}

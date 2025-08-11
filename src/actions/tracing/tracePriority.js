@@ -23,7 +23,7 @@ export const TracePriority = {
  */
 export const PRIORITY_NAMES = {
   [TracePriority.CRITICAL]: 'CRITICAL',
-  [TracePriority.HIGH]: 'HIGH', 
+  [TracePriority.HIGH]: 'HIGH',
   [TracePriority.NORMAL]: 'NORMAL',
   [TracePriority.LOW]: 'LOW',
 };
@@ -53,7 +53,7 @@ export function normalizePriority(priority) {
   if (isValidPriority(priority)) {
     return priority;
   }
-  
+
   // Clamp to valid range
   if (priority > TracePriority.CRITICAL) {
     return TracePriority.CRITICAL;
@@ -61,7 +61,7 @@ export function normalizePriority(priority) {
   if (priority < TracePriority.LOW) {
     return TracePriority.LOW;
   }
-  
+
   // Round to nearest valid priority
   return Math.round(priority);
 }
@@ -87,23 +87,23 @@ export function inferPriority(trace) {
   if (!trace) {
     return TracePriority.LOW;
   }
-  
+
   // Critical priority for errors
   if (trace.hasError || (trace.execution && trace.execution.error)) {
     return TracePriority.CRITICAL;
   }
-  
+
   // High priority for system or user-facing actions
   const actionId = trace.actionId || '';
   if (actionId.includes('system:') || actionId.includes('user:')) {
     return TracePriority.HIGH;
   }
-  
+
   // Low priority for debug traces
   if (actionId.includes('debug:') || actionId.includes('trace:')) {
     return TracePriority.LOW;
   }
-  
+
   // Default to normal priority
   return TracePriority.NORMAL;
 }
@@ -118,7 +118,7 @@ export function inferPriority(trace) {
 export function comparePriorities(priorityA, priorityB) {
   const normalizedA = normalizePriority(priorityA);
   const normalizedB = normalizePriority(priorityB);
-  
+
   // Higher priority comes first (descending order)
   return normalizedB - normalizedA;
 }

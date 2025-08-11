@@ -14,7 +14,10 @@ import { ActionTraceOutputService } from '../../../../src/actions/tracing/action
 import { TracePriority } from '../../../../src/actions/tracing/tracePriority.js';
 import { QUEUE_EVENTS } from '../../../../src/actions/tracing/actionTraceTypes.js';
 import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
-import { createMockActionTraceFilter, createMockIndexedDBStorageAdapter } from '../../../common/mockFactories/actionTracing.js';
+import {
+  createMockActionTraceFilter,
+  createMockIndexedDBStorageAdapter,
+} from '../../../common/mockFactories/actionTracing.js';
 
 describe('Queue Processor Integration', () => {
   let service;
@@ -26,11 +29,11 @@ describe('Queue Processor Integration', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
-    
+
     mockLogger = createMockLogger();
     mockStorageAdapter = createMockIndexedDBStorageAdapter();
     mockActionTraceFilter = createMockActionTraceFilter();
-    
+
     mockEventBus = {
       dispatch: jest.fn(),
     };
@@ -87,7 +90,7 @@ describe('Queue Processor Integration', () => {
       };
 
       await service.writeTrace(trace);
-      
+
       // Allow queue processing
       await jest.runAllTimersAsync();
 
@@ -139,7 +142,7 @@ describe('Queue Processor Integration', () => {
       // Critical trace should be processed first despite being added later
       const storageCalls = mockStorageAdapter.setItem.mock.calls;
       expect(storageCalls.length).toBeGreaterThan(0);
-      
+
       const firstTrace = storageCalls[0][1][0];
       expect(firstTrace.data.actionId).toBe('critical:error');
     });
@@ -159,9 +162,9 @@ describe('Queue Processor Integration', () => {
       };
 
       await service.writeTrace(trace);
-      
+
       const stats = service.getQueueStats();
-      
+
       expect(stats).toHaveProperty('queueLength');
       expect(stats).toHaveProperty('isProcessing');
       expect(stats).toHaveProperty('memoryUsage');
@@ -187,7 +190,7 @@ describe('Queue Processor Integration', () => {
       await jest.runAllTimersAsync();
 
       const metrics = service.getQueueMetrics();
-      
+
       expect(metrics).toBeDefined();
       expect(metrics).toHaveProperty('totalEnqueued');
       expect(metrics).toHaveProperty('totalProcessed');
@@ -218,10 +221,10 @@ describe('Queue Processor Integration', () => {
 
       // Check that batch processed event was dispatched
       const eventCalls = mockEventBus.dispatch.mock.calls;
-      const batchEvent = eventCalls.find(call => 
-        call[0] && call[0].type === QUEUE_EVENTS.BATCH_PROCESSED
+      const batchEvent = eventCalls.find(
+        (call) => call[0] && call[0].type === QUEUE_EVENTS.BATCH_PROCESSED
       );
-      
+
       expect(batchEvent).toBeDefined();
       expect(batchEvent[0].payload).toHaveProperty('batchSize');
       expect(batchEvent[0].payload).toHaveProperty('processingTime');
@@ -252,7 +255,7 @@ describe('Queue Processor Integration', () => {
       };
 
       await service.writeTrace(trace);
-      
+
       // Allow retries to complete
       await jest.advanceTimersByTimeAsync(5000);
 
@@ -289,10 +292,10 @@ describe('Queue Processor Integration', () => {
 
       // Circuit breaker event should be dispatched
       const eventCalls = mockEventBus.dispatch.mock.calls;
-      const circuitEvent = eventCalls.find(call => 
-        call[0] && call[0].type === QUEUE_EVENTS.CIRCUIT_BREAKER
+      const circuitEvent = eventCalls.find(
+        (call) => call[0] && call[0].type === QUEUE_EVENTS.CIRCUIT_BREAKER
       );
-      
+
       expect(circuitEvent).toBeDefined();
     });
 
@@ -319,37 +322,42 @@ describe('Queue Processor Integration', () => {
       // Shutdown should process all remaining traces
       // Need to handle the timers properly during shutdown
       const shutdownPromise = service.shutdown();
-      
+
       // Advance timers to allow the shutdown process to complete
       await jest.runAllTimersAsync();
-      
+
       // Wait for shutdown to complete
       await shutdownPromise;
 
       // Should have been called at least once to save the traces
       expect(mockStorageAdapter.setItem).toHaveBeenCalled();
-      
+
       // Verify all traces were saved in the final batch
-      const lastCall = mockStorageAdapter.setItem.mock.calls[mockStorageAdapter.setItem.mock.calls.length - 1];
+      const lastCall =
+        mockStorageAdapter.setItem.mock.calls[
+          mockStorageAdapter.setItem.mock.calls.length - 1
+        ];
       expect(lastCall[0]).toBe('actionTraces');
-      expect(lastCall[1]).toEqual(expect.arrayContaining([
-        expect.objectContaining({
-          data: expect.objectContaining({
-            actionId: 'shutdown:0'
-          })
-        }),
-        expect.objectContaining({
-          data: expect.objectContaining({
-            actionId: 'shutdown:1'
-          })
-        }),
-        expect.objectContaining({
-          data: expect.objectContaining({
-            actionId: 'shutdown:2'
-          })
-        })
-      ]));
-      
+      expect(lastCall[1]).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            data: expect.objectContaining({
+              actionId: 'shutdown:0',
+            }),
+          }),
+          expect.objectContaining({
+            data: expect.objectContaining({
+              actionId: 'shutdown:1',
+            }),
+          }),
+          expect.objectContaining({
+            data: expect.objectContaining({
+              actionId: 'shutdown:2',
+            }),
+          }),
+        ])
+      );
+
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ActionTraceOutputService: Shutting down, flushing queue...'
       );
@@ -395,7 +403,7 @@ describe('Queue Processor Integration', () => {
 
       // Should work with existing writeTrace API
       await service.writeTrace(trace);
-      
+
       // Should provide existing statistics API
       const stats = service.getStatistics();
       expect(stats).toHaveProperty('totalWrites');
@@ -420,7 +428,7 @@ describe('Queue Processor Integration', () => {
 
       // Test convenience method for priority writing
       await service.writeTraceWithPriority(trace, TracePriority.HIGH);
-      
+
       await jest.runAllTimersAsync();
 
       expect(mockStorageAdapter.setItem).toHaveBeenCalled();

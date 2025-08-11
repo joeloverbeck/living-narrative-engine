@@ -872,6 +872,32 @@ describe('HumanReadableFormatter - Text Formatting', () => {
 - `IActionTraceFilter` - Configuration
 - `ILogger` - Error logging
 
+### Dependency Injection Setup
+
+#### File: `src/dependencyInjection/tokens/actionTracingTokens.js`
+
+Add the following token to the `actionTracingTokens` object:
+
+```javascript
+// Human-readable formatter for trace output
+IHumanReadableFormatter: 'IHumanReadableFormatter',
+```
+
+#### File: `src/dependencyInjection/registrations/actionTracingRegistrations.js`
+
+Register the service implementation:
+
+```javascript
+import { HumanReadableFormatter } from '../../actions/tracing/humanReadableFormatter.js';
+import { actionTracingTokens } from '../tokens/actionTracingTokens.js';
+
+// In the registration function:
+container.register(
+  actionTracingTokens.IHumanReadableFormatter,
+  HumanReadableFormatter
+);
+```
+
 ## Next Steps
 
 1. **ACTTRA-028** - Implement file rotation policies

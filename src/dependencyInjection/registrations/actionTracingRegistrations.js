@@ -13,6 +13,7 @@ import ActionAwareStructuredTrace from '../../actions/tracing/actionAwareStructu
 import { EventDispatchTracer } from '../../events/tracing/eventDispatchTracer.js';
 import { ActionTraceOutputService } from '../../actions/tracing/actionTraceOutputService.js';
 import { IndexedDBStorageAdapter } from '../../storage/indexedDBStorageAdapter.js';
+import { JsonTraceFormatter } from '../../actions/tracing/jsonTraceFormatter.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -113,6 +114,20 @@ export function registerActionTracing(container) {
     `Action Tracing Registration: Registered ${String(actionTracingTokens.IActionTraceFilter)}.`
   );
 
+  // Register JsonTraceFormatter
+  container.register(
+    actionTracingTokens.IJsonTraceFormatter,
+    (c) =>
+      new JsonTraceFormatter({
+        logger: c.resolve(tokens.ILogger),
+        actionTraceFilter: c.resolve(actionTracingTokens.IActionTraceFilter),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.IJsonTraceFormatter)}.`
+  );
+
   // Register enhanced ActionTraceOutputService with IndexedDB support
   container.register(
     actionTracingTokens.IActionTraceOutputService,
@@ -121,6 +136,7 @@ export function registerActionTracing(container) {
         storageAdapter: c.resolve(actionTracingTokens.IIndexedDBStorageAdapter),
         logger: c.resolve(tokens.ILogger),
         actionTraceFilter: c.resolve(actionTracingTokens.IActionTraceFilter),
+        jsonFormatter: c.resolve(actionTracingTokens.IJsonTraceFormatter),
       }),
     { lifecycle: 'singleton' }
   );

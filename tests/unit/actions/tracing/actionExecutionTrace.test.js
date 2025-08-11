@@ -218,5 +218,4 @@ describe('ActionExecutionTrace', () => {
       expect(json.eventPayload.metadata.safe).toBe(true);
     });
   });
-
 });

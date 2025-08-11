@@ -19,7 +19,7 @@ export class TraceQueueProcessorTestBed {
     this.processor = null;
     this.config = null;
     this.timerService = null;
-    
+
     // Test data helpers
     this.traceCounter = 0;
     this.testTraces = [];
@@ -32,7 +32,7 @@ export class TraceQueueProcessorTestBed {
     this.mockLogger = createMockLogger();
     // Use a simpler mock that doesn't rely on setTimeout for tests
     this.mockStorageAdapter = this.createSimpleMockStorageAdapter();
-    
+
     this.mockEventBus = {
       dispatch: jest.fn(),
     };
@@ -61,7 +61,7 @@ export class TraceQueueProcessorTestBed {
 
     return this;
   }
-  
+
   /**
    * Create a simple mock storage adapter that works well with fake timers
    *
@@ -69,7 +69,7 @@ export class TraceQueueProcessorTestBed {
    */
   createSimpleMockStorageAdapter() {
     const storage = new Map();
-    
+
     return {
       getItem: jest.fn().mockImplementation((key) => {
         // Return synchronously wrapped in Promise for immediate resolution
@@ -98,17 +98,17 @@ export class TraceQueueProcessorTestBed {
    */
   withConfig(customConfig) {
     this.config = { ...this.config, ...customConfig };
-    
+
     // Ensure we have a storage adapter
     if (!this.mockStorageAdapter) {
       this.mockStorageAdapter = this.createSimpleMockStorageAdapter();
     }
-    
+
     // Ensure we have a timer service
     if (!this.timerService) {
       this.timerService = new TestTimerService();
     }
-    
+
     this.processor = new TraceQueueProcessor({
       storageAdapter: this.mockStorageAdapter,
       logger: this.mockLogger,
@@ -127,17 +127,17 @@ export class TraceQueueProcessorTestBed {
    */
   withoutEventBus() {
     this.mockEventBus = null;
-    
+
     // Ensure we have a storage adapter
     if (!this.mockStorageAdapter) {
       this.mockStorageAdapter = this.createSimpleMockStorageAdapter();
     }
-    
+
     // Ensure we have a timer service
     if (!this.timerService) {
       this.timerService = new TestTimerService();
     }
-    
+
     this.processor = new TraceQueueProcessor({
       storageAdapter: this.mockStorageAdapter,
       logger: this.mockLogger,
@@ -229,19 +229,24 @@ export class TraceQueueProcessorTestBed {
    */
   enqueueTestTraces(count = 5) {
     const traces = [];
-    const priorities = [TracePriority.LOW, TracePriority.NORMAL, TracePriority.HIGH, TracePriority.CRITICAL];
-    
+    const priorities = [
+      TracePriority.LOW,
+      TracePriority.NORMAL,
+      TracePriority.HIGH,
+      TracePriority.CRITICAL,
+    ];
+
     for (let i = 0; i < count; i++) {
       const priority = priorities[i % priorities.length];
       const trace = this.createMockTrace({
         actionId: `priority:${priority}-${i}`,
         priority,
       });
-      
+
       this.processor.enqueue(trace, priority);
       traces.push(trace);
     }
-    
+
     return traces;
   }
 
@@ -283,7 +288,7 @@ export class TraceQueueProcessorTestBed {
    */
   async waitForProcessing(timeout = 5000) {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       const stats = this.processor.getQueueStats();
       if (stats.totalSize === 0 && !stats.isProcessing) {
@@ -291,7 +296,7 @@ export class TraceQueueProcessorTestBed {
       }
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
-    
+
     throw new Error('Timeout waiting for processing to complete');
   }
 
@@ -304,7 +309,7 @@ export class TraceQueueProcessorTestBed {
   async advanceTimersAndFlush(timeMs) {
     // With the TestTimerService, we can directly control timer execution
     // This avoids all the issues with Jest's fake timers
-    
+
     // First trigger any immediate timers (like the first batch)
     if (timeMs > 0) {
       // Advance simulated time for delayed timers
@@ -313,15 +318,15 @@ export class TraceQueueProcessorTestBed {
       // Trigger all immediate timers
       await this.timerService.triggerAll();
     }
-    
+
     // Process any timers that were scheduled during execution
     // Keep processing until no more timers are pending or queue is empty
     let maxIterations = 10; // Safety limit to prevent infinite loops
     while (maxIterations-- > 0) {
       // Allow promises to settle
       await Promise.resolve();
-      await new Promise(resolve => process.nextTick(resolve));
-      
+      await new Promise((resolve) => process.nextTick(resolve));
+
       // Check if there are more timers to process
       if (!this.timerService.hasPending()) {
         // No more pending timers
@@ -338,10 +343,10 @@ export class TraceQueueProcessorTestBed {
         await this.timerService.triggerAll();
       }
     }
-    
+
     // Final promise flush
     await Promise.resolve();
-    await new Promise(resolve => process.nextTick(resolve));
+    await new Promise((resolve) => process.nextTick(resolve));
   }
 
   /**
@@ -353,28 +358,30 @@ export class TraceQueueProcessorTestBed {
   async waitForProcessingComplete(timeout = 2000) {
     let attempts = 0;
     const maxAttempts = timeout / 25; // Check every 25ms for better responsiveness
-    
+
     while (attempts < maxAttempts) {
       // First advance any immediate timers
       await jest.advanceTimersByTimeAsync(0);
       await this.flushPromises();
-      
+
       const stats = this.processor.getQueueStats();
       if (stats.totalSize === 0 && !stats.isProcessing) {
         // Processing is done - do final flush to ensure completion
         await this.flushPromises();
         return;
       }
-      
+
       // Advance a small amount and flush
       await jest.advanceTimersByTimeAsync(25);
       await this.flushPromises();
       attempts++;
     }
-    
+
     // Log current state for debugging if processing didn't complete
     const finalStats = this.processor.getQueueStats();
-    console.warn(`Processing didn't complete: totalSize=${finalStats.totalSize}, isProcessing=${finalStats.isProcessing}`);
+    console.warn(
+      `Processing didn't complete: totalSize=${finalStats.totalSize}, isProcessing=${finalStats.isProcessing}`
+    );
   }
 
   /**
@@ -445,7 +452,7 @@ export class TraceQueueProcessorTestBed {
     if (!this.mockEventBus) {
       return false;
     }
-    
+
     return this.mockEventBus.dispatch.mock.calls.some((call) => {
       const event = call[0];
       return event && event.type === eventType;
@@ -462,7 +469,7 @@ export class TraceQueueProcessorTestBed {
     if (setItemCalls.length === 0) {
       return [];
     }
-    
+
     // Return traces from last setItem call
     const lastCall = setItemCalls[setItemCalls.length - 1];
     return lastCall[1] || []; // Second parameter is the traces array
@@ -497,7 +504,7 @@ export class TraceQueueProcessorTestBed {
         if (this.isCircuitBreakerOpen()) {
           this.forceCircuitBreakerClose();
         }
-        
+
         // The shutdown method has been fixed to work with fake timers
         // so we no longer need to switch timer modes
         await this.processor.shutdown();
@@ -515,11 +522,11 @@ export class TraceQueueProcessorTestBed {
     if (this.mockLogger) {
       jest.clearAllMocks();
     }
-    
+
     if (this.timerService) {
       this.timerService.clearAll();
     }
-    
+
     this.traceCounter = 0;
     this.testTraces = [];
   }

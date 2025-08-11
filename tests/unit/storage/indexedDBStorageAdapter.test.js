@@ -14,7 +14,11 @@ import { IndexedDBStorageAdapter } from '../../../src/storage/indexedDBStorageAd
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
 // Helper to create a mock IndexedDB request
-const createMockRequest = (result = undefined, shouldFail = false, error = null) => {
+const createMockRequest = (
+  result = undefined,
+  shouldFail = false,
+  error = null
+) => {
   const request = {
     onsuccess: null,
     onerror: null,
@@ -252,7 +256,11 @@ describe('IndexedDBStorageAdapter', () => {
         const value = { data: 'test-value' };
 
         // Create a mock request that will fail
-        const mockPutRequest = createMockRequest(undefined, false, new Error('Storage error'));
+        const mockPutRequest = createMockRequest(
+          undefined,
+          false,
+          new Error('Storage error')
+        );
         mockIndexedDB.mockObjectStore.put.mockReturnValueOnce(mockPutRequest);
 
         const setPromise = adapter.setItem(key, value);
@@ -270,7 +278,11 @@ describe('IndexedDBStorageAdapter', () => {
         const storedValue = { data: 'test-value' };
 
         // Create a mock request with stored data
-        const mockGetRequest = createMockRequest({ key, value: storedValue, timestamp: Date.now() });
+        const mockGetRequest = createMockRequest({
+          key,
+          value: storedValue,
+          timestamp: Date.now(),
+        });
         mockIndexedDB.mockObjectStore.get.mockReturnValueOnce(mockGetRequest);
 
         const getPromise = adapter.getItem(key);
@@ -308,7 +320,11 @@ describe('IndexedDBStorageAdapter', () => {
         const key = 'test-key';
 
         // Create a mock request that will fail
-        const mockGetRequest = createMockRequest(undefined, false, new Error('Get error'));
+        const mockGetRequest = createMockRequest(
+          undefined,
+          false,
+          new Error('Get error')
+        );
         mockIndexedDB.mockObjectStore.get.mockReturnValueOnce(mockGetRequest);
 
         const getPromise = adapter.getItem(key);
@@ -326,7 +342,9 @@ describe('IndexedDBStorageAdapter', () => {
 
         // Create a mock request for deletion
         const mockDeleteRequest = createMockRequest(undefined);
-        mockIndexedDB.mockObjectStore.delete.mockReturnValueOnce(mockDeleteRequest);
+        mockIndexedDB.mockObjectStore.delete.mockReturnValueOnce(
+          mockDeleteRequest
+        );
 
         const removePromise = adapter.removeItem(key);
 
@@ -345,8 +363,14 @@ describe('IndexedDBStorageAdapter', () => {
         const key = 'test-key';
 
         // Create a mock request that will fail
-        const mockDeleteRequest = createMockRequest(undefined, false, new Error('Delete error'));
-        mockIndexedDB.mockObjectStore.delete.mockReturnValueOnce(mockDeleteRequest);
+        const mockDeleteRequest = createMockRequest(
+          undefined,
+          false,
+          new Error('Delete error')
+        );
+        mockIndexedDB.mockObjectStore.delete.mockReturnValueOnce(
+          mockDeleteRequest
+        );
 
         const removePromise = adapter.removeItem(key);
 
@@ -363,7 +387,9 @@ describe('IndexedDBStorageAdapter', () => {
 
         // Create a mock request with keys
         const mockGetKeysRequest = createMockRequest(keys);
-        mockIndexedDB.mockObjectStore.getAllKeys.mockReturnValueOnce(mockGetKeysRequest);
+        mockIndexedDB.mockObjectStore.getAllKeys.mockReturnValueOnce(
+          mockGetKeysRequest
+        );
 
         const getKeysPromise = adapter.getAllKeys();
 
@@ -381,7 +407,9 @@ describe('IndexedDBStorageAdapter', () => {
       it('should handle empty storage', async () => {
         // Create a mock request with empty array
         const mockGetKeysRequest = createMockRequest([]);
-        mockIndexedDB.mockObjectStore.getAllKeys.mockReturnValueOnce(mockGetKeysRequest);
+        mockIndexedDB.mockObjectStore.getAllKeys.mockReturnValueOnce(
+          mockGetKeysRequest
+        );
 
         const getKeysPromise = adapter.getAllKeys();
 
@@ -398,7 +426,9 @@ describe('IndexedDBStorageAdapter', () => {
       it('should clear all items', async () => {
         // Create a mock request for clear operation
         const mockClearRequest = createMockRequest(undefined);
-        mockIndexedDB.mockObjectStore.clear.mockReturnValueOnce(mockClearRequest);
+        mockIndexedDB.mockObjectStore.clear.mockReturnValueOnce(
+          mockClearRequest
+        );
 
         const clearPromise = adapter.clear();
 
@@ -420,7 +450,9 @@ describe('IndexedDBStorageAdapter', () => {
 
         // Create a mock request with count result
         const mockCountRequest = createMockRequest(itemCount);
-        mockIndexedDB.mockObjectStore.count.mockReturnValueOnce(mockCountRequest);
+        mockIndexedDB.mockObjectStore.count.mockReturnValueOnce(
+          mockCountRequest
+        );
 
         const countPromise = adapter.count();
 
@@ -462,7 +494,9 @@ describe('IndexedDBStorageAdapter', () => {
 
       // Set up the mocks to return our request objects
       mockIndexedDB.mockObjectStore.put.mockReturnValueOnce(mockSetRequest);
-      mockIndexedDB.mockObjectStore.delete.mockReturnValueOnce(mockRemoveRequest);
+      mockIndexedDB.mockObjectStore.delete.mockReturnValueOnce(
+        mockRemoveRequest
+      );
 
       const availabilityPromise = adapter.isAvailable();
 
@@ -479,7 +513,11 @@ describe('IndexedDBStorageAdapter', () => {
 
     it('should return false when availability check fails', async () => {
       // Create mock request for setItem that will fail
-      const mockSetRequest = createMockRequest(undefined, false, new Error('Storage unavailable'));
+      const mockSetRequest = createMockRequest(
+        undefined,
+        false,
+        new Error('Storage unavailable')
+      );
 
       // Set up the mock to return our failing request object
       mockIndexedDB.mockObjectStore.put.mockReturnValueOnce(mockSetRequest);

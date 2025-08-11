@@ -24,6 +24,55 @@ export function createMockActionTraceFilter() {
 }
 
 /**
+ * Create mock JsonTraceFormatter
+ *
+ * @returns {object} Mock JsonTraceFormatter instance
+ */
+export function createMockJsonTraceFormatter() {
+  return {
+    format: jest.fn().mockImplementation((trace) => {
+      if (!trace) {
+        return '{}';
+      }
+
+      const formatted = {
+        metadata: {
+          version: '1.0.0',
+          type: trace.execution ? 'execution' : 'pipeline',
+          generated: new Date().toISOString(),
+          generator: 'MockFormatter',
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      if (trace.actionId) {
+        formatted.actionId = trace.actionId;
+        formatted.actorId = trace.actorId;
+      }
+
+      if (trace.execution) {
+        formatted.execution = {
+          startTime: trace.execution.startTime,
+          endTime: trace.execution.endTime,
+          duration: trace.execution.duration,
+          status: trace.execution.result?.success ? 'success' : 'failed',
+        };
+      }
+
+      if (trace.getTracedActions) {
+        formatted.actions = {};
+        const tracedActions = trace.getTracedActions();
+        for (const [actionId, data] of tracedActions) {
+          formatted.actions[actionId] = data;
+        }
+      }
+
+      return JSON.stringify(formatted, null, 2);
+    }),
+  };
+}
+
+/**
  * Create mock ActionExecutionTrace
  *
  * @returns {object} Mock ActionExecutionTrace instance
@@ -146,7 +195,9 @@ export function createMockIndexedDBStorageAdapter(options = {}) {
   let storage = new Map();
 
   const addAsyncDelay = (result) => {
-    return new Promise((resolve) => setTimeout(() => resolve(result), asyncDelay));
+    return new Promise((resolve) =>
+      setTimeout(() => resolve(result), asyncDelay)
+    );
   };
 
   return {
