@@ -161,16 +161,32 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
   createMockClichesData() {
     const categories = {
       names: ['John Smith', 'Jane Doe', 'Bob Johnson'],
-      physicalDescriptions: ['Tall and muscular', 'Beautiful but mysterious', 'Average build with scars'],
+      physicalDescriptions: [
+        'Tall and muscular',
+        'Beautiful but mysterious',
+        'Average build with scars',
+      ],
       personalityTraits: ['Brooding', 'Sarcastic', 'Rebellious'],
       skillsAbilities: ['Master swordsman', 'Expert hacker', 'Martial artist'],
       typicalLikes: ['Being alone', 'Justice', 'Classic music'],
       typicalDislikes: ['Authority', 'Crowds', 'Small talk'],
       commonFears: ['Losing loved ones', 'Being powerless', 'Failure'],
       genericGoals: ['Save the world', 'Get revenge', 'Find their purpose'],
-      backgroundElements: ['Orphaned at young age', 'Trained by mentor', 'Noble upbringing'],
-      overusedSecrets: ['Secret royal bloodline', 'Hidden powers', 'Dark family history'],
-      speechPatterns: ['I work alone', "This time it's personal", 'You remind me of myself'],
+      backgroundElements: [
+        'Orphaned at young age',
+        'Trained by mentor',
+        'Noble upbringing',
+      ],
+      overusedSecrets: [
+        'Secret royal bloodline',
+        'Hidden powers',
+        'Dark family history',
+      ],
+      speechPatterns: [
+        'I work alone',
+        "This time it's personal",
+        'You remind me of myself',
+      ],
     };
 
     const tropesAndStereotypes = [
@@ -284,14 +300,16 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
     );
 
     // Mock getCharacterConcept to return the appropriate concept for each concept ID
-    this.mockCharacterBuilderService.getCharacterConcept.mockImplementation((conceptId) => {
-      const concept = concepts.find(c => c.id === conceptId);
-      if (concept) {
-        return Promise.resolve(concept);
+    this.mockCharacterBuilderService.getCharacterConcept.mockImplementation(
+      (conceptId) => {
+        const concept = concepts.find((c) => c.id === conceptId);
+        if (concept) {
+          return Promise.resolve(concept);
+        }
+        // Return the first concept as fallback or create a new one for the ID
+        return Promise.resolve(this.createMockConcept(conceptId));
       }
-      // Return the first concept as fallback or create a new one for the ID
-      return Promise.resolve(this.createMockConcept(conceptId));
-    });
+    );
 
     return { directions, concepts };
   }
@@ -330,18 +348,19 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
 
   /**
    * Simulate direction selection through UI
+   *
    * @param {string} directionId - Direction ID to select
    */
   async simulateDirectionSelection(directionId) {
     const selector = this.getDirectionSelector();
     selector.value = directionId;
-    
+
     // Trigger change event
     const changeEvent = new Event('change', { bubbles: true });
     selector.dispatchEvent(changeEvent);
-    
+
     // Allow event handlers to process
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
 
   /**
@@ -349,31 +368,35 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
    */
   async simulateGenerateClick() {
     const generateBtn = this.getGenerateButton();
-    
+
     // Enable button for click
     generateBtn.disabled = false;
-    
+
     // Trigger click event
     const clickEvent = new Event('click', { bubbles: true });
     generateBtn.dispatchEvent(clickEvent);
-    
+
     // Also trigger form submit
     const form = document.getElementById('cliches-form');
     if (form) {
-      const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+      const submitEvent = new Event('submit', {
+        bubbles: true,
+        cancelable: true,
+      });
       form.dispatchEvent(submitEvent);
     }
-    
+
     // Allow event handlers to process
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
 
   /**
    * Get dispatched events of a specific type
+   *
    * @param {string} eventType - Event type to filter by
    */
   getDispatchedEvents(eventType) {
-    return this.dispatchedEvents.filter(e => e.type === eventType);
+    return this.dispatchedEvents.filter((e) => e.type === eventType);
   }
 
   /**

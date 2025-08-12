@@ -108,4 +108,145 @@ describe('CurrentTurnActorRenderer', () => {
     expect(img.style.display).toBe('none');
     expect(img.getAttribute('src')).toBe('');
   });
+
+  it('logs error when DOM elements are not bound correctly', () => {
+    // Simulate BoundDomRendererBase failing to bind some elements
+    // by removing elements after documentContext.query is called
+    const originalQuery = deps.documentContext.query;
+    deps.documentContext.query = jest.fn((selector) => {
+      const element = originalQuery(selector);
+      // Simulate partial binding failure
+      if (selector === '#current-turn-actor-panel .actor-visuals') {
+        return null; // This will cause elements.actorVisualsElement to be null
+      }
+      return element;
+    });
+
+    const renderer = new CurrentTurnActorRenderer(deps);
+
+    // Verify error was logged
+    expect(deps.logger.error).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '[CurrentTurnActorRenderer] One or more required DOM elements not bound'
+      )
+    );
+  });
+
+  it('logs error when subscription to TURN_STARTED_ID fails', () => {
+    // Mock subscribe to throw an error
+    deps.validatedEventDispatcher.subscribe.mockImplementation(() => {
+      throw new Error('Subscription failed');
+    });
+
+    // Creating renderer should catch the error and log it
+    new CurrentTurnActorRenderer(deps);
+
+    expect(deps.logger.error).toHaveBeenCalledWith(
+      expect.stringContaining(
+        `[CurrentTurnActorRenderer] Failed to subscribe to ${TURN_STARTED_ID}`
+      ),
+      expect.any(Error)
+    );
+  });
+
+  it('logs warning when DOM elements are missing during update', () => {
+    deps.entityDisplayDataProvider.getEntityName.mockReturnValue('Hero');
+    deps.entityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(
+      '/portrait.png'
+    );
+
+    const renderer = new CurrentTurnActorRenderer(deps);
+
+    // Simulate elements becoming null after construction
+    renderer.elements.actorVisualsElement = null;
+
+    // Call handleTurnStarted which will call #updateActorInfo
+    renderer.handleTurnStarted({ payload: { entityId: 'hero1' } });
+
+    // Verify warning was logged
+    expect(deps.logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '[CurrentTurnActorRenderer] DOM elements not available for update'
+      )
+    );
+  });
+
+  it('logs debug when DOM elements are missing during reset', () => {
+    // Create renderer with missing elements by mocking documentContext
+    const originalQuery = deps.documentContext.query;
+    deps.documentContext.query = jest.fn((selector) => {
+      // Return null for all elements to trigger the reset panel debug log
+      return null;
+    });
+
+    // This will trigger #resetPanel in constructor, which will log debug message
+    new CurrentTurnActorRenderer(deps);
+
+    expect(deps.logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '[CurrentTurnActorRenderer] Cannot reset panel: one or more DOM elements from this.elements are null'
+      )
+    );
+
+    // Restore original query
+    deps.documentContext.query = originalQuery;
+  });
+
+  it('handles null event payload correctly', () => {
+    const renderer = new CurrentTurnActorRenderer(deps);
+    renderer.handleTurnStarted({ payload: null });
+
+    expect(deps.logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Expected entityId string in .payload.entityId was missing or invalid'
+      ),
+      expect.objectContaining({ receivedData: { payload: null } })
+    );
+    expect(nameEl.textContent).toBe('N/A');
+  });
+
+  it('handles empty entityId correctly', () => {
+    const renderer = new CurrentTurnActorRenderer(deps);
+    renderer.handleTurnStarted({ payload: { entityId: '' } });
+
+    expect(deps.logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Expected entityId string in .payload.entityId was missing or invalid'
+      ),
+      expect.objectContaining({ receivedData: { payload: { entityId: '' } } })
+    );
+  });
+
+  it('sets correct alt text when actor name is DEFAULT_ACTOR_NAME', () => {
+    deps.entityDisplayDataProvider.getEntityName.mockReturnValue('N/A');
+    deps.entityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(
+      '/portrait.png'
+    );
+
+    const renderer = new CurrentTurnActorRenderer(deps);
+    renderer.handleTurnStarted({ payload: { entityId: 'unknown' } });
+
+    expect(img.alt).toBe('Current Actor Portrait'); // Should use default alt text
+    expect(nameEl.textContent).toBe('N/A');
+  });
+
+  it('disposes properly and clears elements', () => {
+    const renderer = new CurrentTurnActorRenderer(deps);
+
+    // Verify elements are bound initially
+    expect(renderer.elements.actorNameElement).toBe(nameEl);
+    expect(renderer.elements.actorImageElement).toBe(img);
+    expect(renderer.elements.actorVisualsElement).toBe(visuals);
+
+    // Call dispose
+    renderer.dispose();
+
+    // Verify elements are cleared
+    expect(renderer.elements).toEqual({});
+    expect(deps.logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '[CurrentTurnActorRenderer] Bound DOM elements cleared'
+      )
+    );
+  });
 });

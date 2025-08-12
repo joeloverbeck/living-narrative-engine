@@ -16,6 +16,7 @@ export class ActionTraceOutputService {
   #logger;
   #actionTraceFilter;
   #jsonFormatter;
+  #humanReadableFormatter;
   #outputQueue;
   #isProcessing;
   #maxQueueSize;
@@ -36,6 +37,7 @@ export class ActionTraceOutputService {
    * @param {object} [dependencies.logger] - Logger interface
    * @param {object} [dependencies.actionTraceFilter] - Trace filter
    * @param {object} [dependencies.jsonFormatter] - JSON trace formatter
+   * @param {object} [dependencies.humanReadableFormatter] - Human-readable trace formatter
    * @param {Function} [dependencies.outputHandler] - Custom output handler function for testing
    * @param {object} [dependencies.eventBus] - Event bus for queue notifications
    * @param {object} [dependencies.queueConfig] - Queue processor configuration
@@ -45,6 +47,7 @@ export class ActionTraceOutputService {
     logger,
     actionTraceFilter,
     jsonFormatter,
+    humanReadableFormatter,
     outputHandler,
     eventBus,
     queueConfig,
@@ -69,11 +72,22 @@ export class ActionTraceOutputService {
         requiredMethods: ['format'],
       });
     }
+    if (humanReadableFormatter) {
+      validateDependency(
+        humanReadableFormatter,
+        'IHumanReadableFormatter',
+        null,
+        {
+          requiredMethods: ['format'],
+        }
+      );
+    }
 
     this.#storageAdapter = storageAdapter;
     this.#logger = ensureValidLogger(logger, 'ActionTraceOutputService');
     this.#actionTraceFilter = actionTraceFilter;
     this.#jsonFormatter = jsonFormatter;
+    this.#humanReadableFormatter = humanReadableFormatter;
     this.#eventBus = eventBus;
 
     // Initialize queue processing system
@@ -589,8 +603,34 @@ export class ActionTraceOutputService {
    * @returns {string} Human-readable text
    */
   #formatTracesAsText(traces) {
-    // This will be fully implemented in ACTTRA-027
-    // For now, return formatted JSON
+    // Use HumanReadableFormatter if available
+    if (this.#humanReadableFormatter) {
+      return traces
+        .map((trace) => {
+          try {
+            // Format the trace data using the human-readable formatter
+            const formattedTrace = this.#humanReadableFormatter.format(
+              trace.data
+            );
+            return (
+              `=== Trace ID: ${trace.id} ===\n` +
+              `Stored: ${new Date(trace.timestamp).toISOString()}\n\n` +
+              formattedTrace
+            );
+          } catch (error) {
+            this.#logger.warn('Failed to format trace as text', error);
+            // Fallback to JSON
+            return (
+              `=== Trace: ${trace.id} ===\n` +
+              `Timestamp: ${new Date(trace.timestamp).toISOString()}\n` +
+              `Data:\n${JSON.stringify(trace.data, null, 2)}\n`
+            );
+          }
+        })
+        .join('\n\n');
+    }
+
+    // Fallback to basic formatting
     return traces
       .map((trace) => {
         return (

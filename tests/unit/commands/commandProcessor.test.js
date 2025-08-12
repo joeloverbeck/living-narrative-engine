@@ -678,10 +678,9 @@ describe('CommandProcessor with tracing functionality', () => {
     expect(result.success).toBe(true);
     expect(actionTraceFilter.isEnabled).toHaveBeenCalled();
     expect(actionTraceFilter.shouldTrace).toHaveBeenCalledWith('traced-action');
-    expect(actionExecutionTraceFactory.createFromTurnAction).toHaveBeenCalledWith(
-      turnAction,
-      'traced-actor'
-    );
+    expect(
+      actionExecutionTraceFactory.createFromTurnAction
+    ).toHaveBeenCalledWith(turnAction, 'traced-actor');
     expect(mockTrace.captureDispatchStart).toHaveBeenCalled();
     expect(mockTrace.captureEventPayload).toHaveBeenCalled();
     expect(mockTrace.captureDispatchResult).toHaveBeenCalled();
@@ -703,7 +702,9 @@ describe('CommandProcessor with tracing functionality', () => {
     expect(result.success).toBe(true);
     expect(actionTraceFilter.isEnabled).toHaveBeenCalled();
     expect(actionTraceFilter.shouldTrace).not.toHaveBeenCalled();
-    expect(actionExecutionTraceFactory.createFromTurnAction).not.toHaveBeenCalled();
+    expect(
+      actionExecutionTraceFactory.createFromTurnAction
+    ).not.toHaveBeenCalled();
   });
 
   it('skips trace creation when action should not be traced', async () => {
@@ -720,8 +721,12 @@ describe('CommandProcessor with tracing functionality', () => {
 
     expect(result.success).toBe(true);
     expect(actionTraceFilter.isEnabled).toHaveBeenCalled();
-    expect(actionTraceFilter.shouldTrace).toHaveBeenCalledWith('untraced-action');
-    expect(actionExecutionTraceFactory.createFromTurnAction).not.toHaveBeenCalled();
+    expect(actionTraceFilter.shouldTrace).toHaveBeenCalledWith(
+      'untraced-action'
+    );
+    expect(
+      actionExecutionTraceFactory.createFromTurnAction
+    ).not.toHaveBeenCalled();
   });
 
   it('continues execution when trace creation fails', async () => {
@@ -860,10 +865,10 @@ describe('CommandProcessor with tracing functionality', () => {
 
     // Should still succeed despite trace write failure
     expect(result.success).toBe(true);
-    
+
     // Wait a bit for async write to complete
-    await new Promise(resolve => setTimeout(resolve, 10));
-    
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
     expect(logger.warn).toHaveBeenCalledWith(
       'Failed to write execution trace',
       expect.objectContaining({
@@ -909,7 +914,7 @@ describe('CommandProcessor validation of optional tracing dependencies', () => {
   });
 
   it('validates actionTraceFilter when provided', () => {
-    const invalidFilter = { 
+    const invalidFilter = {
       isEnabled: jest.fn(),
       // Missing shouldTrace method
     };
@@ -1009,9 +1014,9 @@ describe('CommandProcessor multi-target edge cases', () => {
       resolvedParameters: {
         isMultiTarget: true,
         targetIds: {
-          primary: [null],  // Invalid
-          secondary: ['   '],  // Empty string
-          tertiary: ['valid-target'],  // Valid
+          primary: [null], // Invalid
+          secondary: ['   '], // Empty string
+          tertiary: ['valid-target'], // Valid
         },
       },
       commandString: 'test command',
@@ -1052,8 +1057,12 @@ describe('CommandProcessor multi-target edge cases', () => {
 
     // Should use first available target as primary
     expect(calledPayload.targetId).toBe('custom-target');
-    expect(calledPayload.targets.customPlaceholder.entityId).toBe('custom-target');
-    expect(calledPayload.targets.anotherPlaceholder.entityId).toBe('another-target');
+    expect(calledPayload.targets.customPlaceholder.entityId).toBe(
+      'custom-target'
+    );
+    expect(calledPayload.targets.anotherPlaceholder.entityId).toBe(
+      'another-target'
+    );
   });
 
   it('handles targetIds that is an array instead of object', async () => {
@@ -1062,7 +1071,7 @@ describe('CommandProcessor multi-target edge cases', () => {
       actionDefinitionId: 'test:action',
       resolvedParameters: {
         isMultiTarget: true,
-        targetIds: ['target1', 'target2'],  // Array instead of object
+        targetIds: ['target1', 'target2'], // Array instead of object
       },
       commandString: 'test command',
     };
@@ -1086,7 +1095,7 @@ describe('CommandProcessor multi-target edge cases', () => {
         isMultiTarget: true,
         targetIds: {
           custom: ['custom-target'],
-          target: ['preferred-target'],  // 'target' placeholder has priority
+          target: ['preferred-target'], // 'target' placeholder has priority
           another: ['another-target'],
         },
       },
@@ -1109,7 +1118,7 @@ describe('CommandProcessor multi-target edge cases', () => {
       resolvedParameters: {
         isMultiTarget: true,
         targetIds: {
-          primary: [],  // Empty array
+          primary: [], // Empty array
           secondary: ['valid-target'],
         },
       },
@@ -1127,7 +1136,7 @@ describe('CommandProcessor multi-target edge cases', () => {
     expect(calledPayload.targets.secondary.entityId).toBe('valid-target');
     expect(calledPayload.primaryId).toBeNull();
     expect(calledPayload.secondaryId).toBe('valid-target');
-    expect(calledPayload.targetId).toBe('valid-target');  // Should use secondary as primary is missing
+    expect(calledPayload.targetId).toBe('valid-target'); // Should use secondary as primary is missing
   });
 });
 
@@ -1218,12 +1227,12 @@ describe('CommandProcessor performance and error scenarios', () => {
       '../../../src/entities/multiTarget/multiTargetEventBuilder.js'
     ).default;
     const originalBuild = MultiTargetEventBuilder.prototype.build;
-    
-    jest.spyOn(MultiTargetEventBuilder.prototype, 'build').mockImplementation(
-      function() {
+
+    jest
+      .spyOn(MultiTargetEventBuilder.prototype, 'build')
+      .mockImplementation(function () {
         throw new Error('Builder error');
-      }
-    );
+      });
 
     const actor = { id: 'actor1' };
     const turnAction = {
@@ -1238,15 +1247,15 @@ describe('CommandProcessor performance and error scenarios', () => {
 
     // Should have still dispatched with fallback payload
     expect(eventDispatchService.dispatchWithErrorHandling).toHaveBeenCalled();
-    
+
     const calledPayload =
       eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
-    
+
     // Fallback payload should have these fields
     expect(calledPayload.eventName).toBe(ATTEMPT_ACTION_ID);
     expect(calledPayload.actorId).toBe('actor1');
     expect(calledPayload.actionId).toBe('test:action');
-    
+
     // Should have logged the error
     expect(logger.error).toHaveBeenCalledWith(
       'Enhanced payload creation failed, using fallback',
@@ -1263,20 +1272,22 @@ describe('CommandProcessor performance and error scenarios', () => {
   it('handles missing both commandString and actionDefinitionId in fallback', async () => {
     const actor = { id: 'actor1' };
     const turnAction = {
-      actionDefinitionId: '',  // Empty string
+      actionDefinitionId: '', // Empty string
       resolvedParameters: {},
-      commandString: '',  // Empty string
+      commandString: '', // Empty string
     };
 
     const result = await processor.dispatchAction(actor, turnAction);
 
     // Should fail validation before payload creation
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Internal error: Malformed action prevented execution.');
+    expect(result.error).toBe(
+      'Internal error: Malformed action prevented execution.'
+    );
   });
 
   it('validates payload inputs and throws for invalid actor', async () => {
-    const actor = null;  // Invalid actor
+    const actor = null; // Invalid actor
     const turnAction = {
       actionDefinitionId: 'test:action',
       resolvedParameters: {},
@@ -1395,16 +1406,16 @@ describe('CommandProcessor additional edge cases', () => {
 
     const actor = { id: 'actor1' };
     const turnAction = {
-      actionDefinitionId: null,  // Will skip trace creation
+      actionDefinitionId: null, // Will skip trace creation
       resolvedParameters: {},
       commandString: 'test',
     };
 
     const result = await processor.dispatchAction(actor, turnAction);
-    
+
     // Should fail validation
     expect(result.success).toBe(false);
-    
+
     // Should not attempt to create trace with null actionId
     expect(actionTraceFilter.shouldTrace).not.toHaveBeenCalled();
   });
@@ -1486,7 +1497,9 @@ describe('CommandProcessor additional edge cases', () => {
     const result = await processor.dispatchAction(actor, turnAction);
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Internal error: Malformed action prevented execution.');
+    expect(result.error).toBe(
+      'Internal error: Malformed action prevented execution.'
+    );
   });
 
   it('handles payload input validation for actor without id', async () => {
@@ -1506,7 +1519,9 @@ describe('CommandProcessor additional edge cases', () => {
     const result = await processor.dispatchAction(actor, turnAction);
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Internal error: Malformed action prevented execution.');
+    expect(result.error).toBe(
+      'Internal error: Malformed action prevented execution.'
+    );
   });
 
   it('handles payload validation for turnAction without both commandString and actionDefinitionId', async () => {

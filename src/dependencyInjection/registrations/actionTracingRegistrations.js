@@ -14,6 +14,7 @@ import { EventDispatchTracer } from '../../events/tracing/eventDispatchTracer.js
 import { ActionTraceOutputService } from '../../actions/tracing/actionTraceOutputService.js';
 import { IndexedDBStorageAdapter } from '../../storage/indexedDBStorageAdapter.js';
 import { JsonTraceFormatter } from '../../actions/tracing/jsonTraceFormatter.js';
+import { HumanReadableFormatter } from '../../actions/tracing/humanReadableFormatter.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -128,6 +129,20 @@ export function registerActionTracing(container) {
     `Action Tracing Registration: Registered ${String(actionTracingTokens.IJsonTraceFormatter)}.`
   );
 
+  // Register HumanReadableFormatter
+  container.register(
+    actionTracingTokens.IHumanReadableFormatter,
+    (c) =>
+      new HumanReadableFormatter({
+        logger: c.resolve(tokens.ILogger),
+        actionTraceFilter: c.resolve(actionTracingTokens.IActionTraceFilter),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.IHumanReadableFormatter)}.`
+  );
+
   // Register enhanced ActionTraceOutputService with IndexedDB support
   container.register(
     actionTracingTokens.IActionTraceOutputService,
@@ -137,6 +152,9 @@ export function registerActionTracing(container) {
         logger: c.resolve(tokens.ILogger),
         actionTraceFilter: c.resolve(actionTracingTokens.IActionTraceFilter),
         jsonFormatter: c.resolve(actionTracingTokens.IJsonTraceFormatter),
+        humanReadableFormatter: c.resolve(
+          actionTracingTokens.IHumanReadableFormatter
+        ),
       }),
     { lifecycle: 'singleton' }
   );
