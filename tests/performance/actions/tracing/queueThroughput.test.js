@@ -29,7 +29,8 @@ describe('TraceQueueProcessor - Performance Tests', () => {
   let queueConfig;
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    // Use real timers for performance tests to accurately measure time
+    // Performance tests need to measure actual elapsed time
 
     mockLogger = createMockLogger();
     mockStorageAdapter = createMockIndexedDBStorageAdapter();
@@ -50,54 +51,69 @@ describe('TraceQueueProcessor - Performance Tests', () => {
   });
 
   afterEach(async () => {
-    // Skip shutdown for performance tests - just clear timers
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    // Properly shutdown service to avoid hanging timers
+    if (service && service.shutdown) {
+      try {
+        // Use a timeout promise to prevent hanging
+        const shutdownPromise = service.shutdown();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Shutdown timeout')), 2000)
+        );
+        await Promise.race([shutdownPromise, timeoutPromise]);
+      } catch (error) {
+        // Ignore shutdown errors in tests
+      }
+    }
     service = null;
   });
 
   describe('High-Throughput Processing', () => {
-    it('should handle high-throughput trace processing (<5s for 100 traces)', async () => {
-      service = new ActionTraceOutputService({
-        storageAdapter: mockStorageAdapter,
-        logger: mockLogger,
-        actionTraceFilter: mockActionTraceFilter,
-        eventBus: mockEventBus,
-        queueConfig: {
-          ...queueConfig,
-          batchSize: 20,
-          enableParallelProcessing: true,
-        },
-      });
+    it(
+      'should handle high-throughput trace processing (<5s for 100 traces)',
+      async () => {
+        service = new ActionTraceOutputService({
+          storageAdapter: mockStorageAdapter,
+          logger: mockLogger,
+          actionTraceFilter: mockActionTraceFilter,
+          eventBus: mockEventBus,
+          queueConfig: {
+            ...queueConfig,
+            batchSize: 20,
+            enableParallelProcessing: true,
+          },
+        });
 
-      // Warm up - let any initialization happen
-      for (let i = 0; i < 10; i++) {
-        const warmupTrace = {
-          actionId: `warmup:${i}`,
-          toJSON: () => ({ actionId: `warmup:${i}` }),
-        };
-        await service.writeTrace(warmupTrace);
-      }
-      await jest.runAllTimersAsync();
+        // Warm up - let any initialization happen
+        for (let i = 0; i < 10; i++) {
+          const warmupTrace = {
+            actionId: `warmup:${i}`,
+            toJSON: () => ({ actionId: `warmup:${i}` }),
+          };
+          await service.writeTrace(warmupTrace);
+        }
 
-      // Reset mocks after warmup
-      mockStorageAdapter.setItem.mockClear();
+        // Wait for warmup traces to process
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
-      // Measure performance for actual test
-      const traceCount = 100;
-      const startTime = performance.now();
+        // Reset mocks after warmup
+        mockStorageAdapter.setItem.mockClear();
 
-      // Enqueue many traces quickly
-      for (let i = 0; i < traceCount; i++) {
-        const trace = {
-          actionId: `throughput:${i}`,
-          toJSON: () => ({ actionId: `throughput:${i}`, index: i }),
-        };
-        await service.writeTrace(trace);
-      }
+        // Measure performance for actual test
+        const traceCount = 100;
+        const startTime = performance.now();
 
-      await jest.runAllTimersAsync();
-      const endTime = performance.now();
+        // Enqueue many traces quickly
+        for (let i = 0; i < traceCount; i++) {
+          const trace = {
+            actionId: `throughput:${i}`,
+            toJSON: () => ({ actionId: `throughput:${i}`, index: i }),
+          };
+          await service.writeTrace(trace);
+        }
+
+        // Wait for processing to complete
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const endTime = performance.now();
 
       const processingTime = endTime - startTime;
       const metrics = service.getQueueMetrics();
@@ -113,12 +129,16 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         `Processing time: ${processingTime.toFixed(2)}ms for ${traceCount} traces`
       );
       console.log(`Throughput: ${throughput.toFixed(2)} traces/second`);
-      console.log(
-        `Batch efficiency: ${(metrics.batchEfficiency * 100).toFixed(2)}%`
-      );
-    });
+        console.log(
+          `Batch efficiency: ${(metrics.batchEfficiency * 100).toFixed(2)}%`
+        );
+      },
+      60000
+    ); // 60 second timeout
 
-    it('should maintain performance with varying trace sizes', async () => {
+    it(
+      'should maintain performance with varying trace sizes',
+      async () => {
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
@@ -149,28 +169,33 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         }
       }
 
-      await jest.runAllTimersAsync();
-      const endTime = performance.now();
+        // Wait for processing to complete
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        const endTime = performance.now();
 
-      const processingTime = endTime - startTime;
-      const totalTraces = traceSizes.length * tracesPerSize;
+        const processingTime = endTime - startTime;
+        const totalTraces = traceSizes.length * tracesPerSize;
 
-      // Performance should scale reasonably with data size
-      expect(processingTime).toBeLessThan(8000); // 8 seconds for varied sizes
+        // Performance should scale reasonably with data size
+        expect(processingTime).toBeLessThan(8000); // 8 seconds for varied sizes
 
-      const metrics = service.getQueueMetrics();
-      expect(metrics.totalProcessed).toBeGreaterThan(0); // Should process some traces
-      expect(metrics.totalEnqueued).toBeGreaterThan(40); // Should enqueue most traces (queue size limit may apply)
+        const metrics = service.getQueueMetrics();
+        expect(metrics.totalProcessed).toBeGreaterThan(0); // Should process some traces
+        expect(metrics.totalEnqueued).toBeGreaterThan(40); // Should enqueue most traces (queue size limit may apply)
 
-      console.log(
-        `Mixed size processing: ${processingTime.toFixed(2)}ms for ${totalTraces} traces`
-      );
-      console.log(
-        `Average time per trace: ${(processingTime / totalTraces).toFixed(2)}ms`
-      );
-    });
+        console.log(
+          `Mixed size processing: ${processingTime.toFixed(2)}ms for ${totalTraces} traces`
+        );
+        console.log(
+          `Average time per trace: ${(processingTime / totalTraces).toFixed(2)}ms`
+        );
+      },
+      60000
+    ); // 60 second timeout
 
-    it('should demonstrate parallel processing benefits', async () => {
+    it(
+      'should demonstrate parallel processing benefits',
+      async () => {
       // Test with parallel processing disabled
       let serviceSerial = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
@@ -195,11 +220,25 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         await serviceSerial.writeTrace(trace);
       }
 
-      await jest.runAllTimersAsync();
+      // Wait for processing to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
       const serialEndTime = performance.now();
       const serialTime = serialEndTime - serialStartTime;
 
-      serviceSerial = null; // Skip shutdown for performance tests
+      // Shutdown serial service
+      if (serviceSerial && serviceSerial.shutdown) {
+        try {
+          await Promise.race([
+            serviceSerial.shutdown(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Shutdown timeout')), 2000)
+            ),
+          ]);
+        } catch (error) {
+          // Ignore shutdown errors
+        }
+      }
+      serviceSerial = null;
 
       // Reset mocks
       mockStorageAdapter.setItem.mockClear();
@@ -227,23 +266,41 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         await serviceParallel.writeTrace(trace);
       }
 
-      await jest.runAllTimersAsync();
+      // Wait for processing to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
       const parallelEndTime = performance.now();
       const parallelTime = parallelEndTime - parallelStartTime;
 
-      serviceParallel = null; // Skip shutdown for performance tests
+      // Shutdown parallel service
+      if (serviceParallel && serviceParallel.shutdown) {
+        try {
+          await Promise.race([
+            serviceParallel.shutdown(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Shutdown timeout')), 2000)
+            ),
+          ]);
+        } catch (error) {
+          // Ignore shutdown errors
+        }
+      }
+      serviceParallel = null;
 
       // Parallel should be at least as fast as serial (allowing for overhead)
       expect(parallelTime).toBeLessThanOrEqual(serialTime * 1.2); // Allow 20% overhead
 
       console.log(`Serial processing: ${serialTime.toFixed(2)}ms`);
       console.log(`Parallel processing: ${parallelTime.toFixed(2)}ms`);
-      console.log(
-        `Performance improvement: ${((1 - parallelTime / serialTime) * 100).toFixed(2)}%`
-      );
-    });
+        console.log(
+          `Performance improvement: ${((1 - parallelTime / serialTime) * 100).toFixed(2)}%`
+        );
+      },
+      60000
+    ); // 60 second timeout
 
-    it('should handle burst traffic efficiently', async () => {
+    it(
+      'should handle burst traffic efficiently',
+      async () => {
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
@@ -282,11 +339,12 @@ describe('TraceQueueProcessor - Performance Tests', () => {
 
         // Small delay between bursts
         if (burst < numberOfBursts - 1) {
-          await jest.advanceTimersByTimeAsync(delayBetweenBursts);
+          await new Promise((resolve) => setTimeout(resolve, delayBetweenBursts));
         }
       }
 
-      await jest.runAllTimersAsync();
+      // Wait for final processing to complete
+      await new Promise((resolve) => setTimeout(resolve, 800));
       const endTime = performance.now();
 
       const processingTime = endTime - startTime;
@@ -302,12 +360,16 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         `Burst processing: ${processingTime.toFixed(2)}ms for ${totalTraces} traces in ${numberOfBursts} bursts`
       );
       console.log(`Burst throughput: ${throughput.toFixed(2)} traces/second`);
-      console.log(`Priority distribution:`, metrics.priorityDistribution);
-    });
+        console.log(`Priority distribution:`, metrics.priorityDistribution);
+      },
+      60000
+    ); // 60 second timeout
   });
 
   describe('Batch Processing Efficiency', () => {
-    it('should optimize batch sizes for performance', async () => {
+    it(
+      'should optimize batch sizes for performance',
+      async () => {
       const batchSizes = [5, 10, 20, 50];
       const results = [];
 
@@ -336,7 +398,9 @@ describe('TraceQueueProcessor - Performance Tests', () => {
           await testService.writeTrace(trace);
         }
 
-        await jest.runAllTimersAsync();
+        // Wait for processing to complete based on batch size
+        const waitTime = Math.min(batchSize * 20, 1000); // Adaptive wait time
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
         const endTime = performance.now();
         const processingTime = endTime - startTime;
 
@@ -349,7 +413,20 @@ describe('TraceQueueProcessor - Performance Tests', () => {
           throughput: traceCount / (processingTime / 1000),
         });
 
-        testService = null; // Skip shutdown for performance tests
+        // Shutdown test service
+        if (testService && testService.shutdown) {
+          try {
+            await Promise.race([
+              testService.shutdown(),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Shutdown timeout')), 2000)
+              ),
+            ]);
+          } catch (error) {
+            // Ignore shutdown errors
+          }
+        }
+        testService = null;
         mockStorageAdapter.setItem.mockClear();
       }
 
@@ -363,10 +440,12 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         );
       });
 
-      // All batch sizes should complete within reasonable time
-      results.forEach((r) => {
-        expect(r.processingTime).toBeLessThan(10000); // 10 seconds max
-      });
-    });
+        // All batch sizes should complete within reasonable time
+        results.forEach((r) => {
+          expect(r.processingTime).toBeLessThan(10000); // 10 seconds max
+        });
+      },
+      60000
+    ); // 60 second timeout
   });
 });

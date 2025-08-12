@@ -25,7 +25,7 @@ describe('StorageRotationManager - Rotation Policies', () => {
   beforeEach(() => {
     // Reset timers first
     jest.useFakeTimers();
-    
+
     // Mock global timers before any manager instantiation
     jest.spyOn(global, 'setInterval');
     jest.spyOn(global, 'clearInterval');
@@ -35,11 +35,11 @@ describe('StorageRotationManager - Rotation Policies', () => {
       deflate: jest.fn(() => new Uint8Array([1, 2, 3, 4, 5])),
       inflate: jest.fn(() => '{"test":"data"}'),
     };
-    
+
     // Set up window mock for jsdom environment
     global.window = global.window || {};
     global.window.pako = pakoMock;
-    
+
     // Also ensure window.pako is available directly
     if (typeof window !== 'undefined') {
       window.pako = pakoMock;
@@ -342,19 +342,20 @@ describe('StorageRotationManager - Rotation Policies', () => {
   });
 
   describe('Compression', () => {
-
     it('should compress old traces', async () => {
       // Ensure pako mock is working - use the same pattern as beforeEach
-      const mockDeflate = jest.fn().mockReturnValue(new Uint8Array([1, 2, 3, 4, 5]));
+      const mockDeflate = jest
+        .fn()
+        .mockReturnValue(new Uint8Array([1, 2, 3, 4, 5]));
       const mockInflate = jest.fn(() => '{"test":"data"}');
       const pakoMock = {
         deflate: mockDeflate,
         inflate: mockInflate,
       };
-      
+
       global.window = global.window || {};
       global.window.pako = pakoMock;
-      
+
       if (typeof window !== 'undefined') {
         window.pako = pakoMock;
       }
@@ -395,10 +396,10 @@ describe('StorageRotationManager - Rotation Policies', () => {
         deflate: jest.fn(() => new Uint8Array([1, 2, 3, 4, 5])),
         inflate: jest.fn().mockReturnValue('{"test":"data"}'),
       };
-      
+
       global.window = global.window || {};
       global.window.pako = pakoMock;
-      
+
       if (typeof window !== 'undefined') {
         window.pako = pakoMock;
       }
@@ -430,10 +431,10 @@ describe('StorageRotationManager - Rotation Policies', () => {
         }),
         inflate: jest.fn(),
       };
-      
+
       global.window = global.window || {};
       global.window.pako = pakoMock;
-      
+
       if (typeof window !== 'undefined') {
         window.pako = pakoMock;
       }
@@ -533,7 +534,7 @@ describe('StorageRotationManager - Rotation Policies', () => {
         logger: mockLogger,
         config: {
           policy: RotationPolicy.COUNT,
-          maxTraceCount: 1, // Would normally keep only 1 newest  
+          maxTraceCount: 1, // Would normally keep only 1 newest
           preserveCount: 3, // But preserve 3 most recent from deletion
         },
       });
@@ -544,13 +545,13 @@ describe('StorageRotationManager - Rotation Policies', () => {
       // Reset mock calls for clearAllTraces test
       mockStorageAdapter.getItem.mockClear();
       mockStorageAdapter.setItem.mockClear();
-      
+
       mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
       const cleared = await manager.clearAllTraces(true);
 
       // Should preserve the 3 most recent traces (those that were rescued from deletion)
       expect(cleared).toBeLessThan(mockTraces.length);
-      
+
       // Should preserve some traces and clear fewer than all
       const preserved = mockTraces.length - cleared;
       expect(preserved).toBeGreaterThan(0);

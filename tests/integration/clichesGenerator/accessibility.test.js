@@ -53,30 +53,31 @@ describe('Clichés Generator - Accessibility', () => {
   it('should have no accessibility violations', async () => {
     /**
      * ANALYSIS: axe-core + JSDOM Integration Assessment
-     * 
+     *
      * After thorough testing, axe-core has fundamental compatibility issues with JSDOM:
      * 1. Document context mismatch - axe-core doesn't use the JSDOM document instance
      * 2. API incompatibility - "axe.run arguments are invalid" errors persist
      * 3. Missing browser APIs - Many rules require real browser environment
-     * 
+     *
      * RECOMMENDATION: This test structure is maintained to demonstrate the attempt
      * and provide graceful fallback, but E2E testing with Playwright is needed
      * for comprehensive axe-core accessibility validation.
-     * 
-     * VALUE PROVIDED: The manual accessibility tests in this suite provide 
+     *
+     * VALUE PROVIDED: The manual accessibility tests in this suite provide
      * excellent coverage of structural accessibility patterns.
      */
 
     try {
       // Attempt basic axe-core integration for JSDOM
       const results = await axe.run(document);
-      
+
       // If we reach here, axe-core worked in JSDOM
       console.log('axe-core successfully ran in JSDOM environment');
-      
+
       if (results.violations.length > 0) {
-        console.log('Accessibility violations found:', 
-          results.violations.map(v => ({
+        console.log(
+          'Accessibility violations found:',
+          results.violations.map((v) => ({
             id: v.id,
             impact: v.impact,
             description: v.description,
@@ -84,15 +85,18 @@ describe('Clichés Generator - Accessibility', () => {
           }))
         );
       }
-      
+
       expect(results.violations).toHaveLength(0);
-      
     } catch (error) {
       // Expected: axe-core JSDOM compatibility issues
       console.info('axe-core + JSDOM limitation confirmed:', error.message);
-      console.info('✓ Manual accessibility tests provide comprehensive coverage');
-      console.info('→ For full automated validation, use E2E tests with Playwright');
-      
+      console.info(
+        '✓ Manual accessibility tests provide comprehensive coverage'
+      );
+      console.info(
+        '→ For full automated validation, use E2E tests with Playwright'
+      );
+
       // Test passes - we've confirmed the limitation and documented the approach
       expect(error.message).toBeDefined();
     }

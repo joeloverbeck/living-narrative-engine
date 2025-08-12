@@ -72,7 +72,8 @@ describe('Queue Processor Integration', () => {
 
       expect(service).toBeDefined();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'ActionTraceOutputService initialized with TraceQueueProcessor'
+        'ActionTraceOutputService initialized with TraceQueueProcessor',
+        {}
       );
     });
 
@@ -98,14 +99,14 @@ describe('Queue Processor Integration', () => {
 
       // Allow queue processing using TestTimerService - may need multiple rounds
       await testTimerService.triggerAll();
-      
+
       // Wait for any async operations and trigger again if needed
       if (testTimerService.hasPending()) {
         await testTimerService.triggerAll();
       }
 
       // Final wait for async storage operations to complete
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(mockStorageAdapter.setItem).toHaveBeenCalledWith(
         'actionTraces',
@@ -155,7 +156,7 @@ describe('Queue Processor Integration', () => {
       if (testTimerService.hasPending()) {
         await testTimerService.triggerAll();
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Critical trace should be processed first despite being added later
       const storageCalls = mockStorageAdapter.setItem.mock.calls;
@@ -205,13 +206,13 @@ describe('Queue Processor Integration', () => {
       };
 
       await service.writeTrace(trace);
-      
+
       // Allow queue processing
       await testTimerService.triggerAll();
       if (testTimerService.hasPending()) {
         await testTimerService.triggerAll();
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const metrics = service.getQueueMetrics();
 
@@ -245,26 +246,32 @@ describe('Queue Processor Integration', () => {
 
       // Allow batch processing - trigger only once to get batch behavior
       await testTimerService.triggerAll();
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       // Trigger any remaining processing
       if (testTimerService.hasPending()) {
         await testTimerService.triggerAll();
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
 
       // Check that all traces were processed (stored)
       expect(mockStorageAdapter.setItem).toHaveBeenCalled();
-      
+
       // Verify batch processing occurred by checking storage calls
       const storageCalls = mockStorageAdapter.setItem.mock.calls;
       expect(storageCalls.length).toBeGreaterThan(0);
-      
+
       // At least one storage call should contain our batch traces
-      const hasOurTraces = storageCalls.some(call => {
+      const hasOurTraces = storageCalls.some((call) => {
         const traces = call[1];
-        return Array.isArray(traces) && traces.some(trace => 
-          trace.data && trace.data.actionId && trace.data.actionId.startsWith('batch:')
+        return (
+          Array.isArray(traces) &&
+          traces.some(
+            (trace) =>
+              trace.data &&
+              trace.data.actionId &&
+              trace.data.actionId.startsWith('batch:')
+          )
         );
       });
       expect(hasOurTraces).toBe(true);
@@ -298,21 +305,21 @@ describe('Queue Processor Integration', () => {
 
       // Allow initial processing to fail and schedule first retry
       await testTimerService.triggerAll();
-      await new Promise(resolve => setTimeout(resolve, 5));
+      await new Promise((resolve) => setTimeout(resolve, 5));
 
       // Advance time for first retry (delay: 2^1 * 100 = 200ms)
       await testTimerService.advanceTime(200);
-      await new Promise(resolve => setTimeout(resolve, 5));
+      await new Promise((resolve) => setTimeout(resolve, 5));
 
-      // Advance time for second retry (delay: 2^2 * 100 = 400ms)  
+      // Advance time for second retry (delay: 2^2 * 100 = 400ms)
       await testTimerService.advanceTime(400);
-      await new Promise(resolve => setTimeout(resolve, 5));
+      await new Promise((resolve) => setTimeout(resolve, 5));
 
       // Trigger any remaining timers
       if (testTimerService.hasPending()) {
         await testTimerService.triggerAll();
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should eventually succeed after retries
       expect(mockStorageAdapter.setItem).toHaveBeenCalledTimes(3);
@@ -337,13 +344,13 @@ describe('Queue Processor Integration', () => {
           toJSON: () => ({ actionId: `circuit:${i}` }),
         };
         await service.writeTrace(trace);
-        
+
         // Trigger processing for each trace to accumulate failures
         await testTimerService.triggerAll();
         if (testTimerService.hasPending()) {
           await testTimerService.triggerAll();
         }
-        await new Promise(resolve => setTimeout(resolve, 5));
+        await new Promise((resolve) => setTimeout(resolve, 5));
       }
 
       // Allow final processing
@@ -351,7 +358,7 @@ describe('Queue Processor Integration', () => {
       if (testTimerService.hasPending()) {
         await testTimerService.triggerAll();
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Circuit breaker should be activated
       const stats = service.getQueueStats();
@@ -396,7 +403,7 @@ describe('Queue Processor Integration', () => {
       if (testTimerService.hasPending()) {
         await testTimerService.triggerAll();
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Wait for shutdown to complete with proper error handling
       try {
@@ -416,12 +423,18 @@ describe('Queue Processor Integration', () => {
       expect(storageCalls.length).toBeGreaterThan(0);
 
       // Find a call with our test traces
-      const traceCall = storageCalls.find(call => 
-        call[0] === 'actionTraces' && 
-        Array.isArray(call[1]) &&
-        call[1].some(item => item.data && item.data.actionId && item.data.actionId.startsWith('shutdown:'))
+      const traceCall = storageCalls.find(
+        (call) =>
+          call[0] === 'actionTraces' &&
+          Array.isArray(call[1]) &&
+          call[1].some(
+            (item) =>
+              item.data &&
+              item.data.actionId &&
+              item.data.actionId.startsWith('shutdown:')
+          )
       );
-      
+
       expect(traceCall).toBeDefined();
       expect(traceCall[1]).toEqual(
         expect.arrayContaining([
@@ -462,7 +475,8 @@ describe('Queue Processor Integration', () => {
 
       expect(service).toBeDefined();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'ActionTraceOutputService initialized with simple queue'
+        'ActionTraceOutputService initialized with simple queue',
+        {}
       );
     });
 
@@ -519,7 +533,7 @@ describe('Queue Processor Integration', () => {
       if (testTimerService.hasPending()) {
         await testTimerService.triggerAll();
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(mockStorageAdapter.setItem).toHaveBeenCalled();
     });
