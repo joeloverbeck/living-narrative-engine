@@ -412,12 +412,6 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
   createEnhancedEventBus() {
     const baseEventBus = createEventBus({ captureEvents: true });
 
-    // Add the 'on' method as a jest mock that aliases to 'subscribe' for the new EventBus API
-    baseEventBus.on = jest.fn((eventType, callback) => {
-      return baseEventBus.subscribe(eventType, callback);
-    });
-    baseEventBus.off = baseEventBus.unsubscribe;
-
     // Override dispatch method to track events
     const originalDispatch = baseEventBus.dispatch.bind(baseEventBus);
     baseEventBus.dispatch = (event) => {
@@ -433,14 +427,14 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       }
     };
 
-    // Track callbacks when using the 'on' method
-    const originalOn = baseEventBus.on;
-    baseEventBus.on = jest.fn((eventType, callback) => {
+    // Track callbacks when using the 'subscribe' method
+    const originalSubscribe = baseEventBus.subscribe;
+    baseEventBus.subscribe = jest.fn((eventType, callback) => {
       if (!this.eventCallbacks.has(eventType)) {
         this.eventCallbacks.set(eventType, []);
       }
       this.eventCallbacks.get(eventType).push(callback);
-      return originalOn.call(baseEventBus, eventType, callback);
+      return originalSubscribe.call(baseEventBus, eventType, callback);
     });
 
     return baseEventBus;

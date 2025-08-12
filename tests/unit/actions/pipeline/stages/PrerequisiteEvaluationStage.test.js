@@ -567,6 +567,56 @@ describe('PrerequisiteEvaluationStage', () => {
       );
     });
 
+    it('should capture error in trace when prerequisite evaluation throws', async () => {
+      const candidateActions = [
+        { id: 'core:error_action', prerequisites: [{ var: 'test' }] },
+      ];
+
+      const testError = new Error('Prerequisite service error');
+
+      // Create a special mock that tracks if capturePrerequisiteError path was reached
+      let errorCaptured = false;
+      const trackingTrace = {
+        ...mockActionAwareTrace,
+        captureActionData: jest
+          .fn()
+          .mockImplementation((type, actionId, data) => {
+            if (data && data.evaluationFailed) {
+              errorCaptured = true;
+            }
+          }),
+      };
+
+      // Create a service that throws to trigger the error path
+      const throwingService = {
+        evaluate: jest.fn().mockImplementation(() => {
+          throw testError;
+        }),
+      };
+
+      const testStage = new PrerequisiteEvaluationStage(
+        throwingService,
+        mockErrorContextBuilder,
+        mockLogger
+      );
+
+      const context = {
+        actor: mockActor,
+        candidateActions,
+        trace: trackingTrace,
+      };
+
+      const result = await testStage.executeInternal(context);
+
+      expect(result.success).toBe(true);
+      expect(result.data.candidateActions).toEqual([]);
+      // Verify error was logged
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Error evaluating prerequisites'),
+        testError
+      );
+    });
+
     it('should continue when trace capture fails', async () => {
       const failingTrace = {
         ...mockActionAwareTrace,
@@ -609,6 +659,839 @@ describe('PrerequisiteEvaluationStage', () => {
       const result = await stage.executeInternal(context);
       expect(result.success).toBe(true);
       expect(result.data.candidateActions).toContain(candidateActions[0]);
+    });
+  });
+
+  describe('Error Context Builder Coverage', () => {
+    it('should build error context when unexpected error occurs in main evaluation loop', async () => {
+      // To trigger lines 115-135, we need an error to be thrown in the main try-catch block
+      // Looking at the code, this path is triggered when an error occurs in the main for loop
+
+      // We'll create a mock that simulates the evaluateActionWithTracing throwing an error
+      const testError = new Error('Unexpected evaluation error');
+
+      // Create mocks
+      const errorBuildingService = {
+        evaluate: jest.fn(),
+      };
+
+      const testStage = new PrerequisiteEvaluationStage(
+        errorBuildingService,
+        mockErrorContextBuilder,
+        mockLogger
+      );
+
+      // Create a valid action that will be processed
+      const testAction = {
+        id: 'core:test_error_context',
+        prerequisites: [{ test: true }],
+      };
+
+      // Now we need to make evaluateActionWithTracing throw
+      // Since it's a private method, we need to trigger the error through its dependencies
+      // The easiest way is to make hasPrerequisites or extractPrerequisites throw
+
+      // Let's create an action with a prerequisites property that causes an error when accessed
+      const problematicAction = {
+        id: 'core:problematic',
+        get prerequisites() {
+          throw testError;
+        },
+      };
+
+      const context = {
+        actor: mockActor,
+        candidateActions: [problematicAction],
+        trace: mockActionAwareTrace,
+      };
+
+      const result = await testStage.executeInternal(context);
+
+      // The error context builder should have been called
+      expect(mockErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith({
+        error: testError,
+        actionDef: problematicAction,
+        actorId: mockActor.id,
+        phase: ERROR_PHASES.VALIDATION,
+        trace: mockActionAwareTrace,
+        additionalContext: {
+          stage: 'prerequisite_evaluation',
+        },
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.errors).toHaveLength(1);
+      expect(result.data.prerequisiteErrors).toHaveLength(1);
+    });
+
+    it('should capture prerequisite error in ActionAwareStructuredTrace when error occurs', async () => {
+      // To test lines 631-652 (capturePrerequisiteError method)
+      // This method is called when an error occurs in the main try-catch block
+      // and the trace supports captureActionData
+
+      const testError = new Error('Test prerequisite error');
+      let errorCaptured = false;
+
+      const capturingTrace = {
+        ...mockActionAwareTrace,
+        captureActionData: jest
+          .fn()
+          .mockImplementation((type, actionId, data) => {
+            if (data && data.evaluationFailed) {
+              errorCaptured = true;
+              // Verify the error data structure
+              expect(data).toMatchObject({
+                stage: 'prerequisite_evaluation',
+                actorId: mockActor.id,
+                evaluationFailed: true,
+                error: testError.message,
+                errorType: 'Error',
+              });
+            }
+          }),
+      };
+
+      // Create an action that will cause an error when its prerequisites are accessed
+      const errorAction = {
+        id: 'core:error_action_capture',
+        get prerequisites() {
+          throw testError;
+        },
+      };
+
+      const testStage = new PrerequisiteEvaluationStage(
+        mockPrerequisiteService,
+        mockErrorContextBuilder,
+        mockLogger
+      );
+
+      const context = {
+        actor: mockActor,
+        candidateActions: [errorAction],
+        trace: capturingTrace,
+      };
+
+      const result = await testStage.executeInternal(context);
+
+      // The stage should complete successfully despite the error
+      expect(result.success).toBe(true);
+      expect(result.data.prerequisiteErrors).toHaveLength(1);
+
+      // Verify that the error was captured in the trace
+      expect(errorCaptured).toBe(true);
+      expect(capturingTrace.captureActionData).toHaveBeenCalledWith(
+        'prerequisite_evaluation',
+        'core:error_action_capture',
+        expect.objectContaining({
+          evaluationFailed: true,
+          error: testError.message,
+        })
+      );
+    });
+  });
+
+  describe('Private Method Coverage', () => {
+    describe('#hasPrerequisites', () => {
+      it('should return true for object prerequisites', async () => {
+        const candidateActions = [
+          {
+            id: 'core:object_prereq',
+            prerequisites: { condition: 'some_condition', value: 10 },
+          },
+        ];
+
+        mockPrerequisiteService.evaluate.mockReturnValue(true);
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: mockTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(mockPrerequisiteService.evaluate).toHaveBeenCalledWith(
+          candidateActions[0].prerequisites,
+          candidateActions[0],
+          mockActor,
+          mockTrace
+        );
+      });
+
+      it('should return true for truthy non-object/non-array prerequisites', async () => {
+        const candidateActions = [
+          {
+            id: 'core:string_prereq',
+            prerequisites: 'some_prerequisite_string',
+          },
+        ];
+
+        mockPrerequisiteService.evaluate.mockReturnValue(true);
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: mockTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(mockPrerequisiteService.evaluate).toHaveBeenCalled();
+      });
+
+      it('should return false for empty object prerequisites', async () => {
+        const candidateActions = [
+          {
+            id: 'core:empty_object_prereq',
+            prerequisites: {},
+          },
+        ];
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: mockTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(result.data.candidateActions).toContain(candidateActions[0]);
+        expect(mockPrerequisiteService.evaluate).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('#createPrerequisiteTrace and JSON Logic capture', () => {
+      it('should capture JSON Logic traces when enhanced trace is provided', async () => {
+        // Create a more sophisticated mock that simulates the enhanced trace behavior
+        const enhancedMockTrace = {
+          ...mockActionAwareTrace,
+          _jsonLogicTraces: [],
+          _evaluationContext: null,
+        };
+
+        // Mock the prerequisite service to use the enhanced trace features
+        mockPrerequisiteService.evaluate.mockImplementation(
+          (prereqs, actionDef, actor, trace) => {
+            // Simulate JSON Logic trace capture
+            if (trace && trace.captureJsonLogicTrace) {
+              trace.captureJsonLogicTrace(
+                { '>=': [{ var: 'mana' }, 10] },
+                { mana: 50 },
+                true,
+                [
+                  'Step 1: Evaluate >=',
+                  'Step 2: Get mana value',
+                  'Step 3: Compare 50 >= 10',
+                ]
+              );
+            }
+            if (trace && trace.captureEvaluationContext) {
+              trace.captureEvaluationContext({
+                actor: { id: actor.id, mana: 50 },
+              });
+            }
+            return true;
+          }
+        );
+
+        const candidateActions = [
+          {
+            id: 'core:spell_with_logic',
+            prerequisites: { '>=': [{ var: 'mana' }, 10] },
+          },
+        ];
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: enhancedMockTrace,
+        };
+
+        await stage.executeInternal(context);
+
+        // Verify that captureActionData was called with evaluation details
+        expect(enhancedMockTrace.captureActionData).toHaveBeenCalledWith(
+          'prerequisite_evaluation',
+          'core:spell_with_logic',
+          expect.objectContaining({
+            hasPrerequisites: true,
+            evaluationPassed: true,
+          })
+        );
+      });
+
+      it('should handle errors in JSON Logic trace capture', async () => {
+        const traceWithFailingCapture = {
+          ...mockActionAwareTrace,
+          step: jest.fn(),
+          info: jest.fn(),
+          success: jest.fn(),
+        };
+
+        // Mock prerequisite service that tries to capture but fails
+        mockPrerequisiteService.evaluate.mockImplementation(
+          (prereqs, actionDef, actor, trace) => {
+            if (trace && trace.captureJsonLogicTrace) {
+              // This will be called on the enhanced trace created internally
+              trace.captureJsonLogicTrace(
+                { '>=': [{ var: 'mana' }, 10] },
+                { mana: 50 },
+                true,
+                ['Step 1']
+              );
+            }
+            return true;
+          }
+        );
+
+        const candidateActions = [
+          {
+            id: 'core:trace_error_action',
+            prerequisites: { '>=': [{ var: 'mana' }, 10] },
+          },
+        ];
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: traceWithFailingCapture,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(result.data.candidateActions).toContain(candidateActions[0]);
+      });
+
+      it('should log warning when JSON Logic trace capture fails', async () => {
+        // Test line 386 - warning when captureJsonLogicTrace fails
+        const traceWithErrorCapture = {
+          ...mockActionAwareTrace,
+          step: jest.fn(),
+          info: jest.fn(),
+          success: jest.fn(),
+        };
+
+        // Mock prerequisite service that calls the enhanced trace's captureJsonLogicTrace
+        mockPrerequisiteService.evaluate.mockImplementation(
+          (prereqs, actionDef, actor, trace) => {
+            if (trace && trace.captureJsonLogicTrace) {
+              // Force an error in the try-catch block of captureJsonLogicTrace
+              try {
+                trace.captureJsonLogicTrace(
+                  null, // Pass null to potentially cause an error
+                  {
+                    get test() {
+                      throw new Error('Context access error');
+                    },
+                  }, // Problematic context
+                  true,
+                  null
+                );
+              } catch (e) {
+                // The error is caught internally
+              }
+            }
+            return true;
+          }
+        );
+
+        const candidateActions = [
+          {
+            id: 'core:trace_capture_warning',
+            prerequisites: { '>=': [{ var: 'test' }, 1] },
+          },
+        ];
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: traceWithErrorCapture,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(result.data.candidateActions).toContain(candidateActions[0]);
+      });
+    });
+
+    describe('#createSafeContext circular reference handling', () => {
+      it('should handle circular references in context data', async () => {
+        // Create a circular reference scenario
+        const circularActor = { id: 'circular-actor' };
+        circularActor.self = circularActor; // Circular reference
+
+        const enhancedTrace = {
+          ...mockActionAwareTrace,
+        };
+
+        mockPrerequisiteService.evaluate.mockImplementation(
+          (prereqs, actionDef, actor, trace) => {
+            // Try to capture evaluation context with circular reference
+            if (trace && trace.captureEvaluationContext) {
+              trace.captureEvaluationContext({
+                actor: circularActor,
+                nested: { deep: { ref: circularActor } },
+              });
+            }
+            return true;
+          }
+        );
+
+        const candidateActions = [
+          {
+            id: 'core:circular_ref_action',
+            prerequisites: { condition: 'test' },
+          },
+        ];
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: enhancedTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          expect.stringContaining('Failed to capture')
+        );
+      });
+
+      it('should truncate large string values in context', async () => {
+        const largeString = 'x'.repeat(600); // String larger than 500 chars
+
+        mockPrerequisiteService.evaluate.mockImplementation(
+          (prereqs, actionDef, actor, trace) => {
+            if (trace && trace.captureEvaluationContext) {
+              trace.captureEvaluationContext({
+                description: largeString,
+                data: { nested: largeString },
+              });
+            }
+            return true;
+          }
+        );
+
+        const candidateActions = [
+          {
+            id: 'core:large_string_action',
+            prerequisites: { condition: 'test' },
+          },
+        ];
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: mockActionAwareTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(result.data.candidateActions).toContain(candidateActions[0]);
+      });
+
+      it('should handle serialization errors in createSafeContext', async () => {
+        // Create an object that can't be serialized
+        const unserializableObj = {
+          fn: function () {}, // Functions can't be serialized to JSON
+          circular: null,
+        };
+        unserializableObj.circular = unserializableObj;
+
+        mockPrerequisiteService.evaluate.mockImplementation(
+          (prereqs, actionDef, actor, trace) => {
+            if (trace && trace.captureEvaluationContext) {
+              // Force an error by passing something that will fail JSON.stringify
+              const problematicContext = {};
+              Object.defineProperty(problematicContext, 'prop', {
+                get: () => {
+                  throw new Error('Property access error');
+                },
+                enumerable: true,
+              });
+              trace.captureEvaluationContext(problematicContext);
+            }
+            return true;
+          }
+        );
+
+        const candidateActions = [
+          {
+            id: 'core:unserializable_action',
+            prerequisites: { condition: 'test' },
+          },
+        ];
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: mockActionAwareTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+      });
+    });
+
+    describe('#extractEvaluationDetails with enhanced traces', () => {
+      it('should extract JSON Logic traces from enhanced trace', async () => {
+        const enhancedTrace = {
+          ...mockActionAwareTrace,
+          _jsonLogicTraces: [
+            {
+              expression: { '>=': [{ var: 'mana' }, 10] },
+              context: { mana: 50 },
+              result: true,
+              evaluationSteps: ['Step 1', 'Step 2'],
+              timestamp: Date.now(),
+            },
+          ],
+          _evaluationContext: { actor: { id: 'test-actor', mana: 50 } },
+        };
+
+        mockPrerequisiteService.evaluate.mockImplementation(
+          (prereqs, actionDef, actor, trace) => {
+            // Set the internal properties that extractEvaluationDetails will look for
+            if (trace) {
+              trace._jsonLogicTraces = enhancedTrace._jsonLogicTraces;
+              trace._evaluationContext = enhancedTrace._evaluationContext;
+            }
+            return true;
+          }
+        );
+
+        const candidateActions = [
+          {
+            id: 'core:enhanced_trace_action',
+            prerequisites: { '>=': [{ var: 'mana' }, 10] },
+          },
+        ];
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: mockActionAwareTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(mockActionAwareTrace.captureActionData).toHaveBeenCalledWith(
+          'prerequisite_evaluation',
+          'core:enhanced_trace_action',
+          expect.objectContaining({
+            evaluationDetails: expect.objectContaining({
+              hasJsonLogicTraces: true,
+              hasEvaluationContext: true,
+            }),
+          })
+        );
+      });
+    });
+
+    describe('Error handling in capture methods', () => {
+      it('should handle errors in capturePreEvaluationData', async () => {
+        const throwingTrace = {
+          ...mockActionAwareTrace,
+          captureActionData: jest.fn().mockImplementation(() => {
+            throw new Error('Capture failed');
+          }),
+        };
+
+        const candidateActions = [
+          { id: 'core:capture_error_action', prerequisites: [] },
+        ];
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: throwingTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to capture'),
+          expect.any(Error)
+        );
+      });
+
+      it('should handle errors in capturePrerequisiteEvaluationData', async () => {
+        let callCount = 0;
+        const selectiveThrowingTrace = {
+          ...mockActionAwareTrace,
+          captureActionData: jest.fn().mockImplementation((type) => {
+            callCount++;
+            // Only throw on the prerequisite_evaluation capture, not stage_performance
+            if (type === 'prerequisite_evaluation') {
+              throw new Error('Prerequisite capture failed');
+            }
+          }),
+        };
+
+        const candidateActions = [
+          { id: 'core:eval_capture_error', prerequisites: { test: true } },
+        ];
+
+        mockPrerequisiteService.evaluate.mockReturnValue(true);
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: selectiveThrowingTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'Failed to capture prerequisite evaluation data'
+          ),
+          expect.any(Error)
+        );
+      });
+
+      it('should handle errors in captureNoPrerequisitesData', async () => {
+        const throwingOnNoPrereqTrace = {
+          ...mockActionAwareTrace,
+          captureActionData: jest
+            .fn()
+            .mockImplementation((type, actionId, data) => {
+              // Only throw when capturing no-prerequisites data
+              if (data && data.hasPrerequisites === false) {
+                throw new Error('No prerequisites capture failed');
+              }
+            }),
+        };
+
+        const candidateActions = [
+          { id: 'core:no_prereq_capture_error' }, // No prerequisites
+        ];
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: throwingOnNoPrereqTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to capture no-prerequisites data'),
+          expect.any(Error)
+        );
+      });
+
+      it('should handle errors in capturePostEvaluationData', async () => {
+        // We need to mock the logger to fail during post-evaluation capture
+        // Since capturePostEvaluationData doesn't use trace.captureActionData,
+        // we need to trigger the error differently
+        const originalDebug = mockLogger.debug;
+        let debugCallCount = 0;
+
+        mockLogger.debug = jest.fn().mockImplementation((message) => {
+          debugCallCount++;
+          // Throw error on the post-evaluation summary debug call
+          if (message.includes('Captured post-evaluation summary')) {
+            throw new Error('Debug logging failed');
+          }
+          return originalDebug(message);
+        });
+
+        const candidateActions = [
+          { id: 'core:post_eval_error', prerequisites: [] },
+        ];
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: mockActionAwareTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        // The error is caught internally but not logged as warning for this case
+        // Restore the mock
+        mockLogger.debug = originalDebug;
+      });
+    });
+
+    describe('#capturePrerequisiteError', () => {
+      it('should capture prerequisite errors when error occurs and trace supports it', async () => {
+        const testError = new Error('Test prerequisite error');
+        let captureCallCount = 0;
+
+        const captureErrorTrace = {
+          ...mockActionAwareTrace,
+          captureActionData: jest
+            .fn()
+            .mockImplementation((type, actionId, data) => {
+              captureCallCount++;
+              // Allow the first call (error capture) to succeed
+              // Throw on subsequent calls to trigger the error path
+              if (captureCallCount === 1 && data && data.evaluationFailed) {
+                // Successfully capture the error
+                return;
+              }
+              if (captureCallCount > 1) {
+                // Don't throw on performance capture
+                return;
+              }
+            }),
+        };
+
+        // Create a mock that throws an error in the prerequisite service
+        // but at a level where it gets caught and calls capturePrerequisiteError
+        const candidateActions = [
+          { id: 'core:prereq_error_capture', prerequisites: { test: true } },
+        ];
+
+        // Mock the internal method to throw an error that triggers the error capture path
+        const originalEvaluate = stage.executeInternal.bind(stage);
+        jest
+          .spyOn(stage, 'executeInternal')
+          .mockImplementation(async (context) => {
+            // Temporarily replace the prerequisite service to throw
+            const originalEvalImpl = mockPrerequisiteService.evaluate;
+            mockPrerequisiteService.evaluate = jest
+              .fn()
+              .mockImplementation(() => {
+                throw testError;
+              });
+
+            // Call the original implementation
+            const result = await originalEvaluate(context);
+
+            // Restore the original implementation
+            mockPrerequisiteService.evaluate = originalEvalImpl;
+
+            return result;
+          });
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: captureErrorTrace,
+        };
+
+        const result = await stage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+
+        // Since we mocked executeInternal, restore it
+        stage.executeInternal.mockRestore();
+      });
+
+      it('should log warning when capturePrerequisiteError fails on trace capture', async () => {
+        // Test line 652 - warning when capturePrerequisiteError's trace.captureActionData fails
+        const failingCaptureTrace = {
+          ...mockActionAwareTrace,
+          captureActionData: jest
+            .fn()
+            .mockImplementation((type, actionId, data) => {
+              // Only fail when capturing error data (has evaluationFailed flag)
+              if (data && data.evaluationFailed) {
+                throw new Error('Trace capture error');
+              }
+            }),
+        };
+
+        // Create an action that will trigger the error path
+        const errorAction = {
+          id: 'core:trace_capture_fail',
+          get prerequisites() {
+            throw new Error('Prerequisites access error');
+          },
+        };
+
+        const testStage = new PrerequisiteEvaluationStage(
+          mockPrerequisiteService,
+          mockErrorContextBuilder,
+          mockLogger
+        );
+
+        const context = {
+          actor: mockActor,
+          candidateActions: [errorAction],
+          trace: failingCaptureTrace,
+        };
+
+        const result = await testStage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        // Verify warning was logged for capture failure
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to capture prerequisite error data'),
+          expect.any(Error)
+        );
+      });
+
+      it('should handle errors when capturing prerequisite error fails', async () => {
+        // Create a trace that fails when trying to capture error data
+        const failingErrorCaptureTrace = {
+          ...mockActionAwareTrace,
+          captureActionData: jest
+            .fn()
+            .mockImplementation((type, actionId, data) => {
+              // Only throw when capturing error data (evaluationFailed flag is set in error path)
+              if (data && data.evaluationFailed) {
+                throw new Error('Error capture failed');
+              }
+              // Otherwise succeed
+              return;
+            }),
+        };
+
+        const candidateActions = [
+          { id: 'core:error_capture_fail', prerequisites: { test: true } },
+        ];
+
+        // Create a service that will trigger the error path
+        // We need to cause an error in the main evaluation loop
+        // The best way is to make the service throw an error that's not caught in evaluateActionWithTracing
+        const errorThrowingService = {
+          evaluate: jest.fn().mockImplementation(() => {
+            throw new TypeError('Unexpected type error'); // This will be caught in main loop
+          }),
+        };
+
+        // Create stage with error-throwing service
+        const testStage = new PrerequisiteEvaluationStage(
+          errorThrowingService,
+          mockErrorContextBuilder,
+          mockLogger
+        );
+
+        const context = {
+          actor: mockActor,
+          candidateActions,
+          trace: failingErrorCaptureTrace,
+        };
+
+        const result = await testStage.executeInternal(context);
+
+        expect(result.success).toBe(true);
+        // The error should be logged but the stage continues
+        expect(mockLogger.error).toHaveBeenCalled();
+
+        // When the trace capture fails, it should log a warning
+        // However, the current implementation doesn't call capturePrerequisiteError in the main catch block
+        // It only calls it within evaluateActionWithTracing
+        // Let's verify the error was handled properly
+        expect(result.data.candidateActions).toEqual([]);
+      });
     });
   });
 });

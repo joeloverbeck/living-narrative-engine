@@ -564,6 +564,7 @@ export class CharacterBuilderBootstrap {
       ),
       eventBus: container.resolve(tokens.ISafeEventDispatcher),
       schemaValidator: container.resolve(tokens.ISchemaValidator),
+      clicheGenerator: container.resolve(tokens.ClicheGenerator),
       ...config.services, // Additional page-specific services
     };
 

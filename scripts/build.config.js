@@ -36,6 +36,11 @@ module.exports = {
       entry: 'src/character-concepts-manager-entry.js',
       output: 'character-concepts-manager.js',
     },
+    {
+      name: 'cliches-generator',
+      entry: 'src/cliches-generator-main.js',
+      output: 'cliches-generator-main.js',
+    },
   ],
 
   // HTML files (explicit list to prevent missing files)
@@ -46,6 +51,7 @@ module.exports = {
     'character-concepts-manager.html',
     'thematic-direction-generator.html',
     'thematic-directions-manager.html',
+    'cliches-generator.html',
   ],
 
   // Static asset directories
