@@ -41,29 +41,31 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
   const waitForProcessingComplete = async () => {
     let attempts = 0;
     const maxAttempts = 20;
-    
+
     while (attempts < maxAttempts) {
       // Trigger any pending timers
       await testTimerService.triggerAll();
-      
+
       // Wait for any running callbacks to complete
       if (testTimerService.waitForCompletion) {
         await testTimerService.waitForCompletion();
       }
-      
+
       // Small delay to allow new operations to be scheduled
-      await new Promise(resolve => setImmediate(resolve));
-      
+      await new Promise((resolve) => setImmediate(resolve));
+
       // If no more pending timers and no operations running, we're done
       if (!testTimerService.hasPending() && !testTimerService.isProcessing()) {
         break;
       }
-      
+
       attempts++;
     }
-    
+
     if (attempts >= maxAttempts) {
-      console.warn(`waitForProcessingComplete: Max attempts reached, pending: ${testTimerService.hasPending()}, processing: ${testTimerService.isProcessing()}`);
+      console.warn(
+        `waitForProcessingComplete: Max attempts reached, pending: ${testTimerService.hasPending()}, processing: ${testTimerService.isProcessing()}`
+      );
     }
   };
 
@@ -140,7 +142,8 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       expect(service).toBeDefined();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'ActionTraceOutputService initialized with TraceQueueProcessor'
+        'ActionTraceOutputService initialized with TraceQueueProcessor',
+        {} // Empty object is logged when no namingOptions are provided
       );
     });
 
@@ -151,7 +154,8 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       expect(service).toBeDefined();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'ActionTraceOutputService initialized with simple queue'
+        'ActionTraceOutputService initialized with simple queue',
+        {} // Empty object is logged when no namingOptions are provided
       );
     });
   });
@@ -188,7 +192,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       // Now processing should have started and the queue should be empty
       stats = service.getQueueStats();
       expect(stats.queueLength).toBe(0);
-      
+
       // Verify storage was called
       expect(mockStorageAdapter.setItem).toHaveBeenCalled();
     }, 5000);
@@ -206,8 +210,8 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
     it('should enforce maximum queue size', async () => {
       // Use a smaller queue size for faster testing
       const testMaxQueueSize = 10;
-      
-      // Create service with smaller max queue size  
+
+      // Create service with smaller max queue size
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
@@ -220,7 +224,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
 
       // Make storage operations very slow to keep items in queue
       mockStorageAdapter.setItem.mockImplementation(() => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           // Use a real setTimeout to create actual delay since TestTimerService won't delay this
           setTimeout(resolve, 100);
         });
@@ -229,10 +233,12 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       // Fill up queue to capacity - do this quickly without triggering processing
       const fillPromises = [];
       for (let i = 0; i < testMaxQueueSize + 5; i++) {
-        fillPromises.push(service.writeTrace({
-          actionId: `fill:${i}`,
-          toJSON: () => ({ id: i }),
-        }));
+        fillPromises.push(
+          service.writeTrace({
+            actionId: `fill:${i}`,
+            toJSON: () => ({ id: i }),
+          })
+        );
       }
 
       await Promise.all(fillPromises);
@@ -240,10 +246,12 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       // Try to add more traces - these should be dropped due to queue being full
       const overflowPromises = [];
       for (let i = 0; i < 5; i++) {
-        overflowPromises.push(service.writeTrace({
-          actionId: `overflow:${i}`,
-          toJSON: () => ({ action: 'overflow', id: i }),
-        }));
+        overflowPromises.push(
+          service.writeTrace({
+            actionId: `overflow:${i}`,
+            toJSON: () => ({ action: 'overflow', id: i }),
+          })
+        );
       }
 
       await Promise.all(overflowPromises);
@@ -436,7 +444,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
           actionId: `error:${i}`,
           toJSON: () => ({ id: i }),
         });
-        
+
         // Trigger processing after each write to ensure individual failures
         await testTimerService.triggerAll();
       }
@@ -444,7 +452,7 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       // Wait for all operations to complete
       await testTimerService.waitForCompletion();
 
-      // TraceQueueProcessor logs circuit breaker message 
+      // TraceQueueProcessor logs circuit breaker message
       expect(mockLogger.error).toHaveBeenCalledWith(
         'TraceQueueProcessor: Circuit breaker opened due to consecutive failures'
       );
@@ -804,9 +812,10 @@ describe('ActionTraceOutputService - Enhanced Features', () => {
       await testTimerService.triggerAll();
 
       const savedTraces = mockStorageAdapter.setItem.mock.calls[0][1];
-      // TraceQueueProcessor generates IDs with format: sanitized_timestamp_random
+      // TraceQueueProcessor uses TIMESTAMP_FIRST strategy by default
+      // Format: timestamp_sanitized-action_hash
       expect(savedTraces[0].id).toMatch(
-        /^test-action-with-special-chars_\d+_[a-z0-9]+$/
+        /^\d+_\d+_test-action-with-special-chars_[a-z0-9]+$/
       );
     });
   });

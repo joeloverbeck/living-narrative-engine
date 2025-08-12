@@ -8,6 +8,10 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { TraceQueueProcessor } from './traceQueueProcessor.js';
 import { TracePriority, DEFAULT_PRIORITY } from './tracePriority.js';
 import { StorageRotationManager } from './storageRotationManager.js';
+import { TraceIdGenerator, NamingStrategy, TimestampFormat } from './traceIdGenerator.js';
+
+// Re-export from traceIdGenerator for backward compatibility
+export { NamingStrategy, TimestampFormat } from './traceIdGenerator.js';
 
 /**
  * Service for outputting action traces with queue processing
@@ -30,6 +34,8 @@ export class ActionTraceOutputService {
   #queueProcessor;
   #eventBus;
   #rotationManager;
+  #idGenerator;
+  #namingOptions;
 
   /**
    * Constructor
@@ -43,6 +49,7 @@ export class ActionTraceOutputService {
    * @param {Function} [dependencies.outputHandler] - Custom output handler function for testing
    * @param {object} [dependencies.eventBus] - Event bus for queue notifications
    * @param {object} [dependencies.queueConfig] - Queue processor configuration
+   * @param {object} [dependencies.namingOptions] - Naming convention options
    */
   constructor({
     storageAdapter,
@@ -53,6 +60,7 @@ export class ActionTraceOutputService {
     outputHandler,
     eventBus,
     queueConfig,
+    namingOptions = {},
   } = {}) {
     // Validate dependencies if provided
     if (storageAdapter) {
@@ -92,22 +100,30 @@ export class ActionTraceOutputService {
     this.#humanReadableFormatter = humanReadableFormatter;
     this.#eventBus = eventBus;
 
+    // Store naming options for later use
+    this.#namingOptions = namingOptions || {};
+    
+    // Initialize ID generator with naming options
+    this.#idGenerator = new TraceIdGenerator(this.#namingOptions);
+
+    // Extract timerService from queueConfig if provided (used by both queue processor and rotation manager)
+    const { timerService, ...remainingConfig } = queueConfig || {};
+
     // Initialize queue processing system
     if (this.#storageAdapter && typeof TraceQueueProcessor !== 'undefined') {
-      // Extract timerService from queueConfig if provided
-      const { timerService, ...remainingConfig } = queueConfig || {};
-      
-      // Use advanced queue processor
+      // Use advanced queue processor with naming options
       this.#queueProcessor = new TraceQueueProcessor({
         storageAdapter: this.#storageAdapter,
         logger: this.#logger,
         eventBus: this.#eventBus,
         timerService,
         config: remainingConfig,
+        namingOptions: this.#namingOptions,
       });
 
       this.#logger.debug(
-        'ActionTraceOutputService initialized with TraceQueueProcessor'
+        'ActionTraceOutputService initialized with TraceQueueProcessor',
+        this.#namingOptions
       );
     } else {
       // Fall back to simple queue implementation
@@ -118,7 +134,8 @@ export class ActionTraceOutputService {
       this.#storageKey = 'actionTraces';
 
       this.#logger.debug(
-        'ActionTraceOutputService initialized with simple queue'
+        'ActionTraceOutputService initialized with simple queue',
+        this.#namingOptions
       );
     }
 
@@ -149,6 +166,7 @@ export class ActionTraceOutputService {
           storageAdapter: this.#storageAdapter,
           logger: this.#logger,
           config: rotationConfig,
+          timerService: timerService,
         });
 
         this.#logger.debug(
@@ -536,34 +554,17 @@ export class ActionTraceOutputService {
   }
 
   /**
-   * Generate unique ID for trace
+   * Generate unique ID for trace with configurable naming strategies
    *
    * @private
    * @param {object} trace - Trace object
    * @returns {string} Unique trace ID
    */
   #generateTraceId(trace) {
-    const timestamp = Date.now();
-
-    // Extract action ID from trace
-    let actionId = 'unknown';
-    if (trace.actionId) {
-      actionId = trace.actionId;
-    } else if (
-      trace.getTracedActions &&
-      typeof trace.getTracedActions === 'function'
-    ) {
-      const tracedActions = trace.getTracedActions();
-      if (tracedActions.size > 0) {
-        actionId = Array.from(tracedActions.keys())[0];
-      }
-    }
-
-    // Sanitize action ID
-    const sanitizedActionId = actionId.replace(/[^a-zA-Z0-9_-]/g, '-');
-
-    return `${sanitizedActionId}_${timestamp}`;
+    // Use the shared ID generator for consistent naming
+    return this.#idGenerator.generateId(trace);
   }
+
 
   /**
    * Format trace data for output

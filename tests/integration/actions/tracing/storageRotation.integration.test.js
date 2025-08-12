@@ -32,13 +32,13 @@ describe('Storage Rotation Integration', () => {
 
   beforeEach(async () => {
     mockLogger = createMockLogger();
-    
+
     // Mock browser APIs for exportTraces functionality
     global.URL = {
       createObjectURL: jest.fn(() => 'mock-blob-url'),
       revokeObjectURL: jest.fn(),
     };
-    
+
     // Mock document.createElement for download links
     global.document.createElement = jest.fn((tagName) => {
       if (tagName === 'a') {
@@ -89,7 +89,7 @@ describe('Storage Rotation Integration', () => {
     if (rotationManager) {
       rotationManager.shutdown();
     }
-    
+
     // Clean up mocks
     delete global.URL;
     delete global.document.createElement;

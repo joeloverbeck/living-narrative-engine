@@ -55,27 +55,27 @@ describe('Clichés Generator Bootstrap Integration', () => {
     mockElements = {};
     const requiredIds = [
       'direction-selector',
-      'generate-btn', 
+      'generate-btn',
       'selected-direction-display',
       'original-concept-display',
       'cliches-container',
       'status-messages',
       'direction-content',
-      'direction-meta', 
+      'direction-meta',
       'concept-content',
       'loading-overlay',
       'cliches-form',
-      'back-to-menu-btn'
+      'back-to-menu-btn',
     ];
-    
+
     // Pre-create all required elements using real DOM creation in jsdom
-    requiredIds.forEach(id => {
+    requiredIds.forEach((id) => {
       const element = document.createElement('div');
       element.id = id;
-      
+
       // Add element to body so it passes the contains() check
       document.body.appendChild(element);
-      
+
       mockElements[id] = element;
     });
 

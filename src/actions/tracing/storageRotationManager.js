@@ -7,6 +7,23 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 
 /**
+ * Default timer service that uses native timer functions
+ */
+class DefaultRotationTimerService {
+  setInterval(callback, delay) {
+    return setInterval(callback, delay);
+  }
+
+  clearInterval(timerId) {
+    if (timerId) {
+      clearInterval(timerId);
+    }
+  }
+}
+
+const defaultTimerService = new DefaultRotationTimerService();
+
+/**
  * Rotation policies
  *
  * @enum {string}
@@ -30,6 +47,7 @@ export class StorageRotationManager {
   #rotationTimer;
   #storageKey;
   #preservedTraces;
+  #timerService;
 
   /**
    * Constructor
@@ -38,8 +56,9 @@ export class StorageRotationManager {
    * @param {IStorageAdapter} dependencies.storageAdapter - IndexedDB storage interface
    * @param {ILogger} dependencies.logger - Logger service
    * @param {object} dependencies.config - Rotation configuration
+   * @param {object} [dependencies.timerService] - Timer service for scheduling (defaults to real timers)
    */
-  constructor({ storageAdapter, logger, config }) {
+  constructor({ storageAdapter, logger, config, timerService }) {
     validateDependency(storageAdapter, 'IStorageAdapter', null, {
       requiredMethods: ['getItem', 'setItem', 'removeItem'],
     });
@@ -48,6 +67,7 @@ export class StorageRotationManager {
     this.#logger = ensureValidLogger(logger, 'StorageRotationManager');
     this.#config = this.#validateConfig(config);
     this.#storageKey = 'actionTraces';
+    this.#timerService = timerService || defaultTimerService;
 
     this.#isRotating = false;
     this.#lastRotation = Date.now();
@@ -101,10 +121,10 @@ export class StorageRotationManager {
    */
   #scheduleRotation() {
     if (this.#rotationTimer) {
-      clearInterval(this.#rotationTimer);
+      this.#timerService.clearInterval(this.#rotationTimer);
     }
 
-    this.#rotationTimer = setInterval(async () => {
+    this.#rotationTimer = this.#timerService.setInterval(async () => {
       await this.rotateTraces();
     }, this.#config.rotationInterval);
   }
@@ -557,7 +577,7 @@ export class StorageRotationManager {
    */
   shutdown() {
     if (this.#rotationTimer) {
-      clearInterval(this.#rotationTimer);
+      this.#timerService.clearInterval(this.#rotationTimer);
       this.#rotationTimer = null;
     }
 

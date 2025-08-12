@@ -3,270 +3,65 @@
 ## Ticket Information
 
 **Project**: Living Narrative Engine - Clichés Generator  
-**Phase**: Phase 3 - UI Implementation  
+**Phase**: Phase 3 - UI Enhancement  
 **Priority**: High  
-**Estimated Time**: 4 hours  
+**Estimated Time**: 3 hours  
 **Complexity**: Medium  
-**Dependencies**: CLIGEN-010 (CSS Styling), ClichesGeneratorController.js foundation  
+**Dependencies**: CLIGEN-010 (CSS Styling), ClichesGeneratorController.js existing implementation  
 **Assignee**: TBD  
 **Status**: Ready for Development
 
 ## Overview
 
-Implement interactive form functionality for the Clichés Generator page, including direction selector population, form validation, event handling, and user feedback mechanisms. This ticket focuses on bridging the UI layer with the existing controller architecture to create a fully functional form experience.
+Enhance and complete the interactive form functionality for the Clichés Generator page. While core functionality exists in `ClichesGeneratorController.js`, this ticket focuses on adding missing features including form validation UI, keyboard shortcuts, focus management, and improving the existing user feedback mechanisms.
 
 ## Current State Analysis
 
-### Existing Infrastructure ✅
+### Already Implemented ✅
 
-- `ClichesGeneratorController.js` - Comprehensive controller with state management
-- `cliches-generator.html` - Complete HTML form structure with proper IDs
-- `BaseCharacterBuilderController.js` - Base class with common functionality
-- Event bus system for component communication
-- Validation utilities and error handling infrastructure
+In `ClichesGeneratorController.js`:
+
+- `#populateDirectionSelector()` - Direction dropdown population with concept grouping
+- `#handleDirectionSelection()` - Direction selection event handling
+- `#handleGenerateCliches()` - Generate button click handling
+- `#showStatusMessage()` - Status message display system
+- `#updateGenerateButton()` - Basic button state management
+- `_setupEventListeners()` - Form submission and basic event handling
+- `#handleGenerationError()` - Error handling with partial retry logic
+- Event bus integration for service communication
+- Base class methods from `BaseCharacterBuilderController.js`
+
+### What Needs Enhancement 🔧
+
+- **Form Validation UI**: Visual error display and field validation feedback
+- **Keyboard Shortcuts**: Ctrl+Enter for generate, Escape for cancel, F5 for refresh
+- **Focus Management**: Proper focus handling for accessibility
+- **Confirmation Dialogs**: User confirmation before certain actions
+- **Enhanced Button States**: More granular state variations
+- **Retry Mechanism**: Complete retry button functionality in error states
 
 ### What's Missing ❌
 
-- Direction selector dropdown population logic
-- Form event handlers and validation
-- Generate button state management
-- User feedback and status message system
-- Integration between UI events and controller methods
+- Form validation error display system
+- Keyboard navigation and shortcuts
+- Focus management for accessibility
+- Confirmation dialog implementation
+- Enhanced loading states and animations
 
 ## Technical Requirements
 
-### 1. Direction Selector Implementation
+### 1. Form Validation UI Enhancement
 
-Implement the dropdown population and selection handling:
-
-```javascript
-/**
- * Populate direction selector with available thematic directions
- * Groups directions by character concept for better organization
- */
-async _populateDirectionSelector() {
-  try {
-    // Use cached data if available
-    const directionsData = await this._loadDirectionsData();
-    const selector = this.#directionSelector;
-
-    // Clear existing options (keep placeholder)
-    while (selector.children.length > 1) {
-      selector.removeChild(selector.lastChild);
-    }
-
-    // Group directions by concept for organized display
-    const groupedDirections = this._groupDirectionsByConcept(directionsData);
-
-    // Create optgroups for each concept
-    for (const [conceptId, directions] of groupedDirections) {
-      const concept = await this._getCachedConcept(conceptId);
-      const optgroup = document.createElement('optgroup');
-      optgroup.label = concept.title || 'Unknown Concept';
-
-      // Add directions to the group
-      directions.forEach(direction => {
-        const option = document.createElement('option');
-        option.value = direction.id;
-        option.textContent = direction.title;
-        option.setAttribute('data-concept-id', conceptId);
-        optgroup.appendChild(option);
-      });
-
-      selector.appendChild(optgroup);
-    }
-
-    this._logActivity('Direction selector populated', {
-      conceptCount: groupedDirections.size,
-      directionCount: directionsData.length
-    });
-
-  } catch (error) {
-    this._handleError('Failed to populate direction selector', error);
-    this._showStatusMessage('Unable to load thematic directions. Please try refreshing.', 'error');
-  }
-}
-
-/**
- * Group directions by their parent concept for organized display
- */
-_groupDirectionsByConcept(directions) {
-  const grouped = new Map();
-
-  directions.forEach(direction => {
-    if (!grouped.has(direction.conceptId)) {
-      grouped.set(direction.conceptId, []);
-    }
-    grouped.get(direction.conceptId).push(direction);
-  });
-
-  // Sort directions within each group by title
-  for (const directions of grouped.values()) {
-    directions.sort((a, b) => a.title.localeCompare(b.title));
-  }
-
-  return grouped;
-}
-```
-
-### 2. Form Event Handlers
-
-Implement comprehensive form event handling:
+Add visual validation feedback to the existing validation logic:
 
 ```javascript
-/**
- * Set up form event listeners and interactions
- */
-_setupEventListeners() {
-  super._setupEventListeners();
-
-  // Direction selector change handler
-  this.#directionSelector.addEventListener('change', (event) => {
-    this._handleDirectionSelection(event);
-  });
-
-  // Form submission handler
-  this.#form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    this._handleFormSubmission();
-  });
-
-  // Generate button click handler
-  this.#generateBtn.addEventListener('click', (event) => {
-    this._handleGenerateClick(event);
-  });
-
-  // Retry button handler (for error states)
-  document.addEventListener('click', (event) => {
-    if (event.target.id === 'retry-btn') {
-      this._handleRetryGeneration();
-    }
-  });
-
-  // Keyboard shortcuts
-  document.addEventListener('keydown', (event) => {
-    this._handleKeyboardShortcuts(event);
-  });
-
-  // Back to menu navigation
-  this.#backToMenuBtn.addEventListener('click', () => {
-    this._handleNavigateBack();
-  });
-}
-
-/**
- * Handle direction selection with validation and state updates
- */
-async _handleDirectionSelection(event) {
-  const directionId = event.target.value;
-
-  try {
-    // Clear previous state
-    this._clearPreviousSelection();
-
-    if (!directionId) {
-      this._updateUIState('no-selection');
-      return;
-    }
-
-    // Validate selection
-    const validationResult = validateDirectionSelection(directionId);
-    if (!validationResult.isValid) {
-      throw new ClicheValidationError('Invalid direction selection', validationResult);
-    }
-
-    // Update loading state
-    this._updateUIState('loading-selection');
-
-    // Load direction and concept data
-    const [direction, concept] = await Promise.all([
-      this._getDirectionById(directionId),
-      this._getConceptByDirectionId(directionId)
-    ]);
-
-    // Update controller state
-    this.#selectedDirectionId = directionId;
-    this.#currentDirection = direction;
-    this.#currentConcept = concept;
-
-    // Check if clichés already exist
-    const existingCliches = await this._characterBuilderService.getClichesByDirectionId(directionId);
-
-    if (existingCliches) {
-      // Display existing clichés
-      this.#currentCliches = existingCliches;
-      this._updateUIState('has-results');
-      this._displayDirectionInfo(direction, concept);
-      await this._displayCliches(existingCliches);
-      this._showStatusMessage('Clichés already exist for this direction.', 'info');
-    } else {
-      // Ready for generation
-      this._updateUIState('ready-to-generate');
-      this._displayDirectionInfo(direction, concept);
-      this._showStatusMessage('Ready to generate clichés for this direction.', 'success');
-    }
-
-    // Add to state history
-    this._addToStateHistory('direction-selected', { directionId, hasExisting: !!existingCliches });
-
-  } catch (error) {
-    this._handleError('Direction selection failed', error);
-    this._updateUIState('selection-error');
-    this._showStatusMessage('Failed to load direction details. Please try again.', 'error');
-  }
-}
-```
-
-### 3. Form Validation System
-
-Implement comprehensive form validation:
-
-```javascript
-/**
- * Validate form state before submission
- */
-_validateForm() {
-  const errors = [];
-
-  // Check direction selection
-  if (!this.#selectedDirectionId) {
-    errors.push({
-      field: 'direction-selector',
-      message: 'Please select a thematic direction'
-    });
-  }
-
-  // Check for generation prerequisites
-  try {
-    const prerequisites = validateGenerationPrerequisites({
-      directionId: this.#selectedDirectionId,
-      direction: this.#currentDirection,
-      concept: this.#currentConcept,
-      isGenerating: this.#isGenerating
-    });
-
-    if (!prerequisites.isValid) {
-      errors.push(...prerequisites.errors);
-    }
-  } catch (error) {
-    errors.push({
-      field: 'general',
-      message: 'Validation failed. Please check your selection and try again.'
-    });
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
-
 /**
  * Display form validation errors to the user
+ * Enhances existing validation with UI feedback
  */
-_displayFormErrors(errors) {
+#displayFormErrors(errors) {
   // Clear previous errors
-  this._clearFormErrors();
+  this.#clearFormErrors();
 
   errors.forEach(error => {
     const fieldElement = document.getElementById(error.field);
@@ -290,8 +85,8 @@ _displayFormErrors(errors) {
     }
   });
 
-  // Show general error message
-  this._showStatusMessage('Please fix the errors below and try again.', 'error');
+  // Show general error message using existing method
+  this.#showStatusMessage('Please fix the errors below and try again.', 'error');
 
   // Focus first error field for accessibility
   const firstErrorField = document.querySelector('.cb-form-error');
@@ -303,7 +98,7 @@ _displayFormErrors(errors) {
 /**
  * Clear all form validation errors
  */
-_clearFormErrors() {
+#clearFormErrors() {
   // Remove error classes and attributes
   document.querySelectorAll('.cb-form-error').forEach(element => {
     element.classList.remove('cb-form-error');
@@ -316,388 +111,542 @@ _clearFormErrors() {
     element.remove();
   });
 }
-```
 
-### 4. Generate Button State Management
-
-Implement intelligent button state management:
-
-```javascript
 /**
- * Update generate button state based on current conditions
+ * Validate form before submission
+ * Integrates with existing validation utilities
  */
-_updateGenerateButtonState() {
-  const button = this.#generateBtn;
+#validateForm() {
+  const errors = [];
 
-  if (this.#isGenerating) {
-    // Generating state
-    button.disabled = true;
-    button.textContent = 'Generating...';
-    button.classList.add('cb-button-loading');
-    button.setAttribute('aria-busy', 'true');
-
-  } else if (!this.#selectedDirectionId) {
-    // No selection state
-    button.disabled = true;
-    button.textContent = 'Select Direction First';
-    button.classList.remove('cb-button-loading');
-    button.setAttribute('aria-busy', 'false');
-
-  } else if (this.#currentCliches) {
-    // Already has results state
-    button.disabled = true;
-    button.textContent = 'Clichés Already Exist';
-    button.classList.remove('cb-button-loading');
-    button.setAttribute('aria-busy', 'false');
-
-  } else {
-    // Ready to generate state
-    button.disabled = false;
-    button.textContent = 'Generate Clichés';
-    button.classList.remove('cb-button-loading');
-    button.setAttribute('aria-busy', 'false');
+  // Check direction selection
+  if (!this.#selectedDirectionId) {
+    errors.push({
+      field: 'direction-selector',
+      message: 'Please select a thematic direction'
+    });
   }
 
-  // Update button styling based on state
-  this._updateButtonStyling(button);
-}
-
-/**
- * Handle generate button click with comprehensive validation
- */
-async _handleGenerateClick(event) {
+  // Use existing validation functions from clicheValidator.js
   try {
-    // Prevent multiple submissions
-    if (this.#isGenerating) {
-      return;
-    }
-
-    // Validate form
-    const validation = this._validateForm();
-    if (!validation.isValid) {
-      this._displayFormErrors(validation.errors);
-      return;
-    }
-
-    // Confirm generation if needed
-    const shouldProceed = await this._confirmGeneration();
-    if (!shouldProceed) {
-      return;
-    }
-
-    // Start generation process
-    await this._startGeneration();
-
-  } catch (error) {
-    this._handleError('Generation failed to start', error);
-    this._updateUIState('generation-error');
-  }
-}
-
-/**
- * Start the cliché generation process
- */
-async _startGeneration() {
-  try {
-    // Update state and UI
-    this.#isGenerating = true;
-    this._updateUIState('generating');
-    this._updateGenerateButtonState();
-    this._showStatusMessage('Generating clichés... This may take a few seconds.', 'info');
-
-    // Track generation start
-    this._trackGenerationStart();
-
-    // Generate clichés through controller
-    const cliches = await this._characterBuilderService.generateClichesForDirection(
-      this.#currentConcept,
-      this.#currentDirection
-    );
-
-    // Update state with results
-    this.#currentCliches = cliches;
-    this.#isGenerating = false;
-
-    // Display results
-    this._updateUIState('generation-complete');
-    await this._displayCliches(cliches);
-    this._updateGenerateButtonState();
-    this._showStatusMessage('Clichés generated successfully!', 'success');
-
-    // Track successful generation
-    this._trackGenerationSuccess(cliches);
-
-    // Add to state history
-    this._addToStateHistory('generation-complete', {
+    const prerequisites = validateGenerationPrerequisites({
       directionId: this.#selectedDirectionId,
-      clicheCount: this._countTotalCliches(cliches)
+      direction: this.#currentDirection,
+      concept: this.#currentConcept
     });
 
-  } catch (error) {
-    // Handle generation failure
-    this.#isGenerating = false;
-    this._updateUIState('generation-error');
-    this._updateGenerateButtonState();
-
-    this._handleError('Cliché generation failed', error);
-    this._showStatusMessage('Failed to generate clichés. Please try again.', 'error');
-
-    // Track generation failure
-    this._trackGenerationFailure(error);
-  }
-}
-```
-
-### 5. Status Message System
-
-Implement user feedback through status messages:
-
-```javascript
-/**
- * Display status messages to the user with appropriate styling
- */
-_showStatusMessage(message, type = 'info', duration = 5000) {
-  const container = this.#statusMessages;
-
-  // Create message element
-  const messageElement = document.createElement('div');
-  messageElement.className = `cb-status-message cb-status-${type}`;
-  messageElement.setAttribute('role', type === 'error' ? 'alert' : 'status');
-  messageElement.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
-
-  // Create message content
-  const messageContent = document.createElement('span');
-  messageContent.textContent = message;
-  messageElement.appendChild(messageContent);
-
-  // Add close button for persistent messages
-  if (type === 'error' || duration === null) {
-    const closeButton = document.createElement('button');
-    closeButton.className = 'cb-message-close';
-    closeButton.setAttribute('aria-label', 'Close message');
-    closeButton.innerHTML = '×';
-    closeButton.addEventListener('click', () => {
-      this._removeStatusMessage(messageElement);
-    });
-    messageElement.appendChild(closeButton);
-  }
-
-  // Add to container
-  container.appendChild(messageElement);
-
-  // Auto-remove after duration (if specified)
-  if (duration !== null) {
-    setTimeout(() => {
-      if (messageElement.parentNode) {
-        this._removeStatusMessage(messageElement);
-      }
-    }, duration);
-  }
-
-  // Limit total number of messages
-  this._limitStatusMessages(5);
-}
-
-/**
- * Remove a status message with animation
- */
-_removeStatusMessage(messageElement) {
-  messageElement.classList.add('cb-message-removing');
-  setTimeout(() => {
-    if (messageElement.parentNode) {
-      messageElement.parentNode.removeChild(messageElement);
+    if (!prerequisites.isValid) {
+      errors.push(...prerequisites.errors);
     }
-  }, 300);
-}
+  } catch (error) {
+    errors.push({
+      field: 'general',
+      message: 'Validation failed. Please check your selection.'
+    });
+  }
 
-/**
- * Clear all status messages
- */
-_clearStatusMessages() {
-  const messages = this.#statusMessages.querySelectorAll('.cb-status-message');
-  messages.forEach(message => this._removeStatusMessage(message));
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
 }
 ```
 
-### 6. Keyboard Shortcuts and Accessibility
+### 2. Keyboard Shortcuts Implementation
 
-Implement keyboard navigation and shortcuts:
+Add keyboard navigation and shortcuts to enhance UX:
 
 ```javascript
+/**
+ * Add keyboard shortcuts to existing event listeners
+ * Should be called from _setupEventListeners()
+ */
+#setupKeyboardShortcuts() {
+  document.addEventListener('keydown', (event) => {
+    this.#handleKeyboardShortcuts(event);
+  });
+}
+
 /**
  * Handle keyboard shortcuts for improved user experience
  */
-_handleKeyboardShortcuts(event) {
+#handleKeyboardShortcuts(event) {
   // Generate shortcut: Ctrl/Cmd + Enter
   if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-    if (!this.#generateBtn.disabled) {
+    const generateBtn = this._getElement('generate-btn');
+    if (generateBtn && !generateBtn.disabled) {
       event.preventDefault();
-      this._handleGenerateClick(event);
+      this.#handleGenerateCliches();
     }
     return;
   }
 
   // Escape key: Clear current operation
   if (event.key === 'Escape') {
-    this._handleEscapeKey();
+    this.#handleEscapeKey();
     return;
   }
 
-  // F5 key: Refresh data
+  // F5 key: Refresh data (prevent default browser refresh)
   if (event.key === 'F5' && !event.shiftKey) {
     event.preventDefault();
-    this._handleRefresh();
+    this.#handleRefresh();
     return;
+  }
+
+  // Tab navigation enhancement
+  if (event.key === 'Tab') {
+    this.#enhanceTabNavigation(event);
   }
 }
 
 /**
  * Handle escape key press for canceling operations
  */
-_handleEscapeKey() {
-  // Clear status messages
-  this._clearStatusMessages();
-
+#handleEscapeKey() {
   // Clear form errors
-  this._clearFormErrors();
+  this.#clearFormErrors();
 
-  // If generating, show cancellation option
+  // Clear status messages except critical ones
+  const statusContainer = this._getElement('status-messages');
+  if (statusContainer) {
+    const nonCriticalMessages = statusContainer.querySelectorAll('.cb-message:not(.cb-message-error)');
+    nonCriticalMessages.forEach(msg => msg.remove());
+  }
+
+  // If generating, show info
   if (this.#isGenerating) {
-    this._showStatusMessage('Generation in progress. Please wait for completion.', 'info');
+    this.#showStatusMessage('Generation in progress. Please wait for completion.', 'info');
   }
 }
 
 /**
- * Implement proper focus management for accessibility
+ * Handle data refresh
  */
-_manageFocus() {
-  // Focus management after state changes
-  switch (this._getCurrentState()) {
-    case 'ready-to-generate':
-      this.#generateBtn.focus();
-      break;
+async #handleRefresh() {
+  try {
+    this.#showStatusMessage('Refreshing data...', 'info');
 
-    case 'generation-complete':
-      // Focus first result or generate button
+    // Re-populate direction selector
+    await this.#populateDirectionSelector();
+
+    // Clear current selection if needed
+    if (!this.#currentCliches) {
+      this.#selectedDirectionId = null;
+      this.#currentDirection = null;
+      this.#currentConcept = null;
+    }
+
+    this.#showStatusMessage('Data refreshed successfully', 'success');
+  } catch (error) {
+    this.#showStatusMessage('Failed to refresh data', 'error');
+  }
+}
+```
+
+### 3. Focus Management System
+
+Implement proper focus management for accessibility:
+
+```javascript
+/**
+ * Manage focus after state changes for accessibility
+ */
+#manageFocus(newState) {
+  switch (newState) {
+    case 'ready-to-generate': {
+      const generateBtn = this._getElement('generate-btn');
+      if (generateBtn && !generateBtn.disabled) {
+        generateBtn.focus();
+      }
+      break;
+    }
+
+    case 'generation-complete': {
+      // Focus first result or status message
       const firstResult = document.querySelector('.cliche-category-card');
       if (firstResult) {
+        firstResult.setAttribute('tabindex', '0');
         firstResult.focus();
       } else {
-        this.#generateBtn.focus();
+        const statusMessage = document.querySelector('.cb-message-success');
+        if (statusMessage) {
+          statusMessage.focus();
+        }
       }
       break;
+    }
 
-    case 'generation-error':
-      const retryButton = document.getElementById('retry-btn');
+    case 'generation-error': {
+      // Focus retry button if available
+      const retryButton = document.querySelector('[data-action="retry"]');
       if (retryButton) {
         retryButton.focus();
+      } else {
+        const errorMessage = document.querySelector('.cb-message-error');
+        if (errorMessage) {
+          errorMessage.focus();
+        }
       }
       break;
+    }
+
+    case 'selection-made': {
+      // Keep focus on selector unless generating
+      if (!this.#isGenerating) {
+        const generateBtn = this._getElement('generate-btn');
+        if (generateBtn && !generateBtn.disabled) {
+          generateBtn.focus();
+        }
+      }
+      break;
+    }
   }
+}
+
+/**
+ * Enhance tab navigation for better keyboard accessibility
+ */
+#enhanceTabNavigation(event) {
+  const focusableElements = this.#getFocusableElements();
+  const currentIndex = focusableElements.indexOf(document.activeElement);
+
+  if (event.shiftKey) {
+    // Shift+Tab: Move backwards
+    if (currentIndex === 0) {
+      event.preventDefault();
+      focusableElements[focusableElements.length - 1].focus();
+    }
+  } else {
+    // Tab: Move forwards
+    if (currentIndex === focusableElements.length - 1) {
+      event.preventDefault();
+      focusableElements[0].focus();
+    }
+  }
+}
+
+/**
+ * Get all focusable elements in the form
+ */
+#getFocusableElements() {
+  const selector = 'button:not([disabled]), select:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  return Array.from(document.querySelectorAll(selector))
+    .filter(el => el.offsetParent !== null); // Filter out hidden elements
+}
+```
+
+### 4. Enhanced Button State Management
+
+Improve the existing `#updateGenerateButton()` method:
+
+```javascript
+/**
+ * Enhanced generate button state management
+ * Extends existing #updateGenerateButton() method
+ */
+#updateGenerateButtonEnhanced() {
+  const button = this._getElement('generate-btn');
+  if (!button) return;
+
+  // Remove all state classes
+  button.classList.remove('cb-button-loading', 'cb-button-disabled', 'cb-button-ready', 'cb-button-exists');
+
+  if (this.#isGenerating) {
+    // Generating state with spinner
+    button.disabled = true;
+    button.innerHTML = '<span class="cb-spinner"></span> Generating...';
+    button.classList.add('cb-button-loading');
+    button.setAttribute('aria-busy', 'true');
+    button.setAttribute('aria-label', 'Generating clichés, please wait');
+
+  } else if (!this.#selectedDirectionId) {
+    // No selection state
+    button.disabled = true;
+    button.textContent = 'Select Direction First';
+    button.classList.add('cb-button-disabled');
+    button.setAttribute('aria-busy', 'false');
+    button.setAttribute('aria-label', 'Please select a direction before generating');
+
+  } else if (this.#currentCliches && this.#currentCliches.length > 0) {
+    // Already has results state
+    button.disabled = false;
+    button.textContent = 'Regenerate Clichés';
+    button.classList.add('cb-button-exists');
+    button.setAttribute('aria-busy', 'false');
+    button.setAttribute('aria-label', 'Regenerate clichés for current direction');
+
+  } else {
+    // Ready to generate state
+    button.disabled = false;
+    button.textContent = 'Generate Clichés';
+    button.classList.add('cb-button-ready');
+    button.setAttribute('aria-busy', 'false');
+    button.setAttribute('aria-label', 'Generate clichés for selected direction');
+  }
+
+  // Update button tooltip
+  this.#updateButtonTooltip(button);
+}
+
+/**
+ * Add helpful tooltips to the generate button
+ */
+#updateButtonTooltip(button) {
+  if (button.disabled) {
+    button.title = button.textContent;
+  } else if ((event.ctrlKey || event.metaKey)) {
+    button.title = 'Click or press Ctrl+Enter to generate';
+  } else {
+    button.title = 'Generate clichés for the selected direction';
+  }
+}
+```
+
+### 5. Confirmation Dialog Implementation
+
+Add confirmation dialogs for user actions:
+
+```javascript
+/**
+ * Show confirmation dialog before regenerating
+ */
+async #confirmRegeneration() {
+  if (!this.#currentCliches || this.#currentCliches.length === 0) {
+    return true; // No existing clichés, proceed without confirmation
+  }
+
+  return new Promise((resolve) => {
+    const dialog = this.#createConfirmationDialog({
+      title: 'Regenerate Clichés?',
+      message: 'This will replace the existing clichés. Are you sure you want to continue?',
+      confirmText: 'Regenerate',
+      cancelText: 'Cancel',
+      type: 'warning'
+    });
+
+    dialog.addEventListener('confirm', () => {
+      dialog.remove();
+      resolve(true);
+    });
+
+    dialog.addEventListener('cancel', () => {
+      dialog.remove();
+      resolve(false);
+    });
+
+    document.body.appendChild(dialog);
+    dialog.querySelector('[data-action="cancel"]').focus();
+  });
+}
+
+/**
+ * Create a confirmation dialog element
+ */
+#createConfirmationDialog(options) {
+  const dialog = document.createElement('div');
+  dialog.className = 'cb-dialog-overlay';
+  dialog.setAttribute('role', 'dialog');
+  dialog.setAttribute('aria-modal', 'true');
+  dialog.setAttribute('aria-labelledby', 'dialog-title');
+
+  dialog.innerHTML = `
+    <div class="cb-dialog">
+      <h3 id="dialog-title" class="cb-dialog-title">${options.title}</h3>
+      <p class="cb-dialog-message">${options.message}</p>
+      <div class="cb-dialog-actions">
+        <button class="cb-button cb-button-secondary" data-action="cancel">
+          ${options.cancelText}
+        </button>
+        <button class="cb-button cb-button-${options.type || 'primary'}" data-action="confirm">
+          ${options.confirmText}
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Handle dialog actions
+  dialog.querySelector('[data-action="confirm"]').addEventListener('click', () => {
+    dialog.dispatchEvent(new Event('confirm'));
+  });
+
+  dialog.querySelector('[data-action="cancel"]').addEventListener('click', () => {
+    dialog.dispatchEvent(new Event('cancel'));
+  });
+
+  // Handle escape key
+  dialog.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      dialog.dispatchEvent(new Event('cancel'));
+    }
+  });
+
+  return dialog;
+}
+```
+
+### 6. Enhanced Retry Mechanism
+
+Complete the retry functionality for error states:
+
+```javascript
+/**
+ * Enhanced error handling with retry functionality
+ * Extends existing #handleGenerationError() method
+ */
+#handleGenerationErrorEnhanced(error) {
+  // Call existing error handler
+  this.#handleGenerationError(error);
+
+  // Add retry button to error message
+  const errorContainer = this._getElement('status-messages');
+  if (errorContainer) {
+    const lastError = errorContainer.querySelector('.cb-message-error:last-child');
+    if (lastError && !lastError.querySelector('[data-action="retry"]')) {
+      const retryButton = document.createElement('button');
+      retryButton.className = 'cb-button-small cb-button-retry';
+      retryButton.setAttribute('data-action', 'retry');
+      retryButton.textContent = 'Retry';
+      retryButton.addEventListener('click', () => this.#handleRetryGeneration());
+      lastError.appendChild(retryButton);
+    }
+  }
+
+  // Update UI state
+  this.#manageFocus('generation-error');
+}
+
+/**
+ * Handle retry generation after error
+ */
+async #handleRetryGeneration() {
+  // Clear error messages
+  const errorMessages = document.querySelectorAll('.cb-message-error');
+  errorMessages.forEach(msg => msg.remove());
+
+  // Reset state
+  this.#isGenerating = false;
+  this.#updateGenerateButtonEnhanced();
+
+  // Retry generation
+  await this.#handleGenerateCliches();
 }
 ```
 
 ## Implementation Tasks
 
-### Task 1: Direction Selector Implementation (60 minutes)
+### Task 1: Form Validation UI (45 minutes)
 
-- [ ] Implement dropdown population logic with concept grouping
-- [ ] Add selection event handler with validation
-- [ ] Implement cached data loading and error handling
-- [ ] Test dropdown behavior and performance
-
-### Task 2: Form Validation System (45 minutes)
-
-- [ ] Create comprehensive form validation logic
-- [ ] Implement error display and clearing mechanisms
-- [ ] Add accessibility attributes for form errors
+- [ ] Implement `#displayFormErrors()` method for visual error feedback
+- [ ] Implement `#clearFormErrors()` method for error cleanup
+- [ ] Enhance `#validateForm()` to integrate with existing validators
+- [ ] Add CSS classes for error states (.cb-form-error, .cb-field-error)
 - [ ] Test validation with various input scenarios
 
-### Task 3: Generate Button State Management (30 minutes)
+### Task 2: Keyboard Shortcuts (30 minutes)
 
-- [ ] Implement button state logic based on current conditions
-- [ ] Add loading states and visual feedback
-- [ ] Connect button events to generation process
-- [ ] Test button behavior across different states
+- [ ] Implement `#setupKeyboardShortcuts()` method
+- [ ] Add Ctrl+Enter for generate action
+- [ ] Add Escape key handling for clearing operations
+- [ ] Add F5 override for data refresh
+- [ ] Test keyboard navigation flow
 
-### Task 4: Status Message System (30 minutes)
+### Task 3: Focus Management (30 minutes)
 
-- [ ] Create status message display functionality
-- [ ] Implement different message types (success, error, info)
-- [ ] Add auto-dismiss and manual close options
-- [ ] Test message accessibility and user experience
+- [ ] Implement `#manageFocus()` method for state-based focus
+- [ ] Add `#enhanceTabNavigation()` for better keyboard accessibility
+- [ ] Implement `#getFocusableElements()` helper
+- [ ] Add proper tabindex and ARIA attributes
+- [ ] Test with screen readers
 
-### Task 5: Event Handling and User Interactions (45 minutes)
+### Task 4: Enhanced Button States (20 minutes)
 
-- [ ] Set up all form event listeners
-- [ ] Implement keyboard shortcuts and navigation
-- [ ] Add retry and error recovery mechanisms
-- [ ] Test complete user interaction flows
+- [ ] Enhance existing `#updateGenerateButton()` method
+- [ ] Add loading spinner for generation state
+- [ ] Add regenerate state for existing clichés
+- [ ] Implement `#updateButtonTooltip()` for helpful hints
+- [ ] Style new button states in CSS
 
-### Task 6: Integration and Testing (30 minutes)
+### Task 5: Confirmation Dialogs (25 minutes)
 
-- [ ] Connect form logic to existing controller methods
-- [ ] Test integration with service layer
-- [ ] Verify error handling and edge cases
-- [ ] Conduct accessibility and usability testing
+- [ ] Implement `#confirmRegeneration()` method
+- [ ] Create `#createConfirmationDialog()` helper
+- [ ] Add dialog styling and animations
+- [ ] Test dialog accessibility and keyboard navigation
+- [ ] Integrate with generation flow
+
+### Task 6: Complete Retry Mechanism (20 minutes)
+
+- [ ] Enhance `#handleGenerationError()` with retry button
+- [ ] Implement `#handleRetryGeneration()` method
+- [ ] Test retry flow with various error scenarios
+- [ ] Ensure proper state cleanup on retry
+
+### Task 7: Integration and Testing (30 minutes)
+
+- [ ] Integrate all enhancements with existing controller
+- [ ] Update `_setupEventListeners()` to include new handlers
+- [ ] Test complete user flows
+- [ ] Verify accessibility compliance
+- [ ] Performance testing for smooth interactions
 
 ## Acceptance Criteria
 
 ### Functional Requirements
 
-- [ ] **Direction Selection**: Dropdown populates with grouped directions and handles selection properly
-- [ ] **Form Validation**: Form validates input and displays clear error messages
-- [ ] **Generate Button**: Button state changes appropriately based on conditions
-- [ ] **Status Messages**: User receives clear feedback for all operations
-- [ ] **Error Handling**: Graceful error recovery with user-friendly messages
-- [ ] **Integration**: Form connects properly to existing controller and service layers
+- [ ] **Form Validation**: Visual error feedback with clear messages
+- [ ] **Keyboard Shortcuts**: Ctrl+Enter, Escape, and F5 work as expected
+- [ ] **Focus Management**: Proper focus handling after state changes
+- [ ] **Button States**: All button states display correctly
+- [ ] **Confirmation Dialogs**: User confirmation before replacing clichés
+- [ ] **Retry Mechanism**: Complete retry functionality in error states
 
 ### User Experience Requirements
 
-- [ ] **Responsive Interactions**: All interactions work smoothly on mobile and desktop
-- [ ] **Loading States**: Clear visual feedback during async operations
-- [ ] **Error Recovery**: Users can easily recover from errors and retry operations
-- [ ] **Keyboard Navigation**: Complete keyboard accessibility for all functionality
-- [ ] **Screen Reader Support**: Proper announcements and accessibility attributes
+- [ ] **Accessibility**: Full keyboard navigation and screen reader support
+- [ ] **Visual Feedback**: Clear loading states and error messages
+- [ ] **Responsive**: All enhancements work on mobile and desktop
+- [ ] **Performance**: Smooth interactions without UI blocking
+- [ ] **Error Recovery**: Easy recovery from error states
 
 ### Technical Requirements
 
-- [ ] **Event Handling**: Proper event listener setup and cleanup
-- [ ] **State Management**: Consistent state updates and validation
-- [ ] **Performance**: Smooth interactions without blocking the UI
-- [ ] **Error Boundaries**: Comprehensive error handling without crashes
-- [ ] **Memory Management**: No memory leaks from event listeners
+- [ ] **Integration**: Seamless integration with existing controller code
+- [ ] **No Breaking Changes**: All existing functionality continues to work
+- [ ] **Clean Code**: Follows project patterns and conventions
+- [ ] **Memory Management**: Proper cleanup of event listeners
+- [ ] **Test Coverage**: Unit tests for new functionality
 
 ## Testing Strategy
 
 ### Unit Testing
 
 ```javascript
-// Example test structure for form interactions
-describe('ClichesGeneratorController - Form Interactions', () => {
-  let controller, mockService, mockEventBus;
-
-  beforeEach(() => {
-    // Setup test environment
-  });
-
-  describe('Direction Selection', () => {
-    it('should populate dropdown with grouped directions', async () => {
-      // Test dropdown population
+// Test structure for new enhancements
+describe('ClichesGeneratorController - UI Enhancements', () => {
+  describe('Form Validation UI', () => {
+    it('should display validation errors visually', () => {
+      // Test error display
     });
 
-    it('should handle direction selection with validation', async () => {
-      // Test selection handling
+    it('should clear validation errors properly', () => {
+      // Test error cleanup
     });
   });
 
-  describe('Form Validation', () => {
-    it('should validate form state before submission', () => {
-      // Test validation logic
+  describe('Keyboard Shortcuts', () => {
+    it('should handle Ctrl+Enter for generation', () => {
+      // Test keyboard shortcut
     });
 
-    it('should display and clear error messages', () => {
-      // Test error handling
+    it('should handle Escape key for cancel', () => {
+      // Test escape handling
+    });
+  });
+
+  describe('Focus Management', () => {
+    it('should manage focus after state changes', () => {
+      // Test focus management
     });
   });
 });
@@ -705,74 +654,66 @@ describe('ClichesGeneratorController - Form Interactions', () => {
 
 ### Integration Testing
 
-- [ ] Test complete form workflow from selection to generation
-- [ ] Verify integration with service layer and data persistence
+- [ ] Test complete workflows with all enhancements
+- [ ] Verify keyboard navigation through entire form
 - [ ] Test error scenarios and recovery mechanisms
-- [ ] Validate accessibility features with screen readers
-
-### User Acceptance Testing
-
-- [ ] Test user flows with actual thematic direction data
-- [ ] Verify form usability on different devices
-- [ ] Test error scenarios from user perspective
-- [ ] Validate keyboard navigation and shortcuts
+- [ ] Validate accessibility with automated tools
 
 ## Definition of Done
 
-- [ ] All form controls are functional and properly validated
-- [ ] Direction selector populates and handles selection correctly
-- [ ] Generate button state management works across all scenarios
-- [ ] Status message system provides clear user feedback
-- [ ] Form integrates properly with existing controller architecture
-- [ ] Comprehensive error handling and recovery mechanisms
-- [ ] Keyboard navigation and accessibility features implemented
-- [ ] All acceptance criteria verified through testing
-- [ ] Code follows project conventions and patterns
-- [ ] Integration tests pass and cover critical user flows
+- [ ] All enhancement tasks completed and tested
+- [ ] Form validation provides visual feedback
+- [ ] Keyboard shortcuts implemented and documented
+- [ ] Focus management improves accessibility
+- [ ] Button states enhanced with better UX
+- [ ] Confirmation dialogs prevent accidental data loss
+- [ ] Retry mechanism works for all error states
+- [ ] Integration tests pass
+- [ ] Code follows project conventions
+- [ ] No regression in existing functionality
 
 ## Dependencies
 
 ### Upstream Dependencies
 
-- **CLIGEN-010**: CSS Styling & Responsive Design (styling for form elements)
-- `ClichesGeneratorController.js` - Controller foundation and methods
-- `BaseCharacterBuilderController.js` - Base functionality and patterns
-- Character builder service layer - Data operations and validation
+- **CLIGEN-010**: CSS Styling for new UI elements
+- `ClichesGeneratorController.js` - Existing controller implementation
+- `BaseCharacterBuilderController.js` - Base class methods
+- `clicheValidator.js` - Validation utilities
 
 ### Downstream Dependencies
 
-- **CLIGEN-012**: Results Display & Categorization (displays generated results)
+- **CLIGEN-012**: Results Display (uses enhanced UI state)
 
 ## Notes
 
-### Integration Points
+### Key Changes from Original Workflow
 
-This ticket creates the bridge between the UI layer and the existing controller architecture. Key integration points:
+This updated workflow reflects the actual state of the codebase:
 
-- Form events → Controller methods
-- Service layer calls → UI state updates
-- Error handling → User feedback
-- Data loading → UI state management
+- Most core functionality already exists
+- Focus is on enhancements rather than new implementation
+- Method names use `#` prefix for private fields
+- Leverages existing base class methods
+- Integrates with existing validation and error handling
 
 ### Performance Considerations
 
-- Implement proper event listener cleanup to prevent memory leaks
-- Use debouncing for frequent events (typing, selection changes)
-- Cache dropdown data to avoid repeated API calls
-- Optimize DOM updates for smooth user experience
+- Debounce rapid keyboard events
+- Use CSS transitions for smooth state changes
+- Minimize DOM manipulation in loops
+- Cache frequently accessed elements
 
 ### Accessibility Focus
 
-This ticket has a strong focus on accessibility:
-
-- Proper ARIA attributes and roles
-- Keyboard navigation support
-- Screen reader announcements
-- High contrast and reduced motion support
-- Clear error messaging and recovery paths
+- WCAG 2.1 AA compliance
+- Full keyboard navigation
+- Screen reader compatibility
+- High contrast mode support
+- Reduced motion preferences
 
 ---
 
 **Created**: 2025-08-12  
-**Last Updated**: 2025-08-12  
+**Last Updated**: 2025-01-12 (Corrected to align with actual codebase)  
 **Ticket Status**: Ready for Development

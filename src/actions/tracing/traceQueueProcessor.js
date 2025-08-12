@@ -13,6 +13,7 @@ import {
 } from './tracePriority.js';
 import { QUEUE_CONSTANTS, QUEUE_EVENTS } from './actionTraceTypes.js';
 import { TimerService, defaultTimerService } from './timerService.js';
+import { TraceIdGenerator } from './traceIdGenerator.js';
 
 /**
  * Advanced queue processor for trace output
@@ -24,6 +25,7 @@ export class TraceQueueProcessor {
   #eventBus;
   #config;
   #timerService;
+  #idGenerator;
 
   // Priority queue system
   #priorityQueues;
@@ -54,8 +56,9 @@ export class TraceQueueProcessor {
    * @param {object} [dependencies.eventBus] - Event bus for notifications
    * @param {object} [dependencies.config] - Configuration options
    * @param {object} [dependencies.timerService] - Timer service for scheduling (defaults to real timers)
+   * @param {object} [dependencies.namingOptions] - Options for trace ID generation
    */
-  constructor({ storageAdapter, logger, eventBus, config = {}, timerService }) {
+  constructor({ storageAdapter, logger, eventBus, config = {}, timerService, namingOptions }) {
     // Validate required dependencies
     validateDependency(storageAdapter, 'IStorageAdapter', null, {
       requiredMethods: ['getItem', 'setItem', 'removeItem', 'getAllKeys'],
@@ -65,6 +68,9 @@ export class TraceQueueProcessor {
     this.#logger = ensureValidLogger(logger, 'TraceQueueProcessor');
     this.#eventBus = eventBus;
     this.#timerService = timerService || defaultTimerService;
+    
+    // Initialize ID generator with naming options
+    this.#idGenerator = new TraceIdGenerator(namingOptions || {});
 
     // Initialize configuration
     this.#config = {
@@ -327,10 +333,8 @@ export class TraceQueueProcessor {
    * @returns {string} Unique item ID
    */
   #generateItemId(trace) {
-    const timestamp = Date.now();
-    const actionId = trace.actionId || 'unknown';
-    const sanitized = actionId.replace(/[^a-zA-Z0-9_-]/g, '-');
-    return `${sanitized}_${timestamp}_${Math.random().toString(36).substr(2, 9)}`;
+    // Use the shared ID generator for consistent naming
+    return this.#idGenerator.generateId(trace);
   }
 
   /**
@@ -974,7 +978,10 @@ export class TraceQueueProcessor {
       try {
         await this.#timerService.waitForCompletion();
       } catch (error) {
-        this.#logger.warn('TraceQueueProcessor: Error waiting for timer completion', error);
+        this.#logger.warn(
+          'TraceQueueProcessor: Error waiting for timer completion',
+          error
+        );
       }
     }
 

@@ -29,6 +29,28 @@ export class TimerService {
       clearTimeout(timerId);
     }
   }
+
+  /**
+   * Schedule a repeating callback to be executed at intervals
+   *
+   * @param {Function} callback - Function to execute
+   * @param {number} delay - Interval in milliseconds
+   * @returns {number|NodeJS.Timeout} Timer ID for cancellation
+   */
+  setInterval(callback, delay) {
+    return setInterval(callback, delay);
+  }
+
+  /**
+   * Clear a scheduled interval
+   *
+   * @param {number|NodeJS.Timeout} timerId - Timer ID to clear
+   */
+  clearInterval(timerId) {
+    if (timerId) {
+      clearInterval(timerId);
+    }
+  }
 }
 
 /**
@@ -94,6 +116,30 @@ export class TestTimerService extends TimerService {
   }
 
   /**
+   * Schedule a repeating callback (stores it for manual triggering)
+   * For testing, intervals are treated as one-time timers
+   *
+   * @param {Function} callback - Function to execute
+   * @param {number} delay - Delay in milliseconds (stored but not enforced)
+   * @returns {number} Timer ID for cancellation
+   */
+  setInterval(callback, delay) {
+    // For testing purposes, treat setInterval like setTimeout
+    // Tests can manually re-trigger as needed
+    return this.setTimeout(callback, delay);
+  }
+
+  /**
+   * Clear a scheduled interval
+   *
+   * @param {number} timerId - Timer ID to clear
+   */
+  clearInterval(timerId) {
+    // Use the same clearing mechanism as clearTimeout
+    this.clearTimeout(timerId);
+  }
+
+  /**
    * Trigger all pending timers immediately
    * Useful for testing immediate execution scenarios
    *
@@ -146,7 +192,9 @@ export class TestTimerService extends TimerService {
       }
 
       if (iterationCount >= maxIterations) {
-        console.warn('TestTimerService: Maximum trigger iterations reached, may have pending operations');
+        console.warn(
+          'TestTimerService: Maximum trigger iterations reached, may have pending operations'
+        );
       }
     } finally {
       this.#isProcessingBatch = false;
@@ -274,12 +322,14 @@ export class TestTimerService extends TimerService {
         await Promise.allSettled([...this.#runningCallbacks]);
       }
       // Small delay to allow any new callbacks to be registered
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
       attempts++;
     }
 
     if (attempts >= maxAttempts) {
-      console.warn(`TestTimerService waitForCompletion: Max attempts reached. Running: ${this.#runningCallbacks.size}, Pending: ${this.#pendingTimers.length}`);
+      console.warn(
+        `TestTimerService waitForCompletion: Max attempts reached. Running: ${this.#runningCallbacks.size}, Pending: ${this.#pendingTimers.length}`
+      );
     }
   }
 

@@ -15,6 +15,10 @@ import { ActionTraceOutputService } from '../../actions/tracing/actionTraceOutpu
 import { IndexedDBStorageAdapter } from '../../storage/indexedDBStorageAdapter.js';
 import { JsonTraceFormatter } from '../../actions/tracing/jsonTraceFormatter.js';
 import { HumanReadableFormatter } from '../../actions/tracing/humanReadableFormatter.js';
+import {
+  NamingStrategy,
+  TimestampFormat,
+} from '../../actions/tracing/actionTraceOutputService.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -143,7 +147,7 @@ export function registerActionTracing(container) {
     `Action Tracing Registration: Registered ${String(actionTracingTokens.IHumanReadableFormatter)}.`
   );
 
-  // Register enhanced ActionTraceOutputService with IndexedDB support
+  // Register enhanced ActionTraceOutputService with IndexedDB support and naming options
   container.register(
     actionTracingTokens.IActionTraceOutputService,
     (c) =>
@@ -155,6 +159,12 @@ export function registerActionTracing(container) {
         humanReadableFormatter: c.resolve(
           actionTracingTokens.IHumanReadableFormatter
         ),
+        namingOptions: {
+          strategy: NamingStrategy.TIMESTAMP_FIRST,
+          timestampFormat: TimestampFormat.COMPACT,
+          includeHash: true,
+          hashLength: 6,
+        },
       }),
     { lifecycle: 'singleton' }
   );
