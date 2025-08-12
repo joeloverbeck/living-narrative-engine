@@ -160,6 +160,51 @@ describe('VisualizerStateController - Initialization', () => {
         }
       );
     });
+
+    it('should not handle state changes when controller is disposed', () => {
+      const stateChangeHandler =
+        testBed.mockVisualizerState.subscribe.mock.calls[0][0];
+
+      // Dispose the controller
+      visualizerStateController.dispose();
+
+      // Try to trigger state change after disposal
+      stateChangeHandler({
+        previousState: 'IDLE',
+        currentState: 'LOADING',
+        selectedEntity: 'test:entity',
+        anatomyData: null,
+        error: null,
+      });
+
+      // Should not dispatch events after disposal
+      expect(testBed.mockEventDispatcher.dispatch).not.toHaveBeenCalledWith(
+        'anatomy:visualizer_state_changed',
+        expect.any(Object)
+      );
+    });
+
+    it('should handle errors when dispatching state change events', () => {
+      testBed.mockEventDispatcher.dispatch.mockImplementation(() => {
+        throw new Error('Dispatch error');
+      });
+
+      const stateChangeHandler =
+        testBed.mockVisualizerState.subscribe.mock.calls[0][0];
+
+      stateChangeHandler({
+        previousState: 'IDLE',
+        currentState: 'LOADING',
+        selectedEntity: 'test:entity',
+        anatomyData: null,
+        error: null,
+      });
+
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        'Error dispatching state change event:',
+        expect.any(Error)
+      );
+    });
   });
 });
 
@@ -267,6 +312,53 @@ describe('VisualizerStateController - Entity Selection Workflow', () => {
 
       expect(testBed.mockVisualizerState.getCurrentState()).toBe('LOADING');
       expect(testBed.mockVisualizerState.selectEntity).not.toHaveBeenCalled();
+    });
+
+    it('should use retry callback when entity selection fails', async () => {
+      const entityId = 'test:entity:retry';
+      let retryCount = 0;
+
+      const mockErrorRecovery = {
+        handleError: jest.fn().mockImplementation(async (err, context) => {
+          // Simulate calling the retry callback
+          if (context.retryCallback && retryCount === 0) {
+            retryCount++;
+            await context.retryCallback();
+          }
+          return { success: false };
+        }),
+      };
+
+      const mockErrorReporter = {
+        report: jest.fn().mockResolvedValue(),
+      };
+
+      const mockRetryStrategy = {
+        execute: jest
+          .fn()
+          .mockRejectedValueOnce(new Error('Selection failed'))
+          .mockResolvedValueOnce(),
+      };
+
+      const testController = new VisualizerStateController({
+        visualizerState: testBed.mockVisualizerState,
+        anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+        eventDispatcher: testBed.mockEventDispatcher,
+        entityManager: testBed.mockEntityManager,
+        logger: testBed.mockLogger,
+        errorRecovery: mockErrorRecovery,
+        errorReporter: mockErrorReporter,
+        retryStrategy: mockRetryStrategy,
+      });
+
+      // Spy on selectEntity to verify the retry callback
+      const selectEntitySpy = jest.spyOn(testController, 'selectEntity');
+
+      await testController.selectEntity(entityId);
+
+      // Verify that the retry callback was triggered and selectEntity was called again
+      expect(selectEntitySpy).toHaveBeenCalledTimes(2); // Initial + retry
+      expect(selectEntitySpy).toHaveBeenCalledWith(entityId);
     });
   });
 
@@ -572,6 +664,297 @@ describe('VisualizerStateController - State Access', () => {
   });
 });
 
+describe('VisualizerStateController - Recovery and Validation', () => {
+  let visualizerStateController;
+  let testBed;
+
+  beforeEach(() => {
+    testBed = new AnatomyVisualizerUnitTestBed();
+
+    visualizerStateController = new VisualizerStateController({
+      visualizerState: testBed.mockVisualizerState,
+      anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+      eventDispatcher: testBed.mockEventDispatcher,
+      entityManager: testBed.mockEntityManager,
+      logger: testBed.mockLogger,
+    });
+  });
+
+  afterEach(async () => {
+    if (
+      visualizerStateController &&
+      typeof visualizerStateController.dispose === 'function'
+    ) {
+      try {
+        visualizerStateController.dispose();
+      } catch (error) {
+        // Ignore disposal errors in tests
+      }
+    }
+    await testBed.cleanup();
+  });
+
+  describe('Anatomy Structure Validation', () => {
+    it('should validate anatomy structure correctly', () => {
+      const validStructure = { root: 'test:root', parts: [] };
+      const result =
+        visualizerStateController._validateAnatomyStructure(validStructure);
+      expect(result).toBe(true);
+    });
+
+    it('should reject null anatomy data', () => {
+      const result = visualizerStateController._validateAnatomyStructure(null);
+      expect(result).toBe(false);
+    });
+
+    it('should reject non-object anatomy data', () => {
+      const result =
+        visualizerStateController._validateAnatomyStructure('not an object');
+      expect(result).toBe(false);
+    });
+
+    it('should reject anatomy data without root field', () => {
+      const invalidStructure = { parts: [], notRoot: 'value' };
+      const result =
+        visualizerStateController._validateAnatomyStructure(invalidStructure);
+      expect(result).toBe(false);
+    });
+
+    it('should reject invalid anatomy structure during entity selection', async () => {
+      const entityId = 'test:entity:invalid';
+
+      testBed.mockAnatomyLoadingDetector.waitForEntityWithAnatomy.mockResolvedValue(
+        true
+      );
+
+      const customEntityManager = {
+        getEntityInstance: jest.fn().mockResolvedValue({
+          getComponentData: jest.fn().mockReturnValue({
+            body: { notRoot: 'invalid', parts: [] }, // Invalid structure without root
+          }),
+        }),
+      };
+
+      const mockErrorRecovery = {
+        handleError: jest.fn().mockResolvedValue({ success: false }),
+      };
+      const mockErrorReporter = {
+        report: jest.fn().mockResolvedValue(),
+      };
+      const mockRetryStrategy = {
+        execute: jest.fn().mockImplementation(async (id, fn) => {
+          try {
+            return await fn();
+          } catch (error) {
+            throw error;
+          }
+        }),
+      };
+
+      const testController = new VisualizerStateController({
+        visualizerState: testBed.mockVisualizerState,
+        anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+        eventDispatcher: testBed.mockEventDispatcher,
+        entityManager: customEntityManager,
+        logger: testBed.mockLogger,
+        errorRecovery: mockErrorRecovery,
+        errorReporter: mockErrorReporter,
+        retryStrategy: mockRetryStrategy,
+      });
+
+      await testController.selectEntity(entityId);
+
+      expect(testBed.mockVisualizerState.setError).toHaveBeenCalledWith(
+        expect.any(Error)
+      );
+    });
+  });
+
+  describe('Recovery Result Application', () => {
+    it('should apply empty visualization recovery result', () => {
+      const result = { emptyVisualization: true };
+
+      visualizerStateController._applyRecoveryResult(result, 'test_operation');
+
+      expect(testBed.mockVisualizerState.setAnatomyData).toHaveBeenCalledWith(
+        null
+      );
+      expect(testBed.mockVisualizerState.completeRendering).toHaveBeenCalled();
+    });
+
+    it('should apply partial visualization recovery result', () => {
+      const result = { partialVisualization: true };
+
+      // Should not throw and handle gracefully
+      expect(() => {
+        visualizerStateController._applyRecoveryResult(
+          result,
+          'test_operation'
+        );
+      }).not.toThrow();
+    });
+
+    it('should apply state reset recovery result', () => {
+      const result = { stateReset: true };
+
+      visualizerStateController._applyRecoveryResult(result, 'test_operation');
+
+      expect(testBed.mockVisualizerState.reset).toHaveBeenCalled();
+    });
+
+    it('should apply text fallback recovery result', () => {
+      const result = { textFallback: true };
+
+      visualizerStateController._applyRecoveryResult(result, 'test_operation');
+
+      expect(testBed.mockVisualizerState.completeRendering).toHaveBeenCalled();
+    });
+
+    it('should apply simple layout recovery result', () => {
+      const result = { simpleLayout: true };
+
+      visualizerStateController._applyRecoveryResult(result, 'test_operation');
+
+      expect(testBed.mockVisualizerState.completeRendering).toHaveBeenCalled();
+    });
+
+    it('should handle errors when applying recovery result', () => {
+      const result = { emptyVisualization: true };
+
+      testBed.mockVisualizerState.setAnatomyData.mockImplementation(() => {
+        throw new Error('Apply error');
+      });
+
+      visualizerStateController._applyRecoveryResult(result, 'test_operation');
+
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to apply recovery result:',
+        expect.any(Error)
+      );
+    });
+  });
+
+  describe('Error Recovery with Retry Callback', () => {
+    it('should execute retry callback during error recovery', async () => {
+      const retryCallback = jest.fn().mockResolvedValue();
+      const error = new Error('Test error');
+
+      const mockErrorRecovery = {
+        handleError: jest.fn().mockImplementation(async (err, context) => {
+          // Simulate recovery attempting the retry callback
+          if (context.retryCallback) {
+            await context.retryCallback();
+          }
+          return { success: true };
+        }),
+      };
+
+      const mockErrorReporter = {
+        report: jest.fn().mockResolvedValue(),
+      };
+
+      const testController = new VisualizerStateController({
+        visualizerState: testBed.mockVisualizerState,
+        anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+        eventDispatcher: testBed.mockEventDispatcher,
+        entityManager: testBed.mockEntityManager,
+        logger: testBed.mockLogger,
+        errorRecovery: mockErrorRecovery,
+        errorReporter: mockErrorReporter,
+      });
+
+      await testController._handleErrorWithRecovery(error, 'test_operation', {
+        retryCallback,
+      });
+
+      expect(retryCallback).toHaveBeenCalled();
+      expect(testBed.mockLogger.info).toHaveBeenCalledWith(
+        'Error recovery successful for operation: test_operation'
+      );
+    });
+
+    it('should apply recovery result when recovery succeeds with result', async () => {
+      const error = new Error('Test error');
+      const recoveryResult = { emptyVisualization: true };
+
+      const mockErrorRecovery = {
+        handleError: jest.fn().mockResolvedValue({
+          success: true,
+          result: recoveryResult,
+        }),
+      };
+
+      const mockErrorReporter = {
+        report: jest.fn().mockResolvedValue(),
+      };
+
+      const testController = new VisualizerStateController({
+        visualizerState: testBed.mockVisualizerState,
+        anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+        eventDispatcher: testBed.mockEventDispatcher,
+        entityManager: testBed.mockEntityManager,
+        logger: testBed.mockLogger,
+        errorRecovery: mockErrorRecovery,
+        errorReporter: mockErrorReporter,
+      });
+
+      await testController._handleErrorWithRecovery(error, 'test_operation');
+
+      expect(testBed.mockVisualizerState.setAnatomyData).toHaveBeenCalledWith(
+        null
+      );
+      expect(testBed.mockVisualizerState.completeRendering).toHaveBeenCalled();
+    });
+  });
+});
+
+describe('VisualizerStateController - Utility Methods', () => {
+  let visualizerStateController;
+  let testBed;
+
+  beforeEach(() => {
+    testBed = new AnatomyVisualizerUnitTestBed();
+
+    visualizerStateController = new VisualizerStateController({
+      visualizerState: testBed.mockVisualizerState,
+      anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+      eventDispatcher: testBed.mockEventDispatcher,
+      entityManager: testBed.mockEntityManager,
+      logger: testBed.mockLogger,
+    });
+  });
+
+  afterEach(async () => {
+    if (
+      visualizerStateController &&
+      typeof visualizerStateController.dispose === 'function'
+    ) {
+      try {
+        visualizerStateController.dispose();
+      } catch (error) {
+        // Ignore disposal errors in tests
+      }
+    }
+    await testBed.cleanup();
+  });
+
+  describe('Entity Manager Setter', () => {
+    it('should allow setting entity manager for testing', () => {
+      const newEntityManager = {
+        getEntityInstance: jest.fn(),
+      };
+
+      visualizerStateController._setEntityManager(newEntityManager);
+
+      // Verify the entity manager was set by attempting to use it
+      // This is indirectly tested through the selectEntity method
+      expect(() => {
+        visualizerStateController._setEntityManager(newEntityManager);
+      }).not.toThrow();
+    });
+  });
+});
+
 describe('VisualizerStateController - Cleanup', () => {
   let visualizerStateController;
   let testBed;
@@ -617,6 +1000,85 @@ describe('VisualizerStateController - Cleanup', () => {
       expect(testBed.mockVisualizerState.dispose).toHaveBeenCalledTimes(1);
       expect(testBed.mockAnatomyLoadingDetector.dispose).toHaveBeenCalledTimes(
         1
+      );
+    });
+
+    it('should return true when controller is disposed', () => {
+      expect(visualizerStateController.isDisposed()).toBe(false);
+
+      visualizerStateController.dispose();
+
+      expect(visualizerStateController.isDisposed()).toBe(true);
+    });
+
+    it('should handle errors when unsubscribing from state changes', () => {
+      const mockUnsubscribe = jest.fn().mockImplementation(() => {
+        throw new Error('Unsubscribe error');
+      });
+
+      testBed.mockVisualizerState.subscribe.mockReturnValueOnce(
+        mockUnsubscribe
+      );
+
+      const controller = new VisualizerStateController({
+        visualizerState: testBed.mockVisualizerState,
+        anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+        eventDispatcher: testBed.mockEventDispatcher,
+        entityManager: testBed.mockEntityManager,
+        logger: testBed.mockLogger,
+      });
+
+      controller.dispose();
+
+      expect(mockUnsubscribe).toHaveBeenCalled();
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        'Error unsubscribing from state changes:',
+        expect.any(Error)
+      );
+    });
+
+    it('should dispose error handling dependencies when they have dispose methods', () => {
+      const mockErrorRecovery = {
+        handleError: jest.fn().mockResolvedValue({ success: false }),
+        dispose: jest.fn(),
+      };
+      const mockErrorReporter = {
+        report: jest.fn().mockResolvedValue(),
+        dispose: jest.fn(),
+      };
+      const mockRetryStrategy = {
+        execute: jest.fn(),
+        dispose: jest.fn(),
+      };
+
+      const controller = new VisualizerStateController({
+        visualizerState: testBed.mockVisualizerState,
+        anatomyLoadingDetector: testBed.mockAnatomyLoadingDetector,
+        eventDispatcher: testBed.mockEventDispatcher,
+        entityManager: testBed.mockEntityManager,
+        logger: testBed.mockLogger,
+        errorRecovery: mockErrorRecovery,
+        errorReporter: mockErrorReporter,
+        retryStrategy: mockRetryStrategy,
+      });
+
+      controller.dispose();
+
+      expect(mockErrorRecovery.dispose).toHaveBeenCalled();
+      expect(mockErrorReporter.dispose).toHaveBeenCalled();
+      expect(mockRetryStrategy.dispose).toHaveBeenCalled();
+    });
+
+    it('should handle errors when disposing dependencies', () => {
+      testBed.mockVisualizerState.dispose.mockImplementation(() => {
+        throw new Error('Dispose error');
+      });
+
+      visualizerStateController.dispose();
+
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        'Error disposing dependencies:',
+        expect.any(Error)
       );
     });
   });

@@ -24,4 +24,6 @@ export const actionTracingTokens = freeze({
   IIndexedDBStorageAdapter: 'IIndexedDBStorageAdapter',
   // JSON formatter for trace output
   IJsonTraceFormatter: 'IJsonTraceFormatter',
+  // Human-readable formatter for trace output
+  IHumanReadableFormatter: 'IHumanReadableFormatter',
 });

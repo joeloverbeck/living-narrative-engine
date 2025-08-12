@@ -1,48 +1,3 @@
-# ACTTRA-027: Add Human-Readable Output Formatter
-
-## Summary
-
-Implement a human-readable text formatter for action traces that creates clear, well-structured text files optimized for human consumption. The formatter should present trace data in an easy-to-read format with sections, tables, and visual hierarchy while adapting detail level based on verbosity settings.
-
-## Status
-
-- **Type**: Implementation
-- **Priority**: Medium
-- **Complexity**: Low
-- **Estimated Time**: 2 hours
-- **Dependencies**:
-  - ACTTRA-024 (ActionTraceOutputService)
-  - ACTTRA-026 (JSON formatter for reference)
-
-## Objectives
-
-### Primary Goals
-
-1. **Create Text Formatter** - Human-friendly text output
-2. **Visual Hierarchy** - Clear sections and structure
-3. **Readability Focus** - Optimize for human understanding
-4. **Verbosity Support** - Adapt detail based on settings
-5. **Table Formatting** - Present data in aligned tables
-6. **Color Support** - Optional ANSI colors for terminals
-
-### Success Criteria
-
-- [ ] Output is easily readable by humans
-- [ ] Clear visual hierarchy with sections
-- [ ] Tables properly aligned with columns
-- [ ] Verbosity controls detail level
-- [ ] Timing information clearly presented
-- [ ] Errors highlighted prominently
-- [ ] File size reasonable for text files
-- [ ] Optional color support for terminals
-
-## Technical Specification
-
-### 1. Human-Readable Formatter Implementation
-
-#### File: `src/actions/tracing/humanReadableFormatter.js`
-
-```javascript
 /**
  * @file Human-readable text formatter for action traces
  * @see jsonTraceFormatter.js
@@ -53,6 +8,7 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
 
 /**
  * ANSI color codes for terminal output
+ *
  * @enum {string}
  */
 const Colors = {
@@ -80,6 +36,7 @@ export class HumanReadableFormatter {
 
   /**
    * Constructor
+   *
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger - Logger service
    * @param {IActionTraceFilter} dependencies.actionTraceFilter - Trace filter
@@ -100,6 +57,7 @@ export class HumanReadableFormatter {
 
   /**
    * Format trace as human-readable text
+   *
    * @param {object} trace - Trace to format
    * @returns {string} Formatted text
    */
@@ -126,9 +84,14 @@ export class HumanReadableFormatter {
 
   /**
    * Check if trace is an execution trace
+   *
+   * @param trace
    * @private
    */
   #isExecutionTrace(trace) {
+    // Note: Consider using instanceof if classes are available for import
+    // e.g., trace instanceof ActionExecutionTrace
+    // This would be more resilient to minification
     return (
       trace.constructor?.name === 'ActionExecutionTrace' ||
       (trace.actionId && trace.execution)
@@ -137,9 +100,14 @@ export class HumanReadableFormatter {
 
   /**
    * Check if trace is a pipeline trace
+   *
+   * @param trace
    * @private
    */
   #isPipelineTrace(trace) {
+    // Note: Consider using instanceof if classes are available for import
+    // e.g., trace instanceof ActionAwareStructuredTrace
+    // This would be more resilient to minification
     return (
       trace.constructor?.name === 'ActionAwareStructuredTrace' ||
       (trace.getTracedActions && typeof trace.getTracedActions === 'function')
@@ -148,6 +116,8 @@ export class HumanReadableFormatter {
 
   /**
    * Format execution trace
+   *
+   * @param trace
    * @private
    */
   #formatExecutionTrace(trace) {
@@ -219,6 +189,8 @@ export class HumanReadableFormatter {
 
   /**
    * Format pipeline trace
+   *
+   * @param trace
    * @private
    */
   #formatPipelineTrace(trace) {
@@ -271,6 +243,11 @@ export class HumanReadableFormatter {
 
   /**
    * Format individual pipeline action
+   *
+   * @param actionId
+   * @param actionData
+   * @param verbosity
+   * @param config
    * @private
    */
   #formatPipelineAction(actionId, actionData, verbosity, config) {
@@ -336,6 +313,12 @@ export class HumanReadableFormatter {
 
   /**
    * Format pipeline stage
+   *
+   * @param number
+   * @param stageName
+   * @param stageData
+   * @param verbosity
+   * @param config
    * @private
    */
   #formatStage(number, stageName, stageData, verbosity, config) {
@@ -369,6 +352,11 @@ export class HumanReadableFormatter {
 
   /**
    * Get stage-specific details
+   *
+   * @param stageName
+   * @param data
+   * @param verbosity
+   * @param config
    * @private
    */
   #getStageDetails(stageName, data, verbosity, config) {
@@ -429,6 +417,8 @@ export class HumanReadableFormatter {
 
   /**
    * Format generic trace
+   *
+   * @param trace
    * @private
    */
   #formatGenericTrace(trace) {
@@ -445,6 +435,8 @@ export class HumanReadableFormatter {
 
   /**
    * Create header section
+   *
+   * @param title
    * @private
    */
   #createHeader(title) {
@@ -459,6 +451,7 @@ export class HumanReadableFormatter {
 
   /**
    * Create footer section
+   *
    * @private
    */
   #createFooter() {
@@ -467,6 +460,9 @@ export class HumanReadableFormatter {
 
   /**
    * Create a section with title and content
+   *
+   * @param title
+   * @param content
    * @private
    */
   #createSection(title, content) {
@@ -494,6 +490,9 @@ export class HumanReadableFormatter {
 
   /**
    * Format error section
+   *
+   * @param error
+   * @param verbosity
    * @private
    */
   #formatErrorSection(error, verbosity) {
@@ -523,6 +522,9 @@ export class HumanReadableFormatter {
 
   /**
    * Format spans section
+   *
+   * @param spans
+   * @param verbosity
    * @private
    */
   #formatSpansSection(spans, verbosity) {
@@ -550,6 +552,8 @@ export class HumanReadableFormatter {
 
   /**
    * Create performance summary
+   *
+   * @param tracedActions
    * @private
    */
   #createPerformanceSummary(tracedActions) {
@@ -570,6 +574,8 @@ export class HumanReadableFormatter {
 
   /**
    * Calculate statistics from traced actions
+   *
+   * @param tracedActions
    * @private
    */
   #calculateStatistics(tracedActions) {
@@ -600,6 +606,8 @@ export class HumanReadableFormatter {
 
   /**
    * Calculate timing from stages
+   *
+   * @param stages
    * @private
    */
   #calculateTiming(stages) {
@@ -619,6 +627,9 @@ export class HumanReadableFormatter {
 
   /**
    * Format object for display
+   *
+   * @param obj
+   * @param indentLevel
    * @private
    */
   #formatObject(obj, indentLevel = 0) {
@@ -648,6 +659,9 @@ export class HumanReadableFormatter {
 
   /**
    * Format timestamp
+   *
+   * @param timestamp
+   * @param relative
    * @private
    */
   #formatTimestamp(timestamp, relative = false) {
@@ -667,6 +681,8 @@ export class HumanReadableFormatter {
 
   /**
    * Format duration in milliseconds
+   *
+   * @param ms
    * @private
    */
   #formatDuration(ms) {
@@ -687,6 +703,8 @@ export class HumanReadableFormatter {
 
   /**
    * Format status with color
+   *
+   * @param success
    * @private
    */
   #formatStatus(success) {
@@ -701,6 +719,8 @@ export class HumanReadableFormatter {
 
   /**
    * Format stage name
+   *
+   * @param stageName
    * @private
    */
   #formatStageName(stageName) {
@@ -712,6 +732,9 @@ export class HumanReadableFormatter {
 
   /**
    * Create separator line
+   *
+   * @param char
+   * @param length
    * @private
    */
   #createSeparator(char = '─', length = null) {
@@ -721,18 +744,26 @@ export class HumanReadableFormatter {
 
   /**
    * Center text
+   *
+   * @param text
    * @private
    */
   #center(text) {
+    // Strip ANSI codes to calculate actual text length
+    const stripAnsi = (str) => str.replace(/\x1b\[[0-9;]*m/g, '');
+    const actualLength = stripAnsi(text).length;
     const padding = Math.max(
       0,
-      Math.floor((this.#lineWidth - text.length) / 2)
+      Math.floor((this.#lineWidth - actualLength) / 2)
     );
     return ' '.repeat(padding) + text;
   }
 
   /**
    * Indent text
+   *
+   * @param text
+   * @param level
    * @private
    */
   #indent(text, level = 1) {
@@ -745,6 +776,8 @@ export class HumanReadableFormatter {
 
   /**
    * Highlight text
+   *
+   * @param text
    * @private
    */
   #highlight(text) {
@@ -753,6 +786,10 @@ export class HumanReadableFormatter {
 
   /**
    * Apply color to text
+   *
+   * @param text
+   * @param color
+   * @param bold
    * @private
    */
   #color(text, color, bold = false) {
@@ -773,6 +810,9 @@ export class HumanReadableFormatter {
 
   /**
    * Format error output
+   *
+   * @param error
+   * @param trace
    * @private
    */
   #formatError(error, trace) {
@@ -785,8 +825,20 @@ export class HumanReadableFormatter {
     if (trace) {
       lines.push('');
       lines.push('Trace Info:');
-      lines.push(`  Action ID: ${trace.actionId || 'unknown'}`);
-      lines.push(`  Type: ${trace.constructor?.name || 'unknown'}`);
+
+      // Safely access actionId
+      try {
+        lines.push(`  Action ID: ${trace.actionId || 'unknown'}`);
+      } catch (e) {
+        lines.push(`  Action ID: <error accessing property>`);
+      }
+
+      // Safely access constructor name
+      try {
+        lines.push(`  Type: ${trace.constructor?.name || 'unknown'}`);
+      } catch (e) {
+        lines.push(`  Type: <error accessing property>`);
+      }
     }
 
     lines.push(this.#createFooter());
@@ -796,115 +848,3 @@ export class HumanReadableFormatter {
 }
 
 export default HumanReadableFormatter;
-```
-
-## Implementation Notes
-
-### Visual Design
-
-1. **Hierarchy**
-   - Headers with double lines (═)
-   - Sections with single lines (─)
-   - Indentation for nested content
-   - Bullet points for lists
-
-2. **Color Usage**
-   - Red: Errors and failures
-   - Green: Success states
-   - Yellow: Stage names
-   - Cyan: Action IDs and highlights
-   - Bold: Headers and emphasis
-
-3. **Alignment**
-   - Tables with aligned columns
-   - Consistent indentation
-   - Centered headers
-   - Right-aligned numbers
-
-### Verbosity Adaptations
-
-1. **Minimal**
-   - Basic information only
-   - Summary statistics
-   - No stage details
-   - Compact format
-
-2. **Standard**
-   - Common details
-   - Stage summaries
-   - Basic timing
-   - Moderate detail
-
-3. **Detailed**
-   - Full stage information
-   - Complete timing
-   - Error stacks
-   - Target details
-
-4. **Verbose**
-   - Everything available
-   - Event payloads
-   - Debug information
-   - Full context
-
-## Testing Requirements
-
-### Unit Tests
-
-```javascript
-// tests/unit/actions/tracing/humanReadableFormatter.unit.test.js
-
-describe('HumanReadableFormatter - Text Formatting', () => {
-  it('should format execution traces readably');
-  it('should format pipeline traces with stages');
-  it('should handle verbosity levels correctly');
-  it('should apply colors when enabled');
-  it('should align tables properly');
-  it('should format timestamps consistently');
-  it('should format durations readably');
-  it('should highlight errors prominently');
-  it('should handle null/undefined gracefully');
-});
-```
-
-## Dependencies
-
-- `IActionTraceFilter` - Configuration
-- `ILogger` - Error logging
-
-### Dependency Injection Setup
-
-#### File: `src/dependencyInjection/tokens/actionTracingTokens.js`
-
-Add the following token to the `actionTracingTokens` object:
-
-```javascript
-// Human-readable formatter for trace output
-IHumanReadableFormatter: 'IHumanReadableFormatter',
-```
-
-#### File: `src/dependencyInjection/registrations/actionTracingRegistrations.js`
-
-Register the service implementation:
-
-```javascript
-import { HumanReadableFormatter } from '../../actions/tracing/humanReadableFormatter.js';
-import { actionTracingTokens } from '../tokens/actionTracingTokens.js';
-
-// In the registration function:
-container.register(
-  actionTracingTokens.IHumanReadableFormatter,
-  HumanReadableFormatter
-);
-```
-
-## Next Steps
-
-1. **ACTTRA-028** - Implement file rotation policies
-2. **ACTTRA-029** - Add trace file naming conventions
-
----
-
-**Ticket Status**: Ready for Implementation
-**Last Updated**: 2025-01-10
-**Author**: System Architect

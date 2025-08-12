@@ -2,42 +2,46 @@
 
 ## Overview
 
-Complete the service integration and dependency injection setup for the Clichés Generator, connecting all services through proper IoC container registration and ensuring seamless data flow between components.
+Complete the service integration for the Clichés Generator by properly configuring the existing dependency injection system and fixing the entry point to use the correct Bootstrap pattern.
 
 ## Status
 
 - **Status**: Ready for Implementation
 - **Priority**: High
-- **Estimated Time**: 4 hours
-- **Complexity**: Medium
+- **Estimated Time**: 2 hours
+- **Complexity**: Low-Medium
 - **Dependencies**: CLIGEN-007 (Error Handling), CLIGEN-005 (Controller), CLIGEN-003 (ClicheGenerator Service)
 - **Blocks**: CLIGEN-009 (UI Implementation)
 
 ## Objectives
 
-1. **Connect Service Layers**: Integrate ClicheGenerator with CharacterBuilderService
-2. **Configure Dependency Injection**: Register all services in IoC container
-3. **Implement Service Orchestration**: Coordinate multi-service workflows
-4. **Establish Data Flow**: Ensure proper data transformation between layers
-5. **Bootstrap Integration**: Connect with CharacterBuilderBootstrap system
+1. **Verify Service Integration**: Ensure ClicheGenerator is properly integrated with CharacterBuilderService
+2. **Fix Entry Point**: Update cliches-generator-main.js to use correct Bootstrap pattern
+3. **Add Error Handling**: Implement any missing error handling classes
+4. **Create Tests**: Add integration tests for service coordination
+5. **Performance Monitoring**: Add performance metrics if not present
 
 ## Technical Architecture
 
-### Service Dependency Graph
+### Actual Service Dependency Graph (Current Implementation)
 
 ```
-CharacterBuilderBootstrap
-    ├── IoC Container
-    │   ├── CharacterBuilderService (extended)
-    │   ├── ClicheGenerator (new)
-    │   ├── CharacterStorageService (existing)
-    │   ├── CharacterDatabase (existing)
-    │   ├── LLMService (existing)
-    │   └── EventBus (existing)
-    └── ClichesGeneratorController
-        ├── CharacterBuilderService
-        ├── ClicheGenerator
-        └── ClicheErrorHandler
+AppContainer (via configureMinimalContainer)
+    ├── Core Services (tokens.js)
+    │   ├── ILogger
+    │   ├── ISafeEventDispatcher
+    │   ├── ISchemaValidator
+    │   └── ILLMConfigurationManager
+    ├── LLM Services (already registered)
+    │   ├── LLMAdapter (ConfigurableLLMAdapter)
+    │   └── LlmJsonService
+    └── Character Builder Services (characterBuilderRegistrations.js)
+        ├── CharacterDatabase
+        ├── CharacterStorageService
+        ├── ThematicDirectionGenerator
+        ├── ClicheGenerator (already integrated)
+        └── CharacterBuilderService
+            └── Receives clicheGenerator in constructor
 ```
 
 ### Data Flow Architecture
@@ -64,627 +68,123 @@ Controller → UI Update
 
 ## Implementation Tasks
 
-### Task 1: Extend CharacterBuilderService Integration (60 minutes)
+### Task 1: Verify CharacterBuilderService Integration (15 minutes)
 
 **File**: `src/characterBuilder/services/characterBuilderService.js`
 
-Add integration methods to connect with ClicheGenerator:
+**Current Status**: ✅ ALREADY IMPLEMENTED
 
-```javascript
-import { ClicheGenerator } from './ClicheGenerator.js';
-import {
-  ClicheGenerationError,
-  ClicheStorageError
-} from '../errors/clicheErrors.js';
-import { validateClicheData } from '../validators/clicheValidator.js';
+The service already has the following methods properly implemented:
 
-// Add to class properties
-#clicheGenerator = null;
+- `generateClichesForDirection(concept, direction)` - Line 964
+- `getClichesByDirectionId(directionId)` - Line 756
+- `storeCliches(cliches)` - Line 868
+- Constructor already accepts `clicheGenerator` parameter (line 90 in registrations)
 
-// Add to constructor or setter
-setClicheGenerator(clicheGenerator) {
-  validateDependency(clicheGenerator, 'IClicheGenerator');
-  this.#clicheGenerator = clicheGenerator;
-}
+**What to verify**:
 
-/**
- * Enhanced method: Generate clichés for a thematic direction
- * Orchestrates the complete generation workflow
- */
-async generateClichesForDirection(concept, direction) {
-  try {
-    // Check if clichés already exist
-    const existingCliches = await this.getClichesByDirectionId(direction.id);
-    if (existingCliches) {
-      this.#logger.info(`Clichés already exist for direction ${direction.id}`);
-      return existingCliches;
-    }
+1. Check that `#clicheGenerator` is properly initialized in constructor
+2. Ensure error handling uses proper error classes
+3. Verify event dispatching is working correctly
 
-    // Ensure generator is available
-    if (!this.#clicheGenerator) {
-      throw new ClicheGenerationError(
-        'ClicheGenerator service not configured',
-        { directionId: direction.id }
-      );
-    }
+**Note**: The service integration is already complete. The main issue is that the entry point doesn't use the correct Bootstrap pattern.
 
-    // Dispatch generation started event
-    this.#eventBus.dispatch({
-      type: 'CLICHE_GENERATION_STARTED',
-      payload: {
-        directionId: direction.id,
-        conceptId: concept.id,
-        timestamp: new Date().toISOString()
-      }
-    });
-
-    // Generate clichés via dedicated service
-    const generatedData = await this.#clicheGenerator.generateCliches(
-      concept.text,
-      {
-        title: direction.title,
-        description: direction.description,
-        coreTension: direction.coreTension
-      }
-    );
-
-    // Create cliché model
-    const cliche = new Cliche({
-      directionId: direction.id,
-      conceptId: concept.id,
-      categories: generatedData.categories,
-      tropesAndStereotypes: generatedData.tropesAndStereotypes,
-      llmMetadata: generatedData.metadata
-    });
-
-    // Validate before storage
-    validateClicheData(cliche);
-
-    // Store in database
-    const storedCliche = await this.storeCliches(cliche);
-
-    // Dispatch completion event
-    this.#eventBus.dispatch({
-      type: 'CLICHE_GENERATION_COMPLETED',
-      payload: {
-        directionId: direction.id,
-        clicheId: storedCliche.id,
-        timestamp: new Date().toISOString()
-      }
-    });
-
-    return storedCliche;
-
-  } catch (error) {
-    this.#logger.error('Failed to generate clichés:', error);
-
-    // Dispatch failure event
-    this.#eventBus.dispatch({
-      type: 'CLICHE_GENERATION_FAILED',
-      payload: {
-        directionId: direction.id,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      }
-    });
-
-    throw error;
-  }
-}
-
-/**
- * Enhanced method: Store clichés with transaction support
- */
-async storeCliches(cliches) {
-  try {
-    // Start transaction for atomic operation
-    const transaction = await this.#characterStorage.beginTransaction(['cliches']);
-
-    try {
-      // Check for existing clichés (enforce one-to-one)
-      const existing = await this.getClichesByDirectionId(cliches.directionId);
-      if (existing) {
-        throw new ClicheStorageError(
-          'Clichés already exist for this direction',
-          'store',
-          { directionId: cliches.directionId }
-        );
-      }
-
-      // Store the cliché
-      const stored = await this.#characterStorage.storeCliche(cliches, transaction);
-
-      // Commit transaction
-      await transaction.commit();
-
-      // Update cache
-      this.#clicheCache.set(cliches.directionId, stored);
-
-      return stored;
-
-    } catch (error) {
-      // Rollback on error
-      await transaction.abort();
-      throw error;
-    }
-
-  } catch (error) {
-    this.#logger.error('Failed to store clichés:', error);
-    throw new ClicheStorageError(
-      'Unable to save clichés',
-      'store',
-      { originalError: error.message }
-    );
-  }
-}
-
-/**
- * Batch load directions with their clichés
- */
-async getDirectionsWithCliches(conceptId) {
-  try {
-    // Load all directions for concept
-    const directions = await this.getThematicDirections(conceptId);
-
-    // Load clichés in parallel
-    const clichePromises = directions.map(dir =>
-      this.getClichesByDirectionId(dir.id).catch(() => null)
-    );
-
-    const cliches = await Promise.all(clichePromises);
-
-    // Combine data
-    return directions.map((dir, index) => ({
-      ...dir,
-      hasCliches: cliches[index] !== null,
-      cliches: cliches[index]
-    }));
-
-  } catch (error) {
-    this.#logger.error('Failed to load directions with clichés:', error);
-    throw error;
-  }
-}
-```
-
-### Task 2: Service Dependency Registration (45 minutes)
-
-**File**: `src/dependencyInjection/characterBuilderContainer.js` (create or extend)
-
-```javascript
-/**
- * @file IoC container configuration for character builder services
- */
-
-import { Container } from './container.js';
-import { CharacterBuilderService } from '../characterBuilder/services/characterBuilderService.js';
-import { ClicheGenerator } from '../characterBuilder/services/ClicheGenerator.js';
-import { CharacterStorageService } from '../characterBuilder/services/characterStorageService.js';
-import { CharacterDatabase } from '../characterBuilder/services/character-database.js';
-import { ClicheErrorHandler } from '../characterBuilder/services/clicheErrorHandler.js';
-import { LLMService } from '../llms/llmService.js';
-import { EventBus } from '../events/eventBus.js';
-import { Logger } from '../utils/logger.js';
-
-/**
- * Service tokens for dependency injection
- */
-export const CharacterBuilderTokens = {
-  // Core services
-  ICharacterBuilderService: Symbol('ICharacterBuilderService'),
-  ICharacterStorageService: Symbol('ICharacterStorageService'),
-  ICharacterDatabase: Symbol('ICharacterDatabase'),
-
-  // Cliché-specific services
-  IClicheGenerator: Symbol('IClicheGenerator'),
-  IClicheErrorHandler: Symbol('IClicheErrorHandler'),
-
-  // Infrastructure services
-  ILLMService: Symbol('ILLMService'),
-  IEventBus: Symbol('IEventBus'),
-  ILogger: Symbol('ILogger'),
-};
-
-/**
- * Configure IoC container for character builder
- */
-export function configureCharacterBuilderContainer(existingContainer = null) {
-  const container = existingContainer || new Container();
-
-  // Register infrastructure services
-  container.register(CharacterBuilderTokens.ILogger, () => {
-    return new Logger({
-      prefix: '[CharacterBuilder]',
-      level: 'info',
-    });
-  });
-
-  container.register(CharacterBuilderTokens.IEventBus, () => {
-    return EventBus.getInstance();
-  });
-
-  // Register LLM service
-  container.register(CharacterBuilderTokens.ILLMService, () => {
-    const logger = container.resolve(CharacterBuilderTokens.ILogger);
-    return new LLMService({
-      apiUrl: '/llm-proxy',
-      logger,
-      timeout: 30000,
-      maxRetries: 3,
-    });
-  });
-
-  // Register database
-  container.register(CharacterBuilderTokens.ICharacterDatabase, () => {
-    const logger = container.resolve(CharacterBuilderTokens.ILogger);
-    return new CharacterDatabase({
-      dbName: 'CharacterBuilderDB',
-      version: 2, // Incremented for cliches store
-      logger,
-    });
-  });
-
-  // Register storage service
-  container.register(CharacterBuilderTokens.ICharacterStorageService, () => {
-    const database = container.resolve(
-      CharacterBuilderTokens.ICharacterDatabase
-    );
-    const logger = container.resolve(CharacterBuilderTokens.ILogger);
-    const eventBus = container.resolve(CharacterBuilderTokens.IEventBus);
-
-    return new CharacterStorageService({
-      database,
-      logger,
-      eventBus,
-    });
-  });
-
-  // Register ClicheGenerator service
-  container.register(CharacterBuilderTokens.IClicheGenerator, () => {
-    const llmService = container.resolve(CharacterBuilderTokens.ILLMService);
-    const logger = container.resolve(CharacterBuilderTokens.ILogger);
-    const eventBus = container.resolve(CharacterBuilderTokens.IEventBus);
-
-    return new ClicheGenerator({
-      llmService,
-      logger,
-      eventBus,
-    });
-  });
-
-  // Register ClicheErrorHandler
-  container.register(CharacterBuilderTokens.IClicheErrorHandler, () => {
-    const logger = container.resolve(CharacterBuilderTokens.ILogger);
-    const eventBus = container.resolve(CharacterBuilderTokens.IEventBus);
-
-    return new ClicheErrorHandler({
-      logger,
-      eventBus,
-    });
-  });
-
-  // Register main CharacterBuilderService with all dependencies
-  container.register(CharacterBuilderTokens.ICharacterBuilderService, () => {
-    const characterStorage = container.resolve(
-      CharacterBuilderTokens.ICharacterStorageService
-    );
-    const logger = container.resolve(CharacterBuilderTokens.ILogger);
-    const eventBus = container.resolve(CharacterBuilderTokens.IEventBus);
-    const clicheGenerator = container.resolve(
-      CharacterBuilderTokens.IClicheGenerator
-    );
-
-    const service = new CharacterBuilderService({
-      characterStorage,
-      logger,
-      eventBus,
-    });
-
-    // Inject ClicheGenerator
-    service.setClicheGenerator(clicheGenerator);
-
-    return service;
-  });
-
-  return container;
-}
-
-/**
- * Factory function for creating configured services
- */
-export function createCharacterBuilderServices() {
-  const container = configureCharacterBuilderContainer();
-
-  return {
-    container,
-    characterBuilderService: container.resolve(
-      CharacterBuilderTokens.ICharacterBuilderService
-    ),
-    clicheGenerator: container.resolve(CharacterBuilderTokens.IClicheGenerator),
-    clicheErrorHandler: container.resolve(
-      CharacterBuilderTokens.IClicheErrorHandler
-    ),
-    storageService: container.resolve(
-      CharacterBuilderTokens.ICharacterStorageService
-    ),
-    eventBus: container.resolve(CharacterBuilderTokens.IEventBus),
-    logger: container.resolve(CharacterBuilderTokens.ILogger),
-  };
-}
-```
-
-### Task 3: Bootstrap Integration (60 minutes)
-
-**File**: Update `src/characterBuilder/CharacterBuilderBootstrap.js`
-
-```javascript
-import {
-  configureCharacterBuilderContainer,
-  CharacterBuilderTokens,
-} from '../dependencyInjection/characterBuilderContainer.js';
-import { ClichesGeneratorController } from '../clichesGenerator/controllers/ClichesGeneratorController.js';
-
-/**
- * Enhanced bootstrap for Clichés Generator page
- */
-export class CharacterBuilderBootstrap {
-  #container = null;
-  #controller = null;
-  #services = {};
-
-  /**
-   * Bootstrap the application with enhanced service integration
-   */
-  async bootstrap(config = {}) {
-    try {
-      const { pageName, controllerClass, additionalServices = {} } = config;
-
-      // Initialize IoC container
-      this.#container = configureCharacterBuilderContainer();
-
-      // Register any additional services
-      for (const [token, factory] of Object.entries(additionalServices)) {
-        this.#container.register(token, factory);
-      }
-
-      // Initialize database
-      const database = this.#container.resolve(
-        CharacterBuilderTokens.ICharacterDatabase
-      );
-      await database.init();
-
-      // Resolve all required services
-      this.#services = {
-        characterBuilderService: this.#container.resolve(
-          CharacterBuilderTokens.ICharacterBuilderService
-        ),
-        clicheGenerator: this.#container.resolve(
-          CharacterBuilderTokens.IClicheGenerator
-        ),
-        clicheErrorHandler: this.#container.resolve(
-          CharacterBuilderTokens.IClicheErrorHandler
-        ),
-        storageService: this.#container.resolve(
-          CharacterBuilderTokens.ICharacterStorageService
-        ),
-        eventBus: this.#container.resolve(CharacterBuilderTokens.IEventBus),
-        logger: this.#container.resolve(CharacterBuilderTokens.ILogger),
-      };
-
-      // Special handling for Clichés Generator
-      if (pageName === 'cliches-generator') {
-        return this.#bootstrapClichesGenerator(controllerClass);
-      }
-
-      // Default controller initialization
-      return this.#initializeController(controllerClass);
-    } catch (error) {
-      console.error('Bootstrap failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Bootstrap specifically for Clichés Generator
-   */
-  async #bootstrapClichesGenerator(controllerClass) {
-    try {
-      // Ensure we have the right controller
-      if (
-        !controllerClass ||
-        controllerClass.name !== 'ClichesGeneratorController'
-      ) {
-        throw new Error('Invalid controller for Clichés Generator page');
-      }
-
-      // Create controller with all dependencies
-      this.#controller = new controllerClass({
-        characterBuilderService: this.#services.characterBuilderService,
-        clicheGenerator: this.#services.clicheGenerator,
-        errorHandler: this.#services.clicheErrorHandler,
-        logger: this.#services.logger,
-        eventBus: this.#services.eventBus,
-        domUtils: DomUtils, // Assuming DomUtils is available
-      });
-
-      // Set up global error handling
-      this.#setupGlobalErrorHandling();
-
-      // Set up performance monitoring
-      this.#setupPerformanceMonitoring();
-
-      // Initialize the controller
-      await this.#controller.initialize();
-
-      return {
-        controller: this.#controller,
-        services: this.#services,
-        container: this.#container,
-      };
-    } catch (error) {
-      this.#services.logger?.error(
-        'Failed to bootstrap Clichés Generator:',
-        error
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * Set up global error handling
-   */
-  #setupGlobalErrorHandling() {
-    // Handle unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
-      this.#services.logger.error('Unhandled promise rejection:', event.reason);
-      this.#services.eventBus.dispatch({
-        type: 'GLOBAL_ERROR',
-        payload: {
-          error: event.reason,
-          timestamp: new Date().toISOString(),
-        },
-      });
-
-      // Prevent default browser handling
-      event.preventDefault();
-    });
-
-    // Handle general errors
-    window.addEventListener('error', (event) => {
-      this.#services.logger.error('Global error:', event.error);
-      this.#services.eventBus.dispatch({
-        type: 'GLOBAL_ERROR',
-        payload: {
-          error: event.error,
-          timestamp: new Date().toISOString(),
-        },
-      });
-    });
-  }
-
-  /**
-   * Set up performance monitoring
-   */
-  #setupPerformanceMonitoring() {
-    // Monitor long tasks
-    if ('PerformanceObserver' in window) {
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          if (entry.duration > 50) {
-            // Tasks longer than 50ms
-            this.#services.logger.warn('Long task detected:', {
-              duration: entry.duration,
-              startTime: entry.startTime,
-            });
-          }
-        }
-      });
-
-      observer.observe({ entryTypes: ['longtask'] });
-    }
-
-    // Track page visibility changes
-    document.addEventListener('visibilitychange', () => {
-      this.#services.eventBus.dispatch({
-        type: 'PAGE_VISIBILITY_CHANGED',
-        payload: {
-          hidden: document.hidden,
-          timestamp: new Date().toISOString(),
-        },
-      });
-    });
-  }
-
-  /**
-   * Cleanup on page unload
-   */
-  async cleanup() {
-    try {
-      // Save any pending data
-      if (this.#controller?.cleanup) {
-        await this.#controller.cleanup();
-      }
-
-      // Close database connections
-      const database = this.#services.storageService?.database;
-      if (database?.close) {
-        await database.close();
-      }
-
-      // Clear caches
-      this.#container?.clear();
-
-      // Remove event listeners
-      this.#services.eventBus?.removeAllListeners();
-    } catch (error) {
-      console.error('Cleanup failed:', error);
-    }
-  }
-}
-```
-
-### Task 4: Update Entry Point (45 minutes)
+### Task 2: Fix Entry Point (45 minutes)
 
 **File**: `src/cliches-generator-main.js`
 
+**Current Issues**:
+
+1. The constructor `new CharacterBuilderBootstrap({...})` is incorrect - it doesn't accept config in constructor
+2. The `bootstrap.registerService()` method doesn't exist
+3. Not using the proper `bootstrap()` method with configuration
+
+**Required Changes**:
+
 ```javascript
 /**
- * @file Entry point for Clichés Generator page with full service integration
+ * @file Entry point for Clichés Generator page
  */
 
 import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBootstrap.js';
 import { ClichesGeneratorController } from './clichesGenerator/controllers/ClichesGeneratorController.js';
-
-// Performance mark for initialization timing
-performance.mark('cliches-generator-init-start');
 
 /**
  * Initialize the Clichés Generator application
  */
 const initializeApp = async () => {
   const bootstrap = new CharacterBuilderBootstrap();
-  let initialized = false;
 
   try {
     console.log('Initializing Clichés Generator...');
 
-    // Bootstrap with full service integration
+    // Bootstrap with proper configuration
     const result = await bootstrap.bootstrap({
       pageName: 'cliches-generator',
       controllerClass: ClichesGeneratorController,
-      additionalServices: {
-        // Add any page-specific services here if needed
+      customSchemas: ['/data/schemas/cliche.schema.json'],
+      eventDefinitions: [
+        {
+          id: 'core:cliche_generation_started',
+          description: 'Fired when cliché generation begins',
+          payloadSchema: {
+            type: 'object',
+            required: ['directionId', 'conceptId'],
+            properties: {
+              directionId: { type: 'string' },
+              conceptId: { type: 'string' },
+              timestamp: { type: 'string' },
+            },
+          },
+        },
+        {
+          id: 'core:cliche_generation_completed',
+          description: 'Fired when cliché generation completes',
+          payloadSchema: {
+            type: 'object',
+            required: ['directionId', 'clicheId'],
+            properties: {
+              directionId: { type: 'string' },
+              clicheId: { type: 'string' },
+              timestamp: { type: 'string' },
+            },
+          },
+        },
+        {
+          id: 'core:cliche_generation_failed',
+          description: 'Fired when cliché generation fails',
+          payloadSchema: {
+            type: 'object',
+            required: ['directionId', 'error'],
+            properties: {
+              directionId: { type: 'string' },
+              error: { type: 'string' },
+              timestamp: { type: 'string' },
+            },
+          },
+        },
+      ],
+      hooks: {
+        postInit: (controller) => {
+          // Store controller reference for debugging
+          if (process.env.NODE_ENV === 'development') {
+            window.__clichesController = controller;
+            console.log('Debug: Controller exposed on window object');
+          }
+        },
       },
     });
 
-    initialized = true;
-
-    // Performance measurement
-    performance.mark('cliches-generator-init-end');
-    performance.measure(
-      'cliches-generator-initialization',
-      'cliches-generator-init-start',
-      'cliches-generator-init-end'
-    );
-
-    const measure = performance.getEntriesByName(
-      'cliches-generator-initialization'
-    )[0];
     console.log(
-      `Clichés Generator initialized in ${measure.duration.toFixed(2)}ms`
+      `Clichés Generator initialized in ${result.bootstrapTime.toFixed(2)}ms`
     );
 
     // Set up cleanup on page unload
     window.addEventListener('beforeunload', async () => {
-      await bootstrap.cleanup();
+      if (result.controller?.cleanup) {
+        await result.controller.cleanup();
+      }
     });
-
-    // Expose controller for debugging (development only)
-    if (process.env.NODE_ENV === 'development') {
-      window.__clichesController = result.controller;
-      window.__clichesServices = result.services;
-      console.log('Debug: Controller and services exposed on window object');
-    }
 
     return result;
   } catch (error) {
@@ -707,11 +207,6 @@ const initializeApp = async () => {
       `;
     }
 
-    // Clean up if partially initialized
-    if (initialized) {
-      await bootstrap.cleanup();
-    }
-
     throw error;
   }
 };
@@ -728,291 +223,124 @@ if (document.readyState === 'loading') {
 export { initializeApp };
 ```
 
-### Task 5: Service Orchestration Utilities (30 minutes)
+### Task 3: Verify Bootstrap Configuration (15 minutes)
 
-**File**: `src/characterBuilder/services/serviceOrchestrator.js` (new)
+**File**: `src/characterBuilder/CharacterBuilderBootstrap.js`
+
+**Current Status**: ✅ ALREADY PROPERLY IMPLEMENTED
+
+The Bootstrap class is already properly implemented with:
+
+- Proper `bootstrap(config)` method that accepts configuration
+- Support for custom schemas and event definitions
+- Automatic service resolution from the container
+- Controller instantiation with all required dependencies
+- Error handling and performance monitoring
+
+**No changes needed** - The Bootstrap already handles:
+
+- Container setup via `configureMinimalContainer()`
+- Service resolution from registered services
+- Controller creation with proper dependencies
+- Error display configuration
+- Performance monitoring
+
+### Task 4: Add Error Handling Classes (30 minutes)
+
+**File**: `src/characterBuilder/errors/characterBuilderError.js`
+
+Check if `CharacterBuilderError` class properly handles cliché-related errors. The service currently uses this for error handling.
 
 ```javascript
 /**
- * @file Service orchestration utilities for coordinating multi-service operations
+ * @file Character builder specific error classes
  */
 
-import { validateDependency } from '../../utils/dependencyUtils.js';
-
-/**
- * Orchestrates complex multi-service workflows
- */
-export class ServiceOrchestrator {
-  #services = new Map();
-  #logger;
-  #eventBus;
-
-  constructor({ logger, eventBus }) {
-    this.#logger = logger;
-    this.#eventBus = eventBus;
-  }
-
-  /**
-   * Register a service for orchestration
-   */
-  registerService(name, service) {
-    validateDependency(service, `I${name}`);
-    this.#services.set(name, service);
-  }
-
-  /**
-   * Execute a workflow with multiple services
-   */
-  async executeWorkflow(workflowName, steps) {
-    const context = {
-      workflowName,
-      startTime: Date.now(),
-      results: new Map(),
-    };
-
-    try {
-      this.#logger.info(`Starting workflow: ${workflowName}`);
-
-      // Dispatch workflow start event
-      this.#eventBus.dispatch({
-        type: 'WORKFLOW_STARTED',
-        payload: { workflowName, timestamp: new Date().toISOString() },
-      });
-
-      // Execute each step
-      for (const step of steps) {
-        const result = await this.#executeStep(step, context);
-        context.results.set(step.name, result);
-      }
-
-      // Dispatch workflow completion
-      this.#eventBus.dispatch({
-        type: 'WORKFLOW_COMPLETED',
-        payload: {
-          workflowName,
-          duration: Date.now() - context.startTime,
-          timestamp: new Date().toISOString(),
-        },
-      });
-
-      return context.results;
-    } catch (error) {
-      this.#logger.error(`Workflow ${workflowName} failed:`, error);
-
-      // Dispatch workflow failure
-      this.#eventBus.dispatch({
-        type: 'WORKFLOW_FAILED',
-        payload: {
-          workflowName,
-          error: error.message,
-          timestamp: new Date().toISOString(),
-        },
-      });
-
-      throw error;
-    }
-  }
-
-  /**
-   * Execute a single workflow step
-   */
-  async #executeStep(step, context) {
-    const { serviceName, method, args = [], transform } = step;
-
-    const service = this.#services.get(serviceName);
-    if (!service) {
-      throw new Error(`Service '${serviceName}' not found`);
-    }
-
-    // Resolve arguments (may reference previous results)
-    const resolvedArgs = this.#resolveArguments(args, context);
-
-    // Execute service method
-    const result = await service[method](...resolvedArgs);
-
-    // Apply transformation if provided
-    if (transform) {
-      return transform(result, context);
-    }
-
-    return result;
-  }
-
-  /**
-   * Resolve arguments that may reference context
-   */
-  #resolveArguments(args, context) {
-    return args.map((arg) => {
-      if (typeof arg === 'string' && arg.startsWith('$')) {
-        // Reference to previous result
-        const key = arg.substring(1);
-        return context.results.get(key);
-      }
-      return arg;
-    });
-  }
-
-  /**
-   * Execute parallel service calls
-   */
-  async executeParallel(operations) {
-    const promises = operations.map((op) =>
-      this.#executeOperation(op).catch((error) => ({
-        error,
-        operation: op,
-      }))
-    );
-
-    const results = await Promise.all(promises);
-
-    // Check for errors
-    const errors = results.filter((r) => r.error);
-    if (errors.length > 0) {
-      this.#logger.error('Parallel execution had errors:', errors);
-    }
-
-    return results;
-  }
-
-  /**
-   * Execute a single operation
-   */
-  async #executeOperation({ serviceName, method, args = [] }) {
-    const service = this.#services.get(serviceName);
-    if (!service) {
-      throw new Error(`Service '${serviceName}' not found`);
-    }
-
-    return service[method](...args);
+export class CharacterBuilderError extends Error {
+  constructor(message, context = {}) {
+    super(message);
+    this.name = 'CharacterBuilderError';
+    this.context = context;
   }
 }
 
-/**
- * Pre-defined workflows for common operations
- */
-export const ClicheWorkflows = {
-  /**
-   * Complete cliché generation workflow
-   */
-  GENERATE_CLICHES: [
-    {
-      name: 'loadDirection',
-      serviceName: 'CharacterBuilderService',
-      method: 'getThematicDirection',
-      args: ['$directionId'],
-    },
-    {
-      name: 'loadConcept',
-      serviceName: 'CharacterBuilderService',
-      method: 'getCharacterConcept',
-      args: ['$conceptId'],
-    },
-    {
-      name: 'checkExisting',
-      serviceName: 'CharacterBuilderService',
-      method: 'getClichesByDirectionId',
-      args: ['$directionId'],
-    },
-    {
-      name: 'generate',
-      serviceName: 'ClicheGenerator',
-      method: 'generateCliches',
-      args: ['$loadConcept', '$loadDirection'],
-      condition: (context) => !context.results.get('checkExisting'),
-    },
-    {
-      name: 'store',
-      serviceName: 'CharacterBuilderService',
-      method: 'storeCliches',
-      args: ['$generate'],
-      condition: (context) => context.results.has('generate'),
-    },
-  ],
-};
+// Optionally create specific cliché error classes
+export class ClicheGenerationError extends CharacterBuilderError {
+  constructor(message, context = {}) {
+    super(message, context);
+    this.name = 'ClicheGenerationError';
+  }
+}
+
+export class ClicheStorageError extends CharacterBuilderError {
+  constructor(message, operation, context = {}) {
+    super(message, { ...context, operation });
+    this.name = 'ClicheStorageError';
+  }
+}
 ```
+
+**Note**: Service orchestration is not required. The existing CharacterBuilderService already handles the complete cliché generation workflow through its `generateClichesForDirection` method.
 
 ## Testing Requirements
 
 ### Unit Tests
 
-**File**: `tests/unit/dependencyInjection/characterBuilderContainer.test.js`
+**File**: `tests/unit/cliches-generator-main.test.js`
 
 ```javascript
-describe('CharacterBuilderContainer', () => {
-  it('should register all required services');
-  it('should resolve services with dependencies');
-  it('should create singleton instances');
-  it('should handle circular dependencies');
-  it('should allow service overrides');
-});
-```
-
-**File**: `tests/unit/characterBuilder/services/serviceOrchestrator.test.js`
-
-```javascript
-describe('ServiceOrchestrator', () => {
-  it('should execute workflows sequentially');
-  it('should pass context between steps');
-  it('should handle step failures');
-  it('should execute parallel operations');
-  it('should resolve argument references');
+describe('Clichés Generator Entry Point', () => {
+  it('should bootstrap with correct configuration');
+  it('should handle initialization errors gracefully');
+  it('should set up performance monitoring');
+  it('should expose debug objects in development mode');
+  it('should clean up on page unload');
 });
 ```
 
 ### Integration Tests
 
-**File**: `tests/integration/clichesGenerator/serviceIntegration.test.js`
+**File**: `tests/integration/clichesGenerator/bootstrapIntegration.test.js`
 
 ```javascript
-describe('Clichés Generator Service Integration', () => {
+describe('Clichés Generator Bootstrap Integration', () => {
   let bootstrap;
-  let services;
+  let result;
 
   beforeEach(async () => {
     bootstrap = new CharacterBuilderBootstrap();
-    const result = await bootstrap.bootstrap({
+    result = await bootstrap.bootstrap({
       pageName: 'cliches-generator',
       controllerClass: ClichesGeneratorController,
     });
-    services = result.services;
   });
 
   afterEach(async () => {
-    await bootstrap.cleanup();
+    if (result?.controller?.cleanup) {
+      await result.controller.cleanup();
+    }
   });
 
-  it('should initialize all services correctly');
-  it('should coordinate generation workflow');
-  it('should handle service communication');
-  it('should manage transactions properly');
-  it('should clean up resources on shutdown');
-});
-```
-
-**File**: `tests/integration/clichesGenerator/workflowIntegration.test.js`
-
-```javascript
-describe('Cliché Generation Workflow', () => {
-  it('should execute complete generation workflow');
-  it('should handle existing clichés correctly');
-  it('should coordinate LLM service calls');
-  it('should store results atomically');
-  it('should emit correct events throughout');
+  it('should initialize with correct services');
+  it('should resolve ClicheGenerator from container');
+  it('should create controller with all dependencies');
+  it('should handle database initialization');
+  it('should set up event handling correctly');
 });
 ```
 
 ## Success Criteria
 
-- [ ] All services properly registered in IoC container
-- [ ] Dependency injection working without circular dependencies
-- [ ] Service orchestration handles complex workflows
-- [ ] Data flows correctly between all layers
-- [ ] Bootstrap system initializes everything correctly
-- [ ] Error propagation works across service boundaries
+- [ ] Entry point uses correct Bootstrap pattern
+- [ ] All services properly registered in existing IoC container
+- [ ] ClicheGenerator properly integrated with CharacterBuilderService
+- [ ] Controller receives all required dependencies
+- [ ] Error handling classes available for cliché operations
 - [ ] Events dispatched at appropriate points
-- [ ] Transaction support for atomic operations
-- [ ] Clean shutdown releases all resources
-- [ ] Performance monitoring integrated
+- [ ] Performance monitoring working
+- [ ] Clean shutdown on page unload
+- [ ] User-friendly error display
+- [ ] Debug objects exposed in development mode
 
 ## Performance Targets
 
@@ -1026,60 +354,52 @@ describe('Cliché Generation Workflow', () => {
 
 ## Dependencies
 
-### Required Files (Must Exist)
+### Required Files (Already Exist)
 
-- `src/characterBuilder/services/CharacterBuilderService.js`
-- `src/characterBuilder/services/ClicheGenerator.js`
-- `src/characterBuilder/services/characterStorageService.js`
-- `src/characterBuilder/CharacterBuilderBootstrap.js`
-- `src/clichesGenerator/controllers/ClichesGeneratorController.js`
-
-### Files to Create
-
-- `src/dependencyInjection/characterBuilderContainer.js`
-- `src/characterBuilder/services/serviceOrchestrator.js`
+- ✅ `src/characterBuilder/services/CharacterBuilderService.js`
+- ✅ `src/characterBuilder/services/ClicheGenerator.js`
+- ✅ `src/characterBuilder/services/characterStorageService.js`
+- ✅ `src/characterBuilder/CharacterBuilderBootstrap.js`
+- ✅ `src/clichesGenerator/controllers/ClichesGeneratorController.js`
+- ✅ `src/dependencyInjection/registrations/characterBuilderRegistrations.js`
+- ✅ `src/dependencyInjection/tokens.js`
 
 ### Files to Modify
 
-- `src/characterBuilder/services/characterBuilderService.js` (add integration methods)
-- `src/characterBuilder/CharacterBuilderBootstrap.js` (enhance for clichés)
-- `src/cliches-generator-main.js` (update entry point)
+- `src/cliches-generator-main.js` - Fix to use correct Bootstrap pattern
+- `src/characterBuilder/errors/characterBuilderError.js` - Add cliché-specific error classes (optional)
 
 ## Implementation Notes
 
-1. **Service Lifecycle**: Ensure proper initialization order
-2. **Singleton Pattern**: Services should be singletons within container
-3. **Lazy Loading**: Initialize services only when needed
-4. **Transaction Support**: Implement proper rollback mechanisms
-5. **Event Flow**: Maintain consistent event naming and payload structure
-6. **Error Boundaries**: Each service should handle its own errors
-7. **Performance**: Use caching and batch operations where possible
-8. **Testing**: Mock all external dependencies
+1. **Use Existing Infrastructure**: The DI system is already in place - don't recreate it
+2. **Bootstrap Pattern**: Follow the existing Bootstrap configuration pattern
+3. **Service Registration**: Services are already registered in `characterBuilderRegistrations.js`
+4. **Error Handling**: Use existing `CharacterBuilderError` or extend it for specific cases
+5. **Event System**: Events are already defined and dispatched correctly
+6. **Performance**: Bootstrap includes performance monitoring out of the box
+7. **Testing**: Focus on integration tests for the entry point
 
 ## Risk Mitigation
 
-| Risk                           | Impact | Mitigation                             |
-| ------------------------------ | ------ | -------------------------------------- |
-| Circular dependencies          | High   | Use setter injection for circular refs |
-| Service initialization failure | High   | Implement fallback services            |
-| Memory leaks                   | Medium | Proper cleanup in bootstrap            |
-| Performance degradation        | Medium | Lazy loading and caching               |
+| Risk                       | Impact | Mitigation                               |
+| -------------------------- | ------ | ---------------------------------------- |
+| Bootstrap misconfiguration | High   | Follow existing pattern from other pages |
+| Missing dependencies       | High   | Container will throw clear errors        |
+| Memory leaks               | Low    | Bootstrap handles cleanup automatically  |
+| Entry point errors         | Medium | User-friendly error display included     |
 
 ## Completion Checklist
 
-- [ ] IoC container configured
-- [ ] All services registered
-- [ ] Dependency injection working
-- [ ] Service orchestration implemented
-- [ ] Bootstrap system updated
-- [ ] Entry point configured
-- [ ] Unit tests written and passing
-- [ ] Integration tests written and passing
-- [ ] Documentation updated
-- [ ] No memory leaks
-- [ ] Performance targets met
+- [ ] Verify CharacterBuilderService has cliché methods
+- [ ] Update entry point to use Bootstrap correctly
+- [ ] Add cliché-specific error classes (optional)
+- [ ] Write tests for entry point
+- [ ] Test Bootstrap integration
+- [ ] Verify performance monitoring works
+- [ ] Test error display functionality
+- [ ] Confirm cleanup on page unload
 
 ---
 
 **Ticket Status**: Ready for implementation
-**Next Steps**: Start with container configuration, then service registration, then bootstrap integration
+**Next Steps**: Update the entry point file to use the correct Bootstrap pattern, then test the integration
